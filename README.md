@@ -6,6 +6,13 @@ post RFCs by forking and copying `0000-template.md`, which is based on
 the corresponding file in the Rust project.
 
 ***
+Posts
+
+* [Racket2 possibilities](https://groups.google.com/d/msg/racket-users/HiC7z3A5O-k/XPR2wbSJCQAJ) Matthew Flatt 20-July-2019
+* [Racket2 and syntax](https://groups.google.com/d/msg/racket-users/3aIPOGbGgmc/A4HHSbdxAwAJ) Matthew Flatt 15-July-2019
+
+
+***
 
 > Subject: [Racket2 and syntax](https://groups.google.com/d/msg/racket-users/3aIPOGbGgmc/A4HHSbdxAwAJ)
 >
