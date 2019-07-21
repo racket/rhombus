@@ -37,7 +37,7 @@ Note: This is a first draft with entries taken directly from https://github.com/
 # Sweet
 [Sweet]: #Sweet
 
-* Sweet
+* [Sweet.js](https://www.sweetjs.org) - Sweet brings the hygienic macros of languages like Scheme and Rust to JavaScript. 
 
 # Wisp
 [Wisp]: #Wisp
