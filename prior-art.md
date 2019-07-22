@@ -38,7 +38,8 @@ Note: This is a first draft with entries taken directly from https://github.com/
 # Wisp
 [Wisp]: #Wisp
 
-* Wisp
+* [SRFI 119](https://srfi.schemers.org/srfi-119/srfi-119.html)
+* [guile implementation](https://www.draketo.de/english/wisp)
 
 # liso
 [liso]: #liso
