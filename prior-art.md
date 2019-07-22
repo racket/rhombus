@@ -1,13 +1,9 @@
-- Feature Name: prior-art
-- Start Date: 2019-July-21
-- RFC PR: [racket/racket2-rfcs#0000](https://github.com/racket/racket2-rfcs/pull/0000)
-
 # Summary
 [summary]: #summary
 
 Relevant prior art. Designs and implementations that will support the language design process.
 
-Note: This is a first draft with entries taken directly from https://github.com/racket/racket2-rfcs/issues/14 and racket-users. If I have included some items that are not relevant, please accept my apologies, and please submit a PR to fix my mistake. - Stephen
+Note: This is a first draft with entries taken directly from https://github.com/racket/racket2-rfcs/issues/14 and racket-users.
 
 # Honu
 [Honu]: #Honu
