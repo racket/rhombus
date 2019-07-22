@@ -33,6 +33,9 @@ Note: This is a first draft with entries taken directly from https://github.com/
 # Sweet
 [Sweet]: #Sweet
 
+* [SRFI 110](https://srfi.schemers.org/srfi-110/srfi-110.html)
+* [Sweet](https://docs.racket-lang.org/sweet/) Racket reader
+* [Readable Lisp S-expressions Project](https://readable.sourceforge.io/) implemented in Common LISP
 * [Sweet.js](https://www.sweetjs.org) - Sweet brings the hygienic macros of languages like Scheme and Rust to JavaScript. 
 
 # Wisp
