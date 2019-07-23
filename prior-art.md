@@ -105,8 +105,8 @@ lexi-lambda commented:
 mflatt commented:
 > Mentioned on the mailing list: <https://elixir-lang.org/>
  
-# Hackett
-[Hackett]: #Hackett
+# Julia
+[Julia]: #Julia
 
 pschmied commented:
 > The Julia language is quite lispy and I believe achieves this in part with a ~Scheme dialect called femtolisp:
