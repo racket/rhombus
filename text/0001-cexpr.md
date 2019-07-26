@@ -159,24 +159,24 @@ The body of a C-expression-based module is defined by the following
 grammar. We annotate the grammar with the AST produced.
 
 ```
-body := cs ...                 --- (stx-stmts $0 ...)
+body := cs ...              --- (stx-stmts $0 ...)
 
-cs := ce ...+ ';'              --- (stx-stmt $0 ...)
+  cs := ce ...+ ';'         --- (stx-stmt $0 ...)
        
-ce := atom                     --- $0
-    | `op`                     --- $0 (the atom)
-    | op ce                    --- (stx-op $0 $1)
-    | ce op ce                 --- (stx-op $1 $0 $2)
-    | ce `symbol` ce           --- (stx-op $1 $0 $2)
-    | ce sho ce shc            --- (stx-app $1 $0 $2)
-    | '{' body '}'             --- $1
-    | '(' ce ')'               --- $1
-    | '@' ce '{' text-body '}' --- (stx-at $1 $3)
-    |                          --- null (an atom)
+  ce := atom                --- $0
+      | `op`                --- $0 (the atom)
+      | op ce               --- (stx-op $0 $1)
+      | ce op ce            --- (stx-op $1 $0 $2)
+      | ce `symbol` ce      --- (stx-op $1 $0 $2)
+      | ce sho ce shc       --- (stx-app $1 $0 $2)
+      | '{' body '}'        --- $1
+      | '(' ce ')'          --- $1
+      | '@' ce '{' text '}' --- (stx-at $1 $3)
+      |                     --- null (an atom)
 
-text-body := '@' ce            --- (stx-txt-at $1)
-          | '{' text-body '}'  --- (stx-txt-seq $0 $1 $2)
-          | any-char text-body --- (stx-txt-seq $0 $1)
+text := '@' ce              --- (stx-txt-at $1)
+      | '{' text '}'        --- (stx-txt-seq $0 $1 $2)
+      | any-char text       --- (stx-txt-seq $0 $1)
 ```
 
 where `atom` contains many concrete values (like with S-expressions),
@@ -237,6 +237,14 @@ to define new operators with custom precedences; having a very small
 set of precedence rules is a compromise.
 
 The ambiguity of infix operations in `cs` is awkward.
+
+There are a few instances where `(body)` looks really good to me, like
+in a `for` loop. Right now, you have to write `for {let i = 0; i < 10;
+i += 1} { .... }`. Similarly, there are times when `ce ce` looks
+really good, like in a type signature. These two very common patterns
+are not allowed in C-expressions. One solution for the second may be
+to pull out `,` as a special kind of thing rather than just another
+loose operator.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
