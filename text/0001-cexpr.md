@@ -196,7 +196,7 @@ and are flattened into a single `stx-op` node. Tight operators have
 the highest precedence, can be mixed at their level, and associate to
 the left. All other operators have middle precedence, cannot be mixed
 at their level, and are flattened into a single `stx-op` node. We
-propose that loose operators are `,` & '=' & '=>' & '&&' & '||' and
+propose that loose operators are `,` & `=` & `=>` & `&&` & `||`; while
 tight operators are `.` & `->` & `:` & `::`. Here are some example
 parses:
 
