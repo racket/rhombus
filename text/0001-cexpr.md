@@ -69,12 +69,12 @@ fun timed_thunk(thunk) {
      (stx-stmt answer))) */
      
 mac timed {
- case { s ... } => timed_thunk(() => { s ... });
- case e:expr => { timed e; } }
+ case { _ e; } => timed_thunk(() => e);
+ case _(e:expr) => { timed e; } }
 /* (stx-stmt mac timed
     (stx-stmts
-     (stx-stmt case (stx-op => (stx-stmts s ...) (stx-app PAREN timed_thunk (stx-op => null (stx-stmts s ...)))))
-     (stx-stmt case (stx-op => (stx-op : e expr) (stx-stmts (stx-stmt timed e)))))) */
+     (stx-stmt case (stx-op => (stx-stmts (stx-stmt _ e)) (stx-app PAREN timed_thunk (stx-op => null e))))
+     (stx-stmt case (stx-op => (stx-app PAREN e (stx-op : e expr)) (stx-stmts (stx-stmt timed e)))))) */
 
 fun g(x, y, (sign : s = +1)) {
  x + (s * y); }
