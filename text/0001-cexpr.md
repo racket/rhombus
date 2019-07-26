@@ -261,8 +261,8 @@ unifying all the variants of syntax ASTs into a single shape. A goal
 of not doing this in the proposal is to imply that macros can (and
 will) mandate the shape of their arguments in a non-lexical way. This
 means that a macro can insist that its argument be `ce -> ce` and not
-be "fooled" by ``->`(ce, ce)`, in the same way that in current Racket,
-a macro can insist on receive `([se se])` and not be "fooled" by `(se
+be "fooled" by `->(ce, ce)`, in the same way that in current Racket, a
+macro can insist on receiving `([se se])` and not be "fooled" by `(se
 se)`. C-expressions are intended to allow new syntactic notation to be
 imposed, not simply expressed.
 
