@@ -159,9 +159,9 @@ The body of a C-expression-based module is defined by the following
 grammar. We annotate the grammar with the AST produced.
 
 ```
-body := cs ... --- (stx-stmts $0 ...)
+body := cs ...                 --- (stx-stmts $0 ...)
 
-cs := ce ...+ ';' --- (stx-stmt $0 ...)
+cs := ce ...+ ';'              --- (stx-stmt $0 ...)
        
 ce := atom                     --- $0
     | `op`                     --- $0 (the atom)
@@ -180,7 +180,7 @@ text-body := '@' ce            --- (stx-txt-at $1)
 ```
 
 where `atom` contains many concrete values (like with S-expressions),
-`sho` (`shc`) is an open (close) shape character that match, `op` is
+`sho` (`shc`) is an open (closed) shape character that match, `op` is
 any sequence of operator characters, and `any-char` is any character
 (except `@`, `{`, or `}`.) Shape character pairs are either `()`,
 `[]`, `<>`, or other Unicode pairs except `{}`. An operator character
@@ -218,7 +218,7 @@ above does not say which it is. We mandate that the second
 interpretation holds. Similarly `ce op1 ce op2 ce` is either illegal
 (assuming the operations are all "other") or `ce op1 ce` and `op2 ce`
 (two expressions, a binary and a unary). We mandate the second
-interpretation.
+interpretation. Maybe it should be another kind of error.
 
 # Drawbacks
 [drawbacks]: #drawbacks
@@ -232,7 +232,9 @@ The various kinds of operators is a little complicated and it is a
 draw back to not support arbitrary precedence relations. This is an
 attempt to be simple and not require users to understand precedence
 relations, while supporting the most common kinds of mixed
-operations. 
+operations. We also think it would be difficult to allow macro authors
+to define new operators with custom precedences; having a very small
+set of precedence rules is a compromise.
 
 The ambiguity of infix operations in `cs` is awkward.
 
@@ -245,7 +247,7 @@ confusing precedence rules are supported. Familiar function call
 syntax, as well as references and templates, is supported. Blocks of
 statements are supported. Parentheses can always be added around
 expressions for grouping. The `@` supports embedding plain-text, as
-well as macros that use different parsing rules.
+well as facilitates macros that use different parsing rules.
 
 There are too many possible alternative concrete syntaxes to discuss
 them here. However, there are some small alternatives worth
@@ -255,7 +257,14 @@ The C-expression AST could be simplified by mapping `(stx-at stx txt)`
 to `(stx-app @ stx txt)`, `(stx-op op stx ...+)` to `(stx-app op (list
 stx ...+)`), `(stx-stmt stx ...+)` to `(stx-app ; (list stx ...+))`
 and `(stx-stmts stx ...)` to `(stx-app body (list stx ...))`, thus
-unifying all the variants of syntax ASTs into a single shape.
+unifying all the variants of syntax ASTs into a single shape. A goal
+of not doing this in the proposal is to imply that macros can (and
+will) mandate the shape of their arguments in a non-lexical way. This
+means that a macro can insist that its argument be `ce -> ce` and not
+be "fooled" by ``->`(ce, ce)`, in the same way that in current Racket,
+a macro can insist on receive `([se se])` and not be "fooled" by `(se
+se)`. C-expressions are intended to allow new syntactic notation to be
+imposed, not simply expressed.
 
 # Prior art
 [prior-art]: #prior-art
@@ -273,16 +282,20 @@ and they use the Pyret rule about not mixing infix operators.
   allowed. Ideally, they would be specified in a simple and broad way,
   such as by a Unicode category.
   
-- Is the C-expression grammar efficient to parse? Are the constraints
-  in it sufficient for deterministic parsing? Is the explanation of
-  parsing above consistent with the desired example parses?
+- Is the C-expression grammar efficient to parse and mentally
+  internalize? Are the constraints in it sufficient for deterministic
+  parsing? Is the explanation of parsing above consistent with the
+  desired example parses?
 
 - The expression comment sequence `#;` doesn't fit with the other
-  comment characters.
+  comment characters, but it is not a familiar thing in other
+  languages anyways. What does `ce0 #;ce1 op ce2` mean? Does it
+  comment out `ce1` or `ce1 op ce2`?
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
 This proposal leaves open the C-expression shapes expected by Racket2
 core forms and standard library forms. It purposefully leaves open all
-questions about the semantic interpretations of most structures.
+questions about the semantic interpretations of most syntactic
+structures.
