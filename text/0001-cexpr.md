@@ -1,6 +1,6 @@
 - Feature Name: C-expressions as fundamental syntax
 - Start Date: 2019-07-25
-- RFC PR: [racket/racket2-rfcs#0001](https://github.com/racket/racket2-rfcs/pull/0001)
+- RFC PR: [racket/racket2-rfcs#88](https://github.com/racket/racket2-rfcs/pull/88)
 
 # Summary
 [summary]: #summary
