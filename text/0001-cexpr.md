@@ -47,7 +47,7 @@ var x = 3;
 // (stx-stmt var (stx-op = x 3))
 
 fun f(y, z) { 
- y + x + z; }
+ y + x + z; };
 /* (stx-stmt fun (stx-app PAREN f (stx-op , y z))
     (stx-stmts (stx-stmt (stx-op + y x z)))) */
 
@@ -59,7 +59,7 @@ fun timed_thunk(thunk) {
  let answer = thunk();
  let after = now();
  println "It took" (after - before) "seconds";
- answer; }
+ answer; };
 /* (stx-stmt fun (stx-app PAREN timed thunk)
     (stx-stmts
      (stx-stmt let (stx-op = before (stx-app PAREN now null)))
@@ -70,14 +70,14 @@ fun timed_thunk(thunk) {
      
 mac timed {
  case { _ e; } => timed_thunk(() => e);
- case _(e:expr) => { timed e; } }
+ case _(e:expr) => { timed e; } };
 /* (stx-stmt mac timed
     (stx-stmts
      (stx-stmt case (stx-op => (stx-stmts (stx-stmt _ e)) (stx-app PAREN timed_thunk (stx-op => null e))))
      (stx-stmt case (stx-op => (stx-app PAREN e (stx-op : e expr)) (stx-stmts (stx-stmt timed e)))))) */
 
 fun g(x, y, (sign : s = +1)) {
- x + (s * y); }
+ x + (s * y); };
 /* (stx-stmt fun (stx-app PAREN g (stx-op , x y (stx-op = (stx-op : sign s) +1)))
     (stx-stmts (stx-stmt (stx-op + x (stx-op * s y))))) */
     
