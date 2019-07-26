@@ -19,13 +19,21 @@ extra notation can go a long way with a small number of mores on its
 use. For example, in Racket brackets are used in S-expressions when no
 function or macro application is implied (like in the cases of a
 `cond`); reading Racket programs without this notational affordance is
-more difficult.
+more difficult. On the other hand, it is awkward to embed arbitrary
+fragments of code not in S-expression format, such as when quoting a
+program in another language. The only effective option is to embed a
+string. The Racket @-reader is helpful at this, but it is not
+uniformly available and the standard structure of Racket's
+S-expression based languages do not allow macro-specific reading of
+such syntaxes.
 
 C-expressions are an alternative semantics-free tree structure with
 more built-in categories and cases that match the styles found in many
 other languages, like C. We expect that this notation will enable
 language builders in Racket, such as the community for Racket2, to
-create many useful mores for writing and reading Racket2 code.
+create many useful mores for writing and reading Racket2
+code. C-expressions facilitate the embedding of non-C-expression
+syntax via an @-reader-like mechanism.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
