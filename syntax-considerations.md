@@ -36,6 +36,7 @@ Sample ways of using this list include:
 * tree resemblance
 * uniformity vs texture
 * macros / language extensions feel natural next to existing forms
+* syntax leads to "syntax patterns" and "syntax templates" that are easy to use for macro writers
 
 
 # Unresolved questions
