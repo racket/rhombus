@@ -263,12 +263,12 @@ document.
 
 8.  The size of the EBNF
 
-    when controlling for the complexity of the runtime (\#lang bf has
+    when controlling for the complexity of the runtime (`#lang` bf has
     different semantics so a smaller EBNF is expected)
 
-9.  The number of charachters with meaning reserved by the syntax
+9.  The number of characters with meaning reserved by the syntax
 
-    Related to ebnf size.
+    Related to EBNF size.
 
 10. Terseness
 
