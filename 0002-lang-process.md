@@ -160,7 +160,7 @@ This is an incomplete list of high level properties many of which could
 be operationalized to evaluate `#lang` s for use in the core. This list
 partially overlaps the list in the
 [syntax-considerations](https://github.com/racket/racket2-rfcs/blob/master/syntax-considerations.md#considerations-list)
-doccument.
+document.
 
 1.  Homogeneity
 
@@ -176,7 +176,7 @@ doccument.
 
 3.  Confusability (possibly fits under robustness)
 
-    How easy is it to change a single visually similar charachter and
+    How easy is it to change a single visually similar character and
     get an unexpected, nasty result? If the result is silent failure, a
     'correct' program with a different meaning then the syntax is very
     broken. If you want an example of such a language, look no further
@@ -248,7 +248,7 @@ doccument.
     basic parsing, perhaps with some semantics. For example, I have
     implemented a couple of parsers that work for basic Racket in other
     languages so that I can share data portions of my codebases between
-    langauges. Enforestation seems like it could significantly
+    languages. Enforestation seems like it could significantly
     complicate matters this is also relevant for promoting adoption in
     communities that use other editors where good tooling would become
     more difficult to implement
@@ -263,7 +263,7 @@ doccument.
 
 8.  The size of the EBNF
 
-    when controling for the complexity of the runtime (\#lang bf has
+    when controlling for the complexity of the runtime (\#lang bf has
     different semantics so a smaller EBNF is expected)
 
 9.  The number of charachters with meaning reserved by the syntax
@@ -451,11 +451,11 @@ Do these tools exist?
 # Drawbacks
 [drawbacks]: #drawbacks
 
-It will take time to determine the process by which those critieral
-will be selected. A governance model and tracking/determination of
-what official status an RFC can attain will have to be implemented.
+It will take time to determine the process by which criteria for
+evaluation will be selected. A governance model and tracking/determination
+of what official status an RFC can attain will have to be implemented.
 
-It will take time to develop the set of objective criteria for
+It will take time to develop and implement the set of objective criteria for
 evaluating new languages for inclusion in the core.
 
 # Rationale and alternatives
@@ -464,7 +464,7 @@ evaluating new languages for inclusion in the core.
 For rationale see Motivation.
 
 One alternative to this process are that syntax related proposals are
-evaluated in the absense of some objective criteria and instead by
+evaluated in the absence of some objective criteria and instead by
 vote, by discussion, or by fiat.
 
 # Prior art
@@ -483,11 +483,11 @@ kernel uses for including lex/yacc based languages in the codebase.
 - Is this RFC relevant?
 - What further RFCs are needed to develop the process and determine the criteria for inclusion?
 - How much work will it be to develop operational definitions for some of the dimensions vs
-  a semi-quantative or qualitative assessment?
+  a semi-quantitative or qualitative assessment?
 
 # Future possibilities
 [future-possibilities]: #future-possibilities
 
 Next steps are for the community to determine what dimensions are
-relevant for evaluating a language and which criteria for evalulating
-them should be manditory, quantative/multidmensional, and optional.
+relevant for evaluating a language and which criteria for evaluating
+them should be mandatory, quantative/multidmensional, and optional.
