@@ -343,39 +343,9 @@ doccument.
 
 19. Extensibility
 
-20. Extensibility of syntax vs extensibility of semantics
-
-    I'm worried that the failings of lisp (if there are any) will be
-    multiplies a billion times if you can allow inline definition of
-    completely new syntactic forms. The ability to create new syntax on
-    the fly which someone has never seen before and where they can't
-    infer the basic "oh, if I go look for (define-syntax (name stx) …)
-    then I can figure out what this is doing" then it becomes
-    monstrously difficult to use language to communicate, because the
-    basic conventions by which we communicate are themselves contextual.
-    Imagine if there was a lisp that allowed either head or tail
-    position or some intermediate position to be where the form that
-    triggers a macro is placed. The kind of calvinball chaos that would
-    ensue is not a pretty sight, and the way out would end up being
-    something like having operator precedence for every new form that
-    was not in head position. Don't get me wrong, it would be totally
-    cool from a technical perspective if I could magically define the C
-    ternary operator and was able to use it in arbitrary places in a
-    Racket program, but the technology that would let me do that seems
-    like something that could be used to destroy the world and wreak
-    havoc on any sensible persons mind because it is literally a tool
-    for painting bikesheds more fearsome than ever seen before – at
-    least with lisp you know that the first thing in the list is the
-    name of the thing you need to look up to figure out what it does –
-    how could you even look up foo ? bar : baz ?!?!? "c questionmark
-    colon?" google has figured it out, but if it is in a library written
-    by one person and not documented? Or even documented but not widely
-    known and not an ANSI standard? Extensible surface syntax that is
-    undelimited seems like it might actually be a bad idea, though being
-    able to embed different delimited surface syntaxes in the same file
-    would be extremely useful, as it is for example in org-mode using
-    source blocks. Being able to do so recursively would be even more
-    powerful.
+    What are the dangers of undelimited syntactic extensibility?
+    What challenges would be imposed by a lisp that allowed any
+    position in an s-exp to be the form that triggers a macro?
 
 21. Expressiveness
 
