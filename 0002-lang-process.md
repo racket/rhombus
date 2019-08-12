@@ -85,22 +85,17 @@ consideration.
 
 1.  All RFCs that deal with systematic syntactical changes or additions
     will only be considered if they are accompanied
-
-by a full working implementation as a `#lang`, along with certain
-tooling and documentation as yet to be determined by the community as
-part of this RFCing process.
-
-1.  RFCs related to syntax that do not have a working `#lang`
+    by a full working implementation as a `#lang`, along with certain
+    tooling and documentation as yet to be determined by the community as
+    part of this RFCing process.
+2.  RFCs related to syntax that do not have a working `#lang`
     implementation and accompanying tooling and documentation
-
-are not be eligible for any official status.
-
-1.  Such RFCs may still be submitted, but in the absence of
+    are not be eligible for any official status.
+3.  Such RFCs may still be submitted, but in the absence of
     implementation, tooling, and documentation, they will be
-
-considered ineligible for further consideration until such a time as the
-implementation, tooling, and documentation are available to the
-community.
+    considered ineligible for further consideration until such a time as the
+    implementation, tooling, and documentation are available to the
+    community.
 
 ## Proposed criteria for RFCs about `#lang`s
 
@@ -412,6 +407,14 @@ doccument.
 
 1.  Is there a working implementation as a `#lang` ?
 
+2.  Maintainability.
+    This could fit in a number of different categories,
+    but the basic question is whether there is someone
+    who is capable and willing to maintain the implementation
+    There is a related question about whether the code written
+    in the `#lang` is maintainable, which might fit under the
+    syntax/general properties listed above.
+
 ### Test coverage
 
 1.  Are there tests?
@@ -501,7 +504,7 @@ The [syntax-considerations](https://github.com/racket/racket2-rfcs/blob/master/s
 doc is extremely relevant to this RFC. This RFC could be considered to
 directly address future possibility for defining categories of considerations.
 
-Potential prior art might be the the process, if any, that the linux
+Potential prior art might be the process, if any, that the linux
 kernel uses for including lex/yacc based languages in the codebase.
 
 # Unresolved questions
