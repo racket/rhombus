@@ -37,6 +37,9 @@ Sample ways of using this list include:
 * uniformity vs texture
 * macros / language extensions feel natural next to existing forms
 * syntax leads to "syntax patterns" and "syntax templates" that are easy to use for macro writers
+* should be easily readable and editable outside of "your favorite editor"
+  - users (beginners in particular) should not need to learn keybindings or advanced editor features to effectively edit code. Editing code is not easy if it requires you to use `paredit`, for instance.
+  - users (beginners in particular) should be able to read code in various environments, like GitHub and codeblock embeded in Markdown. Matching parens is not easy if it requires you to use rainbow parens, for instance.
 
 
 # Unresolved questions
