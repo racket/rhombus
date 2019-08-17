@@ -1,6 +1,6 @@
 - Feature Name: Subtle-expressions as fundamental syntax
 - Start Date: 2019-08-17
-- RFC PR: [racket/racket2-rfcs#88](https://github.com/racket/racket2-rfcs/pull/88)
+- RFC PR: [racket/racket2-rfcs#109](https://github.com/racket/racket2-rfcs/pull/109)
 
 # Summary
 [summary]: #summary
