@@ -24,12 +24,18 @@
     (and (peek? cs)
          (cons (read-char ip)
                (or (consume cs) '()))))
+  (define (consume-re r)
+    (regexp-try-match r ip))
 
   (define (parse-error state . params)
     (error 'parse-error "~a: ~v => unexpected ~v: ~e" state params (peek-char ip) (read-bytes 128 ip)))
 
   (define empty-cs (string->char-set ""))
   (define space-cs (string->char-set " "))
+  (define identifier-cs
+    (char-set-union char-set:letter char-set:digit
+                    ;; XXX ugh
+                    (string->char-set "_<>+-*/")))
 
   (define (parse-prefix pre)
     (match pre
@@ -53,20 +59,17 @@
       [else
        #f]))
 
-  (define (^parse-iexpr stop-cs)
+  (define (parse-iexpr stop-cs)
     (cond
       [(check1 #\")
        (begin0 (list->string (consume (char-set-complement (string->char-set "\""))))
          (expect1 #\" 'iexpr))]
-      [(consume (char-set-complement (char-set-union space-cs stop-cs)))
-       => (λ (m)
-            (string->symbol (list->string m)))]
+      [(consume-re #rx"^[0-9]+(\\.[0-9]+)?")
+       => (λ (m) (string->number m))]
+      [(consume (char-set-difference identifier-cs stop-cs))
+       => (λ (m) (string->symbol (list->string m)))]
       [else
        (parse-error 'iexpr (char-set->string stop-cs))]))
-  (define (parse-iexpr stop-cs)
-    (define a (^parse-iexpr stop-cs))
-    (eprintf "> ~v\n" a)
-    a)
 
   (define (parse-qexpr stop-cs)
     (cond

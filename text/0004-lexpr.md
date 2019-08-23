@@ -31,6 +31,8 @@ iexpr := atom
        | '{' text[ϵ] '}'
 ```
 
+XXX Single (`'`) and line (`[]`) quotations
+
 Sequence expressions (`qexpr`) are sequences of individual expression
 separated by whitespace. Operators effect the parsing of sequence
 expressions.
