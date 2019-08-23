@@ -103,11 +103,13 @@ c
 is parsed as
 
 ```sexpr
-(begin a b c)
+(begin (a) (b) (c))
 ```
 
-A `\`, which invisibly embeds a sequence of line expressions at one
+A `\`, which invisibly continues the line expression at one
 high level of indentation.
+
+XXX update BNF
 
 ```bnf
 ltail[tailpre] := .... | '\' WS* '\n' lexpr[pre SP SP, tailpre] *
@@ -142,7 +144,17 @@ For example,
 ```lexpr
 data List | Empty
           | Cons(a, b)
+```
 
+is
+
+```sexpr
+(data List (#%bar (Empty) (#%app Cons (#%comma a b))))
+```
+
+and
+
+```lexpr
 define length(l) :
   match l with \
     | Empty => 0
@@ -152,11 +164,10 @@ define length(l) :
 is parsed as
 
 ```sexpr
-(data List (| (Empty) (#%app Cons (, a b))))
 (define (#%app length (l))
   (: (match l with 
-       (| (Empty => 0)
-          ((#%app Cons (, a b)) => 1 + (#%app length b))))))
+       (#%bar (Empty => 0)
+          ((#%app Cons (#%comma a b)) => 1 + (#%app length b))))))
 ```
 
 A `@`, which embeds an indented text block.
