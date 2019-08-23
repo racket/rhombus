@@ -42,7 +42,7 @@ The reference section goes into great detail about the exact structure
 of Subtle-expressions. In this section, we present an example concrete
 program with its AST representation inline.
 
-```
+```subtle
 let x = 3 * 4 + 5;
 // (stx-seq (list let (stx-op = (list x (stx-op + (list (stx-op * (list 3 4)) 5))))))
 
