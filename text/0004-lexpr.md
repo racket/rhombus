@@ -46,7 +46,8 @@ q1expr := WS* iexpr
 Line expressions are indexed by a prefix which they must present and a
 prefix that must occur in embedded expressions. They are a sequence of
 this prefix, an individual expression, and optional sequence
-expression surrounded in whitespace, and a line tail.
+expression surrounded in whitespace, and a line tail. The body of a
+module is parsed as a line expression with no prefix.
 
 ```bnf
 lexpr[pre, tailpre] := pre iexpr [WS qexpr WS] ltail[tailpre]
@@ -175,7 +176,7 @@ datalog @
 is parsed as
 
 ```sexpr
-(datalog (#%text (list (list "import \"family.log\")
+(datalog (#%text (list (list "import \"family.log\"")
                        (list "add(X, " (#%text-esc 5) ", Y)?"))))
 ```
 
