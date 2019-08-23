@@ -1,7 +1,70 @@
 #lang racket/base
+(require racket/match
+         srfi/14)
+
+(struct loc (line col pos) #:transparent)
+(define (current-loc ip)
+  (call-with-values (λ () (port-next-location ip)) loc))
 
 (define (parse ip)
-  'XXX)
+  (port-count-lines! ip)
+
+  (define (parse-error state . params)
+    (error 'parse-error "~a: ~v => unexpected ~v: ~e" state params (peek-char ip) (read-bytes 128 ip)))
+
+  (define (parse-prefix pre)
+    (match pre
+      ['() (void)]))
+
+  (define (parse-whitespace)
+    (cond
+      [(regexp-try-match #rx"^ +" ip)
+       #t]
+      ;; XXX comments
+      [else
+       #f]))
+
+  (define (parse-iexpr stop-re)
+    (cond
+      [(regexp-try-match #rx"^[^ ]*" ip)
+       => (λ (m)
+            (string->symbol (bytes->string/utf-8 (car m))))]
+      [else
+       (parse-error 'iexpr)]))
+  
+  (define (parse-qexpr stop-re)
+    (cond
+      [(regexp-try-match stop-re ip)
+       '()]
+      [else
+       (cons (parse-iexpr stop-re) (parse-q*expr stop-re))]))
+
+  (define (parse-q*expr stop-re)
+    (if (parse-whitespace)
+      (parse-qexpr stop-re)
+      '()))
+
+  (define (parse-ltail pre)
+    (cond
+      [else
+       (parse-error 'ltail pre)]))
+  (define ltail-start-re
+    #rx"^(\n|:|&|\\\\|\\||@)")
+
+  (define (parse-lexpr pre)
+    (parse-prefix pre)
+    (define hd (parse-iexpr))
+    (define md (parse-q*expr ltail-start-re))
+    (define tl (parse-ltail pre))
+    (cons hd (append md tl)))
+
+  (define (parse-lexprs pre)
+    (define a (parse-lexpr pre))
+    (if a
+      (cons a (parse-lexprs pre))
+      '()))
+
+  (parse-lexpr '()))
 
 (module+ test
   (require racket/list
@@ -20,6 +83,7 @@
     (define actual (call-with-input-string in parse))
     (unless (equal? actual expected)
       (eprintf "Test failed: ~a\n" label)
+      (displayln in)
       (value->file actual.rktd actual)
       (value->file expected.rktd expected)
       (system* (find-executable-path "diff") "-u"
@@ -28,7 +92,7 @@
 
   (define-runtime-path x-in "x.txt")
   (define-runtime-path x-out "x.rktd")
-  (parse-test "x" (file->string x-in) (file->value x-out))
+  #;(parse-test "x" (file->string x-in) (file->value x-out))
 
   (define (extract-md-block lang line l)
     (define-values (ignored block-start)

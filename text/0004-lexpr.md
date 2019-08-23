@@ -37,20 +37,20 @@ expressions.
 
 ```bnf
 qexpr  := ϵ
-        | q1expr
-        | q1expr WS qexpr
-        
-q1expr := WS* iexpr
+        | iexpr q*expr
+
+q*expr := ϵ
+        | WS qexpr
 ```
 
 Line expressions are indexed by a prefix which they must present and a
 prefix that must occur in embedded expressions. They are a sequence of
-this prefix, an individual expression, and optional sequence
-expression surrounded in whitespace, and a line tail. The body of a
-module is parsed as a line expression with no prefix.
+this prefix, an individual expression, a sequence expression, and a
+line tail. The body of a module is parsed as a sequence of line
+expressions with no prefix.
 
 ```bnf
-lexpr[pre, tailpre] := pre iexpr [WS qexpr WS] ltail[tailpre]
+lexpr[pre, tailpre] := pre iexpr q*expr ltail[tailpre]
 ```
 
 There are a variety of line tails:
