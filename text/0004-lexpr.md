@@ -17,6 +17,23 @@ x
 (x)
 ```
 
+XXX Characters
+
+```lexpr
+#\
+
+```
+```sexpr
+(#\newline)
+```
+
+```lexpr
+#\a
+```
+```sexpr
+(#\a)
+```
+
 XXX Sequences
 
 ```lexpr
@@ -90,6 +107,13 @@ x < y > z
 (x < y > z)
 ```
 
+```lexpr
+f<A, B>(x, y)[1, 2]
+```
+```sexpr
+((#%member (#%fun-app (#%param f (A B)) (x y)) (1 2)))
+```
+
 XXX Grouping
 
 ```lexpr
@@ -128,8 +152,52 @@ x + 'f(x) + z
 ```sexpr
 (x + (#%quote (#%fun-app f (x))) + z)
 ```
-
+ 
 XXX Text quotation
+
+```lexpr
+{Hello World!}
+```
+```sexpr
+((#%text (("Hello World!"))))
+```
+
+```lexpr
+{Hello @(1 + 2)!}
+```
+```sexpr
+((#%text (("Hello " (#%text-esc (1 + 2)) "!"))))
+```
+
+```lexpr
+{Hello
+
+ World!}
+```
+```sexpr
+((#%text (("Hello") () (" World!"))))
+```
+
+```lexpr
+{}
+```
+```sexpr
+((#%text (())))
+```
+
+```lexpr
+{@1 + 2!}
+```
+```sexpr
+((#%text (((#%text-esc 1) " + 2!"))))
+```
+
+```lexpr
+{This is a { embedded brace! } }
+```
+```sexpr
+((#%text (("This is a " "{" " embedded brace! " "}" " "))))
+```
 
 XXX Line quotation
 
