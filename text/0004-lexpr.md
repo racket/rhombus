@@ -1,3 +1,142 @@
+
+XXX Numbers
+
+```lexpr
+1
+```
+```sexpr
+(1)
+```
+
+XXX Symbols
+
+```lexpr
+x
+```
+```sexpr
+(x)
+```
+
+XXX Sequences
+
+```lexpr
+x y
+```
+```sexpr
+(x y)
+```
+
+XXX Dots
+
+```lexpr
+x.y
+```
+```sexpr
+((#%dot x y))
+```
+
+```lexpr
+x.y.z
+```
+```sexpr
+((#%dot x y z))
+```
+
+```lexpr
+x.y z
+```
+```sexpr
+((#%dot x y) z)
+```
+
+XXX Applications
+
+```lexpr
+f(x)
+```
+```sexpr
+((#%fun-app f (x)))
+```
+
+```lexpr
+f(x, y)
+```
+```sexpr
+((#%fun-app f (x y)))
+```
+
+XXX Member
+
+```lexpr
+f[x, y]
+```
+```sexpr
+((#%member f (x y)))
+```
+
+XXX Param
+
+```lexpr
+f<x, y>
+```
+```sexpr
+((#%param f (x y)))
+```
+
+```lexpr
+x < y > z
+```
+```sexpr
+(x < y > z)
+```
+
+XXX Grouping
+
+```lexpr
+x + 6 * y
+```
+```sexpr
+(x + 6 * y)
+```
+
+```lexpr
+(x + 6) * y
+```
+```sexpr
+((x + 6) * y)
+```
+
+XXX Quotation
+
+```lexpr
+x + '(y * 6) + z
+```
+```sexpr
+(x + (#%quote (y * 6)) + z)
+```
+
+```lexpr
+x + 'x.y + z
+```
+```sexpr
+(x + (#%quote (#%dot x y)) + z)
+```
+
+```lexpr
+x + 'f(x) + z
+```
+```sexpr
+(x + (#%quote (#%fun-app f (x))) + z)
+```
+
+XXX Text quotation
+
+XXX Line quotation
+
+XXX Line followers
+
+XXX
+
 Line expressions (`lexpr`) are primarily line-oriented, but they embed
 two other kinds of expressions: individual and sequence expressions,
 both which are made up of atomic expressions.
@@ -73,7 +212,7 @@ ltail[tailpre] := .... | ':' WS* '\n' lexpr[tailpre SP SP, tailpre] * lexpr[tail
 
 For example,
 
-```lexpr
+```lexpr1
 if x < y :
   "Left"
 else :
@@ -95,7 +234,7 @@ ltail[tailpre] := .... | '&' WS* '\n' lexpr[tailpre, tailpre] *
 
 For example,
 
-```lexpr
+```lexpr1
 begin &
 a
 b
@@ -119,7 +258,7 @@ ltail[tailpre] := .... | '\' WS* '\n' lexpr[pre SP SP, tailpre] *
 
 For example,
 
-```lexpr
+```lexpr1
 begin \
   a
   b
@@ -143,7 +282,7 @@ ltail[tailpre] := .... | '|'@col lexpr[ϵ, tailpre']? lexpr[pre, tailpre'] *
 
 For example,
 
-```lexpr
+```lexpr1
 data List | Empty
           | Cons(a, b)
 ```
@@ -156,7 +295,7 @@ is
 
 and
 
-```lexpr
+```lexpr1
 define length(l) :
   match l with \
     | Empty => 0
@@ -180,7 +319,7 @@ ltail[tailpre] := .... | '@' WS* '\n' text[tailpre]
 
 For example,
 
-```lexpr
+```lexpr1
 datalog @
   import "family.log"
   add(X, @5, Y)?
@@ -202,7 +341,7 @@ ltail[tailpre] := .... | '@{' WS* '\n' text[tailpre] `}` lexpr[tailpre, tailpre]
 
 For example,
 
-```lexpr
+```lexpr1
 c @{
   double log2(double x) {
    return log(x) / log(2); }
