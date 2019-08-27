@@ -220,9 +220,10 @@ want
 
 (define ((set-mem s) v) (set-member? s v))
 
-(define follower (set-union (string->set " .,'()[]<>") (set eof)))
+(define follower (set-union (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
-(define number-leader (set-union (set #\-) (string->set "0123456789")))
+(define number-leader (string->set "-0123456789"))
+(define text-follower (set-union (string->set "@{}\n") (set eof)))
 
 (define (#%dot-list x y)
   (list* '#%dot x
@@ -250,12 +251,49 @@ want
       (read-char ip)
       (parse-error 'expectc x)))
 
+  (define (text-mode)
+    (list '#%text (text-mode* 0)))
+  (define (text-mode* braces)
+    (define s (reads-until text-follower))
+    (match (peek-char ip)
+      [(? eof-object?) (parse-error 'text-mode braces)]
+      [#\newline (read-char ip)
+       (cons (text-single s)
+             (text-mode* braces))]
+      [#\{ (read-char ip)
+       (text-cons (text-cons1 s "{")
+                  (text-mode* (add1 braces)))]
+      [#\} (read-char ip)
+       (if (zero? braces)
+         (text-cons (text-single s)
+                    '())
+         (text-cons (text-cons1 s "}")
+                    (text-mode* (sub1 braces))))]
+      [#\@ (read-char ip)
+       (text-cons (text-cons1 s (list '#%text-esc (unit)))
+                  (text-mode* braces))]))
+  (define (text-cons pre post)
+    (match post
+      ['() (list pre)]
+      [(cons x y)
+       (cons (append pre x) y)]))
+  (define (text-cons1 x y)
+    (append (text-single x)
+            (text-single y)))
+  (define (text-single x)
+    (if (equal? "" x) '() (list x)))
+
   (define (leader)
     (match (peek-char ip)
       [(? (set-mem number-leader))
        (string->number (reads-until number-follower))]
       [#\' (read-char ip)
        (list '#%quote (unit))]
+      [#\# (read-char ip)
+       (expectc #\\)
+       (read-char ip)]
+      [#\{ (read-char ip)
+       (text-mode)]
       [#\( (read-char ip)
        (grouped)]
       [(or #\< #\>)
@@ -266,19 +304,24 @@ want
          (parse-error 'leader))
        (string->symbol l)]))
 
-  (define (unit)
-    (define l (leader))
+  (define (after-leader l)
     (match (peek-char ip)
       [#\. (read-char ip)
        (#%dot-list l (unit))]
       [#\( (read-char ip)
-       (list '#%fun-app l (seq #\)))]
+       (after-leader (list '#%fun-app l (seq #\))))]
       [#\[ (read-char ip)
-       (list '#%member l (seq #\]))]
+       (after-leader (list '#%member l (seq #\])))]
       [#\< (read-char ip)
-       (list '#%param l (seq #\>))]
+       (after-leader (list '#%param l (seq #\>)))]
+      [#\{ (read-char ip)
+       (after-leader (list '#%text-app l (text-mode)))]
       [_ l]))
+  
+  (define (unit)
+    (after-leader (leader)))
 
+  ;; XXX Merge seq and grouped?
   (define (seq endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
@@ -315,7 +358,7 @@ want
          [#\space (read-char ip)
           (loop)]
          [_
-          (error 'parse-error "~a: unexpected ~v: ~e" 'line (peek-char ip) (read-bytes 128 ip))]))))
+          (parse-error 'line)]))))
 
   (line))
 
