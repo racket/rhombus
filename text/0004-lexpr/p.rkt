@@ -5,8 +5,7 @@
          syntax/parse/define
          (for-syntax racket/base
                      racket/syntax)
-         racket/generic
-         srfi/14)
+         racket/generic)
 
 #|
 
@@ -41,133 +40,6 @@ want
 (define (current-loc ip)
   (call-with-values (λ () (port-next-location ip)) loc))
 
-(define (parse ip)
-  (port-count-lines! ip)
-
-  (define (peek? cs)
-    (define c (peek-char ip))
-    (and (char? c)
-         (char-set-contains? cs c)))
-  (define (check1 c)
-    (and (equal? c (peek-char ip))
-         (read-char ip)))
-  (define (expect1 c state . params)
-    (unless (check1 c)
-      (parse-error state params)))
-  (define (consume cs)
-    (and (peek? cs)
-         (cons (read-char ip)
-               (or (consume cs) '()))))
-  (define (consume-re r)
-    (regexp-try-match r ip))
-
-  (define (parse-error state . params)
-    (error 'parse-error "~a: ~v => unexpected ~v: ~e" state params (peek-char ip) (read-bytes 128 ip)))
-
-  (define empty-cs (string->char-set ""))
-  (define space-cs (string->char-set " "))
-  (define identifier-cs
-    (char-set-union char-set:letter char-set:digit
-                    ;; XXX ugh
-                    (string->char-set "_<>+-*/")))
-
-  (define (parse-prefix pre)
-    (match pre
-      ['()
-       (not (eof-object? (peek-char ip)))]
-      [(cons 'first-bar _)
-       (check1 #\space)]
-      [(cons (? number? n) _)
-       (define s (peek-string (add1 n) 0 ip))
-       (and (string? s) (regexp-match #rx"^ +| $" s)
-            (read-string (add1 n) ip))]
-      [(cons ': pre)
-       (and (check1 #\space) (check1 #\space)
-            (parse-prefix pre))]))
-
-  (define (parse-whitespace)
-    (cond
-      [(consume space-cs)
-       #t]
-      ;; XXX comments
-      [else
-       #f]))
-
-  (define (parse-iexpr stop-cs)
-    (cond
-      [(check1 #\")
-       (begin0 (list->string (consume (char-set-complement (string->char-set "\""))))
-         (expect1 #\" 'iexpr))]
-      [(consume-re #rx"^[0-9]+(\\.[0-9]+)?")
-       => (λ (m) (string->number m))]
-      [(consume (char-set-difference identifier-cs stop-cs))
-       => (λ (m) (string->symbol (list->string m)))]
-      [else
-       (parse-error 'iexpr (char-set->string stop-cs))]))
-
-  (define (parse-qexpr stop-cs)
-    (cond
-      [(peek? stop-cs)
-       '()]
-      [else
-       (cons (parse-iexpr stop-cs) (parse-q*expr stop-cs))]))
-
-  (define (parse-q*expr stop-cs)
-    (if (parse-whitespace)
-      (parse-qexpr stop-cs)
-      '()))
-
-  (define (parse-ltail pre)
-    (cond
-      [(or (check1 #\newline)
-           (check1 eof)) '()]
-      [(check1 #\:)
-       (consume space-cs)
-       (expect1 #\newline 'ltail ': pre)
-       (cons (cons ': (parse-lexprs (cons ': pre)))
-             (or (parse-lexpr pre #t)
-                 '()))]
-      [(check1 #\&)
-       (consume space-cs)
-       (expect1 #\newline 'ltail '& pre)
-       (parse-lexprs pre)]
-      [(check1 #\\)
-       (consume space-cs)
-       (expect1 #\newline 'ltail '|\\| pre)
-       ;; XXX Not exactly lexprs, because we really go into the state AFTER the hd
-       (append* (parse-lexprs (cons ': pre)))]
-      [(check1 #\|)
-       (define col (loc-col (current-loc ip)))
-       (define prep (cons col pre))
-       (cons (cons '#%bar
-                   (cons (parse-lexpr (cons 'first-bar prep) #t)
-                         (parse-lexprs prep)))
-             (or (parse-lexpr pre #t)
-                 '()))
-       ]
-      ;; XXX more
-      [else
-       (parse-error 'ltail pre)]))
-  (define ltail-start-cs
-    (string->char-set "\n:&\\|@"))
-
-  (define (parse-lexpr pre ok-to-fail?)
-    (cond
-      [(not (parse-prefix pre))
-       (if ok-to-fail?
-         #f
-         (parse-error 'lexpr 'pre pre))]
-      [else
-       (define hd (parse-iexpr ltail-start-cs))
-       (eprintf "> hd = ~v\n" hd)
-       (define md (parse-q*expr ltail-start-cs))
-       (eprintf "> md = ~v\n" md)
-       (define tl (parse-ltail pre))
-       (eprintf "> tl = ~v\n" tl)
-       (cons hd
-             (if (null? md) tl
-                 (cons md tl)))]))
-
   ;; XXX Change parser to accrue a stack of "constraints" that are
   ;; imposed whenever a #\newline is seen. Individual expressions are
   ;; yielded so they can be accrued by a structure higher up.
@@ -199,18 +71,6 @@ want
 
   |#
 
-  (define (parse-lexprs pre)
-    (define a (parse-lexpr pre #t))
-    (if a
-      (cons a (parse-lexprs pre))
-      '()))
-
-  (parse-lexpr '() #f))
-
-(define-simple-macro (define-char c?)
-  #:with *c? (format-id #'c? "*~a" #'c)
-  (define *c? (λ (v) (and (char? v) (c? v)))))
-
 (struct set-complement (s)
   #:methods gen:set
   [(define/generic super-set-member? set-member?)
@@ -220,7 +80,8 @@ want
 
 (define ((set-mem s) v) (set-member? s v))
 
-(define follower (set-union (string->set " .,'()[]<>{}") (set eof)))
+(define line-follower (set-union (string->set "]\n") (set eof)))
+(define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
@@ -242,6 +103,7 @@ want
       [(? (set-mem s)) (cons (read-char ip) (readc-while s))]
       [_ '()]))
   (define (readc-until s)
+    ;; XXX Make this more efficient by computing position and doing read-chars
     (readc-while (set-complement s)))
   (define (reads-until pred)
     (list->string (readc-until pred)))
@@ -292,10 +154,12 @@ want
       [#\# (read-char ip)
        (expectc #\\)
        (read-char ip)]
-      [#\{ (read-char ip)
-       (text-mode)]
       [#\( (read-char ip)
        (grouped)]
+      [#\{ (read-char ip)
+       (text-mode)]
+      [#\[ (read-char ip)
+       (list '#%quote-line (line #:quoted? #t))]
       [(or #\< #\>)
        (string->symbol (string (read-char ip)))]
       [x
@@ -317,7 +181,7 @@ want
       [#\{ (read-char ip)
        (after-leader (list '#%text-app l (text-mode)))]
       [_ l]))
-  
+
   (define (unit)
     (after-leader (leader)))
 
@@ -325,13 +189,13 @@ want
   (define (seq endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
-       '()]
+                 '()]
       [_
        (cons (unit) (seq-tail endc))]))
   (define (seq-tail endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
-       '()]
+                 '()]
       [#\, (read-char ip)
        (expectc #\space)
        (cons (unit) (seq-tail endc))]))
@@ -349,18 +213,38 @@ want
       [#\space (read-char ip)
        (cons (unit) (grouped-tail))]))
 
-  (define (line)
-    (let loop ()
-      (cons
-       (unit)
-       (match (peek-char ip)
-         [(? eof-object?) '()]
-         [#\space (read-char ip)
-          (loop)]
-         [_
-          (parse-error 'line)]))))
+  (define (line #:quoted? [quoted? #f])
+    (line-start quoted?))
+  (define (line-start quoted?)
+    (match (peek-char ip)
+      [(? (set-mem line-follower)) (line-tail quoted?)]
+      [_ (cons (unit) (line-tail quoted?))]))
+  (define (line-tail quoted?)
+    (match (peek-char ip)
+      [(? eof-object?) '()]
+      [#\newline (read-char ip)
+       '()]
+      [#\space (read-char ip)
+       (cons (unit) (line-tail quoted?))]
+      [#\]
+       (cond
+         [quoted?
+          (read-char ip)
+          '()]
+         [else
+          (parse-error 'line-tail quoted?)])]
+      [_
+       (parse-error 'line)]))
 
-  (line))
+  (define (lines)
+    (let loop ()
+      (match (peek-char ip)
+        [(? eof-object?) '()]
+        [#\newline (read-char ip)
+         (lines)]
+        [_ (cons (line) (lines))])))
+
+  (lines))
 
 (module+ test
   (require racket/list
@@ -377,19 +261,27 @@ want
   (define-runtime-path actual.rktd "actual.rktd")
   (define-runtime-path expected.rktd "expected.rktd")
   (define (read-test label in expected)
-    (eprintf "Reading ~a\n" label)
-    (define actual (call-with-input-string in read-lexpr))
+    #;(eprintf "Reading ~a\n" label)
+    (define actual
+      (with-handlers
+          ([exn:fail?
+            (λ (x)
+              (define xp
+                (struct-copy exn x
+                             [message (format "Reading ~a: ~a" label (exn-message x))]))
+               (raise xp))])
+        (call-with-input-string in read-lexpr)))
     (cond
       [(equal? actual expected)
-       (eprintf "...test passed\n")]
+       #;(eprintf "...test passed\n")]
       [else
-       (eprintf "...test failed:\n")
+       (eprintf "Test failed: ~a: \n" label)
        (displayln in)
        (value->file actual.rktd actual)
        (value->file expected.rktd expected)
        (system* (find-executable-path "diff") "-u"
                 actual.rktd expected.rktd)
-       (newline)]))
+       (displayln "")]))
 
   (define-simple-macro (rt in e)
     (read-test (quote-srcloc) in 'e))
