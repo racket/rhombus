@@ -332,6 +332,16 @@ zig zag
 
 XXX Line follower: |
 
+```lexpr
+let | x = 1
+    | y = 2
+in :
+  x + y
+```
+```sexpr
+((let (#%bar (x = 1) (y = 2)) in (#%indent ((x + y)))))
+```
+
 XXX TODO
 
 XXX Line quotation
@@ -366,6 +376,8 @@ foo bar [zig :
 ```sexpr
 ((foo bar (#%quote-line (zig (#%indent ((zag) (zog))))) baz))
 ```
+
+XXX Escape from quote
 
 XXX BOUNDARY
 
