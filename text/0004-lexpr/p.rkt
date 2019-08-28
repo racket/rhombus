@@ -81,10 +81,10 @@ are read
 (define ((set-mem s) v) (set-member? s v))
 
 (define indent-amount 2)
-(define line-follower (set-union (string->set "]\n|:@&\\") (set eof)))
+(define line-follower (set-union (string->set "]\n|:@\\") (set eof)))
 (define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
-(define number-leader (string->set "-0123456789"))
+(define number-leader (string->set "-+0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
 
 (define (#%dot-list x y)
@@ -99,7 +99,7 @@ are read
   (define (parse-error . state)
     (error 'parse-error "~v => unexpected ~v: ~e" state (peek-char ip) (read-bytes 128 ip)))
   (define (spy . state)
-    #;(eprintf "spy: ~v: ~e\n"
+    (eprintf "spy: ~v: ~e\n"
              state
              (peek-bytes 128 0 ip))
     (void))
@@ -119,27 +119,29 @@ are read
       (read-char ip)
       (parse-error 'expectc x)))
 
-  (define (text-mode)
-    (list '#%text (text-mode* 0)))
-  (define (text-mode* braces)
+  (define (text-mode #:left-col [left-col 0])
+    (list '#%text (text-mode* left-col 0)))
+  (define (text-mode* left-col braces)
     (define s (reads-until text-follower))
     (match (peek-char ip)
-      [(? eof-object?) (parse-error 'text-mode braces)]
+      [(? eof-object?) (parse-error 'text-mode left-col braces)]
       [#\newline (read-char ip)
        (cons (text-single s)
-             (text-mode* braces))]
+             (if (expect-prefix left-col)
+               (text-mode* left-col braces)
+               '()))]
       [#\{ (read-char ip)
        (text-cons (text-cons1 s "{")
-                  (text-mode* (add1 braces)))]
+                  (text-mode* left-col (add1 braces)))]
       [#\} (read-char ip)
        (if (zero? braces)
          (text-cons (text-single s)
                     '())
          (text-cons (text-cons1 s "}")
-                    (text-mode* (sub1 braces))))]
+                    (text-mode* left-col (sub1 braces))))]
       [#\@ (read-char ip)
        (text-cons (text-cons1 s (list '#%text-esc (unit)))
-                  (text-mode* braces))]))
+                  (text-mode* left-col braces))]))
   (define (text-cons pre post)
     (match post
       ['() (list pre)]
@@ -154,7 +156,9 @@ are read
   (define (leader)
     (match (peek-char ip)
       [(? (set-mem number-leader))
-       (string->number (reads-until number-follower))]
+       (define s (reads-until number-follower))
+       (define n (string->number s))
+       (if n n (string->symbol s))]
       [#\' (read-char ip)
        (list '#%quote (unit))]
       [#\# (read-char ip)
@@ -248,19 +252,24 @@ are read
          (line-start left-col quoted?)
          '())]
       [#\space (read-char ip)
+       (define new-col (+ indent-amount left-col))
        (match (peek-char ip)
          [#\\ (read-char ip)
           (expectc #\newline)
-          (define new-col (+ indent-amount left-col))
           (if (expect-prefix new-col)
             (line-start new-col quoted?)
             '())]
          [#\: (read-char ip)
           (expectc #\newline)
-          (define new-col (+ indent-amount left-col))
           (cons
-           (list '#%indent
-                 (lines #:left-col new-col #:quoted? quoted?))
+           (list '#%indent (lines #:left-col new-col #:quoted? quoted?))
+           (line-start left-col quoted?))]
+         [#\@ (read-char ip)
+          (expectc #\newline)
+          (append
+           (if (expect-prefix new-col)
+             (list (text-mode #:left-col new-col))
+             '())
            (line-start left-col quoted?))]
          [_
           (cons (unit) (line-tail left-col quoted?))])]

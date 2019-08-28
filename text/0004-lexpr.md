@@ -285,11 +285,25 @@ g
 ((a (#%indent ((b c) (d))) f) (g))
 ```
 
-XXX Line follower: |
-
 XXX Line follower: @
 
-XXX Line follower: &
+```lexpr
+foo bar @
+  This is just some text!
+  It can have many lines
+  And @(4 - 3) quote!
+baz
+```
+```sexpr
+((foo
+  bar
+  (#%text (("This is just some text!")
+           ("It can have many lines")
+           ("And " (#%text-esc (4 - 3)) " quote!")))
+  baz))
+```
+
+XXX Line follower: |
 
 XXX Line quotation
 
