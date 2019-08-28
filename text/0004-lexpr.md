@@ -415,6 +415,38 @@ foo bar [zig :
 ((foo bar (#%quote-line (zig (#%indent (zag) (zog)))) baz))
 ```
 
+XXX sacred cows: no strings or named characters; limited numbers and
+other literals
+
+XXX goal: only one way to format
+--- not really, because of \ and precedence
+
+XXX sacred cow: comments
+
+Don't have comments and insist on literal programming
+for prose, plus logging, tests ("Show, don't tell"), good names,
+specification, etc, because the compiler doesn't execute or analyze
+comments.
+
+Problem 1.a: What about commenting out code?
+Solution 1.a.1: (when false ...) is easy, but doesn't work for
+macros.
+Solution 1.a.2: `git diff` and the kill ring has the knowledge you
+want
+
+XXX sacred cow: no extra whitespace, except for newlines
+
+Problem: Lining up definitions or other things, like:
+  let foo = 1
+        a = 2
+Solution 1: Allow multiple |s?
+let | foo | 1
+    |   a | 2
+Problem 1.1: Formatting is annoying to maintain and must be fixed
+up.
+Modification 1.2: Treat = (and =>?) as another kind of balancer,
+like | because it is common.
+
 XXX BOUNDARY
 
 Line expressions (`lexpr`) are primarily line-oriented, but they embed
