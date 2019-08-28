@@ -40,36 +40,36 @@ want
 (define (current-loc ip)
   (call-with-values (λ () (port-next-location ip)) loc))
 
-  ;; XXX Change parser to accrue a stack of "constraints" that are
-  ;; imposed whenever a #\newline is seen. Individual expressions are
-  ;; yielded so they can be accrued by a structure higher up.
-  ;;  \n --- impose the constraints
-  ;;   \ --- add the constraint to have an extra indent, the yield function goes to main
-  ;;   | --- add the constraint to line up with |, the yield function goes to body
-  ;;   : --- add the constraint to have an extra indent, the yield function goes to body
-  ;;  @{ --- add an indent, content parsed as text, yield continues
-  ;;   @ --- add an indent, content parsed as text
-  ;;   & --- (jay) no new constraints, the yield goes to main
-  ;;   & --- (mflatt) yield to previous line's
-  ;; When a line violates a constraint, we pop the constraint stack and yield the accrued structure
+;; XXX Change parser to accrue a stack of "constraints" that are
+;; imposed whenever a #\n is seen. Individual expressions are
+;; yielded so they can be accrued by a structure higher up.
+;;  \n --- impose the constraints
+;;   \ --- add the constraint to have an extra indent, the yield function goes to main
+;;   | --- add the constraint to line up with |, the yield function goes to body
+;;   : --- add the constraint to have an extra indent, the yield function goes to body
+;;  @{ --- add an indent, content parsed as text, yield continues
+;;   @ --- add an indent, content parsed as text
+;;   & --- (jay) no new constraints, the yield goes to main
+;;   & --- (mflatt) yield to previous line's
+;; When a line violates a constraint, we pop the constraint stack and yield the accrued structure
 
 
-  #|
+#|
 
-  parse : mode x constraints x success-cont x fail-cont
+parse : mode x constraints x success-cont x fail-cont
 
-  mode = Expression or Text (for '@' mode)
+mode = Expression or Text (for '@' mode)
 
-  constraints = a stack of constraints that must be satisfied before
-  it is possible to parse an individual expression
+constraints = a stack of constraints that must be satisfied before
+it is possible to parse an individual expression
 
-  success-cont = Called if the constraints are met AND an iexpr is
-  parsed, called with the iexpr
+success-cont = Called if the constraints are met AND an iexpr is
+parsed, called with the iexpr
 
-  fail-cont = Called if the constraints are NOT met; no characters
-  are read
+fail-cont = Called if the constraints are NOT met; no characters
+are read
 
-  |#
+|#
 
 (struct set-complement (s)
   #:methods gen:set
@@ -80,7 +80,8 @@ want
 
 (define ((set-mem s) v) (set-member? s v))
 
-(define line-follower (set-union (string->set "]\n") (set eof)))
+(define indent-amount 2)
+(define line-follower (set-union (string->set "]\n|:@&\\") (set eof)))
 (define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-0123456789"))
@@ -97,6 +98,11 @@ want
 
   (define (parse-error . state)
     (error 'parse-error "~v => unexpected ~v: ~e" state (peek-char ip) (read-bytes 128 ip)))
+  (define (spy . state)
+    #;(eprintf "spy: ~v: ~e\n"
+             state
+             (peek-bytes 128 0 ip))
+    (void))
 
   (define (readc-while s)
     (match (peek-char ip)
@@ -213,19 +219,51 @@ want
       [#\space (read-char ip)
        (cons (unit) (grouped-tail))]))
 
-  (define (line #:quoted? [quoted? #f])
-    (line-start quoted?))
-  (define (line-start quoted?)
+  (define (expect-prefix left-col)
+    (spy 'expect-prefix  left-col)
+    (cond
+      [(for/and ([i (in-range left-col)])
+         (equal? #\space (peek-char ip i)))
+       (read-string left-col ip)
+       #t]
+      [else
+       #f]))
+
+  (define (line #:left-col [*left-col #f] #:quoted? [quoted? #f])
+    (spy 'line *left-col quoted?)
+    (define left-col (or *left-col (loc-col (current-loc ip))))
+    (line-start left-col quoted?))
+  (define (line-start left-col quoted?)
+    (spy 'line-start left-col quoted?)
     (match (peek-char ip)
-      [(? (set-mem line-follower)) (line-tail quoted?)]
-      [_ (cons (unit) (line-tail quoted?))]))
-  (define (line-tail quoted?)
+      [(? (set-mem line-follower)) (line-tail left-col quoted?)]
+      [_ (cons (unit) (line-tail left-col quoted?))]))
+  (define (line-tail left-col quoted?)
+    (spy 'line-tail left-col quoted?)
     (match (peek-char ip)
       [(? eof-object?) '()]
       [#\newline (read-char ip)
-       '()]
+       (if (and (not (zero? left-col))
+                (expect-prefix left-col))
+         (line-start left-col quoted?)
+         '())]
       [#\space (read-char ip)
-       (cons (unit) (line-tail quoted?))]
+       (match (peek-char ip)
+         [#\\ (read-char ip)
+          (expectc #\newline)
+          (define new-col (+ indent-amount left-col))
+          (if (expect-prefix new-col)
+            (line-start new-col quoted?)
+            '())]
+         [#\: (read-char ip)
+          (expectc #\newline)
+          (define new-col (+ indent-amount left-col))
+          (cons
+           (list '#%indent
+                 (lines #:left-col new-col #:quoted? quoted?))
+           (line-start left-col quoted?))]
+         [_
+          (cons (unit) (line-tail left-col quoted?))])]
       [#\]
        (cond
          [quoted?
@@ -236,13 +274,18 @@ want
       [_
        (parse-error 'line)]))
 
-  (define (lines)
-    (let loop ()
-      (match (peek-char ip)
-        [(? eof-object?) '()]
-        [#\newline (read-char ip)
-         (lines)]
-        [_ (cons (line) (lines))])))
+  (define (lines #:left-col [left-col 0] #:quoted? [quoted? #f])
+    (spy 'lines left-col quoted?)
+    (cond
+      [(expect-prefix left-col)
+       (match (peek-char ip)
+         [(? eof-object?) '()]
+         [#\newline (read-char ip)
+          (lines #:left-col left-col #:quoted? quoted?)]
+         [_ (cons (line #:left-col left-col #:quoted? quoted?)
+                  (lines #:left-col left-col #:quoted? quoted?))])]
+      [else
+       '()]))
 
   (lines))
 
@@ -269,7 +312,7 @@ want
               (define xp
                 (struct-copy exn x
                              [message (format "Reading ~a: ~a" label (exn-message x))]))
-               (raise xp))])
+              (raise xp))])
         (call-with-input-string in read-lexpr)))
     (cond
       [(equal? actual expected)

@@ -220,9 +220,72 @@ zig zag
 
 XXX Line follower: \
 
-XXX Line follower: |
+```lexpr
+foo \
+  bar
+zig zag
+```
+```sexpr
+((foo bar) (zig zag))
+```
+
+```lexpr
+foo \
+  bar baz
+zig zag
+```
+```sexpr
+((foo bar baz) (zig zag))
+```
+
+```lexpr
+foo \
+  bar
+  baz
+zig zag
+```
+```sexpr
+((foo bar baz) (zig zag))
+```
+
+```lexpr
+foo \
+  bar \
+    baz
+zig zag
+```
+```sexpr
+((foo bar baz) (zig zag))
+```
 
 XXX Line follower: :
+
+```lexpr
+if x < y :
+  f(x)
+else :
+  g(y)
+```
+```sexpr
+((if x < y 
+   (#%indent (((#%fun-app f (x)))))
+  else 
+   (#%indent (((#%fun-app g (y)))))))
+```
+
+```lexpr
+a :
+  b \
+    c
+  d
+f
+g
+```
+```sexpr
+((a (#%indent ((b c) (d))) f) (g))
+```
+
+XXX Line follower: |
 
 XXX Line follower: @
 
