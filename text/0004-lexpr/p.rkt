@@ -22,6 +22,22 @@
 (define number-leader (string->set "-+0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
 
+(define (operator? x)
+  (and (symbol? x)
+       (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
+(define PRECEDENCE-ORDER
+  '(* / % + - #t < <= == != >= >))
+
+(define-values (precedence-table default-precedence)
+  (for/fold ([pt (hasheq)] [dp #f])
+            ([o (in-list PRECEDENCE-ORDER)]
+             [i (in-naturals)])
+    (cond
+      [(eq? o #t)
+       (values pt i)]
+      [else
+       (values (hash-set pt o i) dp)])))
+
 (define (#%dot-list x y)
   (list* '#%dot x
          (match y
@@ -29,8 +45,6 @@
            [_ (list y)])))
 
 ;; XXX srclocs / syntax
-
-;; XXX precedence
 
 (define (read-lexpr ip)
   (port-count-lines! ip)
@@ -56,6 +70,56 @@
     (if (equal? x y)
       (read-char ip)
       (parse-error 'expectc state x)))
+
+  (define (infixate in)
+    (sy:consume-input in '() '()))
+  (define (sy:precendence op)
+    (hash-ref precedence-table op default-precedence))
+  (define (sy:consume-input in out ops)
+    #;(eprintf "SY in ~v\n" (vector in out ops))
+    (match in
+      ['()
+       (sy:pop-operators out ops)]
+      [(cons token in)
+       (cond
+         [(operator? token)
+          (define-values (out-p ops-p)
+            (sy:push-operator out ops token))
+          (sy:consume-input in out-p ops-p)]
+         [else
+          (sy:consume-input in (cons token out) ops)])]))
+  (define (sy:push-operator out ops op1)
+    #;(eprintf "SY push ~v\n" (vector out ops op1))
+    (match ops
+      ['()
+       (values out (cons op1 ops))]
+      [(cons op2 ops-p)
+       (cond
+         [(<= (sy:precendence op2) (sy:precendence op1))
+          (sy:push-operator
+           (sy:push-operator-to-output op2 out)
+           ops-p op1)]
+         [else
+          (values out (cons op1 ops))])]))
+  (define (sy:pop-operators out ops)
+    #;(eprintf "SY pop ~v\n" (vector out ops))
+    (match ops
+      ['()
+       (match out
+         [(list result)
+          result]
+         [_
+          (error 'sy:pop-operators "Too much output: ~v" out)])]
+      [(cons op ops)
+       (sy:pop-operators
+        (sy:push-operator-to-output op out)
+        ops)]))
+  (define (sy:push-operator-to-output op out)
+    #;(eprintf "SY push-out ~v\n" (vector op out))
+    (match out
+      [(list* arg2 arg1 out)
+       (cons (list op arg1 arg2)
+             out)]))
 
   (define (text-mode p)
     (cons '#%text (text-mode* p 0)))
@@ -105,7 +169,7 @@
        (expectc #\\)
        (read-char ip)]
       [#\( (read-char ip)
-       (grouped)]
+       (infixate (grouped #\)))]
       [#\{ (read-char ip)
        (text-mode #f)]
       [#\[ (read-char ip)
@@ -138,25 +202,27 @@
   (define (unit)
     (after-leader (leader)))
 
+  (define (seq1 endc)
+    (infixate (units (set endc #\,))))
   (define (seq endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
                  '()]
       [_
-       (cons (units (set endc #\,)) (seq-tail endc))]))
+       (cons (seq1 endc) (seq-tail endc))]))
   (define (seq-tail endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
                  '()]
       [#\, (read-char ip)
        (expectc #\space)
-       (cons (units (set endc #\,)) (seq-tail endc))]
+       (cons (seq1 endc) (seq-tail endc))]
       [_
        (parse-error 'seq-tail endc)]))
 
-  (define (grouped)
-    (begin0 (units (set #\)))
-      (expectc #\))))
+  (define (grouped endc)
+    (begin0 (units (set endc))
+      (expectc endc)))
 
   (define (units stops)
     (match (peek-char ip)
@@ -200,7 +266,7 @@
        (prefix:bar bc)]
       [_
        (error 'prefix-next/lines "~v" p)]))
-  
+
   (define (expect-prefix p)
     (spy 'expect-prefix p)
     (match p
@@ -250,7 +316,7 @@
   (define (line-space-tail p)
     (spy 'line-space-tail p)
     (match (peek-char ip)
-      [#\\ (read-char ip)          
+      [#\\ (read-char ip)
        (expectc #\newline)
        (define new-p (prefix-indent p))
        (if (expect-prefix new-p)
@@ -267,8 +333,8 @@
        (cons
         (cons '#%indent (lines new-p))
         (if (expect-prefix p)
-         (line-start p)
-         '()))]
+          (line-start p)
+          '()))]
       [#\@ (read-char ip)
        (expectc #\newline)
        (define new-p (prefix-indent p))
