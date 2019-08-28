@@ -177,8 +177,12 @@
                      (parameterize ([current-line-quoted? #t])
                        (line #f)))
          (expectc #\]))]
-      [(or #\< #\>)
-       (string->symbol (string (read-char ip)))]
+      [#\< (read-char ip)
+       (if (set-member? follower (peek-char ip))
+         '<
+         (grouped #\>))]
+      [#\> (read-char ip)  
+       '>]
       [x
        (define l (reads-until follower))
        (when (equal? "" l)

@@ -73,6 +73,15 @@ x + (y + 3)
 ((x + (+ y 3)))
 ```
 
+XXX Non-infix groups
+
+```lexpr
+x + <y + 3>
+```
+```sexpr
+((x + (y + 3)))
+```
+
 XXX Dots
 
 ```lexpr
@@ -406,10 +415,6 @@ fun sum(l) :
         ((#%fun-app cons a d)
          (#%indent ((+ a (#%fun-app sum d))))))))))
 ```
-
-XXX Line follower: ;
-
-XXX TODO - Like a newline, but doesn't impose prefix
 
 XXX Line quotation
 
