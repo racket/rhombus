@@ -81,7 +81,7 @@ are read
 (define ((set-mem s) v) (set-member? s v))
 
 (define indent-amount 2)
-(define line-follower (set-union (string->set "]\n|:@\\") (set eof)))
+(define line-follower (set-union (string->set "]\n|:@\\&") (set eof)))
 (define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
@@ -247,7 +247,8 @@ are read
     (match (peek-char ip)
       [(? eof-object?) '()]
       [#\newline (read-char ip)
-       (if (and (not (zero? left-col))
+       '()
+       #;(if (and (not (zero? left-col))
                 (expect-prefix left-col))
          (line-start left-col quoted?)
          '())]
@@ -258,6 +259,11 @@ are read
           (expectc #\newline)
           (if (expect-prefix new-col)
             (line-start new-col quoted?)
+            '())]
+         [#\& (read-char ip)
+          (expectc #\newline)
+          (if (expect-prefix left-col)
+            (line-start left-col quoted?)
             '())]
          [#\: (read-char ip)
           (expectc #\newline)
@@ -276,7 +282,8 @@ are read
       [#\]
        (cond
          [quoted?
-          (read-char ip)
+          (unless (eq? 'peek quoted?)
+            (read-char ip))
           '()]
          [else
           (parse-error 'line-tail quoted?)])]
@@ -291,7 +298,7 @@ are read
          [(? eof-object?) '()]
          [#\newline (read-char ip)
           (lines #:left-col left-col #:quoted? quoted?)]
-         [_ (cons (line #:left-col left-col #:quoted? quoted?)
+         [_ (cons (line #:left-col left-col #:quoted? (and quoted? 'peek))
                   (lines #:left-col left-col #:quoted? quoted?))])]
       [else
        '()]))
