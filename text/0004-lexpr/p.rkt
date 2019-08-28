@@ -40,13 +40,7 @@ want
 (define (current-loc ip)
   (call-with-values (λ () (port-next-location ip)) loc))
 
-(struct set-complement (s)
-  #:methods gen:set
-  [(define/generic super-set-member? set-member?)
-   (define (set-member? st i)
-     (not (super-set-member? (set-complement-s st) i)))])
 (define (string->set s) (list->set (string->list s)))
-
 (define ((set-mem s) v) (set-member? s v))
 
 (define indent-amount 2)
@@ -69,25 +63,24 @@ want
   (define (parse-error . state)
     (error 'parse-error "~v => unexpected ~v: ~e" state (peek-char ip) (read-bytes 128 ip)))
   (define (spy . state)
-    (eprintf "spy: ~v: ~e\n"
-             state
-             (peek-bytes 128 0 ip))
-    (void))
+    (when #f
+      (eprintf "spy: ~v: ~e\n"
+               state
+               (peek-bytes 128 0 ip))))
 
-  (define (readc-while s)
-    (match (peek-char ip)
-      [(? (set-mem s)) (cons (read-char ip) (readc-while s))]
-      [_ '()]))
-  (define (readc-until s)
-    ;; XXX Make this more efficient by computing position and doing read-chars
-    (readc-while (set-complement s)))
-  (define (reads-until pred)
-    (list->string (readc-until pred)))
-  (define (expectc x)
+  (define (reads-until s)
+    (define l
+      (let loop ()
+        ;; XXX Make this more efficient by computing position and doing read-chars
+        (match (peek-char ip)
+          [(not (? (set-mem s))) (cons (read-char ip) (loop))]
+          [_ '()])))
+    (list->string l))
+  (define (expectc x . state)
     (define y (peek-char ip))
     (if (equal? x y)
       (read-char ip)
-      (parse-error 'expectc x)))
+      (parse-error 'expectc state x)))
 
   (define (text-mode p)
     (cons '#%text (text-mode* p 0)))
