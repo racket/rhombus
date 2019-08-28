@@ -351,6 +351,17 @@ zig zag
 ((foo bar baz) (zig zag))
 ```
 
+```lexpr
+foo \
+  bar &
+  baz &
+  zab
+zig zag
+```
+```sexpr
+((foo bar baz zab) (zig zag))
+```
+
 XXX Line follower: |
 
 ```lexpr

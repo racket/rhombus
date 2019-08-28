@@ -28,6 +28,8 @@
            [(cons '#%dot y) y]
            [_ (list y)])))
 
+;; XXX srclocs / syntax
+
 ;; XXX precedence
 
 (define (read-lexpr ip)
