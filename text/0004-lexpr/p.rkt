@@ -69,13 +69,13 @@ want
                (peek-bytes 128 0 ip))))
 
   (define (reads-until s)
-    (define l
-      (let loop ()
-        ;; XXX Make this more efficient by computing position and doing read-chars
-        (match (peek-char ip)
-          [(not (? (set-mem s))) (cons (read-char ip) (loop))]
-          [_ '()])))
-    (list->string l))
+    (define cs
+      (let loop ([cs 0] [off 0])
+        (define c (peek-char ip off))
+        (if (set-member? s c)
+          cs
+          (loop (add1 cs) (+ off (char-utf-8-length c))))))
+    (read-string cs ip))
   (define (expectc x . state)
     (define y (peek-char ip))
     (if (equal? x y)
