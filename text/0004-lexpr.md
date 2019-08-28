@@ -240,8 +240,7 @@ zig zag
 
 ```lexpr
 foo \
-  bar
-  baz
+  bar baz
 zig zag
 ```
 ```sexpr
@@ -274,6 +273,15 @@ else :
 ```
 
 ```lexpr
+zig :
+  zag
+  zog
+```
+```sexpr
+((zig (#%indent ((zag) (zog)))))
+```
+
+```lexpr
 a :
   b \
     c
@@ -303,7 +311,21 @@ baz
   baz))
 ```
 
+XXX Line follower: &
+
+```lexpr
+foo \
+  bar &
+  baz
+zig zag
+```
+```sexpr
+((foo bar baz) (zig zag))
+```
+
 XXX Line follower: |
+
+XXX TODO
 
 XXX Line quotation
 
@@ -314,9 +336,31 @@ foo bar [zig zag]
 ((foo bar (#%quote-line (zig zag))))
 ```
 
-XXX More line quotation
+```lexpr
+foo bar [zig [baz] zag]
+```
+```sexpr
+((foo bar (#%quote-line (zig (#%quote-line (baz)) zag))))
+```
 
-XXX
+```lexpr
+foo bar [zig \
+           zag] baz
+```
+```sexpr
+((foo bar (#%quote-line (zig zag)) baz))
+```
+
+```lexpr
+foo bar [zig :
+           zag
+           zog] baz
+```
+```sexpr
+((foo bar (#%quote-line (zig (#%indent ((zag) (zog))))) baz))
+```
+
+XXX BOUNDARY
 
 Line expressions (`lexpr`) are primarily line-oriented, but they embed
 two other kinds of expressions: individual and sequence expressions,
