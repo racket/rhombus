@@ -50,7 +50,8 @@ want
 (define ((set-mem s) v) (set-member? s v))
 
 (define indent-amount 2)
-(define line-follower (set-union (string->set "]\n|:@\\&") (set eof)))
+(define line-space-follower (string->set "|:@\\&"))
+(define line-follower (set-union line-space-follower (string->set "]\n") (set eof)))
 (define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
@@ -89,7 +90,7 @@ want
       (parse-error 'expectc x)))
 
   (define (text-mode p)
-    (list '#%text (text-mode* p 0)))
+    (cons '#%text (text-mode* p 0)))
   (define (text-mode* p braces)
     (define s (reads-until text-follower))
     (match (peek-char ip)
@@ -130,6 +131,8 @@ want
        (if n n (string->symbol s))]
       [#\' (read-char ip)
        (list '#%quote (unit))]
+      [#\, (read-char ip)
+       (list '#%unquote (unit))]
       [#\# (read-char ip)
        (expectc #\\)
        (read-char ip)]
@@ -138,7 +141,10 @@ want
       [#\{ (read-char ip)
        (text-mode #f)]
       [#\[ (read-char ip)
-       (list '#%quote-line (line #f #:quoted? #t))]
+       (begin0 (list '#%quote-line
+                     (parameterize ([current-line-quoted? #t])
+                       (line #f)))
+         (expectc #\]))]
       [(or #\< #\>)
        (string->symbol (string (read-char ip)))]
       [x
@@ -152,137 +158,178 @@ want
       [#\. (read-char ip)
        (#%dot-list l (unit))]
       [#\( (read-char ip)
-       (after-leader (list '#%fun-app l (seq #\))))]
+       (after-leader (list* '#%fun-app l (seq #\))))]
       [#\[ (read-char ip)
-       (after-leader (list '#%member l (seq #\])))]
+       (after-leader (list* '#%member l (seq #\])))]
       [#\< (read-char ip)
-       (after-leader (list '#%param l (seq #\>)))]
+       (after-leader (list* '#%param l (seq #\>)))]
       [#\{ (read-char ip)
-       (after-leader (list '#%text-app l (text-mode #f)))]
+       (after-leader (list* '#%text-app l (rest (text-mode #f))))]
       [_ l]))
 
   (define (unit)
     (after-leader (leader)))
 
-  ;; XXX Merge seq and grouped?
   (define (seq endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
                  '()]
       [_
-       (cons (unit) (seq-tail endc))]))
+       (cons (units (set endc #\,)) (seq-tail endc))]))
   (define (seq-tail endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
                  '()]
       [#\, (read-char ip)
        (expectc #\space)
-       (cons (unit) (seq-tail endc))]))
+       (cons (units (set endc #\,)) (seq-tail endc))]
+      [_
+       (parse-error 'seq-tail endc)]))
 
   (define (grouped)
+    (begin0 (units (set #\)))
+      (expectc #\))))
+
+  (define (units stops)
     (match (peek-char ip)
-      [#\) (read-char ip)
+      [(? (set-mem stops))
        '()]
       [_
-       (cons (unit) (grouped-tail))]))
-  (define (grouped-tail)
+       (cons (unit) (units-tail stops))]))
+  (define (units-tail stops)
     (match (peek-char ip)
-      [#\) (read-char ip)
+      [(? (set-mem stops))
        '()]
       [#\space (read-char ip)
-       (cons (unit) (grouped-tail))]))
+       (cons (unit) (units-tail stops))]))
 
   (struct prefix:left-col (lc) #:transparent)
+  (struct prefix:first-bar (bc lc) #:transparent)
+  (struct prefix:bar (bc) #:transparent)
   (define (prefix-indent p)
     (match p
       [(prefix:left-col lc)
-       (prefix:left-col (+ indent-amount lc))]))
+       (prefix:left-col (+ indent-amount lc))]
+      [_
+       (error 'prefix-indent "~v" p)]))
+  (define (prefix-next/line p)
+    (match p
+      [#f #f]
+      [(prefix:left-col _) p]
+      [(prefix:first-bar _ lc)
+       (prefix:left-col lc)]
+      [(prefix:bar bc)
+       (prefix:left-col (+ 2 bc))]
+      [_
+       (error 'prefix-next/line "~v" p)]))
+  (define (prefix-next/lines p)
+    (match p
+      [#f #f]
+      [(prefix:left-col _) p]
+      [(prefix:first-bar bc lc)
+       (prefix:bar bc)]
+      [(prefix:bar bc)
+       (prefix:bar bc)]
+      [_
+       (error 'prefix-next/lines "~v" p)]))
   
   (define (expect-prefix p)
     (spy 'expect-prefix p)
     (match p
+      [#f #t]
       [(prefix:left-col n)
-       (cond
-         [(for/and ([i (in-range n)])
-            (equal? #\space (peek-char ip i)))
-          (read-string n ip)
-          #t]
-         [else
-          #f])]
-      [#f
-       #t]))
+       (and (for/and ([i (in-range n)])
+              (equal? #\space (peek-char ip i)))
+            (read-string n ip))]
+      [(prefix:bar bc)
+       (and (for/and ([i (in-range bc)])
+              (equal? #\space (peek-char ip i)))
+            (equal? #\| (peek-char ip bc))
+            (equal? #\space (peek-char ip (add1 bc)))
+            (read-string (+ 2 bc) ip))]
+      [(prefix:first-bar _ _)
+       #t]
+      [_
+       (error 'expect-prefix "~v" p)]))
 
-  (define (line *p #:quoted? [quoted? #f])
-    (spy 'line *p quoted?)
+  (define current-line-quoted? (make-parameter #f))
+  (define (line *p)
+    (spy 'line *p)
     (define p (or *p (prefix:left-col (loc-col (current-loc ip)))))
-    (line-start p quoted?))
-  (define (line-start p quoted?)
-    (spy 'line-start p quoted?)
+    (line-start p))
+  (define (line-start p)
+    (spy 'line-start p)
     (match (peek-char ip)
-      [(? (set-mem line-follower)) (line-tail p quoted?)]
-      [_ (cons (unit) (line-tail p quoted?))]))
-  (define (line-tail p quoted?)
-    (spy 'line-tail p quoted?)
+      [(? (set-mem line-space-follower)) (line-space-tail p)]
+      [(? (set-mem line-follower)) (line-tail p)]
+      [_ (cons (unit) (line-tail p))]))
+  (define (line-tail p)
+    (spy 'line-tail p)
     (match (peek-char ip)
       [(? eof-object?) '()]
       [#\newline (read-char ip)
        '()]
       [#\space (read-char ip)
-       (match (peek-char ip)
-         [#\\ (read-char ip)          
-          (expectc #\newline)
-          (define new-p (prefix-indent p))
-          (if (expect-prefix new-p)
-            (line-start new-p quoted?)
-            '())]
-         [#\& (read-char ip)
-          (expectc #\newline)
-          (if (expect-prefix p)
-            (line-start p quoted?)
-            '())]
-         [#\: (read-char ip)
-          (expectc #\newline)
-          (define new-p (prefix-indent p))
-          (cons
-           (list '#%indent (lines new-p #:quoted? quoted?))
-           (line-start p quoted?))]
-         [#\@ (read-char ip)
-          (expectc #\newline)
-          (define new-p (prefix-indent p))
-          (append
-           (if (expect-prefix new-p)
-             (list (text-mode new-p))
-             '())
-           (line-start p quoted?))]
-         [#\| (read-char ip)
-          (expectc #\space)
-          (parse-error 'bar)
-          (cons
-           (list '#%bar 'XXX)
-           (line-start p quoted?))]
-         [_
-          (cons (unit) (line-tail p quoted?))])]
+       (line-space-tail p)]
       [#\]
        (cond
-         [quoted?
-          (unless (eq? 'peek quoted?)
-            (read-char ip))
+         [(current-line-quoted?)
           '()]
          [else
-          (parse-error 'line-tail p quoted?)])]
+          (parse-error 'line-tail p)])]
       [_
-       (parse-error 'line p quoted?)]))
+       (parse-error 'line p)]))
+  (define (line-space-tail p)
+    (spy 'line-space-tail p)
+    (match (peek-char ip)
+      [#\\ (read-char ip)          
+       (expectc #\newline)
+       (define new-p (prefix-indent p))
+       (if (expect-prefix new-p)
+         (line-start new-p)
+         '())]
+      [#\& (read-char ip)
+       (expectc #\newline)
+       (if (expect-prefix p)
+         (line-start p)
+         '())]
+      [#\: (read-char ip)
+       (expectc #\newline)
+       (define new-p (prefix-indent p))
+       (cons
+        (cons '#%indent (lines new-p))
+        (if (expect-prefix p)
+         (line-start p)
+         '()))]
+      [#\@ (read-char ip)
+       (expectc #\newline)
+       (define new-p (prefix-indent p))
+       (append
+        (if (expect-prefix new-p)
+          (list (text-mode new-p))
+          '())
+        (line-start p))]
+      [#\| (read-char ip)
+       (expectc #\space)
+       (define this-loc (loc-col (current-loc ip)))
+       (define new-p (prefix:first-bar (- this-loc 2) this-loc))
+       (cons
+        (cons '#%bar (lines new-p))
+        (line-start p))]
+      [_
+       (cons (unit) (line-tail p))]))
 
-  (define (lines p #:quoted? [quoted? #f])
-    (spy 'lines p quoted?)
+  (define (lines p)
+    (spy 'lines p)
     (cond
       [(expect-prefix p)
        (match (peek-char ip)
          [(? eof-object?) '()]
          [#\newline (read-char ip)
-          (lines p #:quoted? quoted?)]
-         [_ (cons (line p #:quoted? (and quoted? 'peek))
-                  (lines p #:quoted? quoted?))])]
+          (lines (prefix-next/lines p))]
+         [_
+          (cons (line (prefix-next/line p))
+                (lines (prefix-next/lines p)))])]
       [else
        '()]))
 
