@@ -40,37 +40,6 @@ want
 (define (current-loc ip)
   (call-with-values (λ () (port-next-location ip)) loc))
 
-;; XXX Change parser to accrue a stack of "constraints" that are
-;; imposed whenever a #\n is seen. Individual expressions are
-;; yielded so they can be accrued by a structure higher up.
-;;  \n --- impose the constraints
-;;   \ --- add the constraint to have an extra indent, the yield function goes to main
-;;   | --- add the constraint to line up with |, the yield function goes to body
-;;   : --- add the constraint to have an extra indent, the yield function goes to body
-;;  @{ --- add an indent, content parsed as text, yield continues
-;;   @ --- add an indent, content parsed as text
-;;   & --- (jay) no new constraints, the yield goes to main
-;;   & --- (mflatt) yield to previous line's
-;; When a line violates a constraint, we pop the constraint stack and yield the accrued structure
-
-
-#|
-
-parse : mode x constraints x success-cont x fail-cont
-
-mode = Expression or Text (for '@' mode)
-
-constraints = a stack of constraints that must be satisfied before
-it is possible to parse an individual expression
-
-success-cont = Called if the constraints are met AND an iexpr is
-parsed, called with the iexpr
-
-fail-cont = Called if the constraints are NOT met; no characters
-are read
-
-|#
-
 (struct set-complement (s)
   #:methods gen:set
   [(define/generic super-set-member? set-member?)

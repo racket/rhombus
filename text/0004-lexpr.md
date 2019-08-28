@@ -199,6 +199,13 @@ XXX Text quotation
 (((#%text (("This is a " "{" " embedded brace! " "}" " ")))))
 ```
 
+```lexpr
+let x = item{Some text}
+```
+```sexpr
+((let x = (#%text-app item (#%text (("Some text"))))))
+```
+
 XXX Line follower: \n
 
 ```lexpr
