@@ -50,6 +50,58 @@ XXX Grouping
 (((* (+ x 6) y)))
 ```
 
+```lexpr
+(3 * x + y / 4 <= z % 3 && 2 != 5)
+```
+```sexpr
+(((&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
+      (!= 2 5))))
+```
+
+```lexpr
+(1 ⊕ 2 + 3)
+```
+```sexpr
+(((⊕ 1 (+ 2 3))))
+```
+
+```lexpr
+(add1 . mult2 $ 5)
+```
+```sexpr
+((($ (|.| add1 mult2) 5)))
+```
+
+```lexpr
+(sub1 . length . map add1 $ iota 4)
+```
+```sexpr
+((($ (|.| (|.| sub1 length)
+          (#%fun-app map add1))
+     (#%fun-app iota 4))))
+```
+
+```lexpr
+(.)
+```
+```sexpr
+((|.|))
+```
+
+```lexpr
+(1 + 2 <= 3 && false || true)
+```
+```sexpr
+(error "Operators with same precedence cannot be used in the same group: || and &&")
+```
+
+```lexpr
+(1 < 2 == 3)
+```
+```sexpr
+(error "Operators with same precedence cannot be used in the same group: == and <")
+```
+
 XXX Sequences
 
 ```lexpr
@@ -79,21 +131,6 @@ x + (y + 3)
 ```sexpr
 (((: x int)))
 ```
-
-```lexpr
-(add1 . sub1)
-```
-```sexpr
-(((|.| add1 sub1)))
-```
-
-```lexpr
-(1 :: 2 : 3 ^ 4 * 5 / 6 % 7 + 8 - 9 ∘ 10 < 11 <= 12 == 13 != 14 >= 15 > 16 && 17 || 18 . 19 $ 20 ; 21)
-```
-```sexpr
-(((|;| ($ (|.| (\|\| (&& (> (>= (!= (== (<= (< (∘ (- (+ (% (/ (* (^ (: (:: 1 2) 3) 4) 5) 6) 7) 8) 9) 10) 11) 12) 13) 14) 15) 16) 17) 18) 19) 20) 21)))
-```
-
 
 XXX Non-infix groups
 

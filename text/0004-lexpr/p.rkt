@@ -25,10 +25,10 @@
 (define (operator? x)
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
+;; XXX maybe have groups and error if things in same group are used
+;; together.
 (define PRECEDENCE-ORDER
-  (map
-   (λ (x) (if (string? x) (string->symbol x) x))
-   '(:: : ^ * / % + - #t < <= == != >= > && "||" "." $ ";")))
+  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($)))
 
 (define-values (precedence-table default-precedence)
   (for/fold ([pt (hasheq)] [dp #f])
@@ -38,7 +38,9 @@
       [(eq? o #t)
        (values pt i)]
       [else
-       (values (hash-set pt o i) dp)])))
+       (values (for/fold ([pt pt]) ([o (in-list o)])
+                 (hash-set pt o i))
+               dp)])))
 
 (define (#%dot-list x y)
   (list* '#%dot x
@@ -74,37 +76,47 @@
       (parse-error 'expectc state x)))
 
   (define (infixate in)
-    (sy:consume-input in '() '()))
+    (sy:consume-input #f in '() '()))
   (define (sy:precendence op)
     (hash-ref precedence-table op default-precedence))
-  (define (sy:consume-input in out ops)
-    #;(eprintf "SY in ~v\n" (vector in out ops))
+  (define (sy:consume-input last-was-in? in out ops)
+    (eprintf "SY in ~v\n" (vector in out ops))
     (match in
       ['()
        (sy:pop-operators out ops)]
-      [(cons token in)
+      [(cons token in-p)
        (cond
          [(operator? token)
           (define-values (out-p ops-p)
             (sy:push-operator out ops token))
-          (sy:consume-input in out-p ops-p)]
+          (sy:consume-input #f in-p out-p ops-p)]
+         [last-was-in?
+          (define-values (out-p ops-p)
+            (sy:push-operator out ops '#%fun-app))
+          (sy:consume-input #f in out-p ops-p)]
          [else
-          (sy:consume-input in (cons token out) ops)])]))
+          (sy:consume-input #t in-p (cons token out) ops)])]))
   (define (sy:push-operator out ops op1)
-    #;(eprintf "SY push ~v\n" (vector out ops op1))
+    (eprintf "SY push ~v\n" (vector out ops op1))
     (match ops
       ['()
        (values out (cons op1 ops))]
       [(cons op2 ops-p)
+       (define p2 (sy:precendence op2))
+       (define p1 (sy:precendence op1))
        (cond
-         [(<= (sy:precendence op2) (sy:precendence op1))
+         [(or (< p2 p1)
+              (and (equal? op1 op2)
+                   (= p1 p2)))
           (sy:push-operator
            (sy:push-operator-to-output op2 out)
            ops-p op1)]
+         [(= p1 p2)
+          (parse-error 'infix (format "Operators with same precedence cannot be used in the same group: ~a and ~a" op1 op2))]
          [else
           (values out (cons op1 ops))])]))
   (define (sy:pop-operators out ops)
-    #;(eprintf "SY pop ~v\n" (vector out ops))
+    (eprintf "SY pop ~v\n" (vector out ops))
     (match ops
       ['()
        (match out
@@ -117,8 +129,10 @@
         (sy:push-operator-to-output op out)
         ops)]))
   (define (sy:push-operator-to-output op out)
-    #;(eprintf "SY push-out ~v\n" (vector op out))
+    (eprintf "SY push-out ~v\n" (vector op out))
     (match out
+      ['()
+       (list op)]
       [(list* arg2 arg1 out)
        (cons (list op arg1 arg2)
              out)]))
@@ -394,6 +408,12 @@
   (define (value->file f v)
     (with-output-to-file f (λ () (pretty-write v)) #:exists 'replace))
 
+  (define (test-equal? actual expected)
+    (match* (actual expected)
+      [((list 'error em) (list 'error er))
+       (regexp-match (regexp-quote er) em)]
+      [(x y) (equal? x y)]))
+  
   (define-runtime-path actual.rktd "actual.rktd")
   (define-runtime-path expected.rktd "expected.rktd")
   (define (read-test label in expected)
@@ -402,13 +422,10 @@
       (with-handlers
           ([exn:fail?
             (λ (x)
-              (define xp
-                (struct-copy exn x
-                             [message (format "Reading ~a: ~a" label (exn-message x))]))
-              (raise xp))])
+              (list 'error (exn-message x)))])
         (call-with-input-string in read-lexpr)))
     (cond
-      [(equal? actual expected)
+      [(test-equal? actual expected)
        #;(eprintf "...test passed\n")]
       [else
        (eprintf "Test failed: ~a: \n" label)
@@ -421,10 +438,6 @@
 
   (define-simple-macro (rt in e)
     (read-test (quote-srcloc) in 'e))
-
-  (define-runtime-path x-in "x.txt")
-  (define-runtime-path x-out "x.rktd")
-  #;(parse-test "x" (file->string x-in) (file->value x-out))
 
   (define (extract-md-block lang line l)
     (define-values (ignored block-start)
@@ -443,7 +456,8 @@
     (define-values (le-line lexpr more-line more) (extract-md-block "```lexpr" line l))
     (define-values (se-line sexpr after-line after) (extract-md-block "```sexpr" more-line more))
     (unless (and (string=? "" lexpr) (string=? "" sexpr))
-      (read-test (format "extracted L~a" le-line) lexpr (with-input-from-string sexpr read))
+      (read-test (format "extracted L~a" le-line)
+                 lexpr (with-input-from-string sexpr read))
       (extract-tests after-line after)))
 
   (define-runtime-path md "../0004-lexpr.md")
