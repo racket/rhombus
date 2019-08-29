@@ -25,8 +25,6 @@
 (define (operator? x)
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
-;; XXX maybe have groups and error if things in same group are used
-;; together.
 (define PRECEDENCE-ORDER
   '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($)))
 
