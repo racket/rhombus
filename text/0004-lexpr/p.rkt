@@ -17,7 +17,7 @@
 (define indent-amount 2)
 (define line-space-follower (string->set "|:@\\&"))
 (define line-follower (set-union line-space-follower (string->set "]\n") (set eof)))
-(define follower (set-union line-follower (string->set " .,'()[]<>{}") (set eof)))
+(define follower (set-union (string->set "\n .,'()[]<>{}") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
@@ -26,7 +26,9 @@
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
 (define PRECEDENCE-ORDER
-  '(* / % + - #t < <= == != >= >))
+  (map
+   (λ (x) (if (string? x) (string->symbol x) x))
+   '(:: : ^ * / % + - #t < <= == != >= > && "||" "." $ ";")))
 
 (define-values (precedence-table default-precedence)
   (for/fold ([pt (hasheq)] [dp #f])
@@ -178,11 +180,18 @@
                        (line #f)))
          (expectc #\]))]
       [#\< (read-char ip)
-       (if (set-member? follower (peek-char ip))
-         '<
-         (grouped #\>))]
-      [#\> (read-char ip)  
-       '>]
+       (cond
+         [(set-member? follower (peek-char ip))
+          '<]
+         [(equal? #\= (peek-char ip))
+          (read-char ip)
+          '<=]
+         [else
+          (grouped #\>)])]
+      [(or #\. #\>)
+       (string->symbol
+        (string-append (string (read-char ip))
+                       (reads-until follower)))]
       [x
        (define l (reads-until follower))
        (when (equal? "" l)
