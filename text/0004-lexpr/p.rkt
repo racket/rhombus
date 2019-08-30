@@ -17,7 +17,8 @@
 (define indent-amount 2)
 (define line-space-follower (string->set "|:@\\&"))
 (define line-follower (set-union line-space-follower (string->set "]\n") (set eof)))
-(define follower (set-union (string->set "\n .,'()[]<>{}") (set eof)))
+(define follower (set-union (string->set "\n .,'()[]{}<") (set eof)))
+(define pointy-follower (set-union follower (string->set ">")))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
@@ -26,8 +27,7 @@
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
 (define PRECEDENCE-ORDER
-  ;; XXX Add arrows? -> =>
-  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($) (=)))
+  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($) (=) (=>)))
 
 (define-values (precedence-table default-precedence)
   (for/fold ([pt (hasheq)] [dp #f])
@@ -40,12 +40,6 @@
        (values (for/fold ([pt pt]) ([o (in-list o)])
                  (hash-set pt o i))
                dp)])))
-
-(define (#%dot-list x y)
-  (list* '#%dot x
-         (match y
-           [(cons '#%dot y) y]
-           [_ (list y)])))
 
 ;; XXX srclocs / syntax
 
@@ -158,7 +152,9 @@
                     (text-mode* p (sub1 braces))))]
       [#\@ (read-char ip)
        (text-cons (text-cons1 s (list '#%text-esc (unit)))
-                  (text-mode* p braces))]))
+                  (text-mode* p braces))]
+      [x
+       (parse-error 'text-mode* p braces)]))
   (define (text-cons pre post)
     (match post
       ['() (list pre)]
@@ -170,7 +166,12 @@
   (define (text-single x)
     (if (equal? "" x) '() (list x)))
 
+  (define inside-pointy? (make-parameter #f))
   (define (leader)
+    (define current-follower
+      (if (inside-pointy?)
+        pointy-follower
+        follower))
     (match (peek-char ip)
       [(? (set-mem number-leader))
        (define s (reads-until number-follower))
@@ -193,10 +194,10 @@
       [(or #\< #\. #\>)
        (string->symbol
         (string-append (string (read-char ip))
-                       ;; XXX maybe special kind of follower for this situation
-                       (reads-until follower)))]
+                       (reads-until current-follower)))]
       [x
-       (define l (reads-until follower))
+       (define l
+         (reads-until current-follower))
        (when (equal? "" l)
          (parse-error 'leader))
        (string->symbol l)]))
@@ -204,13 +205,16 @@
   (define (after-leader l)
     (match (peek-char ip)
       [#\. (read-char ip)
-       (#%dot-list l (unit))]
+       (list '#%dot l (unit))]
       [#\( (read-char ip)
        (after-leader (list* '#%fun-app l (seq #\))))]
       [#\[ (read-char ip)
        (after-leader (list* '#%member l (seq #\])))]
       [#\< (read-char ip)
-       (after-leader (list* '#%param l (seq #\>)))]
+       (after-leader
+        (list* '#%param l
+               (parameterize ([inside-pointy? #t])
+                 (seq #\>))))]
       [#\{ (read-char ip)
        (after-leader (list* '#%text-app l (rest (text-mode #f))))]
       [_ l]))
@@ -251,7 +255,9 @@
       [(? (set-mem stops))
        '()]
       [#\space (read-char ip)
-       (cons (unit) (units-tail stops))]))
+       (cons (unit) (units-tail stops))]
+      [x
+       (parse-error 'units-tail stops)]))
 
   (struct prefix:left-col (lc) #:transparent)
   (struct prefix:first-bar (bc lc) #:transparent)
