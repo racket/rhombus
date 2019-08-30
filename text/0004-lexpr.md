@@ -66,9 +66,10 @@ may escape with `@` and is always parsed into lists of characters
 split across `\n`.
 
 In general, Lexprs are very strict on their formatting: additional
-spaces are never allowed and newlines meaningful.
+spaces are never allowed and newlines are meaningful.
 
-XXX
+Here is an extended example that demonstrates many of the formats in
+Lexprs:
 
 ```lexpr
 fun ksum(k, l) :
@@ -89,6 +90,9 @@ mac timed \
   | [_ e] :
       'timed_thunk([λ() : e])
 ```
+
+It is parsed into the following AST:
+
 ```sexpr
 ((#%line
   fun (#%fun-app ksum k l)
@@ -119,51 +123,109 @@ mac timed \
                           (#%indent (#%line e)))))))))))
 ```
 
+# Reference-level explanation
+[reference-level-explanation]: #reference-level-explanation
 
-XXX
+This section presents a large number of examples of Lexprs, each with
+its parsed version. The parsed versions are checked by the reference
+implementation, which is attached to this pull request in
+[p.rkt](0004-lexpr/p.rkt).
 
-XXX BOUNDARY
+Lexprs are defined relative to UTF-8, so the word "character" in this
+document does not mean one byte, but rather one UTF-8 encoded
+character.
 
-XXX Numbers
+The body of a module is a sequence of lines. In general, sequences are
+not annotated in Lexpr ASTs, but lines are annotated with `#%line`.
+
+## Numbers
+
+Numbers are leaders and can include explicit signs or a single `.`:
 
 ```lexpr
 1
 ```
+`=>`
 ```sexpr
 ((#%line 1))
 ```
 
-XXX Symbols
+```lexpr
++1
+```
+`=>`
+```sexpr
+((#%line 1))
+```
+
+```lexpr
+-1
+```
+`=>`
+```sexpr
+((#%line -1))
+```
+
+```lexpr
+3.14
+```
+`=>`
+```sexpr
+((#%line 3.14))
+```
+
+Unlike Racket, there are no special notations for complex numbers, different
+exactitudes of numbers, or different bases. We expect these notations
+to use a library of text applications.
+
+## Symbols
+
+Symbols are the most common leaders are any sequence of characters
+that is not a number and does not include a character in `\n
+.,'()[]{}<>`. As a special case, a symbol may begin with `<` or
+include `>` if not inside a parameter application.
 
 ```lexpr
 x
 ```
+`=>`
 ```sexpr
 ((#%line x))
 ```
 
-XXX Characters
+## Characters
+
+Literal characters are written with `#\` followed by a character.
 
 ```lexpr
 #\
 
 ```
+`=>`
 ```sexpr
 ((#%line #\newline))
 ```
 
 ```lexpr
-#\a
+#\n
 ```
+`=>`
 ```sexpr
-((#%line #\a))
+((#%line #\n))
 ```
+
+Unlike Racket, there are no "named" characters, `#\newline`. We expect
+these to be provided by a library of definitions which simply name
+characters.
+
+XXX BOUNDARY
 
 XXX Grouping
 
 ```lexpr
 (x + 6 * y)
 ```
+`=>`
 ```sexpr
 ((#%line (+ x (* 6 y))))
 ```
@@ -171,6 +233,7 @@ XXX Grouping
 ```lexpr
 ((x + 6) * y)
 ```
+`=>`
 ```sexpr
 ((#%line (* (+ x 6) y)))
 ```
@@ -178,6 +241,7 @@ XXX Grouping
 ```lexpr
 (ans = 3 * x + y / 4 <= z % 3 && 2 != 5)
 ```
+`=>`
 ```sexpr
 ((#%line (= ans (&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
                     (!= 2 5)))))
@@ -186,6 +250,7 @@ XXX Grouping
 ```lexpr
 (1 ⊕ 2 + 3)
 ```
+`=>`
 ```sexpr
 ((#%line (⊕ 1 (+ 2 3))))
 ```
@@ -193,6 +258,7 @@ XXX Grouping
 ```lexpr
 (add1 . mult2 $ 5)
 ```
+`=>`
 ```sexpr
 ((#%line ($ (|.| add1 mult2) 5)))
 ```
@@ -200,6 +266,7 @@ XXX Grouping
 ```lexpr
 (sub1 . length . map add1 $ iota 4)
 ```
+`=>`
 ```sexpr
 ((#%line ($ (|.| (|.| sub1 length)
                  (#%fun-app map add1))
@@ -209,6 +276,7 @@ XXX Grouping
 ```lexpr
 (.)
 ```
+`=>`
 ```sexpr
 ((#%line |.|))
 ```
@@ -216,6 +284,7 @@ XXX Grouping
 ```lexpr
 (1 + 2 <= 3 && false || true)
 ```
+`=>`
 ```sexpr
 (error "Operators with same precedence cannot be used in the same group: || and &&")
 ```
@@ -223,6 +292,7 @@ XXX Grouping
 ```lexpr
 (1 < 2 == 3)
 ```
+`=>`
 ```sexpr
 (error "Operators with same precedence cannot be used in the same group: == and <")
 ```
@@ -233,6 +303,7 @@ XXX Grouping
   {x, y, def, and rest are passed by position}
   {kw_ext1 and kw_ext2 are passed by keyword}
 ```
+`=>`
 ```sexpr
 ((#%line
   (#%fun-app
@@ -254,6 +325,7 @@ XXX Sequences
 ```lexpr
 x y
 ```
+`=>`
 ```sexpr
 ((#%line x y))
 ```
@@ -261,6 +333,7 @@ x y
 ```lexpr
 x + y
 ```
+`=>`
 ```sexpr
 ((#%line x + y))
 ```
@@ -268,6 +341,7 @@ x + y
 ```lexpr
 x + (y + 3)
 ```
+`=>`
 ```sexpr
 ((#%line x + (+ y 3)))
 ```
@@ -275,6 +349,7 @@ x + (y + 3)
 ```lexpr
 (x : int)
 ```
+`=>`
 ```sexpr
 ((#%line (: x int)))
 ```
@@ -284,6 +359,7 @@ XXX Dots
 ```lexpr
 x.y
 ```
+`=>`
 ```sexpr
 ((#%line (#%dot x y)))
 ```
@@ -291,6 +367,7 @@ x.y
 ```lexpr
 a ... b
 ```
+`=>`
 ```sexpr
 ((#%line a (#%dot |.| |.|) b))
 ```
@@ -298,6 +375,7 @@ a ... b
 ```lexpr
 x.y.z
 ```
+`=>`
 ```sexpr
 ((#%line (#%dot x (#%dot y z))))
 ```
@@ -305,6 +383,7 @@ x.y.z
 ```lexpr
 x.y z
 ```
+`=>`
 ```sexpr
 ((#%line (#%dot x y) z))
 ```
@@ -314,6 +393,7 @@ XXX Applications
 ```lexpr
 f(x)
 ```
+`=>`
 ```sexpr
 ((#%line (#%fun-app f x)))
 ```
@@ -321,6 +401,7 @@ f(x)
 ```lexpr
 f(x, y)
 ```
+`=>`
 ```sexpr
 ((#%line (#%fun-app f x y)))
 ```
@@ -328,6 +409,7 @@ f(x, y)
 ```lexpr
 f(x + 2, y)
 ```
+`=>`
 ```sexpr
 ((#%line (#%fun-app f (+ x 2) y)))
 ```
@@ -337,6 +419,7 @@ XXX Member
 ```lexpr
 f[x, y]
 ```
+`=>`
 ```sexpr
 ((#%line (#%member f x y)))
 ```
@@ -346,6 +429,7 @@ XXX Param
 ```lexpr
 f<x, y>
 ```
+`=>`
 ```sexpr
 ((#%line (#%param f x y)))
 ```
@@ -353,6 +437,7 @@ f<x, y>
 ```lexpr
 x < y > z
 ```
+`=>`
 ```sexpr
 ((#%line x < y > z))
 ```
@@ -360,6 +445,7 @@ x < y > z
 ```lexpr
 f<A, B>(x, y)[1, 2]
 ```
+`=>`
 ```sexpr
 ((#%line (#%member (#%fun-app (#%param f A B) x y) 1 2)))
 ```
@@ -369,6 +455,7 @@ XXX Quotation
 ```lexpr
 (x + '(y * 6) + z)
 ```
+`=>`
 ```sexpr
 ((#%line (+ (+ x (#%quote (* y 6))) z)))
 ```
@@ -376,6 +463,7 @@ XXX Quotation
 ```lexpr
 x + 'x.y + z
 ```
+`=>`
 ```sexpr
 ((#%line x + (#%quote (#%dot x y)) + z))
 ```
@@ -383,6 +471,7 @@ x + 'x.y + z
 ```lexpr
 (x + 'f(x) + z)
 ```
+`=>`
 ```sexpr
 ((#%line (+ (+ x (#%quote (#%fun-app f x))) z)))
 ```
@@ -390,6 +479,7 @@ x + 'x.y + z
 ```lexpr
 (x + 'f(x + ,y) + z)
 ```
+`=>`
 ```sexpr
 ((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote y))))) z)))
 ```
@@ -397,6 +487,7 @@ x + 'x.y + z
 ```lexpr
 (x + 'f(x + ,g(7, y)) + z)
 ```
+`=>`
 ```sexpr
 ((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote (#%fun-app g 7 y)))))) z)))
 ```
@@ -406,6 +497,7 @@ XXX Text quotation
 ```lexpr
 {Hello World!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("Hello World!"))))
 ```
@@ -413,6 +505,7 @@ XXX Text quotation
 ```lexpr
 {Hello @(1 + 2)!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("Hello " (#%text-esc (+ 1 2)) "!"))))
 ```
@@ -420,6 +513,7 @@ XXX Text quotation
 ```lexpr
 {Hello @(#\@)!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("Hello " (#%text-esc #\@) "!"))))
 ```
@@ -427,6 +521,7 @@ XXX Text quotation
 ```lexpr
 {Hello @(newline)!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("Hello " (#%text-esc newline) "!"))))
 ```
@@ -436,6 +531,7 @@ XXX Text quotation
 
  World!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("Hello") () (" World!"))))
 ```
@@ -443,6 +539,7 @@ XXX Text quotation
 ```lexpr
 {}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ())))
 ```
@@ -450,6 +547,7 @@ XXX Text quotation
 ```lexpr
 {@1 + 2!}
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ((#%text-esc 1) " + 2!"))))
 ```
@@ -457,6 +555,7 @@ XXX Text quotation
 ```lexpr
 {This is a { embedded brace! } }
 ```
+`=>`
 ```sexpr
 ((#%line (#%text ("This is a " "{" " embedded brace! " "}" " "))))
 ```
@@ -464,6 +563,7 @@ XXX Text quotation
 ```lexpr
 let x = item{Some text}
 ```
+`=>`
 ```sexpr
 ((#%line let x = (#%text-app item ("Some text"))))
 ```
@@ -474,6 +574,7 @@ XXX Line follower: \n
 foo bar
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar) (#%line zig zag))
 ```
@@ -483,6 +584,7 @@ foo bar
 
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar) (#%line zig zag))
 ```
@@ -494,6 +596,7 @@ foo \
   bar
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar) (#%line zig zag))
 ```
@@ -503,6 +606,7 @@ foo \
   bar baz
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar baz) (#%line zig zag))
 ```
@@ -512,6 +616,7 @@ foo \
   bar baz
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar baz) (#%line zig zag))
 ```
@@ -522,6 +627,7 @@ foo \
     baz
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar baz) (#%line zig zag))
 ```
@@ -534,6 +640,7 @@ if (x < y) :
 else :
   g(y)
 ```
+`=>`
 ```sexpr
 ((#%line if (< x y) 
    (#%indent (#%line (#%fun-app f x)))
@@ -546,6 +653,7 @@ zig :
   zag
   zog
 ```
+`=>`
 ```sexpr
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
@@ -554,6 +662,7 @@ zig :
 zig : zag
   zog
 ```
+`=>`
 ```sexpr
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
@@ -566,6 +675,7 @@ a :
 f
 g
 ```
+`=>`
 ```sexpr
 ((#%line a (#%indent (#%line b c) (#%line d)) f) (#%line g))
 ```
@@ -579,6 +689,7 @@ foo bar @
   And @(4 - 3) quote!
 baz
 ```
+`=>`
 ```sexpr
 ((#%line 
   foo
@@ -597,6 +708,7 @@ foo \
   baz
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar baz) (#%line zig zag))
 ```
@@ -608,6 +720,7 @@ foo \
   zab
 zig zag
 ```
+`=>`
 ```sexpr
 ((#%line foo bar baz zab) (#%line zig zag))
 ```
@@ -620,6 +733,7 @@ let | x = 1
 in :
   x + y
 ```
+`=>`
 ```sexpr
 ((#%line let (#%bar (#%line x = 1) (#%line y = 2)) in (#%indent (#%line x + y))))
 ```
@@ -633,6 +747,7 @@ g
 
 i
 ```
+`=>`
 ```sexpr
 ((#%line a (#%indent (#%line b (#%bar (#%line e)))))
  (#%line g)
@@ -644,6 +759,7 @@ XXX Embedded lines
 ```lexpr
 foo bar [zig zag]
 ```
+`=>`
 ```sexpr
 ((#%line foo bar (#%line zig zag)))
 ```
@@ -651,6 +767,7 @@ foo bar [zig zag]
 ```lexpr
 foo bar [zig [baz] zag]
 ```
+`=>`
 ```sexpr
 ((#%line foo bar (#%line zig (#%line baz) zag)))
 ```
@@ -659,6 +776,7 @@ foo bar [zig [baz] zag]
 foo bar [zig \
            zag] baz
 ```
+`=>`
 ```sexpr
 ((#%line foo bar (#%line zig zag) baz))
 ```
@@ -668,6 +786,7 @@ foo bar [zig :
            zag
            zog] baz
 ```
+`=>`
 ```sexpr
 ((#%line foo bar (#%line zig (#%indent (#%line zag) (#%line zog))) baz))
 ```
@@ -709,3 +828,5 @@ Modification 1.2: Treat = (and =>?) as another kind of balancer,
 like | because it is common.
 
 XXX lots of overlap with `#lang something`: https://github.com/tonyg/racket-something
+
+XXX <> is ugly special casing
