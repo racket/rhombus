@@ -327,7 +327,8 @@
       [#\space (read-char ip)
        (line-space-tail p)]
       [#\] ;; We're not reading on purpose, because this ends an
-           ;; embedded line
+           ;; embedded line and we may be deeply nested, so other
+           ;; lines need to see it also.
        '()]
       [_
        (parse-error 'line p)]))
