@@ -293,6 +293,20 @@ XXX Text quotation
 ```
 
 ```lexpr
+{Hello @(#\@)!}
+```
+```sexpr
+((#%line (#%text ("Hello " (#%text-esc #\@) "!"))))
+```
+
+```lexpr
+{Hello @(newline)!}
+```
+```sexpr
+((#%line (#%text ("Hello " (#%text-esc newline) "!"))))
+```
+
+```lexpr
 {Hello
 
  World!}
@@ -529,13 +543,17 @@ foo bar [zig :
 ((#%line foo bar (#%line zig (#%indent (#%line zag) (#%line zog))) baz))
 ```
 
-XXX sacred cows: no strings or named characters; limited numbers and
-other literals
+XXX MORE sacred cows: no named characters (these are just variables
+that you can use `@(BLAH)`) to get ; limited numbers and other
+literals (I don't like literal vectors, etc, and I think things like
+`binary{01010101}` are a better interface to new notations. In
+particular, they are more uniform than having just a few things built
+in.)
 
-XXX goal: only one way to format
+XXX MORE goal: only one way to format
 --- not really, because of \ and precedence
 
-XXX sacred cow: comments
+XXX MORE sacred cow: comments
 
 Don't have comments and insist on literal programming
 for prose, plus logging, tests ("Show, don't tell"), good names,
