@@ -51,11 +51,11 @@ XXX Grouping
 ```
 
 ```lexpr
-(3 * x + y / 4 <= z % 3 && 2 != 5)
+(ans = 3 * x + y / 4 <= z % 3 && 2 != 5)
 ```
 ```sexpr
-((#%line (&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
-             (!= 2 5))))
+((#%line (= ans (&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
+                    (!= 2 5)))))
 ```
 
 ```lexpr
@@ -100,6 +100,28 @@ XXX Grouping
 ```
 ```sexpr
 (error "Operators with same precedence cannot be used in the same group: == and <")
+```
+
+```lexpr
+λ(x, y, def = 5, kw_ext1 => kw_int1, kw_ext2 => kw_int1 = 6, ... rest) :
+  {x, y, and kw_ext1 are mandatory}
+  {x, y, def, and rest are passed by position}
+  {kw_ext1 and kw_ext2 are passed by keyword}
+```
+```sexpr
+((#%line
+  (#%fun-app
+   λ
+   x
+   y
+   (= def 5)
+   (=> kw_ext1 kw_int1)
+   (=> kw_ext2 (= kw_int1 6))
+   (#%fun-app (#%dot |.| |.|) rest))
+  (#%indent
+   (#%line (#%text ("x, y, and kw_ext1 are mandatory")))
+   (#%line (#%text ("x, y, def, and rest are passed by position")))
+   (#%line (#%text ("kw_ext1 and kw_ext2 are passed by keyword"))))))
 ```
 
 XXX Sequences
@@ -152,7 +174,7 @@ a ... b
 x.y.z
 ```
 ```sexpr
-((#%line (#%dot x y z)))
+((#%line (#%dot x (#%dot y z))))
 ```
 
 ```lexpr
