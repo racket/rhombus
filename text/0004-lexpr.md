@@ -5,7 +5,7 @@ XXX Numbers
 1
 ```
 ```sexpr
-((1))
+((#%line 1))
 ```
 
 XXX Symbols
@@ -14,7 +14,7 @@ XXX Symbols
 x
 ```
 ```sexpr
-((x))
+((#%line x))
 ```
 
 XXX Characters
@@ -24,14 +24,14 @@ XXX Characters
 
 ```
 ```sexpr
-((#\newline))
+((#%line #\newline))
 ```
 
 ```lexpr
 #\a
 ```
 ```sexpr
-((#\a))
+((#%line #\a))
 ```
 
 XXX Grouping
@@ -40,52 +40,52 @@ XXX Grouping
 (x + 6 * y)
 ```
 ```sexpr
-(((+ x (* 6 y))))
+((#%line (+ x (* 6 y))))
 ```
 
 ```lexpr
 ((x + 6) * y)
 ```
 ```sexpr
-(((* (+ x 6) y)))
+((#%line (* (+ x 6) y)))
 ```
 
 ```lexpr
 (3 * x + y / 4 <= z % 3 && 2 != 5)
 ```
 ```sexpr
-(((&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
-      (!= 2 5))))
+((#%line (&& (<= (+ (* 3 x) (/ y 4)) (% z 3))
+             (!= 2 5))))
 ```
 
 ```lexpr
 (1 ⊕ 2 + 3)
 ```
 ```sexpr
-(((⊕ 1 (+ 2 3))))
+((#%line (⊕ 1 (+ 2 3))))
 ```
 
 ```lexpr
 (add1 . mult2 $ 5)
 ```
 ```sexpr
-((($ (|.| add1 mult2) 5)))
+((#%line ($ (|.| add1 mult2) 5)))
 ```
 
 ```lexpr
 (sub1 . length . map add1 $ iota 4)
 ```
 ```sexpr
-((($ (|.| (|.| sub1 length)
-          (#%fun-app map add1))
-     (#%fun-app iota 4))))
+((#%line ($ (|.| (|.| sub1 length)
+                 (#%fun-app map add1))
+            (#%fun-app iota 4))))
 ```
 
 ```lexpr
 (.)
 ```
 ```sexpr
-((|.|))
+((#%line |.|))
 ```
 
 ```lexpr
@@ -108,37 +108,28 @@ XXX Sequences
 x y
 ```
 ```sexpr
-((x y))
+((#%line x y))
 ```
 
 ```lexpr
 x + y
 ```
 ```sexpr
-((x + y))
+((#%line x + y))
 ```
 
 ```lexpr
 x + (y + 3)
 ```
 ```sexpr
-((x + (+ y 3)))
+((#%line x + (+ y 3)))
 ```
 
 ```lexpr
 (x : int)
 ```
 ```sexpr
-(((: x int)))
-```
-
-XXX Non-infix groups
-
-```lexpr
-x + <y + 3>
-```
-```sexpr
-((x + (y + 3)))
+((#%line (: x int)))
 ```
 
 XXX Dots
@@ -147,21 +138,28 @@ XXX Dots
 x.y
 ```
 ```sexpr
-(((#%dot x y)))
+((#%line (#%dot x y)))
+```
+
+```lexpr
+a ... b
+```
+```sexpr
+((#%line a (#%dot |.| |.|) b))
 ```
 
 ```lexpr
 x.y.z
 ```
 ```sexpr
-(((#%dot x y z)))
+((#%line (#%dot x y z)))
 ```
 
 ```lexpr
 x.y z
 ```
 ```sexpr
-(((#%dot x y) z))
+((#%line (#%dot x y) z))
 ```
 
 XXX Applications
@@ -170,21 +168,21 @@ XXX Applications
 f(x)
 ```
 ```sexpr
-(((#%fun-app f x)))
+((#%line (#%fun-app f x)))
 ```
 
 ```lexpr
 f(x, y)
 ```
 ```sexpr
-(((#%fun-app f x y)))
+((#%line (#%fun-app f x y)))
 ```
 
 ```lexpr
 f(x + 2, y)
 ```
 ```sexpr
-(((#%fun-app f (+ x 2) y)))
+((#%line (#%fun-app f (+ x 2) y)))
 ```
 
 XXX Member
@@ -193,7 +191,7 @@ XXX Member
 f[x, y]
 ```
 ```sexpr
-(((#%member f x y)))
+((#%line (#%member f x y)))
 ```
 
 XXX Param
@@ -202,21 +200,21 @@ XXX Param
 f<x, y>
 ```
 ```sexpr
-(((#%param f x y)))
+((#%line (#%param f x y)))
 ```
 
 ```lexpr
 x < y > z
 ```
 ```sexpr
-((x < y > z))
+((#%line x < y > z))
 ```
 
 ```lexpr
 f<A, B>(x, y)[1, 2]
 ```
 ```sexpr
-(((#%member (#%fun-app (#%param f A B) x y) 1 2)))
+((#%line (#%member (#%fun-app (#%param f A B) x y) 1 2)))
 ```
 
 XXX Quotation
@@ -225,35 +223,35 @@ XXX Quotation
 (x + '(y * 6) + z)
 ```
 ```sexpr
-(((+ (+ x (#%quote (* y 6))) z)))
+((#%line (+ (+ x (#%quote (* y 6))) z)))
 ```
 
 ```lexpr
 x + 'x.y + z
 ```
 ```sexpr
-((x + (#%quote (#%dot x y)) + z))
+((#%line x + (#%quote (#%dot x y)) + z))
 ```
 
 ```lexpr
 (x + 'f(x) + z)
 ```
 ```sexpr
-(((+ (+ x (#%quote (#%fun-app f x))) z)))
+((#%line (+ (+ x (#%quote (#%fun-app f x))) z)))
 ```
 
 ```lexpr
 (x + 'f(x + ,y) + z)
 ```
 ```sexpr
-(((+ (+ x (#%quote (#%fun-app f (+ x (#%unquote y))))) z)))
+((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote y))))) z)))
 ```
 
 ```lexpr
 (x + 'f(x + ,g(7, y)) + z)
 ```
 ```sexpr
-(((+ (+ x (#%quote (#%fun-app f (+ x (#%unquote (#%fun-app g 7 y)))))) z)))
+((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote (#%fun-app g 7 y)))))) z)))
 ```
 
 XXX Text quotation
@@ -262,14 +260,14 @@ XXX Text quotation
 {Hello World!}
 ```
 ```sexpr
-(((#%text ("Hello World!"))))
+((#%line (#%text ("Hello World!"))))
 ```
 
 ```lexpr
 {Hello @(1 + 2)!}
 ```
 ```sexpr
-(((#%text ("Hello " (#%text-esc (+ 1 2)) "!"))))
+((#%line (#%text ("Hello " (#%text-esc (+ 1 2)) "!"))))
 ```
 
 ```lexpr
@@ -278,35 +276,35 @@ XXX Text quotation
  World!}
 ```
 ```sexpr
-(((#%text ("Hello") () (" World!"))))
+((#%line (#%text ("Hello") () (" World!"))))
 ```
 
 ```lexpr
 {}
 ```
 ```sexpr
-(((#%text ())))
+((#%line (#%text ())))
 ```
 
 ```lexpr
 {@1 + 2!}
 ```
 ```sexpr
-(((#%text ((#%text-esc 1) " + 2!"))))
+((#%line (#%text ((#%text-esc 1) " + 2!"))))
 ```
 
 ```lexpr
 {This is a { embedded brace! } }
 ```
 ```sexpr
-(((#%text ("This is a " "{" " embedded brace! " "}" " "))))
+((#%line (#%text ("This is a " "{" " embedded brace! " "}" " "))))
 ```
 
 ```lexpr
 let x = item{Some text}
 ```
 ```sexpr
-((let x = (#%text-app item ("Some text"))))
+((#%line let x = (#%text-app item ("Some text"))))
 ```
 
 XXX Line follower: \n
@@ -316,7 +314,7 @@ foo bar
 zig zag
 ```
 ```sexpr
-((foo bar) (zig zag))
+((#%line foo bar) (#%line zig zag))
 ```
 
 ```lexpr
@@ -325,7 +323,7 @@ foo bar
 zig zag
 ```
 ```sexpr
-((foo bar) (zig zag))
+((#%line foo bar) (#%line zig zag))
 ```
 
 XXX Line follower: \
@@ -336,7 +334,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar) (zig zag))
+((#%line foo bar) (#%line zig zag))
 ```
 
 ```lexpr
@@ -345,7 +343,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar baz) (zig zag))
+((#%line foo bar baz) (#%line zig zag))
 ```
 
 ```lexpr
@@ -354,7 +352,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar baz) (zig zag))
+((#%line foo bar baz) (#%line zig zag))
 ```
 
 ```lexpr
@@ -364,7 +362,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar baz) (zig zag))
+((#%line foo bar baz) (#%line zig zag))
 ```
 
 XXX Line follower: :
@@ -376,10 +374,10 @@ else :
   g(y)
 ```
 ```sexpr
-((if (< x y) 
-   (#%indent ((#%fun-app f x)))
+((#%line if (< x y) 
+   (#%indent (#%line (#%fun-app f x)))
   else 
-   (#%indent ((#%fun-app g y)))))
+   (#%indent (#%line (#%fun-app g y)))))
 ```
 
 ```lexpr
@@ -388,7 +386,7 @@ zig :
   zog
 ```
 ```sexpr
-((zig (#%indent (zag) (zog))))
+((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
 
 ```lexpr
@@ -400,7 +398,7 @@ f
 g
 ```
 ```sexpr
-((a (#%indent (b c) (d)) f) (g))
+((#%line a (#%indent (#%line b c) (#%line d)) f) (#%line g))
 ```
 
 XXX Line follower: @
@@ -413,7 +411,8 @@ foo bar @
 baz
 ```
 ```sexpr
-((foo
+((#%line 
+  foo
   bar
   (#%text ("This is just some text!")
           ("It can have many lines")
@@ -430,7 +429,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar baz) (zig zag))
+((#%line foo bar baz) (#%line zig zag))
 ```
 
 ```lexpr
@@ -441,7 +440,7 @@ foo \
 zig zag
 ```
 ```sexpr
-((foo bar baz zab) (zig zag))
+((#%line foo bar baz zab) (#%line zig zag))
 ```
 
 XXX Line follower: |
@@ -453,7 +452,7 @@ in :
   x + y
 ```
 ```sexpr
-((let (#%bar (x = 1) (y = 2)) in (#%indent (x + y))))
+((#%line let (#%bar (#%line x = 1) (#%line y = 2)) in (#%indent (#%line x + y))))
 ```
 
 ```lexpr
@@ -465,30 +464,30 @@ fun sum(l) :
         (a + sum(d))
 ```
 ```sexpr
-((fun (#%fun-app sum l)
+((#%line fun (#%fun-app sum l)
   (#%indent
-    (match l
+    (#%line match l
       (#%bar
-        (empty 
-         (#%indent (0)))
-        ((#%fun-app cons a d)
-         (#%indent ((+ a (#%fun-app sum d))))))))))
+        (#%line empty 
+         (#%indent (#%line 0)))
+        (#%line (#%fun-app cons a d)
+         (#%indent (#%line (+ a (#%fun-app sum d))))))))))
 ```
 
-XXX Line quotation
+XXX Embedded lines
 
 ```lexpr
 foo bar [zig zag]
 ```
 ```sexpr
-((foo bar (#%quote-line (zig zag))))
+((#%line foo bar (#%line zig zag)))
 ```
 
 ```lexpr
 foo bar [zig [baz] zag]
 ```
 ```sexpr
-((foo bar (#%quote-line (zig (#%quote-line (baz)) zag))))
+((#%line foo bar (#%line zig (#%line baz) zag)))
 ```
 
 ```lexpr
@@ -496,7 +495,7 @@ foo bar [zig \
            zag] baz
 ```
 ```sexpr
-((foo bar (#%quote-line (zig zag)) baz))
+((#%line foo bar (#%line zig zag) baz))
 ```
 
 ```lexpr
@@ -505,7 +504,7 @@ foo bar [zig :
            zog] baz
 ```
 ```sexpr
-((foo bar (#%quote-line (zig (#%indent (zag) (zog)))) baz))
+((#%line foo bar (#%line zig (#%indent (#%line zag) (#%line zog))) baz))
 ```
 
 XXX sacred cows: no strings or named characters; limited numbers and
