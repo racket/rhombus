@@ -16,7 +16,7 @@
 
 (define indent-amount 2)
 (define line-space-follower (string->set "|:@\\&"))
-(define line-follower (set-union line-space-follower (string->set "]\n") (set eof)))
+(define line-follower (set-union (string->set "]\n") (set eof)))
 (define follower (set-union (string->set "\n .,'()[]{}<") (set eof)))
 (define pointy-follower (set-union follower (string->set ">")))
 (define number-follower (set-remove follower #\.))
@@ -47,12 +47,11 @@
   (port-count-lines! ip)
 
   (define (parse-error . state)
-    (error 'parse-error "~v => unexpected ~v: ~e" state (peek-char ip) (read-bytes 128 ip)))
+    (error 'parse-error "~v => unexpected ~v: ~e" state (peek-char ip)
+           (read-bytes 16 ip)))
   (define (spy . state)
     (when #f
-      (eprintf "spy: ~v: ~e\n"
-               state
-               (peek-bytes 128 0 ip))))
+      (eprintf "spy: ~v: ~e\n" state (peek-bytes 16 0 ip))))
 
   (define (reads-until s)
     (define cs
@@ -185,7 +184,7 @@
        (expectc #\\)
        (read-char ip)]
       [#\( (read-char ip)
-       (infixate (grouped #\)))]
+       (grouped #\))]
       [#\{ (read-char ip)
        (text-mode #f)]
       [#\[ (read-char ip)
@@ -223,7 +222,7 @@
     (after-leader (leader)))
 
   (define (seq1 endc)
-    (infixate (units (set endc #\,))))
+    (units (set endc #\,)))
   (define (seq endc)
     (match (peek-char ip)
       [(== endc) (read-char ip)
@@ -245,11 +244,12 @@
       (expectc endc)))
 
   (define (units stops)
-    (match (peek-char ip)
-      [(? (set-mem stops))
-       '()]
-      [_
-       (cons (unit) (units-tail stops))]))
+    (infixate
+     (match (peek-char ip)
+       [(? (set-mem stops))
+        '()]
+       [_
+        (cons (unit) (units-tail stops))])))
   (define (units-tail stops)
     (match (peek-char ip)
       [(? (set-mem stops))
@@ -260,6 +260,7 @@
        (parse-error 'units-tail stops)]))
 
   (struct prefix:left-col (lc) #:transparent)
+  (struct prefix:first-indent (p) #:transparent)
   (struct prefix:first-bar (bc lc) #:transparent)
   (struct prefix:bar (bc) #:transparent)
   (define (prefix-indent p)
@@ -276,6 +277,8 @@
        (prefix:left-col lc)]
       [(prefix:bar bc)
        (prefix:left-col (+ 2 bc))]
+      [(prefix:first-indent p)
+       p]
       [_
        (error 'prefix-next/line "~v" p)]))
   (define (prefix-next/lines p)
@@ -284,8 +287,9 @@
       [(prefix:left-col _) p]
       [(prefix:first-bar bc lc)
        (prefix:bar bc)]
-      [(prefix:bar bc)
-       (prefix:bar bc)]
+      [(prefix:bar bc) p]
+      [(prefix:first-indent p)
+       p]
       [_
        (error 'prefix-next/lines "~v" p)]))
 
@@ -305,6 +309,8 @@
             (read-string (+ 2 bc) ip))]
       [(prefix:first-bar _ _)
        #t]
+      [(prefix:first-indent _)
+       #t]
       [_
        (error 'expect-prefix "~v" p)]))
 
@@ -316,7 +322,7 @@
     (spy 'line-start p)
     (match (peek-char ip)
       [(? (set-mem line-space-follower)) (line-space-tail p)]
-      [(? (set-mem line-follower)) (line-tail p)]
+      [(? (set-mem line-follower)) '()]
       [_ (cons (unit) (line-tail p))]))
   (define (line-tail p)
     (spy 'line-tail p)
@@ -347,8 +353,15 @@
          (line-start p)
          '())]
       [#\: (read-char ip)
-       (expectc #\newline)
-       (define new-p (prefix-indent p))
+       (define in-p (prefix-indent p))
+       (define new-p
+         (match (peek-char ip)
+           [#\newline (read-char ip)
+            in-p]
+           [#\space (read-char ip)
+            (prefix:first-indent in-p)]
+           [_
+            (parse-error 'line-space-tail p #\:)]))
        (cons
         (cons '#%indent (lines new-p))
         (if (expect-prefix p)
@@ -378,8 +391,12 @@
       [(expect-prefix p)
        (match (peek-char ip)
          [(? eof-object?) '()]
-         [#\newline (read-char ip)
-          (lines (prefix-next/lines p))]
+         [#\newline
+          (cond
+            [p '()]
+            [else
+             (read-char ip)
+             (lines (prefix-next/lines p))])]
          [_
           (cons (line (prefix-next/line p))
                 (lines (prefix-next/lines p)))])]
@@ -426,7 +443,8 @@
        (value->file expected.rktd expected)
        (system* (find-executable-path "diff") "-u"
                 actual.rktd expected.rktd)
-       (displayln "")]))
+       (displayln "")
+       #;(exit 1)]))
 
   (define-simple-macro (rt in e)
     (read-test (quote-srcloc) in 'e))
