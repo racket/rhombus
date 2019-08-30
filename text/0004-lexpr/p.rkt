@@ -26,7 +26,8 @@
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
 (define PRECEDENCE-ORDER
-  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($)))
+  ;; XXX Add arrows? -> =>
+  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($) (=)))
 
 (define-values (precedence-table default-precedence)
   (for/fold ([pt (hasheq)] [dp #f])
@@ -78,7 +79,7 @@
   (define (sy:precendence op)
     (hash-ref precedence-table op default-precedence))
   (define (sy:consume-input last-was-in? in out ops)
-    (eprintf "SY in ~v\n" (vector in out ops))
+    #;(eprintf "SY in ~v\n" (vector in out ops))
     (match in
       ['()
        (sy:pop-operators out ops)]
@@ -95,7 +96,7 @@
          [else
           (sy:consume-input #t in-p (cons token out) ops)])]))
   (define (sy:push-operator out ops op1)
-    (eprintf "SY push ~v\n" (vector out ops op1))
+    #;(eprintf "SY push ~v\n" (vector out ops op1))
     (match ops
       ['()
        (values out (cons op1 ops))]
@@ -114,7 +115,7 @@
          [else
           (values out (cons op1 ops))])]))
   (define (sy:pop-operators out ops)
-    (eprintf "SY pop ~v\n" (vector out ops))
+    #;(eprintf "SY pop ~v\n" (vector out ops))
     (match ops
       ['()
        (match out
@@ -127,7 +128,7 @@
         (sy:push-operator-to-output op out)
         ops)]))
   (define (sy:push-operator-to-output op out)
-    (eprintf "SY push-out ~v\n" (vector op out))
+    #;(eprintf "SY push-out ~v\n" (vector op out))
     (match out
       ['()
        (list op)]
@@ -187,22 +188,12 @@
       [#\{ (read-char ip)
        (text-mode #f)]
       [#\[ (read-char ip)
-       (begin0 (list '#%quote-line
-                     (parameterize ([current-line-quoted? #t])
-                       (line #f)))
+       (begin0 (line #f)
          (expectc #\]))]
-      [#\< (read-char ip)
-       (cond
-         [(set-member? follower (peek-char ip))
-          '<]
-         [(equal? #\= (peek-char ip))
-          (read-char ip)
-          '<=]
-         [else
-          (grouped #\>)])]
-      [(or #\. #\>)
+      [(or #\< #\. #\>)
        (string->symbol
         (string-append (string (read-char ip))
+                       ;; XXX maybe special kind of follower for this situation
                        (reads-until follower)))]
       [x
        (define l (reads-until follower))
@@ -311,11 +302,10 @@
       [_
        (error 'expect-prefix "~v" p)]))
 
-  (define current-line-quoted? (make-parameter #f))
   (define (line *p)
     (spy 'line *p)
     (define p (or *p (prefix:left-col (loc-col (current-loc ip)))))
-    (line-start p))
+    (cons '#%line (line-start p)))
   (define (line-start p)
     (spy 'line-start p)
     (match (peek-char ip)
@@ -330,12 +320,9 @@
        '()]
       [#\space (read-char ip)
        (line-space-tail p)]
-      [#\]
-       (cond
-         [(current-line-quoted?)
-          '()]
-         [else
-          (parse-error 'line-tail p)])]
+      [#\] ;; We're not reading on purpose, because this ends an
+           ;; embedded line
+       '()]
       [_
        (parse-error 'line p)]))
   (define (line-space-tail p)
