@@ -1,3 +1,128 @@
+- Feature Name: Line-expressions as fundamental syntax
+- Start Date: 2019-08-30
+- RFC PR: [racket/racket2-rfcs#XXX](https://github.com/racket/racket2-rfcs/pull/XXX)
+
+# Summary
+[summary]: #summary
+
+Line-expressions (L-expressions or Lexprs) are like S-expressions, but
+with more syntactic categories and without as much required
+notation. Like S-expressions, they mostly lack a semantic
+interpretation. Lexprs are reminiscent of many aspects of existing
+languages, but have a unique flavor.
+
+# Motivation
+[motivation]: #motivation
+
+The uniformity of S-expressions limits the amount of information at
+the notational level of reading Racket programs. A small amount of
+extra notation can go a long way with a small number of mores on its
+use. For example, in Racket brackets are used in S-expressions when no
+function or macro application is implied (like in the cases of a
+`cond`); reading Racket programs without this notational affordance is
+more difficult. Similarly, blocks are typically distinguished in
+Racket by indenting their bodies after the first line and it is very
+difficult to read Racket programs that don't follow this convention.
+
+Many Racket programs use mathematics but cannot be written in the
+traditional infix notation that is parsed using the PEMDASFLTR
+(parentheses, exponentiation, multiplication, division, addition,
+subtraction, from left to right) algorithm common across the world.
+
+It is awkward to embed arbitrary fragments of code not in S-expression
+format, such as when quoting a program in another language. The only
+effective option is to embed a string. The Racket @-reader is helpful
+at this, but it is not uniformly available and the standard structure
+of Racket's S-expression based languages do not allow macro-specific
+reading of such syntaxes.
+
+Line-expressions are an alternative semantics-free tree structure with
+more built-in categories. We expect that this notation will enable
+language builders in Racket, such as the community for Racket2, to
+create many useful mores for writing and reading Racket2 code. Lexprs
+facilitate mathematical infix notation and the embedding of non-Lexpr
+syntax.
+
+# Guide-level explanation
+[guide-level-explanation]: #guide-level-explanation
+
+The reference section gives many more examples of the exact structure
+of line-expressions. In this section, we give a few broad examples and
+demonstrate the structure of Lexprs.
+
+Lexprs are divided into leaders, units, sequences and groups, lines,
+and text. Leaders are distinguished by their first characters, like
+identifier, numbers, and embedded versions of the other
+categories. Units are leaders followed by another character, such as
+`(` which opens a sequence or `.` which precedes another
+unit. Sequences are a series of groups separated by commas. Groups are
+a series of units separated by spaces and parsed with infix
+notation. Lines are a series of units that ends in a
+follower. Followers are tokens like a newline, which end a line, or
+`&`, which extend a line past a newline, or `:`, which embeds a series
+of lines indented one level, or `|`, which embeds a series of lines
+aligned with the bar, and so on. Text is delimited by `{` and `}` and
+may escape with `@` and is always parsed into lists of characters
+split across `\n`.
+
+In general, Lexprs are very strict on their formatting: additional
+spaces are never allowed and newlines meaningful.
+
+XXX
+
+```lexpr
+fun ksum(k, l) :
+  match l \
+    | empty :
+        0
+    | cons(a, d) :
+        (a + k * ksum(k, d))
+        
+fun timed_thunk(thunk) :
+  let before = now()
+  let answer = thunk()
+  let after = now()
+  println {It took @(after - before) seconds}
+  answer
+  
+mac timed \
+  | [_ e] :
+      'timed_thunk([λ() : e])
+```
+```sexpr
+((#%line
+  fun (#%fun-app ksum k l)
+  (#%indent
+   (#%line match l
+           (#%bar (#%line empty
+                          (#%indent (#%line 0)))
+                  (#%line (#%fun-app cons a d)
+                          (#%indent (#%line (+ a (* k (#%fun-app ksum k d))))))))))
+ (#%line
+  fun (#%fun-app timed_thunk thunk)
+  (#%indent
+   (#%line let before = (#%fun-app now))
+   (#%line let answer = (#%fun-app thunk))
+   (#%line let after = (#%fun-app now))
+   (#%line println (#%text ("It took " (#%text-esc (- after before)) " seconds")))
+   (#%line answer)))
+ (#%line
+  mac timed
+  (#%bar
+   (#%line
+    (#%line _ e)
+    (#%indent
+     (#%line
+      (#%quote
+       (#%fun-app timed_thunk
+                  (#%line (#%fun-app λ)
+                          (#%indent (#%line e)))))))))))
+```
+
+
+XXX
+
+XXX BOUNDARY
 
 XXX Numbers
 
@@ -426,6 +551,14 @@ zig :
 ```
 
 ```lexpr
+zig : zag
+  zog
+```
+```sexpr
+((#%line zig (#%indent (#%line zag) (#%line zog))))
+```
+
+```lexpr
 a :
   b \
     c
@@ -492,22 +625,18 @@ in :
 ```
 
 ```lexpr
-fun sum(l) :
-  match l \
-    | empty :
-        0
-    | cons(a, d) :
-        (a + sum(d))
+a :
+  b \
+    | e
+
+g
+
+i
 ```
 ```sexpr
-((#%line fun (#%fun-app sum l)
-  (#%indent
-    (#%line match l
-      (#%bar
-        (#%line empty 
-         (#%indent (#%line 0)))
-        (#%line (#%fun-app cons a d)
-         (#%indent (#%line (+ a (#%fun-app sum d))))))))))
+((#%line a (#%indent (#%line b (#%bar (#%line e)))))
+ (#%line g)
+ (#%line i))
 ```
 
 XXX Embedded lines
