@@ -25,9 +25,9 @@ Racket by indenting their bodies after the first line and it is very
 difficult to read Racket programs that don't follow this convention.
 
 Many Racket programs use mathematics but cannot be written in the
-traditional infix notation that is parsed using the PEMDASFLTR
-(parentheses, exponentiation, multiplication, division, addition,
-subtraction, from left to right) algorithm common across the world.
+traditional infix notation that is parsed using the PMDASFLTR
+(parentheses, multiplication, division, addition, subtraction, from
+left to right) algorithm common across the world.
 
 It is awkward to embed arbitrary fragments of code not in S-expression
 format, such as when quoting a program in another language. The only
@@ -54,16 +54,15 @@ Lexprs are divided into leaders, units, sequences and groups, lines,
 and text. Leaders are distinguished by their first characters, like
 identifier, numbers, and embedded versions of the other
 categories. Units are leaders followed by another character, such as
-`(` which opens a sequence or `.` which precedes another
-unit. Sequences are a series of groups separated by commas. Groups are
-a series of units separated by spaces and parsed with infix
-notation. Lines are a series of units that ends in a
-follower. Followers are tokens like a newline, which end a line, or
-`&`, which extend a line past a newline, or `:`, which embeds a series
-of lines indented one level, or `|`, which embeds a series of lines
-aligned with the bar, and so on. Text is delimited by `{` and `}` and
-may escape with `@` and is always parsed into lists of characters
-split across `\n`.
+`(` which opens a group or `.` which precedes another unit. Sequences
+are a series of groups separated by commas. Groups are a series of
+units separated by spaces and parsed with infix notation. Lines are a
+series of units that ends in a follower. Followers are tokens like a
+newline, which end a line, or `&`, which extend a line past a newline,
+or `:`, which embeds a series of lines indented one level, or `|`,
+which embeds a series of lines aligned with the bar, and so on. Text
+is delimited by `{` and `}` and may escape with `@` and is always
+parsed into lists of characters split across `\n`.
 
 In general, Lexprs are very strict on their formatting: additional
 spaces are never allowed and newlines are meaningful.
@@ -176,13 +175,13 @@ Numbers are leaders and can include explicit signs or a single `.`:
 
 Unlike Racket, there are no special notations for complex numbers, different
 exactitudes of numbers, or different bases. We expect these notations
-to use a library of text applications.
+to use a library of text applications, like `0b{0110}`.
 
 ## Symbols
 
 Symbols are the most common leaders are any sequence of characters
 that is not a number and does not include a character in `\n
-.,'()[]{}<>`. As a special case, a symbol may begin with `<` or
+.,'()[]{}<>`. As a special case, a symbol may begin with `.`, `<` or
 include `>` if not inside a parameter application.
 
 ```lexpr
@@ -192,6 +191,31 @@ x
 ```sexpr
 ((#%line x))
 ```
+
+```lexpr
+0b
+```
+`=>`
+```sexpr
+((#%line 0b))
+```
+
+```lexpr
+.
+```
+`=>`
+```sexpr
+((#%line |.|))
+```
+
+```lexpr
+<=
+```
+`=>`
+```sexpr
+((#%line <=))
+```
+
 
 ## Characters
 
@@ -216,11 +240,55 @@ Literal characters are written with `#\` followed by a character.
 
 Unlike Racket, there are no "named" characters, `#\newline`. We expect
 these to be provided by a library of definitions which simply name
-characters.
+characters. They would be referred to in text with something like
+`@newline` or `{The character for a smile is @(smiley-face)!}`.
 
-XXX BOUNDARY
+## Grouping
 
-XXX Grouping
+A leader that starts with `(` is a group: a sequence of units
+separated by spaces parsed with infix notation. The group ends with a
+`)`. The presence of a group is not visible in the resulting AST.
+
+The infix order of operations is based on the basic mathematical
+operations, PMDASFLTR (parentheses, multiplication, division,
+addition, subtraction, from left to right), with a very small number
+of extra operators. All operators associate the same way---to the
+left. (XXX: Is it left or right?)
+
+The following table shows the order of operations from tightest to
+loosest. If two operators appear in the same group, then they cannot
+be combined together in the same group. This is to prevent confusing
+combinations.
+
+| `:` |
+| `*` |
+| `/` |
+| `%` |
+| `+` |
+| `-` |
+| operators not mentioned |
+| `< <= == != >= >` |
+| `&& ||` |
+| `.` |
+| `$` |
+| `=` |
+| `=>` |
+
+An operator is any sequence of characters with no characters in the
+Unicode categories `Ll`, `Lu`, `Lt`, `Lm`, and `Lo`.
+
+This table is designed to allow variables to be annotated with `:`,
+then combined with arithmetic operations (`*/%+-`), then compared
+against other equations (`==`, etc), those boolean equations combined
+with others (`&&` and `||`) and finally assigned (`=`).
+
+In parallel, the table supports curried functional programming and
+pointless function operations like `.` and `$`, because adjacency is
+treated as function application
+
+Here are some examples:
+
+Multiplication is tighter than addition:
 
 ```lexpr
 (x + 6 * y)
@@ -230,6 +298,8 @@ XXX Grouping
 ((#%line (+ x (* 6 y))))
 ```
 
+An embedded group can change the order of operations:
+
 ```lexpr
 ((x + 6) * y)
 ```
@@ -237,6 +307,19 @@ XXX Grouping
 ```sexpr
 ((#%line (* (+ x 6) y)))
 ```
+
+Groups are not visible in the output, so they can be added
+unnecessarily:
+
+```lexpr
+((((x) + 6)) * (y))
+```
+`=>`
+```sexpr
+((#%line (* (+ x 6) y)))
+```
+
+Here is a prototypical mathematical group:
 
 ```lexpr
 (ans = 3 * x + y / 4 <= z % 3 && 2 != 5)
@@ -247,13 +330,7 @@ XXX Grouping
                     (!= 2 5)))))
 ```
 
-```lexpr
-(1 ⊕ 2 + 3)
-```
-`=>`
-```sexpr
-((#%line (⊕ 1 (+ 2 3))))
-```
+Here are some prototypical functional programming groups:
 
 ```lexpr
 (add1 . mult2 $ 5)
@@ -262,6 +339,8 @@ XXX Grouping
 ```sexpr
 ((#%line ($ (|.| add1 mult2) 5)))
 ```
+
+and
 
 ```lexpr
 (sub1 . length . map add1 $ iota 4)
@@ -273,13 +352,8 @@ XXX Grouping
             (#%fun-app iota 4))))
 ```
 
-```lexpr
-(.)
-```
-`=>`
-```sexpr
-((#%line |.|))
-```
+Operators are the same precedence level cannot be mixed without
+parentheses:
 
 ```lexpr
 (1 + 2 <= 3 && false || true)
@@ -290,12 +364,48 @@ XXX Grouping
 ```
 
 ```lexpr
+((1 + 2 <= 3 && false) || true)
+```
+`=>`
+```sexpr
+((#%line (\|\| (&& (<= (+ 1 2) 3) false) true)))
+```
+
+```lexpr
 (1 < 2 == 3)
 ```
 `=>`
 ```sexpr
 (error "Operators with same precedence cannot be used in the same group: == and <")
 ```
+
+Operators not otherwise mentioned are between arithmetic and
+comparison operators:
+
+```lexpr
+(0 <= 1 ⊕ 2 + 3)
+```
+`=>`
+```sexpr
+((#%line (<= 0 (⊕ 1 (+ 2 3)))))
+```
+
+And they are all at the same precedence level, so they cannot be
+mixed:
+
+```lexpr
+(1 ⊕ 2 ⊗ 3)
+```
+`=>`
+```sexpr
+(error "Operators with same precedence cannot be used in the same group: ⊗ and ⊕")
+```
+
+This particular example shows how this is unfortunate, but Lexprs try
+to strike a balance between enabling common patterns and avoiding
+program-specific parsing.
+
+XXX BOUNDARY
 
 ```lexpr
 λ(x, y, def = 5, kw_ext1 => kw_int1, kw_ext2 => kw_int1 = 6, ... rest) :
@@ -791,13 +901,6 @@ foo bar [zig :
 ((#%line foo bar (#%line zig (#%indent (#%line zag) (#%line zog))) baz))
 ```
 
-XXX MORE sacred cows: no named characters (these are just variables
-that you can use `@(BLAH)`) to get ; limited numbers and other
-literals (I don't like literal vectors, etc, and I think things like
-`binary{01010101}` are a better interface to new notations. In
-particular, they are more uniform than having just a few things built
-in.)
-
 XXX MORE goal: only one way to format
 --- not really, because of \ and precedence
 
@@ -814,6 +917,8 @@ macros.
 Solution 1.a.2: `git diff` and the kill ring has the knowledge you
 want
 
+XXX ; as a line follower or leader?
+
 XXX sacred cow: no extra whitespace, except for newlines
 
 Problem: Lining up definitions or other things, like:
@@ -829,4 +934,4 @@ like | because it is common.
 
 XXX lots of overlap with `#lang something`: https://github.com/tonyg/racket-something
 
-XXX <> is ugly special casing
+XXX <> is ugly special casing... maybe remove #%param-app?
