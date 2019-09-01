@@ -463,7 +463,8 @@ x.y
 ((#%line (#%dot x y)))
 ```
 
-Since the left is a leader, this means that dots are left-associative:
+Since the left is a leader and the right is a unit, this means that
+dots are right-associative:
 
 ```lexpr
 x.y.z
@@ -545,16 +546,16 @@ f⟨x, y⟩
 ((#%line (#%param f x y)))
 ```
 
-An application is a unit, and another unit may follow, so applications
-may nest arbitrarily. They are left-associative (as if everything in
-Lexprs!)
+An application is treated like a leader, so anything that may follow a
+leader is allowed, such as another application or a dot. In a sense,
+this means that applications are right-associative.
 
 ```lexpr
-f⟨A, B⟩(x, y)[1, 2]
+f⟨A, B⟩(x, y)[1, 2].z
 ```
 `=>`
 ```sexpr
-((#%line (#%member (#%fun-app (#%param f A B) x y) 1 2)))
+((#%line (#%dot (#%member (#%fun-app (#%param f A B) x y) 1 2) z)))
 ```
 
 ## Quotation
@@ -1171,8 +1172,8 @@ an easier to remember set of rules.
 
 Line-expressions rely on an operator precedence hierarchy, which many
 people find distasteful. Line-expressions attempt to alleviate this by
-using only one associativity and making very few additions atop normal
-arithmetic notation.
+using only one associativity within infix expressions and making very
+few additions atop normal arithmetic notation.
 
 The same character sequences, like `()`, `[]`, and `:` are given
 different interpretations depending on their context, whether in a
