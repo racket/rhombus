@@ -57,15 +57,16 @@ categories. Units are leaders followed by another character, such as
 `(` which opens a group or `.` which precedes another unit. Sequences
 are a series of groups separated by commas. Groups are a series of
 units separated by spaces and parsed with infix notation. Lines are a
-series of units that ends in a follower. Followers are tokens like a
-newline, which end a line, or `&`, which extend a line past a newline,
-or `:`, which embeds a series of lines indented one level, or `|`,
-which embeds a series of lines aligned with the bar, and so on. Text
-is delimited by `{` and `}` and may escape with `@` and is always
-parsed into lists of characters split across `\n`.
+series of units separated by spaces that ends in a follower. Followers
+are tokens like a newline, which end a line, or `&`, which extend a
+line past a newline, or `:`, which embeds a series of lines indented
+one level, or `|`, which embeds a series of lines aligned with the
+bar, and so on. Text is delimited by `{` and `}` and may escape with
+`@` and is always parsed into lists of characters split across `\n`.
 
 In general, Lexprs are very strict on their formatting: additional
-spaces are never allowed and newlines are meaningful.
+spaces are never allowed and newlines are meaningful. In Lexprs, a
+level of indentation is always exactly two space characters: `  `.
 
 Here is an extended example that demonstrates many of the formats in
 Lexprs:
@@ -252,7 +253,7 @@ The infix order of operations is based on the basic mathematical
 operations, PMDASFLTR (parentheses, multiplication, division,
 addition, subtraction, from left to right), with a very small number
 of extra operators. All operators associate the same way---to the
-left. (XXX: Is it left or right?)
+left.
 
 The following table shows the order of operations from tightest to
 loosest. If two operators appear in the same group, then they cannot
@@ -287,6 +288,16 @@ treated as function application
 
 Here are some examples:
 
+All operators are left-associative:
+
+```lexpr
+(x + 6 + y)
+```
+`=>`
+```sexpr
+((#%line (+ (+ x 6) y)))
+```
+
 Multiplication is tighter than addition:
 
 ```lexpr
@@ -316,6 +327,16 @@ unnecessarily:
 `=>`
 ```sexpr
 ((#%line (* (+ x 6) y)))
+```
+
+`:` is an operator, as well as a line follower.
+
+```lexpr
+(x : int)
+```
+`=>`
+```sexpr
+((#%line (: x int)))
 ```
 
 Here is a prototypical mathematical group:
@@ -402,9 +423,10 @@ mixed:
 
 This particular example shows how this is unfortunate, but Lexprs try
 to strike a balance between enabling common patterns and avoiding
-program-specific parsing.
+program-specific parsing. XXX Alternative
 
-XXX BOUNDARY
+This example shows how operators might be used in the syntax of a
+function definition:
 
 ```lexpr
 λ(x, y, def = 5, kw_ext1 => kw_int1, kw_ext2 => kw_int1 = 6, ... rest) :
@@ -429,41 +451,9 @@ XXX BOUNDARY
    (#%line (#%text ("kw_ext1 and kw_ext2 are passed by keyword"))))))
 ```
 
-XXX Sequences
+## Dots
 
-```lexpr
-x y
-```
-`=>`
-```sexpr
-((#%line x y))
-```
-
-```lexpr
-x + y
-```
-`=>`
-```sexpr
-((#%line x + y))
-```
-
-```lexpr
-x + (y + 3)
-```
-`=>`
-```sexpr
-((#%line x + (+ y 3)))
-```
-
-```lexpr
-(x : int)
-```
-`=>`
-```sexpr
-((#%line (: x int)))
-```
-
-XXX Dots
+A leader followed by a `.` and another unit is a dot unit:
 
 ```lexpr
 x.y
@@ -473,13 +463,7 @@ x.y
 ((#%line (#%dot x y)))
 ```
 
-```lexpr
-a ... b
-```
-`=>`
-```sexpr
-((#%line a (#%dot |.| |.|) b))
-```
+Since the left is a leader, this means that dots are left-associative:
 
 ```lexpr
 x.y.z
@@ -489,15 +473,27 @@ x.y.z
 ((#%line (#%dot x (#%dot y z))))
 ```
 
+Since `.` is a valid identifier, it is a valid leader, which means
+`...` is a unit:
+
 ```lexpr
-x.y z
+...
 ```
 `=>`
 ```sexpr
-((#%line (#%dot x y) z))
+((#%line (#%dot |.| |.|)))
 ```
 
-XXX Applications
+## Applications
+
+There are three major kinds of applications in Lexpr notation. Each is
+a leader followed by an open symbol, a sequence, then a close
+symbol. The valid open/close pairs are `()`, `[]`, and `⟨⟩`. The first
+is called function application, the second is member access, and the
+third is parameter application. These names are suggestive and
+particular Lexpr-based languages can give them any semantics.
+
+The basic form of function application:
 
 ```lexpr
 f(x)
@@ -507,6 +503,9 @@ f(x)
 ((#%line (#%fun-app f x)))
 ```
 
+Since the body is a sequence, there can be multiple groups separated
+by commas:
+
 ```lexpr
 f(x, y)
 ```
@@ -514,6 +513,9 @@ f(x, y)
 ```sexpr
 ((#%line (#%fun-app f x y)))
 ```
+
+Since a sequence is made of groups, prefix notation is enabled without
+the use of `()`s:
 
 ```lexpr
 f(x + 2, y)
@@ -523,7 +525,7 @@ f(x + 2, y)
 ((#%line (#%fun-app f (+ x 2) y)))
 ```
 
-XXX Member
+If `[]` are used instead of `()`, then it is apparent in the AST:
 
 ```lexpr
 f[x, y]
@@ -533,7 +535,7 @@ f[x, y]
 ((#%line (#%member f x y)))
 ```
 
-XXX Param
+Similarly for `⟨⟩`:
 
 ```lexpr
 f⟨x, y⟩
@@ -543,13 +545,9 @@ f⟨x, y⟩
 ((#%line (#%param f x y)))
 ```
 
-```lexpr
-x < y > z
-```
-`=>`
-```sexpr
-((#%line x < y > z))
-```
+An application is a unit, and another unit may follow, so applications
+may nest arbitrarily. They are left-associative (as if everything in
+Lexprs!)
 
 ```lexpr
 f⟨A, B⟩(x, y)[1, 2]
@@ -559,7 +557,13 @@ f⟨A, B⟩(x, y)[1, 2]
 ((#%line (#%member (#%fun-app (#%param f A B) x y) 1 2)))
 ```
 
-XXX Quotation
+## Quotation
+
+Lexprs have a quote form, `'`, that wraps the next unit in a special
+AST `#%quote` node. If a leader is `,`, then a unit follows which is
+wrapped in a special `#%unquote` node.
+
+All normal parsing takes place inside of quotations, including prefix notation:
 
 ```lexpr
 (x + '(y * 6) + z)
@@ -569,6 +573,8 @@ XXX Quotation
 ((#%line (+ (+ x (#%quote (* y 6))) z)))
 ```
 
+As well as dots:
+
 ```lexpr
 x + 'x.y + z
 ```
@@ -576,6 +582,8 @@ x + 'x.y + z
 ```sexpr
 ((#%line x + (#%quote (#%dot x y)) + z))
 ```
+
+And function application:
 
 ```lexpr
 (x + 'f(x) + z)
@@ -585,6 +593,12 @@ x + 'x.y + z
 ((#%line (+ (+ x (#%quote (#%fun-app f x))) z)))
 ```
 
+An unquote is always in the leader position, and a comma in a sequence
+is always in the follower position, so there is never ambiguity about
+where a comma is an unquote or the next element in a sequence:
+
+This `,` is an unquote:
+
 ```lexpr
 (x + 'f(x + ,y) + z)
 ```
@@ -592,6 +606,19 @@ x + 'x.y + z
 ```sexpr
 ((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote y))))) z)))
 ```
+
+This example has both kinds of commas:
+
+```lexpr
+(x + 'f(x + ,y, a) + z)
+```
+`=>`
+```sexpr
+((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote y)) a))) z)))
+```
+
+Unquote consumes an entire unit, which may include more commas, etc,
+this is uncontroversial:
 
 ```lexpr
 (x + 'f(x + ,g(7, y)) + z)
@@ -601,7 +628,16 @@ x + 'x.y + z
 ((#%line (+ (+ x (#%quote (#%fun-app f (+ x (#%unquote (#%fun-app g 7 y)))))) z)))
 ```
 
-XXX Text quotation
+## Text Quotation
+
+In Lexprs, matched `{}` delimit a text quotation. The quotation may
+run any number of lines and may include `@`s which escape a single
+unit back into Lexpr mode. Text quotations do not provide any
+interpretation on any character sequences other than `@`. The entire
+quotation is present in the AST as `#%text` with one list of per line
+(i.e. per `\n` character). Escapes are tagged with `#%text-esc`.
+
+Here is a simple example:
 
 ```lexpr
 {Hello World!}
@@ -611,6 +647,8 @@ XXX Text quotation
 ((#%line (#%text ("Hello World!"))))
 ```
 
+And one with an escape:
+
 ```lexpr
 {Hello @(1 + 2)!}
 ```
@@ -618,6 +656,8 @@ XXX Text quotation
 ```sexpr
 ((#%line (#%text ("Hello " (#%text-esc (+ 1 2)) "!"))))
 ```
+
+Here's how you might choose to write an `@` sign:
 
 ```lexpr
 {Hello @(#\@)!}
@@ -627,6 +667,8 @@ XXX Text quotation
 ((#%line (#%text ("Hello " (#%text-esc #\@) "!"))))
 ```
 
+Or a newline:
+
 ```lexpr
 {Hello @(newline)!}
 ```
@@ -634,6 +676,8 @@ XXX Text quotation
 ```sexpr
 ((#%line (#%text ("Hello " (#%text-esc newline) "!"))))
 ```
+
+However, you can just include newlines:
 
 ```lexpr
 {Hello
@@ -645,6 +689,8 @@ XXX Text quotation
 ((#%line (#%text ("Hello") () (" World!"))))
 ```
 
+Text quotations can be empty:
+
 ```lexpr
 {}
 ```
@@ -652,6 +698,8 @@ XXX Text quotation
 ```sexpr
 ((#%line (#%text ())))
 ```
+
+And remember, only a single unit is included, not a group:
 
 ```lexpr
 {@1 + 2!}
@@ -661,6 +709,8 @@ XXX Text quotation
 ((#%line (#%text ((#%text-esc 1) " + 2!"))))
 ```
 
+There's nothing wrong with embedded braces in the quotation:
+
 ```lexpr
 {This is a { embedded brace! } }
 ```
@@ -668,6 +718,11 @@ XXX Text quotation
 ```sexpr
 ((#%line (#%text ("This is a " "{" " embedded brace! " "}" " "))))
 ```
+
+## Text applications
+
+When a `{` is a follower, then it is a text application unit, which is
+notated with a special AST:
 
 ```lexpr
 let x = item{Some text}
@@ -677,7 +732,57 @@ let x = item{Some text}
 ((#%line let x = (#%text-app item ("Some text"))))
 ```
 
-XXX Line follower: \n
+This is particular convenient inside text quotations:
+
+```lexpr
+{Here is some @bold{text} with some @color[1.0, 0.0, 0.0]{RED} letters.}
+```
+```sexpr
+((#%line (#%text ("Here is some " (#%text-esc (#%text-app bold
+("text"))) " with some " (#%text-esc (#%text-app (#%member color 1.0
+0.0 0.0) ("RED"))) " letters."))))
+```
+
+## Lines
+
+We now comes to lines. At a first glance, lines are just sequences of
+units separated by spaces.
+
+```lexpr
+x y
+```
+`=>`
+```sexpr
+((#%line x y))
+```
+
+Since they are units, there is no prefix parsing:
+
+```lexpr
+x + y
+```
+`=>`
+```sexpr
+((#%line x + y))
+```
+
+Unless enabled by `()`s:
+
+```lexpr
+x + (y + 3)
+```
+`=>`
+```sexpr
+((#%line x + (+ y 3)))
+```
+
+However, everything interesting about lines is determined by their
+follower.
+
+# Line Follower: Newline
+
+If a line follower is a newline (i.e. `\n`), then the line is
+terminated and a new line is parsed:
 
 ```lexpr
 foo bar
@@ -688,6 +793,8 @@ zig zag
 ((#%line foo bar) (#%line zig zag))
 ```
 
+A blank line, at the top-level, is ignored:
+
 ```lexpr
 foo bar
 
@@ -698,7 +805,10 @@ zig zag
 ((#%line foo bar) (#%line zig zag))
 ```
 
-XXX Line follower: \
+## Line follower: Slash
+
+A `\` line follower continues the line AST passed a newline, with one
+required level of indentation.
 
 ```lexpr
 foo \
@@ -710,15 +820,7 @@ zig zag
 ((#%line foo bar) (#%line zig zag))
 ```
 
-```lexpr
-foo \
-  bar baz
-zig zag
-```
-`=>`
-```sexpr
-((#%line foo bar baz) (#%line zig zag))
-```
+The line is not just a single unit, but could be many:
 
 ```lexpr
 foo \
@@ -729,6 +831,21 @@ zig zag
 ```sexpr
 ((#%line foo bar baz) (#%line zig zag))
 ```
+
+The exact way that a line was written in the source code is not
+apparent in the AST:
+
+```lexpr
+foo bar \
+  baz
+zig zag
+```
+`=>`
+```sexpr
+((#%line foo bar baz) (#%line zig zag))
+```
+
+Of course, any line follower may be used multiple times:
 
 ```lexpr
 foo \
@@ -741,7 +858,13 @@ zig zag
 ((#%line foo bar baz) (#%line zig zag))
 ```
 
-XXX Line follower: :
+## Line follower: Colon
+
+A `:` line follower embeds a series of lines inside the given line at
+one required level of indentation and continues the line after the
+level of indentation terminates.
+
+Here's a typical use case:
 
 ```lexpr
 if (x < y) :
@@ -757,6 +880,8 @@ else :
    (#%indent (#%line (#%fun-app g y)))))
 ```
 
+The indented region may be multiple lines: 
+
 ```lexpr
 zig :
   zag
@@ -767,6 +892,22 @@ zig :
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
 
+But blank lines are not allowed. XXX
+
+```lexpr
+zig :
+  zag
+  
+  zog
+```
+`=>`
+```sexpr
+(error "unexpected")
+```
+
+As a special case, the first line in the series may begin immediately
+after the `:` as in this example:
+
 ```lexpr
 zig : zag
   zog
@@ -775,6 +916,8 @@ zig : zag
 ```sexpr
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
+
+Of course, multiple line followers may be used in tandem:
 
 ```lexpr
 a :
@@ -788,6 +931,10 @@ g
 ```sexpr
 ((#%line a (#%indent (#%line b c) (#%line d)) f) (#%line g))
 ```
+
+## Line follower: At
+
+XXX Boundary
 
 XXX Line follower: @
 
