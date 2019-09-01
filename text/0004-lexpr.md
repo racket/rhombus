@@ -423,7 +423,7 @@ mixed:
 
 This particular example shows how this is unfortunate, but Lexprs try
 to strike a balance between enabling common patterns and avoiding
-program-specific parsing. XXX Alternative
+program-specific parsing.
 
 This example shows how operators might be used in the syntax of a
 function definition:
@@ -858,6 +858,50 @@ zig zag
 ((#%line foo bar baz) (#%line zig zag))
 ```
 
+## Line follower: And
+
+An `&` line follower extends a line passed a newline without requiring
+a new level of indentation.
+
+```lexpr
+foo &
+bar &
+baz
+zig zag
+```
+`=>`
+```sexpr
+((#%line foo bar baz) (#%line zig zag))
+```
+
+When combined with other line followers, the `&` requires the same
+amount of indentation as the line it is continuing:
+
+```lexpr
+foo \
+  bar &
+  baz
+zig zag
+```
+`=>`
+```sexpr
+((#%line foo bar baz) (#%line zig zag))
+```
+
+And it may be used multiple times:
+
+```lexpr
+foo \
+  bar &
+  baz &
+  zab
+zig zag
+```
+`=>`
+```sexpr
+((#%line foo bar baz zab) (#%line zig zag))
+```
+
 ## Line follower: Colon
 
 A `:` line follower embeds a series of lines inside the given line at
@@ -892,7 +936,21 @@ zig :
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
 
-But blank lines are not allowed. XXX
+But blank lines are not allowed.
+
+```lexpr
+zig :
+  zag
+
+  zog
+```
+`=>`
+```sexpr
+(error "unexpected")
+```
+
+Unless they include the correct indentation level (in which case, they
+weren't actually empty):
 
 ```lexpr
 zig :
@@ -902,7 +960,7 @@ zig :
 ```
 `=>`
 ```sexpr
-(error "unexpected")
+((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
 
 As a special case, the first line in the series may begin immediately
@@ -934,9 +992,10 @@ g
 
 ## Line follower: At
 
-XXX Boundary
-
-XXX Line follower: @
+An `@` line follower begins an indented text quotation. The entire
+indented region that follows is parsed as if it were between `{}`,
+except that it must have leading indentation, which is not part of the
+quotation:
 
 ```lexpr
 foo bar @
@@ -956,32 +1015,11 @@ baz
   baz))
 ```
 
-XXX Line follower: &
+## Line follower: Bar
 
-```lexpr
-foo \
-  bar &
-  baz
-zig zag
-```
-`=>`
-```sexpr
-((#%line foo bar baz) (#%line zig zag))
-```
-
-```lexpr
-foo \
-  bar &
-  baz &
-  zab
-zig zag
-```
-`=>`
-```sexpr
-((#%line foo bar baz zab) (#%line zig zag))
-```
-
-XXX Line follower: |
+The `|` line follower begins a series of lines which must begin with
+spaces and then a `|` at the same column as the original `|`. The
+first line begins immediately after the `|`.
 
 ```lexpr
 let | x = 1
@@ -994,10 +1032,17 @@ in :
 ((#%line let (#%bar (#%line x = 1) (#%line y = 2)) in (#%indent (#%line x + y))))
 ```
 
+As usual, all of the various line followers may be used at the same
+time. If a line follower appears after a `|`, then the required
+indentation begins at the first column of the line after the `|`.
+
 ```lexpr
 a :
   b \
     | e
+    | f \
+        1
+    | 2
 
 g
 
@@ -1005,12 +1050,14 @@ i
 ```
 `=>`
 ```sexpr
-((#%line a (#%indent (#%line b (#%bar (#%line e)))))
+((#%line a (#%indent (#%line b (#%bar (#%line e) (#%line f 1) (#%line 2)))))
  (#%line g)
  (#%line i))
 ```
 
-XXX Embedded lines
+## Embedded lines
+
+In leader position, `[]`s delimit an embedded line:
 
 ```lexpr
 foo bar [zig zag]
@@ -1020,6 +1067,8 @@ foo bar [zig zag]
 ((#%line foo bar (#%line zig zag)))
 ```
 
+They can, of course, be nested:
+
 ```lexpr
 foo bar [zig [baz] zag]
 ```
@@ -1027,6 +1076,8 @@ foo bar [zig [baz] zag]
 ```sexpr
 ((#%line foo bar (#%line zig (#%line baz) zag)))
 ```
+
+Or use line followers:
 
 ```lexpr
 foo bar [zig \
@@ -1036,6 +1087,8 @@ foo bar [zig \
 ```sexpr
 ((#%line foo bar (#%line zig zag) baz))
 ```
+
+Of any kind:
 
 ```lexpr
 foo bar [zig :
@@ -1047,37 +1100,124 @@ foo bar [zig :
 ((#%line foo bar (#%line zig (#%indent (#%line zag) (#%line zog))) baz))
 ```
 
-XXX MORE goal: only one way to format
---- not really, because of \ and precedence
+Or appear inside of quotes:
 
-XXX MORE sacred cow: comments
+```lexpr
+foo bar '[zig :
+            zag
+            zog] baz
+```
+`=>`
+```sexpr
+((#%line foo bar (#%quote (#%line zig (#%indent (#%line zag) (#%line zog)))) baz))
+```
 
-Don't have comments and insist on literal programming
-for prose, plus logging, tests ("Show, don't tell"), good names,
-specification, etc, because the compiler doesn't execute or analyze
-comments.
+## Comments
 
-Problem 1.a: What about commenting out code?
-Solution 1.a.1: (when false ...) is easy, but doesn't work for
-macros.
-Solution 1.a.2: `git diff` and the kill ring has the knowledge you
-want
+Line expressions comments are written in two ways. First, a `#;`
+leader consumes a unit, a space, and then another unit, returning the
+second unit. Next, a `;` line follower is treated exactly like a new
+line.
 
-XXX ; as a line follower or leader?
+```lexpr
+foo #;bar zog
+```
+`=>`
+```sexpr
+((#%line foo zog))
+```
 
-XXX sacred cow: no extra whitespace, except for newlines
+`#;` combines nicely with `{}` for long block comments.
 
-Problem: Lining up definitions or other things, like:
-  let foo = 1
-        a = 2
-Solution 1: Allow multiple |s?
-let | foo | 1
-    |   a | 2
-Problem 1.1: Formatting is annoying to maintain and must be fixed
-up.
-Modification 1.2: Treat = (and =>?) as another kind of balancer,
-like | because it is common.
+```lexpr
+foo #;{A long and beautiful text comment} zog
+```
+`=>`
+```sexpr
+((#%line foo zog))
+```
 
-XXX lots of overlap with `#lang something`: https://github.com/tonyg/racket-something
+Here's an example of `;` follower:
 
-XXX <> is ugly special casing... maybe remove #%param-app?
+```lexpr
+foo bar ; Here is a little note about programming style
+zog zig ; I'm in favor of it!
+```
+`=>`
+```sexpr
+((#%line foo bar) (#%line zog zig))
+```
+
+And using it on its own, which acts like a blank line:
+
+```lexpr
+zig :
+  zag
+  ; This line is intentionally left blank.
+  zog
+```
+`=>`
+```sexpr
+((#%line zig (#%indent (#%line zag) (#%line zog))))
+```
+
+# Drawbacks
+[drawbacks]: #drawbacks
+
+Line-expressions are strictly less powerful than a Honu-like syntax
+where grouping is binding-sensitive and macros can control how much of
+the token stream they read. This is trade-off that exchanges power for
+an easier to remember set of rules.
+
+Line-expressions rely on an operator precedence hierarchy, which many
+people find distasteful. Line-expressions attempt to alleviate this by
+using only one associativity and making very few additions atop normal
+arithmetic notation.
+
+The same character sequences, like `()`, `[]`, and `:` are given
+different interpretations depending on their context, whether in a
+leader, follower, or line follower position.
+
+Line-expressions are extremely strict on where whitespace may occur
+and exactly which kind may be used, because spaces are syntactically
+meaningful controls of whether a position is a leader or line follower
+position. This does have the advantage of limiting the number of ways
+a programmed is allowed to be format, which may increase the
+uniformity of programming styles across the Lexpr community. The
+biggest annoyances with this is that it is illegal to add extra
+spaces to align things like assignments. That is:
+
+```lexpr
+let |   x = 1
+    | bar = 2
+```
+`=>`
+```sexpr
+(error "unexpected")
+```
+
+is illegal because of the extra spaces before `x`.
+
+XXX Blank lines only okay if have correct spacing
+
+# Rationale and alternatives
+[rationale-and-alternatives]: #rationale-and-alternatives
+
+Line-expressions support a familiar syntax with enough flexibility for
+interesting language oriented programming. Infix operators are
+supported. Familiar function call syntax, as well as references and
+templates, is supported. Blocks of statements are
+supported. Parentheses can always be added around expressions for
+grouping. Text quotations supports embedding plain-text, as well as
+facilitates macros that use different parsing rules.
+
+There are too many possible alternative concrete syntaxes to discuss
+them here. However, there are some small alternatives worth
+mentioning.
+
+XXX Boundary
+
+XXX Binding specific precedence/assoc?
+
+XXX , as a special operator (that may appear at the end of a unit) and
+no sequence/group distinction
