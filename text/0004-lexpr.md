@@ -181,8 +181,7 @@ to use a library of text applications, like `0b{0110}`.
 
 Symbols are the most common leaders are any sequence of characters
 that is not a number and does not include a character in `\n
-.,'()[]{}<>`. As a special case, a symbol may begin with `.`, `<` or
-include `>` if not inside a parameter application.
+.,'()[]{}⟨⟩`. As a special case, a symbol may begin with `.`.
 
 ```lexpr
 x
@@ -537,7 +536,7 @@ f[x, y]
 XXX Param
 
 ```lexpr
-f<x, y>
+f⟨x, y⟩
 ```
 `=>`
 ```sexpr
@@ -553,7 +552,7 @@ x < y > z
 ```
 
 ```lexpr
-f<A, B>(x, y)[1, 2]
+f⟨A, B⟩(x, y)[1, 2]
 ```
 `=>`
 ```sexpr
