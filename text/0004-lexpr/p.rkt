@@ -15,8 +15,9 @@
 (define ((set-mem s) v) (set-member? s v))
 
 (define indent-amount 2)
-(define line-space-follower (string->set "|:@\\&"))
+(define line-space-follower (string->set "|:@\\&;"))
 (define line-follower (set-union (string->set "]\n") (set eof)))
+(define line-comment-follower (set-union (string->set "\n") (set eof)))
 (define follower (set-union (string->set "\n .,'()[]{}⟨⟩") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
@@ -175,8 +176,15 @@
       [#\, (read-char ip)
        (list '#%unquote (unit))]
       [#\# (read-char ip)
-       (expectc #\\)
-       (read-char ip)]
+       (match (peek-char ip)
+         [#\\ (read-char ip)
+          (read-char ip)]
+         [#\; (read-char ip)
+          (unit)
+          (expectc #\space)
+          (leader)]
+         [_
+          (parse-error 'leader #\#)])]
       [#\( (read-char ip)
        (grouped #\))]
       [#\{ (read-char ip)
@@ -324,7 +332,7 @@
        '()]
       [#\space (read-char ip)
        (line-space-tail p)]
-      [#\] ;; We're not reading on purpose, because this ends an
+      [#\] ;; We're not consuming on purpose, because this ends an
            ;; embedded line and we may be deeply nested, so other
            ;; lines need to see it also.
        '()]
@@ -333,6 +341,10 @@
   (define (line-space-tail p)
     (spy 'line-space-tail p)
     (match (peek-char ip)
+      [#\; (read-char ip)
+       (reads-until line-comment-follower)
+       (read-char ip)
+       '()]
       [#\\ (read-char ip)
        (expectc #\newline)
        (define new-p (prefix-indent p))
@@ -356,9 +368,13 @@
             (parse-error 'line-space-tail p #\:)]))
        (cons
         (cons '#%indent (lines new-p))
-        (if (expect-prefix p)
-          (line-start p)
-          '()))]
+        (cond
+          [(expect-prefix p)
+           (spy 'indent 'line-continues)
+           (line-start p)]
+          [else
+           (spy 'indent 'line-stops)
+           '()]))]
       [#\@ (read-char ip)
        (expectc #\newline)
        (define new-p (prefix-indent p))
@@ -383,16 +399,16 @@
       [(expect-prefix p)
        (match (peek-char ip)
          [(? eof-object?) '()]
-         [#\newline
-          (cond
-            [p '()]
-            [else
-             (read-char ip)
-             (lines (prefix-next/lines p))])]
+         [#\newline (read-char ip)
+          (lines (prefix-next/lines p))]
          [_
-          (cons (line (prefix-next/line p))
-                (lines (prefix-next/lines p)))])]
+          (define l (line (prefix-next/line p)))
+          (define r (lines (prefix-next/lines p)))
+          (if (equal? l '(#%line))
+            r
+            (cons l r))])]
       [else
+       (spy 'lines 'no-prefix)
        '()]))
 
   (lines #f))

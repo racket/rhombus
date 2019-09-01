@@ -78,14 +78,14 @@ fun ksum(k, l) :
         0
     | cons(a, d) :
         (a + k * ksum(k, d))
-        
+
 fun timed_thunk(thunk) :
   let before = now()
   let answer = thunk()
   let after = now()
   println {It took @(after - before) seconds}
   answer
-  
+
 mac timed \
   | [_ e] :
       'timed_thunk([λ() : e])
@@ -1115,7 +1115,7 @@ foo bar '[zig :
 ## Comments
 
 Line expressions comments are written in two ways. First, a `#;`
-leader consumes a unit, a space, and then another unit, returning the
+leader consumes a unit, a space, and then another leader, returning the
 second unit. Next, a `;` line follower is treated exactly like a new
 line.
 
@@ -1198,7 +1198,14 @@ let |   x = 1
 
 is illegal because of the extra spaces before `x`.
 
-XXX Blank lines only okay if have correct spacing
+Comments are a little awkward because they are not allowed anywhere
+(i.e. only in line follower positions) and there's no easy way to
+comment out an entire line or block of lines, since `#;` requires a
+unit position.
+
+It is awkward that blank lines are only okay if they have the correct
+indentation. I don't know how to get around this and still allow blank
+lines to end blocks without requiring any notation.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -1215,9 +1222,47 @@ There are too many possible alternative concrete syntaxes to discuss
 them here. However, there are some small alternatives worth
 mentioning.
 
-XXX Boundary
+It might be possible to replace the infix parsing in the parser with a
+macro implementation by parsing groups line `(1 + 2)` into `(#%group
+1 + 2)`. The advantage of this is that binding-specific precedence
+hierarchies could be defined. It is arguable that this is not an
+advantage at all though, because it amplifies the need to understand a
+precedence hierarchy that is already awkward in a language like
+C. Similarly, it has the advantage of making groups inside of
+quotations unparsed. Although it is possible to redefine Lexprs in
+this way, I don't think it would be a good idea.
 
-XXX Binding specific precedence/assoc?
+Presently, Lexprs consider sequences (series of groups separated by
+commas) as distinct from groups (series of units separated by
+spaces). It is conceivable to merge these by adding `,` as an operator
+with the loosest precedence. However, with the normal rules of groups,
+you would have to have spaces around the commas, `(1 + 2 , 3)`, which
+looks horrible. One way to solve this is to allow operators to abut
+other units, but this would be very inoperable with existing Racket
+programs that use identifiers like
+`drracket:language:simple-module-based-language->module-based-language-mixin`. Another
+way is to treat `,` as a special operator: the only one that CAN abut
+a unit. This is compatible, because existing Racket programs can't
+really use `,` in an identifier, because it is an unquote. However,
+this shows another problem, which is that `,` at the front is already
+an unquote in Lexprs. Overall, this is a very tight space we're in
+designing Lexprs, and I think I've done the best you can.
 
-XXX , as a special operator (that may appear at the end of a unit) and
-no sequence/group distinction
+# Prior art
+[prior-art]: #prior-art
+
+The prior art document are the root of the repository describes a
+variety of related works. Line-expressions are an example of a token
+tree.
+
+# Unresolved questions
+[unresolved-questions]: #unresolved-questions
+
+# Future possibilities
+[future-possibilities]: #future-possibilities
+
+This proposal leaves open the Line-expression shapes expected by
+Racket2 core forms and standard library forms. It purposefully leaves
+open all questions about the semantic interpretations of most
+syntactic structures.
+
