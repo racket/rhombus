@@ -1,6 +1,6 @@
 - Feature Name: Line-expressions as fundamental syntax
 - Start Date: 2019-08-30
-- RFC PR: [racket/racket2-rfcs#XXX](https://github.com/racket/racket2-rfcs/pull/XXX)
+- RFC PR: [racket/racket2-rfcs#114](https://github.com/racket/racket2-rfcs/pull/114)
 
 # Summary
 [summary]: #summary
