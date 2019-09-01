@@ -17,8 +17,7 @@
 (define indent-amount 2)
 (define line-space-follower (string->set "|:@\\&"))
 (define line-follower (set-union (string->set "]\n") (set eof)))
-(define follower (set-union (string->set "\n .,'()[]{}<") (set eof)))
-(define pointy-follower (set-union follower (string->set ">")))
+(define follower (set-union (string->set "\n .,'()[]{}⟨⟩") (set eof)))
 (define number-follower (set-remove follower #\.))
 (define number-leader (string->set "-+0123456789"))
 (define text-follower (set-union (string->set "@{}\n") (set eof)))
@@ -165,12 +164,7 @@
   (define (text-single x)
     (if (equal? "" x) '() (list x)))
 
-  (define inside-pointy? (make-parameter #f))
   (define (leader)
-    (define current-follower
-      (if (inside-pointy?)
-        pointy-follower
-        follower))
     (match (peek-char ip)
       [(? (set-mem number-leader))
        (define s (reads-until number-follower))
@@ -190,13 +184,13 @@
       [#\[ (read-char ip)
        (begin0 (line #f)
          (expectc #\]))]
-      [(or #\< #\. #\>)
+      [#\.
        (string->symbol
         (string-append (string (read-char ip))
-                       (reads-until current-follower)))]
+                       (reads-until follower)))]
       [x
        (define l
-         (reads-until current-follower))
+         (reads-until follower))
        (when (equal? "" l)
          (parse-error 'leader))
        (string->symbol l)]))
@@ -209,11 +203,9 @@
        (after-leader (list* '#%fun-app l (seq #\))))]
       [#\[ (read-char ip)
        (after-leader (list* '#%member l (seq #\])))]
-      [#\< (read-char ip)
+      [#\⟨ (read-char ip)
        (after-leader
-        (list* '#%param l
-               (parameterize ([inside-pointy? #t])
-                 (seq #\>))))]
+        (list* '#%param l (seq #\⟩)))]
       [#\{ (read-char ip)
        (after-leader (list* '#%text-app l (rest (text-mode #f))))]
       [_ l]))
