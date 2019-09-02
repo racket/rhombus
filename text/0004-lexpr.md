@@ -814,7 +814,7 @@ x + (y + 3)
 However, everything interesting about lines is determined by their
 follower.
 
-# Line Follower: Newline
+## Line Follower: Newline
 
 If a line follower is a newline (i.e. `\n`), then the line is
 terminated and a new line is parsed:
