@@ -1277,7 +1277,9 @@ unit position.
 
 It is awkward that blank lines are only okay if they have the correct
 indentation. I don't know how to get around this and still allow blank
-lines to end blocks without requiring any notation.
+lines to end blocks without requiring any notation. I think in
+practice, it will be insane to use a blank line without sticking in a
+`;` so that the fact there are blank lines there is apparent.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
