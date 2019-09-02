@@ -457,6 +457,9 @@
   (define-simple-macro (rt in e)
     (read-test (quote-srcloc) in 'e))
 
+  (rt "(1 + 2 - 3 + 4)" ((#%line (- (+ 1 2) (+ 3 4)))))
+  (rt "(1 * 2 / 3 * 4)" ((#%line (/ (* 1 2) (* 3 4)))))
+
   (define (extract-md-block lang line l)
     (define-values (ignored block-start)
       (splitf-at l (λ (s) (not (string=? s lang)))))

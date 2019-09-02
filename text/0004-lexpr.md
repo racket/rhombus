@@ -253,7 +253,7 @@ The infix order of operations is based on the basic mathematical
 operations, PMDASFLTR (parentheses, multiplication, division,
 addition, subtraction, from left to right), with a very small number
 of extra operators. All operators associate the same way---to the
-left.
+left. All operators are binary.
 
 The following table shows the order of operations from tightest to
 loosest. If two operators appear in the same group, then they cannot
