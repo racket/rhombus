@@ -406,7 +406,7 @@ and
             (#%fun-app iota 4))))
 ```
 
-Operators are the same precedence level cannot be mixed without
+Operators at the same precedence level cannot be mixed without
 parentheses:
 
 ```lexpr
