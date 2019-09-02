@@ -1217,10 +1217,10 @@ Line-expressions are extremely strict on where whitespace may occur
 and exactly which kind may be used, because spaces are syntactically
 meaningful controls of whether a position is a leader or line follower
 position. This does have the advantage of limiting the number of ways
-a programmed is allowed to be format, which may increase the
-uniformity of programming styles across the Lexpr community. The
-biggest annoyances with this is that it is illegal to add extra
-spaces to align things like assignments. That is:
+a program is allowed to be format, which may increase the uniformity
+of programming styles across the Lexpr community. The biggest
+annoyances with this is that it is illegal to add extra spaces to
+align things like assignments. That is:
 
 ```lexpr
 let |   x = 1
