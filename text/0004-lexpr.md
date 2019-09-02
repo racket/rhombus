@@ -1010,6 +1010,20 @@ zig : zag
 ((#%line zig (#%indent (#%line zag) (#%line zog))))
 ```
 
+This looks particularly tasty when used with `if`:
+
+```lexpr
+if (x < y) : f(x)
+else : g(y)
+```
+`=>`
+```sexpr
+((#%line if (< x y) 
+   (#%indent (#%line (#%fun-app f x)))
+  else 
+   (#%indent (#%line (#%fun-app g y)))))
+```
+
 Of course, multiple line followers may be used in tandem:
 
 ```lexpr
@@ -1024,6 +1038,29 @@ g
 ```sexpr
 ((#%line a (#%indent (#%line b c) (#%line d)) f) (#%line g))
 ```
+
+Since a symbol may include line follower characters like `:`, it is
+not possible to use them as a symbol inside a line, unless they are
+wrapped in parens.
+
+```lexpr
+a : b
+```
+`=>`
+```sexpr
+((#%line a (#%indent (#%line b))))
+```
+
+vs
+
+```lexpr
+a (:) b
+```
+`=>`
+```sexpr
+((#%line a : b))
+```
+
 
 ## Line follower: At
 
@@ -1060,11 +1097,11 @@ first line begins immediately after the `|`.
 let | x = 1
     | y = 2
 in :
-  x + y
+  (x + y)
 ```
 `=>`
 ```sexpr
-((#%line let (#%bar (#%line x = 1) (#%line y = 2)) in (#%indent (#%line x + y))))
+((#%line let (#%bar (#%line x = 1) (#%line y = 2)) in (#%indent (#%line (+ x y)))))
 ```
 
 As usual, all of the various line followers may be used at the same
