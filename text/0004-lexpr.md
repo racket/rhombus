@@ -630,7 +630,7 @@ And function application:
 
 An unquote is always in the leader position, and a comma in a sequence
 is always in the follower position, so there is never ambiguity about
-where a comma is an unquote or the next element in a sequence:
+whether a comma is an unquote or the next element in a sequence:
 
 This `,` is an unquote:
 
