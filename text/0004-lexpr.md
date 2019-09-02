@@ -257,22 +257,21 @@ left. All operators are binary.
 
 The following table shows the order of operations from tightest to
 loosest. If two operators appear in the same group, then they cannot
-be combined together in the same group. This is to prevent confusing
+be combined together in the same group, unless noted. This is to prevent confusing
 combinations.
 
-| `:` |
-| `*` |
-| `/` |
-| `%` |
-| `+` |
-| `-` |
+| Operators | Note |
+| --------- | ---- |
+| `:` | |
+| `*` `*` `/` | may be combined |
+| `+` `-` | may be combined |
 | operators not mentioned |
-| `< <= == != >= >` |
-| `&& ||` |
-| `.` |
-| `$` |
-| `=` |
-| `=>` |
+| `< <= == != >= >` | |
+| `&& ||` | |
+| `.` | |
+| `$` | |
+| `=` | |
+| `=>` | |
 
 An operator is any sequence of characters with no characters in the
 Unicode categories `Ll`, `Lu`, `Lt`, `Lm`, and `Lo`.
@@ -284,7 +283,7 @@ with others (`&&` and `||`) and finally assigned (`=`).
 
 In parallel, the table supports curried functional programming and
 pointless function operations like `.` and `$`, because adjacency is
-treated as function application
+treated as function application, even if operators appear alone.
 
 Here are some examples:
 
@@ -298,14 +297,38 @@ All operators are left-associative:
 ((#%line (+ (+ x 6) y)))
 ```
 
-Multiplication is tighter than addition:
+Typical arithmetic formulas have expected meaning:
 
 ```lexpr
-(x + 6 * y)
+(1 + 2 - 3 + 4)
 ```
 `=>`
 ```sexpr
-((#%line (+ x (* 6 y))))
+((#%line (+ (- (+ 1 2) 3) 4)))
+```
+
+```lexpr
+(1 + 2 * 3 + 4)
+```
+`=>`
+```sexpr
+((#%line (+ (+ 1 (* 2 3)) 4)))
+```
+
+```lexpr
+(1 * 2 + 3 * 4)
+```
+`=>`
+```sexpr
+((#%line (+ (* 1 2) (* 3 4))))
+```
+
+```lexpr
+(1 * 2 / 3 * 4)
+```
+`=>`
+```sexpr
+((#%line (* (/ (* 1 2) 3) 4)))
 ```
 
 An embedded group can change the order of operations:
@@ -338,6 +361,17 @@ unnecessarily:
 ```sexpr
 ((#%line (: x int)))
 ```
+
+Adjacency means function unary application, even for operators:
+
+```lexpr
+(1 + 2 + (- 3) + 4)
+```
+`=>`
+```sexpr
+((#%line (+ (+ (+ 1 2) (#%fun-app - 3)) 4)))
+```
+
 
 Here is a prototypical mathematical group:
 

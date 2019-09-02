@@ -27,17 +27,29 @@
   (and (symbol? x)
        (regexp-match #px"^\\p{^L}*$" (symbol->string x))))
 (define PRECEDENCE-ORDER
-  '((:) (*) (/) (%) (+) (-) #t (< <= == != >= >) (&& \|\|) (|.|) ($) (=) (=>)))
+  '((#f (:))
+    (#t (* / %))
+    (#t (+ -))
+    (#f #t)
+    (#f (< <= == != >= >))
+    (#f (&& \|\|))
+    (#f (|.|))
+    (#f ($))
+    (#f (=))
+    (#f (=>))))
 
-(define-values (precedence-table default-precedence)
-  (for/fold ([pt (hasheq)] [dp #f])
-            ([o (in-list PRECEDENCE-ORDER)]
+(define-values (precedence-level-info precedence-table default-precedence)
+  (for/fold ([pli (hasheq)] [pt (hasheq)] [dp #f])
+            ([nfo (in-list PRECEDENCE-ORDER)]
              [i (in-naturals)])
+    (match-define (list may-be-combined? ops) nfo)
+    (define plip (hash-set pli i may-be-combined?))
     (cond
-      [(eq? o #t)
-       (values pt i)]
+      [(eq? ops #t)
+       (values plip pt i)]
       [else
-       (values (for/fold ([pt pt]) ([o (in-list o)])
+       (values plip
+               (for/fold ([pt pt]) ([o (in-list ops)])
                  (hash-set pt o i))
                dp)])))
 
@@ -98,8 +110,9 @@
        (define p1 (sy:precendence op1))
        (cond
          [(or (< p2 p1)
-              (and (equal? op1 op2)
-                   (= p1 p2)))
+              (and (= p1 p2)
+                   (or (equal? op1 op2)
+                       (hash-ref precedence-level-info p1))))
           (sy:push-operator
            (sy:push-operator-to-output op2 out)
            ops-p op1)]
@@ -127,7 +140,9 @@
        (list op)]
       [(list* arg2 arg1 out)
        (cons (list op arg1 arg2)
-             out)]))
+             out)]
+      [(list* arg1 out)
+       (cons (list '#%fun-app op arg1) out)]))
 
   (define (text-mode p)
     (cons '#%text (text-mode* p 0)))
@@ -456,9 +471,6 @@
 
   (define-simple-macro (rt in e)
     (read-test (quote-srcloc) in 'e))
-
-  (rt "(1 + 2 - 3 + 4)" ((#%line (- (+ 1 2) (+ 3 4)))))
-  (rt "(1 * 2 / 3 * 4)" ((#%line (/ (* 1 2) (* 3 4)))))
 
   (define (extract-md-block lang line l)
     (define-values (ignored block-start)
