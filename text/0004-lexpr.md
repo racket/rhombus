@@ -62,7 +62,7 @@ are tokens like a newline, which end a line, or `&`, which extend a
 line past a newline, or `:`, which embeds a series of lines indented
 one level, or `|`, which embeds a series of lines aligned with the
 bar, and so on. Text is delimited by `{` and `}` and may escape with
-`@` and is always parsed into lists of characters split across `\n`.
+`@` and is always parsed into lists of strings split across `\n`.
 
 In general, Lexprs are very strict on their formatting: additional
 spaces are never allowed and newlines are meaningful. In Lexprs, a
@@ -75,6 +75,7 @@ Lexprs:
 fun ksum(k, l) :
   match l \
     | empty :
+        ; This is my favorite number!
         0
     | cons(a, d) :
         (a + k * ksum(k, d))
