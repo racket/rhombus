@@ -201,5 +201,7 @@ This section includes references on general parsing techniques. These don't dire
 [Top Down Operator Precedence](http://tdop.github.io) -  Vaughan R. Pratt  Massachusetts Institute of Technology 1973
 
 
+# PLOT
 
+[Design of the PLOT programming language](http://users.rcn.com/david-moon/PLOT/) by [David Moon](https://en.wikipedia.org/wiki/David_A._Moon).
 
