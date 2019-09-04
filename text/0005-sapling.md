@@ -11,7 +11,7 @@ for further enforestation by another parser (e.g., as in Honu). The
 notation is line-sensitive but indentation-insensitive. The identation
 of a sapling can be normalized using only lexemes without further
 parsing information. The parsed form of a sapling imposes grouping to
-ensure that further parsing is consistent with the Salping's normal
+ensure that further parsing is consistent with the Sapling's normal
 indentation.
 
 # Motivation
