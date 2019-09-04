@@ -1,0 +1,230 @@
+let | x = 1
+    | y = 2
+& x+y
+
+define pi = 3.14
+
+define fib(n) =
+  log_error("fib called")
+  cond | (n = 0) => 0
+       | (n = 1) => 1
+       | else => fib(n-1) + fib(n-2)
+
+define
+| fib(0) = 0
+| fib(1) = 1
+| fib(n) = fib(n-1) + fib(n-2)
+
+define fib =
+  lambda (n) =>
+    cond | (n = 0) => 0
+         | (n = 1) => 1
+         | else => fib(n-1) + fib(n-2)
+
+define fib(n) =
+  match n
+  | 0 => 0
+  | 1 => 1
+  | n => fib(n-1) + fib(n-2)
+
+define fib(n) =
+  match n
+  | 0 =>
+      0
+  | 1 =>
+      1
+  | n =>
+      fib(n-1) + fib(n-2)
+
+// This one should fail to parse, because the `+` is
+// split across two groups
+define fib(n) =
+  match n
+  | 0
+    => 0
+  | 1
+    => 1
+  | n
+    => fib(n-1)
+       + fib(n-2)
+
+// Continue the + line
+define fib(n) =
+  match n
+  | 0
+    => 0
+  | 1
+    => 1
+  | n
+    => fib(n-1) \
+         + fib(n-2)
+
+define fib(n) =
+  match n | 0 => 0 | 1 => 1
+          | n =>
+              fib(n-1) + fib(n-2)
+
+// Misleadingly indented...
+define make_adder(n) =
+  lambda (m) =>
+    printf("adding to ~a\n", m)
+  m + n
+
+// Reindented
+define make_adder(n) =
+  lambda (m) =>
+    printf("adding to ~a\n", m)
+    m + n
+
+// Add parens to get somethign different (correctly indented):
+define make_adder(n) =
+  (lambda (m) =>
+    printf("adding to ~a\n", m))
+  m + n
+
+struct posn(x, y):
+  _property prop_equal_and_hash \
+    (let | hc => lambda (a : posn, hc) =>
+                   hc(a.x) + hc(a.y)
+     & [lambda (a : posn, b : posn, eql) =>
+          (eql(a.x, b.x) \
+             && eql(a.y = b.y)),
+        hc,
+        hc])
+
+// Properly indented, but it looks a little ugly
+// to start a `let` mid-line, because the `&`
+// lines up under the group start
+struct posn(x, y):
+  _property prop_equal_and_hash \
+    let | hc => lambda (a : posn, hc) =>
+                  hc(a.x) + hc(a.y)
+  & [lambda (a : posn, b : posn, eql) =>
+       (eql(a.x, b.x) \
+          && eql(a.y = b.y)),
+     hc,
+     hc]
+      
+// Misleadingly indented: the `|` will
+// belong to the `let`, not the `lambda`:
+struct posn(x, y):
+  _property prop_equal_and_hash \
+    (let | hc => lambda (a : posn, hc) =>
+                   match (a.x, a.y)
+                   | (0, 0) => 0
+                   | _ => hc(a.x) + hc(a.y)
+     & [lambda (a : posn, b : posn, eql) =>
+          (eql(a.x, b.x) \
+             && eql(a.y = b.y)),
+        hc,
+        hc])
+
+// Re-indented, showing how it will parse:
+struct posn(x, y):
+  _property prop_equal_and_hash \
+    (let | hc => lambda (a : posn, hc) =>
+                   match (a.x, a.y)
+         | (0, 0) => 0
+         | _ => hc(a.x) + hc(a.y)
+     & [lambda (a : posn, b : posn, eql) =>
+          (eql(a.x, b.x) \
+             && eql(a.y = b.y)),
+        hc,
+        hc])
+
+// Ok with more parentheses:
+struct posn(x, y):
+  _property prop_equal_and_hash \
+    (let | hc => (lambda (a : posn, hc) =>
+                    hc(a.x) + hc(a.y))
+     & [lambda (a : posn, b : posn, eql) =>
+          (eql(a.x, b.x) \
+             && eql(a.y = b.y)),
+        hc,
+        hc])
+
+define fourth(n : integer) =
+  define m = n*n
+  define v = m*m
+  printf("~a^4 = ~a\n", n, v)
+  v
+
+define exp(n : integer, _base base = 2.718281828459045) =
+  if (n = 1)
+  | base
+  | base * exp(n-1, _base base)
+
+// A better choice of syntax for `if`? Not sure,
+// but it's up to the implementer of `if`.
+define exp(n : integer, _base base = 2.718281828459045) =
+  if (n = 1):
+    base
+    base * exp(n-1, _base base)
+
+define positive_p(n) => (if (n > 0) | #true | #false)
+
+define go() = {
+  define helper(n) =
+    list(n, n)
+
+  define more(m) =
+    if (m == 0)
+    | "done"
+    | more(m - 1)
+
+  helper(more(9))
+}
+
+define approx(x) =
+  match x
+  | something(v) => printf("got it\n")
+                    v
+  | nothing => 0
+
+define approx(x) =
+  match x
+  | something(v) =>
+      printf("got it\n")
+      v
+  | nothing => 0
+
+// Nested "=>"s work out to bind more tightly than "|",
+// in a sense:
+define approx_thunk(x) =
+  match x
+  | something(v) => lambda () =>
+                      v
+  | nothing => lambda () => 0
+
+// And we're happy to resort to parentheses to handle more
+// general cases:
+define approx_thunk(x) =
+  match x
+  | something(v) => (lambda
+                     | () => v
+                     | (n) => v + n)
+  | nothing => (lambda
+                | () => 0
+                | (n) => n)
+
+define curried =
+  lambda (x) =>
+    lambda (y) =>
+      lambda (z) =>
+        list(x, y, z)
+
+dictionary = {"foo" : 17,
+              "bar" : "string",
+              "baz" : #true }
+
+begin:
+  dictionary = {
+    "foo" : 17,
+    "bar" : "string",
+    "baz" : #true
+  }
+
+define f(x_something,
+         y_something_else,
+         z_also_long_name) =
+  5
