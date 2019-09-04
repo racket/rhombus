@@ -268,7 +268,7 @@ combinations.
 | `+` `-` | may be combined |
 | operators not mentioned |
 | `< <= == != >= >` | |
-| `&& ||` | |
+| `&& \|\|` | |
 | `.` | |
 | `$` | |
 | `=` | |
