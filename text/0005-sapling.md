@@ -274,7 +274,7 @@ See [demo.sap](demo.sap), [interp.sap](interp.sap), and
 
 Sapling notation is not a good choice where precise and complete
 grouping is needed, both because its grouping is coarse-grained and
-the grpuing rules generate lots of extra `#%grp` layers.
+the grouping rules generate lots of extra `#%grp` layers.
 
 Saplings do not resolve the question of how infix expressions parse.
 There is no precedence at the sapling level, for example, other than
@@ -301,7 +301,7 @@ range of code to reindent if editing has made it unreadable.
 
 There is a lot of room to change the definition of _arrow_, _equal_,
 etc., to adjust the indentation rules, and possibly to tweak the
-grouping rules to avoid unecessary `#%grp`s.
+grouping rules to avoid unnecessary `#%grp`s.
 
 # Prior art
 [prior-art]: #prior-art
@@ -310,7 +310,7 @@ Spaling notation takes a lot of inspriation from S-expression,
 alternative S-expression notations, and especially
 [Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/text/0004-lexpr.md).
 The idea that, even in an S-expression-like setting, some parsing can
-be deferred a later arser has many precents, including Clojure's choice
+be deferred a later parser has many precedents, including Clojure's choice
 of where to put parentheses and notations that use something like `$`
 to escape to infix mode.
 
