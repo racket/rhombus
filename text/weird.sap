@@ -1,0 +1,119 @@
+// A set of examples to see what happens with verious forms,
+// where many of them seem nonsensical
+
+somthing else = 8
+
+this is a \
+  very long linear group \
+  that spans multiple lines
+
+this is | one => a \
+            long result
+        | two \
+            also long
+        | three =>
+            result \
+              nested \
+              here
+
+something +
+more stuff
+
+something ->
+more stuff
+
+define
+  | fib(0) = 0
+  | fib(1) = 1
+  | fib(n) =
+    fib(n-1) + fib(n-2)
+
+define
+  | fib(0) = 0
+  | fib(1) = 1
+  | fib(n) = fib(n-1) + fib(n-2)
+  | more
+
+struct color_posn(col):
+  _extends posn
+  _mutable
+
+// Try some strange things to see how they indent
+nonense:
+  hello | there 4.5
+        | more f(8)
+  next (ok |
+           | stuff => (begin :
+                        more
+                        things
+
+                       separately)
+          again)
+  something
+
+define x =
+ 10,
+define y = 12
+
+q:
+  x, y
+  z
+  
+q:
+  x, y;
+z
+
+q:
+  w:
+    x, y;
+z
+
+x + w | z => =>
+              z
+
+x | w
+& y
+  & z
+    | q
+
+let | x = 8
+    | y = 9 => 10
+& let | x = 8
+      | y = 9 => 10
+  & show(x + y)
+    x - y
+
+letrec_syntax_values
+| m = (syntax_rules ....)
+| n = (syntax_rules ....)
+&
+  | x = 10
+  | y = 12
+  &
+    body
+    more
+
+x something | a
+              y:
+                w:
+                q
+            | c
+              z
+& b
+
+x | indentize
+    y
+    z
+  | indentize =>
+      y
+
+define fib(n) =
+ match n
+ | 0
+   => 0
+ | 1
+   => 1
+ | n
+   => fib(n-1)
+   + fib(n-2)
+   more
