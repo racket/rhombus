@@ -67,11 +67,11 @@ Preliminaries:
 
 Special syntactic tokens:
 
- <arrow> = `=` | `=>` | `<=` | `->` | `<-` | `->-` | ....
-   (Any operator that includes "< or ">".)
+ <arrow> = `=>` | `==>` | `=->` ....
+   (Any operator that starts "=" and ends ">".)
 
  <equal> = `=` | `:` | `?=` | `?:` ...
-   (Operators that end in "=" or ":" and have no ">" or "<".)
+   (Operators that end in "=" or ":".)
 
  <opener> = `(` | `[` | `{` | ....
    (All Unicode openers?)
@@ -318,9 +318,9 @@ line-ending <backslash> previously appeared in the group.
 (define (lex source-name)
   (lexer
    [(eof) (ttoken EOF)]
-   [(:: (:* (:- symbolic (:or "<" ">")))
-        (:or "<" ">")
-        (:* symbolic))
+   [(:: "="
+        (:* symbolic)
+        ">")
     (token arrow-operator (string->symbol lexeme))]
    [(:: (:* (:- symbolic (:or "<" ">")))
         (:or ":" "="))

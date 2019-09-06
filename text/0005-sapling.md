@@ -173,10 +173,9 @@ level.
 
 Special syntactic tokens:
 
- - An _arrow_ is an operator that includes `<` or `>`.
+ - An _arrow_ is an operator that start `=` and ends `>`.
 
- - An _equal_ is an operator that ends in `=` or `:`
-   and has no `<` or `>`.
+ - An _equal_ is an operator that ends in `=` or `:`.
 
  - An _opener_ is a `(`, `[`, or `{`, or maybe an Unicode opener.
 
