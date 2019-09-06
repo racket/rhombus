@@ -1,6 +1,6 @@
 - Feature Name: Sapling notation
 - Start Date: 2019-09-04
-- RFC PR: [racket/racket2-rfcs#117](https://github.com/racket/racket2-rfcs/pull/117)
+- RFC PR: [racket/racket2-rfcs#119](https://github.com/racket/racket2-rfcs/pull/119)
 
 # Summary
 [summary]: #summary
