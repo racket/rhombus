@@ -83,7 +83,7 @@ define make_adder(n) =
   m + n
 
 struct posn(x, y):
-  _property prop_equal_and_hash \
+  property# prop_equal_and_hash \
     (let | hc => lambda (a : posn, hc) =>
                    hc(a.x) + hc(a.y)
      & [lambda (a : posn, b : posn, eql) =>
@@ -96,7 +96,7 @@ struct posn(x, y):
 // to start a `let` mid-line, because the `&`
 // lines up under the group start
 struct posn(x, y):
-  _property prop_equal_and_hash \
+  property# prop_equal_and_hash \
     let | hc => lambda (a : posn, hc) =>
                   hc(a.x) + hc(a.y)
   & [lambda (a : posn, b : posn, eql) =>
@@ -108,7 +108,7 @@ struct posn(x, y):
 // Misleadingly indented: the `|` will
 // belong to the `let`, not the `lambda`:
 struct posn(x, y):
-  _property prop_equal_and_hash \
+  property# prop_equal_and_hash \
     (let | hc => lambda (a : posn, hc) =>
                    match (a.x, a.y)
                    | (0, 0) => 0
@@ -121,7 +121,7 @@ struct posn(x, y):
 
 // Re-indented, showing how it will parse:
 struct posn(x, y):
-  _property prop_equal_and_hash \
+  property# prop_equal_and_hash \
     (let | hc => lambda (a : posn, hc) =>
                    match (a.x, a.y)
          | (0, 0) => 0
@@ -134,7 +134,7 @@ struct posn(x, y):
 
 // Ok with more parentheses:
 struct posn(x, y):
-  _property prop_equal_and_hash \
+  property# prop_equal_and_hash \
     (let | hc => (lambda (a : posn, hc) =>
                     hc(a.x) + hc(a.y))
      & [lambda (a : posn, b : posn, eql) =>
@@ -228,3 +228,45 @@ define f(x_something,
          y_something_else,
          z_also_long_name) =
   5
+
+define show_all(l) =
+  for | x = in_list(l)
+  & print(x)
+    newline()
+
+define show_zip(l, l2) =
+  for | x = in_list(l)
+      | x2 = in_list(l2)
+  & print(x)
+    print_string(" ")
+    print(y)
+    newline()
+
+define show_combos_not_same(l, l2) =
+  for | x = in_list(l)
+      | in# // shorthand for `when# #true`
+      | x2 = in_list(l2)
+      | when# !is_equal(x, x2)
+  & print(x)
+    print_string(" ")
+    print(y)
+    newline()
+
+define map(f, l) =
+  for list | x = in_list(l)
+  & f(x)
+
+// Could also be written with an extra line break:
+define map(f, l) =
+  for list
+  | x = in_list(l)
+  & f(x)
+
+define partition(l, pred) =
+  for fold (yes = empty,
+            no = empty
+            result# (reverse(yes), reverse(no)))
+  | x = in_list(l)
+  & (if pred(x)
+     | (cons(x, yes), no)
+     | (yes, cons(x, no)))

@@ -54,8 +54,9 @@ Preliminaries:
 
  - Numbers are written in some reasonable way distinct from
    identifiers. Literals are similarly distinct; we use "#true" and
-   "#false" for booleans, for example. Strings are written in the
-   obvious way with straight doublequotes.
+   "#false" for booleans, for example. Keywords are distinct from
+   identifier; we use identifiers that end in "#". Strings are written
+   in the obvious way with straight doublequotes.
 
  - No spaces are needed between operators and non-operators, so `1+2`
    and `1 + 2` mean the same thing.
@@ -337,15 +338,15 @@ line-ending <backslash> previously appeared in the group.
     (token literal (if (equal? lexeme "#true")
                        #t
                        #f))]
-   [(:: alphabetic
+   [(:: (:or alphabetic #\_)
         (:* (:or alphabetic
                  numeric
                  #\_)))
     (token identifier (string->symbol lexeme))]
-   [(:: #\_
-        (:* (:or alphabetic
+   [(:: (:* (:or alphabetic
                  numeric
-                 #\_)))
+                 #\_))
+        #\#)
     (token keyword (string->symbol lexeme))]
    [(:: (char-range #\0 #\9)
         (:* (char-range #\0 #\9))
