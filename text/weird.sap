@@ -1,7 +1,7 @@
 // A set of examples to see what happens with verious forms,
 // where many of them seem nonsensical
 
-somthing else = 8
+somthing else => 8
 
 this is a \
   very long linear group \
@@ -19,7 +19,7 @@ this is | one => a \
 something +
 more stuff
 
-something ->
+something =>
 more stuff
 
 define
@@ -34,9 +34,9 @@ define
   | fib(n) = fib(n-1) + fib(n-2)
   | more
 
-struct color_posn(col):
-  _extends posn
-  _mutable
+struct color_posn(col)
+: extends# posn
+: mutable#
 
 // Try some strange things to see how they indent
 nonense:
@@ -83,15 +83,13 @@ let | x = 8
   & show(x + y)
     x - y
 
-letrec_syntax_values
-| m = (syntax_rules ....)
-| n = (syntax_rules ....)
-&
-  | x = 10
-  | y = 12
-  &
-    body
-    more
+letrec_syntax_and_values
+: (m = (syntax_rules ....),
+   n = (syntax_rules ....))
+: (x = 10,
+   y = 12)
+=> body
+   more
 
 x something | a
               y:
@@ -117,3 +115,10 @@ define fib(n) =
    => fib(n-1)
    + fib(n-2)
    more
+
+begin =>
+  dictionary = {
+    "foo" : 17,
+    "bar" : "string",
+    "baz" : #true
+  }

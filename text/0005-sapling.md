@@ -11,7 +11,7 @@ for further enforestation by another parser (e.g., as in Honu). The
 notation is line-sensitive but indentation-insensitive. The identation
 of a sapling can be normalized using only lexemes without further
 parsing information. The parsed form of a sapling imposes grouping to
-ensure that further parsing is consistent with the Sapling's normal
+ensure that further parsing is consistent with the sapling's normal
 indentation.
 
 # Motivation
@@ -55,7 +55,7 @@ Defering complete grouping to another parser, meanwhile, relieves a
 burden on the notation to pin down every grouping detail, so the
 notation can be much less insistent about where line break are
 required. At the same time, line-based grouping can constrain parsing
-to ensure that line breaks and indentation in the source <are not
+to ensure that line breaks and indentation in the source are not
 misleading.
 
 Sampling notation is inspired by
@@ -70,32 +70,39 @@ indicate how lexemes are grouped and where groups start and continue.
 Here are some example saplings in standard indentation.
 
 ```
-define pi = 3.14
+define pi => 3.14
 
-define fib(n) =
+define fib(n) =>
   log_error("fib called")
   cond | (n = 0) => 0
        | (n = 1) => 1
-       | else => fib(n-1) + fib(n-2)
+       | else# => fib(n-1) + fib(n-2)
 
 define
-| fib(0) = 0
-| fib(1) = 1
-| fib(n) = fib(n-1) + fib(n-2)
+| fib(0) => 0
+| fib(1) => 1
+| fib(n) => fib(n-1) + fib(n-2)
 
-define fib =
+define fib =>
   lambda (n) =>
     cond | (n = 0) => 0
          | (n = 1) => 1
          | else => fib(n-1) + fib(n-2)
 
-define fib(n) =
+define fib(n) =>
   match n
   | 0 => 0
   | 1 => 1
   | n => fib(n-1) + fib(n-2)
 
-define fib(n) =
+define fib(n) =>
+  match n
+  | 0 => 0
+  | 1 => 1
+  | n => (fib(n-1)
+          + fib(n-2))
+
+define fib(n) =>
   match n
   | 0 =>
       0
@@ -108,27 +115,27 @@ define make_adder(n) =
   lambda (m) =>
     printf("adding to ~a\n", m)
 
-define fourth(n : integer) =
+define fourth(n : integer) =>
   define m = n*n
   define v = m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
-struct posn(x, y):
-  _property prop_equal_and_hash \
-    (let | hc => lambda (a : posn, hc) =>
-                   hc(a.x) + hc(a.y)
-     & [lambda (a : posn, b : posn, eql) =>
-          (eql(a.x, b.x) \
-             && eql(a.y = b.y)),
-        hc,
-        hc])
+struct posn(x, y)
+: _property prop_equal_and_hash \
+  (let (hc => lambda (a : posn, hc) =>
+                hc(a.x) + hc(a.y))
+   => [lambda (a : posn, b : posn, eql) =>
+         (eql(a.x, b.x)
+          && eql(a.y, b.y)),
+       hc,
+       hc])
 
-define go() = {
-  define helper(n) =
+define go() => {
+  define helper(n) =>
     list(n, n)
 
-  define more(m) =
+  define more(m) =>
     if (m == 0)
     | "done"
     | more(m - 1)
@@ -136,28 +143,24 @@ define go() = {
   helper(more(9))
 }
 
-define curried =
+define curried =>
   lambda (x) =>
     lambda (y) =>
       lambda (z) =>
         list(x, y, z)
 
-dictionary = {"foo" : 17,
-              "bar" : "string",
-              "baz" : #true }
+let (x => 1,
+     y => 2)
+=> printf("About to add")
+   x+y
 
-begin:
-  printf("Creating a dictionary\n")
-  dictionary = {
-    "foo" : 17,
-    "bar" : "string",
-    "baz" : #true
-  }
-
-let | x = 1
-    | y = 2
-& printf("About to add")
-  x+y
+define show_zip(l, l2) =>
+  for (x => in_list(l),
+       x2 => in_list(l2))
+  => print(x)
+     print_string(" ")
+     print(y)
+     newline()
 ```
 
 Identifiers are Java-style with alphanumerics and underscores.
@@ -171,99 +174,151 @@ Function calls, recognized as having no white space between an expression
 and open parenthesis, are distinct from other forms at the reader
 level.
 
-Special syntactic tokens:
+### Grouping overview
 
- - An _arrow_ is an operator that start `=` and ends `>`.
+ - The default rule is that every line starrts a new group. A file
+   is a sequence of groups.
 
- - An _equal_ is an operator that ends in `=` or `:`.
+ - Pairs of _opener_ and _closer_, such as `(` and `)`, contain a
+   sequence of groups that counts as a single entity in the enclosing
+   group. So, _opener_-_closer_ pairs are one way to have newlines
+   within the group outsde of the pair, although the newlines separate
+   indvidual groups between within the pair.
 
- - An _opener_ is a `(`, `[`, or `{`, or maybe an Unicode opener.
+ - The simplest ways to continue a group in a new line are `:` at the
+   start of a line (after any whitespace/comments) or `\` at the end
+   of the line (before whitespace/comments). These aren't the most
+   common ways to continue a group, though.
 
- - A _closer_ is a `)`, `]`, or `}`, or maybe any Unicode closer.
+ - The most common way to continue a group across a line is with `=>`.
+   A `=>` at the end of a line continues the group into the next line,
+   and a `=>` at the start of a line continue the group of the
+   previous line. But `=>` has a second job, which is that it starts a
+   nested sequence of groups, much in the same way that
+   _opener_-_closer_ pairs create nested groups. There's no explicit
+   closer to go with `=>`.
 
- - A _conj_ is `|` or `&`.
+ - A blank line terminates all active groups up to an enclosing
+   _opener_-_closer_ pair. A `,` or `;` has the same effect. So, a
+   blank line is a common way to end a `=>` subgroup, a `,` is a
+   common way to end a `=>` subgroup between `(` and `)`, and a `;` is
+   a common way to end a `=>` subgroup between `{` and `}`.
 
-Grouping overview:
+ - A `|` at the start of a line continues a group and starts subgroups
+   in the same way as `=>`. However, a `|` also closes active
+   subgroups up to a preceding `|` (within the same _opener_-_closer_
+   pair). This property makes `|` a kind of alternative to using
+   `,`-separated groups between parentheses. A blank line, `,`, or `;`
+   meanwhile closes all active subgroups without stopping at a `|`.
+   Overall, a blank line, `,`, or `;` is effectively stronger as a
+   terminator than a `|`, but `|` is still strong enough to terminate
+   a `=>`.
 
- - Pairs of _opener_ and _closer_ contain a sequence of groups. No
-   group within the _opener_-_closer_ pair extends outisde the pair.
+ - In the special case of a group immediately within `(` and `)` or
+   `[` and `]`, any operator is allow as a line-continuing starter.
+   So, while `X + Y` cannot be split across lines—except by resorting
+   to a `\`— the form `(X + Y)` can be split across lines by adding a
+   newline before `+`, which is handy if `X` and `Y` stand for large
+   expressions.
 
- - A blank line terminates all currently enclosing groups up to the
-   enclosing _opener_-_closer_ pair. A `,` or `;` has the
-   same effect.
-
- - A _conj_ ends all nested groups up to the previous _conj_, if any,
-   within an enclosing _opener_-_closer_ pair. It then continues any
-   current group that remains open. So, pairs of _conj_ bracket groups
-   in a similar way to _opener_-_closer_ pairs, but a blank line, `,`,
-   or `;` is stronger.
-
- - A line-ending _equal_ or line-ending/middle/starting _arrow_
-   continues the current group into the new line, but starts a nested
-   sequence of subgroups for the parts after the _equal_ or _arrow_.
-   Nested subgruped are ended by a _closer_, blank line, `,`,
-   `;`, or _conj_ — possibly ending multiple groups at once.
-
- - Unless continued with a _equal_, _arrow_, or _conj_, each line
-   starts a new group.
+ - The parsed form of `(` and `)` or `[` and `]` records the use of
+   parentheses or square brackets. The parsed form of `{` and `}`, in
+   contrast, just forms a group of groups. Similarly, the parsed form
+   of `,` records the comma as part of the enclosing group, while `;`
+   silently terminates a group. A `\` silently continues a group on
+   the next line, while `:` is recorded as part of the group that it
+   continues.
 
 Here are some saplings each followed by the corresponding parsed forms
 as represented by an S-expression:
 
 ```
-define pi = 3.14
+define pi => 3.14
 
-(#%all (#%grp define pi = 3.14))
+(#%all (#%grp define pi => 3.14))
 
 define
-| fib(0) = 0
-| fib(1) = 1
-| fib(n) = fib(n-1) + fib(n-2)
+| fib(0) => 0
+| fib(1) => 1
+| fib(n) => fib(n-1) + fib(n-2)
 
 (#%all
  (#%grp
   define
   \|
-  (#%grp (#%call fib (#%grp 0)) = 0)
+  (#%grp (#%call fib (#%grp 0)) => 0)
   \|
-  (#%grp (#%call fib (#%grp 1)) = 1)
+  (#%grp (#%call fib (#%grp 1)) => 1)
   \|
   (#%grp
    (#%call fib (#%grp n))
-   =
+   =>
    (#%call fib (#%grp n - 1))
    +
    (#%call fib (#%grp n - 2)))))
 
-begin:
-  fprintf(current_output_port(), "hello\n")
-  exit(1)
+define show_combos(l, l2) =>
+  for (x => in_list(l))
+  :   (x2 => in_list(l2))
+  => printf("<~a, ~a>\n", x, x2)
 
 (#%all
  (#%grp
-  begin
-  :
+  define
+  show_combos
+  (#%paren (#%grp l) |,| (#%grp l2))
+  =>
   (#%grp
    (#%grp
-    (#%call
-     fprintf
-     (#%grp (#%call current_output_port))
-     |,|
-     (#%grp "\"hello\\n\"")))
-   (#%grp (#%call exit (#%grp 1))))))
+    for
+    (#%paren (#%grp x => (#%grp (#%grp in_list (#%paren (#%grp l))))))
+    :
+    (#%paren (#%grp x2 => (#%grp (#%grp in_list (#%paren (#%grp l2))))))
+    =>
+    (#%grp
+     (#%grp
+      printf
+      (#%paren (#%grp "\"<~a, ~a>\\n\"") |,| (#%grp x) |,| (#%grp x2))))))))
 ```
 
 In a Racket implementation of a language based on saplings, the intent
 is that `#%grp` acts like `begin` on expression and definition, where you
 can always wrap more of them.
 
+### Indentation overview
+
+The standard identation of saplings starts each new group within a
+group sequence at the same column. The start of nested groups depends
+on how it is created:
+
+ * `(` and `[` indent nested subgroups to line up after the _opener_.
+
+ * `|` indents nested subgroups to one space after the `|`.
+
+ * `=>` as a line-starter or line-middle indents subgrops to one space
+   after the `=>`.
+
+ * `=>` as a line-ender indents subgrops to one step larger than the
+   current group's indentation.
+
+ * `{` as a line-starter or line-middle indents subgroups like `(` or `[`.
+
+ * `{` as a line-ender indents subgroups like `=>` as a line ender, unless
+   it is immediately preceded by a `=>`.
+
+ * `=> {` as a line-ender indents like line a line-ending `{` or `=>`.
+   (The `=>` and `{` in `=> {` can be separate by whitespace and
+   comments.)
+
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
 See [sapling.rkt](sapling.rkt). Note that if you run with no
-arguments, the that program will read from stdin and not write
-anything. Use flags like `--reindent` or `--group` to get output.
-Supply one or more files are arguments to read from those files.
+arguments, the that program will read from stdin and write back out a
+reindented form, which is useful for checking your expected
+indentation against the parser. Use the `--group` flag to instead see
+the grouping in S-expression form. Supply one or more files to read
+from those files insteda of stdin.
 
 See [demo.sap](demo.sap), [interp.sap](interp.sap), and
 [weird.sap](weird.sap) for more examples.
@@ -279,9 +334,6 @@ Saplings do not resolve the question of how infix expressions parse.
 There is no precedence at the sapling level, for example, other than
 the way that an _arrow_ has a higher precdence than a _conj_.
 
-Not being able to split `(1 + 2)` across lines without a `\` seems
-awkward.
-
 The lexeme-level syntax here would require some sort of bridge to
 Racket names that don't fit that syntax.
 
@@ -293,14 +345,18 @@ function calls from other kinds of syntactic forms. The sequence `1+2`
 is one plus two, not a strangely spelled identifier. Extra
 parenthesese are always allowed (pending the sampling consumer's
 cooperation) and can be freely used to disambiguate grouping. Tokens
-like `:`, `{`, and `=` are used in familar ways. Saplings provide
+like `(`, `,`, `{` and `;` are used in familar ways. Saplings provide
 enough grouping structure that code-navigaton and -transformation
 should be useful and straighforward in an editor. You can select a
 range of code to reindent if editing has made it unreadable.
 
-There is a lot of room to change the definition of _arrow_, _equal_,
-etc., to adjust the indentation rules, and possibly to tweak the
-grouping rules to avoid unnecessary `#%grp`s.
+There may be room to tweak the grouping rules to avoid unnecessary
+`#%grp`s.
+
+Sapling notation could be adapted to support Lisp-style identifiers by
+requiring more space around operators, but the rule for continuing a
+group between `(` and `)` or `[` and `]` currently depends on
+distinguishing operators from non-operators.
 
 # Prior art
 [prior-art]: #prior-art

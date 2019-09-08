@@ -1,33 +1,33 @@
-let | x = 1
-    | y = 2
-& x+y
+let (x => 1,
+     y => 2)
+=> x+y
 
-define pi = 3.14
+define pi => 3.14
 
-define fib(n) =
+define fib(n) =>
   log_error("fib called")
   cond | (n = 0) => 0
        | (n = 1) => 1
-       | else => fib(n-1) + fib(n-2)
+       | else# => fib(n-1) + fib(n-2)
 
 define
-| fib(0) = 0
-| fib(1) = 1
-| fib(n) = fib(n-1) + fib(n-2)
+| fib(0) => 0
+| fib(1) => 1
+| fib(n) => fib(n-1) + fib(n-2)
 
-define fib =
+define fib =>
   lambda (n) =>
     cond | (n = 0) => 0
          | (n = 1) => 1
-         | else => fib(n-1) + fib(n-2)
+         | else# => fib(n-1) + fib(n-2)
 
-define fib(n) =
+define fib(n) =>
   match n
   | 0 => 0
   | 1 => 1
   | n => fib(n-1) + fib(n-2)
 
-define fib(n) =
+define fib(n) =>
   match n
   | 0 =>
       0
@@ -38,7 +38,7 @@ define fib(n) =
 
 // This one should fail to parse, because the `+` is
 // split across two groups
-define fib(n) =
+define fib(n) =>
   match n
   | 0
     => 0
@@ -48,126 +48,76 @@ define fib(n) =
     => fib(n-1)
        + fib(n-2)
 
-// Continue the + line
-define fib(n) =
+// Parenthesese allow an operator like `+` to continue the line
+define fib(n) =>
   match n
   | 0
     => 0
   | 1
     => 1
   | n
-    => fib(n-1) \
-         + fib(n-2)
+    => (fib(n-1)
+        + fib(n-2))
 
-define fib(n) =
+define fib(n) =>
   match n | 0 => 0 | 1 => 1
           | n =>
               fib(n-1) + fib(n-2)
 
 // Misleadingly indented...
-define make_adder(n) =
+define make_adder(n) =>
   lambda (m) =>
     printf("adding to ~a\n", m)
   m + n
 
 // Reindented
-define make_adder(n) =
+define make_adder(n) =>
   lambda (m) =>
     printf("adding to ~a\n", m)
     m + n
 
 // Add parens to get somethign different (correctly indented):
-define make_adder(n) =
+define make_adder(n) =>
   (lambda (m) =>
     printf("adding to ~a\n", m))
   m + n
 
-struct posn(x, y):
-  property# prop_equal_and_hash \
-    (let | hc => lambda (a : posn, hc) =>
-                   hc(a.x) + hc(a.y)
-     & [lambda (a : posn, b : posn, eql) =>
-          (eql(a.x, b.x) \
-             && eql(a.y = b.y)),
-        hc,
-        hc])
+struct posn(x, y)
 
-// Properly indented, but it looks a little ugly
-// to start a `let` mid-line, because the `&`
-// lines up under the group start
-struct posn(x, y):
-  property# prop_equal_and_hash \
-    let | hc => lambda (a : posn, hc) =>
-                  hc(a.x) + hc(a.y)
-  & [lambda (a : posn, b : posn, eql) =>
-       (eql(a.x, b.x) \
-          && eql(a.y = b.y)),
-     hc,
-     hc]
-      
-// Misleadingly indented: the `|` will
-// belong to the `let`, not the `lambda`:
-struct posn(x, y):
-  property# prop_equal_and_hash \
-    (let | hc => lambda (a : posn, hc) =>
-                   match (a.x, a.y)
-                   | (0, 0) => 0
-                   | _ => hc(a.x) + hc(a.y)
-     & [lambda (a : posn, b : posn, eql) =>
-          (eql(a.x, b.x) \
-             && eql(a.y = b.y)),
-        hc,
-        hc])
+struct color_posn(col)
+: extends# posn
+: mutable#
 
-// Re-indented, showing how it will parse:
-struct posn(x, y):
-  property# prop_equal_and_hash \
-    (let | hc => lambda (a : posn, hc) =>
-                   match (a.x, a.y)
-         | (0, 0) => 0
-         | _ => hc(a.x) + hc(a.y)
-     & [lambda (a : posn, b : posn, eql) =>
-          (eql(a.x, b.x) \
-             && eql(a.y = b.y)),
-        hc,
-        hc])
+struct posn(x, y)
+: property# prop_equal_and_hash \
+  (let (hc => lambda (a : posn, hc) =>
+                hc(a.x) + hc(a.y))
+   => [lambda (a : posn, b : posn, eql) =>
+         (eql(a.x, b.x)
+          && eql(a.y, b.y)),
+       hc,
+       hc])
 
-// Ok with more parentheses:
-struct posn(x, y):
-  property# prop_equal_and_hash \
-    (let | hc => (lambda (a : posn, hc) =>
-                    hc(a.x) + hc(a.y))
-     & [lambda (a : posn, b : posn, eql) =>
-          (eql(a.x, b.x) \
-             && eql(a.y = b.y)),
-        hc,
-        hc])
-
-define fourth(n : integer) =
+// Would it be a good idea for `define` to allow
+// `=` in place of `=>`, so this would work?
+define fourth(n : integer) =>
   define m = n*n
   define v = m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
-define exp(n : integer, _base base = 2.718281828459045) =
+define exp(n : integer, _base base = 2.718281828459045) =>
   if (n = 1)
   | base
   | base * exp(n-1, _base base)
 
-// A better choice of syntax for `if`? Not sure,
-// but it's up to the implementer of `if`.
-define exp(n : integer, _base base = 2.718281828459045) =
-  if (n = 1):
-    base
-    base * exp(n-1, _base base)
-
 define positive_p(n) => (if (n > 0) | #true | #false)
 
-define go() = {
-  define helper(n) =
+define go() => {
+  define helper(n) =>
     list(n, n)
 
-  define more(m) =
+  define more(m) =>
     if (m == 0)
     | "done"
     | more(m - 1)
@@ -175,13 +125,13 @@ define go() = {
   helper(more(9))
 }
 
-define approx(x) =
+define approx(x) =>
   match x
   | something(v) => printf("got it\n")
                     v
   | nothing => 0
 
-define approx(x) =
+define approx(x) =>
   match x
   | something(v) =>
       printf("got it\n")
@@ -190,7 +140,7 @@ define approx(x) =
 
 // Nested "=>"s work out to bind more tightly than "|",
 // in a sense:
-define approx_thunk(x) =
+define approx_thunk(x) =>
   match x
   | something(v) => lambda () =>
                       v
@@ -198,7 +148,7 @@ define approx_thunk(x) =
 
 // And we're happy to resort to parentheses to handle more
 // general cases:
-define approx_thunk(x) =
+define approx_thunk(x) =>
   match x
   | something(v) => (lambda
                      | () => v
@@ -207,66 +157,53 @@ define approx_thunk(x) =
                 | () => 0
                 | (n) => n)
 
-define curried =
+define curried =>
   lambda (x) =>
     lambda (y) =>
       lambda (z) =>
         list(x, y, z)
 
-dictionary = {"foo" : 17,
-              "bar" : "string",
-              "baz" : #true }
-
-begin:
-  dictionary = {
-    "foo" : 17,
-    "bar" : "string",
-    "baz" : #true
-  }
+dictionary => ("foo" : 17,
+               "bar" : "string",
+               "baz" : #true)
 
 define f(x_something,
          y_something_else,
-         z_also_long_name) =
+         z_also_long_name) =>
   5
 
-define show_all(l) =
-  for | x = in_list(l)
-  & print(x)
-    newline()
+define show_all(l) =>
+  for (x => in_list(l))
+  => print(x)
+     newline()
 
-define show_zip(l, l2) =
-  for | x = in_list(l)
-      | x2 = in_list(l2)
-  & print(x)
-    print_string(" ")
-    print(y)
-    newline()
+define show_zip(l, l2) =>
+  for (x => in_list(l),
+       x2 => in_list(l2))
+  => print(x)
+     print_string(" ")
+     print(y)
+     newline()
 
-define show_combos_not_same(l, l2) =
-  for | x = in_list(l)
-      | in# // shorthand for `when# #true`
-      | x2 = in_list(l2)
-      | when# !is_equal(x, x2)
-  & print(x)
-    print_string(" ")
-    print(y)
-    newline()
+define show_combos_not_same(l, l2) =>
+  for (x => in_list(l))
+  :   (x2 => in_list(l2))
+  :   when# !is_equal(x, x2)
+  => print(x)
+     print_string(" ")
+     print(y)
+     newline()
 
-define map(f, l) =
-  for list | x = in_list(l)
-  & f(x)
-
-// Could also be written with an extra line break:
-define map(f, l) =
+define map(f, l) =>
   for list
-  | x = in_list(l)
-  & f(x)
+  :   (x = in_list(l))
+  => f(x)
 
-define partition(l, pred) =
-  for fold (yes = empty,
-            no = empty
+define partition(l, pred) =>
+  for fold (yes => empty,
+            no => empty,
             result# (reverse(yes), reverse(no)))
-  | x = in_list(l)
-  & (if pred(x)
-     | (cons(x, yes), no)
-     | (yes, cons(x, no)))
+  :   ( x = in_list(l))
+  => (if pred(x)
+      | (cons(x, yes), no)
+      | (yes, cons(x, no)))
