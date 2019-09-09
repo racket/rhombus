@@ -1,9 +1,7 @@
 #lang racket/base
 (require racket/match
          racket/pretty
-         parser-tools/lex
-         (prefix-in : parser-tools/lex-sre)
-         (for-syntax racket/base))
+         "private/lex.rkt")
 
 #|
 
@@ -278,112 +276,11 @@ line-ending <backslash> previously appeared in the group.
 |#
 
 ;; There's lot of room for improvement in this implementation!
+;; It combines an indenter with a parser. See "parse.rkt" for
+;; a parser by itself, which is easier to understand for just
+;; parsing.
 
 (define INDENT 2)
-
-(define-tokens non-terminals (identifier
-                              keyword
-                              number
-                              literal
-                              comment
-                              whitespace
-
-                              operator
-                              arrow-operator
-                              colon-operator
-                              bar-operator
-                              bs-operator
-
-                              opener closer
-                              comma-operator
-                              semicolon-operator
-                              EOF))
-
-(define stx-for-original-property (read-syntax #f (open-input-string "original")))
-
-(define-syntax (token stx)
-  (syntax-case stx ()
-    [(_ name val)
-     (identifier? (syntax name))
-     (let ([name (syntax name)])
-       (with-syntax ([token-name (datum->syntax
-                                  name
-                                  (string->symbol
-                                   (format "token-~a" (syntax-e name))))]
-                     [source-name (datum->syntax name 'source-name)]
-                     [start-pos (datum->syntax name 'start-pos)]
-                     [end-pos (datum->syntax name 'end-pos)])
-         (syntax 
-          (token-name 
-           (datum->syntax #f val
-                                 (list
-                                  source-name
-                                  (position-line start-pos)
-                                  (position-col start-pos)
-                                  (position-offset start-pos)
-                                  (- (position-offset end-pos)
-                                     (position-offset start-pos)))
-                                 stx-for-original-property)))))]))
-(define-syntax (ttoken stx)
-  (syntax-case stx ()
-    [(_ name)
-     (identifier? (syntax name))
-     (syntax (token name 'name))]))
-
-(define-lex-abbrev symbolic
-  ;; Note: no "\" or "#"
-  (:or "=" "!" "@" "$" "%" "^" "&" "*" "-" "+" "<" ">" "." "?" "/" "~" "'" "`"))
-
-(define (lex source-name)
-  (lexer
-   [(eof) (ttoken EOF)]
-   ["=>"
-    (token arrow-operator (string->symbol lexeme))]
-   [":"
-    (token colon-operator (string->symbol lexeme))]
-   [#\| (token bar-operator '\|)]
-   [#\\ (token bs-operator '|\|)]
-   [(:- (:+ symbolic) #\| "=>" #\: "//" "/*" "*/")
-    (token operator (string->symbol lexeme))]
-   [(:: #\"
-        (:* (:~ #\"))
-        #\")
-    (token literal lexeme)]
-   [(:: "#" (:or "true" "false"))
-    (token literal (if (equal? lexeme "#true")
-                       #t
-                       #f))]
-   [(:: (:or alphabetic #\_)
-        (:* (:or alphabetic
-                 numeric
-                 #\_)))
-    (token identifier (string->symbol lexeme))]
-   [(:: (:* (:or alphabetic
-                 numeric
-                 #\_))
-        #\#)
-    (token keyword (string->symbol lexeme))]
-   [(:: (char-range #\0 #\9)
-        (:* (char-range #\0 #\9))
-        (:? (:: #\.
-                (:* (char-range #\0 #\9)))))
-    (token number (string->number lexeme))]
-   [(:or #\( #\[ #\{) (token opener lexeme)]
-   [(:or #\) #\] #\}) (token closer lexeme)]
-   [(:or #\,) (token comma-operator (string->symbol lexeme))]
-   [(:or #\;) (token semicolon-operator (string->symbol lexeme))]
-   [(:: #\/ #\/ (:* (:~ #\newline))) (token comment lexeme)]
-   [(:: "/*" (complement (:: any-string "*/" any-string)) "*/") (token comment lexeme)]
-   [(:+ whitespace) (token whitespace lexeme)]))
-
-(define (p in)
-  (port-count-lines! in)
-  (let ([lex (lex (object-name in))])
-    (let loop ()
-      (define v (lex in))
-      (if (eq? 'EOF (token-name v))
-          null
-          (cons v (loop))))))
 
 (define (starts-function-call? l)
   (and (pair? l)
@@ -719,12 +616,8 @@ line-ending <backslash> previously appeared in the group.
              (next #:group group
                    #:bar bar)])]
          [(colon-operator)
-          (ender-block
-           #:new-block? #f
-           ;; If not ender:
-           (lambda (group)
-             (next #:group group
-                   #:bar bar)))]
+          (atom (syntax-e (token-value v))
+                #:new-line? #f)]
          [(arrow-operator)
           (ender-block
            #:new-block? #t
@@ -797,7 +690,7 @@ line-ending <backslash> previously appeared in the group.
                 #:reindent? [reindent? #t]
                 #:respace? [respace? #f]
                 #:grouping? [grouping? #f])
-  (define l (p in))
+  (define l (lex-all in))
   (unless (null? l)
     (define o (open-output-string))
     (port-count-lines! o)
@@ -830,7 +723,7 @@ line-ending <backslash> previously appeared in the group.
 
   (command-line
    #:once-each
-   [("--reindent") "Show re-indentation"
+   [("--reindent") "Show re-indentation [the default unless `--group`]"
                    (set! reindent? #t)]
    [("--respace") "Normalize non-leading space, too"
                   (set! respace? #t)]

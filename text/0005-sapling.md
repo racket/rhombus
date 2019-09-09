@@ -111,7 +111,7 @@ define fib(n) =>
   | n =>
       fib(n-1) + fib(n-2)
 
-define make_adder(n) =
+define make_adder(n) =>
   lambda (m) =>
     printf("adding to ~a\n", m)
 
@@ -313,12 +313,11 @@ on how it is created:
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-See [sapling.rkt](sapling.rkt). Note that if you run with no
-arguments, the that program will read from stdin and write back out a
-reindented form, which is useful for checking your expected
-indentation against the parser. Use the `--group` flag to instead see
-the grouping in S-expression form. Supply one or more files to read
-from those files insteda of stdin.
+See [parse.rkt](parse.rkt) and [indent.rkt](indent.rkt). Note that if
+you run with no arguments, the that program will read from stdin,
+which is useful for checking your expectations against the parser or
+indenter. Supply one or more files to read from those files
+instead of stdin.
 
 See [demo.sap](demo.sap), [interp.sap](interp.sap), and
 [weird.sap](weird.sap) for more examples.
