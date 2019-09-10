@@ -2,7 +2,7 @@ let (x => 1,
      y => 2)
 => x+y
 
-define pi => 3.14
+define pi = 3.14
 
 define fib(n) =>
   log_error("fib called")
@@ -90,8 +90,8 @@ struct color_posn(col)
 
 struct posn(x, y)
 : property# prop_equal_and_hash \
-  (let (hc => lambda (a : posn, hc) =>
-                hc(a.x) + hc(a.y))
+  (let (hc = (lambda (a : posn, hc) =>
+                hc(a.x) + hc(a.y)))
    => [lambda (a : posn, b : posn, eql) =>
          (eql(a.x, b.x)
           && eql(a.y, b.y)),
@@ -157,15 +157,16 @@ define approx_thunk(x) =>
                 | () => 0
                 | (n) => n)
 
-define curried =>
+define curried = {
   lambda (x) =>
     lambda (y) =>
       lambda (z) =>
         list(x, y, z)
+}
 
-dictionary => ("foo" : 17,
-               "bar" : "string",
-               "baz" : #true)
+define dictionary =  ("foo" : 17,
+                      "bar" : "string",
+                      "baz" : #true)
 
 define f(x_something,
          y_something_else,
@@ -173,21 +174,21 @@ define f(x_something,
   5
 
 define show_all(l) =>
-  for (x => in_list(l))
+  for (x = in_list(l))
   => print(x)
      newline()
 
 define show_zip(l, l2) =>
-  for (x => in_list(l),
-       x2 => in_list(l2))
+  for (x = in_list(l),
+       x2 = in_list(l2))
   => print(x)
      print_string(" ")
      print(y)
      newline()
 
 define show_combos_not_same(l, l2) =>
-  for (x => in_list(l))
-  :   (x2 => in_list(l2))
+  for (x = in_list(l))
+  :   (x2 = in_list(l2))
   :   when# !is_equal(x, x2)
   => print(x)
      print_string(" ")
@@ -200,8 +201,8 @@ define map(f, l) =>
   => f(x)
 
 define partition(l, pred) =>
-  for fold (yes => empty,
-            no => empty,
+  for fold (yes = empty,
+            no = empty,
             result# (reverse(yes), reverse(no)))
   :   ( x = in_list(l))
   => (if pred(x)

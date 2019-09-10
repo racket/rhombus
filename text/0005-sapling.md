@@ -123,8 +123,8 @@ define fourth(n : integer) =>
 
 struct posn(x, y)
 : _property prop_equal_and_hash \
-  (let (hc => lambda (a : posn, hc) =>
-                hc(a.x) + hc(a.y))
+  (let (hc = (lambda (a : posn, hc) =>
+                hc(a.x) + hc(a.y)))
    => [lambda (a : posn, b : posn, eql) =>
          (eql(a.x, b.x)
           && eql(a.y, b.y)),
@@ -143,20 +143,21 @@ define go() => {
   helper(more(9))
 }
 
-define curried =>
+define curried = {
   lambda (x) =>
     lambda (y) =>
       lambda (z) =>
         list(x, y, z)
+}
 
-let (x => 1,
-     y => 2)
+let (x = 1,
+     y = 2)
 => printf("About to add")
    x+y
 
 define show_zip(l, l2) =>
-  for (x => in_list(l),
-       x2 => in_list(l2))
+  for (x = in_list(l),
+       x2 = in_list(l2))
   => print(x)
      print_string(" ")
      print(y)
