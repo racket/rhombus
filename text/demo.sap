@@ -1,5 +1,5 @@
-let (x => 1,
-     y => 2)
+let (x = 1,
+     y = 2)
 => x+y
 
 define pi = 3.14
@@ -15,11 +15,12 @@ define
 | fib(1) => 1
 | fib(n) => fib(n-1) + fib(n-2)
 
-define fib =>
+define fib = {
   lambda (n) =>
     cond | (n = 0) => 0
          | (n = 1) => 1
          | else# => fib(n-1) + fib(n-2)
+}
 
 define fib(n) =>
   match n
