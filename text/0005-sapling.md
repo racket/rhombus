@@ -70,72 +70,66 @@ indicate how lexemes are grouped and where groups start and continue.
 Here are some example saplings in standard indentation.
 
 ```
-define pi => 3.14
+define pi = 3.14
 
-define fib(n) =>
+define fib(n):
   log_error("fib called")
-  cond | (n = 0) => 0
-       | (n = 1) => 1
-       | else# => fib(n-1) + fib(n-2)
+  cond | (n = 0): 0
+       | (n = 1): 1
+       | else: fib(n-1) + fib(n-2)
 
 define
-| fib(0) => 0
-| fib(1) => 1
-| fib(n) => fib(n-1) + fib(n-2)
+| fib(0): 0
+| fib(1): 1
+| fib(n): fib(n-1) + fib(n-2)
 
-define fib =>
-  lambda (n) =>
-    cond | (n = 0) => 0
-         | (n = 1) => 1
-         | else => fib(n-1) + fib(n-2)
-
-define fib(n) =>
+define fib(n):
   match n
-  | 0 => 0
-  | 1 => 1
-  | n => fib(n-1) + fib(n-2)
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
-define fib(n) =>
+define fib(n):
   match n
-  | 0 => 0
-  | 1 => 1
-  | n => (fib(n-1)
-          + fib(n-2))
+  | 0: 0
+  | 1: 1
+  | n: (fib(n-1)
+        + fib(n-2))
 
-define fib(n) =>
+define fib(n):
   match n
-  | 0 =>
+  | 0:
       0
-  | 1 =>
+  | 1:
       1
-  | n =>
+  | n:
       fib(n-1) + fib(n-2)
 
-define make_adder(n) =>
-  lambda (m) =>
+define make_adder(n):
+  lambda (m):
     printf("adding to ~a\n", m)
 
-define fourth(n : integer) =>
+define fourth(n: integer):
   define m = n*n
   define v = m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
 struct posn(x, y)
-: _property prop_equal_and_hash \
-  (let (hc = (lambda (a : posn, hc) =>
-                hc(a.x) + hc(a.y)))
-   => [lambda (a : posn, b : posn, eql) =>
-         (eql(a.x, b.x)
-          && eql(a.y, b.y)),
-       hc,
-       hc])
+& property prop_equal_and_hash \
+  (let (hc = (lambda (a: posn, hc):
+                hc(a.x) + hc(a.y))):
+     [lambda (a: posn, b: posn, eql):
+        (eql(a.x, b.x)
+         && eql(a.y, b.y)),
+      hc,
+      hc])
 
-define go() => {
-  define helper(n) =>
+define go(): {
+  define helper(n):
     list(n, n)
 
-  define more(m) =>
+  define more(m):
     if (m == 0)
     | "done"
     | more(m - 1)
@@ -144,29 +138,29 @@ define go() => {
 }
 
 define curried = {
-  lambda (x) =>
-    lambda (y) =>
-      lambda (z) =>
+  lambda (x):
+    lambda (y):
+      lambda (z):
         list(x, y, z)
 }
 
 let (x = 1,
-     y = 2)
-=> printf("About to add")
-   x+y
+     y = 2):
+  printf("About to add")
+  x+y
 
-define show_zip(l, l2) =>
+define show_zip(l, l2):
   for (x = in_list(l),
-       x2 = in_list(l2))
-  => print(x)
-     print_string(" ")
-     print(y)
-     newline()
+       x2 = in_list(l2)):
+    print(x)
+    print_string(" ")
+    print(y)
+    newline()
 ```
 
 Identifiers are Java-style with alphanumerics and underscores.
 Operators are sequences of symbolic characters in the sense of
-`char-symbolic?`, roughly. Some operators, including `|` and `=>`, are
+`char-symbolic?`, roughly. Some operators, including `|` and `:`, are
 treated specially for indentation and grouping, but that doesn't
 preclude their use like other operators. Numbers are written in some
 reasonable way distinct from identifiers. No spaces are needed between
@@ -186,34 +180,84 @@ level.
    within the group outsde of the pair, although the newlines separate
    indvidual groups between within the pair.
 
- - The simplest ways to continue a group in a new line are `:` at the
+   ```
+     group one
+     (subgroup two.a
+      subgroup two.b)
+     group three
+   ```
+
+ - The simplest ways to continue a group in a new line are `&` at the
    start of a line (after any whitespace/comments) or `\` at the end
    of the line (before whitespace/comments). These aren't the most
    common ways to continue a group, though.
 
- - The most common way to continue a group across a line is with `=>`.
-   A `=>` at the end of a line continues the group into the next line,
-   and a `=>` at the start of a line continue the group of the
-   previous line. But `=>` has a second job, which is that it starts a
-   nested sequence of groups, much in the same way that
-   _opener_-_closer_ pairs create nested groups. There's no explicit
-   closer to go with `=>`.
+   ```
+     This group became \
+       way too long \
+       to put on a single line
+
+     struct posn(x, y)
+     & mutable
+     & transparent
+   ```
+
+ - The most common way to continue a group across a line is with `:`.
+   A `:` at line boundary (either the end of one line or the start of
+   the next) continues the group. But `:` has a second job, which is
+   that it starts a nested sequence of groups, much in the same way
+   that _opener_-_closer_ pairs create nested groups. There's no
+   explicit closer to go with `:`.
+
+   ```
+   define sqr(x):
+      x*x
+   ```
 
  - A blank line terminates all active groups up to an enclosing
    _opener_-_closer_ pair. A `,` or `;` has the same effect. So, a
-   blank line is a common way to end a `=>` subgroup, a `,` is a
-   common way to end a `=>` subgroup between `(` and `)`, and a `;` is
-   a common way to end a `=>` subgroup between `{` and `}`.
+   blank line is a common way to end a `:` subgroup, a `,` is a
+   common way to end a `:` subgroup between `(` and `)`, and a `;` is
+   a common way to end a `:` subgroup between `{` and `}`.
+
+   ```
+   define dist(x, y):
+      sqrt(x*x + y*y)
+
+   define also_dist(x, y): {
+      define sqr(x):
+        x*x
+
+      sqrt(sqr(x) + sqr(y))
+   }
+
+   define compact_dist(x, y): {
+      define sqr(x):
+        x*x;
+      sqrt(sqr(x) + sqr(y))
+   }
+   ```
 
  - A `|` at the start of a line continues a group and starts subgroups
-   in the same way as `=>`. However, a `|` also closes active
+   in the same way as `:`. However, a `|` also closes active
    subgroups up to a preceding `|` (within the same _opener_-_closer_
    pair). This property makes `|` a kind of alternative to using
    `,`-separated groups between parentheses. A blank line, `,`, or `;`
    meanwhile closes all active subgroups without stopping at a `|`.
    Overall, a blank line, `,`, or `;` is effectively stronger as a
    terminator than a `|`, but `|` is still strong enough to terminate
-   a `=>`.
+   a `:`.
+
+   ```
+   define make_multiplier(n):
+      match n
+      | 0: lambda (m): 0
+      | 1: lambda (m): m
+      | -1: lambda (m): -m
+      | n: lambda (m):
+             log_warning("slowest case")
+             m*n
+   ```
 
  - In the special case of a group immediately within `(` and `)` or
    `[` and `]`, any operator is allow as a line-continuing starter.
@@ -221,6 +265,12 @@ level.
    to a `\`— the form `(X + Y)` can be split across lines by adding a
    newline before `+`, which is handy if `X` and `Y` stand for large
    expressions.
+
+   ```
+    lambda(first_arg, second_arg):
+       sqrt(first_arg * first_arg
+            + second_arg * second_arg)
+   ```
 
  - The parsed form of `(` and `)` or `[` and `]` records the use of
    parentheses or square brackets. The parsed form of `{` and `}`, in
@@ -234,14 +284,14 @@ Here are some saplings each followed by the corresponding parsed forms
 as represented by an S-expression:
 
 ```
-define pi => 3.14
+define pi = 3.14
 
-(#%all (#%grp define pi => 3.14))
+(#%all (#%grp define pi = 3.14))
 
 define
-| fib(0) => 0
-| fib(1) => 1
-| fib(n) => fib(n-1) + fib(n-2)
+| fib(0): 0
+| fib(1): 1
+| fib(n): fib(n-1) + fib(n-2)
 
 (#%all
  (#%grp
@@ -253,29 +303,29 @@ define
   \|
   (#%grp
    (#%call fib (#%grp n))
-   =>
+   :
    (#%call fib (#%grp n - 1))
    +
    (#%call fib (#%grp n - 2)))))
 
-define show_combos(l, l2) =>
+define show_combos(l, l2):
   for (x => in_list(l))
-  :   (x2 => in_list(l2))
-  => printf("<~a, ~a>\n", x, x2)
+  &   (x2 => in_list(l2)):
+    printf("<~a, ~a>\n", x, x2)
 
 (#%all
  (#%grp
   define
   show_combos
   (#%paren (#%grp l) |,| (#%grp l2))
-  =>
+  :
   (#%grp
    (#%grp
     for
     (#%paren (#%grp x => (#%grp (#%grp in_list (#%paren (#%grp l))))))
-    :
+    &
     (#%paren (#%grp x2 => (#%grp (#%grp in_list (#%paren (#%grp l2))))))
-    =>
+    :
     (#%grp
      (#%grp
       printf
@@ -296,19 +346,19 @@ on how it is created:
 
  * `|` indents nested subgroups to one space after the `|`.
 
- * `=>` as a line-starter or line-middle indents subgrops to one space
-   after the `=>`.
+ * `:` as a line-starter or line-middle indents subgrops to one space
+   after the `:`.
 
- * `=>` as a line-ender indents subgrops to one step larger than the
+ * `:` as a line-ender indents subgrops to one step larger than the
    current group's indentation.
 
  * `{` as a line-starter or line-middle indents subgroups like `(` or `[`.
 
- * `{` as a line-ender indents subgroups like `=>` as a line ender, unless
-   it is immediately preceded by a `=>`.
+ * `{` as a line-ender indents subgroups like `:` as a line ender, unless
+   it is immediately preceded by a `:`.
 
- * `=> {` as a line-ender indents like line a line-ending `{` or `=>`.
-   (The `=>` and `{` in `=> {` can be separate by whitespace and
+ * `: {` as a line-ender indents like line a line-ending `{` or `:`.
+   (The `:` and `{` in `: {` can be separate by whitespace and
    comments.)
 
 # Reference-level explanation
@@ -332,7 +382,7 @@ the grouping rules generate lots of extra `#%grp` layers.
 
 Saplings do not resolve the question of how infix expressions parse.
 There is no precedence at the sapling level, for example, other than
-the way that an _arrow_ has a higher precdence than a _conj_.
+the way that an `:` has a higher precdence than a `|`.
 
 The lexeme-level syntax here would require some sort of bridge to
 Racket names that don't fit that syntax.

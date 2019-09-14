@@ -5,119 +5,119 @@
    would be a good idea there, but it seemed like an interesting
    realistic program to try */
 
-type Value =>
-  | numV(n : Number)
-  | closV(arg : Symbol,
-          body : Exp,
-          env : Env)
+type Value:
+  | numV(n: Number)
+  | closV(arg: Symbol,
+          body: Exp,
+          env: Env)
 
-type Exp =>
-  | numE(n : Number)
-  | idE(s : Symbol)
-  | plusE(l : Exp,
-          r : Exp)
-  | multE(l : Exp,
-          r : Exp)
-  | letE(n : Symbol,
-         rhs : Exp,
-         body : Exp)
-  | lamE(n : Symbol,
-         body : Exp)
-  | appE(fun : Exp,
-         arg : Exp)
+type Exp:
+  | numE(n: Number)
+  | idE(s: Symbol)
+  | plusE(l: Exp,
+          r: Exp)
+  | multE(l: Exp,
+          r: Exp)
+  | letE(n: Symbol,
+         rhs: Exp,
+         body: Exp)
+  | lamE(n: Symbol,
+         body: Exp)
+  | appE(fun: Exp,
+         arg: Exp)
 
-type Binding =>
-  | bind(name : Symbol,
-         val : Value)
+type Binding:
+  | bind(name: Symbol,
+         val: Value)
 
-type_alias Env => Listof(Binding)
+type_alias Env: Listof(Binding)
 
-define mt_env => empty
+define mt_env: empty
 
-define extend_env => cons
+define extend_env: cons
 
 modulet test {
   print_only_errors(#true)
 }
 
 // interp ----------------------------------------
-define interp(a : Exp, env : Env) : Value =>
+define interp(a: Exp, env: Env) -> Value :
   typecase Exp a
-  | numE(n) => numV(n)
-  | idE(s) => lookup(s, env)
-  | plusE(l, r) => num_plus(interp(l, env), interp(r, env))
-  | multE(l, r) => num_times(interp(l, env), interp(r, env))
-  | letE(n, rhs, body) => interp(body,
-                                 extend_env(bind(n, interp(rhs, env)),
-                                            env))
-  | lamE(n, body) => closV(n, body, env)
-  | appE(fun, arg) => (typecase Value interp(fun, env)
-                       | closV(n, body, c_env) =>
-                           interp(body,
-                                  extend_env(bind(n, interp(arg, env)),
-                                             c_env))
-                       | error(' interp, "not a function"))
+  | numE(n): numV(n)
+  | idE(s): lookup(s, env)
+  | plusE(l, r): num_plus(interp(l, env), interp(r, env))
+  | multE(l, r): num_times(interp(l, env), interp(r, env))
+  | letE(n, rhs, body): interp(body,
+                               extend_env(bind(n, interp(rhs, env)),
+                                          env))
+  | lamE(n, body): closV(n, body, env)
+  | appE(fun, arg): (typecase Value interp(fun, env)
+                     | closV(n, body, c_env):
+                         interp(body,
+                                extend_env(bind(n, interp(arg, env)),
+                                           c_env))
+                     | error(' interp, "not a function"))
 
 modulet test {
   test
-  : interp(parse(`2), mt_env)
-  : numV(2)
+  & interp(parse(`2), mt_env)
+  & numV(2)
 
-  test : interp(parse(`2), mt_env) : numV(2)
-  test : interp(parse(`3), mt_env) : numV(3)
+  test & interp(parse(`2), mt_env) & numV(2)
+  test & interp(parse(`3), mt_env) & numV(3)
 
   test_exn
-  : interp(parse(`x), mt_env)
-  : "free variable"
+  & interp(parse(`x), mt_env)
+  & "free variable"
 
   test
-  : interp(parse(`x),
+  & interp(parse(`x),
            extend_env(bind('x, numV(9)), mt_env))
-  : numV(9)
+  & numV(9)
 
   test
-  : interp(parse(`{+ 2 1}), mt_env)
-  : numV(3);
+  & interp(parse(`{+ 2 1}), mt_env)
+  & numV(3);
   test
-  : interp(parse(`{* 2 1}), mt_env)
-  : numV(2)
+  & interp(parse(`{* 2 1}), mt_env)
+  & numV(2)
 
   test
-  : interp(parse(`{+ {* 2 3} {+ 5 8}}), mt_env)
-  : numV(1)
+  & interp(parse(`{+ {* 2 3} {+ 5 8}}), mt_env)
+  & numV(1)
 
   test
-  : interp(parse(`{lambda {x} {+ x x}}),
+  & interp(parse(`{lambda {x} {+ x x}}),
            mt_env)
-  : closV('x, plusE(idE('x), idE('x)), mt_env)
+  & closV('x, plusE(idE('x), idE('x)), mt_env)
 
   test
-  : interp(parse(`{let {[x 5]}
+  & interp(parse(`{let {[x 5]}
                    {+ x x}}),
            mt_env)
-  : numV(1)
+  & numV(1)
 }
 
 // num+ and num* ----------------------------------------
-define num_op(op : (Number Number -> Number), l : Value, r : Value) : Value =>
+define num_op(op: Number Number -> Number, l: Value, r: Value) -> Value :
   cond
-  | is_numV(l) && is_numV(r)) =>
+  | is_numV(l) && is_numV(r):
       numV(op(numV_n(l), numV_n(r)))
-  | else =>
+  | else:
       error('interp, "not a number")
 
-define num_plus(l : Value, r : Value) : Value =>
+define num_plus(l: Value, r: Value) -> Value :
   num_op(op +, l, r)
 
-define num_mult(l : Value, r : Value) : Value =>
+define num_mult(l: Value, r: Value) -> Value :
   num_op(op *, l, r)
 
 modulet test {
   test
-  : num_plus(numV(1), numV(2))
-  : numV(3)
+  & num_plus(numV(1), numV(2))
+  & numV(3)
 
   test
-  : num_mult(numV(2), numV(3))
-  : numV(6)
+  & num_mult(numV(2), numV(3))
+  & numV(6)
 }

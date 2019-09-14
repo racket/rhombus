@@ -108,7 +108,7 @@
           [(whitespace comment)
            (parse-nested-groups (cdr l) (struct-copy nested-group-state nsg
                                                      [line line]))]
-          [(bar-operator)
+          [(alt-operator)
            (if (nested-group-state-after-bar? nsg)
                (done)
                (keep-group #:after-bar? #t))]
@@ -159,7 +159,7 @@
                   rest-rest-l
                   end-line))
         (case (token-name (car l))
-          [(identifier number keyword literal)
+          [(identifier number literal)
            (if new-line?
                (done)
                (keep))]
@@ -171,13 +171,13 @@
                   (done))]
              [else
               (keep)])]
-          [(colon-operator)
+          [(more-operator)
            (cond
              [new-line?
               (keep)]
              [else
               (keep)])]
-          [(bs-operator)
+          [(continue-operator)
            (cond
              [new-line?
               (parse-group (cdr l) s)]
@@ -211,10 +211,10 @@
                       end-line)])]
           [(closer comma-operator semicolon-operator)
            (done)]
-          [(arrow-operator)
+          [(block-operator)
            (keep-nested-group #:inline? #f
                               #:after-bar? (state-after-bar? s))]
-          [(bar-operator)
+          [(alt-operator)
            (cond
              [(state-after-bar? s)
               (done)]

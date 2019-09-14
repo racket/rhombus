@@ -14,17 +14,16 @@
          token-line)
 
 (define-tokens non-terminals (identifier
-                              keyword
                               number
                               literal
                               comment
                               whitespace
 
                               operator
-                              arrow-operator
-                              colon-operator
-                              bar-operator
-                              bs-operator
+                              block-operator
+                              more-operator
+                              alt-operator
+                              continue-operator
 
                               opener closer
                               comma-operator
@@ -69,13 +68,13 @@
 (define (lex source-name)
   (lexer
    [(eof) (ttoken EOF)]
-   ["=>"
-    (token arrow-operator (string->symbol lexeme))]
    [":"
-    (token colon-operator (string->symbol lexeme))]
-   [#\| (token bar-operator '\|)]
-   [#\\ (token bs-operator '|\|)]
-   [(:- (:+ symbolic) #\| "=>" #\: "//" "/*" "*/")
+    (token block-operator (string->symbol lexeme))]
+   ["&"
+    (token more-operator (string->symbol lexeme))]
+   [#\| (token alt-operator '\|)]
+   [#\\ (token continue-operator '|\|)]
+   [(:- (:+ symbolic) #\| #\& #\: "//" "/*" "*/")
     (token operator (string->symbol lexeme))]
    [(:: #\"
         (:* (:~ #\"))
@@ -90,11 +89,6 @@
                  numeric
                  #\_)))
     (token identifier (string->symbol lexeme))]
-   [(:: (:* (:or alphabetic
-                 numeric
-                 #\_))
-        #\#)
-    (token keyword (string->symbol lexeme))]
    [(:: (char-range #\0 #\9)
         (:* (char-range #\0 #\9))
         (:? (:: #\.

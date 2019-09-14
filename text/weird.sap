@@ -1,17 +1,17 @@
 // A set of examples to see what happens with verious forms,
 // where many of them seem nonsensical
 
-somthing else => 8
+somthing else: 8
 
 this is a \
   very long linear group \
   that spans multiple lines
 
-this is | one => a \
-            long result
+this is | one: a \
+                 long result
         | two \
             also long
-        | three =>
+        | three:
             result \
               nested \
               here
@@ -19,46 +19,46 @@ this is | one => a \
 something +
 more stuff
 
-something =>
-more stuff
+something:
+  more stuff
 
 define
-  | fib(0) = 0
-  | fib(1) = 1
-  | fib(n) =
-    fib(n-1) + fib(n-2)
+| fib(0) = 0
+| fib(1) = 1
+| fib(n) =
+  fib(n-1) + fib(n-2)
 
 define
-  | fib(0) = 0
-  | fib(1) = 1
-  | fib(n) = fib(n-1) + fib(n-2)
-  | more
+| fib(0) = 0
+| fib(1) = 1
+| fib(n) = fib(n-1) + fib(n-2)
+| more
 
 struct color_posn(col)
-: extends# posn
-: mutable#
+: extends posn
+  : mutable
 
 // Try some strange things to see how they indent
-nonense:
+nonsense:
   hello | there 4.5
         | more f(8)
-  next (ok |
-           | stuff => (begin :
-                        more
-                        things
+          next (ok |
+                   | stuff: (begin:
+                               more
+                               things
 
-                       separately)
-          again)
-  something
+                             eparately)
+                            again)
+          something
 
 define x =
- 10,
+10,
 define y = 12
 
 q:
   x, y
   z
-  
+
 q:
   x, y;
 z
@@ -68,55 +68,55 @@ q:
     x, y;
 z
 
-x + w | z => =>
+x + w | z : :
               z
 
 x | w
-& y
-  & z
-    | q
+    & y
+    & z
+  | q
 
 let | x = 8
-    | y = 9 => 10
-& let | x = 8
-      | y = 9 => 10
-  & show(x + y)
-    x - y
+    | y = 9: 10
+             & let | x = 8
+    | y = 9: 10
+             & show(x + y)
+             x - y
 
 letrec_syntax_and_values
 : (m = (syntax_rules ....),
    n = (syntax_rules ....))
-: (x = 10,
-   y = 12)
-=> body
-   more
+  : (x = 10,
+     y = 12)
+    => body
+    more
 
 x something | a
               y:
                 w:
-                q
+                  q
             | c
               z
-& b
+              & b
 
 x | indentize
     y
     z
-  | indentize =>
+  | indentize:
       y
 
 define fib(n) =
- match n
- | 0
-   => 0
- | 1
-   => 1
- | n
-   => fib(n-1)
-   + fib(n-2)
-   more
+match n
+| 0
+  : 0
+| 1
+  : 1
+| n
+  : fib(n-1)
+    + fib(n-2)
+    more
 
-begin =>
+begin:
   dictionary = {
     "foo" : 17,
     "bar" : "string",

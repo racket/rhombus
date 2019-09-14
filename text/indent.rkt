@@ -53,8 +53,7 @@ Preliminaries:
 
  - Numbers are written in some reasonable way distinct from
    identifiers. Literals are similarly distinct; we use "#true" and
-   "#false" for booleans, for example. Keywords are distinct from
-   identifier; we use identifiers that end in "#". Strings are written
+   "#false" for booleans, for example. Strings are written
    in the obvious way with straight doublequotes.
 
  - No spaces are needed between operators and non-operators, so `1+2`
@@ -526,7 +525,7 @@ line-ending <backslash> previously appeared in the group.
                #:group next-group
                #:bar (and (not new-group?) bar)))
        (case (token-name v)
-         [(identifier number keyword literal)
+         [(identifier number literal)
           (atom (syntax-e (token-value v)))]
          [(operator)
           (atom (syntax-e (token-value v))
@@ -568,7 +567,7 @@ line-ending <backslash> previously appeared in the group.
                 #:continued? #f)]
          [(closer)
           (next/pop (syntax-e (token-value v)))]
-         [(bar-operator)
+         [(alt-operator)
           (cond
             [(and new-line?
                   bar)
@@ -596,7 +595,7 @@ line-ending <backslash> previously appeared in the group.
                                    (+ c INDENT))
                 #:operator-continues? #f
                 #:continued? #f)]
-         [(bs-operator)
+         [(continue-operator)
           (emit-space)
           (write-string (symbol->string (syntax-e (token-value v))))
           (define to-line (next-line (cdr l)))
@@ -615,10 +614,10 @@ line-ending <backslash> previously appeared in the group.
              (container-add! group (token-value v))
              (next #:group group
                    #:bar bar)])]
-         [(colon-operator)
+         [(more-operator)
           (atom (syntax-e (token-value v))
                 #:new-line? #f)]
-         [(arrow-operator)
+         [(block-operator)
           (ender-block
            #:new-block? #t
            ;; If not ender:
