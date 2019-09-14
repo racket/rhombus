@@ -91,7 +91,7 @@ struct color_posn(col)
 & mutable
 
 struct posn(x, y)
-& property prop_equal_and_hash
+& property prop_equal_and_hash \
   (let (hc = (lambda (a: posn, hc):
                 hc(a.x) + hc(a.y))):
      [lambda (a: posn, b: posn, eql):
