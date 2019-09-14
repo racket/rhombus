@@ -346,10 +346,10 @@ on how it is created:
 
  * `|` indents nested subgroups to one space after the `|`.
 
- * `:` as a line-starter or line-middle indents subgrops to one space
+ * `:` as a line-starter or line-middle indents subgroups to one space
    after the `:`.
 
- * `:` as a line-ender indents subgrops to one step larger than the
+ * `:` as a line-ender indents subgroups to one step larger than the
    current group's indentation.
 
  * `{` as a line-starter or line-middle indents subgroups like `(` or `[`.
