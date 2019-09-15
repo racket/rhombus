@@ -21,8 +21,8 @@
 
                               operator
                               block-operator
-                              more-operator
-                              alt-operator
+                              or-operator
+                              and-operator
                               continue-operator
 
                               opener closer
@@ -68,11 +68,10 @@
 (define (lex source-name)
   (lexer
    [(eof) (ttoken EOF)]
-   [":"
+   [#\:
     (token block-operator (string->symbol lexeme))]
-   ["&"
-    (token more-operator (string->symbol lexeme))]
-   [#\| (token alt-operator '\|)]
+   [#\| (token or-operator '\|)]
+   [#\& (token and-operator '&)]
    [#\\ (token continue-operator '|\|)]
    [(:- (:+ symbolic) #\| #\& #\: "//" "/*" "*/")
     (token operator (string->symbol lexeme))]

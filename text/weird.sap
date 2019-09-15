@@ -57,7 +57,7 @@ define y = 12
 
 q:
   x, y
-  z
+z
 
 q:
   x, y;
@@ -81,7 +81,7 @@ let | x = 8
              & let | x = 8
     | y = 9: 10
              & show(x + y)
-             x - y
+               x - y
 
 letrec_syntax_and_values
 : (m = (syntax_rules ....),

@@ -48,7 +48,7 @@ notation is
 
 Line sensivity has some of the same problems as indentation
 sensitivity, but the problems are much fewer in practice. After all,
-unless your Lisp/Scheme/Racket code has no line comments, it is
+unless Lisp/Scheme/Racket code has no line comments, it is
 already in a line-sensitive notation.
 
 Defering complete grouping to another parser, meanwhile, relieves a
@@ -116,7 +116,8 @@ define fourth(n: integer):
   v
 
 struct posn(x, y)
-& property prop_equal_and_hash \
+& property
+  prop_equal_and_hash
   (let (hc = (lambda (a: posn, hc):
                 hc(a.x) + hc(a.y))):
      [lambda (a: posn, b: posn, eql):
@@ -187,26 +188,8 @@ level.
      group three
    ```
 
- - The simplest ways to continue a group in a new line are `&` at the
-   start of a line (after any whitespace/comments) or `\` at the end
-   of the line (before whitespace/comments). These aren't the most
-   common ways to continue a group, though.
-
-   ```
-     This group became \
-       way too long \
-       to put on a single line
-
-     struct posn(x, y)
-     & mutable
-     & transparent
-   ```
-
- - The most common way to continue a group across a line is with `:`.
-   A `:` at line boundary (either the end of one line or the start of
-   the next) continues the group. But `:` has a second job, which is
-   that it starts a nested sequence of groups, much in the same way
-   that _opener_-_closer_ pairs create nested groups. There's no
+ - A `:` starts a nested sequence of groups, much in the same way that
+   _opener_-_closer_ pairs create nested groups, but there's no
    explicit closer to go with `:`.
 
    ```
@@ -215,10 +198,12 @@ level.
    ```
 
  - A blank line terminates all active groups up to an enclosing
-   _opener_-_closer_ pair. A `,` or `;` has the same effect. So, a
-   blank line is a common way to end a `:` subgroup, a `,` is a
-   common way to end a `:` subgroup between `(` and `)`, and a `;` is
-   a common way to end a `:` subgroup between `{` and `}`.
+   _opener_-_closer_ pair, so a blank line is one way to end a `:`
+   group. A `,` or `;` has the same effect as a blank line, so `,` may
+   be a common way to end a group within `(` and `)`, while `;` may be
+   a more natural way to end a group within `{` and `}`. Enforcing a
+   the use of `,` with `(` and `)` is up to a language that is written
+   in sapling notation.
 
    ```
    define dist(x, y):
@@ -238,12 +223,11 @@ level.
    }
    ```
 
- - A `|` at the start of a line continues a group and starts subgroups
-   in the same way as `:`. However, a `|` also closes active
-   subgroups up to a preceding `|` (within the same _opener_-_closer_
-   pair). This property makes `|` a kind of alternative to using
-   `,`-separated groups between parentheses. A blank line, `,`, or `;`
-   meanwhile closes all active subgroups without stopping at a `|`.
+ - A `|` at the start of a line continues a group from the preceding
+   line. It also starts nested groups in the same way as `:`. However,
+   a `|` anywhere also closes active groups up to a preceding `|`
+   within the same _opener_-_closer_ pair. A blank line, `,`, or `;`
+   meanwhile closes all active groups without stopping at a `|`.
    Overall, a blank line, `,`, or `;` is effectively stronger as a
    terminator than a `|`, but `|` is still strong enough to terminate
    a `:`.
@@ -259,12 +243,52 @@ level.
              m*n
    ```
 
+ - A `&` is similar to a `|`, but `&` closes groups only up to a `&`
+   or `|`, whichever is first, while `|` closes past any `&` to find a
+   `|`. In other words, `|` is stronger as a closer than `&` (but that
+   has the effect of making `&` behave as higher precedence for
+   joining nested groups).
+
+   ```
+   define
+   | make_list_of_adders(lo, hi):
+      for list
+      & (i = in_range(lo, hi)):
+          lambda (n): i + n
+   | make_list_of_adders(hi):
+       make_list_of_adders(0, hi):
+   ```
+
+   The relative precedence of `:`, `&`, and `|` is meant to be
+   convenient, but it won't avoid the need for parentheses in all
+   cases.
+
+   ```
+   define assoc(key, lst):
+     match lst
+     | empty: #false
+     | cons(cons(a_key, a_val), rest):
+         (cond
+          | is_equal(a_key, key): a_val
+          | else: assoc(key, rst))
+   
+   ```
+
+ - As a last resort, a `\` at the end of the line (before
+   whitespace/comments) continues the group into the next line.
+
+   ```
+     This group became \
+       way too long \
+       to put on a single line
+   ```
+
  - In the special case of a group immediately within `(` and `)` or
-   `[` and `]`, any operator is allow as a line-continuing starter.
-   So, while `X + Y` cannot be split across lines—except by resorting
-   to a `\`— the form `(X + Y)` can be split across lines by adding a
-   newline before `+`, which is handy if `X` and `Y` stand for large
-   expressions.
+   `[` and `]`, any operator at the start of a line continues the
+   previous line. So, while `X + Y` cannot be split across
+   lines—except by resorting to a `\`— the form `(X + Y)` can be split
+   across lines by adding a newline before `+`, which is handy if `X`
+   and `Y` stand for large expressions.
 
    ```
     lambda(first_arg, second_arg):
@@ -279,6 +303,8 @@ level.
    silently terminates a group. A `\` silently continues a group on
    the next line, while `:` is recorded as part of the group that it
    continues.
+
+
 
 Here are some saplings each followed by the corresponding parsed forms
 as represented by an S-expression:
@@ -297,21 +323,22 @@ define
  (#%grp
   define
   \|
-  (#%grp (#%call fib (#%grp 0)) => 0)
+  (#%grp (#%grp fib (#%paren (#%grp 0)) : (#%grp (#%grp 0))))
   \|
-  (#%grp (#%call fib (#%grp 1)) => 1)
+  (#%grp (#%grp fib (#%paren (#%grp 1)) : (#%grp (#%grp 1))))
   \|
   (#%grp
-   (#%call fib (#%grp n))
-   :
-   (#%call fib (#%grp n - 1))
-   +
-   (#%call fib (#%grp n - 2)))))
+   (#%grp
+    fib
+    (#%paren (#%grp n))
+    :
+    (#%grp
+     (#%grp fib (#%paren (#%grp n - 1)) + fib (#%paren (#%grp n - 2))))))))
 
 define show_combos(l, l2):
   for (x => in_list(l))
-  &   (x2 => in_list(l2)):
-    printf("<~a, ~a>\n", x, x2)
+  & (x2 => in_list(l2)):
+      printf("<~a, ~a>\n", x, x2)
 
 (#%all
  (#%grp
@@ -322,14 +349,21 @@ define show_combos(l, l2):
   (#%grp
    (#%grp
     for
-    (#%paren (#%grp x => (#%grp (#%grp in_list (#%paren (#%grp l))))))
+    (#%paren (#%grp x => in_list (#%paren (#%grp l))))
     &
-    (#%paren (#%grp x2 => (#%grp (#%grp in_list (#%paren (#%grp l2))))))
-    :
     (#%grp
      (#%grp
-      printf
-      (#%paren (#%grp "\"<~a, ~a>\\n\"") |,| (#%grp x) |,| (#%grp x2))))))))
+      (#%paren (#%grp x2 => in_list (#%paren (#%grp l2))))
+      :
+      (#%grp
+       (#%grp
+        printf
+        (#%paren
+         (#%grp "\"<~a, ~a>\\n\"")
+         |,|
+         (#%grp x)
+         |,|
+         (#%grp x2))))))))))
 ```
 
 In a Racket implementation of a language based on saplings, the intent
@@ -342,24 +376,35 @@ The standard identation of saplings starts each new group within a
 group sequence at the same column. The start of nested groups depends
 on how it is created:
 
- * `(` and `[` indent nested subgroups to line up after the _opener_.
+ * `(` and `[` indent nested groups to line up after the _opener_.
 
- * `|` indents nested subgroups to one space after the `|`.
+ * `|` indents nested groups to one space after the `|`.
 
- * `:` as a line-starter or line-middle indents subgroups to one space
-   after the `:`.
+ * `&` indents nested groups to one space after the `&`.
 
- * `:` as a line-ender indents subgroups to one step larger than the
-   current group's indentation.
+ * `:` at the end of a line indents nested groups to one step larger
+   than the current group's indentation.
 
- * `{` as a line-starter or line-middle indents subgroups like `(` or `[`.
+ * `:` at the start of middle of a line indents nested groups to one
+   space after the `:`.
 
- * `{` as a line-ender indents subgroups like `:` as a line ender, unless
-   it is immediately preceded by a `:`.
+ * `{` at the start or middle of a line indents nested groups like `(`
+   or `[`.
 
- * `: {` as a line-ender indents like line a line-ending `{` or `:`.
-   (The `:` and `{` in `: {` can be separate by whitespace and
-   comments.)
+ * `{` at the end of a line indents nested groups like `:` at the end
+   of a line, unless it is immediately preceded by a `:`. If the closing
+   `}` appears at the start of a line, it is indented line the group
+   that is extended by `{`.
+
+ * `: {` at the end of a line indents like `{` or `:` at the end of a
+   line. (The `:` and `{` in `: {` can be separate by whitespace and
+   comments.) If the closing `}` appears at the start of a line, it is
+   indented line the group that is extended by `:`.
+
+ * `\` at the end of a line indents the continuation one step deeper
+   than the current group's indentation, unless the previous line was
+   already a `\` continuation for the same group, in which case the
+   next line uses the current line's indentation.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -382,7 +427,8 @@ the grouping rules generate lots of extra `#%grp` layers.
 
 Saplings do not resolve the question of how infix expressions parse.
 There is no precedence at the sapling level, for example, other than
-the way that an `:` has a higher precdence than a `|`.
+the way that an `:` has a higher precdence than a `&` or `|` and `&`
+has a higher precedence than `|`.
 
 The lexeme-level syntax here would require some sort of bridge to
 Racket names that don't fit that syntax.
@@ -400,6 +446,13 @@ enough grouping structure that code-navigaton and -transformation
 should be useful and straighforward in an editor. You can select a
 range of code to reindent if editing has made it unreadable.
 
+The precendence difference between `&` and `|` could be removed, and
+that change would not signficiantly affect any of the
+[demo.sap](demo.sap) examples.
+
+Making `{`...`}` and `;` silent may be a bad idea, and maybe the
+choice is better left to a language that uses sapling notation.
+
 There may be room to tweak the grouping rules to avoid unnecessary
 `#%grp`s.
 
@@ -411,7 +464,7 @@ distinguishing operators from non-operators.
 # Prior art
 [prior-art]: #prior-art
 
-Spaling notation takes a lot of inspriation from S-expression,
+Spaling notation takes a lot of inspriation from S-expressions,
 alternative S-expression notations, and especially
 [Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/text/0004-lexpr.md).
 The idea that, even in an S-expression-like setting, some parsing can

@@ -63,8 +63,8 @@ define fib(n):
 // Ugly, but allowed
 define fib(n):
   match n | 0: 0 | 1: 1
-          | n
-            : fib(n-1) + fib(n-2)
+          | n:
+              fib(n-1) + fib(n-2)
 
 // Misleadingly indented...
 define make_adder(n):
@@ -91,14 +91,15 @@ struct color_posn(col)
 & mutable
 
 struct posn(x, y)
-& property prop_equal_and_hash \
-  (let (hc = (lambda (a: posn, hc):
-                hc(a.x) + hc(a.y))):
-     [lambda (a: posn, b: posn, eql):
-        (eql(a.x, b.x)
-         && eql(a.y, b.y)),
-      hc,
-      hc])
+& property
+  prop_equal_and_hash
+  let (hc = (lambda (a: posn, hc):
+               hc(a.x) + hc(a.y))):
+    [lambda (a: posn, b: posn, eql):
+       (eql(a.x, b.x)
+        && eql(a.y, b.y)),
+     hc,
+     hc]
 
 // Note that using `=` instead of `:` for
 // non-fumction definitions makes this work
@@ -172,9 +173,9 @@ define curried = lambda (x):
     lambda (z):
       list(x, y, z)
 
-define dictionary =  ("foo" : 17,
-                      "bar" : "string",
-                      "baz" : #true)
+define dictionary = ("foo" : 17,
+                     "bar" : "string",
+                     "baz" : #true)
 
 define f(x_something,
          y_something_else,
@@ -196,30 +197,30 @@ define show_zip(l, l2):
 
 define show_combos_not_same(l, l2):
   for (x = in_list(l))
-  &   (x2 = in_list(l2))
-  &   when !is_equal(x, x2):
-    print(x)
-    print_string(" ")
-    print(y)
-    newline()
+  & (x2 = in_list(l2))
+  & when !is_equal(x, x2):
+      print(x)
+      print_string(" ")
+      print(y)
+      newline()
 
 define map(f, l):
   for list
-  &   (x = in_list(l)):
-    f(x)
+  & (x = in_list(l)):
+      f(x)
 
 define partition(l, pred):
   for fold (yes = empty,
             no = empty,
             result (reverse(yes), reverse(no)))
-  &   (x = in_list(l)):
-    (if pred(x)
-     | (cons(x, yes), no)
-     | (yes, cons(x, no)))
+  & (x = in_list(l)):
+      (if pred(x)
+       | (cons(x, yes), no)
+       | (yes, cons(x, no)))
 
 define sum(l):
   // Named let
   let loop (l = l):
     if is_null(l)
     | 0
-    | first(l) + loop(rest(l)))
+    | first(l) + loop(rest(l))

@@ -2,20 +2,18 @@
 (require racket/pretty
          "private/lex.rkt")
 
-;; See "indent.rkt" for some overall notes
-
 ;; Parsing state at the group level:
 (struct state (line          ; current group's line
                in-parens?    ; immediately in "(...)" or "[...]"?
-               after-bar?))  ; after | in group?
+               after-conj))  ; #f or 'or or 'and: after `|` or `&` in group?
 
 ;; Parsing state at the group-sequence level for top and parens:
 (struct group-state (closer       ; expected closer, a string or EOF
                      in-parens?)) ; immediately in "(...)" or "[...]"?
 
-;; Parsing state at the group-sequence level for "|" and "=>":
+;; Parsing state at the group-sequence level ":", "|", and "&":
 (struct nested-group-state (line         ; next group's line
-                            after-bar?)) ; after | in an enclodinig group?
+                            after-conj)) ; after conj in an enclosing group?
 
 ;; Report an error on failure, but then keep parsing anyway
 (define (fail msg)
@@ -49,8 +47,8 @@
         (unless (equal? closer (token-e t))
           (fail (format "expected ~s; closing at ~a" closer (token-value t))))
         (if (eof-object? closer)
-            ;; continue afte extra closer:
-            (parse-groups l sg)
+            ;; continue after extra closer:
+            (parse-groups (cdr l) sg)
             ;; stop at closer
             (values null (cdr l) (token-line t)))]
        [(comma-operator)
@@ -74,7 +72,7 @@
                 rest-rest-l
                 end-line)])]))
 
-;; Parse a sequence of groups under "|" or "=>".
+;; Parse a sequence of groups under ":", "|", or "&"
 ;; Returns: the list of groups
 ;;          remaining tokens after sequence
 ;;          ending line
@@ -87,11 +85,11 @@
     [else
      (define t (car l))
      (define line (token-line t))
-     (define (keep-group #:after-bar? [after-bar? (nested-group-state-after-bar? nsg)])
+     (define (keep-group)
        (define-values (g rest-l end-line)
-         (parse-group l (state (token-line (car l))
+         (parse-group l (state line
                                #f
-                               after-bar?)))
+                               (nested-group-state-after-conj nsg))))
        (define-values (gs rest-rest-l nested-end-line)
          (parse-nested-groups rest-l (struct-copy nested-group-state nsg
                                                   [line end-line])))
@@ -108,10 +106,14 @@
           [(whitespace comment)
            (parse-nested-groups (cdr l) (struct-copy nested-group-state nsg
                                                      [line line]))]
-          [(alt-operator)
-           (if (nested-group-state-after-bar? nsg)
+          [(or-operator)
+           (if (nested-group-state-after-conj nsg)
                (done)
-               (keep-group #:after-bar? #t))]
+               (keep-group))]
+          [(and-operator)
+           (if (eq? 'and (nested-group-state-after-conj nsg))
+               (done)
+               (keep-group))]
           [else
            (keep-group)])])]))
 
@@ -138,24 +140,20 @@
        [else
         (define new-line? (line . > . (state-line s)))
         (define (keep-nested-group #:inline? inline?
-                                   #:after-bar? after-bar?)
+                                   #:after-conj after-conj)
           (define next-line (next-line-of (cdr l)))
+          (define next-l (cdr l))
           (define-values (gs rest-l nested-end-line)
-            (parse-nested-groups (cdr l)
+            (parse-nested-groups next-l
                                  (nested-group-state (or next-line
                                                          line)
-                                                     after-bar?)))
+                                                     after-conj)))
           (define-values (g rest-rest-l end-line)
             (parse-group rest-l (struct-copy state s
                                              [line nested-end-line])))
           (values (cons (token-value t)
-                        ;; Not sure the `inline?` distinction is a good idea
-                        (if (and inline?
-                                 (pair? gs))
-                            (append gs
-                                    g)
-                            (cons (cons '#%grp gs)
-                                  g)))
+                        (cons (cons '#%grp gs)
+                              g))
                   rest-rest-l
                   end-line))
         (case (token-name (car l))
@@ -169,12 +167,6 @@
               (if (state-in-parens? s)
                   (keep)
                   (done))]
-             [else
-              (keep)])]
-          [(more-operator)
-           (cond
-             [new-line?
-              (keep)]
              [else
               (keep)])]
           [(continue-operator)
@@ -212,15 +204,20 @@
           [(closer comma-operator semicolon-operator)
            (done)]
           [(block-operator)
-           (keep-nested-group #:inline? #f
-                              #:after-bar? (state-after-bar? s))]
-          [(alt-operator)
-           (cond
-             [(state-after-bar? s)
-              (done)]
-             [else
-              (keep-nested-group #:inline? #t
-                                 #:after-bar? #t)])]
+           (if new-line?
+               (done)
+               (keep-nested-group #:inline? #f
+                                  #:after-conj (state-after-conj s)))]
+          [(or-operator)
+           (if (state-after-conj s)
+               (done)
+               (keep-nested-group #:inline? #t
+                                  #:after-conj 'or))]
+          [(and-operator)
+           (if (eq? 'and (state-after-conj s))
+               (done)
+               (keep-nested-group #:inline? #t
+                                  #:after-conj 'and))]
           [(whitespace comment)
            (parse-group (cdr l) s)]
           [else
