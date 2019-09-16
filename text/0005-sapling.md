@@ -312,8 +312,6 @@ level.
    the next line, while `:` is recorded as part of the group that it
    continues.
 
-
-
 Here are some saplings each followed by the corresponding parsed forms
 as represented by an S-expression:
 
@@ -438,19 +436,19 @@ Racket names that don't fit that syntax.
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
-The lexeme-level syntax is chosen to be familiar and to distniguish
-function calls from other kinds of syntactic forms. The sequence `1+2`
-is one plus two, not a strangely spelled identifier. Extra
-parenthesese are always allowed (pending the sampling consumer's
-cooperation) and can be freely used to disambiguate grouping. Tokens
-like `(`, `,`, `{` and `;` are used in familar ways. Saplings provide
-enough grouping structure that code-navigaton and -transformation
-should be useful and straighforward in an editor. You can select a
-range of code to reindent if editing has made it unreadable.
+The lexeme-level syntax is chosen to be familiar to programmers
+generally. The sequence `1+2` is one plus two, not a strangely spelled
+identifier. Extra parenthesese are always allowed (pending the
+sampling consumer's cooperation) and can be freely used to
+disambiguate grouping. Tokens like `(`, `,`, `{` and `;` are used in
+familar ways. Saplings provide enough grouping structure that
+code-navigaton and -transformation should be useful and straighforward
+in an editor. You can select a range of code to reindent if editing
+has made it unreadable.
 
-The precendence difference between `&` and `|` could be removed, and
-that change would not signficiantly affect any of the
-[demo.sap](demo.sap) examples.
+A full sapling-notation design should incopoprate `at-exp` notation,
+too (where `@` escapes returrn to sapling notation instead of
+S-expressions).
 
 Making `{`...`}` and `;` silent may be a bad idea, and maybe the
 choice is better left to a language that uses sapling notation.
