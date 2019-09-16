@@ -121,7 +121,7 @@ define go(): {
     list(n, n)
 
   define more(m):
-    if (m == 0)
+    if (m = 0)
     | "done"
     | more(m - 1)
 

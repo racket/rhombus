@@ -67,6 +67,15 @@ indicate how lexemes are grouped and where groups start and continue.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
+Here are all of the special tokens that are used for grouping:
+
+```
+: | &   ( ) [ ] { }   ; ,   \
+```
+
+Lines breaks, and particularly a blank line, are also meaningful for
+grouping.
+
 Here are some example saplings in standard indentation.
 
 ```
@@ -131,7 +140,7 @@ define go(): {
     list(n, n)
 
   define more(m):
-    if (m == 0)
+    if (m = 0)
     | "done"
     | more(m - 1)
 
@@ -169,14 +178,9 @@ define show_cross(l, l2):
 
 Identifiers are Java-style with alphanumerics and underscores.
 Operators are sequences of symbolic characters in the sense of
-`char-symbolic?`, roughly. Some operators, including `|` and `:`, are
-treated specially for indentation and grouping, but that doesn't
-preclude their use like other operators. Numbers are written in some
-reasonable way distinct from identifiers. No spaces are needed between
-operators and non-operators, so `1+2` and `1 + 2` mean the same thing.
-Function calls, recognized as having no white space between an expression
-and open parenthesis, are distinct from other forms at the reader
-level.
+`char-symbolic?`, roughly. Numbers are written in some reasonable way
+distinct from identifiers. No spaces are needed between operators and
+non-operators, so `1+2` and `1 + 2` mean the same thing.
 
 ### Grouping overview
 
@@ -254,8 +258,8 @@ level.
  - A `&` is similar to a `|`, but `&` closes groups only up to a `&`,
    `|`, or `:`, whichever is first. In other words, `&` is weaker as a
    closer than `|`, and it nests inside `:` instead of closing a `:`.
-   Another view is that `&` has a higher "precedence" than `|` and `:`
-   for joining nested groups (while `:` has a higher "precedence" than
+   Another view is that `&` has a higher “precedence” than `|` and `:`
+   for joining nested groups (while `:` has a higher “precedence” than
    `|`).
 
    ```
@@ -268,7 +272,7 @@ level.
    ```
 
    The relative precedence of `:`, `&`, and `|` is meant to be
-   convenient, but it won't avoid the need for parentheses in all
+   convenient, but it won’t avoid the need for parentheses in all
    cases.
 
    ```
@@ -431,7 +435,7 @@ the way that an `:` has a higher precdence than a `&` or `|` and `&`
 has a higher precedence than `|`.
 
 The lexeme-level syntax here would require some sort of bridge to
-Racket names that don't fit that syntax.
+Racket names that don’t fit that syntax.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
