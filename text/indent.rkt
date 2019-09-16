@@ -145,14 +145,19 @@
            (emit-whitespace t nsg)
            (indent-nested-groups (cdr l) nsg)]
           [(or-operator)
-           (if (or (any-state-or-indent nsg)
-                   (any-state-and-indent nsg))
+           (if (nested-group-state-after-conj nsg)
                (done)
                (keep-group))]
           [(and-operator)
-           (if (any-state-and-indent nsg)
+           (if (eq? 'and (nested-group-state-after-conj nsg))
                (done)
                (keep-group))]
+          [(block-operator)
+           (if (eq? 'and (nested-group-state-after-conj nsg))
+               (done)
+               (begin
+                 (emit-indent t nsg)
+                 (keep-group)))]
           [else
            (emit-indent t nsg)
            (keep-group)])])]))
@@ -285,7 +290,8 @@
           [(closer comma-operator semicolon-operator)
            (done)]
           [(block-operator)
-           (if new-line?
+           (if (or new-line?
+                   (eq? 'and (state-after-conj s)))
                (done)
                (keep-nested-group #:indent-mode (if (next-is-curly? (cdr l))
                                                     'none

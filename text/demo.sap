@@ -93,13 +93,13 @@ struct color_posn(col)
 struct posn(x, y)
 & property
   prop_equal_and_hash
-  let (hc = (lambda (a: posn, hc):
-               hc(a.x) + hc(a.y))):
-    [lambda (a: posn, b: posn, eql):
-       (eql(a.x, b.x)
-        && eql(a.y, b.y)),
-     hc,
-     hc]
+  (let (hc = (lambda (a: posn, hc):
+                hc(a.x) + hc(a.y))):
+     [lambda (a: posn, b: posn, eql):
+        (eql(a.x, b.x)
+         && eql(a.y, b.y)),
+      hc,
+      hc])
 
 // Note that using `=` instead of `:` for
 // non-fumction definitions makes this work
@@ -196,27 +196,26 @@ define show_zip(l, l2):
     newline()
 
 define show_combos_not_same(l, l2):
-  for (x = in_list(l))
-  & (x2 = in_list(l2))
-  & when !is_equal(x, x2):
-      print(x)
-      print_string(" ")
-      print(y)
-      newline()
+  for & (x = in_list(l))
+      & (x2 = in_list(l2))
+      & when !is_equal(x, x2):
+    print(x)
+    print_string(" ")
+    print(y)
+    newline()
 
 define map(f, l):
-  for list
-  & (x = in_list(l)):
-      f(x)
+  for list & (x = in_list(l)):
+    f(x)
 
 define partition(l, pred):
   for fold (yes = empty,
             no = empty,
             result (reverse(yes), reverse(no)))
   & (x = in_list(l)):
-      (if pred(x)
-       | (cons(x, yes), no)
-       | (yes, cons(x, no)))
+    (if pred(x)
+     | (cons(x, yes), no)
+     | (yes, cons(x, no)))
 
 define sum(l):
   // Named let

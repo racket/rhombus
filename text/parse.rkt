@@ -114,6 +114,10 @@
            (if (eq? 'and (nested-group-state-after-conj nsg))
                (done)
                (keep-group))]
+          [(block-operator)
+           (if (eq? 'and (nested-group-state-after-conj nsg))
+               (done)
+               (keep-group))]
           [else
            (keep-group)])])]))
 
@@ -204,7 +208,8 @@
           [(closer comma-operator semicolon-operator)
            (done)]
           [(block-operator)
-           (if new-line?
+           (if (or new-line?
+                   (eq? 'and (state-after-conj s)))
                (done)
                (keep-nested-group #:inline? #f
                                   #:after-conj (state-after-conj s)))]

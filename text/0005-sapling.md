@@ -151,8 +151,16 @@ let (x = 1,
   x+y
 
 define show_zip(l, l2):
-  for (x = in_list(l),
-       x2 = in_list(l2)):
+  for & (x = in_list(l),
+         x2 = in_list(l2)):
+    print(x)
+    print_string(" ")
+    print(y)
+    newline()
+
+define show_cross(l, l2):
+  for & x = in_list(l)
+      & x2 = in_list(l2):
     print(x)
     print_string(" ")
     print(y)
@@ -243,18 +251,18 @@ level.
              m*n
    ```
 
- - A `&` is similar to a `|`, but `&` closes groups only up to a `&`
-   or `|`, whichever is first, while `|` closes past any `&` to find a
-   `|`. In other words, `|` is stronger as a closer than `&` (but that
-   has the effect of making `&` behave as higher precedence for
-   joining nested groups).
+ - A `&` is similar to a `|`, but `&` closes groups only up to a `&`,
+   `|`, or `:`, whichever is first. In other words, `&` is weaker as a
+   closer than `|`, and it nests inside `:` instead of closing a `:`.
+   Another view is that `&` has a higher "precedence" than `|` and `:`
+   for joining nested groups (while `:` has a higher "precedence" than
+   `|`).
 
    ```
    define
    | make_list_of_adders(lo, hi):
-      for list
-      & (i = in_range(lo, hi)):
-          lambda (n): i + n
+      for list & (i = in_range(lo, hi)):
+        lambda (n): i + n
    | make_list_of_adders(hi):
        make_list_of_adders(0, hi):
    ```
@@ -336,9 +344,9 @@ define
      (#%grp fib (#%paren (#%grp n - 1)) + fib (#%paren (#%grp n - 2))))))))
 
 define show_combos(l, l2):
-  for (x => in_list(l))
-  & (x2 => in_list(l2)):
-      printf("<~a, ~a>\n", x, x2)
+  for & x = in_list(l)
+      & x2 = in_list(l2):
+    printf("<~a, ~a>\n", x, x2)
 
 (#%all
  (#%grp
@@ -349,21 +357,15 @@ define show_combos(l, l2):
   (#%grp
    (#%grp
     for
-    (#%paren (#%grp x => in_list (#%paren (#%grp l))))
     &
+    (#%grp (#%grp x = in_list (#%paren (#%grp l))))
+    &
+    (#%grp (#%grp x2 = in_list (#%paren (#%grp l2))))
+    :
     (#%grp
      (#%grp
-      (#%paren (#%grp x2 => in_list (#%paren (#%grp l2))))
-      :
-      (#%grp
-       (#%grp
-        printf
-        (#%paren
-         (#%grp "\"<~a, ~a>\\n\"")
-         |,|
-         (#%grp x)
-         |,|
-         (#%grp x2))))))))))
+      printf
+      (#%paren (#%grp "\"<~a, ~a>\\n\"") |,| (#%grp x) |,| (#%grp x2))))))))
 ```
 
 In a Racket implementation of a language based on saplings, the intent
@@ -385,7 +387,7 @@ on how it is created:
  * `:` at the end of a line indents nested groups to one step larger
    than the current group's indentation.
 
- * `:` at the start of middle of a line indents nested groups to one
+ * `:` at the start or middle of a line indents nested groups to one
    space after the `:`.
 
  * `{` at the start or middle of a line indents nested groups like `(`
