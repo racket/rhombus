@@ -192,7 +192,7 @@ define show_zip(l, l2):
        x2 = in_list(l2)):
     print(x)
     print_string(" ")
-    print(y)
+    print(x2)
     newline()
 
 define show_combos_not_same(l, l2):
@@ -201,7 +201,7 @@ define show_combos_not_same(l, l2):
       & when !is_equal(x, x2):
     print(x)
     print_string(" ")
-    print(y)
+    print(x2)
     newline()
 
 define map(f, l):

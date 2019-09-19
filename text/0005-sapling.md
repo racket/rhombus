@@ -164,7 +164,7 @@ define show_zip(l, l2):
          x2 = in_list(l2)):
     print(x)
     print_string(" ")
-    print(y)
+    print(x2)
     newline()
 
 define show_cross(l, l2):
@@ -172,7 +172,7 @@ define show_cross(l, l2):
       & x2 = in_list(l2):
     print(x)
     print_string(" ")
-    print(y)
+    print(x2)
     newline()
 ```
 
