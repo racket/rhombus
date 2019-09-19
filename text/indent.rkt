@@ -263,14 +263,14 @@
              [else
               (emit t s)
               (define out-col (current-column))
-              (define-values (closer col-indent? tag)
+              (define closer
                 (case (token-e t)
-                  [("(") (values ")" #t '#%paren)]
-                  [("[") (values "]" #t '#%bracket)]
-                  [("{")
-                   (define next-line (next-line-of (cdr l)))
-                   (values "}" (and next-line (= next-line line)) '#%grp)]
+                  [("(") ")"]
+                  [("[") "]"]
+                  [("{") "}"]
                   [else (error "unknown opener" t)]))
+              (define next-line (next-line-of (cdr l)))
+              (define col-indent? (and next-line (= next-line line)))
               (define indent
                 (if col-indent?
                     out-col

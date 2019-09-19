@@ -51,13 +51,12 @@
             (parse-groups (cdr l) sg)
             ;; stop at closer
             (values null (cdr l) (token-line t)))]
-       [(comma-operator)
+       [(comma-operator semicolon-operator)
         (define-values (gs rest-l end-line)
           (parse-groups (cdr l) sg))
         (values (cons (token-value t) gs)
                 rest-l
                 end-line)]
-       [(semicolon-operator) (parse-groups (cdr l) sg)]
        [(whitespace comment) (parse-groups (cdr l) sg)]
        [else
         (define-values (g rest-l group-end-line) 
@@ -193,7 +192,7 @@
                 (case (token-e t)
                   [("(") (values ")" #t '#%paren)]
                   [("[") (values "]" #t '#%bracket)]
-                  [("{") (values "}" #f '#%grp)]
+                  [("{") (values "}" #f '#%brace)]
                   [else (error "unknown opener" t)]))
               (define-values (gs rest-l close-line)
                 (parse-groups (cdr l)

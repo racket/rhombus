@@ -308,13 +308,12 @@ non-operators, so `1+2` and `1 + 2` mean the same thing.
             + second_arg * second_arg)
    ```
 
- - The parsed form of `(` and `)` or `[` and `]` records the use of
-   parentheses or square brackets. The parsed form of `{` and `}`, in
-   contrast, just forms a group of groups. Similarly, the parsed form
-   of `,` records the comma as part of the enclosing group, while `;`
-   silently terminates a group. A `\` silently continues a group on
-   the next line, while `:` is recorded as part of the group that it
-   continues.
+ - The parsed form of `(` and `)` or `[` and `]` or `{` and `}`
+   records the use of parentheses, square brackets, or curly braces,
+   respectively. Similarly, the parsed form of `,` or `;` records the
+   comma or semicolon as part of the enclosing group. A `\` silently
+   continues a group on the next line, while `:` is recorded as part
+   of the group that it continues.
 
 Here are some saplings each followed by the corresponding parsed forms
 as represented by an S-expression:
@@ -380,30 +379,29 @@ The standard identation of saplings starts each new group within a
 group sequence at the same column. The start of nested groups depends
 on how it is created:
 
- * `(` and `[` indent nested groups to line up after the _opener_.
-
- * `|` indents nested groups to one space after the `|`.
-
- * `&` indents nested groups to one space after the `&`.
-
  * `:` at the end of a line indents nested groups to one step larger
    than the current group's indentation.
 
  * `:` at the start or middle of a line indents nested groups to one
    space after the `:`.
 
- * `{` at the start or middle of a line indents nested groups like `(`
-   or `[`.
+ * `|` indents nested groups to one space after the `|`.
 
- * `{` at the end of a line indents nested groups like `:` at the end
-   of a line, unless it is immediately preceded by a `:`. If the closing
-   `}` appears at the start of a line, it is indented line the group
-   that is extended by `{`.
+ * `&` indents nested groups to one space after the `&`.
 
- * `: {` at the end of a line indents like `{` or `:` at the end of a
-   line. (The `:` and `{` in `: {` can be separate by whitespace and
-   comments.) If the closing `}` appears at the start of a line, it is
-   indented line the group that is extended by `:`.
+ * _opener_ at the start or middle of a line indents nested groups to
+   line up after the _opener_.
+
+ * _opener_ at the end of a line indents nested groups like `:` at the
+   end of a line, unless it is immediately preceded by a `:`. If the
+   corresponding _closer_ appears at the start of a line, it is
+   indented line the group that is extended by _opener_.
+
+ * `:` followed by _opener_ at the end of a line indents like _opener_
+   or `:` at the end of a line. (The `:` and _opener_ can be separated
+   by whitespace and comments.) If the corresponding _closer_ appears
+   at the start of a line, it is indented line the group that is
+   extended by `:`.
 
  * `\` at the end of a line indents the continuation one step deeper
    than the current group's indentation, unless the previous line was
@@ -453,9 +451,6 @@ has made it unreadable.
 A full sapling-notation design should incopoprate `at-exp` notation,
 too (where `@` escapes returrn to sapling notation instead of
 S-expressions).
-
-Making `{`...`}` and `;` silent may be a bad idea, and maybe the
-choice is better left to a language that uses sapling notation.
 
 There may be room to tweak the grouping rules to avoid unnecessary
 `#%grp`s.
