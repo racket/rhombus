@@ -83,8 +83,8 @@ define pi = 3.14
 
 define fib(n):
   log_error("fib called")
-  cond | (n = 0): 0
-       | (n = 1): 1
+  cond | n = 0: 0
+       | n = 1: 1
        | else: fib(n-1) + fib(n-2)
 
 define
@@ -140,7 +140,7 @@ define go(): {
     list(n, n)
 
   define more(m):
-    if (m = 0)
+    if m = 0
     | "done"
     | more(m - 1)
 

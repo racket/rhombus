@@ -6,8 +6,8 @@ define pi = 3.14
 
 define fib(n):
   log_error("fib called")
-  cond | (n = 0): 0
-       | (n = 1): 1
+  cond | n = 0: 0
+       | n = 1: 1
        | else: fib(n-1) + fib(n-2)
 
 define
@@ -17,8 +17,8 @@ define
 
 define fib = {
   lambda (n):
-    cond | (n = 0): 0
-         | (n = 1): 1
+    cond | n = 0: 0
+         | n = 1: 1
          | else: fib(n-1) + fib(n-2)
 }
 
@@ -110,18 +110,18 @@ define fourth(n: integer):
   v
 
 define exp(n: integer, _base base = 2.718281828459045):
-  if (n = 1)
+  if n = 1
   | base
   | base * exp(n-1, _base base)
 
-define positive_p(n): if (n > 0) | #true | #false
+define positive_p(n): if n > 0 | #true | #false
 
 define go(): {
   define helper(n):
     list(n, n)
 
   define more(m):
-    if (m = 0)
+    if m = 0
     | "done"
     | more(m - 1)
 
@@ -196,8 +196,8 @@ define show_zip(l, l2):
     newline()
 
 define show_combos_not_same(l, l2):
-  for & (x = in_list(l))
-      & (x2 = in_list(l2))
+  for & x = in_list(l)
+      & x2 = in_list(l2)
       & when !is_equal(x, x2):
     print(x)
     print_string(" ")
@@ -205,14 +205,14 @@ define show_combos_not_same(l, l2):
     newline()
 
 define map(f, l):
-  for list & (x = in_list(l)):
+  for list & x = in_list(l):
     f(x)
 
 define partition(l, pred):
   for fold (yes = empty,
             no = empty,
             result (reverse(yes), reverse(no)))
-  & (x = in_list(l)):
+  & x = in_list(l):
     (if pred(x)
      | (cons(x, yes), no)
      | (yes, cons(x, no)))
