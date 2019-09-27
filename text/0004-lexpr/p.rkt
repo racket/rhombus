@@ -397,14 +397,18 @@
         (if (expect-prefix new-p)
           (list (text-mode new-p))
           '())
-        (line-start p))]
+        (if (expect-prefix p)
+          (line-start p)
+          '()))]
       [#\| (read-char ip)
        (expectc #\space)
        (define this-loc (loc-col (current-loc ip)))
        (define new-p (prefix:first-bar (- this-loc 2) this-loc))
        (cons
         (cons '#%bar (lines new-p))
-        (line-start p))]
+        (if (expect-prefix p)
+          (line-start p)
+          '()))]
       [_
        (cons (unit) (line-tail p))]))
 
@@ -445,7 +449,7 @@
       [((list 'error em) (list 'error er))
        (regexp-match (regexp-quote er) em)]
       [(x y) (equal? x y)]))
-  
+
   (define-runtime-path actual.rktd "actual.rktd")
   (define-runtime-path expected.rktd "expected.rktd")
   (define (read-test label in expected)
