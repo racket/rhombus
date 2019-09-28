@@ -237,12 +237,13 @@ non-operators, so `1+2` and `1 + 2` mean the same thing.
 
  - A `|` at the start of a line continues a group from the preceding
    line. It also starts nested groups in the same way as `:`. However,
-   a `|` anywhere also closes active groups up to a preceding `|`
-   within the same _opener_-_closer_ pair. A blank line, `,`, or `;`
-   meanwhile closes all active groups without stopping at a `|`.
-   Overall, a blank line, `,`, or `;` is effectively stronger as a
-   terminator than a `|`, but `|` is still strong enough to terminate
-   a `:`.
+   if a `|` anywhere has a preceding `|` within the same
+   _opener_-_closer_ pair, then it also closes active groups up to
+   that `|`. A blank line, `,`, or `;` meanwhile closes all active
+   groups without stopping at a `|`. Overall, a blank line, `,`, or
+   `;` is effectively stronger as a terminator than a `|`, but `|` is
+   still strong enough to terminate a `:` if there's a `|` before the
+   `:`.
 
    ```
    define make_multiplier(n):
@@ -433,7 +434,11 @@ the way that an `:` has a higher precdence than a `&` or `|` and `&`
 has a higher precedence than `|`.
 
 The lexeme-level syntax here would require some sort of bridge to
-Racket names that don’t fit that syntax.
+Racket names that don’t fit that syntax. For example, something like
+`#{....}` could be the syntax for an identifier that has any character
+between the curly braces (with some suitable generalization to
+accomodate `{` and `}` in identifier names), so `#{exact-integer?}`
+would be an identifier with `-` and `?` as part of the identifier.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -463,7 +468,7 @@ distinguishing operators from non-operators.
 # Prior art
 [prior-art]: #prior-art
 
-Spaling notation takes a lot of inspriation from S-expressions,
+Sapling notation takes a lot of inspriation from S-expressions,
 alternative S-expression notations, and especially
 [Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/text/0004-lexpr.md).
 The idea that, even in an S-expression-like setting, some parsing can
