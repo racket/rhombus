@@ -1068,7 +1068,8 @@ a (:) b
 An `@` line follower begins an indented text quotation. The entire
 indented region that follows is parsed as if it were between `{}`,
 except that it must have leading indentation, which is not part of the
-quotation:
+quotation.  Like `:`, the line continues after the indented region
+terminates.
 
 ```lexpr
 foo bar @
@@ -1092,7 +1093,8 @@ baz
 
 The `|` line follower begins a series of lines which must begin with
 spaces and then a `|` at the same column as the original `|`. The
-first line begins immediately after the `|`.
+first line begins immediately after the `|`. Like `:`,  the line
+continues after the `|` sequence terminates.
 
 ```lexpr
 let | x = 1
