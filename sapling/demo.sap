@@ -37,8 +37,9 @@ define fib(n):
   | n:
       fib(n-1) + fib(n-2)
 
-// This one should fail to parse, because the `+` is
-// split across two groups
+// This one should fail to mean fibonacci, because the `+` is
+// split across two group. But if `+` is a unary operator, then
+// it parses. It's a valid sapling, in any case.
 define fib(n):
   match n
   | 0:
@@ -84,6 +85,20 @@ define make_adder(n):
     printf("adding to ~a\n", m))
   m + n
 
+// Similarly, watch out for misindented after `if`:
+define analyze(n):
+  if (n == 0)
+  | printf("zero\n")
+  | printf("other\n")
+  printf("done\n")
+
+// Correct indentation accurately reflects the parse:
+define analyze(n):
+  if (n == 0)
+  | printf("zero\n")
+  | printf("other\n")
+    printf("done\n")
+
 struct posn(x, y)
 
 struct color_posn(col)
@@ -109,10 +124,10 @@ define fourth(n: integer):
   printf("~a^4 = ~a\n", n, v)
   v
 
-define exp(n: integer, _base base = 2.718281828459045):
+define exp(n: integer, base:: base = 2.718281828459045):
   if n = 1
   | base
-  | base * exp(n-1, _base base)
+  | base * exp(n-1, base:: base)
 
 define positive_p(n): if n > 0 | #true | #false
 
@@ -141,7 +156,7 @@ define approx(x):
       v
   | nothing: 0
 
-// Nested "=>"s work out to bind more tightly than "|",
+// Nested ":"s work out to bind more tightly than "|",
 // in a sense:
 define approx_thunk(x):
   match x
@@ -213,9 +228,9 @@ define partition(l, pred):
             no = empty,
             result (reverse(yes), reverse(no)))
   & x = in_list(l):
-    (if pred(x)
-     | (cons(x, yes), no)
-     | (yes, cons(x, no)))
+    if pred(x)
+    | (cons(x, yes), no)
+    | (yes, cons(x, no))
 
 define sum(l):
   // Named let
