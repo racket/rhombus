@@ -497,5 +497,5 @@
                  lexpr (with-input-from-string sexpr read))
       (extract-tests after-line after)))
 
-  (define-runtime-path md "../0004-lexpr.md")
+  (define-runtime-path md "./0004-lexpr.md")
   (extract-tests 0 (file->lines md)))
