@@ -40,7 +40,7 @@ notation is
  - line- and indentation-sensitive, and
  - intended to constrain grouping but not reflect every detail of grouping.
 
-Defering complete grouping to another parser relieves a burden on
+Deferring complete grouping to another parser relieves a burden on
 reader-level notation. At the same time, line- and
 indentation-sensitive rules constrain parsing to ensure that line
 breaks and indentation in the source are not misleading.
@@ -81,7 +81,7 @@ define print_sexp(v)
 Forms like `define`, `cond`, and `match` are not specified by
 shrubbery notation, since specifying those forms is up to a language
 that is built on top of shrubbery notation. Still, shrubbery notation
-is meant to accomodate a particular kind of syntax for nested blocks
+is meant to accommodate a particular kind of syntax for nested blocks
 (via indentation or `:`) and conditional branches (via `|`).
 
 Identifiers are C-style with alphanumerics and underscores. Operators
@@ -100,7 +100,7 @@ and indentation:
 Parentheses, square brackets, and curly braces are used to form groups
 in the obvious way. A `;` or `,` acts as a group separator, even
 within a single line. A `:` or `|`treats remaining item on the same
-line like a new indented line, which forms a subgroup. A `\` contnues a
+line like a new indented line, which forms a subgroup. A `\` continues a
 group across a line break.
 
 ## Grouping by lines
@@ -206,7 +206,7 @@ hello { world ; universe }
 ```
 
 As illustrated in those examples, there is no constraint on how much
-indetation a nested group sequence must use, as long as the indentation
+indentation a nested group sequence must use, as long as the indentation
 is more than the enclosing group. Within an _opener_-_closer_ pair, a
 nested group sequence can start at any indentation; it doesn't have to be
 indented to the right of the _opener_.
@@ -261,7 +261,7 @@ end of a group, then it forces an empty block. This extra rule ensures
 that a `:` doesn't just disappear if there's no content after it. For
 example `(void:)` is the same as `(void {})`, not `(void)`.
 
-The correspondance among blocks created `:`, indentation, and `{}`
+The correspondence among blocks created `:`, indentation, and `{}`
 means that a programmer can choose between single-line forms using
 `{}` and `;` or multi-line forms using indentation.
 
@@ -457,7 +457,7 @@ S-expression representation, because symbol atoms will always appear
 as non-initial items in a `'group` list.
 
 Here are some example shrubberies with their S-expression parsed
-reprsentations:
+representations:
 
 ```
 define pi: 3.14
@@ -550,14 +550,14 @@ Racket names that don’t fit C-style syntax.
 
 The lexeme-level syntax is chosen to be familiar to programmers
 generally. The sequence `1+2` is one plus two, not a strangely spelled
-identifier. Tokens like `(`, `,`, `{` and `;` are used in familar
+identifier. Tokens like `(`, `,`, `{` and `;` are used in familiar
 ways. Shrubbery notation provides enough grouping structure that code
-navigaton and transformation should be useful and straighforward in an
+navigation and transformation should be useful and straightforward in an
 editor.
 
 Parentheses in shrubbery notation do not disable indentation, unlike
 some indentation-sensitive notations. That choice supports a language
-in shubbery notation where parentheses can be added around any
+in shrubbery notation where parentheses can be added around any
 expression — even if the expression is written with indentation
 (although the expression may need to be shifted right to preserve
 relative indentation, depending on how parentheses are added).
@@ -567,13 +567,13 @@ conditional forms (such a `if`, `cond`, and `match`) are important and
 common. A distinct, pleasant, and uniform pattern for conditionals
 deserves direct support in the notation.
 
-A full shrubbery-notation design should incopoprate `at-exp` notation,
-too (where `@` escapes returrn to shrubbery notation instead of
+A full shrubbery-notation design should incorporate `at-exp` notation,
+too (where `@` escapes return to shrubbery notation instead of
 S-expressions).
 
 To bridge to Racket identifiers, something like `#{....}` could be the
 syntax for an identifier that has any character between the curly
-braces (with some suitable generalization to accomodate `{` and `}` in
+braces (with some suitable generalization to accommodate `{` and `}` in
 identifier names), so `#{exact-integer?}` would be an identifier with
 `-` and `?` as part of the identifier.
 
@@ -593,8 +593,8 @@ Sampling notation's rules relating indentation, lines, `{}`, `;`, and
 something`](https://github.com/tonyg/racket-something) reader, which
 also targets an underlying expander that further groups tokens.
 Shrubbery notation departs from `#lang something` conventions in a few
-ways, such as ignoring more `:` and preserving indetation in `()`, and
-it adds the threatment of `,` and `|`.
+ways, such as ignoring more `:` and preserving indentation in `()`, and
+it adds the treatment of `,` and `|`.
 
 Shrubbery notation is also based on
 [Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/text/0004-lexpr.md),
@@ -606,7 +606,7 @@ the notation discourages that style in favor of further nesting (or,
 in the case of `if`, in favor of `|` notation like other
 conditionals).
 
-More generally, shrubbery notation takes inspriation from
+More generally, shrubbery notation takes inspiration from
 S-expressions and alternative S-expression notations. The idea that,
 even in an S-expression-like setting, some parsing can be deferred a
 later parser has many precedents, including Clojure's choice of where
@@ -624,4 +624,3 @@ Like other notation designs, this one leaves open exactly the way that
 the notation would be used to express a new programming language. The
 examples are meant to be suggestive and have influenced many of the
 notational choices, though.
-The 
