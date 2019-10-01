@@ -63,7 +63,7 @@ define print_sexp(v)
   match v
    | empty: display("()")
    | cons(a, d)           // <- a colon here would be ok
-       if is_list(d)
+       if is_list(d)      // <- or here, or anywhere before indentation
         | display("(")
           print_sexp(a)
           for (v = in_list(d))
