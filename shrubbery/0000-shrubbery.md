@@ -1,5 +1,5 @@
 - Feature Name: Shrubbery notation
-- Start Date: 2019-09-04
+- Start Date: 2019-10-01
 - RFC PR: [racket/racket2-rfcs#122](https://github.com/racket/racket2-rfcs/pull/122)
 
 # Summary
