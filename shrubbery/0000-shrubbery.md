@@ -9,7 +9,7 @@ Shrubbery notation is similar to S-expression notation, but instead of
 generating fully formed trees, it is intended to partially group input
 for further enforestation by another parser (e.g., as in Honu). The
 notation is line- and indentation-sensitive, and the parsed form of a
-shrubbery imposes grouping tto ensures that further parsing is
+shrubbery imposes grouping to ensure that further parsing is
 consistent with the shrubbery's lines and indentation.
 
 # Motivation
