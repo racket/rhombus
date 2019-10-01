@@ -1,6 +1,6 @@
 - Feature Name: Shrubbery notation
 - Start Date: 2019-09-04
-- RFC PR: [racket/racket2-rfcs#119](https://github.com/racket/racket2-rfcs/pull/119)
+- RFC PR: [racket/racket2-rfcs#122](https://github.com/racket/racket2-rfcs/pull/122)
 
 # Summary
 [summary]: #summary
@@ -605,6 +605,14 @@ an indented section to allow further chaining of the group. Although
 the notation discourages that style in favor of further nesting (or,
 in the case of `if`, in favor of `|` notation like other
 conditionals).
+
+Shrubbery notation is in some sense a follow-up to [sapling
+notation](https://github.com/mflatt/racket2-rfcs/blob/sapling/sapling/0005-sapling.md).
+The primary difference is that shrubbery notation is
+indentation-sensitive, while sapling notation is
+indentation-insensitive. Indentation sensitivity and block conventions
+in shrubbery notation avoid some delimiters and blank lines that are
+needed in sapling notation.
 
 More generally, shrubbery notation takes inspiration from
 S-expressions and alternative S-expression notations. The idea that,
