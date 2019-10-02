@@ -28,5 +28,5 @@ This document, or the concepts in it, could also be used to help newcomers quick
 
 Potentially relevant but outside the scope of this document:
 * How much community support is available for tooling, etc.?
-* How extensive will the interoperability between Racket2 and #lang racket be? (This is not just about syntax!)
-* What will be the relationship between Racket2 and the existing #lang racket?
+* How extensive will the interoperability between Rhombus and #lang racket be? (This is not just about syntax!)
+* What will be the relationship between Rhombus and the existing #lang racket?

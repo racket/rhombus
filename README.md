@@ -1,5 +1,7 @@
-This repository is for brainstorming and discussion about the design
-of a new language that is based on Racket.
+This repository is for brainstorming and discussion for the Rhombus
+project, which is about the design of a new language that is based on
+Racket. “Rhombus” is the project name and a placeholder name for
+a language name to be chosen later.
 
 # Resources
 

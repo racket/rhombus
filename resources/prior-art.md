@@ -3,7 +3,7 @@
 
 Relevant prior art. Designs and implementations that will support the language design process.
 
-Note: This is a first draft with entries taken directly from https://github.com/racket/racket2-rfcs/issues/14 and racket-users.
+Note: This is a first draft with entries taken directly from https://github.com/racket/rhombus-brainstroming/issues/14 and racket-users.
 
 # Token Trees
 [token trees]: #token-trees
