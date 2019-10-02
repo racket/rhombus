@@ -599,7 +599,7 @@ ways, such as ignoring more `:` and preserving indentation in `()`, and
 it adds the treatment of `,` and `|`.
 
 Shrubbery notation is also based on
-[Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/text/0004-lexpr.md),
+[Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/lexpr/0004-lexpr.md),
 particularly its use of `|`. Lexprs uses mandatory `:` and `|` tokens
 as a prefix for indentation, and it absorbs an additional line after
 an indented section to allow further chaining of the group. Although
