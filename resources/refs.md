@@ -2,6 +2,7 @@
 # Relevant mailing list posts
 
 * [Rhombus plan](https://groups.google.com/d/msg/racket-users/-x_M5wIhtWk/V47eL30HCgAJ)
+  from Racket project leadership on 2019/10/02
 
 * [Racket2 and
   syntax](https://groups.google.com/d/msg/racket-users/3aIPOGbGgmc/A4HHSbdxAwAJ)
