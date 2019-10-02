@@ -48,7 +48,9 @@ breaks and indentation in the source are not misleading.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Here are some example shrubberies:
+Here are some example shrubberies. A `:` in the middle a line is the
+same as starting a new line with indentation for the part after the
+`:`. (Extra `:`s are allowed, but we don't use any extra ones here.)
 
 ```
 define identity(x): x
@@ -62,8 +64,8 @@ define fib(n)
 define print_sexp(v)
   match v
    | empty: display("()")
-   | cons(a, d)           // <- a colon here would be ok
-       if is_list(d)      // <- or here, or anywhere before indentation
+   | cons(a, d)
+       if is_list(d)
         | display("(")
           print_sexp(a)
           for (v = in_list(d))
