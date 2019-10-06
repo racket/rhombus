@@ -39,6 +39,15 @@ Compared to the earlier work in this tradition, Honu adds [Top Down Operator Pre
 * [Honu: Syntactic Extension for Algebraic Notation  through Enforestation](https://www.cs.utah.edu/plt/publications/gpce12-rf.pdf), GPCE 2012
 * [Honu documentation](https://docs.racket-lang.org/honu/)
 
+## Star
+[Star]: #Star
+
+Star is an independent take on this idea, also adding [Top Down Operator Precedence] parsing
+
+* [Feel Different on the Java Platform: The Star Programming Language](http://www.deinprogramm.de/sperber/papers/star.pdf), PPPJ 2013
+* [Star Reference](https://github.com/fgmccabe/StarReference)
+* [Star implementation](https://github.com/fgmccabe/star)
+
 ## Sweet.js
 [Sweet.js]: #sweetjs
 
