@@ -69,9 +69,9 @@ let | x = 8
              show(x + y)
              x - y
 
-letrec_syntax_and_values
+letrec_syntax_and_values:
   (m = (syntax_rules ....),
-   n = (syntax_rules ....))
+   n = (syntax_rules ....)):
     (x = 10,
      y = 12)
     => body
@@ -91,7 +91,7 @@ x | indentize
   | indentize:
       y
 
-define fib(n) =
+define fib(n):
  match n
   | 0
     : 0

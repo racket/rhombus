@@ -1,12 +1,12 @@
 let (x = 1,
-     y = 2)
+     y = 2):
   x+y
 
 let (x = 1, y = 2): x+y
 
 define pi: 3.14
 
-define fib(n)
+define fib(n):
   log_error("fib called")
   cond | n == 0: 0
        | n == 1: 1
@@ -23,16 +23,16 @@ define
  | fib(n): (fib(n-1) // in parens => `+` continues this line
             + fib(n-2))
 
-define fib
-  lambda (n)
+define fib:
+  lambda (n):
     cond
      | n == 0: 0
      | n == 1: 1
      | else: fib(n-1) + fib(n-2)
 
-// Ok to add trailing `:`s if you want, and it parses the
+// Ok to add `:` before `|`. This parses the
 // same as the prevous example, but this is not the standard
-// style (which is to omit all unnecessary colons).
+// style (which is to omit unnecessary colons).
 define fib:
   lambda (n):
     cond:
@@ -43,8 +43,8 @@ define fib:
 // Adding parentheses is ok, at least with the obvious handling
 // of parentheses by the use of sapling notation, but the
 // parentheses are apparent in the sampling parse.
-(define fib
-  (lambda (n)
+(define fib:
+  (lambda (n):
     (cond
       | (n == 0): 0
       | (n == 1): 1
@@ -55,7 +55,7 @@ define fib:
 
 // START: all of the next `fib` definitions are exactly the same
 
-define fib(n)
+define fib(n):
   match n
    | 0: 0
    | 1: 1
@@ -67,26 +67,26 @@ define fib(n):
    | 1: 1
    | n: fib(n-1) + fib(n-2)
 
-define fib(n)
+define fib(n):
   match n | 0: 0
           | 1: 1
           | n: fib(n-1) + fib(n-2)
 
-define fib(n)
+define fib(n):
   match n
-   | 0
+   | 0:
        0
-   | 1
+   | 1:
        1
-   | n
+   | n:
        fib(n-1) + fib(n-2)
 
-define fib(n)
+define fib(n):
   match n { | 0 { 0 }
             | 1 { 1 }
             | n { fib(n-1) + fib(n-2) } }
 
-define fib(n)
+define fib(n):
   match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
 
 define fib(n): match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
@@ -101,18 +101,18 @@ define fib(n) { match n | { 0 {0} } | { 1 {1} } | { n { fib(n-1) + fib(n-2) } } 
 
 // END equivalent `fib` definitions
 
-define make_adder(n)
-  lambda (m)
+define make_adder(n):
+  lambda (m):
     printf("adding to ~a\n", m)
     m+n
 
-define analyze(n)
+define analyze(n):
   if n == 0
    | printf("zero\n")
    | printf("other\n")
   printf("done\n")
 
-define analyze(n)
+define analyze(n):
   if n == 0
    | printf("zero\n")
      printf("done saying zero\n")
@@ -121,95 +121,95 @@ define analyze(n)
 
 struct posn(x, y)
 
-struct color_posn(col)
+struct color_posn(col):
   extends posn
   mutable
 
 struct posn(x mutable,
-            y = 7)
-  methods equality
-    define equal(a, b)
+            y = 7):
+  methods equality:
+    define equal(a, b):
       is_posn(b) => (a.x == b.x && a.y == b.y)
-    define hash(a)
+    define hash(a):
       17
-    define secondary_hash(a)
+    define secondary_hash(a):
       19
 
-struct posn(x, y)
-  property prop_equal_and_hash
-    let (hc = lambda (a: posn, hc)
+struct posn(x, y):
+  property prop_equal_and_hash:
+    let (hc = lambda (a: posn, hc):
                  hc(a.x) + hc(a.y),
-         eql = lambda (a: posn, b: posn, eql)
-                 eql(a.x, b.x) && eql(a.y, b.y))
+         eql = lambda (a: posn, b: posn, eql):
+                 eql(a.x, b.x) && eql(a.y, b.y)):
       values(eql, hc, hc)
 
-struct posn(x, y)
-  property prop_equal_and_hash
-    let (hc = lambda (a: posn, hc)
-                hc(a.x) + hc(a.y))
-      (lambda (a: posn, b: posn, eql)
+struct posn(x, y):
+  property prop_equal_and_hash:
+    let (hc = lambda (a: posn, hc):
+                hc(a.x) + hc(a.y)):
+      (lambda (a: posn, b: posn, eql):
          eql(a.x, b.x) && eql(a.y, b.y),
        hc,
        hc)
 
 // Another possibile approach to syntax for `struct`:
-struct posn
-  fields
+struct posn:
+  fields:
     x mutable
     y = 7
-  methods equality
-    define equal(a, b)
+  methods equality:
+    define equal(a, b):
       is_posn(b) => (a.x == b.x && a.y == b.y)
-    define hash(a)
+    define hash(a):
       17
-    define secondary_hash(a)
+    define secondary_hash(a):
       19
   property prop_quality: "high"
 
-define fourth(n: Integer)
+define fourth(n: Integer):
   define m: n*n
   define v: m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
-define exp(n: Integer, base: base = 2.718281828459045)
+define exp(n: Integer, base: base = 2.718281828459045):
   if (n == 1)
    | base
    | base * exp(n-1, base: base)
 
 define positive_p(n): if n > 0 | true | false
 
-define go()
-  define helper(n)
+define go():
+  define helper(n):
     list(n, n)
-  define more(m)
+  define more(m):
     if m == 0 | "done"
               | more(m - 1)
   helper(more(9))
 
-define approx(x)
+define approx(x):
   match x
-   | something(v)
+   | something(v):
        printf("got it\n")
        v
    | nothing: 0
 
 // With two `:`s on one line, there's no way to
 // add to the first `:`
-define approx_thunk(x)
+define approx_thunk(x):
   match x
    | something(v): lambda (): v
    | nothing: lambda (): 0
 
 // Enough indentation for `v` means that it continues the
 // implicit second `:`, so the `lambda` body has `v`:
-define approx_thunk(x)
+define approx_thunk(x):
   match x
-   | something(v): lambda ()
+   | something(v): lambda ():
                       v
    | nothing: lambda (): 0
 
-define approx_thunk(x)
+define approx_thunk(x):
   match x
    | something(v): lambda
                     | (): v
@@ -218,71 +218,71 @@ define approx_thunk(x)
                | (): 0
                | (n): n
 
-define curried
-  lambda (x)
-    lambda (y)
-      lambda (z)
+define curried:
+  lambda (x):
+    lambda (y):
+      lambda (z):
         list(x, y, z)
 
-define curried: lambda (x)
-                  lambda (y)
-                    lambda (z)
+define curried: lambda (x):
+                  lambda (y):
+                    lambda (z):
                       list(x, y, z)
 
-define dictionary: dict
+define dictionary: dict:
                       foo: 17
                       bar: string
                       baz: true
 
 define f(x_something,
          y_something_else,
-         z_also_long_name)
+         z_also_long_name):
   5
 
-define sum(l)
-  let loop(l = l)
+define sum(l):
+  let loop(l = l):
     if is_null(l)
      | 0
      | first(l) + loop(rest(l))
 
-define show_all(l)
-  for (x = in_list(l))
+define show_all(l):
+  for (x = in_list(l)):
     print(x)
     newline()
 
-define show_zip(l, l2)
+define show_zip(l, l2):
   for (x = in_list(l),
-       x2 = in_list(l2))
+       x2 = in_list(l2)):
     print(x)
     print_string(" ")
     print(x2)
     newline()
 
-define show_combos_not_same(l, l2)
-  for (x = in_list(l))
-   then (x2 = in_list(l2))
-     when !is_equal(x, x2)
+define show_combos_not_same(l, l2):
+  for (x = in_list(l)):
+   then (x2 = in_list(l2)):
+     when !is_equal(x, x2):
        print(x)
        print_string(" ")
        print(x2)
        newline()
 
-define map(f, l)
-  for list (x = in_list(l))
+define map(f, l):
+  for list (x = in_list(l)):
     f(x)
 
-define partition(l, pred)
+define partition(l, pred):
   for fold (yes = empty,
             no = empty,
-            result (reverse(yes), reverse(no)))
-   with (x = in_list(l))
+            result (reverse(yes), reverse(no))):
+   with (x = in_list(l)):
      if pred(x)
       | (cons(x, yes), no)
       | (yes, cons(x, no))
 
-local
-  with
+local:
+  with:
     define x: 1
     define y: 2
-  in
+  in:
    x+y

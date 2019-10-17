@@ -56,20 +56,20 @@ use any extra `:`s here.)
 ```
 define identity(x): x
 
-define fib(n)
+define fib(n):
   cond
    | n == 0: 0
    | n == 1: 1
    | else: fib(n-1) + fib(n-2)
 
-define print_sexp(v)
+define print_sexp(v):
   match v
    | empty: display("()")
-   | cons(a, d)
+   | cons(a, d):
        if is_list(d)
         | display("(")
           print_sexp(a)
-          for (v = in_list(d))
+          for (v = in_list(d)):
             display(" ")
           print_sexp(v)
           display(")")
@@ -222,11 +222,11 @@ becomes shallower again. All four of the following groups are the
 same, each with one block that has two nested groups:
 
 ```
-hello
+hello:
   world
   universe
 
-hello
+hello:
        world
        universe
 
@@ -249,11 +249,23 @@ hello {
 }
 ```
 
+Identation is allowed only on a line where the previous line ends with
+`:`, when the previous line ends with `|`, or the indented line starts
+with `|`.
+
+```
+// Not allowed
+hello
+  world
+  universe
+```
+
 ## Grouping by `:`
 
-A `:` is equivalent to starting a new line and indenting up to the
-position of the token following the `:`, which means that it creates a
-block. The following group is also equivalent to the above groups:
+A `:` in the middle of a line is equivalent to starting a new line
+after the `:` and indenting up to the position of the token following
+the `:`, which means that it creates a block. The following group is
+also equivalent to the above groups:
 
 ```
 hello: world
@@ -262,21 +274,12 @@ hello: world
 
 As a special rule, if the block that would be created by `:` has one
 group that is itself a block, then `:` does not create a new block.
-This rule is consistent with the effect of `:` at the end of a line
-before an indented block (since inserting a blank line has no effect),
-but it generalizes by allowing an optional `:` before an explicit `{`.
-In fact, any number of optional `:`s can appear. All of the following
-groups are the same:
+This rule is consistent with `:` as a knid of redundant indicator for
+indentation, and it generalizes by allowing an optional `:` before an
+explicit `{`. In fact, any number of optional `:`s can appear. The
+following groups are the same as the earlier examples:
 
 ```
-hello
-  world
-  universe
-
-hello:
-  world
-  universe
-
 hello: {world; universe}
 
 hello: : : : : world
@@ -288,12 +291,12 @@ whether a `:` is redundant or whether it creates some subtle or
 important extra layer of blocking, and the parser will not be
 needlessly pendantic when you're writing or revising code. However,
 the standard style, which might be enforced with a code-formatting
-tool, is to omit any unnecessary `:`.
+tool, is to omit any `:` that is not required.
 
-There's one additional special rule for `:`. If a `:` appears at the
-end of a group, then it forces an empty block. This extra rule ensures
-that a `:` doesn't just disappear if there's no content after it. For
-example `(void:)` is the same as `(void {})`, not `(void)`.
+Note that if a `:` appears at the end of a group, then it forces an
+empty block, which means that a `:` doesn't just disappear if there's
+no content after it. For example `(void:)` is the same as `(void {})`,
+not `(void)`.
 
 The correspondence among blocks created `:`, indentation, and `{}`
 means that a programmer can choose between single-line forms using
@@ -395,75 +398,75 @@ define
  | fib(1): 1
  | fib(n): fib(n-1) + fib(n-2)
 
-define fib(n)
+define fib(n):
   match n
    | 0: 0
    | 1: 1
    | n: fib(n-1) + fib(n-2)
 
-define fib(n)
+define fib(n):
   match n | 0: 0
           | 1: 1
           | n: (fib(n-1)
-                 + fib(n-2))
+                + fib(n-2))
 
-define fib(n)
+define fib(n):
   match n
-   | 0
+   | 0:
        0
-   | 1
+   | 1:
        1
-   | n
+   | n:
        fib(n-1) + fib(n-2)
 
-define make_adder(n)
-  lambda (m)
+define make_adder(n):
+  lambda (m):
     printf("adding to ~a\n", m)
 
-define fourth(n: integer)
+define fourth(n: integer):
   define m: n*n
   define v: m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
-struct posn(x, y)
-  property prop_equal_and_hash
-    let (hc = lambda (a: posn, hc)
+struct posn(x, y):
+  property prop_equal_and_hash:
+    let (hc = lambda (a: posn, hc):
                  hc(a.x) + hc(a.y),
-         eql = lambda (a: posn, b: posn, eql)
-                 eql(a.x, b.x) && eql(a.y, b.y))
+         eql = lambda (a: posn, b: posn, eql):
+                 eql(a.x, b.x) && eql(a.y, b.y)):
       values(eql, hc, hc)
 
-define go()
-  define helper(n)
+define go():
+  define helper(n):
     list(n, n)
-  define more(m)
+  define more(m):
     if m == 0 | "done"
               | more(m - 1)
   helper(more(9))
 
-define curried
-  lambda (x)
-    lambda (y)
-      lambda (z)
+define curried:
+  lambda (x):
+    lambda (y):
+      lambda (z):
         list(x, y, z)
 
 let (x = 1,
-     y = 2)
+     y = 2):
   printf("About to add")
   x+y
 
-define show_zip(l, l2)
+define show_zip(l, l2):
   for (x = in_list(l),
-       x2 = in_list(l2))
+       x2 = in_list(l2)):
     print(x)
     print_string(" ")
     print(x2)
     newline()
 
-define show_combos(l, l2)
-  for (x = in_list(l))
-   then (x2 = in_list(l2))
+define show_combos(l, l2):
+  for (x = in_list(l)):
+   then (x2 = in_list(l2)):
      print(x)
      print_string(" ")
      print(x2)
@@ -511,7 +514,7 @@ define pi: 3.14
 ```
 
 ```
-define fourth(n: integer)
+define fourth(n: integer):
   define m: n*n
   define v: m*m
   printf("~a^4 = ~a\n", n, v)
@@ -530,19 +533,19 @@ define fourth(n: integer)
 
 ```
 if x = y
-| same
-| different
+ | same
+ | different
 
 (group if x = y (alts (block (group same))
                       (block (group different))))
 ```
 
 ```
-define fib(n)
+define fib(n):
   match n
-  | 0: 0
-  | 1: 1
-  | n: fib(n-1) + fib(n-2)
+   | 0: 0
+   | 1: 1
+   | n: fib(n-1) + fib(n-2)
 
 (group define
        fib
@@ -618,6 +621,11 @@ The inclusion of `|` in shrubbery notation reflects the fact that
 conditional forms (such a `if`, `cond`, and `match`) are important and
 common. A distinct, pleasant, and uniform pattern for conditionals
 deserves direct support in the notation.
+
+Shrubbery notation would be consistent and without ambiguity if we
+drop the requrement to precede indentation with `:` or `|`. Requiring
+a preceding `:` or `|` is a kind of consistency check to enable better
+and earlier errors when indentation goes wrong.
 
 A full shrubbery-notation design should incorporate `at-exp` notation,
 too (where `@` escapes return to shrubbery notation instead of

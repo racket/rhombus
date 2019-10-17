@@ -7,6 +7,7 @@
                column       ; group's column; below ends group, above starts indented
                paren-immed? ; immediately in `()` or `[]`?
                bar-closes?
+               indent-ok?   ; immediately after `:` or `|`?
                last-line))  ; most recently consumed line
 
 (define (make-state #:line line
@@ -18,6 +19,7 @@
          column
          paren-immed?
          bar-closes?
+         #f ; just-saw-colon?
          last-line))
 
 ;; Parsing state for group sequences: top level, in opener-closer, or after `:`
@@ -33,6 +35,7 @@
                           #:paren-immed? [paren-immed? #f]
                           #:column column
                           #:check-column? [check-column? #t]
+                          #:indent-ok? [indent-ok? #f]
                           #:bar-closes? [bar-closes? #f]
                           #:last-line last-line)
   (group-state closer
@@ -40,7 +43,7 @@
                column
                check-column?
                bar-closes?
-               #f ; comma-time?
+               indent-ok?
                last-line))
 
 (define closer-column? number?)
@@ -209,7 +212,8 @@
        (define-values (g rest-l end-line)
          (parse-group (cdr l) (struct-copy state s
                                            [line line]
-                                           [last-line line])))
+                                           [last-line line]
+                                           [indent-ok? #f])))
        (values (cons (token-value t) g) rest-l end-line))
      ;; Dispatch
      (cond
@@ -226,6 +230,13 @@
            (define column (token-column t))
            (cond
              [(column . > . (state-column s))
+              ;; More indented => forms a group
+              ;; Belt and suspenders: require either `:` or `|` to indicate that it's ok
+              ;; to start an indented block.
+              (unless (or (state-indent-ok? s)
+                          (eq? 'bar-operator (token-name t)))
+                (fail (format "wrong indentation (or missing `:` on previous line) at line ~a"
+                              line)))
               (define-values (indent-g rest-l end-line)
                 (parse-groups l
                               (make-group-state #:closer column
@@ -344,7 +355,8 @@
            (define-values (g rest-rest-l end-line)
              (parse-group rest-l (struct-copy state s
                                               [line close-line]
-                                              [last-line close-line])))
+                                              [last-line close-line]
+                                              [indent-ok? #f])))
            (values (cons (if (eq? tag 'block)
                              (tag-as-block gs)
                              (cons tag gs))
