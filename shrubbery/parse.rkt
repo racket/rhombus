@@ -26,6 +26,7 @@
                      column         ; expected indentation, just to check
                      check-column?  ; #f => allow any sufficiently large indentation
                      bar-closes?
+                     comma-time?    ; allow and expect a comma next
                      last-line))    ; most recently consumed line
 
 (define (make-group-state #:closer closer
@@ -39,6 +40,7 @@
                column
                check-column?
                bar-closes?
+               #f ; comma-time?
                last-line))
 
 (define closer-column? exact-integer?)
@@ -106,75 +108,89 @@
              [(closer-column? (group-state-closer sg))
               (done)]
              [else
-              (unless (group-state-paren-immed? sg)
-                (fail (format (format "misplaced comma at line ~a column ~a"
+              (unless (and (group-state-paren-immed? sg)
+                           (group-state-comma-time? sg))
+                (fail (format (format "misplaced comma at line ~a column ~a~a"
                                       (token-line t)
-                                      (token-column t)))))
-              
+                                      (token-column t)
+                                      (if (group-state-paren-immed? sg)
+                                          ""
+                                          " (not immdiately within parentheses or brackets)")))))
               ;; In top level or immediately in opener-closer: 
-              (define-values (gs rest-l end-line)
-                (parse-groups (cdr l) (struct-copy group-state sg
-                                                   [check-column? #f]
-                                                   [last-line (token-line t)])))
-              (values (cons (token-value t) gs)
-                      rest-l
-                      end-line)])]
+              (parse-groups (cdr l) (struct-copy group-state sg
+                                                 [check-column? #f]
+                                                 [last-line (token-line t)]
+                                                 [comma-time? #f]))])]
           [(semicolon-operator)
+           (when (group-state-paren-immed? sg)
+             (fail (format (format "misplaced semicolon at line ~a column ~a (~a)"
+                                   (token-line t)
+                                   (token-column t)
+                                   "immdiately within parentheses or brackets"))))
            (parse-groups (cdr l) (struct-copy group-state sg
                                               [check-column? #f]
                                               [last-line (token-line t)]))]
-          [(bar-operator)
-           (cond
-             [(group-state-bar-closes? sg)
-              (done)]
+          [else
+           (when (group-state-comma-time? sg)
+             (fail (format "missing comma before new group started at line ~a column ~a (~a)"
+                           (token-line t)
+                           column
+                           "within parentheses or braces")))
+           (case (token-name t)
+             [(bar-operator)
+              (cond
+                [(group-state-bar-closes? sg)
+                 (done)]
+                [else
+                 ;; Bar at the start of a group: no implicit block before,
+                 ;; but parse content as a block
+                 (define column (token-column t))
+                 (define line (token-line t))
+                 (define same-line? (or (not (group-state-last-line sg))
+                                        (= line (group-state-last-line sg))))
+                 (when (group-state-check-column? sg)
+                   (unless (or same-line?
+                               (= column (group-state-column sg)))
+                     (fail (format "wrong indentation at line ~a column ~a" line column))))
+                 (define-values (g rest-l group-end-line)
+                   (parse-block l
+                                #:closer (add1 column)
+                                #:bar-closes? #t))
+                 (define-values (gs rest-rest-l end-line)
+                   (parse-groups rest-l (struct-copy group-state sg
+                                                     [column (if same-line?
+                                                                 (group-state-column sg)
+                                                                 column)]
+                                                     [check-column? #t]
+                                                     [last-line group-end-line]
+                                                     [comma-time? (group-state-paren-immed? sg)])))
+                 (values (cons (list 'group (cons 'bar g)) gs)
+                         rest-rest-l
+                         end-line)])]
              [else
-              ;; Bar at the start of a group: no implicit block before,
-              ;; but parse content as a block
+              ;; Parse one group, then recur to continue the sequence:
               (define column (token-column t))
               (define line (token-line t))
-              (define same-line? (or (not (group-state-last-line sg))
-                                     (= line (group-state-last-line sg))))
               (when (group-state-check-column? sg)
-                (unless (or same-line?
-                            (= column (group-state-column sg)))
+                (unless (= column (group-state-column sg))
                   (fail (format "wrong indentation at line ~a column ~a" line column))))
-              (define-values (g rest-l group-end-line) 
-                (parse-block l
-                             #:closer (add1 column)
-                             #:bar-closes? #t))
+              (define-values (g rest-l group-end-line)
+                (parse-group l (make-state #:paren-immed? (group-state-paren-immed? sg)
+                                           #:line line
+                                           #:column column
+                                           #:bar-closes? (group-state-bar-closes? sg)
+                                           #:last-line (group-state-last-line sg))))
               (define-values (gs rest-rest-l end-line)
                 (parse-groups rest-l (struct-copy group-state sg
-                                                  [column (if same-line?
-                                                               (group-state-column sg)
-                                                              column)]
+                                                  [column (if (group-state-check-column? sg)
+                                                              column
+                                                              (group-state-column sg))]
                                                   [check-column? #t]
-                                                  [last-line group-end-line])))
-              (values (cons (list 'group (cons 'bar g)) gs)
+                                                  [last-line group-end-line]
+                                                  [comma-time? (group-state-paren-immed? sg)])))
+              (values (cons (cons 'group g) gs)
                       rest-rest-l
-                      end-line)])]
-          [else
-           ;; Parse one group, then recur to continue the sequence:
-           (define column (token-column t))
-           (define line (token-line t))
-           (when (group-state-check-column? sg)
-             (unless (= column (group-state-column sg))
-               (fail (format "wrong indentation at line ~a column ~a" line column))))
-           (define-values (g rest-l group-end-line) 
-             (parse-group l (make-state #:paren-immed? (group-state-paren-immed? sg)
-                                        #:line line
-                                        #:column column
-                                        #:bar-closes? (group-state-bar-closes? sg)
-                                        #:last-line (group-state-last-line sg))))
-           (define-values (gs rest-rest-l end-line)
-             (parse-groups rest-l (struct-copy group-state sg
-                                               [column (if (group-state-check-column? sg)
-                                                           column
-                                                           (group-state-column sg))]
-                                               [check-column? #t]
-                                               [last-line group-end-line])))
-           (values (cons (cons 'group g) gs)
-                   rest-rest-l
-                   end-line)])])]))
+                      end-line)])])])]))
 
 ;; Parse one group.
 ;; Returns: the list of items in the group

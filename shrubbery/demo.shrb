@@ -30,8 +30,9 @@ define fib
       | n == 1: 1
       | else: fib(n-1) + fib(n-2)
 
-// Ok to add trailing `:`s if you want, parses
-// the same as the prevous example:
+// Ok to add trailing `:`s if you want, and it parses the
+// same as the prevous example, but this is not the standard
+// style (which is to omit all unnecessary colons).
 define fib:
   lambda (n):
     cond:
@@ -70,11 +71,6 @@ define fib(n)
   match n | 0: 0
           | 1: 1
           | n: fib(n-1) + fib(n-2)
-
-define fib(n)
-  match n: | 0: 0
-           | 1: 1
-           | n: fib(n-1) + fib(n-2)
 
 define fib(n)
   match n
@@ -200,7 +196,7 @@ define approx(x)
 
 // With two `:`s on one line, there's no way to
 // add to the first `:`
-define approx_thunk(x):
+define approx_thunk(x)
   match x
     | something(v): lambda (): v
     | nothing: lambda (): 0

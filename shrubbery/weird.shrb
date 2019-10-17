@@ -41,7 +41,7 @@ nonsense:
                    | stuff: (begin:
                                more
                                things
-
+                             ,
                              separately)
                             again)
           something

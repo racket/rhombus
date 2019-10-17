@@ -50,7 +50,8 @@ breaks and indentation in the source are not misleading.
 
 Here are some example shrubberies. A `:` in the middle a line is the
 same as starting a new line with indentation for the part after the
-`:`. (Extra `:`s are allowed, but we don't use any extra ones here.)
+`:`. (Extra `:`s are allowed, but they are non-standard, and we don't
+use any extra `:`s here.)
 
 ```
 define identity(x): x
@@ -123,12 +124,14 @@ when this document says “the previous line” or “the next line.”
 An _opener_-_closer_ pair `(` and `)`, `[` and `]`, or `{` and `}`
 forms a nested group that can span lines. Within the _opener_-_closer_
 pair, separate lines at the same indentation form separate groups.
+Within `()` or `[]`, groups on separate lines must also be separated
+by `,`.
 
 ```
 group 1
-[group 2 - subgroup one
- group 2 - subgroup two
- (group 2 - subgroup three - subsubgroup A
+[group 2 - subgroup one,
+ group 2 - subgroup two,
+ (group 2 - subgroup three - subsubgroup A,
   group 2 - subgroup three - subsubgroup B)]
 group 3
 group 4 {has a subgroup
@@ -155,29 +158,55 @@ than using `\`.
 
 ## Group separators `;` and `,`
 
-A `;` or a `,` separates two groups on the same line. A `;` separates
-groups “silently,” and it is allowed in any context. A `,` is allowed
-only to separate groups in an immediate sequence within `()` or `[]` .
-The following two groups are the same.
+A `;` or a `,` separates two groups on the same line. A `;` is allowed
+in any context except between groups immediately within `()` or `[]`.
+A `,` is allowed only to separate groups of an immediate sequence
+within `()` or `[]`, and `,` is also required to separate groups
+witin `()` and `[]`.
+
+The following two groups are the same:
 
 ```
 [(subgroup one, subgroup two,
-  subgroup three)
+  subgroup three),
  {subgroup X; subgroup Y}]
 
 [(subgroup one,
   subgroup two,
-  subgroup three)
+  subgroup three),
  {subgroup X
   subgroup Y}]
+```
+
+These following forms are disllowed, because they use the wrong
+separator or because a required separator is missing.
+
+
+```
+// Not allowed
+(1; 2)
+[1; 2]
+{1, 2}
+
+// Not allowed
+(1
+ 2)
+[1
+ 2]
 ```
 
 The `;` and `,` separators interact differently with subgroups formed
 by indentation, `:`, and `|`. A `,` closes subgroups as necessary to
 reach an enclosing `()` or `[]`, while a `;` separate groups within a
-nested group sequence. A `;` or `,` will never create an empty group,
-so a `,` (which is preserved in the parse) can appear in a group
-sequence with no group before and/or after it.
+nested group sequence. A `;` will never create an empty group, and a `,`
+is disallowed if it would create an empty group.
+
+```
+// Not allowed
+(, 1)
+(1,, 2)
+(1, 2,)
+```
 
 ## Grouping by indentation
 
@@ -256,7 +285,10 @@ hello: : : : : world
 
 This special rule for `:` means that you don't have to worry about
 whether a `:` is redundant or whether it creates some subtle or
-important extra layer of blocking.
+important extra layer of blocking, and the parser will not be
+needlessly pendantic when you're writing or revising code. However,
+the standard style, which might be enforced with a code-formatting
+tool, is to omit any unnecessary `:`.
 
 There's one additional special rule for `:`. If a `:` appears at the
 end of a group, then it forces an empty block. This extra rule ensures
@@ -406,7 +438,7 @@ define curried
         list(x, y, z)
 
 let (x = 1,
-     y = 2):
+     y = 2)
   printf("About to add")
   x+y
 
@@ -418,7 +450,7 @@ define show_zip(l, l2)
     print(x2)
     newline()
 
-define show_combos(l, l2):
+define show_combos(l, l2)
   for (x = in_list(l))
    then (x2 = in_list(l2))
      print(x)
@@ -436,8 +468,7 @@ The parse of a shrubbery can be represented by an S-expression:
 
  * Atom elements are represented as “themselves” within a group.
 
- * A group sequence is represented as a list of `'group` lists and
-   `'|,|` symbols.
+ * A group sequence is represented as a list of `'group` lists.
 
  * A block is represented as `'block` consed onto a group-sequence
    list.
@@ -481,7 +512,7 @@ define fourth(n: integer)
         (group define m (block (group n * n)))
         (group define v (block (group m * m)))
         (group printf
-               (parens (group "\"~a^4 = ~a\\n\"") |,| (group n) |,| (group v)))
+               (parens (group "\"~a^4 = ~a\\n\"") (group n) (group v)))
         (group v)))
 ```
 
@@ -595,7 +626,7 @@ Sampling notation's rules relating indentation, lines, `{}`, `;`, and
 something`](https://github.com/tonyg/racket-something) reader, which
 also targets an underlying expander that further groups tokens.
 Shrubbery notation departs from `#lang something` conventions in a few
-ways, such as ignoring more `:` and preserving indentation in `()`, and
+ways, such as ignoring more `:`s and preserving indentation in `()`, and
 it adds the treatment of `,` and `|`.
 
 Shrubbery notation is also based on
