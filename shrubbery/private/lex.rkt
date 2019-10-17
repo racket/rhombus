@@ -12,7 +12,10 @@
          ;; Our additions:
          token-e
          token-line
-         token-column)
+         token-column
+
+         column-next
+         column-half-next)
 
 (define-tokens non-terminals (identifier
                               number
@@ -109,11 +112,24 @@
           null
           (cons v (loop))))))
 
+(define (token-e t)
+  (syntax-e (token-value t)))
+
 (define (token-line t)
   (syntax-line (token-value t)))
 
 (define (token-column t)
-  (syntax-column (token-value t)))
+  (let ([c (syntax-column (token-value t))])
+    (if (eq? (token-name t) 'bar-operator)
+        (+ c 0.5)
+        c)))
 
-(define (token-e t)
-  (syntax-e (token-value t)))
+(define (column-next c)
+  (if (integer? c)
+      (add1 c)
+      (add1 (inexact->exact (floor c)))))
+
+(define (column-half-next c)
+  (if (integer? c)
+      (+ c 0.5)
+      (column-next c)))

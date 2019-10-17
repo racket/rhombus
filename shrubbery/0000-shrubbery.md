@@ -58,9 +58,9 @@ define identity(x): x
 
 define fib(n)
   cond
-    | n == 0: 0
-    | n == 1: 1
-    | else: fib(n-1) + fib(n-2)
+   | n == 0: 0
+   | n == 1: 1
+   | else: fib(n-1) + fib(n-2)
 
 define print_sexp(v)
   match v
@@ -71,7 +71,7 @@ define print_sexp(v)
           print_sexp(a)
           for (v = in_list(d))
             display(" ")
-            print_sexp(v)
+          print_sexp(v)
           display(")")
         | display("(")
           print_sexp(a)
@@ -102,7 +102,7 @@ and indentation:
 
 Parentheses, square brackets, and curly braces are used to form groups
 in the obvious way. A `;` or `,` acts as a group separator, even
-within a single line. A `:` or `|`treats remaining item on the same
+within a single line. A `:` or `|` treats remaining item on the same
 line like a new indented line, which forms a subgroup. A `\` continues a
 group across a line break.
 
@@ -301,7 +301,8 @@ means that a programmer can choose between single-line forms using
 
 ## Grouping by `|`
 
-A `|` is implicitly followed by a `:` that conceptually occupies same
+A `|` is implicitly shifted half a column right (so, implicitly nested),
+and it is implicitly followed by a `:` that conceptually occupies same
 column as the `|`. A `|` that is not at the start of a group is also
 implicitly *preceded* by a `:`. Note that the implicit `:` following a
 `|` is subject to the special rules for `:`, which is that it doesn't
@@ -310,8 +311,12 @@ and it can force an empty block.
 
 ```
 hello
-  | world
-  | universe
+ | world
+ | universe
+
+hello
+| world
+| universe
 
 hello: | world
        | universe
@@ -346,7 +351,7 @@ hello | world | universe
 hello: | world | universe
 
 hello
-  | world | universe
+ | world | universe
 
 hello | { world } | { universe }
 
@@ -356,6 +361,12 @@ hello { | { world } | { universe } }
 
 hello { | { world } ; | { universe } }
 ```
+
+The implicit shifting of `|` by half a column is consistent with its
+visual representation, and it avoids the possibility of a group
+sequence that contains a mixture of `|`-started groups and other kinds
+of groups. Nevertheless, standard indentation includes a one additional
+space of indentation before `|`.
 
 ## Continuing a group with `\`
 
@@ -470,8 +481,10 @@ The parse of a shrubbery can be represented by an S-expression:
 
  * A group sequence is represented as a list of `'group` lists.
 
- * A block is represented as `'block` consed onto a group-sequence
-   list.
+ * A block is represented as either `'block` or `'alts` consed onto a
+   group-sequence list. The representation uses `'alts` if the content
+   of the block is a squence of groups started with `|`, and it's
+   `'block` otherwise.
 
  * An element created by `()` is represented by `'parens` consed
    onto a group-sequence list.
@@ -479,15 +492,14 @@ The parse of a shrubbery can be represented by an S-expression:
  * An element created by `[]` is represented by `'braces` consed
    onto a group-sequence list.
 
- * A block created to follow `|` is wrapped in a 2-element list that
-   contains `'bar` and the block.
+ * A block created to follow `|` appears immediately in an `'alts`
+   list.
 
-Note that a block can only appear immediately in a `'group` list or in
-a `'bar` list that is immediately in a `'group` list. Note also that
-there is no possibility of confusion between symbol atoms in the input
-and `'group`, `'block`, etc., at the start of a list in an
-S-expression representation, because symbol atoms will always appear
-as non-initial items in a `'group` list.
+Note that a block can only appear immediately in a `'group` or `'alts`
+list. Note also that there is no possibility of confusion between
+symbol atoms in the input and `'group`, `'block`, etc., at the start
+of a list in an S-expression representation, because symbol atoms will
+always appear as non-initial items in a `'group` list.
 
 Here are some example shrubberies with their S-expression parsed
 representations:
@@ -517,11 +529,20 @@ define fourth(n: integer)
 ```
 
 ```
+if x = y
+| same
+| different
+
+(group if x = y (alts (block (group same))
+                      (block (group different))))
+```
+
+```
 define fib(n)
   match n
-    | 0: 0
-    | 1: 1
-    | n: fib(n-1) + fib(n-2)
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
 (group define
        fib
@@ -529,19 +550,17 @@ define fib(n)
        (block
         (group match
                n
-               (block
-                (group (bar (block (group 0 (block (group 0))))))
-                (group (bar (block (group 1 (block (group 1))))))
-                (group
-                 (bar
-                  (block
-                   (group n
-                          (block
-                           (group fib
-                                  (parens (group n - 1))
-                                  +
-                                  fib
-                                  (parens (group n - 2))))))))))))
+               (alts
+                (block (group 0 (block (group 0))))
+                (block (group 1 (block (group 1))))
+                (block
+                 (group n
+                        (block
+                         (group fib
+                                (parens (group n - 1))
+                                +
+                                fib
+                                (parens (group n - 2))))))))))))
 ```
 
 

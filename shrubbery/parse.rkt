@@ -43,7 +43,7 @@
                #f ; comma-time?
                last-line))
 
-(define closer-column? exact-integer?)
+(define closer-column? number?)
 
 ;; ----------------------------------------
 
@@ -154,7 +154,7 @@
                      (fail (format "wrong indentation at line ~a column ~a" line column))))
                  (define-values (g rest-l group-end-line)
                    (parse-block l
-                                #:closer (add1 column)
+                                #:closer (column-next column)
                                 #:bar-closes? #t))
                  (define-values (gs rest-rest-l end-line)
                    (parse-groups rest-l (struct-copy group-state sg
@@ -231,7 +231,7 @@
                               (make-group-state #:closer column
                                                 #:column column
                                                 #:last-line (state-last-line s))))
-              (values (list (cons 'block indent-g))
+              (values (list (tag-as-block indent-g))
                       rest-l
                       end-line)]
              [(and (state-paren-immed? s)
@@ -267,7 +267,7 @@
                                                      [last-line prev-line]))])])]
              [else (continue-done)])]
           [(block-operator)
-           (parse-block l #:closer (add1 (state-column s)))]
+           (parse-block l #:closer (column-half-next (state-column s)))]
           [(bar-operator)
            (cond
              [(state-bar-closes? s)
@@ -283,7 +283,7 @@
                     [(bar-operator)
                      (define-values (g rest-l end-line)
                        (parse-block l
-                                    #:closer (add1 (token-column t))
+                                    #:closer (column-next (token-column t))
                                     #:bar-closes? #t))
                      (values (list 'group (cons 'bar g))
                              rest-l
@@ -297,7 +297,7 @@
                 (define accum (cons new-g prev-accum))
                 ;; If next is `|`, absorb it into the implicit block
                 (define (done-bar-block)
-                  (values (list (cons 'block (reverse accum)))
+                  (values (list (tag-as-block (reverse accum)))
                           rest-l
                           end-line))
                 (cond
@@ -335,7 +335,7 @@
            (define sub-column
              (if (pair? next-l)
                  (token-column (car next-l))
-                 (add1 (token-column t))))
+                 (column-next (token-column t))))
            (define-values (gs rest-l close-line)
              (parse-groups next-l (make-group-state #:closer closer
                                                     #:paren-immed? paren-immed?
@@ -345,7 +345,9 @@
              (parse-group rest-l (struct-copy state s
                                               [line close-line]
                                               [last-line close-line])))
-           (values (cons (cons tag gs)
+           (values (cons (if (eq? tag 'block)
+                             (tag-as-block gs)
+                             (cons tag gs))
                          g)
                    rest-rest-l
                    end-line)]
@@ -364,7 +366,7 @@
   (define line (token-line t))
   (define-values (next-l prev-line) (next-of (cdr l) line))
   (define (block-empty)
-    (values (list (list 'block))
+    (values (list (tag-as-block null))
             next-l
             line))
   (cond
@@ -379,7 +381,7 @@
                                          #:last-line prev-line
                                          #:bar-closes? bar-closes?)))
        (values (or (extract-one-block indent-gs)
-                   (list (cons 'block indent-gs)))
+                   (list (tag-as-block indent-gs)))
                rest-l
                end-line))
      (cond
@@ -395,13 +397,34 @@
 (define (extract-one-block gs)
   (and (pair? gs)
        (null? (cdr gs))
-       (let ([gp (car gs)]) ; (cons '%#grp something)
+       (let ([gp (car gs)]) ; (cons 'group something)
          (and (pair? (cdr gp))
               (null? (cddr gp))
               (let ([g (cadr gp)])
                 (and (pair? g)
-                     (eq? (car g) 'block)
+                     (or (eq? (car g) 'block)
+                         (eq? (car g) 'alts))
                      (list g)))))))
+
+(define (tag-as-block gs)
+  (cond
+    [(and (pair? gs)
+          (for/and ([g (in-list gs)])
+            (and (pair? g)
+                 (eq? (car g) 'group)
+                 (pair? (cdr g))
+                 (null? (cddr g))
+                 (let ([b (cadr g)])
+                   (and (pair? b)
+                        (eq? (car b) 'bar)
+                        (pair? (cdr b))
+                        (null? (cddr b))
+                        (pair? (cadr b))
+                        (eq? 'block (caadr b)))))))
+     (cons 'alts (for/list ([g (in-list gs)])
+                   (let ([b (cadr g)])
+                     (cadr b))))]
+    [else (cons 'block gs)]))
    
 ;; Consume whitespace and comments where lookahead is needed
 ;; Returns:

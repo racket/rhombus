@@ -13,22 +13,22 @@ define fib(n)
        | else: fib(n-1) + fib(n-2)
 
 define
-  | fib(0): 0
-  | fib(1): 1
-  | fib(n): fib(n-1) + fib(n-2)
+ | fib(0): 0
+ | fib(1): 1
+ | fib(n): fib(n-1) + fib(n-2)
 
 define
-  | fib(0): 0
-  | fib(1): 1
-  | fib(n): (fib(n-1) // in parens => `+` continues this line
-             + fib(n-2))
+ | fib(0): 0
+ | fib(1): 1
+ | fib(n): (fib(n-1) // in parens => `+` continues this line
+            + fib(n-2))
 
 define fib
   lambda (n)
     cond
-      | n == 0: 0
-      | n == 1: 1
-      | else: fib(n-1) + fib(n-2)
+     | n == 0: 0
+     | n == 1: 1
+     | else: fib(n-1) + fib(n-2)
 
 // Ok to add trailing `:`s if you want, and it parses the
 // same as the prevous example, but this is not the standard
@@ -36,9 +36,9 @@ define fib
 define fib:
   lambda (n):
     cond:
-      | n == 0: 0
-      | n == 1: 1
-      | else: fib(n-1) + fib(n-2)
+     | n == 0: 0
+     | n == 1: 1
+     | else: fib(n-1) + fib(n-2)
 
 // Adding parentheses is ok, at least with the obvious handling
 // of parentheses by the use of sapling notation, but the
@@ -57,15 +57,15 @@ define fib:
 
 define fib(n)
   match n
-    | 0: 0
-    | 1: 1
-    | n: fib(n-1) + fib(n-2)
+   | 0: 0
+   | 1: 1
+   | n: fib(n-1) + fib(n-2)
 
 define fib(n):
   match n:
-    | 0: 0
-    | 1: 1
-    | n: fib(n-1) + fib(n-2)
+   | 0: 0
+   | 1: 1
+   | n: fib(n-1) + fib(n-2)
 
 define fib(n)
   match n | 0: 0
@@ -74,12 +74,12 @@ define fib(n)
 
 define fib(n)
   match n
-    | 0
-        0
-    | 1
-        1
-    | n
-        fib(n-1) + fib(n-2)
+   | 0
+       0
+   | 1
+       1
+   | n
+       fib(n-1) + fib(n-2)
 
 define fib(n)
   match n { | 0 { 0 }
@@ -189,34 +189,34 @@ define go()
 
 define approx(x)
   match x
-    | something(v)
-        printf("got it\n")
-        v
-    | nothing: 0
+   | something(v)
+       printf("got it\n")
+       v
+   | nothing: 0
 
 // With two `:`s on one line, there's no way to
 // add to the first `:`
 define approx_thunk(x)
   match x
-    | something(v): lambda (): v
-    | nothing: lambda (): 0
+   | something(v): lambda (): v
+   | nothing: lambda (): 0
 
 // Enough indentation for `v` means that it continues the
 // implicit second `:`, so the `lambda` body has `v`:
 define approx_thunk(x)
   match x
-    | something(v): lambda ()
-                       v
-    | nothing: lambda (): 0
+   | something(v): lambda ()
+                      v
+   | nothing: lambda (): 0
 
 define approx_thunk(x)
   match x
-    | something(v): lambda
-                      | (): v
-                      | (n): v+n
-    | nothing: lambda
-                 | (): 0
-                 | (n): n
+   | something(v): lambda
+                    | (): v
+                    | (n): v+n
+   | nothing: lambda
+               | (): 0
+               | (n): n
 
 define curried
   lambda (x)
