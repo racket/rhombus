@@ -198,14 +198,29 @@ separator or because a required separator is missing.
 The `;` and `,` separators interact differently with subgroups formed
 by indentation, `:`, and `|`. A `,` closes subgroups as necessary to
 reach an enclosing `()` or `[]`, while a `;` separate groups within a
-nested group sequence. A `;` will never create an empty group, and a `,`
-is disallowed if it would create an empty group.
+nested group sequence. A `;` will never create an empty group. A `,`
+is disallowed if it would create an empty group, except that a traiing
+`,` is allowed.
 
 ```
 // Not allowed
 (, 1)
 (1,, 2)
+
+// Allowed, but not standard
 (1, 2,)
+```
+
+A trailing `,` is only standard style when the _closer_ that follows is
+on its own line.
+
+```
+list(
+  red,
+  green,
+  blue,
+  orange,
+)
 ```
 
 ## Grouping by indentation
@@ -432,7 +447,7 @@ define fourth(n: integer):
 struct posn(x, y):
   property prop_equal_and_hash:
     let (hc = lambda (a: posn, hc):
-                 hc(a.x) + hc(a.y),
+                hc(a.x) + hc(a.y),
          eql = lambda (a: posn, b: posn, eql):
                  eql(a.x, b.x) && eql(a.y, b.y)):
       values(eql, hc, hc)

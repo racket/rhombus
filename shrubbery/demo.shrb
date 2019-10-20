@@ -234,6 +234,14 @@ define dictionary: dict:
                       bar: string
                       baz: true
 
+define colors:
+  list(
+    red,
+    green,
+    blue,
+    orange,
+  )
+
 define f(x_something,
          y_something_else,
          z_also_long_name):
