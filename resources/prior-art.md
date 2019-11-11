@@ -25,6 +25,12 @@ The following are in rough chronological order.
 * [OOPSALA 2001 paper](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.83.859&rep=rep1&type=pdf)
 * [Talk slides](https://people.eecs.berkeley.edu/~jrb/Projects/oopsla-jse.pdf)
 
+## Gel
+
+[Gel: A Generic Extensible
+Language](https://www.cs.utexas.edu/~wcook/Drafts/2008/gel.pdf) by
+Falcon and Cook
+
 ## P4P
 [P4P]: #P4P
 
