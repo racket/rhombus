@@ -71,7 +71,7 @@ define print_sexp(v):
           print_sexp(a)
           for (v = in_list(d)):
             display(" ")
-          print_sexp(v)
+            print_sexp(v)
           display(")")
         | display("(")
           print_sexp(a)
