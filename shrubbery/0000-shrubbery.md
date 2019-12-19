@@ -48,7 +48,7 @@ breaks and indentation in the source are not misleading.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Here are some example shrubberies. A `:` in the middle a line is the
+Here are some example shrubberies. A `:` in the middle of a line is the
 same as starting a new line with indentation for the part after the
 `:`. (Extra `:`s are allowed, but they are non-standard, and we don't
 use any extra `:`s here.)
