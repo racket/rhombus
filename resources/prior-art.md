@@ -192,6 +192,7 @@ pschmied commented:
 > I don’t know if it’s germane, but some languages have gone the other way—implementing an S-expr surface language atop another language:
 * [Erlang / LFE](http://lfe.io/)
 * [Python / Hy](http://docs.hylang.org/en/stable/)
+* [Lua / Fennel](https://fennel-lang.org/)
 
 # Language workbenches
 [language workbenches]: #Language-workbenches
