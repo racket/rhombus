@@ -67,7 +67,7 @@ For this, use `.` at the start of the next line:
 ```
 define (greet name)       |  (define (greet name)
   displayln "hello "      |    (displayln "hello "
-          . name "!"      |               name "!"))
+            . name "!"    |               name "!"))
 ```
 
 To a Racket developer, this can be intuitively be perceived the "."
@@ -76,7 +76,7 @@ representing a cons onto the next listed expression that is consumed:
 ```
 define (greet name)       |  (define (greet name)
   displayln "hello "      |    (displayln "hello "
-    . name "!"            |               (. name "!")))
+            . name "!"    |               (. name "!")))
 ```
 
 However, keywords are implicitly considered to be continuing arguments
