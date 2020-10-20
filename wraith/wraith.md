@@ -126,8 +126,9 @@ to simply be members of that same parenthetical expression:
 ``` racket
 define a-list '(1 2 3                   |  (define a-list '(1 2 3
                 4 5 6)                  |                   4 5 6))
-                                        |
-                                        |
+```
+
+``` racket
 for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
           (y (in-naturals)))            |             (y (in-naturals)))
   * x y                                 |    (* x y))
@@ -154,8 +155,9 @@ This makes aesthetically more appealing `let` and `for` syntax examples.
 ``` racket
 for [pet '("cat" "dog" "horse")]        |  (for ([pet '("cat" "dog" "horse")])
   printf "I love my ~a!\n" pet          |    (printf "I love my ~a!\n" pet))
-                                        |
-                                        |
+```
+
+``` racket
 define (counting-letters-song letters)  |  (define (counting-letters-song letters)
   for [letter letters                   |    (for ([letter letters]
        number (in-naturals 1)]          |          [number (in-naturals 1)])
@@ -163,8 +165,9 @@ define (counting-letters-song letters)  |  (define (counting-letters-song letter
       . letter number                   |         . letter number)
     newline                             |      (newline))
   displayln "Singing a letters song!"   |    (displayln "Singing a letters song!"))
-                                        |
-                                        |
+```
+
+``` racket
 let* [animal "dog"                      |  (let* ([animal "dog"]
       noise "barks"                     |         [noise "barks"]
       player-hears                      |         [player-hears
@@ -199,10 +202,14 @@ per curly-grouping:
 ``` racket
 define (double x)                      |  (define (double x)
   {x * 2}                              |    (* x 2))
-                                       |
+```
+
+``` racket
 define (squared-minus-one x)           |  (define (squared-minus-one x)
   {{x * x} - 1}                        |    (- (* x x) 1))
-                                       |
+```
+
+``` racket
 {1 + 2 + {9 / 3}}                      |  (+ 1 2 (/ 9 3))
 ```
 
