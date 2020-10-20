@@ -21,7 +21,7 @@ Many users are overwhelmed by parenthetical syntax and would like an alternative
 Consider the following Racket program, taken from the Racket
 [quick introduction](https://docs.racket-lang.org/quick/index.html):
 
-```
+``` racket
 define (add-drawing p)
   define drawer
     make-pict-drawer p
@@ -35,7 +35,7 @@ define (add-drawing p)
 
 This corresponds to the following Racket code:
 
-```
+``` racket
 (define (add-drawing p)
   (define drawer
     (make-pict-drawer p))
@@ -50,21 +50,21 @@ This corresponds to the following Racket code:
 The intuition here that a newline with indentation corresponds to
 a nested expression:
 
-```
+``` racket
 define drawer             |  (define drawer
   make-pict-drawer p      |    (make-pict-drawer p))
 ```
 
 Parentheses can also be used to nest another expression on the same line
 
-```
+``` racket
 define drawer (make-pict-drawer p)  |  (define drawer (make-pict-drawer p))
 ```
 
 But how to handle arguments that aren't composing a new expression?
 For this, use `.` at the start of the next line:
 
-```
+``` racket
 define (greet name)       |  (define (greet name)
   displayln "hello "      |    (displayln "hello "
             . name "!"    |               name "!"))
@@ -73,7 +73,7 @@ define (greet name)       |  (define (greet name)
 To a Racket developer, this can be intuitively be perceived the "."
 representing a cons onto the next listed expression that is consumed:
 
-```
+``` racket
 define (greet name)       |  (define (greet name)
   displayln "hello "      |    (displayln "hello "
             . name "!"    |               (. name "!")))
@@ -82,7 +82,7 @@ define (greet name)       |  (define (greet name)
 However, keywords are implicitly considered to be continuing arguments
 the previous expression:
 
-```
+``` racket
 standard-cat 100 90       |  (standard-cat 100 90
              #:happy? #t  |                #:happy? #t)
 ```
@@ -97,7 +97,7 @@ The indentation level does not matter super strongly; as long as
 "greater" than the previous, it is "nested into the parent
 expression":
 
-```
+``` racket
 standard-cat              |  (standard-cat
   . 100 90                |   100 90
   #:happy? #t             |   #:happy? #t)
@@ -106,7 +106,7 @@ standard-cat              |  (standard-cat
 Parentheses can be used to build a new nested expression.  For
 instance:
 
-```
+``` racket
 define (display-excitement str)         |  (define (display-excitement str)
   format "I'm SO EXCITED about ~a!!!"   |    (format "I'm SO EXCITED about ~a!!!"
          string-upcase str              |            (string-upcase str)))
@@ -116,7 +116,7 @@ However, for the most part, lines within a parenthetical expression still
 follow expresions still generally follow Wraith's rules
 (note that this is a major departure from Sweet Expressions and Wisp!):
 
-```
+``` racket
 define (greeter name)                  |  (define (greeter name)
   let ((to-say                         |    (let ((to-say
           format "Hey there ~a! :D"    |           (format "Hey there ~a! :D"
@@ -129,7 +129,7 @@ within a parenthetical expression, "rectangle alignment" with new lines
 aligning with the start of the parenthetical expression are considered
 to simply be members of that same parenthetical expression:
 
-```
+``` racket
 define a-list '(1 2 3                   |  (define a-list '(1 2 3
                 4 5 6)                  |                   4 5 6))
                                         |
@@ -142,7 +142,7 @@ for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
 Delightfully, this means that many quoted/quasiquoted expressions
 remain the same in Wraith as in traditional Racket code:
 
-```
+``` racket
 '(div                                   |  '(div
   (p (@ (class "cool-paragraph"))       |    (p (@ (class "cool-paragraph"))
      "Hello everybody! "                |       "Hello everybody! "
@@ -157,7 +157,7 @@ In Wraith syntax, `[]` has a special meaning which can be described
 as "a wrapped set of wrapped expressions".
 This makes aesthetically more appealing `let` and `for` syntax examples.
 
-```
+``` racket
 for [pet '("cat" "dog" "horse")]        |  (for ([pet '("cat" "dog" "horse")])
   printf "I love my ~a!\n" pet          |    (printf "I love my ~a!\n" pet))
                                         |
@@ -184,7 +184,7 @@ expressions are not permitted to have less indentation than the column
 after the opening parenthesis.
 In other words, the following is an error and not permitted:
 
-```
+``` racket
 ;; Not allowed!
 define a-list
   '(1 2
@@ -202,7 +202,7 @@ operations.  Thus Wraith partially borrows from
 for curly infix operations but only permits one infix operation
 per curly-grouping:
 
-```
+``` racket
 define (double x)                      |  (define (double x)
   {x * 2}                              |    (* x 2))
                                        |
