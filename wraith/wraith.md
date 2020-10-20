@@ -51,8 +51,8 @@ The intuition here that a newline with indentation corresponds to
 a nested expression:
 
 ``` racket
-define drawer             |  (define drawer
-  make-pict-drawer p      |    (make-pict-drawer p))
+define drawer                           |  (define drawer
+  make-pict-drawer p                    |    (make-pict-drawer p))
 ```
 
 Parentheses can also be used to nest another expression on the same line
