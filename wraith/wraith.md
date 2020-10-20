@@ -58,33 +58,33 @@ define drawer             |  (define drawer
 Parentheses can also be used to nest another expression on the same line
 
 ``` racket
-define drawer (make-pict-drawer p)  |  (define drawer (make-pict-drawer p))
+define drawer (make-pict-drawer p)      |  (define drawer (make-pict-drawer p))
 ```
 
 But how to handle arguments that aren't composing a new expression?
 For this, use `.` at the start of the next line:
 
 ``` racket
-define (greet name)       |  (define (greet name)
-  displayln "hello "      |    (displayln "hello "
-            . name "!"    |               name "!"))
+define (greet name)                     |  (define (greet name)
+  displayln "hello "                    |    (displayln "hello "
+            . name "!"                  |               name "!"))
 ```
 
 To a Racket developer, this can be intuitively be perceived the "."
 representing a cons onto the next listed expression that is consumed:
 
 ``` racket
-define (greet name)       |  (define (greet name)
-  displayln "hello "      |    (displayln "hello "
-            . name "!"    |               (. name "!")))
+define (greet name)                     |  (define (greet name)
+  displayln "hello "                    |    (displayln "hello "
+            . name "!"                  |               (. name "!")))
 ```
 
 However, keywords are implicitly considered to be continuing arguments
 the previous expression:
 
 ``` racket
-standard-cat 100 90       |  (standard-cat 100 90
-             #:happy? #t  |                #:happy? #t)
+standard-cat 100 90                     |  (standard-cat 100 90
+             #:happy? #t                |                #:happy? #t)
 ```
 
 **TODO:** It could be that only variables/unquoted symbols have this
@@ -98,9 +98,9 @@ The indentation level does not matter super strongly; as long as
 expression":
 
 ``` racket
-standard-cat              |  (standard-cat
-  . 100 90                |   100 90
-  #:happy? #t             |   #:happy? #t)
+standard-cat                            |  (standard-cat
+  . 100 90                              |   100 90
+  #:happy? #t                           |   #:happy? #t)
 ```
 
 Parentheses can be used to build a new nested expression.  For
