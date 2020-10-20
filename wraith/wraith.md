@@ -112,16 +112,83 @@ define (display-excitement str)         |  (define (display-excitement str)
          string-upcase str              |            (string-upcase str)))
 ```
 
-In the following code we observe that parenthetical expressions
-continue to have the same rules of indentation as everything else:
+However, for the most part, lines within a parenthetical expression still
+follow expresions still generally follow Wraith's rules
+(note that this is a major departure from Sweet Expressions and Wisp!):
 
 ```
-let* ([animal "dog"]                    |  (let* ([animal "dog"]
-      [noise "barks"]                   |         [noise "barks"]
-      [player-hears                     |         [player-hears
+define (greeter name)                  |  (define (greeter name)
+  let ((to-say                         |    (let ((to-say
+          format "Hey there ~a! :D"    |           (format "Hey there ~a! :D"
+                 . name))              |                   name)))
+    displayln to-say                   |      (displayln to-say)))
+```
+
+However, there is an "exception", or special rule...
+within a parenthetical expression, "rectangle alignment" with new lines
+aligning with the start of the parenthetical expression are considered
+to simply be members of that same parenthetical expression:
+
+```
+define a-list '(1 2 3                   |  (define a-list '(1 2 3
+                4 5 6)                  |                   4 5 6))
+                                        |
+                                        |
+for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
+          (y (in-naturals)))            |             (y (in-naturals)))
+  * x y                                 |    (* x y))
+```
+
+Delightfully, this means that many quoted/quasiquoted expressions
+remain the same in Wraith as in traditional Racket code:
+
+```
+'(div                                   |  '(div
+  (p (@ (class "cool-paragraph"))       |    (p (@ (class "cool-paragraph"))
+     "Hello everybody! "                |       "Hello everybody! "
+     "Here's a picture of my cat: "     |       "Here's a picture of my cat: "
+     (img (@ (href "cat.jpg")           |       (img (@ (href "cat.jpg")
+             (alt "My cat Fluffy")))))  |               (alt "My cat Fluffy")))))
+```
+
+In traditional Racket S-Expression syntax, `()` and `[]` have only
+been differentiated by convention.
+In Wraith syntax, `[]` has a special meaning which can be described
+as "a wrapped set of wrapped expressions".
+This makes aesthetically more appealing `let` and `for` syntax examples.
+
+```
+for [pet '("cat" "dog" "horse")]        |  (for ([pet '("cat" "dog" "horse")])
+  printf "I love my ~a!\n" pet          |    (printf "I love my ~a!\n" pet))
+                                        |
+                                        |
+define (counting-letters-song letters)  |  (define (counting-letters-song letters)
+  for [letter letters                   |    (for ([letter letters]
+       number (in-naturals 1)]          |          [number (in-naturals 1)])
+    printf "I like ~a, it's number ~a!" |      (printf "I like ~a, it's number ~a!"
+      . letter number                   |         . letter number)
+    newline                             |      (newline))
+  displayln "Singing a letters song!"   |    (displayln "Singing a letters song!"))
+                                        |
+                                        |
+let* [animal "dog"                      |  (let* ([animal "dog"]
+      noise "barks"                     |         [noise "barks"]
+      player-hears                      |         [player-hears
         format "the ~a says: ~a!!!"     |          (format "the ~a says: ~a!!!"
-               . animal noise])         |                  animal noise)])
+               . animal noise]          |                  animal noise)])
   displayln player-hears                |    (displayln player-hears))
+```
+
+However, in Wraith, new lines of content within parenthetical/bracketed
+expressions are not permitted to have less indentation than the column
+after the opening parenthesis.
+In other words, the following is an error and not permitted:
+
+```
+;; Not allowed!
+define a-list
+  '(1 2
+ 3)
 ```
 
 Finally, many potential users have grown up being taught mathematics
