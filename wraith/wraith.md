@@ -134,18 +134,6 @@ for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
   * x y                                 |    (* x y))
 ```
 
-Delightfully, this means that many quoted/quasiquoted expressions
-remain the same in Wraith as in traditional Racket code:
-
-``` racket
-'(div                                   |  '(div
-  (p (@ (class "cool-paragraph"))       |    (p (@ (class "cool-paragraph"))
-     "Hello everybody! "                |       "Hello everybody! "
-     "Here's a picture of my cat: "     |       "Here's a picture of my cat: "
-     (img (@ (href "cat.jpg")           |       (img (@ (href "cat.jpg")
-             (alt "My cat Fluffy")))))  |               (alt "My cat Fluffy")))))
-```
-
 In traditional Racket S-Expression syntax, `()` and `[]` have only
 been differentiated by convention.
 In Wraith syntax, `[]` has a special meaning which can be described
