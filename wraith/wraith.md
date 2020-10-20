@@ -134,6 +134,9 @@ for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
   * x y                                 |    (* x y))
 ```
 
+However, that for/list looks ugly and very parenthetical still.
+Is there a way we can make it better?
+
 In traditional Racket S-Expression syntax, `()` and `[]` have only
 been differentiated by convention.
 In Wraith syntax, `[]` has a special meaning which can be described
