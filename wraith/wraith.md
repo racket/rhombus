@@ -134,8 +134,9 @@ for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
   * x y                                 |    (* x y))
 ```
 
-However, that for/list looks ugly and very parenthetical still.
-Is there a way we can make it better?
+However, that for/list looks very parenthetical still.
+If we're deviating from s-expressions, is there a way to make
+it less nested?
 
 In traditional Racket S-Expression syntax, `()` and `[]` have only
 been differentiated by convention.
