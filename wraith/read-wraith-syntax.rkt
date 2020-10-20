@@ -46,7 +46,7 @@
       [else
        (match-define (followed ts after)
          (indentation-single src in tok))
-       (loop after (cons (group ts) acc))])))
+       (loop after (append (group ts) acc))])))
 
 ;; wraith-string->sexprs : String -> [Listof S-Expr]
 (define (wraith-string->sexprs str)
@@ -117,7 +117,9 @@
        (read-error (format "expected `~a` to close" close)
                    tokloc
                    #:extra-srclocs (list loc)))
-     (group ts #t loc (token-srcloc after))]))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g) g]
+       [l (error 'handle-parens "internal error, not exactly one: ~v" l)])]))
 
 ;; handle-brackets : Any Input-Port Srcloc String -> Syntax
 (define (handle-brackets src in loc close)
@@ -142,7 +144,9 @@
        (read-error (format "expected `~a` to close" close)
                    tokloc
                    #:extra-srclocs (list loc)))
-     (group ts #t loc (token-srcloc after))]))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g) g]
+       [l (error 'handle-brackets "internal error, not exactly one: ~v" l)])]))
 
 ;; handle-braces : Any Input-Port Srcloc String -> Syntax
 (define handle-braces #f)
@@ -184,9 +188,9 @@
           ; (rev before), head, (rev xs), acc, tail
           (match-define (followed tail after*)
             (indentation-multiple src in after))
-          (define head-group
+          (define head-groups
             (group (cons head (append-reverse xs (append acc tail)))))
-          (loop before (list head-group) after*)])])))
+          (loop before head-groups after*)])])))
 
 ;; indentation-multiple : Any Input-Port Token -> [Followed [Listof Syntax]]
 (define (indentation-multiple src in tok)
@@ -194,14 +198,14 @@
   (define col (srcloc-column loc))
   (let loop ([tok tok] [acc '()])
     (match-define (followed ts after) (indentation-single src in tok))
-    (define g (group ts))
+    (define gs (group ts))
     (cond
-      [(end? after)           (followed (reverse (cons g acc)) after)]
-      [(< (column after) col) (followed (reverse (cons g acc)) after)]
+      [(end? after)           (followed (append-reverse acc gs) after)]
+      [(< (column after) col) (followed (append-reverse acc gs) after)]
       [else
        (unless (= col (column after))
          (error 'read-wraith "internal error"))
-       (loop after (cons g acc))])))
+       (loop after (append-reverse gs acc))])))
 
 ;; read-line-reversed : Any Input-Port Nat (U Token Eof) Tights -> [Followed Tights]
 (define (read-line-reversed src in ln tok acc)
@@ -270,19 +274,30 @@
     [(cons t rst) (cons t (handle-ticks rst))]))
        
 
-;; group : Tights -> Syntax
+;; group : Tights -> Tights
+;; Groups them into a single syntax object,
+;; except when the first token is a "non-grouping" token and parens? is #f
 (define (group ts
                [parens? #f]
                [loc1 (and (cons? ts) (get-srcloc (first ts)))]
                [loc2 (and (cons? ts) (get-srcloc (last ts)))])
   (match (handle-ticks ts)
-    ['() (datum->syntax #f '() (build-source-location-list loc1 loc2))]
-    [(list t) #:when (not parens?) (tight->syntax t)]
+    ['()
+     (list (datum->syntax #f '() (build-source-location-list loc1 loc2)))]
+    [(cons (token "." 'other _) rst)
+     #:when (not parens?)
+     rst]
+    [(cons (and t (token _ 'hash-colon-keyword _)) rst)
+     (cons t rst)]
+    [(list t)
+     #:when (not parens?)
+     (list (tight->syntax t))]
     [ts
-     (datum->syntax
-      #f
-      (map tight->syntax ts)
-      (build-source-location-list loc1 loc2))]))
+     (list
+      (datum->syntax
+       #f
+       (map tight->syntax ts)
+       (build-source-location-list loc1 loc2)))]))
 
 (module+ test
   (check-equal? (wraith-string->sexprs "a") '(a))
@@ -405,6 +420,30 @@ define drawer (make-pict-drawer p)
                     (make-pict-drawer p))
                   (define drawer (make-pict-drawer p))])
   (check-equal? (wraith-string->sexprs #<<```
+define (greet name)
+  displayln
+    string-append "hello "
+                  . name "!"
+```
+                                       )
+                '[(define (greet name)
+                    (displayln
+                     (string-append "hello "
+                                    name "!")))])
+  (check-equal? (wraith-string->sexprs #<<```
+standard-cat 100 90
+             #:happy? #t
+standard-cat
+  . 100 90
+  #:happy? #t
+```
+                                       )
+                '[(standard-cat 100 90
+                                #:happy? #t)
+                  (standard-cat
+                    100 90
+                    #:happy? #t)])
+  (check-equal? (wraith-string->sexprs #<<```
 define (display-excitement str)
   format "I'm SO EXCITED about ~a!!!"
          string-upcase str
@@ -433,6 +472,81 @@ define (greeter name)
                             (format "Hey there ~a! :D"
                                     name))]
                       (displayln to-say)))])
+
+  ;; TODO: test "rectangle alignment" examples
+
+  (check-equal? (wraith-string->sexprs #<<```
+for/list [x (in-range 0 30 2)
+          y (in-naturals)]
+  * x y
+```
+                                       )
+                '[(for/list [(x (in-range 0 30 2))
+                             (y (in-naturals))]
+                    (* x y))])
+  (check-equal? (wraith-string->sexprs #<<```
+'(div
+   (p (@ (class "cool-paragraph"))
+      "Hello everybody! "
+      "Here's a picture of my cat: "
+      (img (@ (href "cat.jpg")
+              (alt "My cat Fluffy")))))
+'div
+   p (@ (class "cool-paragraph"))
+     "Hello everybody! "
+     "Here's a picture of my cat: "
+     img @ (href "cat.jpg")
+           alt "My cat Fluffy"
+```
+                                       )
+                '['(div
+                     (p (@ (class "cool-paragraph"))
+                        "Hello everybody! "
+                        "Here's a picture of my cat: "
+                        (img (@ (href "cat.jpg")
+                                (alt "My cat Fluffy")))))
+                  '(div
+                     (p (@ (class "cool-paragraph"))
+                        "Hello everybody! "
+                        "Here's a picture of my cat: "
+                        (img (@ (href "cat.jpg")
+                                (alt "My cat Fluffy")))))])
+  (check-equal? (wraith-string->sexprs #<<```
+for [pet '("cat" "dog" "horse")]
+  printf "I love my ~a!\n" pet
+
+define (counting-letters-song letters)
+  for [letter letters
+       number (in-naturals 1)]
+    printf "I like ~a, it's number ~a!"
+      . letter number
+    (newline)
+  displayln "Singing a letters song!"
+
+let* [animal "dog"
+      noise "barks"
+      player-hears
+        format "the ~a says: ~a!!!"
+               . animal noise]
+  displayln player-hears
+```
+                                       )
+                '[(for [(pet '("cat" "dog" "horse"))]
+                    (printf "I love my ~a!\n" pet))
+                  (define (counting-letters-song letters)
+                    (for [(letter letters)
+                          (number (in-naturals 1))]
+                      (printf "I like ~a, it's number ~a!"
+                              letter number)
+                      (newline))
+                    (displayln "Singing a letters song!"))
+                  (let* [(animal "dog")
+                         (noise "barks")
+                         (player-hears
+                          (format "the ~a says: ~a!!!"
+                                  animal noise))]
+                    (displayln player-hears))
+                  ])
 
   (check-equal? (wraith-string->sexprs #<<```
 
