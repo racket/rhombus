@@ -87,12 +87,6 @@ standard-cat 100 90                     |  (standard-cat 100 90
              #:happy? #t                |                #:happy? #t)
 ```
 
-**TODO:** It could be that only variables/unquoted symbols have this
-"precede with a `.` character" thing, and integers/strings/etc also
-implicitly don't "start a new expression"?  The main way this may
-become questionable would be in hashmap keys (which really could bear
-to have a new syntax anyway...)
-
 The indentation level does not matter super strongly; as long as
 "greater" than the previous, it is "nested into the parent
 expression":
