@@ -49,7 +49,7 @@
       [(eof-object? tok) (reverse acc)]
       [else
        (match-define (followed ts after)
-         (indentation-single src in tok))
+         (indentation-single src in #f tok))
        (loop after (append (group ts) acc))])))
 
 ;; wraith-string->sexprs : String -> [Listof S-Expr]
@@ -92,14 +92,16 @@
     ["[" "]"]
     ["{" "}"]))
 
-;; end? : (U Token Eof) -> Bool
-(define (end? tok)
+;; end? : (U Token Eof) (U #f Nat) -> Bool
+(define (end? tok lcol)
   (or (eof-object? tok)
       (and (symbol=? (token-type tok) 'parenthesis)
-           (member (token-string tok) '(")" "]" "}")))))
+           (member (token-string tok) '(")" "]" "}")))
+      (and lcol (<= (srcloc-column (token-srcloc tok)) lcol))))
 
 ;; handle-parens : Any Input-Port Srcloc String -> Syntax
 (define (handle-parens src in loc close)
+  (define lcol (srcloc-column loc))
   (define tok (read-token src in))
   (cond
     [(eof-object? tok)
@@ -110,14 +112,14 @@
        orig-stx)]
     [else
      (define tokloc (token-srcloc tok))
-     (unless (< (srcloc-column loc) (srcloc-column tokloc))
+     (unless (< lcol (srcloc-column tokloc))
        (read-error
         (format "expected `~a` before line ~a (assuming indentation is correct)"
                 close
                 (srcloc-line tokloc))
         tokloc
         #:extra-srclocs (list loc)))
-     (match-define (followed ts after) (indentation-single src in tok))
+     (match-define (followed ts after) (indentation-single src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
        (read-error (format "expected `~a` to close" close)
                    tokloc
@@ -128,6 +130,7 @@
 
 ;; handle-brackets : Any Input-Port Srcloc String -> Syntax
 (define (handle-brackets src in loc close)
+  (define lcol (srcloc-column loc))
   (define tok (read-token src in))
   (cond
     [(eof-object? tok)
@@ -138,14 +141,14 @@
        orig-stx)]
     [else
      (define tokloc (token-srcloc tok))
-     (unless (< (srcloc-column loc) (srcloc-column tokloc))
+     (unless (< lcol (srcloc-column tokloc))
        (read-error
         (format "expected `~a` before line ~a (assuming indentation is correct)"
                 close
                 (srcloc-line tokloc))
         tokloc
         #:extra-srclocs (list loc)))
-     (match-define (followed ts after) (indentation-multiple src in tok))
+     (match-define (followed ts after) (indentation-multiple src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
        (read-error (format "expected `~a` to close" close)
                    tokloc
@@ -161,16 +164,16 @@
 (define handle-prefab #f)
 (define handle-hash #f)
 
-;; indentation-single : Any Input-Port Token -> [Followed Tights]
-(define (indentation-single src in tok)
+;; indentation-single : Any Input-Port (U #f Nat) Token -> [Followed Tights]
+(define (indentation-single src in lcol tok)
   (define loc (token-srcloc tok))
   ; line-rev includes tok
   (match-define (followed line-rev after)
-    (read-line-reversed src in (srcloc-line loc) tok '()))
+    (read-line-reversed src in (srcloc-line loc) lcol tok '()))
   ; (rev line-rev), acc
   (let loop ([line-rev line-rev] [acc '()] [after after])
     (cond
-      [(end? after)
+      [(end? after lcol)
        (followed (append-reverse line-rev acc) after)]
       [else
        (define after-col (srcloc-column (token-srcloc after)))
@@ -186,39 +189,36 @@
          [(list head)
           ; head, (rev xs), acc, tail
           (match-define (followed tail after*)
-            (indentation-multiple src in after))
+            (indentation-multiple src in (column head) after))
           (followed
            (cons head (append-reverse xs (append acc tail)))
            after*)]
          [(cons head before)
           ; (rev before), head, (rev xs), acc, tail
           (match-define (followed tail after*)
-            (indentation-multiple src in after))
+            (indentation-multiple src in (column head) after))
           (define head-groups
             (group (cons head (append-reverse xs (append acc tail)))))
           (loop before head-groups after*)])])))
 
-;; indentation-multiple : Any Input-Port Token -> [Followed [Listof Syntax]]
-(define (indentation-multiple src in tok)
-  (define loc (token-srcloc tok))
-  (define col (srcloc-column loc))
+;; indentation-multiple : Any Input-Port (U #f Nat) Token -> [Followed Tights]
+(define (indentation-multiple src in lcol tok)
   (let loop ([tok tok] [acc '()])
-    (match-define (followed ts after) (indentation-single src in tok))
+    (match-define (followed ts after) (indentation-single src in lcol tok))
     (define gs (group ts))
     (cond
-      [(end? after)           (followed (append-reverse acc gs) after)]
-      [(< (column after) col) (followed (append-reverse acc gs) after)]
-      [else
-       (unless (= col (column after))
-         (error 'read-wraith "internal error"))
-       (loop after (append-reverse gs acc))])))
+      [(end? after lcol) (followed (append-reverse acc gs) after)]
+      [else              (loop after (append-reverse gs acc))])))
 
-;; read-line-reversed : Any Input-Port Nat (U Token Eof) Tights -> [Followed Tights]
-(define (read-line-reversed src in ln tok acc)
-  (cond [(end? tok) (followed acc tok)]
+;; indentation-single-or-multiple : Any Input-Port Token
+
+;; read-line-reversed :
+;; Any Input-Port Nat (U Nat) (U Token Eof) Tights -> [Followed Tights]
+(define (read-line-reversed src in ln lcol tok acc)
+  (cond [(end? tok lcol) (followed acc tok)]
         [(<= (line tok) ln)
          (define t (tight src in tok))
-         (read-line-reversed src in ln (read-token src in) (cons t acc))]
+         (read-line-reversed src in ln lcol (read-token src in) (cons t acc))]
         [else (followed acc tok)]))
 
 (define (tight->syntax t)
