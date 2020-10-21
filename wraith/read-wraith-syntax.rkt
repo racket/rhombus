@@ -19,6 +19,10 @@
 ;;  - Syntax
 ;; A Tights is a [Listof Tight]
 
+;; A syntax object that has the "original?" property
+;; (borrowed from the scribble reader)
+(define orig-stx (read-syntax #f (open-input-string "dummy")))
+
 (define (get-srcloc v)
   (cond [(token? v) (token-srcloc v)]
         [else (build-source-location v)]))
@@ -102,7 +106,8 @@
      (read-error (format "expected `~a` to close" close) loc)]
     [(string=? (token-string tok) close)
      (datum->syntax #f '()
-       (build-source-location-list loc (token-srcloc tok)))]
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
     [else
      (define tokloc (token-srcloc tok))
      (unless (< (srcloc-column loc) (srcloc-column tokloc))
@@ -129,7 +134,8 @@
      (read-error (format "expected `~a` to close" close) loc)]
     [(string=? (token-string tok) close)
      (datum->syntax #f '()
-       (build-source-location-list loc (token-srcloc tok)))]
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
     [else
      (define tokloc (token-srcloc tok))
      (unless (< (srcloc-column loc) (srcloc-column tokloc))
@@ -225,7 +231,8 @@
          (datum->syntax
           #f
           (read (open-input-string (token-string t)))
-          (build-source-location-list (token-srcloc t)))]
+          (build-source-location-list (token-srcloc t))
+          orig-stx)]
         [else (error "expected syntax or a token")]))
 
 ;; handle-tick : Symbol Srcloc Tight -> Syntax
@@ -235,7 +242,8 @@
    #f
    (list (datum->syntax #f sym (build-source-location-list loc))
          (tight->syntax t))
-   (build-source-location-list loc loc2)))
+   (build-source-location-list loc loc2)
+   orig-stx))
 
 ;; handle-ticks : Tights -> Tights
 (define (handle-ticks ts)
@@ -283,7 +291,12 @@
                [loc2 (and (cons? ts) (get-srcloc (last ts)))])
   (match (handle-ticks ts)
     ['()
-     (list (datum->syntax #f '() (build-source-location-list loc1 loc2)))]
+     (list
+      (datum->syntax
+       #f
+       '()
+       (build-source-location-list loc1 loc2)
+       orig-stx))]
     [(cons (token "." 'other _) rst)
      #:when (not parens?)
      rst]
@@ -297,7 +310,8 @@
       (datum->syntax
        #f
        (map tight->syntax ts)
-       (build-source-location-list loc1 loc2)))]))
+       (build-source-location-list loc1 loc2)
+       orig-stx))]))
 
 (module+ test
   (check-equal? (wraith-string->sexprs "a") '(a))
