@@ -119,7 +119,7 @@
                 (srcloc-line tokloc))
         tokloc
         #:extra-srclocs (list loc)))
-     (match-define (followed ts after) (indentation-single src in lcol tok))
+     (match-define (followed ts after) (indentation-single-or-multiple src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
        (read-error (format "expected `~a` to close" close)
                    tokloc
@@ -210,7 +210,17 @@
       [(end? after lcol) (followed (append-reverse acc gs) after)]
       [else              (loop after (append-reverse gs acc))])))
 
-;; indentation-single-or-multiple : Any Input-Port Token
+;; indentation-single-or-multiple :
+;; Any Input-Port (U #f Nat) Token -> [Followed Tights]
+(define (indentation-single-or-multiple src in lcol tok)
+  (match-define s (indentation-single src in lcol tok))
+  (define after (followed-after s))
+  (cond
+    [(end? after lcol) s]
+    [else
+     (define fsts (group (followed-value s)))
+     (match-define (followed rsts after*) (indentation-multiple src in lcol after))
+     (followed (append fsts rsts) after*)]))
 
 ;; read-line-reversed :
 ;; Any Input-Port Nat (U Nat) (U Token Eof) Tights -> [Followed Tights]
@@ -487,15 +497,38 @@ define (greeter name)
                                     name))]
                       (displayln to-say)))])
 
-  ;; TODO: test "rectangle alignment" examples
+  ;; TODO: which "rectangle alignment" behavior do we want with parens?
+  (check-equal? (wraith-string->sexprs #<<```
+define a-list '(1 2 3
+                4 5 6)
+define a-list '(. 1 2 3
+                . 4 5 6)
+for/list (x (in-range 0 30 2)  ; NOTE: bad style, should use [] brackets instead
+          y (in-naturals))
+  * x y
+```
+                                       )
+                '[(define a-list '((1 2 3)         ; TODO: this vs (1 2 3 4 5 6)?
+                                   (4 5 6)))
+                  (define a-list '(1 2 3
+                                   4 5 6))
+                  (for/list ((x (in-range 0 30 2))
+                             (y (in-naturals)))
+                    (* x y))])
 
   (check-equal? (wraith-string->sexprs #<<```
+for/list ((x (in-range 0 30 2))
+          (y (in-naturals)))
+  * x y
 for/list [x (in-range 0 30 2)
           y (in-naturals)]
   * x y
 ```
                                        )
-                '[(for/list [(x (in-range 0 30 2))
+                '[(for/list ((x (in-range 0 30 2))
+                             (y (in-naturals)))
+                    (* x y))
+                  (for/list [(x (in-range 0 30 2))
                              (y (in-naturals))]
                     (* x y))])
   (check-equal? (wraith-string->sexprs #<<```
