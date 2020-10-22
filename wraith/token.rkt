@@ -44,6 +44,9 @@
      (define span (and start end (- end start)))
      (define str (read-string span in))
      (token str 'comment (srcloc src ln col pos span))]
+    [(equal? (peek-string 2 0 in) "\\\n")
+     (define str (read-string 2 in))
+     (token str 'other (srcloc src ln col pos 2))]
     [else
      ; normal behaviour
      (define-values [str type _paren start end] (racket-lexer in))
@@ -79,6 +82,24 @@
                 (list (token "a" 'symbol (srcloc 'string 1 0 1 1))
                       (token "#|b|#" 'comment (srcloc 'string 1 2 3 5))
                       (token "c" 'symbol (srcloc 'string 1 8 9 1))))
+  (check-equal? (string->tokens
+                 (string-append
+                  "list a b c \\\n"
+                  "     d e f \\\n"
+                  "     g h i\n"))
+                (list
+                 (token "list" 'symbol (srcloc 'string 1 0 1 4))
+                 (token "a" 'symbol (srcloc 'string 1 5 6 1))
+                 (token "b" 'symbol (srcloc 'string 1 7 8 1))
+                 (token "c" 'symbol (srcloc 'string 1 9 10 1))
+                 (token "\\\n" 'other (srcloc 'string 1 11 12 2))
+                 (token "d" 'symbol (srcloc 'string 2 5 19 1))
+                 (token "e" 'symbol (srcloc 'string 2 7 21 1))
+                 (token "f" 'symbol (srcloc 'string 2 9 23 1))
+                 (token "\\\n" 'other (srcloc 'string 2 11 25 2))
+                 (token "g" 'symbol (srcloc 'string 3 5 32 1))
+                 (token "h" 'symbol (srcloc 'string 3 7 34 1))
+                 (token "i" 'symbol (srcloc 'string 3 9 36 1))))
   (check-equal? (string->tokens
                  (string-append
                   "(define (f x)\n"

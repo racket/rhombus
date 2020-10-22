@@ -226,6 +226,8 @@
 ;; Any Input-Port Nat (U Nat) (U Token Eof) Tights -> [Followed Tights]
 (define (read-line-reversed src in ln lcol tok acc)
   (cond [(end? tok lcol) (followed acc tok)]
+        [(string=? (token-string tok) "\\\n")
+         (read-line-reversed src in (add1 ln) lcol (read-token src in) acc)]
         [(<= (line tok) ln)
          (define t (tight src in tok))
          (read-line-reversed src in ln lcol (read-token src in) (cons t acc))]
@@ -448,9 +450,17 @@ define (greet name)
   displayln
     string-append "hello "
                   . name "!"
+define (greet name)
+  displayln
+    string-append "hello " \
+                  name "!"
 ```
                                        )
                 '[(define (greet name)
+                    (displayln
+                     (string-append "hello "
+                                    name "!")))
+                  (define (greet name)
                     (displayln
                      (string-append "hello "
                                     name "!")))])
@@ -460,10 +470,16 @@ standard-cat 100 90
 standard-cat
   . 100 90
   #:happy? #t
+standard-cat \
+  100 90
+  #:happy? #t
 ```
                                        )
                 '[(standard-cat 100 90
                                 #:happy? #t)
+                  (standard-cat
+                    100 90
+                    #:happy? #t)
                   (standard-cat
                     100 90
                     #:happy? #t)])
@@ -503,6 +519,8 @@ define a-list '(1 2 3
                 4 5 6)
 define a-list '(. 1 2 3
                 . 4 5 6)
+define a-list '(1 2 3 \
+                4 5 6)
 for/list (x (in-range 0 30 2)  ; NOTE: bad style, should use [] brackets instead
           y (in-naturals))
   * x y
@@ -510,6 +528,8 @@ for/list (x (in-range 0 30 2)  ; NOTE: bad style, should use [] brackets instead
                                        )
                 '[(define a-list '((1 2 3)         ; TODO: this vs (1 2 3 4 5 6)?
                                    (4 5 6)))
+                  (define a-list '(1 2 3
+                                   4 5 6))
                   (define a-list '(1 2 3
                                    4 5 6))
                   (for/list ((x (in-range 0 30 2))
@@ -576,6 +596,12 @@ let* [animal "dog"
         format "the ~a says: ~a!!!"
                . animal noise]
   displayln player-hears
+let* [animal "dog"
+      noise "barks"
+      player-hears
+        format "the ~a says: ~a!!!" \
+               animal noise]
+  displayln player-hears
 ```
                                        )
                 '[(for [(pet '("cat" "dog" "horse"))]
@@ -587,6 +613,12 @@ let* [animal "dog"
                               letter number)
                       (newline))
                     (displayln "Singing a letters song!"))
+                  (let* [(animal "dog")
+                         (noise "barks")
+                         (player-hears
+                          (format "the ~a says: ~a!!!"
+                                  animal noise))]
+                    (displayln player-hears))
                   (let* [(animal "dog")
                          (noise "barks")
                          (player-hears
