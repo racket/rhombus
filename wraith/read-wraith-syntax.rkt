@@ -73,9 +73,9 @@
      (match pre
        [""
         (match open
-          ["(" (handle-parens src in loc close)]
-          ["[" (handle-brackets src in loc close)]
-          ["{" (handle-braces src in loc close)])]
+          ["(" (handle-parens src in loc open close)]
+          ["[" (handle-brackets src in loc open close)]
+          ["{" (handle-braces src in loc open close)])]
        ["#" (handle-vector src in loc #f close)]
        ["#s" (handle-prefab src in loc close)]
        ["#hash" (handle-hash src in loc make-immutable-hash close)]
@@ -99,13 +99,13 @@
            (member (token-string tok) '(")" "]" "}")))
       (and lcol (<= (srcloc-column (token-srcloc tok)) lcol))))
 
-;; handle-parens : Any Input-Port Srcloc String -> Syntax
-(define (handle-parens src in loc close)
+;; handle-parens : Any Input-Port Srcloc String String -> Syntax
+(define (handle-parens src in loc open close)
   (define lcol (srcloc-column loc))
   (define tok (read-token src in))
   (cond
     [(eof-object? tok)
-     (read-error (format "expected `~a` to close" close) loc)]
+     (read-error (format "expected `~a` to close `~a`" close open) loc)]
     [(string=? (token-string tok) close)
      (datum->syntax #f '()
        (build-source-location-list loc (token-srcloc tok))
@@ -114,27 +114,31 @@
      (define tokloc (token-srcloc tok))
      (unless (< lcol (srcloc-column tokloc))
        (read-error
-        (format "expected `~a` before line ~a (assuming indentation is correct)"
+        (format (string-append
+                 "expected `~a` before line ~a to close `~a`\n"
+                 "  (assuming indentation is correct)")
                 close
-                (srcloc-line tokloc))
+                (srcloc-line tokloc)
+                open)
         tokloc
         #:extra-srclocs (list loc)))
-     (match-define (followed ts after) (indentation-single-or-multiple src in lcol tok))
+     (match-define (followed ts after) (indentation-single/tail src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
-       (read-error (format "expected `~a` to close" close)
+       (read-error (format "expected `~a` to close `~a`" close open)
                    tokloc
                    #:extra-srclocs (list loc)))
      (match (group ts #t loc (token-srcloc after))
        [(list g) g]
        [l (error 'handle-parens "internal error, not exactly one: ~v" l)])]))
 
-;; handle-brackets : Any Input-Port Srcloc String -> Syntax
-(define (handle-brackets src in loc close)
+;; handle-brackets : Any Input-Port Srcloc String String -> Syntax
+(define (handle-brackets src in loc open close)
   (define lcol (srcloc-column loc))
   (define tok (read-token src in))
   (cond
     [(eof-object? tok)
-     (read-error (format "expected `~a` to close" close) loc)]
+     (read-error (format "expected `~a` to close `~a`" close open) loc
+                 #:extra-srclocs (list (token-srcloc tok)))]
     [(string=? (token-string tok) close)
      (datum->syntax #f '()
        (build-source-location-list loc (token-srcloc tok))
@@ -143,14 +147,17 @@
      (define tokloc (token-srcloc tok))
      (unless (< lcol (srcloc-column tokloc))
        (read-error
-        (format "expected `~a` before line ~a (assuming indentation is correct)"
+        (format (string-append
+                 "expected `~a` before line ~a to close `~a`\n"
+                 "  (assuming indentation is correct)")
                 close
-                (srcloc-line tokloc))
+                (srcloc-line tokloc)
+                open)
         tokloc
         #:extra-srclocs (list loc)))
      (match-define (followed ts after) (indentation-multiple src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
-       (read-error (format "expected `~a` to close" close)
+       (read-error (format "expected `~a` to close `~a`" close open)
                    tokloc
                    #:extra-srclocs (list loc)))
      (match (group ts #t loc (token-srcloc after))
@@ -210,17 +217,16 @@
       [(end? after lcol) (followed (append-reverse acc gs) after)]
       [else              (loop after (append-reverse gs acc))])))
 
-;; indentation-single-or-multiple :
-;; Any Input-Port (U #f Nat) Token -> [Followed Tights]
-(define (indentation-single-or-multiple src in lcol tok)
-  (match-define s (indentation-single src in lcol tok))
-  (define after (followed-after s))
+;; indentation-single/tail : Any Input-Port (U #f Nat) Token -> [Followed Tights]
+(define (indentation-single/tail src in lcol tok)
+  (define s (indentation-single src in lcol tok))
+  (match-define (followed ts after) s)
   (cond
     [(end? after lcol) s]
+    [(and (cons? ts) (cons? (rest ts))) s]
     [else
-     (define fsts (group (followed-value s)))
-     (match-define (followed rsts after*) (indentation-multiple src in lcol after))
-     (followed (append fsts rsts) after*)]))
+     (match-define (followed tail after*) (indentation-multiple src in lcol after))
+     (followed (append ts tail) after*)]))
 
 ;; read-line-reversed :
 ;; Any Input-Port Nat (U Nat) (U Token Eof) Tights -> [Followed Tights]
@@ -236,7 +242,7 @@
 (define (tight->syntax t)
   (cond [(syntax? t) t]
         ;; TODO: only for some tokens,
-        ;; not special tokens like parens, dots, and ticks
+        ;; not special tokens like parens, ticks, and backslash-newlines
         [(token? t)
          (when (symbol=? (token-type t) 'parenthesis)
            (error 'tight->syntax "unexpected paren"))
@@ -309,9 +315,6 @@
        '()
        (build-source-location-list loc1 loc2)
        orig-stx))]
-    [(cons (token "." 'other _) rst)
-     #:when (not parens?)
-     rst]
     [(cons (and t (token _ 'hash-colon-keyword _)) rst)
      (cons t rst)]
     [(list t)
@@ -448,10 +451,6 @@ define drawer (make-pict-drawer p)
   (check-equal? (wraith-string->sexprs #<<```
 define (greet name)
   displayln
-    string-append "hello "
-                  . name "!"
-define (greet name)
-  displayln
     string-append "hello " \
                   name "!"
 ```
@@ -459,17 +458,10 @@ define (greet name)
                 '[(define (greet name)
                     (displayln
                      (string-append "hello "
-                                    name "!")))
-                  (define (greet name)
-                    (displayln
-                     (string-append "hello "
                                     name "!")))])
   (check-equal? (wraith-string->sexprs #<<```
 standard-cat 100 90
              #:happy? #t
-standard-cat
-  . 100 90
-  #:happy? #t
 standard-cat \
   100 90
   #:happy? #t
@@ -477,9 +469,6 @@ standard-cat \
                                        )
                 '[(standard-cat 100 90
                                 #:happy? #t)
-                  (standard-cat
-                    100 90
-                    #:happy? #t)
                   (standard-cat
                     100 90
                     #:happy? #t)])
@@ -513,44 +502,64 @@ define (greeter name)
                                     name))]
                       (displayln to-say)))])
 
-  ;; TODO: which "rectangle alignment" behavior do we want with parens?
-  (check-equal? (wraith-string->sexprs #<<```
+  ;; with parens "rectangle alignment" with multiple things is an error
+  (check-exn #rx"expected `\\)` to close `\\(`"
+             (λ ()
+               (wraith-string->sexprs #<<```
 define a-list '(1 2 3
                 4 5 6)
-define a-list '(. 1 2 3
-                . 4 5 6)
-define a-list '(1 2 3 \
-                4 5 6)
-for/list (x (in-range 0 30 2)  ; NOTE: bad style, should use [] brackets instead
+```
+                                       )))
+  (check-exn #rx"expected `\\)` to close `\\(`"
+             (λ ()
+               (wraith-string->sexprs #<<```
+for/list (x (in-range 0 30 2)
           y (in-naturals))
   * x y
 ```
-                                       )
-                '[(define a-list '((1 2 3)         ; TODO: this vs (1 2 3 4 5 6)?
-                                   (4 5 6)))
-                  (define a-list '(1 2 3
-                                   4 5 6))
-                  (define a-list '(1 2 3
-                                   4 5 6))
-                  (for/list ((x (in-range 0 30 2))
-                             (y (in-naturals)))
-                    (* x y))])
+                                       )))
+  (check-exn #rx"expected `\\)` to close `\\(`"
+             (λ ()
+               (wraith-string->sexprs #<<```
+define n
+  sum (map sqr
+       range 0 30 2)
+```
+                                       )))
 
   (check-equal? (wraith-string->sexprs #<<```
+define a-list '(1 2 3 \
+                4 5 6)
 for/list ((x (in-range 0 30 2))
           (y (in-naturals)))
   * x y
 for/list [x (in-range 0 30 2)
           y (in-naturals)]
   * x y
+define n
+  sum (map
+       sqr
+       range 0 30 2)
+define n
+  sum (map sqr
+        range 0 30 2)
 ```
                                        )
-                '[(for/list ((x (in-range 0 30 2))
+                '[(define a-list '(1 2 3
+                                   4 5 6))
+                  (for/list ((x (in-range 0 30 2))
                              (y (in-naturals)))
                     (* x y))
                   (for/list [(x (in-range 0 30 2))
                              (y (in-naturals))]
-                    (* x y))])
+                    (* x y))
+                  (define n
+                    (sum (map
+                          sqr
+                          (range 0 30 2))))
+                  (define n
+                    (sum (map sqr
+                           (range 0 30 2))))])
   (check-equal? (wraith-string->sexprs #<<```
 '(div
    (p (@ (class "cool-paragraph"))
@@ -585,17 +594,11 @@ for [pet '("cat" "dog" "horse")]
 define (counting-letters-song letters)
   for [letter letters
        number (in-naturals 1)]
-    printf "I like ~a, it's number ~a!"
-      . letter number
+    printf "I like ~a, it's number ~a!" \
+      letter number
     (newline)
   displayln "Singing a letters song!"
 
-let* [animal "dog"
-      noise "barks"
-      player-hears
-        format "the ~a says: ~a!!!"
-               . animal noise]
-  displayln player-hears
 let* [animal "dog"
       noise "barks"
       player-hears
@@ -613,12 +616,6 @@ let* [animal "dog"
                               letter number)
                       (newline))
                     (displayln "Singing a letters song!"))
-                  (let* [(animal "dog")
-                         (noise "barks")
-                         (player-hears
-                          (format "the ~a says: ~a!!!"
-                                  animal noise))]
-                    (displayln player-hears))
                   (let* [(animal "dog")
                          (noise "barks")
                          (player-hears
