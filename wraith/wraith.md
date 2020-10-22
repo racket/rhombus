@@ -51,40 +51,34 @@ The intuition here that a newline with indentation corresponds to
 a nested expression:
 
 ``` racket
-define drawer                           |  (define drawer
-  make-pict-drawer p                    |    (make-pict-drawer p))
+define drawer                             |  (define drawer
+  make-pict-drawer p                      |    (make-pict-drawer p))
 ```
 
 Parentheses can also be used to nest another expression on the same line
 
 ``` racket
-define drawer (make-pict-drawer p)      |  (define drawer (make-pict-drawer p))
+define drawer (make-pict-drawer p)        |  (define drawer (make-pict-drawer p))
 ```
 
 But how to handle arguments that aren't composing a new expression?
-For this, use `.` at the start of the next line:
+For this, use a `\` backslash at the end of the line:
 
 ``` racket
-define (greet name)                     |  (define (greet name)
-  displayln "hello "                    |    (displayln "hello "
-            . name "!"                  |               name "!"))
+define (greet name)                       |  (define (greet name)
+  displayln "hello " \                    |    (displayln "hello "
+            name "!"                      |               name "!"))
 ```
 
-To a Racket developer, this can be intuitively be perceived the "."
-representing a cons onto the next listed expression that is consumed:
-
-``` racket
-define (greet name)                     |  (define (greet name)
-  displayln "hello "                    |    (displayln "hello "
-            . name "!"                  |               (. name "!")))
-```
+Make sure the `\` backslash is at the very end, with no other characters
+between it and the newline.
 
 However, keywords are implicitly considered to be continuing arguments
-the previous expression:
+in the previous expression:
 
 ``` racket
-standard-cat 100 90                     |  (standard-cat 100 90
-             #:happy? #t                |                #:happy? #t)
+standard-cat 100 90                       |  (standard-cat 100 90
+             #:happy? #t                  |                #:happy? #t)
 ```
 
 The indentation level does not matter super strongly; as long as
@@ -92,18 +86,18 @@ The indentation level does not matter super strongly; as long as
 expression":
 
 ``` racket
-standard-cat                            |  (standard-cat
-  . 100 90                              |   100 90
-  #:happy? #t                           |   #:happy? #t)
+standard-cat \                            |  (standard-cat
+  100 90                                  |   100 90
+  #:happy? #t                             |   #:happy? #t)
 ```
 
 Parentheses can be used to build a new nested expression.  For
 instance:
 
 ``` racket
-define (display-excitement str)         |  (define (display-excitement str)
-  format "I'm SO EXCITED about ~a!!!"   |    (format "I'm SO EXCITED about ~a!!!"
-         string-upcase str              |            (string-upcase str)))
+define (display-excitement str)           |  (define (display-excitement str)
+  format "I'm SO EXCITED about ~a!!!"     |    (format "I'm SO EXCITED about ~a!!!"
+         string-upcase str                |            (string-upcase str)))
 ```
 
 However, for the most part, lines within a parenthetical expression still
@@ -111,30 +105,14 @@ follow expresions still generally follow Wraith's rules
 (note that this is a major departure from Sweet Expressions and Wisp!):
 
 ``` racket
-define (greeter name)                  |  (define (greeter name)
-  let ((to-say                         |    (let ((to-say
-          format "Hey there ~a! :D"    |           (format "Hey there ~a! :D"
-                 . name))              |                   name)))
-    displayln to-say                   |      (displayln to-say)))
+define (greeter name)                     |  (define (greeter name)
+  let ((to-say                            |    (let ((to-say
+          format "Hey there ~a! :D"       |           (format "Hey there ~a! :D"
+                 name))                   |                   name)))
+    displayln to-say                      |      (displayln to-say)))
 ```
 
-However, there is an "exception", or special rule...
-within a parenthetical expression, "rectangle alignment" with new lines
-aligning with the start of the parenthetical expression are considered
-to simply be members of that same parenthetical expression:
-
-``` racket
-define a-list '(1 2 3                   |  (define a-list '(1 2 3
-                4 5 6)                  |                   4 5 6))
-```
-
-``` racket
-for/list ((x (in-range 30))             |  (for/list ((x (in-range 0 30 2))
-          (y (in-naturals)))            |             (y (in-naturals)))
-  * x y                                 |    (* x y))
-```
-
-However, that for/list looks very parenthetical still.
+However, that let looks very parenthetical still.
 If we're deviating from s-expressions, is there a way to make
 it less nested?
 
@@ -145,27 +123,35 @@ as "a wrapped set of wrapped expressions".
 This makes aesthetically more appealing `let` and `for` syntax examples.
 
 ``` racket
-for [pet '("cat" "dog" "horse")]        |  (for ([pet '("cat" "dog" "horse")])
-  printf "I love my ~a!\n" pet          |    (printf "I love my ~a!\n" pet))
+define (greeter name)                     |  (define (greeter name)
+  let [to-say                             |    (let [(to-say
+         format "Hey there ~a! :D"        |           (format "Hey there ~a! :D"
+                name]                     |                   name))]
+    displayln to-say                      |      (displayln to-say)))
 ```
 
 ``` racket
-define (counting-letters-song letters)  |  (define (counting-letters-song letters)
-  for [letter letters                   |    (for ([letter letters]
-       number (in-naturals 1)]          |          [number (in-naturals 1)])
-    printf "I like ~a, it's number ~a!" |      (printf "I like ~a, it's number ~a!"
-      . letter number                   |         . letter number)
-    newline                             |      (newline))
-  displayln "Singing a letters song!"   |    (displayln "Singing a letters song!"))
+for [pet '("cat" "dog" "horse")]          |  (for [(pet '("cat" "dog" "horse"))]
+  printf "I love my ~a!\n" pet            |    (printf "I love my ~a!\n" pet))
 ```
 
 ``` racket
-let* [animal "dog"                      |  (let* ([animal "dog"]
-      noise "barks"                     |         [noise "barks"]
-      player-hears                      |         [player-hears
-        format "the ~a says: ~a!!!"     |          (format "the ~a says: ~a!!!"
-               . animal noise]          |                  animal noise)])
-  displayln player-hears                |    (displayln player-hears))
+define (counting-letters-song letters)    |  (define (counting-letters-song letters)
+  for [letter letters                     |    (for [(letter letters)
+       number (in-naturals 1)]            |          (number (in-naturals 1))]
+    printf "I like ~a, it's number ~a!" \ |      (printf "I like ~a, it's number ~a!"
+      letter number                       |         letter number)
+    (newline)                             |      (newline))
+  displayln "Singing a letters song!"     |    (displayln "Singing a letters song!"))
+```
+
+``` racket
+let* [animal "dog"                        |  (let* [(animal "dog")
+      noise "barks"                       |         (noise "barks")
+      player-hears                        |         (player-hears
+        format "the ~a says: ~a!!!" \     |          (format "the ~a says: ~a!!!"
+               animal noise]              |                  animal noise))]
+  displayln player-hears                  |    (displayln player-hears))
 ```
 
 However, in Wraith, new lines of content within parenthetical/bracketed
