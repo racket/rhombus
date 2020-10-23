@@ -8,6 +8,7 @@
          racket/list
          racket/match
          syntax/readerr
+         syntax/parse
          syntax/srcloc
          (only-in srfi/1 append-reverse)
          "token.rkt")
@@ -67,7 +68,7 @@
      (define len (string-length str))
      (define pre (substring str 0 (sub1 len)))
      (define open (substring str (sub1 len)))
-     (unless (member open '("(" "[" "}"))
+     (unless (member open '("(" "[" "{"))
        (read-error (format "unexpected `~a`" open) loc))
      (define close (paren-close open))
      (match pre
@@ -131,7 +132,7 @@
      (match-define (followed ts after) (indentation-single/tail src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
        (read-error (format "expected `~a` to close `~a`" close open)
-                   tokloc
+                   (token-srcloc after)
                    #:extra-srclocs (list loc)))
      (match (group ts #t loc (token-srcloc after))
        [(list g) g]
@@ -164,14 +165,52 @@
      (match-define (followed ts after) (indentation-multiple src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
        (read-error (format "expected `~a` to close `~a`" close open)
-                   tokloc
+                   (token-srcloc after)
                    #:extra-srclocs (list loc)))
      (match (group ts #t loc (token-srcloc after))
        [(list g) g]
        [l (error 'handle-brackets "internal error, not exactly one: ~v" l)])]))
 
-;; handle-braces : Any Input-Port Srcloc String -> Syntax
-(define handle-braces #f)
+;; handle-braces : Any Input-Port Srcloc String String -> Syntax
+(define (handle-braces src in loc open close)
+  (define lcol (srcloc-column loc))
+  (define tok (read-token src in))
+  (cond
+    [(eof-object? tok)
+     (read-error (format "expected `~a` to close `~a`" close open) loc
+                 #:extra-srclocs (list (token-srcloc tok)))]
+    [(string=? (token-string tok) close)
+     (datum->syntax #f '()
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
+    [else
+     (match-define (followed ts after) (tights src in lcol tok))
+     (unless (and (token? after) (string=? (token-string after) close))
+       (read-error (format "expected `~a` to close `~a`" close open)
+                   (token-srcloc after)
+                   #:extra-srclocs (list loc)))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g)
+        (syntax-parse g
+          [(a) #'a]
+          [(a op b) (datum->syntax #f (list #'op #'a #'b) g g)]
+          [(a op b {~seq op2 c} ...)
+           #:do
+           [(define op-dat (syntax->datum #'op))
+            (for ([op2 (in-list (attribute op2))])
+              (unless (equal? op-dat (syntax->datum op2))
+                (raise-syntax-error 'infix (format "expected `~s`" op-dat) g op2)))]
+           (datum->syntax #f (list* #'op #'a #'b (attribute c)) g g)])]
+       [l (error 'handle-braces "internal error, not exactly one: ~v" l)])]))
+
+;; tights : Any Input-Port (U Nat #f) Token -> [Followed Tights]
+(define (tights src in lcol tok)
+  (let loop ([tok tok] [acc '()])
+    (define t (tight src in tok))
+    (define after (read-token src in))
+    (cond
+      [(end? after lcol) (followed (reverse (cons t acc)) after)]
+      [else              (loop after (cons t acc))])))
 
 (define handle-vector #f)
 (define handle-prefab #f)
@@ -235,7 +274,7 @@
      (followed (append ts tail) after*)]))
 
 ;; read-line-reversed :
-;; Any Input-Port Nat (U Nat) (U Token Eof) Tights -> [Followed Tights]
+;; Any Input-Port Nat (U Nat #f) (U Token Eof) Tights -> [Followed Tights]
 (define (read-line-reversed src in ln lcol tok acc)
   (cond [(end? tok lcol) (followed acc tok)]
         [(string=? (token-string tok) "\\\n")
@@ -681,6 +720,24 @@ a b c
                 '[(a c
                     (d e))
                   (a b c)])
+
+  (check-equal? (wraith-string->sexprs #<<```
+{}
+{1}
+{1 + 2}
+{1 + 2 + 3 + 4}
+sqrt {(sqr a) + (sqr b)}
+{{(- b) + (sqrt {(sqr b) - {4 * a * c}})}
+ / {2 * a}}
+```
+                                       )
+                '[()
+                  1
+                  (+ 1 2)
+                  (+ 1 2 3 4)
+                  (sqrt (+ (sqr a) (sqr b)))
+                  (/ (+ (- b) (sqrt (- (sqr b) (* 4 a c))))
+                     (* 2 a))])
 
   (check-equal? (wraith-string->sexprs #<<```
 
