@@ -278,7 +278,7 @@
 (define (read-line-reversed src in ln lcol tok acc)
   (cond [(end? tok lcol) (followed acc tok)]
         [(string=? (token-string tok) "\\\n")
-         (read-line-reversed src in (add1 ln) lcol (read-token src in) acc)]
+         (read-line-reversed src in (add1 ln) #f (read-token src in) acc)]
         [(<= (line tok) ln)
          (define t (tight src in tok))
          (read-line-reversed src in ln lcol (read-token src in) (cons t acc))]
@@ -679,6 +679,21 @@ let* [animal "dog"
                                   animal noise))]
                     (displayln player-hears))
                   ])
+  (check-equal? (wraith-string->sexprs #<<```
+a b c
+  d e \
+ f g
+a b c
+  d e
+    f \
+g h
+```
+                                       )
+                '[(a b c
+                     (d e f g))
+                  (a b c
+                     (d e
+                        (f g h)))])
 
   (check-equal? (wraith-string->sexprs #<<```
 a b c . d
