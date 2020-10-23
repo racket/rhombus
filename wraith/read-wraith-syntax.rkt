@@ -99,6 +99,12 @@
            (member (token-string tok) '(")" "]" "}")))
       (and lcol (<= (srcloc-column (token-srcloc tok)) lcol))))
 
+;; non-grouping-token? : Any -> Bool
+(define (non-grouping-token? v)
+  (and (token? v)
+       (or (symbol=? (token-type v) 'hash-colon-keyword)
+           (string=? (token-string v) "."))))
+
 ;; handle-parens : Any Input-Port Srcloc String String -> Syntax
 (define (handle-parens src in loc open close)
   (define lcol (srcloc-column loc))
@@ -274,29 +280,31 @@
     [(cons (? syntax? stx) rst)
      (cons stx (handle-ticks rst))]
     [(cons (token str 'sexp-comment loc) rst)
-     (next str loc rst)
-     (handle-ticks (rest rst))]
+     (define rst* (handle-ticks rst))
+     (next str loc rst*)
+     (rest rst*)]
     [(cons (and t (token str (or 'constant 'other) loc)) rst)
+     (define rst* (handle-ticks rst))
      (match str
-       ["'" (cons (handle-tick 'quote loc (next str loc rst))
-                  (handle-ticks (rest rst)))]
-       ["`" (cons (handle-tick 'quasiquote loc (next str loc rst))
-                  (handle-ticks (rest rst)))]
-       ["," (cons (handle-tick 'unquote loc (next str loc rst))
-                  (handle-ticks (rest rst)))]
-       [",@" (cons (handle-tick 'unquote-splicing loc (next str loc rst))
-                  (handle-ticks (rest rst)))]
-       ["#'" (cons (handle-tick 'syntax loc (next str loc rst))
-                   (handle-ticks (rest rst)))]
-       ["#`" (cons (handle-tick 'quasisyntax loc (next str loc rst))
-                   (handle-ticks (rest rst)))]
-       ["#," (cons (handle-tick 'unsyntax loc (next str loc rst))
-                   (handle-ticks (rest rst)))]
-       ["#,@" (cons (handle-tick 'unsyntax-splicing loc (next str loc rst))
-                    (handle-ticks (rest rst)))]
-       ["#&" (cons (handle-tick 'box loc (next str loc rst))
-                   (handle-ticks (rest rst)))]
-       [_ (cons t (handle-ticks rst))])]
+       ["'" (cons (handle-tick 'quote loc (next str loc rst*))
+                  (rest rst*))]
+       ["`" (cons (handle-tick 'quasiquote loc (next str loc rst*))
+                  (rest rst*))]
+       ["," (cons (handle-tick 'unquote loc (next str loc rst*))
+                  (rest rst*))]
+       [",@" (cons (handle-tick 'unquote-splicing loc (next str loc rst*))
+                   (rest rst*))]
+       ["#'" (cons (handle-tick 'syntax loc (next str loc rst*))
+                   (rest rst*))]
+       ["#`" (cons (handle-tick 'quasisyntax loc (next str loc rst*))
+                   (rest rst*))]
+       ["#," (cons (handle-tick 'unsyntax loc (next str loc rst*))
+                   (rest rst*))]
+       ["#,@" (cons (handle-tick 'unsyntax-splicing loc (next str loc rst*))
+                    (rest rst*))]
+       ["#&" (cons (handle-tick 'box loc (next str loc rst*))
+                   (rest rst*))]
+       [_ (cons t rst*)])]
     [(cons t rst) (cons t (handle-ticks rst))]))
        
 
@@ -307,26 +315,35 @@
                [parens? #f]
                [loc1 (and (cons? ts) (get-srcloc (first ts)))]
                [loc2 (and (cons? ts) (get-srcloc (last ts)))])
-  (match (handle-ticks ts)
-    ['()
-     (list
-      (datum->syntax
-       #f
-       '()
-       (build-source-location-list loc1 loc2)
-       orig-stx))]
-    [(cons (and t (token _ 'hash-colon-keyword _)) rst)
-     (cons t rst)]
-    [(list t)
-     #:when (not parens?)
-     (list (tight->syntax t))]
+  (match ts
+    [(cons (token _ 'sexp-comment _) _) '()]
+    [(cons (? non-grouping-token?) _) #:when (not parens?) ts]
     [ts
-     (list
-      (datum->syntax
-       #f
-       (map tight->syntax ts)
-       (build-source-location-list loc1 loc2)
-       orig-stx))]))
+     (match (handle-ticks ts)
+       [(list t)
+        #:when (not parens?)
+        (list (tight->syntax t))]
+       [(list as ... (token "." 'other _) b (token "." 'other _) cs ...)
+        (list
+         (datum->syntax
+          #f
+          (map tight->syntax (cons (tight->syntax b) (append as cs)))
+          (build-source-location-list loc1 loc2)
+          orig-stx))]
+       [(list init ... (token "." 'other _) last)
+        (list
+         (datum->syntax
+          #f
+          (append (map tight->syntax init) (tight->syntax last))
+          (build-source-location-list loc1 loc2)
+          orig-stx))]
+       [ts
+        (list
+         (datum->syntax
+          #f
+          (map tight->syntax ts)
+          (build-source-location-list loc1 loc2)
+          orig-stx))])]))
 
 (module+ test
   (check-equal? (wraith-string->sexprs "a") '(a))
@@ -623,6 +640,47 @@ let* [animal "dog"
                                   animal noise))]
                     (displayln player-hears))
                   ])
+
+  (check-equal? (wraith-string->sexprs #<<```
+a b c . d
+a b c
+  . d
+a b
+  c
+  . d
+a b
+  c
+  .
+  d
+(a b c . d)
+(b c . a . d)
+```
+                                       )
+                '[(a b c . d)
+                  (a b c . d)
+                  (a b c . d)
+                  (a b c . d)
+                  (a b c . d)
+                  (b c . a . d)])
+  (check-equal? (wraith-string->sexprs #<<```
+`#`'#,,x
+`(,a ,b ,c . ,x)
+```
+                                       )
+                '[`#`'#,,x
+                  `(,a ,b ,c . ,x)])
+  (check-equal? (wraith-string->sexprs #<<```
+#;a b c
+ d e
+a #;b c
+ d e
+a b c
+ #;d e
+```
+                                       )
+                '[(a c
+                    (d e))
+                  (a b c)])
 
   (check-equal? (wraith-string->sexprs #<<```
 
