@@ -366,7 +366,7 @@
         (list
          (datum->syntax
           #f
-          (map tight->syntax (cons (tight->syntax b) (append as cs)))
+          (map tight->syntax (cons b (append as cs)))
           (build-source-location-list loc1 loc2)
           orig-stx))]
        [(list init ... (token "." 'other _) last)
