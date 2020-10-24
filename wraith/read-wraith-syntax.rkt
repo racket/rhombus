@@ -54,7 +54,7 @@
      (unless (eof-object? after)
        (read-error (format "unexpected `~a`" (token-string after))
                    (token-srcloc after)))
-     (map tight->syntax ts)]))
+     (map tight->syntax (handle-ticks ts))]))
 
 ;; wraith-string->sexprs : String -> [Listof S-Expr]
 (define (wraith-string->sexprs str)
@@ -354,7 +354,7 @@
                    (rest rst*))]
        [_ (cons t rst*)])]
     [(cons t rst) (cons t (handle-ticks rst))]))
-       
+
 
 ;; group : Tights -> Tights
 ;; Groups them into a single syntax object,
@@ -364,7 +364,8 @@
                [loc1 (and (cons? ts) (get-srcloc (first ts)))]
                [loc2 (and (cons? ts) (get-srcloc (last ts)))])
   (match ts
-    [(cons (token _ 'sexp-comment _) _) '()]
+    [(list _) #:when (not parens?) ts]
+    [(cons (token _ 'sexp-comment _) _) #:when (not parens?) '()]
     [(cons (? non-grouping-token?) _) #:when (not parens?) ts]
     [ts
      (match (handle-ticks ts)
@@ -739,11 +740,21 @@ a #;b c
  d e
 a b c
  #;d e
+#;
+a b c
+ d e
+'
+a b
+(#;a b c
+  d e)
 ```
                                        )
                 '[(a c
                     (d e))
-                  (a b c)])
+                  (a b c)
+                  '(a b)
+                  (b c
+                    (d e))])
 
   (check-equal? (wraith-string->sexprs #<<```
 {}
