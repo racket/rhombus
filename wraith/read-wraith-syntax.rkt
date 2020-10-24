@@ -45,13 +45,16 @@
 
 ;; read-wraith-syntax-list : Any Input-Port -> [Listof Syntax]
 (define (read-wraith-syntax-list src in)
-  (let loop ([tok (read-token src in)] [acc '()])
-    (cond
-      [(eof-object? tok) (reverse acc)]
-      [else
-       (match-define (followed ts after)
-         (indentation-single src in #f tok))
-       (loop after (append (group ts) acc))])))
+  (define tok (read-token src in))
+  (cond
+    [(eof-object? tok) '()]
+    [else
+     (match-define (followed ts after)
+       (indentation-multiple src in #f tok))
+     (unless (eof-object? after)
+       (read-error (format "unexpected `~a`" (token-string after))
+                   (token-srcloc after)))
+     (map tight->syntax ts)]))
 
 ;; wraith-string->sexprs : String -> [Listof S-Expr]
 (define (wraith-string->sexprs str)
@@ -225,7 +228,7 @@
   ; (rev line-rev), acc
   (let loop ([line-rev line-rev] [acc '()] [after after])
     (cond
-      [(end? after lcol)
+      [(or (end? after lcol) (string=? (token-string after) "&"))
        (followed (append-reverse line-rev acc) after)]
       [else
        (define after-col (srcloc-column (token-srcloc after)))
@@ -260,7 +263,12 @@
     (define gs (group ts))
     (cond
       [(end? after lcol) (followed (append-reverse acc gs) after)]
-      [else              (loop after (append-reverse gs acc))])))
+      [(string=? (token-string after) "&")
+       (define next (read-token src in))
+       (cond [(end? next lcol) (followed (append-reverse acc gs) next)]
+             [else             (loop next (append-reverse gs acc))])]
+      [else
+       (loop after (append-reverse gs acc))])))
 
 ;; indentation-single/tail : Any Input-Port (U #f Nat) Token -> [Followed Tights]
 (define (indentation-single/tail src in lcol tok)
@@ -276,7 +284,8 @@
 ;; read-line-reversed :
 ;; Any Input-Port Nat (U Nat #f) (U Token Eof) Tights -> [Followed Tights]
 (define (read-line-reversed src in ln lcol tok acc)
-  (cond [(end? tok lcol) (followed acc tok)]
+  (cond [(end? tok lcol)                   (followed acc tok)]
+        [(string=? (token-string tok) "&") (followed acc tok)]
         [(string=? (token-string tok) "\\\n")
          (read-line-reversed src in (add1 ln) #f (read-token src in) acc)]
         [(<= (line tok) ln)
@@ -753,6 +762,54 @@ sqrt {(sqr a) + (sqr b)}
                   (sqrt (+ (sqr a) (sqr b)))
                   (/ (+ (- b) (sqrt (- (sqr b) (* 4 a c))))
                      (* 2 a))])
+
+  (check-equal? (wraith-string->sexprs #<<```
+overlay/offset (rectangle 100 10 "solid" "blue") \
+               10 10
+               rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
+  10 & 10
+  rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
+  10 & fib 7
+  rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
+  factorial 4 & fib 7
+  rectangle 10 100 "solid" "red"
+```
+                                       )
+                '[(overlay/offset (rectangle 100 10 "solid" "blue")
+                                  10 10
+                                  (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
+                    10 10
+                    (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
+                    10 (fib 7)
+                    (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
+                    (factorial 4) (fib 7)
+                    (rectangle 10 100 "solid" "red"))])
+  (check-equal? (wraith-string->sexprs #<<```
+a b c & d
+a b
+  c & d
+a b c
+  & d
+a b &
+  c & d &
+```
+                                       )
+                '[(a b c) d
+                  (a b c d)
+                  (a b c) d
+                  (a b) c d])
 
   (check-equal? (wraith-string->sexprs #<<```
 
