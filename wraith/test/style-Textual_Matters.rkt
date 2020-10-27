@@ -1,5 +1,9 @@
 #lang wraith racket
 
+;; Based on the Racket Style Guide: How to Program Racket
+;; Section 6: Textual Matters
+;; https://docs.racket-lang.org/style/Textual_Matters.html
+
 require "../read-wraith-syntax.rkt"
 module+ test
   require rackunit
@@ -133,6 +137,12 @@ module+ test
         ...)
       define (launch x)
         define w 9 & define h 33
+        ...
+      (define (launch x) \
+        (define w 9) (define h 33)
+        ...)
+      define (launch x) \
+        (define w 9) (define h 33)
         ...]
   check-sexprs-same
     '[(place-image img 10 10 background)
@@ -149,7 +159,11 @@ module+ test
       (place-image img
                    10 & 10 & background)
       place-image img
-                  10 & 10 & background]
+                  10 & 10 & background
+      (place-image img \
+                   10 10 background)
+      place-image img \
+                  10 10 background]
   check-sexprs-same
     '[(above img
              (- width  hdelta)
@@ -169,7 +183,12 @@ module+ test
       above img
             - width hdelta & - height vdelta & bg
       above img
-            {width - hdelta} & {height - vdelta} & bg]
+            {width - hdelta} & {height - vdelta} & bg
+      (above img \
+             (- width hdelta) (- height vdelta) bg)
+      above img \
+            {width - hdelta} {height - vdelta} bg
+      ]
   check-sexprs-same
     '[(above ufo 10 v-delta bg)
       (above ufo 10 v-delta
@@ -182,7 +201,11 @@ module+ test
       (above ufo
              10 & v-delta & bg)
       above ufo
-            10 & v-delta & bg]
+            10 & v-delta & bg
+      (above ufo \
+             10 v-delta bg)
+      above ufo \
+            10 v-delta bg]
   check-sexprs-same
     '[(overlay/offset (rectangle 100 10 "solid" "blue")
                       10
