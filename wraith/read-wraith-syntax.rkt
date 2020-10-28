@@ -80,13 +80,13 @@
           ["(" (handle-parens src in loc open close)]
           ["[" (handle-brackets src in loc open close)]
           ["{" (handle-braces src in loc open close)])]
-       ["#" (handle-vector src in loc #f close)]
-       ["#s" (handle-prefab src in loc close)]
-       ["#hash" (handle-hash src in loc make-immutable-hash close)]
-       ["#hasheq" (handle-hash src in loc make-immutable-hasheq close)]
-       ["#hasheqv" (handle-hash src in loc make-immutable-hasheqv close)]
+       ["#" (handle-vector src in loc #f open close)]
+       ["#s" (handle-prefab src in loc open close)]
+       ["#hash" (handle-hash src in loc make-immutable-hash open close)]
+       ["#hasheq" (handle-hash src in loc make-immutable-hasheq open close)]
+       ["#hasheqv" (handle-hash src in loc make-immutable-hasheqv open close)]
        [(regexp #px"#(\\d+)" (list _ d))
-        (handle-vector src in loc (string->number d) close)])]
+        (handle-vector src in loc (string->number d) open close)])]
     [_ tok]))
 
 ;; paren-close : String -> String
@@ -215,9 +215,98 @@
       [(end? after lcol) (followed (reverse (cons t acc)) after)]
       [else              (loop after (cons t acc))])))
 
-(define handle-vector #f)
-(define handle-prefab #f)
-(define handle-hash #f)
+;; handle-vector : Any Input-Port Srcloc (U #f Nat) String String -> Syntax
+(define (handle-vector src in loc ?len open close)
+  (define lcol (srcloc-column loc))
+  (define tok (read-token src in))
+  (cond
+    [(eof-object? tok)
+     (read-error (format "expected `~a` to close `~a`" close open) loc
+                 #:extra-srclocs (list (token-srcloc tok)))]
+    [(string=? (token-string tok) close)
+     (datum->syntax #f '()
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
+    [else
+     (match-define (followed ts after) (tights src in lcol tok))
+     (unless (and (token? after) (string=? (token-string after) close))
+       (read-error (format "expected `~a` to close `~a`" close open)
+                   (token-srcloc after)
+                   #:extra-srclocs (list loc)))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g)
+        (define lst (syntax->list g))
+        (unless lst
+          (read-error "unexpected `.` in vector" (get-srcloc g)))
+        (datum->syntax #f (list->vector lst) g g)]
+       [l (error 'handle-vector "internal error, not exactly one: ~v" l)])]))
+
+;; handle-prefab : Any Input-Port Srcloc String String -> Syntax
+(define (handle-prefab src in loc open close)
+  (define lcol (srcloc-column loc))
+  (define tok (read-token src in))
+  (cond
+    [(eof-object? tok)
+     (read-error (format "expected `~a` to close `~a`" close open) loc
+                 #:extra-srclocs (list (token-srcloc tok)))]
+    [(string=? (token-string tok) close)
+     (datum->syntax #f '()
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
+    [else
+     (match-define (followed ts after) (tights src in lcol tok))
+     (unless (and (token? after) (string=? (token-string after) close))
+       (read-error (format "expected `~a` to close `~a`" close open)
+                   (token-srcloc after)
+                   #:extra-srclocs (list loc)))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g)
+        (define lst (syntax->list g))
+        (unless lst
+          (read-error "unexpected `.` in prefab struct" (get-srcloc g)))
+        (unless (cons? lst)
+          (read-error "missing structure description in `#s` form" (get-srcloc g)))
+        (datum->syntax #f
+          (apply make-prefab-struct (syntax->datum (first lst)) (rest lst))
+          g
+          g)]
+       [l (error 'handle-prefab "internal error, not exactly one: ~v" l)])]))
+
+;; handle-hash : Any Input-Port Srcloc [AList -> Hash] String String -> Syntax
+(define (handle-hash src in loc make open close)
+  (define lcol (srcloc-column loc))
+  (define tok (read-token src in))
+  (cond
+    [(eof-object? tok)
+     (read-error (format "expected `~a` to close `~a`" close open) loc
+                 #:extra-srclocs (list (token-srcloc tok)))]
+    [(string=? (token-string tok) close)
+     (datum->syntax #f '()
+       (build-source-location-list loc (token-srcloc tok))
+       orig-stx)]
+    [else
+     (match-define (followed ts after) (tights src in lcol tok))
+     (unless (and (token? after) (string=? (token-string after) close))
+       (read-error (format "expected `~a` to close `~a`" close open)
+                   (token-srcloc after)
+                   #:extra-srclocs (list loc)))
+     (match (group ts #t loc (token-srcloc after))
+       [(list g)
+        (define lst (syntax->list g))
+        (unless lst
+          (read-error "unexpected `.` in hash" (get-srcloc g)))
+        (define pairs
+          (for/list ([p (in-list lst)])
+            (define e (syntax-e p))
+            (unless (cons? e)
+              (read-error "expected `(`, `[`, or `{` to start a hash pair"
+                          (get-srcloc e)))
+            (unless (syntax? (cdr e))
+              (read-error "expected `.` and value for hash"
+                          (if (cons? (cdr e)) (get-srcloc (cadr e)) (get-srcloc p))))
+            (cons (syntax->datum (car e)) (cdr e))))
+        (datum->syntax #f (make pairs) g g)]
+       [l (error 'handle-hash "internal error, not exactly one: ~v" l)])]))
 
 ;; indentation-single : Any Input-Port (U #f Nat) Token -> [Followed Tights]
 (define (indentation-single src in lcol tok)
@@ -821,6 +910,22 @@ a b &
                   (a b c d)
                   (a b c) d
                   (a b) c d])
+
+  (check-equal? (wraith-string->sexprs #<<```
+#(a b c
+  d e f)
+#s(a b c
+   d e f)
+#hash((a . 1) (b . 2)
+  (c . 3) (d . 4))
+```
+                                       )
+                '[#(a b c
+                    d e f)
+                  #s(a b c
+                     d e f)
+                  #hash((a . 1) (b . 2)
+                    (c . 3) (d . 4))])
 
   (check-equal? (wraith-string->sexprs #<<```
 
