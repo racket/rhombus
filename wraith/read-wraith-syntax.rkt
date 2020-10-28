@@ -7,6 +7,8 @@
 (require racket/bool
          racket/list
          racket/match
+         racket/flonum
+         racket/fixnum
          syntax/readerr
          syntax/parse
          syntax/srcloc
@@ -80,14 +82,21 @@
           ["(" (handle-parens src in loc open close)]
           ["[" (handle-brackets src in loc open close)]
           ["{" (handle-braces src in loc open close)])]
-       ["#" (handle-vector src in loc #f open close)]
+       ["#" (handle-vector src in loc #f make-vector* open close)]
        ["#s" (handle-prefab src in loc open close)]
        ["#hash" (handle-hash src in loc make-immutable-hash open close)]
        ["#hasheq" (handle-hash src in loc make-immutable-hasheq open close)]
        ["#hasheqv" (handle-hash src in loc make-immutable-hasheqv open close)]
        [(regexp #px"#(\\d+)" (list _ d))
-        (handle-vector src in loc (string->number d) open close)])]
+        (handle-vector src in loc (string->number d) make-vector* open close)])]
     [_ tok]))
+
+(define (make-vector* n l)
+  (define nl (length l))
+  (cond [(or (not n) (= nl n)) (list->vector l)]
+        [(empty? l) (make-vector n)]
+        [(< nl n) (list->vector (append l (make-list (- n nl) (last l))))]
+        [else (error 'make-vector* "vector length is too small")]))
 
 ;; paren-close : String -> String
 (define (paren-close s)
@@ -215,8 +224,9 @@
       [(end? after lcol) (followed (reverse (cons t acc)) after)]
       [else              (loop after (cons t acc))])))
 
-;; handle-vector : Any Input-Port Srcloc (U #f Nat) String String -> Syntax
-(define (handle-vector src in loc ?len open close)
+;; handle-vector :
+;; Any Input-Port Srcloc (U #f Nat) [(U #f Nat) List -> Vec] String String -> Syntax
+(define (handle-vector src in loc ?len make open close)
   (define lcol (srcloc-column loc))
   (define tok (read-token src in))
   (cond
@@ -224,7 +234,7 @@
      (read-error (format "expected `~a` to close `~a`" close open) loc
                  #:extra-srclocs (list (token-srcloc tok)))]
     [(string=? (token-string tok) close)
-     (datum->syntax #f '()
+     (datum->syntax #f (make ?len '())
        (build-source-location-list loc (token-srcloc tok))
        orig-stx)]
     [else
@@ -238,7 +248,12 @@
         (define lst (syntax->list g))
         (unless lst
           (read-error "unexpected `.` in vector" (get-srcloc g)))
-        (datum->syntax #f (list->vector lst) g g)]
+        (define nl (length lst))
+        (unless (or (false? ?len) (<= nl ?len))
+          (read-error
+           (format "vector length ~a is too small, ~a values provided" ?len nl)
+           (get-srcloc g)))
+        (datum->syntax #f (make ?len lst) g g)]
        [l (error 'handle-vector "internal error, not exactly one: ~v" l)])]))
 
 ;; handle-prefab : Any Input-Port Srcloc String String -> Syntax
@@ -250,9 +265,7 @@
      (read-error (format "expected `~a` to close `~a`" close open) loc
                  #:extra-srclocs (list (token-srcloc tok)))]
     [(string=? (token-string tok) close)
-     (datum->syntax #f '()
-       (build-source-location-list loc (token-srcloc tok))
-       orig-stx)]
+     (read-error "missing structure description in `#s` form" (token-srcloc tok))]
     [else
      (match-define (followed ts after) (tights src in lcol tok))
      (unless (and (token? after) (string=? (token-string after) close))
@@ -281,7 +294,7 @@
      (read-error (format "expected `~a` to close `~a`" close open) loc
                  #:extra-srclocs (list (token-srcloc tok)))]
     [(string=? (token-string tok) close)
-     (datum->syntax #f '()
+     (datum->syntax #f (make '())
        (build-source-location-list loc (token-srcloc tok))
        orig-stx)]
     [else
@@ -912,18 +925,26 @@ a b &
                   (a b) c d])
 
   (check-equal? (wraith-string->sexprs #<<```
+#()
 #(a b c
   d e f)
+#3()
+#5(a b c)
 #s(a b c
    d e f)
+#hash()
 #hash((a . 1) (b . 2)
   (c . 3) (d . 4))
 ```
                                        )
-                '[#(a b c
+                '[#()
+                  #(a b c
                     d e f)
+                  #(0 0 0)
+                  #(a b c c c)
                   #s(a b c
                      d e f)
+                  #hash()
                   #hash((a . 1) (b . 2)
                     (c . 3) (d . 4))])
 
