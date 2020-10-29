@@ -91,6 +91,19 @@ standard-cat \                            |  (standard-cat
   #:happy? #t                             |   #:happy? #t)
 ```
 
+An `&` ampersand can separate expressions that would otherwise be grouped by line or indentation:
+``` racket
+define (greet name)                       |  (define (greet name)
+  displayln "hello "                      |    (displayln "hello "
+            name & "!"                    |               name "!"))
+```
+``` racket
+standard-cat                              |  (standard-cat
+  100 & 90                                |   100 90
+  #:happy? #t                             |   #:happy? #t)
+```
+
+
 Parentheses can be used to build a new nested expression.  For
 instance:
 
@@ -202,10 +215,90 @@ define (squared-minus-one x)           |  (define (squared-minus-one x)
 
 <!-- The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work. -->
 
+There are 4 ways of grouping expressions together in Wraith:
+  1. Indentation
+      ```
+      a b_1 ... b_m
+        c_1
+        ...
+        c_n
+      ```
+  2. Parentheses
+      ```
+      (a b_1 ... b_m
+        c_1
+        ...
+        c_n)
+      ```
+      or
+      ```
+      (a_1
+       ...
+       a_n)
+      ```
+  3. Square Brackets
+      ```
+      [a_1 b_1_1 ... b_1_m
+        c_1_1
+        ...
+        c_1_n
+       ...
+       a_l b_l_1 ... b_l_m
+        c_l_1
+        ...
+        c_l_n]
+      ```
+  4. Curly Braces
+      ```
+      {a_1 op a_2 ... op a_n}
+      ```
+
+Indentation applies to expressions both outside and inside parens and brackets.
+
+Within an indented expression:
+```
+a b_1 ... b_m
+  c_1
+  ...
+  c_n
+```
+The indentation of each `c` expression must be:
+ * greater than the indentation of the `a` expression, and
+ * less than or equal to the indentation of the first `b` expression and the previous `c` expression (if it exists)
+
+If a potential `c` has indentation less than that, it will not be considered part of `a`'s expression, but part of a later expression. If a potential `c` has indentation greater than that, it will be associated with the `b` or `c` closest up and to the left of it.
+
+For example, here the `d` is not associated with `a` because it does not have greater indentation than `a`:
+```
+a b_1   | (a b_1)
+d       | d
+```
+
+Here the `d` is associated with `b_1` because it has greater indentation than `b_1`:
+```
+a b_1   | (a (b_1
+   d    |      d))
+```
+
+And here the `d` is associated with `c_1` because it has greater indentation than `c_1`:
+```
+a b_1   | (a b_1
+  c_1   |    (c_1
+   d    |      d))
+```
+
+The indentation does not group anything together if `a` is a `#:` keyword or a `.` dot.
+
 # Drawbacks
 [drawbacks]: #drawbacks
 
 <!-- Why should we *not* do this? -->
+
+Wraith does not include algebra-style function calls `f(x,y)`, and does not include any precedence in infix notation, so `{x + y * z}` is not allowed.
+
+Wraith also does not allow you to write extra parentheses anywhere around any expression without changing meaning, so `(x)` is different from `x`.
+
+Wraith requires parentheses for zero-argument function calls, but not for one-or-more-argument calls, so `add1 5` can be called without parens while `(newline)` still needs parens to make it a call. This may look inconsistent.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
