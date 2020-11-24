@@ -55,14 +55,41 @@ define drawer                             |  (define drawer
   make-pict-drawer p                      |    (make-pict-drawer p))
 ```
 
-Parentheses can also be used to nest another expression on the same line
+To properly correspond to intuition, a line with only one argument is
+assumed to not be an application, whereas a line with multiple
+arguments is:
 
 ``` racket
-define drawer (make-pict-drawer p)        |  (define drawer (make-pict-drawer p))
+define (greet name)                       |  (define (greet name)
+  displayln "hello "                      |    (displayln "hello "
+            name                          |               name
+             "!"                          |               "!"))
 ```
 
-But how to handle arguments that aren't composing a new expression?
-For this, use a `\` backslash at the end of the line:
+``` racket
+define (greet name)                       |  (define (greet name)
+  displayln "hello "                      |    (displayln "hello "
+            string-upcase name            |               (string-upcase name)
+             "!"                          |               "!"))
+```
+
+But how to handle arguments that aren't composing a new expression, but
+are on the same line?
+An `&` ampersand can separate expressions that would otherwise be grouped by line or indentation:
+
+``` racket
+define (greet name)                       |  (define (greet name)
+  displayln "hello "                      |    (displayln "hello "
+            name & "!"                    |               name "!"))
+```
+
+``` racket
+standard-cat                              |  (standard-cat
+  100 & 90                                |   100 90
+  #:happy? #t                             |   #:happy? #t)
+```
+
+Additionally, backslash can be used to "continue" a line:
 
 ``` racket
 define (greet name)                       |  (define (greet name)
@@ -91,21 +118,12 @@ standard-cat \                            |  (standard-cat
   #:happy? #t                             |   #:happy? #t)
 ```
 
-An `&` ampersand can separate expressions that would otherwise be grouped by line or indentation:
-``` racket
-define (greet name)                       |  (define (greet name)
-  displayln "hello "                      |    (displayln "hello "
-            name & "!"                    |               name "!"))
-```
-``` racket
-standard-cat                              |  (standard-cat
-  100 & 90                                |   100 90
-  #:happy? #t                             |   #:happy? #t)
-```
-
-
 Parentheses can be used to build a new nested expression.  For
 instance:
+
+``` racket
+define drawer (make-pict-drawer p)        |  (define drawer (make-pict-drawer p))
+```
 
 ``` racket
 define (display-excitement str)           |  (define (display-excitement str)
