@@ -60,56 +60,57 @@ assumed to not be an application, whereas a line with multiple
 arguments is:
 
 ``` racket
-define (greet name)                       |  (define (greet name)
-  displayln "hello "                      |    (displayln "hello "
-            name                          |               name
-             "!"                          |               "!"))
+displayln                               |  (displayln
+  string-append "hello "                |    (string-append "hello "
+                name                    |                   name
+                "!"                     |                   "!"))
 ```
 
 ``` racket
-define (greet name)                       |  (define (greet name)
-  displayln "hello "                      |    (displayln "hello "
-            string-upcase name            |               (string-upcase name)
-             "!"                          |               "!"))
+displayln                               |  (displayln
+  string-append "hello "                |    (string-append "hello "
+                string-upcase name      |                   (string-upcase name)
+                "!"                     |                   "!"))
 ```
 
 But how to handle arguments that aren't composing a new expression, but
 are on the same line?
-An `&` ampersand can separate expressions that would otherwise be grouped by line or indentation:
+A `\` backslash can be used to continue a line:
 
 ``` racket
-define (greet name)                       |  (define (greet name)
-  displayln "hello "                      |    (displayln "hello "
-            name & "!"                    |               name "!"))
-```
-
-``` racket
-standard-cat                              |  (standard-cat
-  100 & 90                                |   100 90
-  #:happy? #t                             |   #:happy? #t)
-```
-
-Additionally, backslash can be used to "continue" a line:
-
-``` racket
-define (greet name)                       |  (define (greet name)
-  displayln "hello " \                    |    (displayln "hello "
-            name "!"                      |               name "!"))
+list 1 2 3 \                              |  (list 1 2 3
+     4 5 6                                |        4 5 6)
 ```
 
 Make sure the `\` backslash is at the very end, with no other characters
 between it and the newline.
 
-However, keywords are implicitly considered to be continuing arguments
-in the previous expression:
+However, this isn't good enough for all cirucumstances; a more precise
+operator is to use an `&` ampersand which can separate expressions
+that would otherwise be grouped by line or indentation.
+Its purpose is made clearer by example:
+
+``` racket
+overlay/offset                            |  (overlay/offset                   
+  rectangle 100 10 "solid" "blue"         |   (rectangle 100 10 "solid" "blue")
+  10 & 10                                 |   10 10                        
+  rectangle 10 100 "solid" "red"          |   (rectangle 10 100 "solid" "red"))
+```
+
+As we can see above, no use of backslash would have as correctly
+allowed us to put `10` and `10` on the same line.
+`&` to the rescue!
+
+Keywords are implicitly considered to be continuing arguments in the
+previous expression:
 
 ``` racket
 standard-cat 100 90                       |  (standard-cat 100 90
              #:happy? #t                  |                #:happy? #t)
 ```
 
-The indentation level does not matter super strongly; as long as
-"greater" than the previous, it is "nested into the parent
+In general, indentation level does not matter super strongly; as long
+as "greater" than the previous, it is "nested into the parent
 expression":
 
 ``` racket
