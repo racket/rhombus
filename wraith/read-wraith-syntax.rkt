@@ -466,6 +466,7 @@
                [loc1 (and (cons? ts) (get-srcloc (first ts)))]
                [loc2 (and (cons? ts) (get-srcloc (last ts)))])
   (match ts
+    [(cons (token ".." 'symbol _) rst) rst]
     [(list _) #:when (not parens?) ts]
     [(cons (token _ 'sexp-comment _) _) #:when (not parens?) '()]
     [(cons (? non-grouping-token?) _) #:when (not parens?) ts]
@@ -619,6 +620,10 @@ define drawer (make-pict-drawer p)
   (check-equal? (wraith-string->sexprs #<<```
 define (greet name)
   displayln
+    string-append "hello "
+                  .. name "!"
+define (greet name)
+  displayln
     string-append "hello " \
                   name "!"
 ```
@@ -626,10 +631,17 @@ define (greet name)
                 '[(define (greet name)
                     (displayln
                      (string-append "hello "
+                                    name "!")))
+                  (define (greet name)
+                    (displayln
+                     (string-append "hello "
                                     name "!")))])
   (check-equal? (wraith-string->sexprs #<<```
 standard-cat 100 90
              #:happy? #t
+standard-cat
+  .. 100 90
+  #:happy? #t
 standard-cat \
   100 90
   #:happy? #t
@@ -637,6 +649,9 @@ standard-cat \
                                        )
                 '[(standard-cat 100 90
                                 #:happy? #t)
+                  (standard-cat
+                    100 90
+                    #:happy? #t)
                   (standard-cat
                     100 90
                     #:happy? #t)])
@@ -762,10 +777,25 @@ for [pet '("cat" "dog" "horse")]
 define (counting-letters-song letters)
   for [letter letters
        number (in-naturals 1)]
+    printf "I like ~a, it's number ~a!"
+      .. letter number
+    (newline)
+  displayln "Singing a letters song!"
+
+define (counting-letters-song letters)
+  for [letter letters
+       number (in-naturals 1)]
     printf "I like ~a, it's number ~a!" \
       letter number
     (newline)
   displayln "Singing a letters song!"
+
+let* [animal "dog"
+      noise "barks"
+      player-hears
+        format "the ~a says: ~a!!!"
+               .. animal noise]
+  displayln player-hears
 
 let* [animal "dog"
       noise "barks"
@@ -784,6 +814,19 @@ let* [animal "dog"
                               letter number)
                       (newline))
                     (displayln "Singing a letters song!"))
+                  (define (counting-letters-song letters)
+                    (for [(letter letters)
+                          (number (in-naturals 1))]
+                      (printf "I like ~a, it's number ~a!"
+                              letter number)
+                      (newline))
+                    (displayln "Singing a letters song!"))
+                  (let* [(animal "dog")
+                         (noise "barks")
+                         (player-hears
+                          (format "the ~a says: ~a!!!"
+                                  animal noise))]
+                    (displayln player-hears))
                   (let* [(animal "dog")
                          (noise "barks")
                          (player-hears
@@ -793,8 +836,15 @@ let* [animal "dog"
                   ])
   (check-equal? (wraith-string->sexprs #<<```
 a b c
+  d e
+   .. f g
+a b c
   d e \
  f g
+a b c
+  d e
+    f
+     .. g h
 a b c
   d e
     f \
@@ -803,6 +853,11 @@ g h
                                        )
                 '[(a b c
                      (d e f g))
+                  (a b c
+                     (d e f g))
+                  (a b c
+                     (d e
+                        (f g h)))
                   (a b c
                      (d e
                         (f g h)))])
@@ -877,16 +932,31 @@ sqrt {(sqr a) + (sqr b)}
                      (* 2 a))])
 
   (check-equal? (wraith-string->sexprs #<<```
+overlay/offset (rectangle 100 10 "solid" "blue")
+               .. 10 10
+               rectangle 10 100 "solid" "red"
 overlay/offset (rectangle 100 10 "solid" "blue") \
                10 10
                rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
+  .. 10 10
+  rectangle 10 100 "solid" "red"
 overlay/offset
   rectangle 100 10 "solid" "blue"
   10 & 10
   rectangle 10 100 "solid" "red"
 overlay/offset
   rectangle 100 10 "solid" "blue"
+  .. 10 (fib 7)
+  rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
   10 & fib 7
+  rectangle 10 100 "solid" "red"
+overlay/offset
+  rectangle 100 10 "solid" "blue"
+  .. (factorial 4) (fib 7)
   rectangle 10 100 "solid" "red"
 overlay/offset
   rectangle 100 10 "solid" "blue"
@@ -897,6 +967,13 @@ overlay/offset
                 '[(overlay/offset (rectangle 100 10 "solid" "blue")
                                   10 10
                                   (rectangle 10 100 "solid" "red"))
+                  (overlay/offset (rectangle 100 10 "solid" "blue")
+                                  10 10
+                                  (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
+                    10 10
+                    (rectangle 10 100 "solid" "red"))
                   (overlay/offset
                     (rectangle 100 10 "solid" "blue")
                     10 10
@@ -907,21 +984,38 @@ overlay/offset
                     (rectangle 10 100 "solid" "red"))
                   (overlay/offset
                     (rectangle 100 10 "solid" "blue")
+                    10 (fib 7)
+                    (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
+                    (factorial 4) (fib 7)
+                    (rectangle 10 100 "solid" "red"))
+                  (overlay/offset
+                    (rectangle 100 10 "solid" "blue")
                     (factorial 4) (fib 7)
                     (rectangle 10 100 "solid" "red"))])
   (check-equal? (wraith-string->sexprs #<<```
 a b c & d
 a b
+  .. c d
+a b
   c & d
 a b c
+.. d
+a b c
   & d
+a b
+.. c d
 a b &
   c & d &
 ```
                                        )
                 '[(a b c) d
                   (a b c d)
+                  (a b c d)
                   (a b c) d
+                  (a b c) d
+                  (a b) c d
                   (a b) c d])
 
   (check-equal? (wraith-string->sexprs #<<```

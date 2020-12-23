@@ -191,6 +191,10 @@ define curried₂ lambda (x)
 
 ;; This could be improved by having a hash-table macro
 ;; using (hash-table (key val) ...) like the match pattern
+define dictionary₀ hash
+                     .. 'foo 17
+                     .. 'bar "string"
+                     .. 'baz #true
 define dictionary₁ hash
                      'foo & 17
                      'bar & "string"

@@ -138,9 +138,15 @@ module+ test
       define (launch x)
         define w 9 & define h 33
         ...
+      (define (launch x)
+        .. (define w 9) (define h 33)
+        ...)
       (define (launch x) \
         (define w 9) (define h 33)
         ...)
+      define (launch x)
+        .. (define w 9) (define h 33)
+        ...
       define (launch x) \
         (define w 9) (define h 33)
         ...]
@@ -160,8 +166,12 @@ module+ test
                    10 & 10 & background)
       place-image img
                   10 & 10 & background
+      (place-image img
+                   .. 10 10 background)
       (place-image img \
                    10 10 background)
+      place-image img
+                  .. 10 10 background
       place-image img \
                   10 10 background]
   check-sexprs-same
@@ -184,8 +194,12 @@ module+ test
             - width hdelta & - height vdelta & bg
       above img
             {width - hdelta} & {height - vdelta} & bg
+      (above img
+             .. (- width hdelta) (- height vdelta) bg)
       (above img \
              (- width hdelta) (- height vdelta) bg)
+      above img
+            .. {width - hdelta} {height - vdelta} bg
       above img \
             {width - hdelta} {height - vdelta} bg
       ]
@@ -202,8 +216,12 @@ module+ test
              10 & v-delta & bg)
       above ufo
             10 & v-delta & bg
+      (above ufo
+             .. 10 v-delta bg)
       (above ufo \
              10 v-delta bg)
+      above ufo
+            .. 10 v-delta bg
       above ufo \
             10 v-delta bg]
   check-sexprs-same
@@ -218,10 +236,19 @@ module+ test
         rectangle 10 100 "solid" "red"
       ; this is the exception to the guideline about each argument
       ; after the first line belonging on its own line:
-      ; both conceptually related and short, separated by `&` ampersand
+      ; both conceptually related and short,
+      ; with `..` starting the line,
+      (overlay/offset (rectangle 100 10 "solid" "blue")
+                      .. 10 10
+                      (rectangle 10 100 "solid" "red"))
+      ; or, separated by `&` ampersand
       (overlay/offset (rectangle 100 10 "solid" "blue")
                       10 & 10
                       (rectangle 10 100 "solid" "red"))
+      overlay/offset
+        rectangle 100 10 "solid" "blue"
+        .. 10 10
+        rectangle 10 100 "solid" "red"
       overlay/offset
         rectangle 100 10 "solid" "blue"
         10 & 10
