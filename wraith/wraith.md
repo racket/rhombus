@@ -75,31 +75,29 @@ displayln                               |  (displayln
 
 But how to handle arguments that aren't composing a new expression, but
 are on the same line?
-A `\` backslash can be used to continue a line:
+For this, use `..` double-dot at the start of the line:
 
 ``` racket
-list 1 2 3 \                              |  (list 1 2 3
-     4 5 6                                |        4 5 6)
+list 1 2 3                                |  (list 1 2 3
+  .. 4 5 6                                |        4 5 6)
 ```
 
-Make sure the `\` backslash is at the very end, with no other characters
-between it and the newline.
-
-However, this isn't good enough for all cirucumstances; a more precise
-operator is to use an `&` ampersand which can separate expressions
-that would otherwise be grouped by line or indentation.
-Its purpose is made clearer by example:
-
 ``` racket
-overlay/offset                            |  (overlay/offset                   
+overlay/offset                            |  (overlay/offset
   rectangle 100 10 "solid" "blue"         |   (rectangle 100 10 "solid" "blue")
-  10 & 10                                 |   10 10                        
+  .. 10 10                                |   10 10
   rectangle 10 100 "solid" "red"          |   (rectangle 10 100 "solid" "red"))
 ```
 
-As we can see above, no use of backslash would have as correctly
-allowed us to put `10` and `10` on the same line.
-`&` to the rescue!
+You can also use an `&` ampersand to separate expressions
+that would otherwise be grouped by line or indentation:
+
+``` racket
+overlay/offset                            |  (overlay/offset
+  rectangle 100 10 "solid" "blue"         |   (rectangle 100 10 "solid" "blue")
+  10 & 10                                 |   10 10
+  rectangle 10 100 "solid" "red"          |   (rectangle 10 100 "solid" "red"))
+```
 
 Keywords are implicitly considered to be continuing arguments in the
 previous expression:
@@ -114,8 +112,8 @@ as "greater" than the previous, it is "nested into the parent
 expression":
 
 ``` racket
-standard-cat \                            |  (standard-cat
-  100 90                                  |   100 90
+standard-cat                              |  (standard-cat
+  .. 100 90                               |   100 90
   #:happy? #t                             |   #:happy? #t)
 ```
 
@@ -171,8 +169,8 @@ for [pet '("cat" "dog" "horse")]          |  (for [(pet '("cat" "dog" "horse"))]
 define (counting-letters-song letters)    |  (define (counting-letters-song letters)
   for [letter letters                     |    (for [(letter letters)
        number (in-naturals 1)]            |          (number (in-naturals 1))]
-    printf "I like ~a, it's number ~a!" \ |      (printf "I like ~a, it's number ~a!"
-      letter number                       |         letter number)
+    printf "I like ~a, it's number ~a!"   |      (printf "I like ~a, it's number ~a!"
+      .. letter number                    |         letter number)
     (newline)                             |      (newline))
   displayln "Singing a letters song!"     |    (displayln "Singing a letters song!"))
 ```
@@ -181,8 +179,8 @@ define (counting-letters-song letters)    |  (define (counting-letters-song lett
 let* [animal "dog"                        |  (let* [(animal "dog")
       noise "barks"                       |         (noise "barks")
       player-hears                        |         (player-hears
-        format "the ~a says: ~a!!!" \     |          (format "the ~a says: ~a!!!"
-               animal noise]              |                  animal noise))]
+        format "the ~a says: ~a!!!"       |          (format "the ~a says: ~a!!!"
+            .. animal noise]              |                  animal noise))]
   displayln player-hears                  |    (displayln player-hears))
 ```
 
