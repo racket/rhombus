@@ -3,6 +3,12 @@ project, which is about the design of a new language that is based on
 Racket. “Rhombus” is the project name and a placeholder name for
 a language name to be chosen later.
 
+**Anyone can participate in Rhobus design discussions.** The Racket team's
+unofficial motto is _anything we can do, you can do:_ programmers should feel
+empowered to participate in the creation of the languages they use. Discussions
+in pull requests and issues are open to all, and a wide variety of perspectives
+is especially beneficial.
+
 # Resources
 
 * A summary of [possible goals](resources/goals.md)
