@@ -4,6 +4,9 @@
          racket/class
          racket/list)
 
+;; TODO:
+;;  - use more constraints imposed by commas
+
 ;; Conventions:
 ;;   pos = arbitary position
 ;;   s, e = range positions
@@ -72,114 +75,121 @@
 
 ;; Gets list of candiates with further-right candidates first
 (define (indentation-candidates t pos #:as-bar? [as-bar? #f])
-  ;; invariant: candidate is within limit
   (let loop ([pos pos] [candidate #f] [limit #f])
     (cond
       [(eqv? limit -1) null]
       [else
-       (define (maybe-list col) (if (or (not limit) (col . <= . limit)) (list col) null))
+       (define (maybe-list col)
+         (cond
+           [(not col) null]
+           [(or (not limit) (col . <= . limit))
+            (list col)]
+           [else null]))
        (define (loop* pos new-candidate)
-         (loop pos
-               (if (or (not limit)
-                       (new-candidate . < . limit))
-                   new-candidate
-                   candidate)
-               (min new-candidate (or limit new-candidate))))
+         (loop pos new-candidate (min new-candidate (or limit new-candidate))))
        (define-values (s e) (send t get-token-range pos))
        (define category (send t classify-position s))
        (case category
          [(white-space comment continue-operator)
           (if (zero? s)
-              (list (or candidate 0))
+              (maybe-list candidate)
               (loop (sub1 s) candidate limit))]
-         [(parenthesis)
-          (cond
-            [(opener? (send t get-text (sub1 e) e))
-             ;; We're inside parentheses, brackets, etc.
-             (cond
-               [candidate (list candidate)]
-               [(zero? s) (maybe-list 2)]
-               [else
-                (define start (line-start t pos))
-                (define delta (line-delta t start))
-                ;; first position within parens/braces/brackets; if
-                ;; indentation the bracket's group is before the bracket,
-                ;; then "outdent" that far
-                (define col (col-of s start delta))
-                (define block-col (get-block-column t (sub1 s) col start))
-                (if (and block-col (block-col . < . col))
-                    (maybe-list (+ block-col 2))
-                    (maybe-list (+ col 2)))])]
-            [else
-             ;; Found parenthesized while walking backward
-             (define r (send t backward-match e 0))
-             (cond
-               [(not r) (cond
-                          [(zero? s) (list (or candidate 0))]
-                          [else
-                           (define start (line-start t pos))
-                           (define delta (line-delta t start))
-                           (loop* (sub1 s) (col-of s start delta))])]
-               [(zero? r) (list 0)]
-               [else
-                (define start (line-start t r))
-                (define delta (line-delta t start))
-                (loop* (sub1 r) (col-of r start delta))])])]
          [(block-operator)
           (define start (line-start t pos))
           (define delta (line-delta t start))
           (define block-col (if (zero? s)
                                 0
                                 (get-block-column t (sub1 s) (col-of s start delta) start)))
-          (define outer-canddiates (if (zero? s)
+          (define outer-candidates (if (zero? s)
                                        null
                                        (remove-larger (loop (sub1 s) #f limit)
                                                       block-col)))
           (append (cond
-                    [candidate (if (and (pair? outer-canddiates)
-                                        (eqv? candidate (car outer-canddiates)))
+                    [candidate (if (and (pair? outer-candidates)
+                                        (eqv? candidate (car outer-candidates)))
                                    null
-                                   (list candidate))]
-                    [(pair? outer-canddiates) (maybe-list (+ block-col (if as-bar? 1 2)))]
-                    [else null])
-                  outer-canddiates)]
-         [(bar-operator)
-          (define start (line-start t pos))
-          (define-values (s-outer-candidates skip-bar? bar-limit)
-            (if as-bar?
-                (find-bar-outer-start t s start limit)
-                (values (sub1 s) #f limit)))
-          (define outer-candidates
-            (cond
-              [(zero? s) null]
-              [(and as-bar? (not skip-bar?)) null]
-              [else
-               (define delta (line-delta t start))
-               (remove-larger (loop s-outer-candidates #f bar-limit)
-                              (col-of e start delta))]))
-          (append (cond
-                    [candidate (list candidate)]
-                    [else null])
-                  (cond
-                    [(or (not candidate)
-                         (and as-bar? (not skip-bar?)))
-                     (define delta (line-delta t start))
-                     (maybe-list (col-of (if as-bar? s (+ e 1))
-                                         start
-                                         delta))]
+                                   (maybe-list candidate))]
+                    [(or (pair? outer-candidates) as-bar?) (maybe-list (+ block-col (if as-bar? 1 2)))]
                     [else null])
                   outer-candidates)]
-         [(separator)
-          (if (zero? s)
-              (list (or candidate 0))
-              (loop (sub1 s) candidate limit))]
          [else
           (cond
-            [(zero? s) (list 0)]
+            [(and candidate
+                  (eqv? candidate (if as-bar? 1 0))
+                  (or (not limit) (limit . >= . (if as-bar? 1 0))))
+             ;; already found minimal column, so stop here
+             (list candidate)]
             [else
-             (define start (line-start t s))
-             (define delta (line-delta t start))
-             (loop* (sub1 s) (col-of (if as-bar? (add1 s) s) start delta))])])])))
+             (case category
+               [(parenthesis)
+                (cond
+                  [(opener? (send t get-text (sub1 e) e))
+                   ;; We're inside parentheses, brackets, etc.
+                   (cond
+                     [candidate (maybe-list candidate)]
+                     [(zero? s) (maybe-list 2)]
+                     [else
+                      (define start (line-start t pos))
+                      (define delta (line-delta t start))
+                      ;; first position within parens/braces/brackets; if
+                      ;; indentation the bracket's group is before the bracket,
+                      ;; then "outdent" that far
+                      (define col (col-of s start delta))
+                      (define block-col (get-block-column t (sub1 s) col start))
+                      (if (and block-col (block-col . < . col))
+                          (maybe-list (+ block-col 2))
+                          (maybe-list (+ col 2)))])]
+                  [else
+                   ;; Found parenthesized while walking backward
+                   (define r (send t backward-match e 0))
+                   (cond
+                     [(not r) (cond
+                                [(zero? s) (maybe-list candidate)]
+                                [else
+                                 (define start (line-start t pos))
+                                 (define delta (line-delta t start))
+                                 (loop* (sub1 s) (col-of s start delta))])]
+                     [(zero? r) null]
+                     [else
+                      (define start (line-start t r))
+                      (define delta (line-delta t start))
+                      (loop* (sub1 r) (col-of r start delta))])])]
+               [(bar-operator)
+                (define start (line-start t pos))
+                (define-values (s-outer-candidates skip-bar? bar-candidate bar-limit)
+                  (if as-bar?
+                      (find-bar-outer-start t s start limit)
+                      (values (sub1 s) #f #f limit)))
+                (define outer-candidates
+                  (cond
+                    [(zero? s) null]
+                    [else
+                     (define delta (line-delta t start))
+                     (remove-larger (loop s-outer-candidates bar-candidate bar-limit)
+                                    (col-of e start delta))]))
+                (append (cond
+                          [(and candidate (not as-bar?)) (maybe-list candidate)]
+                          [else null])
+                        (cond
+                          [(or (not candidate)
+                               (and as-bar? (not skip-bar?)))
+                           (define delta (line-delta t start))
+                           (maybe-list (col-of (if as-bar? s (+ e 1))
+                                               start
+                                               delta))]
+                          [else null])
+                        outer-candidates)]
+               [(separator)
+                (if (zero? s)
+                    (maybe-list candidate)
+                    (loop (sub1 s) candidate limit))]
+               [else
+                (cond
+                  [(zero? s) (maybe-list (if as-bar? 1 0))]
+                  [else
+                   (define start (line-start t s))
+                   (define delta (line-delta t start))
+                   (loop* (sub1 s) (col-of (if as-bar? (add1 s) s) start delta))])])])])])))
 
 ;; find the current indentation of the block that starts at or before `pos`,
 ;; a long as the block continues (not nested) on the line at `at-start`
@@ -223,51 +233,65 @@
              (define delta (line-delta t start))
              (loop (sub1 s) (col-of s start delta) start)])])])))
 
-;; Returns a position before `pos` to continue search, whether to skip
-;; the bar that starts at `pos`, and an upper bound on useful search
-;; results where the next bar starts. If going backward from the same
-;; line hits another bar operator, then the skipping result is true,
-;; and the first result is just `pos`-1. Otherwise, skip to the start
-;; of the line, because intermediate positions will not be allowed for
-;; the bar.
+;; Return values:
+;;   - a position before `pos` to continue search,
+;;   - whether to skip the bar that starts at `pos`
+;;   - a candidate for that search
+;;   - an upper bound on useful search results where the next bar starts
+;; Note that the last value may be less than the third value; that happens
+;; when the third value corresponds to a token where lining up would be
+;; disallowed.
+;; If going backward from the same line hits another bar operator,
+;; then the skipping result is true, and the first result is just
+;; `pos`-1. Otherwise, skip to the start of the line, because
+;; intermediate positions will not be allowed for the bar based on
+;; this same line.
 (define (find-bar-outer-start t orig-pos at-start orig-limit)
-  (let loop ([pos (sub1 orig-pos)] [at-start at-start])
+  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [line-candidate #f] [line-limit orig-limit])
     (define pos-start (line-start t pos))
     (cond
       [(pos-start . < . at-start)
-       (values pos #f -1)]
+       (values pos #f line-candidate line-limit)]
       [else
        (define-values (s e) (send t get-token-range pos))
        (define category (send t classify-position s))
        (case category
          [(white-space comment continue-operator)
           (if (zero? s)
-              (values 0 #f -1)
-              (loop (sub1 s) at-start))]
+              (values 0 #f #f -1)
+              (loop (sub1 s) at-start line-candidate line-limit))]
          [(parenthesis)
           (cond
             [(opener? (send t get-text (sub1 e) e))
-             (values s #f -1)]
+             (values s #f #f -1)]
             [else
              ;; Found parenthesized while walking backward
              (define r (send t backward-match e 0))
              (cond
-               [(not r) (loop (sub1 s) at-start)]
-               [(zero? r) (values 0 #f -1)]
+               [(not r)
+                (define start (line-start t r))
+                (define delta (line-delta t start))
+                (define col (col-of s start delta))
+                (loop (sub1 s) at-start col (sub1 col))]
+               [(zero? r) (values 0 #f #f -1)]
                [else
                 (define start (line-start t r))
-                (loop (sub1 r) start)])])]
+                (define delta (line-delta t start))
+                (define col (col-of r start delta))
+                (loop (sub1 r) start col (sub1 col))])])]
          [(bar-operator)
           (define start (line-start t pos))
           (define delta (line-delta t start))
           (define limit (col-of s start delta))
-          (values (sub1 orig-pos) #t (min limit (or orig-limit limit)))]
+          (values (sub1 orig-pos) #t #f (min limit (or orig-limit limit)))]
          [else
           (cond
             [(zero? s) (values 0 #f -1)]
             [else
              (define start (line-start t pos))
-             (loop (sub1 s) start)])])])))
+             (define delta (line-delta t start))
+             (define col (col-of s start delta))
+             (loop (sub1 s) start col (sub1 col))])])])))
 
 (define (opener? s)
   (member s '("(" "{" "[")))
