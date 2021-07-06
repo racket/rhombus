@@ -13,6 +13,7 @@
          token-e
          token-line
          token-column
+         token-srcloc
 
          column-next
          column-half-next)
@@ -103,7 +104,8 @@
    [(:: "/*" (complement (:: any-string "*/" any-string)) "*/") (token comment lexeme)]
    [(:+ whitespace) (token whitespace lexeme)]))
 
-(define (lex-all in)
+;; lexer never fails, so `fail` is ignored
+(define (lex-all in fail)
   (port-count-lines! in)
   (let ([lex (lex (object-name in))])
     (let loop ()
@@ -123,6 +125,14 @@
     (if (eq? (token-name t) 'bar-operator)
         (+ c 0.5)
         c)))
+
+(define (token-srcloc t)
+  (define s (token-value t))
+  (srcloc (syntax-source s)
+          (syntax-line s)
+          (syntax-column s)
+          (syntax-position s)
+          (syntax-span s)))
 
 (define (column-next c)
   (if (integer? c)

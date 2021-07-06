@@ -36,11 +36,11 @@ define mt_env: empty
 
 define extend_env: cons
 
-modulet test
+modulet test:
   print_only_errors(#true)
 
 // interp ----------------------------------------
-define interp(a: Exp, env: Env) -> Value
+define interp(a: Exp, env: Env) -> Value:
   typecase Exp a
    | numE(n): numV(n)
    | idE(s): lookup(s, env)
@@ -56,64 +56,64 @@ define interp(a: Exp, env: Env) -> Value
                                  extend_env(bind(n, interp(arg, env)),
                                             c_env))
                       | error('interp, "not a function")
-modulet test
-  test
+modulet test:
+  test:
     interp(parse(`2), mt_env)
     numV(2)
 
   test { interp(parse(`2), mt_env) ; numV(2) }
   test { interp(parse(`3), mt_env) ; numV(3) }
 
-  test_exn
+  test_exn:
     interp(parse(`x), mt_env)
     "free variable"
 
-  test
+  test:
     interp(parse(`x),
            extend_env(bind('x, numV(9)), mt_env))
     numV(9)
 
-  test
+  test:
     interp(parse(`{+ 2 1}), mt_env)
     numV(3)
-  test
+  test:
     interp(parse(`{* 2 1}), mt_env)
     numV(2)
 
-  test
+  test:
     interp(parse(`{+ {* 2 3} {+ 5 8}}), mt_env)
     numV(1)
 
-  test
+  test:
     interp(parse(`{lambda {x} {+ x x}}),
            mt_env)
     closV('x, plusE(idE('x), idE('x)), mt_env)
 
-  test
+  test:
     interp(parse(`{let {[x 5]}
                    {+ x x}}),
            mt_env)
     numV(1)
 
 // num+ and num* ----------------------------------------
-define num_op(op: Number Number -> Number, l: Value, r: Value) -> Value
+define num_op(op: Number Number -> Number, l: Value, r: Value) -> Value:
   cond
-   | is_numV(l) && is_numV(r)
+   | is_numV(l) && is_numV(r):
        numV(op(numV_n(l), numV_n(r)))
-   | else
+   | else:
        error('interp, "not a number")
 
-define num_plus(l: Value, r: Value) -> Value
+define num_plus(l: Value, r: Value) -> Value:
   num_op(op +, l, r)
 
-define num_mult(l: Value, r: Value) -> Value
+define num_mult(l: Value, r: Value) -> Value:
   num_op(op *, l, r)
 
-modulet test
-  test
+modulet test:
+  test:
     num_plus(numV(1), numV(2))
     numV(3)
 
-  test
+  test:
     num_mult(numV(2), numV(3))
     numV(6)

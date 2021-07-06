@@ -103,8 +103,9 @@ and indentation:
 Parentheses, square brackets, and curly braces are used to form groups
 in the obvious way. A `;` or `,` acts as a group separator, even
 within a single line. A `:` or `|` treats remaining item on the same
-line like a new indented line, which forms a subgroup. A `\` continues a
-group across a line break.
+line like a new indented line, which forms a subgroup. A `\` continues
+a line, effectively shifting all columns on the next line as if they
+appeared immediately after the `\`.
 
 ## Grouping by lines
 
@@ -386,19 +387,46 @@ sequence that contains a mixture of `|`-started groups and other kinds
 of groups. Nevertheless, standard indentation includes a one additional
 space of indentation before `|`.
 
-## Continuing a group with `\`
+## Continuing a line with `\`
 
-As a last resort, `\` can be used at the end of a line to continue the
-group on the next line as it if were one line; the `\` does not appear
-in the parsed form. A `\` anywhere else in a line is ignored, except
-that a `\` as the first non-whitespace entry on a non-continuing line
-determines the line's indentation.
+As a last resort, `\` can be used at the end of a line (optionally
+followed by whitespace and coments on the line) to continue the next
+line as it if were one line continuing with the next line. The itself
+`\` does not appear in the parsed form. A that is not at the end of a
+line (followed by whitespace and coments) is treated the same as
+whitespace.
+
+Lines contianing only whitespace and comments do not count as “the
+next line” even for `\` continuations, so any number of whitespace of
+comment lines in the next can appear between `\` and the line that it
+continues.
+
 
 ```
 this is \
   the first group
 this \ is \ the \ second \ group
-\ this is the third group
+
+this is a group \
+ with (a,
+                       nested,
+                       list)
+
+this is a group \
+ with (a,
+                \
+       nested,
+                \
+       list)
+
+this is a group \
+ with (a,
+                \
+       /* this a comment on `nested`: */
+       nested,
+                \
+       list)
+
 ```
 
 ## More examples
@@ -641,6 +669,22 @@ Shrubbery notation would be consistent and without ambiguity if we
 drop the requrement to precede indentation with `:` or `|`. Requiring
 a preceding `:` or `|` is a kind of consistency check to enable better
 and earlier errors when indentation goes wrong.
+
+Making whitespace and comment lines ignored in all contexts means that
+they can be freely added without intefering with grouping. The `\`
+continuation operator is somewhat unusual in that it skips blank and
+comment lines to continue, as opposed to requiring `\` on every
+continuing line; that, too, allows extra blank and comment lines to be
+added, even amid continuing lines.
+
+The interaction of indentation and `\` differs slightly from Python,
+which does not count the space for `\` itself or any leading
+whitespace on a continuing line todward indentation. Counting the
+leading whitespace on a continuing line has the advantage that it can
+reach an arbitrary amount of identation within a constrained textual
+width. Counting the `\` itself is consistent with ignoring `\` when it
+appears within a line, so grouping stays the same whether there's a
+newline or the continue line immediately after `\`.
 
 A full shrubbery-notation design should incorporate `at-exp` notation,
 too (where `@` escapes return to shrubbery notation instead of

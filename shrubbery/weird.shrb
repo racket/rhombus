@@ -16,6 +16,47 @@ this is | one: a \
               nested \
               here
 
+this is \
+  the first group
+this \ is \ the \ second \ group
+
+this is a group \  with (a,
+                         nested,
+                         list)
+
+this is a group \
+  with (a,
+                         nested,
+                         list)
+
+this is a group \
+ with (a,
+                \
+       nested,
+                \
+       list)
+
+this is a group \
+ with (a,
+                \
+       /* this a comment on `nested`: */
+       nested,
+                \
+       list)
+
+hello | a | c\
+ :
+               d
+
+this: \
+      is more
+             foo
+
+foo
+ | more \
+ | again:
+              sub
+
 something +
 more stuff
 
