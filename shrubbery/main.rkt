@@ -23,4 +23,7 @@
         [(color-lexer)
          (dynamic-require 'shrubbery/syntax-color
                           'shrubbery-lexer)]
+        [(drracket:indentation)
+         (dynamic-require 'shrubbery/syntax-color
+                          'shrubbery-indent)]
         [else default]))))

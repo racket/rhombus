@@ -308,19 +308,19 @@
    ["#{"
     (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0))]
    [":"
-    (ret 'block-operator lexeme 'no-color #f start-pos end-pos 'initial)]
+    (ret 'block-operator lexeme 'block-operator #f start-pos end-pos 'initial)]
    ["|"
-    (ret 'bar-operator lexeme 'no-color #f start-pos end-pos 'initial)]
+    (ret 'bar-operator lexeme 'bar-operator #f start-pos end-pos 'initial)]
    ["\\"
-    (ret 'continue-operator lexeme 'no-color #f start-pos end-pos 'initial)]
+    (ret 'continue-operator lexeme 'continue-operator #f start-pos end-pos 'initial)]
    [","
-    (ret 'comma-operator lexeme 'no-color #f start-pos end-pos 'initial)]
+    (ret 'comma-operator lexeme 'separator #f start-pos end-pos 'initial)]
    [";"
-    (ret 'semicolon-operator lexeme 'no-color #f start-pos end-pos 'initial)]
+    (ret 'semicolon-operator lexeme 'separator #f start-pos end-pos 'initial)]
    [identifier
     (ret 'identifier (string->symbol lexeme) 'symbol #f start-pos end-pos 'continuing)]
    [operator
-    (ret 'operator (string->symbol lexeme) 'symbol #f start-pos end-pos 'initial)]
+    (ret 'operator (string->symbol lexeme) 'operator #f start-pos end-pos 'initial)]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
