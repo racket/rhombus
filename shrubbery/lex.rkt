@@ -5,6 +5,7 @@
          (prefix-in : parser-tools/lex-sre))
 
 (provide lex/status
+         lex-all
 
          token-name
          ;;  'identifier
@@ -197,9 +198,9 @@
     (get-next-comment input-port)]))
 
 (define (read-nested-comment num-opens start-pos input)
-  (let-values (((diff end) (get-next-comment input)))
+  (let-values ([(diff end) (get-next-comment input)])
     (cond
-      ((eq? 'eof diff) (ret 'fail "" 'error #f start-pos end 'initial))
+      ((eq? 'eof diff) (ret 'fail eof 'error #f start-pos end 'initial))
       (else
        (let ((next-num-opens (+ diff num-opens)))
          (cond
@@ -394,3 +395,46 @@
   (if srcloc
       (located-token name s srcloc)
       (token name s)))
+
+;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
+;; for an S-expression escape:
+(define (lex-all in fail)
+  (parameterize ([current-lexer-source (object-name in)])
+    (let loop ([status 'initial])
+      (define-values (tok type paren start-pos end-pos backup new-status)
+        (lex/status in (file-position in) status #f))
+      (case (token-name tok)
+        [(EOF) '()]
+        [(fail) (fail tok "read error")]
+        [(s-exp)
+         (cons (finish-s-exp tok in fail) (loop 'continuing))]
+        [else
+         (cons tok (loop new-status))]))))
+
+(define (finish-s-exp open-tok in fail)
+  (define v (read-syntax (current-lexer-source) in))
+  (when (eof-object? v)
+    (fail open-tok "expected S-expression after `#{`"))
+  (define end-pos
+    (let loop ()
+      (define-values (line col pos) (port-next-location in))
+      (define c (read-char in))
+      (cond
+        [(eof-object? c)
+         (fail v "expected `}` after S-expression")]
+        [(eqv? c #\})
+         (add1 pos)]
+        [(char-whitespace? c)
+         (loop)]
+        [else
+         (define bad (datum->syntax #f c (list (current-lexer-source)
+                                               line
+                                               col
+                                               pos
+                                               1)))
+         (fail bad "expected only whitespace or `}` after S-expression")])))
+  (syntax->token (if (identifier? v) 'identifier 'literal)
+                 v
+                 (let ([loc (token-srcloc open-tok)])
+                   (struct-copy srcloc loc
+                                [span (- end-pos (srcloc-position loc))]))))
