@@ -627,7 +627,7 @@ escape provides access to the full Racket S-expression number grammar.
 Boolean literals are Racket-style instead of reserving identifiers.
 Special floating-point values similarly use a `#` notation.
 
-Operators are formed from Unicode symbolic and punction characters
+Operators are formed from Unicode symbolic and punctuation characters
 other than the ones listed above as distinct lexemes, but `|` is also
 allowed in an operator name as long as it is not by itself. A
 multi-character operator cannot end in `+`, `-`, or `.` to avoid
@@ -642,7 +642,8 @@ lexical error, because the `x` after `1` is not a delimiter.
 Non-alphanumeric characters other than `_` and `.` are delimiters.
 Finally, the treatment of `+` and `-` as a number prefix versus an
 operator is subject to a special rule: they are parsed as operators
-when preceded by an alphanumeric character, `_`, `)`, `]`, or `}`. For
+when immediately preceded by an alphanumeric character, `_`, `)`, `]`, or `}`
+with no whitespace in between. For
 example, `1+2` is `1` plus `2`, but `1 +2` is `1` followed by the
 number `+2`.
 
