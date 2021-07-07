@@ -187,23 +187,28 @@
                    ;; of indentation:
                    (loop (sub1 s) #f (min* s limit))]
                   [as-bar?
-                   ;; within the current group but outside the found bar,
-                   ;; a new bar can only line up with outer candidates
-                   ;; beyond the found bar
                    (define delta (line-delta t start))
                    (define col (col-of s start delta))
-                   (define b-start (line-start t limit-pos))
-                   (define b-delta (line-delta t b-start))
-                   (define b-col (col-of limit-pos b-start b-delta))
-                   (append (maybe-list col)
-                           ;; outer candidates:
-                           (loop (sub1 limit-pos) #f (min* (min col b-col)
-                                                           limit)))]
+                   (cond
+                     [(not limit-pos) (maybe-list col)]
+                     [else
+                      ;; within the current group but outside the found bar,
+                      ;; a new bar can only line up with outer candidates
+                      ;; beyond the found bar
+                      (define b-start (line-start t limit-pos))
+                      (define b-delta (line-delta t b-start))
+                      (define b-col (col-of limit-pos b-start b-delta))
+                      (append (maybe-list col)
+                              ;; outer candidates:
+                              (loop (sub1 limit-pos) b-col (min* (min col (sub1 b-col))
+                                                                 limit)))])]
                   [else
                    ;; line up within bar or outside [another] bar
                    (append (maybe-list candidate)
-                           ;; outer candidates
-                           (loop (sub1 (or another-bar-start s)) #f limit))])]
+                           (if (not limit-pos)
+                               null
+                               ;; outer candidates
+                               (loop (sub1 (or another-bar-start s)) #f limit)))])]
                [(separator)
                 (cond
                   [candidate (maybe-list candidate)]
@@ -262,9 +267,10 @@
 ;;     start as reflected by `at-start` (but taking continuing lines
 ;;     into account), or #f if there's not one
 ;;   * the position where the bar's enclosing block starts, but only
-;;     reliably if `as-bar?` and the first result is #f
+;;     reliably if `as-bar?` and the first result is #f, or #f (all modes)
+;;     to mean that not outer group is possible
 (define (find-bar-same-line t orig-pos at-start as-bar?)
-  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [limit-pos 0])
+  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [limit-pos (sub1 orig-pos)])
     (cond
       [(negative? pos) (values #f limit-pos)]
       [else
@@ -284,7 +290,7 @@
                [(parenthesis)
                 (cond
                   [(opener? (send t get-text (sub1 e) e))
-                   (values #f e)]
+                   (values #f #f)]
                   [else
                    ;; Found parenthesized while walking backward
                    (define r (send t backward-match e 0))
@@ -298,7 +304,7 @@
                    (define-values (another-bar-pos limit-pos) (loop (sub1 s) at-start 0))
                    (values (or another-bar-pos s) limit-pos)]
                   [else
-                   ;; don't need to find limit-pis
+                   ;; don't need to find limit-pos
                    (values s 0)])]
                [else (loop (sub1 s) at-start s)])])])])))
 
