@@ -798,7 +798,10 @@ leading whitespace on a continuing line has the advantage that it can
 reach an arbitrary amount of identation within a constrained textual
 width. Counting the `\` itself is consistent with ignoring `\` when it
 appears within a line, so grouping stays the same whether there's a
-newline or the continue line immediately after `\`.
+newline or the continue line immediately after `\`. The whitespace
+role of `\` also means that spaces can be turned into `\` to “harden”
+code for transfer via media (such as email) that might mangle
+consecutive spaces.
 
 The `#{....}` escape to S-expressions bridges to Racket identifiers.
 For example, `#{exact-integer?}` would be an identifier with `-` and
