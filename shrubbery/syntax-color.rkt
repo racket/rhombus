@@ -4,9 +4,6 @@
          racket/class
          racket/list)
 
-;; TODO:
-;;  - use more constraints imposed by commas
-
 ;; Conventions:
 ;;   pos = arbitary position
 ;;   s, e = range positions
@@ -208,9 +205,13 @@
                            ;; outer candidates
                            (loop (sub1 (or another-bar-start s)) #f limit))])]
                [(separator)
-                ;; currently treating separators like whitespace,
-                ;; so there's room for improvement here
-                (loop (sub1 s) candidate limit)]
+                (cond
+                  [candidate (maybe-list candidate)]
+                  [else
+                   (define i-pos (get-inside-start t pos))
+                   (define start (line-start t i-pos))
+                   (define delta (line-delta t start))
+                   (maybe-list (col-of i-pos start delta))])]
                [else
                 (keep s)])])])])))
 
@@ -300,6 +301,29 @@
                    ;; don't need to find limit-pis
                    (values s 0)])]
                [else (loop (sub1 s) at-start s)])])])])))
+
+;; Skips back to an unmatched opener and returns the
+;; position of the first thing after it (not counting
+;; whitespace or comments)
+(define (get-inside-start t pos)
+  (let loop ([pos pos] [last-pos #f])
+    (cond
+      [(pos . <= . 0) 0]
+      [else
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment continue-operator)
+          (loop (sub1 s) last-pos)]
+         [(parenthesis)
+          (cond
+            [(opener? (send t get-text (sub1 e) e))
+             (or last-pos e)]
+            [else
+             ;; Found parenthesized while walking backward
+             (define r (send t backward-match e 0))
+             (loop (sub1 (or r s)) (or r s))])]
+         [else (loop (sub1 s) s)])])))
 
 (define (opener? s)
   (member s '("(" "{" "[")))
