@@ -4,4 +4,5 @@
 
 (define deps
   '("base"
-    "syntax-color-lib"))
+    "syntax-color-lib"
+    "parser-tools-lib"))
