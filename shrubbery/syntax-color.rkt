@@ -26,7 +26,7 @@
   (define current-tab (get-current-tab t start))
   ;; tabbing only makes sense if the target line is not a continuation
   ;; or if it continues an empty line
-  (define delta (line-delta t start #:require-empty? #t))
+  (define delta (or (line-delta t start #:unless-empty? #t) 0))
   (cond
     [(eqv? delta 0)
      (case (send t classify-position (+ start current-tab))
@@ -37,20 +37,26 @@
        [else
         (indent-like-enclosing-group t start current-tab)])]
     [else
+     ;; don't change indentation for a continuation line
      current-tab]))
 
 (define (indent-like-enclosing-group t start current-tab #:as-bar? [as-bar? #f])
+  ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define candidates (remove-dups (indentation-candidates t (sub1 start) #:as-bar? as-bar?)))
   (define delta (line-delta t start))
   (define tabs (for/list ([col (in-list candidates)]
                           #:when (col . >= . delta))
                  (- col delta)))
+  ;; if the current state matches a candidate tab, we'll
+  ;; used the next one (to the left)
   (define next-tabs (memv current-tab tabs))
   (cond
     [(and next-tabs (pair? (cdr next-tabs)))
      (cadr next-tabs)]
     [(null? tabs) 0]
-    [else (car tabs)]))
+    [else
+     ;; default to rightmost:
+     (car tabs)]))
 
 (define (indent-like-opener t start current-tab)
   (define-values (s e) (send t get-token-range (+ start current-tab)))
@@ -73,44 +79,66 @@
      ;; didn't find match, so treat like other tokens
      (indent-like-enclosing-group t start current-tab)]))
 
-;; Gets list of candiates with further-right candidates first
+;; Gets list of candiates with further-right candidates first starting
+;; search with the token that contains `pos` (inclusive on the left
+;; edge of the token, starts before the line that we want to indent).
+;; The search works going backwards to find enclosing groups.
 (define (indentation-candidates t pos #:as-bar? [as-bar? #f])
-  (let loop ([pos pos] [candidate #f] [limit #f])
+  (let loop ([pos pos]
+             ;; possible target column, depending on what's we
+             ;; find by looking further back; for example, this
+             ;; candidate will be discarded if we find another
+             ;; identifier just before it
+             [candidate #f]
+             ;; filter out possibilities to the right (exclusive)
+             ;; of the limit
+             [limit #f])
+    ;; helper
+    (define (maybe-list col)
+      (cond
+        [(not col) null]
+        [(or (not limit) (col . <= . limit))
+         (list col)]
+        [else null]))
+    ;; helper: loops where the candidate also works as a refined limit
+    (define (loop* pos new-candidate)
+      (loop pos new-candidate (min new-candidate (or limit new-candidate))))
+    (define (keep s)
+      (define start (line-start t s))
+      (define delta (line-delta t start))
+      (loop* (sub1 s) (col-of (if as-bar? (add1 s) s) start delta)))
     (cond
       [(eqv? limit -1) null]
+      [(negative? pos) (maybe-list candidate)]
       [else
-       (define (maybe-list col)
-         (cond
-           [(not col) null]
-           [(or (not limit) (col . <= . limit))
-            (list col)]
-           [else null]))
-       (define (loop* pos new-candidate)
-         (loop pos new-candidate (min new-candidate (or limit new-candidate))))
        (define-values (s e) (send t get-token-range pos))
        (define category (send t classify-position s))
        (case category
          [(white-space comment continue-operator)
-          (if (zero? s)
-              (maybe-list candidate)
-              (loop (sub1 s) candidate limit))]
+          ;; we don't do anything special with continue-operator here,
+          ;; because we avoid looking at line numbers, anyway, and `line-delta`
+          ;; is responsible for computing continuation columns
+          (loop (sub1 s) candidate limit)]
          [(block-operator)
+          ;; a block creates an indentation candidate that's 2 (or 1 for a `|`)
+          ;; to the right of the enclosing group's indentation
           (define start (line-start t pos))
           (define delta (line-delta t start))
           (define block-col (if (zero? s)
                                 0
                                 (get-block-column t (sub1 s) (col-of s start delta) start)))
-          (define outer-candidates (if (zero? s)
-                                       null
-                                       (remove-larger (loop (sub1 s) #f limit)
-                                                      block-col)))
+          ;; look further outside this block, and don't consider anything
+          ;; that would appear to be nested in the block:
+          (define outer-candidates (loop (sub1 s) #f (min* block-col limit)))
           (append (cond
-                    [candidate (if (and (pair? outer-candidates)
-                                        (eqv? candidate (car outer-candidates)))
-                                   null
-                                   (maybe-list candidate))]
-                    [(or (pair? outer-candidates) as-bar?) (maybe-list (+ block-col (if as-bar? 1 2)))]
-                    [else null])
+                    [candidate
+                     ;; we already have something after `:`, so
+                     ;; use its indentation
+                     (maybe-list candidate)]
+                    [else
+                     ;; we haven't found anything in the block, so
+                     ;; indent as the first thing in the block
+                     (maybe-list (+ block-col (if as-bar? 1 2)))])
                   outer-candidates)]
          [else
           (cond
@@ -124,7 +152,7 @@
                [(parenthesis)
                 (cond
                   [(opener? (send t get-text (sub1 e) e))
-                   ;; We're inside parentheses, brackets, etc.
+                   ;; we're inside parentheses, brackets, etc.
                    (cond
                      [candidate (maybe-list candidate)]
                      [(zero? s) (maybe-list 2)]
@@ -132,7 +160,7 @@
                       (define start (line-start t pos))
                       (define delta (line-delta t start))
                       ;; first position within parens/braces/brackets; if
-                      ;; indentation the bracket's group is before the bracket,
+                      ;; indentation for the bracket's group is before the bracket,
                       ;; then "outdent" that far
                       (define col (col-of s start delta))
                       (define block-col (get-block-column t (sub1 s) col start))
@@ -140,56 +168,51 @@
                           (maybe-list (+ block-col 2))
                           (maybe-list (+ col 2)))])]
                   [else
-                   ;; Found parenthesized while walking backward
+                   ;; found parenthesized while walking backward
                    (define r (send t backward-match e 0))
                    (cond
-                     [(not r) (cond
-                                [(zero? s) (maybe-list candidate)]
-                                [else
-                                 (define start (line-start t pos))
-                                 (define delta (line-delta t start))
-                                 (loop* (sub1 s) (col-of s start delta))])]
+                     [(not r)
+                      ;; matching open not found
+                      (cond
+                        [(zero? s) (maybe-list candidate)]
+                        [else (keep s)])]
                      [(zero? r) null]
-                     [else
-                      (define start (line-start t r))
-                      (define delta (line-delta t start))
-                      (loop* (sub1 r) (col-of r start delta))])])]
+                     [else (keep r)])])]
                [(bar-operator)
                 (define start (line-start t pos))
-                (define-values (s-outer-candidates skip-bar? bar-candidate bar-limit)
-                  (if as-bar?
-                      (find-bar-outer-start t s start limit)
-                      (values (sub1 s) #f #f limit)))
-                (define outer-candidates
-                  (cond
-                    [(zero? s) null]
-                    [else
-                     (define delta (line-delta t start))
-                     (remove-larger (loop s-outer-candidates bar-candidate bar-limit)
-                                    (col-of e start delta))]))
-                (append (cond
-                          [(and candidate (not as-bar?)) (maybe-list candidate)]
-                          [else null])
-                        (cond
-                          [(or (not candidate)
-                               (and as-bar? (not skip-bar?)))
-                           (define delta (line-delta t start))
-                           (maybe-list (col-of (if as-bar? s (+ e 1))
-                                               start
-                                               delta))]
-                          [else null])
-                        outer-candidates)]
-               [(separator)
-                (if (zero? s)
-                    (maybe-list candidate)
-                    (loop (sub1 s) candidate limit))]
-               [else
+                ;; look back to see whether there's another bar on the
+                ;; same line:
+                (define-values (another-bar-start limit-pos)
+                  (find-bar-same-line t s start as-bar?))
                 (cond
-                  [(zero? s) (maybe-list (if as-bar? 1 0))]
-                  [else
-                   (define start (line-start t s))
+                  [(and another-bar-start as-bar?)
+                   ;; don't treat the current bar as a source
+                   ;; of indentation:
+                   (loop (sub1 s) #f (min* s limit))]
+                  [as-bar?
+                   ;; within the current group but outside the found bar,
+                   ;; a new bar can only line up with outer candidates
+                   ;; beyond the found bar
                    (define delta (line-delta t start))
-                   (loop* (sub1 s) (col-of (if as-bar? (add1 s) s) start delta))])])])])])))
+                   (define col (col-of s start delta))
+                   (define b-start (line-start t limit-pos))
+                   (define b-delta (line-delta t b-start))
+                   (define b-col (col-of limit-pos b-start b-delta))
+                   (append (maybe-list col)
+                           ;; outer candidates:
+                           (loop (sub1 limit-pos) #f (min* (min col b-col)
+                                                           limit)))]
+                  [else
+                   ;; line up within bar or outside [another] bar
+                   (append (maybe-list candidate)
+                           ;; outer candidates
+                           (loop (sub1 (or another-bar-start s)) #f limit))])]
+               [(separator)
+                ;; currently treating separators like whitespace,
+                ;; so there's room for improvement here
+                (loop (sub1 s) candidate limit)]
+               [else
+                (keep s)])])])])))
 
 ;; find the current indentation of the block that starts at or before `pos`,
 ;; a long as the block continues (not nested) on the line at `at-start`
@@ -233,65 +256,50 @@
              (define delta (line-delta t start))
              (loop (sub1 s) (col-of s start delta) start)])])])))
 
-;; Return values:
-;;   - a position before `pos` to continue search,
-;;   - whether to skip the bar that starts at `pos`
-;;   - a candidate for that search
-;;   - an upper bound on useful search results where the next bar starts
-;; Note that the last value may be less than the third value; that happens
-;; when the third value corresponds to a token where lining up would be
-;; disallowed.
-;; If going backward from the same line hits another bar operator,
-;; then the skipping result is true, and the first result is just
-;; `pos`-1. Otherwise, skip to the start of the line, because
-;; intermediate positions will not be allowed for the bar based on
-;; this same line.
-(define (find-bar-outer-start t orig-pos at-start orig-limit)
-  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [line-candidate #f] [line-limit orig-limit])
-    (define pos-start (line-start t pos))
+;; Returns:
+;;   * the position of a bar before `orig-pos` with the same line
+;;     start as reflected by `at-start` (but taking continuing lines
+;;     into account), or #f if there's not one
+;;   * the position where the bar's enclosing block starts, but only
+;;     reliably if `as-bar?` and the first result is #f
+(define (find-bar-same-line t orig-pos at-start as-bar?)
+  (let loop ([pos (sub1 orig-pos)] [at-start at-start] [limit-pos 0])
     (cond
-      [(pos-start . < . at-start)
-       (values pos #f line-candidate line-limit)]
+      [(negative? pos) (values #f limit-pos)]
       [else
        (define-values (s e) (send t get-token-range pos))
        (define category (send t classify-position s))
        (case category
-         [(white-space comment continue-operator)
-          (if (zero? s)
-              (values 0 #f #f -1)
-              (loop (sub1 s) at-start line-candidate line-limit))]
-         [(parenthesis)
-          (cond
-            [(opener? (send t get-text (sub1 e) e))
-             (values s #f #f -1)]
-            [else
-             ;; Found parenthesized while walking backward
-             (define r (send t backward-match e 0))
-             (cond
-               [(not r)
-                (define start (line-start t r))
-                (define delta (line-delta t start))
-                (define col (col-of s start delta))
-                (loop (sub1 s) at-start col (sub1 col))]
-               [(zero? r) (values 0 #f #f -1)]
-               [else
-                (define start (line-start t r))
-                (define delta (line-delta t start))
-                (define col (col-of r start delta))
-                (loop (sub1 r) start col (sub1 col))])])]
-         [(bar-operator)
-          (define start (line-start t pos))
-          (define delta (line-delta t start))
-          (define limit (col-of s start delta))
-          (values (sub1 orig-pos) #t #f (min limit (or orig-limit limit)))]
+         [(white-space comment)
+          (loop (sub1 s) at-start limit-pos)]
+         [(continue-operator)
+          (loop (sub1 s) (line-start t s) limit-pos)]
          [else
+          (define pos-start (line-start t pos))
           (cond
-            [(zero? s) (values 0 #f -1)]
+            [(pos-start . < . at-start) (values #f limit-pos)]
             [else
-             (define start (line-start t pos))
-             (define delta (line-delta t start))
-             (define col (col-of s start delta))
-             (loop (sub1 s) start col (sub1 col))])])])))
+             (case category
+               [(parenthesis)
+                (cond
+                  [(opener? (send t get-text (sub1 e) e))
+                   (values #f e)]
+                  [else
+                   ;; Found parenthesized while walking backward
+                   (define r (send t backward-match e 0))
+                   (cond
+                     [(not r) (loop (sub1 s) at-start s)]
+                     [else (loop (sub1 r) (line-start t r) r)])])]
+               [(bar-operator)
+                (cond
+                  [(not as-bar?)
+                   ;; keep looking back
+                   (define-values (another-bar-pos limit-pos) (loop (sub1 s) at-start 0))
+                   (values (or another-bar-pos s) limit-pos)]
+                  [else
+                   ;; don't need to find limit-pis
+                   (values s 0)])]
+               [else (loop (sub1 s) at-start s)])])])])))
 
 (define (opener? s)
   (member s '("(" "{" "[")))
@@ -300,7 +308,7 @@
   (send t paragraph-start-position (send t position-paragraph pos #t)))
 
 ;; skip back over whitespace and comments to find `\`
-(define (line-delta t start #:require-empty? [require-empty? #f])
+(define (line-delta t start #:unless-empty? [unless-empty? #f])
   (let loop ([pos start])
     (cond
       [(eqv? pos 0) 0]
@@ -314,10 +322,12 @@
           ;; continue operator applies
           (define-values (s e) (send t get-token-range (sub1 pos)))
           (define c-start (line-start t s))
-          (and (or (not require-empty?)
-                   (only-whitespace-between? t c-start s))
-               (+ (- e c-start)
-                  (line-delta t c-start #:require-empty? require-empty?)))]
+          (define more-delta (line-delta t c-start #:unless-empty? unless-empty?))
+          (and more-delta
+               (if unless-empty?
+                   (not (only-whitespace-between? t c-start s))
+                   #t)
+               (+ (- e c-start) more-delta))]
          [else 0])])))
 
 (define (only-whitespace-between? t s-pos e-pos)
@@ -331,6 +341,7 @@
 (define (col-of pos start delta)
   (+ (- pos start) delta))
 
+;; determine current indentation starting with `start`
 (define (get-current-tab t start)
   (define e (send t last-position))
   (let loop ([pos start])
@@ -348,12 +359,6 @@
        (char-whitespace? (string-ref str 0))
        (not (equal? str "\n"))))
 
-(define (remove-larger l n)
-  (cond
-    [(null? l) null]
-    [((car l) . > . n) (remove-larger (cdr l) n)]
-    [else l]))
-
 (define (remove-dups l)
   (cond
     [(null? l) null]
@@ -361,8 +366,5 @@
     [(eqv? (car l) (cadr l)) (remove-dups (cdr l))]
     [else (cons (car l) (remove-dups (cdr l)))]))
 
-(define (shift-indents t start cols)
-  cols)
-
-(define (shift-indent t start col)
-  col)
+(define (min* a b)
+  (min a (or b a)))
