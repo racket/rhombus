@@ -1,6 +1,6 @@
 #lang racket/base
 (require racket/pretty
-         "private/lex.rkt")
+         "lex.rkt")
 
 (provide parse-all)
 

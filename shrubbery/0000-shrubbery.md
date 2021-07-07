@@ -89,9 +89,9 @@ is meant to accommodate a particular kind of syntax for nested blocks
 
 Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of `char-symbolic?`,
-roughly. Numbers are written in some reasonable way distinct from
-identifiers. No spaces are needed between operators and non-operators,
-so `1+2` and `1 + 2` mean the same thing. Comments are C-style.
+roughly. No spaces are needed between operators and non-operators, so
+`1+2` and `1 + 2` mean the same thing. Comments are C-style. See
+[lexeme parsing](#lexeme-parsing) for more information.
 
 The following tokens are used for grouping, in addition to line breaks
 and indentation:
@@ -609,6 +609,123 @@ define fib(n):
                                 (parens (group n - 2))))))))))))
 ```
 
+## Lexeme Parsing
+[lexeme-parsing]: #lexeme-parsing
+
+The tokens used for grouping and indentation are distinct lexemes:
+
+```
+( ) [ ] { }   ; ,   : |   \
+```
+
+Other lexemes are described by the grammar in the table below, where
+an asterisk in the left column indicates that the productions that
+corresponds to lexemes. Only simple forms of numbers are supported
+directly (decimal integers, decimal floating point, and hexadecimal
+integers, in all cases allowing `_`s between digits), but a `#{`...`}`
+escape provides access to the full Racket S-expression number grammar.
+Boolean literals are Racket-style instead of reserving identifiers.
+Special floating-point values similarly use a `#` notation.
+
+Operators are formed from Unicode symbolic and punction characters
+other than the ones listed above as distinct lexemes, but `|` is also
+allowed in an operator name as long as it is not by itself. A
+multi-character operator cannot end in `+`, `-`, or `.` to avoid
+ambiguity in cases like `1+-2` (which is `1` plus `-2`, not `1` and
+`2` combined with a `+-` operator).
+
+Implicit in the grammar is the usual lexical rule of taking the
+largest possible match at the start of a stream. Not reflected in the
+grammar is a set of delimiter requirements: numbers, `#true`, and
+`#false` must be followed by a delimiter. For example, `1x` is a
+lexical error, because the `x` after `1` is not a delimiter.
+Non-alphanumeric characters other than `_` and `.` are delimiters.
+Finally, the treatment of `+` and `-` as a number prefix versus an
+operator is subject to a special rule: they are parsed as operators
+when preceded by an alphanumeric character, `_`, `)`, `]`, or `}`. For
+example, `1+2` is `1` plus `2`, but `1 +2` is `1` followed by the
+number `+2`.
+
+When a `#{`...`}` escape describes an identifier S-expression, it is
+an identifier in the same sense as a shrubbery-notation identifier.
+the same holds for numbers, booleans, strings, and byte strings. A
+`#{`...`}` escape must _not_ describe a pair, because pairs are used
+to represent a parsed shrubbery, and allowing pairs would create
+ambiguous or ill-formed representations.
+
+
+
+|   | nonterminal     |     |                 production                                | adjustment      |
+|---|-----------------|-----|-----------------------------------------------------------|-----------------|
+| * | _identifier_    | is  | _alpha_ _alphanum_ *                                      |                 |
+|   |                 |     |                                                           |                 |
+|   | _alpha_         | is  | **an alphabetic Unicode character or** `_`                |                 |
+|   |                 |     |                                                           |                 |
+|   | _alphanum_      | is  | _alpha_                                                   |                 |
+|   |                 | or  | **a numeric Unicode character**                           |                 |
+|   |                 |     |                                                           |                 |
+| * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **but not** `|` |
+|   |                 |     |                                                           |                 |
+|   | _opchar_        | is  | **a symbolic Unicode character**                          |                 |
+|   |                 | or  | **a punctuation Unicode character not in** _special_      |                 |
+|   |                 |     |                                                           |                 |
+|   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`         |                 |
+|   |                 |     |                                                           |                 |
+|   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`, `@`              |                 |
+|   |                 | or  | **one of** `;`, `,`, `:`, `#`, `\`, `_`                   |                 |
+|   |                 |     |                                                           |                 |
+| * | _number_        | is  | _integer_                                                 |                 |
+|   |                 | or  | _float_                                                   |                 |
+|   |                 | or  | _hexinteger_                                              |                 |
+|   |                 |     |                                                           |                 |
+|   | _integer_       | is  | _sign_ ? _nonneg_                                         |                 |
+|   |                 |     |                                                           |                 |
+|   | _sign_          | is  | **one of** `+` **or** `-`                                 |                 |
+|   |                 |     |                                                           |                 |
+|   | _nonneg_        | is  | _decimal_ _usdecimal_ +                                   |                 |
+|   |                 |     |                                                           |                 |
+|   | _decimal_       | is  | `0` through `9`                                           |                 |
+|   |                 |     |                                                           |                 |
+|   | _usdecimal_     | is  | _decimal_                                                 |                 |
+|   |                 | or  | `_` _decimal_                                             |                 |
+|   |                 |     |                                                           |                 |
+|   | _float_         | is  | _sign_ ? _nonneg_ ? `.` _nonneg_? _exp_ ?                 |                 |
+|   |                 | or  | _sign_ ? _nonneg_ _exp_                                   |                 |
+|   |                 | or  | `#inf`                                                    |                 |
+|   |                 | or  | `#neginf`                                                 |                 |
+|   |                 | or  | `#nan`                                                    |                 |
+|   |                 |     |                                                           |                 |
+|   | _exp_           | is  | `e` _sign_ ? _nonneg_                                     |                 |
+|   |                 | or  | `E` _sign_ ? _nonneg_                                     |                 |
+|   |                 |     |                                                           |                 |
+|   | _hexinteger_    | is  | `0x` _hex_ _ushex_ *                                      |                 |
+|   |                 |     |                                                           |                 |
+|   | _hex_           | is  | **one of** `0` **through** `9`                            |                 |
+|   |                 | or  | **one of** `a` **through** `f`                            |                 |
+|   |                 | or  | **one of** `A` **through** `F`                            |                 |
+|   |                 |     |                                                           |                 |
+|   | _ushex_         | is  | _hex_                                                     |                 |
+|   |                 | or  | `_` _hex_                                                 |                 |
+|   |                 |     |                                                           |                 |
+| * | _boolean_       | is  | `#true`                                                   |                 |
+|   |                 | or  | `#false`                                                  |                 |
+|   |                 |     |                                                           |                 |
+| * | _string_        | is  | `"` _strelem_ * `"`                                       |                 |
+| * | _char_          | is  | `'` _strelem_ `'`                                         |                 |
+| * | _bytestring_    | is  | `#"` _bytestrelem_ * `"`                                  |                 |
+|   |                 |     |                                                           |                 |
+|   | _strelem_       | is  | **element in Racket string**                              | `\U` ≤ 6 digits |
+|   | _bytestrelem_   | is  | **element in Racket byte string**                         |                 |
+|   |                 |     |                                                           |                 |
+| * | _sexpression_   | is  | `#{` _racket_ `}`                                         |                 |
+|   |                 |     |                                                           |                 |
+|   | _racket_        | is  | **any non-pair Racket S-expression**                      |                 |
+|   |                 |     |                                                           |                 |
+| * | _comment_       | is  | `//` _nonnlchar_                                          |                 |
+|   |                 | or  | `/*` _anychar_ `*/`                                       | nesting allowed |
+|   |                 |     |                                                           |                 |
+|   | _nonnlchar_     |     | **any character other than newline**                      |                 |
+
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -639,9 +756,6 @@ Shrubbery notation does not resolve the question of how infix
 expressions parse. There is no precedence at the shrubbery level, for
 example, other than the way that a `:` has higher precedence (in a
 sense) than `|`.
-
-The lexeme-level syntax here would require some sort of bridge to
-Racket names that don’t fit C-style syntax.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
@@ -679,27 +793,23 @@ added, even amid continuing lines.
 
 The interaction of indentation and `\` differs slightly from Python,
 which does not count the space for `\` itself or any leading
-whitespace on a continuing line todward indentation. Counting the
+whitespace on a continuing line toward indentation. Counting the
 leading whitespace on a continuing line has the advantage that it can
 reach an arbitrary amount of identation within a constrained textual
 width. Counting the `\` itself is consistent with ignoring `\` when it
 appears within a line, so grouping stays the same whether there's a
 newline or the continue line immediately after `\`.
 
-A full shrubbery-notation design should incorporate `at-exp` notation,
-too (where `@` escapes return to shrubbery notation instead of
-S-expressions).
+The `#{....}` escape to S-expressions bridges to Racket identifiers.
+For example, `#{exact-integer?}` would be an identifier with `-` and
+`?` as part of the identifier. Shrubbery notation could be adapted to
+support Lisp-style identifiers by requiring more space around
+operators, but the rule for continuing a group between `(` and `)` or
+`[` and `]` currently depends on distinguishing operators from
+non-operators.
 
-To bridge to Racket identifiers, something like `#{....}` could be the
-syntax for an identifier that has any character between the curly
-braces (with some suitable generalization to accommodate `{` and `}` in
-identifier names), so `#{exact-integer?}` would be an identifier with
-`-` and `?` as part of the identifier.
-
-Shrubbery notation could be adapted to support Lisp-style identifiers by
-requiring more space around operators, but the rule for continuing a
-group between `(` and `)` or `[` and `]` currently depends on
-distinguishing operators from non-operators.
+The `@` is reserved for a future extension to `at-exp` notation
+adapted suitably to srhubbery notation.
 
 # Prior art
 [prior-art]: #prior-art
