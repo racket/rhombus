@@ -42,32 +42,7 @@
 (define-lex-abbrevs
   
   ;; For case insensitivity
-  [a (char-set "aA")]
-  [b (char-set "bB")]
-  [c (char-set "cC")]
-  [d (char-set "dD")]
   [e (char-set "eE")]
-  [f (char-set "fF")]
-  [g (char-set "gG")]
-  [h (char-set "hH")]
-  [i (char-set "iI")]
-  [j (char-set "jJ")]
-  [k (char-set "kK")]
-  [l (char-set "lL")]
-  [m (char-set "mM")]
-  [n (char-set "nN")]
-  [o (char-set "oO")]
-  [p (char-set "pP")]
-  [q (char-set "qQ")]
-  [r (char-set "rR")]
-  [s (char-set "sS")]
-  [t (char-set "tT")]
-  [u (char-set "uU")]
-  [v (char-set "vV")]
-  [w (char-set "wW")]
-  [x (char-set "xX")]
-  [y (char-set "yY")]
-  [z (char-set "zZ")]
 
   [digit (:/ "0" "9")]
   [digit_ (:or digit (:: digit "_"))]
@@ -76,19 +51,19 @@
   [digit8 (:/ "0" "7")]
 
   [langchar (:or (:/ "az" "AZ" "09") "+" "-" "_")]
-  
-  ;; What about char->integer constraint?
+
+  ;; does not constrain to avoid surrogates:
   [unicode  (:or (:: "u" (:** 1 4 digit16))
                  (:: "U" (:** 1 6 digit16)))]
   
-  [character (:or (:: "'" (:~ "'") "'")
-                  (:: "'" string-escape "'"))]
-  
-  [str (:or (:: "\"" (:* string-element (:: "\\" unicode)) "\"")
-            byte-str)]
-  [byte-str (:: "#\"" (:* byte-string-element) "\"")]
+  [character (:: "'" string-element "'")]
+  [str (:: "\"" (:* string-element ) "\"")]
+
   [string-element (:or (:~ "\"" "\\")
+                       (:: "\\" unicode)
                        string-escape)]
+
+  [byte-str (:: "#\"" (:* byte-string-element) "\"")]
   [byte-string-element (:or (:- (:/ "\x00" "\xFF") "\"" "\\")
                             string-escape)]
   [string-escape (:or "\\\""
@@ -118,9 +93,9 @@
   [boolean (:or "#true" "#false")]
                       
   [special-number (:: "#"
-                      (:or (:: i n f)
-                           (:: n e g i n f)
-                           (:: n a n)))]
+                      (:or "#inf"
+                           "#neginf"
+                           "#nan"))]
 
   [bad-hash (:- (:: "#" (:* non-delims))
                 boolean
@@ -131,10 +106,10 @@
   
   [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline) (:: #\\ #\newline)))]
   
-  [identifier (:: (:or (:/ "az" "AZ") "_")
-                  (:* (:or (:/ "az" "AZ" "09") "_")))]
+  [identifier (:: (:or alphabetic "_")
+                  (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" ":" "(" ")" "[" "]" "{" "}" "#" "\\")))]
+               (:- punctuation (:or "," ";" ":" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" ".")))
                 "|")]
@@ -211,23 +186,6 @@
   (let-values (((x y offset) (port-next-location i)))
     offset))
 
-(define (escape-regexp s)
-  (apply string-append 
-         (map (lambda (c)
-                (if (memq c '(#\( #\) #\* #\+ #\? #\[ #\] #\. #\^ #\\ #\|))
-                    (string #\\ c)
-                    (string c)))
-              (string->list s))))
-
-(define (special-read-line i)
-  (let ((next (peek-char-or-special i)))
-    (cond
-      ((or (eq? next #\newline) (not (char? next)))
-       null)
-      (else
-       (read-char i)
-       (cons next (special-read-line i))))))
-
 (define (read-line/skip-over-specials i)
   (let loop ()
     (let ((next (peek-char-or-special i)))
@@ -273,7 +231,9 @@
   (lexer
    [(:+ whitespace)
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
-   [(:or str character) (ret 'literal lexeme 'string #f start-pos end-pos 'datum)]
+   [str (ret 'literal (parse-string lexeme) 'string #f start-pos end-pos 'datum)]
+   [byte-str (ret 'literal (parse-byte-string lexeme) 'string #f start-pos end-pos 'datum)]
+   [character (ret 'literal (parse-char lexeme) 'string #f start-pos end-pos 'datum)]
    [bad-number
     (ret 'fail lexeme 'error #f start-pos end-pos 'continuing)]
    [number
@@ -360,6 +320,19 @@
 (define (parse-number s)
   (string->number (regexp-replace* #rx"_" s "")))
 
+(define (parse-string s)
+  (read (open-input-string s)))
+
+(define (parse-byte-string s)
+  (read (open-input-string s)))
+
+(define (parse-char s)
+  (define str
+    (read (open-input-string (string-append "\""
+                                            (substring s 1 (sub1 (string-length s)))
+                                            "\""))))
+  (string-ref str 0))
+
 (struct token (name value))
 (struct located-token token (srcloc))
 
@@ -433,8 +406,12 @@
                                                pos
                                                1)))
          (fail bad "expected only whitespace or `}` after S-expression")])))
-  (syntax->token (if (identifier? v) 'identifier 'literal)
-                 v
-                 (let ([loc (token-srcloc open-tok)])
-                   (struct-copy srcloc loc
-                                [span (- end-pos (srcloc-position loc))]))))
+  (define result
+    (syntax->token (if (identifier? v) 'identifier 'literal)
+                   v
+                   (let ([loc (token-srcloc open-tok)])
+                     (struct-copy srcloc loc
+                                  [span (- end-pos (srcloc-position loc))]))))
+  (when (pair? (syntax-e v))
+    (fail result "S-expression in `#{` and `}` must not be a pair"))
+  result)
