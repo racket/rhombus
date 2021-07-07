@@ -13,12 +13,14 @@
 ;;   tab = indentation relative to start, does not include delta
 
 (provide shrubbery-lexer
-         shrubbery-indent)
+         shrubbery-indentation
+         shrubbery-range-indentation)
 
 (define (shrubbery-lexer in pos status)
   (lex/status in pos status racket-lexer/status))
 
-(define (shrubbery-indent t pos)
+(define (shrubbery-indentation t pos
+                               #:multi? [multi? #f])
   (define start (line-start t pos))
   (define current-tab (get-current-tab t start))
   ;; tabbing only makes sense if the target line is not a continuation
@@ -30,14 +32,64 @@
        [(parenthesis)
         (indent-like-opener t start current-tab)]
        [(bar-operator)
-        (indent-like-enclosing-group t start current-tab #:as-bar? #t)]
+        (indent-like-enclosing-group t start current-tab
+                                     #:multi? multi?
+                                     #:as-bar? #t)]
        [else
-        (indent-like-enclosing-group t start current-tab)])]
+        (indent-like-enclosing-group t start current-tab
+                                     #:multi? multi?)])]
     [else
      ;; don't change indentation for a continuation line
      current-tab]))
 
-(define (indent-like-enclosing-group t start current-tab #:as-bar? [as-bar? #f])
+(define (shrubbery-range-indentation t s e)
+  (define s-line (send t position-paragraph s))
+  (define e-line (let ([line (send t position-paragraph e)])
+                   (if (and (s . < . e)
+                            (= e (send t paragraph-start-position line)))
+                       (sub1 line)
+                       line)))
+  (cond
+    [(= s-line e-line)
+     ;; use single-line mode
+     #f]
+    [else
+     ;; compute indentation for the first non-empty line; as long as that
+     ;; involves inserting space or deleting no more space than is
+     ;; available in all lines, shift all the lines the same
+     (define lines (get-non-empty-lines t s-line e-line))
+     (cond
+       [(null? lines) '()]
+       [else
+        (define (line-position line) (send t paragraph-start-position line))
+        (define pos (line-position (car lines)))
+        (define amt-or-multi-amt (shrubbery-indentation t pos #:multi? #t))
+        (define amts (if (list? amt-or-multi-amt)
+                         amt-or-multi-amt
+                         (list amt-or-multi-amt)))
+        (define current-amt (get-current-tab t pos))
+        (or
+         ;; try each possible shift:
+         (for/or ([amt (in-list amts)])
+           (cond
+             [(current-amt . < . amt)
+              ;; insert in all lines
+              (define ins-str (make-string (- amt current-amt) #\space))
+              (for/list ([line (in-range s-line (add1 e-line))])
+                (list 0 (if (memv line lines) ins-str "")))]
+             [(current-amt . > . amt)
+              (define delta (- current-amt amt))
+              (and (for/and ([line (in-list lines)])
+                     (delta . <= . (get-current-tab t (send t paragraph-start-position line))))
+                   (for/list ([line (in-range s-line (add1 e-line))])
+                     (list (if (memv line lines) delta 0) "")))]
+             [else #f]))
+         ;; no change
+         '())])]))
+
+(define (indent-like-enclosing-group t start current-tab
+                                     #:as-bar? [as-bar? #f]
+                                     #:multi? [multi? #f])
   ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define candidates (remove-dups (indentation-candidates t (sub1 start) #:as-bar? as-bar?)))
   (define delta (line-delta t start))
@@ -48,6 +100,11 @@
   ;; used the next one (to the left)
   (define next-tabs (memv current-tab tabs))
   (cond
+    [multi?
+     (if next-tabs
+         (append next-tabs
+                 (take tabs (- (length tabs) (length next-tabs))))
+         tabs)]
     [(and next-tabs (pair? (cdr next-tabs)))
      (cadr next-tabs)]
     [(null? tabs) 0]
@@ -355,21 +412,35 @@
           (define more-delta (line-delta t c-start #:unless-empty? unless-empty?))
           (and more-delta
                (if unless-empty?
-                   (not (only-whitespace-between? t c-start s))
+                   (not (only-whitespace-between? t c-start s #:or-ws-like? #t))
                    #t)
                (+ (- e c-start) more-delta))]
          [else 0])])))
 
-(define (only-whitespace-between? t s-pos e-pos)
-  (case (send t classify-position s-pos)
-    [(white-space comment continue-operator)
-     (define-values (s e) (send t get-token-range s-pos))
-     (or (e . >= . e-pos)
-         (only-whitespace-between? t e e-pos))]
-    [else #f]))
+(define (only-whitespace-between? t s-pos e-pos
+                                  #:or-ws-like? [or-ws-like? #f])
+  (let loop ([pos s-pos])
+    (and (case (send t classify-position pos)
+           [(white-space) #t]
+           [(comment continue-operator) or-ws-like?]
+           [else #f])
+         (let ()
+           (define-values (s e) (send t get-token-range pos))
+           (or (e . >= . e-pos)
+               (loop e))))))
 
 (define (col-of pos start delta)
   (+ (- pos start) delta))
+
+(define (get-non-empty-lines t s-line e-line)
+  (let loop ([line s-line])
+    (cond
+      [(line . > . e-line) '()]
+      [(only-whitespace-between? t
+                                 (send t paragraph-start-position line)
+                                 (send t paragraph-end-position line))
+       (loop (add1 line))]
+      [else (cons line (loop (add1 line)))])))
 
 ;; determine current indentation starting with `start`
 (define (get-current-tab t start)

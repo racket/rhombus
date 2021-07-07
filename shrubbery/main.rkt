@@ -25,5 +25,8 @@
                           'shrubbery-lexer)]
         [(drracket:indentation)
          (dynamic-require 'shrubbery/syntax-color
-                          'shrubbery-indent)]
+                          'shrubbery-indentation)]
+        [(drracket:range-indentation)
+         (dynamic-require 'shrubbery/syntax-color
+                          'shrubbery-range-indentation)]
         [else default]))))
