@@ -30,7 +30,7 @@
     [(eqv? delta 0)
      (case (send t classify-position (+ start current-tab))
        [(parenthesis)
-        (indent-like-opener t start current-tab)]
+        (indent-like-parenthesis t start current-tab)]
        [(bar-operator)
         (indent-like-enclosing-group t start current-tab
                                      #:multi? multi?
@@ -112,7 +112,7 @@
      ;; default to rightmost:
      (car tabs)]))
 
-(define (indent-like-opener t start current-tab)
+(define (indent-like-parenthesis t start current-tab)
   (define-values (s e) (send t get-token-range (+ start current-tab)))
   (define o-s (send t backward-match e 0))
   (cond
@@ -128,7 +128,8 @@
                   (define next-s (if (equal? paren "}")
                                      (skip-redundant-block-operators t (sub1 o-s) o-start)
                                      (sub1 o-s)))
-                  (get-block-column t next-s col o-start)))
+                  (get-block-column t next-s col o-start
+                                    #:for-outdent? #t)))
            col))
      (define s-delta (line-delta t start))
      (if (use-col . > . s-delta)
@@ -233,7 +234,8 @@
                                          ;; outdent past redundant operators:
                                          (skip-redundant-block-operators t (sub1 s) start)
                                          (sub1 s)))
-                      (define block-col (get-block-column t next-s col start))
+                      (define block-col (get-block-column t next-s col start
+                                                          #:for-outdent? #t))
                       (if (and block-col (block-col . < . col))
                           (maybe-list (+ block-col 2))
                           (maybe-list (+ col 2)))])]
@@ -294,8 +296,10 @@
                 (keep s)])])])])))
 
 ;; find the current indentation of the block that starts at or before `pos`,
-;; a long as the block continues (not nested) on the line at `at-start`
-(define (get-block-column t pos candidate at-start)
+;; a long as the block continues (not nested) on the line at `at-start`;
+;; if `for-outdent?` is true, don't treat leading operators as the start
+(define (get-block-column t pos candidate at-start
+                          #:for-outdent? [for-outdent? #t])
   (let loop ([pos pos] [candidate candidate] [at-start at-start])
     (define pos-start (line-start t pos))
     (cond
@@ -329,6 +333,11 @@
          [(block-operator bar-operator separator) candidate]
          [else
           (cond
+            [(and for-outdent?
+                  (eq? category 'operator))
+             (if (zero? s)
+                 (or candidate 0)
+                 (loop (sub1 s) candidate at-start))]
             [(zero? s) 0]
             [else
              (define start (line-start t pos))
