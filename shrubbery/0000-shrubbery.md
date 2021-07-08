@@ -635,7 +635,8 @@ Boolean literals are Racket-style, instead of reserving identifiers.
 Special floating-point values similarly use a `#` notation.
 
 Operators are formed from Unicode symbolic and punctuation characters
-other than the ones listed above as distinct lexemes, but `|` or `:` is also
+other than the ones listed above as distinct lexemes (plus a few more,
+like `"`), but `|` or `:` is also
 allowed in an operator name as long as it is not by itself. A
 multi-character operator cannot end in `+`, `-`, or `.` to avoid
 ambiguity in cases like `1+-2` (which is `1` plus `-2`, not `1` and
@@ -679,7 +680,7 @@ ambiguous or ill-formed representations.
 |   |                 |     |                                                           |                        |
 |   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`         |                        |
 |   |                 |     |                                                           |                        |
-|   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`                   |                        |
+|   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`, `"`              |                        |
 |   |                 | or  | **one of** `;`, `,`, `#`, `\`, `_`, `@`                   |                        |
 |   |                 |     |                                                           |                        |
 | * | _number_        | is  | _integer_                                                 |                        |
@@ -719,10 +720,11 @@ ambiguous or ill-formed representations.
 |   |                 | or  | `#false`                                                  |                        |
 |   |                 |     |                                                           |                        |
 | * | _string_        | is  | `"` _strelem_ * `"`                                       |                        |
-| * | _char_          | is  | `'` _strelem_ `'`                                         |                        |
-| * | _bytestring_    | is  | `#"` _bytestrelem_ * `"`                                  |                        |
 |   |                 |     |                                                           |                        |
 |   | _strelem_       | is  | **element in Racket string**                              | `\U` ≤ 6 digits        |
+|   |                 |     |                                                           |                        |
+| * | _bytestring_    | is  | `#"` _bytestrelem_ * `"`                                  |                        |
+|   |                 |     |                                                           |                        |
 |   | _bytestrelem_   | is  | **element in Racket byte string**                         |                        |
 |   |                 |     |                                                           |                        |
 | * | _sexpression_   | is  | `#{` _racket_ `}`                                         |                        |

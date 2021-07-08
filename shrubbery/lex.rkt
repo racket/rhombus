@@ -56,7 +56,6 @@
   [unicode  (:or (:: "u" (:** 1 4 digit16))
                  (:: "U" (:** 1 6 digit16)))]
   
-  [character (:: "'" string-element "'")]
   [str (:: "\"" (:* string-element ) "\"")]
 
   [string-element (:or (:~ "\"" "\\")
@@ -85,10 +84,6 @@
                (:* (:~ "\"" "\\")
                    (:: "\\" any-char))
                (:? "\\" "\""))]
-  [bad-char (:: "'" 
-                (:* (:~ "'" "\\")
-                    (:: "\\" any-char))
-                (:? "\\" "'"))]
 
   [boolean (:or "#true" "#false")]
                       
@@ -109,7 +104,7 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@")))]
+               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" ".")))
                 "|" ":")]
@@ -233,7 +228,6 @@
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
    [str (ret 'literal (parse-string lexeme) 'string #f start-pos end-pos 'datum)]
    [byte-str (ret 'literal (parse-byte-string lexeme) 'string #f start-pos end-pos 'datum)]
-   [character (ret 'literal (parse-char lexeme) 'string #f start-pos end-pos 'datum)]
    [bad-number
     (ret 'fail lexeme 'error #f start-pos end-pos 'continuing)]
    [number
@@ -295,7 +289,7 @@
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
    [(eof) (values (make-token 'EOF lexeme start-pos end-pos) 'eof #f #f #f #f)]
-   [(:or bad-char bad-str bad-hash)
+   [(:or bad-str bad-hash)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
