@@ -201,7 +201,7 @@ The `;` and `,` separators interact differently with subgroups formed
 by indentation, `:`, and `|`. A `,` closes subgroups as necessary to
 reach an enclosing `()` or `[]`, while a `;` separate groups within a
 nested group sequence. A `;` will never create an empty group. A `,`
-is disallowed if it would create an empty group, except that a traiing
+is disallowed if it would create an empty group, except that a trailing
 `,` is allowed.
 
 ```
@@ -266,7 +266,7 @@ hello {
 }
 ```
 
-Identation to start a group is allowed only on a line where the
+Indentation to start a group is allowed only on a line where the
 previous line ends with `:` or the indented line starts with `|`.
 
 ```
@@ -290,7 +290,7 @@ hello: world
 
 As a special rule, if the block that would be created by `:` has one
 group that is itself a block, then `:` does not create a new block.
-This rule is consistent with `:` as a knid of redundant indicator for
+This rule is consistent with `:` as a kind of redundant indicator for
 indentation, and it generalizes by allowing an optional `:` before an
 explicit `{`. In fact, any number of optional `:`s can appear. The
 following groups are the same as the earlier examples:
@@ -314,7 +314,7 @@ empty block, which means that a `:` doesn't just disappear if there's
 no content after it. For example `(void:)` is the same as `(void {})`,
 not `(void)`.
 
-The correspondence among blocks created `:`, indentation, and `{}`
+The correspondence among blocks created by `:`, indentation, and `{}`
 means that a programmer can choose between single-line forms using
 `{}` and `;` or multi-line forms using indentation.
 
@@ -431,7 +431,11 @@ this is a group \
 
 ## More examples
 
-Here are more example shrubberies.
+Here are more example shrubberies. These shrubberies are not
+necessarily consistent with each other in the sense of sketching a
+single language that uses shrubbery notation; they show different
+potential ways of using the notation.
+
 
 ```
 define pi: 3.14
@@ -619,12 +623,12 @@ The tokens used for grouping and indentation are distinct lexemes:
 ```
 
 Other lexemes are described by the grammar in the table below, where
-an asterisk in the left column indicates that the productions that
-corresponds to lexemes. Only simple forms of numbers are supported
+an asterisk in the left column indicates the productions that
+correspond to lexemes. Only simple forms of numbers are supported
 directly (decimal integers, decimal floating point, and hexadecimal
 integers, in all cases allowing `_`s between digits), but a `#{`...`}`
 escape provides access to the full Racket S-expression number grammar.
-Boolean literals are Racket-style instead of reserving identifiers.
+Boolean literals are Racket-style, instead of reserving identifiers.
 Special floating-point values similarly use a `#` notation.
 
 Operators are formed from Unicode symbolic and punctuation characters
@@ -634,7 +638,7 @@ multi-character operator cannot end in `+`, `-`, or `.` to avoid
 ambiguity in cases like `1+-2` (which is `1` plus `-2`, not `1` and
 `2` combined with a `+-` operator).
 
-Implicit in the grammar is the usual lexical rule of taking the
+Implicit in the grammar is the usual convention of choosing the
 largest possible match at the start of a stream. Not reflected in the
 grammar is a set of delimiter requirements: numbers, `#true`, and
 `#false` must be followed by a delimiter. For example, `1x` is a
