@@ -247,12 +247,13 @@
    [boolean
     (ret 'literal (equal? lexeme "#true") 'constant #f start-pos end-pos 'continuing)]
    ["//"
-    (values (make-token 'comment (apply string (read-line/skip-over-specials input-port))
-                        start-pos end-pos)
-            'comment #f 
-            (position-offset start-pos)
-            (get-offset input-port)
-            'initial)]
+    (let ([comment (apply string (read-line/skip-over-specials input-port))])
+      (define-values (end-line end-col end-offset) (port-next-location input-port))
+      (values (make-token 'comment comment start-pos (position end-offset end-line end-col))
+              'comment #f 
+              (position-offset start-pos)
+              end-offset
+              'initial))]
    ["/*" (read-nested-comment 1 start-pos input-port)]
    [(:: (:or "#lang " "#!")
         (:or langchar
@@ -371,18 +372,22 @@
 
 ;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
 ;; for an S-expression escape:
-(define (lex-all in fail)
+(define (lex-all in fail #:keep-type? [keep-type? #f])
   (parameterize ([current-lexer-source (object-name in)])
     (let loop ([status 'initial])
       (define-values (tok type paren start-pos end-pos backup new-status)
         (lex/status in (file-position in) status #f))
+      (define (wrap r)
+        (if keep-type?
+            (vector r type paren)
+            r))
       (case (token-name tok)
         [(EOF) '()]
         [(fail) (fail tok "read error")]
         [(s-exp)
-         (cons (finish-s-exp tok in fail) (loop 'continuing))]
+         (cons (wrap (finish-s-exp tok in fail)) (loop 'continuing))]
         [else
-         (cons tok (loop new-status))]))))
+         (cons (wrap tok) (loop new-status))]))))
 
 (define (finish-s-exp open-tok in fail)
   (define v (read-syntax (current-lexer-source) in))

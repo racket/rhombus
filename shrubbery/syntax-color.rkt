@@ -97,7 +97,7 @@
                           #:when (col . >= . delta))
                  (- col delta)))
   ;; if the current state matches a candidate tab, we'll
-  ;; used the next one (to the left)
+  ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))
   (cond
     [multi?
@@ -307,7 +307,7 @@
        (case category
          [(white-space comment continue-operator)
           (if (zero? s)
-              (list (or candidate 0))
+              (or candidate 0)
               (loop (sub1 s) candidate at-start))]
          [(parenthesis)
           (cond
@@ -329,7 +329,7 @@
          [(block-operator bar-operator separator) candidate]
          [else
           (cond
-            [(zero? s) (list 0)]
+            [(zero? s) 0]
             [else
              (define start (line-start t pos))
              (define delta (line-delta t start))
