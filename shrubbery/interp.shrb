@@ -6,41 +6,41 @@
    realistic program to try */
 
 type Value
-  | numV(n: Number)
-  | closV(arg: Symbol,
-          body: Exp,
-          env: Env)
+  | numV(n :: Number)
+  | closV(arg :: Symbol,
+          body :: Exp,
+          env :: Env)
 
 type Exp
-  | numE(n: Number)
-  | idE(s: Symbol)
-  | plusE(l: Exp,
-          r: Exp)
-  | multE(l: Exp,
-          r: Exp)
-  | letE(n: Symbol,
-         rhs: Exp,
-         body: Exp)
-  | lamE(n: Symbol,
-         body: Exp)
-  | appE(fun: Exp,
-         arg: Exp)
+  | numE(n :: Number)
+  | idE(s :: Symbol)
+  | plusE(l :: Exp,
+          r :: Exp)
+  | multE(l :: Exp,
+          r :: Exp)
+  | letE(n :: Symbol,
+         rhs :: Exp,
+         body :: Exp)
+  | lamE(n :: Symbol,
+         body :: Exp)
+  | appE(fun :: Exp,
+         arg :: Exp)
 
 type Binding
-  | bind(name: Symbol,
-         val: Value)
+  | bind(name :: Symbol,
+         val :: Value)
 
-type_alias Env: Listof(Binding)
+type_alias Env :: Listof(Binding)
 
-define mt_env: empty
+define mt_env :: empty
 
-define extend_env: cons
+define extend_env :: cons
 
 modulet test:
   print_only_errors(#true)
 
 // interp ----------------------------------------
-define interp(a: Exp, env: Env) -> Value:
+define interp(a :: Exp, env :: Env) :: Value:
   typecase Exp a
    | numE(n): numV(n)
    | idE(s): lookup(s, env)
@@ -96,17 +96,17 @@ modulet test:
     numV(1)
 
 // num+ and num* ----------------------------------------
-define num_op(op: Number Number -> Number, l: Value, r: Value) -> Value:
+define num_op(op :: Number Number :: Number, l :: Value, r :: Value) :: Value:
   cond
    | is_numV(l) && is_numV(r):
        numV(op(numV_n(l), numV_n(r)))
    | else:
        error(^interp, "not a number")
 
-define num_plus(l: Value, r: Value) -> Value:
+define num_plus(l :: Value, r :: Value) :: Value:
   num_op(op +, l, r)
 
-define num_mult(l: Value, r: Value) -> Value:
+define num_mult(l :: Value, r :: Value) :: Value:
   num_op(op *, l, r)
 
 modulet test:
