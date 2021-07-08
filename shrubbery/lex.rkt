@@ -109,10 +109,10 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" ":" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@")))]
+               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" ".")))
-                "|")]
+                "|" ":")]
 
   ;; disallows a number that starts +, -, or "."
   [number/continuing (:or decimal-number/continuing
