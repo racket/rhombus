@@ -188,9 +188,13 @@
                                 (get-block-column t (sub1 s) (col-of s start delta) start)))
           ;; redundant operators are not valid indentation points:
           (define next-s (skip-redundant-block-operators t (sub1 s) start))
+          ;; if this block operator is first after a bar operator or open brace,
+          ;; then indentation under the block operator is valid
+          (define next-candidate (and (empty-before-block-operator? t next-s start)
+                                      (col-of (add1 next-s) start delta)))
           ;; look further outside this block, and don't consider anything
           ;; that would appear to be nested in the block:
-          (define outer-candidates (loop next-s #f (min* block-col limit)))
+          (define outer-candidates (loop next-s next-candidate (min* block-col limit)))
           (append (cond
                     [candidate
                      ;; we already have something after `:`, so
@@ -400,7 +404,24 @@
              (loop (sub1 (or r s)) (or r s))])]
          [else (loop (sub1 s) s)])])))
 
+;; block operator just at `pos`+1
 (define (skip-redundant-block-operators t pos at-start)
+  (let loop ([pos pos] [result-pos pos])
+    (define start (line-start t pos))
+    (cond
+      [(= start at-start)
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment)
+          (loop (sub1 s) result-pos)]
+         [(block-operator)
+          (loop (sub1 s) (sub1 s))]
+         [else result-pos])]
+      [else result-pos])))
+
+;; block operator just at `pos`+1
+(define (empty-before-block-operator? t pos at-start)
   (let loop ([pos pos])
     (define start (line-start t pos))
     (cond
@@ -408,10 +429,14 @@
        (define-values (s e) (send t get-token-range pos))
        (define category (send t classify-position s))
        (case category
-         [(white-space comment block-operator)
+         [(white-space comment)
           (loop (sub1 s))]
-         [else pos])]
-      [else pos])))
+         [(bar-operator) #t]
+         [(parenthesis)
+          (define paren (send t get-text (sub1 e) e))
+          (equal? paren "{")]
+         [else #f])]
+      [else #f])))
 
 (define (opener? s)
   (member s '("(" "{" "[")))
