@@ -116,14 +116,19 @@
   (define-values (s e) (send t get-token-range (+ start current-tab)))
   (define o-s (send t backward-match e 0))
   (cond
-    [o-s
+    [o-s ; => s is closer
      (define o-start (line-start t o-s))
      (define o-delta (line-delta t o-start))
      (define col (col-of o-s o-start o-delta))
      ;; line up with indentation position of opener's group
      (define use-col
        (or (and (positive? o-s)
-                (get-block-column t (sub1 o-s) col o-start))
+                (let ()
+                  (define paren (send t get-text (sub1 e) e))
+                  (define next-s (if (equal? paren "}")
+                                     (skip-redundant-block-operators t (sub1 o-s) o-start)
+                                     (sub1 o-s)))
+                  (get-block-column t next-s col o-start)))
            col))
      (define s-delta (line-delta t start))
      (if (use-col . > . s-delta)
@@ -181,9 +186,11 @@
           (define block-col (if (zero? s)
                                 0
                                 (get-block-column t (sub1 s) (col-of s start delta) start)))
+          ;; redundant operators are not valid indentation points:
+          (define next-s (skip-redundant-block-operators t (sub1 s) start))
           ;; look further outside this block, and don't consider anything
           ;; that would appear to be nested in the block:
-          (define outer-candidates (loop (sub1 s) #f (min* block-col limit)))
+          (define outer-candidates (loop next-s #f (min* block-col limit)))
           (append (cond
                     [candidate
                      ;; we already have something after `:`, so
@@ -204,8 +211,9 @@
             [else
              (case category
                [(parenthesis)
+                (define paren (send t get-text (sub1 e) e))
                 (cond
-                  [(opener? (send t get-text (sub1 e) e))
+                  [(opener? paren)
                    ;; we're inside parentheses, brackets, etc.
                    (cond
                      [candidate (maybe-list candidate)]
@@ -217,7 +225,11 @@
                       ;; indentation for the bracket's group is before the bracket,
                       ;; then "outdent" that far
                       (define col (col-of s start delta))
-                      (define block-col (get-block-column t (sub1 s) col start))
+                      (define next-s (if (equal? paren "{")
+                                         ;; outdent past redundant operators:
+                                         (skip-redundant-block-operators t (sub1 s) start)
+                                         (sub1 s)))
+                      (define block-col (get-block-column t next-s col start))
                       (if (and block-col (block-col . < . col))
                           (maybe-list (+ block-col 2))
                           (maybe-list (+ col 2)))])]
@@ -387,6 +399,19 @@
              (define r (send t backward-match e 0))
              (loop (sub1 (or r s)) (or r s))])]
          [else (loop (sub1 s) s)])])))
+
+(define (skip-redundant-block-operators t pos at-start)
+  (let loop ([pos pos])
+    (define start (line-start t pos))
+    (cond
+      [(= start at-start)
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment block-operator)
+          (loop (sub1 s))]
+         [else pos])]
+      [else pos])))
 
 (define (opener? s)
   (member s '("(" "{" "[")))
