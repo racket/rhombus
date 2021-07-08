@@ -50,10 +50,9 @@ breaks and indentation in the source are not misleading.
 
 Here are some example shrubberies. Indented lines either start with
 `|`, follow a line that ends with `:`, or line up under a group that
-was started on the previous or continued on the previous line at the
-same alignment as the group's start. A `|` or `:` in the middle of a
-line also starts a new group. More precise rules are described below,
-but that's enough to get a sense of the examples.
+was started on a previous line. A `|` or `:` in the middle of a line
+also starts a new group. More precise rules are described below, but
+that's enough to get a sense of the examples.
 
 ```
 define identity(x): x
