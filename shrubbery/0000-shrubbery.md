@@ -48,10 +48,12 @@ breaks and indentation in the source are not misleading.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
-Here are some example shrubberies. A `:` in the middle of a line is the
-same as starting a new line with indentation for the part after the
-`:`. (Extra `:`s are allowed, but they are non-standard, and we don't
-use any extra `:`s here.)
+Here are some example shrubberies. Indented lines either start with
+`|`, follow a line that ends with `:`, or line up under a group that
+was started on the previous or continued on the previous line at the
+same alignment as the group's start. A `|` or `:` in the middle of a
+line also starts a new group. More precise rules are described below,
+but that's enough to get a sense of the examples.
 
 ```
 define identity(x): x
@@ -85,7 +87,7 @@ Forms like `define`, `cond`, and `match` are not specified by
 shrubbery notation, since specifying those forms is up to a language
 that is built on top of shrubbery notation. Still, shrubbery notation
 is meant to accommodate a particular kind of syntax for nested blocks
-(via indentation or `:`) and conditional branches (via `|`).
+(via indentation and/or `:`) and conditional branches (via `|`).
 
 Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of `char-symbolic?`,
@@ -265,9 +267,8 @@ hello {
 }
 ```
 
-Identation is allowed only on a line where the previous line ends with
-`:`, when the previous line ends with `|`, or the indented line starts
-with `|`.
+Identation to start a group is allowed only on a line where the
+previous line ends with `:` or the indented line starts with `|`.
 
 ```
 // Not allowed
