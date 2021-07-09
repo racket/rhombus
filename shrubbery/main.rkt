@@ -24,9 +24,12 @@
          (dynamic-require 'shrubbery/syntax-color
                           'shrubbery-lexer)]
         [(drracket:indentation)
-         (dynamic-require 'shrubbery/syntax-color
+         (dynamic-require 'shrubbery/indentation
                           'shrubbery-indentation)]
         [(drracket:range-indentation)
-         (dynamic-require 'shrubbery/syntax-color
+         (dynamic-require 'shrubbery/indentation
                           'shrubbery-range-indentation)]
+        [(drracket:grouping-position)
+         (dynamic-require 'shrubbery/navigation
+                          'shrubbery-grouping-position)]
         [else default]))))

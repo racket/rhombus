@@ -1,7 +1,7 @@
 #lang at-exp racket/base
 (require racket/class
          "../lex.rkt"
-         "../syntax-color.rkt"
+         "../indentation.rkt"
          (for-syntax racket/base))
 
 (define failed? #f)
