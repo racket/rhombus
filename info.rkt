@@ -6,3 +6,6 @@
   '("base"
     "syntax-color-lib"
     "parser-tools-lib"))
+
+(define build-deps
+  '("at-exp-lib"))
