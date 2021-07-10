@@ -75,12 +75,14 @@
     [else
      (let loop ([pos pos] [stay-on-line stay-on-line])
        (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
        (define (continue #:ok-to-change-line? [ok-to-change-line? #f])
          (define start (and stay-on-line (line-start t s)))
          (cond
            [(and stay-on-line
                  (not ok-to-change-line?)
-                 (not (eqv? start stay-on-line)))
+                 (not (eqv? start stay-on-line))
+                 (not (eq? category 'white-space)))
             (if (dir . < . 0)
                 (send t get-token-range e)
                 (send t get-token-range (sub1 s)))]
@@ -92,7 +94,6 @@
                 (if (eqv? e end-pos)
                     (values s e)
                     (loop e start)))]))
-       (define category (send t classify-position s))
        (case category
          [(white-space comment)
           (continue)]
@@ -238,6 +239,7 @@
     (or last-bar (and last-pos last-block) last-pos s))
   (let loop ([pos pos] ; checking before
              [last-bar #f] ; candidate bar (to move just before) most recently found (right line or column)
+             [col col] ; column of most recently found `last-bar`
              [last-block #f] ; candidate `:`, only counts if `last-pos` is set for outdented
              [last-pos #f] ; candiate start of an outdented block
              [bar-start at-start] ; line for current block (to detect same-line candidates)
@@ -249,11 +251,11 @@
        (define category (send t classify-position s))
        (case category
          [(white-space comment)
-          (loop s last-bar last-block last-pos
+          (loop s last-bar col last-block last-pos
                 bar-start at-start)]
          [(continue-operator)
           (define s-start (line-start t s))
-          (loop s last-bar last-block last-pos
+          (loop s last-bar col last-block last-pos
                 (if (= at-start bar-start) s-start bar-start) s-start)]
          [else
           (define s-start (line-start t pos))
@@ -267,31 +269,31 @@
                 (define o-s (send t backward-match e 0))
                 (cond
                   [o-s ; => `s` is a closer
-                   (loop o-s last-bar last-block (if (outdented? o-s) o-s last-pos)
+                   (loop o-s last-bar col last-block (if (outdented? o-s) o-s last-pos)
                          bar-start (line-start t o-s))]
                   [else ; `s` is an opener
                    (select last-bar last-block last-pos s)])]
                [(bar-operator)
+                (define s-col (col-of s s-start (line-delta t s-start)))
                 (cond
                   [(eqv? bar-start s-start)
                    ;; same line, so earlier bar the in same block
-                   (loop s s #f #f bar-start at-start)]
+                   (loop s s s-col #f #f bar-start 0)]
                   [else
-                   (define s-col (col-of s s-start (line-delta t s-start)))
                    (cond
                      [(s-col . > . col)
                       ;; more indented: ignore
-                      (loop s last-bar last-block last-pos bar-start at-start)]
+                      (loop s last-bar col last-block last-pos bar-start at-start)]
                      [(s-col . < . col)
                       ;; less indented
                       (select last-bar last-block last-pos s)]
                      [else
                       ;; same indented:
-                      (loop s s #f #f s-start s-start)])])]
+                      (loop s s col #f #f s-start 0)])])]
                [(block-operator)
                 (cond
                   [(outdented? s) (select last-bar last-block last-pos s)]
-                  [else (loop s last-bar s #f bar-start s-start)])]
+                  [else (loop s last-bar col s #f bar-start s-start)])]
                [else
-                (loop s last-bar last-block (if (outdented? s) s last-pos) bar-start s-start)])])])])))
+                (loop s last-bar col last-block (if (outdented? s) s last-pos) bar-start s-start)])])])])))
 
