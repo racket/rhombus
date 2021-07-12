@@ -36,6 +36,7 @@
          token-srcloc
 
          syntax->token
+         stx-for-original-property
 
          current-lexer-source)
 
@@ -276,7 +277,7 @@
    [identifier
     (ret 'identifier (string->symbol lexeme) 'symbol #f start-pos end-pos 'continuing)]
    [operator
-    (ret 'operator (string->symbol lexeme) 'operator #f start-pos end-pos 'initial)]
+    (ret 'operator (list 'op (string->symbol lexeme)) 'operator #f start-pos end-pos 'initial)]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))

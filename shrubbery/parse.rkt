@@ -63,7 +63,7 @@
 ;; Parse all groups in a stream
 (define (parse-top-groups l)
   (define-values (next-l last-line delta) (next-of l #f 0))
-  (define-values (gs rest-l end-line end-delta)
+  (define-values (gs rest-l end-line end-delta end-t)
     (parse-groups next-l (make-group-state #:closer eof
                                            #:column (if (pair? next-l)
                                                         (token-column (car next-l))
@@ -80,16 +80,17 @@
 ;;          remaining tokens after a closer
 ;;          line of last consumed (possibly closer)
 ;;          delta of last consumed
+;;          last token consumed (if a closer)
 (define (parse-groups l sg)
-  (define (done)
-    (values null l (group-state-last-line sg) (group-state-delta sg)))
+  (define (done end-t)
+    (values null l (group-state-last-line sg) (group-state-delta sg) end-t))
   (define closer (group-state-closer sg))
   (cond
     [(null? l)
      ;; Out of tokens
      (when (string? (closer-expected closer))
        (fail (closer-expected-opener closer) (format "expected ~s" (closer-expected closer))))
-     (done)]
+     (done #f)]
     [else
      (define t (car l))
      (define column (+ (token-column t) (group-state-delta sg)))
@@ -97,14 +98,14 @@
        [(and (closer-column? closer)
              (column . < . closer))
         ;; Next token is less indented than this group sequence
-        (done)]
+        (done #f)]
        [else
         ;; Dispatch on token
         (case (token-name t)
           [(closer)
            (cond
              [(closer-column? closer)
-              (done)]
+              (done #f)]
              [else
               (unless (equal? (closer-expected closer) (token-e t))
                 (fail t (format "expected ~s; closing at ~a" (closer-expected closer) (token-value t))))
@@ -113,7 +114,7 @@
                   (parse-groups (cdr l) (struct-copy group-state sg
                                                      [last-line (token-line t)]))
                   ;; stop at closer
-                  (values null (cdr l) (token-line t) (group-state-delta sg)))])]
+                  (values null (cdr l) (token-line t) (group-state-delta sg) t))])]
           [(whitespace comment continue-operator)
            (define-values (next-l last-line delta) (next-of l
                                                             (group-state-last-line sg)
@@ -124,7 +125,7 @@
           [(comma-operator)
            (cond
              [(closer-column? (group-state-closer sg))
-              (done)]
+              (done #f)]
              [else
               (unless (and (group-state-paren-immed? sg)
                            (group-state-comma-time? sg))
@@ -156,7 +157,7 @@
              [(bar-operator)
               (cond
                 [(group-state-bar-closes? sg)
-                 (done)]
+                 (done #f)]
                 [else
                  ;; Bar at the start of a group: no implicit block before,
                  ;; but parse content as a block
@@ -173,7 +174,7 @@
                                 #:closer (column-next column)
                                 #:bar-closes? #t
                                 #:delta (group-state-delta sg)))
-                 (define-values (gs rest-rest-l end-line end-delta)
+                 (define-values (gs rest-rest-l end-line end-delta end-t)
                    (parse-groups rest-l (struct-copy group-state sg
                                                      [column (if same-line?
                                                                  (group-state-column sg)
@@ -182,10 +183,15 @@
                                                      [last-line group-end-line]
                                                      [delta group-end-delta]
                                                      [comma-time? (group-state-paren-immed? sg)])))
-                 (values (cons (list 'group (cons 'bar g)) gs)
+                 (values (cons (list 'group
+                                     (add-span-srcloc
+                                      t end-t
+                                      (cons 'bar g)))
+                               gs)
                          rest-rest-l
                          end-line
-                         end-delta)])]
+                         end-delta
+                         end-t)])]
              [else
               ;; Parse one group, then recur to continue the sequence:
               (define column (+ (token-column t) (group-state-delta sg)))
@@ -199,7 +205,7 @@
                                            #:column column
                                            #:bar-closes? (group-state-bar-closes? sg)
                                            #:delta (group-state-delta sg))))
-              (define-values (gs rest-rest-l end-line end-delta)
+              (define-values (gs rest-rest-l end-line end-delta end-t)
                 (parse-groups rest-l (struct-copy group-state sg
                                                   [column (if (group-state-check-column? sg)
                                                               column
@@ -208,10 +214,12 @@
                                                   [last-line group-end-line]
                                                   [comma-time? (group-state-paren-immed? sg)]
                                                   [delta group-delta])))
-              (values (cons (cons 'group g) gs)
+              (values (cons (cons 'group g)
+                            gs)
                       rest-rest-l
                       end-line
-                      end-delta)])])])]))
+                      end-delta
+                      end-t)])])])]))
 
 ;; Parse one group.
 ;; Returns: the list of items in the group
@@ -253,7 +261,7 @@
               (unless (or (state-indent-ok? s)
                           (eq? 'bar-operator (token-name t)))
                 (fail t "wrong indentation (or missing `:` on previous line)"))
-              (define-values (indent-g rest-l end-line end-delta)
+              (define-values (indent-g rest-l end-line end-delta end-t)
                 (parse-groups l
                               (make-group-state #:closer column
                                                 #:column column
@@ -298,7 +306,10 @@
                                     #:closer (column-next (+ (token-column t) (state-delta s)))
                                     #:bar-closes? #t
                                     #:delta (state-delta s)))
-                     (values (list 'group (cons 'bar g))
+                     (values (list 'group
+                                   (add-span-srcloc
+                                    t #f
+                                    (cons 'bar g)))
                              rest-l
                              end-line
                              end-delta)]
@@ -307,7 +318,8 @@
                        (parse-group l (struct-copy state s
                                                    [line (token-line t)]
                                                    [column bar-column])))
-                     (values (cons 'group g) rest-l end-line end-delta)]))
+                     (values (cons 'group g)
+                             rest-l end-line end-delta)]))
                 (define accum (cons new-g prev-accum))
                 ;; If next is `|`, absorb it into the implicit block
                 (define (done-bar-block)
@@ -349,20 +361,23 @@
              (if (pair? next-l)
                  (+ (token-column (car next-l)) (state-delta s))
                  (column-next (+ (token-column t) (state-delta s)))))
-           (define-values (gs rest-l close-line close-delta)
+           (define-values (gs rest-l close-line close-delta end-t)
              (parse-groups next-l (make-group-state #:closer (make-closer-expected closer t)
                                                     #:paren-immed? paren-immed?
                                                     #:column sub-column
                                                     #:last-line last-line
                                                     #:delta delta)))
+           
            (define-values (g rest-rest-l end-line end-delta)
              (parse-group rest-l (struct-copy state s
                                               [line close-line]
                                               [delta close-delta]
                                               [indent-ok? #f])))
-           (values (cons (if (eq? tag 'block)
-                             (tag-as-block gs)
-                             (cons tag gs))
+           (values (cons (add-span-srcloc
+                          t end-t
+                          (if (eq? tag 'block)
+                              (tag-as-block gs)
+                              (cons tag gs)))
                          g)
                    rest-rest-l
                    end-line
@@ -390,7 +405,7 @@
   (cond
     [(pair? next-l)
      (define next-t (car next-l))
-     (define-values (indent-gs rest-l end-line end-delta)
+     (define-values (indent-gs rest-l end-line end-delta end-t)
        (parse-groups next-l
                      (make-group-state #:closer closer
                                        #:column (+ (token-column next-t) delta)
@@ -398,7 +413,9 @@
                                        #:bar-closes? bar-closes?
                                        #:delta delta)))
      (values (or (extract-one-block indent-gs)
-                 (list (tag-as-block indent-gs)))
+                 (list (add-span-srcloc
+                        t end-t
+                        (tag-as-block indent-gs))))
              rest-l
              end-line
              end-delta)]
@@ -413,8 +430,8 @@
               (null? (cddr gp))
               (let ([g (cadr gp)])
                 (and (pair? g)
-                     (or (eq? (car g) 'block)
-                         (eq? (car g) 'alts))
+                     (or (tag? 'block (car g))
+                         (tag? 'alts (car g)))
                      (list g)))))))
 
 (define (tag-as-block gs)
@@ -422,20 +439,59 @@
     [(and (pair? gs)
           (for/and ([g (in-list gs)])
             (and (pair? g)
-                 (eq? (car g) 'group)
+                 (eq? 'group (car g))
                  (pair? (cdr g))
                  (null? (cddr g))
                  (let ([b (cadr g)])
                    (and (pair? b)
-                        (eq? (car b) 'bar)
+                        (tag? 'bar (car b))
                         (pair? (cdr b))
                         (null? (cddr b))
                         (pair? (cadr b))
-                        (eq? 'block (caadr b)))))))
+                        (tag? 'block (caadr b)))))))
      (cons 'alts (for/list ([g (in-list gs)])
                    (let ([b (cadr g)])
                      (cadr b))))]
     [else (cons 'block gs)]))
+
+(define (tag? sym e)
+  (or (eq? sym e)
+      (and (syntax? e)
+           (eq? sym (syntax-e e)))))
+
+(define (add-span-srcloc start-t end-t l)
+  (cond
+    [(not start-t) l]
+    [else
+     (define (add-srcloc l loc)
+       (cons (datum->syntax #f (car l) loc stx-for-original-property)
+             (cdr l)))
+     (define last-t/e (or end-t
+                          (let loop ([e l])
+                            (cond
+                              [(syntax? e) e]
+                              [(not (pair? e)) #f]
+                              [(null? (cdr e))
+                               (loop (car e))]
+                              [else (loop (cdr e))]))))
+     (define s-loc (token-srcloc start-t))
+     (define e-loc/e (and last-t/e
+                          (if (syntax? last-t/e)
+                              last-t/e
+                              (token-srcloc last-t/e))))
+     (add-srcloc l (vector (srcloc-source s-loc)
+                           (srcloc-line s-loc)
+                           (srcloc-column s-loc)
+                           (srcloc-position s-loc)
+                           (let ([s (srcloc-position s-loc)]
+                                 [e (if (srcloc? e-loc/e)
+                                        (srcloc-position e-loc/e)
+                                        (syntax-position e-loc/e))]
+                                 [sp (if (srcloc? e-loc/e)
+                                         (srcloc-span e-loc/e)
+                                         (syntax-span e-loc/e))])
+                             (and s e sp
+                                  (+ (- e s) sp)))))]))
    
 ;; Consume whitespace and comments, including continuing backslashes,
 ;; where lookahead is needed
