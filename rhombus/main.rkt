@@ -9,7 +9,8 @@
                 (provide (all-from-out mod)))
          ...))
 (bounce "private/core-implicit.rkt"
-        "private/core-op.rkt")
+        "private/core-op.rkt"
+        "private/dot-op.rkt")
 
 (provide add1)
 

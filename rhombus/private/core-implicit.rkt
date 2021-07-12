@@ -7,7 +7,7 @@
          #%call)
 
 (define-syntax #%tuple
-  (rhombus-multi-unary-operator (lambda (forms stx)
+  (rhombus-multi-prefix-operator (lambda (forms stx)
                                   (cond
                                     [(null? forms)
                                      (raise-syntax-error #f "empty expression" stx)]
@@ -16,7 +16,7 @@
                                     [else (car forms)]))))
 
 (define-syntax #%call
-  (rhombus-multi-binary-operator (lambda (rator rands stx)
+  (rhombus-multi-infix-operator (lambda (rator rands stx)
                                    (datum->syntax (quote-syntax here)
                                                   (cons rator rands)
                                                   (span-srcloc rator stx)

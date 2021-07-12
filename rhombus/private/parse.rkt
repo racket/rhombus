@@ -41,24 +41,17 @@
     (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail)))
 
   (define (enforest #:init-form [init-form #f] stxes)
-    (let loop ([init-form init-form] [stxes stxes]
+    (let loop ([init-form init-form]
+               [stxes stxes]
                [combine (lambda (form) form)] [current-op #f] [stack '()])
-      (define (keep form/s context tail alone-name adjacent-name #:multi? [multi? #f])
-        (cond
-          [(not init-form)
-           (loop (if alone-name
-                     (alone-combine context alone-name form/s
-                                    #:multi? multi?)
-                     form/s)
-                 tail
-                 combine current-op stack)]
-          [else
-           (loop (adjacent-combine context adjacent-name init-form form/s
-                                   #:multi? multi?)
-                 tail
-                 combine current-op stack)]))
+      ;; helper to continue with an implicitly combined argument:
+      (define (keep form/s tail implicit-combine)
+        (loop (implicit-combine init-form form/s)
+              tail
+              combine current-op stack))
       (syntax-parse stxes
         [()
+         ;; input stream ended, so use up the combiner stack
          (cond
            [(not init-form) (raise-syntax-error #f "empty expression")]
            [(null? stack) (combine init-form)]
@@ -66,22 +59,31 @@
         [(head:operator . tail)
          (define v (syntax-local-value #'head.opname (lambda () #f)))
          (cond
-           [(and (rhombus-binary-operator? v)
+           [(and (rhombus-infix-operator? v)
                  (or init-form
-                     (not (rhombus-unary-operator? v))))
+                     (not (rhombus-prefix-operator? v))))
             (unless init-form
-              (raise-syntax-error #f "binary operator without preceding argument" #'head))
+              (raise-syntax-error #f "infix operator without preceding argument" #'head))
             (define rel-prec (if (not current-op)
                                  'higher
                                  (relative-precedence v current-op #'head)))
+            (log-error ">> ~s ~s => ~s" current-op #'head rel-prec)
             (cond
               [(or (not current-op) (eq? rel-prec 'higher))
-               (loop #f #'tail
-                     (lambda (form) (apply-binary-operator v init-form form #'head))
-                     v
-                     (cons (cons combine current-op) stack))]
+               (cond
+                 [(rhombus-infix-operator-transformer? v)
+                  ;; it's up to the transformer to consume whatever it wants after the operator
+                  (define-values (form new-tail) (apply-infix-operator-transformer v init-form #'tail #'head))
+                  (loop form new-tail combine current-op stack)]
+                 [else
+                  ;; new operator sets precedence, defer application of operator until a suitable rhs is parsed
+                  (loop #f #'tail
+                        (lambda (form) (apply-infix-operator v init-form form #'head))
+                        v
+                        (cons (cons combine current-op) stack))])]
               [(eq? rel-prec 'lower)
                (unless (pair? stack) (error 'internal "empty enforest stack"))
+               ;; combine for current operator, then try again
                (loop (combine init-form) stxes
                      (caar stack) (cdar stack) (cdr stack))]
               [else
@@ -99,37 +101,50 @@
                                         "  other operator: ~a")
                                        (syntax-e (rhombus-operator-name current-op)))
                                       #'head.opname)])])]
-           [(rhombus-unary-operator? v)
-            (loop init-form #'tail
-                  (lambda (form) (apply-unary-operator v form #'head))
-                  v
-                  (cons (cons combine current-op) stack))]
+           [(rhombus-prefix-operator? v)
+            (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head.opname))
+            (cond
+              [(rhombus-prefix-operator-transformer? v)
+               ;; it's up to the transformer to consume whatever it wants after the operator
+               (define-values (form new-tail) (apply-prefix-operator-transformer v #'tail #'head))
+               (keep form new-tail implicit-combine)]
+              [else
+               ;; new operator sets precedence, defer application of operator until a suitable argument is parsed
+               (loop #f #'tail
+                     (lambda (form) (implicit-combine init-form (apply-prefix-operator v form #'head)))
+                     v
+                     (cons (cons combine current-op) stack))])]
            [else
             (raise-syntax-error #f "unbound operator" #'head.name)])]
         [(head:identifier . tail)
+         (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head))
          (define v (syntax-local-value #'head (lambda () #f)))
          (cond
            [(rhombus-expression-transformer? v)
             (define-values (form tail) (apply-expression-transformer v stxes))
-            (keep form #'head tail #f juxtipose-name)]
+            (keep form tail implicit-combine)]
            [(rhombus-transformer? v)
             (raise-syntax-error #f "illegal use" #'head)]
            [else
             ;; identifier is a variable
-            (keep #'head #'head #'tail #f juxtipose-name)])]
+            (keep #'head #'tail implicit-combine)])]
         [(((~and tag (~datum parens)) . _) . tail)
-         (keep (parse-expression-sequence (stx-car stxes)) #'tag #'tail tuple-name call-name #:multi? #t)]
+         (define implicit-combine (lookup-implicit-combine init-form tuple-name call-name #'tag #:multi? #t))
+         (keep (parse-expression-sequence (stx-car stxes)) #'tail implicit-combine)]
         [(((~and tag (~datum braces)) . _) . tail)
-         (keep (parse-expression-sequence (stx-car stxes)) #'tag #'tail array-name ref-name #:multi? #t)]
+         (define implicit-combine (lookup-implicit-combine init-form array-name ref-name #'tag #:multi? #t))
+         (keep (parse-expression-sequence (stx-car stxes)) #'tail implicit-combine)]
         [(((~and tag (~datum block)) . _) . tail)
-         (keep (parse-expression-block (stx-car stxes)) #'tag #'tail #f juxtipose-name)]
+         (define implicit-combine (lookup-implicit-combine #f init-form juxtipose-name #'tag))
+         (keep (parse-expression-block (stx-car stxes)) #'tail implicit-combine)]
         [(((~and tag (~datum alts)) . inside) . tail)
          (raise-syntax-error 'alternation
                              "misplaced alternative"
                              (stx-car stxes)
                              #'tag)]
         [(datum . tail)
-         (keep (syntax/loc #'datum (#%datum . datum)) #'datum #'tail #f juxtipose-name)])))
+         (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'tag))
+         (keep (syntax/loc #'datum (#%datum . datum)) #'tail implicit-combine)])))
 
   ;; returns: 'higher, 'lower, 'same (no associativity), #f (not related)
   (define (relative-precedence op other-op head)
@@ -162,58 +177,15 @@
       [(or op-same? ot-same?
            (free-identifier=? (rhombus-operator-name op)
                               (rhombus-operator-name other-op)))
-       (define op-a (rhombus-binary-operator-assoc op))
-       (when (rhombus-binary-operator? other-op)
-         (unless (eq? op-a (rhombus-binary-operator-assoc other-op))
+       (define op-a (rhombus-infix-operator-assoc op))
+       (when (rhombus-infix-operator? other-op)
+         (unless (eq? op-a (rhombus-infix-operator-assoc other-op))
            (raise-inconsistent "associativity")))
        (case op-a
          [(left) 'lower]
          [(right) 'higher]
          [else 'same])]
       [else #f]))
-
-  (define (alone-combine adj-context alone-name form/s #:multi? multi?)
-    (define v (syntax-local-value (datum->syntax adj-context alone-name) (lambda () #f)))
-    (unless (if multi?
-                (rhombus-multi-unary-operator? v)
-                (rhombus-unary-operator? v))
-      (raise-syntax-error #f
-                          (format "misplaced expression;\n implicit `~a` is not a ~aunary operator in this context"
-                                  alone-name
-                                  (if multi? "multi-" ""))
-                          adj-context))
-    (apply-unary-operator v form/s adj-context #:multi? multi?))
-
-  (define (adjacent-combine adj-context adjacent-name form1 form2/s #:multi? multi?)
-    (define v (syntax-local-value (datum->syntax adj-context adjacent-name) (lambda () #f)))
-    (unless (if multi?
-                (rhombus-multi-binary-operator? v)
-                (rhombus-binary-operator? v))
-      (raise-syntax-error #f
-                          (format "misplaced expression;\n implicit `~a` is not a ~abinary operator in this context"
-                                  adjacent-name
-                                  (if multi? "multi-" ""))
-                          adj-context))
-    (apply-binary-operator v form1 form2/s adj-context #:multi? multi?))
-
-  (define (apply-unary-operator v form/s stx #:multi? [multi? #f])
-    (define form ((if multi?
-                      (rhombus-multi-unary-operator-proc v)
-                      (rhombus-unary-operator-proc v))
-                  form/s
-                  stx))
-    (unless (syntax? form) (raise-result-error 'rhombus-unary-operator "syntax?" form))
-    form)
-
-  (define (apply-binary-operator v form1 form2/s stx #:multi? [multi? #f])
-    (define form ((if multi?
-                      (rhombus-multi-binary-operator-proc v)
-                      (rhombus-binary-operator-proc v))
-                  form1
-                  form2/s
-                  stx))
-    (unless (syntax? form) (raise-result-error 'rhombus-binary-operator "syntax?" form))
-    form)
   
   (define (apply-expression-transformer t stx)
     (call-with-values

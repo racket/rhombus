@@ -1,4 +1,6 @@
 #lang racket/base
+(require syntax/stx
+         "proc-name.rkt")
 
 (provide rhombus-operator?
          rhombus-operator-name
@@ -6,19 +8,24 @@
          rhombus-operator-same-as-names
          rhombus-operator-greater-than-names
 
-         rhombus-unary-operator
-         rhombus-unary-operator?
-         rhombus-unary-operator-proc
-         prop:rhombus-unary-operator
+         rhombus-prefix-operator
+         rhombus-prefix-operator?
+         rhombus-prefix-operator-proc
+         prop:rhombus-prefix-operator
 
-         rhombus-binary-operator
-         rhombus-binary-operator?
-         rhombus-binary-operator-proc
-         rhombus-binary-operator-assoc
-         prop:rhombus-binary-operator
+         rhombus-infix-operator
+         rhombus-infix-operator?
+         rhombus-infix-operator-proc
+         rhombus-infix-operator-assoc
+         prop:rhombus-infix-operator
 
-         (struct-out rhombus-multi-unary-operator)
-         (struct-out rhombus-multi-binary-operator)
+         rhombus-prefix-operator-transformer?
+         prop:rhombus-prefix-operator-transformer
+         rhombus-infix-operator-transformer?
+         prop:rhombus-infix-operator-transformer
+         
+         (struct-out rhombus-multi-prefix-operator)
+         (struct-out rhombus-multi-infix-operator)
 
          juxtipose-name
          tuple-name
@@ -26,33 +33,47 @@
          array-name
          ref-name
 
-         relative-precedence)
+         relative-precedence
 
-(define-values (prop:rhombus-unary-operator rhombus-unary-operator? rhombus-unary-operator-ref)
-  (make-struct-type-property 'rhombus-unary-operator))
-(define-values (prop:rhombus-binary-operator rhombus-binary-operator? rhombus-binary-operator-ref)
-  (make-struct-type-property 'rhombus-binary-operator))
+         lookup-implicit-combine
+
+         apply-prefix-operator
+         apply-infix-operator
+         apply-prefix-operator-transformer
+         apply-infix-operator-transformer)
+
+(define-values (prop:rhombus-prefix-operator rhombus-prefix-operator? rhombus-prefix-operator-ref)
+  (make-struct-type-property 'rhombus-prefix-operator))
+(define-values (prop:rhombus-infix-operator rhombus-infix-operator? rhombus-infix-operator-ref)
+  (make-struct-type-property 'rhombus-infix-operator))
+
+(define-values (prop:rhombus-prefix-operator-transformer rhombus-prefix-operator-transformer? rhombus-prefix-operator-transformer-ref)
+  (make-struct-type-property 'rhombus-prefix-operator-transformer #f
+                             (list (cons prop:rhombus-infix-operator values))))
+(define-values (prop:rhombus-infix-operator-transformer rhombus-infix-operator-transformer? rhombus-infix-operator-transformer-ref)
+  (make-struct-type-property 'rhombus-infix-operator-transformer #f
+                             (list (cons prop:rhombus-infix-operator values))))
 
 (struct operator (name less-than-names same-as-names greater-than-names))
-(struct unary-operator operator (proc)
-  #:property prop:rhombus-unary-operator (lambda (self) self))
-(struct binary-operator operator (assoc proc)
-  #:property prop:rhombus-binary-operator (lambda (self) self))
+(struct prefix-operator operator (proc)
+  #:property prop:rhombus-prefix-operator (lambda (self) self))
+(struct infix-operator operator (assoc proc)
+  #:property prop:rhombus-infix-operator (lambda (self) self))
 
-(define (rhombus-unary-operator name less-than-names same-as-names greater-than-names proc)
-  (unary-operator name less-than-names same-as-names greater-than-names proc))
+(define (rhombus-prefix-operator name less-than-names same-as-names greater-than-names proc)
+  (prefix-operator name less-than-names same-as-names greater-than-names proc))
 
-(define (rhombus-binary-operator name less-than-names same-as-names greater-than-names assoc proc)
-  (binary-operator name less-than-names same-as-names greater-than-names assoc proc))
+(define (rhombus-infix-operator name less-than-names same-as-names greater-than-names assoc proc)
+  (infix-operator name less-than-names same-as-names greater-than-names assoc proc))
 
 (define (rhombus-operator? v)
-  (or (rhombus-unary-operator? v)
-      (rhombus-binary-operator? v)))
+  (or (rhombus-prefix-operator? v)
+      (rhombus-infix-operator? v)))
 
 (define (unwrap-operator o)
   (cond
-    [(or (rhombus-unary-operator-ref o #f)
-         (rhombus-binary-operator-ref o #f))
+    [(or (rhombus-prefix-operator-ref o #f)
+         (rhombus-infix-operator-ref o #f))
      => (lambda (sel) (sel o))]
     [else o]))
 
@@ -68,31 +89,31 @@
 (define (rhombus-operator-greater-than-names o)
   (operator-greater-than-names (unwrap-operator o)))
 
-(define (unwrap-unary-operator o)
+(define (unwrap-prefix-operator o)
   (cond
-    [(rhombus-unary-operator-ref o #f)
+    [(rhombus-prefix-operator-ref o #f)
      => (lambda (sel) (sel o))]
     [else o]))
 
-(define (rhombus-unary-operator-proc o)
-  (unary-operator-proc (unwrap-unary-operator o)))
+(define (rhombus-prefix-operator-proc o)
+  (prefix-operator-proc (unwrap-prefix-operator o)))
 
-(define (unwrap-binary-operator o)
+(define (unwrap-infix-operator o)
   (cond
-    [(rhombus-binary-operator-ref o #f)
+    [(rhombus-infix-operator-ref o #f)
      => (lambda (sel) (sel o))]
     [else o]))
 
-(define (rhombus-binary-operator-proc o)
-  (binary-operator-proc (unwrap-binary-operator o)))
+(define (rhombus-infix-operator-proc o)
+  (infix-operator-proc (unwrap-infix-operator o)))
 
-(define (rhombus-binary-operator-assoc o)
-  (binary-operator-assoc (unwrap-binary-operator o)))
+(define (rhombus-infix-operator-assoc o)
+  (infix-operator-assoc (unwrap-infix-operator o)))
 
 ;; for `#%tuple` and `#%array`:
-(struct rhombus-multi-unary-operator (proc))
+(struct rhombus-multi-prefix-operator (proc))
 ;; for `#%call` and `#%ref`:
-(struct rhombus-multi-binary-operator (proc))
+(struct rhombus-multi-infix-operator (proc))
 
 (define juxtipose-name '#%juxtipose)
 (define tuple-name '#%tuple)
@@ -131,12 +152,92 @@
     [(or op-same? ot-same?
          (free-identifier=? (rhombus-operator-name op)
                             (rhombus-operator-name other-op)))
-     (define op-a (rhombus-binary-operator-assoc op))
-     (when (rhombus-binary-operator? other-op)
-       (unless (eq? op-a (rhombus-binary-operator-assoc other-op))
+     (define op-a (rhombus-infix-operator-assoc op))
+     (when (rhombus-infix-operator? other-op)
+       (unless (eq? op-a (rhombus-infix-operator-assoc other-op))
          (raise-inconsistent "associativity")))
      (case op-a
        [(left) 'lower]
        [(right) 'higher]
        [else 'same])]
     [else #f]))
+
+;; Helper to find an implicit, which is constrained to have a higher
+;; precedence than everything else and to be left-associative.
+;; For example, the function-call form triggered by `f(x)` is an
+;; implement that combines `f` and `(x)`; implicits can have multiple
+;; RHS arguments, as in `f(x, y)` or `a[row, col]`. Implicits are also
+;; used for parenthesized things or brackets things without a preceding
+;; expression. Finally, there can be an implicit that combines arbitrary
+;; adjacent expressions where the second is not in parentheses or braces
+(define (lookup-implicit-combine init-form alone-name adjacent-name context #:multi? [multi? #f])
+  (cond
+    [(not init-form)
+     (if alone-name
+         (lookup-alone-combine context alone-name #:multi? multi?)
+         (lambda (init-form form) form))]
+    [else
+     (lookup-adjacent-combine context adjacent-name #:multi? multi?)]))
+
+(define (lookup-alone-combine adj-context alone-name #:multi? multi?)
+  (define v (syntax-local-value (datum->syntax adj-context alone-name) (lambda () #f)))
+  (unless (if multi?
+              (rhombus-multi-prefix-operator? v)
+              (rhombus-prefix-operator? v))
+    (raise-syntax-error #f
+                        (format (string-append
+                                 "misplaced expression;\n"
+                                 " no infix operator is between this expression and the previous one,\n"
+                                 " and `~a` is not bound as an implicit ~aprefix operator")
+                                alone-name
+                                (if multi? "multi-" ""))
+                        adj-context))
+  (lambda (init-form form/s)
+    (apply-prefix-operator v form/s adj-context #:multi? multi?)))
+
+(define (lookup-adjacent-combine adj-context adjacent-name #:multi? multi?)
+  (define v (syntax-local-value (datum->syntax adj-context adjacent-name) (lambda () #f)))
+  (unless (if multi?
+              (rhombus-multi-infix-operator? v)
+              (rhombus-infix-operator? v))
+    (raise-syntax-error #f
+                        (format
+                         (string-append
+                          "misplaced expression;\n"
+                          " no infix operator is between this expression and the previous one,\n"
+                          " and `~a` is not bound as an implicit ~ainfix operator")
+                         adjacent-name
+                         (if multi? "multi-" ""))
+                        adj-context))
+  (lambda (form1 form2/s)
+    (apply-infix-operator v form1 form2/s adj-context #:multi? multi?)))
+
+(define (apply-prefix-operator v form/s stx #:multi? [multi? #f])
+  (define proc (if multi?
+                   (rhombus-multi-prefix-operator-proc v)
+                   (rhombus-prefix-operator-proc v)))
+  (define form (proc form/s stx))
+  (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+  form)
+
+(define (apply-infix-operator v form1 form2/s stx #:multi? [multi? #f])
+  (define proc (if multi?
+                    (rhombus-multi-infix-operator-proc v)
+                    (rhombus-infix-operator-proc v)))
+  (define form (proc form1 form2/s stx))
+  (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+  form)
+
+(define (apply-prefix-operator-transformer v tail stx)
+  (define proc (rhombus-prefix-operator-proc v))
+  (define-values (form new-tail) (proc tail stx))
+  (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+  (unless (stx-list? form) (raise-result-error (proc-name proc) "stx-list?" form))
+  (values form new-tail))
+
+(define (apply-infix-operator-transformer v form1 tail stx)
+  (define proc (rhombus-infix-operator-proc v))
+  (define-values (form new-tail) (proc form1 tail stx))
+  (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+  (unless (stx-list? form) (raise-result-error (proc-name proc) "stx-list?" form))
+  (values form new-tail))
