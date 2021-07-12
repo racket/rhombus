@@ -530,7 +530,10 @@ The parse of a shrubbery can be represented by an S-expression:
  * Each group is represented as a list that starts `'group`, and
    the rest of the list are the elements of the group.
 
- * Atom elements are represented as “themselves” within a group.
+ * Atom elements are represented as “themselves” within a group,
+   including identifers a symbols, except that an operator is
+   represented as a 2-list that is `'op` followed by the operator name
+   as a symbol.
 
  * A group sequence is represented as a list of `'group` lists.
 
@@ -574,8 +577,8 @@ define fourth(n: integer):
        fourth
        (parens (group n (block (group integer))))
        (block
-        (group define m (block (group n * n)))
-        (group define v (block (group m * m)))
+        (group define m (block (group n (op *) n)))
+        (group define v (block (group m (op *) m)))
         (group printf
                (parens (group "\"~a^4 = ~a\\n\"") (group n) (group v)))
         (group v)))
@@ -586,8 +589,8 @@ if x = y
  | same
  | different
 
-(group if x = y (alts (block (group same))
-                      (block (group different))))
+(group if x (op =) y (alts (block (group same))
+                           (block (group different))))
 ```
 
 ```
@@ -610,10 +613,10 @@ define fib(n):
                  (group n
                         (block
                          (group fib
-                                (parens (group n - 1))
-                                +
+                                (parens (group n (op -) 1))
+                                (op +)
                                 fib
-                                (parens (group n - 2))))))))))))
+                                (parens (group n (op -) 2))))))))))))
 ```
 
 ## Lexeme Parsing
