@@ -8,8 +8,8 @@
   (begin (begin (require mod)
                 (provide (all-from-out mod)))
          ...))
-(bounce "private/default.rkt"
-        "private/op.rkt")
+(bounce "private/core-implicit.rkt"
+        "private/core-op.rkt")
 
 (provide add1)
 

@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     "srcloc.rkt")
-         "parse.rkt")
+                     "srcloc.rkt"
+                     "op.rkt"))
 
 (provide #%tuple
          #%call)

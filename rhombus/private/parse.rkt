@@ -1,13 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     syntax/stx))
+                     syntax/stx
+                     "op.rkt"))
 
-(provide (for-syntax parse-top
-                     rhombus-unary-operator
-                     rhombus-binary-operator
-                     rhombus-multi-unary-operator
-                     rhombus-multi-binary-operator))
+(provide (for-syntax parse-top))
 
 (begin-for-syntax
   (struct rhombus-form (expansion))
@@ -21,20 +18,6 @@
   (struct rhombus-definition-transformer rhombus-transformer ())
   ;; returns a list of declarations+definitions+expression:
   (struct rhombus-declaration-transformer rhombus-transformer ())
-
-  (struct rhombus-unary-operator (name proc))
-  (struct rhombus-binary-operator (name proc less-than-names same-as-names greater-than-names assoc))
-
-  ;; for `#%tuple` and `#%array`:
-  (struct rhombus-multi-unary-operator (proc))
-  ;; for `#%call` and `#%ref`:
-  (struct rhombus-multi-binary-operator (proc))
-
-  (define juxtipose-name '#%juxtipose)
-  (define tuple-name '#%tuple)
-  (define call-name '#%call)
-  (define array-name '#%array)
-  (define ref-name '#%ref)
 
   (define-syntax-class operator
     (pattern ((~datum op) name) #:attr opname #'name))
@@ -83,7 +66,9 @@
         [(head:operator . tail)
          (define v (syntax-local-value #'head.opname (lambda () #f)))
          (cond
-           [(rhombus-binary-operator? v)
+           [(and (rhombus-binary-operator? v)
+                 (or init-form
+                     (not (rhombus-unary-operator? v))))
             (unless init-form
               (raise-syntax-error #f "binary operator without preceding argument" #'head))
             (define rel-prec (if (not current-op)
@@ -112,13 +97,13 @@
                                         "combination of operators without declared relative precedence"
                                         " needs explicit parenthesization\n"
                                         "  other operator: ~a")
-                                       (syntax-e (rhombus-binary-operator-name current-op)))
+                                       (syntax-e (rhombus-operator-name current-op)))
                                       #'head.opname)])])]
            [(rhombus-unary-operator? v)
             (loop init-form #'tail
-                  (lambda (form) (combine (apply-unary-operator v form #'head)))
-                  current-op
-                  stack)]
+                  (lambda (form) (apply-unary-operator v form #'head))
+                  v
+                  (cons (cons combine current-op) stack))]
            [else
             (raise-syntax-error #f "unbound operator" #'head.name)])]
         [(head:identifier . tail)
@@ -150,13 +135,13 @@
   (define (relative-precedence op other-op head)
     (define (find op ids)
       (for/or ([id (in-list ids)])
-        (free-identifier=? (rhombus-binary-operator-name op) id)))
-    (define op-lo? (find other-op (rhombus-binary-operator-less-than-names op)))
-    (define op-same? (find other-op (rhombus-binary-operator-same-as-names op)))
-    (define op-hi? (find other-op (rhombus-binary-operator-greater-than-names op)))
-    (define ot-lo? (find op (rhombus-binary-operator-less-than-names other-op)))
-    (define ot-same? (find op (rhombus-binary-operator-same-as-names other-op)))
-    (define ot-hi? (find op (rhombus-binary-operator-greater-than-names other-op)))
+        (free-identifier=? (rhombus-operator-name op) id)))
+    (define op-lo? (find other-op (rhombus-operator-less-than-names op)))
+    (define op-same? (find other-op (rhombus-operator-same-as-names op)))
+    (define op-hi? (find other-op (rhombus-operator-greater-than-names op)))
+    (define ot-lo? (find op (rhombus-operator-less-than-names other-op)))
+    (define ot-same? (find op (rhombus-operator-same-as-names other-op)))
+    (define ot-hi? (find op (rhombus-operator-greater-than-names other-op)))
     (define (raise-inconsistent how)
       (raise-syntax-error #f
                            (format
@@ -164,8 +149,8 @@
                                            "  one operator: ~a\n"
                                            "  other operator: ~a")
                             how
-                            (syntax-e (rhombus-binary-operator-name op))
-                            (syntax-e (rhombus-binary-operator-name other-op)))
+                            (syntax-e (rhombus-operator-name op))
+                            (syntax-e (rhombus-operator-name other-op)))
                            head))
     (cond
       [(or (and op-lo? (or ot-lo? ot-same?))
@@ -175,11 +160,12 @@
       [(or op-lo? ot-hi?) 'lower]
       [(or op-hi? ot-lo?) 'higher]
       [(or op-same? ot-same?
-           (free-identifier=? (rhombus-binary-operator-name op)
-                              (rhombus-binary-operator-name other-op)))
+           (free-identifier=? (rhombus-operator-name op)
+                              (rhombus-operator-name other-op)))
        (define op-a (rhombus-binary-operator-assoc op))
-       (unless (eq? op-a (rhombus-binary-operator-assoc other-op))
-         (raise-inconsistent "associativity"))
+       (when (rhombus-binary-operator? other-op)
+         (unless (eq? op-a (rhombus-binary-operator-assoc other-op))
+           (raise-inconsistent "associativity")))
        (case op-a
          [(left) 'lower]
          [(right) 'higher]
