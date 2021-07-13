@@ -10,9 +10,10 @@
          ...))
 (bounce "private/core-implicit.rkt"
         "private/core-op.rkt"
-        "private/dot-op.rkt")
-
-(provide add1)
+        "private/dot-op.rkt"
+        "private/define.rkt"
+        "private/type.rkt"
+        "private/list.rkt")
 
 (module reader racket/base
   (require shrubbery/parse

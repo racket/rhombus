@@ -20,6 +20,25 @@
 (begin-for-syntax
   (require (for-syntax racket/base
                        syntax/parse))
+  (define-syntax (prefix-operator stx)
+    (syntax-parse stx
+      [(_ name:identifier prim:identifier
+          (~optional (~seq #:less-than (greater-op ...))
+                     #:defaults ([(greater-op 1) '()]))
+          (~optional (~seq #:same-as (same-op ...))
+                     #:defaults ([(same-op 1) '()]))
+          (~optional (~seq #:greater-than (lesser-op ...))
+                     #:defaults ([(lesser-op 1) '()])))
+       #`(rhombus-prefix-operator (quote-syntax name)
+                                  (list (quote-syntax greater-op) ...)
+                                  (list (quote-syntax same-op) ...)
+                                  (list (quote-syntax lesser-op) ...)
+                                  (lambda (form stx)
+                                    (datum->syntax (quote-syntax here)
+                                                   (list 'prim form)
+                                                   (span-srcloc stx form)
+                                                   stx)))]))
+
   (define-syntax (infix-operator stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
@@ -32,34 +51,15 @@
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left])))
        #`(rhombus-infix-operator (quote-syntax name)
-                                  (list (quote-syntax greater-op) ...)
-                                  (list (quote-syntax same-op) ...)
-                                  (list (quote-syntax lesser-op) ...)
-                                  assoc
-                                  (lambda (form1 form2 stx)
-                                    (datum->syntax (quote-syntax here)
-                                                   (list 'prim form1 form2)
-                                                   (span-srcloc form1 form2)
-                                                   stx)))]))
-
-  (define-syntax (prefix-operator stx)
-    (syntax-parse stx
-      [(_ name:identifier prim:identifier
-          (~optional (~seq #:less-than (greater-op ...))
-                     #:defaults ([(greater-op 1) '()]))
-          (~optional (~seq #:same-as (same-op ...))
-                     #:defaults ([(same-op 1) '()]))
-          (~optional (~seq #:greater-than (lesser-op ...))
-                     #:defaults ([(lesser-op 1) '()])))
-       #`(rhombus-prefix-operator (quote-syntax name)
-                                 (list (quote-syntax greater-op) ...)
-                                 (list (quote-syntax same-op) ...)
-                                 (list (quote-syntax lesser-op) ...)
-                                 (lambda (form stx)
-                                   (datum->syntax (quote-syntax here)
-                                                  (list 'prim form)
-                                                  (span-srcloc stx form)
-                                                  stx)))]))
+                         (list (quote-syntax greater-op) ...)
+                         (list (quote-syntax same-op) ...)
+                         (list (quote-syntax lesser-op) ...)
+                         (lambda (form1 form2 stx)
+                           (datum->syntax (quote-syntax here)
+                                          (list 'prim form1 form2)
+                                          (span-srcloc form1 form2)
+                                          stx))
+                         assoc)]))
 
   (struct rhombus-prefix+infix-operator (prefix infix)
     #:property prop:rhombus-prefix-operator (lambda (self) (rhombus-prefix+infix-operator-prefix self))
