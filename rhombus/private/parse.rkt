@@ -2,32 +2,25 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx
-                     "op.rkt"))
+                     "op.rkt"
+                     "transformer.rkt"))
 
-(provide (for-syntax parse-top))
+(provide rhombus-top
+         rhombus-block
+         rhombus-expression)
 
 (begin-for-syntax
-  (struct rhombus-form (expansion))
-  (struct rhombus-definition rhombus-form ())
-  (struct rhombus-expression rhombus-form ())
-
-  (struct rhombus-transformer (proc))
-  ;; returns an expression and a tail of unused syntax:
-  (struct rhombus-expression-transformer rhombus-transformer ())
-  ;; returns a list of definitions+expressions and a list of expressions:
-  (struct rhombus-definition-transformer rhombus-transformer ())
-  ;; returns a list of declarations+definitions+expression:
-  (struct rhombus-declaration-transformer rhombus-transformer ())
-
   (define-syntax-class operator
     (pattern ((~datum op) name) #:attr opname #'name))
 
+  ;; Things that can appear at the top of a module:
   (define-syntax-class declaration
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
              #:when (rhombus-declaration-transformer? v)
              #:attr expandeds (apply-declaration-transformer v (cons #'head #'tail))))
 
+  ;; Things that can appear in a definition context:
   (define-syntax-class definition
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
@@ -37,11 +30,57 @@
              #:attr expandeds defns-and-exprs
              #:attr exprs exprs))
 
+  ;; Things that can appear in an expression context:
   (define-syntax-class expression
     (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail)))
 
-  (define (enforest #:init-form [init-form #f] stxes)
-    (let loop ([init-form init-form]
+  ;; The `enforest` function below is based on the one described in
+  ;; figure 1 of "Honu: Syntactic Extension for Algebraic Notation
+  ;; through Enforestation". Some key differences:
+  ;;
+  ;; * A prefix or infix operator has an associated combiner procedure
+  ;;   to produce a Racket expression form, instead of always making a
+  ;;   `bin` or `un` AST node.
+  ;;
+  ;; * A prefix or infix operator can be bound to a transformer, in
+  ;;   which case all parsing for the (second) argument is up to the
+  ;;   transformer. A prefix operator as a transformer acts just like
+  ;;   a transformer bound to an identifier, while an infix operator
+  ;;   as transformer is useful for something like `.` (where the
+  ;;   second "argument" is not an expression).
+  ;;
+  ;; * Function calls, array references, and list construction are not
+  ;;   quite built-in. Instead, those positions correspond to the use
+  ;;   of implicit operators, such as `#%call`. Many of these
+  ;;   operators are special because they're N-ary (e.g., `f(1,2)` has
+  ;;   three "arguments" `f`, `1`, and `2`), so they use a special
+  ;;   protocol as non-transformer operators, but they can follow the
+  ;;   regular protocol as transformers.
+  ;;
+  ;; * The paper's prefix-operator case seems wrong; the old operator
+  ;;   and combiner should be pushed onto the stack, as here.
+  ;;
+  ;; Also, operator precedence is not based on numerical levels or
+  ;; even a transitive order. Instead, each operator can declare an
+  ;; order relative to specific other operators, and an error is
+  ;; reported if two operators must be compared fr precedence and have
+  ;; no declared order.
+  ;;
+  ;; Terminology compared to the paper: "form" means "tree term", and
+  ;; "stx" means "term". A "head" or "tail" is a stx/term.
+
+  ;; implicit operator names:
+  (define juxtipose-name '#%juxtipose) ; exprs with no operator between, when not #%call or #%ref
+  (define tuple-name '#%tuple)         ; parentheses not after an expression
+  (define call-name '#%call)           ; parentheses adjacent to preceding expression
+  (define array-name '#%array)         ; square brackets not after an expression
+  (define ref-name '#%ref)             ; square brackets adjacent to preceding expression
+
+  ;; implicit form names:
+  (define block-name '#%block)         ; curly braces (normally mapped to `rhombus-block`)
+
+  (define (enforest stxes)
+    (let loop ([init-form #f]
                [stxes stxes]
                [combine (lambda (form) form)] [current-op #f] [stack '()])
       ;; helper to continue with an implicitly combined argument:
@@ -49,6 +88,25 @@
         (loop (implicit-combine init-form form/s)
               tail
               combine current-op stack))
+      ;; helper to apply an implicit-combine transformer:
+      (define (implicit-transform implicit-combine stx)
+        (define-values (form tail) (apply-infix-operator-transformer implicit-combine init-form stxes stx))
+        (loop form tail
+              combine current-op stack))
+      ;; helper to selected among the above two helpers
+      (define (implicit-or-keep to-keep-thunk stx tail implicit-combine)
+        (cond
+          [(rhombus-infix-operator-transformer? implicit-combine)
+           ;; `init-form` must be non-#f here
+           (implicit-transform implicit-combine stx)]
+          [(rhombus-prefix-operator-transformer? implicit-combine)
+           ;; `init-form` must be #f here
+           (define-values (form tail) (apply-prefix-operator-transformer implicit-combine stxes stx))
+           (loop form tail
+                 combine current-op stack)]
+          [else
+           (keep (to-keep-thunk) tail implicit-combine)]))
+      ;; dispatch on the head token
       (syntax-parse stxes
         [()
          ;; input stream ended, so use up the combiner stack
@@ -67,7 +125,6 @@
             (define rel-prec (if (not current-op)
                                  'higher
                                  (relative-precedence v current-op #'head)))
-            (log-error ">> ~s ~s => ~s" current-op #'head rel-prec)
             (cond
               [(or (not current-op) (eq? rel-prec 'higher))
                (cond
@@ -104,6 +161,9 @@
            [(rhombus-prefix-operator? v)
             (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head.opname))
             (cond
+              [(rhombus-infix-operator-transformer? implicit-combine)
+               ;; it's up to the transformer to figure out what to do with the operator
+               (implicit-transform implicit-combine #'head.opname)]
               [(rhombus-prefix-operator-transformer? v)
                ;; it's up to the transformer to consume whatever it wants after the operator
                (define-values (form new-tail) (apply-prefix-operator-transformer v #'tail #'head))
@@ -118,130 +178,87 @@
             (raise-syntax-error #f "unbound operator" #'head.name)])]
         [(head:identifier . tail)
          (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head))
-         (define v (syntax-local-value #'head (lambda () #f)))
          (cond
-           [(rhombus-expression-transformer? v)
-            (define-values (form tail) (apply-expression-transformer v stxes))
-            (keep form tail implicit-combine)]
-           [(rhombus-transformer? v)
-            (raise-syntax-error #f "illegal use" #'head)]
+           [(rhombus-infix-operator-transformer? implicit-combine)
+            (implicit-transform implicit-combine #'head)]
            [else
-            ;; identifier is a variable
-            (keep #'head #'tail implicit-combine)])]
+            (define v (syntax-local-value #'head (lambda () #f)))
+            (cond
+              [(rhombus-expression-transformer? v)
+               (define-values (form tail) (apply-expression-transformer v stxes))
+               (keep form tail implicit-combine)]
+              [(rhombus-transformer? v)
+               (raise-syntax-error #f "illegal use" #'head)]
+              [else
+               ;; identifier is a variable
+               (keep #'head #'tail implicit-combine)])])]
         [(((~and tag (~datum parens)) . _) . tail)
          (define implicit-combine (lookup-implicit-combine init-form tuple-name call-name #'tag #:multi? #t))
-         (keep (parse-expression-sequence (stx-car stxes)) #'tail implicit-combine)]
+         (implicit-or-keep (lambda () (parse-expression-sequence (stx-car stxes))) #'tag #'tail implicit-combine)]
         [(((~and tag (~datum braces)) . _) . tail)
          (define implicit-combine (lookup-implicit-combine init-form array-name ref-name #'tag #:multi? #t))
-         (keep (parse-expression-sequence (stx-car stxes)) #'tail implicit-combine)]
-        [(((~and tag (~datum block)) . _) . tail)
+         (implicit-or-keep (lambda () (parse-expression-sequence (stx-car stxes))) #'tag #'tail implicit-combine)]
+        [(((~and tag (~datum block)) . inside) . tail)
          (define implicit-combine (lookup-implicit-combine #f init-form juxtipose-name #'tag))
-         (keep (parse-expression-block (stx-car stxes)) #'tail implicit-combine)]
+         (define (make-block-form)
+           (define stx #'tag)
+           (datum->syntax #f (cons (datum->syntax stx block-name stx stx) #'inside) stx stx))
+         (implicit-or-keep make-block-form #'tag #'tail implicit-combine)]
         [(((~and tag (~datum alts)) . inside) . tail)
-         (raise-syntax-error 'alternation
+         (raise-syntax-error #f
                              "misplaced alternative"
                              (stx-car stxes)
                              #'tag)]
         [(datum . tail)
-         (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'tag))
-         (keep (syntax/loc #'datum (#%datum . datum)) #'tail implicit-combine)])))
-
-  ;; returns: 'higher, 'lower, 'same (no associativity), #f (not related)
-  (define (relative-precedence op other-op head)
-    (define (find op ids)
-      (for/or ([id (in-list ids)])
-        (free-identifier=? (rhombus-operator-name op) id)))
-    (define op-lo? (find other-op (rhombus-operator-less-than-names op)))
-    (define op-same? (find other-op (rhombus-operator-same-as-names op)))
-    (define op-hi? (find other-op (rhombus-operator-greater-than-names op)))
-    (define ot-lo? (find op (rhombus-operator-less-than-names other-op)))
-    (define ot-same? (find op (rhombus-operator-same-as-names other-op)))
-    (define ot-hi? (find op (rhombus-operator-greater-than-names other-op)))
-    (define (raise-inconsistent how)
-      (raise-syntax-error #f
-                           (format
-                            (string-append "inconsistent operator ~a declared\n"
-                                           "  one operator: ~a\n"
-                                           "  other operator: ~a")
-                            how
-                            (syntax-e (rhombus-operator-name op))
-                            (syntax-e (rhombus-operator-name other-op)))
-                           head))
-    (cond
-      [(or (and op-lo? (or ot-lo? ot-same?))
-           (and op-same? (or ot-lo? ot-hi?))
-           (and op-hi? (or ot-hi? ot-same?)))
-       (raise-inconsistent "precedence")]
-      [(or op-lo? ot-hi?) 'lower]
-      [(or op-hi? ot-lo?) 'higher]
-      [(or op-same? ot-same?
-           (free-identifier=? (rhombus-operator-name op)
-                              (rhombus-operator-name other-op)))
-       (define op-a (rhombus-infix-operator-assoc op))
-       (when (rhombus-infix-operator? other-op)
-         (unless (eq? op-a (rhombus-infix-operator-assoc other-op))
-           (raise-inconsistent "associativity")))
-       (case op-a
-         [(left) 'lower]
-         [(right) 'higher]
-         [else 'same])]
-      [else #f]))
-  
-  (define (apply-expression-transformer t stx)
-    (call-with-values
-     (lambda () ((rhombus-transformer-proc t) stx))
-     (case-lambda
-       [(form tail)
-        (unless (syntax? form) (raise-result-error 'rhombus-tranform "syntax?" form))
-        (unless (stx-list? tail) (raise-result-error 'rhombus-tranform "stx-list?" tail))
-        (values form tail)])))
-
-  (define (apply-definition-transformer t stx)
-    (call-with-values
-     (lambda () ((rhombus-transformer-proc t) stx))
-     (case-lambda
-       [(forms exprs)
-        (unless (stx-list? forms) (raise-result-error 'rhombus-tranform-definition "stx-list?" forms))
-        (unless (stx-list? exprs) (raise-result-error 'rhombus-tranform-definition "stx-list?" exprs))
-        (values forms exprs)])))
-
-  (define (apply-declaration-transformer t stx)
-    (call-with-values
-     (lambda () ((rhombus-transformer-proc t) stx))
-     (case-lambda
-       [(forms)
-        (unless (stx-list? forms) (raise-result-error 'rhombus-tranform-declaration "stx-list?" forms))
-        forms])))
-
-  (define (parse-expression-block orig-stx)
-    (when (stx-null? orig-stx)
-      (raise-syntax-error #f "found an empty block" orig-stx))
-    #`(let ()
-        #,@(let loop ([stx (stx-cdr orig-stx)])
-            (syntax-parse stx 
-              [() '()]
-              [(e:definition . tail)
-               (when (and (stx-null? #'tail)
-                          (stx-null? #'e.exprs))
-                 (raise-syntax-error #f "block does not end with an expression" stx))
-               #`((begin . e.expandeds)
-                  (begin . e.exprs)
-                  . #,(loop #'tail))]
-              [(e:expression . tail)
-               #`(e.expanded
-                  . #,(loop #'tail))]))))
+         (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'datum))
+         (implicit-or-keep (lambda () (syntax/loc #'datum (#%datum . datum))) #'datum #'tail implicit-combine)])))
 
   (define (parse-expression-sequence orig-stx)
     (let loop ([stx (stx-cdr orig-stx)])
       (syntax-parse stx 
         [() '()]
         [(e:expression . tail)
-         (cons #'e.expanded (loop #'tail))])))
+         (cons #'e.expanded (loop #'tail))]))))
 
-  (define (parse-top stx)
-    (syntax-parse stx
-      [()
-       (raise-syntax-error #f "found an empty top form" stx)]
-      [e:declaration #'(begin . e.expandeds)]
-      [e:definition #'(begin (begin . e.expandeds) . e.exprs)]
-      [e:expression #'e.expanded])))
+;; For a module top level, interleaves expansion and enforestation:
+(define-syntax (rhombus-top stx)
+  (syntax-case stx ()
+    [(_) #'(begin)]
+    [(_ form . forms)
+     #`(begin
+         #,(syntax-parse #'form
+             [e:declaration #'(begin . e.expandeds)]
+             [e:definition #'(begin (begin . e.expandeds) . e.exprs)]
+             [e:expression #'e.expanded])
+         (rhombus-top . forms))]))
+
+;; For a definition context, interleaves expansion and enforestation:
+(define-syntax (rhombus-block stx)
+  (syntax-parse stx
+    [(_)
+     (raise-syntax-error #f "found an empty block" stx)]
+    [(_ e:definition . tail)
+     (when (and (stx-null? #'tail)
+                (stx-null? #'e.exprs))
+       (raise-syntax-error #f "block does not end with an expression" stx))
+     #`(begin
+         (begin . e.expandeds)
+         (maybe-begin
+          (begin . e.exprs)
+          #,(syntax/loc stx
+              (rhombus-block . tail))))]
+    [(_ e:expression . tail)
+     #`(maybe-begin
+        e.expanded
+        #,(syntax/loc stx
+            (rhombus-block . tail)))]))
+
+(define-syntax (maybe-begin stx)
+  (syntax-parse stx
+    [(_ e (_)) #'e]
+    [(_ e1 (_ . _)) #'(begin e1 e2)]))
+
+;; For an expression context:
+(define-syntax (rhombus-expression stx)
+  (syntax-parse stx
+    [(_ e:expression) #'e.expanded]))

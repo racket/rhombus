@@ -43,18 +43,4 @@
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
-        (rhombus-tops . content))]))
-
-(define-syntax (rhombus-tops stx)
-  (syntax-case stx ()
-    [(_) #'(begin)]
-    [(_ form . forms)
-     #'(begin
-         (rhombus-top form)
-         (rhombus-tops . forms))]))
-
-(define-syntax (rhombus-top stx)
-  (syntax-case stx ()
-    [(_ form)
-     (parse-top #'form)]))
-
+        (rhombus-top . content))]))

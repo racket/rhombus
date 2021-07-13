@@ -1,9 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      "srcloc.rkt"
-                     "op.rkt"))
+                     "op.rkt")
+         "parse.rkt")
 
-(provide #%tuple
+(provide (rename-out [rhombus-block #%block])
+         #%tuple
          #%call)
 
 (define-syntax #%tuple

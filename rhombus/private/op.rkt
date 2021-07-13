@@ -2,6 +2,15 @@
 (require syntax/stx
          "proc-name.rkt")
 
+;; See "parse.rkt" for general information about operators and parsing.
+;;
+;; The compile-time nature of being a unary operator, binary
+;; operator, etc., is represented using structure-type properties, so
+;; a name can be bound to multiple of those (e.g., `-` is normally
+;; both a unary and a binary operator). An binding cannot be both a
+;; transformer binary operator and non-transformer binary operator,
+;; however, because the transformer nature takes precedence.
+
 (provide rhombus-operator?
          rhombus-operator-name
          rhombus-operator-less-than-names
@@ -26,12 +35,6 @@
          
          (struct-out rhombus-multi-prefix-operator)
          (struct-out rhombus-multi-infix-operator)
-
-         juxtipose-name
-         tuple-name
-         call-name
-         array-name
-         ref-name
 
          relative-precedence
 
@@ -114,12 +117,6 @@
 (struct rhombus-multi-prefix-operator (proc))
 ;; for `#%call` and `#%ref`:
 (struct rhombus-multi-infix-operator (proc))
-
-(define juxtipose-name '#%juxtipose)
-(define tuple-name '#%tuple)
-(define call-name '#%call)
-(define array-name '#%array)
-(define ref-name '#%ref)
 
 ;; returns: 'higher, 'lower, 'same (no associativity), #f (not related)
 (define (relative-precedence op other-op head)
