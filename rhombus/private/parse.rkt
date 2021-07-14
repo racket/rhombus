@@ -130,7 +130,7 @@
   ;; implicit infix operator names:
   (define call-name      '#%call)      ; parentheses adjacent to preceding expression
   (define ref-name       '#%ref)       ; square brackets adjacent to preceding expression
-  (define juxtipose-name '#%juxtipose) ; exprs with no operator between, when not #%call or #%ref
+  (define juxtapose-name '#%juxtapose) ; exprs with no operator between, when not #%call or #%ref
 
   (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
@@ -156,7 +156,7 @@
             [else
              ;; either `stxes` starts with an infix operator (which was weaker
              ;; precedence than consumed in the previous step), or this step will
-             ;; dispatch to a suitable implicit infix operator, like `#%juxtipose`
+             ;; dispatch to a suitable implicit infix operator, like `#%juxtapose`
              (define-values (form tail) (enforest-step init-form stxes current-op))
              (loop form tail)])))
 
@@ -230,21 +230,21 @@
                  [(rhombus-infix-operator? v)
                   (dispatch-infix-operator v #'tail #'head.name)]
                  [(rhombus-prefix-operator? v)
-                  (dispatch-infix-implicit juxtipose-name #'head)]
+                  (dispatch-infix-implicit juxtapose-name #'head)]
                  [else
                   (raise-unbound-operator #'head.name)])]
               [(head:identifier . tail)
-               (dispatch-infix-implicit juxtipose-name #'head)]
+               (dispatch-infix-implicit juxtapose-name #'head)]
               [(((~and tag (~datum parens)) . inside) . tail)
                (dispatch-infix-implicit call-name #'tag)]
               [(((~and tag (~datum braces)) . inside) . tail)
                (dispatch-infix-implicit ref-name #'tag)]
               [(((~and tag (~datum block)) . inside) . tail)
-               (dispatch-infix-implicit juxtipose-name #'tag)]
+               (dispatch-infix-implicit juxtapose-name #'tag)]
               [(((~and tag (~datum alts)) . inside) . tail)
-               (dispatch-infix-implicit juxtipose-name #'tag)]
+               (dispatch-infix-implicit juxtapose-name #'tag)]
               [(literal . tail)
-               (dispatch-infix-implicit juxtipose-name #'literal)])
+               (dispatch-infix-implicit juxtapose-name #'literal)])
 
             . where . 
 
