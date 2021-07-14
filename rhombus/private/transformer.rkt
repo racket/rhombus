@@ -18,12 +18,13 @@
          rhombus-expression-transformer
          rhombus-definition-transformer
          rhombus-declaration-transformer
-         rhombus-pattern-transformer
+         rhombus-pattern-transformer)
 
-         apply-expression-transformer
-         apply-definition-transformer
-         apply-declaration-transformer
-         apply-pattern-transformer)
+(module+ for-parse
+  (provide apply-expression-transformer
+           apply-definition-transformer
+           apply-declaration-transformer
+           apply-pattern-transformer))
 
 (struct transformer (proc))
 

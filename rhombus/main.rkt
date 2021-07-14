@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         "private/parse.rkt")
+         "parse.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin]))
 

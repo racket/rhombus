@@ -3,7 +3,9 @@
                      syntax/parse
                      syntax/stx
                      "op.rkt"
-                     "transformer.rkt"))
+                     (submod "op.rkt" for-parse)
+                     "transformer.rkt"
+                     (submod "transformer.rkt" for-parse)))
 
 (provide rhombus-top
          rhombus-block

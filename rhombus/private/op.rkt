@@ -58,17 +58,18 @@
 
          rhombus-infix-pattern-operator-transformer
          rhombus-infix-pattern-operator-transformer?
-         prop:rhombus-infix-pattern-operator-transformer
+         prop:rhombus-infix-pattern-operator-transformer)
 
-         relative-precedence
+(module+ for-parse
+  (provide relative-precedence
 
-         lookup-infix-implicit
-         lookup-prefix-implicit
+           lookup-infix-implicit
+           lookup-prefix-implicit
 
-         apply-prefix-operator
-         apply-infix-operator
-         apply-prefix-operator-transformer
-         apply-infix-operator-transformer)
+           apply-prefix-operator
+           apply-infix-operator
+           apply-prefix-operator-transformer
+           apply-infix-operator-transformer))
 
 (define-values (prop:rhombus-prefix-operator rhombus-prefix-operator? rhombus-prefix-operator-ref)
   (make-struct-type-property 'rhombus-prefix-operator))
