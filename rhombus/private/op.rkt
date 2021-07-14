@@ -11,10 +11,19 @@
 ;; transformer binary operator and non-transformer binary operator,
 ;; however, because the transformer nature takes precedence.
 
+;; An operator's predence is represented as a list of
+;;
+;;   (cons/c (or/c identifier? 'default)
+;;           (or/c 'stronger 'same 'weaker))
+;;
+;; where the `car`s of the pairs should be distinct, and 'default
+;; stands for every identifier not mentioned. The value 'stronger
+;; means that the operator that has this list has a stronger
+;; precedence than the one referenced by the identifier. An operator
+;; is implicitly the 'same as itself (i.e., not covered by 'default).
+
 (provide rhombus-operator-name
-         rhombus-operator-less-than-names
-         rhombus-operator-same-as-names
-         rhombus-operator-greater-than-names
+         rhombus-operator-precedences
 
          rhombus-prefix-operator
          rhombus-prefix-operator?
@@ -35,37 +44,26 @@
          rhombus-infix-pattern-operator?
          prop:rhombus-infix-pattern-operator
 
+         rhombus-prefix-operator-transformer
          rhombus-prefix-operator-transformer?
          prop:rhombus-prefix-operator-transformer
 
+         rhombus-prefix-pattern-operator-transformer
          rhombus-prefix-pattern-operator-transformer?
          prop:rhombus-prefix-pattern-operator-transformer
-         
+
+         rhombus-infix-operator-transformer
          rhombus-infix-operator-transformer?
          prop:rhombus-infix-operator-transformer
-         
+
+         rhombus-infix-pattern-operator-transformer
          rhombus-infix-pattern-operator-transformer?
          prop:rhombus-infix-pattern-operator-transformer
 
-         rhombus-multi-prefix-operator
-         rhombus-multi-prefix-operator?
-         prop:rhombus-multi-prefix-operator
-         
-         rhombus-multi-prefix-pattern-operator
-         rhombus-multi-prefix-pattern-operator?
-         prop:rhombus-multi-prefix-pattern-operator
-
-         rhombus-multi-infix-operator
-         rhombus-multi-infix-operator?
-         prop:rhombus-multi-infix-operator
-         
-         rhombus-multi-infix-pattern-operator
-         rhombus-multi-infix-pattern-operator?
-         prop:rhombus-multi-infix-pattern-operator
-
          relative-precedence
 
-         lookup-implicit-combine
+         lookup-infix-implicit
+         lookup-prefix-implicit
 
          apply-prefix-operator
          apply-infix-operator
@@ -83,10 +81,10 @@
 
 (define-values (prop:rhombus-prefix-operator-transformer rhombus-prefix-operator-transformer? rhombus-prefix-operator-transformer-ref)
   (make-struct-type-property 'rhombus-prefix-operator-transformer #f
-                             (list (cons prop:rhombus-infix-operator values))))
+                             (list (cons prop:rhombus-prefix-operator values))))
 (define-values (prop:rhombus-prefix-pattern-operator-transformer rhombus-prefix-pattern-operator-transformer? rhombus-prefix-pattern-operator-transformer-ref)
   (make-struct-type-property 'rhombus-prefix-pattern-operator-transformer #f
-                             (list (cons prop:rhombus-infix-pattern-operator values))))
+                             (list (cons prop:rhombus-prefix-pattern-operator values))))
 (define-values (prop:rhombus-infix-operator-transformer rhombus-infix-operator-transformer? rhombus-infix-operator-transformer-ref)
   (make-struct-type-property 'rhombus-infix-operator-transformer #f
                              (list (cons prop:rhombus-infix-operator values))))
@@ -94,7 +92,7 @@
   (make-struct-type-property 'rhombus-infix-pattern-operator-transformer #f
                              (list (cons prop:rhombus-infix-pattern-operator values))))
 
-(struct operator (name less-than-names same-as-names greater-than-names proc))
+(struct operator (name precedences proc))
 
 (struct prefix-operator operator ()
   #:property prop:rhombus-prefix-operator (lambda (self) self))
@@ -108,14 +106,32 @@
   #:property prop:rhombus-infix-pattern-operator (lambda (self) self))
 
 ;; convenience functions
-(define (rhombus-prefix-operator name less-than-names same-as-names greater-than-names proc)
-  (prefix-operator name less-than-names same-as-names greater-than-names proc))
-(define (rhombus-prefix-pattern-operator name less-than-names same-as-names greater-than-names proc)
-  (prefix-pattern-operator name less-than-names same-as-names greater-than-names proc))
-(define (rhombus-infix-operator name less-than-names same-as-names greater-than-names proc assoc)
-  (infix-operator name less-than-names same-as-names greater-than-names proc assoc))
-(define (rhombus-infix-pattern-operator name less-than-names same-as-names greater-than-names proc assoc)
-  (infix-pattern-operator name less-than-names same-as-names greater-than-names proc assoc))
+(define (rhombus-prefix-operator name precedences proc)
+  (prefix-operator name precedences proc))
+(define (rhombus-prefix-pattern-operator name precedences proc)
+  (prefix-pattern-operator name precedences proc))
+(define (rhombus-infix-operator name precedences assoc proc)
+  (infix-operator name precedences proc assoc))
+(define (rhombus-infix-pattern-operator name precedences assoc proc)
+  (infix-pattern-operator name precedences proc assoc))
+
+(struct prefix-operator-transformer operator ()
+  #:property prop:rhombus-prefix-operator-transformer (lambda (self) self))
+(struct prefix-pattern-operator-transformer operator ()
+  #:property prop:rhombus-prefix-pattern-operator-transformer (lambda (self) self))
+(struct infix-operator-transformer infix-*operator ()
+  #:property prop:rhombus-infix-operator-transformer (lambda (self) self))
+(struct infix-pattern-operator-transformer infix-*operator ()
+  #:property prop:rhombus-infix-pattern-operator-transformer (lambda (self) self))
+
+(define (rhombus-prefix-operator-transformer name precedences proc)
+  (prefix-operator-transformer name precedences proc))
+(define (rhombus-prefix-pattern-operator-transformer name precedences proc)
+  (prefix-pattern-operator-transformer name precedences proc))
+(define (rhombus-infix-operator-transformer name precedences assoc proc)
+  (infix-operator-transformer name precedences proc assoc))
+(define (rhombus-infix-pattern-operator-transformer name precedences assoc proc)
+  (infix-pattern-operator-transformer name precedences proc assoc))
 
 (define (unwrap-operator o #:pattern? pattern?)
   (cond
@@ -130,14 +146,8 @@
 (define (rhombus-operator-name o #:pattern? pattern?)
   (operator-name (unwrap-operator o #:pattern? pattern?)))
 
-(define (rhombus-operator-less-than-names o #:pattern? pattern?)
-  (operator-less-than-names (unwrap-operator o #:pattern? pattern?)))
-
-(define (rhombus-operator-same-as-names o #:pattern? pattern?)
-  (operator-same-as-names (unwrap-operator o #:pattern? pattern?)))
-
-(define (rhombus-operator-greater-than-names o #:pattern? pattern?)
-  (operator-greater-than-names (unwrap-operator o #:pattern? pattern?)))
+(define (rhombus-operator-precedences o #:pattern? pattern?)
+  (operator-precedences (unwrap-operator o #:pattern? pattern?)))
 
 (define (unwrap-prefix-operator o #:pattern? pattern?)
   (cond
@@ -164,55 +174,26 @@
 (define (rhombus-infix-operator-assoc o #:pattern? pattern?)
   (infix-*operator-assoc (unwrap-infix-operator o #:pattern? pattern?)))
 
-;; for `#%tuple` and `#%array`:
-(define-values (prop:rhombus-multi-prefix-operator rhombus-multi-prefix-operator? rhombus-multi-prefix-operator-ref)
-  (make-struct-type-property 'rhombus-multi-prefix-operator))
-(define-values (prop:rhombus-multi-prefix-pattern-operator rhombus-multi-prefix-pattern-operator? rhombus-multi-prefix-pattern-operator-ref)
-  (make-struct-type-property 'rhombus-multi-prefix-pattern-operator))
-(struct multi-prefix-operator (proc)
-  #:property prop:rhombus-multi-prefix-operator (lambda (self) self))
-(struct multi-prefix-pattern-operator multi-prefix-operator ()
-  #:property prop:rhombus-multi-prefix-pattern-operator (lambda (self) self))
-
-;; for `#%call` and `#%ref`:
-(define-values (prop:rhombus-multi-infix-operator rhombus-multi-infix-operator? rhombus-multi-infix-operator-ref)
-  (make-struct-type-property 'rhombus-multi-infix-operator))
-(define-values (prop:rhombus-multi-infix-pattern-operator rhombus-multi-infix-pattern-operator? rhombus-multi-infix-pattern-operator-ref)
-  (make-struct-type-property 'rhombus-multi-infix-pattern-operator))
-(struct multi-infix-operator (proc)
-  #:property prop:rhombus-multi-infix-operator (lambda (self) self))
-(struct multi-infix-pattern-operator multi-infix-operator ()
-  #:property prop:rhombus-multi-infix-pattern-operator (lambda (self) self))
-
-(define (rhombus-multi-prefix-operator-proc o #:pattern? pattern?)
-  (define sel (if pattern?
-                  (rhombus-multi-prefix-pattern-operator-ref o #f)
-                  (rhombus-multi-prefix-operator-ref o #f)))
-  (multi-prefix-operator-proc (sel o)))
-
-(define (rhombus-multi-infix-operator-proc o #:pattern? pattern?)
-  (define sel (if pattern?
-                  (rhombus-multi-infix-pattern-operator-ref o #f)
-                  (rhombus-multi-infix-operator-ref o #f)))
-  (multi-infix-operator-proc (sel o)))
-
-;; covenience
-(define (rhombus-multi-prefix-operator proc) (multi-prefix-operator proc))
-(define (rhombus-multi-prefix-pattern-operator proc) (multi-prefix-pattern-operator proc))
-(define (rhombus-multi-infix-operator proc) (multi-infix-operator proc))
-(define (rhombus-multi-infix-pattern-operator proc) (multi-infix-pattern-operator proc))  
-
-;; returns: 'higher, 'lower, 'same (no associativity), #f (not related)
+;; returns: 'stronger, 'weaker, 'same (no associativity), #f (not related)
 (define (relative-precedence op other-op head #:pattern? pattern?)
-  (define (find op ids)
-    (for/or ([id (in-list ids)])
-      (free-identifier=? (rhombus-operator-name op #:pattern? pattern?) id)))
-  (define op-lo? (find other-op (rhombus-operator-less-than-names op #:pattern? pattern?)))
-  (define op-same? (find other-op (rhombus-operator-same-as-names op #:pattern? pattern?)))
-  (define op-hi? (find other-op (rhombus-operator-greater-than-names op #:pattern? pattern?)))
-  (define ot-lo? (find op (rhombus-operator-less-than-names other-op #:pattern? pattern?)))
-  (define ot-same? (find op (rhombus-operator-same-as-names other-op #:pattern? pattern?)))
-  (define ot-hi? (find op (rhombus-operator-greater-than-names other-op #:pattern? pattern?)))
+  (define (find op-name this-op-name precs)
+    (let loop ([precs precs] [default #f])
+      (cond
+        [(null? precs) (if (free-identifier=? op-name this-op-name)
+                           'same
+                           default)]
+        [(eq? (caar precs) 'default) (loop (cdr precs) (cdar precs))]
+        [(free-identifier=? op-name (caar precs)) (cdar precs)]
+        [else (loop (cdr precs) default)])))
+  (define (invert dir)
+    (case dir
+      [(stronger) 'weaker]
+      [(weaker) 'stronger]
+      [else dir]))
+  (define op-name (rhombus-operator-name op #:pattern? pattern?))
+  (define other-op-name (rhombus-operator-name other-op #:pattern? pattern?))
+  (define dir1 (find other-op-name op-name (rhombus-operator-precedences op #:pattern? pattern?)))
+  (define dir2 (invert (find op-name other-op-name (rhombus-operator-precedences other-op #:pattern? pattern?))))
   (define (raise-inconsistent how)
     (raise-syntax-error #f
                         (format
@@ -223,136 +204,101 @@
                          (syntax-e (rhombus-operator-name op #:pattern? pattern?))
                          (syntax-e (rhombus-operator-name other-op #:pattern? pattern?)))
                         head))
+  (when (and dir1 dir2 (not (eq? dir1 dir2)))
+    (raise-inconsistent "precedence"))
+  (define dir (or dir1 dir2
+                  (and (free-identifier=? (rhombus-operator-name op #:pattern? pattern?)
+                                          (rhombus-operator-name other-op #:pattern? pattern?))
+                       'same)))
   (cond
-    [(or (and op-lo? (or ot-lo? ot-same?))
-         (and op-same? (or ot-lo? ot-hi?))
-         (and op-hi? (or ot-hi? ot-same?)))
-     (raise-inconsistent "precedence")]
-    [(or op-lo? ot-hi?) 'lower]
-    [(or op-hi? ot-lo?) 'higher]
-    [(or op-same? ot-same?
-         (free-identifier=? (rhombus-operator-name op #:pattern? pattern?)
-                            (rhombus-operator-name other-op #:pattern? pattern?)))
+    [(eq? 'same dir)
      (define op-a (rhombus-infix-operator-assoc op #:pattern? pattern?))
      (when (rhombus-infix-operator? other-op)
        (unless (eq? op-a (rhombus-infix-operator-assoc other-op #:pattern? pattern?))
          (raise-inconsistent "associativity")))
      (case op-a
-       [(left) 'lower]
-       [(right) 'higher]
+       [(left) 'weaker]
+       [(right) 'stronger]
        [else 'same])]
-    [else #f]))
+    [else dir]))
 
-;; Helper to find an implicit, which is constrained to have a higher
-;; precedence than everything else and to be left-associative.
-;; For example, the function-call form triggered by `f(x)` is an
-;; implement that combines `f` and `(x)`; implicits can have multiple
-;; RHS arguments, as in `f(x, y)` or `a[row, col]`. Implicits are also
-;; used for parenthesized things or brackets things without a preceding
-;; expression. Finally, there can be an implicit that combines arbitrary
-;; adjacent expressions where the second is not in parentheses or braces
-(define (lookup-implicit-combine init-form alone-name adjacent-name context
-                                 #:multi? [multi? #f]
-                                 #:pattern? pattern?)
-  (cond
-    [(not init-form)
-     (if alone-name
-         (lookup-alone-combine context alone-name #:multi? multi? #:pattern? pattern?)
-         (lambda (init-form form) form))]
-    [else
-     (lookup-adjacent-combine context adjacent-name #:multi? multi? #:pattern? pattern?)]))
-
-(define (lookup-alone-combine adj-context alone-name #:multi? multi? #:pattern? pattern?)
-  (define v (syntax-local-value (datum->syntax adj-context alone-name) (lambda () #f)))
-  (unless (if multi?
-              (if pattern?
-                  (rhombus-multi-prefix-pattern-operator? v)
-                  (rhombus-multi-prefix-operator? v))
-              (if pattern?
-                  (rhombus-prefix-pattern-operator? v)
-                  (rhombus-prefix-operator? v)))
+(define (lookup-prefix-implicit alone-name adj-context #:pattern? pattern?)
+  (define op-stx (datum->syntax adj-context alone-name))
+  (define v (syntax-local-value op-stx (lambda () #f)))
+  (unless (if pattern?
+              (rhombus-prefix-pattern-operator? v)
+              (rhombus-prefix-operator? v))
     (raise-syntax-error #f
                         (format (string-append
                                  "misplaced expression;\n"
                                  " no infix operator is between this expression and the previous one,\n"
-                                 " and `~a` is not bound as an implicit ~aprefix ~aoperator")
+                                 " and `~a` is not bound as an implicit prefix ~aoperator")
                                 alone-name
-                                (if multi? "multi-" "")
                                 (if pattern? "pattern " ""))
                         adj-context))
-  (lambda (init-form form/s)
-    (apply-prefix-operator v form/s adj-context #:multi? multi? #:pattern? pattern?)))
+  (values v op-stx))
 
-(define (lookup-adjacent-combine adj-context adjacent-name #:multi? multi? #:pattern? pattern?)
-  (define v (syntax-local-value (datum->syntax adj-context adjacent-name) (lambda () #f)))
-  (unless (if multi?
-              (if pattern?
-                  (rhombus-multi-infix-pattern-operator? v)
-                  (rhombus-multi-infix-operator? v))
-              (if pattern?
-                  (rhombus-infix-pattern-operator? v)
-                  (rhombus-infix-operator? v)))
+(define (lookup-infix-implicit adjacent-name adj-context #:pattern? pattern?)
+  (define op-stx (datum->syntax adj-context adjacent-name))
+  (define v (syntax-local-value op-stx (lambda () #f)))
+  (unless (if pattern?
+              (rhombus-infix-pattern-operator? v)
+              (rhombus-infix-operator? v))
     (raise-syntax-error #f
                         (format
                          (string-append
                           "misplaced expression;\n"
                           " no infix operator is between this expression and the previous one,\n"
-                          " and `~a` is not bound as an implicit ~ainfix ~aoperator")
+                          " and `~a` is not bound as an implicit infix ~aoperator")
                          adjacent-name
-                         (if multi? "multi-" "")
                          (if pattern? "pattern " ""))
                         adj-context))
-  (lambda (form1 form2/s)
-    (apply-infix-operator v form1 form2/s adj-context #:multi? multi? #:pattern? pattern?)))
+  (values v op-stx))
 
-(define (apply-prefix-operator v form/s stx #:multi? [multi? #f] #:pattern? pattern?)
-  (define proc (if multi?
-                   (rhombus-multi-prefix-operator-proc v #:pattern? pattern?)
-                   (rhombus-prefix-operator-proc v #:pattern? pattern?)))
-  (cond
-    [pattern?
-     (define-values (ids filter-form) (proc form/s stx))
-     (check-pattern-result ids filter-form proc)]
-    [else
-     (define form (proc form/s stx))
-     (check-expression-result form proc)]))
-
-(define (apply-infix-operator v form1 form2/s stx #:multi? [multi? #f] #:pattern? pattern?)
-  (define proc (if multi?
-                   (rhombus-multi-infix-operator-proc v #:pattern? pattern?)
-                   (rhombus-infix-operator-proc v #:pattern? pattern?)))
-  (cond
-    [pattern?
-     (define-values (ids filter-form) (proc form1 form2/s stx))
-     (check-pattern-result ids filter-form proc)]
-    [else
-     (define form (proc form1 form2/s stx))
-     (check-expression-result form proc)]))
-
-(define (apply-prefix-operator-transformer v tail stx #:pattern? pattern?)
+(define (apply-prefix-operator v form stx #:pattern? pattern?)
   (define proc (rhombus-prefix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form new-tail) (proc tail stx))
+     (define-values (ids filter-form) (proc form stx))
+     (check-pattern-result ids filter-form proc)]
+    [else
+     (define new-form (proc form stx))
+     (check-expression-result new-form proc)]))
+
+(define (apply-infix-operator v form1 form2 stx #:pattern? pattern?)
+  (define proc (rhombus-infix-operator-proc v #:pattern? pattern?))
+  (cond
+    [pattern?
+     (define-values (ids filter-form) (proc form1 form2 stx))
+     (check-pattern-result ids filter-form proc)]
+    [else
+     (define form (proc form1 form2 stx))
+     (check-expression-result form proc)]))
+
+(define (apply-prefix-operator-transformer v tail #:pattern? pattern?)
+  (define proc (rhombus-prefix-operator-proc v #:pattern? pattern?))
+  (cond
+    [pattern?
+     (define-values (ids filter-form new-tail) (proc tail))
      (check-transformer-result (check-pattern-result ids filter-form proc)
                                new-tail
                                proc)]
     [else
-     (define-values (form new-tail) (proc tail stx))
+     (define-values (form new-tail) (proc tail))
      (check-transformer-result (check-expression-result form proc)
                                new-tail
                                proc)]))
 
-(define (apply-infix-operator-transformer v form1 tail stx #:pattern? pattern?)
+(define (apply-infix-operator-transformer v form1 tail #:pattern? pattern?)
   (define proc (rhombus-infix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form new-tail) (proc form1 tail stx))
+     (define-values (ids filter-form new-tail) (proc form1 tail))
      (check-transformer-result (check-pattern-result ids filter-form proc)
                                new-tail
                                proc)]
     [else
-     (define-values (form new-tail) (proc form1 tail stx))
+     (define-values (form new-tail) (proc form1 tail))
      (check-transformer-result (check-expression-result form proc)
                                new-tail
                                proc)]))

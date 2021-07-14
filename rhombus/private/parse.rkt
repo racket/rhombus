@@ -13,20 +13,24 @@
                      :declaration
                      :definition
                      :expression
-                     :pattern))
+                     :pattern
+
+                     ;; for continuing enforestation of expressions or patterns:
+                     :op+expression+tail
+                     :op+pattern+tail))
 
 (begin-for-syntax
   (define-syntax-class :operator
-    (pattern ((~datum op) name) #:attr opname #'name))
+    (pattern ((~datum op) name)))
 
-  ;; Things that can appear at the top of a module:
+  ;; Form at the top of a module:
   (define-syntax-class :declaration
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
              #:when (rhombus-declaration-transformer? v)
              #:attr expandeds (apply-declaration-transformer v (cons #'head #'tail))))
 
-  ;; Things that can appear in a definition context:
+  ;; Form in a definition context:
   (define-syntax-class :definition
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
@@ -36,20 +40,42 @@
              #:attr expandeds (datum->syntax #f defns-and-exprs)
              #:attr exprs (datum->syntax #f exprs)))
 
-  ;; Things that can appear in an expression context:
+  ;; Form in an expression context:
   (define-syntax-class :expression
-    (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail)))
+    (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail #f)))
 
-  ;; Things that can appear in a pattern context:
+  ;; For reentering the enforestation loop within a group, stopping when
+  ;; the group end or when an operator with weaker precedence than `op` is found
+  (define-splicing-syntax-class :op+expression+tail
+    (pattern (op:identifier . tail)
+             #:do [(define-values (form new-tail) (enforest-step (syntax-local-value #'op) #'tail))]
+             #:attr expanded form
+             #:attr new-tail new-tail))
+
+  ;; Form in a pattern context:
   (define-syntax-class :pattern
     (pattern ((~datum group) . tail)
-             #:do [(define expanded (enforest-pattern #'tail))]
-             #:attr bindings (datum->syntax #f (stx-car expanded))
-             #:attr filter (stx-car (stx-cdr expanded))))
+             #:with (bindings filter) (enforest-pattern #'tail)))
+
+  ;; Like `:op+expression+tail`, but for patterns
+  (define-splicing-syntax-class :op+pattern+tail
+    (pattern (op:identifier . tail)
+             #:do [(define-values (form new-tail) (enforest-pattern-step (syntax-local-value #'op) #'tail))]
+             #:with (bindings filter) form
+             #:attr new-tail new-tail))
 
   ;; The `enforest` functions below are based on the one described in
   ;; figure 1 of "Honu: Syntactic Extension for Algebraic Notation
   ;; through Enforestation". Some key differences:
+  ;;
+  ;; * The stack of pending operators is represented through the
+  ;;   continuation, instead of an explicit stack. The `enforest-step`
+  ;;   functions provide a way to reenter enforestation given a
+  ;;   preceding operator (for precedence), which is useful for
+  ;;   operator transformers. (All operators could be implemented as
+  ;;   transformers, but we provide support for non-transformer
+  ;;   operators as a convenience and as a way to understand the
+  ;;   implementation.)
   ;;
   ;; * A prefix or infix operator has an associated combiner procedure
   ;;   to produce a Racket expression form, instead of always making a
@@ -71,13 +97,14 @@
   ;;   regular protocol as transformers.
   ;;
   ;; * The paper's prefix-operator case seems wrong; the old operator
-  ;;   and combiner should be pushed onto the stack, as here.
+  ;;   and combiner should be pushed onto the stack, as reflected by a
+  ;;   recursive call here.
   ;;
-  ;; Also, operator precedence is not based on numerical levels or
-  ;; even a transitive order. Instead, each operator can declare an
-  ;; order relative to specific other operators, and an error is
-  ;; reported if two operators must be compared fr precedence and have
-  ;; no declared order.
+  ;; * Operator precedence is not based on numerical levels or even a
+  ;;   transitive order. Instead, each operator can declare an order
+  ;;   relative to specific other operators, and an error is reported
+  ;;   if two operators must be compared fr precedence and have no
+  ;;   declared order. See "op.rkt" for more on precedence.
   ;;
   ;; Terminology compared to the paper: "form" means "tree term", and
   ;; "stx" means "term". A "head" or "tail" is a stx/term.
@@ -91,17 +118,21 @@
   ;; `enforest` code work easily for both modes, parameterized over
   ;; whether it's in pattern mode.
 
-  ;; implicit operator names:
+  ;; implicit prefix operator names:
+  (define tuple-name   '#%tuple)       ; parentheses not after an expression
+  (define array-name   '#%array)       ; square brackets not after an expression
+  (define block-name   '#%block)       ; curly braces (normally mapped to `rhombus-block`)
+  (define alts-name    '#%alts)        ; vertical bars
+  (define literal-name '#%literal)     ; numbers, strings, etc.
+
+  ;; implicit infix operator names:
+  (define call-name      '#%call)      ; parentheses adjacent to preceding expression
+  (define ref-name       '#%ref)       ; square brackets adjacent to preceding expression
   (define juxtipose-name '#%juxtipose) ; exprs with no operator between, when not #%call or #%ref
-  (define tuple-name '#%tuple)         ; parentheses not after an expression
-  (define call-name '#%call)           ; parentheses adjacent to preceding expression
-  (define array-name '#%array)         ; square brackets not after an expression
-  (define ref-name '#%ref)             ; square brackets adjacent to preceding expression
 
-  ;; implicit form names:
-  (define block-name '#%block)         ; curly braces (normally mapped to `rhombus-block`)
+  (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
-  (define-syntax-rule (define-enforest enforest
+  (define-syntax-rule (define-enforest enforest enforest-step
                         pattern?
                         ;; the rest are named as if they're for expressions,
                         ;; but they can be replaced by functions for patterns
@@ -111,89 +142,131 @@
                         rhombus-prefix-operator-transformer?
                         rhombus-expression-transformer?
                         apply-expression-transformer
-                        make-identifier-expression
-                        make-datum-expression)
-    (define (enforest stxes)
-      (let loop ([init-form #f]
-                 [stxes stxes]
-                 [combine (lambda (form) form)] [current-op #f] [stack '()])
-        ;; helper to continue with an implicitly combined argument:
-        (define (keep form/s tail implicit-combine)
-          (loop (implicit-combine init-form form/s)
-                tail
-                combine current-op stack))
-        ;; helper to apply an implicit-combine transformer:
-        (define (implicit-transform implicit-combine stx)
-          (define-values (form tail) (apply-infix-operator-transformer implicit-combine init-form stxes stx
-                                                                       #:pattern? pattern?))
-          (loop form tail
-                combine current-op stack))
-        ;; helper to selected among the above two helpers
-        (define (implicit-or-keep to-keep-thunk stx tail implicit-combine)
+                        make-identifier-expression)
+    (begin
+      (define (enforest stxes [current-op #f])
+        ;; either `stxes` starts with a prefix operator or this first step
+        ;; will dispatch to a suitable implicit prefix operator
+        (define-values (form tail) (enforest-step stxes current-op))
+        (let loop ([init-form form] [stxes tail])
           (cond
-            [(rhombus-infix-operator-transformer? implicit-combine)
-             ;; `init-form` must be non-#f here
-             (implicit-transform implicit-combine stx)]
-            [(rhombus-prefix-operator-transformer? implicit-combine)
-             ;; `init-form` must be #f here
-             (define-values (form tail) (apply-prefix-operator-transformer implicit-combine stxes stx
-                                                                           #:pattern? pattern?))
-             (loop form tail
-                   combine current-op stack)]
+            [(stx-null? stxes) init-form]
             [else
-             (define r (to-keep-thunk))
-             (keep r tail implicit-combine)]))
-        ;; helper to handle a sequence of expressions:
-        (define (enforest-sequence stx)
-          (syntax-parse stx 
-            [() '()]
-            [(((~datum group) . e) . tail)
-             (cons (enforest #'e) (enforest-sequence #'tail))]))
-        ;; dispatch on the head token
-        (syntax-parse stxes
-          [()
-           ;; input stream ended, so use up the combiner stack
-           (cond
-             [(not init-form) (raise-syntax-error #f "empty expression")]
-             [(null? stack) (combine init-form)]
-             [else (loop (combine init-form) stxes (caar stack) (cdar stack) (cdr stack))])]
-          [(head::operator . tail)
-           (define v (syntax-local-value #'head.opname (lambda () #f)))
-           (cond
-             [(and (rhombus-infix-operator? v)
-                   (or init-form
-                       (not (rhombus-prefix-operator? v))))
-              (unless init-form
-                (raise-syntax-error #f "infix operator without preceding argument" #'head))
-              (define rel-prec (if (not current-op)
-                                   'higher
-                                   (relative-precedence v current-op #'head #:pattern? pattern?)))
+             ;; either `stxes` starts with an infix operator (which was weaker
+             ;; precedence than consumed in the previous step), or this step will
+             ;; dispatch to a suitable implicit infix operator, like `#%juxtipose`
+             (define-values (form tail) (enforest-step init-form stxes current-op))
+             (loop form tail)])))
+
+      (define (raise-unbound-operator op-stx)
+        (raise-syntax-error #f
+                            (if pattern? "unbound pattern operator" "unbound operator")
+                            op-stx))
+
+      ;; Takes 2 or 3 arguments, depending on whether a preceding expression is available
+      (define enforest-step
+        (case-lambda
+          [(stxes current-op)
+           ;; No preceding expression, so dispatch to prefix (possibly implicit)
+           ((syntax-parse stxes
+              [() (raise-syntax-error #f "empty expression")]
+              [(head::operator . tail)
+               (define v (syntax-local-value #'head.name (lambda () #f)))
+               (cond
+                 [(rhombus-prefix-operator? v)
+                  (dispatch-prefix-operator v #'tail #'head.name)]
+                 [(rhombus-infix-operator? v)
+                  (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
+                 [else
+                  (raise-unbound-operator #'head.name)])]
+              [(head:identifier . tail)
+               (define v (syntax-local-value #'head (lambda () #f)))
+               (cond
+                 [(rhombus-expression-transformer? v)
+                  (apply-expression-transformer v stxes)]
+                 [else
+                  (values (make-identifier-expression #'head) #'tail)])]
+              [(((~and tag (~datum parens)) . inside) . tail)
+               (dispatch-prefix-implicit tuple-name #'tag)]
+              [(((~and tag (~datum braces)) . inside) . tail)
+               (dispatch-prefix-implicit array-name #'tag)]
+              [(((~and tag (~datum block)) . inside) . tail)
+               (dispatch-prefix-implicit block-name #'tag)]
+              [(((~and tag (~datum alts)) . inside) . tail)
+               (dispatch-prefix-implicit alts-name #'tag)]
+              [(literal . tail)
+               (dispatch-prefix-implicit literal-name #'literal)])
+
+            . where .
+           
+            (define (dispatch-prefix-operator v tail op-stx)
               (cond
-                [(or (not current-op) (eq? rel-prec 'higher))
+                [(rhombus-prefix-operator-transformer? v)
+                 ;; it's up to the transformer to consume whatever it wants after the operator
+                 (apply-prefix-operator-transformer v stxes #:pattern? pattern?)]
+                [else
+                 ;; new operator sets precedence, defer application of operator until a suitable
+                 ;; argument is parsed
+                 (define-values (form new-tail) (enforest-step tail v))
+                 (values (apply-prefix-operator v form op-stx #:pattern? pattern?)
+                         new-tail)]))
+
+            (define (dispatch-prefix-implicit implicit-name head-stx)
+              (define-values (implicit-v op-stx) (lookup-prefix-implicit implicit-name head-stx
+                                                                         #:pattern? pattern?))
+              (dispatch-prefix-operator implicit-v stxes op-stx)))]
+
+          [(init-form stxes current-op)
+           ;; Has a preceding expression, so dispatch to infix (possibly implicit)
+           ((syntax-parse stxes
+              [(head::operator . tail)
+               (define v (syntax-local-value #'head.name (lambda () #f)))
+               (cond
+                 [(rhombus-infix-operator? v)
+                  (dispatch-infix-operator v #'tail #'head.name)]
+                 [(rhombus-prefix-operator? v)
+                  (dispatch-infix-implicit juxtipose-name #'head)]
+                 [else
+                  (raise-unbound-operator #'head.name)])]
+              [(head:identifier . tail)
+               (dispatch-infix-implicit juxtipose-name #'head)]
+              [(((~and tag (~datum parens)) . inside) . tail)
+               (dispatch-infix-implicit call-name #'tag)]
+              [(((~and tag (~datum braces)) . inside) . tail)
+               (dispatch-infix-implicit ref-name #'tag)]
+              [(((~and tag (~datum block)) . inside) . tail)
+               (dispatch-infix-implicit juxtipose-name #'tag)]
+              [(((~and tag (~datum alts)) . inside) . tail)
+               (dispatch-infix-implicit juxtipose-name #'tag)]
+              [(literal . tail)
+               (dispatch-infix-implicit juxtipose-name #'literal)])
+
+            . where . 
+
+            (define (dispatch-infix-operator v tail op-stx)
+              (define rel-prec (if (not current-op)
+                                   'stronger
+                                   (relative-precedence v current-op op-stx #:pattern? pattern?)))
+              (cond
+                [(eq? rel-prec 'stronger)
                  (cond
                    [(rhombus-infix-operator-transformer? v)
                     ;; it's up to the transformer to consume whatever it wants after the operator
-                    (define-values (form new-tail) (apply-infix-operator-transformer v init-form #'tail #'head
-                                                                                     #:pattern? pattern?))
-                    (loop form new-tail combine current-op stack)]
+                    (apply-infix-operator-transformer v init-form stxes #:pattern? pattern?)]
                    [else
-                    ;; new operator sets precedence, defer application of operator until a suitable rhs is parsed
-                    (loop #f #'tail
-                          (lambda (form) (apply-infix-operator v init-form form #'head
-                                                               #:pattern? pattern?))
-                          v
-                          (cons (cons combine current-op) stack))])]
-                [(eq? rel-prec 'lower)
-                 (unless (pair? stack) (error 'internal "empty enforest stack"))
-                 ;; combine for current operator, then try again
-                 (loop (combine init-form) stxes
-                       (caar stack) (cdar stack) (cdr stack))]
+                    ;; new operator sets precedence, defer application of operator until a suitable
+                    ;; right-hand argument is parsed
+                    (define-values (form new-tail) (enforest-step tail v))
+                    (values (apply-infix-operator v init-form form op-stx #:pattern? pattern?)
+                            new-tail)])]
+                [(eq? rel-prec 'weaker)
+                 (values init-form stxes)]
                 [else
                  (cond
                    [(eq? rel-prec 'same)
                     (raise-syntax-error #f
                                         "non-associative operator needs explicit parenthesization"
-                                        #'head.opname)]
+                                        op-stx)]
                    [else
                     (raise-syntax-error #f
                                         (format
@@ -203,102 +276,40 @@
                                           "  other operator: ~a")
                                          (if pattern? "pattern " "")
                                          (syntax-e (rhombus-operator-name current-op #:pattern? pattern?)))
-                                        #'head.opname)])])]
-             [(rhombus-prefix-operator? v)
-              (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head.opname
-                                                                #:pattern? pattern?))
-              (cond
-                [(rhombus-infix-operator-transformer? implicit-combine)
-                 ;; it's up to the transformer to figure out what to do with the operator
-                 (implicit-transform implicit-combine #'head.opname)]
-                [(rhombus-prefix-operator-transformer? v)
-                 ;; it's up to the transformer to consume whatever it wants after the operator
-                 (define-values (form new-tail) (apply-prefix-operator-transformer v #'tail #'head
-                                                                                   #:pattern? pattern?))
-                 (keep form new-tail implicit-combine)]
-                [else
-                 ;; new operator sets precedence, defer application of operator until a suitable argument is parsed
-                 (loop #f #'tail
-                       (lambda (form) (implicit-combine init-form (apply-prefix-operator v form #'head
-                                                                                         #:pattern? pattern?)))
-                       v
-                       (cons (cons combine current-op) stack))])]
-             [else
-              (raise-syntax-error #f
-                                  (if pattern? "unbound pattern operator" "unbound operator")
-                                  #'head.name)])]
-          [(head:identifier . tail)
-           (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'head
-                                                             #:pattern? pattern?))
-           (cond
-             [(rhombus-infix-operator-transformer? implicit-combine)
-              (implicit-transform implicit-combine #'head)]
-             [else
-              (define v (syntax-local-value #'head (lambda () #f)))
-              (cond
-                [(rhombus-expression-transformer? v)
-                 (define-values (form tail) (apply-expression-transformer v stxes))
-                 (keep form tail implicit-combine)]
-                [else
-                 (keep (make-identifier-expression #'head) #'tail implicit-combine)])])]
-          [(((~and tag (~datum parens)) . inside) . tail)
-           (define implicit-combine (lookup-implicit-combine init-form tuple-name call-name #'tag
-                                                             #:multi? #t #:pattern? pattern?))
-           (implicit-or-keep (lambda () (enforest-sequence #'inside)) #'tag #'tail implicit-combine)]
-          [(((~and tag (~datum braces)) . inside) . tail)
-           (define implicit-combine (lookup-implicit-combine init-form array-name ref-name #'tag
-                                                             #:multi? #t #:pattern? pattern?))
-           (implicit-or-keep (lambda () (enforest-sequence #'inside)) #'tag #'tail implicit-combine)]
-          [(((~and tag (~datum block)) . inside) . tail)
-           (define implicit-combine (lookup-implicit-combine #f init-form juxtipose-name #'tag
-                                                             #:pattern? pattern?))
-           (define (make-block-form)
-             (define stx #'tag)
-             (datum->syntax #f (cons (datum->syntax stx block-name stx stx) #'inside) stx stx))
-           (implicit-or-keep make-block-form #'tag #'tail implicit-combine)]
-          [(((~and tag (~datum alts)) . inside) . tail)
-           (raise-syntax-error #f
-                               "misplaced alternative"
-                               (stx-car stxes)
-                               #'tag)]
-          [(datum . tail)
-           (define implicit-combine (lookup-implicit-combine init-form #f juxtipose-name #'datum
-                                                             #:pattern? pattern?))
-           (implicit-or-keep (lambda () (make-datum-expression #'datum)) #'datum #'tail implicit-combine)]))))
+                                        op-stx)])]))
+
+            (define (dispatch-infix-implicit implicit-name head-stx)
+              (define-values (implicit-v op-stx) (lookup-infix-implicit implicit-name head-stx
+                                                                        #:pattern? pattern?))
+              (dispatch-infix-operator implicit-v stxes op-stx)))]))))
 
   ;; the expression variant:
-  (define-enforest enforest #f
+  (define-enforest enforest enforest-step #f
     rhombus-infix-operator?
     rhombus-infix-operator-transformer?
     rhombus-prefix-operator?
     rhombus-prefix-operator-transformer?
     rhombus-expression-transformer?
     apply-expression-transformer
-    make-identifier-expression
-    make-datum-expression)
+    make-identifier-expression)
 
   ;; the pattern variant:
-  (define-enforest enforest-pattern #t
+  (define-enforest enforest-pattern enforest-pattern-step #t
     rhombus-infix-pattern-operator?
     rhombus-infix-pattern-operator-transformer?
     rhombus-prefix-pattern-operator?
     rhombus-prefix-pattern-operator-transformer?
     rhombus-pattern-transformer?
     apply-pattern-transformer
-    make-identifier-pattern
-    make-datum-pattern)
+    make-identifier-pattern)
 
-  ;; helper functions for expressions
+  ;; helper function for expressions
   (define (make-identifier-expression id)
     id)
-  (define (make-datum-expression datum)
-    (datum->syntax datum (cons #'#%datum datum) datum datum))
 
-  ;; helper functions for patterns
+  ;; helper function for patterns
   (define (make-identifier-pattern id)
-    (list (list id) #'(lambda (v) (values #t v))))
-  (define (make-datum-pattern datum)
-    (list null #'(lambda (v) (values (equal? v datum))))))
+    (list (list id) #'(lambda (v) (values #t v)))))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)

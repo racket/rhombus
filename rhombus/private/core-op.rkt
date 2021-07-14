@@ -23,16 +23,22 @@
   (define-syntax (prefix-operator stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
-          (~optional (~seq #:less-than (greater-op ...))
-                     #:defaults ([(greater-op 1) '()]))
+          (~optional (~seq #:weaker-than (weaker-op ...))
+                     #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
                      #:defaults ([(same-op 1) '()]))
-          (~optional (~seq #:greater-than (lesser-op ...))
-                     #:defaults ([(lesser-op 1) '()])))
+          (~optional (~seq #:stronger-than (stronger-op ...))
+                     #:defaults ([(stronger-op 1) '()])))
        #`(rhombus-prefix-operator (quote-syntax name)
-                                  (list (quote-syntax greater-op) ...)
-                                  (list (quote-syntax same-op) ...)
-                                  (list (quote-syntax lesser-op) ...)
+                                  (list (cons (quote-syntax weaker-op)
+                                              'weaker)
+                                        ...
+                                        (cons (quote-syntax same-op)
+                                              'same)
+                                        ...
+                                        (cons (quote-syntax stronger-op)
+                                              'stronger)
+                                        ...)
                                   (lambda (form stx)
                                     (datum->syntax (quote-syntax here)
                                                    (list 'prim form)
@@ -42,24 +48,30 @@
   (define-syntax (infix-operator stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
-          (~optional (~seq #:less-than (greater-op ...))
-                     #:defaults ([(greater-op 1) '()]))
+          (~optional (~seq #:weaker-than (weaker-op ...))
+                     #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
                      #:defaults ([(same-op 1) '()]))
-          (~optional (~seq #:greater-than (lesser-op ...))
-                     #:defaults ([(lesser-op 1) '()]))
+          (~optional (~seq #:stronger-than (stronger-op ...))
+                     #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left])))
        #`(rhombus-infix-operator (quote-syntax name)
-                         (list (quote-syntax greater-op) ...)
-                         (list (quote-syntax same-op) ...)
-                         (list (quote-syntax lesser-op) ...)
-                         (lambda (form1 form2 stx)
-                           (datum->syntax (quote-syntax here)
-                                          (list 'prim form1 form2)
-                                          (span-srcloc form1 form2)
-                                          stx))
-                         assoc)]))
+                                 (list (cons (quote-syntax weaker-op)
+                                             'weaker)
+                                       ...
+                                       (cons (quote-syntax same-op)
+                                             'same)
+                                       ...
+                                       (cons (quote-syntax stronger-op)
+                                             'stronger)
+                                       ...)
+                                 assoc
+                                 (lambda (form1 form2 stx)
+                                   (datum->syntax (quote-syntax here)
+                                                  (list 'prim form1 form2)
+                                                  (span-srcloc form1 form2)
+                                                  stx)))]))
 
   (struct rhombus-prefix+infix-operator (prefix infix)
     #:property prop:rhombus-prefix-operator (lambda (self) (rhombus-prefix+infix-operator-prefix self))
@@ -76,13 +88,13 @@
      #'(define-syntax name (prefix-operator name spec ...))]))
 
 (define-infix-operator rhombus+ +
-  #:less-than (rhombus* rhombus/)
+  #:weaker-than (rhombus* rhombus/)
   #:same-as (rhombus-))
 
 (define-syntax rhombus-
   (rhombus-prefix+infix-operator
-   (prefix-operator rhombus- - #:less-than (rhombus* rhombus/))
-   (infix-operator rhombus- - #:less-than (rhombus* rhombus/))))
+   (prefix-operator rhombus- - #:weaker-than (rhombus* rhombus/))
+   (infix-operator rhombus- - #:weaker-than (rhombus* rhombus/))))
 
 (define-infix-operator rhombus* *
   #:same-as (rhombus/))
@@ -90,24 +102,24 @@
 (define-infix-operator rhombus/ /)
 
 (define-prefix-operator ! not
-  #:greater-than (&& \|\|))
+  #:stronger-than (&& \|\|))
 
 (define-infix-operator && and
-  #:greater-than (\|\|))
+  #:stronger-than (\|\|))
 
 (define-infix-operator \|\| or)
 
 (define-infix-operator rhombus< <
   #:same-as (rhombus> rhombus>= rhombus== rhombus<=)
-  #:greater-than (\|\| &&))
+  #:stronger-than (\|\| &&))
 (define-infix-operator rhombus<= <=
   #:same-as (rhombus> rhombus>= rhombus==)
-  #:greater-than (\|\| &&))
+  #:stronger-than (\|\| &&))
 (define-infix-operator rhombus== =
   #:same-as (rhombus> rhombus>=)
-  #:greater-than (\|\| &&))
+  #:stronger-than (\|\| &&))
 (define-infix-operator rhombus>= >=
   #:same-as (rhombus>)
-  #:greater-than (\|\| &&))
+  #:stronger-than (\|\| &&))
 (define-infix-operator rhombus> >
-  #:greater-than (\|\| &&))
+  #:stronger-than (\|\| &&))

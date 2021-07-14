@@ -7,39 +7,29 @@
 
 (provide |.|)
 
-(begin-for-syntax
-  (struct rhombus-infix-operator-transformer (infix)
-    #:property prop:rhombus-infix-operator-transformer
-    (lambda (self) (rhombus-infix-operator-transformer-infix self))))
-
 (define-syntax |.|
   (rhombus-infix-operator-transformer
-   (rhombus-infix-operator
-    (quote-syntax |.|)
-    (list)
-    (list)
-    (list #'core:+ #'core:- #'core:* #'core:/
-          #'core:< #'core:<= #'core:== #'core:>= #'core:>
-          #'core:&& #'core:\|\| #'core:!)
-    'left
-    (lambda (form1 tail stx)
-      (syntax-parse tail
-        [(field:identifier . tail)
-         (values (datum->syntax (quote-syntax here)
-                                (list #'field-ref form1 #''field)
-                                (span-srcloc form1 #'field)
-                                stx)
-                 #'tail)]
-        [(other . tail)
-         (raise-syntax-error #f
-                             "expected an identifier for a field name, but found something else"
-                             stx
-                             #f
-                             (list #'other))]
-        [()
-         (raise-syntax-error #f
-                             "expected an identifier for a field name"
-                             stx)])))))
+   (quote-syntax |.|)
+   '((default . stronger))
+   'left
+   (lambda (form1 tail)
+     (syntax-parse tail
+       [(dot field:identifier . tail)
+        (values (datum->syntax (quote-syntax here)
+                               (list #'field-ref form1 #''field)
+                               (span-srcloc form1 #'field)
+                               #'dot)
+                #'tail)]
+       [(dot other . tail)
+        (raise-syntax-error #f
+                            "expected an identifier for a field name, but found something else"
+                            #'dot
+                            #f
+                            (list #'other))]
+       [(dot)
+        (raise-syntax-error #f
+                            "expected an identifier for a field name"
+                            #'dot)]))))
 
 (define (field-ref v name)
   (error 'field-ref "don't yet know how to find field: ~s" name))
