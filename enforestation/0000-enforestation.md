@@ -1,11 +1,11 @@
 - Feature Name: Enforestation and expansion for shrubberies
 - Start Date: 2021-07-14
-- RFC PR: [racket/rhombus-brainstorming#123](https://github.com/racket/rhombus-brainstoring/pull/123)
+- RFC PR: [racket/rhombus-brainstorming#162](https://github.com/racket/rhombus-brainstorming/pull/162)
 
 # Summary
 [summary]: #summary
 
-[Shrubbery notation](https://github.com/jeapostrophe/rhombus-brainstoring/blob/shrubbery/shrubbery/0000-shrubbery.md)
+[Shrubbery notation](https://github.com/mflatt/rhombus-brainstorming/blob/shrubbery/shrubbery/0000-shrubbery.md)
 specifies how to parse a sequence of characters into a coarse-grained
 block structure, but it leaves the interpretation of that block
 structure to another layer of parsing—not to mention more fine-grained
