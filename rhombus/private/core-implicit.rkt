@@ -28,7 +28,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(datum . tail)
-        (values #'(quote datum)
+        (values (syntax/loc #'datum (quote datum))
                 #'tail)]))))
 
 (define-syntax #%tuple

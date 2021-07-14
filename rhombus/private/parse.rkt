@@ -185,7 +185,7 @@
                  [(rhombus-expression-transformer? v)
                   (apply-expression-transformer v stxes)]
                  [else
-                  (values (make-identifier-expression #'head) #'tail)])]
+                  (enforest-step (make-identifier-expression #'head) #'tail current-op)])]
               [(((~and tag (~datum parens)) . inside) . tail)
                (dispatch-prefix-implicit tuple-name #'tag)]
               [(((~and tag (~datum braces)) . inside) . tail)
@@ -198,18 +198,20 @@
                (dispatch-prefix-implicit literal-name #'literal)])
 
             . where .
-           
+
             (define (dispatch-prefix-operator v tail op-stx)
               (cond
                 [(rhombus-prefix-operator-transformer? v)
                  ;; it's up to the transformer to consume whatever it wants after the operator
-                 (apply-prefix-operator-transformer v stxes #:pattern? pattern?)]
+                 (define-values (form new-tail) (apply-prefix-operator-transformer v stxes #:pattern? pattern?))
+                 (enforest-step form new-tail current-op)]
                 [else
                  ;; new operator sets precedence, defer application of operator until a suitable
                  ;; argument is parsed
                  (define-values (form new-tail) (enforest-step tail v))
-                 (values (apply-prefix-operator v form op-stx #:pattern? pattern?)
-                         new-tail)]))
+                 (enforest-step (apply-prefix-operator v form op-stx #:pattern? pattern?)
+                                new-tail
+                                current-op)]))
 
             (define (dispatch-prefix-implicit implicit-name head-stx)
               (define-values (implicit-v op-stx) (lookup-prefix-implicit implicit-name head-stx
@@ -219,6 +221,7 @@
           [(init-form stxes current-op)
            ;; Has a preceding expression, so dispatch to infix (possibly implicit)
            ((syntax-parse stxes
+              [() (values init-form stxes)]
               [(head::operator . tail)
                (define v (syntax-local-value #'head.name (lambda () #f)))
                (cond
@@ -252,13 +255,15 @@
                  (cond
                    [(rhombus-infix-operator-transformer? v)
                     ;; it's up to the transformer to consume whatever it wants after the operator
-                    (apply-infix-operator-transformer v init-form stxes #:pattern? pattern?)]
+                    (define-values (form new-tail) (apply-infix-operator-transformer v init-form stxes #:pattern? pattern?))
+                    (enforest-step form new-tail current-op)]
                    [else
                     ;; new operator sets precedence, defer application of operator until a suitable
                     ;; right-hand argument is parsed
                     (define-values (form new-tail) (enforest-step tail v))
-                    (values (apply-infix-operator v init-form form op-stx #:pattern? pattern?)
-                            new-tail)])]
+                    (enforest-step (apply-infix-operator v init-form form op-stx #:pattern? pattern?)
+                                   new-tail
+                                   current-op)])]
                 [(eq? rel-prec 'weaker)
                  (values init-form stxes)]
                 [else
