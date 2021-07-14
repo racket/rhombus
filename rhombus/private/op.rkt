@@ -117,7 +117,7 @@
 (define (rhombus-infix-pattern-operator name less-than-names same-as-names greater-than-names proc assoc)
   (infix-pattern-operator name less-than-names same-as-names greater-than-names proc assoc))
 
-(define (unwrap-operator o #:pattern pattern?)
+(define (unwrap-operator o #:pattern? pattern?)
   (cond
     [(if pattern?
          (or (rhombus-prefix-pattern-operator-ref o #f)
@@ -131,13 +131,13 @@
   (operator-name (unwrap-operator o #:pattern? pattern?)))
 
 (define (rhombus-operator-less-than-names o #:pattern? pattern?)
-  (operator-less-than-names (unwrap-operator o)))
+  (operator-less-than-names (unwrap-operator o #:pattern? pattern?)))
 
 (define (rhombus-operator-same-as-names o #:pattern? pattern?)
-  (operator-same-as-names (unwrap-operator o)))
+  (operator-same-as-names (unwrap-operator o #:pattern? pattern?)))
 
 (define (rhombus-operator-greater-than-names o #:pattern? pattern?)
-  (operator-greater-than-names (unwrap-operator o)))
+  (operator-greater-than-names (unwrap-operator o #:pattern? pattern?)))
 
 (define (unwrap-prefix-operator o #:pattern? pattern?)
   (cond

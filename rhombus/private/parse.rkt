@@ -167,7 +167,7 @@
                 (raise-syntax-error #f "infix operator without preceding argument" #'head))
               (define rel-prec (if (not current-op)
                                    'higher
-                                   (relative-precedence v current-op #'head)))
+                                   (relative-precedence v current-op #'head #:pattern? pattern?)))
               (cond
                 [(or (not current-op) (eq? rel-prec 'higher))
                  (cond
@@ -309,7 +309,7 @@
          #,(syntax-parse #'form
              [e::declaration #'(begin . e.expandeds)]
              [e::definition #'(begin (begin . e.expandeds) . e.exprs)]
-             [e::expression #'e.expanded])
+             [e::expression #'(#%expression e.expanded)])
          (rhombus-top . forms))]))
 
 ;; For a definition context, interleaves expansion and enforestation:
@@ -324,12 +324,12 @@
      #`(begin
          (begin . e.expandeds)
          (maybe-begin
-          (begin . e.exprs)
+          (#%expression (begin . e.exprs))
           #,(syntax/loc stx
               (rhombus-block . tail))))]
     [(_ e::expression . tail)
      #`(maybe-begin
-        e.expanded
+        (#%expression e.expanded)
         #,(syntax/loc stx
             (rhombus-block . tail)))]))
 
