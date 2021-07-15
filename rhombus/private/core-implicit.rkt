@@ -11,7 +11,7 @@
          #%call)
 
 (define-syntax #%block
-  (rhombus-prefix-operator-transformer
+  (rhombus-prefix-expression-operator-transformer
    #'%block
    '((default . stronger))
    (lambda (stxes)
@@ -22,7 +22,7 @@
 
 
 (define-syntax #%literal
-  (rhombus-prefix-operator-transformer
+  (rhombus-prefix-expression-operator-transformer
    #'%literal
    '((default . stronger))
    (lambda (stxes)
@@ -32,7 +32,7 @@
                 #'tail)]))))
 
 (define-syntax #%tuple
-  (rhombus-prefix-operator-transformer
+  (rhombus-prefix-expression-operator-transformer
    #'%tuple
    '((default . stronger))
    (lambda (stxes)
@@ -51,10 +51,9 @@
                [e::expression (values #'e.expanded #'tail)])]))]))))
 
 (define-syntax #%call
-  (rhombus-infix-operator-transformer
+  (rhombus-infix-expression-operator-transformer
    #'%call
    '((default . stronger))
-   'left
    (lambda (rator stxes)
      (syntax-parse stxes
        [(((~and head (~datum parens)) rand::expression ...) . tail)
@@ -62,4 +61,5 @@
                                (cons rator #'(rand.expanded ...))
                                (span-srcloc rator #'head)
                                #'head)
-                #'tail)]))))
+                #'tail)]))
+   'left))

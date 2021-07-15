@@ -4,8 +4,8 @@
                      syntax/stx
                      "srcloc.rkt"
                      "op.rkt"
-                     "syntax-local.rkt")
-         "parse.rkt")
+                     "syntax-local.rkt"
+                     "binding.rkt"))
 
 (provide ::
 
@@ -61,7 +61,6 @@
   (rhombus-infix-binding-operator-transformer
    #'::
    '((default . weaker))
-   #f
    (lambda (form tail)
      (syntax-parse tail
        [(op t::type . new-tail)
@@ -79,13 +78,14 @@
                             #'left.syntax-ids
                             #'left.syntax-form)]))
           (values
-           var-ids
-           #`(lambda (v)
-               (if (t.predicate v)
-                   (left.matcher-form v)
-                   (values #f . falses)))
-           stx-ids
-           stx-form
-           #'new-tail))]))))
+           #`(#,var-ids
+              (lambda (v)
+                (if (t.predicate v)
+                    (left.matcher-form v)
+                    (values #f . falses)))
+              #,stx-ids
+              #,stx-form)
+           #'new-tail))]))
+   #f))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))

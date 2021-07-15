@@ -32,19 +32,19 @@
                                                           (length (syntax->list #'d.variable-ids))))])
                                  #'#f)])
            (values
-            #'(a-id ... d-id ...)
-            #'(lambda (v)
-                (if (pair? v)
-                    (let-values ([(match? . a.variable-ids) (a.matcher-form (car v))])
-                      (if match?
-                          (let-values ([(match? . d.variable-ids) (d.matcher-form (cdr v))])
-                            (if match?
-                                (values #t a-id ... d-id ...)
-                                (values #f . falses)))
-                          (values #f . falses)))
-                    (values #f . falses)))
-            #'(a-stx-id ... d-stx-id ...)
-            #'(let-values ([(a-stx-id ...) a.syntax-form]
-                           [(d-stx-id ...) d.syntax-form])
-                (values a-stx-id ... d-stx-id ...))
+            #'((a-id ... d-id ...)
+               (lambda (v)
+                 (if (pair? v)
+                     (let-values ([(match? . a.variable-ids) (a.matcher-form (car v))])
+                       (if match?
+                           (let-values ([(match? . d.variable-ids) (d.matcher-form (cdr v))])
+                             (if match?
+                                 (values #t a-id ... d-id ...)
+                                 (values #f . falses)))
+                           (values #f . falses)))
+                     (values #f . falses)))
+               (a-stx-id ... d-stx-id ...)
+               (let-values ([(a-stx-id ...) a.syntax-form]
+                            [(d-stx-id ...) d.syntax-form])
+                 (values a-stx-id ... d-stx-id ...)))
             #'new-tail))])))))

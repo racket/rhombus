@@ -48,10 +48,9 @@
            null))]))))
 
 (define-syntax |.|
-  (rhombus-infix-operator-transformer
+  (rhombus-infix-expression-operator-transformer
    (quote-syntax |.|)
    '((default . stronger))
-   'left
    (lambda (form1 tail)
      (syntax-parse tail
        [(dot field:identifier . tail)
@@ -80,4 +79,5 @@
        [(dot)
         (raise-syntax-error #f
                             "expected an identifier for a field name"
-                            #'dot)]))))
+                            #'dot)]))
+   'left))

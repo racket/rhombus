@@ -5,7 +5,8 @@
                      "op.rkt"
                      (submod "op.rkt" for-parse)
                      "transformer.rkt"
-                     (submod "transformer.rkt" for-parse)))
+                     (submod "transformer.rkt" for-parse)
+                     "check.rkt"))
 
 (provide rhombus-top
          rhombus-block
@@ -16,7 +17,6 @@
                      :definition
                      :expression
                      :binding
-                     :binding-form
 
                      ;; for continuing enforestation of expressions or bindings:
                      :op+expression+tail
@@ -45,13 +45,14 @@
 
   ;; Form in an expression context:
   (define-syntax-class :expression
-    (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail #f)))
+    (pattern ((~datum group) . tail) #:attr expanded (enforest-expression #'tail #f)))
 
   ;; For reentering the enforestation loop within a group, stopping when
   ;; the group end or when an operator with weaker precedence than `op` is found
   (define-splicing-syntax-class :op+expression+tail
-    (pattern (op:identifier . tail)
-             #:do [(define-values (form new-tail) (enforest-step (syntax-local-value #'op) #'tail))]
+    (pattern (op-name:identifier . tail)
+             #:do [(define op (expression-operator-ref (syntax-local-value #'op)))
+                   (define-values (form new-tail) (enforest-expression-step op #'tail))]
              #:attr expanded form
              #:attr new-tail new-tail))
 
@@ -59,14 +60,12 @@
   (define-syntax-class :binding
     (pattern ((~datum group) . tail)
              #:with (variable-ids matcher-form syntax-ids syntax-form) (enforest-binding #'tail)))
-  ;; To re-unpack a `:binding` result:
-  (define-syntax-class :binding-form
-    (pattern (variable-ids matcher-form syntax-ids syntax-form)))
 
   ;; Like `:op+expression+tail`, but for bindings
   (define-splicing-syntax-class :op+binding+tail
-    (pattern (op:identifier . tail)
-             #:do [(define-values (form new-tail) (enforest-binding-step (syntax-local-value #'op) #'tail))]
+    (pattern (op-name:identifier . tail)
+             #:do [(define op (binding-operator-ref (syntax-local-value #'op)))
+                   (define-values (form new-tail) (enforest-binding-step op #'tail))]
              #:with (variable-ids matcher syntax-ids syntax-rhs) form
              #:attr new-tail new-tail))
 
@@ -136,15 +135,14 @@
   (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
   (define-syntax-rule (define-enforest enforest enforest-step
-                        binding?
-                        ;; the rest are named as if they're for expressions,
-                        ;; but they can be replaced by functions for bindings
-                        rhombus-infix-operator?
-                        rhombus-infix-operator-transformer?
-                        rhombus-prefix-operator?
-                        rhombus-prefix-operator-transformer?
-                        rhombus-expression-transformer?
-                        apply-expression-transformer
+                        operator-kind-str
+                        infix-operator-ref
+                        infix-operator-transformer-ref
+                        prefix-operator-ref
+                        prefix-operator-transformer-ref
+                        transformer-ref
+                        apply-transformer
+                        check-result
                         make-identifier-expression)
     (begin
       (define (enforest stxes [current-op #f])
@@ -163,7 +161,7 @@
 
       (define (raise-unbound-operator op-stx)
         (raise-syntax-error #f
-                            (if binding? "unbound binding operator" "unbound operator")
+                            (string-append "unbound " operator-kind-str)
                             op-stx))
 
       ;; Takes 2 or 3 arguments, depending on whether a preceding expression is available
@@ -176,17 +174,19 @@
               [(head::operator . tail)
                (define v (syntax-local-value #'head.name (lambda () #f)))
                (cond
-                 [(rhombus-prefix-operator? v)
-                  (dispatch-prefix-operator v #'tail #'head.name)]
-                 [(rhombus-infix-operator? v)
+                 [(prefix-operator-ref v)
+                  => (lambda (op)
+                       (dispatch-prefix-operator v op #'tail #'head.name))]
+                 [(infix-operator-ref v)
                   (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
                  [else
                   (raise-unbound-operator #'head.name)])]
               [(head:identifier . tail)
                (define v (syntax-local-value #'head (lambda () #f)))
                (cond
-                 [(rhombus-expression-transformer? v)
-                  (apply-expression-transformer v stxes)]
+                 [(transformer-ref v)
+                  => (lambda (op)
+                       (apply-transformer op stxes))]
                  [else
                   (enforest-step (make-identifier-expression #'head) #'tail current-op)])]
               [(((~and tag (~datum parens)) . inside) . tail)
@@ -202,24 +202,25 @@
 
             . where .
 
-            (define (dispatch-prefix-operator v tail op-stx)
+            (define (dispatch-prefix-operator v op tail op-stx)
               (cond
-                [(rhombus-prefix-operator-transformer? v)
-                 ;; it's up to the transformer to consume whatever it wants after the operator
-                 (define-values (form new-tail) (apply-prefix-operator-transformer v stxes #:binding? binding?))
-                 (enforest-step form new-tail current-op)]
+                [(prefix-operator-transformer-ref v)
+                 => (lambda (t)
+                      ;; it's up to the transformer to consume whatever it wants after the operator
+                      (define-values (form new-tail) (apply-prefix-operator-transformer t stxes check-result))
+                      (enforest-step form new-tail current-op))]
                 [else
                  ;; new operator sets precedence, defer application of operator until a suitable
                  ;; argument is parsed
                  (define-values (form new-tail) (enforest-step tail v))
-                 (enforest-step (apply-prefix-operator v form op-stx #:binding? binding?)
+                 (enforest-step (apply-prefix-operator op form op-stx check-result)
                                 new-tail
                                 current-op)]))
 
             (define (dispatch-prefix-implicit implicit-name head-stx)
-              (define-values (implicit-v op-stx) (lookup-prefix-implicit implicit-name head-stx
-                                                                         #:binding? binding?))
-              (dispatch-prefix-operator implicit-v stxes op-stx)))]
+              (define-values (v op-stx) (lookup-prefix-implicit implicit-name head-stx
+                                                                prefix-operator-ref operator-kind-str))
+              (dispatch-prefix-operator v (prefix-operator-ref v) stxes op-stx)))]
 
           [(init-form stxes current-op)
            ;; Has a preceding expression, so dispatch to infix (possibly implicit)
@@ -228,9 +229,10 @@
               [(head::operator . tail)
                (define v (syntax-local-value #'head.name (lambda () #f)))
                (cond
-                 [(rhombus-infix-operator? v)
-                  (dispatch-infix-operator v #'tail #'head.name)]
-                 [(rhombus-prefix-operator? v)
+                 [(infix-operator-ref v)
+                  => (lambda (op)
+                       (dispatch-infix-operator v op #'tail #'head.name))]
+                 [(prefix-operator-ref v)
                   (dispatch-infix-implicit juxtapose-name #'head)]
                  [else
                   (raise-unbound-operator #'head.name)])]
@@ -249,22 +251,23 @@
 
             . where . 
 
-            (define (dispatch-infix-operator v tail op-stx)
+            (define (dispatch-infix-operator v op tail op-stx)
               (define rel-prec (if (not current-op)
                                    'stronger
-                                   (relative-precedence v current-op op-stx #:binding? binding?)))
+                                   (relative-precedence op current-op op-stx)))
               (cond
                 [(eq? rel-prec 'stronger)
                  (cond
-                   [(rhombus-infix-operator-transformer? v)
-                    ;; it's up to the transformer to consume whatever it wants after the operator
-                    (define-values (form new-tail) (apply-infix-operator-transformer v init-form stxes #:binding? binding?))
-                    (enforest-step form new-tail current-op)]
+                   [(infix-operator-transformer-ref v)
+                    => (lambda (op)
+                         ;; it's up to the transformer to consume whatever it wants after the operator
+                         (define-values (form new-tail) (apply-infix-operator-transformer op init-form stxes check-result))
+                         (enforest-step form new-tail current-op))]
                    [else
                     ;; new operator sets precedence, defer application of operator until a suitable
                     ;; right-hand argument is parsed
                     (define-values (form new-tail) (enforest-step tail v))
-                    (enforest-step (apply-infix-operator v init-form form op-stx #:binding? binding?)
+                    (enforest-step (apply-infix-operator op init-form form op-stx check-result)
                                    new-tail
                                    current-op)])]
                 [(eq? rel-prec 'weaker)
@@ -279,36 +282,40 @@
                     (raise-syntax-error #f
                                         (format
                                          (string-append 
-                                          "combination of ~aoperators without declared relative precedence"
+                                          "combination of ~as without declared relative precedence"
                                           " needs explicit parenthesization\n"
                                           "  other operator: ~a")
-                                         (if binding? "binding " "")
-                                         (syntax-e (rhombus-operator-name current-op #:binding? binding?)))
+                                         operator-kind-str
+                                         (syntax-e (rhombus-operator-name current-op)))
                                         op-stx)])]))
 
             (define (dispatch-infix-implicit implicit-name head-stx)
-              (define-values (implicit-v op-stx) (lookup-infix-implicit implicit-name head-stx
-                                                                        #:binding? binding?))
-              (dispatch-infix-operator implicit-v stxes op-stx)))]))))
+              (define-values (v op-stx) (lookup-infix-implicit implicit-name head-stx
+                                                               infix-operator-ref operator-kind-str))
+              (dispatch-infix-operator v (infix-operator-ref v) stxes op-stx)))]))))
 
   ;; the expression variant:
-  (define-enforest enforest enforest-step #f
-    rhombus-infix-operator?
-    rhombus-infix-operator-transformer?
-    rhombus-prefix-operator?
-    rhombus-prefix-operator-transformer?
-    rhombus-expression-transformer?
+  (define-enforest enforest-expression enforest-expression-step
+    "expression operator"
+    rhombus-infix-expression-operator-ref
+    rhombus-infix-expression-operator-transformer-ref
+    rhombus-prefix-expression-operator-ref
+    rhombus-prefix-expression-operator-transformer-ref
+    rhombus-expression-transformer-ref
     apply-expression-transformer
+    check-expression-result
     make-identifier-expression)
 
   ;; the binding variant:
-  (define-enforest enforest-binding enforest-binding-step #t
-    rhombus-infix-binding-operator?
-    rhombus-infix-binding-operator-transformer?
-    rhombus-prefix-binding-operator?
-    rhombus-prefix-binding-operator-transformer?
-    rhombus-binding-transformer?
+  (define-enforest enforest-binding enforest-binding-step
+    "binding operator"
+    rhombus-infix-binding-operator-ref
+    rhombus-infix-binding-operator-transformer-ref
+    rhombus-prefix-binding-operator-ref
+    rhombus-prefix-binding-operator-transformer-ref
+    rhombus-binding-transformer-ref
     apply-binding-transformer
+    check-binding-result
     make-identifier-binding)
 
   ;; helper function for expressions

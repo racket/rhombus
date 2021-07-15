@@ -1,5 +1,7 @@
 #lang racket/base
-(require syntax/stx)
+(require syntax/stx
+         syntax/parse
+         "binding.rkt")
 
 (provide check-expression-result
          check-binding-result
@@ -11,20 +13,10 @@
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
   form)
 
-(define (check-binding-result var-ids matcher-form stx-ids stx-form proc)
-  (define (check-ids ids)
-    (unless (and (stx-list? ids)
-                 (let loop ([ids ids])
-                   (or (stx-null? ids)
-                       (and (stx-pair? ids)
-                            (identifier? (stx-car ids))
-                            (loop (stx-cdr ids))))))
-      (raise-result-error (proc-name proc) "(listof identifier?))" ids)))
-  (check-ids var-ids)
-  (unless (syntax? matcher-form) (raise-result-error (proc-name proc) "syntax?" matcher-form))
-  (check-ids stx-ids)
-  (unless (syntax? stx-form) (raise-result-error (proc-name proc) "syntax?" stx-form))
-  (datum->syntax #f (list var-ids matcher-form stx-ids stx-form)))
+(define (check-binding-result form proc)
+  (syntax-parse (if (syntax? form) form #'#f)
+    [_::binding-form form]
+    [_ (raise-result-error (proc-name proc) "binding-result?" form)]))
 
 (define (check-transformer-result form tail proc)
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
