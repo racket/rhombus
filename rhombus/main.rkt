@@ -10,7 +10,7 @@
          ...))
 (bounce "private/core-implicit.rkt"
         "private/core-op.rkt"
-        "private/dot-op.rkt"
+        "private/struct.rkt"
         "private/define.rkt"
         "private/type.rkt"
         "private/list.rkt")

@@ -16,6 +16,7 @@
                      :definition
                      :expression
                      :pattern
+                     :pattern-form
 
                      ;; for continuing enforestation of expressions or patterns:
                      :op+expression+tail
@@ -57,13 +58,16 @@
   ;; Form in a pattern context:
   (define-syntax-class :pattern
     (pattern ((~datum group) . tail)
-             #:with (bindings filter) (enforest-pattern #'tail)))
+             #:with (variable-ids matcher-form syntax-ids syntax-form) (enforest-pattern #'tail)))
+  ;; To re-unpack a `:pattern` result:
+  (define-syntax-class :pattern-form
+    (pattern (variable-ids matcher-form syntax-ids syntax-form)))
 
   ;; Like `:op+expression+tail`, but for patterns
   (define-splicing-syntax-class :op+pattern+tail
     (pattern (op:identifier . tail)
              #:do [(define-values (form new-tail) (enforest-pattern-step (syntax-local-value #'op) #'tail))]
-             #:with (bindings filter) form
+             #:with (variable-ids matcher syntax-ids syntax-rhs) form
              #:attr new-tail new-tail))
 
   ;; The `enforest` functions below are based on the one described in
@@ -316,7 +320,7 @@
 
   ;; helper function for patterns
   (define (make-identifier-pattern id)
-    (list (list id) #'(lambda (v) (values #t v)))))
+    (list (list id) #'(lambda (v) (values #t v)) null #'(values))))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)

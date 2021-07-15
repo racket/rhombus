@@ -260,8 +260,8 @@
   (define proc (rhombus-prefix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form) (proc form stx))
-     (check-pattern-result ids filter-form proc)]
+     (define-values (var-ids matcher-form stx-ids stx-form) (proc form stx))
+     (check-pattern-result var-ids matcher-form stx-ids stx-form proc)]
     [else
      (define new-form (proc form stx))
      (check-expression-result new-form proc)]))
@@ -270,8 +270,8 @@
   (define proc (rhombus-infix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form) (proc form1 form2 stx))
-     (check-pattern-result ids filter-form proc)]
+     (define-values (var-ids matcher-form stx-ids stx-form) (proc form1 form2 stx))
+     (check-pattern-result var-ids matcher-form stx-ids stx-form proc)]
     [else
      (define form (proc form1 form2 stx))
      (check-expression-result form proc)]))
@@ -280,8 +280,8 @@
   (define proc (rhombus-prefix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form new-tail) (proc tail))
-     (check-transformer-result (check-pattern-result ids filter-form proc)
+     (define-values (var-ids matcher-form stx-ids stx-form new-tail) (proc tail))
+     (check-transformer-result (check-pattern-result var-ids matcher-form stx-ids stx-form proc)
                                new-tail
                                proc)]
     [else
@@ -294,8 +294,8 @@
   (define proc (rhombus-infix-operator-proc v #:pattern? pattern?))
   (cond
     [pattern?
-     (define-values (ids filter-form new-tail) (proc form1 tail))
-     (check-transformer-result (check-pattern-result ids filter-form proc)
+     (define-values (var-ids matcher-form stx-ids stx-form new-tail) (proc form1 tail))
+     (check-transformer-result (check-pattern-result var-ids matcher-form stx-ids stx-form proc)
                                new-tail
                                proc)]
     [else

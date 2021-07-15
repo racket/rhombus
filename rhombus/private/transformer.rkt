@@ -94,7 +94,7 @@
 
 (define (apply-pattern-transformer t stx)
   (define proc (transformer-proc ((rhombus-pattern-transformer-ref t) t)))
-  (define-values (ids filter-form tail) (proc stx))
-  (check-transformer-result (check-pattern-result ids filter-form proc)
+  (define-values (var-ids matcher-form stx-ids stx-form tail) (proc stx))
+  (check-transformer-result (check-pattern-result var-ids matcher-form stx-ids stx-form proc)
                             tail
                             proc))
