@@ -11,15 +11,18 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block)
-       [(_ id:identifier (parens arg::pattern ...) (~and rhs (block body ...)))
+       [(_ id:identifier (parens arg::binding ...) (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
           #'(define id
               (lambda (arg-id ...)
                 (nested-bindings
-                 (((match? . arg.bindings) (arg.filter arg-id))
-                  (unless match? (argument-pattern-failure 'id arg-id 'arg)))
+                 ((match? . arg.variable-ids)
+                  (arg.matcher-form arg-id)
+                  (unless match? (argument-binding-failure 'id arg-id 'arg))
+                  arg.syntax-ids
+                  arg.syntax-form)
                  ...
                  (rhombus-expression (group rhs))))))
          null)]))))
@@ -27,14 +30,16 @@
 (define-syntax nested-bindings
   (syntax-rules ()
     [(_ body) body]
-    [(_ ((vars rhs) check) . tail) (let-values ([vars rhs])
-                                     check
-                                     (nested-bindings . tail))]))
+    [(_ (vars var-rhs check stxes stx-rhs) . tail)
+     (let-values ([vars var-rhs])
+       check
+       (letrec-syntaxes ([stxes stx-rhs])
+         (nested-bindings . tail)))]))
 
-(define (argument-pattern-failure who val pattern)
+(define (argument-binding-failure who val binding)
   (error who
-         (string-append "argument does not match pattern\n"
+         (string-append "argument does not match binding pattern\n"
                         "  argument: ~v\n"
-                        "  pattern: ~s")
+                        "  binding: ~s")
          val
-         pattern))
+         binding))

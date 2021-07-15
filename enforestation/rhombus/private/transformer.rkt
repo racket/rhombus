@@ -8,23 +8,23 @@
 (provide rhombus-expression-transformer?
          rhombus-definition-transformer?
          rhombus-declaration-transformer?
-         rhombus-pattern-transformer?
+         rhombus-binding-transformer?
 
          prop:rhombus-expression-transformer
          prop:rhombus-definition-transformer
          prop:rhombus-declaration-transformer
-         prop:rhombus-pattern-transformer
+         prop:rhombus-binding-transformer
 
          rhombus-expression-transformer
          rhombus-definition-transformer
          rhombus-declaration-transformer
-         rhombus-pattern-transformer)
+         rhombus-binding-transformer)
 
 (module+ for-parse
   (provide apply-expression-transformer
            apply-definition-transformer
            apply-declaration-transformer
-           apply-pattern-transformer))
+           apply-binding-transformer))
 
 (struct transformer (proc))
 
@@ -62,15 +62,15 @@
   (declaration-transformer proc))
 
 ;; returns an list of ids, a filter expression, and a tail of unused syntax:
-(define-values (prop:rhombus-pattern-transformer
-                rhombus-pattern-transformer?
-                rhombus-pattern-transformer-ref)
-  (make-struct-type-property 'rhombus-pattern-transformer))
-(struct pattern-transformer transformer ()
-  #:property prop:rhombus-pattern-transformer
+(define-values (prop:rhombus-binding-transformer
+                rhombus-binding-transformer?
+                rhombus-binding-transformer-ref)
+  (make-struct-type-property 'rhombus-binding-transformer))
+(struct binding-transformer transformer ()
+  #:property prop:rhombus-binding-transformer
   (lambda (self) self))
-(define (rhombus-pattern-transformer proc)
-  (pattern-transformer proc))
+(define (rhombus-binding-transformer proc)
+  (binding-transformer proc))
 
 (define (apply-expression-transformer t stx)
   (define proc (transformer-proc ((rhombus-expression-transformer-ref t) t)))
@@ -92,9 +92,9 @@
   (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
   forms)
 
-(define (apply-pattern-transformer t stx)
-  (define proc (transformer-proc ((rhombus-pattern-transformer-ref t) t)))
-  (define-values (ids filter-form tail) (proc stx))
-  (check-transformer-result (check-pattern-result ids filter-form proc)
+(define (apply-binding-transformer t stx)
+  (define proc (transformer-proc ((rhombus-binding-transformer-ref t) t)))
+  (define-values (var-ids matcher-form stx-ids stx-form tail) (proc stx))
+  (check-transformer-result (check-binding-result var-ids matcher-form stx-ids stx-form proc)
                             tail
                             proc))

@@ -43,20 +43,20 @@ define
 The intent here is that `define` is macro-implemented and recognizes
 various forms of definitions, including simple binding, function
 forms, and match-dispatch function forms. The `define` macro is not
-meant to know about `::` specifically; the `::` meant to be a
-binding-pattern operator that checks whether the value flowing to the
-binding satisfies a predicate, and it also binds compile-time
-information indicating that `p` is known to be a `Posn` instance. The
-name `Posn` works in an expression to construct a position value,
-while in a binding position, `Posn` also works to construct a pattern
-(again, without `define` knowing anything specific about `Posn`).
-Meanwhile, `.`, `-`, `+`, `*`, `<`, and `||` are the obvious operators
-with the usual precedence. Unlike the other operators, the `.`
-operator's right-hand side is not an expression; it must always be an
-identifier.
+meant to know about `::` specifically; the `::` meant to be a binding
+operator that checks whether the value flowing to the binding
+satisfies a predicate, and it also binds compile-time information
+indicating that `p` is known to be a `Posn` instance. The name `Posn`
+works in an expression to construct a position value, while in a
+binding position, `Posn` also works to construct a pattern-matching
+binding (again, without `define` knowing anything specific about
+`Posn`). Meanwhile, `.`, `-`, `+`, `*`, `<`, and `||` are the obvious
+operators with the usual precedence. Unlike the other operators, the
+`.` operator's right-hand side is not an expression; it must always be
+an identifier.
 
 To define a new expander layer for shrubbery notation, we take
-Racket's primitives as given: syntax objects, binding, modules, and
+Racket's primitives as given: syntax objects, scopes, modules, and
 more. We also recycle some variant of Racket as the target for
 shrubbery expansion. In principle, the variant could be minimal,
 corresponding to the core forms that all Racket modules expand into,
@@ -64,10 +64,11 @@ but some larger variant (including keyword arguments, for example) is
 likely a better choice of interoperability with Racket modules.
 Finally, the enforestation and expansion process here are defined in
 terms of the S-expression form of parsed shrubbery notation (really,
-syntax-object form, so it can refer to binding). Even so, a gap
-remains between shrubbery notation and Racket's macro expander,
-because shrubbery notation is intended to be used with less grouping
-than is normally present in S-expressions.
+syntax-object form, so it can include scopes to determine a mappin for
+identifiers and operators). Even so, a gap remains between shrubbery
+notation and Racket's macro expander, because shrubbery notation is
+intended to be used with less grouping than is normally present in
+S-expressions.
 
 This proposal does not go as far as specifying a language with
 specific definition forms, expression forms, and so on. The proposal
@@ -75,16 +76,19 @@ only specifies an extensible traversal of shrubberies to turn them
 into Racket terms. In particular, this proposal addresses the problem
 of parsing a mixture of operators and other terms within a group,
 allowing the definition of infix and prefix operators for expression
-and pattern-matching (i.e., binding) positions. The handling of
-operators is directly based on Honu, but with several
-refinements—including a framework for relative and non-transitive
-operator precedence that is more like Fortress than Honu.
+and binding positions. The handling of operators is directly based on
+Honu, but with several refinements—including a framework for relative
+and non-transitive operator precedence that is more like Fortress than
+Honu.
 
 Although this proposal does not specify definition forms, we assume
-some way of binding an identifier or operator to a compile-time
-entity, such as a macro transformer. We also assume that bindings can
-be local, so that delaying the expansion of nested groups is useful
-while compile-time bindings are created by surrounding terms.
+some way of mapping an identifier or operator to a compile-time
+entity, such as a macro transformer. (Throughout this proposal, we use
+“mapping” to refer to this binding in the sense of `define-syntax`, as
+opposed to binding positions in a language that is built with the
+Rhombus expander.) We also assume that mappings can be local, so that
+delaying the expansion of nested groups is useful while compile-time
+mappings are created by surrounding terms.
 
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
@@ -97,7 +101,7 @@ necessarily mean something involving `#lang racket`.
 
 _Suggestion:_ skip the “API” part of each section on a first reading.
 
-## Contexts and transformer kinds
+## Syntactic categories and transformer kinds
 
 Rhombus expansion involves four syntactic categories:
 
@@ -107,34 +111,46 @@ Rhombus expansion involves four syntactic categories:
 
  * expressions
 
- * patterns (in binding positions)
+ * bindings
 
-The first three exist in Racket expansion as reflected by
+The first three exist in Racket's expander as reflected by
 `syntax-local-context`. The fourth corresponds to `match` patterns,
 and we make them more pervasive in Rhombus. For its three syntactic
-categories, Racket has only one kind of transformer as one kind of
-compile-time value: a procedure of arity 1; nevertheless, some macros
-work only in, say, definition positions or in a module body. Rhombus
-expansion uses different kinds of compile-time values for its
-different expansion positions, so a binding can effectively declare
-where it's mean to be used. The different kinds of values are
+categories, the Racket expander has only one kind of transformer as
+one kind of compile-time value: a procedure of arity 1; nevertheless,
+some macros work only in, say, definition positions or in a module
+body. Rhombus expansion uses different kinds of compile-time values
+for its different expansion positions, so a mapping can effectively
+declare where it's mean to be used. The different kinds of values are
 implemented through structure-type properties, so a compile-time value
-can implement multiple kinds to create a binding that is allowed in
+can implement multiple kinds to create a mapping that is allowed in
 multiple contexts (especially expressions versus bindings).
 
-The rules for operator expansion differ from the rules for identifier
-expansion. Furthermore, operators can either act like macros and take
-over parsing after the operator (useful for a `.` operator, for
-example), or they can be more like variables, translated based on
-already-translated arguments. Operators used in expressions and
-operators used in binding patterns are represented as different kinds
-of compile-time values—but, again, an operator's compile-time value
-can implement both.
+The relevant syntactic category for a shrubbery is determined by its
+surrounding forms, and not inherent to the shrubbery. For example,
+`cons(x, y)` might mean one thing as an expression and aother as a
+binding. Exactly where the contexts reside in a module depends on a
+specific Rhambus language that is built on the Rhombus expander, so
+it's difficult to say more here. Meanwhile, a full Rhambus language
+may have more syntactic categories than the oes directly supported by
+the expander, in the same way that a Racket program can have more
+through syntactic extensions like `match` or Typed Racket. The four
+categories for the Rhombus expander are merely the ones that are
+directly supported by the expander and its API.
 
-Only expression and pattern contexts support operators. That is, the
-Rhombus expander will dispatch on operator binding only during the
+Within any category, the rules for operator expansion differ from the
+rules for identifier expansion. Furthermore, operators can either act
+like macros and take over parsing after the operator (useful for a `.`
+operator, for example), or they can be more like variables, translated
+based on already-translated arguments. Operators used in expressions
+and operators used in bindings are represented as different kinds of
+compile-time values—but, again, an operator's compile-time value can
+implement both.
+
+Only expression and binding contexts support operators. That is, the
+Rhombus expander will dispatch on operator mapping only during the
 expansion of expressions. A macro transformer that implements a
-declaration or definition is free to consult an operator's binding,
+declaration or definition is free to consult an operator's mapping,
 but whatever it does with that information is up to the transformer.
 The practical result is that declaration and definition forms are
 (like Racket) based on a leading identifier.
@@ -149,9 +165,10 @@ classes that serve as entry points to the Rhombus expander:
    expands at the Racket level by Rhombus-expanding a sequence of
    declaration, definition, and expression forms.
 
- * The `rhombus-block` form can be used to create a nested binding
-   context. It expands to Rhombus-expand a sequence of definition and
-   expression forms, requiring the last expansion to be an expression.
+ * The `rhombus-block` form can be used to create a nested
+   binding/mapping context. It expands to Rhombus-expand a sequence of
+   definition and expression forms, requiring the last expansion to be
+   an expression.
 
  * The `rhombus-expression` form expands to Rhombus-expand (with
    enforestation) a single expression.
@@ -167,8 +184,8 @@ classes that serve as entry points to the Rhombus expander:
  * The `:expression` syntax class matches and eagerly Rhombus-expands
    a single expression form. The result is a Racket expression.
 
- * The `:pattern` syntax class matches and eagerly Rhombus-expands a
-   single pattern form. The result combines information about a
+ * The `:binding` syntax class matches and eagerly Rhombus-expands a
+   single binding form. The result combines information about a
    matcher and result bindings.
 
  * The `:op+expression+tail` syntax class matches and eagerly
@@ -179,8 +196,8 @@ classes that serve as entry points to the Rhombus expander:
    continue parsing an expression. The result is a Racket expression
    and a sequence of remaining terms.
 
- * The `:op+pattern+tail` syntax class is analogous to
-   `:op+expression+tail`, but for binding patterns.
+ * The `:op+binding+tail` syntax class is analogous to
+   `:op+expression+tail`, but for binding bindings.
 
 Naturally, a Rhombus program will not refer to these Racket entities
 directly, but they are used to implement Rhombus. But a Rhombus
@@ -189,11 +206,11 @@ Rhombus that ultimately make use of these Racket entities.
 
 ## Identifier transformers
 
-The Rhombus expander checks an identifier's binding for a transformer
+The Rhombus expander checks an identifier's mapping for a transformer
 when the identifier is at the start of a group or when it starts an
-expression or pattern in other forms. An identifier is bound to a
-transformer using Racket's binding machinery (`define-syntax`, etc.),
-but not to just a procedure. Instead, for the binding to serve as a
+expression or binding in other forms. An identifier is bound to a
+transformer using Racket's mapping machinery (`define-syntax`, etc.),
+but not to just a procedure. Instead, for the mapping to serve as a
 Rhombus expander, the compile-time value must instantiate a structure
 type or implement a suitable structure-type property that is provided
 by the Rhombus expander.
@@ -201,16 +218,16 @@ by the Rhombus expander.
 In all expansion contexts, a macro transformer receives all remaining
 terms in the enclosing group after the triggering identifier or
 operator. A declaration or definition transformer is obliged to use
-all of the terms. In an expression or pattern context, the transformer
+all of the terms. In an expression or binding context, the transformer
 consumes as many as it wants, and it returns the remaining terms
 alongside its expansion result.
 
 ### API
 
-The Rhombus expander checks an identifier's binding for a transformer
+The Rhombus expander checks an identifier's mapping for a transformer
 when the identifier is at the start of a group in `rhombus-top`,
 `rhombus-block` `:declaration`, or `:definition`, or when it starts an
-expression or pattern in other contexts.
+expression or binding in other contexts.
 
 The structure types provided by the Rhombus expander to implement
 transformers:
@@ -234,7 +251,7 @@ transformers:
     result is a list of remaining terms (intended to be a tail of the
     input list of terms).
  
- * `(rhombus-pattern-transformer proc)`: `proc` is
+ * `(rhombus-binding-transformer proc)`: `proc` is
     `((listof syntax?) . -> . (values (listof identifier?) syntax? (listof identifier?) syntax? stx-list?))`
     where the first result is a list of identifiers to bind as
     variables, the second result is a Racket expression for a matcher
@@ -245,8 +262,9 @@ transformers:
     of remaining terms (intended to be a tail of the input list of
     terms). A matcher procedure takes one argument, and it returns one
     plus _N_ results: the first result is a boolean indicating whether
-    the pattern matches, and the remaining _N_ result supply values
-    for the _N_ variables returned by the transformer.
+    the binding succeeds, which is useful for pattern-matching
+    bindings, and the remaining _N_ result supply values for the _N_
+    variables returned by the transformer.
 
 For each of these structure types, the Rhombus expander also provides
 a structure-type property and a predicate to recognize instances of
@@ -264,7 +282,7 @@ provide by Rhombus that ultimately make use of these Racket entities.
 Shrubbery notation distinguishes identifiers and operators, but
 operators are bound at the Racket level in identifier form (i.e., the
 identifier that has the same characters as the operator). Operator
-bindings come in two flavors: plain operators, where the argument
+mappings come in two flavors: plain operators, where the argument
 expression(s) of the operator are delivered to a converted in parsed
 form, or operator transformers, where the unparsed stream of terms
 after the operators is delivered to the transformer procedure. For an
@@ -272,7 +290,7 @@ infix operator transformer, the operator's left argument is delivered
 in parsed form, the same as for a prefix operator.
 
 Since operators can be infix or prefix, plain or transformer, and
-expression or pattern, the Rhombus expander provides eight
+expression or binding, the Rhombus expander provides eight
 compile-time constructors to operator representations. They are listed
 further below.
 
@@ -320,20 +338,20 @@ associativity. The expression operator constructors are as follows:
    left argument, and the remaining arguments and results are the same
    as for `rhombus-prefix-operator-transformer`.
 
-Four similar constructors are provided for pattern operators. In each
+Four similar constructors are provided for binding operators. In each
 case, the arguments are the same as for expression operators, and the
-results are the same as for `rhombus-pattern-transformer`.
+results are the same as for `rhombus-binding-transformer`.
 
- * `(rhombus-prefix-pattern-operator id prec proc)`
+ * `(rhombus-prefix-binding-operator id prec proc)`
 
- * `(rhombus-infix-pattern-operator id prec assc proc)`
+ * `(rhombus-infix-binding-operator id prec assc proc)`
 
- * `(rhombus-prefix-pattern-operator-transformer id prec proc)`
+ * `(rhombus-prefix-binding-operator-transformer id prec proc)`
 
- * `(rhombus-infix-pattern-operator-transformer id prec assc proc)`
+ * `(rhombus-infix-binding-operator-transformer id prec assc proc)`
 
 For operator transformers, the `:op+expression+tail` and
-`:op+pattern+tail` syntax classes are potentially useful for parsing
+`:op+binding+tail` syntax classes are potentially useful for parsing
 the argument after an operator. Any plain operator can be defined as
 an operator transformer using those syntax classes.
 
@@ -357,7 +375,7 @@ indicates a relationship to B or B indicates a relationship to A. This
 approach turns out to work fine with a Pratt-style parser (as used in
 Honu), which only ever needs to work with precedence when it has two
 specific operators to compare. A potential advantage of non-transitive
-precedence avoiding an order among operands that have make no sense
+precedence is avoiding an order among operands that make no sense
 next to each other. An operator can declare a default precedence
 relationship to other operators, but must declare the default
 explicitly.
@@ -368,7 +386,8 @@ have stronger precedence than B if B claims stronger precedence than
 A. Also, if one or both operators claim a same precedence strength to
 the other, the operators must have the same associativity. The
 consistency of precedence claims between A and B is checked only at
-the point where A and B are compared by the enforesting expander.
+the point where A and B are compared by the enforesting expander,
+and inconsistent claims trigger a syntax error at that point.
 
 Precedence is relevant for both infix (binary) and prefix (unary)
 operators, but only infix operators have an associativity. When an
@@ -392,7 +411,7 @@ An associativity is represented as either `'left`, `'right`, or `#f`.
 ## Implicit operators
 
 In much the same way that `#%app` and `#%datum` are implicitly used in
-many Racket expressions, Rhombus expressions and patterns involve a
+many Racket expressions, Rhombus expressions and bindings involve a
 number of implicit operators:
 
  * `#%call`: implicit infix for an expression followed by a parenthesized
@@ -429,16 +448,16 @@ and be left-associative, but they are not constrained to those
 conventions by the Rhombus expander.
 
 Note that the names of implicit operators are not shrubbery operator
-tokens. Binding works in terms of Racket identifiers, whether for
+tokens. Mapping works in terms of Racket identifiers, whether for
 shrubbery identifiers for operators, so there's no inherent problem
-with using these “operator” names for binding. Unlike explicitly
+with using these “operator” names for mapping. Unlike explicitly
 referring to `#%app` in Racket, however, it is impossible for a
 program in shrubbery notation to explicitly refer to an implicit
 operator.
 
 ### API
 
-Normally, bindings for implicit operators need to be operator
+Normally, mappings for implicit operators need to be operator
 transformers, and not plain operators. When an operator transformer's
 procedure receives a list of terms, there will be no representative to
 the implicit operator itself. For example, the first term in the list
@@ -482,9 +501,9 @@ the remaining terms.
 ### API
 
 The enforestation algorithm is built into `rhombus-expression`,
-`rhombus-pattern`, `:expression`, `:pattern`, `:op+expression+tail`,
-and `:op+pattern+tail`. The `:op+expression+tail` and
-`:op+pattern+tail` syntax classes effectively calls the enforestation
+`rhombus-binding`, `:expression`, `:binding`, `:op+expression+tail`,
+and `:op+binding+tail`. The `:op+expression+tail` and
+`:op+binding+tail` syntax classes effectively calls the enforestation
 algorithm with a current operator, while the others start
 enforestation without a current operator.
 
@@ -506,22 +525,35 @@ that is part of the proposal.
 [drawbacks]: #drawbacks
 
 Much like shrubbery notation itself, the Rhombus expander tries to be
-general, but it embeds a certain amount of opinion on syntax. Function
-calls do not have to be written with parentheses around arguments (for
-example, `#%juxtapose` is available for implementing ML-style function
-calls), but having `#%call` available encourages that style. Along
-similar lines, the Rhombus expander supports a certain style of infix
-and prefix operators, but it does not directly support all possible
-kinds of operators. The combination of opinion and choice provided by
-the Rhombus expander leads to a large set of implicit operators.
+general, but it embeds a certain amount of opinion on syntax and
+program organization. Function calls do not have to be written with
+parentheses around arguments (for example, `#%juxtapose` is available
+for implementing ML-style function calls), but having `#%call`
+available encourages that style. Along similar lines, the Rhombus
+expander supports a certain style of infix and prefix operators, but
+it does not directly support all possible kinds of operators; for
+example, a backward `.` that puts the field first will not work well,
+since the left-hand side of an operator is always parsed as an
+expression. The combination of opinion and choice provided by the
+Rhombus expander leads to a large set of implicit operators.
 
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
+The four syntactic categories to be directly supported—declarations,
+definitions, expressions, and binding—reflect experience with Racket.
+The first three have been a successful baseline in Racket, while the
+lack of built-in extensibility for binding positions for `lambda` and
+`let` has limited the use of pattern matching. A natural fifth
+category would be types, and that category is omitted here with the
+expectation that an base Rhombus language will not be statically
+typed. Other possibile categories include method and field positions;
+those, again, are meant to be left to libraries.
+
 The choice to constrain operator dispatch to expression positions is
 intended as a simplification. Operators could be straightforwardly
 allowed to have prefix declaration- and definition-transformer
-bindings, and some form of infix operators could be supported. One
+mappings, and some form of infix operators could be supported. One
 possible use of `::` as a declaration infix operator would be for type
 declarations separate from definitions:
 
@@ -533,7 +565,11 @@ define f(x):
 
 Since declarations and definitions do not naturally nest in the same
 way as expressions, however, the way infix operators should work at
-that level is not as clear as it is for the expression level.
+that level is not as clear as it is for the expression level. A
+language with types that supports the above notation would likely need
+a multi-pass, partial-expansion transversal of a definition context to
+gather and relate definitions and type declarations, and that seems
+better left to a library or extension than the Rhombus expander core.
 
 For opinions on non-transitive operator precedence, see
 [Jeff Walker's blog post](https://blog.adamant-lang.org/2019/operator-precedence/).
