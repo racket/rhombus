@@ -58,14 +58,14 @@
       [else #f])))
 
 (define-syntax ::
-  (rhombus-infix-pattern-operator-transformer
+  (rhombus-infix-binding-operator-transformer
    #'::
    '((default . weaker))
    #f
    (lambda (form tail)
      (syntax-parse tail
        [(op t::type . new-tail)
-        #:with left::pattern-form form
+        #:with left::binding-form form
         (with-syntax ([falses (for/list ([b (in-list (stx->list #'left.variable-ids))])
                                 #'#f)])
           (define-values (var-ids stx-ids stx-form)

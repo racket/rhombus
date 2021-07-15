@@ -8,22 +8,22 @@
 (provide (rename-out [rhombus-cons cons]))
 
 (begin-for-syntax
-  (struct pattern-function (macro-proc pattern-proc)
+  (struct binding-function (macro-proc binding-proc)
     #:property prop:procedure (struct-field-index macro-proc)
     #:property
-    prop:rhombus-pattern-transformer
-    (lambda (self) (pattern-function-pattern-proc self))))
+    prop:rhombus-binding-transformer
+    (lambda (self) (binding-function-binding-proc self))))
 
 (define-syntax rhombus-cons
-  (pattern-function
+  (binding-function
    (lambda (stx)
      (syntax-parse stx
        [_:identifier #'cons]
        [(_ arg ...) (syntax/loc stx (cons arg ...))]))
-   (rhombus-pattern-transformer
+   (rhombus-binding-transformer
     (lambda (tail)
       (syntax-parse tail
-        [(_ ((~datum parens) a::pattern d::pattern) . new-tail)
+        [(_ ((~datum parens) a::binding d::binding) . new-tail)
          (with-syntax ([(a-id ...) #'a.variable-ids]
                        [(d-id ...) #'d.variable-ids]
                        [(a-stx-id ...) #'a.syntax-ids]

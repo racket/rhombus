@@ -2,7 +2,7 @@
 (require syntax/stx)
 
 (provide check-expression-result
-         check-pattern-result
+         check-binding-result
          check-transformer-result
 
          proc-name)
@@ -11,7 +11,7 @@
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
   form)
 
-(define (check-pattern-result var-ids matcher-form stx-ids stx-form proc)
+(define (check-binding-result var-ids matcher-form stx-ids stx-form proc)
   (define (check-ids ids)
     (unless (and (stx-list? ids)
                  (let loop ([ids ids])
