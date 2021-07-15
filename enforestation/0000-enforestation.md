@@ -43,7 +43,7 @@ define
 The intent here is that `define` is macro-implemented and recognizes
 various forms of definitions, including simple binding, function
 forms, and match-dispatch function forms. The `define` macro is not
-meant to know about `::` specifically; the `::` meant to be a binding
+meant to know about `::` specifically; the `::` is meant to be a binding
 operator that checks whether the value flowing to the binding
 satisfies a predicate, and it also binds compile-time information
 indicating that `p` is known to be a `Posn` instance. The name `Posn`
@@ -64,7 +64,7 @@ but some larger variant (including keyword arguments, for example) is
 likely a better choice of interoperability with Racket modules.
 Finally, the enforestation and expansion process here are defined in
 terms of the S-expression form of parsed shrubbery notation (really,
-syntax-object form, so it can include scopes to determine a mappin for
+syntax-object form, so it can include scopes to determine a mapping for
 identifiers and operators). Even so, a gap remains between shrubbery
 notation and Racket's macro expander, because shrubbery notation is
 intended to be used with less grouping than is normally present in
@@ -128,11 +128,11 @@ multiple contexts (especially expressions versus bindings).
 
 The relevant syntactic category for a shrubbery is determined by its
 surrounding forms, and not inherent to the shrubbery. For example,
-`cons(x, y)` might mean one thing as an expression and aother as a
+`cons(x, y)` might mean one thing as an expression and another as a
 binding. Exactly where the contexts reside in a module depends on a
-specific Rhambus language that is built on the Rhombus expander, so
-it's difficult to say more here. Meanwhile, a full Rhambus language
-may have more syntactic categories than the oes directly supported by
+specific Rhombus language that is built on the Rhombus expander, so
+it's difficult to say more here. Meanwhile, a full Rhombus language
+may have more syntactic categories than the ones directly supported by
 the expander, in the same way that a Racket program can have more
 through syntactic extensions like `match` or Typed Racket. The four
 categories for the Rhombus expander are merely the ones that are
