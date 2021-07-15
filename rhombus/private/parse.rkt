@@ -116,13 +116,10 @@
   ;; "stx" means "term". A "head" or "tail" is a stx/term.
   ;;
   ;; The "tree term" for binding enforestation is a syntactic list of
-  ;; length 2, where the first part is a list of N identifiers bound
-  ;; by the binding and the second part is an expression that acts as
-  ;; a function from the argument to a boolean (true implies matching)
-  ;; and N values (that are ignored if the first result is false).
-  ;; Putting those two pieces in one syntax object just makes the
-  ;; `enforest` code work easily for both modes, parameterized over
-  ;; whether it's in binding mode.
+  ;; length 4 to hold the results of a binding transformer. Putting
+  ;; those the pieces in one syntax object is a little awkward, but it
+  ;; makes the `enforest` code work easily for both modes,
+  ;; parameterized over whether it's in binding mode.
 
   ;; implicit prefix operator names:
   (define tuple-name   '#%tuple)       ; parentheses not after an expression
