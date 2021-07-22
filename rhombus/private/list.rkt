@@ -1,26 +1,16 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     syntax/stx
-                     "transformer.rkt")
-         "parse.rkt")
+                     syntax/stx)
+         "parse.rkt"
+         "expression.rkt"
+         "binding.rkt")
 
-(provide (rename-out [rhombus-cons cons]))
+(provide cons
+         (for-space rhombus/binding cons))
 
-(begin-for-syntax
-  (struct binding-function (macro-proc binding-proc)
-    #:property prop:procedure (struct-field-index macro-proc)
-    #:property
-    prop:rhombus-binding-transformer
-    (lambda (self) (binding-function-binding-proc self))))
-
-(define-syntax rhombus-cons
-  (binding-function
-   (lambda (stx)
-     (syntax-parse stx
-       [_:identifier #'cons]
-       [(_ arg ...) (syntax/loc stx (cons arg ...))]))
-   (rhombus-binding-transformer
+(define-binding-syntax cons
+   (binding-transformer
     (lambda (tail)
       (syntax-parse tail
         [(_ ((~datum parens) a::binding d::binding) . new-tail)
@@ -47,4 +37,4 @@
                (let-values ([(a-stx-id ...) a.syntax-form]
                             [(d-stx-id ...) d.syntax-form])
                  (values a-stx-id ... d-stx-id ...)))
-            #'new-tail))])))))
+            #'new-tail))]))))

@@ -3,6 +3,7 @@
                      syntax/parse
                      "srcloc.rkt"
                      "op.rkt")
+         "expression.rkt"
          "parse.rkt")
 
 (provide #%block
@@ -11,9 +12,10 @@
          #%call)
 
 (define-syntax #%block
-  (rhombus-prefix-expression-operator-transformer
+  (expression-prefix-operator
    #'%block
    '((default . stronger))
+   #t ; transformer
    (lambda (stxes)
      (syntax-parse stxes
        [((~and head ((~datum block) . body)) . tail)
@@ -22,9 +24,10 @@
 
 
 (define-syntax #%literal
-  (rhombus-prefix-expression-operator-transformer
+  (expression-prefix-operator
    #'%literal
    '((default . stronger))
+   #t ; transformer
    (lambda (stxes)
      (syntax-parse stxes
        [(datum . tail)
@@ -32,9 +35,10 @@
                 #'tail)]))))
 
 (define-syntax #%tuple
-  (rhombus-prefix-expression-operator-transformer
+  (expression-prefix-operator
    #'%tuple
    '((default . stronger))
+   #t ; transformer
    (lambda (stxes)
      (syntax-parse stxes
        [((~and head ((~datum parens) . args)) . tail)
@@ -51,9 +55,10 @@
                [e::expression (values #'e.expanded #'tail)])]))]))))
 
 (define-syntax #%call
-  (rhombus-infix-expression-operator-transformer
+  (expression-infix-operator
    #'%call
    '((default . stronger))
+   #t ; transformer
    (lambda (rator stxes)
      (syntax-parse stxes
        [(((~and head (~datum parens)) rand::expression ...) . tail)

@@ -6,7 +6,9 @@
                      (submod "op.rkt" for-parse)
                      "transformer.rkt"
                      (submod "transformer.rkt" for-parse)
-                     "check.rkt"))
+                     "check.rkt")
+         "expression.rkt"
+         "binding.rkt")
 
 (provide rhombus-top
          rhombus-block
@@ -30,14 +32,14 @@
   (define-syntax-class :declaration
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
-             #:when (rhombus-declaration-transformer? v)
+             #:when (declaration-transformer? v)
              #:attr expandeds (apply-declaration-transformer v (cons #'head #'tail))))
 
   ;; Form in a definition context:
   (define-syntax-class :definition
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value #'head (lambda () #f)))]
-             #:when (rhombus-definition-transformer? v)
+             #:when (definition-transformer? v)
              #:do [(define-values (defns-and-exprs exprs)
                      (apply-definition-transformer v (cons #'head #'tail)))]
              #:attr expandeds (datum->syntax #f defns-and-exprs)
@@ -51,7 +53,7 @@
   ;; the group end or when an operator with weaker precedence than `op` is found
   (define-splicing-syntax-class :op+expression+tail
     (pattern (op-name:identifier . tail)
-             #:do [(define op (expression-operator-ref (syntax-local-value #'op)))
+             #:do [(define op (expression-operator-ref (syntax-local-value (in-expression-space #'op))))
                    (define-values (form new-tail) (enforest-expression-step op #'tail))]
              #:attr expanded form
              #:attr new-tail new-tail))
@@ -64,7 +66,7 @@
   ;; Like `:op+expression+tail`, but for bindings
   (define-splicing-syntax-class :op+binding+tail
     (pattern (op-name:identifier . tail)
-             #:do [(define op (binding-operator-ref (syntax-local-value #'op)))
+             #:do [(define op (binding-operator-ref (syntax-local-value (in-binding-space #'op))))
                    (define-values (form new-tail) (enforest-binding-step op #'tail))]
              #:with (variable-ids matcher syntax-ids syntax-rhs) form
              #:attr new-tail new-tail))
@@ -135,15 +137,11 @@
   (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
   (define-syntax-rule (define-enforest enforest enforest-step
-                        operator-kind-str
-                        infix-operator-ref
-                        infix-operator-transformer-ref
-                        prefix-operator-ref
-                        prefix-operator-transformer-ref
-                        transformer-ref
-                        apply-transformer
+                        form-kind-str operator-kind-str
+                        in-space
+                        transformer-ref prefix-operator-ref infix-operator-ref
                         check-result
-                        make-identifier-expression)
+                        make-identifier-form)
     (begin
       (define (enforest stxes [current-op #f])
         ;; either `stxes` starts with a prefix operator or this first step
@@ -170,9 +168,9 @@
           [(stxes current-op)
            ;; No preceding expression, so dispatch to prefix (possibly implicit)
            ((syntax-parse stxes
-              [() (raise-syntax-error #f "empty expression")]
+              [() (raise-syntax-error #f (format "empty ~a" form-kind-str))]
               [(head::operator . tail)
-               (define v (syntax-local-value #'head.name (lambda () #f)))
+               (define v (syntax-local-value (in-space #'head.name) (lambda () #f)))
                (cond
                  [(prefix-operator-ref v)
                   => (lambda (op)
@@ -182,13 +180,13 @@
                  [else
                   (raise-unbound-operator #'head.name)])]
               [(head:identifier . tail)
-               (define v (syntax-local-value #'head (lambda () #f)))
+               (define v (syntax-local-value (in-space #'head) (lambda () #f)))
                (cond
                  [(transformer-ref v)
                   => (lambda (op)
-                       (apply-transformer op stxes))]
+                       (apply-transformer op stxes check-result))]
                  [else
-                  (enforest-step (make-identifier-expression #'head) #'tail current-op)])]
+                  (enforest-step (make-identifier-form #'head) #'tail current-op)])]
               [(((~and tag (~datum parens)) . inside) . tail)
                (dispatch-prefix-implicit tuple-name #'tag)]
               [(((~and tag (~datum braces)) . inside) . tail)
@@ -204,30 +202,30 @@
 
             (define (dispatch-prefix-operator v op tail op-stx)
               (cond
-                [(prefix-operator-transformer-ref v)
-                 => (lambda (t)
-                      ;; it's up to the transformer to consume whatever it wants after the operator
-                      (define-values (form new-tail) (apply-prefix-operator-transformer t stxes check-result))
-                      (enforest-step form new-tail current-op))]
+                [(operator-transformer? op)
+                 ;; it's up to the transformer to consume whatever it wants after the operator
+                 (define-values (form new-tail) (apply-prefix-transformer-operator op stxes check-result))
+                 (enforest-step form new-tail current-op)]
                 [else
                  ;; new operator sets precedence, defer application of operator until a suitable
                  ;; argument is parsed
                  (define-values (form new-tail) (enforest-step tail v))
-                 (enforest-step (apply-prefix-operator op form op-stx check-result)
+                 (enforest-step (apply-prefix-direct-operator op form op-stx check-result)
                                 new-tail
                                 current-op)]))
 
             (define (dispatch-prefix-implicit implicit-name head-stx)
-              (define-values (v op-stx) (lookup-prefix-implicit implicit-name head-stx
-                                                                prefix-operator-ref operator-kind-str))
-              (dispatch-prefix-operator v (prefix-operator-ref v) stxes op-stx)))]
+              (define-values (v op op-stx) (lookup-prefix-implicit implicit-name head-stx in-space
+                                                                   prefix-operator-ref
+                                                                   operator-kind-str form-kind-str))
+              (dispatch-prefix-operator v op stxes op-stx)))]
 
           [(init-form stxes current-op)
            ;; Has a preceding expression, so dispatch to infix (possibly implicit)
            ((syntax-parse stxes
               [() (values init-form stxes)]
               [(head::operator . tail)
-               (define v (syntax-local-value #'head.name (lambda () #f)))
+               (define v (syntax-local-value (in-space #'head.name) (lambda () #f)))
                (cond
                  [(infix-operator-ref v)
                   => (lambda (op)
@@ -258,16 +256,15 @@
               (cond
                 [(eq? rel-prec 'stronger)
                  (cond
-                   [(infix-operator-transformer-ref v)
-                    => (lambda (op)
-                         ;; it's up to the transformer to consume whatever it wants after the operator
-                         (define-values (form new-tail) (apply-infix-operator-transformer op init-form stxes check-result))
-                         (enforest-step form new-tail current-op))]
+                   [(operator-transformer? op)
+                    ;; it's up to the transformer to consume whatever it wants after the operator
+                    (define-values (form new-tail) (apply-infix-transformer-operator op init-form stxes check-result))
+                    (enforest-step form new-tail current-op)]
                    [else
                     ;; new operator sets precedence, defer application of operator until a suitable
                     ;; right-hand argument is parsed
                     (define-values (form new-tail) (enforest-step tail v))
-                    (enforest-step (apply-infix-operator op init-form form op-stx check-result)
+                    (enforest-step (apply-infix-direct-operator op init-form form op-stx check-result)
                                    new-tail
                                    current-op)])]
                 [(eq? rel-prec 'weaker)
@@ -286,35 +283,28 @@
                                           " needs explicit parenthesization\n"
                                           "  other operator: ~a")
                                          operator-kind-str
-                                         (syntax-e (rhombus-operator-name current-op)))
+                                         (syntax-e (operator-name current-op)))
                                         op-stx)])]))
 
             (define (dispatch-infix-implicit implicit-name head-stx)
-              (define-values (v op-stx) (lookup-infix-implicit implicit-name head-stx
-                                                               infix-operator-ref operator-kind-str))
-              (dispatch-infix-operator v (infix-operator-ref v) stxes op-stx)))]))))
+              (define-values (v op op-stx) (lookup-infix-implicit implicit-name head-stx in-space
+                                                                  infix-operator-ref
+                                                                  operator-kind-str form-kind-str))
+              (dispatch-infix-operator v op stxes op-stx)))]))))
 
   ;; the expression variant:
   (define-enforest enforest-expression enforest-expression-step
-    "expression operator"
-    rhombus-infix-expression-operator-ref
-    rhombus-infix-expression-operator-transformer-ref
-    rhombus-prefix-expression-operator-ref
-    rhombus-prefix-expression-operator-transformer-ref
-    rhombus-expression-transformer-ref
-    apply-expression-transformer
+    "expression" "expression operator"
+    in-expression-space
+    expression-transformer-ref expression-prefix-operator-ref expression-infix-operator-ref
     check-expression-result
     make-identifier-expression)
 
   ;; the binding variant:
   (define-enforest enforest-binding enforest-binding-step
-    "binding operator"
-    rhombus-infix-binding-operator-ref
-    rhombus-infix-binding-operator-transformer-ref
-    rhombus-prefix-binding-operator-ref
-    rhombus-prefix-binding-operator-transformer-ref
-    rhombus-binding-transformer-ref
-    apply-binding-transformer
+    "binding" "binding operator"
+    in-binding-space
+    binding-transformer-ref binding-prefix-operator-ref binding-infix-operator-ref
     check-binding-result
     make-identifier-binding)
 

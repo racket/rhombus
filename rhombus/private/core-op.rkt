@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt"
-                     "op.rkt"))
+                     "op.rkt")
+         "expression.rkt")
 
 (provide (rename-out [rhombus+ +]
                      [rhombus- -]
@@ -20,7 +21,7 @@
 (begin-for-syntax
   (require (for-syntax racket/base
                        syntax/parse))
-  (define-syntax (prefix-operator stx)
+  (define-syntax (prefix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
           (~optional (~seq #:weaker-than (weaker-op ...))
@@ -29,23 +30,24 @@
                      #:defaults ([(same-op 1) '()]))
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()])))
-       #`(rhombus-prefix-expression-operator (quote-syntax name)
-                                             (list (cons (quote-syntax weaker-op)
-                                                         'weaker)
-                                                   ...
-                                                   (cons (quote-syntax same-op)
-                                                         'same)
-                                                   ...
-                                                   (cons (quote-syntax stronger-op)
-                                                         'stronger)
-                                                   ...)
-                                             (lambda (form stx)
-                                               (datum->syntax (quote-syntax here)
-                                                              (list 'prim form)
-                                                              (span-srcloc stx form)
-                                                              stx)))]))
+       #`(expression-prefix-operator (quote-syntax name)
+                                     (list (cons (quote-syntax weaker-op)
+                                                 'weaker)
+                                           ...
+                                           (cons (quote-syntax same-op)
+                                                 'same)
+                                           ...
+                                           (cons (quote-syntax stronger-op)
+                                                 'stronger)
+                                           ...)
+                                     #f ; not a transformer
+                                     (lambda (form stx)
+                                       (datum->syntax (quote-syntax here)
+                                                      (list 'prim form)
+                                                      (span-srcloc stx form)
+                                                      stx)))]))
 
-  (define-syntax (infix-operator stx)
+  (define-syntax (infix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
           (~optional (~seq #:weaker-than (weaker-op ...))
@@ -56,70 +58,71 @@
                      #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left])))
-       #`(rhombus-infix-expression-operator (quote-syntax name)
-                                            (list (cons (quote-syntax weaker-op)
-                                                        'weaker)
-                                                  ...
-                                                  (cons (quote-syntax same-op)
-                                                        'same)
-                                                  ...
-                                                  (cons (quote-syntax stronger-op)
-                                                        'stronger)
-                                                  ...)
-                                            (lambda (form1 form2 stx)
-                                              (datum->syntax (quote-syntax here)
-                                                             (list 'prim form1 form2)
-                                                             (span-srcloc form1 form2)
-                                                             stx))
-                                            assoc)]))
+       #`(expression-infix-operator (quote-syntax name)
+                                    (list (cons (quote-syntax weaker-op)
+                                                'weaker)
+                                          ...
+                                          (cons (quote-syntax same-op)
+                                                'same)
+                                          ...
+                                          (cons (quote-syntax stronger-op)
+                                                'stronger)
+                                          ...)
+                                    #f ; not a transformer
+                                    (lambda (form1 form2 stx)
+                                      (datum->syntax (quote-syntax here)
+                                                     (list 'prim form1 form2)
+                                                     (span-srcloc form1 form2)
+                                                     stx))
+                                    assoc)]))
+  
+  (struct prefix+infix (prefix infix)
+    #:property prop:expression-prefix-operator (lambda (self) (prefix+infix-prefix self))
+    #:property prop:expression-infix-operator (lambda (self) (prefix+infix-infix self))))
 
-  (struct prefix+infix-operator (prefix infix)
-    #:property prop:rhombus-prefix-expression-operator (lambda (self) (prefix+infix-operator-prefix self))
-    #:property prop:rhombus-infix-expression-operator (lambda (self) (prefix+infix-operator-infix self))))
-
-(define-syntax (define-infix-operator stx)
+(define-syntax (define-infix stx)
   (syntax-parse stx
     [(_ name spec ...)
-     #'(define-syntax name (infix-operator name spec ...))]))
+     #'(define-syntax name (infix name spec ...))]))
 
-(define-syntax (define-prefix-operator stx)
+(define-syntax (define-prefix stx)
   (syntax-parse stx
     [(_ name spec ...)
-     #'(define-syntax name (prefix-operator name spec ...))]))
+     #'(define-syntax name (prefix name spec ...))]))
 
-(define-infix-operator rhombus+ +
+(define-infix rhombus+ +
   #:weaker-than (rhombus* rhombus/)
   #:same-as (rhombus-))
 
 (define-syntax rhombus-
-  (prefix+infix-operator
-   (prefix-operator rhombus- - #:weaker-than (rhombus* rhombus/))
-   (infix-operator rhombus- - #:weaker-than (rhombus* rhombus/))))
+  (prefix+infix
+   (prefix rhombus- - #:weaker-than (rhombus* rhombus/))
+   (infix rhombus- - #:weaker-than (rhombus* rhombus/))))
 
-(define-infix-operator rhombus* *
+(define-infix rhombus* *
   #:same-as (rhombus/))
 
-(define-infix-operator rhombus/ /)
+(define-infix rhombus/ /)
 
-(define-prefix-operator ! not
+(define-prefix ! not
   #:stronger-than (&& \|\|))
 
-(define-infix-operator && and
+(define-infix && and
   #:stronger-than (\|\|))
 
-(define-infix-operator \|\| or)
+(define-infix \|\| or)
 
-(define-infix-operator rhombus< <
+(define-infix rhombus< <
   #:same-as (rhombus> rhombus>= rhombus== rhombus<=)
   #:stronger-than (\|\| &&))
-(define-infix-operator rhombus<= <=
+(define-infix rhombus<= <=
   #:same-as (rhombus> rhombus>= rhombus==)
   #:stronger-than (\|\| &&))
-(define-infix-operator rhombus== =
+(define-infix rhombus== =
   #:same-as (rhombus> rhombus>=)
   #:stronger-than (\|\| &&))
-(define-infix-operator rhombus>= >=
+(define-infix rhombus>= >=
   #:same-as (rhombus>)
   #:stronger-than (\|\| &&))
-(define-infix-operator rhombus> >
+(define-infix rhombus> >
   #:stronger-than (\|\| &&))

@@ -7,7 +7,7 @@
 (provide (rename-out [rhombus-define define]))
 
 (define-syntax rhombus-define
-  (rhombus-definition-transformer
+  (definition-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block)

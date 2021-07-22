@@ -1,7 +1,10 @@
 #lang racket/base
-(require syntax/stx
-         "check.rkt"
-         "property.rkt")
+(require racket/base
+         syntax/stx
+         "property.rkt"
+         "property-out.rkt"
+         "transformer.rkt"
+         "check.rkt")
 
 ;; See "parse.rkt" for general information about operators and parsing.
 ;;
@@ -23,29 +26,18 @@
 ;; precedence than the one referenced by the identifier. An operator
 ;; is implicitly the 'same as itself (i.e., not covered by 'default).
 
-(provide rhombus-operator?
-         rhombus-operator-name
-         rhombus-operator-precedences
-         rhombus-operator-proc ; convention depends on category
+(provide operator?
+         operator-name
+         operator-precedences
+         operator-transformer?
+         operator-proc ; convention depends on category
 
-         rhombus-prefix-operator
-         rhombus-prefix-operator?
+         prefix-operator
+         prefix-operator?
 
-         rhombus-infix-operator
-         rhombus-infix-operator?
-         rhombus-infix-operator-assoc
-
-         (property-out rhombus-prefix-expression-operator)
-         (property-out rhombus-prefix-binding-operator)
-         
-         (property-out rhombus-infix-expression-operator)
-         (property-out rhombus-infix-binding-operator)
-
-         (property-out rhombus-prefix-expression-operator-transformer)
-         (property-out rhombus-prefix-binding-operator-transformer)
-
-         (property-out rhombus-infix-expression-operator-transformer)
-         (property-out rhombus-infix-binding-operator-transformer))
+         infix-operator
+         infix-operator?
+         infix-operator-assoc)
 
 (module+ for-parse
   (provide relative-precedence
@@ -53,47 +45,17 @@
            lookup-infix-implicit
            lookup-prefix-implicit
 
-           apply-prefix-operator
-           apply-infix-operator
-           apply-prefix-operator-transformer
-           apply-infix-operator-transformer
+           apply-prefix-direct-operator
+           apply-infix-direct-operator
+           apply-prefix-transformer-operator
+           apply-infix-transformer-operator))
 
-           expression-operator-ref
-           binding-operator-ref))
+(struct operator (name precedences transformer? proc))
+(struct prefix-operator operator ())
+(struct infix-operator operator (assoc))
 
-(struct rhombus-operator (name precedences proc))
-(struct rhombus-prefix-operator rhombus-operator ())
-(struct rhombus-infix-operator rhombus-operator (assoc))
-
-(property rhombus-prefix-expression-operator rhombus-prefix-operator)
-(property rhombus-prefix-binding-operator rhombus-prefix-operator)
-
-(property rhombus-infix-expression-operator rhombus-infix-operator)
-(property rhombus-infix-binding-operator rhombus-infix-operator)
-
-(property rhombus-prefix-expression-operator-transformer rhombus-prefix-operator
-          #:super prop:rhombus-prefix-expression-operator)
-(property rhombus-prefix-binding-operator-transformer rhombus-prefix-operator
-          #:super prop:rhombus-prefix-binding-operator)
-
-(property rhombus-infix-expression-operator-transformer rhombus-infix-operator
-          #:super prop:rhombus-infix-expression-operator)
-(property rhombus-infix-binding-operator-transformer rhombus-infix-operator
-          #:super prop:rhombus-infix-binding-operator)
-
-(define (expression-operator-ref v)
-  (or (rhombus-prefix-expression-operator-ref v (lambda () #f))
-      (rhombus-infix-expression-operator-ref v (lambda () #f))
-      (error #f "identifier is not mapped to an expression operator: ~e" v)))
-
-(define (binding-operator-ref v)
-  (or (rhombus-prefix-binding-operator-ref v (lambda () #f))
-      (rhombus-infix-binding-operator-ref v (lambda () #f))
-      (error #f "identifier is not mapped to  binding operator: ~e" v)))
-
-;; All helper functions from here on expect unwrapped operators (i.e.,
-;; an accessor like `rhombus-prefix-expression-operator-ref` has already
-;; been applied).
+;; All helper functions from here on expect core operators (i.e., an
+;; accessor like `prefix-operator-ref` has already been applied).
 
 ;; returns: 'stronger, 'weaker, 'same (no associativity), #f (not related)
 (define (relative-precedence op other-op head)
@@ -111,10 +73,10 @@
       [(stronger) 'weaker]
       [(weaker) 'stronger]
       [else dir]))
-  (define op-name (rhombus-operator-name op))
-  (define other-op-name (rhombus-operator-name other-op))
-  (define dir1 (find other-op-name op-name (rhombus-operator-precedences op)))
-  (define dir2 (invert (find op-name other-op-name (rhombus-operator-precedences other-op))))
+  (define op-name (operator-name op))
+  (define other-op-name (operator-name other-op))
+  (define dir1 (find other-op-name op-name (operator-precedences op)))
+  (define dir2 (invert (find op-name other-op-name (operator-precedences other-op))))
   (define (raise-inconsistent how)
     (raise-syntax-error #f
                         (format
@@ -122,20 +84,20 @@
                                         "  one operator: ~a\n"
                                         "  other operator: ~a")
                          how
-                         (syntax-e (rhombus-operator-name op))
-                         (syntax-e (rhombus-operator-name other-op)))
+                         (syntax-e (operator-name op))
+                         (syntax-e (operator-name other-op)))
                         head))
   (when (and dir1 dir2 (not (eq? dir1 dir2)))
     (raise-inconsistent "precedence"))
   (define dir (or dir1 dir2
-                  (and (free-identifier=? (rhombus-operator-name op)
-                                          (rhombus-operator-name other-op))
+                  (and (free-identifier=? (operator-name op)
+                                          (operator-name other-op))
                        'same)))
   (cond
     [(eq? 'same dir)
-     (define op-a (rhombus-infix-operator-assoc op))
-     (when (rhombus-infix-operator? other-op)
-       (unless (eq? op-a (rhombus-infix-operator-assoc other-op))
+     (define op-a (infix-operator-assoc op))
+     (when (infix-operator? other-op)
+       (unless (eq? op-a (infix-operator-assoc other-op))
          (raise-inconsistent "associativity")))
      (case op-a
        [(left) 'weaker]
@@ -143,52 +105,56 @@
        [else 'same])]
     [else dir]))
 
-(define (lookup-prefix-implicit alone-name adj-context operator? operator-kind)
+(define (lookup-prefix-implicit alone-name adj-context in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context alone-name))
-  (define v (syntax-local-value op-stx (lambda () #f)))
-  (unless (operator? v)
+  (define v (syntax-local-value (in-space op-stx) (lambda () #f)))
+  (define op (operator-ref v))
+  (unless op
     (raise-syntax-error #f
                         (format (string-append
-                                 "misplaced expression;\n"
-                                 " no infix operator is between this expression and the previous one,\n"
+                                 "misplaced ~a;\n"
+                                 " no infix operator is between this ~a and the previous one,\n"
                                  " and `~a` is not bound as an implicit prefix ~a")
+                                form-kind form-kind
                                 alone-name
                                 operator-kind)
                         adj-context))
-  (values v op-stx))
+  (values v op op-stx))
 
-(define (lookup-infix-implicit adjacent-name adj-context operator? operator-kind)
+(define (lookup-infix-implicit adjacent-name adj-context in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context adjacent-name))
-  (define v (syntax-local-value op-stx (lambda () #f)))
-  (unless (operator? v)
+  (define v (syntax-local-value (in-space op-stx) (lambda () #f)))
+  (define op (operator-ref v))
+  (unless op
     (raise-syntax-error #f
                         (format
                          (string-append
-                          "misplaced expression;\n"
-                          " no infix operator is between this expression and the previous one,\n"
+                          "misplaced ~a;\n"
+                          " no infix operator is between this ~a and the previous one,\n"
                           " and `~a` is not bound as an implicit infix ~a")
+                         form-kind form-kind
                          adjacent-name
                          operator-kind)
                         adj-context))
-  (values v op-stx))
+  (values v op op-stx))
 
-(define (apply-prefix-operator op form stx checker)
-  (define proc (rhombus-operator-proc op))
+(define (apply-prefix-direct-operator op form stx checker)
+  (define proc (operator-proc op))
   (checker (proc form stx) proc))
 
-(define (apply-infix-operator op form1 form2 stx checker)
-  (define proc (rhombus-operator-proc op))
+(define (apply-infix-direct-operator op form1 form2 stx checker)
+  (define proc (operator-proc op))
   (checker (proc form1 form2 stx) proc))
 
-(define (apply-prefix-operator-transformer op tail checker)
-  (define proc (rhombus-operator-proc op))
+(define (apply-prefix-transformer-operator op tail checker)
+  (define proc (operator-proc op))
   (define-values (form new-tail) (proc tail))
   (check-transformer-result (checker form proc)
                             new-tail
                             proc))
 
-(define (apply-infix-operator-transformer op form1 tail checker)
-  (define proc (rhombus-operator-proc op))
+(define (apply-infix-transformer-operator op form1 tail checker)
+  (define proc (operator-proc op))
   (define-values (form new-tail) (proc form1 tail))
   (check-transformer-result (checker form proc)
                             new-tail

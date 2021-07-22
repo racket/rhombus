@@ -1,66 +1,60 @@
 #lang racket/base
 (require syntax/stx
          "check.rkt"
-         "property.rkt")
+         "property.rkt"
+         "property-out.rkt")
 
 ;; See "parse.rkt" for general information about transformers and
 ;; parsing.
 
-(provide rhombus-transformer?
-         rhombus-transformer-proc
+(provide transformer?
+         transformer-proc
+         transformer
 
-         (property-out rhombus-expression-transformer)
-         (property-out rhombus-definition-transformer)
-         (property-out rhombus-declaration-transformer)
-         (property-out rhombus-binding-transformer))
+         (property-out definition-transformer)
+         (property-out declaration-transformer)
+
+         check-transformer-result)
 
 (module+ for-parse
-  (provide apply-expression-transformer
+  (provide apply-transformer
            apply-definition-transformer
-           apply-declaration-transformer
-           apply-binding-transformer))
+           apply-declaration-transformer))
 
-(struct rhombus-transformer (proc))
+(struct transformer (proc))
 
-;; returns an expression and a tail of unused syntax:
-(property rhombus-expression-transformer rhombus-transformer)
+;; a generic transformer returns a form and a tail of unused syntax
 
 ;; returns a list of definitions+expressions and a list of expressions:
-(property rhombus-definition-transformer rhombus-transformer)
+(property definition-transformer transformer)
 
 ;; returns a list of declarations+definitions+expression:
-(property rhombus-declaration-transformer rhombus-transformer)
+(property declaration-transformer transformer)
 
-;; returns an list of ids, a filter expression, and a tail of unused syntax:
-(property rhombus-binding-transformer rhombus-transformer)
+;; All helper functions from here on expect core transformers (i.e.,
+;; an accessor like `transformer-ref` has already been applied).
 
-;; All helper functions from here on expect unwrapped transformers (i.e.,
-;; an accessor like `rhombus-expression-transformer-ref` has already
-;; been applied).
-
-(define (apply-expression-transformer t stx)
-  (define proc (rhombus-transformer-proc t))
+(define (apply-transformer t stx checker)
+  (define proc (transformer-proc t))
   (define-values (form tail) (proc stx))
-  (check-transformer-result (check-expression-result form proc)
+  (check-transformer-result (checker form proc)
                             tail
                             proc))
 
 (define (apply-definition-transformer t stx)
-  (define proc (rhombus-transformer-proc t))
+  (define proc (transformer-proc t))
   (define-values (forms exprs) (proc stx))
   (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
   (unless (stx-list? exprs) (raise-result-error (proc-name proc) "stx-list?" exprs))
   (values forms exprs))
 
 (define (apply-declaration-transformer t stx)
-  (define proc (rhombus-transformer-proc t))
+  (define proc (transformer-proc t))
   (define forms (proc stx))
   (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
   forms)
 
-(define (apply-binding-transformer t stx)
-  (define proc (rhombus-transformer-proc t))
-  (define-values (form tail) (proc stx))
-  (check-transformer-result (check-binding-result form proc)
-                            tail
-                            proc))
+(define (check-transformer-result form tail proc)
+  (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+  (unless (stx-list? tail) (raise-result-error (proc-name proc) "stx-list?" tail))
+  (values form tail))

@@ -1,16 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     racket/provide-transform)
+                     racket/provide-transform
+                     "format-id.rkt")
          racket/provide-syntax)
 
-(provide property
-         property-out)
-
-(define-for-syntax (format-id str ctx)
-  (datum->syntax ctx
-                 (string->symbol (format str (syntax-e ctx)))
-                 ctx))
+(provide property)
 
 ;; Defines:
 ;;   `prop:name` - a property whose value should be a procedure
@@ -39,14 +34,3 @@
              #:property prop:name (lambda (self) self)
              #:reflection-name 'name)
            (define name convenience-name)))]))
-
-(define-provide-syntax (property-out stx)
-  (syntax-parse stx
-    [(_ name:identifier)
-     (with-syntax ([prop:name (format-id "prop:~a" #'name)]
-                   [name-ref (format-id "~a-ref" #'name)]
-                   [name? (format-id "~a?" #'name)])
-       #'(combine-out prop:name
-                      name
-                      name?
-                      name-ref))]))

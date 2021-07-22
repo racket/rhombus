@@ -4,8 +4,9 @@
                      syntax/stx
                      "srcloc.rkt"
                      "op.rkt"
-                     "syntax-local.rkt"
-                     "binding.rkt"))
+                     "syntax-local.rkt")
+         "expression.rkt"
+         "binding.rkt")
 
 (provide ::
 
@@ -14,7 +15,10 @@
          (for-syntax rhombus-type
                      rhombus-typed
                      rhombus-type-property
-                     rhombus-syntax-local-type))
+                     rhombus-syntax-local-type
+                     in-type-space)
+
+         define-type-syntax)
 
 (begin-for-syntax
   (struct rhombus-type (predicate))
@@ -24,9 +28,11 @@
 
   (define rhombus-type-property (gensym))
 
+  (define in-type-space (make-interned-syntax-introducer 'rhombus/type))
+
   (define-syntax-class :type
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* #'id rhombus-type?))]
+             #:do [(define v (syntax-local-value* (in-type-space #'id) rhombus-type?))]
              #:when (rhombus-type? v)
              #:attr predicate (rhombus-type-predicate v)))
 
@@ -58,9 +64,10 @@
       [else #f])))
 
 (define-syntax ::
-  (rhombus-infix-binding-operator-transformer
+  (binding-infix-operator
    #'::
    '((default . weaker))
+   #t ; transformer
    (lambda (form tail)
      (syntax-parse tail
        [(op t::type . new-tail)
@@ -89,3 +96,9 @@
    #f))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))
+
+(define-syntax (define-type-syntax stx)
+  (syntax-parse stx
+    [(_ id:identifier rhs)
+     #`(define-syntax #,(in-type-space #'id)
+         rhs)]))
