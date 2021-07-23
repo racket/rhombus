@@ -6,7 +6,9 @@
                      "transformer.rkt"
                      "syntax-local.rkt")
          "expression.rkt"
-         "type.rkt")
+         "binding.rkt"
+         "type.rkt"
+         "composite.rkt")
 
 (provide (rename-out [rhombus-struct struct])
          |.|)
@@ -41,6 +43,10 @@
                   (values struct:name name name?
                           (make-struct-field-accessor name-ref field-index 'field)
                           ...)))
+            #'(define-binding-syntax name
+                (binding-transformer
+                 (make-composite-binding-transformer (quote-syntax name?)
+                                                     (list (quote-syntax name-field) ...))))
             #'(define-type-syntax name
                 (struct-type (quote-syntax name?)
                              (quote-syntax name)
