@@ -6,7 +6,8 @@
                      (submod "op.rkt" for-parse)
                      "transformer.rkt"
                      (submod "transformer.rkt" for-parse)
-                     "check.rkt")
+                     "check.rkt"
+                     "syntax-local.rkt")
          "expression.rkt"
          "binding.rkt")
 
@@ -22,7 +23,9 @@
 
                      ;; for continuing enforestation of expressions or bindings:
                      :op+expression+tail
-                     :op+binding+tail))
+                     :op+binding+tail
+
+                     :non-binding-identifier))
 
 (begin-for-syntax
   (define-syntax-class :operator
@@ -31,14 +34,14 @@
   ;; Form at the top of a module:
   (define-syntax-class :declaration
     (pattern ((~datum group) head:identifier . tail)
-             #:do [(define v (syntax-local-value #'head (lambda () #f)))]
+             #:do [(define v (syntax-local-value* #'head declaration-transformer?))]
              #:when (declaration-transformer? v)
              #:attr expandeds (apply-declaration-transformer v (cons #'head #'tail))))
 
   ;; Form in a definition context:
   (define-syntax-class :definition
     (pattern ((~datum group) head:identifier . tail)
-             #:do [(define v (syntax-local-value #'head (lambda () #f)))]
+             #:do [(define v (syntax-local-value* #'head definition-transformer?))]
              #:when (definition-transformer? v)
              #:do [(define-values (defns-and-exprs exprs)
                      (apply-definition-transformer v (cons #'head #'tail)))]
@@ -53,7 +56,8 @@
   ;; the group end or when an operator with weaker precedence than `op` is found
   (define-splicing-syntax-class :op+expression+tail
     (pattern (op-name:identifier . tail)
-             #:do [(define op (expression-operator-ref (syntax-local-value (in-expression-space #'op))))
+             #:do [(define op (expression-operator-ref (syntax-local-value* (in-expression-space #'op)
+                                                                            expression-operator-ref)))
                    (define-values (form new-tail) (enforest-expression-step op #'tail))]
              #:attr expanded form
              #:attr new-tail new-tail))
@@ -66,10 +70,15 @@
   ;; Like `:op+expression+tail`, but for bindings
   (define-splicing-syntax-class :op+binding+tail
     (pattern (op-name:identifier . tail)
-             #:do [(define op (binding-operator-ref (syntax-local-value (in-binding-space #'op))))
+             #:do [(define op (binding-operator-ref (syntax-local-value* (in-binding-space #'op)
+                                                                         binding-operator-ref)))
                    (define-values (form new-tail) (enforest-binding-step op #'tail))]
              #:with expanded form
              #:attr new-tail new-tail))
+
+  (define-syntax-class :non-binding-identifier
+    (pattern id:identifier
+             #:when (not (syntax-local-value* (in-binding-space #'id) binding-transformer?))))
 
   ;; The `enforest` functions below are based on the one described in
   ;; figure 1 of "Honu: Syntactic Extension for Algebraic Notation
@@ -170,7 +179,9 @@
            ((syntax-parse stxes
               [() (raise-syntax-error #f (format "empty ~a" form-kind-str))]
               [(head::operator . tail)
-               (define v (syntax-local-value (in-space #'head.name) (lambda () #f)))
+               (define v (syntax-local-value* (in-space #'head.name)
+                                              (lambda (v) (or (prefix-operator-ref v)
+                                                              (infix-operator-ref v)))))
                (cond
                  [(prefix-operator-ref v)
                   => (lambda (op)
@@ -180,7 +191,7 @@
                  [else
                   (raise-unbound-operator #'head.name)])]
               [(head:identifier . tail)
-               (define v (syntax-local-value (in-space #'head) (lambda () #f)))
+               (define v (syntax-local-value* (in-space #'head) transformer-ref))
                (cond
                  [(transformer-ref v)
                   => (lambda (op)
@@ -225,7 +236,9 @@
            ((syntax-parse stxes
               [() (values init-form stxes)]
               [(head::operator . tail)
-               (define v (syntax-local-value (in-space #'head.name) (lambda () #f)))
+               (define v (syntax-local-value* (in-space #'head.name)
+                                              (lambda (v) (or (infix-operator-ref v)
+                                                              (prefix-operator-ref v)))))
                (cond
                  [(infix-operator-ref v)
                   => (lambda (op)
