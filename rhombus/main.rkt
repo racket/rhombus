@@ -13,7 +13,8 @@
         "private/struct.rkt"
         "private/define.rkt"
         "private/type.rkt"
-        "private/list.rkt")
+        "private/list.rkt"
+        "private/function.rkt")
 
 (module reader racket/base
   (require shrubbery/parse

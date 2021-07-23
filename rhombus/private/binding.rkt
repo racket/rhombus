@@ -20,7 +20,8 @@
 
                      in-binding-space)
 
-         define-binding-syntax)
+         define-binding-syntax
+         raise-binding-failure)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:
@@ -56,3 +57,12 @@
     [(_ name:id rhs)
      (quasisyntax/loc stx
        (define-syntax #,(in-binding-space #'name) rhs))]))
+
+(define (raise-binding-failure who what val binding)
+  (error who
+         (string-append "~a does not match binding pattern\n"
+                        "  argument: ~v\n"
+                        "  binding: ~s")
+         what
+         val
+         binding))

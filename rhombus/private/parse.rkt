@@ -195,7 +195,8 @@
                (cond
                  [(transformer-ref v)
                   => (lambda (op)
-                       (apply-transformer op stxes check-result))]
+                       (define-values (form new-tail) (apply-transformer op stxes check-result))
+                       (enforest-step form new-tail current-op))]
                  [else
                   (enforest-step (make-identifier-form #'head) #'tail current-op)])]
               [(((~and tag (~datum parens)) . inside) . tail)

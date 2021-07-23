@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide span-srcloc)
+(provide span-srcloc
+         relocate)
 
 (define (span-srcloc start end)
   (vector (syntax-source start)
@@ -11,4 +12,7 @@
                 [s (syntax-position start)]
                 [sp (syntax-span end)])
             (and s e sp
-                 (+ (- e s) sp)))))
+                 (max 0 (+ (- e s) sp))))))
+
+(define (relocate srcloc stx)
+  (datum->syntax stx (syntax-e stx) srcloc stx))

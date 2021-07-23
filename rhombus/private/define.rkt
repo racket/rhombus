@@ -3,7 +3,8 @@
                      syntax/parse
                      "transformer.rkt")
          "binding.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "function.rkt")
 
 (provide (rename-out [rhombus-define define]))
 
@@ -22,7 +23,9 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts)
-       [(form-id:identifier (alts (block (group id:identifier (parens arg::binding ...) (~and rhs (block body ...)))) ...+))
+       [(form-id:identifier ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
+                                                                (~and rhs (block body ...))))
+                                                  ...+))
         (define ids (syntax->list #'(id ...)))
         (define the-id (car ids))
         (for ([another-id (in-list (cdr ids))])
@@ -34,45 +37,18 @@
         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
         (define arg-expandedss (map syntax->list (syntax->list #'((arg.expanded ...) ...))))
         (define rhss (syntax->list #'(rhs ...)))
-        (define sames (group-by-counts (map fcase argss arg-expandedss rhss)))
         (values
          (list
           #`(define #,the-id
-              (case-lambda
-                #,@(for/list ([same (in-list sames)])
-                     (with-syntax ([(try-next arg-id ...) (generate-temporaries
-                                                           (cons 'try-next (fcase-args (car same))))])
-                       #`[(arg-id ...)
-                          #,(let loop ([same same])
-                              (cond
-                                [(null? same)
-                                 #`(cases-failure '#,the-id arg-id ...)]
-                                [else
-                                 (with-syntax ([(arg ...) (fcase-args (car same))]
-                                               [(arg-expanded ...) (fcase-arg-expandeds (car same))]
-                                               [rhs (fcase-rhs (car same))])
-                                   #`(let ([try-next (lambda () #,(loop (cdr same)))])
-                                       (nested-bindings
-                                        form-id
-                                        try-next
-                                        (begin)
-                                        (arg-id arg-expanded arg)
-                                        ...
-                                        (rhombus-expression (group rhs)))))]))])))))
+              #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag)))
          null)]
-       [(form-id:identifier id::non-binding-identifier (parens arg::binding ...) (~and rhs (block body ...)))
+       [(form-id:identifier id::non-binding-identifier ((~and parens-tag parens) arg::binding ...)
+                            (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
-          #'(define id
-              (lambda (arg-id ...)
-                (nested-bindings
-                 form-id
-                 #f
-                 (begin)
-                 (arg-id arg.expanded arg)
-                 ...
-                 (rhombus-expression (group rhs))))))
+          #`(define id
+              #,(build-function #'id #'(arg ...) #'(arg.expanded ...) #'rhs #'form-id #'parens-tag)))
          null)]
        [(form-id:identifier any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)
@@ -108,25 +84,5 @@
                  (try-next)
                  (argument-binding-failure 'who arg-id 'arg-pat))))]))
 
-(define (argument-binding-failure who val binding)
-  (binding-failure who "argument" val binding))
-
 (define (rhs-binding-failure who val binding)
-  (binding-failure who "value" val binding))
-
-(define (binding-failure who what val binding)
-  (error who
-         (string-append "~a does not match binding pattern\n"
-                        "  argument: ~v\n"
-                        "  binding: ~s")
-         what
-         val
-         binding))
-
-(define (cases-failure who . args)
-  (apply error who
-         (apply string-append "no matching case for arguments\n"
-                "  arguments...:"
-                (for/list ([arg (in-list args)])
-                  "\n   ~e"))
-         args))
+  (raise-binding-failure who "value" val binding))
