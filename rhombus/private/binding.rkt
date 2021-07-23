@@ -12,7 +12,9 @@
                      binding-operator-ref
                      
                      (property-out binding-transformer)
-                     
+
+                     make-identifier-binding
+
                      :binding-form
                      check-binding-result
 
@@ -23,10 +25,9 @@
 (begin-for-syntax
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
-    (pattern ((~and variable-ids (_:identifier ...))
-              matcher-form
-              (~and syntax-ids (_:identifier ...))
-              syntax-form)))
+    (pattern ((~and var-ids (var-id:identifier ...))
+              check-proc-expr
+              post-defn)))
 
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
@@ -37,6 +38,11 @@
         (error #f "identifier is not mapped to an binding operator: ~e" v)))
 
   (property binding-transformer transformer)
+
+  (define (make-identifier-binding id)
+    #`((#,id)
+       (lambda (v) (values #t v))
+       (begin)))
 
   (define (check-binding-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)

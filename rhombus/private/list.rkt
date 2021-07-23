@@ -14,27 +14,22 @@
     (lambda (tail)
       (syntax-parse tail
         [(_ ((~datum parens) a::binding d::binding) . new-tail)
-         (with-syntax ([(a-id ...) #'a.variable-ids]
-                       [(d-id ...) #'d.variable-ids]
-                       [(a-stx-id ...) #'a.syntax-ids]
-                       [(d-stx-id ...) #'d.syntax-ids]
-                       [falses (for/list ([b (in-range (+ (length (syntax->list #'a.variable-ids))
-                                                          (length (syntax->list #'d.variable-ids))))])
+         #:with a-expanded::binding-form #'a.expanded
+         #:with d-expanded::binding-form #'d.expanded
+         (with-syntax ([falses (for/list ([b (in-range (+ (length (syntax->list #'a-expanded.var-ids))
+                                                          (length (syntax->list #'d-expanded.var-ids))))])
                                  #'#f)])
            (values
-            #'((a-id ... d-id ...)
+            #'([a-expanded.var-id ... d-expanded.var-id ...]
                (lambda (v)
                  (if (pair? v)
-                     (let-values ([(match? . a.variable-ids) (a.matcher-form (car v))])
-                       (if match?
-                           (let-values ([(match? . d.variable-ids) (d.matcher-form (cdr v))])
-                             (if match?
-                                 (values #t a-id ... d-id ...)
-                                 (values #f . falses)))
+                     (let-values ([(a-match? a-expanded.var-id ...) (a-expanded.check-proc-expr (car v))])
+                       (if a-match?
+                           (let-values ([(d-match? d-expanded.var-id ...) (d-expanded.check-proc-expr (cdr v))])
+                             (values d-match? a-expanded.var-id ... d-expanded.var-id ...))
                            (values #f . falses)))
                      (values #f . falses)))
-               (a-stx-id ... d-stx-id ...)
-               (let-values ([(a-stx-id ...) a.syntax-form]
-                            [(d-stx-id ...) d.syntax-form])
-                 (values a-stx-id ... d-stx-id ...)))
+               (begin
+                 a-expanded.post-defn
+                 d-expanded.post-defn))
             #'new-tail))]))))

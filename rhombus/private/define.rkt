@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "transformer.rkt")
+         "binding.rkt"
          "parse.rkt")
 
 (provide (rename-out [rhombus-define define]))
@@ -11,30 +12,31 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block)
-       [(_ id:identifier (parens arg::binding ...) (~and rhs (block body ...)))
+       [(form-id:identifier id:identifier (parens arg::binding ...) (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
           #'(define id
               (lambda (arg-id ...)
                 (nested-bindings
-                 ((match? . arg.variable-ids)
-                  (arg.matcher-form arg-id)
-                  (unless match? (argument-binding-failure 'id arg-id 'arg))
-                  arg.syntax-ids
-                  arg.syntax-form)
+                 form-id
+                 (begin)
+                 (arg-id arg.expanded)
                  ...
                  (rhombus-expression (group rhs))))))
          null)]))))
 
-(define-syntax nested-bindings
-  (syntax-rules ()
-    [(_ body) body]
-    [(_ (vars var-rhs check stxes stx-rhs) . tail)
-     (let-values ([vars var-rhs])
-       check
-       (letrec-syntaxes ([stxes stx-rhs])
-         (nested-bindings . tail)))]))
+(define-syntax (nested-bindings stx)
+  (syntax-parse stx
+    [(_ who post-defn body) #'(let () post-defn body)]
+    [(_ who post-defn (arg-id arg::binding-form) . tail)
+     #'(let-values ([(match? . arg.var-ids) (arg.check-proc-expr arg-id)])
+         (if match?
+             (nested-bindings
+              who
+              (begin post-defn arg.post-defn)
+              . tail)
+             (argument-binding-failure 'who arg-id 'arg)))]))
 
 (define (argument-binding-failure who val binding)
   (error who

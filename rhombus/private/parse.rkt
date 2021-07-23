@@ -61,14 +61,14 @@
   ;; Form in a binding context:
   (define-syntax-class :binding
     (pattern ((~datum group) . tail)
-             #:with (variable-ids matcher-form syntax-ids syntax-form) (enforest-binding #'tail)))
+             #:with expanded::binding-form (enforest-binding #'tail)))
 
   ;; Like `:op+expression+tail`, but for bindings
   (define-splicing-syntax-class :op+binding+tail
     (pattern (op-name:identifier . tail)
              #:do [(define op (binding-operator-ref (syntax-local-value (in-binding-space #'op))))
                    (define-values (form new-tail) (enforest-binding-step op #'tail))]
-             #:with (variable-ids matcher syntax-ids syntax-rhs) form
+             #:with expanded form
              #:attr new-tail new-tail))
 
   ;; The `enforest` functions below are based on the one described in
@@ -306,15 +306,7 @@
     in-binding-space
     binding-transformer-ref binding-prefix-operator-ref binding-infix-operator-ref
     check-binding-result
-    make-identifier-binding)
-
-  ;; helper function for expressions
-  (define (make-identifier-expression id)
-    id)
-
-  ;; helper function for bindings
-  (define (make-identifier-binding id)
-    (list (list id) #'(lambda (v) (values #t v)) null #'(values))))
+    make-identifier-binding))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)

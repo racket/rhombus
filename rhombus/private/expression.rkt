@@ -12,12 +12,15 @@
                      expression-operator-ref
                      
                      (property-out expression-transformer)
+
+                     make-identifier-expression
                      
                      check-expression-result
 
                      in-expression-space)
 
-         define-expression-syntax)
+         define-expression-syntax
+         )
 
 (begin-for-syntax
   (property expression-prefix-operator prefix-operator)
@@ -29,6 +32,9 @@
         (error #f "identifier is not mapped to an expression operator: ~e" v)))
 
   (property expression-transformer transformer)
+
+  (define (make-identifier-expression id)
+    id)
 
   (define (check-expression-result form proc)
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
