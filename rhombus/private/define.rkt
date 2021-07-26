@@ -1,10 +1,15 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "transformer.rkt")
+                     "transformer.rkt"
+                     "consistent.rkt")
          "binding.rkt"
+         "expression.rkt"
          "parse.rkt"
-         "function.rkt")
+         "function.rkt"
+         "syntax.rkt"
+         "quasiquote.rkt"
+         (for-syntax "parse.rkt"))
 
 (provide (rename-out [rhombus-define define]))
 
@@ -20,20 +25,28 @@
 
 (define-syntax rhombus-define
   (definition-transformer
-   (lambda (stx)
+    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts)
+       [(form-id:identifier ((~and alts-tag alts) (block (group ((~datum op) (~literal ?)) ((~and parens-tag parens) g)
+                                                                (~and rhs (block body ...))))
+                                                  ...+))
+        (values
+         (list (parse-operator-definitions stx
+                                           (syntax->list #'(g ...))
+                                           (syntax->list #'(rhs ...))))
+         null)]
+       [(form-id:identifier ((~datum op) (~literal ?)) ((~and parens-tag parens) g)
+                            (~and rhs (block body ...)))
+        (values
+         (list (parse-operator-definition #'g #'rhs))
+         null)]
        [(form-id:identifier ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
                                                                 (~and rhs (block body ...))))
                                                   ...+))
         (define ids (syntax->list #'(id ...)))
         (define the-id (car ids))
-        (for ([another-id (in-list (cdr ids))])
-          (unless (free-identifier=? the-id another-id)
-            (raise-syntax-error #f
-                                "case name does not match initial case name"
-                                stx
-                                another-id)))
+        (check-consistent stx ids "name")
         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
         (define arg-expandedss (map syntax->list (syntax->list #'((arg.expanded ...) ...))))
         (define rhss (syntax->list #'(rhs ...)))

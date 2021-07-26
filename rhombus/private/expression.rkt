@@ -19,8 +19,7 @@
 
                      in-expression-space)
 
-         define-expression-syntax
-         )
+         define-expression-syntax)
 
 (begin-for-syntax
   (property expression-prefix-operator prefix-operator)

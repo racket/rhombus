@@ -36,7 +36,7 @@
     (pattern ((~datum group) head:identifier . tail)
              #:do [(define v (syntax-local-value* #'head declaration-transformer?))]
              #:when (declaration-transformer? v)
-             #:attr expandeds (apply-declaration-transformer v (cons #'head #'tail))))
+             #:attr expandeds (apply-declaration-transformer v (datum->syntax #f (cons #'head #'tail)))))
 
   ;; Form in a definition context:
   (define-syntax-class :definition
@@ -44,7 +44,7 @@
              #:do [(define v (syntax-local-value* #'head definition-transformer?))]
              #:when (definition-transformer? v)
              #:do [(define-values (defns-and-exprs exprs)
-                     (apply-definition-transformer v (cons #'head #'tail)))]
+                     (apply-definition-transformer v (datum->syntax #f (cons #'head #'tail))))]
              #:attr expandeds (datum->syntax #f defns-and-exprs)
              #:attr exprs (datum->syntax #f exprs)))
 
@@ -199,6 +199,8 @@
                        (enforest-step form new-tail current-op))]
                  [else
                   (enforest-step (make-identifier-form #'head) #'tail current-op)])]
+              [(((~datum parsed) inside) . tail)
+               (enforest-step #'inside #'tail current-op)]
               [(((~and tag (~datum parens)) . inside) . tail)
                (dispatch-prefix-implicit tuple-name #'tag)]
               [(((~and tag (~datum braces)) . inside) . tail)
@@ -248,7 +250,9 @@
                   (dispatch-infix-implicit juxtapose-name #'head)]
                  [else
                   (raise-unbound-operator #'head.name)])]
-              [(head:identifier . tail)
+              [(head:identifier . _)
+               (dispatch-infix-implicit juxtapose-name #'head)]
+              [(((~datum parsed) . _) . _)
                (dispatch-infix-implicit juxtapose-name #'head)]
               [(((~and tag (~datum parens)) . inside) . tail)
                (dispatch-infix-implicit call-name #'tag)]
@@ -339,26 +343,26 @@
   (syntax-parse stx
     [(_)
      (raise-syntax-error #f "found an empty block" stx)]
-    [(_ e::definition . tail)
-     (when (and (stx-null? #'tail)
-                (stx-null? #'e.exprs))
-       (raise-syntax-error #f "block does not end with an expression" stx))
-     #`(begin
-         (begin . e.expandeds)
-         (maybe-begin
-          (#%expression (begin . e.exprs))
-          #,(syntax/loc stx
-              (rhombus-block . tail))))]
-    [(_ e::expression . tail)
-     #`(maybe-begin
-        (#%expression e.expanded)
-        #,(syntax/loc stx
-            (rhombus-block . tail)))]))
+    [(_ . tail)
+     #`(let ()
+         . #,(let loop ([tail #'tail])
+               (syntax-parse tail
+                 [() #'()]
+                 [(e::definition . tail)
+                  (when (and (stx-null? #'tail)
+                             (stx-null? #'e.exprs))
+                    (raise-syntax-error #f "block does not end with an expression" stx))
+                  #`((begin . e.expandeds)
+                     (expression-begin . e.exprs)
+                     . #,(loop #'tail))]
+                 [(e::expression . tail)
+                  #`((#%expression e.expanded)
+                     . #,(loop #'tail))])))]))
 
-(define-syntax (maybe-begin stx)
+(define-syntax (expression-begin stx)
   (syntax-parse stx
-    [(_ e (_)) #'e]
-    [(_ e1 (_ . _)) #'(begin e1 e2)]))
+    [(_) #'(begin)]
+    [(_ . exprs) #'(#%expression (begin e.exprs))]))
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)

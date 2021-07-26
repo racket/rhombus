@@ -4,17 +4,23 @@
 
 (provide (rename-out [rhombus-module-begin #%module-begin]))
 
-(define-syntax-rule (bounce mod ...)
-  (begin (begin (require mod)
-                (provide (all-from-out mod)))
-         ...))
+(define-syntax (bounce stx)
+  (syntax-case stx ()
+    [(_ mod ...)
+     (with-syntax ([(mod ...) (map syntax->datum (syntax->list #'(mod ...)))])
+       #'(begin (begin (require mod (for-syntax mod))
+                       (provide (all-from-out mod)
+                                (for-syntax (all-from-out mod))))
+                ...))]))
 (bounce "private/core-implicit.rkt"
         "private/core-op.rkt"
         "private/struct.rkt"
         "private/define.rkt"
         "private/type.rkt"
         "private/list.rkt"
-        "private/function.rkt")
+        "private/function.rkt"
+        "private/cond.rkt"
+        "private/quasiquote.rkt")
 
 (module reader racket/base
   (require shrubbery/parse

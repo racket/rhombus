@@ -19,7 +19,8 @@
 (module+ for-parse
   (provide apply-transformer
            apply-definition-transformer
-           apply-declaration-transformer))
+           apply-declaration-transformer
+           make-transformer-wrap))
 
 (struct transformer (proc))
 
@@ -34,11 +35,18 @@
 ;; All helper functions from here on expect core transformers (i.e.,
 ;; an accessor like `transformer-ref` has already been applied).
 
+(define (make-transformer-wrap)
+  (define intro (make-syntax-introducer))
+  (values intro
+          (lambda (stx)
+            (if (syntax? stx) (intro stx) stx))))
+
 (define (apply-transformer t stx checker)
   (define proc (transformer-proc t))
-  (define-values (form tail) (proc stx))
-  (check-transformer-result (checker form proc)
-                            tail
+  (define-values (in out) (make-transformer-wrap))
+  (define-values (form tail) (proc (in stx)))
+  (check-transformer-result (checker (out form) proc)
+                            (out tail)
                             proc))
 
 (define (apply-definition-transformer t stx)

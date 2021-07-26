@@ -4,6 +4,7 @@
          "property.rkt"
          "property-out.rkt"
          "transformer.rkt"
+         (submod "transformer.rkt" for-parse)
          "check.rkt")
 
 ;; See "parse.rkt" for general information about operators and parsing.
@@ -148,14 +149,16 @@
 
 (define (apply-prefix-transformer-operator op tail checker)
   (define proc (operator-proc op))
-  (define-values (form new-tail) (proc tail))
-  (check-transformer-result (checker form proc)
-                            new-tail
+  (define-values (in out) (make-transformer-wrap))
+  (define-values (form new-tail) (proc (in tail)))
+  (check-transformer-result (checker (out form) proc)
+                            (out new-tail)
                             proc))
 
 (define (apply-infix-transformer-operator op form1 tail checker)
   (define proc (operator-proc op))
-  (define-values (form new-tail) (proc form1 tail))
-  (check-transformer-result (checker form proc)
-                            new-tail
+  (define-values (in out) (make-transformer-wrap))
+  (define-values (form new-tail) (proc (in form1) (in tail)))
+  (check-transformer-result (checker (out form) proc)
+                            (out new-tail)
                             proc))
