@@ -18,6 +18,7 @@
         "private/define.rkt"
         "private/type.rkt"
         "private/list.rkt"
+        "private/assign.rkt"
         "private/function.rkt"
         "private/cond.rkt"
         "private/match.rkt"

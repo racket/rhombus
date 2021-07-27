@@ -4,7 +4,8 @@
                      "srcloc.rkt"
                      "op.rkt")
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (submod "function.rkt" for-call))
 
 (provide #%block
          #%literal
@@ -60,11 +61,5 @@
    '((default . stronger))
    #t ; transformer
    (lambda (rator stxes)
-     (syntax-parse stxes
-       [(((~and head (~datum parens)) rand::expression ...) . tail)
-        (values (datum->syntax (quote-syntax here)
-                               (cons rator #'(rand.expanded ...))
-                               (span-srcloc rator #'head)
-                               #'head)
-                #'tail)]))
+     (parse-function-call rator stxes))
    'left))

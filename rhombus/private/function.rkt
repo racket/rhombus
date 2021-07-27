@@ -5,11 +5,35 @@
                      "srcloc.rkt")
          "expression.rkt"
          "binding.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "assign.rkt"
+                  [= rhombus=]))
 
 (provide function
-         (for-syntax build-function
+         :>
+         (for-syntax :kw-opt-binding
+                     build-function
                      build-case-function))
+
+(module+ for-call
+  (provide (for-syntax parse-function-call)))
+
+(begin-for-syntax
+  (define-syntax-class :kw-opt-binding
+    #:datum-literals (op)
+    #:literals (:> rhombus=)
+    (pattern (group kw:identifier (op :>) a ... (op rhombus=) e ...)
+             #:with arg::binding #'(group a ...)
+             #:with default #'(group e ...)
+             #:attr expanded #'arg.expanded)
+    (pattern (group kw:identifier (op :>) a ...)
+             #:with arg::binding #'(group a ...)
+             #:attr default #'#f
+             #:attr expanded #'arg.expanded)
+    (pattern arg::binding
+             #:attr default #'#f
+             #:attr kw #'#f
+             #:attr expanded #'arg.expanded)))
 
 (define-syntax function
   (expression-transformer
@@ -23,9 +47,9 @@
         (values
          (build-case-function #'form-id argss arg-expandedss rhss #'form-id #'alts-tag)
          #'tail)]
-       [(form-id:identifier ((~and parens-tag parens) arg::binding ...) (~and rhs (block body ...)) . tail)
+       [(form-id:identifier ((~and parens-tag parens) arg::kw-opt-binding ...) (~and rhs (block body ...)) . tail)
         (values
-         (build-function #'form-id #'(arg ...) #'(arg.expanded ...) #'rhs #'form-id #'parens-tag)
+         (build-function #'form-id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)
          #'tail)]))))
 
 (begin-for-syntax
@@ -40,21 +64,37 @@
     (for/list ([sames (in-hash-values ht)])
       (reverse sames)))
 
-  (define (build-function function-name args arg-expandeds rhs start end)
-    (with-syntax ([(arg-id ...) (generate-temporaries args)]
+  (define (build-function function-name kws args arg-expandeds defaults rhs start end)
+    (define arg-ids (generate-temporaries args))
+    (with-syntax ([(arg-id ...) arg-ids]
                   [(arg ...) args]
                   [(arg.expanded ...) arg-expandeds]
                   [rhs rhs])
-      (relocate
-       (span-srcloc start end)
-      #`(lambda (arg-id ...)
-          (nested-bindings
-           #,function-name
-           #f
-           (begin)
-           (arg-id arg.expanded arg)
-           ...
-           (rhombus-expression (group rhs)))))))
+      (with-syntax ([((arg-form ...) ...)
+                     (for/list ([kw (in-list (syntax->list kws))]
+                                [arg-id (in-list arg-ids)]
+                                [default (in-list (syntax->list defaults))])
+                       (define arg+default
+                         (cond
+                           [(not (syntax-e default))
+                            arg-id]
+                           [else
+                            #`[#,arg-id (rhombus-expression #,default)]]))
+                       (cond
+                         [(not (syntax-e kw))
+                          (list arg+default)]
+                         [else
+                          (list (string->keyword (symbol->string (syntax-e kw))) arg+default)]))])
+        (relocate
+         (span-srcloc start end)
+         #`(lambda (arg-form ... ...)
+             (nested-bindings
+              #,function-name
+              #f
+              (begin)
+              (arg-id arg.expanded arg)
+              ...
+              (rhombus-expression (group rhs))))))))
   
   (define (build-case-function function-name argss arg-expandedss rhss start end)
     (define sames (group-by-counts (map fcase argss arg-expandedss rhss)))
@@ -107,3 +147,30 @@
                 (for/list ([arg (in-list args)])
                   "\n   ~e"))
          args))
+
+(define-syntax :> #f)
+
+(begin-for-syntax
+  (define-syntax-class :kw-expression
+    #:datum-literals (op)
+    #:literals (:>)
+    (pattern (group kw:identifier (op :>) e ...)
+             #:with exp::expression #'(group e ...)
+             #:attr expanded #'exp.expanded)
+    (pattern exp::expression
+             #:attr kw #'#f
+             #:attr expanded #'exp.expanded)))
+
+(define-for-syntax (parse-function-call rator stxes)
+  (syntax-parse stxes
+    [(((~and head (~datum parens)) rand::kw-expression ...) . tail)
+     #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
+                                            [expanded (in-list (syntax->list #'(rand.expanded ...)))])
+                                   (if (syntax-e kw)
+                                       (list (string->keyword (symbol->string (syntax-e kw))) expanded)
+                                       (list expanded)))
+     (values (datum->syntax (quote-syntax here)
+                            (cons rator #'(arg-form ... ...))
+                            (span-srcloc rator #'head)
+                            #'head)
+             #'tail)]))

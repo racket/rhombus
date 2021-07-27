@@ -27,19 +27,24 @@
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group block alts)
-       [(form-id:identifier ((~and alts-tag alts) (block (group ((~datum op) (~literal ?)) ((~and parens-tag parens) g)
+       #:datum-literals (parens group block alts op)
+       [(form-id:identifier ((~and alts-tag alts) (block (group q::syntax-quote
                                                                 (~and rhs (block body ...))))
                                                   ...+))
         (values
          (list (parse-operator-definitions stx
-                                           (syntax->list #'(g ...))
+                                           (syntax->list #'(q.g ...))
+                                           (syntax->list #'(q.prec ...))
+                                           (syntax->list #'(q.assc ...))
                                            (syntax->list #'(rhs ...))))
          null)]
-       [(form-id:identifier ((~datum op) (~literal ?)) ((~and parens-tag parens) g)
+       [(form-id:identifier q::syntax-quote
                             (~and rhs (block body ...)))
         (values
-         (list (parse-operator-definition #'g #'rhs))
+         (list (parse-operator-definition #'q.g
+                                          #'q.prec
+                                          #'q.assc
+                                          #'rhs))
          null)]
        [(form-id:identifier ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
                                                                 (~and rhs (block body ...))))
@@ -55,13 +60,13 @@
           #`(define #,the-id
               #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag)))
          null)]
-       [(form-id:identifier id::non-binding-identifier ((~and parens-tag parens) arg::binding ...)
+       [(form-id:identifier id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
                             (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
           #`(define id
-              #,(build-function #'id #'(arg ...) #'(arg.expanded ...) #'rhs #'form-id #'parens-tag)))
+              #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))
          null)]
        [(form-id:identifier any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)

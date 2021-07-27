@@ -141,14 +141,14 @@
       ;; is found
       (define-splicing-syntax-class :prefix-op+form+tail
         (pattern (op-name:identifier . tail)
-                 #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op)
+                 #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                             prefix-operator-ref)))
                        (define-values (form new-tail) (enforest-step op #'tail))]
                  #:attr expanded form
                  #:attr new-tail new-tail))
       (define-splicing-syntax-class :infix-op+form+tail
         (pattern (op-name:identifier . tail)
-                 #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op)
+                 #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                            infix-operator-ref)))
                        (define-values (form new-tail) (enforest-step op #'tail))]
                  #:attr expanded form

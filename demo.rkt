@@ -16,6 +16,12 @@ define five(x):
 
 3*five(#true && #false || 2 < 3)-2
 
+define six(x, plus :> amt = 0):
+  6 + amt
+
+six("anything")
+six("anything", plus :> 7)
+
 // pattern-matching on a function argument
 
 define f(cons(x :: Integer, y)): cons(x + 1, y)
@@ -72,6 +78,19 @@ define ?(¿a +* ¿b):
    }
 
 3 +* 4
+
+// with precedence and associativity
+
+define ?(¿a ++* ¿b,
+         weaker_than :> *,
+         associativity :> right):
+  ?{
+     define v: ¿b
+     (¿a + v) * v
+   }
+
+3 ++* 4 * 2 ++* 5
+3 ++* ((4 * 2) ++* 5)
 
 // ?? is an alternate spelling of ¿
 define ?(??a & ??b):
