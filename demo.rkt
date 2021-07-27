@@ -110,3 +110,7 @@ match cons(7, 8)
      b
  | x:
      x
+
+match ?(z + y, {[10, 11, 12]})
+ | ?(x ¿a): a
+ | ?(¿a + y, {[¿n, ...]}): cons(a, n)

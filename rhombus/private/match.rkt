@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
-                     racket/pretty)
+                     syntax/parse)
          "expression.rkt"
          "parse.rkt"
          "function.rkt")
@@ -18,15 +17,11 @@
                          ...)
                  . tail)
         #:with (b::binding ...) #'((group bind ...) ...)
-        (define (show v)
-          (pretty-print (syntax->datum v))
-          v)
         (values
-         (show
-          #`(#,(build-case-function #'match
-                                    (map list (syntax->list #'(b ...)))
-                                    (map list (syntax->list #'(b.expanded ...)))
-                                    (syntax->list #'(rhs ...))
-                                    #'form-id #'alts-tag)
-             (rhombus-expression (group in ...))))
+         #`(#,(build-case-function #'match
+                                   (map list (syntax->list #'(b ...)))
+                                   (map list (syntax->list #'(b.expanded ...)))
+                                   (syntax->list #'(rhs ...))
+                                   #'form-id #'alts-tag)
+            (rhombus-expression (group in ...)))
          #'tail)]))))

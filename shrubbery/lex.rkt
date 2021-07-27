@@ -107,7 +107,8 @@
   [opchar (:or (:- symbolic (:or))
                (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"")))]
   [operator (:- (:or opchar
-                     (:: (:* opchar) (:- opchar "+" "-" ".")))
+                     (:: (:* opchar) (:- opchar "+" "-" "."))
+                     (:+ "."))
                 "|" ":")]
 
   ;; disallows a number that starts +, -, or "."
