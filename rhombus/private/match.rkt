@@ -3,7 +3,9 @@
                      syntax/parse)
          "expression.rkt"
          "parse.rkt"
-         "function.rkt")
+         "function.rkt"
+         (only-in "cond.rkt"
+                  [else rhombus-else]))
 
 (provide match)
 
@@ -11,9 +13,27 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id in ... ((~and alts-tag (~datum alts))
-                         ((~datum block) ((~datum group) bind ...
-                                                         (~and rhs ((~datum block) . _))))
+       #:datum-literals (alts block group)
+       #:literals (rhombus-else)
+       [(form-id in ... ((~and alts-tag alts)
+                         (block (group bind ...
+                                       (~and rhs (block . _))))
+                         ...
+                         (block (group rhombus-else
+                                       (~and else-rhs (block . _)))))
+                 . tail)
+        #:with (b::binding ...) #'((group bind ...) ...)
+        (values
+         #`(#,(build-case-function #'match
+                                   (map list (syntax->list #'(b ... ignored)))
+                                   (map list (syntax->list #'(b.expanded ... (() (lambda (v) #t) (begin)))))
+                                   (syntax->list #'(rhs ... else-rhs))
+                                   #'form-id #'alts-tag)
+            (rhombus-expression (group in ...)))
+         #'tail)]
+       [(form-id in ... ((~and alts-tag alts)
+                         (block (group bind ...
+                                       (~and rhs (block . _))))
                          ...)
                  . tail)
         #:with (b::binding ...) #'((group bind ...) ...)

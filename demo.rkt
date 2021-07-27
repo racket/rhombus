@@ -16,11 +16,11 @@ define five(x):
 
 3*five(#true && #false || 2 < 3)-2
 
-define six(x, plus :> amt = 0):
+define six(x, plus:> amt = 0):
   6 + amt
 
 six("anything")
-six("anything", plus :> 7)
+six("anything", plus:> 7)
 
 // pattern-matching on a function argument
 
@@ -82,8 +82,8 @@ define ?(¿a +* ¿b):
 // with precedence and associativity
 
 define ?(¿a ++* ¿b,
-         weaker_than :> *,
-         associativity :> right):
+         weaker_than:> *,
+         associativity:> right):
   ?{
      define v: ¿b
      (¿a + v) * v
@@ -129,7 +129,15 @@ match cons(7, 8)
      b
  | x:
      x
+ | else:
+     "other"
 
 match ?(z + y, {[10, 11, 12]})
  | ?(x ¿a): a
  | ?(¿a + y, {[¿n, ...]}): cons(a, n)
+
+cond
+ | #true: 17
+ | else: 18
+
+                           
