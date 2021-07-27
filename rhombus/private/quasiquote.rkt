@@ -16,11 +16,17 @@
 
 (define-for-syntax (escape e [depth 0])
   (syntax-parse e
-    [((~and tag (~or (~datum parens) (~datum brackets) (~datum block) (~datum alts)))
+    [((~and tag (~or (~datum parens) (~datum brackets) (~datum block)))
       g ...)
      (with-syntax ([(new-g ...) (map (escape-group depth) (syntax->list #'(g ...)))])
        (syntax/loc e
          (tag new-g ...)))]
+    [((~and tag (~datum alts))
+      b ...)
+     (with-syntax ([(new-b ...) (for/list ([b (in-list (syntax->list #'(b ...)))])
+                                  (escape b depth))])
+       (syntax/loc e
+         (tag new-b ...)))]
     [_ e]))
 
 (define-for-syntax ((escape-group depth) g)
@@ -106,14 +112,15 @@
         (with-syntax ([((id id-ref) ...) idrs]
                       [(false ...) (for/list ([idr (in-list idrs)]) #'#f)])
           (values
-           #`((id ...)
-              (lambda (v)
+           (binding-form
+            #'(id ...)
+            #`(lambda (v)
                 (if (syntax? v)
                     (syntax-parse v
                       [#,pattern (values #t (syntax id-ref) ...)]
                       [_ (values #f false ...)])
                     (values #f false ...)))
-              (begin))
+            #'(begin))
            #'tail))]))))
 
 (define-syntax ¿

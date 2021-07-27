@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse)
          "expression.rkt"
+         "binding.rkt"
          "parse.rkt"
          "function.rkt"
          (only-in "cond.rkt"
@@ -26,7 +27,10 @@
         (values
          #`(#,(build-case-function #'match
                                    (map list (syntax->list #'(b ... ignored)))
-                                   (map list (syntax->list #'(b.expanded ... (() (lambda (v) #t) (begin)))))
+                                   (map list (syntax->list #`(b.expanded ... #,(binding-form
+                                                                                #'()
+                                                                                #'(lambda (v) #t)
+                                                                                #'(begin)))))
                                    (syntax->list #'(rhs ... else-rhs))
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))

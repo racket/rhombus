@@ -24,8 +24,9 @@
        (with-syntax ([falses (for/list ([a (in-list (syntax->list #'(a-expanded.var-id ... ...)))])
                                #'#f)])
          (values
-          #`([a-expanded.var-id ... ...]
-             (lambda (v)
+          (binding-form
+           #'[a-expanded.var-id ... ...]
+           #`(lambda (v)
                (if (#,predicate v)
                    #,(let loop ([match? #t]
                                 [a-idss (syntax->list #'((a-expanded.var-id ...) ...))]
@@ -40,6 +41,6 @@
                                   #,(loop #'match? (cdr a-idss) (cdr a-proc-exprs) (cdr selectors))
                                   (values #f . falses)))]))
                    (values #f . falses)))
-             (begin
+           #`(begin
                a-expanded.post-defn ...))
           #'new-tail))])))

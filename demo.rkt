@@ -71,7 +71,7 @@ size
 
 // defining an infix operator
 
-define ?(¿a +* ¿b):
+expression ?(¿a +* ¿b):
   ?{
      define v: ¿b
      (¿a + v) * v
@@ -81,9 +81,9 @@ define ?(¿a +* ¿b):
 
 // with precedence and associativity
 
-define ?(¿a ++* ¿b,
-         weaker_than:> *,
-         associativity:> right):
+expression ?(¿a ++* ¿b,
+             weaker_than:> *,
+             associativity:> right):
   ?{
      define v: ¿b
      (¿a + v) * v
@@ -93,14 +93,14 @@ define ?(¿a ++* ¿b,
 3 ++* ((4 * 2) ++* 5)
 
 // ?? is an alternate spelling of ¿
-define ?(??a & ??b):
+expression ?(??a & ??b):
   ?(cons(??a, ??b))
 
 1 & 2
   
 // defining a prefix operator
 
-define ?(!! ¿b):
+expression ?(!! ¿b):
   ?(! ! ¿b)
 
 !!#true
@@ -113,7 +113,7 @@ define power(base, exponent):
   | 1
   | base * power(base, exponent-1)
 
-define
+expression
  | ?(** ¿exponent):
       ?(2 ** ¿exponent)
  | ?(¿base ** ¿exponent):
@@ -146,7 +146,7 @@ define
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
-define ?(¿a *! ¿tail ...):
+expression ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10*!
@@ -154,7 +154,7 @@ define ?(¿a *! ¿tail ...):
 // define an expression transformer, which receives
 // the rest of the group after the identifier
 
-define ?(prefix_plus ¿e ...):
+expression ?(prefix_plus ¿e ...):
   match e
   | ?(¿a ¿b ¿c ...):
       values(a, ?(+ ¿b ¿c ...))
@@ -162,3 +162,23 @@ define ?(prefix_plus ¿e ...):
       values(?"this is terrible error reporting", ?())
 
 prefix_plus 7 9
+
+// define a binding operator
+
+binding ?(¿a <> ¿b):
+  match a
+   | ?((¿a_id), ¿a_pred, ¿a_def):
+       match b
+        | ?((¿b_id), ¿b_pred, ¿b_def):
+            ?((¿a_id ¿b_id),
+              function(v):
+                // this function should call a_pred and b_pred,
+                // but we don't have a way to receive multiple values, yet
+                match v
+                 | cons(bv, av):
+                     values(#true, av, bv)
+                 | else: values(#false, #false, #false),
+              ¿a_def)
+
+define rx <> ry: cons(1, 2)
+rx

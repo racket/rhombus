@@ -16,6 +16,8 @@
         "private/core-op.rkt"
         "private/struct.rkt"
         "private/define.rkt"
+        "private/expression-syntax.rkt"
+        "private/binding-syntax.rkt"
         "private/type.rkt"
         "private/list.rkt"
         "private/assign.rkt"

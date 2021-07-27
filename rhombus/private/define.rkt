@@ -7,7 +7,6 @@
          "expression.rkt"
          "parse.rkt"
          "function.rkt"
-         "syntax.rkt"
          "quasiquote.rkt"
          (for-syntax "parse.rkt"))
 
@@ -28,31 +27,6 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
-                                                     (~and rhs (block body ...))))
-                                       ...+))
-        (values
-         (list (parse-operator-definitions stx
-                                           (syntax->list #'(q.g ...))
-                                           (syntax->list #'(q.prec ...))
-                                           (syntax->list #'(q.assc ...))
-                                           (syntax->list #'(q.self-id ...))
-                                           (syntax->list #'(rhs ...))))
-         null)]
-       [(form-id q::operator-syntax-quote
-                 (~and rhs (block body ...)))
-        (values
-         (list (parse-operator-definition #'q.g
-                                          #'q.prec
-                                          #'q.assc
-                                          #'q.self-id
-                                          #'rhs))
-         null)]
-       [(form-id q::identifier-syntax-quote
-                 (~and rhs (block body ...)))
-        (values
-         (list (parse-transformer-definition #'q.g #'q.self-id #'rhs))
-         null)]
        [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
                                                      (~and rhs (block body ...))))
                                        ...+))

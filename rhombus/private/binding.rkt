@@ -15,6 +15,7 @@
                      make-identifier-binding
 
                      :binding-form
+                     binding-form
                      check-binding-result
 
                      in-binding-space)
@@ -25,19 +26,29 @@
 (begin-for-syntax
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
-    (pattern ((~and var-ids (var-id:identifier ...))
-              check-proc-expr
-              post-defn)))
+    #:datum-literals (parens group)
+    (pattern (parens
+              (group (parens (group var-id:identifier ...)))
+              (group check-proc-expr)
+              (group post-defn))
+             #:attr var-ids #'(var-id ...)))
 
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
 
   (property binding-transformer transformer)
 
+  ;; puts pieces together into a `:binding-form`
+  (define (binding-form ids check-proc-expr post-defn)
+    #`(parens
+       (group (parens (group . #,ids)))
+       (group #,check-proc-expr)
+       (group #,post-defn)))
+
   (define (make-identifier-binding id)
-    #`((#,id)
-       (lambda (v) (values #t v))
-       (begin)))
+    (binding-form (list id)
+                  #'(lambda (v) (values #t v))
+                  #'(begin)))
 
   (define (check-binding-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)

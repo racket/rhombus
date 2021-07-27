@@ -86,14 +86,14 @@
               [else (values #'left.var-ids
                             #'(begin))]))
           (values
-           #`(#,var-ids
-              (lambda (v)
-                (if (t.predicate v)
-                    (left.check-proc-expr v)
-                    (values #f . falses)))
-              (begin
-                #,new-def
-                left.post-defn))
+           (binding-form var-ids
+                         #`(lambda (v)
+                             (if (t.predicate v)
+                                 (left.check-proc-expr v)
+                                 (values #f . falses)))
+                         #`(begin
+                             #,new-def
+                             left.post-defn))
            #'new-tail))]))
    #f))
 

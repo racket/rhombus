@@ -2,20 +2,19 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     "consistent.rkt"
                      "transformer.rkt"
-                     "srcloc.rkt"
-                     "check.rkt"
-                     "tail.rkt")
-         "expression.rkt"
+                     "consistent.rkt"
+                     "srcloc.rkt")
          (rename-in "quasiquote.rkt"
                     [... rhombus...])
          "parse.rkt"
          "function.rkt"
-         ;; to we generate compile-time code:
+         ;; because we generate compile-time code:
          (for-syntax "parse.rkt"))
 
-(provide (for-syntax :operator-syntax-quote
+(provide (for-syntax make-syntax-definition-transformer
+                     
+                     :operator-syntax-quote
                      :identifier-syntax-quote
                      parse-operator-definition
                      parse-operator-definitions
@@ -92,58 +91,56 @@
                                   (~optional (group op_stx (op :>) self-id:identifier)
                                              #:defaults ([self-id #'self])))))))
 
-(begin-for-syntax
-  (struct prefix+infix (prefix infix)
-    #:property prop:expression-prefix-operator (lambda (self) (prefix+infix-prefix self))
-    #:property prop:expression-infix-operator (lambda (self) (prefix+infix-infix self))))
+(define-for-syntax (parse-one-operator-definition make-prefix-id make-infix-id)
+  (lambda (g prec assc self-id rhs)
+    (define (convert-prec prec)
+      #`(list #,@(for/list ([p (in-list (syntax->list prec))])
+                   (syntax-parse p
+                     [((~literal other) . spec) #`'(default . spec)]
+                     [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
+    (syntax-parse g
+      #:datum-literals (group op)
+      #:literals (¿ rhombus...)
+      [(group (op ¿) left:identifier
+              (op op-name)
+              (op ¿) right-or-tail:identifier
+              (~optional (~and dots (op rhombus...))
+                         #:defaults ([dots #'#f])))
+       #`(#,make-infix-id
+          (quote-syntax op-name)
+          #,(convert-prec prec)
+          (not (eq? (syntax-e #'dots) #f))
+          (let ([op-name (lambda (left right-or-tail self-id)
+                           (rhombus-expression (group #,rhs)))])
+            op-name)
+          '#,(if (eq? (syntax-e assc) 'none)
+                 #'#f
+                 assc))]
+      [(group (op op-name)
+              (op ¿) arg-or-tail:identifier
+              (~optional (~and dots (op rhombus...))
+                         #:defaults ([dots #'#f])))
+       (when (syntax-e assc)
+         (raise-syntax-error #f
+                             "associativity not allowed for infix operators"
+                             assc))
+       #`(#,make-prefix-id
+          (quote-syntax op-name)
+          #,(convert-prec prec)
+          (not (eq? (syntax-e #'dots) #f))
+          (let ([op-name (lambda (arg-or-tail self-id)
+                           (rhombus-expression (group #,rhs)))])
+            op-name))])))
 
-(define-for-syntax (parse-one-operator-definition g prec assc self-id rhs)
-  (define (convert-prec prec)
-    #`(list #,@(for/list ([p (in-list (syntax->list prec))])
-                 (syntax-parse p
-                   [((~literal other) . spec) #`'(default . spec)]
-                   [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
-  (syntax-parse g
-    #:datum-literals (group op)
-    #:literals (¿ rhombus...)
-    [(group (op ¿) left:identifier
-            (op op-name)
-            (op ¿) right-or-tail:identifier
-            (~optional (~and dots (op rhombus...))
-                       #:defaults ([dots #'#f])))
-     #`(make-expression-infix-operator
-        (quote-syntax op-name)
-        #,(convert-prec prec)
-        (not (eq? (syntax-e #'dots) #f))
-        (let ([op-name (lambda (left right-or-tail self-id)
-                         (rhombus-expression (group #,rhs)))])
-          op-name)
-        '#,(if (eq? (syntax-e assc) 'none)
-               #'#f
-               assc))]
-    [(group (op op-name)
-            (op ¿) arg-or-tail:identifier
-            (~optional (~and dots (op rhombus...))
-                       #:defaults ([dots #'#f])))
-     (when (syntax-e assc)
-       (raise-syntax-error #f
-                           "associatvity not allowed for infix operators"
-                           assc))
-     #`(make-expression-prefix-operator
-        (quote-syntax op-name)
-        #,(convert-prec prec)
-        (not (eq? (syntax-e #'dots) #f))
-        (let ([op-name (lambda (arg-or-tail self-id)
-                         (rhombus-expression (group #,rhs)))])
-          op-name))]))
-
-(define-for-syntax (parse-operator-definition g prec assc self-id rhs)
-  (define p (parse-one-operator-definition g prec assc self-id rhs))
+(define-for-syntax (parse-operator-definition g prec assc self-id rhs
+                                              in-space make-prefix-id make-infix-id)
+  (define p ((parse-one-operator-definition make-prefix-id make-infix-id) g prec assc self-id rhs))
   (define op (syntax-parse p [(_ (_ op) . _) #'op]))
-  #`(define-syntax #,op #,p))
+  #`(define-syntax #,(in-space op) #,p))
 
-(define-for-syntax (parse-operator-definitions stx gs precs asscs self-ids rhss)
-  (define ps (map parse-one-operator-definition gs precs asscs self-ids rhss))
+(define-for-syntax (parse-operator-definitions stx gs precs asscs self-ids rhss
+                                               in-space make-prefix-id make-infix-id prefix+infix-id)
+  (define ps (map (parse-one-operator-definition make-prefix-id make-infix-id) gs precs asscs self-ids rhss))
   (define-values (prefixes infixes ops)
     (let loop ([ps ps] [prefixes null] [infixes null] [ops null])
       (cond
@@ -161,67 +158,67 @@
                         (respan stx)))
   (unless ((length infixes) . < . 2)
     (raise-syntax-error #f
-                        "cannot handle two infix implementations"
+                        "cannot handle multiple infix implementations"
                         (respan stx)))
-  #`(define-syntax #,(car ops)
+  #`(define-syntax #,(in-space (car ops))
       #,(cond
           [(null? prefixes) (car infixes)]
           [(null? infixes) (car prefixes)]
-          [else #`(prefix+infix #,(car prefixes) #,(car infixes))])))
+          [else #`(#,prefix+infix-id #,(car prefixes) #,(car infixes))])))
 
-(define-for-syntax (make-expression-infix-operator name prec transformer? proc assc)
-  (expression-infix-operator
-   name
-   prec
-   transformer?
-   (if transformer?
-       (lambda (form1 tail)
-         (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                                   (unpack-tail new-tail proc)
-                                   proc))
-       (lambda (form1 form2 stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form1) #`(parsed #,form2) stx)
-                                         proc)))))
-   assc))
-
-(define-for-syntax (make-expression-prefix-operator name prec transformer? proc)
-  (expression-prefix-operator
-   name
-   prec
-   transformer? 
-   (if transformer?
-       (lambda (tail)
-         (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                                   (unpack-tail new-tail proc)
-                                   proc))
-       (lambda (form stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form) stx)
-                                         proc)))))))
-
-(define-for-syntax (parse-transformer-definition g self-id rhs)
+(define-for-syntax (parse-transformer-definition g self-id rhs
+                                                 in-space make-transformer-id)
   (syntax-parse g
     #:datum-literals (group op)
     #:literals (¿ rhombus...)
     [(group id:identifier
             (op ¿) tail:identifier
             (op rhombus...))
-     #`(define-syntax id
-         (make-expression-transformer
+     #`(define-syntax #,(in-space #'id)
+         (#,make-transformer-id
           (let ([id (lambda (tail self-id)
                       (rhombus-expression (group #,rhs)))])
             id)))]))
 
-(define-for-syntax (make-expression-transformer proc)
-  (expression-transformer
-   (lambda (tail)
-     (define-values (form new-tail) (syntax-parse tail
-                                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                               (unpack-tail new-tail proc)
-                               proc))))
+(define-for-syntax (make-syntax-definition-transformer in-space
+                                                       make-transformer-id
+                                                       make-prefix-id
+                                                       make-infix-id
+                                                       prefix+infix-id)
+  (definition-transformer
+    (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group block alts op)
+       [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
+                                                     (~and rhs (block body ...))))
+                                       ...+))
+        (values
+         (list (parse-operator-definitions stx
+                                           (syntax->list #'(q.g ...))
+                                           (syntax->list #'(q.prec ...))
+                                           (syntax->list #'(q.assc ...))
+                                           (syntax->list #'(q.self-id ...))
+                                           (syntax->list #'(rhs ...))
+                                           in-space
+                                           make-prefix-id
+                                           make-infix-id
+                                           prefix+infix-id))
+         null)]
+       [(form-id q::operator-syntax-quote
+                 (~and rhs (block body ...)))
+        (values
+         (list (parse-operator-definition #'q.g
+                                          #'q.prec
+                                          #'q.assc
+                                          #'q.self-id
+                                          #'rhs
+                                          in-space
+                                          make-prefix-id
+                                          make-infix-id))
+         null)]
+       [(form-id q::identifier-syntax-quote
+                 (~and rhs (block body ...)))
+        (values
+         (list (parse-transformer-definition #'q.g #'q.self-id #'rhs
+                                             in-space make-transformer-id))
+         null)]))))

@@ -38,9 +38,10 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(datum . tail)
-        (values #'(()
-                   (lambda (v) (equal? v (quote datum)))
-                   (begin))
+        (values (binding-form
+                 #'()
+                 #'(lambda (v) (equal? v (quote datum)))
+                 #'(begin))
                 #'tail)]))))
 
 (define-syntax #%tuple
