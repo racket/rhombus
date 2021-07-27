@@ -20,7 +20,10 @@
   (provide apply-transformer
            apply-definition-transformer
            apply-declaration-transformer
-           make-transformer-wrap))
+
+           transform-in
+           transform-out
+           call-as-transformer))
 
 (struct transformer (proc))
 
@@ -35,32 +38,57 @@
 ;; All helper functions from here on expect core transformers (i.e.,
 ;; an accessor like `transformer-ref` has already been applied).
 
-(define (make-transformer-wrap)
+(define no-props (datum->syntax #f #f))
+
+(define current-transformer-introduce (make-parameter (lambda (stx) stx)))
+(define (transform-in stx)
+  ((current-transformer-introduce) stx))
+(define (transform-out stx)
+  ((current-transformer-introduce) stx))
+
+(define (call-as-transformer id thunk)
   (define intro (make-syntax-introducer))
-  (values intro
-          (lambda (stx)
-            (if (syntax? stx) (intro stx) stx))))
+  (parameterize ([current-transformer-introduce intro])
+    (thunk intro
+           (lambda (stx)
+             (let loop ([stx stx])
+               (cond
+                 [(syntax? stx)
+                  (syntax-track-origin (intro stx)
+                                       no-props
+                                       id)]
+                 [(pair? stx) (cons (loop (car stx))
+                                    (loop (cdr stx)))]
+                 [else stx]))))))
 
-(define (apply-transformer t stx checker)
+(define (apply-transformer t id stx checker)
   (define proc (transformer-proc t))
-  (define-values (in out) (make-transformer-wrap))
-  (define-values (form tail) (proc (in stx)))
-  (check-transformer-result (checker (out form) proc)
-                            (out tail)
-                            proc))
+  (call-as-transformer
+   id
+   (lambda (in out)
+     (define-values (form tail) (proc (in stx)))
+     (check-transformer-result (checker (out form) proc)
+                               (out tail)
+                               proc))))
 
-(define (apply-definition-transformer t stx)
+(define (apply-definition-transformer t id stx)
   (define proc (transformer-proc t))
-  (define-values (forms exprs) (proc stx))
-  (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
-  (unless (stx-list? exprs) (raise-result-error (proc-name proc) "stx-list?" exprs))
-  (values forms exprs))
+  (call-as-transformer
+   id
+   (lambda (in out)
+     (define-values (forms exprs) (proc (in stx)))
+     (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
+     (unless (stx-list? exprs) (raise-result-error (proc-name proc) "stx-list?" exprs))
+     (values (out forms) (out exprs)))))
 
-(define (apply-declaration-transformer t stx)
+(define (apply-declaration-transformer t id stx)
   (define proc (transformer-proc t))
-  (define forms (proc stx))
-  (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
-  forms)
+  (call-as-transformer
+   id
+   (lambda (in out)
+     (define forms (proc (in stx)))
+     (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
+     (out forms))))
 
 (define (check-transformer-result form tail proc)
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))

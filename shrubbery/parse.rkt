@@ -579,8 +579,8 @@
 
 ;; ----------------------------------------
 
-(define (parse-all in)
-  (define l (lex-all in fail))
+(define (parse-all in #:source [source (object-name in)])
+  (define l (lex-all in fail #:source source))
   (if (null? l)
       eof
       (parse-top-groups l)))

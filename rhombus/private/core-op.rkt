@@ -43,7 +43,7 @@
                                      #f ; not a transformer
                                      (lambda (form stx)
                                        (datum->syntax (quote-syntax here)
-                                                      (list 'prim form)
+                                                      (list (quote-syntax prim) form)
                                                       (span-srcloc stx form)
                                                       stx)))]))
 
@@ -71,7 +71,7 @@
                                     #f ; not a transformer
                                     (lambda (form1 form2 stx)
                                       (datum->syntax (quote-syntax here)
-                                                     (list 'prim form1 form2)
+                                                     (list (quote-syntax prim) form1 form2)
                                                      (span-srcloc form1 form2)
                                                      stx))
                                     assoc)]))

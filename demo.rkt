@@ -140,4 +140,13 @@ cond
  | #true: 17
  | else: 18
 
-                           
+// postfix efect by a transformer "infix" operator
+
+define
+ | factorial(0): 1
+ | factorial(n): n*factorial(n-1)
+         
+define ?(¿a *! ¿tail ...):
+  values(?(factorial(¿a)), tail)
+
+10*!

@@ -4,6 +4,8 @@
                      "srcloc.rkt"
                      "op.rkt")
          "expression.rkt"
+         "binding.rkt"
+         "expression+binding.rkt"
          "parse.rkt"
          (submod "function.rkt" for-call))
 
@@ -23,9 +25,8 @@
         (values #`(rhombus-block . body)
                 #'tail)]))))
 
-
 (define-syntax #%literal
-  (expression-prefix-operator
+  (make-expression+binding-prefix-operator
    #'%literal
    '((default . stronger))
    #t ; transformer
@@ -33,6 +34,13 @@
      (syntax-parse stxes
        [(datum . tail)
         (values (syntax/loc #'datum (quote datum))
+                #'tail)]))
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(datum . tail)
+        (values #'(()
+                   (lambda (v) (equal? v (quote datum)))
+                   (begin))
                 #'tail)]))))
 
 (define-syntax #%tuple

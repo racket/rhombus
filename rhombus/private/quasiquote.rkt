@@ -5,7 +5,8 @@
          syntax/parse
          "parse.rkt"
          "expression.rkt"
-         "binding.rkt")
+         "binding.rkt"
+         "expression+binding.rkt")
 
 (provide ?
          ¿
@@ -78,15 +79,6 @@
      (values #'(~literal id) null)]
     [_
      (values e null)]))
-
-(begin-for-syntax
-  (struct expression+binding-prefix-operator (exp-op bind-op)
-    #:property prop:expression-prefix-operator (lambda (self) (expression+binding-prefix-operator-exp-op self))
-    #:property prop:binding-prefix-operator (lambda (self) (expression+binding-prefix-operator-bind-op self)))
-  (define (make-expression+binding-prefix-operator name prec transformer? exp bind)
-    (expression+binding-prefix-operator
-     (expression-prefix-operator name prec transformer? exp)
-     (binding-prefix-operator name prec transformer? bind))))
 
 (define-syntax ?
   (make-expression+binding-prefix-operator

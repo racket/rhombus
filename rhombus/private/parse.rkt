@@ -36,19 +36,23 @@
   ;; Form at the top of a module:
   (define-syntax-class :declaration
     (pattern ((~datum group) head:identifier . tail)
-             #:do [(define v (syntax-local-value* #'head declaration-transformer?))]
+             #:do [(define head-id (transform-in #'head))]
+             #:do [(define v (syntax-local-value* head-id declaration-transformer?))]
              #:when (declaration-transformer? v)
-             #:attr expandeds (apply-declaration-transformer v (datum->syntax #f (cons #'head #'tail)))))
+             #:attr expandeds (transform-out
+                               (apply-declaration-transformer v head-id
+                                                              (datum->syntax #f (cons head-id (transform-in #'tail)))))))
 
   ;; Form in a definition context:
   (define-syntax-class :definition
     (pattern ((~datum group) head:identifier . tail)
-             #:do [(define v (syntax-local-value* #'head definition-transformer?))]
+             #:do [(define head-id (transform-in #'head))]
+             #:do [(define v (syntax-local-value* head-id definition-transformer?))]
              #:when (definition-transformer? v)
              #:do [(define-values (defns-and-exprs exprs)
-                     (apply-definition-transformer v (datum->syntax #f (cons #'head #'tail))))]
-             #:attr expandeds (datum->syntax #f defns-and-exprs)
-             #:attr exprs (datum->syntax #f exprs)))
+                     (apply-definition-transformer v head-id (datum->syntax #f (cons head-id (transform-in #'tail)))))]
+             #:attr expandeds (transform-out (datum->syntax #f defns-and-exprs))
+             #:attr exprs (transform-out (datum->syntax #f exprs))))
 
   ;; Form in an expression context:
   ;;  :expression is defined via `define-enforest` below
@@ -134,7 +138,7 @@
                         make-identifier-form)
     (begin
       (define-syntax-class :form
-        (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail #f)))
+        (pattern ((~datum group) . tail) #:attr expanded (transform-out (enforest (transform-in #'tail) #f))))
 
       ;; For reentering the enforestation loop within a group, stopping when
       ;; the group ends or when an operator with weaker precedence than `op`
@@ -143,16 +147,16 @@
         (pattern (op-name:identifier . tail)
                  #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                             prefix-operator-ref)))
-                       (define-values (form new-tail) (enforest-step op #'tail))]
-                 #:attr expanded form
-                 #:attr new-tail new-tail))
+                       (define-values (form new-tail) (enforest-step op (transform-in #'tail)))]
+                 #:attr expanded (transform-out form)
+                 #:attr new-tail (transform-out new-tail)))
       (define-splicing-syntax-class :infix-op+form+tail
         (pattern (op-name:identifier . tail)
                  #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                            infix-operator-ref)))
-                       (define-values (form new-tail) (enforest-step op #'tail))]
-                 #:attr expanded form
-                 #:attr new-tail new-tail))
+                       (define-values (form new-tail) (enforest-step op (transform-in #'tail)))]
+                 #:attr expanded (transform-out form)
+                 #:attr new-tail (transform-out new-tail)))
 
       (define (enforest stxes [current-op #f])
         ;; either `stxes` starts with a prefix operator or this first step
@@ -181,23 +185,25 @@
            ((syntax-parse stxes
               [() (raise-syntax-error #f (format "empty ~a" form-kind-str))]
               [(head::operator . tail)
-               (define v (syntax-local-value* (in-space #'head.name)
+               (define head-id (in-space #'head.name))
+               (define v (syntax-local-value* head-id
                                               (lambda (v) (or (prefix-operator-ref v)
                                                               (infix-operator-ref v)))))
                (cond
                  [(prefix-operator-ref v)
                   => (lambda (op)
-                       (dispatch-prefix-operator v op #'tail #'head.name))]
+                       (dispatch-prefix-operator v op #'tail head-id))]
                  [(infix-operator-ref v)
                   (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
                  [else
                   (raise-unbound-operator #'head.name)])]
               [(head:identifier . tail)
-               (define v (syntax-local-value* (in-space #'head) transformer-ref))
+               (define head-id (in-space #'head))
+               (define v (syntax-local-value* head-id transformer-ref))
                (cond
                  [(transformer-ref v)
                   => (lambda (op)
-                       (define-values (form new-tail) (apply-transformer op stxes check-result))
+                       (define-values (form new-tail) (apply-transformer op head-id stxes check-result))
                        (enforest-step form new-tail current-op))]
                  [else
                   (enforest-step (make-identifier-form #'head) #'tail current-op)])]
@@ -220,7 +226,7 @@
               (cond
                 [(operator-transformer? op)
                  ;; it's up to the transformer to consume whatever it wants after the operator
-                 (define-values (form new-tail) (apply-prefix-transformer-operator op stxes check-result))
+                 (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes check-result))
                  (enforest-step form new-tail current-op)]
                 [else
                  ;; new operator sets precedence, defer application of operator until a suitable
@@ -241,13 +247,14 @@
            ((syntax-parse stxes
               [() (values init-form stxes)]
               [(head::operator . tail)
-               (define v (syntax-local-value* (in-space #'head.name)
+               (define head-id (in-space #'head.name))
+               (define v (syntax-local-value* head-id
                                               (lambda (v) (or (infix-operator-ref v)
                                                               (prefix-operator-ref v)))))
                (cond
                  [(infix-operator-ref v)
                   => (lambda (op)
-                       (dispatch-infix-operator v op #'tail #'head.name))]
+                       (dispatch-infix-operator v op #'tail head-id))]
                  [(prefix-operator-ref v)
                   (dispatch-infix-implicit juxtapose-name #'head)]
                  [else
@@ -278,7 +285,7 @@
                  (cond
                    [(operator-transformer? op)
                     ;; it's up to the transformer to consume whatever it wants after the operator
-                    (define-values (form new-tail) (apply-infix-transformer-operator op init-form stxes check-result))
+                    (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes check-result))
                     (enforest-step form new-tail current-op)]
                    [else
                     ;; new operator sets precedence, defer application of operator until a suitable
@@ -336,10 +343,11 @@
     [(_) #'(begin)]
     [(_ form . forms)
      #`(begin
-         #,(syntax-parse #'form
-             [e::declaration #'(begin . e.expandeds)]
-             [e::definition #'(begin (begin . e.expandeds) . e.exprs)]
-             [e::expression #'(#%expression e.expanded)])
+         #,(syntax-local-introduce
+            (syntax-parse (syntax-local-introduce #'form)
+              [e::declaration #'(begin . e.expandeds)]
+              [e::definition #'(begin (begin . e.expandeds) . e.exprs)]
+              [e::expression #'(#%expression e.expanded)]))
          (rhombus-top . forms))]))
 
 ;; For a definition context, interleaves expansion and enforestation:
@@ -348,20 +356,21 @@
     [(_)
      (raise-syntax-error #f "found an empty block" stx)]
     [(_ . tail)
-     #`(let ()
-         . #,(let loop ([tail #'tail])
-               (syntax-parse tail
-                 [() #'()]
-                 [(e::definition . tail)
-                  (when (and (stx-null? #'tail)
-                             (stx-null? #'e.exprs))
-                    (raise-syntax-error #f "block does not end with an expression" stx))
-                  #`((begin . e.expandeds)
-                     (expression-begin . e.exprs)
-                     . #,(loop #'tail))]
-                 [(e::expression . tail)
-                  #`((#%expression e.expanded)
-                     . #,(loop #'tail))])))]))
+     (syntax-local-introduce
+      #`(let ()
+          . #,(let loop ([tail (syntax-local-introduce #'tail)])
+                (syntax-parse tail
+                  [() #'()]
+                  [(e::definition . tail)
+                   (when (and (stx-null? #'tail)
+                              (stx-null? #'e.exprs))
+                     (raise-syntax-error #f "block does not end with an expression" stx))
+                   #`((begin . e.expandeds)
+                      (expression-begin . e.exprs)
+                      . #,(loop #'tail))]
+                  [(e::expression . tail)
+                   #`((#%expression e.expanded)
+                      . #,(loop #'tail))]))))]))
 
 (define-syntax (expression-begin stx)
   (syntax-parse stx
@@ -370,5 +379,5 @@
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
-  (syntax-parse stx
-    [(_ e::expression) #'e.expanded]))
+  (syntax-parse (syntax-local-introduce stx)
+    [(_ e::expression) (syntax-local-introduce #'e.expanded)]))

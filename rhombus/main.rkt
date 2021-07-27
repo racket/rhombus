@@ -22,30 +22,18 @@
         "private/function.rkt"
         "private/cond.rkt"
         "private/match.rkt"
-        "private/quasiquote.rkt")
+        "private/quasiquote.rkt"
+        "private/values.rkt")
 
-(module reader racket/base
+(module reader syntax/module-reader
+  #:language 'rhombus
+  #:read (lambda (in) (list (syntax->datum (parse-all in))))
+  #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
+  #:info get-info-proc
+  #:whole-body-readers? #t
   (require shrubbery/parse
            (only-in (submod shrubbery reader)
-                    get-info))
-  
-  (provide (rename-out [rhombus-read read]
-                       [rhombus-read-syntax read-syntax])
-           get-info)
-
-  (define (rhombus-read in)
-    (syntax->datum
-     (rhombus-read-syntax #f in)))
- 
-  (define (rhombus-read-syntax src in)
-    (define r (parse-all in))
-    (if (eof-object? r)
-        r
-        (datum->syntax
-         #f
-         `(module anything rhombus
-            (#%module-begin
-             ,r))))))
+                    get-info-proc)))
 
 (define-syntax (rhombus-module-begin stx)
   (syntax-case stx ()

@@ -140,25 +140,35 @@
   (values v op op-stx))
 
 (define (apply-prefix-direct-operator op form stx checker)
-  (define proc (operator-proc op))
-  (checker (proc form stx) proc))
+  (call-as-transformer
+   stx
+   (lambda (in out)
+     (define proc (operator-proc op))
+     (out (checker (proc (in form) stx) proc)))))
 
 (define (apply-infix-direct-operator op form1 form2 stx checker)
-  (define proc (operator-proc op))
-  (checker (proc form1 form2 stx) proc))
+  (call-as-transformer
+   stx
+   (lambda (in out)
+     (define proc (operator-proc op))
+     (checker (out (proc (in form1) (in form2) stx)) proc))))
 
-(define (apply-prefix-transformer-operator op tail checker)
+(define (apply-prefix-transformer-operator op op-stx tail checker)
   (define proc (operator-proc op))
-  (define-values (in out) (make-transformer-wrap))
-  (define-values (form new-tail) (proc (in tail)))
-  (check-transformer-result (checker (out form) proc)
-                            (out new-tail)
-                            proc))
+  (call-as-transformer
+   op-stx
+   (lambda (in out)
+     (define-values (form new-tail) (proc (in tail)))
+     (check-transformer-result (out (checker form proc))
+                               (out new-tail)
+                               proc))))
 
-(define (apply-infix-transformer-operator op form1 tail checker)
+(define (apply-infix-transformer-operator op op-stx form1 tail checker)
   (define proc (operator-proc op))
-  (define-values (in out) (make-transformer-wrap))
-  (define-values (form new-tail) (proc (in form1) (in tail)))
-  (check-transformer-result (checker (out form) proc)
-                            (out new-tail)
-                            proc))
+  (call-as-transformer
+   op-stx
+   (lambda (in out)
+     (define-values (form new-tail) (proc (in form1) (in tail)))
+     (check-transformer-result (out (checker form proc))
+                               (out new-tail)
+                               proc))))

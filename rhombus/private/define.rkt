@@ -36,6 +36,7 @@
                                            (syntax->list #'(q.g ...))
                                            (syntax->list #'(q.prec ...))
                                            (syntax->list #'(q.assc ...))
+                                           (syntax->list #'(q.self-id ...))
                                            (syntax->list #'(rhs ...))))
          null)]
        [(form-id:identifier q::syntax-quote
@@ -44,6 +45,7 @@
          (list (parse-operator-definition #'q.g
                                           #'q.prec
                                           #'q.assc
+                                          #'q.self-id
                                           #'rhs))
          null)]
        [(form-id:identifier ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
