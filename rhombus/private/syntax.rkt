@@ -4,7 +4,9 @@
                      syntax/boundmap
                      "consistent.rkt"
                      "transformer.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "check.rkt"
+                     "tail.rkt")
          "expression.rkt"
          (rename-in "quasiquote.rkt"
                     [... rhombus...])
@@ -13,9 +15,11 @@
          ;; to we generate compile-time code:
          (for-syntax "parse.rkt"))
 
-(provide (for-syntax :syntax-quote
+(provide (for-syntax :operator-syntax-quote
+                     :identifier-syntax-quote
                      parse-operator-definition
-                     parse-operator-definitions))
+                     parse-operator-definitions
+                     parse-transformer-definition))
 
 (begin-for-syntax
   (define-syntax-class :op/other
@@ -41,8 +45,18 @@
     (for ([same (in-list sames)])
       (add! same 'same))
     (datum->syntax #f prec))
-  
-  (define-splicing-syntax-class :syntax-quote
+
+  (define-syntax-class :operator-definition-group
+    #:datum-literals (op group)
+    #:literals (?)
+    (pattern (group (op ¿) _ (op _) . _))
+    (pattern (group (op _) . _)))
+
+  (define-syntax-class :identifier-definition-group
+    #:datum-literals (group)
+    (pattern (group _:identifier . _)))
+
+  (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group
                          stronger_than
                          weaker_than
@@ -50,11 +64,11 @@
                          associativity
                          right left none)
     #:literals (? :>)
-    (pattern (~seq (op ?) (parens g))
+    (pattern (~seq (op ?) (parens g::operator-definition-group))
              #:attr prec #'()
              #:attr assc #'#f
              #:attr self-id #'self)
-    (pattern (~seq (op ?) (parens g
+    (pattern (~seq (op ?) (parens g::operator-definition-group
                                   (~alt (~optional (group stronger_than (op :>) stronger::op/other ...)
                                                    #:defaults ([(stronger.name 1) '()]))
                                         (~optional (group weaker_than (op :>) weaker::op/other ...)
@@ -69,7 +83,14 @@
                                   ...))
              #:attr prec (combine-prec (syntax->list #'(stronger.name ...))
                                        (syntax->list #'(weaker.name ...))
-                                       (syntax->list #'(same.name ...))))))
+                                       (syntax->list #'(same.name ...)))))
+  
+  (define-splicing-syntax-class :identifier-syntax-quote
+    #:datum-literals (op parens group)
+    #:literals (? :>)
+    (pattern (~seq (op ?) (parens g::identifier-definition-group
+                                  (~optional (group op_stx (op :>) self-id:identifier)
+                                             #:defaults ([self-id #'self])))))))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)
@@ -85,11 +106,11 @@
   (syntax-parse g
     #:datum-literals (group op)
     #:literals (¿ rhombus...)
-    [((~datum group) (op ¿) left:identifier
-                     (op op-name)
-                     (op ¿) right-or-tail:identifier
-                     (~optional (~and dots (op rhombus...))
-                                #:defaults ([dots #'#f])))
+    [(group (op ¿) left:identifier
+            (op op-name)
+            (op ¿) right-or-tail:identifier
+            (~optional (~and dots (op rhombus...))
+                       #:defaults ([dots #'#f])))
      #`(make-expression-infix-operator
         (quote-syntax op-name)
         #,(convert-prec prec)
@@ -100,10 +121,10 @@
         '#,(if (eq? (syntax-e assc) 'none)
                #'#f
                assc))]
-    [((~datum group) (op op-name)
-                     (op ¿) arg-or-tail:identifier
-                     (~optional (~and dots (op rhombus...))
-                                #:defaults ([dots #'#f])))
+    [(group (op op-name)
+            (op ¿) arg-or-tail:identifier
+            (~optional (~and dots (op rhombus...))
+                       #:defaults ([dots #'#f])))
      (when (syntax-e assc)
        (raise-syntax-error #f
                            "associatvity not allowed for infix operators"
@@ -156,9 +177,9 @@
    (if transformer?
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc #`(parsed #,form1) #'tail #'head)]))
+                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
          (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                                   new-tail
+                                   (unpack-tail new-tail proc)
                                    proc))
        (lambda (form1 form2 stx)
          #`(rhombus-expression (group #,(check-expression-result
@@ -174,15 +195,33 @@
    (if transformer?
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc #'tail #'head)]))
+                                          [(head . tail) (proc (pack-tail #'tail) #'head)]))
          (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                                   new-tail
+                                   (unpack-tail new-tail proc)
                                    proc))
        (lambda (form stx)
          #`(rhombus-expression (group #,(check-expression-result
                                          (proc #`(parsed #,form) stx)
                                          proc)))))))
 
-(define-for-syntax (next stx)
-  (syntax-parse stx
-    [(_ . tail) #'tail]))
+(define-for-syntax (parse-transformer-definition g self-id rhs)
+  (syntax-parse g
+    #:datum-literals (group op)
+    #:literals (¿ rhombus...)
+    [(group id:identifier
+            (op ¿) tail:identifier
+            (op rhombus...))
+     #`(define-syntax id
+         (make-expression-transformer
+          (let ([id (lambda (tail self-id)
+                      (rhombus-expression (group #,rhs)))])
+            id)))]))
+
+(define-for-syntax (make-expression-transformer proc)
+  (expression-transformer
+   (lambda (tail)
+     (define-values (form new-tail) (syntax-parse tail
+                                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
+     (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
+                               (unpack-tail new-tail proc)
+                               proc))))

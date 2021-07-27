@@ -90,7 +90,8 @@
          [(block-operator bar-operator separator) candidate]
          [else
           (cond
-            [(and for-outdent?
+            [(and #f ;; not sure why special-casing operators seemed like a good idea
+                  for-outdent?
                   (eq? category 'operator))
              (if (zero? s)
                  (or candidate 0)

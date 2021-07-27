@@ -28,9 +28,9 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id:identifier ((~and alts-tag alts) (block (group q::syntax-quote
-                                                                (~and rhs (block body ...))))
-                                                  ...+))
+       [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
+                                                     (~and rhs (block body ...))))
+                                       ...+))
         (values
          (list (parse-operator-definitions stx
                                            (syntax->list #'(q.g ...))
@@ -39,8 +39,8 @@
                                            (syntax->list #'(q.self-id ...))
                                            (syntax->list #'(rhs ...))))
          null)]
-       [(form-id:identifier q::syntax-quote
-                            (~and rhs (block body ...)))
+       [(form-id q::operator-syntax-quote
+                 (~and rhs (block body ...)))
         (values
          (list (parse-operator-definition #'q.g
                                           #'q.prec
@@ -48,9 +48,14 @@
                                           #'q.self-id
                                           #'rhs))
          null)]
-       [(form-id:identifier ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
-                                                                (~and rhs (block body ...))))
-                                                  ...+))
+       [(form-id q::identifier-syntax-quote
+                 (~and rhs (block body ...)))
+        (values
+         (list (parse-transformer-definition #'q.g #'q.self-id #'rhs))
+         null)]
+       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
+                                                     (~and rhs (block body ...))))
+                                       ...+))
         (define ids (syntax->list #'(id ...)))
         (define the-id (car ids))
         (check-consistent stx ids "name")
@@ -62,15 +67,15 @@
           #`(define #,the-id
               #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag)))
          null)]
-       [(form-id:identifier id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
-                            (~and rhs (block body ...)))
+       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
+                 (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
           #`(define id
               #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))
          null)]
-       [(form-id:identifier any ... (~and rhs (block body ...)))
+       [(form-id any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)
         #:with lhs-e::binding-form #'lhs.expanded
         #:with name-id (syntax-parse #'lhs-e.var-ids

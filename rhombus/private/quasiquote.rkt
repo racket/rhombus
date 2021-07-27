@@ -6,7 +6,8 @@
          "parse.rkt"
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt")
+         "expression+binding.rkt"
+         "tail.rkt")
 
 (provide ?
          ¿
@@ -31,7 +32,12 @@
                         [() null]
                         [((~and op ((~datum op) (~literal ¿))) e . tail)
                          (if (zero? depth)
-                             (cons #'(unsyntax (rhombus-expression (group e))) (loop #'tail))
+                             (syntax-parse #'tail
+                               [(((~datum op) (~literal rhombus...)) . tail)
+                                (cons #'(unsyntax-splicing (unpack-tail (rhombus-expression (group e)) 'unquote))
+                                      (loop #'tail))]
+                               [else
+                                (cons #'(unsyntax (rhombus-expression (group e))) (loop #'tail))])
                              (list* #'op (escape #'e (sub1 depth)) (loop #'tail)))]
                         [((~and op ((~datum op) (~literal ?))) e . tail)
                          (list* #'op (escape #'e (add1 depth)) (loop #'tail))]
@@ -60,7 +66,7 @@
                                 #'op.name))
           (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
                                   (syntax-parse idr
-                                    [(id id-ref) #'(id (id-ref (... ...)))])))
+                                    [(id id-ref) #'(id (parens (group id-ref (... ...))))])))
           (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps))]
          [(((~datum op) (~literal ¿)) id:identifier . gs)
           (loop #'gs (list #'(id id)) (append (or pend-idrs '()) idrs) (cons #'id ps))]

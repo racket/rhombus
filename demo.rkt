@@ -150,3 +150,15 @@ define ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10*!
+
+// define an expression transformer, which receives
+// the rest of the group after the identifier
+
+define ?(prefix_plus ¿e ...):
+  match e
+  | ?(¿a ¿b ¿c ...):
+      values(a, ?(+ ¿b ¿c ...))
+  | else:
+      values(?"this is terrible error reporting", ?())
+
+prefix_plus 7 9
