@@ -42,6 +42,13 @@ md(Posn(1, 4))
 define π: 3.14
 π
 
+define (((ππ))): π * π
+ππ
+
+define values(ma, mb, mc):
+  values("1", "2", "3")
+mb
+  
 define cons(ca, cb): cons(1, 2)
 ca
 
@@ -165,6 +172,7 @@ prefix_plus 7 9
 
 // define a binding operator
 
+// define <> as revese-cons pattern
 binding ?(¿a <> ¿b):
   match a
    | ?((¿a_id), ¿a_pred, ¿a_def):
@@ -172,13 +180,22 @@ binding ?(¿a <> ¿b):
         | ?((¿b_id), ¿b_pred, ¿b_def):
             ?((¿a_id ¿b_id),
               function(v):
-                // this function should call a_pred and b_pred,
-                // but we don't have a way to receive multiple values, yet
                 match v
                  | cons(bv, av):
-                     values(#true, av, bv)
+                     define values(is_a_match, ar):
+                       ¿a_pred(av)
+                     if is_a_match
+                      | define values(is_b_match, br):
+                          ¿b_pred(bv)
+                        if is_b_match
+                         | values(#true, ar, br)
+                         | values(#false, #false, #false)
+                      | values(#false, #false, #false)
                  | else: values(#false, #false, #false),
               ¿a_def)
 
-define rx <> ry: cons(1, 2)
+// an expression operator that's consistent with the pattern
+expression ?(¿a <> ¿b): ?(cons(¿b, ¿a))
+
+define rx <> (ry :: Integer) : "2" <> 1
 rx

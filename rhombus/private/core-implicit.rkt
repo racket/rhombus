@@ -45,7 +45,7 @@
                 #'tail)]))))
 
 (define-syntax #%tuple
-  (expression-prefix-operator
+  (make-expression+binding-prefix-operator
    #'%tuple
    '((default . stronger))
    #t ; transformer
@@ -62,7 +62,19 @@
              ;; eagerly parse content of parentheses; we could choose to
              ;; delay parsing by using `rhombus-expression`, instead
              (syntax-parse (car args)
-               [e::expression (values #'e.expanded #'tail)])]))]))))
+               [e::expression (values #'e.expanded #'tail)])]))]))
+   (lambda (stxes)
+     (syntax-parse stxes
+       [((~and head ((~datum parens) . args)) . tail)
+        (let ([args (syntax->list #'args)])
+          (cond
+            [(null? args)
+             (raise-syntax-error #f "empty pattern" #'head)]
+            [(pair? (cdr args))
+             (raise-syntax-error #f "too many patterns" #'head)]
+            [else
+             (syntax-parse (car args)
+               [b::binding (values #'b.expanded #'tail)])]))]))))
 
 (define-syntax #%call
   (expression-infix-operator

@@ -7,6 +7,7 @@
          "expression.rkt"
          "parse.rkt"
          "function.rkt"
+         (submod "function.rkt" for-call)
          "quasiquote.rkt"
          (for-syntax "parse.rkt"))
 
@@ -49,12 +50,31 @@
           #`(define id
               #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))
          null)]
+       [(form-id (~literal values) (parens g ...) (~and rhs (block body ...)))
+        #:with (lhs::binding ...) #'(g ...)
+        #:with (lhs-e::binding-form ...) #'(lhs.expanded ...)
+        #:with (name-id ...) (map infer-name (syntax->list #'(lhs-e.var-ids ...)))
+        #:with (tmp-id ...) (generate-temporaries #'(name-id ...))
+        (values
+         (list
+          #'(define-values (lhs-e.var-id ... ...)
+              (let-values ([(tmp-id ...)
+                            (let-values ([(name-id ...) (rhombus-expression (group rhs))])
+                              (values name-id ...))])
+                (nested-bindings
+                 form-id
+                 #f
+                 (begin)
+                 (tmp-id lhs-e lhs)
+                 ...
+                 (values lhs-e.var-id ... ...))))
+          #'(begin
+              lhs-e.post-defn ...))
+         null)]
        [(form-id any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)
         #:with lhs-e::binding-form #'lhs.expanded
-        #:with name-id (syntax-parse #'lhs-e.var-ids
-                         [(id) #'id]
-                         [_ (quote-syntax rhs)])
+        #:with name-id (infer-name #'lhs-e.var-ids)
         (values
          (list
           #'(define-values lhs-e.var-ids
@@ -68,20 +88,10 @@
           #'lhs-e.post-defn)
          null)]))))
 
-(define-syntax (nested-bindings stx)
-  (syntax-parse stx
-    [(_ who try-next post-defn body) #'(let () post-defn body)]
-    [(_ who try-next post-defn (arg-id arg::binding-form arg-pat) . tail)
-     #'(let-values ([(match? . arg.var-ids) (arg.check-proc-expr arg-id)])
-         (if match?
-             (nested-bindings
-              who
-              try-next
-              (begin post-defn arg.post-defn)
-              . tail)
-             (if try-next
-                 (try-next)
-                 (argument-binding-failure 'who arg-id 'arg-pat))))]))
-
 (define (rhs-binding-failure who val binding)
   (raise-binding-failure who "value" val binding))
+
+(define-for-syntax (infer-name var-ids)
+  (syntax-parse var-ids
+    [(id) #'id]
+    [_ (car (generate-temporaries (list #'rhs)))]))

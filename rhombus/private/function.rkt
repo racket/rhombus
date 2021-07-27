@@ -16,7 +16,8 @@
                      build-case-function))
 
 (module+ for-call
-  (provide (for-syntax parse-function-call)))
+  (provide (for-syntax parse-function-call)
+           nested-bindings))
 
 (begin-for-syntax
   (define-syntax-class :kw-opt-binding
