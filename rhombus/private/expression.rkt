@@ -9,7 +9,6 @@
 
 (provide (for-syntax (property-out expression-prefix-operator)
                      (property-out expression-infix-operator)
-                     expression-operator-ref
                      
                      (property-out expression-transformer)
 
@@ -24,11 +23,6 @@
 (begin-for-syntax
   (property expression-prefix-operator prefix-operator)
   (property expression-infix-operator infix-operator)
-
-  (define (expression-operator-ref v)
-    (or (expression-prefix-operator-ref v)
-        (expression-infix-operator-ref v)
-        (error #f "identifier is not mapped to an expression operator: ~e" v)))
 
   (property expression-transformer transformer)
 

@@ -22,8 +22,10 @@
                      :binding
 
                      ;; for continuing enforestation of expressions or bindings:
-                     :op+expression+tail
-                     :op+binding+tail
+                     :prefix-op+expression+tail
+                     :infix-op+expression+tail
+                     :prefix-op+binding+tail
+                     :infix-op+binding+tail
 
                      :non-binding-identifier))
 
@@ -49,32 +51,10 @@
              #:attr exprs (datum->syntax #f exprs)))
 
   ;; Form in an expression context:
-  (define-syntax-class :expression
-    (pattern ((~datum group) . tail) #:attr expanded (enforest-expression #'tail #f)))
-
-  ;; For reentering the enforestation loop within a group, stopping when
-  ;; the group end or when an operator with weaker precedence than `op` is found
-  (define-splicing-syntax-class :op+expression+tail
-    (pattern (op-name:identifier . tail)
-             #:do [(define op (expression-operator-ref (syntax-local-value* (in-expression-space #'op)
-                                                                            expression-operator-ref)))
-                   (define-values (form new-tail) (enforest-expression-step op #'tail))]
-             #:attr expanded form
-             #:attr new-tail new-tail))
+  ;;  :expression is defined via `define-enforest` below
 
   ;; Form in a binding context:
-  (define-syntax-class :binding
-    (pattern ((~datum group) . tail)
-             #:with expanded::binding-form (enforest-binding #'tail)))
-
-  ;; Like `:op+expression+tail`, but for bindings
-  (define-splicing-syntax-class :op+binding+tail
-    (pattern (op-name:identifier . tail)
-             #:do [(define op (binding-operator-ref (syntax-local-value* (in-binding-space #'op)
-                                                                         binding-operator-ref)))
-                   (define-values (form new-tail) (enforest-binding-step op #'tail))]
-             #:with expanded form
-             #:attr new-tail new-tail))
+  ;;  :binding is defined via `define-enforest` below
 
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
@@ -146,12 +126,34 @@
   (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
   (define-syntax-rule (define-enforest enforest enforest-step
+                        :form :prefix-op+form+tail :infix-op+form+tail
                         form-kind-str operator-kind-str
                         in-space
                         transformer-ref prefix-operator-ref infix-operator-ref
                         check-result
                         make-identifier-form)
     (begin
+      (define-syntax-class :form
+        (pattern ((~datum group) . tail) #:attr expanded (enforest #'tail #f)))
+
+      ;; For reentering the enforestation loop within a group, stopping when
+      ;; the group ends or when an operator with weaker precedence than `op`
+      ;; is found
+      (define-splicing-syntax-class :prefix-op+form+tail
+        (pattern (op-name:identifier . tail)
+                 #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op)
+                                                                            prefix-operator-ref)))
+                       (define-values (form new-tail) (enforest-step op #'tail))]
+                 #:attr expanded form
+                 #:attr new-tail new-tail))
+      (define-splicing-syntax-class :infix-op+form+tail
+        (pattern (op-name:identifier . tail)
+                 #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op)
+                                                                           infix-operator-ref)))
+                       (define-values (form new-tail) (enforest-step op #'tail))]
+                 #:attr expanded form
+                 #:attr new-tail new-tail))
+
       (define (enforest stxes [current-op #f])
         ;; either `stxes` starts with a prefix operator or this first step
         ;; will dispatch to a suitable implicit prefix operator
@@ -312,6 +314,7 @@
 
   ;; the expression variant:
   (define-enforest enforest-expression enforest-expression-step
+    :expression :prefix-op+expression+tail :infix-op+expression+tail
     "expression" "expression operator"
     in-expression-space
     expression-transformer-ref expression-prefix-operator-ref expression-infix-operator-ref
@@ -320,6 +323,7 @@
 
   ;; the binding variant:
   (define-enforest enforest-binding enforest-binding-step
+    :binding :prefix-op+binding+tail :infix-op+binding+tail
     "binding" "binding operator"
     in-binding-space
     binding-transformer-ref binding-prefix-operator-ref binding-infix-operator-ref

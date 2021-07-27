@@ -9,7 +9,6 @@
 
 (provide (for-syntax (property-out binding-prefix-operator)
                      (property-out binding-infix-operator)
-                     binding-operator-ref
                      
                      (property-out binding-transformer)
 
@@ -32,11 +31,6 @@
 
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
-
-  (define (binding-operator-ref v)
-    (or (binding-prefix-operator-ref v)
-        (binding-infix-operator-ref v)
-        (error #f "identifier is not mapped to an binding operator: ~e" v)))
 
   (property binding-transformer transformer)
 
