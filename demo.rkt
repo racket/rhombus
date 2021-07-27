@@ -102,3 +102,11 @@ define
 
 3 ** 8
 ** 10 // = 2 ** 10
+
+// match
+
+match cons(7, 8)
+ | cons(a, b):
+     b
+ | x:
+     x

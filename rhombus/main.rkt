@@ -20,6 +20,7 @@
         "private/list.rkt"
         "private/function.rkt"
         "private/cond.rkt"
+        "private/match.rkt"
         "private/quasiquote.rkt")
 
 (module reader racket/base
