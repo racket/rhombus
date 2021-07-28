@@ -267,7 +267,9 @@
                                                 #:column column
                                                 #:last-line (state-line s)
                                                 #:delta 0)))
-              (values (list (tag-as-block indent-g))
+              (values (list (add-span-srcloc
+                             t #f
+                             (tag-as-block indent-g)))
                       rest-l
                       end-line
                       end-delta)]
@@ -323,7 +325,9 @@
                 (define accum (cons new-g prev-accum))
                 ;; If next is `|`, absorb it into the implicit block
                 (define (done-bar-block)
-                  (values (list (tag-as-block (reverse accum)))
+                  (values (list (add-span-srcloc
+                                 t #f
+                                 (tag-as-block (reverse accum))))
                           rest-l
                           end-line
                           end-delta))

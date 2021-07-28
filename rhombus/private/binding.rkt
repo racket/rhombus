@@ -4,7 +4,8 @@
                      "op.rkt"
                      "transformer.rkt"
                      "property.rkt"
-                     "check.rkt")
+                     "check.rkt"
+                     "syntax-local.rkt")
          "property-out.rkt")
 
 (provide (for-syntax (property-out binding-prefix-operator)
@@ -18,7 +19,8 @@
                      binding-form
                      check-binding-result
 
-                     in-binding-space)
+                     in-binding-space
+                     :non-binding-identifier)
 
          define-binding-syntax
          raise-binding-failure)
@@ -52,7 +54,11 @@
       [_::binding-form form]
       [_ (raise-result-error (proc-name proc) "binding-result?" form)]))
 
-  (define in-binding-space (make-interned-syntax-introducer 'rhombus/binding)))
+  (define in-binding-space (make-interned-syntax-introducer 'rhombus/binding))
+
+  (define-syntax-class :non-binding-identifier
+    (pattern id:identifier
+             #:when (not (syntax-local-value* (in-binding-space #'id) binding-transformer?)))))
 
 (define-syntax (define-binding-syntax stx)
   (syntax-parse stx

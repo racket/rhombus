@@ -10,9 +10,9 @@
          "expression.rkt"
          "parse.rkt")
 
-(provide expression)
+(provide expression_form)
 
-(define-syntax expression
+(define-syntax expression_form
   (make-syntax-definition-transformer (lambda (x) x)
                                       #'make-expression-transformer
                                       #'make-expression-prefix-operator

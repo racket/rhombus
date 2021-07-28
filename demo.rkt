@@ -53,12 +53,12 @@ define cons(ca, cb): cons(1, 2)
 ca
 
 define
-| size(n :: Integer):
-    n
-| size(p ::Posn):
-    p.x + p.y
-| size(a, b):
-    a+b
+ | size(n :: Integer):
+     n
+ | size(p ::Posn):
+     p.x + p.y
+ | size(a, b):
+     a+b
 
 size(Posn(8, 6))
 size(1, 2)
@@ -78,7 +78,7 @@ size
 
 // defining an infix operator
 
-expression ?(¿a +* ¿b):
+expression_form ?(¿a +* ¿b):
   ?{
      define v: ¿b
      (¿a + v) * v
@@ -88,9 +88,9 @@ expression ?(¿a +* ¿b):
 
 // with precedence and associativity
 
-expression ?(¿a ++* ¿b,
-             weaker_than:> *,
-             associativity:> right):
+expression_form ?(¿a ++* ¿b,
+                  weaker_than:> *,
+                  associativity:> right):
   ?{
      define v: ¿b
      (¿a + v) * v
@@ -100,14 +100,14 @@ expression ?(¿a ++* ¿b,
 3 ++* ((4 * 2) ++* 5)
 
 // ?? is an alternate spelling of ¿
-expression ?(??a & ??b):
+expression_form ?(??a & ??b):
   ?(cons(??a, ??b))
 
 1 & 2
   
 // defining a prefix operator
 
-expression ?(!! ¿b):
+expression_form ?(!! ¿b):
   ?(! ! ¿b)
 
 !!#true
@@ -120,7 +120,7 @@ define power(base, exponent):
   | 1
   | base * power(base, exponent-1)
 
-expression
+expression_form
  | ?(** ¿exponent):
       ?(2 ** ¿exponent)
  | ?(¿base ** ¿exponent):
@@ -153,7 +153,7 @@ define
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
-expression ?(¿a *! ¿tail ...):
+expression_form ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10*!
@@ -161,18 +161,18 @@ expression ?(¿a *! ¿tail ...):
 // define an expression transformer, which receives
 // the rest of the group after the identifier
 
-expression ?(prefix_plus ¿e ...):
+expression_form ?(prefix_plus ¿e ...):
   match e
-  | ?(¿a ¿b ¿c ...):
-      values(a, ?(+ ¿b ¿c ...))
-  | else:
-      values(?"this is terrible error reporting", ?())
+   | ?(¿a ¿b ¿c ...):
+       values(a, ?(+ ¿b ¿c ...))
+   | else:
+       values(?"this is terrible error reporting", ?())
 
 prefix_plus 7 9
 
 // define a binding operator
 
-binding ?($ ¿n):
+binding_form ?($ ¿n):
   ?(¿n :: Integer)
 
 define apply_interest($ n):
@@ -181,7 +181,7 @@ define apply_interest($ n):
 apply_interest(7)
 
 // define <> as revese-cons pattern
-binding ?(¿a <> ¿b):
+binding_form ?(¿a <> ¿b):
   match unpack_binding(a)
    | ?((¿a_id), ¿a_pred, {¿a_def; ...}):
        match unpack_binding(b)
@@ -203,7 +203,7 @@ binding ?(¿a <> ¿b):
                            {¿a_def; ...; ¿b_def; ...}))
 
 // an expression operator that's consistent with the pattern
-expression ?(¿a <> ¿b): ?(cons(¿b, ¿a))
+expression_form ?(¿a <> ¿b): ?(cons(¿b, ¿a))
 
 define rx <> (ry :: Integer) : "2" <> 1
 rx
@@ -211,7 +211,7 @@ rx
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 
-definition ?(define_eight ¿e ...):
+definition_form ?(define_eight ¿e ...):
   match e
   | ?(¿name):
       ?{define ¿name: 8}
@@ -219,7 +219,7 @@ definition ?(define_eight ¿e ...):
 define_eight ate
 ate
 
-definition ?(define_and_use ¿e ...):
+definition_form ?(define_and_use ¿e ...):
   match e
   | ?(¿name {¿rhs ...}):
       values(?{define ¿name {¿rhs ...}},

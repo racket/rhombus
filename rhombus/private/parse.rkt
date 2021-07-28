@@ -26,9 +26,7 @@
                      :prefix-op+expression+tail
                      :infix-op+expression+tail
                      :prefix-op+binding+tail
-                     :infix-op+binding+tail
-
-                     :non-binding-identifier))
+                     :infix-op+binding+tail))
 
 (begin-for-syntax
   ;; Form at the top of a module:
@@ -57,10 +55,6 @@
 
   ;; Form in a binding context:
   ;;  :binding is defined via `define-enforest` below
-
-  (define-syntax-class :non-binding-identifier
-    (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id) binding-transformer?))))
   
   ;; the expression variant:
   (define-enforest enforest-expression enforest-expression-step

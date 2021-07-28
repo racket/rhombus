@@ -10,11 +10,11 @@
          "binding.rkt"
          "parse.rkt")
 
-(provide binding
+(provide binding_form
          (for-syntax unpack_binding
                      pack_binding))
 
-(define-syntax binding
+(define-syntax binding_form
   (make-syntax-definition-transformer in-binding-space
                                       #'make-binding-transformer
                                       #'make-binding-prefix-operator

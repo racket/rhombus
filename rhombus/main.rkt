@@ -7,7 +7,7 @@
 (define-syntax (bounce stx)
   (syntax-case stx ()
     [(_ mod ...)
-     (with-syntax ([(mod ...) (map syntax->datum (syntax->list #'(mod ...)))])
+     (with-syntax ([(mod ...) ((make-syntax-introducer) #'(mod ...))])
        #'(begin (begin (require mod (for-syntax mod))
                        (provide (all-from-out mod)
                                 (for-syntax (all-from-out mod))))
@@ -16,6 +16,8 @@
         "private/core-op.rkt"
         "private/struct.rkt"
         "private/define.rkt"
+        "private/require.rkt"
+        "private/provide.rkt"
         "private/expression-syntax.rkt"
         "private/binding-syntax.rkt"
         "private/definition-syntax.rkt"
