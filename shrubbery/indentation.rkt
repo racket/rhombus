@@ -162,7 +162,13 @@
     (define (keep s)
       (define start (line-start t s))
       (define delta (line-delta t start))
-      (loop* (sub1 s) (col-of (if as-bar? (add1 s) s) start delta)))
+      (define new-candidate (col-of (if as-bar? (add1 s) s) start delta))
+      (loop* (sub1 s)
+             ;; don't forget the old candidate if the new candidate would
+             ;; be too deeply indented
+             (if (or (not candidate) (new-candidate . <= . limit))
+                 new-candidate
+                 candidate)))
     (cond
       [(eqv? limit -1) null]
       [(negative? pos) (maybe-list candidate)]
