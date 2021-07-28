@@ -172,27 +172,35 @@ prefix_plus 7 9
 
 // define a binding operator
 
+binding ?($ ¿n):
+  ?(¿n :: Integer)
+
+define apply_interest($ n):
+  n * 1.05
+
+apply_interest(7)
+
 // define <> as revese-cons pattern
 binding ?(¿a <> ¿b):
-  match a
-   | ?((¿a_id), ¿a_pred, ¿a_def):
-       match b
-        | ?((¿b_id), ¿b_pred, ¿b_def):
-            ?((¿a_id ¿b_id),
-              function(v):
-                match v
-                 | cons(bv, av):
-                     define values(is_a_match, ar):
-                       ¿a_pred(av)
-                     if is_a_match
-                      | define values(is_b_match, br):
-                          ¿b_pred(bv)
-                        if is_b_match
-                         | values(#true, ar, br)
-                         | values(#false, #false, #false)
-                      | values(#false, #false, #false)
-                 | else: values(#false, #false, #false),
-              ¿a_def)
+  match unpack_binding(a)
+   | ?((¿a_id), ¿a_pred, {¿a_def; ...}):
+       match unpack_binding(b)
+        | ?((¿b_id), ¿b_pred, {¿b_def; ...}):
+            pack_binding(?((¿a_id ¿b_id),
+                           function(v):
+                             match v
+                              | cons(bv, av):
+                                  define values(is_a_match, ar):
+                                    ¿a_pred(av)
+                                  if is_a_match
+                                   | define values(is_b_match, br):
+                                       ¿b_pred(bv)
+                                     if is_b_match
+                                      | values(#true, ar, br)
+                                      | values(#false, #false, #false)
+                                   | values(#false, #false, #false)
+                              | else: values(#false, #false, #false),
+                           {¿a_def; ...; ¿b_def; ...}))
 
 // an expression operator that's consistent with the pattern
 expression ?(¿a <> ¿b): ?(cons(¿b, ¿a))

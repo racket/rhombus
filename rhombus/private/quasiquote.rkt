@@ -14,83 +14,78 @@
          (rename-out [¿ ??]
                      [rhombus... ...]))
 
-(define-for-syntax (escape e [depth 0])
-  (syntax-parse e
-    [((~and tag (~or (~datum parens) (~datum brackets) (~datum block)))
-      g ...)
-     (with-syntax ([(new-g ...) (map (escape-group depth) (syntax->list #'(g ...)))])
-       (syntax/loc e
-         (tag new-g ...)))]
-    [((~and tag (~datum alts))
-      b ...)
-     (with-syntax ([(new-b ...) (for/list ([b (in-list (syntax->list #'(b ...)))])
-                                  (escape b depth))])
-       (syntax/loc e
-         (tag new-b ...)))]
-    [_ e]))
-
-(define-for-syntax ((escape-group depth) g)
-  (syntax-parse g
-    [((~and tag (~datum group)) e ...)
-     (with-syntax ([(new-e ...)
-                    (let loop ([es #'(e ...)])
-                      (syntax-parse es
-                        [() null]
-                        [((~and op ((~datum op) (~literal ¿))) e . tail)
-                         (if (zero? depth)
-                             (syntax-parse #'tail
-                               [(((~datum op) (~literal rhombus...)) . tail)
-                                (cons #'(unsyntax-splicing (unpack-tail (rhombus-expression (group e)) 'unquote))
-                                      (loop #'tail))]
-                               [else
-                                (cons #'(unsyntax (rhombus-expression (group e))) (loop #'tail))])
-                             (list* #'op (escape #'e (sub1 depth)) (loop #'tail)))]
-                        [((~and op ((~datum op) (~literal ?))) e . tail)
-                         (list* #'op (escape #'e (add1 depth)) (loop #'tail))]
-                        [(e . tail)
-                         (cons (escape #'e depth) (loop #'tail))]))])
-       (syntax/loc g (tag new-e ...)))]))
-
 (begin-for-syntax
   (define-syntax-class repetition
     (pattern ((~datum op) (~and name (~literal rhombus...))))
     (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))))
 
+(define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape)
+  (let convert ([e e])
+       (syntax-parse e
+         [((~and tag (~or (~datum parens) (~datum brackets) (~datum block) (~datum alts) (~datum group)))
+           g ...)
+          (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()])
+            (syntax-parse gs
+              [()
+               (values #`(#,(make-datum #'tag) . #,(reverse ps))
+                       (append (or pend-idrs '()) idrs))]
+              [(op:repetition . gs)
+               (unless pend-idrs
+                 (raise-syntax-error #f
+                                     "misplaced repetition"
+                                     #'op.name))
+               (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
+                                       (deepen-escape idr)))
+               (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps))]
+              [(((~datum op) (~and (~literal ¿) ¿-id)) esc . gs)
+               (define-values (id idr) (handle-escape #'¿-id #'esc e))
+               (loop #'gs (list idr) (append (or pend-idrs '()) idrs) (cons id ps))]
+              [(g . gs)
+               (define-values (p new-ids) (convert #'g))
+               (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps))]))]
+         [((~and tag (~datum op)) op-name)
+          (values #`(#,(make-datum #'tag) #,(make-literal #'op-name)) null)]
+         [id:identifier
+          (values (make-literal #'id) null)]
+         [_
+          (values e null)])))
+
 (define-for-syntax (convert-pattern e)
-  (syntax-parse e
-    [((~and tag (~or (~datum parens) (~datum brackets) (~datum block) (~datum alts) (~datum group)))
-      g ...)
-     (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()])
-       (syntax-parse gs
-         [()
-          (values #`((~datum tag) . #,(reverse ps))
-                  (append (or pend-idrs '()) idrs))]
-         [(op:repetition . gs)
-          (unless pend-idrs
-            (raise-syntax-error #f
-                                "misplaced repetition"
-                                #'op.name))
-          (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
-                                  (syntax-parse idr
-                                    [(id id-ref) #'(id (parens (group id-ref (... ...))))])))
-          (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps))]
-         [(((~datum op) (~literal ¿)) id:identifier . gs)
-          (loop #'gs (list #'(id id)) (append (or pend-idrs '()) idrs) (cons #'id ps))]
-         [(((~datum op) (~and (~literal ¿) ¿-id)) g . gs)
-          (raise-syntax-error #f
-                              (format "expected an identifier after ~a"
-                                      (syntax-e #'¿-id))
-                              #'g
-                              e)]
-         [(g . gs)
-          (define-values (p new-ids) (convert-pattern #'g))
-          (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps))]))]
-    [((~and tag (~datum op)) op-name)
-     (values #'((~datum op) (~literal op-name)) null)]
-    [id:identifier
-     (values #'(~literal id) null)]
-    [_
-     (values e null)]))
+  (convert-syntax e
+                  ;; make-datum
+                  (lambda (d)
+                    #`(~datum #,d))
+                  ;; make-literal
+                  (lambda (d)
+                    #`(~literal #,d))
+                  ;; handle-esvape:
+                  (lambda (¿-id e in-e)
+                    (if (identifier? e)
+                        (values e #`[#,e #,e])
+                        (raise-syntax-error #f
+                                            (format "expected an identifier after ~a"
+                                                    (syntax-e #'¿-id))
+                                            in-e
+                                            e)))
+                  ;; deepen-escape
+                  (lambda (idr)
+                    (syntax-parse idr
+                      [(id id-ref) #'(id (parens (group id-ref (... ...))))]))))
+
+(define-for-syntax (convert-template e)
+  (convert-syntax e
+                  ;; make-datum
+                  (lambda (d) d)
+                  ;; make-literal
+                  (lambda (d) d)
+                  ;; handle-esvape:
+                  (lambda (¿-id e in-e)
+                    (define id (car (generate-temporaries (list e))))
+                    (values id #`[#,id #,e 0]))
+                  ;; deepen-escape
+                  (lambda (idr)
+                    (syntax-parse idr
+                      [(id-pat e depth) #`[(id-pat (... ...)) e #,(add1 (syntax-e #'depth))]]))))
 
 (define-syntax ?
   (make-expression+binding-prefix-operator
@@ -101,8 +96,20 @@
    (lambda (stx)
      (syntax-parse stx
        [(op e . tail)
-        (values (relocate (span-srcloc #'op #'parens-tag)
-                          #`(#,(quote-syntax quasisyntax) #,(escape #'e)))
+        (define-values (template idrs) (convert-template #'e))
+        (define (bind-variable idr)
+          (syntax-parse idr
+            [(id-pat e depth)
+             #`[id-pat (let ([r (rhombus-expression (group e))])
+                         #,(let loop ([depth (syntax-e #'depth)])
+                             (cond
+                               [(eqv? depth 0) #'r]
+                               [(eqv? depth 1) #'(unpack-tail r 'unquote)]
+                               [else
+                                #`(for/list ([r (in-list (unpack-tail r 'unquote))])
+                                    #,(loop (sub1 depth)))])))]]))
+        (values #`(with-syntax #,(map bind-variable idrs)
+                    (#,(quote-syntax quasisyntax) #,template))
                 #'tail)]))
    ;; pattern
    (lambda (stx)

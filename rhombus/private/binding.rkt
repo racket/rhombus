@@ -27,11 +27,9 @@
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
     #:datum-literals (parens group)
-    (pattern (parens
-              (group (parens (group var-id:identifier ...)))
-              (group check-proc-expr)
-              (group post-defn))
-             #:attr var-ids #'(var-id ...)))
+    (pattern ((~and var-ids (var-id:identifier ...))
+              check-proc-expr
+              post-defn)))
 
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
@@ -40,10 +38,9 @@
 
   ;; puts pieces together into a `:binding-form`
   (define (binding-form ids check-proc-expr post-defn)
-    #`(parens
-       (group (parens (group . #,ids)))
-       (group #,check-proc-expr)
-       (group #,post-defn)))
+    (datum->syntax #f (list ids
+                            check-proc-expr
+                            post-defn)))
 
   (define (make-identifier-binding id)
     (binding-form (list id)

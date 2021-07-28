@@ -12,6 +12,7 @@
          "binding.rkt")
 
 (provide rhombus-top
+         rhombus-definition
          rhombus-block
          rhombus-expression
 
@@ -350,7 +351,16 @@
               [e::expression #'(#%expression e.expanded)]))
          (rhombus-top . forms))]))
 
-;; For a definition context, interleaves expansion and enforestation:
+;; For a definition context:
+(define-syntax (rhombus-definition stx)
+  (syntax-parse stx
+    [(_) #'(begin)]
+    [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
+    [(_ e::definition) #'(begin
+                           (begin . e.expandeds)
+                           (expression-begin . e.exprs))]))
+
+;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-block stx)
   (syntax-parse stx
     [(_)
