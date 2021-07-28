@@ -9,8 +9,7 @@
 
 (provide (for-syntax (property-out expression-prefix-operator)
                      (property-out expression-infix-operator)
-                     
-                     (property-out expression-transformer)
+                     expression-transformer
 
                      make-identifier-expression
                      
@@ -24,7 +23,8 @@
   (property expression-prefix-operator prefix-operator)
   (property expression-infix-operator infix-operator)
 
-  (property expression-transformer transformer)
+  (define (expression-transformer name proc)
+    (expression-prefix-operator name '((default . stronger)) #t proc))
 
   (define (make-identifier-expression id)
     id)

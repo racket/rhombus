@@ -17,8 +17,6 @@
   (property require-prefix-operator prefix-operator)
   (property require-infix-operator infix-operator)
 
-  (property require-transformer transformer)
-
   (define in-require-space (make-interned-syntax-introducer 'rhombus/require))
 
   (define (check-require-result form proc)
@@ -35,7 +33,7 @@
     :require :require-prefix-op+form+tail :require-infix-op+form+tail
     "require" "require operator"
     in-require-space
-    require-transformer-ref require-prefix-operator-ref require-infix-operator-ref
+    require-prefix-operator-ref require-infix-operator-ref
     check-require-result
     make-identifier-require))
 

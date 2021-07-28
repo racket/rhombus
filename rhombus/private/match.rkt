@@ -12,6 +12,7 @@
 
 (define-syntax match
   (expression-transformer
+   #'match
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)

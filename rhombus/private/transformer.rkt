@@ -17,8 +17,7 @@
          check-transformer-result)
 
 (module+ for-parse
-  (provide apply-transformer
-           apply-definition-transformer
+  (provide apply-definition-transformer
            apply-declaration-transformer
 
            transform-in
@@ -60,16 +59,6 @@
                  [(pair? stx) (cons (loop (car stx))
                                     (loop (cdr stx)))]
                  [else stx]))))))
-
-(define (apply-transformer t id stx checker)
-  (define proc (transformer-proc t))
-  (call-as-transformer
-   id
-   (lambda (in out)
-     (define-values (form tail) (proc (in stx)))
-     (check-transformer-result (checker (out form) proc)
-                               (out tail)
-                               proc))))
 
 (define (apply-definition-transformer t id stx)
   (define proc (transformer-proc t))

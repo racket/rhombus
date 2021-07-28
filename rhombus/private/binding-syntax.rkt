@@ -16,7 +16,6 @@
 
 (define-syntax binding_form
   (make-syntax-definition-transformer in-binding-space
-                                      #'make-binding-transformer
                                       #'make-binding-prefix-operator
                                       #'make-binding-infix-operator
                                       #'prefix+infix))
@@ -85,12 +84,3 @@
        (lambda (form stx)
          (extract-binding (proc (wrap-parsed form) stx)
                           proc)))))
-
-(define-for-syntax (make-binding-transformer proc)
-  (binding-transformer
-   (lambda (tail)
-     (define-values (form new-tail) (syntax-parse tail
-                                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-transformer-result (extract-binding form proc)
-                               (unpack-tail new-tail proc)
-                               proc))))

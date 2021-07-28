@@ -10,6 +10,7 @@
 
 (define-syntax rhombus-if
   (expression-transformer
+   #'rhombus-if
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block)
@@ -25,6 +26,7 @@
 
 (define-syntax rhombus-cond
   (expression-transformer
+   #'rhombus-cond
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)

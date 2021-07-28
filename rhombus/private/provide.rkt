@@ -14,8 +14,6 @@
   (property provide-prefix-operator prefix-operator)
   (property provide-infix-operator infix-operator)
 
-  (property provide-transformer transformer)
-
   (define in-provide-space (make-interned-syntax-introducer 'rhombus/provide))
 
   (define (check-provide-result form proc)
@@ -32,7 +30,7 @@
     :provide :provide-prefix-op+form+tail :provide-infix-op+form+tail
     "provide" "provide operator"
     in-provide-space
-    provide-transformer-ref provide-prefix-operator-ref provide-infix-operator-ref
+    provide-prefix-operator-ref provide-infix-operator-ref
     check-provide-result
     make-identifier-provide))
 

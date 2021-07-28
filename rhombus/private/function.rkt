@@ -38,6 +38,7 @@
 
 (define-syntax function
   (expression-transformer
+   #'function
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts)

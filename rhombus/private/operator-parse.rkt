@@ -4,4 +4,5 @@
 (provide :operator)
 
 (define-syntax-class :operator
-  (pattern ((~datum op) name)))
+  (pattern ((~datum op) name))
+  (pattern name:identifier))

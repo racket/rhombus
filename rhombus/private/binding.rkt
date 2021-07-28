@@ -10,8 +10,8 @@
 
 (provide (for-syntax (property-out binding-prefix-operator)
                      (property-out binding-infix-operator)
-                     
-                     (property-out binding-transformer)
+
+                     binding-transformer
 
                      make-identifier-binding
 
@@ -36,7 +36,8 @@
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
 
-  (property binding-transformer transformer)
+  (define (binding-transformer name proc)
+    (binding-prefix-operator name '((default . stronger)) #t proc))
 
   ;; puts pieces together into a `:binding-form`
   (define (binding-form ids check-proc-expr post-defn)
@@ -58,7 +59,7 @@
 
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id) binding-transformer?)))))
+             #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?)))))
 
 (define-syntax (define-binding-syntax stx)
   (syntax-parse stx

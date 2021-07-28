@@ -81,7 +81,7 @@
                       :form :prefix-op+form+tail :infix-op+form+tail
                       form-kind-str operator-kind-str
                       in-space
-                      transformer-ref prefix-operator-ref infix-operator-ref
+                      prefix-operator-ref infix-operator-ref
                       check-result
                       make-identifier-form)
   (begin
@@ -108,7 +108,7 @@
 
     (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                               in-space
-                                              transformer-ref prefix-operator-ref infix-operator-ref
+                                              prefix-operator-ref infix-operator-ref
                                               check-result
                                               make-identifier-form))
     (define enforest (make-enforest enforest-step))))
@@ -130,7 +130,7 @@
 
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space
-                            transformer-ref prefix-operator-ref infix-operator-ref
+                            prefix-operator-ref infix-operator-ref
                             check-result
                             make-identifier-form)
   (define (raise-unbound-operator op-stx)
@@ -156,18 +156,10 @@
                    (dispatch-prefix-operator v op #'tail head-id))]
              [(infix-operator-ref v)
               (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
+             [(identifier? #'head)
+              (enforest-step (make-identifier-form #'head) #'tail current-op)]
              [else
               (raise-unbound-operator #'head.name)])]
-          [(head:identifier . tail)
-           (define head-id (in-space #'head))
-           (define v (syntax-local-value* head-id transformer-ref))
-           (cond
-             [(transformer-ref v)
-              => (lambda (op)
-                   (define-values (form new-tail) (apply-transformer op head-id stxes check-result))
-                   (enforest-step form new-tail current-op))]
-             [else
-              (enforest-step (make-identifier-form #'head) #'tail current-op)])]
           [(((~datum parsed) inside) . tail)
            (enforest-step #'inside #'tail current-op)]
           [(((~and tag (~datum parens)) . inside) . tail)
@@ -218,10 +210,10 @@
                    (dispatch-infix-operator v op #'tail head-id))]
              [(prefix-operator-ref v)
               (dispatch-infix-implicit juxtapose-name #'head)]
+             [(identifier? #'head)
+              (dispatch-infix-implicit juxtapose-name #'head)]
              [else
               (raise-unbound-operator #'head.name)])]
-          [(head:identifier . _)
-           (dispatch-infix-implicit juxtapose-name #'head)]
           [(((~datum parsed) . _) . _)
            (dispatch-infix-implicit juxtapose-name #'head)]
           [(((~and tag (~datum parens)) . inside) . tail)

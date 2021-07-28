@@ -14,7 +14,6 @@
 
 (define-syntax expression_form
   (make-syntax-definition-transformer (lambda (x) x)
-                                      #'make-expression-transformer
                                       #'make-expression-prefix-operator
                                       #'make-expression-infix-operator
                                       #'prefix+infix))
@@ -58,12 +57,3 @@
          #`(rhombus-expression (group #,(check-expression-result
                                          (proc #`(parsed #,form) stx)
                                          proc)))))))
-
-(define-for-syntax (make-expression-transformer proc)
-  (expression-transformer
-   (lambda (tail)
-     (define-values (form new-tail) (syntax-parse tail
-                                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
-                               (unpack-tail new-tail proc)
-                               proc))))

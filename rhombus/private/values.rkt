@@ -7,7 +7,10 @@
          (for-space rhombus/binding values))
 
 (define-binding-syntax values
-  (binding-transformer
+  (binding-prefix-operator
+   #'values
+   '((default . stronger))
+   #t
    (lambda (stx)
      (syntax-parse stx
        [(head . _)

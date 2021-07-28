@@ -61,7 +61,7 @@
     :expression :prefix-op+expression+tail :infix-op+expression+tail
     "expression" "expression operator"
     in-expression-space
-    expression-transformer-ref expression-prefix-operator-ref expression-infix-operator-ref
+    expression-prefix-operator-ref expression-infix-operator-ref
     check-expression-result
     make-identifier-expression)
 
@@ -70,7 +70,7 @@
     :binding :prefix-op+binding+tail :infix-op+binding+tail
     "binding" "binding operator"
     in-binding-space
-    binding-transformer-ref binding-prefix-operator-ref binding-infix-operator-ref
+    binding-prefix-operator-ref binding-infix-operator-ref
     check-binding-result
     make-identifier-binding))
 

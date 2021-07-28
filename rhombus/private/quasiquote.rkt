@@ -145,6 +145,7 @@
 
 (define-syntax rhombus...
   (expression-transformer
+   #'rhombus...
    (lambda (stx)
      (syntax-parse stx
        [(op::operator . tail)

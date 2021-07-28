@@ -45,6 +45,7 @@
                           ...)))
             #'(define-binding-syntax name
                 (binding-transformer
+                 #'name
                  (make-composite-binding-transformer (quote-syntax name?)
                                                      (list (quote-syntax name-field) ...))))
             #'(define-type-syntax name
