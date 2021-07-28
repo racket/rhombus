@@ -9,9 +9,11 @@
          "function.rkt"
          (submod "function.rkt" for-call)
          "quasiquote.rkt"
-         (for-syntax "parse.rkt"))
+         (for-syntax "parse.rkt")
+         "declaration-sequence.rkt")
 
-(provide (rename-out [rhombus-define define]))
+(provide (rename-out [rhombus-define define])
+         forward)
 
 (begin-for-syntax
   (struct fcase (args arg-expandeds rhs))
@@ -23,7 +25,7 @@
     (for/list ([sames (in-hash-values ht)])
       (reverse sames))))
 
-(define-syntax rhombus-define
+(define-for-syntax (make-define wrap-definition)
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
@@ -39,16 +41,18 @@
         (define rhss (syntax->list #'(rhs ...)))
         (values
          (list
-          #`(define #,the-id
-              #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag)))
+          (wrap-definition
+           #`(define #,the-id
+               #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag))))
          null)]
        [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (values
          (list
-          #`(define id
-              #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))
+          (wrap-definition
+           #`(define id
+               #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag))))
          null)]
        [(form-id (~literal values) (parens g ...) (~and rhs (block body ...)))
         #:with (lhs::binding ...) #'(g ...)
@@ -57,19 +61,21 @@
         #:with (tmp-id ...) (generate-temporaries #'(name-id ...))
         (values
          (list
-          #'(define-values (lhs-e.var-id ... ...)
-              (let-values ([(tmp-id ...)
-                            (let-values ([(name-id ...) (rhombus-expression (group rhs))])
-                              (values name-id ...))])
-                (nested-bindings
-                 form-id
-                 #f
-                 (begin)
-                 (tmp-id lhs-e lhs)
-                 ...
-                 (values lhs-e.var-id ... ...))))
-          #'(begin
-              lhs-e.post-defn ...))
+          (wrap-definition
+           #'(define-values (lhs-e.var-id ... ...)
+               (let-values ([(tmp-id ...)
+                             (let-values ([(name-id ...) (rhombus-expression (group rhs))])
+                               (values name-id ...))])
+                 (nested-bindings
+                  form-id
+                  #f
+                  (begin)
+                  (tmp-id lhs-e lhs)
+                  ...
+                  (values lhs-e.var-id ... ...)))))
+          (wrap-definition
+           #'(begin
+               lhs-e.post-defn ...)))
          null)]
        [(form-id any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)
@@ -77,16 +83,24 @@
         #:with name-id (infer-name #'lhs-e.var-ids)
         (values
          (list
-          #'(define-values lhs-e.var-ids
-              (let ([tmp-id (let ([name-id (rhombus-expression (group rhs))])
-                              name-id)])
-                (let-values ([(match? . lhs-e.var-ids)
-                              (lhs-e.check-proc-expr tmp-id)])
-                  (unless match?
-                    (rhs-binding-failure 'form-id tmp-id 'lhs))
-                  (values . lhs-e.var-ids))))
-          #'lhs-e.post-defn)
+          (wrap-definition
+           #'(define-values lhs-e.var-ids
+               (let ([tmp-id (let ([name-id (rhombus-expression (group rhs))])
+                               name-id)])
+                 (let-values ([(match? . lhs-e.var-ids)
+                               (lhs-e.check-proc-expr tmp-id)])
+                   (unless match?
+                     (rhs-binding-failure 'form-id tmp-id 'lhs))
+                   (values . lhs-e.var-ids)))))
+          (wrap-definition
+           #'lhs-e.post-defn))
          null)]))))
+
+(define-syntax rhombus-define
+  (make-define (lambda (defn) defn)))
+
+(define-syntax forward
+  (make-define (lambda (defn) #`(rhombus-forward #,defn))))
 
 (define (rhs-binding-failure who val binding)
   (raise-binding-failure who "value" val binding))

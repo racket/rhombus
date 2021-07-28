@@ -9,6 +9,7 @@
                      (submod "transformer.rkt" for-parse)
                      "check.rkt"
                      "syntax-local.rkt")
+         "declaration-sequence.rkt"
          "expression.rkt"
          "binding.rkt")
 
@@ -103,21 +104,28 @@
     [(_)
      (raise-syntax-error #f "found an empty block" stx)]
     [(_ . tail)
+     #`(let ()
+         (rhombus-declaration-sequence
+          (rhombus-body . tail)))]))
+
+;; For an expression context, interleaves expansion and enforestation:
+(define-syntax (rhombus-body stx)
+  (syntax-parse stx
+    [(_) #'(begin)]
+    [(_ e::definition . tail)
+     (when (and (stx-null? #'tail)
+                (stx-null? #'e.exprs))
+       (raise-syntax-error #f "block does not end with an expression" stx))
      (syntax-local-introduce
-      #`(let ()
-          . #,(let loop ([tail (syntax-local-introduce #'tail)])
-                (syntax-parse tail
-                  [() #'()]
-                  [(e::definition . tail)
-                   (when (and (stx-null? #'tail)
-                              (stx-null? #'e.exprs))
-                     (raise-syntax-error #f "block does not end with an expression" stx))
-                   #`((begin . e.expandeds)
-                      (expression-begin . e.exprs)
-                      . #,(loop #'tail))]
-                  [(e::expression . tail)
-                   #`((#%expression e.expanded)
-                      . #,(loop #'tail))]))))]))
+      #`(begin
+         (begin . e.expandeds)
+         (expression-begin . e.exprs)
+         (rhombus-body . tail)))]
+    [(_ e::expression . tail)
+     (syntax-local-introduce
+      #`(begin
+          (#%expression e.expanded)
+          (rhombus-body . tail)))]))
 
 (define-syntax (expression-begin stx)
   (syntax-parse stx

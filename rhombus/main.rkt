@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         "parse.rkt")
+         "parse.rkt"
+         "private/declaration-sequence.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin]))
 
@@ -47,4 +48,5 @@
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
-        (rhombus-top . content))]))
+        (rhombus-declaration-sequence
+         (rhombus-top . content)))]))

@@ -232,7 +232,20 @@ nine
 
 declaration_form ?(empty_require ¿e ...):
   match e
-  | ?(x):
+  | ?():
       ?{require:}
 
 empty_require
+
+// `forward` is a definition that is only visible later
+
+define check_later():
+  ok_later
+
+forward accum: 1
+forward accum: accum+1
+forward accum: accum+1
+accum
+
+define ok_later: "ok"
+check_later()
