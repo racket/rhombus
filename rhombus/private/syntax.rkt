@@ -13,6 +13,7 @@
          (for-syntax "parse.rkt"))
 
 (provide (for-syntax make-syntax-definition-transformer
+                     make-identifier-syntax-definition-transformer
                      
                      :operator-syntax-quote
                      :identifier-syntax-quote
@@ -216,6 +217,19 @@
                                           make-prefix-id
                                           make-infix-id))
          null)]
+       [(form-id q::identifier-syntax-quote
+                 (~and rhs (block body ...)))
+        (values
+         (list (parse-transformer-definition #'q.g #'q.self-id #'rhs
+                                             in-space make-transformer-id))
+         null)]))))
+
+(define-for-syntax (make-identifier-syntax-definition-transformer in-space
+                                                                  make-transformer-id)
+  (definition-transformer
+    (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group block alts op)
        [(form-id q::identifier-syntax-quote
                  (~and rhs (block body ...)))
         (values

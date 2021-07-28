@@ -100,7 +100,8 @@
     [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
     [(_ e::definition) #'(begin
                            (begin . e.expandeds)
-                           (expression-begin . e.exprs))]))
+                           (expression-begin . e.exprs))]
+    [(_ e::expression) #'(#%expression e.expanded)]))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-block stx)

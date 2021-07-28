@@ -207,3 +207,23 @@ expression ?(¿a <> ¿b): ?(cons(¿b, ¿a))
 
 define rx <> (ry :: Integer) : "2" <> 1
 rx
+
+// definition form, which returns either a block of definitions
+// or a block of definitions and a sequence of expressions
+
+definition ?(define_eight ¿e ...):
+  match e
+  | ?(¿name):
+      ?{define ¿name: 8}
+
+define_eight ate
+ate
+
+definition ?(define_and_use ¿e ...):
+  match e
+  | ?(¿name {¿rhs ...}):
+      values(?{define ¿name {¿rhs ...}},
+             ?(¿name))
+
+define_and_use nine: 1+8
+nine
