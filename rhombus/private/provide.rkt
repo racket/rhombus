@@ -8,7 +8,9 @@
          (only-in "core-implicit.rkt"
                   #%literal))
 
-(provide (rename-out [rhombus-provide provide]))
+(provide (rename-out [rhombus-provide provide])
+
+         (for-space rhombus/provide rename))
 
 (begin-for-syntax
   (property provide-prefix-operator prefix-operator)
@@ -47,3 +49,17 @@
     [(_ name:id rhs)
      (quasisyntax/loc stx
        (define-syntax #,(in-provide-space #'name) rhs))]))
+
+(define-provide-syntax rename
+  (provide-prefix-operator
+   #'rename
+   '((default . stronger))
+   #t
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (block)
+       [(_ (block (group int:identifier (~datum to) ext:identifier)
+                  ...)
+           . tail)
+        (values #`(rename-out [int ext] ...)
+                #'tail)]))))

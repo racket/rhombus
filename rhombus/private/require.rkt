@@ -10,8 +10,9 @@
 
 (provide (rename-out [rhombus-require require])
 
-         #%literal
-         (for-space rhombus/require #%literal))
+         (for-space rhombus/require
+                    #%literal
+                    rename))
 
 (begin-for-syntax
   (property require-prefix-operator prefix-operator)
@@ -65,3 +66,18 @@
                               #'a))
         (values #'a
                 #'tail)]))))
+
+(define-require-syntax rename
+  (require-infix-operator
+   #'rename
+   '((default . stronger))
+   #t
+   (lambda (req stx)
+     (syntax-parse stx
+       #:datum-literals (block)
+       [(_ (block (group int:identifier (~datum to) ext:identifier)
+                  ...)
+           . tail)
+        (values #`(rename-in #,req [int ext] ...)
+                #'tail)]))
+   #f))
