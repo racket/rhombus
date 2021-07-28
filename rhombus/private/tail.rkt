@@ -1,12 +1,15 @@
 #lang racket/base
 (require syntax/parse
+         syntax/stx
          "check.rkt")
 
 (provide pack-tail
          unpack-tail)
 
 (define (pack-tail tail)
-  #`(parens (group . #,tail)))
+  (if (stx-null? tail)
+      #`(parens)
+      #`(parens (group . #,tail))))
 
 (define (unpack-tail packed-tail proc)
   (syntax-parse packed-tail

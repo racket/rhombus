@@ -488,12 +488,14 @@
                            (srcloc-column s-loc)
                            (srcloc-position s-loc)
                            (let ([s (srcloc-position s-loc)]
-                                 [e (if (srcloc? e-loc/e)
-                                        (srcloc-position e-loc/e)
-                                        (syntax-position e-loc/e))]
-                                 [sp (if (srcloc? e-loc/e)
-                                         (srcloc-span e-loc/e)
-                                         (syntax-span e-loc/e))])
+                                 [e (and e-loc/e
+                                         (if (srcloc? e-loc/e)
+                                             (srcloc-position e-loc/e)
+                                             (syntax-position e-loc/e)))]
+                                 [sp (and e-loc/e
+                                          (if (srcloc? e-loc/e)
+                                              (srcloc-span e-loc/e)
+                                              (syntax-span e-loc/e)))])
                              (and s e sp
                                   (+ (- e s) sp)))))]))
    

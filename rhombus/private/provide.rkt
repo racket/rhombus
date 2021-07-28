@@ -4,7 +4,8 @@
                      "op.rkt"
                      "transformer.rkt"
                      "enforest.rkt"
-                     "property.rkt")
+                     "property.rkt"
+                     "check.rkt")
          (only-in "core-implicit.rkt"
                   #%literal))
 
@@ -19,6 +20,7 @@
   (define in-provide-space (make-interned-syntax-introducer 'rhombus/provide))
 
   (define (check-provide-result form proc)
+    (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
   (define (make-identifier-provide id)

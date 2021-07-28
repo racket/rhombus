@@ -227,3 +227,12 @@ definition_form ?(define_and_use ¿e ...):
 
 define_and_use nine: 1+8
 nine
+
+// declaration form
+
+declaration_form ?(empty_require ¿e ...):
+  match e
+  | ?(x):
+      ?{require:}
+
+empty_require
