@@ -29,7 +29,9 @@
                           (define p (syntax-position stx))
                           (define sp (syntax-span stx))
                           (loop (syntax-e stx)
-                                (if (and p sp)
+                                (if (and p sp
+                                         (equal? (syntax-source head)
+                                                 (syntax-source stx)))
                                     (max pos (+ p sp))
                                     pos))]
                          [(pair? stx) (loop (cdr stx) (loop (car stx) pos))]

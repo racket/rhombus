@@ -108,7 +108,9 @@
                (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "."))
-                     (:+ "."))
+                     (:+ ".")
+                     (:+ "+")
+                     (:+ "-"))
                 "|" ":")]
 
   ;; disallows a number that starts +, -, or "."

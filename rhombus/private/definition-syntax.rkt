@@ -18,16 +18,9 @@
 (define-for-syntax (make-definition-transformer proc)
   (definition-transformer
    (lambda (tail)
-     (define-values (defns exprs)
-       (call-with-values
-        (lambda ()
-          (syntax-parse tail
-            [(head . tail) (proc (pack-tail #'tail) #'head)]))
-        (case-lambda
-          [(defns) (values defns #'(parens))]
-          [(defns exprs) (values defns exprs)])))
-     (values (unpack-definitions defns proc)
-             (unpack-expressions exprs proc)))))
+     (define defns (syntax-parse tail
+                     [(head . tail) (proc (pack-tail #'tail) #'head)]))
+     (unpack-definitions defns proc))))
 
 (define-for-syntax (unpack-definitions form proc)
   (syntax-parse form
@@ -36,11 +29,3 @@
      #`((rhombus-definition (group d ...))
         ...)]
     [_ (raise-result-error (proc-name proc) "definition-list?" form)]))
-
-(define-for-syntax (unpack-expressions form proc)
-  (syntax-parse form
-    #:datum-literals (parens group)
-    [(parens (group e ...) ...)
-     #`((rhombus-expression (group e ...))
-        ...)]
-    [_ (raise-result-error (proc-name proc) "expression-list?" form)]))

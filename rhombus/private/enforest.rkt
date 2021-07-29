@@ -184,7 +184,7 @@
             [else
              ;; new operator sets precedence, defer application of operator until a suitable
              ;; argument is parsed
-             (define-values (form new-tail) (enforest-step tail v))
+             (define-values (form new-tail) (enforest-step tail op))
              (enforest-step (apply-prefix-direct-operator op form op-stx check-result)
                             new-tail
                             current-op)]))
@@ -243,7 +243,7 @@
                [else
                 ;; new operator sets precedence, defer application of operator until a suitable
                 ;; right-hand argument is parsed
-                (define-values (form new-tail) (enforest-step tail v))
+                (define-values (form new-tail) (enforest-step tail op))
                 (enforest-step (apply-infix-direct-operator op init-form form op-stx check-result)
                                new-tail
                                current-op)])]

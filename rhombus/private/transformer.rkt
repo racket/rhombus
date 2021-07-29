@@ -65,10 +65,9 @@
   (call-as-transformer
    id
    (lambda (in out)
-     (define-values (forms exprs) (proc (in stx)))
+     (define forms (proc (in stx)))
      (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
-     (unless (stx-list? exprs) (raise-result-error (proc-name proc) "stx-list?" exprs))
-     (values (out forms) (out exprs)))))
+     (out (datum->syntax #f forms)))))
 
 (define (apply-declaration-transformer t id stx)
   (define proc (transformer-proc t))
@@ -77,7 +76,7 @@
    (lambda (in out)
      (define forms (proc (in stx)))
      (unless (stx-list? forms) (raise-result-error (proc-name proc) "stx-list?" forms))
-     (out forms))))
+     (out (datum->syntax #f forms)))))
 
 (define (check-transformer-result form tail proc)
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))

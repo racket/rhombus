@@ -46,10 +46,9 @@
              #:do [(define head-id (transform-in #'head))]
              #:do [(define v (syntax-local-value* head-id definition-transformer?))]
              #:when (definition-transformer? v)
-             #:do [(define-values (defns-and-exprs exprs)
-                     (apply-definition-transformer v head-id (datum->syntax #f (cons head-id (transform-in #'tail)))))]
-             #:attr expandeds (transform-out (datum->syntax #f defns-and-exprs))
-             #:attr exprs (transform-out (datum->syntax #f exprs))))
+             #:attr expandeds (transform-out
+                               (apply-definition-transformer v head-id
+                                                             (datum->syntax #f (cons head-id (transform-in #'tail)))))))
 
   ;; Form in an expression context:
   ;;  :expression is defined via `define-enforest` below
@@ -84,7 +83,7 @@
          #,(syntax-local-introduce
             (syntax-parse (syntax-local-introduce #'form)
               [e::declaration #'(begin . e.expandeds)]
-              [e::definition #'(begin (begin . e.expandeds) . e.exprs)]
+              [e::definition #'(begin . e.expandeds)]
               [e::expression #'(#%expression e.expanded)]))
          (rhombus-top . forms))]))
 
@@ -93,9 +92,7 @@
   (syntax-parse stx
     [(_) #'(begin)]
     [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
-    [(_ e::definition) #'(begin
-                           (begin . e.expandeds)
-                           (expression-begin . e.exprs))]
+    [(_ e::definition) #'(begin . e.expandeds)]
     [(_ e::expression) #'(#%expression e.expanded)]))
 
 ;; For an expression context, interleaves expansion and enforestation:
@@ -106,6 +103,7 @@
     [(_ . tail)
      #`(let ()
          (rhombus-declaration-sequence
+          #:need-end-expr #,stx
           (rhombus-body . tail)))]))
 
 ;; For an expression context, interleaves expansion and enforestation:
@@ -113,13 +111,9 @@
   (syntax-parse stx
     [(_) #'(begin)]
     [(_ e::definition . tail)
-     (when (and (stx-null? #'tail)
-                (stx-null? #'e.exprs))
-       (raise-syntax-error #f "block does not end with an expression" stx))
      (syntax-local-introduce
       #`(begin
          (begin . e.expandeds)
-         (expression-begin . e.exprs)
          (rhombus-body . tail)))]
     [(_ e::expression . tail)
      (syntax-local-introduce

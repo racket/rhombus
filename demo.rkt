@@ -6,7 +6,7 @@
 10 + (-3) * 2
 
 {
- #false || !(#false || #false)
+  #false || !(#false || #false)
 }
 
 // define and call a function
@@ -222,8 +222,8 @@ ate
 definition_form ?(define_and_use ¿e ...):
   match e
   | ?(¿name {¿rhs ...}):
-      values(?{define ¿name {¿rhs ...}},
-             ?(¿name))
+      ?{define ¿name {¿rhs ...}
+        ?(¿name)}
 
 define_and_use nine: 1+8
 nine

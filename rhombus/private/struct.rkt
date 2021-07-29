@@ -34,25 +34,23 @@
                       [(field-index ...) (for/list ([field (in-list fields)]
                                                     [i (in-naturals)])
                                            i)])
-          (values
-           (list
-            #'(define-values (struct:name name name? name-field ...)
-                (let-values ([(struct:name name name? name-ref name-set!)
-                              (make-struct-type 'name #f cnt 0 #f null #f #f
-                                                '(field-index ...))])
-                  (values struct:name name name?
-                          (make-struct-field-accessor name-ref field-index 'field)
-                          ...)))
-            #'(define-binding-syntax name
-                (binding-transformer
-                 #'name
-                 (make-composite-binding-transformer (quote-syntax name?)
-                                                     (list (quote-syntax name-field) ...))))
-            #'(define-type-syntax name
-                (struct-type (quote-syntax name?)
-                             (quote-syntax name)
-                             (list (cons 'field (quote-syntax name-field)) ...))))
-           null))]))))
+          (list
+           #'(define-values (struct:name name name? name-field ...)
+               (let-values ([(struct:name name name? name-ref name-set!)
+                             (make-struct-type 'name #f cnt 0 #f null #f #f
+                                               '(field-index ...))])
+                 (values struct:name name name?
+                         (make-struct-field-accessor name-ref field-index 'field)
+                         ...)))
+           #'(define-binding-syntax name
+               (binding-transformer
+                #'name
+                (make-composite-binding-transformer (quote-syntax name?)
+                                                    (list (quote-syntax name-field) ...))))
+           #'(define-type-syntax name
+               (struct-type (quote-syntax name?)
+                            (quote-syntax name)
+                            (list (cons 'field (quote-syntax name-field)) ...)))))]))))
 
 (define-syntax |.|
   (expression-infix-operator

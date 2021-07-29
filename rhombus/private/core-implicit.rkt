@@ -21,8 +21,8 @@
    #t ; transformer
    (lambda (stxes)
      (syntax-parse stxes
-       [((~and head ((~datum block) . body)) . tail)
-        (values #`(rhombus-block . body)
+       [((~and head ((~and tag (~datum block)) . body)) . tail)
+        (values (respan #`(#,(datum->syntax #'here 'rhombus-block #'tag) . body))
                 #'tail)]))))
 
 (define-syntax #%literal

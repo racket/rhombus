@@ -169,30 +169,26 @@
        [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                      (~and rhs (block body ...))))
                                        ...+))
-        (values
-         (list (parse-operator-definitions stx
-                                           (syntax->list #'(q.g ...))
-                                           (syntax->list #'(q.prec ...))
-                                           (syntax->list #'(q.assc ...))
-                                           (syntax->list #'(q.self-id ...))
-                                           (syntax->list #'(rhs ...))
-                                           in-space
-                                           make-prefix-id
-                                           make-infix-id
-                                           prefix+infix-id))
-         null)]
-       [(form-id q::operator-syntax-quote
-                 (~and rhs (block body ...)))
-        (values
-         (list (parse-operator-definition #'q.g
-                                          #'q.prec
-                                          #'q.assc
-                                          #'q.self-id
-                                          #'rhs
+        (list (parse-operator-definitions stx
+                                          (syntax->list #'(q.g ...))
+                                          (syntax->list #'(q.prec ...))
+                                          (syntax->list #'(q.assc ...))
+                                          (syntax->list #'(q.self-id ...))
+                                          (syntax->list #'(rhs ...))
                                           in-space
                                           make-prefix-id
-                                          make-infix-id))
-         null)]))))
+                                          make-infix-id
+                                          prefix+infix-id))]
+       [(form-id q::operator-syntax-quote
+                 (~and rhs (block body ...)))
+        (list (parse-operator-definition #'q.g
+                                         #'q.prec
+                                         #'q.assc
+                                         #'q.self-id
+                                         #'rhs
+                                         in-space
+                                         make-prefix-id
+                                         make-infix-id))]))))
 
 ;; ----------------------------------------
 
@@ -230,7 +226,5 @@
        #:datum-literals (parens group block alts op)
        [(form-id q::identifier-syntax-quote
                  (~and rhs (block body ...)))
-        (values
-         (list (parse-transformer-definition #'q.g #'q.self-id #'rhs
-                                             in-space make-transformer-id))
-         null)]))))
+        (list (parse-transformer-definition #'q.g #'q.self-id #'rhs
+                                            in-space make-transformer-id))]))))
