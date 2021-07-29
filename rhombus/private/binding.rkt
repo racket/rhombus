@@ -1,28 +1,27 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "op.rkt"
-                     "transformer.rkt"
-                     "property.rkt"
-                     "check.rkt"
-                     "syntax-local.rkt")
-         "property-out.rkt")
+                     enforest/operator
+                     enforest/property
+                     enforest/proc-name
+                     enforest/syntax-local))
 
-(provide (for-syntax (property-out binding-prefix-operator)
-                     (property-out binding-infix-operator)
+(begin-for-syntax
+  (provide (property-out binding-prefix-operator)
+           (property-out binding-infix-operator)
 
-                     binding-transformer
+           binding-transformer
 
-                     make-identifier-binding
+           make-identifier-binding
+                     
+           :binding-form
+           binding-form
+           check-binding-result
+           
+           in-binding-space
+           :non-binding-identifier))
 
-                     :binding-form
-                     binding-form
-                     check-binding-result
-
-                     in-binding-space
-                     :non-binding-identifier)
-
-         define-binding-syntax
+(provide define-binding-syntax
          raise-binding-failure)
 
 (begin-for-syntax

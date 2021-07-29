@@ -1,7 +1,7 @@
 #lang racket/base
 (require syntax/parse
          syntax/stx
-         "check.rkt")
+         enforest/proc-name)
 
 (provide pack-tail
          unpack-tail)

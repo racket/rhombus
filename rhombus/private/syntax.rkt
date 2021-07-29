@@ -2,13 +2,13 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     "transformer.rkt"
+                     enforest/operator-parse
                      "consistent.rkt"
-                     "srcloc.rkt"
-                     "operator-parse.rkt")
+                     "srcloc.rkt")
          (rename-in "quasiquote.rkt"
                     [... rhombus...])
          "parse.rkt"
+         "definition.rkt"
          "function.rkt"
          ;; because we generate compile-time code:
          (for-syntax "parse.rkt"))

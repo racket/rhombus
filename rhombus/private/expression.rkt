@@ -1,23 +1,23 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "op.rkt"
-                     "transformer.rkt"
-                     "property.rkt"
-                     "check.rkt")
-         "property-out.rkt")
+                     enforest/operator
+                     enforest/property
+                     enforest/proc-name))
 
-(provide (for-syntax (property-out expression-prefix-operator)
-                     (property-out expression-infix-operator)
-                     expression-transformer
+(begin-for-syntax
+  (provide (property-out expression-prefix-operator)
+           (property-out expression-infix-operator)
 
-                     make-identifier-expression
+           expression-transformer
+
+           make-identifier-expression
                      
-                     check-expression-result
+           check-expression-result
+           
+           in-expression-space))
 
-                     in-expression-space)
-
-         define-expression-syntax)
+(provide define-expression-syntax)
 
 (begin-for-syntax
   (property expression-prefix-operator prefix-operator)

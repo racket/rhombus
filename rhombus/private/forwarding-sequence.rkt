@@ -2,14 +2,14 @@
 (require (for-syntax racket/base
                      syntax/parse))
 
-(provide rhombus-declaration-sequence
+(provide rhombus-forwarding-sequence
 
          ;; wrap `rhombus-forward` around a sequence of declarations
          ;; to make any bindings among the  declarations visible only
          ;; after the declarations
          rhombus-forward)
 
-(define-syntax (rhombus-declaration-sequence stx)
+(define-syntax (rhombus-forwarding-sequence stx)
   (syntax-parse stx
     [(_ #:need-end-expr orig . tail)
      #'(sequence #:need-end-expr orig base-ctx add-ctx remove-ctx . tail)]

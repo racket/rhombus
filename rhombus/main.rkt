@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         "parse.rkt"
-         "private/declaration-sequence.rkt")
+         "private/parse.rkt"
+         "private/forwarding-sequence.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin]))
 
@@ -13,8 +13,8 @@
                        (provide (all-from-out mod)
                                 (for-syntax (all-from-out mod))))
                 ...))]))
-(bounce "private/core-implicit.rkt"
-        "private/core-op.rkt"
+(bounce "private/implicit.rkt"
+        "private/arithmetic.rkt"
         "private/struct.rkt"
         "private/define.rkt"
         "private/require.rkt"
@@ -48,5 +48,5 @@
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
-        (rhombus-declaration-sequence
+        (rhombus-forwarding-sequence
          (rhombus-top . content)))]))

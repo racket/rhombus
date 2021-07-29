@@ -2,10 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     "transformer.rkt"
+                     enforest/proc-name
+                     enforest/transformer-result
                      "srcloc.rkt"
-                     "check.rkt"
                      "tail.rkt")
+         "definition.rkt"
          "syntax.rkt"
          "binding.rkt"
          "parse.rkt")
@@ -49,7 +50,7 @@
 
 (define-for-syntax (extract-binding form proc)
   (syntax-parse (if (syntax? form) #`(group #,form) #'#f)
-    [b::binding #'b.expanded]
+    [b::binding #'b.parsed]
     [_ (raise-result-error (proc-name proc) "binding?" form)]))
 
 (define-for-syntax (make-binding-infix-operator name prec transformer? proc assc)

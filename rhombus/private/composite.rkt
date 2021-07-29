@@ -10,7 +10,7 @@
   (lambda (tail)
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
-       #:with (a-expanded::binding-form ...) #'(a.expanded ...)
+       #:with (a-parsed::binding-form ...) #'(a.parsed ...)
        (unless (= (length (syntax->list #'(a ...)))
                   (length selectors))
          (raise-syntax-error #f
@@ -21,20 +21,20 @@
                                      (length (syntax->list #'(a ...))))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
-       (with-syntax ([falses (for/list ([a (in-list (syntax->list #'(a-expanded.var-id ... ...)))])
+       (with-syntax ([falses (for/list ([a (in-list (syntax->list #'(a-parsed.var-id ... ...)))])
                                #'#f)])
          (values
           (binding-form
-           #'[a-expanded.var-id ... ...]
+           #'[a-parsed.var-id ... ...]
            #`(lambda (v)
                (if (#,predicate v)
                    #,(let loop ([match? #t]
-                                [a-idss (syntax->list #'((a-expanded.var-id ...) ...))]
-                                [a-proc-exprs (syntax->list #'(a-expanded.check-proc-expr ...))]
+                                [a-idss (syntax->list #'((a-parsed.var-id ...) ...))]
+                                [a-proc-exprs (syntax->list #'(a-parsed.check-proc-expr ...))]
                                 [selectors selectors])
                        (cond
                          [(null? a-idss)
-                          #`(values #,match? a-expanded.var-id ... ...)]
+                          #`(values #,match? a-parsed.var-id ... ...)]
                          [else
                           #`(let-values ([(match? . #,(car a-idss)) (#,(car a-proc-exprs) (#,(car selectors) v))])
                               (if match?
@@ -42,5 +42,5 @@
                                   (values #f . falses)))]))
                    (values #f . falses)))
            #`(begin
-               a-expanded.post-defn ...))
+               a-parsed.post-defn ...))
           #'new-tail))])))

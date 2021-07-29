@@ -1,8 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt"
-                     "op.rkt")
+                     "srcloc.rkt")
          "expression.rkt")
 
 (provide (rename-out [rhombus+ +]

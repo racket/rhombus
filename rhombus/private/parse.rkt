@@ -2,14 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx
-                     "enforest.rkt"
-                     "op.rkt"
-                     (submod "op.rkt" for-parse)
-                     "transformer.rkt"
-                     (submod "transformer.rkt" for-parse)
-                     "check.rkt"
-                     "syntax-local.rkt")
-         "declaration-sequence.rkt"
+                     enforest
+                     enforest/transformer)
+         "forwarding-sequence.rkt"
+         "declaration.rkt"
+         "definition.rkt"
          "expression.rkt"
          "binding.rkt")
 
@@ -31,32 +28,18 @@
 
 (begin-for-syntax
   ;; Form at the top of a module:
-  (define-syntax-class :declaration
-    (pattern ((~datum group) head:identifier . tail)
-             #:do [(define head-id (transform-in #'head))]
-             #:do [(define v (syntax-local-value* head-id declaration-transformer?))]
-             #:when (declaration-transformer? v)
-             #:attr expandeds (transform-out
-                               (apply-declaration-transformer v head-id
-                                                              (datum->syntax #f (cons head-id (transform-in #'tail)))))))
+  (define-transform-class :declaration
+    "declaration"
+    declaration-transformer-ref
+    check-declaration-result)
 
   ;; Form in a definition context:
-  (define-syntax-class :definition
-    (pattern ((~datum group) head:identifier . tail)
-             #:do [(define head-id (transform-in #'head))]
-             #:do [(define v (syntax-local-value* head-id definition-transformer?))]
-             #:when (definition-transformer? v)
-             #:attr expandeds (transform-out
-                               (apply-definition-transformer v head-id
-                                                             (datum->syntax #f (cons head-id (transform-in #'tail)))))))
+  (define-transform-class :definition
+    "definition"
+    definition-transformer-ref
+    check-definition-result)
 
   ;; Form in an expression context:
-  ;;  :expression is defined via `define-enforest` below
-
-  ;; Form in a binding context:
-  ;;  :binding is defined via `define-enforest` below
-  
-  ;; the expression variant:
   (define-enforest enforest-expression enforest-expression-step
     :expression :prefix-op+expression+tail :infix-op+expression+tail
     "expression" "expression operator"
@@ -65,7 +48,7 @@
     check-expression-result
     make-identifier-expression)
 
-  ;; the binding variant:
+  ;; Form in a binding context:
   (define-enforest enforest-binding enforest-binding-step
     :binding :prefix-op+binding+tail :infix-op+binding+tail
     "binding" "binding operator"
@@ -82,9 +65,9 @@
      #`(begin
          #,(syntax-local-introduce
             (syntax-parse (syntax-local-introduce #'form)
-              [e::declaration #'(begin . e.expandeds)]
-              [e::definition #'(begin . e.expandeds)]
-              [e::expression #'(#%expression e.expanded)]))
+              [e::declaration #'(begin . e.parsed)]
+              [e::definition #'(begin . e.parsed)]
+              [e::expression #'(#%expression e.parsed)]))
          (rhombus-top . forms))]))
 
 ;; For a definition context:
@@ -92,8 +75,8 @@
   (syntax-parse stx
     [(_) #'(begin)]
     [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
-    [(_ e::definition) #'(begin . e.expandeds)]
-    [(_ e::expression) #'(#%expression e.expanded)]))
+    [(_ e::definition) #'(begin . e.parsed)]
+    [(_ e::expression) #'(#%expression e.parsed)]))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-block stx)
@@ -102,7 +85,7 @@
      (raise-syntax-error #f "found an empty block" stx)]
     [(_ . tail)
      #`(let ()
-         (rhombus-declaration-sequence
+         (rhombus-forwarding-sequence
           #:need-end-expr #,stx
           (rhombus-body . tail)))]))
 
@@ -113,20 +96,15 @@
     [(_ e::definition . tail)
      (syntax-local-introduce
       #`(begin
-         (begin . e.expandeds)
+         (begin . e.parsed)
          (rhombus-body . tail)))]
     [(_ e::expression . tail)
      (syntax-local-introduce
       #`(begin
-          (#%expression e.expanded)
+          (#%expression e.parsed)
           (rhombus-body . tail)))]))
-
-(define-syntax (expression-begin stx)
-  (syntax-parse stx
-    [(_) #'(begin)]
-    [(_ . exprs) #'(#%expression (begin e.exprs))]))
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
   (syntax-parse (syntax-local-introduce stx)
-    [(_ e::expression) (syntax-local-introduce #'e.expanded)]))
+    [(_ e::expression) (syntax-local-introduce #'e.parsed)]))

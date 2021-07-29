@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "transformer.rkt"
                      "consistent.rkt")
+         "definition.rkt"
          "binding.rkt"
          "expression.rkt"
          "parse.rkt"
@@ -10,13 +10,13 @@
          (submod "function.rkt" for-call)
          "quasiquote.rkt"
          (for-syntax "parse.rkt")
-         "declaration-sequence.rkt")
+         "forwarding-sequence.rkt")
 
 (provide (rename-out [rhombus-define define])
          forward)
 
 (begin-for-syntax
-  (struct fcase (args arg-expandeds rhs))
+  (struct fcase (args arg-parseds rhs))
   (define (group-by-counts fcases)
     (define ht
       (for/fold ([ht #hasheqv()]) ([fc (in-list fcases)])
@@ -37,22 +37,22 @@
         (define the-id (car ids))
         (check-consistent stx ids "name")
         (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
-        (define arg-expandedss (map syntax->list (syntax->list #'((arg.expanded ...) ...))))
+        (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
         (define rhss (syntax->list #'(rhs ...)))
         (list
          (wrap-definition
           #`(define #,the-id
-              #,(build-case-function the-id argss arg-expandedss rhss #'form-id #'alts-tag))))]
+              #,(build-case-function the-id argss arg-parsedss rhss #'form-id #'alts-tag))))]
        [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (list
          (wrap-definition
           #`(define id
-              #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.expanded ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag))))]
+              #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag))))]
        [(form-id (~literal values) (parens g ...) (~and rhs (block body ...)))
         #:with (lhs::binding ...) #'(g ...)
-        #:with (lhs-e::binding-form ...) #'(lhs.expanded ...)
+        #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
         #:with (name-id ...) (map infer-name (syntax->list #'(lhs-e.var-ids ...)))
         #:with (tmp-id ...) (generate-temporaries #'(name-id ...))
         (list
@@ -73,7 +73,7 @@
               lhs-e.post-defn ...)))]
        [(form-id any ... (~and rhs (block body ...)))
         #:with lhs::binding #'(group any ...)
-        #:with lhs-e::binding-form #'lhs.expanded
+        #:with lhs-e::binding-form #'lhs.parsed
         #:with name-id (infer-name #'lhs-e.var-ids)
         (list
          (wrap-definition

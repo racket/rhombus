@@ -2,9 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     "transformer.rkt"
+                     enforest/transformer-result
                      "srcloc.rkt"
-                     "check.rkt"
                      "tail.rkt")
          "syntax.rkt"
          "expression.rkt"

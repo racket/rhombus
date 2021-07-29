@@ -1,10 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt"
-                     "op.rkt"
-                     "transformer.rkt"
-                     "syntax-local.rkt")
+                     enforest/syntax-local
+                     "srcloc.rkt")
+         "definition.rkt"
          "expression.rkt"
          "binding.rkt"
          "type.rkt"

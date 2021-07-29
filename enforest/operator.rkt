@@ -1,21 +1,10 @@
 #lang racket/base
 (require racket/base
          syntax/stx
-         "property.rkt"
-         "property-out.rkt"
-         "transformer.rkt"
-         (submod "transformer.rkt" for-parse)
-         "check.rkt")
+         "private/transform.rkt")
 
-;; See "parse.rkt" for general information about operators and parsing.
+;; See "main.rkt" for general information about operators and parsing.
 ;;
-;; The compile-time nature of being a unary operator, binary
-;; operator, etc., is represented using structure-type properties, so
-;; a name can be bound to multiple of those (e.g., `-` is normally
-;; both a unary and a binary operator). An binding cannot be both a
-;; transformer binary operator and non-transformer binary operator,
-;; however, because the transformer nature takes precedence.
-
 ;; An operator's predence is represented as a list of
 ;;
 ;;   (cons/c (or/c identifier? 'default)
@@ -30,7 +19,7 @@
 (provide operator?
          operator-name
          operator-precedences
-         operator-transformer?
+         operator-macro?
          operator-proc ; convention depends on category
 
          prefix-operator
@@ -51,12 +40,9 @@
            apply-prefix-transformer-operator
            apply-infix-transformer-operator))
 
-(struct operator (name precedences transformer? proc))
+(struct operator (name precedences macro? proc))
 (struct prefix-operator operator ())
 (struct infix-operator operator (assoc))
-
-;; All helper functions from here on expect core operators (i.e., an
-;; accessor like `prefix-operator-ref` has already been applied).
 
 ;; returns: 'stronger, 'weaker, 'same (no associativity), #f (not related)
 (define (relative-precedence op other-op head)

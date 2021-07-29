@@ -1,8 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt"
-                     "op.rkt")
+                     "srcloc.rkt")
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
@@ -62,7 +61,7 @@
              ;; eagerly parse content of parentheses; we could choose to
              ;; delay parsing by using `rhombus-expression`, instead
              (syntax-parse (car args)
-               [e::expression (values #'e.expanded #'tail)])]))]))
+               [e::expression (values #'e.parsed #'tail)])]))]))
    (lambda (stxes)
      (syntax-parse stxes
        [((~and head ((~datum parens) . args)) . tail)
@@ -74,7 +73,7 @@
              (raise-syntax-error #f "too many patterns" #'head)]
             [else
              (syntax-parse (car args)
-               [b::binding (values #'b.expanded #'tail)])]))]))))
+               [b::binding (values #'b.parsed #'tail)])]))]))))
 
 (define-syntax #%call
   (expression-infix-operator

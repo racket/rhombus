@@ -1,10 +1,9 @@
 #lang racket/base
 (require syntax/parse
          syntax/stx
-         "op.rkt"
-         (submod "op.rkt" for-parse)
-         "transformer.rkt"
-         (submod "transformer.rkt" for-parse)
+         "operator.rkt"
+         (submod "operator.rkt" for-parse)
+         "private/transform.rkt"
          "syntax-local.rkt"
          "operator-parse.rkt")
 
@@ -27,14 +26,10 @@
 ;;   to produce a Racket expression form, instead of always making a
 ;;   `bin` or `un` AST node.
 ;;
-;; * A prefix or infix operator can be bound to a transformer, in
-;;   which case all parsing for the (second) argument is up to the
-;;   transformer. A prefix operator as a transformer acts just like
-;;   a transformer bound to an identifier, while an infix operator
-;;   as transformer is useful for something like `.` (where the
-;;   second "argument" is not an expression). Note that an infix
-;;   transformer that doesn't consume further input is effectively
-;;   a postfix operator.
+;; * A prefix or infix operator can be bound to a macro transformer,
+;;   in which case all parsing for the (second) argument is up to the
+;;   transformer. Note that an macro infix transformer that doesn't
+;;   consume further input is effectively a postfix operator.
 ;;
 ;; * Function calls, array references, and list construction are not
 ;;   quite built-in. Instead, those positions correspond to the use
@@ -50,18 +45,12 @@
 ;;
 ;; * Operator precedence is not based on numerical levels or even a
 ;;   transitive order. Instead, each operator can declare an order
-;;   relative to specific other operators, and an error is reported
-;;   if two operators must be compared fr precedence and have no
-;;   declared order. See "op.rkt" for more on precedence.
+;;   relative to specific other operators, and an error is reported if
+;;   two operators must be compared fr precedence and have no declared
+;;   order. See "operator.rkt" for more on precedence.
 ;;
 ;; Terminology compared to the paper: "form" means "tree term", and
 ;; "stx" means "term". A "head" or "tail" is a stx/term.
-;;
-;; The "tree term" for binding enforestation is a syntactic list of
-;; length 4 to hold the results of a binding transformer. Putting
-;; those the pieces in one syntax object is a little awkward, but it
-;; makes the `enforest` code work easily for both modes,
-;; parameterized over whether it's in binding mode.
 
 ;; implicit prefix operator names:
 (define tuple-name   '#%tuple)       ; parentheses not after an expression
@@ -86,25 +75,25 @@
                       make-identifier-form)
   (begin
     (define-syntax-class :form
-      (pattern ((~datum group) . tail) #:attr expanded (transform-out (enforest (transform-in #'tail) #f))))
+      (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))
 
     ;; For reentering the enforestation loop within a group, stopping when
     ;; the group ends or when an operator with weaker precedence than `op`
     ;; is found
     (define-splicing-syntax-class :prefix-op+form+tail
-      (pattern (op-name:identifier . tail)
+      (pattern (op-name:identifier . in-tail)
                #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                           prefix-operator-ref)))
-                     (define-values (form new-tail) (enforest-step op (transform-in #'tail)))]
-               #:attr expanded (transform-out form)
-               #:attr new-tail (transform-out new-tail)))
+                     (define-values (form new-tail) (enforest-step op (transform-in #'in-tail)))]
+               #:attr parsed (transform-out form)
+               #:attr tail (transform-out new-tail)))
     (define-splicing-syntax-class :infix-op+form+tail
-      (pattern (op-name:identifier . tail)
+      (pattern (op-name:identifier . in-tail)
                #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
                                                                          infix-operator-ref)))
-                     (define-values (form new-tail) (enforest-step op (transform-in #'tail)))]
-               #:attr expanded (transform-out form)
-               #:attr new-tail (transform-out new-tail)))
+                     (define-values (form new-tail) (enforest-step op (transform-in #'in-tail)))]
+               #:attr parsed (transform-out form)
+               #:attr tail (transform-out new-tail)))
 
     (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                               in-space
@@ -114,10 +103,10 @@
     (define enforest (make-enforest enforest-step))))
 
 (define (make-enforest enforest-step)
-  (lambda (stxes [current-op #f])
+  (lambda (stxes)
     ;; either `stxes` starts with a prefix operator or this first step
     ;; will dispatch to a suitable implicit prefix operator
-    (define-values (form tail) (enforest-step stxes current-op))
+    (define-values (form tail) (enforest-step stxes #f))
     (let loop ([init-form form] [stxes tail])
       (cond
         [(stx-null? stxes) init-form]
@@ -125,7 +114,7 @@
          ;; either `stxes` starts with an infix operator (which was weaker
          ;; precedence than consumed in the previous step), or this step will
          ;; dispatch to a suitable implicit infix operator, like `#%juxtapose`
-         (define-values (form tail) (enforest-step init-form stxes current-op))
+         (define-values (form tail) (enforest-step init-form stxes #f))
          (loop form tail)]))))
 
 (define (make-enforest-step form-kind-str operator-kind-str
@@ -177,7 +166,7 @@
 
         (define (dispatch-prefix-operator v op tail op-stx)
           (cond
-            [(operator-transformer? op)
+            [(operator-macro? op)
              ;; it's up to the transformer to consume whatever it wants after the operator
              (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes check-result))
              (enforest-step form new-tail current-op)]
@@ -236,7 +225,7 @@
           (cond
             [(eq? rel-prec 'stronger)
              (cond
-               [(operator-transformer? op)
+               [(operator-macro? op)
                 ;; it's up to the transformer to consume whatever it wants after the operator
                 (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes check-result))
                 (enforest-step form new-tail current-op)]
@@ -273,4 +262,3 @@
           (dispatch-infix-operator v op stxes op-stx)))]))
 
   enforest-step)
-

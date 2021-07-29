@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt"
-                     "operator-parse.rkt")
+                     enforest/operator-parse
+                     "srcloc.rkt")
          syntax/parse
          "parse.rkt"
          "expression.rkt"

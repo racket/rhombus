@@ -28,10 +28,10 @@
         (values
          #`(#,(build-case-function #'match
                                    (map list (syntax->list #'(b ... ignored)))
-                                   (map list (syntax->list #`(b.expanded ... #,(binding-form
-                                                                                #'()
-                                                                                #'(lambda (v) #t)
-                                                                                #'(begin)))))
+                                   (map list (syntax->list #`(b.parsed ... #,(binding-form
+                                                                              #'()
+                                                                              #'(lambda (v) #t)
+                                                                              #'(begin)))))
                                    (syntax->list #'(rhs ... else-rhs))
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
@@ -45,7 +45,7 @@
         (values
          #`(#,(build-case-function #'match
                                    (map list (syntax->list #'(b ...)))
-                                   (map list (syntax->list #'(b.expanded ...)))
+                                   (map list (syntax->list #'(b.parsed ...)))
                                    (syntax->list #'(rhs ...))
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))

@@ -1,12 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "op.rkt"
-                     "transformer.rkt"
-                     "enforest.rkt"
-                     "property.rkt"
-                     "check.rkt")
-         (only-in "core-implicit.rkt"
+                     enforest
+                     enforest/operator
+                     enforest/property
+                     enforest/proc-name)
+         "declaration.rkt"
+         (only-in "implicit.rkt"
                   #%literal))
 
 (provide (rename-out [rhombus-require require])
@@ -46,7 +46,7 @@
      (syntax-parse stx
        #:datum-literals (block)
        [(_ (block r::require ...))
-        #`((require r.expanded ...))]))))
+        #`((require r.parsed ...))]))))
 
 (define-syntax (define-require-syntax stx)
   (syntax-parse stx

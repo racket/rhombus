@@ -2,9 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx
-                     "srcloc.rkt"
-                     "op.rkt"
-                     "syntax-local.rkt")
+                     enforest/syntax-local
+                     "srcloc.rkt")
          "expression.rkt"
          "binding.rkt")
 
