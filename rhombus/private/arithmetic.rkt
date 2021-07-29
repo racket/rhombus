@@ -73,11 +73,7 @@
                                                      (list (quote-syntax prim) form1 form2)
                                                      (span-srcloc form1 form2)
                                                      stx))
-                                    assoc)]))
-  
-  (struct prefix+infix (prefix infix)
-    #:property prop:expression-prefix-operator (lambda (self) (prefix+infix-prefix self))
-    #:property prop:expression-infix-operator (lambda (self) (prefix+infix-infix self))))
+                                    assoc)])))
 
 (define-syntax (define-infix stx)
   (syntax-parse stx
@@ -94,7 +90,7 @@
   #:same-as (rhombus-))
 
 (define-syntax rhombus-
-  (prefix+infix
+  (expression-prefix+infix-operator
    (prefix rhombus- - #:weaker-than (rhombus* rhombus/))
    (infix rhombus- - #:weaker-than (rhombus* rhombus/))))
 

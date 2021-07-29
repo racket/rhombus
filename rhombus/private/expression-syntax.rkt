@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     syntax/boundmap
                      enforest/transformer-result
                      "srcloc.rkt"
                      "tail.rkt")
@@ -9,13 +8,22 @@
          "expression.rkt"
          "parse.rkt")
 
-(provide expression_form)
+(provide expression_operator
+         expression_macro)
 
-(define-syntax expression_form
-  (make-syntax-definition-transformer (lambda (x) x)
-                                      #'make-expression-prefix-operator
-                                      #'make-expression-infix-operator
-                                      #'prefix+infix))
+(define-syntax expression_operator
+  (make-operator-definition-transformer 'automatic
+                                        (lambda (x) x)
+                                        #'make-expression-prefix-operator
+                                        #'make-expression-infix-operator
+                                        #'prefix+infix))
+
+(define-syntax expression_macro
+  (make-operator-definition-transformer 'macro
+                                        (lambda (x) x)
+                                        #'make-expression-prefix-operator
+                                        #'make-expression-infix-operator
+                                        #'prefix+infix))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)

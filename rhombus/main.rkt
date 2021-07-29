@@ -23,6 +23,7 @@
         "private/binding-syntax.rkt"
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"
+        "private/operator.rkt"
         "private/type.rkt"
         "private/list.rkt"
         "private/assign.rkt"

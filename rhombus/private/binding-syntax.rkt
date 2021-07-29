@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     syntax/boundmap
                      enforest/proc-name
                      enforest/transformer-result
                      "srcloc.rkt"
@@ -11,15 +10,24 @@
          "binding.rkt"
          "parse.rkt")
 
-(provide binding_form
+(provide binding_operator
+         binding_macro
          (for-syntax unpack_binding
                      pack_binding))
 
-(define-syntax binding_form
-  (make-syntax-definition-transformer in-binding-space
-                                      #'make-binding-prefix-operator
-                                      #'make-binding-infix-operator
-                                      #'prefix+infix))
+(define-syntax binding_operator
+  (make-operator-definition-transformer 'automatic
+                                        in-binding-space
+                                        #'make-binding-prefix-operator
+                                        #'make-binding-infix-operator
+                                        #'prefix+infix))
+
+(define-syntax binding_macro
+  (make-operator-definition-transformer 'macro
+                                        in-binding-space
+                                        #'make-binding-prefix-operator
+                                        #'make-binding-infix-operator
+                                        #'prefix+infix))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)

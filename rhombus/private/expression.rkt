@@ -15,7 +15,9 @@
                      
            check-expression-result
            
-           in-expression-space))
+           in-expression-space
+
+           (struct-out expression-prefix+infix-operator)))
 
 (provide define-expression-syntax)
 
@@ -40,3 +42,8 @@
     [(_ name:id rhs)
      (quasisyntax/loc stx
        (define-syntax #,(in-expression-space #'name) rhs))]))
+
+(begin-for-syntax
+  (struct expression-prefix+infix-operator (prefix infix)
+    #:property prop:expression-prefix-operator (lambda (self) (expression-prefix+infix-operator-prefix self))
+    #:property prop:expression-infix-operator (lambda (self) (expression-prefix+infix-operator-infix self))))

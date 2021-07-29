@@ -123,6 +123,7 @@
                             check-result
                             make-identifier-form)
   (define (raise-unbound-operator op-stx)
+    (log-error ">> ~s" (syntax-debug-info op-stx))
     (raise-syntax-error #f
                         (string-append "unbound " operator-kind-str)
                         op-stx))

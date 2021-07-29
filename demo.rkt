@@ -78,53 +78,37 @@ size
 
 // defining an infix operator
 
-expression_form ?(¿a +* ¿b):
-  ?{
-     define v: ¿b
-     (¿a + v) * v
-   }
+operator (a +* b):
+  (a + b) * b
 
 3 +* 4
 
 // with precedence and associativity
 
-expression_form ?(¿a ++* ¿b,
-                  weaker_than:> *,
-                  associativity:> right):
-  ?{
-     define v: ¿b
-     (¿a + v) * v
-   }
+operator (a ++* b,
+          weaker_than:> *,
+          associativity:> right):
+  (a + b) * b
 
 3 ++* 4 * 2 ++* 5
 3 ++* ((4 * 2) ++* 5)
 
-// ?? is an alternate spelling of ¿
-expression_form ?(??a & ??b):
-  ?(cons(??a, ??b))
-
-1 & 2
-  
 // defining a prefix operator
 
-expression_form ?(!! ¿b):
-  ?(! ! ¿b)
+operator (!! b):
+  ! ! b
 
 !!#true
 
-// defining an operator that is both prefix and infix,
-// using a helper function
+// defining an operator that is both prefix and infix
 
-define power(base, exponent):
-  if exponent == 0
-  | 1
-  | base * power(base, exponent-1)
-
-expression_form
- | ?(** ¿exponent):
-      ?(2 ** ¿exponent)
- | ?(¿base ** ¿exponent):
-      ?(power(¿base, ¿exponent))
+operator
+ | (** exponent):
+     2 ** exponent
+ | (base ** exponent):
+     if exponent == 0
+     | 1
+     | base * (base ** (exponent-1))
 
 3 ** 8
 ** 10 // = 2 ** 10
@@ -147,32 +131,47 @@ cond
  | #true: 17
  | else: 18
 
-// postfix efect by a transformer "infix" operator
+// postfix as a macro "infix" operator;
 
 define
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
-expression_form ?(¿a *! ¿tail ...):
+expression_macro ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10*!
 
-// define an expression transformer, which receives
-// the rest of the group after the identifier
+// ?? is an alias for ¿
 
-expression_form ?(prefix_plus ¿e ...):
+expression_macro ?(??a **! ??tail ...):
+  values(?(factorial(??a)), tail)
+
+10**!
+
+
+// a macro with an identifier name that does a weird
+// thing with the result tail
+
+expression_macro ?(prefix_plus ¿a ¿b ¿c ...):
+  values(a, ?(+ ¿b ¿c ...))
+
+prefix_plus 7 9
+
+// another way to write that
+
+expression_macro ?(also_prefix_plus ¿e ...):
   match e
    | ?(¿a ¿b ¿c ...):
        values(a, ?(+ ¿b ¿c ...))
    | else:
        values(?"this is terrible error reporting", ?())
 
-prefix_plus 7 9
+also_prefix_plus 7 9
 
 // define a binding operator
 
-binding_form ?($ ¿n):
+binding_operator ?($ ¿n):
   ?(¿n :: Integer)
 
 define apply_interest($ n):
@@ -181,7 +180,7 @@ define apply_interest($ n):
 apply_interest(7)
 
 // define <> as revese-cons pattern
-binding_form ?(¿a <> ¿b):
+binding_operator ?(¿a <> ¿b):
   match unpack_binding(a)
    | ?((¿a_id), ¿a_pred, {¿a_def; ...}):
        match unpack_binding(b)
@@ -203,7 +202,7 @@ binding_form ?(¿a <> ¿b):
                            {¿a_def; ...; ¿b_def; ...}))
 
 // an expression operator that's consistent with the pattern
-expression_form ?(¿a <> ¿b): ?(cons(¿b, ¿a))
+expression_operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
 
 define rx <> (ry :: Integer) : "2" <> 1
 rx
@@ -211,7 +210,7 @@ rx
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 
-definition_form ?(define_eight ¿e ...):
+definition_macro ?(define_eight ¿e ...):
   match e
   | ?(¿name):
       ?{define ¿name: 8}
@@ -219,7 +218,7 @@ definition_form ?(define_eight ¿e ...):
 define_eight ate
 ate
 
-definition_form ?(define_and_use ¿e ...):
+definition_macro ?(define_and_use ¿e ...):
   match e
   | ?(¿name {¿rhs ...}):
       ?{define ¿name {¿rhs ...}
@@ -230,7 +229,7 @@ nine
 
 // declaration form
 
-declaration_form ?(empty_require ¿e ...):
+declaration_macro ?(empty_require ¿e ...):
   match e
   | ?():
       ?{require:}

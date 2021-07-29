@@ -9,9 +9,9 @@
          "syntax.rkt"
          "parse.rkt")
 
-(provide definition_form)
+(provide definition_macro)
 
-(define-syntax definition_form
+(define-syntax definition_macro
   (make-identifier-syntax-definition-transformer (lambda (x) x)
                                                  #'make-definition-transformer))
 
