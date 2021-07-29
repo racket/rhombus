@@ -10,7 +10,7 @@
   (binding-prefix-operator
    #'values
    '((default . stronger))
-   #t
+   'macro
    (lambda (stx)
      (syntax-parse stx
        [(head . _)

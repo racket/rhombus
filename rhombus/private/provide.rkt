@@ -54,7 +54,7 @@
   (provide-prefix-operator
    #'rename
    '((default . stronger))
-   #t
+   'macro
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)

@@ -9,7 +9,7 @@
   (struct expression+binding-prefix-operator (exp-op bind-op)
     #:property prop:expression-prefix-operator (lambda (self) (expression+binding-prefix-operator-exp-op self))
     #:property prop:binding-prefix-operator (lambda (self) (expression+binding-prefix-operator-bind-op self)))
-  (define (make-expression+binding-prefix-operator name prec transformer? exp bind)
+  (define (make-expression+binding-prefix-operator name prec protocol exp bind)
     (expression+binding-prefix-operator
-     (expression-prefix-operator name prec transformer? exp)
-     (binding-prefix-operator name prec transformer? bind))))
+     (expression-prefix-operator name prec protocol exp)
+     (binding-prefix-operator name prec protocol bind))))

@@ -55,7 +55,7 @@
   (expression-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (form1 tail)
      (syntax-parse tail
        [(dot field:identifier . tail)

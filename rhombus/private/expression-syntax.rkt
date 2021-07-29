@@ -22,12 +22,12 @@
     #:property prop:expression-prefix-operator (lambda (self) (prefix+infix-prefix self))
     #:property prop:expression-infix-operator (lambda (self) (prefix+infix-infix self))))
 
-(define-for-syntax (make-expression-infix-operator name prec transformer? proc assc)
+(define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator
    name
    prec
-   transformer?
-   (if transformer?
+   protocol
+   (if (eq? protocol 'macro)
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
@@ -40,12 +40,12 @@
                                          proc)))))
    assc))
 
-(define-for-syntax (make-expression-prefix-operator name prec transformer? proc)
+(define-for-syntax (make-expression-prefix-operator name prec protocol proc)
   (expression-prefix-operator
    name
    prec
-   transformer? 
-   (if transformer?
+   protocol
+   (if (eq? protocol 'macro)
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (pack-tail #'tail) #'head)]))

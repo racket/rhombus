@@ -53,12 +53,12 @@
     [b::binding #'b.parsed]
     [_ (raise-result-error (proc-name proc) "binding?" form)]))
 
-(define-for-syntax (make-binding-infix-operator name prec transformer? proc assc)
+(define-for-syntax (make-binding-infix-operator name prec protocol proc assc)
   (binding-infix-operator
    name
    prec
-   transformer?
-   (if transformer?
+   protocol
+   (if (eq? protocol 'macro)
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail) #'head)]))
@@ -70,12 +70,12 @@
                           proc)))
    assc))
 
-(define-for-syntax (make-binding-prefix-operator name prec transformer? proc)
+(define-for-syntax (make-binding-prefix-operator name prec protocol proc)
   (binding-prefix-operator
    name
    prec
-   transformer? 
-   (if transformer?
+   protocol 
+   (if (eq? protocol 'macro)
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (pack-tail #'tail) #'head)]))

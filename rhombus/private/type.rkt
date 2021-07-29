@@ -66,7 +66,7 @@
   (binding-infix-operator
    #'::
    '((default . weaker))
-   #t ; transformer
+   'macro
    (lambda (form tail)
      (syntax-parse tail
        [(op t::type . new-tail)
@@ -94,7 +94,7 @@
                              #,new-def
                              left.post-defn))
            #'new-tail))]))
-   #f))
+   'none))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))
 

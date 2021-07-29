@@ -99,12 +99,12 @@
        #`(#,make-infix-id
           (quote-syntax op-name.name)
           #,(convert-prec prec)
-          (not (eq? (syntax-e #'dots) #f))
+          (if (eq? (syntax-e #'dots) #f) 'automatic 'macro)
           (let ([op-name.name (lambda (left right-or-tail self-id)
                                 (rhombus-expression (group #,rhs)))])
             op-name.name)
-          '#,(if (eq? (syntax-e assc) 'none)
-                 #'#f
+          '#,(if (eq? (syntax-e assc) #f)
+                 #'none
                  assc))]
       [(group op-name::operator
               (op ¿) arg-or-tail:identifier
@@ -117,7 +117,7 @@
        #`(#,make-prefix-id
           (quote-syntax op-name.name)
           #,(convert-prec prec)
-          (not (eq? (syntax-e #'dots) #f))
+          (if (eq? (syntax-e #'dots) #f) 'automatic 'macro)
           (let ([op-name.name (lambda (arg-or-tail self-id)
                                 (rhombus-expression (group #,rhs)))])
             op-name.name))])))

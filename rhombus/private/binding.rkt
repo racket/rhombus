@@ -36,7 +36,7 @@
   (property binding-infix-operator infix-operator)
 
   (define (binding-transformer name proc)
-    (binding-prefix-operator name '((default . stronger)) #t proc))
+    (binding-prefix-operator name '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
   (define (binding-form ids check-proc-expr post-defn)

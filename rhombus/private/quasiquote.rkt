@@ -92,7 +92,7 @@
   (make-expression+binding-prefix-operator
    (quote-syntax ?)
    '((default . stronger))
-   #t ; transformer
+   'macro
    ;; expression
    (lambda (stx)
      (syntax-parse stx
@@ -135,7 +135,7 @@
   (expression-prefix-operator
    (quote-syntax ¿)
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (stx)
      (syntax-parse stx
        [(op . _)

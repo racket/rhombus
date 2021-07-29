@@ -58,7 +58,7 @@
   (require-prefix-operator
    #'%literal
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (stx)
      (syntax-parse stx
        [(a . tail)
@@ -73,7 +73,7 @@
   (require-infix-operator
    #'rename
    '((default . stronger))
-   #t
+   'macro
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
@@ -82,4 +82,4 @@
            . tail)
         (values #`(rename-in #,req [int ext] ...)
                 #'tail)]))
-   #f))
+   'none))

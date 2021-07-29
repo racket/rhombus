@@ -17,7 +17,7 @@
   (expression-prefix-operator
    #'%block
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (stxes)
      (syntax-parse stxes
        [((~and head ((~and tag (~datum block)) . body)) . tail)
@@ -28,7 +28,7 @@
   (make-expression+binding-prefix-operator
    #'%literal
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (stxes)
      (syntax-parse stxes
        [(datum . tail)
@@ -47,7 +47,7 @@
   (make-expression+binding-prefix-operator
    #'%tuple
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (stxes)
      (syntax-parse stxes
        [((~and head ((~datum parens) . args)) . tail)
@@ -79,7 +79,7 @@
   (expression-infix-operator
    #'%call
    '((default . stronger))
-   #t ; transformer
+   'macro
    (lambda (rator stxes)
      (parse-function-call rator stxes))
    'left))

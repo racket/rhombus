@@ -166,7 +166,7 @@
 
         (define (dispatch-prefix-operator v op tail op-stx)
           (cond
-            [(operator-macro? op)
+            [(eq? (operator-protocol op) 'macro)
              ;; it's up to the transformer to consume whatever it wants after the operator
              (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes check-result))
              (enforest-step form new-tail current-op)]
@@ -225,7 +225,7 @@
           (cond
             [(eq? rel-prec 'stronger)
              (cond
-               [(operator-macro? op)
+               [(eq? (operator-protocol op) 'macro)
                 ;; it's up to the transformer to consume whatever it wants after the operator
                 (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes check-result))
                 (enforest-step form new-tail current-op)]

@@ -19,7 +19,7 @@
 (provide operator?
          operator-name
          operator-precedences
-         operator-macro?
+         operator-protocol
          operator-proc ; convention depends on category
 
          prefix-operator
@@ -40,9 +40,29 @@
            apply-prefix-transformer-operator
            apply-infix-transformer-operator))
 
-(struct operator (name precedences macro? proc))
+(struct operator (name precedences protocol proc)
+  #:guard (lambda (name precedences protocol proc who)
+            (unless (identifier? name)
+              (raise-argument-error who "identifier?" name))
+            (unless (and (list? precedences)
+                         (for/and ([p (in-list precedences)])
+                           (and (pair? p)
+                                (or (eq? (car p) 'default)
+                                    (identifier? (car p)))
+                                (memq (cdr p) '(weaker stronger same)))))
+              (raise-argument-error who "(listof (cons/c (or/c identifier? 'default) (or/c 'stronger 'weaker 'same)))" precedences))
+            (unless (memq protocol '(automatic macro))
+              (raise-argument-error who "(or/c 'automatic 'macro)" protocol))
+            (unless (procedure? proc)
+              (raise-argument-error who "procedure?" proc))
+            (values name precedences protocol proc)))
+            
 (struct prefix-operator operator ())
-(struct infix-operator operator (assoc))
+(struct infix-operator operator (assoc)
+  #:guard (lambda (name precedences protocol proc assoc who)
+            (unless (memq assoc '(left right none))
+              (raise-argument-error who "(or/c 'left 'right 'none)" assoc))
+            (values name precedences protocol proc assoc)))
 
 ;; returns: 'stronger, 'weaker, 'same (no associativity), #f (not related)
 (define (relative-precedence op other-op head)

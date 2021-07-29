@@ -24,7 +24,7 @@
   (property expression-infix-operator infix-operator)
 
   (define (expression-transformer name proc)
-    (expression-prefix-operator name '((default . stronger)) #t proc))
+    (expression-prefix-operator name '((default . stronger)) 'macro proc))
 
   (define (make-identifier-expression id)
     id)

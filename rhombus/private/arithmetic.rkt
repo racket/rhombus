@@ -39,7 +39,7 @@
                                            (cons (quote-syntax stronger-op)
                                                  'stronger)
                                            ...)
-                                     #f ; not a transformer
+                                     'automatic
                                      (lambda (form stx)
                                        (datum->syntax (quote-syntax here)
                                                       (list (quote-syntax prim) form)
@@ -67,7 +67,7 @@
                                           (cons (quote-syntax stronger-op)
                                                 'stronger)
                                           ...)
-                                    #f ; not a transformer
+                                    'automatic
                                     (lambda (form1 form2 stx)
                                       (datum->syntax (quote-syntax here)
                                                      (list (quote-syntax prim) form1 form2)
