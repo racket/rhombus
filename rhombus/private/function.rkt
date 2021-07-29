@@ -1,10 +1,14 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "consistent.rkt")
          "expression.rkt"
          "binding.rkt"
+         "definition.rkt"
+         "expression+definition.rkt"
          "parse.rkt"
+         "nested-bindings.rkt"
          (only-in "assign.rkt"
                   [= rhombus=]))
 
@@ -15,8 +19,7 @@
                      build-case-function))
 
 (module+ for-call
-  (provide (for-syntax parse-function-call)
-           nested-bindings))
+  (provide (for-syntax parse-function-call)))
 
 (begin-for-syntax
   (define-syntax-class :kw-opt-binding
@@ -36,22 +39,40 @@
              #:attr parsed #'arg.parsed)))
 
 (define-syntax function
-  (expression-transformer
-   #'function
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (parens group block alts)
-       [(form-id:identifier ((~and alts-tag alts) (block (group (parens arg::binding ...) (~and rhs (block body ...)))) ...+) . tail)
-        (define argss (map syntax->list (syntax->list #'((arg ...) ...))))
-        (define arg-parsedss (map syntax->list (syntax->list #'((arg.parsed ...) ...))))
-        (define rhss (syntax->list #'(rhs ...)))
-        (values
-         (build-case-function #'form-id argss arg-parsedss rhss #'form-id #'alts-tag)
-         #'tail)]
-       [(form-id:identifier ((~and parens-tag parens) arg::kw-opt-binding ...) (~and rhs (block body ...)) . tail)
-        (values
-         (build-function #'form-id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)
-         #'tail)]))))
+  (make-expression+definition-transformer
+   (expression-transformer
+    #'function
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (parens group block alts)
+        [(form-id ((~and alts-tag alts) (block (group (parens arg::binding ...) (~and rhs (block body ...)))) ...+) . tail)
+         (values
+          (build-case-function #'form-id #'((arg ...) ...) #'((arg.parsed ...) ...) #'(rhs ...) #'form-id #'alts-tag)
+          #'tail)]
+        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ...) (~and rhs (block body ...)) . tail)
+         (values
+          (build-function #'form-id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)
+          #'tail)])))
+   (definition-transformer
+     (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (parens group block alts)
+        [(form-id ((~and alts-tag alts) (block (group name:identifier (parens arg::binding ...) (~and rhs (block body ...)))) ...+))
+         (define names (syntax->list #'(name ...)))
+         (define the-name (car names))
+         (check-consistent stx names "name")
+         (list
+          #`(define #,the-name
+              #,(build-case-function #'form-id #'((arg ...) ...) #'((arg.parsed ...) ...) #'(rhs ...) #'form-id #'alts-tag)))]
+        [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ...) (~and rhs (block body ...)))
+         (list
+          #`(define name
+              #,(build-function #'form-id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))]
+        ;; definition form didn't match, so try parsing as a `function` expression:
+        [(_ ((~and parens-tag parens) arg ...) (~and rhs (block . _)) . _)
+         (syntax-parse #`(group . #,stx)
+           [e::expression
+            (list #'e.parsed)])])))))
 
 (begin-for-syntax
 
@@ -91,13 +112,16 @@
          #`(lambda (arg-form ... ...)
              (nested-bindings
               #,function-name
-              #f
+              #f argument-binding-failure
               (begin)
               (arg-id arg.parsed arg)
               ...
               (rhombus-expression (group rhs))))))))
   
-  (define (build-case-function function-name argss arg-parsedss rhss start end)
+  (define (build-case-function function-name argss-stx arg-parsedss-stx rhss-stx start end)
+    (define argss (map syntax->list (syntax->list argss-stx)))
+    (define arg-parsedss (map syntax->list (syntax->list arg-parsedss-stx)))
+    (define rhss (syntax->list rhss-stx))
     (define sames (group-by-counts (map fcase argss arg-parsedss rhss)))
     (relocate
      (span-srcloc start end)
@@ -117,26 +141,11 @@
                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
                                 (nested-bindings
                                  #,function-name
-                                 try-next
+                                 try-next argument-binding-failure
                                  (begin)
                                  (arg-id arg-parsed arg)
                                  ...
                                  (rhombus-expression (group rhs)))))]))]))))))
-
-(define-syntax (nested-bindings stx)
-  (syntax-parse stx
-    [(_ who try-next post-defn body) #'(let () post-defn body)]
-    [(_ who try-next post-defn (arg-id arg::binding-form arg-pat) . tail)
-     #'(let-values ([(match? . arg.var-ids) (arg.check-proc-expr arg-id)])
-         (if match?
-             (nested-bindings
-              who
-              try-next
-              (begin post-defn arg.post-defn)
-              . tail)
-             (if try-next
-                 (try-next)
-                 (argument-binding-failure 'who arg-id 'arg-pat))))]))
 
 (define (argument-binding-failure who val binding)
   (raise-binding-failure who "argument" val binding))

@@ -11,24 +11,23 @@
 (provide expression_operator
          expression_macro)
 
+(module+ for-define
+  (provide (for-syntax make-expression-infix-operator
+                       make-expression-prefix-operator)))
+
 (define-syntax expression_operator
   (make-operator-definition-transformer 'automatic
                                         (lambda (x) x)
                                         #'make-expression-prefix-operator
                                         #'make-expression-infix-operator
-                                        #'prefix+infix))
+                                        #'expression-prefix+infix-operator))
 
 (define-syntax expression_macro
   (make-operator-definition-transformer 'macro
                                         (lambda (x) x)
                                         #'make-expression-prefix-operator
                                         #'make-expression-infix-operator
-                                        #'prefix+infix))
-
-(begin-for-syntax
-  (struct prefix+infix (prefix infix)
-    #:property prop:expression-prefix-operator (lambda (self) (prefix+infix-prefix self))
-    #:property prop:expression-infix-operator (lambda (self) (prefix+infix-infix self))))
+                                        #'expression-prefix+infix-operator))
 
 (define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator

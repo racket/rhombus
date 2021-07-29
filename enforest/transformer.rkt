@@ -26,7 +26,7 @@
                #:do [(define t (syntax-local-value* head-id transformer-ref))]
                #:when t
                #:attr parsed (transform-out
-                              (apply-transformer t head-id
+                              (apply-transformer (transformer-ref t) head-id
                                                  (transform-in (datum->syntax #f (cons head-id #'tail)))
                                                  check-result))))))
 

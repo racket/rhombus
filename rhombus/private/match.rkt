@@ -27,12 +27,12 @@
         #:with (b::binding ...) #'((group bind ...) ...)
         (values
          #`(#,(build-case-function #'match
-                                   (map list (syntax->list #'(b ... ignored)))
-                                   (map list (syntax->list #`(b.parsed ... #,(binding-form
-                                                                              #'()
-                                                                              #'(lambda (v) #t)
-                                                                              #'(begin)))))
-                                   (syntax->list #'(rhs ... else-rhs))
+                                   #'((b) ... (ignored))
+                                   #`((b.parsed) ... (#,(binding-form
+                                                         #'()
+                                                         #'(lambda (v) #t)
+                                                         #'(begin))))
+                                   #'(rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
@@ -44,9 +44,9 @@
         #:with (b::binding ...) #'((group bind ...) ...)
         (values
          #`(#,(build-case-function #'match
-                                   (map list (syntax->list #'(b ...)))
-                                   (map list (syntax->list #'(b.parsed ...)))
-                                   (syntax->list #'(rhs ...))
+                                   #'((b) ...)
+                                   #'((b.parsed) ...)
+                                   #'(rhs ...)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]))))

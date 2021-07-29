@@ -45,11 +45,11 @@ define π: 3.14
 define (((ππ))): π * π
 ππ
 
-define values(ma, mb, mc):
+define (ma, mb, mc):
   values("1", "2", "3")
 mb
   
-define cons(ca, cb): cons(1, 2)
+value cons(ca, cb): cons(1, 2)
 ca
 
 define
@@ -133,7 +133,7 @@ cond
 
 // postfix as a macro "infix" operator;
 
-define
+function
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
@@ -160,7 +160,7 @@ prefix_plus 7 9
 
 // another way to write that
 
-expression_macro ?(also_prefix_plus ¿e ...):
+define ?(also_prefix_plus ¿e ...):
   match e
    | ?(¿a ¿b ¿c ...):
        values(a, ?(+ ¿b ¿c ...))
@@ -174,7 +174,7 @@ also_prefix_plus 7 9
 binding_operator ?($ ¿n):
   ?(¿n :: Integer)
 
-define apply_interest($ n):
+function apply_interest($ n):
   n * 1.05
 
 apply_interest(7)

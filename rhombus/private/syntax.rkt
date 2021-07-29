@@ -17,6 +17,10 @@
 (provide (for-syntax make-operator-definition-transformer
                      make-identifier-syntax-definition-transformer
 
+                     parse-operator-definition
+                     parse-operator-definitions
+                     :operator-syntax-quote
+
                      :prefix-operator-options
                      :infix-operator-options
                      convert-prec

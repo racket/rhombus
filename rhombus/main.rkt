@@ -17,6 +17,7 @@
         "private/arithmetic.rkt"
         "private/struct.rkt"
         "private/define.rkt"
+        "private/value.rkt"
         "private/require.rkt"
         "private/provide.rkt"
         "private/expression-syntax.rkt"

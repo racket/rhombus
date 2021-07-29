@@ -15,5 +15,6 @@
      (syntax-parse stx
        [(head . _)
         (raise-syntax-error #f
-                            "not allowed as a nested pattern"
+                            (string-append "not allowed as a pattern (except as a non-nested"
+                                           " pattern by forms that specifically recognize it")
                             #'head)]))))
