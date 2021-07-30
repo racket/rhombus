@@ -5,8 +5,7 @@
          "parse.rkt")
 
 (provide (rename-out [rhombus-if if]
-                     [rhombus-cond cond]
-                     [rhombus-else else]))
+                     [rhombus-cond cond]))
 
 (define-syntax rhombus-if
   (expression-transformer
@@ -30,11 +29,10 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
-       #:literals (rhombus-else)
        [(form-id (alts
                   (block (group pred ... (block rhs ...)))
                   ...
-                  (block (group rhombus-else (block else-rhs ...))))
+                  (block (group #:else (block else-rhs ...))))
                  . tail)
         (values
          #'(cond
@@ -54,5 +52,3 @@
               (rhombus-block rhs ...)]
              ...)
          #'tail)]))))
-
-(define-syntax rhombus-else #f)

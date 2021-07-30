@@ -122,7 +122,7 @@ match cons(7, 8)
      b
  | x:
      x
- | else:
+ | 'else':
      "other"
 
 match ?(z + y, {[10, 11, 12]})
@@ -131,7 +131,7 @@ match ?(z + y, {[10, 11, 12]})
 
 cond
  | #true: 17
- | else: 18
+ | 'else': 18
 
 // postfix as a macro "infix" operator;
 
@@ -166,7 +166,7 @@ define ?(also_prefix_plus ¿e ...):
   match e
    | ?(¿a ¿b ¿c ...):
        values(a, ?(+ ¿b ¿c ...))
-   | else:
+   | 'else':
        values(?"this is terrible error reporting", ?())
 
 also_prefix_plus 7 9
@@ -200,7 +200,7 @@ binding_operator ?(¿a <> ¿b):
                                       | values(#true, ar, br)
                                       | values(#false, #false, #false)
                                    | values(#false, #false, #false)
-                              | else: values(#false, #false, #false),
+                              | 'else': values(#false, #false, #false),
                            {¿a_def; ...; ¿b_def; ...}))
 
 // an expression operator that's consistent with the pattern

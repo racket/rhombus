@@ -4,9 +4,7 @@
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
-         "function.rkt"
-         (only-in "cond.rkt"
-                  [else rhombus-else]))
+         "function.rkt")
 
 (provide match)
 
@@ -16,12 +14,11 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
-       #:literals (rhombus-else)
        [(form-id in ... ((~and alts-tag alts)
                          (block (group bind ...
                                        (~and rhs (block . _))))
                          ...
-                         (block (group rhombus-else
+                         (block (group #:else
                                        (~and else-rhs (block . _)))))
                  . tail)
         #:with (b::binding ...) #'((group bind ...) ...)
