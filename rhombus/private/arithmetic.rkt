@@ -15,7 +15,8 @@
                      [rhombus> >])
          !
          &&
-         \|\|)
+         \|\|
+         +$)
 
 (begin-for-syntax
   (require (for-syntax racket/base
@@ -121,3 +122,5 @@
   #:stronger-than (\|\| &&))
 (define-infix rhombus> >
   #:stronger-than (\|\| &&))
+
+(define-infix +$ string-append)

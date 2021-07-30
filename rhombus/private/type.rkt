@@ -10,6 +10,7 @@
 (provide ::
 
          Integer
+         String
 
          (for-syntax rhombus-type
                      rhombus-typed
@@ -97,6 +98,7 @@
    'none))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))
+(define-syntax String (rhombus-type #'string?))
 
 (define-syntax (define-type-syntax stx)
   (syntax-parse stx

@@ -9,6 +9,8 @@
   #false || !(#false || #false)
 }
 
+"hello" +$ " " +$ "world"
+
 // define and call a function
 
 define five(x):
