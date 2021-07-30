@@ -142,7 +142,7 @@
            (cond
              [(prefix-operator-ref v)
               => (lambda (op)
-                   (dispatch-prefix-operator v op #'tail head-id))]
+                   (dispatch-prefix-operator v op #'tail stxes head-id))]
              [(infix-operator-ref v)
               (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
              [(identifier? #'head)
@@ -164,7 +164,7 @@
 
         . where .
 
-        (define (dispatch-prefix-operator v op tail op-stx)
+        (define (dispatch-prefix-operator v op tail stxes op-stx)
           (cond
             [(eq? (operator-protocol op) 'macro)
              ;; it's up to the transformer to consume whatever it wants after the operator
@@ -182,7 +182,8 @@
           (define-values (v op op-stx) (lookup-prefix-implicit implicit-name head-stx in-space
                                                                prefix-operator-ref
                                                                operator-kind-str form-kind-str))
-          (dispatch-prefix-operator v op stxes op-stx)))]
+          (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
+          (dispatch-prefix-operator v op stxes synthetic-stxes op-stx)))]
 
       [(init-form stxes current-op)
        ;; Has a preceding expression, so dispatch to infix (possibly implicit)
@@ -196,7 +197,7 @@
            (cond
              [(infix-operator-ref v)
               => (lambda (op)
-                   (dispatch-infix-operator v op #'tail head-id))]
+                   (dispatch-infix-operator v op #'tail stxes head-id))]
              [(prefix-operator-ref v)
               (dispatch-infix-implicit juxtapose-name #'head)]
              [(identifier? #'head)
@@ -218,7 +219,7 @@
 
         . where . 
 
-        (define (dispatch-infix-operator v op tail op-stx)
+        (define (dispatch-infix-operator v op tail stxes op-stx)
           (define rel-prec (if (not current-op)
                                'stronger
                                (relative-precedence op current-op op-stx)))
@@ -259,6 +260,7 @@
           (define-values (v op op-stx) (lookup-infix-implicit implicit-name head-stx in-space
                                                               infix-operator-ref
                                                               operator-kind-str form-kind-str))
-          (dispatch-infix-operator v op stxes op-stx)))]))
+          (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
+          (dispatch-infix-operator v op stxes synthetic-stxes op-stx)))]))
 
   enforest-step)

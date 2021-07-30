@@ -173,7 +173,7 @@
 
 (define-for-syntax (parse-function-call rator stxes)
   (syntax-parse stxes
-    [(((~and head (~datum parens)) rand::kw-expression ...) . tail)
+    [(_ ((~and head (~datum parens)) rand::kw-expression ...) . tail)
      #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                             [parsed (in-list (syntax->list #'(rand.parsed ...)))])
                                    (if (syntax-e kw)

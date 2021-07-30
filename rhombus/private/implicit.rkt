@@ -20,7 +20,7 @@
    'macro
    (lambda (stxes)
      (syntax-parse stxes
-       [((~and head ((~and tag (~datum block)) . body)) . tail)
+       [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
         (values (respan #`(#,(datum->syntax #'here 'rhombus-block #'tag) . body))
                 #'tail)]))))
 
@@ -31,12 +31,12 @@
    'macro
    (lambda (stxes)
      (syntax-parse stxes
-       [(datum . tail)
+       [(_ datum . tail)
         (values (syntax/loc #'datum (quote datum))
                 #'tail)]))
    (lambda (stxes)
      (syntax-parse stxes
-       [(datum . tail)
+       [(_ datum . tail)
         (values (binding-form
                  #'()
                  #'(lambda (v) (equal? v (quote datum)))
@@ -50,7 +50,7 @@
    'macro
    (lambda (stxes)
      (syntax-parse stxes
-       [((~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head ((~datum parens) . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
@@ -64,7 +64,7 @@
                [e::expression (values #'e.parsed #'tail)])]))]))
    (lambda (stxes)
      (syntax-parse stxes
-       [((~and head ((~datum parens) . args)) . tail)
+       [(_ (~and head ((~datum parens) . args)) . tail)
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
