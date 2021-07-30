@@ -58,27 +58,25 @@
     (pattern (group ::operator . _)))
 
   (define-splicing-syntax-class :operator-options
-    #:datum-literals (op group
+    #:datum-literals (op block group
                          stronger_than
                          weaker_than
                          same_as)
-    #:literals (:>)
-    (pattern (~seq (~alt (~optional (group stronger_than (op :>) stronger::op/other ...)
-                                    #:defaults ([(stronger.name 1) '()]))
-                         (~optional (group weaker_than (op :>) weaker::op/other ...)
-                                    #:defaults ([(weaker.name 1) '()]))
-                         (~optional (group same_as (op :>) same::op/other ...)
-                                    #:defaults ([(same.name 1) '()])))
+    (pattern (~seq (~alt (~optional (group #:stronger_than (block (group stronger::op/other ...) ...))
+                                    #:defaults ([(stronger.name 2) '()]))
+                         (~optional (group #:weaker_than (block (group weaker::op/other ...) ...))
+                                    #:defaults ([(weaker.name 2) '()]))
+                         (~optional (group #:same_as (block (group same::op/other ...) ...))
+                                    #:defaults ([(same.name 2) '()])))
                    ...)
-             #:attr prec (combine-prec (syntax->list #'(stronger.name ...))
-                                       (syntax->list #'(weaker.name ...))
-                                       (syntax->list #'(same.name ...)))))
+             #:attr prec (combine-prec (syntax->list #'(stronger.name ... ...))
+                                       (syntax->list #'(weaker.name ... ...))
+                                       (syntax->list #'(same.name ... ...)))))
 
   (define-splicing-syntax-class :self-operator-options
-    #:datum-literals (op group
+    #:datum-literals (op block group
                          opt_stx)
-    #:literals (:>)
-    (pattern (~seq (~alt (~optional (group op_stx (op :>) self-id:identifier)
+    (pattern (~seq (~alt (~optional (group #:op_stx (block (group self-id:identifier)))
                                     #:defaults ([self-id #'self])))
                    ...)))
 
@@ -87,11 +85,6 @@
              #:attr prec #'opt.prec))
   
   (define-splicing-syntax-class :self-prefix-operator-options
-    #:datum-literals (op parens group
-                         stronger_than
-                         weaker_than
-                         same_as)
-    #:literals (:>)
     (pattern (~seq (~alt (~optional pre-opt::prefix-operator-options
                                     #:defaults ([pre-opt.prec #'()]))
                          (~optional self-opt::self-operator-options
@@ -101,13 +94,12 @@
              #:attr self-id #'self-opt.self-id))
              
   (define-splicing-syntax-class :infix-operator-options
-    #:datum-literals (op group
+    #:datum-literals (op block group
                          associativity)
-    #:literals (:>)
     (pattern (~seq (~alt (~optional op-opt::operator-options
                                     #:defaults ([op-opt.prec #'()]))
-                         (~optional (group associativity (op :>) (~and assc
-                                                                       (~or right left none)))
+                         (~optional (group #:associativity (block (group (~and assc
+                                                                               (~or right left none)))))
                                     #:defaults ([assc #'none])))
                    ...)
              #:attr prec #'op-opt.prec))
@@ -117,7 +109,6 @@
                          stronger_than
                          weaker_than
                          same_as)
-    #:literals (:>)
     (pattern (~seq (~alt (~optional in-opt::infix-operator-options
                                     #:defaults ([in-opt.prec #'()]
                                                 [in-opt.assc #'none]))
@@ -130,7 +121,7 @@
              
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
-    #:literals (¿ ? :>)
+    #:literals (¿ ?)
     (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator . _))
                                   opt::self-prefix-operator-options))
              #:attr prec #'opt.prec
@@ -292,9 +283,9 @@
 (begin-for-syntax
   (define-splicing-syntax-class :identifier-syntax-quote
     #:datum-literals (op parens group)
-    #:literals (? :>)
+    #:literals (?)
     (pattern (~seq (op ?) (parens g::identifier-definition-group
-                                  (~optional (group op_stx (op :>) self-id:identifier)
+                                  (~optional (group #:op_stx (block (group self-id:identifier)))
                                              #:defaults ([self-id #'self]))))))
 
   (define-syntax-class :identifier-definition-group

@@ -13,7 +13,6 @@
                   [= rhombus=]))
 
 (provide function
-         :>
          (for-syntax :kw-opt-binding
                      build-function
                      build-case-function))
@@ -23,13 +22,13 @@
 
 (begin-for-syntax
   (define-syntax-class :kw-opt-binding
-    #:datum-literals (op)
-    #:literals (:> rhombus=)
-    (pattern (group kw:identifier (op :>) a ... (op rhombus=) e ...)
+    #:datum-literals (op block group)
+    #:literals (rhombus=)
+    (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...)))
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:identifier (op :>) a ...)
+    (pattern (group kw:keyword (block (group a ...)))
              #:with arg::binding #'(group a ...)
              #:attr default #'#f
              #:attr parsed #'arg.parsed)
@@ -106,7 +105,7 @@
                          [(not (syntax-e kw))
                           (list arg+default)]
                          [else
-                          (list (string->keyword (symbol->string (syntax-e kw))) arg+default)]))])
+                          (list kw arg+default)]))])
         (relocate
          (span-srcloc start end)
          #`(lambda (arg-form ... ...)
@@ -158,13 +157,10 @@
                   "\n   ~e"))
          args))
 
-(define-syntax :> #f)
-
 (begin-for-syntax
   (define-syntax-class :kw-expression
-    #:datum-literals (op)
-    #:literals (:>)
-    (pattern (group kw:identifier (op :>) e ...)
+    #:datum-literals (op block group)
+    (pattern (group kw:keyword (block (group e ...)))
              #:with exp::expression #'(group e ...)
              #:attr parsed #'exp.parsed)
     (pattern exp::expression
@@ -177,7 +173,7 @@
      #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                             [parsed (in-list (syntax->list #'(rand.parsed ...)))])
                                    (if (syntax-e kw)
-                                       (list (string->keyword (symbol->string (syntax-e kw))) parsed)
+                                       (list kw parsed)
                                        (list parsed)))
      (values (datum->syntax (quote-syntax here)
                             (cons rator #'(arg-form ... ...))

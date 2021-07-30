@@ -105,7 +105,7 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"")))]
+               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"" "'")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "."))
                      (:+ ".")
@@ -113,6 +113,11 @@
                      (:+ "-"))
                 "|" ":")]
 
+  [keyword (:: "\'" identifier "\'")]
+  [bad-keyword (:: "\'" 
+                   (:* (:~ "\'"))
+                   (:? "\'"))]
+  
   ;; disallows a number that starts +, -, or "."
   [number/continuing (:or decimal-number/continuing
                           hex-number)]
@@ -287,6 +292,9 @@
     (ret 'identifier (string->symbol lexeme) 'symbol #f start-pos end-pos 'continuing)]
    [operator
     (ret 'operator (list 'op (string->symbol lexeme)) 'operator #f start-pos end-pos 'initial)]
+   [keyword
+    (let ([kw (string->keyword (substring lexeme 1 (sub1 (string-length lexeme))))])
+      (ret 'identifier kw 'keyword #f start-pos end-pos 'continuing))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
@@ -300,7 +308,7 @@
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
    [(eof) (values (make-token 'EOF lexeme start-pos end-pos) 'eof #f #f #f #f)]
-   [(:or bad-str bad-hash)
+   [(:or bad-str bad-keyword bad-hash)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 

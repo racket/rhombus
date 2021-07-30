@@ -32,16 +32,24 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ datum . tail)
+        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (syntax/loc #'datum (quote datum))
                 #'tail)]))
    (lambda (stxes)
      (syntax-parse stxes
        [(_ datum . tail)
+        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (binding-form
                  #'()
                  #'(lambda (v) (equal? v (quote datum)))
                  #'(begin))
                 #'tail)]))))
+
+(define-for-syntax (raise-keyword-error datum)
+  (raise-syntax-error #f
+                      (string-append "a keyword is allowed only where the enclosing context expects it,"
+                                     " such as before argument to a function")
+                      datum))
 
 (define-syntax #%tuple
   (make-expression+binding-prefix-operator
