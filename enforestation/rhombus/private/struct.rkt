@@ -1,27 +1,28 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt"
-                     "op.rkt"
-                     "transformer.rkt"
-                     "syntax-local.rkt")
-         "type.rkt")
+                     enforest/syntax-local
+                     "srcloc.rkt")
+         "definition.rkt"
+         "expression.rkt"
+         "binding.rkt"
+         "type.rkt"
+         "composite.rkt")
 
 (provide (rename-out [rhombus-struct struct])
          |.|)
 
 (begin-for-syntax
-  (struct struct-type rhombus-type (constructor-id fields)
-    #:property prop:rename-transformer (struct-field-index constructor-id)))
+  (struct struct-type rhombus-type (constructor-id fields)))
 
 (define-syntax rhombus-struct
-  (rhombus-definition-transformer
+  (definition-transformer
    (lambda (stxes)
      (syntax-parse stxes
        [(_ name:identifier ((~datum parens) ((~datum group) field:id) ...))
         (define fields (syntax->list #'(field ...)))
         (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
-                      [(struct:name make-name) (generate-temporaries #'(name name))]
+                      [(struct:name) (generate-temporaries #'(name))]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (datum->syntax field
                                                          (string->symbol (format "~a_~a"
@@ -32,32 +33,35 @@
                       [(field-index ...) (for/list ([field (in-list fields)]
                                                     [i (in-naturals)])
                                            i)])
-          (values
-           (list
-            #'(define-values (struct:name make-name name? name-field ...)
-                (let-values ([(struct:name make-name name? name-ref name-set!)
-                              (make-struct-type 'name #f cnt 0 #f null #f #f
-                                                '(field-index ...))])
-                  (values struct:name make-name name?
-                          (make-struct-field-accessor name-ref field-index 'field)
-                          ...)))
-            #'(define-syntax name
-                (struct-type (quote-syntax name?)
-                             (quote-syntax make-name)
-                             (list (cons 'field (quote-syntax name-field)) ...))))
-           null))]))))
+          (list
+           #'(define-values (struct:name name name? name-field ...)
+               (let-values ([(struct:name name name? name-ref name-set!)
+                             (make-struct-type 'name #f cnt 0 #f null #f #f
+                                               '(field-index ...))])
+                 (values struct:name name name?
+                         (make-struct-field-accessor name-ref field-index 'field)
+                         ...)))
+           #'(define-binding-syntax name
+               (binding-transformer
+                #'name
+                (make-composite-binding-transformer (quote-syntax name?)
+                                                    (list (quote-syntax name-field) ...))))
+           #'(define-type-syntax name
+               (struct-type (quote-syntax name?)
+                            (quote-syntax name)
+                            (list (cons 'field (quote-syntax name-field)) ...)))))]))))
 
 (define-syntax |.|
-  (rhombus-infix-operator-transformer
+  (expression-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
-   'left
+   'macro
    (lambda (form1 tail)
      (syntax-parse tail
        [(dot field:identifier . tail)
         (define type-id (rhombus-syntax-local-type form1))
         (define type (and (identifier? type-id)
-                          (syntax-local-value* type-id struct-type?)))
+                          (syntax-local-value* (in-type-space type-id) struct-type?)))
         (define accessor-id (and (struct-type? type)
                                  (for/or ([field+acc (in-list (struct-type-fields type))])
                                    (and (eq? (car field+acc) (syntax-e #'field))
@@ -80,4 +84,5 @@
        [(dot)
         (raise-syntax-error #f
                             "expected an identifier for a field name"
-                            #'dot)]))))
+                            #'dot)]))
+   'left))

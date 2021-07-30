@@ -1,42 +1,48 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         "parse.rkt")
+         "private/parse.rkt"
+         "private/forwarding-sequence.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin]))
 
-(define-syntax-rule (bounce mod ...)
-  (begin (begin (require mod)
-                (provide (all-from-out mod)))
-         ...))
-(bounce "private/core-implicit.rkt"
-        "private/core-op.rkt"
+(define-syntax (bounce stx)
+  (syntax-case stx ()
+    [(_ mod ...)
+     (with-syntax ([(mod ...) ((make-syntax-introducer) #'(mod ...))])
+       #'(begin (begin (require mod (for-syntax mod))
+                       (provide (all-from-out mod)
+                                (for-syntax (all-from-out mod))))
+                ...))]))
+(bounce "private/implicit.rkt"
+        "private/arithmetic.rkt"
         "private/struct.rkt"
         "private/define.rkt"
+        "private/value.rkt"
+        "private/require.rkt"
+        "private/provide.rkt"
+        "private/expression-syntax.rkt"
+        "private/binding-syntax.rkt"
+        "private/definition-syntax.rkt"
+        "private/declaration-syntax.rkt"
+        "private/operator.rkt"
         "private/type.rkt"
-        "private/list.rkt")
+        "private/list.rkt"
+        "private/assign.rkt"
+        "private/function.rkt"
+        "private/cond.rkt"
+        "private/match.rkt"
+        "private/quasiquote.rkt"
+        "private/values.rkt")
 
-(module reader racket/base
+(module reader syntax/module-reader
+  #:language 'rhombus
+  #:read (lambda (in) (list (syntax->datum (parse-all in))))
+  #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
+  #:info get-info-proc
+  #:whole-body-readers? #t
   (require shrubbery/parse
            (only-in (submod shrubbery reader)
-                    get-info))
-  
-  (provide (rename-out [rhombus-read read]
-                       [rhombus-read-syntax read-syntax])
-           get-info)
-
-  (define (rhombus-read in)
-    (syntax->datum
-     (rhombus-read-syntax #f in)))
- 
-  (define (rhombus-read-syntax src in)
-    (define r (parse-all in))
-    (if (eof-object? r)
-        r
-        (datum->syntax
-         #f
-         `(module anything rhombus
-            (#%module-begin
-             ,r))))))
+                    get-info-proc)))
 
 (define-syntax (rhombus-module-begin stx)
   (syntax-case stx ()
@@ -44,4 +50,5 @@
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
-        (rhombus-top . content))]))
+        (rhombus-forwarding-sequence
+         (rhombus-top . content)))]))

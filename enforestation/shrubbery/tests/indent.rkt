@@ -153,7 +153,7 @@
  ;; any, can affect the indenters results (e.g., the answer tends to
  ;; be different if it starts "|"). Whitespace after a final "^" or
  ;; "!" will not matter.
- 
+
  @e{a
     ^x}
 
@@ -318,18 +318,25 @@
     ^ ^  ^: 0}
 
  @e{+ `(
-         ^x}
+      ^x}
 
  @e{+ `(
          x
-       ^)}
+    ^)}
  
  @e{+ x`(
-        ^x}
+      ^x}
 
  @e{+ x`(
         x
-      ^)}
+    ^)}
+
+ @e{(match v
+      | cons(bv, av):
+          define values(is_a_match, ar):
+            ¿a_pred(av)
+          if is_a_match
+      ^    ^| define}
  
  )
 

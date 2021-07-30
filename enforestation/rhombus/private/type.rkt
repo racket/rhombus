@@ -2,10 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx
-                     "srcloc.rkt"
-                     "op.rkt"
-                     "syntax-local.rkt")
-         "parse.rkt")
+                     enforest/syntax-local
+                     "srcloc.rkt")
+         "expression.rkt"
+         "binding.rkt")
 
 (provide ::
 
@@ -14,7 +14,10 @@
          (for-syntax rhombus-type
                      rhombus-typed
                      rhombus-type-property
-                     rhombus-syntax-local-type))
+                     rhombus-syntax-local-type
+                     in-type-space)
+
+         define-type-syntax)
 
 (begin-for-syntax
   (struct rhombus-type (predicate))
@@ -24,9 +27,11 @@
 
   (define rhombus-type-property (gensym))
 
+  (define in-type-space (make-interned-syntax-introducer 'rhombus/type))
+
   (define-syntax-class :type
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* #'id rhombus-type?))]
+             #:do [(define v (syntax-local-value* (in-type-space #'id) rhombus-type?))]
              #:when (rhombus-type? v)
              #:attr predicate (rhombus-type-predicate v)))
 
@@ -58,34 +63,43 @@
       [else #f])))
 
 (define-syntax ::
-  (rhombus-infix-binding-operator-transformer
+  (binding-infix-operator
    #'::
    '((default . weaker))
-   #f
+   'macro
    (lambda (form tail)
      (syntax-parse tail
        [(op t::type . new-tail)
         #:with left::binding-form form
-        (with-syntax ([falses (for/list ([b (in-list (stx->list #'left.variable-ids))])
+        (define num-vars (length (syntax->list #'left.var-ids)))
+        (with-syntax ([falses (for/list ([i (in-range num-vars)])
                                 #'#f)])
-          (define-values (var-ids stx-ids stx-form)
+          (define-values (var-ids new-def)
             (cond
-              [(= 1 (length (stx->list #'left.variable-ids)))
-               (define tmp-id (car (generate-temporaries #'left.variable-ids)))
+              [(and (= 1 num-vars)
+                    (syntax-parse #'left.post-defn [(begin) #t] [_ #f]))
+               (define tmp-id (car (generate-temporaries #'left.var-ids)))
                (values (list tmp-id)
-                       #'left.variable-ids
-                       #`(make-typed-identifier (quote-syntax #,tmp-id) (quote-syntax t)))]
-              [else (values #'left.variable-ids
-                            #'left.syntax-ids
-                            #'left.syntax-form)]))
+                       #`(define-syntaxes left.var-ids
+                           (make-typed-identifier (quote-syntax #,tmp-id) (quote-syntax t))))]
+              [else (values #'left.var-ids
+                            #'(begin))]))
           (values
-           var-ids
-           #`(lambda (v)
-               (if (t.predicate v)
-                   (left.matcher-form v)
-                   (values #f . falses)))
-           stx-ids
-           stx-form
-           #'new-tail))]))))
+           (binding-form var-ids
+                         #`(lambda (v)
+                             (if (t.predicate v)
+                                 (left.check-proc-expr v)
+                                 (values #f . falses)))
+                         #`(begin
+                             #,new-def
+                             left.post-defn))
+           #'new-tail))]))
+   'none))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))
+
+(define-syntax (define-type-syntax stx)
+  (syntax-parse stx
+    [(_ id:identifier rhs)
+     #`(define-syntax #,(in-type-space #'id)
+         rhs)]))

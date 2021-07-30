@@ -267,7 +267,9 @@
                                                 #:column column
                                                 #:last-line (state-line s)
                                                 #:delta 0)))
-              (values (list (tag-as-block indent-g))
+              (values (list (add-span-srcloc
+                             t #f
+                             (tag-as-block indent-g)))
                       rest-l
                       end-line
                       end-delta)]
@@ -323,7 +325,9 @@
                 (define accum (cons new-g prev-accum))
                 ;; If next is `|`, absorb it into the implicit block
                 (define (done-bar-block)
-                  (values (list (tag-as-block (reverse accum)))
+                  (values (list (add-span-srcloc
+                                 t #f
+                                 (tag-as-block (reverse accum))))
                           rest-l
                           end-line
                           end-delta))
@@ -484,12 +488,14 @@
                            (srcloc-column s-loc)
                            (srcloc-position s-loc)
                            (let ([s (srcloc-position s-loc)]
-                                 [e (if (srcloc? e-loc/e)
-                                        (srcloc-position e-loc/e)
-                                        (syntax-position e-loc/e))]
-                                 [sp (if (srcloc? e-loc/e)
-                                         (srcloc-span e-loc/e)
-                                         (syntax-span e-loc/e))])
+                                 [e (and e-loc/e
+                                         (if (srcloc? e-loc/e)
+                                             (srcloc-position e-loc/e)
+                                             (syntax-position e-loc/e)))]
+                                 [sp (and e-loc/e
+                                          (if (srcloc? e-loc/e)
+                                              (srcloc-span e-loc/e)
+                                              (syntax-span e-loc/e)))])
                              (and s e sp
                                   (+ (- e s) sp)))))]))
    
@@ -579,8 +585,8 @@
 
 ;; ----------------------------------------
 
-(define (parse-all in)
-  (define l (lex-all in fail))
+(define (parse-all in #:source [source (object-name in)])
+  (define l (lex-all in fail #:source source))
   (if (null? l)
       eof
       (parse-top-groups l)))

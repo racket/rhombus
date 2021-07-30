@@ -107,7 +107,10 @@
   [opchar (:or (:- symbolic (:or))
                (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"")))]
   [operator (:- (:or opchar
-                     (:: (:* opchar) (:- opchar "+" "-" ".")))
+                     (:: (:* opchar) (:- opchar "+" "-" "."))
+                     (:+ ".")
+                     (:+ "+")
+                     (:+ "-"))
                 "|" ":")]
 
   ;; disallows a number that starts +, -, or "."
@@ -146,16 +149,22 @@
 
 (define (make-token name e start-pos end-pos)
   (define offset (position-offset start-pos))
-  (token name (datum->syntax #f
-                             e
-                             (list (current-lexer-source)
-                                   (position-line start-pos)
-                                   (position-col start-pos)
-                                   offset
-                                   (- (position-offset end-pos)
-                                      offset))
-                             stx-for-original-property)))
-
+  (define loc (vector (current-lexer-source)
+                      (position-line start-pos)
+                      (position-col start-pos)
+                      offset
+                      (- (position-offset end-pos)
+                         offset)))
+  (token name (let loop ([e e])
+                (let ([e (if (pair? e)
+                             (cons (loop (car e))
+                                   (loop (cdr e)))
+                             e)])
+                  (datum->syntax #f
+                                 e
+                                 loc
+                                 stx-for-original-property)))))
+         
 (define get-next-comment
   (lexer
    ["/*" (values 1 end-pos)]
@@ -367,8 +376,10 @@
 
 ;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
 ;; for an S-expression escape:
-(define (lex-all in fail #:keep-type? [keep-type? #f])
-  (parameterize ([current-lexer-source (object-name in)])
+(define (lex-all in fail
+                 #:keep-type? [keep-type? #f]
+                 #:source [source (object-name in)])
+  (parameterize ([current-lexer-source source])
     (let loop ([status 'initial])
       (define-values (tok type paren start-pos end-pos backup new-status)
         (lex/status in (file-position in) status #f))
