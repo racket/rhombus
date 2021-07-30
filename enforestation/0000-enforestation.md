@@ -297,7 +297,7 @@ relationships, so it cannot be used next to `*`:
 
 In this example, enforestation would report that `<>` and `*` are
 unrelated, so parentheses are needed somewhere. The prototype `#lang
-rhombus` supports precdence declarations through a `weaker_than`
+rhombus` supports precedence declarations through a `weaker_than`
 keyword (where the `:>` here imitates the keyword syntax that is used
 in the prototype for function definitions and calls):
 
@@ -412,7 +412,7 @@ expression_macro ?(¿x -> ¿y ¿tail ...):
   values(?(¿x . ¿y), tail)
 ```
 
-the macro transformer receives an syntax-object repersenting the
+the macro transformer receives an syntax-object representing the
 already-parsed left-hand argument `x` as a `'parsed` list. The macro
 therefore has no way to pull the expression apart, inspect it, or
 rearrange it. Of course, such facilities could be made available to
@@ -459,7 +459,7 @@ with some key differences:
    combiner should be pushed onto the stack.
 
  * Already-parsed forms that are encoded with `'parsed` (which are
-   “term”s in the figure's termonology) are immediately converted to
+   “term”s in the figure's terminology) are immediately converted to
    parsed form (i.e., “tree term”s in the figure) by removing the
    `'parsed` wrapper.
 
@@ -520,7 +520,7 @@ types and one macro:
    library.
 
  * A `define-enforest` macro that parameterizes the enforestation
-   algrothm over the following:
+   algorithm over the following:
 
     - `enforest`: the name to bind as an `enforest` function, which is
       used to start enforestation of a group. It takes a list of
@@ -530,7 +530,7 @@ types and one macro:
 
     - `enforest-step`: the name to bind as an enforest-step function,
       with continues an enforestation. It takes two arguments, which
-      is the list of remaming terms in a group and the current
+      is the list of renaming terms in a group and the current
       operator. The result is two values: a parsed form and the
       remaining sequence of terms (starting with an infix operator
       that has lower precedence than the input operator).
@@ -572,7 +572,7 @@ types and one macro:
 
    The `define-enforest` macro is provided by the `enforest` library.
 
-To support simple contexts that have only indentifier-named prefix
+To support simple contexts that have only identifier-named prefix
 transformers, the Rhombus expander API provides an additional
 structure type and macro:
 
@@ -582,7 +582,7 @@ structure type and macro:
       parsed term
 
  * A `define-transform-class` macro that defines a syntax class to
-   trigger parsing, given the folling:
+   trigger parsing, given the following:
 
     - `:form`: the name of the syntax class to define, which matches a
        `group` shrubbery representation and parses it. A match has
@@ -604,7 +604,7 @@ structure type and macro:
 ## Prototype implementation examples
 
 The prototype `#lang rhombus` implementation starts with a
-`#%module-begin` form that takes a shribbery sequence wrapped with
+`#%module-begin` form that takes a shrubbery sequence wrapped with
 `top` as its input. Simplifying somewhat, the implementation uses a
 `rhombus-top` helper macro:
 
@@ -634,14 +634,14 @@ parsing an expression produces a single expression as `parsed`:
          (rhombus-top . forms))]))
 ```
 
-This `rhombus-top` macro uses a typical trampoling pattern: the Racket
+This `rhombus-top` macro uses a typical trampolining pattern: the Racket
 macro expander will perform any declaration or definition bindings
 before expanding the recursive use of `rhombus-top`. which will then
 force more declaration, definition, and expression parsing. That way,
 Rhombus-level operators can be defined and then used in the same
 module.
 
-The `:definition` syntax class is defined using the simplied Rhobus
+The `:definition` syntax class is defined using the simplified Rhombus
 expander API:
 
 ```
@@ -653,7 +653,7 @@ expander API:
 
 Here, `definition-transformer-ref` refers to a function that extracts
 a `transformer` structure from a compile-time value (returning `#f` if
-no such structure is available). The `check-defintion-result` function
+no such structure is available). The `check-definition-result` function
 makes sure that the low-level transformer returns at least a
 list-shaped syntax object, but that's just for earlier error
 detection.
@@ -716,7 +716,7 @@ just the identity function. The `expression-prefix-operator-ref` and
 `definition-transformer-ref`, but for expression prefix and infix
 operators.
 
-An infix expression operator like `+` is defined roughtly like this:
+An infix expression operator like `+` is defined roughly like this:
 
 ```
 (provide (rename-out [rhombus+ +])) ; and similar for `rhombus-`, etc.
@@ -814,7 +814,7 @@ expander further relies on different kinds of compile-time values for
 transformers that work in different contexts. Multiple transformers
 might be mapped to an identifier or operator in the default space
 through structure-type properties. The choice of using a single value
-or mapping in different spaces may depend on the sitation and whether
+or mapping in different spaces may depend on the situation and whether
 a default-space mapping exists already; supporting both layers of
 distinction provides flexibility and extensibility.
 
