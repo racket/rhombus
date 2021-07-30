@@ -3,6 +3,7 @@
                      syntax/parse
                      "srcloc.rkt"
                      "consistent.rkt")
+         racket/unsafe/undefined
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
@@ -21,16 +22,28 @@
   (provide (for-syntax parse-function-call)))
 
 (begin-for-syntax
+  (define (empty->keyword g kw)
+    (syntax-parse g
+      [(_) #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw))]
+      [else g]))
   (define-syntax-class :kw-opt-binding
     #:datum-literals (op block group)
     #:literals (rhombus=)
-    (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...)))
-             #:with arg::binding #'(group a ...)
+    (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...+)))
+             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+             #:with default #'(group e ...)
+             #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword (block (group (op rhombus=) e ...+)))
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword (block (group a ...)))
-             #:with arg::binding #'(group a ...)
+             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:attr default #'#f
+             #:attr parsed #'arg.parsed)
+    (pattern (group a ...+ (op rhombus=) e ...+)
+             #:with arg::binding #'(group a ...)
+             #:with default #'(group e ...)
+             #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern arg::binding
              #:attr default #'#f
@@ -91,21 +104,24 @@
                   [(arg ...) args]
                   [(arg.parsed ...) arg-parseds]
                   [rhs rhs])
-      (with-syntax ([((arg-form ...) ...)
+      (with-syntax ([(((arg-form ...) arg-default) ...)
                      (for/list ([kw (in-list (syntax->list kws))]
                                 [arg-id (in-list arg-ids)]
                                 [default (in-list (syntax->list defaults))])
+                       ;; FIXME: if `default` is simple enough, then
+                       ;; use it instead of `unsafe-undefined`, and
+                       ;; then `define` has the opportunity to inline it
                        (define arg+default
                          (cond
                            [(not (syntax-e default))
                             arg-id]
                            [else
-                            #`[#,arg-id (rhombus-expression #,default)]]))
+                            #`[#,arg-id unsafe-undefined]]))
                        (cond
                          [(not (syntax-e kw))
-                          (list arg+default)]
+                          (list (list arg+default) default)]
                          [else
-                          (list kw arg+default)]))])
+                          (list (list kw arg+default) default)]))])
         (relocate
          (span-srcloc start end)
          #`(lambda (arg-form ... ...)
@@ -113,7 +129,7 @@
               #,function-name
               #f argument-binding-failure
               (begin)
-              (arg-id arg.parsed arg)
+              (arg-id arg.parsed arg arg-default)
               ...
               (rhombus-expression (group rhs))))))))
   
@@ -142,7 +158,7 @@
                                  #,function-name
                                  try-next argument-binding-failure
                                  (begin)
-                                 (arg-id arg-parsed arg)
+                                 (arg-id arg-parsed arg #f)
                                  ...
                                  (rhombus-expression (group rhs)))))]))]))))))
 
