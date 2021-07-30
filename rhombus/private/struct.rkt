@@ -25,7 +25,7 @@
                       [(struct:name) (generate-temporaries #'(name))]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (datum->syntax field
-                                                         (string->symbol (format "~a_~a"
+                                                         (string->symbol (format "~a.~a"
                                                                                  (syntax-e #'name)
                                                                                  (syntax-e field)))
                                                          field))]
@@ -59,22 +59,39 @@
    (lambda (form1 tail)
      (syntax-parse tail
        [(dot field:identifier . tail)
-        (define type-id (rhombus-syntax-local-type form1))
-        (define type (and (identifier? type-id)
-                          (syntax-local-value* (in-type-space type-id) struct-type?)))
-        (define accessor-id (and (struct-type? type)
-                                 (for/or ([field+acc (in-list (struct-type-fields type))])
-                                   (and (eq? (car field+acc) (syntax-e #'field))
-                                        (cdr field+acc)))))
-        (unless accessor-id
-          (raise-syntax-error #f
-                              "don't know how to access field"
-                              #'field))
-        (values (datum->syntax (quote-syntax here)
-                               (list accessor-id form1)
-                               (span-srcloc form1 #'field)
-                               #'dot)
-                #'tail)]
+        (cond
+          [(and (identifier? form1)
+                ;; FIXME: we should check an expression-space binding
+                ;; for `form1` and get from there to a struct-type...
+                (syntax-local-value* (in-type-space form1) struct-type?))
+           => (lambda (type)
+                (define accessor-id
+                  (for/or ([field+acc (in-list (struct-type-fields type))])
+                    (and (eq? (car field+acc) (syntax-e #'field))
+                         (cdr field+acc))))
+                (unless accessor-id
+                  (raise-syntax-error #f
+                                      "cannot field field in structure type"
+                                      #'field))
+                (values accessor-id
+                        #'tail))]
+          [else
+           (define type-id (rhombus-syntax-local-type form1))
+           (define type (and (identifier? type-id)
+                             (syntax-local-value* (in-type-space type-id) struct-type?)))
+           (define accessor-id (and (struct-type? type)
+                                    (for/or ([field+acc (in-list (struct-type-fields type))])
+                                      (and (eq? (car field+acc) (syntax-e #'field))
+                                           (cdr field+acc)))))
+           (unless accessor-id
+             (raise-syntax-error #f
+                                 "don't know how to access field"
+                                 #'field))
+           (values (datum->syntax (quote-syntax here)
+                                  (list accessor-id form1)
+                                  (span-srcloc form1 #'field)
+                                  #'dot)
+                   #'tail)])]
        [(dot other . tail)
         (raise-syntax-error #f
                             "expected an identifier for a field name, but found something else"

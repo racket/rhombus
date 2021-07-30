@@ -35,6 +35,8 @@ struct Posn(x, y)
 define md(p :: Posn):
   p.x + p.y
 
+Posn.x(Posn(1, 4))
+
 md(Posn(1, 4))
 
 // more definitions
