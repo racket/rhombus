@@ -72,11 +72,12 @@
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
-  (syntax-parse stx
-    [(_) #'(begin)]
-    [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
-    [(_ e::definition) #'(begin . e.parsed)]
-    [(_ e::expression) #'(#%expression e.parsed)]))
+  (syntax-local-introduce
+   (syntax-parse (syntax-local-introduce stx)
+     [(_) #'(begin)]
+     [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
+     [(_ e::definition) #'(begin . e.parsed)]
+     [(_ e::expression) #'(#%expression e.parsed)])))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-block stx)
@@ -91,7 +92,7 @@
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
-  (syntax-parse stx
+  (syntax-parse (syntax-local-introduce stx)
     [(_) #'(begin)]
     [(_ e::definition . tail)
      (syntax-local-introduce
