@@ -8,8 +8,7 @@
          "binding.rkt"
          "expression.rkt"
          "parse.rkt"
-         "function.rkt"
-         (submod "function.rkt" for-call)
+         (submod "function.rkt" for-build)
          "quasiquote.rkt"
          (for-syntax "parse.rkt")
          "forwarding-sequence.rkt"

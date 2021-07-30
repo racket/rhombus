@@ -4,7 +4,7 @@
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
-         "function.rkt")
+         (submod "function.rkt" for-build))
 
 (provide match)
 

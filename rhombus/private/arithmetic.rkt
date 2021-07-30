@@ -126,4 +126,7 @@
 (define-infix rhombus> >
   #:stronger-than (\|\| &&))
 
-(define-infix +$ string-append)
+(define-infix +$ append-as-strings)
+(define (append-as-strings a b)
+  (string-append (if (string? a) a (format "~a" a))
+                 (if (string? b) b (format "~a" b))))

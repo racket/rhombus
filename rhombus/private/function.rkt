@@ -13,10 +13,12 @@
          (only-in "assign.rkt"
                   [= rhombus=]))
 
-(provide function
-         (for-syntax :kw-opt-binding
-                     build-function
-                     build-case-function))
+(provide function)
+
+(module+ for-build
+  (provide (for-syntax :kw-opt-binding
+                       build-function
+                       build-case-function)))
 
 (module+ for-call
   (provide (for-syntax parse-function-call)))
