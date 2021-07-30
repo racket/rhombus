@@ -1,9 +1,11 @@
 #lang racket/base
-(require (for-syntax racket/base)
+(require (for-syntax racket/base
+                     syntax/parse)
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
 
-(provide (rename-out [rhombus-module-begin #%module-begin]))
+(provide (rename-out [rhombus-module-begin #%module-begin])
+         #%top-interaction)
 
 (define-syntax (bounce stx)
   (syntax-case stx ()
@@ -38,17 +40,32 @@
   #:language 'rhombus
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
-  #:info get-info-proc
+  #:info (lambda (key default make-default)
+           (case key
+             [(drracket:submit-predicate)
+              (lambda (in whitespace-after?)
+                (and whitespace-after?
+                     (regexp-match? #px"(?m:^);$" in)))]
+             [else (get-info-proc key default make-default)]))
   #:whole-body-readers? #t
   (require shrubbery/parse
            (only-in (submod shrubbery reader)
                     get-info-proc)))
 
+(module configure-runtime racket/base
+  (require rhombus/runtime-config))
+
 (define-syntax (rhombus-module-begin stx)
-  (syntax-case stx ()
+  (syntax-parse stx
     [(_ (top . content))
      (unless (eq? 'top (syntax-e #'top))
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
+        (module configure-runtime racket/base (require rhombus/runtime-config))
         (rhombus-forwarding-sequence
          (rhombus-top . content)))]))
+
+(define-syntax (#%top-interaction stx)
+  (syntax-parse stx
+    [(_ . (top . content))
+     #'(rhombus-top . content)]))

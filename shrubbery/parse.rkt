@@ -119,9 +119,9 @@
            (define-values (next-l last-line delta) (next-of l
                                                             (group-state-last-line sg)
                                                             (group-state-delta sg)))
-           (parse-groups (cdr l) (struct-copy group-state sg
-                                              [last-line last-line]
-                                              [delta delta]))]
+           (parse-groups next-l (struct-copy group-state sg
+                                             [last-line last-line]
+                                             [delta delta]))]
           [(comma-operator)
            (cond
              [(closer-column? (group-state-closer sg))
@@ -548,7 +548,8 @@
                     0))])]))
 
 (define (next-line? l last-line)
-  ((token-line (car l)) . > . last-line))
+  (and (pair? l)
+       ((token-line (car l)) . > . last-line)))
 
 ;; Report an error on failure, but then keep parsing anyway
 ;;  if in recover mode

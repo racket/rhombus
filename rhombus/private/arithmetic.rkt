@@ -13,9 +13,12 @@
                      [rhombus== ==]
                      [rhombus>= >=]
                      [rhombus> >])
+         sqrt cos sin tan log exp expt
+
          !
          &&
          \|\|
+
          +$)
 
 (begin-for-syntax

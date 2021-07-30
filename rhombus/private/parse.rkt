@@ -59,16 +59,18 @@
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
-  (syntax-case stx ()
+  (syntax-parse stx
     [(_) #'(begin)]
     [(_ form . forms)
-     #`(begin
-         #,(syntax-local-introduce
-            (syntax-parse (syntax-local-introduce #'form)
-              [e::declaration #'(begin . e.parsed)]
-              [e::definition #'(begin . e.parsed)]
-              [e::expression #'(#%expression e.parsed)]))
-         (rhombus-top . forms))]))
+     (define parsed
+       (syntax-local-introduce
+        (syntax-parse (syntax-local-introduce #'form)
+          [e::declaration #'(begin . e.parsed)]
+          [e::definition #'(begin . e.parsed)]
+          [e::expression #'(#%expression e.parsed)])))
+     (syntax-parse #'forms
+       [() parsed]
+       [_ #`(begin #,parsed (rhombus-top . forms))])]))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
