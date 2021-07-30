@@ -394,8 +394,8 @@ additional terms, and the remaining terms that were not consumed. The
 Rhombus expander does not check that the second result is a tail of
 the original remaining terms, so a transformer could replace or
 rearrange them, but that's probably not a good idea. The invocation of
-a transformer for an implicit operator does not include a token for
-the implicit operator, unlike other transformer invocations.
+a transformer for an implicit operator includes a synthesized term for
+the implicit operator.
 
 The enforestation process recognizes a superset of S-expressions
 compared to those used to represent shrubberies. Specifically, it

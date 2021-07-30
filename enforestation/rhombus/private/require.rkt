@@ -61,7 +61,7 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(a . tail)
+       [(_ a . tail)
         (unless (module-path? (syntax->datum #'a))
           (raise-syntax-error 'require
                               "not a valid module path"
