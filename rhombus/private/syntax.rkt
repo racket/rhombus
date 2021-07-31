@@ -30,18 +30,27 @@
   (define-syntax-class :op/other
     #:datum-literals (op)
     (pattern (op name))
-    (pattern (~and name (~literal other))))
+    (pattern (~and name #:other)))
 
   (define (combine-prec strongers weakers sames)
     (define ht (make-free-identifier-mapping))
+    (define said-other? #f)
     (define prec '())
     (define (add! op kind)
-      (define old-op (free-identifier-mapping-get ht op (lambda () #f)))
-      (when old-op
-        (raise-syntax-error #f
-                            "operator multiple times in precedence specifications"
-                            op))
-      (free-identifier-mapping-put! ht op op)
+      (cond
+        [(eq? (syntax-e op) '#:other)
+         (when said-other?
+           (raise-syntax-error #f
+                               "'other' multiple times in precedence specifications"
+                               op))
+         (set! said-other? #t)]
+        [else
+         (define old-op (free-identifier-mapping-get ht op (lambda () #f)))
+         (when old-op
+           (raise-syntax-error #f
+                               "operator multiple times in precedence specifications"
+                               op))
+         (free-identifier-mapping-put! ht op op)])
       (set! prec (cons (cons op kind) prec)))
     (for ([stronger (in-list strongers)])
       (add! stronger 'stronger))
@@ -136,7 +145,7 @@
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
                  (syntax-parse p
-                   [((~literal other) . spec) #`'(default . spec)]
+                   [(#:other . spec) #`'(default . spec)]
                    [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
   
   (define (convert-assc assc)
@@ -175,7 +184,7 @@
       (with-syntax ([((id id-ref) ...) idrs])
         #`(syntax-parse #,tail-id
             [#,pattern
-             (let ([id (syntax id-ref)] ...)
+             (let ([id id-ref] ...)
                (rhombus-expression (group #,rhs)))])))
     (syntax-parse g
       #:datum-literals (group op)

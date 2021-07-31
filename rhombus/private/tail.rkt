@@ -4,12 +4,21 @@
          enforest/proc-name)
 
 (provide pack-tail
+         pack-tail*
          unpack-tail)
 
 (define (pack-tail tail)
   (if (stx-null? tail)
       #`(parens)
       #`(parens (group . #,tail))))
+
+(define (pack-tail* stx depth)
+  (cond
+    [(eqv? depth 0) stx]
+    [(eqv? depth 1) (pack-tail stx)]
+    [else
+     (pack-tail (for/list ([t (in-list (syntax->list stx))])
+                  (pack-tail* t (sub1 depth))))]))
 
 (define (unpack-tail packed-tail proc)
   (syntax-parse packed-tail

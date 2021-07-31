@@ -46,4 +46,12 @@
                                    #'(rhs ...)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
+         #'tail)]
+       [(form-id in ... ((~and block-tag block)) . tail)
+        (values
+         #`((match-fallthrough 'form-id (rhombus-expression (group in ...)))
+            (rhombus-expression (group in ...)))
          #'tail)]))))
+
+(define (match-fallthrough who v)
+  (error who "no matching case"))

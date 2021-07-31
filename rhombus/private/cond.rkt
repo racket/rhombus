@@ -50,5 +50,13 @@
          #'(cond
              [(rhombus-expression (group pred ...))
               (rhombus-block rhs ...)]
-             ...)
+             ...
+             [else (cond-fallthrough #'form-id)])
+         #'tail)]
+       [(form-id (block) . tail)
+        (values
+         #'(cond-fallthrough 'form-id)
          #'tail)]))))
+
+(define (cond-fallthrough who)
+  (error who "no matching case"))

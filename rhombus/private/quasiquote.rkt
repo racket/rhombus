@@ -8,7 +8,10 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
-         "tail.rkt")
+         "tail.rkt"
+         ;; because `expression_macro` uses the result of `convert-syntax`
+         ;; as a compile-time pattern:
+         (for-syntax "tail.rkt"))
 
 (provide ?
          ¿
@@ -21,18 +24,21 @@
 (begin-for-syntax
   (define-syntax-class repetition
     (pattern ((~datum op) (~and name (~literal rhombus...))))
-    (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))))
+    (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))
+    (pattern ((~datum block) ((~datum group) ((~datum op) (~and name (~literal rhombus...))))))))
 
-(define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape handle-maybe-empty-group)
-  (let convert ([e e])
+(define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape
+                                   handle-maybe-empty-sole-group
+                                   handle-maybe-empty-alts handle-maybe-empty-group)
+  (let convert ([e e] [empty-ok? #f])
     (syntax-parse e
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum block)))
         (~and g ((~datum group) . _)))
        ;; Special case: for a single group with (), [], or {}, if the group
        ;; can be empty, allow a match/construction with zero groups
-       (define-values (p new-idrs can-be-empty?) (convert #'g))
+       (define-values (p new-idrs can-be-empty?) (convert #'g #t))
        (if can-be-empty?
-           (handle-maybe-empty-group #'tag p new-idrs)
+           (handle-maybe-empty-sole-group #'tag p new-idrs)
            (values #`(#,(make-datum #'tag) #,p)
                    new-idrs 
                    #f))]
@@ -41,9 +47,17 @@
        (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t])
          (syntax-parse gs
            [()
-            (values #`(#,(make-datum #'tag) . #,(reverse ps))
-                    (append (or pend-idrs '()) idrs)
-                    can-be-empty?)]
+            (let ([ps (reverse ps)]
+                  [idrs (append (or pend-idrs '()) idrs)])
+              (cond
+                [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
+                 (handle-maybe-empty-alts #'tag ps idrs)]
+                [(and can-be-empty? (eq? (syntax-e #'tag) 'group))
+                 (handle-maybe-empty-group #'tag ps idrs)]
+                [else
+                 (values #`(#,(make-datum #'tag) . #,ps)
+                         idrs
+                         can-be-empty?)]))]
            [(op:repetition . gs)
             (unless pend-idrs
               (raise-syntax-error #f
@@ -56,7 +70,7 @@
             (define-values (id idr) (handle-escape #'¿-id #'esc e))
             (loop #'gs (list idr) (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)))]
            [(g . gs)
-            (define-values (p new-ids nested-can-be-empty?) (convert #'g))
+            (define-values (p new-ids nested-can-be-empty?) (convert #'g #f))
             (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)))]))]
       [((~and tag (~datum op)) op-name)
        (values #`(#,(make-datum #'tag) #,(make-literal #'op-name)) null #f)]
@@ -76,7 +90,7 @@
                   ;; handle-escape:
                   (lambda (¿-id e in-e)
                     (if (identifier? e)
-                        (values e #`[#,e #,e])
+                        (values e #`[#,e (pack-tail* (syntax #,e) 0)])
                         (raise-syntax-error #f
                                             (format "expected an identifier after ~a"
                                                     (syntax-e #'¿-id))
@@ -85,16 +99,34 @@
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
-                      [(id id-ref) #'(id (parens (group id-ref (... ...))))]))
-                  ;; handle-maybe-empty-group
+                      [(id (_ (_ stx) depth))
+                       #`(id (pack-tail* (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
+                  ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs)
+                    ;; `pat` matches a `group` form that's supposed to be under `tag`,
+                    ;; but if `pat` match `(group)`, then allow an overall match to `(tag)`
                     (values #`(~or* ((~datum #,tag) #,pat)
                                     (~and ((~datum #,tag))
                                           ;; sets all pattern variables to nested empties:
-                                          ((~datum #,tag) . #,(syntax-parse pat
-                                                                [(_ . tail) #'tail]))))
+                                          (_ . #,(syntax-parse pat
+                                                   [(_ . tail) #'tail]))))
                             idrs
-                            #f))))
+                            #f))
+                  ;; handle-maybe-empty-alts
+                  (lambda (tag ps idrs)
+                    ;; if `(tag . ps)` would match `(alts)`, then let it match `(block)`
+                    (values #`(~or* ((~datum #,tag) . #,ps)
+                                    (~and ((~datum block))
+                                          ;; sets all pattern variables to nested empties:
+                                          (_ . #,ps)))
+                            idrs
+                            #t))
+                  ;; handle-maybe-empty-alts
+                  (lambda (tag ps idrs)
+                    ;; the `(tag . ps)` could match `(group)`, but it just never will,
+                    ;; because that won't be an input
+                    (values #`((~datum #,tag) . #,ps) idrs #t))))
+
 
 (define-for-syntax (convert-template e)
   (convert-syntax e
@@ -109,18 +141,43 @@
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
-                      #:literals (convert-empty-group)
-                      [(id-pat (convert-empty-group (qs t) c-depth) 0)
-                       #`[(id-pat (... ...)) (convert-empty-group (qs (t (... ...))) #,(add1 (syntax-e #'c-depth))) 0]]
+                      #:literals (convert-empty-group convert-empty-alts error-empty-group)
+                      [(id-pat ((~and convert (~or convert-empty-group convert-empty-alts error-empty-group))
+                                (qs t)
+                                c-depth)
+                               0)
+                       #`[(id-pat (... ...)) (convert (qs (t (... ...))) #,(add1 (syntax-e #'c-depth))) 0]]
                       [(id-pat e depth)
                        ;; defer conversion of `e` to `wrap-bindings`:
                        #`[(id-pat (... ...)) e #,(add1 (syntax-e #'depth))]]))
-                  ;; handle-maybe-empty-group
+                  ;; handle-maybe-empty-sole-group
                   (lambda (tag template idrs)
+                    ;; if `template` generates `(group)`, then instead of `(tag (group))`,
+                    ;; produce `(tag)`
                     (define id (car (generate-temporaries '(group))))
                     (values #`(#,tag #,id (... ...))
                             (cons #`[(#,id (... ...))
                                      (convert-empty-group (#,(quote-syntax quasisyntax) #,template) 0)
+                                     0]
+                                  idrs)
+                            #f))
+                  ;; handle-maybe-empty-alts
+                  (lambda (tag ts idrs)
+                    ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
+                    (define id (car (generate-temporaries '(alts))))
+                    (values id
+                            (cons #`[#,id
+                                     (convert-empty-alts (#,(quote-syntax quasisyntax) (#,tag . #,ts)) 0)
+                                     0]
+                                  idrs)
+                            #f))
+                  ;; handle-maybe-empty-group
+                  (lambda (tag ts idrs)
+                    ;; if `(tag . ts)` generates `(group)`, then error
+                    (define id (car (generate-temporaries '(group))))
+                    (values id
+                            (cons #`[#,id
+                                     (error-empty-group (#,(quote-syntax quasisyntax) (#,tag . #,ts)) 0)
                                      0]
                                   idrs)
                             #f))))
@@ -135,6 +192,30 @@
          (list l))]
     [else (for/list ([g (in-list (syntax->list l))])
             (convert-empty-group g (sub1 at-depth)))]))
+
+(define (convert-empty-alts l at-depth)
+  (cond
+    [(zero? at-depth)
+     (define u (cdr (syntax-e l)))
+     (cond
+       [(or (null? u)
+            (and (syntax? u) (null? (syntax-e u))))
+        (define a (car (syntax-e l)))
+        (list (datum->syntax a 'block a a))]
+       [else l])]
+    [else (for/list ([g (in-list (syntax->list l))])
+            (convert-empty-alts g (sub1 at-depth)))]))
+
+(define (error-empty-group l at-depth)
+  (cond
+    [(zero? at-depth)
+     (define u (cdr (syntax-e l)))
+     (when (or (null? u)
+               (and (syntax? u) (null? (syntax-e u))))
+       (error '? "generated an empty group"))
+     l]
+    [else (for/list ([g (in-list (syntax->list l))])
+            (error-empty-group g (sub1 at-depth)))]))
 
 (require (for-syntax racket/pretty))
 
@@ -180,7 +261,7 @@
             #`(lambda (v)
                 (if (syntax? v)
                     (syntax-parse v
-                      [#,pattern (values #t (syntax id-ref) ...)]
+                      [#,pattern (values #t id-ref ...)]
                       [_ (values #f false ...)])
                     (values #f false ...)))
             #'(begin))
