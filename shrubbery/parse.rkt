@@ -72,7 +72,7 @@
                                            #:delta delta)))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
-  (datum->syntax #f `(top ,@gs)))
+  (datum->syntax #f `(top ,@(bars-insert-alts gs))))
 
 ;; Parse a sequence of groups (top level, in opener-closer, or after `:`)
 ;;   consuming the closer in the case of opener-closer context.
@@ -255,7 +255,7 @@
            (define column (token-column t))
            (cond
              [(column . > . (state-column s))
-              ;; More indented => forms a group
+              ;; More indented => forms a nested block
               ;; Belt and suspenders: require either `:` or `|` to indicate that it's ok
               ;; to start an indented block.
               (unless (or (state-indent-ok? s)
@@ -381,7 +381,7 @@
                           t end-t
                           (if (eq? tag 'block)
                               (tag-as-block gs)
-                              (cons tag gs)))
+                              (cons tag (bars-insert-alts gs))))
                          g)
                    rest-rest-l
                    end-line
@@ -441,6 +441,7 @@
 (define (tag-as-block gs)
   (cond
     [(and (pair? gs)
+          ;; really only need to check the first one:
           (for/and ([g (in-list gs)])
             (and (pair? g)
                  (eq? 'group (car g))
@@ -449,6 +450,7 @@
                  (let ([b (cadr g)])
                    (and (pair? b)
                         (tag? 'bar (car b))
+                        ;; the rest should always be true:
                         (pair? (cdr b))
                         (null? (cddr b))
                         (pair? (cadr b))
@@ -457,6 +459,26 @@
                    (let ([b (cadr g)])
                      (cadr b))))]
     [else (cons 'block gs)]))
+
+(define (bars-insert-alts gs)
+  (cond
+    [(and (pair? gs)
+          ;; same check is in `tag-as-block
+          (let ([g (car gs)])
+            (and (pair? g)
+                 (eq? 'group (car g))
+                 (pair? (cdr g))
+                 (null? (cddr g))
+                 (let ([b (cadr g)])
+                   (and (pair? b)
+                        (tag? 'bar (car b))
+                        (car b))))))
+     => (lambda (bar-tag)
+          (list (list 'group
+                      (add-span-srcloc
+                       bar-tag #f
+                       (tag-as-block gs)))))]
+    [else gs]))
 
 (define (tag? sym e)
   (or (eq? sym e)
@@ -471,23 +493,45 @@
        (cons (datum->syntax #f (car l) loc stx-for-original-property)
              (cdr l)))
      (define last-t/e (or end-t
+                          ;; when `end-t` is false, we go looking for the
+                          ;; end in `l`; this search walks down the end
+                          ;; of `l`, and it may recur into the last element,
+                          ;; but it should go only a couple of levels that way,
+                          ;; since non-`group` tags have spanning locations
+                          ;; gather from their content
                           (let loop ([e l])
                             (cond
                               [(syntax? e) e]
                               [(not (pair? e)) #f]
                               [(null? (cdr e))
-                               (loop (car e))]
+                               (define a (car e))
+                               (if (and (pair? a)
+                                        (syntax? (car a)))
+                                   ;; found a tag like `block`
+                                   (car a)
+                                   (loop a))]
                               [else (loop (cdr e))]))))
-     (define s-loc (token-srcloc start-t))
+     (define s-loc/e (if (syntax? start-t)
+                         start-t
+                         (token-srcloc start-t)))
      (define e-loc/e (and last-t/e
                           (if (syntax? last-t/e)
                               last-t/e
                               (token-srcloc last-t/e))))
-     (add-srcloc l (vector (srcloc-source s-loc)
-                           (srcloc-line s-loc)
-                           (srcloc-column s-loc)
-                           (srcloc-position s-loc)
-                           (let ([s (srcloc-position s-loc)]
+     (define s-position (if (srcloc? s-loc/e)
+                            (srcloc-position s-loc/e)
+                            (syntax-position s-loc/e)))
+     (add-srcloc l (vector (if (srcloc? s-loc/e)
+                               (srcloc-source s-loc/e)
+                               (syntax-source s-loc/e))
+                           (if (srcloc? s-loc/e)
+                               (srcloc-line s-loc/e)
+                               (syntax-line s-loc/e))
+                           (if (srcloc? s-loc/e)
+                               (srcloc-column s-loc/e)
+                               (syntax-column s-loc/e))
+                           s-position
+                           (let ([s s-position]
                                  [e (and e-loc/e
                                          (if (srcloc? e-loc/e)
                                              (srcloc-position e-loc/e)
