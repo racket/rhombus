@@ -107,11 +107,12 @@
   [opchar (:or (:- symbolic (:or))
                (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"" "'")))]
   [operator (:- (:or opchar
-                     (:: (:* opchar) (:- opchar "+" "-" "."))
+                     (:: (:* opchar) (:- opchar "+" "-" "." "/"))
                      (:+ ".")
                      (:+ "+")
                      (:+ "-"))
-                "|" ":")]
+                "|" ":"
+                (:: (:* any-char) (:or "//" "/*") (:* any-char)))]
 
   [keyword (:: "\'" identifier "\'")]
   [bad-keyword (:: "\'" 
@@ -330,7 +331,10 @@
    [(:+ whitespace) (values lexeme end-pos)]))
 
 (define (parse-number s)
-  (string->number (regexp-replace* #rx"_" s "")))
+  (if (and ((string-length s) . > . 2)
+           (eqv? #\x (string-ref s 1)))
+      (string->number (regexp-replace* #rx"_" (substring s 2) "") 16)
+      (string->number (regexp-replace* #rx"_" s ""))))
 
 (define (parse-string s)
   (read (open-input-string s)))
