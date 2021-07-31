@@ -137,19 +137,14 @@
                   ;; handle-escape:
                   (lambda (¿-id e in-e)
                     (define id (car (generate-temporaries (list e))))
-                    (values id #`[#,id (rhombus-expression (group #,e)) 0]))
+                    (values id #`[#,id (unpack-tail* (rhombus-expression (group #,e)) 0)]))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
-                      #:literals (convert-empty-group convert-empty-alts error-empty-group)
-                      [(id-pat ((~and convert (~or convert-empty-group convert-empty-alts error-empty-group))
-                                (qs t)
-                                c-depth)
-                               0)
-                       #`[(id-pat (... ...)) (convert (qs (t (... ...))) #,(add1 (syntax-e #'c-depth))) 0]]
-                      [(id-pat e depth)
-                       ;; defer conversion of `e` to `wrap-bindings`:
-                       #`[(id-pat (... ...)) e #,(add1 (syntax-e #'depth))]]))
+                      [(id-pat ((~literal unpack-tail*) e depth))
+                       #`[(id-pat (... ...)) (unpack-tail* e #,(add1 (syntax-e #'depth)))]]
+                      [(id-pat (converter depth (qs t) . args))
+                       #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag template idrs)
                     ;; if `template` generates `(group)`, then instead of `(tag (group))`,
@@ -157,8 +152,7 @@
                     (define id (car (generate-temporaries '(group))))
                     (values #`(#,tag #,id (... ...))
                             (cons #`[(#,id (... ...))
-                                     (convert-empty-group (#,(quote-syntax quasisyntax) #,template) 0)
-                                     0]
+                                     (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
                                   idrs)
                             #f))
                   ;; handle-maybe-empty-alts
@@ -166,9 +160,7 @@
                     ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
                     (define id (car (generate-temporaries '(alts))))
                     (values id
-                            (cons #`[#,id
-                                     (convert-empty-alts (#,(quote-syntax quasisyntax) (#,tag . #,ts)) 0)
-                                     0]
+                            (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
                                   idrs)
                             #f))
                   ;; handle-maybe-empty-group
@@ -176,13 +168,11 @@
                     ;; if `(tag . ts)` generates `(group)`, then error
                     (define id (car (generate-temporaries '(group))))
                     (values id
-                            (cons #`[#,id
-                                     (error-empty-group (#,(quote-syntax quasisyntax) (#,tag . #,ts)) 0)
-                                     0]
+                            (cons #`[#,id (error-empty-group 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
                                   idrs)
                             #f))))
 
-(define (convert-empty-group l at-depth)
+(define (convert-empty-group at-depth l)
   (cond
     [(zero? at-depth)
      (define u (cdr (syntax-e l)))
@@ -191,9 +181,9 @@
          null
          (list l))]
     [else (for/list ([g (in-list (syntax->list l))])
-            (convert-empty-group g (sub1 at-depth)))]))
+            (convert-empty-group (sub1 at-depth) g))]))
 
-(define (convert-empty-alts l at-depth)
+(define (convert-empty-alts at-depth l)
   (cond
     [(zero? at-depth)
      (define u (cdr (syntax-e l)))
@@ -204,9 +194,9 @@
         (list (datum->syntax a 'block a a))]
        [else l])]
     [else (for/list ([g (in-list (syntax->list l))])
-            (convert-empty-alts g (sub1 at-depth)))]))
+            (convert-empty-alts (sub1 at-depth) g))]))
 
-(define (error-empty-group l at-depth)
+(define (error-empty-group at-depth l)
   (cond
     [(zero? at-depth)
      (define u (cdr (syntax-e l)))
@@ -215,7 +205,7 @@
        (error '? "generated an empty group"))
      l]
     [else (for/list ([g (in-list (syntax->list l))])
-            (error-empty-group g (sub1 at-depth)))]))
+            (error-empty-group (sub1 at-depth) g))]))
 
 (require (for-syntax racket/pretty))
 
@@ -236,15 +226,8 @@
              (wrap-bindings
               (cdr idrs)
               (syntax-parse (car idrs)
-                [(id-pat e depth)
-                 #`(with-syntax ([id-pat (let ([r e])
-                                           #,(let loop ([depth (syntax-e #'depth)])
-                                               (cond
-                                                 [(eqv? depth 0) #'r]
-                                                 [(eqv? depth 1) #'(unpack-tail r 'unquote)]
-                                                 [else
-                                                  #`(for/list ([r (in-list (unpack-tail r 'unquote))])
-                                                      #,(loop (sub1 depth)))])))])
+                [(id-pat e)
+                 #`(with-syntax ([id-pat e])
                      #,body)]))]))
         (values (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template))
                 #'tail)]))

@@ -5,7 +5,8 @@
 
 (provide pack-tail
          pack-tail*
-         unpack-tail)
+         unpack-tail
+         unpack-tail*)
 
 (define (pack-tail tail)
   (if (stx-null? tail)
@@ -28,3 +29,10 @@
      (raise-result-error (if (symbol? proc) proc (proc-name proc))
                          "rhombus-syntax-list?"
                          packed-tail)]))
+
+(define (unpack-tail* r depth)
+  (cond
+    [(eqv? depth 0) r]
+    [(eqv? depth 1) (unpack-tail r 'unquote)]
+    [else (for/list ([r (in-list (unpack-tail r 'unquote))])
+            (unpack-tail* r (sub1 depth)))]))
