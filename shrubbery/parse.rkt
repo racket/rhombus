@@ -60,6 +60,14 @@
 
 ;; ----------------------------------------
 
+;; In the parsed representation of a shrubbery, source locations are
+;; not associated with sequences tagged `group` or `top`. For terms
+;; tagged with `parens`, `braces`, `block`, `alts`, and `op`, the same
+;; source location is associated with the tag and the parentheses that
+;; group the tag with its members, and that location spans the content
+;; and any delimiters used to form it (such as parentheses or a `:`
+;; that starts a block).
+
 ;; Parse all groups in a stream
 (define (parse-top-groups l)
   (define-values (next-l last-line delta) (next-of l #f 0))
@@ -72,7 +80,7 @@
                                            #:delta delta)))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
-  (datum->syntax #f `(top ,@(bars-insert-alts gs))))
+  (lists->syntax (cons 'top (bars-insert-alts gs))))
 
 ;; Parse a sequence of groups (top level, in opener-closer, or after `:`)
 ;;   consuming the closer in the case of opener-closer context.
@@ -542,7 +550,22 @@
                                               (syntax-span e-loc/e)))])
                              (and s e sp
                                   (+ (- e s) sp)))))]))
-   
+
+;; Like `datum->syntax`, but propagates the source location of
+;; a start of a list (if any) to the list itself. That starting
+;; item is expected to be a tag that has the span of the whole
+;; term already as its location
+(define (lists->syntax l)
+  (cond
+    [(pair? l)
+     (define a (car l))
+     (define new-l (for/list ([e (in-list l)])
+                     (lists->syntax e)))
+     (if (syntax? a)
+         (datum->syntax #f new-l a a)
+         (datum->syntax #f new-l))]
+    [else l]))
+
 ;; Consume whitespace and comments, including continuing backslashes,
 ;; where lookahead is needed
 ;; Arguments/returns:

@@ -162,8 +162,7 @@
                          offset)))
   (token name (let loop ([e e])
                 (let ([e (if (pair? e)
-                             (cons (loop (car e))
-                                   (loop (cdr e)))
+                             (map loop e)
                              e)])
                   (datum->syntax #f
                                  e

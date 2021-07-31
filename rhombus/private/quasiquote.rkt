@@ -39,7 +39,7 @@
        (define-values (p new-idrs can-be-empty?) (convert #'g #t))
        (if can-be-empty?
            (handle-maybe-empty-sole-group #'tag p new-idrs)
-           (values #`(#,(make-datum #'tag) #,p)
+           (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
                    new-idrs 
                    #f))]
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum block) (~datum alts) (~datum group)))
@@ -55,7 +55,7 @@
                 [(and can-be-empty? (eq? (syntax-e #'tag) 'group))
                  (handle-maybe-empty-group #'tag ps idrs)]
                 [else
-                 (values #`(#,(make-datum #'tag) . #,ps)
+                 (values (quasisyntax/loc e (#,(make-datum #'tag) . #,ps))
                          idrs
                          can-be-empty?)]))]
            [(op:repetition . gs)
@@ -73,7 +73,7 @@
             (define-values (p new-ids nested-can-be-empty?) (convert #'g #f))
             (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)))]))]
       [((~and tag (~datum op)) op-name)
-       (values #`(#,(make-datum #'tag) #,(make-literal #'op-name)) null #f)]
+       (values (quasisyntax/loc e (#,(make-datum #'tag) #,(make-literal #'op-name))) null #f)]
       [id:identifier
        (values (make-literal #'id) null #f)]
       [_
