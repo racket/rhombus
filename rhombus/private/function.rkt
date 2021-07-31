@@ -27,7 +27,7 @@
   (define (empty->keyword g kw)
     (syntax-parse g
       [(_) #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw))]
-      [else g]))
+      [_ g]))
   (define-syntax-class :kw-opt-binding
     #:datum-literals (op block group)
     #:literals (rhombus=)
@@ -38,8 +38,16 @@
     (pattern (group kw:keyword (block (group (op rhombus=) e ...+)))
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword (op rhombus=) e ...+)
+             #:with arg::binding (empty->keyword #'(group) #'kw)
+             #:with default #'(group e ...)
+             #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword (block (group a ...)))
              #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+             #:attr default #'#f
+             #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword)
+             #:with arg::binding (empty->keyword #'(group) #'kw)
              #:attr default #'#f
              #:attr parsed #'arg.parsed)
     (pattern (group a ...+ (op rhombus=) e ...+)
