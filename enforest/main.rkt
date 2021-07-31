@@ -133,7 +133,7 @@
       [(stxes current-op)
        ;; No preceding expression, so dispatch to prefix (possibly implicit)
        ((syntax-parse stxes
-          [() (raise-syntax-error #f (format "empty ~a" form-kind-str))]
+          [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::operator . tail)
            (define head-id (in-space #'head.name))
            (define v (syntax-local-value* head-id
@@ -173,7 +173,7 @@
             [else
              ;; new operator sets precedence, defer application of operator until a suitable
              ;; argument is parsed
-             (define-values (form new-tail) (enforest-step tail op))
+             (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op))
              (enforest-step (apply-prefix-direct-operator op form op-stx check-result)
                             new-tail
                             current-op)]))
@@ -233,7 +233,7 @@
                [else
                 ;; new operator sets precedence, defer application of operator until a suitable
                 ;; right-hand argument is parsed
-                (define-values (form new-tail) (enforest-step tail op))
+                (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op))
                 (enforest-step (apply-infix-direct-operator op init-form form op-stx check-result)
                                new-tail
                                current-op)])]
@@ -262,5 +262,16 @@
                                                               operator-kind-str form-kind-str))
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
           (dispatch-infix-operator v op stxes synthetic-stxes op-stx)))]))
+
+  ;; improves errors when nothin appears after an operator:
+  (define (check-empty op-stx tail form-kind-str)
+    (cond
+      [(or (null? tail)
+           (and (syntax? tail)
+                (null? (syntax-e tail))))
+       (raise-syntax-error #f
+                           (format "missing ~a after operator" form-kind-str)
+                           op-stx)]
+      [else tail]))
 
   enforest-step)

@@ -1,12 +1,19 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     "srcloc.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
          (submod "function.rkt" for-build))
 
 (provide match)
+
+(begin-for-syntax
+  (define-syntax-class :pattern-clause
+    #:datum-literals (block group)
+    (pattern (block (group bind ...
+                           (~and rhs (block . _)))))))
 
 (define-syntax match
   (expression-transformer
@@ -15,13 +22,12 @@
      (syntax-parse stx
        #:datum-literals (alts block group)
        [(form-id in ... ((~and alts-tag alts)
-                         (block (group bind ...
-                                       (~and rhs (block . _))))
+                         clause::pattern-clause
                          ...
                          (block (group #:else
                                        (~and else-rhs (block . _)))))
                  . tail)
-        #:with (b::binding ...) #'((group bind ...) ...)
+        #:with (b::binding ...) #'((group clause.bind ...) ...)
         (values
          #`(#,(build-case-function #'match
                                    #'((b) ... (ignored))
@@ -29,7 +35,7 @@
                                                          #'()
                                                          #'(lambda (v) #t)
                                                          #'(begin))))
-                                   #'(rhs ... else-rhs)
+                                   #'(clause.rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
@@ -41,17 +47,41 @@
         #:with (b::binding ...) #'((group bind ...) ...)
         (values
          #`(#,(build-case-function #'match
-                                   #'((b) ...)
-                                   #'((b.parsed) ...)
-                                   #'(rhs ...)
+                                   #'((b) ... (unmatched))
+                                   #`((b.parsed) ... (#,(binding-form
+                                                         #'(unmatched)
+                                                         #'(lambda (v) (values #t v))
+                                                         #'(begin))))
+                                   #`(rhs ... (parsed
+                                               (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
        [(form-id in ... ((~and block-tag block)) . tail)
         (values
-         #`((match-fallthrough 'form-id (rhombus-expression (group in ...)))
+         #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
             (rhombus-expression (group in ...)))
-         #'tail)]))))
+         #'tail)]
+       [(form-id in ... (alts clause ...) . tail)
+        (for ([c (in-list (syntax->list #'(clause ...)))])
+          (syntax-parse c
+            [(c::pattern-clause ...) (void)]
+            [_ (raise-syntax-error #f
+                                   "expected a pattern followed by a result block"
+                                   c)]))]))))
 
-(define (match-fallthrough who v)
-  (error who "no matching case"))
+
+(struct exn:fail:contract:srcloc exn:fail:contract (srclocs)
+  #:property prop:exn:srclocs (lambda (exn) (exn:fail:contract:srcloc-srclocs exn)))
+
+(define (raise-srcloc-error who v loc)
+  (raise
+   (exn:fail:contract:srcloc
+    (format "~a: no matching case" who)
+    (current-continuation-marks)
+    (if loc
+        (list loc)
+        null))))
+
+(define (match-fallthrough who v loc)
+  (raise-srcloc-error who v loc))

@@ -21,7 +21,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
-        (values (respan #`(#,(datum->syntax #'here 'rhombus-block #'tag) . body))
+        (values (quasisyntax/loc #'tag (rhombus-block . body))
                 #'tail)]))))
 
 (define-syntax #%literal
@@ -47,8 +47,7 @@
 
 (define-for-syntax (raise-keyword-error datum)
   (raise-syntax-error #f
-                      (string-append "a keyword is allowed only where the enclosing context expects it,"
-                                     " such as before argument to a function")
+                      "misplaced keyword"
                       datum))
 
 (define-syntax #%tuple

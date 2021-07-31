@@ -11,5 +11,5 @@
                           (format "case ~a does not match initial case ~a"
                                   what
                                   what)
-                          (respan stx)
+                          stx
                           another-id))))

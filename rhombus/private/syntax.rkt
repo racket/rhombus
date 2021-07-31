@@ -179,10 +179,10 @@
 
 (define-for-syntax (parse-one-macro-operator-definition make-prefix-id make-infix-id)
   (lambda (g prec assc self-id rhs)
-    (define (macro-body tail-id tail-pattern rhs)
+    (define (macro-body self-id tail-id tail-pattern rhs)
       (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . #,tail-pattern))))
       (with-syntax ([((id id-ref) ...) idrs])
-        #`(syntax-parse #,tail-id
+        #`(syntax-parse (respan-empty #,self-id #,tail-id)
             [#,pattern
              (let ([id id-ref] ...)
                (rhombus-expression (group #,rhs)))])))
@@ -197,7 +197,7 @@
           #,(convert-prec prec)
           'macro
           (let ([op-name.name (lambda (left tail self-id)
-                                #,(macro-body #'tail #'tail-pattern rhs))])
+                                #,(macro-body #'self-id #'tail #'tail-pattern rhs))])
             op-name.name)
           #,(convert-assc assc))]
       [(group op-name::operator
@@ -207,7 +207,7 @@
           #,(convert-prec prec)
           'macro
           (let ([op-name.name (lambda (tail self-id)
-                                #,(macro-body #'tail #'tail-pattern rhs))])
+                                #,(macro-body #'self-id #'tail #'tail-pattern rhs))])
             op-name.name))])))
 
 (define-for-syntax (parse-operator-definition protocol g prec assc self-id rhs
@@ -241,11 +241,11 @@
   (unless ((length prefixes) . < . 2)
     (raise-syntax-error #f
                         "cannot handle multiple prefix implementations"
-                        (respan stx)))
+                        stx))
   (unless ((length infixes) . < . 2)
     (raise-syntax-error #f
                         "cannot handle multiple infix implementations"
-                        (respan stx)))
+                        stx))
   #`(define-syntax #,(in-space (car ops))
       #,(cond
           [(null? prefixes) (car infixes)]

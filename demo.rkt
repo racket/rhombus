@@ -1,7 +1,5 @@
 #lang rhombus
 
-function
-
 // Some expressions
 
 10 * (-3) + 2

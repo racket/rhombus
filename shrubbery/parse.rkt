@@ -178,7 +178,7 @@
                                (= column (group-state-column sg)))
                      (fail t "wrong indentation")))
                  (define-values (g rest-l group-end-line group-end-delta)
-                   (parse-block l
+                   (parse-block t l
                                 #:closer (column-next column)
                                 #:bar-closes? #t
                                 #:delta (group-state-delta sg)))
@@ -295,7 +295,7 @@
           [(identifier number literal operator)
            (keep (state-delta s))]
           [(block-operator)
-           (parse-block l
+           (parse-block t l
                         #:closer (column-half-next (state-column s))
                         #:delta (state-delta s))]
           [(bar-operator)
@@ -312,7 +312,7 @@
                   (case (token-name t)
                     [(bar-operator)
                      (define-values (g rest-l end-line end-delta)
-                       (parse-block l
+                       (parse-block t l
                                     #:closer (column-next (+ (token-column t) (state-delta s)))
                                     #:bar-closes? #t
                                     #:delta (state-delta s)))
@@ -402,7 +402,7 @@
           [else
            (error "unexpected" t)])])]))
 
-(define (parse-block l
+(define (parse-block block-t l
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:delta in-delta)
@@ -410,7 +410,9 @@
   (define line (token-line t))
   (define-values (next-l last-line delta) (next-of (cdr l) line in-delta))
   (define (block-empty)
-    (values (list (tag-as-block null))
+    (values (list (add-span-srcloc
+                   block-t #f
+                   (tag-as-block null)))
             next-l
             line
             delta))
@@ -519,37 +521,25 @@
                                    (car a)
                                    (loop a))]
                               [else (loop (cdr e))]))))
-     (define s-loc/e (if (syntax? start-t)
-                         start-t
-                         (token-srcloc start-t)))
-     (define e-loc/e (and last-t/e
-                          (if (syntax? last-t/e)
-                              last-t/e
-                              (token-srcloc last-t/e))))
-     (define s-position (if (srcloc? s-loc/e)
-                            (srcloc-position s-loc/e)
-                            (syntax-position s-loc/e)))
-     (add-srcloc l (vector (if (srcloc? s-loc/e)
-                               (srcloc-source s-loc/e)
-                               (syntax-source s-loc/e))
-                           (if (srcloc? s-loc/e)
-                               (srcloc-line s-loc/e)
-                               (syntax-line s-loc/e))
-                           (if (srcloc? s-loc/e)
-                               (srcloc-column s-loc/e)
-                               (syntax-column s-loc/e))
+     (define s-loc (if (syntax? start-t)
+                       (syntax-srcloc start-t)
+                       (token-srcloc start-t)))
+     (define e-loc (and last-t/e
+                        (if (syntax? last-t/e)
+                            (syntax-srcloc last-t/e)
+                            (token-srcloc last-t/e))))
+     (define s-position (srcloc-position s-loc))
+     (add-srcloc l (srcloc (srcloc-source s-loc)
+                           (srcloc-line s-loc)
+                           (srcloc-column s-loc)
                            s-position
-                           (let ([s s-position]
-                                 [e (and e-loc/e
-                                         (if (srcloc? e-loc/e)
-                                             (srcloc-position e-loc/e)
-                                             (syntax-position e-loc/e)))]
-                                 [sp (and e-loc/e
-                                          (if (srcloc? e-loc/e)
-                                              (srcloc-span e-loc/e)
-                                              (syntax-span e-loc/e)))])
-                             (and s e sp
-                                  (+ (- e s) sp)))))]))
+                           (if e-loc
+                               (let ([s s-position]
+                                     [e (srcloc-position e-loc)]
+                                     [sp (srcloc-span e-loc)])
+                                 (and s e sp
+                                      (+ (- e s) sp)))
+                               (srcloc-span s-loc))))]))
 
 ;; Like `datum->syntax`, but propagates the source location of
 ;; a start of a list (if any) to the list itself. That starting
