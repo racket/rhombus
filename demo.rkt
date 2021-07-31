@@ -89,9 +89,9 @@ operator (a +* b):
 
 // with precedence and associativity
 
-operator (a ++* b,
-          'weaker_than': *,
-          'associativity': right):
+operator (a ++* b):
+  'weaker_than': *
+  'associativity': right
   (a + b) * b
 
 3 ++* 4 * 2 ++* 5

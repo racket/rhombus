@@ -71,6 +71,13 @@
                                pos
                                (max 0 (- end-pos pos)))
                        stx)]
+       [(eq? (syntax-e head) 'group)
+        ;; this seems like a hack; maybe 'group should get a source location, too
+        (define tail (datum->syntax #f (cdr e)))
+        (define new-tail (respan tail))
+        (if (eq? tail new-tail)
+            stx
+            (datum->syntax #f (cons head new-tail) new-tail))]
        [else stx])]
     [else stx]))
 

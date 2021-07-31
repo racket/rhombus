@@ -77,7 +77,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group int:identifier (~datum to) ext:identifier)
+       [(_ (block (group int:identifier #:to ext:identifier)
                   ...)
            . tail)
         (values #`(rename-in #,req [int ext] ...)

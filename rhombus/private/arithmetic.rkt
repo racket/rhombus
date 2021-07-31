@@ -14,6 +14,7 @@
                      [rhombus>= >=]
                      [rhombus> >])
          sqrt cos sin tan log exp expt
+         floor ceiling round
 
          !
          &&

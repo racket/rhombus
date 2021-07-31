@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/operator-parse
-                     "consistent.rkt")
+                     "consistent.rkt"
+                     "srcloc.rkt")
          "expression.rkt"
          "parse.rkt"
          "syntax.rkt"
@@ -18,19 +19,21 @@
 (begin-for-syntax
   
   (define-splicing-syntax-class :prefix-case
-    (pattern (~seq (parens (~and g (group op-name::operator arg))
-                           options::prefix-operator-options)
-                   (~and rhs (block body ...)))
-             #:attr name #'op-name.name
-             #:attr prec #'options.prec))
-
-  (define-splicing-syntax-class :infix-case
-    (pattern (~seq (~and (~and g (parens (group left op-name::operator right)
-                                         options::infix-operator-options)))
-                   (~and rhs (block body ...)))
+    (pattern (~seq (parens (~and g (group op-name::operator arg)))
+                   ((~and tag block) options::prefix-operator-options
+                                     body ...))
              #:attr name #'op-name.name
              #:attr prec #'options.prec
-             #:attr assc #'options.assc))
+             #:attr rhs #'(tag body ...)))
+
+  (define-splicing-syntax-class :infix-case
+    (pattern (~seq (parens (~and g (group left op-name::operator right)))
+                   ((~and tag block) options::infix-operator-options
+                                     body ...))
+             #:attr name #'op-name.name
+             #:attr prec #'options.prec
+             #:attr assc #'options.assc
+             #:attr rhs #'(tag body ...)))
 
   (define (make-prefix name op-proc prec)
     (with-syntax ([op-proc op-proc])
@@ -39,7 +42,7 @@
          #,(convert-prec prec)
          'automatic
          (lambda (arg self-stx)
-           #`(op-proc #,arg)))))
+           (relocate (span-srcloc self-stx arg) #`(op-proc #,arg))))))
 
   (define (make-infix name op-proc prec assc)
     (with-syntax ([op-proc op-proc])
@@ -48,7 +51,7 @@
          #,(convert-prec prec)
          'automatic
          (lambda (left right self-stx)
-           #`(op-proc #,left #,right))
+           (relocate (span-srcloc left right) #`(op-proc #,left #,right)))
          #,(convert-assc assc))))
 
   (define (build-prefix-function name arg rhs start end)

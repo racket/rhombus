@@ -61,9 +61,6 @@
         (list (parse-operator-definitions 'macro
                                           stx
                                           (syntax->list #'(q.g ...))
-                                          (syntax->list #'(q.prec ...))
-                                          (syntax->list #'(q.assc ...))
-                                          (syntax->list #'(q.self-id ...))
                                           (syntax->list #'(rhs ...))
                                           in-expression-space
                                           #'make-expression-prefix-operator
@@ -73,9 +70,6 @@
                  (~and rhs (block body ...)))
         (list (parse-operator-definition 'macro
                                          #'q.g
-                                         #'q.prec
-                                         #'q.assc
-                                         #'q.self-id
                                          #'rhs
                                          in-expression-space
                                          #'make-expression-prefix-operator
