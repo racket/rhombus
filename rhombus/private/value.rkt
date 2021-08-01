@@ -19,13 +19,15 @@
        #:datum-literals (parens group block alts op)
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
         (build-values-definitions #'form-id
-                                  #'(g ...) #'rhs)]
+                                  #'(g ...) #'rhs
+                                  values)]
        [(form-id any ... (~and rhs (block body ...)))
         (build-value-definitions #'form-id
                                  #'(group any ...)
-                                 #'rhs)]))))
+                                 #'rhs
+                                 values)]))))
 
-(define-for-syntax (build-value-definitions form-id g-stx rhs-stx)
+(define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition)
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
@@ -38,9 +40,10 @@
                           flattened-if
                           (void)
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
-      #`(lhs-e.binder-id tmp-id lhs-e.data))]))
+      (wrap-definition
+       #`(lhs-e.binder-id tmp-id lhs-e.data)))]))
 
-(define-for-syntax (build-values-definitions form-id gs-stx rhs-stx)
+(define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
@@ -49,6 +52,7 @@
      (list
       #'(define-values (tmp-id ...) (let-values ([(lhs-e.arg-id ...) (rhombus-expression (group rhs))])
                                       (values lhs-e.arg-id ...)))
+     (wrap-definition
       #`(begin
           (lhs-e.matcher-id tmp-id
                             lhs-e.data
@@ -57,7 +61,7 @@
                             (rhs-binding-failure '#,form-id tmp-id 'lhs))
           ...
           (lhs-e.binder-id tmp-id lhs-e.data)
-          ...))]))
+          ...)))]))
 
 (define-syntax (flattened-if stx)
   (syntax-parse stx

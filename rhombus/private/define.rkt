@@ -52,32 +52,34 @@
           #`(define id
               #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag))))]
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
-        (map
-         wrap-definition
-         (build-values-definitions #'form-id #'(g ...) #'rhs))]
+        (build-values-definitions #'form-id #'(g ...) #'rhs
+                                  wrap-definition)]
        [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                      (~and rhs (block body ...))))
                                        ...+))
-        (list (parse-operator-definitions 'macro
-                                          stx
-                                          (syntax->list #'(q.g ...))
-                                          (syntax->list #'(rhs ...))
-                                          in-expression-space
-                                          #'make-expression-prefix-operator
-                                          #'make-expression-infix-operator
-                                          #'expression-prefix+infix-operator))]
+        (list
+         (wrap-definition
+          (parse-operator-definitions 'macro
+                                      stx
+                                      (syntax->list #'(q.g ...))
+                                      (syntax->list #'(rhs ...))
+                                      in-expression-space
+                                      #'make-expression-prefix-operator
+                                      #'make-expression-infix-operator
+                                      #'expression-prefix+infix-operator)))]
        [(form-id q::operator-syntax-quote
                  (~and rhs (block body ...)))
-        (list (parse-operator-definition 'macro
-                                         #'q.g
-                                         #'rhs
-                                         in-expression-space
-                                         #'make-expression-prefix-operator
-                                         #'make-expression-infix-operator))]
+        (list
+         (wrap-definition
+          (parse-operator-definition 'macro
+                                     #'q.g
+                                     #'rhs
+                                     in-expression-space
+                                     #'make-expression-prefix-operator
+                                     #'make-expression-infix-operator)))]
        [(form-id any ... (~and rhs (block body ...)))
-        (map
-         wrap-definition
-         (build-value-definitions #'form-id #'(group any ...) #'rhs))]))))
+        (build-value-definitions #'form-id #'(group any ...) #'rhs
+                                 wrap-definition)]))))
 
 (define-syntax rhombus-define
   (make-define (lambda (defn) defn)))
