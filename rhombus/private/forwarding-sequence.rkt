@@ -35,7 +35,7 @@
                                           #'require)
                                     #f))
      (syntax-parse exp-form
-       #:literals (begin define-values rhombus-forward)
+       #:literals (begin define-values define-syntaxes rhombus-forward)
        [(rhombus-forward . sub-forms)
         (define introducer (make-syntax-introducer #t))
         #`(begin

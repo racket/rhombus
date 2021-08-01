@@ -39,11 +39,23 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (binding-form
-                 #'()
-                 #'(lambda (v) (equal? v (quote datum)))
-                 #'(begin))
+        (values (binding-form #'literal
+                              #'literal-matcher
+                              #'literal-bind-nothing
+                              #'datum)
                 #'tail)]))))
+
+(define-syntax (literal-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id datum IF success fail)
+     #'(IF (equal? arg-id (quote datum))
+           success
+           fail)]))
+
+(define-syntax (literal-bind-nothing stx)
+  (syntax-parse stx
+    [(_ arg-id datum)
+     #'(begin)]))
 
 (define-for-syntax (raise-keyword-error datum)
   (raise-syntax-error #f

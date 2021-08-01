@@ -4,8 +4,7 @@
                      "infer-name.rkt")
          "definition.rkt"
          "binding.rkt"
-         "parse.rkt"
-         "nested-bindings.rkt")
+         "parse.rkt")
 
 (provide value)
 
@@ -19,49 +18,53 @@
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
-        (build-values-definitions #'(g ...) #'rhs)]
+        (build-values-definitions #'form-id
+                                  #'(g ...) #'rhs)]
        [(form-id any ... (~and rhs (block body ...)))
-        (build-value-definitions #'(group any ...)
+        (build-value-definitions #'form-id
+                                 #'(group any ...)
                                  #'rhs)]))))
 
-(define-for-syntax (build-value-definitions g-stx rhs-stx)
+(define-for-syntax (build-value-definitions form-id g-stx rhs-stx)
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
-     #:with name-id (infer-name #'lhs-e.var-ids)
      #:with rhs rhs-stx
      (list
-      #'(define-values lhs-e.var-ids
-          (let ([tmp-id (let ([name-id (rhombus-expression (group rhs))])
-                          name-id)])
-            (let-values ([(match? . lhs-e.var-ids)
-                          (lhs-e.check-proc-expr tmp-id)])
-              (unless match?
-                (rhs-binding-failure 'form-id tmp-id 'lhs))
-              (values . lhs-e.var-ids))))
-      #'lhs-e.post-defn)]))
+      #'(define tmp-id (let ([lhs-e.arg-id (rhombus-expression (group rhs))])
+                         lhs-e.arg-id))
+      #`(lhs-e.matcher-id tmp-id
+                          lhs-e.data
+                          flattened-if
+                          (void)
+                          (rhs-binding-failure '#,form-id tmp-id 'lhs))
+      #`(lhs-e.binder-id tmp-id lhs-e.data))]))
 
-(define-for-syntax (build-values-definitions gs-stx rhs-stx)
+(define-for-syntax (build-values-definitions form-id gs-stx rhs-stx)
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
-     #:with (name-id ...) (map infer-name (syntax->list #'(lhs-e.var-ids ...)))
-     #:with (tmp-id ...) (generate-temporaries #'(name-id ...))
      #:with rhs rhs-stx
+     #:with (tmp-id ...) (generate-temporaries #'(lhs-e.arg-id ...))
      (list
-      #'(define-values (lhs-e.var-id ... ...)
-          (let-values ([(tmp-id ...)
-                        (let-values ([(name-id ...) (rhombus-expression (group rhs))])
-                          (values name-id ...))])
-            (nested-bindings
-             form-id
-             #f rhs-binding-failure
-             (begin)
-             (tmp-id lhs-e lhs #f)
-             ...
-             (values lhs-e.var-id ... ...))))
-      #'(begin
-          lhs-e.post-defn ...))]))
+      #'(define-values (tmp-id ...) (let-values ([(lhs-e.arg-id ...) (rhombus-expression (group rhs))])
+                                      (values lhs-e.arg-id ...)))
+      #`(begin
+          (lhs-e.matcher-id tmp-id
+                            lhs-e.data
+                            flattened-if
+                            (begin)
+                            (rhs-binding-failure '#,form-id tmp-id 'lhs))
+          ...
+          (lhs-e.binder-id tmp-id lhs-e.data)
+          ...))]))
+
+(define-syntax (flattened-if stx)
+  (syntax-parse stx
+    [(_ check-expr success-expr fail-expr)
+     #'(begin
+         (unless check-expr fail-expr)
+         success-expr)]))
 
 (define (rhs-binding-failure who val binding)
   (raise-binding-failure who "value" val binding))

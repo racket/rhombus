@@ -6,12 +6,21 @@
                      "srcloc.rkt"
                      "tail.rkt")
          "definition.rkt"
+         "expression.rkt"
+         "expression+definition.rkt"
          "syntax.rkt"
          "binding.rkt"
-         "parse.rkt")
+         (rename-in "quasiquote.rkt"
+                    [... rhombus...])
+         (submod "quasiquote.rkt" convert)
+         "parse.rkt"
+         ;; for binding_{match,bind}_builder_macro:
+         (for-syntax "parse.rkt"))
 
 (provide binding_operator
          binding_macro
+         binding_match_macro
+         binding_bind_macro
          (for-syntax unpack_binding
                      pack_binding))
 
@@ -37,21 +46,146 @@
 (define-for-syntax (unpack_binding stx)
   (syntax-parse stx
     [((~datum parsed) b::binding-form)
-     #`(parens (group (parens (group . b.var-ids)))
-               (group (parsed b.check-proc-expr))
-               (group (block (group (parsed b.post-defn)))))]))
+     #`(parens (group b.arg-id)
+               (group chain-to-matcher)
+               (group chain-to-binder)
+               (group (parsed (b.matcher-id b.binder-id b.data))))]))
 
 (define-for-syntax (pack_binding stx)
   #`(parsed
      #,(syntax-parse stx
          #:datum-literals (parens group block)
-         [(parens (group (parens (group id:identifier ...)))
-                  (group e ...)
-                  (group (block (group defn ...) ...)))
-          (binding-form #'(id ...)
-                        #'(rhombus-expression (group e ...))
-                        #'(begin (rhombus-definition (group defn ...))
-                                 ...))])))
+         [(parens (group arg-id:identifier)
+                  (group matcher-id:identifier)
+                  (group binder-id:identifier)
+                  (group data))
+          (binding-form #'arg-id
+                        #'matcher-id
+                        #'binder-id
+                        #'data)]
+         [_ (raise-syntax-error 'pack_binding
+                                "ill-formed unpacked binding"
+                                stx)])))
+
+(define-syntax binding_match_macro
+  (definition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (op parens group block)
+        #:literals (? ¿)
+        [(form-id (op ?) (parens (group builder-id:identifier
+                                        (parens (group (op ¿) arg-id:identifier)
+                                                data-pattern
+                                                (group (op ¿) IF-id:identifier)
+                                                (group (op ¿) success-id:identifier)
+                                                (group (op ¿) fail-id:identifier))))
+                  (block body ...))
+         (define-values (converted-pattern idrs can-be-empty?) (convert-pattern #'data-pattern))
+         (with-syntax ([((id id-ref) ...) idrs])
+           (list
+            #`(define-syntax (builder-id stx)
+                (syntax-parse stx
+                  [(_ arg-id data IF success fail)
+                   (syntax-parse #'(group data)
+                     [#,converted-pattern
+                      (let ([id id-ref] ... [arg-id #'arg-id])
+                        (let ([IF-id #'if-bridge])
+                          (let ([success-id #'(parsed success)]
+                                ;; putting `if-bridge` in `fail-id`
+                                ;; helps make sure it's used correctly
+                                [fail-id #'(parsed (if-bridge IF fail))])
+                            (unwrap-block
+                             (rhombus-block body ...)))))])]))))]))))
+
+(define-syntax if-bridge
+  ;; depending on `IF`, `if-bridge` will be used in an expression
+  ;; or definition context
+  (let ([parse (lambda (stx)
+                 (syntax-parse stx
+                   #:datum-literals (alts block parsed)
+                   [(form-id e ... (alts (block success ...)
+                                         (block . fail-case)))
+                    (syntax-parse #'fail-case
+                      #:datum-literals (group parsed)
+                      #:literals (if-bridge)
+                      [((group (parsed (if-bridge IF fail))))
+                       #`(IF (rhombus-expression (group e ...))
+                             (rhombus-body success ...)
+                             fail)]
+                      [_ (raise-syntax-error #f
+                                             "not the given failure form in the failure branch"
+                                             stx)])]))])
+    (make-expression+definition-transformer
+     (expression-transformer
+      #'if-bridge
+      (lambda (stx) (values (parse stx) #'())))
+     (definition-transformer
+       (lambda (stx) (list (parse stx)))))))
+
+(define-syntax chain-to-matcher
+  ;; depends on `IF` like `if-bridge` does
+  (let ([parse (lambda (rhombus stx)
+                 (syntax-parse stx
+                   #:datum-literals (parsed group parens)
+                   #:literals (if-bridge)
+                   [(_ (parens (group arg-id:identifier)
+                               (group (parsed (matcher-id binder-id data)))
+                               (group IF-bridge)
+                               (group success ...)
+                               (group (parsed (if-bridge IF fail)))))
+                    #:with rhombus rhombus
+                    #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)]))])
+    (make-expression+definition-transformer
+     (expression-transformer
+      #'chain-to-matcher
+      (lambda (stx) (values (parse #'rhombus-block stx) #'())))
+     (definition-transformer
+       (lambda (stx) (list (parse #'rhombus-body stx)))))))
+
+(define-syntax chain-to-binder
+  ;; depends on `IF` like `if-bridge` does
+  (let ([parse (lambda (rhombus stx)
+                 (syntax-parse stx
+                   #:datum-literals (parsed group parens)
+                   #:literals (if-bridge)
+                   [(_ (parens (group arg-id:identifier)
+                               (group (parsed (matcher-id binder-id data)))))
+                    #:with rhombus rhombus
+                    #'(binder-id arg-id data)]))])
+    (make-expression+definition-transformer
+     (expression-transformer
+      #'chain-to-matcher
+      (lambda (stx) (values (parse #'rhombus-block stx) #'())))
+     (definition-transformer
+       (lambda (stx) (list (parse #'rhombus-body stx)))))))
+
+(define-syntax binding_bind_macro
+  (definition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (op parens group block)
+        #:literals (? ¿)
+        [(form-id (op ?) (parens (group builder-id:identifier
+                                        (parens (group (op ¿) arg-id:identifier)
+                                                data-pattern)))
+                  (block body ...))
+         (define-values (converted-pattern idrs can-be-empty?) (convert-pattern #'data-pattern))
+         (with-syntax ([((id id-ref) ...) idrs])
+           (list
+            #`(define-syntax (builder-id stx)
+                (syntax-parse stx
+                  [(_ arg-id data)
+                   (syntax-parse #'(group data)
+                     [#,converted-pattern
+                      (let ([id id-ref] ... [arg-id #'arg-id])
+                        (unwrap-block
+                         (rhombus-block body ...)))])]))))]))))
+
+(define-for-syntax (unwrap-block stx)
+  (syntax-parse stx
+    #:datum-literals (block)
+    [(block g ...)
+     #'(rhombus-body g ...)]))
 
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #,stx))

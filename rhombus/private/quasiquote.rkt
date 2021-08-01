@@ -236,19 +236,38 @@
      (syntax-parse stx
        [(op e . tail)
         (define-values (pattern idrs can-be-empty?) (convert-pattern #'e))
-        (with-syntax ([((id id-ref) ...) idrs]
-                      [(false ...) (for/list ([idr (in-list idrs)]) #'#f)])
-          (values
-           (binding-form
-            #'(id ...)
-            #`(lambda (v)
-                (if (syntax? v)
-                    (syntax-parse v
-                      [#,pattern (values #t id-ref ...)]
-                      [_ (values #f false ...)])
-                    (values #f false ...)))
-            #'(begin))
-           #'tail))]))))
+        (with-syntax ([((id id-ref) ...) idrs])
+          (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
+            (values
+             (binding-form
+              #'syntax
+              #'syntax-matcher
+              #'syntax-binder
+              #`(#,pattern
+                 (tmp-id ...)
+                 (id ...)
+                 (id-ref ...)))
+             #'tail)))]))))
+
+(define-syntax (syntax-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)) IF success fail)
+     #'(IF (syntax? arg-id)
+           (begin
+             (define-values (match? tmp-id ...)
+               (syntax-parse arg-id
+                 [pattern (values #t id-ref ...)]
+                 [_ (values #f 'id ...)]))
+             (IF match?
+                 success
+                 fail))
+           fail)]))
+
+(define-syntax (syntax-binder stx)
+  (syntax-parse stx
+    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)))
+     #'(begin
+         (define id tmp-id) ...)]))
 
 (define-syntax ¿
   (expression-prefix-operator

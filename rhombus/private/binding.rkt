@@ -22,15 +22,20 @@
            :non-binding-identifier))
 
 (provide define-binding-syntax
-         raise-binding-failure)
+         raise-binding-failure
+
+         ;; used by "type.rkt":
+         identifier-succeed
+         identifier-bind)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
     #:datum-literals (parens group)
-    (pattern ((~and var-ids (var-id:identifier ...))
-              check-proc-expr
-              post-defn)))
+    (pattern (arg-id:identifier
+              matcher-id:identifier
+              binder-id:identifier
+              data)))
 
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
@@ -39,15 +44,17 @@
     (binding-prefix-operator name '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
-  (define (binding-form ids check-proc-expr post-defn)
-    (datum->syntax #f (list ids
-                            check-proc-expr
-                            post-defn)))
+  (define (binding-form arg-id matcher-id binder-id data)
+    (datum->syntax #f (list arg-id
+                            matcher-id
+                            binder-id
+                            data)))
 
   (define (make-identifier-binding id)
-    (binding-form (list id)
-                  #'(lambda (v) (values #t v))
-                  #'(begin)))
+    (binding-form id
+                  #'identifier-succeed
+                  #'identifier-bind
+                  id))
 
   (define (check-binding-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -59,6 +66,16 @@
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
              #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?)))))
+
+(define-syntax (identifier-succeed stx)
+  (syntax-parse stx
+    [(_ arg-id bind-id IF success fail)
+     #'(IF #t success fail)]))
+
+(define-syntax (identifier-bind stx)
+  (syntax-parse stx
+    [(_ arg-id bind-id)
+     #'(define bind-id arg-id)]))
 
 (define-syntax (define-binding-syntax stx)
   (syntax-parse stx

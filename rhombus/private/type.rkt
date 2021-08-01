@@ -72,30 +72,59 @@
      (syntax-parse tail
        [(op t::type . new-tail)
         #:with left::binding-form form
-        (define num-vars (length (syntax->list #'left.var-ids)))
-        (with-syntax ([falses (for/list ([i (in-range num-vars)])
-                                #'#f)])
-          (define-values (var-ids new-def)
-            (cond
-              [(and (= 1 num-vars)
-                    (syntax-parse #'left.post-defn [(begin) #t] [_ #f]))
-               (define tmp-id (car (generate-temporaries #'left.var-ids)))
-               (values (list tmp-id)
-                       #`(define-syntaxes left.var-ids
-                           (make-typed-identifier (quote-syntax #,tmp-id) (quote-syntax t))))]
-              [else (values #'left.var-ids
-                            #'(begin))]))
-          (values
-           (binding-form var-ids
-                         #`(lambda (v)
-                             (if (t.predicate v)
-                                 (left.check-proc-expr v)
-                                 (values #f . falses)))
-                         #`(begin
-                             #,new-def
-                             left.post-defn))
-           #'new-tail))]))
+        (values
+         (cond
+           [(free-identifier=? #'left.matcher-id #'identifier-succeed)
+            ;; binding an identifier instead of a general pattern,
+            ;; so we can bind that name to have type information
+            (binding-form
+             #'left.arg-id
+             #'just-check-predicate-matcher
+             #'bind-typed-identifier
+             #'(t
+                t.predicate
+                left.arg-id))]
+           [else (binding-form
+                  #'left.arg-id
+                  #'check-predicate-matcher
+                  #'bind-nothing-new
+                  #'(t
+                     t.predicate
+                     left.matcher-id
+                     left.binder-id
+                     left.data))])
+         #'new-tail)]))
    'none))
+
+(define-syntax (check-predicate-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (t predicate left-matcher-id left-binder-id left-data) IF success fail)
+     #'(IF (predicate arg-id)
+           (left-matcher-id
+            arg-id
+            left-data
+            IF
+            success
+            fail)
+           fail)]))
+
+(define-syntax (bind-nothing-new stx)
+  (syntax-parse stx
+    [(_ arg-id (t predicate left-matcher-id left-binder-id left-data))
+     #'(left-binder-id arg-id left-data)]))
+
+(define-syntax (just-check-predicate-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (t predicate bind-id) IF success fail)
+     #'(IF (predicate arg-id)
+           success
+           fail)]))
+
+(define-syntax (bind-typed-identifier stx)
+  (syntax-parse stx
+    [(_ arg-id (t predicate bind-id))
+     #'(define-syntax bind-id
+         (make-typed-identifier #'arg-id  (quote-syntax t)))]))
 
 (define-syntax Integer (rhombus-type #'exact-integer?))
 (define-syntax String (rhombus-type #'string?))

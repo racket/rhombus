@@ -32,9 +32,10 @@
          #`(#,(build-case-function #'match
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
-                                                         #'()
-                                                         #'(lambda (v) #t)
-                                                         #'(begin))))
+                                                         #'ignored
+                                                         #'else-matcher
+                                                         #'else-binder
+                                                         #'(#t ignored))))
                                    #'(clause.rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
@@ -49,9 +50,10 @@
          #`(#,(build-case-function #'match
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
-                                                         #'(unmatched)
-                                                         #'(lambda (v) (values #t v))
-                                                         #'(begin))))
+                                                         #'unmatched
+                                                         #'else-matcher
+                                                         #'else-binder
+                                                         #'(#f unmatched))))
                                    #`(rhs ... (parsed
                                                (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag)
@@ -85,3 +87,15 @@
 
 (define (match-fallthrough who v loc)
   (raise-srcloc-error who v loc))
+
+(define-syntax (else-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (ok? bind-id) IF success fail)
+     #'(IF ok?
+           success
+           fail)]))
+
+(define-syntax (else-binder stx)
+  (syntax-parse stx
+    [(_ arg-id (_ bind-id))
+     #'(define bind-id arg-id)]))

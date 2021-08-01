@@ -118,7 +118,7 @@
 (define-infix rhombus<= <=
   #:same-as (rhombus> rhombus>= rhombus==)
   #:stronger-than (\|\| &&))
-(define-infix rhombus== =
+(define-infix rhombus== equal?
   #:same-as (rhombus> rhombus>=)
   #:stronger-than (\|\| &&))
 (define-infix rhombus>= >=

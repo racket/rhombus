@@ -185,25 +185,48 @@ apply_interest(7)
 
 // define <> as revese-cons pattern
 binding_operator ?(¿a <> ¿b):
+  pack_binding(?(pair,
+                 build_reverse_cons_match,
+                 build_reverse_cons_bind,
+                 (¿a, ¿b, a_part, b_part)))
+
+binding_match_macro ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
+                                               ¿IF, ¿success, ¿fail)):
   match unpack_binding(a)
-   | ?((¿a_id), ¿a_pred, {¿a_def; ...}):
+   | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        match unpack_binding(b)
-        | ?((¿b_id), ¿b_pred, {¿b_def; ...}):
-            pack_binding(?((¿a_id ¿b_id),
-                           function(v):
-                             match v
-                              | cons(bv, av):
-                                  define values(is_a_match, ar):
-                                    ¿a_pred(av)
-                                  if is_a_match
-                                   | define values(is_b_match, br):
-                                       ¿b_pred(bv)
-                                     if is_b_match
-                                      | values(#true, ar, br)
-                                      | values(#false, #false, #false)
-                                   | values(#false, #false, #false)
-                              | 'else': values(#false, #false, #false),
-                           {¿a_def; ...; ¿b_def; ...}))
+        | ?(¿b_id, ¿b_matcher, ¿b_binder, ¿b_data):
+            ?{
+              // check for pair an extract reversed pieces
+              value (is_match, ¿a_part_id, ¿b_part_id):
+                match ¿in_id
+                 | cons(¿b_id, ¿a_id):
+                     values(#true, ¿a_id, ¿b_id)
+                 | 'else':
+                     values(#false, #false, #false)
+              // if a match, chain to a and b matchers
+              ¿IF is_match
+               | ¿a_matcher(¿a_part_id,
+                            ¿a_data,
+                            ¿IF,
+                            ¿b_matcher(¿b_part_id,
+                                       ¿b_data,
+                                       ¿IF,
+                                       ¿success,
+                                       ¿fail),
+                            ¿fail)
+               | ¿fail
+            }
+
+binding_bind_macro ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
+  match unpack_binding(a)
+   | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
+       match unpack_binding(b)
+        | ?(¿b_id, ¿b_matcher, ¿b_binder, ¿b_data):
+            ?{
+              ¿a_binder(¿a_part_id, ¿a_data)
+              ¿b_binder(¿b_part_id, ¿b_data)
+            }
 
 // an expression operator that's consistent with the pattern
 expression_operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))

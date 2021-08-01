@@ -54,7 +54,7 @@
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
         (map
          wrap-definition
-         (build-values-definitions #'(g ...) #'rhs))]
+         (build-values-definitions #'form-id #'(g ...) #'rhs))]
        [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                      (~and rhs (block body ...))))
                                        ...+))
@@ -77,7 +77,7 @@
        [(form-id any ... (~and rhs (block body ...)))
         (map
          wrap-definition
-         (build-value-definitions #'(group any ...) #'rhs))]))))
+         (build-value-definitions #'form-id #'(group any ...) #'rhs))]))))
 
 (define-syntax rhombus-define
   (make-define (lambda (defn) defn)))

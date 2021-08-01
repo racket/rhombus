@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt"
-                     "consistent.rkt")
+                     "consistent.rkt"
+                     "with-syntax.rkt")
          racket/unsafe/undefined
          "expression.rkt"
          "binding.rkt"
@@ -109,39 +110,39 @@
       (reverse sames)))
 
   (define (build-function function-name kws args arg-parseds defaults rhs start end)
-    (define arg-ids (generate-temporaries args))
-    (with-syntax ([(arg-id ...) arg-ids]
-                  [(arg ...) args]
-                  [(arg.parsed ...) arg-parseds]
-                  [rhs rhs])
-      (with-syntax ([(((arg-form ...) arg-default) ...)
-                     (for/list ([kw (in-list (syntax->list kws))]
-                                [arg-id (in-list arg-ids)]
-                                [default (in-list (syntax->list defaults))])
-                       ;; FIXME: if `default` is simple enough, then
-                       ;; use it instead of `unsafe-undefined`, and
-                       ;; then `define` has the opportunity to inline it
-                       (define arg+default
+    (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds])
+      (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-parsed.arg-id ...))]
+                    [(arg ...) args]
+                    [rhs rhs])
+        (with-syntax ([(((arg-form ...) arg-default) ...)
+                       (for/list ([kw (in-list (syntax->list kws))]
+                                  [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
+                                  [default (in-list (syntax->list defaults))])
+                         ;; FIXME: if `default` is simple enough, then
+                         ;; use it instead of `unsafe-undefined`, and
+                         ;; then `define` has the opportunity to inline it
+                         (define arg+default
+                           (cond
+                             [(not (syntax-e default))
+                              tmp-id]
+                             [else
+                              #`[#,tmp-id unsafe-undefined]]))
                          (cond
-                           [(not (syntax-e default))
-                            arg-id]
+                           [(not (syntax-e kw))
+                            (list (list arg+default) default)]
                            [else
-                            #`[#,arg-id unsafe-undefined]]))
-                       (cond
-                         [(not (syntax-e kw))
-                          (list (list arg+default) default)]
-                         [else
-                          (list (list kw arg+default) default)]))])
-        (relocate
-         (span-srcloc start end)
-         #`(lambda (arg-form ... ...)
-             (nested-bindings
-              #,function-name
-              #f argument-binding-failure
-              (begin)
-              (arg-id arg.parsed arg arg-default)
-              ...
-              (rhombus-expression (group rhs))))))))
+                            (list (list kw arg+default) default)]))])
+          (relocate
+           (span-srcloc start end)
+           #`(lambda (arg-form ... ...)
+               (nested-bindings
+                #,function-name
+                #f argument-binding-failure
+                (tmp-id arg-parsed arg arg-default)
+                ...
+                (begin
+                  (arg-parsed.binder-id tmp-id arg-parsed.data) ...
+                  (rhombus-expression (group rhs))))))))))
   
   (define (build-case-function function-name argss-stx arg-parsedss-stx rhss-stx start end)
     (define argss (map syntax->list (syntax->list argss-stx)))
@@ -160,17 +161,19 @@
                          [(null? same)
                           #`(cases-failure '#,function-name arg-id ...)]
                          [else
-                          (with-syntax ([(arg ...) (fcase-args (car same))]
-                                        [(arg-parsed ...) (fcase-arg-parseds (car same))]
-                                        [rhs (fcase-rhs (car same))])
+                          (with-syntax-parse ([(arg ...) (fcase-args (car same))]
+                                              [(arg-parsed::binding-form ...) (fcase-arg-parseds (car same))]
+                                              [rhs (fcase-rhs (car same))])
                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
                                 (nested-bindings
                                  #,function-name
-                                 try-next argument-binding-failure
-                                 (begin)
+                                 try-next
+                                 argument-binding-failure
                                  (arg-id arg-parsed arg #f)
                                  ...
-                                 (rhombus-expression (group rhs)))))]))]))))))
+                                 (begin
+                                   (arg-parsed.binder-id arg-id arg-parsed.data) ...
+                                   (rhombus-expression (group rhs))))))]))]))))))
 
 (define (argument-binding-failure who val binding)
   (raise-binding-failure who "argument" val binding))

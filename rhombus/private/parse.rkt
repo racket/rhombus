@@ -18,6 +18,7 @@
          rhombus-expression
 
          rhombus-block-at
+         rhombus-body
 
          (for-syntax :declaration
                      :definition
@@ -103,7 +104,7 @@
     [(_ tag . tail)
      (syntax/loc #'tag (rhombus-block . tail))]))
 
-;; For an expression context, interleaves expansion and enforestation:
+;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
