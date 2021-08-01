@@ -289,9 +289,7 @@
   (define-splicing-syntax-class :identifier-syntax-quote
     #:datum-literals (op parens group)
     #:literals (?)
-    (pattern (~seq (op ?) (parens g::identifier-definition-group
-                                  (~optional (group #:op_stx (block (group self-id:identifier)))
-                                             #:defaults ([self-id #'self]))))))
+    (pattern (~seq (op ?) (parens g::identifier-definition-group))))
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
@@ -302,14 +300,17 @@
   (syntax-parse g
     #:datum-literals (group op)
     #:literals (¿ rhombus...)
-    [(group id:identifier
-            (op ¿) tail:identifier
-            (op rhombus...))
-     #`(define-syntax #,(in-space #'id)
-         (#,make-transformer-id
-          (let ([id (lambda (tail self-id)
-                      (rhombus-expression (group #,rhs)))])
-            id)))]))
+    [(group id:identifier . tail-pattern)
+     (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . tail-pattern))))
+     (with-syntax ([((p-id id-ref) ...) idrs])
+       #`(define-syntax #,(in-space #'id)
+           (#,make-transformer-id
+            (let ([id (lambda (tail #,self-id)
+                        (syntax-parse (respan-empty #,self-id tail)
+                          [#,pattern
+                           (let ([p-id id-ref] ...)
+                             (rhombus-expression (group #,rhs)))]))])
+              id))))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer in-space
                                                                   make-transformer-id)
@@ -318,6 +319,9 @@
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
        [(form-id q::identifier-syntax-quote
-                 (~and rhs (block body ...)))
-        (list (parse-transformer-definition #'q.g #'q.self-id #'rhs
+                 (~and rhs (block
+                            (~optional (group #:op_stx (block (group self-id:identifier)))
+                                       #:defaults ([self-id #'self]))
+                            body ...)))
+        (list (parse-transformer-definition #'q.g #'self-id #'rhs
                                             in-space make-transformer-id))]))))
