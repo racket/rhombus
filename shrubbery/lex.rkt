@@ -142,6 +142,7 @@
   [bad-number (:- (:: (:? sign) digit (:+ non-number-delims))
                   identifier
                   number)]
+  [bad-comment "*/"]
 
   [non-number-delims (:or non-delims ".")]
   [non-delims (:or alphabetic numeric "_")])
@@ -308,7 +309,7 @@
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
    [(eof) (values (make-token 'EOF lexeme start-pos end-pos) 'eof #f #f #f #f)]
-   [(:or bad-str bad-keyword bad-hash)
+   [(:or bad-str bad-keyword bad-hash bad-comment)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
