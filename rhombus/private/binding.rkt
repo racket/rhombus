@@ -24,7 +24,7 @@
 (provide define-binding-syntax
          raise-binding-failure
 
-         ;; used by "type.rkt":
+         ;; used by "contract.rkt":
          identifier-succeed
          identifier-bind)
 

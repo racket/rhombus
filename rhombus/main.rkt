@@ -27,7 +27,7 @@
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"
         "private/operator.rkt"
-        "private/type.rkt"
+        "private/contract.rkt"
         "private/list.rkt"
         "private/assign.rkt"
         "private/function.rkt"

@@ -12,40 +12,40 @@
          Integer
          String
 
-         (for-syntax rhombus-type
-                     rhombus-typed
-                     rhombus-type-property
-                     rhombus-syntax-local-type
-                     in-type-space)
+         (for-syntax rhombus-contract
+                     rhombus-contracted
+                     rhombus-contract-property
+                     rhombus-syntax-local-contract
+                     in-contract-space)
 
-         define-type-syntax)
+         define-contract-syntax)
 
 (begin-for-syntax
-  (struct rhombus-type (predicate))
+  (struct rhombus-contract (predicate))
 
-  (struct rhombus-typed (type-stx proc)
+  (struct rhombus-contracted (contract-stx proc)
     #:property prop:procedure (struct-field-index proc))
 
-  (define rhombus-type-property (gensym))
+  (define rhombus-contract-property (gensym))
 
-  (define in-type-space (make-interned-syntax-introducer 'rhombus/type))
+  (define in-contract-space (make-interned-syntax-introducer 'rhombus/contract))
 
-  (define-syntax-class :type
+  (define-syntax-class :contract
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* (in-type-space #'id) rhombus-type?))]
-             #:when (rhombus-type? v)
-             #:attr predicate (rhombus-type-predicate v)))
+             #:do [(define v (syntax-local-value* (in-contract-space #'id) rhombus-contract?))]
+             #:when (rhombus-contract? v)
+             #:attr predicate (rhombus-contract-predicate v)))
 
-  (define (make-typed-identifier id type-stx)
-    (rhombus-typed
-     type-stx
+  (define (make-contracted-identifier id contract-stx)
+    (rhombus-contracted
+     contract-stx
      (lambda (stx)
        (define (get-id stx)
          (syntax-property (datum->syntax id
                                          (syntax-e id)
                                          stx)
-                          rhombus-type-property
-                          type-stx))
+                          rhombus-contract-property
+                          contract-stx))
        (syntax-parse stx
          [_:identifier (get-id stx)]
          [(rator rand ...) (datum->syntax (quote-syntax here)
@@ -53,14 +53,14 @@
                                           stx
                                           stx)]))))
 
-  (define (rhombus-syntax-local-type e)
+  (define (rhombus-syntax-local-contract e)
     (cond
-      [(syntax-property e rhombus-type-property)
-       => (lambda (type-stx) type-stx)]
+      [(syntax-property e rhombus-contract-property)
+       => (lambda (contract-stx) contract-stx)]
       [(identifier? e)
-       (define v (syntax-local-value* e rhombus-typed?))
-       (and (rhombus-typed? v)
-            (rhombus-typed-type-stx v))]
+       (define v (syntax-local-value* e rhombus-contracted?))
+       (and (rhombus-contracted? v)
+            (rhombus-contracted-contract-stx v))]
       [else #f])))
 
 (define-syntax ::
@@ -70,17 +70,17 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op t::type . new-tail)
+       [(op t::contract . new-tail)
         #:with left::binding-form form
         (values
          (cond
            [(free-identifier=? #'left.matcher-id #'identifier-succeed)
             ;; binding an identifier instead of a general pattern,
-            ;; so we can bind that name to have type information
+            ;; so we can bind that name to have contract information
             (binding-form
              #'left.arg-id
              #'just-check-predicate-matcher
-             #'bind-typed-identifier
+             #'bind-contracted-identifier
              #'(t
                 t.predicate
                 left.arg-id))]
@@ -120,17 +120,17 @@
            success
            fail)]))
 
-(define-syntax (bind-typed-identifier stx)
+(define-syntax (bind-contracted-identifier stx)
   (syntax-parse stx
     [(_ arg-id (t predicate bind-id))
      #'(define-syntax bind-id
-         (make-typed-identifier #'arg-id  (quote-syntax t)))]))
+         (make-contracted-identifier #'arg-id  (quote-syntax t)))]))
 
-(define-syntax Integer (rhombus-type #'exact-integer?))
-(define-syntax String (rhombus-type #'string?))
+(define-syntax Integer (rhombus-contract #'exact-integer?))
+(define-syntax String (rhombus-contract #'string?))
 
-(define-syntax (define-type-syntax stx)
+(define-syntax (define-contract-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
-     #`(define-syntax #,(in-type-space #'id)
+     #`(define-syntax #,(in-contract-space #'id)
          rhs)]))

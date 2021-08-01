@@ -6,14 +6,14 @@
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
-         "type.rkt"
+         "contract.rkt"
          "composite.rkt")
 
 (provide (rename-out [rhombus-struct struct])
          |.|)
 
 (begin-for-syntax
-  (struct struct-type rhombus-type (constructor-id fields)))
+  (struct struct-contract rhombus-contract (constructor-id fields)))
 
 (define-syntax rhombus-struct
   (definition-transformer
@@ -46,10 +46,10 @@
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
                                                     (list (quote-syntax name-field) ...))))
-           #'(define-type-syntax name
-               (struct-type (quote-syntax name?)
-                            (quote-syntax name)
-                            (list (cons 'field (quote-syntax name-field)) ...)))))]))))
+           #'(define-contract-syntax name
+               (struct-contract (quote-syntax name?)
+                                (quote-syntax name)
+                                (list (cons 'field (quote-syntax name-field)) ...)))))]))))
 
 (define-syntax |.|
   (expression-infix-operator
@@ -62,25 +62,25 @@
         (cond
           [(and (identifier? form1)
                 ;; FIXME: we should check an expression-space binding
-                ;; for `form1` and get from there to a struct-type...
-                (syntax-local-value* (in-type-space form1) struct-type?))
-           => (lambda (type)
+                ;; for `form1` and get from there to a struct-contract...
+                (syntax-local-value* (in-contract-space form1) struct-contract?))
+           => (lambda (contract)
                 (define accessor-id
-                  (for/or ([field+acc (in-list (struct-type-fields type))])
+                  (for/or ([field+acc (in-list (struct-contract-fields contract))])
                     (and (eq? (car field+acc) (syntax-e #'field))
                          (cdr field+acc))))
                 (unless accessor-id
                   (raise-syntax-error #f
-                                      "cannot field field in structure type"
+                                      "cannot field field in structure"
                                       #'field))
                 (values accessor-id
                         #'tail))]
           [else
-           (define type-id (rhombus-syntax-local-type form1))
-           (define type (and (identifier? type-id)
-                             (syntax-local-value* (in-type-space type-id) struct-type?)))
-           (define accessor-id (and (struct-type? type)
-                                    (for/or ([field+acc (in-list (struct-type-fields type))])
+           (define contract-id (rhombus-syntax-local-contract form1))
+           (define contract (and (identifier? contract-id)
+                                 (syntax-local-value* (in-contract-space contract-id) struct-contract?)))
+           (define accessor-id (and (struct-contract? contract)
+                                    (for/or ([field+acc (in-list (struct-contract-fields contract))])
                                       (and (eq? (car field+acc) (syntax-e #'field))
                                            (cdr field+acc)))))
            (unless accessor-id
