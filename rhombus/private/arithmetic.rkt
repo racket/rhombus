@@ -20,7 +20,8 @@
          &&
          \|\|
 
-         +$)
+         +$
+         ===)
 
 (begin-for-syntax
   (require (for-syntax racket/base
@@ -118,7 +119,7 @@
 (define-infix rhombus<= <=
   #:same-as (rhombus> rhombus>= rhombus==)
   #:stronger-than (\|\| &&))
-(define-infix rhombus== equal?
+(define-infix rhombus== =
   #:same-as (rhombus> rhombus>=)
   #:stronger-than (\|\| &&))
 (define-infix rhombus>= >=
@@ -131,3 +132,6 @@
 (define (append-as-strings a b)
   (string-append (if (string? a) a (format "~a" a))
                  (if (string? b) b (format "~a" b))))
+
+(define-infix === equal?
+  #:stronger-than (\|\| &&))

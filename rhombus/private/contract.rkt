@@ -10,15 +10,21 @@
 (provide ::
 
          Integer
-         String
+         Number
+         String)
 
-         (for-syntax rhombus-contract
-                     rhombus-contracted
-                     rhombus-contract-property
-                     rhombus-syntax-local-contract
-                     in-contract-space)
+(module+ for-struct
+  (provide (for-syntax rhombus-contract
+                       rhombus-contract?
+                       rhombus-contract-predicate
+                       rhombus-contracted
+                       rhombus-contract-property
+                       rhombus-syntax-local-contract
+                       in-contract-space
 
-         define-contract-syntax)
+                       :contract)
+           
+           define-contract-syntax))
 
 (begin-for-syntax
   (struct rhombus-contract (predicate))
@@ -127,6 +133,7 @@
          (make-contracted-identifier #'arg-id  (quote-syntax t)))]))
 
 (define-syntax Integer (rhombus-contract #'exact-integer?))
+(define-syntax Number (rhombus-contract #'number?))
 (define-syntax String (rhombus-contract #'string?))
 
 (define-syntax (define-contract-syntax stx)
