@@ -325,8 +325,9 @@ means that a programmer can choose between single-line forms using
 
 A `|` is implicitly shifted half a column right (so, implicitly nested),
 and it is implicitly followed by a `:` that conceptually occupies same
-column as the `|`. A `|` that is not at the start of a group is also
-implicitly *preceded* by a `:`. Note that the implicit `:` following a
+column as the `|`. When a `|` is not at the start of a group or its
+group is at the start of a block or after an opener, then the `|`
+is also implicitly *preceded* by a `:`. Note that the implicit `:` following a
 `|` is subject to the special rules for `:`, which is that it doesn't
 create a new block if one is already created (by indentation or `{`),
 and it can force an empty block.
@@ -637,13 +638,21 @@ escape provides access to the full Racket S-expression number grammar.
 Boolean literals are Racket-style, instead of reserving identifiers.
 Special floating-point values similarly use a `#` notation.
 
+Identifiers are formed from Unicode alphanumeric characters plus `_`,
+where the initial character must not be a numeric character. An
+identifier surrounded by `'` forms a keyword, analogous to prefixin an
+identifier with `#:` in Racket.
+
 Operators are formed from Unicode symbolic and punctuation characters
 other than the ones listed above as distinct lexemes (plus a few more,
-like `"`), but `|` or `:` is also
+like `"` and `'`), but `|` or `:` is also
 allowed in an operator name as long as it is not by itself. A
 multi-character operator cannot end in `+`, `-`, or `.` to avoid
 ambiguity in cases like `1+-2` (which is `1` plus `-2`, not `1` and
-`2` combined with a `+-` operator).
+`2` combined with a `+-` operator), unless the operator contains
+only `+`, `-`, or `.` (so `++`, `--`, and `...` are allowed).
+Also, multi-character operator cannot end with `/` or contain `//` or
+`/*`, because that can create ambiguities with comments.
 
 Implicit in the grammar is the usual convention of choosing the
 largest possible match at the start of a stream. Not reflected in the
@@ -660,84 +669,89 @@ number `+2`.
 
 When a `#{`...`}` escape describes an identifier S-expression, it is
 an identifier in the same sense as a shrubbery-notation identifier.
-the same holds for numbers, booleans, strings, and byte strings. A
-`#{`...`}` escape must _not_ describe a pair, because pairs are used
-to represent a parsed shrubbery, and allowing pairs would create
-ambiguous or ill-formed representations.
+the same holds for numbers, booleans, strings, byte strings, and
+keywords. A `#{`...`}` escape must _not_ describe a pair, because
+pairs are used to represent a parsed shrubbery, and allowing pairs
+would create ambiguous or ill-formed representations.
 
 
 
 |   | nonterminal     |     |                 production                                | adjustment             |
 |---|-----------------|-----|-----------------------------------------------------------|------------------------|
-| * | _identifier_    | is  | _alpha_ _alphanum_ *                                      |                        |
-|   |                 |     |                                                           |                        |
-|   | _alpha_         | is  | **an alphabetic Unicode character or** `_`                |                        |
-|   |                 |     |                                                           |                        |
-|   | _alphanum_      | is  | _alpha_                                                   |                        |
-|   |                 | or  | **a numeric Unicode character**                           |                        |
-|   |                 |     |                                                           |                        |
-| * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **not** `|` **or** `:` |
-|   |                 |     |                                                           |                        |
-|   | _opchar_        | is  | **a symbolic Unicode character**                          |                        |
-|   |                 | or  | **a punctuation Unicode character not in** _special_      |                        |
-|   |                 |     |                                                           |                        |
-|   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`         |                        |
-|   |                 |     |                                                           |                        |
-|   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`, `"`              |                        |
-|   |                 | or  | **one of** `;`, `,`, `#`, `\`, `_`, `@`                   |                        |
-|   |                 |     |                                                           |                        |
-| * | _number_        | is  | _integer_                                                 |                        |
-|   |                 | or  | _float_                                                   |                        |
-|   |                 | or  | _hexinteger_                                              |                        |
-|   |                 |     |                                                           |                        |
-|   | _integer_       | is  | _sign_ ? _nonneg_                                         |                        |
-|   |                 |     |                                                           |                        |
-|   | _sign_          | is  | **one of** `+` **or** `-`                                 |                        |
-|   |                 |     |                                                           |                        |
-|   | _nonneg_        | is  | _decimal_ _usdecimal_ +                                   |                        |
-|   |                 |     |                                                           |                        |
-|   | _decimal_       | is  | `0` through `9`                                           |                        |
-|   |                 |     |                                                           |                        |
-|   | _usdecimal_     | is  | _decimal_                                                 |                        |
-|   |                 | or  | `_` _decimal_                                             |                        |
-|   |                 |     |                                                           |                        |
-|   | _float_         | is  | _sign_ ? _nonneg_ ? `.` _nonneg_? _exp_ ?                 |                        |
-|   |                 | or  | _sign_ ? _nonneg_ _exp_                                   |                        |
-|   |                 | or  | `#inf`                                                    |                        |
-|   |                 | or  | `#neginf`                                                 |                        |
-|   |                 | or  | `#nan`                                                    |                        |
-|   |                 |     |                                                           |                        |
-|   | _exp_           | is  | `e` _sign_ ? _nonneg_                                     |                        |
-|   |                 | or  | `E` _sign_ ? _nonneg_                                     |                        |
-|   |                 |     |                                                           |                        |
-|   | _hexinteger_    | is  | `0x` _hex_ _ushex_ *                                      |                        |
-|   |                 |     |                                                           |                        |
-|   | _hex_           | is  | **one of** `0` **through** `9`                            |                        |
-|   |                 | or  | **one of** `a` **through** `f`                            |                        |
-|   |                 | or  | **one of** `A` **through** `F`                            |                        |
-|   |                 |     |                                                           |                        |
-|   | _ushex_         | is  | _hex_                                                     |                        |
-|   |                 | or  | `_` _hex_                                                 |                        |
-|   |                 |     |                                                           |                        |
-| * | _boolean_       | is  | `#true`                                                   |                        |
-|   |                 | or  | `#false`                                                  |                        |
-|   |                 |     |                                                           |                        |
-| * | _string_        | is  | `"` _strelem_ * `"`                                       |                        |
-|   |                 |     |                                                           |                        |
-|   | _strelem_       | is  | **element in Racket string**                              | `\U` ≤ 6 digits        |
-|   |                 |     |                                                           |                        |
-| * | _bytestring_    | is  | `#"` _bytestrelem_ * `"`                                  |                        |
-|   |                 |     |                                                           |                        |
-|   | _bytestrelem_   | is  | **element in Racket byte string**                         |                        |
-|   |                 |     |                                                           |                        |
-| * | _sexpression_   | is  | `#{` _racket_ `}`                                         |                        |
-|   |                 |     |                                                           |                        |
-|   | _racket_        | is  | **any non-pair Racket S-expression**                      |                        |
-|   |                 |     |                                                           |                        |
-| * | _comment_       | is  | `//` _nonnlchar_                                          |                        |
-|   |                 | or  | `/*` _anychar_ `*/`                                       | nesting allowed        |
-|   |                 |     |                                                           |                        |
-|   | _nonnlchar_     |     | **any character other than newline**                      |                        |
+| * | _identifier_    | is  | _alpha_ _alphanum_ *                                      |                                |
+|   |                 |     |                                                           |                                |
+|   | _alpha_         | is  | **an alphabetic Unicode character or** `_`                |                                |
+|   |                 |     |                                                           |                                |
+|   | _alphanum_      | is  | _alpha_                                                   |                                |
+|   |                 | or  | **a numeric Unicode character**                           |                                |
+|   |                 |     |                                                           |                                |
+| * | _keyword_       | is  | `'` _identifier_  `'`                                     |                                |
+|   |                 |     |                                                           |                                |
+| * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **not** `|` **or** `:` ...     |
+|   |                 | or  | `.` +                                                     | ... **or containing** `//` ... |
+|   |                 | or  | `+` +                                                     | ... **or containing** `/*`     |
+|   |                 | or  | `-` +                                                     |                                |
+|   |                 |     |                                                           |                                |
+|   | _opchar_        | is  | **a symbolic Unicode character**                          |                                |
+|   |                 | or  | **a punctuation Unicode character not in** _special_      |                                |
+|   |                 |     |                                                           |                                |
+|   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`, `/`    |                                |
+|   |                 |     |                                                           |                                |
+|   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`, `"`              |                                |
+|   |                 | or  | **one of** `;`, `,`, `#`, `\`, `_`, `@`                   |                                |
+|   |                 |     |                                                           |                                |
+| * | _number_        | is  | _integer_                                                 |                                |
+|   |                 | or  | _float_                                                   |                                |
+|   |                 | or  | _hexinteger_                                              |                                |
+|   |                 |     |                                                           |                                |
+|   | _integer_       | is  | _sign_ ? _nonneg_                                         |                                |
+|   |                 |     |                                                           |                                |
+|   | _sign_          | is  | **one of** `+` **or** `-`                                 |                                |
+|   |                 |     |                                                           |                                |
+|   | _nonneg_        | is  | _decimal_ _usdecimal_ +                                   |                                |
+|   |                 |     |                                                           |                                |
+|   | _decimal_       | is  | `0` through `9`                                           |                                |
+|   |                 |     |                                                           |                                |
+|   | _usdecimal_     | is  | _decimal_                                                 |                                |
+|   |                 | or  | `_` _decimal_                                             |                                |
+|   |                 |     |                                                           |                                |
+|   | _float_         | is  | _sign_ ? _nonneg_ ? `.` _nonneg_? _exp_ ?                 |                                |
+|   |                 | or  | _sign_ ? _nonneg_ _exp_                                   |                                |
+|   |                 | or  | `#inf`                                                    |                                |
+|   |                 | or  | `#neginf`                                                 |                                |
+|   |                 | or  | `#nan`                                                    |                                |
+|   |                 |     |                                                           |                                |
+|   | _exp_           | is  | `e` _sign_ ? _nonneg_                                     |                                |
+|   |                 | or  | `E` _sign_ ? _nonneg_                                     |                                |
+|   |                 |     |                                                           |                                |
+|   | _hexinteger_    | is  | `0x` _hex_ _ushex_ *                                      |                                |
+|   |                 |     |                                                           |                                |
+|   | _hex_           | is  | **one of** `0` **through** `9`                            |                                |
+|   |                 | or  | **one of** `a` **through** `f`                            |                                |
+|   |                 | or  | **one of** `A` **through** `F`                            |                                |
+|   |                 |     |                                                           |                                |
+|   | _ushex_         | is  | _hex_                                                     |                                |
+|   |                 | or  | `_` _hex_                                                 |                                |
+|   |                 |     |                                                           |                                |
+| * | _boolean_       | is  | `#true`                                                   |                                |
+|   |                 | or  | `#false`                                                  |                                |
+|   |                 |     |                                                           |                                |
+| * | _string_        | is  | `"` _strelem_ * `"`                                       |                                |
+|   |                 |     |                                                           |                                |
+|   | _strelem_       | is  | **element in Racket string**                              | `\U` ≤ 6 digits                |
+|   |                 |     |                                                           |                                |
+| * | _bytestring_    | is  | `#"` _bytestrelem_ * `"`                                  |                                |
+|   |                 |     |                                                           |                                |
+|   | _bytestrelem_   | is  | **element in Racket byte string**                         |                                |
+|   |                 |     |                                                           |                                |
+| * | _sexpression_   | is  | `#{` _racket_ `}`                                         |                                |
+|   |                 |     |                                                           |                                |
+|   | _racket_        | is  | **any non-pair Racket S-expression**                      |                                |
+|   |                 |     |                                                           |                                |
+| * | _comment_       | is  | `//` _nonnlchar_                                          |                                |
+|   |                 | or  | `/*` _anychar_ `*/`                                       | nesting allowed                |
+|   |                 |     |                                                           |                                |
+|   | _nonnlchar_     |     | **any character other than newline**                      |                                |
 
 
 # Reference-level explanation
@@ -816,13 +830,28 @@ role of `\` also means that spaces can be turned into `\` to “harden”
 code for transfer via media (such as email) that might mangle
 consecutive spaces.
 
-The `#{....}` escape to S-expressions bridges to Racket identifiers.
-For example, `#{exact-integer?}` would be an identifier with `-` and
-`?` as part of the identifier. Shrubbery notation could be adapted to
-support Lisp-style identifiers by requiring more space around
-operators, but the rule for continuing a group between `(` and `)` or
-`[` and `]` currently depends on distinguishing operators from
-non-operators.
+Some languages allow either `"` or `'` to be used for forming strings.
+In the interest of making programs more consistent, shrubbery notion
+allows only `"` for strings. While `'` could be used for C-style
+characters, character constants are so rarely needed that using `'`
+for that purpose seems like a waste. The notion of keywords as
+distinct from identifiers, meanwhile, as been liberating for Racket
+syntax (particularly since keywords can be kept disintinct from
+expressions more generally), and we expect similar benefits for having
+keywords in shrubbery notation. While a leading `'` character could
+suffice to designate a keyword, programmers from languages other than
+Lisp will expect `'`s to be balanced. Furthermore, if keywords are
+combined with `:`, then the `'` just before `:` helps highlight that
+that the `:` is associated with a keyword rather than some other kind
+of syntactic form.
+
+The `#{....}` escape to S-expressions bridges between shrubbery
+notation and Racket identifiers. For example, `#{exact-integer?}` is
+an identifier with `-` and `?` as part of the identifier. Shrubbery
+notation could be adapted to support Lisp-style identifiers by
+requiring more space around operators, but the rule for continuing a
+group between `(` and `)` or `[` and `]` currently depends on
+distinguishing operators from non-operators.
 
 The `@` is reserved for a future extension to `at-exp` notation
 adapted suitably to srhubbery notation.
