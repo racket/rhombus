@@ -3,7 +3,7 @@
 (define collection 'multi)
 
 (define deps
-  '(["base" #:version "8.2.0.5"]
+  '("base"
     "syntax-color-lib"
     "parser-tools-lib"))
 

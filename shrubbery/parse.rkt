@@ -1,6 +1,7 @@
 #lang racket/base
 (require racket/pretty
-         "lex.rkt")
+         "lex.rkt"
+         "srcloc.rkt")
 
 (provide parse-all)
 
