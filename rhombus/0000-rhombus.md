@@ -127,8 +127,9 @@ begin:
   another group within block
 
 if is_rotten(apple)
- | return_to_fruit_stand()
- | take_a_bite()
+ | get_another()
+ | take_bite()
+   be_happy()
 
 match x
  | 0:
@@ -174,7 +175,8 @@ examples:
 begin: group within block
        another group within block
 
-if is_rotten(apple) | return_to_fruit_stand() | take_a_bite()
+if is_rotten(apple) | get_another() | take_bite()
+                                      be_happy()
 
 match x | 0: define zero = x
              x + zero
@@ -191,7 +193,7 @@ group, so these examples also parse the same:
 ```
 begin: group within block; another group within block
 
-if is_rotten(apple) | return_to_fruit_stand() | take_a_bite()
+if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
 match x | 0: define zero = x; x + zero
         | n: n + 1
@@ -201,15 +203,17 @@ You can add extra `;`s, such as at the end of lines, since `;` will
 never create an empty group.
 
 Finally, `:` plus indentation can be written instead with `{` ... `}`,
-so blocks can be fully braced, if you like:
+so blocks can be fully braced, if you like. In the following example,
+three pairs of braces replace three `:`s, while the other pairs are
+allowed but redundant (and this is definitely not the intended style):
 
 ```
 begin { group within block; another group within block }
 
-if is_rotten(apple) { | { return_to_fruit_stand() } | { take_a_bite() } }
+if is_rotten(apple) { | { get_another() } | { take_bite(); be_happy() } }
 
-match x | 0 { define zero = x; x + zero }
-        | n { n + 1 }
+match x { | { 0 { define zero = x; x + zero } }
+          | { n { n + 1 } } }
 ```
 
 Parentheses `(` ... `)` and square brackets `[` ... `]` similarly
