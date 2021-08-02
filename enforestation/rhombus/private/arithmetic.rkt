@@ -13,9 +13,15 @@
                      [rhombus== ==]
                      [rhombus>= >=]
                      [rhombus> >])
+         sqrt cos sin tan log exp expt
+         floor ceiling round
+
          !
          &&
-         \|\|)
+         \|\|
+
+         +$
+         ===)
 
 (begin-for-syntax
   (require (for-syntax racket/base
@@ -103,21 +109,29 @@
   #:stronger-than (&& \|\|))
 
 (define-infix && and
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/)
   #:stronger-than (\|\|))
 
-(define-infix \|\| or)
+(define-infix \|\| or
+  #:weaker-than (rhombus+ rhombus- rhombus* rhombus/))
 
-(define-infix rhombus< <
-  #:same-as (rhombus> rhombus>= rhombus== rhombus<=)
-  #:stronger-than (\|\| &&))
-(define-infix rhombus<= <=
-  #:same-as (rhombus> rhombus>= rhombus==)
-  #:stronger-than (\|\| &&))
-(define-infix rhombus== =
-  #:same-as (rhombus> rhombus>=)
-  #:stronger-than (\|\| &&))
-(define-infix rhombus>= >=
-  #:same-as (rhombus>)
-  #:stronger-than (\|\| &&))
-(define-infix rhombus> >
-  #:stronger-than (\|\| &&))
+(define-syntax-rule (define-comp-infix name racket-name)
+  (define-infix name racket-name
+    #:weaker-than (rhombus+ rhombus- rhombus* rhombus/)
+    #:same-as (rhombus> rhombus>= rhombus== rhombus<= ===)
+    #:stronger-than (\|\| &&)
+    #:associate 'none))
+
+(define-comp-infix rhombus< <)
+(define-comp-infix rhombus<= <=)
+(define-comp-infix rhombus== =)
+(define-comp-infix rhombus>= >=)
+(define-comp-infix rhombus> >)
+(define-comp-infix === equal?)
+
+(define-infix +$ append-as-strings
+  #:stronger-than (===))
+
+(define (append-as-strings a b)
+  (string-append (if (string? a) a (format "~a" a))
+                 (if (string? b) b (format "~a" b))))

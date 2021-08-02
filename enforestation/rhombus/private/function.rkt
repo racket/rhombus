@@ -2,36 +2,61 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt"
-                     "consistent.rkt")
+                     "consistent.rkt"
+                     "with-syntax.rkt")
+         racket/unsafe/undefined
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
+         (submod "struct.rkt" for-call)
+         (submod "contract.rkt" for-struct)
          (only-in "assign.rkt"
                   [= rhombus=]))
 
-(provide function
-         :>
-         (for-syntax :kw-opt-binding
-                     build-function
-                     build-case-function))
+(provide function)
+
+(module+ for-build
+  (provide (for-syntax :kw-opt-binding
+                       build-function
+                       build-case-function)))
 
 (module+ for-call
   (provide (for-syntax parse-function-call)))
 
 (begin-for-syntax
+  (define (empty->keyword g kw)
+    (syntax-parse g
+      [(_) #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw))]
+      [_ g]))
   (define-syntax-class :kw-opt-binding
-    #:datum-literals (op)
-    #:literals (:> rhombus=)
-    (pattern (group kw:identifier (op :>) a ... (op rhombus=) e ...)
-             #:with arg::binding #'(group a ...)
+    #:datum-literals (op block group)
+    #:literals (rhombus=)
+    (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...+)))
+             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:identifier (op :>) a ...)
-             #:with arg::binding #'(group a ...)
+    (pattern (group kw:keyword (block (group (op rhombus=) e ...+)))
+             #:with default #'(group e ...)
+             #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword (op rhombus=) e ...+)
+             #:with arg::binding (empty->keyword #'(group) #'kw)
+             #:with default #'(group e ...)
+             #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword (block (group a ...)))
+             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:attr default #'#f
+             #:attr parsed #'arg.parsed)
+    (pattern (group kw:keyword)
+             #:with arg::binding (empty->keyword #'(group) #'kw)
+             #:attr default #'#f
+             #:attr parsed #'arg.parsed)
+    (pattern (group a ...+ (op rhombus=) e ...+)
+             #:with arg::binding #'(group a ...)
+             #:with default #'(group e ...)
+             #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern arg::binding
              #:attr default #'#f
@@ -87,36 +112,39 @@
       (reverse sames)))
 
   (define (build-function function-name kws args arg-parseds defaults rhs start end)
-    (define arg-ids (generate-temporaries args))
-    (with-syntax ([(arg-id ...) arg-ids]
-                  [(arg ...) args]
-                  [(arg.parsed ...) arg-parseds]
-                  [rhs rhs])
-      (with-syntax ([((arg-form ...) ...)
-                     (for/list ([kw (in-list (syntax->list kws))]
-                                [arg-id (in-list arg-ids)]
-                                [default (in-list (syntax->list defaults))])
-                       (define arg+default
+    (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds])
+      (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-parsed.arg-id ...))]
+                    [(arg ...) args]
+                    [rhs rhs])
+        (with-syntax ([(((arg-form ...) arg-default) ...)
+                       (for/list ([kw (in-list (syntax->list kws))]
+                                  [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
+                                  [default (in-list (syntax->list defaults))])
+                         ;; FIXME: if `default` is simple enough, then
+                         ;; use it instead of `unsafe-undefined`, and
+                         ;; then `define` has the opportunity to inline it
+                         (define arg+default
+                           (cond
+                             [(not (syntax-e default))
+                              tmp-id]
+                             [else
+                              #`[#,tmp-id unsafe-undefined]]))
                          (cond
-                           [(not (syntax-e default))
-                            arg-id]
+                           [(not (syntax-e kw))
+                            (list (list arg+default) default)]
                            [else
-                            #`[#,arg-id (rhombus-expression #,default)]]))
-                       (cond
-                         [(not (syntax-e kw))
-                          (list arg+default)]
-                         [else
-                          (list (string->keyword (symbol->string (syntax-e kw))) arg+default)]))])
-        (relocate
-         (span-srcloc start end)
-         #`(lambda (arg-form ... ...)
-             (nested-bindings
-              #,function-name
-              #f argument-binding-failure
-              (begin)
-              (arg-id arg.parsed arg)
-              ...
-              (rhombus-expression (group rhs))))))))
+                            (list (list kw arg+default) default)]))])
+          (relocate
+           (span-srcloc start end)
+           #`(lambda (arg-form ... ...)
+               (nested-bindings
+                #,function-name
+                #f argument-binding-failure
+                (tmp-id arg-parsed arg arg-default)
+                ...
+                (begin
+                  (arg-parsed.binder-id tmp-id arg-parsed.data) ...
+                  (rhombus-expression (group rhs))))))))))
   
   (define (build-case-function function-name argss-stx arg-parsedss-stx rhss-stx start end)
     (define argss (map syntax->list (syntax->list argss-stx)))
@@ -135,17 +163,19 @@
                          [(null? same)
                           #`(cases-failure '#,function-name arg-id ...)]
                          [else
-                          (with-syntax ([(arg ...) (fcase-args (car same))]
-                                        [(arg-parsed ...) (fcase-arg-parseds (car same))]
-                                        [rhs (fcase-rhs (car same))])
+                          (with-syntax-parse ([(arg ...) (fcase-args (car same))]
+                                              [(arg-parsed::binding-form ...) (fcase-arg-parseds (car same))]
+                                              [rhs (fcase-rhs (car same))])
                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
                                 (nested-bindings
                                  #,function-name
-                                 try-next argument-binding-failure
-                                 (begin)
-                                 (arg-id arg-parsed arg)
+                                 try-next
+                                 argument-binding-failure
+                                 (arg-id arg-parsed arg #f)
                                  ...
-                                 (rhombus-expression (group rhs)))))]))]))))))
+                                 (begin
+                                   (arg-parsed.binder-id arg-id arg-parsed.data) ...
+                                   (rhombus-expression (group rhs))))))]))]))))))
 
 (define (argument-binding-failure who val binding)
   (raise-binding-failure who "argument" val binding))
@@ -158,13 +188,10 @@
                   "\n   ~e"))
          args))
 
-(define-syntax :> #f)
-
 (begin-for-syntax
   (define-syntax-class :kw-expression
-    #:datum-literals (op)
-    #:literals (:>)
-    (pattern (group kw:identifier (op :>) e ...)
+    #:datum-literals (op block group)
+    (pattern (group kw:keyword (block (group e ...)))
              #:with exp::expression #'(group e ...)
              #:attr parsed #'exp.parsed)
     (pattern exp::expression
@@ -177,10 +204,18 @@
      #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                             [parsed (in-list (syntax->list #'(rand.parsed ...)))])
                                    (if (syntax-e kw)
-                                       (list (string->keyword (symbol->string (syntax-e kw))) parsed)
+                                       (list kw parsed)
                                        (list parsed)))
-     (values (datum->syntax (quote-syntax here)
-                            (cons rator #'(arg-form ... ...))
-                            (span-srcloc rator #'head)
-                            #'head)
+     (define contract (and (identifier? rator)
+                           (syntax-local-struct-contract rator)))
+     (define e (datum->syntax (quote-syntax here)
+                              (cons rator #'(arg-form ... ...))
+                              (span-srcloc rator #'head)
+                              #'head))
+     (define e-maybe-contract (if contract
+                                  (syntax-property e
+                                                   rhombus-contract-property
+                                                   rator)
+                                  e))
+     (values e-maybe-contract
              #'tail)]))

@@ -5,24 +5,29 @@
          "parse.rkt")
 
 (provide (rename-out [rhombus-if if]
-                     [rhombus-cond cond]
-                     [rhombus-else else]))
+                     [rhombus-cond cond]))
 
 (define-syntax rhombus-if
   (expression-transformer
    #'rhombus-if
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts block)
-       [(form-id test ... (alts
-                           (block thn ...)
-                           (block els ...))
+       #:datum-literals (alts)
+       [(form-id test ... (alts alt ...)
                  . tail)
-        (values
-         #'(if (rhombus-expression (group test ...))
-               (rhombus-block thn ...)
-               (rhombus-block els ...))
-         #'tail)]))))
+        (syntax-parse #'(alt ...)
+          #:datum-literals (block)
+          [(((~and tag-thn block) thn ...)
+            ((~and tag-els block) els ...))
+           (values
+            #'(if (rhombus-expression (group test ...))
+                  (rhombus-block-at tag-thn thn ...)
+                  (rhombus-block-at tag-els els ...))
+            #'tail)]
+          [_
+           (raise-syntax-error #f
+                               "expected two alternatives"
+                               stx)])]))))
 
 (define-syntax rhombus-cond
   (expression-transformer
@@ -30,29 +35,34 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
-       #:literals (rhombus-else)
        [(form-id (alts
-                  (block (group pred ... (block rhs ...)))
+                  (block (group pred ... ((~and tag block) rhs ...)))
                   ...
-                  (block (group rhombus-else (block else-rhs ...))))
+                  (block (group #:else ((~and else-tag block) else-rhs ...))))
                  . tail)
         (values
          #'(cond
              [(rhombus-expression (group pred ...))
-              (rhombus-block rhs ...)]
+              (rhombus-block-at tag rhs ...)]
              ...
              [else
-              (rhombus-block else-rhs ...)])
+              (rhombus-block-at else-tag else-rhs ...)])
          #'tail)]
        [(form-id (alts
-                  (block (group pred ... (block rhs ...)))
+                  (block (group pred ... ((~and tag block) rhs ...)))
                   ...)
                  . tail)
         (values
          #'(cond
              [(rhombus-expression (group pred ...))
-              (rhombus-block rhs ...)]
-             ...)
+              (rhombus-block-at tag rhs ...)]
+             ...
+             [else (cond-fallthrough #'form-id)])
+         #'tail)]
+       [(form-id (block) . tail)
+        (values
+         #'(cond-fallthrough 'form-id)
          #'tail)]))))
 
-(define-syntax rhombus-else #f)
+(define (cond-fallthrough who)
+  (error who "no matching case"))

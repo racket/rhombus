@@ -21,26 +21,45 @@
                                      (length (syntax->list #'(a ...))))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
-       (with-syntax ([falses (for/list ([a (in-list (syntax->list #'(a-parsed.var-id ... ...)))])
-                               #'#f)])
-         (values
-          (binding-form
-           #'[a-parsed.var-id ... ...]
-           #`(lambda (v)
-               (if (#,predicate v)
-                   #,(let loop ([match? #t]
-                                [a-idss (syntax->list #'((a-parsed.var-id ...) ...))]
-                                [a-proc-exprs (syntax->list #'(a-parsed.check-proc-expr ...))]
-                                [selectors selectors])
-                       (cond
-                         [(null? a-idss)
-                          #`(values #,match? a-parsed.var-id ... ...)]
-                         [else
-                          #`(let-values ([(match? . #,(car a-idss)) (#,(car a-proc-exprs) (#,(car selectors) v))])
-                              (if match?
-                                  #,(loop #'match? (cdr a-idss) (cdr a-proc-exprs) (cdr selectors))
-                                  (values #f . falses)))]))
-                   (values #f . falses)))
-           #`(begin
-               a-parsed.post-defn ...))
-          #'new-tail))])))
+       (values
+        (binding-form
+         #'composite
+         #'composite-matcher
+         #'composite-binder
+         #`(#,predicate
+            #,selectors
+            #,(generate-temporaries #'(a-parsed.arg-id ...))
+            (a-parsed.arg-id ...)
+            (a-parsed.matcher-id ...)
+            (a-parsed.binder-id ...)
+            (a-parsed.data ...)))
+        #'new-tail)])))
+
+(define-syntax (composite-matcher stx)
+  (syntax-parse stx
+    [(_ c-arg-id (predicate selectors tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
+     #`(IF (predicate c-arg-id)
+           #,(let loop ([selectors (syntax->list #'selectors)]
+                        [tmp-ids (syntax->list #'tmp-ids)]
+                        [arg-ids (syntax->list #'arg-ids)]
+                        [matcher-ids (syntax->list #'matcher-ids)]
+                        [datas (syntax->list #'datas)])
+               (cond
+                 [(null? arg-ids)
+                  #`(IF #t success-expr fail-expr)]
+                 [else
+                  #`(begin
+                      (define #,(car tmp-ids) (let ([#,(car arg-ids) (#,(car selectors) c-arg-id)])
+                                                #,(car arg-ids)))
+                      (#,(car matcher-ids) #,(car tmp-ids) #,(car datas)
+                       IF
+                       #,(loop (cdr selectors) (cdr tmp-ids) (cdr arg-ids) (cdr matcher-ids) (cdr datas))
+                       fail-expr))]))
+           fail-expr)]))
+
+(define-syntax (composite-binder stx)
+  (syntax-parse stx
+    [(_ c-arg-id (predicate selectors (tmp-id ...) arg-ids matcher-ids (binder-id ...) (data ...)))
+     #`(begin
+         (binder-id tmp-id data)
+         ...)]))

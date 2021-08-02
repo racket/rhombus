@@ -21,7 +21,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
-        (values (respan #`(#,(datum->syntax #'here 'rhombus-block #'tag) . body))
+        (values (quasisyntax/loc #'tag (rhombus-block . body))
                 #'tail)]))))
 
 (define-syntax #%literal
@@ -32,16 +32,35 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ datum . tail)
+        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (syntax/loc #'datum (quote datum))
                 #'tail)]))
    (lambda (stxes)
      (syntax-parse stxes
        [(_ datum . tail)
-        (values (binding-form
-                 #'()
-                 #'(lambda (v) (equal? v (quote datum)))
-                 #'(begin))
+        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
+        (values (binding-form #'literal
+                              #'literal-matcher
+                              #'literal-bind-nothing
+                              #'datum)
                 #'tail)]))))
+
+(define-syntax (literal-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id datum IF success fail)
+     #'(IF (equal? arg-id (quote datum))
+           success
+           fail)]))
+
+(define-syntax (literal-bind-nothing stx)
+  (syntax-parse stx
+    [(_ arg-id datum)
+     #'(begin)]))
+
+(define-for-syntax (raise-keyword-error datum)
+  (raise-syntax-error #f
+                      "misplaced keyword"
+                      datum))
 
 (define-syntax #%tuple
   (make-expression+binding-prefix-operator

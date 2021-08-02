@@ -60,6 +60,14 @@
 
 ;; ----------------------------------------
 
+;; In the parsed representation of a shrubbery, source locations are
+;; not associated with sequences tagged `group` or `top`. For terms
+;; tagged with `parens`, `braces`, `block`, `alts`, and `op`, the same
+;; source location is associated with the tag and the parentheses that
+;; group the tag with its members, and that location spans the content
+;; and any delimiters used to form it (such as parentheses or a `:`
+;; that starts a block).
+
 ;; Parse all groups in a stream
 (define (parse-top-groups l)
   (define-values (next-l last-line delta) (next-of l #f 0))
@@ -72,7 +80,7 @@
                                            #:delta delta)))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
-  (datum->syntax #f `(top ,@gs)))
+  (lists->syntax (cons 'top (bars-insert-alts gs))))
 
 ;; Parse a sequence of groups (top level, in opener-closer, or after `:`)
 ;;   consuming the closer in the case of opener-closer context.
@@ -119,9 +127,9 @@
            (define-values (next-l last-line delta) (next-of l
                                                             (group-state-last-line sg)
                                                             (group-state-delta sg)))
-           (parse-groups (cdr l) (struct-copy group-state sg
-                                              [last-line last-line]
-                                              [delta delta]))]
+           (parse-groups next-l (struct-copy group-state sg
+                                             [last-line last-line]
+                                             [delta delta]))]
           [(comma-operator)
            (cond
              [(closer-column? (group-state-closer sg))
@@ -170,7 +178,7 @@
                                (= column (group-state-column sg)))
                      (fail t "wrong indentation")))
                  (define-values (g rest-l group-end-line group-end-delta)
-                   (parse-block l
+                   (parse-block t l
                                 #:closer (column-next column)
                                 #:bar-closes? #t
                                 #:delta (group-state-delta sg)))
@@ -255,7 +263,7 @@
            (define column (token-column t))
            (cond
              [(column . > . (state-column s))
-              ;; More indented => forms a group
+              ;; More indented => forms a nested block
               ;; Belt and suspenders: require either `:` or `|` to indicate that it's ok
               ;; to start an indented block.
               (unless (or (state-indent-ok? s)
@@ -287,7 +295,7 @@
           [(identifier number literal operator)
            (keep (state-delta s))]
           [(block-operator)
-           (parse-block l
+           (parse-block t l
                         #:closer (column-half-next (state-column s))
                         #:delta (state-delta s))]
           [(bar-operator)
@@ -304,7 +312,7 @@
                   (case (token-name t)
                     [(bar-operator)
                      (define-values (g rest-l end-line end-delta)
-                       (parse-block l
+                       (parse-block t l
                                     #:closer (column-next (+ (token-column t) (state-delta s)))
                                     #:bar-closes? #t
                                     #:delta (state-delta s)))
@@ -381,7 +389,7 @@
                           t end-t
                           (if (eq? tag 'block)
                               (tag-as-block gs)
-                              (cons tag gs)))
+                              (cons tag (bars-insert-alts gs))))
                          g)
                    rest-rest-l
                    end-line
@@ -394,7 +402,7 @@
           [else
            (error "unexpected" t)])])]))
 
-(define (parse-block l
+(define (parse-block block-t l
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:delta in-delta)
@@ -402,7 +410,9 @@
   (define line (token-line t))
   (define-values (next-l last-line delta) (next-of (cdr l) line in-delta))
   (define (block-empty)
-    (values (list (tag-as-block null))
+    (values (list (add-span-srcloc
+                   block-t #f
+                   (tag-as-block null)))
             next-l
             line
             delta))
@@ -441,6 +451,7 @@
 (define (tag-as-block gs)
   (cond
     [(and (pair? gs)
+          ;; really only need to check the first one:
           (for/and ([g (in-list gs)])
             (and (pair? g)
                  (eq? 'group (car g))
@@ -449,6 +460,7 @@
                  (let ([b (cadr g)])
                    (and (pair? b)
                         (tag? 'bar (car b))
+                        ;; the rest should always be true:
                         (pair? (cdr b))
                         (null? (cddr b))
                         (pair? (cadr b))
@@ -457,6 +469,26 @@
                    (let ([b (cadr g)])
                      (cadr b))))]
     [else (cons 'block gs)]))
+
+(define (bars-insert-alts gs)
+  (cond
+    [(and (pair? gs)
+          ;; same check is in `tag-as-block
+          (let ([g (car gs)])
+            (and (pair? g)
+                 (eq? 'group (car g))
+                 (pair? (cdr g))
+                 (null? (cddr g))
+                 (let ([b (cadr g)])
+                   (and (pair? b)
+                        (tag? 'bar (car b))
+                        (car b))))))
+     => (lambda (bar-tag)
+          (list (list 'group
+                      (add-span-srcloc
+                       bar-tag #f
+                       (tag-as-block gs)))))]
+    [else gs]))
 
 (define (tag? sym e)
   (or (eq? sym e)
@@ -471,34 +503,59 @@
        (cons (datum->syntax #f (car l) loc stx-for-original-property)
              (cdr l)))
      (define last-t/e (or end-t
+                          ;; when `end-t` is false, we go looking for the
+                          ;; end in `l`; this search walks down the end
+                          ;; of `l`, and it may recur into the last element,
+                          ;; but it should go only a couple of levels that way,
+                          ;; since non-`group` tags have spanning locations
+                          ;; gather from their content
                           (let loop ([e l])
                             (cond
                               [(syntax? e) e]
                               [(not (pair? e)) #f]
                               [(null? (cdr e))
-                               (loop (car e))]
+                               (define a (car e))
+                               (if (and (pair? a)
+                                        (syntax? (car a)))
+                                   ;; found a tag like `block`
+                                   (car a)
+                                   (loop a))]
                               [else (loop (cdr e))]))))
-     (define s-loc (token-srcloc start-t))
-     (define e-loc/e (and last-t/e
-                          (if (syntax? last-t/e)
-                              last-t/e
-                              (token-srcloc last-t/e))))
-     (add-srcloc l (vector (srcloc-source s-loc)
+     (define s-loc (if (syntax? start-t)
+                       (syntax-srcloc start-t)
+                       (token-srcloc start-t)))
+     (define e-loc (and last-t/e
+                        (if (syntax? last-t/e)
+                            (syntax-srcloc last-t/e)
+                            (token-srcloc last-t/e))))
+     (define s-position (srcloc-position s-loc))
+     (add-srcloc l (srcloc (srcloc-source s-loc)
                            (srcloc-line s-loc)
                            (srcloc-column s-loc)
-                           (srcloc-position s-loc)
-                           (let ([s (srcloc-position s-loc)]
-                                 [e (and e-loc/e
-                                         (if (srcloc? e-loc/e)
-                                             (srcloc-position e-loc/e)
-                                             (syntax-position e-loc/e)))]
-                                 [sp (and e-loc/e
-                                          (if (srcloc? e-loc/e)
-                                              (srcloc-span e-loc/e)
-                                              (syntax-span e-loc/e)))])
-                             (and s e sp
-                                  (+ (- e s) sp)))))]))
-   
+                           s-position
+                           (if e-loc
+                               (let ([s s-position]
+                                     [e (srcloc-position e-loc)]
+                                     [sp (srcloc-span e-loc)])
+                                 (and s e sp
+                                      (+ (- e s) sp)))
+                               (srcloc-span s-loc))))]))
+
+;; Like `datum->syntax`, but propagates the source location of
+;; a start of a list (if any) to the list itself. That starting
+;; item is expected to be a tag that has the span of the whole
+;; term already as its location
+(define (lists->syntax l)
+  (cond
+    [(pair? l)
+     (define a (car l))
+     (define new-l (for/list ([e (in-list l)])
+                     (lists->syntax e)))
+     (if (syntax? a)
+         (datum->syntax #f new-l a a)
+         (datum->syntax #f new-l))]
+    [else l]))
+
 ;; Consume whitespace and comments, including continuing backslashes,
 ;; where lookahead is needed
 ;; Arguments/returns:
@@ -548,7 +605,8 @@
                     0))])]))
 
 (define (next-line? l last-line)
-  ((token-line (car l)) . > . last-line))
+  (and (pair? l)
+       ((token-line (car l)) . > . last-line)))
 
 ;; Report an error on failure, but then keep parsing anyway
 ;;  if in recover mode

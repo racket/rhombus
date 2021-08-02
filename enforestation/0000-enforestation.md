@@ -72,7 +72,7 @@ new operators can be defined in a function-like way, like this:
 operator (x <> y):
   Posn(x, y)
 
-1 <> 2 // same as Posn(1, 1)
+1 <> 2 // same as Posn(1, 2)
 ```
 
 Or operators can be defined in a more general, macro-like way. For
@@ -298,12 +298,12 @@ relationships, so it cannot be used next to `*`:
 In this example, enforestation would report that `<>` and `*` are
 unrelated, so parentheses are needed somewhere. The prototype `#lang
 rhombus` supports precedence declarations through a `weaker_than`
-keyword (where the `:>` here imitates the keyword syntax that is used
-in the prototype for function definitions and calls):
+keyword (where the use of `'` here imitates the keyword syntax that is
+used in the prototype for function definitions and calls):
 
 ```
 operator (x <> y,
-          weaker_than:> * / + -):
+          'weaker_than': * / + -):
   Posn(x, y)
 
 1 <> 2 * 3 // same as Posn(1, 6)

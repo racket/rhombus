@@ -16,27 +16,34 @@
          shrubbery-range-indentation)
 
 (define (shrubbery-indentation t pos
-                               #:multi? [multi? #f])
+                               #:multi? [multi? #f]
+                               #:always? [always? multi?])
   (define start (line-start t pos))
   (define current-tab (get-current-tab t start))
-  ;; tabbing only makes sense if the target line is not a continuation
-  ;; or if it continues an empty line
-  (define delta (or (line-delta t start #:unless-empty? #t) 0))
   (cond
-    [(eqv? delta 0)
-     (case (send t classify-position (+ start current-tab))
-       [(parenthesis)
-        (indent-like-parenthesis t start current-tab)]
-       [(bar-operator)
-        (indent-like-enclosing-group t start current-tab
-                                     #:multi? multi?
-                                     #:as-bar? #t)]
-       [else
-        (indent-like-enclosing-group t start current-tab
-                                     #:multi? multi?)])]
+    ;; If `always?` is #f, we got here by the Return key;
+    ;; don't indent when just inserting new lines
+    [(and (not always?) (= (line-start t (sub1 pos)) (sub1 pos)))
+     current-tab]
     [else
-     ;; don't change indentation for a continuation line
-     current-tab]))
+     ;; tabbing only makes sense if the target line is not a continuation
+     ;; or if it continues an empty line
+     (define delta (or (line-delta t start #:unless-empty? #t) 0))
+     (cond
+       [(eqv? delta 0)
+        (case (send t classify-position (+ start current-tab))
+          [(parenthesis)
+           (indent-like-parenthesis t start current-tab)]
+          [(bar-operator)
+           (indent-like-enclosing-group t start current-tab
+                                        #:multi? multi?
+                                        #:as-bar? #t)]
+          [else
+           (indent-like-enclosing-group t start current-tab
+                                        #:multi? multi?)])]
+       [else
+        ;; don't change indentation for a continuation line
+        current-tab])]))
 
 (define (shrubbery-range-indentation t s e)
   (define s-line (send t position-paragraph s))
@@ -48,7 +55,11 @@
   (cond
     [(= s-line e-line)
      ;; use single-line mode
-     #f]
+     (define pos (send t paragraph-start-position s-line))
+     (define amt (shrubbery-indentation t pos #:always? #t))
+     (define current-amt (get-current-tab t pos))
+     (list (list (max 0 (- current-amt amt))
+                 (make-string (max 0 (- amt current-amt)) #\space)))]
     [else
      ;; compute indentation for the first non-empty line; as long as that
      ;; involves inserting space or deleting no more space than is

@@ -3,17 +3,22 @@
                      syntax/parse
                      syntax/stx
                      enforest
-                     enforest/transformer)
+                     enforest/transformer
+                     "srcloc.rkt")
          "forwarding-sequence.rkt"
          "declaration.rkt"
          "definition.rkt"
          "expression.rkt"
-         "binding.rkt")
+         "binding.rkt"
+         "srcloc.rkt")
 
 (provide rhombus-top
          rhombus-definition
          rhombus-block
          rhombus-expression
+
+         rhombus-block-at
+         rhombus-body
 
          (for-syntax :declaration
                      :definition
@@ -59,53 +64,64 @@
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
-  (syntax-case stx ()
+  (syntax-parse stx
     [(_) #'(begin)]
     [(_ form . forms)
-     #`(begin
-         #,(syntax-local-introduce
-            (syntax-parse (syntax-local-introduce #'form)
-              [e::declaration #'(begin . e.parsed)]
-              [e::definition #'(begin . e.parsed)]
-              [e::expression #'(#%expression e.parsed)]))
-         (rhombus-top . forms))]))
+     (define parsed
+       (with-syntax-error-respan
+         (syntax-local-introduce
+          (syntax-parse (syntax-local-introduce #'form)
+            [e::declaration #'(begin . e.parsed)]
+            [e::definition #'(begin . e.parsed)]
+            [e::expression #'(#%expression e.parsed)]))))
+     (syntax-parse #'forms
+       [() parsed]
+       [_ #`(begin #,parsed (rhombus-top . forms))])]))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
-  (syntax-local-introduce
-   (syntax-parse (syntax-local-introduce stx)
-     [(_) #'(begin)]
-     [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
-     [(_ e::definition) #'(begin . e.parsed)]
-     [(_ e::expression) #'(#%expression e.parsed)])))
+  (with-syntax-error-respan
+    (syntax-local-introduce
+     (syntax-parse (syntax-local-introduce stx)
+       [(_) #'(begin)]
+       [(_ ((~datum group) ((~datum parsed) defn))) #'defn]
+       [(_ e::definition) #'(begin . e.parsed)]
+       [(_ e::expression) #'(#%expression e.parsed)]))))
 
 ;; For an expression context, interleaves expansion and enforestation:
 (define-syntax (rhombus-block stx)
   (syntax-parse stx
     [(_)
-     (raise-syntax-error #f "found an empty block" stx)]
+     (raise-syntax-error #f "block has no expressions" stx)]
     [(_ . tail)
      #`(let ()
          (rhombus-forwarding-sequence
           #:need-end-expr #,stx
           (rhombus-body . tail)))]))
 
-;; For an expression context, interleaves expansion and enforestation:
+(define-syntax (rhombus-block-at stx)
+  (syntax-parse stx
+    [(_ tag . tail)
+     (syntax/loc #'tag (rhombus-block . tail))]))
+
+;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
-  (syntax-parse (syntax-local-introduce stx)
-    [(_) #'(begin)]
-    [(_ e::definition . tail)
-     (syntax-local-introduce
-      #`(begin
-         (begin . e.parsed)
-         (rhombus-body . tail)))]
-    [(_ e::expression . tail)
-     (syntax-local-introduce
-      #`(begin
-          (#%expression e.parsed)
-          (rhombus-body . tail)))]))
+  (with-syntax-error-respan
+    (syntax-parse (syntax-local-introduce stx)
+      [(_) #'(begin)]
+      [(_ e::definition . tail)
+       (syntax-local-introduce
+        #`(begin
+            (begin . e.parsed)
+            (rhombus-body . tail)))]
+      [(_ e::expression . tail)
+       (syntax-local-introduce
+        #`(begin
+            (#%expression e.parsed)
+            (rhombus-body . tail)))])))
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
-  (syntax-parse (syntax-local-introduce stx)
-    [(_ e::expression) (syntax-local-introduce #'e.parsed)]))
+  (with-syntax-error-respan
+    (syntax-parse (syntax-local-introduce stx)
+      [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
