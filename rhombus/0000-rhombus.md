@@ -205,7 +205,8 @@ never create an empty group.
 Finally, `:` plus indentation can be written instead with `{` ... `}`,
 so blocks can be fully braced, if you like. In the following example,
 three pairs of braces replace three `:`s, while the other pairs are
-allowed but redundant (and this is definitely not the intended style):
+allowed but redundant, and every block in the example now has braces
+(but this is definitely not the intended style):
 
 ```
 begin { group within block; another group within block }
