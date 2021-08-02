@@ -276,7 +276,7 @@ accum
 define ok_later: "ok"
 check_later()
 
-//
+// Nested structure types with contracts
 
 struct IPosn(x :: Integer, y :: Integer)
 
