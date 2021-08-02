@@ -14,6 +14,9 @@
 (provide (rename-out [rhombus-struct struct])
          |.|)
 
+(module+ for-call
+  (provide (for-syntax syntax-local-struct-contract)))
+
 (begin-for-syntax
   (struct struct-contract rhombus-contract (constructor-id fields))
 
@@ -102,6 +105,11 @@
                                                             #,(format "~a" (syntax-e predicate))
                                                             #,field))]))))))
 
+(define-for-syntax (syntax-local-struct-contract form)
+  ;; FIXME: we should check an expression-space binding
+  ;; for `form1` and get from there to a struct-contract...
+  (syntax-local-value* (in-contract-space form) struct-contract?))
+
 (define-syntax |.|
   (expression-infix-operator
    (quote-syntax |.|)
@@ -112,9 +120,7 @@
        [(dot field:identifier . tail)
         (cond
           [(and (identifier? form1)
-                ;; FIXME: we should check an expression-space binding
-                ;; for `form1` and get from there to a struct-contract...
-                (syntax-local-value* (in-contract-space form1) struct-contract?))
+                (syntax-local-struct-contract form1))
            => (lambda (contract)
                 (define accessor-id
                   (for/or ([field+acc (in-list (struct-contract-fields contract))])

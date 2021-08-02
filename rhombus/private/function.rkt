@@ -11,6 +11,8 @@
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
+         (submod "struct.rkt" for-call)
+         (submod "contract.rkt" for-struct)
          (only-in "assign.rkt"
                   [= rhombus=]))
 
@@ -204,8 +206,16 @@
                                    (if (syntax-e kw)
                                        (list kw parsed)
                                        (list parsed)))
-     (values (datum->syntax (quote-syntax here)
-                            (cons rator #'(arg-form ... ...))
-                            (span-srcloc rator #'head)
-                            #'head)
+     (define contract (and (identifier? rator)
+                           (syntax-local-struct-contract rator)))
+     (define e (datum->syntax (quote-syntax here)
+                              (cons rator #'(arg-form ... ...))
+                              (span-srcloc rator #'head)
+                              #'head))
+     (define e-maybe-contract (if contract
+                                  (syntax-property e
+                                                   rhombus-contract-property
+                                                   rator)
+                                  e))
+     (values e-maybe-contract
              #'tail)]))

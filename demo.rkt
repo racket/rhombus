@@ -275,3 +275,15 @@ accum
 
 define ok_later: "ok"
 check_later()
+
+//
+
+struct IPosn(x :: Integer, y :: Integer)
+
+struct ILine(p1 :: IPosn, p2 :: IPosn)
+
+define l1: ILine(IPosn(1, 2), IPosn(3, 4))
+
+l1.p2.x
+
+IPosn(1, 2).x
