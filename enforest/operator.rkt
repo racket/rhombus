@@ -49,8 +49,11 @@
                            (and (pair? p)
                                 (or (eq? (car p) 'default)
                                     (identifier? (car p)))
-                                (memq (cdr p) '(weaker stronger same)))))
-              (raise-argument-error who "(listof (cons/c (or/c identifier? 'default) (or/c 'stronger 'weaker 'same)))" precedences))
+                                (memq (cdr p) '(weaker stronger same same-on-left same-on-right)))))
+              (raise-argument-error who
+                                    (string-append "(listof (cons/c (or/c identifier? 'default)"
+                                                   " (or/c 'stronger 'weaker 'same 'same-on-left 'same-on-right)))")
+                                    precedences))
             (unless (memq protocol '(automatic macro))
               (raise-argument-error who "(or/c 'automatic 'macro)" protocol))
             (unless (procedure? proc)
@@ -64,8 +67,16 @@
               (raise-argument-error who "(or/c 'left 'right 'none)" assoc))
             (values name precedences protocol proc assoc)))
 
-;; returns: 'stronger, 'weaker, 'same (no associativity), #f (not related)
-(define (relative-precedence op other-op head)
+;; `op` is the operator just found, and `left-op` is the
+;; "current" operator previously found on the left;
+;; returns either
+;;   * a successful comparison: 'stronger or 'weaker
+;;   * an error comparision, where the result desribes why:
+;;       - 'same (error because no associativity)
+;;       - 'same-on-right (error because on left)
+;;       - 'same-on-left (error because on right)
+;;       - #f (no precedence relation)
+(define (relative-precedence op left-op head)
   (define (find op-name this-op-name precs)
     (let loop ([precs precs] [default #f])
       (cond
@@ -79,32 +90,35 @@
     (case dir
       [(stronger) 'weaker]
       [(weaker) 'stronger]
+      [(same-on-right) 'same-on-left]
+      [(same-on-left) 'same-on-right]
       [else dir]))
   (define op-name (operator-name op))
-  (define other-op-name (operator-name other-op))
-  (define dir1 (find other-op-name op-name (operator-precedences op)))
-  (define dir2 (invert (find op-name other-op-name (operator-precedences other-op))))
+  (define left-op-name (operator-name left-op))
+  (define dir1 (find left-op-name op-name (operator-precedences op)))
+  (define dir2 (invert (find op-name left-op-name (operator-precedences left-op))))
   (define (raise-inconsistent how)
     (raise-syntax-error #f
                         (format
                          (string-append "inconsistent operator ~a declared\n"
-                                        "  one operator: ~a\n"
-                                        "  other operator: ~a")
+                                        "  left operator: ~a\n"
+                                        "  right operator: ~a")
                          how
-                         (syntax-e (operator-name op))
-                         (syntax-e (operator-name other-op)))
+                         (syntax-e (operator-name left-op))
+                         (syntax-e (operator-name op)))
                         head))
   (when (and dir1 dir2 (not (eq? dir1 dir2)))
     (raise-inconsistent "precedence"))
   (define dir (or dir1 dir2
                   (and (free-identifier=? (operator-name op)
-                                          (operator-name other-op))
+                                          (operator-name left-op))
                        'same)))
   (cond
-    [(eq? 'same dir)
+    [(or (eq? 'same dir)
+         (eq? 'same-on-right dir))
      (define op-a (infix-operator-assoc op))
-     (when (infix-operator? other-op)
-       (unless (eq? op-a (infix-operator-assoc other-op))
+     (when (infix-operator? left-op)
+       (unless (eq? op-a (infix-operator-assoc left-op))
          (raise-inconsistent "associativity")))
      (case op-a
        [(left) 'weaker]

@@ -91,7 +91,7 @@ operator (a +* b):
 
 operator (a ++* b):
   'weaker_than': *
-  'associativity': right
+  'associativity': 'right'
   (a + b) * b
 
 3 ++* 4 * 2 ++* 5
