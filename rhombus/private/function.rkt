@@ -16,7 +16,7 @@
          (only-in "assign.rkt"
                   [= rhombus=]))
 
-(provide function)
+(provide fun)
 
 (module+ for-build
   (provide (for-syntax :kw-opt-binding
@@ -63,10 +63,10 @@
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)))
 
-(define-syntax function
+(define-syntax fun
   (make-expression+definition-transformer
    (expression-transformer
-    #'function
+    #'fun
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (parens group block alts)
@@ -93,7 +93,7 @@
          (list
           #`(define name
               #,(build-function #'form-id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag)))]
-        ;; definition form didn't match, so try parsing as a `function` expression:
+        ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ ((~and parens-tag parens) arg ...) (~and rhs (block . _)) . _)
          (syntax-parse #`(group . #,stx)
            [e::expression

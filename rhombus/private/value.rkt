@@ -9,13 +9,13 @@
          "contract.rkt"
          (submod "struct.rkt" for-call))
 
-(provide value)
+(provide val)
 
 (module+ for-define
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(define-syntax value
+(define-syntax val
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx

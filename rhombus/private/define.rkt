@@ -16,8 +16,8 @@
          "syntax.rkt"
          (submod "expression-syntax.rkt" for-define))
 
-(provide (rename-out [rhombus-define define])
-         forward)
+(provide (rename-out [rhombus-define def]
+                     [rhombus-let let]))
 
 (begin-for-syntax
   (struct fcase (args arg-parseds rhs))
@@ -84,5 +84,5 @@
 (define-syntax rhombus-define
   (make-define (lambda (defn) defn)))
 
-(define-syntax forward
+(define-syntax rhombus-let
   (make-define (lambda (defn) #`(rhombus-forward #,defn))))
