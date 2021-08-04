@@ -279,7 +279,7 @@
                                     op-stx)])]))
 
         (define (dispatch-infix-implicit implicit-name head-stx)
-          (define-values (op op-stx) (lookup-infix-implicit implicit-name head-stx in-space
+          (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form head-stx in-space
                                                             infix-operator-ref
                                                             operator-kind-str form-kind-str))
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))

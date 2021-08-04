@@ -4,25 +4,29 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "tail.rkt")
+         "lexicon.rkt"
          "syntax.rkt"
          "expression.rkt"
          "parse.rkt")
 
-(provide expression_operator
-         expression_macro)
+(provide expr)
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
                        make-expression-prefix-operator)))
 
-(define-syntax expression_operator
+(define-syntax expr
+  (simple-lexicon operator
+                  macro))
+
+(define-syntax operator
   (make-operator-definition-transformer 'automatic
                                         (lambda (x) x)
                                         #'make-expression-prefix-operator
                                         #'make-expression-infix-operator
                                         #'expression-prefix+infix-operator))
 
-(define-syntax expression_macro
+(define-syntax macro
   (make-operator-definition-transformer 'macro
                                         (lambda (x) x)
                                         #'make-expression-prefix-operator

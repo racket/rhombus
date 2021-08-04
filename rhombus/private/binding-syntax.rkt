@@ -5,6 +5,7 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "tail.rkt")
+         "lexicon.rkt"
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
@@ -14,24 +15,27 @@
                     [... rhombus...])
          (submod "quasiquote.rkt" convert)
          "parse.rkt"
-         ;; for binding_{match,bind}_builder_macro:
+         ;; for `matcher` and `binder`:
          (for-syntax "parse.rkt"))
 
-(provide binding_operator
-         binding_macro
-         binding_match_macro
-         binding_bind_macro
+(provide bind
          (for-syntax unpack_binding
                      pack_binding))
 
-(define-syntax binding_operator
+(define-syntax bind
+  (simple-lexicon operator
+                  macro
+                  matcher
+                  binder))
+
+(define-syntax operator
   (make-operator-definition-transformer 'automatic
                                         in-binding-space
                                         #'make-binding-prefix-operator
                                         #'make-binding-infix-operator
                                         #'prefix+infix))
 
-(define-syntax binding_macro
+(define-syntax macro
   (make-operator-definition-transformer 'macro
                                         in-binding-space
                                         #'make-binding-prefix-operator
@@ -67,7 +71,7 @@
                                 "ill-formed unpacked binding"
                                 stx)])))
 
-(define-syntax binding_match_macro
+(define-syntax matcher
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -159,7 +163,7 @@
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body stx)))))))
 
-(define-syntax binding_bind_macro
+(define-syntax binder
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx

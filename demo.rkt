@@ -141,14 +141,14 @@ fun
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
-expression_macro ?(¿a *! ¿tail ...):
+expr.macro ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10*!
 
 // ?? is an alias for ¿
 
-expression_macro ?(??a **! ??tail ...):
+expr.macro ?(??a **! ??tail ...):
   values(?(factorial(??a)), tail)
 
 10**!
@@ -157,7 +157,7 @@ expression_macro ?(??a **! ??tail ...):
 // a macro with an identifier name that does a weird
 // thing with the result tail
 
-expression_macro ?(prefix_plus ¿a ¿b ¿c ...):
+expr.macro ?(prefix_plus ¿a ¿b ¿c ...):
   values(a, ?(+ ¿b ¿c ...))
 
 prefix_plus 7 9
@@ -175,7 +175,7 @@ also_prefix_plus 7 9
 
 // define a binding operator
 
-binding_operator ?($ ¿n):
+bind.operator ?($ ¿n):
   ?(¿n :: Integer)
 
 fun apply_interest($ n):
@@ -184,14 +184,14 @@ fun apply_interest($ n):
 apply_interest(7)
 
 // define <> as revese-cons pattern
-binding_operator ?(¿a <> ¿b):
+bind.operator ?(¿a <> ¿b):
   pack_binding(?(pair,
                  build_reverse_cons_match,
                  build_reverse_cons_bind,
                  (¿a, ¿b, a_part, b_part)))
 
-binding_match_macro ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
-                                               ¿IF, ¿success, ¿fail)):
+bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
+                                        ¿IF, ¿success, ¿fail)):
   match unpack_binding(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        match unpack_binding(b)
@@ -218,7 +218,7 @@ binding_match_macro ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, 
                | ¿fail
             }
 
-binding_bind_macro ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
+bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
   match unpack_binding(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        match unpack_binding(b)
@@ -229,7 +229,7 @@ binding_bind_macro ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿
             }
 
 // an expression operator that's consistent with the pattern
-expression_operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
+expr.operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
 
 def rx <> (ry :: Integer) : "2" <> 1
 rx
@@ -237,7 +237,7 @@ rx
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 
-definition_macro ?(define_eight ¿e ...):
+defn.macro ?(define_eight ¿e ...):
   match e
   | ?(¿name):
       ?{def ¿name: 8}
@@ -245,7 +245,7 @@ definition_macro ?(define_eight ¿e ...):
 define_eight ate
 ate
 
-definition_macro ?(define_and_use ¿e ...):
+defn.macro ?(define_and_use ¿e ...):
   match e
   | ?(¿name {¿rhs ...}):
       ?{def ¿name {¿rhs ...}
@@ -256,12 +256,12 @@ nine
 
 // declaration form
 
-declaration_macro ?(empty_require ¿e ...):
+decl.macro ?(empty_import ¿e ...):
   match e
   | ?():
-      ?{require:}
+      ?{import:}
 
-empty_require
+empty_import
 
 // `forward` is a definition that is only visible later
 

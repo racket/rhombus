@@ -142,20 +142,34 @@
                         adj-context))
   (values op op-stx))
 
-(define (lookup-infix-implicit adjacent-name adj-context in-space operator-ref operator-kind form-kind)
+(define (lookup-infix-implicit adjacent-name prev-form adj-context in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context adjacent-name))
   (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
-    (raise-syntax-error #f
-                        (format
-                         (string-append
-                          "misplaced ~a;\n"
-                          " no infix operator is between this ~a and the previous one,\n"
-                          " and `~a` is not bound as an implicit infix ~a")
-                         form-kind form-kind
-                         adjacent-name
-                         operator-kind)
-                        adj-context))
+    (cond
+      [(identifier? prev-form)
+       (raise-syntax-error #f
+                           (format
+                            (string-append
+                             "unbound or misplaced ~a;\n"
+                             " the identifier is not bound as a macro,"
+                             " no infix operator appears afterward,\n"
+                             " and `~a` is not bound as an implicit infix ~a")
+                            form-kind
+                            adjacent-name
+                            operator-kind)
+                           prev-form)]
+      [else
+       (raise-syntax-error #f
+                           (format
+                            (string-append
+                             "misplaced ~a;\n"
+                             " no infix operator is between this ~a and the previous one,\n"
+                             " and `~a` is not bound as an implicit infix ~a")
+                            form-kind form-kind
+                            adjacent-name
+                            operator-kind)
+                           adj-context)]))
   (values op op-stx))
 
 (define (apply-prefix-direct-operator op form stx checker)

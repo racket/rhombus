@@ -13,7 +13,7 @@
                  (define lxc (syntax-local-value* head-id lexicon-ref))]
            #:when lxc
            #:do [(define-values (head tail) (apply-lexicon head-id lxc #'stxes))]
-           #:with ((~var href (:hierarchical-ref-seq in-space)) . new-tail) (cons head tail)
+           #:with (~var href (:hierarchical-ref-seq in-space)) (cons head tail)
            #:attr name #'href.name
            #:attr tail #'href.tail)
   (pattern (ref::reference . tail)
