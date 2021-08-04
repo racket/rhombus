@@ -152,8 +152,7 @@
                               (span-srcloc form1 field-id)
                               #'dot))
      (define maybe-contract-e (if (syntax-e (cadr accessor-id+contract))
-                                  (syntax-property e
-                                                   dot-provider-syntax-property
-                                                   (cadr accessor-id+contract))
+                                  (wrap-dot-provider e
+                                                     (cadr accessor-id+contract))
                                   e))
-     maybe-contract-e ]))
+     maybe-contract-e]))

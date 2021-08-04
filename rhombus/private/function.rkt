@@ -213,9 +213,7 @@
                               (span-srcloc rator #'head)
                               #'head))
      (define e-maybe-contract (if contract
-                                  (syntax-property e
-                                                   dot-provider-syntax-property
-                                                   rator)
+                                  (wrap-dot-provider e rator)
                                   e))
      (values e-maybe-contract
              #'tail)]))

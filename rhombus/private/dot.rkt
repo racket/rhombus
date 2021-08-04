@@ -15,7 +15,8 @@
              
              (property-out dot-provider)
              in-dot-provider-space
-             dot-provider-syntax-property))
+
+             wrap-dot-provider))
   (provide define-dot-provider-syntax))
 
 (begin-for-syntax
@@ -23,9 +24,13 @@
 
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot-provider))
 
-  (define dot-provider-syntax-property (gensym))
+  (define (wrap-dot-provider expr provider-stx)
+    #`(begin (quote-syntax (#%dot-provider #,provider-stx))
+             #,expr))
   
   (property dot-provider rhombus-dot-provider))
+
+(define-syntax #%dot-provider #f)
 
 (define-syntax |.|
   (expression-infix-operator
@@ -35,23 +40,30 @@
    (lambda (form1 tail)
      (syntax-parse tail
        [(dot field:identifier . tail)
+        (define (apply-provider p form)
+          (values
+           ((rhombus-dot-provider-handler p) p form #'dot #'field)
+           #'tail))
+        (define (fail)
+          (raise-syntax-error #f
+                              "not supported for left-hand side"
+                              #'dot
+                              #f
+                              (list form1)))
         (cond
-          [(or (and (identifier? form1)
-                    (syntax-local-value* (in-dot-provider-space form1) dot-provider-ref))
-               (let ([id (syntax-property form1 dot-provider-syntax-property)])
-                 (and id
-                      (identifier? id)
-                      (syntax-local-value* (in-dot-provider-space id) dot-provider-ref))))
+          [(and (identifier? form1)
+                (syntax-local-value* (in-dot-provider-space form1) dot-provider-ref))
            => (lambda (p)
-                (values
-                 ((rhombus-dot-provider-handler p) p form1 #'dot #'field)
-                 #'tail))]
+                (apply-provider p form1))]
           [else
-           (raise-syntax-error #f
-                               "not supported for left-hand side"
-                               #'dot
-                               #f
-                               (list form1))])]
+           (syntax-parse form1
+             #:literals (begin quote-syntax #%dot-provider)
+             [(begin (quote-syntax (#%dot-provider id:identifier)) e)
+              (define p (syntax-local-value* (in-dot-provider-space #'id) dot-provider-ref))
+              (if p
+                  (apply-provider p #'e)
+                  (fail))]
+             [_ (fail)])])]
        [(dot other . tail)
         (raise-syntax-error #f
                             "expected an identifier for a field name, but found something else"
