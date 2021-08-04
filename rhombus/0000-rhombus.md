@@ -133,7 +133,7 @@ if is_rotten(apple)
 
 match x
  | 0:
-    define zero = x
+    def zero = x
     x + zero
  | n:
     n + 1
@@ -178,7 +178,7 @@ begin: group within block
 if is_rotten(apple) | get_another() | take_bite()
                                       be_happy()
 
-match x | 0: define zero = x
+match x | 0: def zero = x
              x + zero
         | n: n + 1
 ```
@@ -195,7 +195,7 @@ begin: group within block; another group within block
 
 if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
-match x | 0: define zero = x; x + zero
+match x | 0: def zero = x; x + zero
         | n: n + 1
 ```
 
@@ -205,7 +205,7 @@ never create an empty group.
 Finally, `:` plus indentation can be written instead with `{` ... `}`,
 so blocks can be fully braced, if you like. In the following example,
 three pairs of braces replace three `:`s, while the other pairs are
-allowed but redundant, and every block in the example now has braces
+allowed but redundant due to `|` rules, and every block in the example now has braces
 (but this is definitely not the intended style):
 
 ```
@@ -213,7 +213,7 @@ begin { group within block; another group within block }
 
 if is_rotten(apple) { | { get_another() } | { take_bite(); be_happy() } }
 
-match x { | { 0 { define zero = x; x + zero } }
+match x { | { 0 { def zero = x; x + zero } }
           | { n { n + 1 } } }
 ```
 
@@ -221,7 +221,7 @@ Parentheses `(` ... `)` and square brackets `[` ... `]` similarly
 combine a sequence of groups. Unlike `{` ... `}`, a comma `,` can be
 used to separate groups on one line between `(` ... `)` or `[` ...
 `]`. Also unlike `{` ... `}`, a `,` is _required_ to separate groups
-within between `(` ... `)` or `[` ... `]`, even if they're on the same
+within between `(` ... `)` or `[` ... `]`, even if they're not on the same
 line. You can't have extra `,`s, except after the last group.
 
 ```
@@ -240,7 +240,7 @@ Indentation still works for creating blocks within `{` ... `}`, `(`
 ... `)` or `[` ... `]`:
 
 ```
-map(function (x):
+map(fun (x):
       x + 5,
     [1, 2, 3, 4])
 ```
@@ -263,17 +263,17 @@ module, then its value gets printed out.
 "Hello, world!"  // prints "Hello, world!", including the quotes
 ```
 
-The ways to define names in a module include `value` and `function`.
-The `value` form defines an immutable variable, and it expects an
-identifier to define followed by a block. The `function` form defines
+The ways to define names in a module include `val` and `fun`.
+The `val` form defines an immutable variable, and it expects an
+identifier to define followed by a block. The `fun` form defines
 a function when it see an identifier, parentheses, and then a block.
 
 ```
 #lang rhombus
 
-value fahrenheit_freezing: 32
+val fahrenheit_freezing: 32
 
-function fahrenheit_to_celsius(f):
+fun fahrenheit_to_celsius(f):
   (f - 32) * 5/9
 
 fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
@@ -298,9 +298,9 @@ provide:
   fahrenheit_freezing
   fahrenheit_to_celsius
 
-value fahrenheit_freezing: 32
+val fahrenheit_freezing: 32
 
-function fahrenheit_to_celsius(f):
+fun fahrenheit_to_celsius(f):
   (f - 32) * 5/9
 ```
 
@@ -316,7 +316,7 @@ fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
 
 ## Definitions
 
-Besides `value` and `function`, `struct` is a definition form that
+Besides `val` and `fun`, `struct` is a definition form that
 defines a new structure type. By convention, structure names start
 with a capital letter.
 
@@ -330,7 +330,7 @@ instance of the structure type. The structure-type name followed by
 an instance of the structure.
 
 ```
-value origin: Posn(0, 0)
+val origin: Posn(0, 0)
 
 origin  // prints Posn(0, 0)
 
@@ -346,7 +346,7 @@ This `flip` function will report an error if its argument is not a
 `Posn` instance:
 
 ```
-function flip(p :: Posn):
+fun flip(p :: Posn):
   Posn(Posn.y(p), Posn.x(p))
 
 // flip(0)  // would be a run-time error
@@ -357,16 +357,16 @@ Furthermore, the `:: Posn` declaration on `p` makes `.` work directly
 to access fields of `p`:
 
 ```
-function flip(p :: Posn):
+fun flip(p :: Posn):
   Posn(p.y, p.x)
 ```
 
-The use of `::` in this way is not specific to `function`. The `::`
+The use of `::` in this way is not specific to `fun`. The `::`
 binding operator works in any binding position, including the one for
-`value`:
+`val`:
 
 ```
-value (flipped :: Posn):  flip(Posn(1, 2))
+val (flipped :: Posn):  flip(Posn(1, 2))
 
 flipped.x  // prints 2
 ```
@@ -376,7 +376,7 @@ positions as a pattern-matching form. Here's a implementation of
 `flip` that uses pattern matching for its argument:
 
 ```
-function flip(Posn(x, y)):
+fun flip(Posn(x, y)):
   Posn(y, x)
 
 // flip(0)  // would be a run-time error
@@ -391,51 +391,51 @@ As you would expect, the fields in a `Posn` binding pattern are
 themselves patterns. Here's a function that works only on the origin:
 
 ```
-function flip_origin(Posn(0, 0)):
+fun flip_origin(Posn(0, 0)):
   origin
 
 // flip_origin(Posn(1, 2))  // would be a run-time error
 flip_origin(origin) // prints Posn(0, 0)
 ```
 
-The `define` form is a kind of do-what-I-mean form that acts like
-`value`, `function`, or certain other definition forms depending on
-the shape of the terms after `define`. It's sensitive to binding
+The `def` form is a kind of do-what-I-mean form that acts like
+`val`, `fun`, or certain other definition forms depending on
+the shape of the terms after `def`. It's sensitive to binding
 forms, though, so it will not treat the immediate use of a pattern
 constructor as a function definition.
 
 ```
-define pin: Posn(3, 4)
+def pin: Posn(3, 4)
 
-define distance(Posn(x, y), Posn(x2, y2)):
-  define dx: x2-x
-  define dy: y2-y
+def distance(Posn(x, y), Posn(x2, y2)):
+  def dx: x2-x
+  def dy: y2-y
   sqrt(dx*dx + dy*dy)
 
 distance(origin, pin)  // prints 5
 
-define Posn(pin_x, pin_y): pin
+def Posn(pin_x, pin_y): pin
 pin_x  // prints 3
 ```
 
-_Is `define` a good idea? See the current [rationale](#rationale-and-alternatives)._
+_Is `def` a good idea? See the current [rationale](#rationale-and-alternatives)._
 
-The `forward` form is like `define`, but it makes bindings available
+The `let` form is like `def`, but it makes bindings available
 only _after_ the definition, and it shadows any binding before, which
 is useful for binding a sequence of results to the same name. The
-`forward` form does not change the binding region of other
-definitions, so a `define` after `forward` binds a name that is
-visible before the `forward` form.
+`let` form does not change the binding region of other
+definitions, so a `def` after `let` binds a name that is
+visible before the `let` form.
 
 ```
-define get_after(): after
+def get_after(): after
 
-define accum: 0
-forward accum: accum+1
-forward accum: accum+1
+def accum: 0
+let accum: accum+1
+let accum: accum+1
 accum  // prints 2
 
-define after: 3
+def after: 3
 get_after()  // prints 3
 ```
 
@@ -468,7 +468,7 @@ and then the `.` operator can be chained in the expected way:
 ```
 struct Line(p1 :: Posn, p2 :: Posn)
 
-define l1 :: Line:
+def l1 :: Line:
   Line(Posn(1, 2), Posn(3, 4))
 
 l1.p2.x  // prints 3
@@ -481,14 +481,14 @@ associates a static contract to an identifier, and using `.` to access
 a field that has a contract gives the overall `.` expression a
 contract.
 
-The `define` and `value` forms recognize when the left-hand side of a
+The `def` and `val` forms recognize when the left-hand side of a
 definition is a plain identifier and the right-hand side is an
 immediate application of a structure constructor, and they implicitly
 add a `::` annotation to the binding in that case. So, `l1` above does
 not need an explicit `:: Line` declaration:
 
 ```
-define l1: Line(Posn(1, 2), Posn(3, 4))
+def l1: Line(Posn(1, 2), Posn(3, 4))
 ```
 
 _How far should this type-like propagation of contracts go? 
@@ -497,20 +497,20 @@ _How far should this type-like propagation of contracts go?
 
 ## Function expressions
 
-The `function` form also works in a function position (as λ). Just
-like `function` in JavaScript, the expression variant omits a function
+The `fun` form also works in a function position (as λ). Just
+like `fun` in JavaScript, the expression variant omits a function
 name.
 
 ```
-value curried_add: function (x):
-                     function (y):
-                       x+y
+val curried_add: fun (x):
+                   fun (y):
+                     x+y
 
 curried_add(10)(20)  // prints 30
 ```
 
 Naturally, keyword and optional arguments (as described in the next
-section) work with `function` expressions, too.
+section) work with `fun` expressions, too.
 
 ## Keyword and optional arguments
 
@@ -518,7 +518,7 @@ A function argument can be made optional by using `=` after the
 argument's pattern and providing a default-value expression after `=`:
 
 ```
-function scale(Posn(x, y), factor = 1):
+fun scale(Posn(x, y), factor = 1):
   Posn(factor * x, factor * y)
 
 scale(Posn(1, 2))     // prints Posn(1, 2)
@@ -531,10 +531,10 @@ formal or actual argument with a shrubbery keyword, which is written
 between `'`s, and then starting a block with `:`.
 
 ```
-function transform(Posn(x, y),
-                   'scale': factor = 1,
-                   'dx': dx = 0,
-                   'dy': dy = 0):
+fun transform(Posn(x, y),
+              'scale': factor = 1,
+              'dx': dx = 0,
+              'dy': dy = 0):
   Posn(factor*x + dx, factor*y + dy)
 
 transform(Posn(1, 2))           // prints Posn(1, 2)
@@ -551,7 +551,7 @@ _Why `'` for keywords? See the rationale in the
 proposal._
 
 _The keyword prefix and `=` for default values are not binding
-operators. They are specific to the syntax of `function`._
+operators. They are specific to the syntax of `fun`._
 
 If an argument name is the same as its keyword (just without the
 `'`s), then the `:` argument name can be omitted. That only works for
@@ -560,10 +560,10 @@ default value, because keywords don't work as variable names
 in binding patterns.
 
 ```
-function transform(Posn(x, y),
-                   'scale': factor = 1,
-                   'dx' = 0,
-                   'dy' = 0):
+fun transform(Posn(x, y),
+              'scale': factor = 1,
+              'dx' = 0,
+              'dy' = 0):
   Posn(factor*x + dx, factor*y + dy)
 ```
 
@@ -607,7 +607,7 @@ to the block after first test that produces a non-`#false` value. The
 `'else'` keyword can be used in place of a last test.
 
 ```
-function fib(n):
+fun fib(n):
   cond
    | n == 0: 1
    | n == 1: 1
@@ -631,7 +631,7 @@ to `cond`, `match` supports `'else`' in place of a final binding
 pattern:
 
 ```
-function fib(n):
+fun fib(n):
   match n
    | 0: 1
    | 1: 1
@@ -639,11 +639,11 @@ function fib(n):
 ```
 
 This kind of immediate pattern-matching dispatch on a function
-argument is common enough that `function` supports it directly,
+argument is common enough that `fun` supports it directly,
 fusing the function declaration and the pattern match, like this:
 
 ```
-function 
+fun 
  | fib(0): 1
  | fib(1): 1
  | fib(n): fib(n-1) + fib(n-2)
@@ -657,7 +657,7 @@ different numbers of arguments, and a call will find a matching case
 with the right number of arguments.
 
 ```
-function
+fun
  | hello(name):
     "Hello, " +$ name    // +$ coerces to strings and concatenates
  | hello(first, last):
@@ -678,23 +678,23 @@ values(1, "apple") // prints 1 and "apple"
 When an expression in a module body returns multiple values, each one
 is printed, the same as in `#lang racket`.
 
-When the `value` binding form is followed by parentheses with _N_
+When the `val` binding form is followed by parentheses with _N_
 groups, then the right-hand side should produce _N_ values, and each
 value is matched against the corresponding group.
 
 ```
-value (n, s): values(1, "apple")
+val (n, s): values(1, "apple")
 
 n  // prints 1
 s  // prints "apple"
 ```
 
-A definition binding with with `values` or `define` can also use
+A definition binding with with `val` or `def` can also use
 `values` in the outermost pattern, and that's the same as not writing
 `values`, but makes the receiver and sender side look more the same:
 
 ```
-define values(n, s): values(1, "apple")
+def values(n, s): values(1, "apple")
 
 n  // prints 1
 s  // prints "apple"
@@ -715,13 +715,13 @@ binding operator. The `=` infix operator assigns to a mutable variable
 while also returning the variable's new value.
 
 ```
-define mutable todays_weather: "sunny"
+def mutable todays_weather: "sunny"
 
 todays_weather            // prints "sunny"
 todays_weather = "rainy"  // prints "rainy"
 todays_weather            // prints "rainy"
 
-define f(mutable x):
+def f(mutable x):
   x = x + 8
   x
 
@@ -801,18 +801,24 @@ appear near an arithmetic operator like `*`:
 1 <> (2 * 3)   // prints Posn(1, 6)
 ```
 
+The initially defined operators mostly have the usual precedence: `*`
+and `/` are stronger than `+` and `-`, while `+` and `-` have the same
+predence and are left-associative. The `*` and `/` operator have the
+same precedence as long as `*` appears only to the left of `/`,
+
 A precedence declaration in `operator` takes the form of keyword
 blocks at the start of the operator's body. The possible keyword
 options for prefix operators are `'weaker_than'`, `'stronger_than'`,
-and `'same_as'`. For infix operators, those options apply, as well as
-`'associativity'`. Operators listed with keywords like `'weaker_than'`
+`'same_as'`, or `'same_as_on_left'`. For infix operators, those options
+ apply, as well as `'same_as_on_right'` and `'associativity'`. Operators
+listed with keywords like `'weaker_than'`
 can be grouped on lines however is convenient.
 
 ```
 operator (x <> y):
   'weaker_than': * / 
                  + -
-  'associativity': right
+  'associativity': 'right'
   Posn(x, y)
 
 1 <> 2 * 3  // prints Posn(1, 6)
@@ -873,7 +879,7 @@ parenthesized group has terms, and each of those terms is used in one
 replication.
 
 ```
-define seq: ?(1 2 3)
+def seq: ?(1 2 3)
 
 ?((hi ¿seq) ...) // prints a shrubbery: ((hi 1) (hi 2) (hi 3))
 ```
@@ -891,7 +897,7 @@ Attempting to generate a group with no terms within a parenthesized
 form with multiple groups is an error.
 
 ```
-define seq: ?()
+def seq: ?()
 
 ?((hi ¿seq) ...)          // prints a shrubbery: ()
 // ?(x, (hi ¿seq) ..., y) // would be a run-time error
@@ -907,7 +913,7 @@ group before the `,`, which effectively replicates that group with its
 separating comma:
 
 ```
-define seq: ?(1 2 3)
+def seq: ?(1 2 3)
 
 ?(hi ¿seq, ...) // prints a shrubbery: (hi 1, hi 2, hi 3)
 ```
@@ -916,7 +922,7 @@ Along the same lines, `...` just after a `|` can replicate a preceding
 `|` block:
 
 ```
-define seq: ?(1 2 3)
+def seq: ?(1 2 3)
 
 ?{ | ¿seq | ... } // prints a shrubbery: { | 1 | 2 | 3 }
 ```
@@ -929,7 +935,7 @@ matches syntax objects, and it binds variables that are escaped in the
 pattern with `¿`.
 
 ```
-value ?(¿x + ¿y): ?(1 + (2 + 3))
+val ?(¿x + ¿y): ?(1 + (2 + 3))
 
 x  // prints a shrubbery: 1
 y  // prints a shrubbery: (2 + 3)
@@ -945,14 +951,14 @@ that would be parsed as an expression. For example, a pattern variable
 `y` by itself cannot be matched to a sequence `2 + 3`:
 
 ```
-// value ?(¿x + ¿y): ?(1 + 2 + 3)  // would be a run-time error
+// val ?(¿x + ¿y): ?(1 + 2 + 3)  // would be a run-time error
 ```
 
 Meanwhile, `...` works the way you would expect in a pattern, matching
 any `...`-replicated pattern variables to form a sequence of matches:
 
 ```
-value ?(¿x + ¿y ...): ?(1 + 2 + 3)
+val ?(¿x + ¿y ...): ?(1 + 2 + 3)
 
 x  // prints a shrubbery: 1
 y  // prints a shrubbery: (2 + 3)
@@ -977,7 +983,7 @@ a zero-argument function:
 
 ```
 expression_macro ?(thunk { ¿body ... } ¿tail ...):
-  values(?(function () { ¿body ... } ), tail)
+  vals(?(fun () { ¿body ... } ), tail)
 
 thunk { 1 + "oops" } // prints a function
 thunk { 1 + 3 } ()   // prints 4
@@ -1008,9 +1014,9 @@ this:
 
 ```
 expression_macro ?(¿a ! ¿tail ...):
-  values(?(factorial(¿a)), tail)
+  vals(?(factorial(¿a)), tail)
 
-function
+fun
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
@@ -1030,7 +1036,7 @@ term, which would enable reporting a specific error if a parsed
 expression is put into a non-expression context. Probably it should do
 that._
 
-The `define` form turns itself into `expression` macro when it is
+The `def` form turns itself into `expression_macro` when it is
 followed by a `?` pattern that would be suitable for
 `expression_macro`.
 
@@ -1067,16 +1073,16 @@ identifier (never an operator), and the result syntax object should
 represent a block, which is spliced into the definition context where
 the macro is used.
 
-Here's the classic `define_five` macro:
+Here's the classic `def_five` macro:
 
 
 ```
-definition_macro ?(define_five ¿id):
+definition_macro ?(def_five ¿id):
   ?{
-    define ¿id: 5
+    def ¿id: 5
   }
 
-define_five v
+def_five v
 v  // prints 5
 ```
 
@@ -1105,7 +1111,7 @@ number inputs:
 binding_operator ?($ ¿n):
   ?(¿n :: Number)
 
-value $salary: 100.0
+val $salary: 100.0
 
 salary  // prints 100.0
 ```
@@ -1166,11 +1172,11 @@ constrained by choices in other dimensions.
 
 ## Define
 
-The `define` form may or may not be a good idea. Some programmers may
-prefer the generality of `define`, while others may prefer the
-specificity of `value`, `function`, and `expression_macro`. Some
+The `def` form may or may not be a good idea. Some programmers may
+prefer the generality of `def`, while others may prefer the
+specificity of `val`, `fun`, and `expression_macro`. Some
 programmers may dislike that there's more than one way. But having
-`define` also makes it easier to have `forward`. A `forward` modifier
+`def` also makes it easier to have `let`. A `let` modifier
 that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
 some of them need to refer to each other.
