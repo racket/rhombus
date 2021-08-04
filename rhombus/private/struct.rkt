@@ -88,7 +88,8 @@
                (binding-transformer
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
-                                                    (list (quote-syntax name-field) ...))))
+                                                    (list (quote-syntax name-field) ...)
+                                                    (list (quote-syntax field.contract-name) ...))))
            #'(define-contract-syntax name
                (struct-contract (quote-syntax name?)
                                 (quote-syntax name)
@@ -96,7 +97,11 @@
                                       ...)))
            #'(define-dot-provider-syntax name
                (struct-dot-provider handle-struct-type-dot
-                                    (quote-syntax name)))))]))))
+                                    (quote-syntax name)))
+           #'(begin
+               (define-contracted-syntax/maybe name-field
+                 (rhombus-contracted (quote-syntax (#%result field.contract-name))))
+               ...)))]))))
 
 (define-for-syntax (build-guard-expr fields predicates)
   (and (for/or ([predicate (in-list predicates)])
@@ -156,3 +161,9 @@
                                                      (cadr accessor-id+contract))
                                   e))
      maybe-contract-e]))
+
+(define-syntax (define-contracted-syntax/maybe stx)
+  (syntax-parse stx
+    [(_ id (_ (_ #f))) #'(begin)]
+    [(_ id rhs)
+     #'(define-contracted-syntax id rhs)]))

@@ -19,26 +19,36 @@
   (provide (for-syntax rhombus-contract
                        rhombus-contract?
                        rhombus-contract-predicate
-                       rhombus-contracted
                        in-contract-space
 
+                       rhombus-contracted
+                       in-contracted-space
+
                        :contract
-                       :contract-seq)
+                       :contract-seq
+
+                       syntax-local-contracted-contract)
            
-           define-contract-syntax))
+           define-contract-syntax
+           define-contracted-syntax
+
+           #%result))
 
 (begin-for-syntax
   (struct rhombus-contract (predicate))
   (define (rhombus-contract-ref v) (and (rhombus-contract? v) v))
 
-  (struct rhombus-contracted (contract-stx proc)
-    #:property prop:procedure (struct-field-index proc)
-    #:property prop:dot-provider (lambda (self)
-                                   (syntax-local-value* (in-dot-provider-space (rhombus-contracted-contract-stx self))
-                                                        dot-provider-ref)))
-                                                        
-
   (define in-contract-space (make-interned-syntax-introducer 'rhombus/contract))
+
+  (struct rhombus-contracted (contract-stx)
+    #:property prop:dot-provider (lambda (self)
+                                   (define stx (rhombus-contracted-contract-stx self))
+                                   (and (identifier? stx)
+                                        (syntax-local-value* (in-dot-provider-space stx)
+                                                             dot-provider-ref))))
+  (define (contracted-ref v) (and (rhombus-contracted? v) v))
+
+  (define in-contracted-space (make-interned-syntax-introducer 'rhombus/contracted))
 
   (define-syntax-class :contract-seq
     (pattern (~var ref (:hierarchical-ref-seq in-contract-space))
@@ -53,20 +63,7 @@
              #:with c::contract-seq #'(e ...)
              #:with () #'c.tail
              #:attr name #'c.name
-             #:attr predicate #'c.predicate))
-
-  (define (make-contracted-identifier id contract-stx)
-    (rhombus-contracted
-     contract-stx
-     (lambda (stx)
-       (define (wrap stx)
-         (wrap-dot-provider (relocate stx id) contract-stx))
-       (syntax-parse stx
-         [_:identifier (wrap stx)]
-         [(rator rand ...) (datum->syntax (quote-syntax here)
-                                          (cons (wrap #'rator) #'(rand ...))
-                                          stx
-                                          stx)])))))
+             #:attr predicate #'c.predicate)))
 
 (define-syntax ::
   (binding-infix-operator
@@ -128,15 +125,33 @@
 (define-syntax (bind-contracted-identifier stx)
   (syntax-parse stx
     [(_ arg-id (t predicate bind-id))
-     #'(define-syntax bind-id
-         (make-contracted-identifier #'arg-id  (quote-syntax t)))]))
+     #'(begin
+         (define bind-id arg-id)
+         (define-dot-provider-syntax bind-id
+           (rhombus-contracted (quote-syntax t))))]))
 
 (define-syntax Integer (rhombus-contract #'exact-integer?))
 (define-syntax Number (rhombus-contract #'number?))
 (define-syntax String (rhombus-contract #'string?))
+(define-syntax #%result #f) ;; contract constructor, probably to be replaced by -> 
 
 (define-syntax (define-contract-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-contract-space #'id)
          rhs)]))
+
+(define-syntax (define-contracted-syntax stx)
+  (syntax-parse stx
+    [(_ id:identifier rhs)
+     #`(define-syntax #,(in-contracted-space #'id)
+         rhs)]))
+
+(begin-for-syntax
+  (define (syntax-local-contracted-contract form)
+    (cond
+      [(and (identifier? form)
+            (syntax-local-value* (in-contracted-space form) contracted-ref))
+       => (lambda (p)
+            (rhombus-contracted-contract-stx p))]
+      [else #f])))

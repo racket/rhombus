@@ -70,8 +70,10 @@
     #:datum-literals (block group)
     #:literals (::)
     (pattern (~seq (op ::) c::contract)
+             #:attr ctc #'c.name
              #:attr predicate #'c.predicate)
     (pattern (~seq)
+             #:attr ctc #'#f
              #:attr predicate #'#f)))
 
 (define-syntax fun
@@ -114,23 +116,27 @@
          (define names (syntax->list #'(name ...)))
          (define the-name (car names))
          (check-consistent stx names "name")
-         (list
-          #`(define #,the-name
-              #,(build-case-function #'form-id
-                                     #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                     #'(ret.predicate ...)
-                                     #'(rhs ...)
-                                     #'form-id #'alts-tag)))]
+         (maybe-add-function-result-definition
+          the-name (syntax->list #'(ret.ctc ...))
+          (list
+           #`(define #,the-name
+               #,(build-case-function #'form-id
+                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                      #'(ret.predicate ...)
+                                      #'(rhs ...)
+                                      #'form-id #'alts-tag))))]
         [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
                   ret::ret-contract
                   (~and rhs (block body ...)))
-         (list
-          #`(define name
-              #,(build-function #'form-id
-                                #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
-                                #'ret.predicate
-                                #'rhs
-                                #'form-id #'parens-tag)))]
+         (maybe-add-function-result-definition
+          #'name (list #'ret.ctc)
+          (list
+           #`(define name
+               #,(build-function #'form-id
+                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                                 #'ret.predicate
+                                 #'rhs
+                                 #'form-id #'parens-tag))))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or (parens _ ...)
                  (alts (block (group (parens _ ...))) ...+))
@@ -230,7 +236,28 @@
                                    (add-contract-check
                                     #,function-name
                                     pred
-                                    (rhombus-expression (group rhs)))))))]))]))))))
+                                    (rhombus-expression (group rhs)))))))]))])))))
+
+  (define (maybe-add-function-result-definition name ctcs defns)
+    (define (same-expression? a b)
+      (cond
+        [(identifier? a) (and (identifier? b)
+                              (free-identifier=? a b))]
+        [(syntax? a) (same-expression? (syntax-e a) b)]
+        [(syntax? b) (same-expression? a (syntax-e b))]
+        [(pair? a) (and (pair? b)
+                        (same-expression? (car a) (car b))
+                        (same-expression? (cdr a) (cdr b)))]
+        [else (equal? a b)]))
+    (cond
+      [(and (pair? ctcs)
+            (syntax-e (car ctcs))
+            (for/and ([ctc (in-list (cdr ctcs))])
+              (same-expression? (car ctcs) ctc)))
+       (cons
+        #`(define-contracted-syntax #,name (rhombus-contracted (quote-syntax (#%result #,(car ctcs)))))
+        defns)]
+      [else defns])))
 
 (define (argument-binding-failure who val binding)
   (raise-binding-failure who "argument" val binding))
@@ -278,14 +305,24 @@
                                    (if (syntax-e kw)
                                        (list kw parsed)
                                        (list parsed)))
-     (define contract (and (identifier? rator)
-                           (syntax-local-struct-contract rator)))
+     (define provider
+       (cond
+         [(and (identifier? rator)
+               (syntax-local-struct-contract rator))
+          rator]
+         [(syntax-local-contracted-contract rator)
+          => (lambda (stx)
+               (syntax-parse stx
+                 #:literals (#%result)
+                 [(#%result id:identifier) #'id]
+                 [_ #f]))]
+         [else #f]))
      (define e (datum->syntax (quote-syntax here)
                               (cons rator #'(arg-form ... ...))
                               (span-srcloc rator #'head)
                               #'head))
-     (define e-maybe-contract (if contract
-                                  (wrap-dot-provider e rator)
+     (define e-maybe-contract (if provider
+                                  (wrap-dot-provider e provider)
                                   e))
      (values e-maybe-contract
              #'tail)]))

@@ -288,7 +288,12 @@ l1.p2.x
 
 IPosn(1, 2).x
 
-// ILine.p1(l1).x
+ILine.p1(l1).x
+
+{
+  val ILine(p1, p2): l1
+  p1.x + p2.y
+}
 
 // function result contracts
 
@@ -313,3 +318,8 @@ add_two(6, 7) === "6 and 7"
   val f: fun (x) :: Integer: x
   f(10)
 }
+
+fun on_diag(n :: Integer) :: Posn:
+  Posn(n, n)
+
+on_diag(1).x
