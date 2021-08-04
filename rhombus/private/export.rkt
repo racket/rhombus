@@ -7,53 +7,53 @@
                      enforest/proc-name)
          "declaration.rkt")
 
-(provide (rename-out [rhombus-provide provide])
+(provide export
 
-         (for-space rhombus/provide
+         (for-space rhombus/export
                     rename
                     operator))
 
 (begin-for-syntax
-  (property provide-prefix-operator prefix-operator)
-  (property provide-infix-operator infix-operator)
+  (property export-prefix-operator prefix-operator)
+  (property export-infix-operator infix-operator)
 
-  (define in-provide-space (make-interned-syntax-introducer 'rhombus/provide))
+  (define in-export-space (make-interned-syntax-introducer 'rhombus/export))
 
-  (define (check-provide-result form proc)
+  (define (check-export-result form proc)
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
-  (define (make-identifier-provide id)
+  (define (make-identifier-export id)
     (unless (module-path? (syntax-e id))
-      (raise-syntax-error 'provide
+      (raise-syntax-error 'export
                           "not a valid module path element"
                           id))
     id)
 
-  (define-enforest provide-enforest provide-enforest-step
-    :provide :provide-prefix-op+form+tail :provide-infix-op+form+tail
-    "provide" "provide operator"
-    in-provide-space
-    provide-prefix-operator-ref provide-infix-operator-ref
-    check-provide-result
-    make-identifier-provide))
+  (define-enforest export-enforest export-enforest-step
+    :export :export-prefix-op+form+tail :export-infix-op+form+tail
+    "export" "export operator"
+    in-export-space
+    export-prefix-operator-ref export-infix-operator-ref
+    check-export-result
+    make-identifier-export))
 
-(define-syntax rhombus-provide
+(define-syntax export
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block p::provide ...))
+       [(_ (block p::export ...))
         #`((provide p.parsed ...))]))))
 
-(define-syntax (define-provide-syntax stx)
+(define-syntax (define-export-syntax stx)
   (syntax-parse stx
     [(_ name:id rhs)
      (quasisyntax/loc stx
-       (define-syntax #,(in-provide-space #'name) rhs))]))
+       (define-syntax #,(in-export-space #'name) rhs))]))
 
-(define-provide-syntax rename
-  (provide-prefix-operator
+(define-export-syntax rename
+  (export-prefix-operator
    #'rename
    '((default . stronger))
    'macro
@@ -66,8 +66,8 @@
         (values #`(rename-out [int ext] ...)
                 #'tail)]))))
 
-(define-provide-syntax operator
-  (provide-prefix-operator
+(define-export-syntax operator
+  (export-prefix-operator
    #'rename
    '((default . stronger))
    'macro

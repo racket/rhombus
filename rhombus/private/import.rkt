@@ -15,37 +15,37 @@
          (only-in "implicit.rkt"
                   #%literal))
 
-(provide (rename-out [rhombus-require require])
+(provide import
 
-         (for-space rhombus/require
+         (for-space rhombus/import
                     #%literal
                     |.|
                     rename))
 
 (begin-for-syntax
-  (property require-prefix-operator prefix-operator)
-  (property require-infix-operator infix-operator)
+  (property import-prefix-operator prefix-operator)
+  (property import-infix-operator infix-operator)
 
-  (define in-require-space (make-interned-syntax-introducer 'rhombus/require))
+  (define in-import-space (make-interned-syntax-introducer 'rhombus/import))
 
-  (define (check-require-result form proc)
+  (define (check-import-result form proc)
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
-  (define (make-identifier-require id)
+  (define (make-identifier-import id)
     (unless (module-path? (syntax-e id))
-      (raise-syntax-error 'require
+      (raise-syntax-error 'import
                           "not a valid module path element"
                           id))
     id)
 
-  (define-enforest require-enforest require-enforest-step
-    :require :require-prefix-op+form+tail :require-infix-op+form+tail
-    "require" "require operator"
-    in-require-space
-    require-prefix-operator-ref require-infix-operator-ref
-    check-require-result
-    make-identifier-require)
+  (define-enforest import-enforest import-enforest-step
+    :import :import-prefix-op+form+tail :import-infix-op+form+tail
+    "import" "import operator"
+    in-import-space
+    import-prefix-operator-ref import-infix-operator-ref
+    check-import-result
+    make-identifier-import)
 
   (define (extract-prefix r)
     (syntax-parse r
@@ -64,31 +64,31 @@
                                                      ""))
                      r
                      r)]
-      [_ (raise-syntax-error 'require
+      [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              r)]))
 
-  (define-syntax-class :require-block
+  (define-syntax-class :import-block
     #:datum-literals (block group op)
     #:literals (rhombus=)
     (pattern (group prefix:identifier (op rhombus=) req ...)
-             #:with r::require #'(group req ...)
+             #:with r::import #'(group req ...)
              #:attr parsed #'r.parsed)
     (pattern (group (op rhombus=) req ...)
-             #:with r::require #'(group req ...)
+             #:with r::import #'(group req ...)
              #:attr parsed #'r.parsed
              #:attr prefix #'#f)
     (pattern (group req ...)
-             #:with r::require #'(group req ...)
+             #:with r::import #'(group req ...)
              #:attr parsed #'r.parsed
              #:attr prefix (extract-prefix #'r.parsed))))
 
-(define-syntax rhombus-require
+(define-syntax import
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block r::require-block ...))
+       [(_ (block r::import-block ...))
         (define prefixes (syntax->list #'(r.prefix ...)))
         (define intros (for/list ([prefix (in-list prefixes)])
                          (if (syntax-e prefix)
@@ -103,14 +103,14 @@
                                    (if (syntax-e prefix)
                                        #`(define-syntax #,prefix
                                            (lexicon (lambda (tail)
-                                                      (parse-require-dot
+                                                      (parse-import-dot
                                                        (quote-syntax #,(datum->syntax parsed 'ctx))
                                                        tail))))
                                        #'(begin)))])
           #`((require r-parsed ...)
              def ...))]))))
 
-(define-for-syntax (parse-require-dot ctx stxes)
+(define-for-syntax (parse-import-dot ctx stxes)
   (define (get what name)
     (define id (datum->syntax ctx
                               (syntax-e name)
@@ -118,7 +118,7 @@
                               name))
     (unless (identifier-binding id)
       (raise-syntax-error #f
-                          (format "no such required ~a" what)
+                          (format "no such importd ~a" what)
                           name))
     id)
   (syntax-parse stxes
@@ -129,14 +129,14 @@
     [(_ (op |.|) (parens (group (~and target (op field))))  . tail)
      (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]))
   
-(define-syntax (define-require-syntax stx)
+(define-syntax (define-import-syntax stx)
   (syntax-parse stx
     [(_ name:id rhs)
      (quasisyntax/loc stx
-       (define-syntax #,(in-require-space #'name) rhs))]))
+       (define-syntax #,(in-import-space #'name) rhs))]))
 
-(define-require-syntax #%literal
-  (require-prefix-operator
+(define-import-syntax #%literal
+  (import-prefix-operator
    #'%literal
    '((default . stronger))
    'macro
@@ -144,27 +144,27 @@
      (syntax-parse stx
        [(_ a . tail)
         (unless (module-path? (syntax->datum #'a))
-          (raise-syntax-error 'require
+          (raise-syntax-error 'import
                               "not a valid module path"
                               #'a))
         (values #'a
                 #'tail)]))))
 
-(define-require-syntax |.|
-  (require-infix-operator
+(define-import-syntax |.|
+  (import-infix-operator
    #'%literal
    '((default . stronger))
    'macro
    (lambda (form1 stx)
      (unless (identifier? form1)
-       (raise-syntax-error 'require
+       (raise-syntax-error 'import
                            "not a valid module path element"
                            form1))
      (syntax-parse stx
        [(_ a . tail)
         (unless (and (identifier? #'a)
                      (module-path? (syntax->datum #'a)))
-          (raise-syntax-error 'require
+          (raise-syntax-error 'import
                               "not a valid module path element"
                               #'a))
         (values (datum->syntax #'a
@@ -177,8 +177,8 @@
                 #'tail)]))
    'left))
 
-(define-require-syntax rename
-  (require-infix-operator
+(define-import-syntax rename
+  (import-infix-operator
    #'rename
    '((default . stronger))
    'macro
