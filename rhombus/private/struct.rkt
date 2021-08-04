@@ -15,7 +15,8 @@
 (provide (rename-out [rhombus-struct struct]))
 
 (module+ for-call
-  (provide (for-syntax syntax-local-struct-contract)))
+  (provide (for-syntax syntax-local-struct-contract
+                       syntax-local-result-provider)))
 
 (begin-for-syntax
   (struct struct-contract rhombus-contract (constructor-id fields))
@@ -167,3 +168,17 @@
     [(_ id (_ (_ #f))) #'(begin)]
     [(_ id rhs)
      #'(define-contracted-syntax id rhs)]))
+
+
+(define-for-syntax (syntax-local-result-provider rator)
+  (cond
+    [(and (identifier? rator)
+          (syntax-local-struct-contract rator))
+     rator]
+    [(syntax-local-contracted-contract rator)
+     => (lambda (stx)
+          (syntax-parse stx
+            #:literals (#%result)
+            [(#%result id:identifier) #'id]
+            [_ #f]))]
+    [else #f]))

@@ -77,17 +77,15 @@
   (raise-binding-failure who "value" val binding))
 
 (define-for-syntax (maybe-add-struct-contract g-stx rhs-stx)
-  ;; Ad hoc contracting rule: if we have a plain identifier
-  ;; and the right-hand side is a struct constrcution, then
-  ;; add the structure type a contract on the variable
   (syntax-parse g-stx
     #:datum-literals (group)
     [(group id:identifier)
      (syntax-parse rhs-stx
        #:datum-literals (block group parens)
        [(block (group rator:identifier ((~and tag parens) . _)))
-        #:when (and (syntax-local-struct-contract #'rator)
+        #:do [(define provider (syntax-local-result-provider #'rator))]
+        #:when (and provider
                     (free-identifier=? #'#%call (datum->syntax #'tag '#%call)))
-        #'(group id (op ::) rator)]
+        #`(group id (op ::) #,provider)]
        [_ g-stx])]
     [_ g-stx]))

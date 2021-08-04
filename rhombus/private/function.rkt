@@ -305,18 +305,7 @@
                                    (if (syntax-e kw)
                                        (list kw parsed)
                                        (list parsed)))
-     (define provider
-       (cond
-         [(and (identifier? rator)
-               (syntax-local-struct-contract rator))
-          rator]
-         [(syntax-local-contracted-contract rator)
-          => (lambda (stx)
-               (syntax-parse stx
-                 #:literals (#%result)
-                 [(#%result id:identifier) #'id]
-                 [_ #f]))]
-         [else #f]))
+     (define provider (syntax-local-result-provider rator))
      (define e (datum->syntax (quote-syntax here)
                               (cons rator #'(arg-form ... ...))
                               (span-srcloc rator #'head)

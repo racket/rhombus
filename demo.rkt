@@ -326,3 +326,6 @@ fun on_diag(n :: Integer) :: Posn:
   Posn(n, n)
 
 on_diag(1).x
+
+val known_posn: on_diag(2)
+known_posn.x
