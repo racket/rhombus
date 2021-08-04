@@ -9,7 +9,9 @@
 
 (provide (rename-out [rhombus-provide provide])
 
-         (for-space rhombus/provide rename))
+         (for-space rhombus/provide
+                    rename
+                    operator))
 
 (begin-for-syntax
   (property provide-prefix-operator prefix-operator)
@@ -58,8 +60,22 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group int:identifier (~datum to) ext:identifier)
+       [(_ (block (group int:identifier #:to ext:identifier)
                   ...)
            . tail)
         (values #`(rename-out [int ext] ...)
                 #'tail)]))))
+
+(define-provide-syntax operator
+  (provide-prefix-operator
+   #'rename
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (block op)
+       [(_ (block (group (op name) ...) ...)
+           . tail)
+        (values #`(combine-out name ... ...)
+                #'tail)]))))
+

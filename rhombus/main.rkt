@@ -17,6 +17,7 @@
                 ...))]))
 (bounce "private/implicit.rkt"
         "private/arithmetic.rkt"
+        "private/dot.rkt"
         "private/struct.rkt"
         "private/define.rkt"
         "private/value.rkt"

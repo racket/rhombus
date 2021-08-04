@@ -1,10 +1,10 @@
 #lang racket/base
 (require syntax/parse
          "syntax-local.rkt"
-         "private/transform.rkt")
+         "private/transform.rkt"
+         "hierarchical-ref-parse.rkt")
 
-;; Degenerate variant of enforestation with only prefix "operators"
-;; with identifier names
+;; Degenerate variant of enforestation with only prefix operators
 
 (provide transformer?
          transformer-proc
@@ -21,13 +21,13 @@
                       check-result)
   (begin
     (define-syntax-class :form
-      (pattern ((~datum group) head:identifier . tail)
-               #:do [(define head-id (transform-in #'head))]
+      (pattern ((~datum group) . (~var ref (:hierarchical-ref-seq values)))
+               #:do [(define head-id (transform-in #'ref.name))]
                #:do [(define t (syntax-local-value* head-id transformer-ref))]
                #:when t
                #:attr parsed (transform-out
                               (apply-transformer (transformer-ref t) head-id
-                                                 (transform-in (datum->syntax #f (cons head-id #'tail)))
+                                                 (transform-in (datum->syntax #f (cons head-id #'ref.tail)))
                                                  check-result))))))
 
 (define (apply-transformer t id stx checker)

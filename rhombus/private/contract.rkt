@@ -3,9 +3,11 @@
                      syntax/parse
                      syntax/stx
                      enforest/syntax-local
+                     enforest/hierarchical-ref-parse
                      "srcloc.rkt")
          "expression.rkt"
-         "binding.rkt")
+         "binding.rkt"
+         (submod "dot.rkt" for-dot-provider))
 
 (provide ::
 
@@ -18,29 +20,40 @@
                        rhombus-contract?
                        rhombus-contract-predicate
                        rhombus-contracted
-                       rhombus-contract-property
-                       rhombus-syntax-local-contract
                        in-contract-space
 
-                       :contract)
+                       :contract
+                       :contract-seq)
            
            define-contract-syntax))
 
 (begin-for-syntax
   (struct rhombus-contract (predicate))
+  (define (rhombus-contract-ref v) (and (rhombus-contract? v) v))
 
   (struct rhombus-contracted (contract-stx proc)
-    #:property prop:procedure (struct-field-index proc))
-
-  (define rhombus-contract-property (gensym))
+    #:property prop:procedure (struct-field-index proc)
+    #:property prop:dot-provider (lambda (self)
+                                   (syntax-local-value* (in-dot-provider-space (rhombus-contracted-contract-stx self))
+                                                        dot-provider-ref)))
+                                                        
 
   (define in-contract-space (make-interned-syntax-introducer 'rhombus/contract))
 
-  (define-syntax-class :contract
-    (pattern id:identifier
-             #:do [(define v (syntax-local-value* (in-contract-space #'id) rhombus-contract?))]
-             #:when (rhombus-contract? v)
-             #:attr predicate (rhombus-contract-predicate v)))
+  (define-syntax-class :contract-seq
+    (pattern (~var ref (:hierarchical-ref-seq in-contract-space))
+             #:do [(define v (syntax-local-value* (in-contract-space #'ref.name) rhombus-contract-ref))]
+             #:when v
+             #:attr predicate (rhombus-contract-predicate v)
+             #:attr name #'ref.name
+             #:attr tail #'ref.tail))
+
+  (define-splicing-syntax-class :contract
+    (pattern (~seq e ...)
+             #:with c::contract-seq #'(e ...)
+             #:with () #'c.tail
+             #:attr name #'c.name
+             #:attr predicate #'c.predicate))
 
   (define (make-contracted-identifier id contract-stx)
     (rhombus-contracted
@@ -50,24 +63,14 @@
          (syntax-property (datum->syntax id
                                          (syntax-e id)
                                          stx)
-                          rhombus-contract-property
+                          dot-provider-syntax-property
                           contract-stx))
        (syntax-parse stx
          [_:identifier (get-id stx)]
          [(rator rand ...) (datum->syntax (quote-syntax here)
                                           (cons (get-id #'rator) #'(rand ...))
                                           stx
-                                          stx)]))))
-
-  (define (rhombus-syntax-local-contract e)
-    (cond
-      [(syntax-property e rhombus-contract-property)
-       => (lambda (contract-stx) contract-stx)]
-      [(identifier? e)
-       (define v (syntax-local-value* e rhombus-contracted?))
-       (and (rhombus-contracted? v)
-            (rhombus-contracted-contract-stx v))]
-      [else #f])))
+                                          stx)])))))
 
 (define-syntax ::
   (binding-infix-operator
@@ -76,7 +79,7 @@
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op t::contract . new-tail)
+       [(op . t::contract-seq)
         #:with left::binding-form form
         (values
          (cond
@@ -87,19 +90,19 @@
              #'left.arg-id
              #'just-check-predicate-matcher
              #'bind-contracted-identifier
-             #'(t
+             #'(t.name
                 t.predicate
                 left.arg-id))]
            [else (binding-form
                   #'left.arg-id
                   #'check-predicate-matcher
                   #'bind-nothing-new
-                  #'(t
+                  #'(t.name
                      t.predicate
                      left.matcher-id
                      left.binder-id
                      left.data))])
-         #'new-tail)]))
+         #'t.tail)]))
    'none))
 
 (define-syntax (check-predicate-matcher stx)

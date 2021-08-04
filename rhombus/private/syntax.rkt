@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     enforest/operator-parse
+                     "operator-parse.rkt"
                      "consistent.rkt"
                      "srcloc.rkt")
          (rename-in "quasiquote.rkt"
@@ -68,7 +68,7 @@
     #:datum-literals (op group)
     #:literals (?)
     (pattern (group (op ¿) _ _::operator . _))
-    (pattern (group ::operator . _)))
+    (pattern (group ::operator-or-identifier . _)))
 
   (define-splicing-syntax-class :operator-options
     #:datum-literals (op block group
@@ -145,7 +145,7 @@
     #:datum-literals (op parens group)
     #:literals (¿ ?)
     (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator . _)))))
-    (pattern (~seq (op ?) (parens (~and g (group ::operator . _))))))
+    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _))))))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -174,7 +174,7 @@
                                    (rhombus-expression (group (tag rhs ...))))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
-      [(group op-name::operator
+      [(group op-name::operator-or-identifier
               (op ¿) arg:identifier)
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
@@ -212,7 +212,7 @@
                                                  #'(tag rhs ...)))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
-      [(group op-name::operator
+      [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)

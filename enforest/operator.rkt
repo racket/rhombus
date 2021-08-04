@@ -1,7 +1,8 @@
 #lang racket/base
 (require racket/base
          syntax/stx
-         "private/transform.rkt")
+         "private/transform.rkt"
+         "syntax-local.rkt")
 
 ;; See "main.rkt" for general information about operators and parsing.
 ;;
@@ -128,8 +129,7 @@
 
 (define (lookup-prefix-implicit alone-name adj-context in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context alone-name))
-  (define v (syntax-local-value (in-space op-stx) (lambda () #f)))
-  (define op (operator-ref v))
+  (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
     (raise-syntax-error #f
                         (format (string-append
@@ -140,12 +140,11 @@
                                 alone-name
                                 operator-kind)
                         adj-context))
-  (values v op op-stx))
+  (values op op-stx))
 
 (define (lookup-infix-implicit adjacent-name adj-context in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context adjacent-name))
-  (define v (syntax-local-value (in-space op-stx) (lambda () #f)))
-  (define op (operator-ref v))
+  (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
     (raise-syntax-error #f
                         (format
@@ -157,7 +156,7 @@
                          adjacent-name
                          operator-kind)
                         adj-context))
-  (values v op op-stx))
+  (values op op-stx))
 
 (define (apply-prefix-direct-operator op form stx checker)
   (call-as-transformer

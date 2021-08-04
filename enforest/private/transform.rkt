@@ -32,5 +32,11 @@
 
 (define (check-transformer-result form tail proc)
   (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
-  (unless (stx-list? tail) (raise-result-error (proc-name proc) "stx-list?" tail))
+  ;; we'd like to check for a syntax list in `tail`, but that's not constant-time
+  (unless (or (pair? tail)
+              (null? tail)
+              (and (syntax? tail)
+                   (let ([e (syntax-e tail)])
+                     (or (pair? e) (null? e)))))
+    (raise-result-error (proc-name proc) "stx-list?" tail))
   (values form tail))

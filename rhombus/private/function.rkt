@@ -12,7 +12,7 @@
          "parse.rkt"
          "nested-bindings.rkt"
          (submod "struct.rkt" for-call)
-         (submod "contract.rkt" for-struct)
+         (submod "dot.rkt" for-dot-provider)
          (only-in "assign.rkt"
                   [= rhombus=]))
 
@@ -214,7 +214,7 @@
                               #'head))
      (define e-maybe-contract (if contract
                                   (syntax-property e
-                                                   rhombus-contract-property
+                                                   dot-provider-syntax-property
                                                    rator)
                                   e))
      (values e-maybe-contract

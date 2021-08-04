@@ -38,7 +38,8 @@
 
 (begin-for-syntax
   (struct mutable-variable (id)
-    #:property prop:rename-transformer (struct-field-index id)))
+    #:property prop:rename-transformer (struct-field-index id))
+  (define (mutable-variable-ref v) (and (mutable-variable? v) v)))
 
 (define-syntax rhombus=
   (expression-infix-operator
@@ -47,7 +48,7 @@
    'automatic
    (lambda (form1 form2 self-stx)
      (define mv (and (identifier? form1)
-                     (syntax-local-value* form1 mutable-variable?)))
+                     (syntax-local-value* form1 mutable-variable-ref)))
      (unless mv
        (raise-syntax-error #f
                            "left-hand argument is not a mutable identifier"
