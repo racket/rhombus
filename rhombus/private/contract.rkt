@@ -7,6 +7,7 @@
                      "srcloc.rkt")
          "expression.rkt"
          "binding.rkt"
+         "expression+binding.rkt"
          (submod "dot.rkt" for-dot-provider))
 
 (provide ::
@@ -66,10 +67,24 @@
              #:attr predicate #'c.predicate)))
 
 (define-syntax ::
-  (binding-infix-operator
+  (make-expression+binding-infix-operator
    #'::
    '((default . weaker))
    'macro
+   'none
+   ;; expression
+   (lambda (form tail)
+     (syntax-parse tail
+       [(op . t::contract-seq)
+        (values
+         (wrap-dot-provider
+          #`(let ([val #,form])
+              (if (t.predicate val)
+                  val
+                  (raise-contract-failure val 't.name)))
+          #'t.name)
+         #'t.tail)]))
+   ;; binding
    (lambda (form tail)
      (syntax-parse tail
        [(op . t::contract-seq)
@@ -95,8 +110,7 @@
                      left.matcher-id
                      left.binder-id
                      left.data))])
-         #'t.tail)]))
-   'none))
+         #'t.tail)]))))
 
 (define-syntax (check-predicate-matcher stx)
   (syntax-parse stx
@@ -155,3 +169,11 @@
        => (lambda (p)
             (rhombus-contracted-contract-stx p))]
       [else #f])))
+
+(define (raise-contract-failure val contract)
+  (error '::
+         (string-append "value does not match contract\n"
+                        "  argument: ~v\n"
+                        "  contract: ~s")
+         val
+         contract))

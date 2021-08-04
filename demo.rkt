@@ -289,6 +289,9 @@ l1.p2.x
 IPosn(1, 2).x
 
 ILine.p1(l1).x
+(l1.p1 :: IPosn).x
+
+fun (p): (p :: IPosn).x
 
 {
   val ILine(p1, p2): l1
