@@ -133,7 +133,7 @@
             (raise-syntax-error #f
                                 "cannot find field in structure"
                                 field-id))
-          accessor-id)]
+          (relocate (span-srcloc form1 field-id) accessor-id))]
     [else
      ;; dot is used for an instance of the structure type
      (define contract-id (struct-dot-provider-contract-id p))

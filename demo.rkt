@@ -287,3 +287,29 @@ def l1: ILine(IPosn(1, 2), IPosn(3, 4))
 l1.p2.x
 
 IPosn(1, 2).x
+
+// ILine.p1(l1).x
+
+// function result contracts
+
+fun add1(x) :: Integer:
+  match x
+   | n :: Integer : x + 1
+   | 'else': x
+
+add1(100)
+// add1("oops")
+
+fun
+ | add_two(x) :: Number:
+     x + 2.0
+ | add_two(x, y) :: String:
+     x +$ " and " +$ y
+
+add_two(7) == 9.0
+add_two(6, 7) === "6 and 7"
+
+{
+  val f: fun (x) :: Integer: x
+  f(10)
+}

@@ -35,6 +35,7 @@
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
        [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
+                                                     ret::ret-contract
                                                      (~and rhs (block body ...))))
                                        ...+))
         (define ids (syntax->list #'(id ...)))
@@ -43,14 +44,24 @@
         (list
          (wrap-definition
           #`(define #,the-id
-              #,(build-case-function the-id #'((arg ...) ...) #'((arg.parsed ...) ...) #'(rhs ...) #'form-id #'alts-tag))))]
+              #,(build-case-function the-id
+                                     #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                     #'(ret.predicate ...)
+                                     #'(rhs ...)
+                                     #'form-id #'alts-tag))))]
        [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
+                 ret::ret-contract
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (list
          (wrap-definition
           #`(define id
-              #,(build-function #'id #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...) #'rhs #'form-id #'parens-tag))))]
+              #,(build-function #'id
+                                #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                                #'ret.predicate
+                                #'rhs
+                                #'form-id
+                                #'parens-tag))))]
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
         (build-values-definitions #'form-id #'(g ...) #'rhs
                                   wrap-definition)]

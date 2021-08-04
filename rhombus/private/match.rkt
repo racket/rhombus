@@ -13,7 +13,10 @@
   (define-syntax-class :pattern-clause
     #:datum-literals (block group)
     (pattern (block (group bind ...
-                           (~and rhs (block . _)))))))
+                           (~and rhs (block . _))))))
+
+  (define (falses l-stx)
+    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx))))))
 
 (define-syntax match
   (expression-transformer
@@ -36,6 +39,7 @@
                                                          #'else-matcher
                                                          #'else-binder
                                                          #'(#t ignored))))
+                                   (falses #'(b ...))
                                    #'(clause.rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
@@ -54,6 +58,7 @@
                                                          #'else-matcher
                                                          #'else-binder
                                                          #'(#f unmatched))))
+                                   (falses #'(b ...))
                                    #`(rhs ... (parsed
                                                (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag)

@@ -59,12 +59,12 @@
     (rhombus-contracted
      contract-stx
      (lambda (stx)
-       (define (wrap id)
-         (wrap-dot-provider id contract-stx))
+       (define (wrap stx)
+         (wrap-dot-provider (relocate stx id) contract-stx))
        (syntax-parse stx
-         [_:identifier (wrap id)]
+         [_:identifier (wrap stx)]
          [(rator rand ...) (datum->syntax (quote-syntax here)
-                                          (cons (wrap id) #'(rand ...))
+                                          (cons (wrap #'rator) #'(rand ...))
                                           stx
                                           stx)])))))
 
