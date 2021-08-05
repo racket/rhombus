@@ -2,7 +2,7 @@
 (require syntax/parse
          "syntax-local.rkt"
          "private/transform.rkt"
-         "hierarchical-ref-parse.rkt")
+         "name-ref-parse.rkt")
 
 ;; Degenerate variant of enforestation with only prefix operators
 
@@ -17,11 +17,11 @@
 (define-syntax-rule (define-transform-class
                       :form
                       form-kind-str
-                      hierarchy-op transformer-ref
+                      name-path-op transformer-ref
                       check-result)
   (begin
     (define-syntax-class :form
-      (pattern ((~datum group) . (~var ref (:hierarchical-ref-seq values hierarchy-op)))
+      (pattern ((~datum group) . (~var ref (:name-ref-seq values name-path-op)))
                #:do [(define head-id (transform-in #'ref.name))]
                #:do [(define t (syntax-local-value* head-id transformer-ref))]
                #:when t

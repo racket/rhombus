@@ -6,8 +6,8 @@
          "private/transform.rkt"
          "syntax-local.rkt"
          "ref-parse.rkt"
-         "lexicon.rkt"
-         (submod "lexicon.rkt" for-parse))
+         "name-root.rkt"
+         (submod "name-root.rkt" for-parse))
 
 (provide define-enforest)
 
@@ -72,7 +72,7 @@
                       :form :prefix-op+form+tail :infix-op+form+tail
                       form-kind-str operator-kind-str
                       in-space
-                      hierarchy-op prefix-operator-ref infix-operator-ref
+                      name-path-op prefix-operator-ref infix-operator-ref
                       check-result
                       make-identifier-form)
   (begin
@@ -99,7 +99,7 @@
 
     (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                               in-space
-                                              hierarchy-op prefix-operator-ref infix-operator-ref
+                                              name-path-op prefix-operator-ref infix-operator-ref
                                               check-result
                                               make-identifier-form))
     (define enforest (make-enforest enforest-step))))
@@ -121,7 +121,7 @@
 
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space
-                            hierarchy-op prefix-operator-ref infix-operator-ref
+                            name-path-op prefix-operator-ref infix-operator-ref
                             check-result
                             make-identifier-form)
   (define (raise-unbound-operator op-stx)
@@ -138,15 +138,15 @@
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
-           (define hier-ref? (starts-wth-hierarchy-op? #'tail))
+           (define name-path? (starts-wth-name-path-op? #'tail))
            (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (and hier-ref?
-                                                               (lexicon-ref v))
+                                          (lambda (v) (or (and name-path?
+                                                               (name-root-ref v))
                                                           (prefix-operator-ref v)
                                                           (infix-operator-ref v)))))
            (cond
-             [(lexicon? v)
-              (define-values (head tail) (apply-lexicon head-id v stxes))
+             [(name-root? v)
+              (define-values (head tail) (apply-name-root head-id v stxes))
               (enforest-step (cons head tail) current-op current-op-stx)]
              [(prefix-operator? v)
               (dispatch-prefix-operator v #'tail stxes head-id)]
@@ -199,15 +199,15 @@
           [() (values init-form stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
-           (define hier-ref? (starts-wth-hierarchy-op? #'tail))
+           (define name-path? (starts-wth-name-path-op? #'tail))
            (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (and hier-ref?
-                                                               (lexicon-ref v))
+                                          (lambda (v) (or (and name-path?
+                                                               (name-root-ref v))
                                                           (infix-operator-ref v)
                                                           (prefix-operator-ref v)))))
            (cond
-             [(lexicon? v)
-              (define-values (head tail) (apply-lexicon head-id v stxes))
+             [(name-root? v)
+              (define-values (head tail) (apply-name-root head-id v stxes))
               (enforest-step init-form (cons head tail) current-op current-op-stx)]
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
@@ -289,9 +289,9 @@
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
           (dispatch-infix-operator op stxes synthetic-stxes op-stx)))]))
 
-  (define (starts-wth-hierarchy-op? tail)
+  (define (starts-wth-name-path-op? tail)
     (syntax-parse tail
-      [(((~datum op) sep) . _) (eq? (syntax-e #'sep) hierarchy-op)]
+      [(((~datum op) sep) . _) (eq? (syntax-e #'sep) name-path-op)]
       [_ #f]))
 
   ;; improves errors when nothin appears after an operator:

@@ -4,7 +4,7 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "tail.rkt")
-         "lexicon.rkt"
+         "name-root.rkt"
          "syntax.rkt"
          "expression.rkt"
          "parse.rkt")
@@ -16,8 +16,8 @@
                        make-expression-prefix-operator)))
 
 (define-syntax expr
-  (simple-lexicon operator
-                  macro))
+  (simple-name-root operator
+                    macro))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic

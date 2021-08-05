@@ -5,9 +5,9 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
-                     enforest/lexicon
+                     enforest/name-root
                      "srcloc.rkt"
-                     "hierarchy-op.rkt")
+                     "name-path-op.rkt")
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -44,7 +44,7 @@
     :import :import-prefix-op+form+tail :import-infix-op+form+tail
     "import" "import operator"
     in-import-space
-    hierarchy-op import-prefix-operator-ref import-infix-operator-ref
+    name-path-op import-prefix-operator-ref import-infix-operator-ref
     check-import-result
     make-identifier-import)
 
@@ -104,10 +104,10 @@
                                             [parsed (in-list parseds)])
                                    (if (syntax-e prefix)
                                        #`(define-syntax #,prefix
-                                           (lexicon (lambda (tail)
-                                                      (parse-import-dot
-                                                       (quote-syntax #,(datum->syntax parsed 'ctx))
-                                                       tail))))
+                                           (name-root (lambda (tail)
+                                                        (parse-import-dot
+                                                         (quote-syntax #,(datum->syntax parsed 'ctx))
+                                                         tail))))
                                        #'(begin)))])
           #`((require r-parsed ...)
              def ...))]))))

@@ -5,7 +5,7 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "tail.rkt")
-         "lexicon.rkt"
+         "name-root.rkt"
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
@@ -23,10 +23,10 @@
                      pack_binding))
 
 (define-syntax bind
-  (simple-lexicon operator
-                  macro
-                  matcher
-                  binder))
+  (simple-name-root operator
+                    macro
+                    matcher
+                    binder))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic

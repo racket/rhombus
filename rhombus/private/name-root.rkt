@@ -1,18 +1,18 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     enforest/lexicon
+                     enforest/name-root
                      "srcloc.rkt")
          "dot.rkt")
 
-(provide (for-syntax simple-lexicon))
+(provide (for-syntax simple-name-root))
 
 (begin-for-syntax
-  (define-syntax-rule (simple-lexicon id ...)
-    (make-simple-lexicon (make-hasheq (list (cons 'id (quote-syntax id)) ...))))
+  (define-syntax-rule (simple-name-root id ...)
+    (make-simple-name-root (make-hasheq (list (cons 'id (quote-syntax id)) ...))))
   
-  (define (make-simple-lexicon ht)
-    (lexicon
+  (define (make-simple-name-root ht)
+    (name-root
      (lambda (stxes)
        (syntax-parse stxes
          #:datum-literals (op)
