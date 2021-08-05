@@ -11,22 +11,19 @@
                paren-immed?    ; immediately in `()` or `[]`?
                bar-closes?
                indent-ok?      ; immediately after `:` or `|`?
-               delta           ; column delta created by `\`, applied to `line` continuation
-               commenting))    ; pending `#//` token
+               delta))         ; column delta created by `\`, applied to `line` continuation
 
 (define (make-state #:line line
                     #:column column
                     #:paren-immed? [paren-immed? #f]
                     #:bar-closes? [bar-closes? #f]
-                    #:delta delta
-                    #:commenting [commenting #f])
+                    #:delta delta)
   (state line
          column
          paren-immed?
          bar-closes?
          #f ; just-saw-colon?
-         delta
-         commenting))
+         delta))
 
 ;; Parsing state for group sequences: top level, in opener-closer, or after `:`
 (struct group-state (closer         ; expected closer: a string, EOF, or column
@@ -38,8 +35,7 @@
                      last-line      ; most recently consumed line
                      delta          ; column delta created by `\`, applies to `last-line` continuation
                      commenting     ; pending group-level `#//` token; exclusive with `tail-commenting`
-                     tail-commenting ; pending group-level `#//` at end (so far)
-                     term-commenting)) ; cons of token + column, applies within next group
+                     tail-commenting)) ; pending group-level `#//` at end (so far)
 
 (define (make-group-state #:closer closer
                           #:paren-immed? [paren-immed? #f]
@@ -59,8 +55,7 @@
                last-line
                delta
                #f
-               commenting
-               #f))
+               commenting))
 
 (define closer-column? number?)
 
@@ -101,12 +96,9 @@
 ;;          line of last consumed (possibly closer)
 ;;          delta of last consumed
 ;;          last token consumed (if a closer)
+;;          pending group-comment token from end
 (define (parse-groups l sg)
-  (define (check-no-term-commenting)
-    (when (group-state-term-commenting sg)
-      (fail-no-comment-term (car (group-state-term-commenting sg)))))
   (define (check-no-commenting #:tail-ok? [tail-ok? #f])
-    (check-no-term-commenting)
     (define commenting (or (group-state-commenting sg)
                            (and (not tail-ok?) (group-state-tail-commenting sg))))
     (when commenting
@@ -125,7 +117,7 @@
      (define t (car l))
      (define column (+ (token-column t) (group-state-delta sg)))
      (cond
-       [(eq? (token-name t) 'term-comment)
+       [(eq? (token-name t) 'group-comment)
         ;; column doesn't matter if it's on its own line
         (define-values (rest-l last-line delta) (next-of (cdr l) (token-line t) (group-state-delta sg)))
         (cond
@@ -135,18 +127,9 @@
            (parse-groups rest-l (struct-copy group-state sg
                                              [last-line last-line]
                                              [delta delta]
-                                             [tail-commenting t]
-                                             [term-commenting #f]))]
+                                             [tail-commenting t]))]
           [else
-           ;; structure comment applies to terms of the next group
-           (check-no-term-commenting)
-           (define column (+ (token-column t) (group-state-delta sg)))
-           (parse-groups rest-l (struct-copy group-state sg
-                                             [last-line last-line]
-                                             [delta delta]
-                                             [commenting (group-state-tail-commenting sg)]
-                                             [tail-commenting #f]
-                                             [term-commenting (cons t column)]))])]
+           (fail t "misplaced group comment")])]
        [(and (closer-column? closer)
              (column . < . closer))
         ;; Next token is less indented than this group sequence
@@ -187,20 +170,17 @@
                                 (if (group-state-paren-immed? sg)
                                     ""
                                     " (not immdiately within parentheses or brackets)"))))
-              (check-no-term-commenting)
               (define-values (rest-l last-line delta) (next-of (cdr l) (token-line t) (group-state-delta sg)))
               ;; In top level or immediately in opener-closer: 
               (parse-groups (cdr l) (struct-copy group-state sg
                                                  [check-column? (next-line? rest-l last-line)]
                                                  [last-line last-line]
                                                  [comma-time? #f]
-                                                 [delta delta]
-                                                 [term-commenting #f]))])]
+                                                 [delta delta]))])]
           [(semicolon-operator)
            (when (group-state-paren-immed? sg)
              (fail t (format "misplaced semicolon (~a)"
                              "immdiately within parentheses or brackets")))
-           (check-no-term-commenting)
            (define-values (rest-l last-line delta) (next-of (cdr l) (token-line t) (group-state-delta sg)))
            (parse-groups rest-l (struct-copy group-state sg
                                              [check-column? (next-line? rest-l last-line)]
@@ -214,7 +194,6 @@
                              "within parentheses or braces")))
            (case (token-name t)
              [(bar-operator)
-              (check-no-term-commenting)
               (cond
                 [(group-state-bar-closes? sg)
                  (done #f)]
@@ -246,8 +225,7 @@
                                                      [delta group-end-delta]
                                                      [comma-time? (group-state-paren-immed? sg)]
                                                      [commenting #f]
-                                                     [tail-commenting block-tail-commenting]
-                                                     [term-commenting #f])))
+                                                     [tail-commenting block-tail-commenting])))
                  (values (if commenting
                              gs
                              (cons (list 'group
@@ -262,9 +240,7 @@
                          tail-commenting)])]
              [else
               ;; Parse one group, then recur to continue the sequence:
-              (define column (if (group-state-term-commenting sg)
-                                 (cdr (group-state-term-commenting sg))
-                                 (+ (token-column t) (group-state-delta sg))))
+              (define column (+ (token-column t) (group-state-delta sg)))
               (define line (token-line t))
               (when (group-state-check-column? sg)
                 (unless (= column (group-state-column sg))
@@ -274,9 +250,7 @@
                                            #:line line
                                            #:column column
                                            #:bar-closes? (group-state-bar-closes? sg)
-                                           #:delta (group-state-delta sg)
-                                           #:commenting (and (group-state-term-commenting sg)
-                                                             (car (group-state-term-commenting sg))))))
+                                           #:delta (group-state-delta sg))))
               (define commenting (or (group-state-commenting sg)
                                      (group-state-tail-commenting sg)))
               (define-values (gs rest-rest-l end-line end-delta end-t tail-commenting)
@@ -289,8 +263,7 @@
                                                   [comma-time? (group-state-paren-immed? sg)]
                                                   [delta group-delta]
                                                   [commenting #f]
-                                                  [tail-commenting group-tail-commenting]
-                                                  [term-commenting #f])))
+                                                  [tail-commenting group-tail-commenting])))
               (values (if (or commenting
                               (null? g)) ; can happen due to a term comment
                           gs
@@ -307,12 +280,9 @@
 ;;          remaining tokens after group
 ;;          line of last consumed
 ;;          delta at last consumed
+;;          pending group-comment token from end
 (define (parse-group l s)
-  (define (check-no-commenting commenting)
-    (when commenting
-      (fail-no-comment-term commenting)))
   (define (done)
-    (check-no-commenting (state-commenting s))
     (values null l (state-line s) (state-delta s) #f))
   (cond
     [(null? l) (done)]
@@ -321,17 +291,12 @@
      (define line (token-line t))
      ;; Consume a token
      (define (keep delta)
-       (define commenting (state-commenting s))
        (define-values (g rest-l end-line end-delta tail-commenting)
          (parse-group (cdr l) (struct-copy state s
                                            [line line]
                                            [indent-ok? #f]
-                                           [delta delta]
-                                           [commenting #f])))
-       (define new-g (if commenting
-                         g
-                         (cons (token-value t) g)))
-       (values new-g rest-l end-line end-delta tail-commenting))
+                                           [delta delta])))
+       (values (cons (token-value t) g) rest-l end-line end-delta tail-commenting))
      ;; Dispatch
      (cond
        [(line . > . (state-line s))
@@ -344,7 +309,7 @@
           [else
            ;; consume any structure comments that are on their own line:
            (define-values (group-commenting use-t use-l last-line delta)
-             (get-own-line-term-comment t l line (state-delta s)))
+             (get-own-line-group-comment t l line (state-delta s)))
            (define column (token-column use-t))
            (cond
              [(column . > . (state-column s))
@@ -361,11 +326,9 @@
                                                 #:last-line (state-line s)
                                                 #:delta 0
                                                 #:commenting group-commenting)))
-              (values (if (state-commenting s)
-                          null
-                          (list (add-span-srcloc
-                                 use-t #f
-                                 (tag-as-block indent-g))))
+              (values (list (add-span-srcloc
+                             use-t #f
+                             (tag-as-block indent-g)))
                       rest-l
                       end-line
                       end-delta
@@ -390,20 +353,17 @@
            (keep (state-delta s))]
           [(block-operator)
            (parse-block t l
-                        #:commenting (state-commenting s)
                         #:closer (column-half-next (state-column s))
                         #:delta (state-delta s))]
           [(bar-operator)
            (cond
              [(state-bar-closes? s)
-              ;; `#//` just before a closing `|` is allowed and comments the `|`
-              (values null l (state-line s) (state-delta s) (state-commenting s))]
+              (done)]
              [else
               ;; Implicit `:` before this inline `|`. The nested loop
-              ;; here implements that `:`. Any pending structure comments
-              ;; drop `|`s.
+              ;; here implements that `:`
               (define bar-column (+ (token-column t) (state-delta s)))
-              (let loop ([prev-accum null] [l l] [commenting (state-commenting s)])
+              (let loop ([prev-accum null] [l l] [group-commenting #f])
                 (define t (car l))
                 (define-values (new-g rest-l end-line end-delta tail-commenting)
                   (case (token-name t)
@@ -428,7 +388,7 @@
                                                    [column bar-column])))
                      (values (cons 'group g)
                              rest-l end-line end-delta tail-commenting)]))
-                (define accum (if commenting
+                (define accum (if group-commenting
                                   prev-accum
                                   (cons new-g prev-accum)))
                 ;; If next is `|`, absorb it into the implicit block
@@ -484,16 +444,13 @@
              (parse-group rest-l (struct-copy state s
                                               [line close-line]
                                               [delta close-delta]
-                                              [indent-ok? #f]
-                                              [commenting #f])))
-           (values (if (state-commenting s)
-                       g
-                       (cons (add-span-srcloc
-                              t end-t
-                              (if (eq? tag 'block)
-                                  (tag-as-block gs)
-                                  (cons tag (bars-insert-alts gs))))
-                             g))
+                                              [indent-ok? #f])))
+           (values (cons (add-span-srcloc
+                          t end-t
+                          (if (eq? tag 'block)
+                              (tag-as-block gs)
+                              (cons tag (bars-insert-alts gs))))
+                         g)
                    rest-rest-l
                    end-line
                    end-delta
@@ -503,16 +460,12 @@
            (parse-group next-l (struct-copy state s
                                             [line line]
                                             [delta delta]))]
-          [(term-comment)
-           (check-no-commenting (state-commenting s))
-           (parse-group (cdr l) (struct-copy state s
-                                             [indent-ok? #f]
-                                             [commenting t]))]
+          [(group-comment)
+           (fail t "misplaced group comment")]
           [else
            (error "unexpected" t)])])]))
 
 (define (parse-block block-t l
-                     #:commenting [commenting #f]
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:delta in-delta)
@@ -523,7 +476,7 @@
     [(pair? next-l)
      (define next-in-t (car next-l))
      (define-values (group-commenting next-t next-next-l last-line next-delta)
-       (get-own-line-term-comment next-in-t next-l (token-line next-in-t) delta))
+       (get-own-line-group-comment next-in-t next-l (token-line next-in-t) delta))
      (define-values (indent-gs rest-l end-line end-delta end-t tail-commenting)
        (parse-groups next-next-l
                      (make-group-state #:closer closer
@@ -532,22 +485,18 @@
                                        #:bar-closes? bar-closes?
                                        #:delta next-delta
                                        #:commenting group-commenting)))
-     (values (if commenting
-                 null
-                 (or (extract-one-block indent-gs)
-                     (list (add-span-srcloc
-                            t end-t
-                            (tag-as-block indent-gs)))))
+     (values (or (extract-one-block indent-gs)
+                 (list (add-span-srcloc
+                        t end-t
+                        (tag-as-block indent-gs))))
              rest-l
              end-line
              end-delta
              tail-commenting)]
     [else
-     (values (if commenting
-                 null
-                 (list (add-span-srcloc
-                        block-t #f
-                        (tag-as-block null))))
+     (values (list (add-span-srcloc
+                    block-t #f
+                    (tag-as-block null)))
              next-l
              line
              delta
@@ -722,10 +671,10 @@
                     0))])]))
 
 ;; t is at the start of l on input and output
-(define (get-own-line-term-comment t l line delta)
+(define (get-own-line-group-comment t l line delta)
   (let loop ([commenting #f] [t t] [l (cdr l)] [line line] [delta delta])
     (case (token-name t)
-      [(term-comment)
+      [(group-comment)
        (define-values (next-l last-line next-delta) (next-of l line delta))
        (cond
          [(null? next-l) (fail-no-comment-group t)]
@@ -741,8 +690,6 @@
   (and (pair? l)
        ((token-line (car l)) . > . last-line)))
 
-(define (fail-no-comment-term t)
-  (fail t "no term within group for term comment"))
 (define (fail-no-comment-group t)
   (fail t "no group for term comment"))
 

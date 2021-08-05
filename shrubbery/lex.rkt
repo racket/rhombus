@@ -267,7 +267,7 @@
               'initial))]
    ["/*" (read-nested-comment 1 start-pos input-port)]
    ["#//"
-    (ret 'term-comment lexeme 'comment #f start-pos end-pos 'initial)]
+    (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
    [(:: (:or "#lang " "#!")
         (:or langchar
              (:: langchar (:* (:or langchar "/")) langchar)))
