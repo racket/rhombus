@@ -31,16 +31,20 @@
      (define delta (or (line-delta t start #:unless-empty? #t) 0))
      (cond
        [(eqv? delta 0)
+        (define (like-enclosing #:as-bar? [as-bar? #f])
+          (indent-like-enclosing-group t start current-tab
+                                       #:multi? multi?
+                                       #:as-bar? as-bar?))
         (case (send t classify-position (+ start current-tab))
           [(parenthesis)
            (indent-like-parenthesis t start current-tab)]
           [(bar-operator)
-           (indent-like-enclosing-group t start current-tab
-                                        #:multi? multi?
-                                        #:as-bar? #t)]
+           (like-enclosing #:as-bar? #t)]
+          [(comment)
+           (like-enclosing #:as-bar? (and (is-term-comment? t (+ start current-tab))
+                                          (bar-after-term-comment? t (+ start current-tab) start)))]
           [else
-           (indent-like-enclosing-group t start current-tab
-                                        #:multi? multi?)])]
+           (like-enclosing)])]
        [else
         ;; don't change indentation for a continuation line
         current-tab])]))
@@ -409,6 +413,20 @@
           (define paren (send t get-text (sub1 e) e))
           (equal? paren "{")]
          [else #f])]
+      [else #f])))
+
+(define (is-term-comment? t pos)
+  (define-values (s e) (send t get-token-range pos))
+  (and (= e (+ s 3))
+       (equal? "#//" (send t get-text s e))))
+
+(define (bar-after-term-comment? t pos at-start)
+  (let loop ([pos pos])
+    (define-values (s e) (send t get-token-range pos))
+    (define category (send t classify-position s))
+    (case category
+      [(white-space comment) (loop e)]
+      [(bar-operator) (> (line-start t pos) at-start)]
       [else #f])))
 
 (define (get-non-empty-lines t s-line e-line)
