@@ -64,6 +64,7 @@
                                                      ""))
                      r
                      r)]
+      [((~literal rename-in) mp . _) (extract-prefix #'mp)]
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              r)]))
