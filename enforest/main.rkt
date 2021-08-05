@@ -138,7 +138,7 @@
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
-           (define name-path? (starts-wth-name-path-op? #'tail))
+           (define name-path? (starts-like-name-path? #'head #'tail))
            (define v (syntax-local-value* head-id
                                           (lambda (v) (or (and name-path?
                                                                (name-root-ref v))
@@ -199,7 +199,7 @@
           [() (values init-form stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
-           (define name-path? (starts-wth-name-path-op? #'tail))
+           (define name-path? (starts-like-name-path? #'head #'tail))
            (define v (syntax-local-value* head-id
                                           (lambda (v) (or (and name-path?
                                                                (name-root-ref v))
@@ -289,10 +289,11 @@
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
           (dispatch-infix-operator op stxes synthetic-stxes op-stx)))]))
 
-  (define (starts-wth-name-path-op? tail)
-    (syntax-parse tail
-      [(((~datum op) sep) . _) (eq? (syntax-e #'sep) name-path-op)]
-      [_ #f]))
+  (define (starts-like-name-path? head tail)
+    (and (identifier? head)
+         (syntax-parse tail
+           [(((~datum op) sep) . _) (eq? (syntax-e #'sep) name-path-op)]
+           [_ #f])))
 
   ;; improves errors when nothin appears after an operator:
   (define (check-empty op-stx tail form-kind-str)
