@@ -24,5 +24,12 @@
                                 (format "not provided by ~a"
                                         (syntax-e #'form-id))
                                 #'key))
-          (values (relocate #'key id) #'tail)])))))
-
+          (values (relocate #'key id) #'tail)]
+         [(form-id (op (~and dot |.|)) . tail)
+          (raise-syntax-error #f
+                              "expected an identifier after dot"
+                              #'dot)]
+         [(form-id . tail)
+          (raise-syntax-error #f
+                              "expected a dot and then an identifier"
+                              #'form-id)])))))

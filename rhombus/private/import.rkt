@@ -128,7 +128,15 @@
     [(_ (op |.|) field:identifier . tail)
      (values (relocate #'field (get "identifier" #'field)) #'tail)]
     [(_ (op |.|) (parens (group (~and target (op field))))  . tail)
-     (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]))
+     (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]
+    [(form-id (op (~and dot |.|)) . tail)
+     (raise-syntax-error #f
+                         "expected an identifier or parentheses after dot"
+                         #'dot)]
+    [(form-id . tail)
+     (raise-syntax-error #f
+                         "expected a dot after import name"
+                         #'form-id)]))
   
 (define-syntax (define-import-syntax stx)
   (syntax-parse stx
