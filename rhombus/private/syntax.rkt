@@ -67,7 +67,7 @@
   (define-syntax-class :operator-definition-group
     #:datum-literals (op group)
     #:literals (?)
-    (pattern (group (op ¿) _ _::operator . _))
+    (pattern (group (op ¿) _ _::operator-or-identifier . _))
     (pattern (group ::operator-or-identifier . _)))
 
   (define-splicing-syntax-class :operator-options
@@ -144,7 +144,7 @@
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
     #:literals (¿ ?)
-    (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator . _)))))
+    (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator-or-identifier . _)))))
     (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _))))))
 
   (define (convert-prec prec)
@@ -162,7 +162,7 @@
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
       [(group (op ¿) left:identifier
-              op-name::operator
+              op-name::operator-or-identifier
               (op ¿) right:identifier)
        (syntax-parse rhs
          [((~and tag block) opt::self-infix-operator-options rhs ...)
@@ -199,7 +199,7 @@
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
       [(group (op ¿) left:identifier
-              op-name::operator
+              op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::self-infix-operator-options rhs ...)

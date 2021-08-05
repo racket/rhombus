@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     enforest/operator-parse
+                     "operator-parse.rkt"
                      "consistent.rkt"
                      "srcloc.rkt")
          "expression.rkt"
@@ -19,7 +19,7 @@
 (begin-for-syntax
   
   (define-splicing-syntax-class :prefix-case
-    (pattern (~seq (parens (~and g (group op-name::operator arg)))
+    (pattern (~seq (parens (~and g (group op-name::operator-or-identifier arg)))
                    ((~and tag block) options::prefix-operator-options
                                      body ...))
              #:attr name #'op-name.name
@@ -27,7 +27,7 @@
              #:attr rhs #'(tag body ...)))
 
   (define-splicing-syntax-class :infix-case
-    (pattern (~seq (parens (~and g (group left op-name::operator right)))
+    (pattern (~seq (parens (~and g (group left op-name::operator-or-identifier right)))
                    ((~and tag block) options::infix-operator-options
                                      body ...))
              #:attr name #'op-name.name
