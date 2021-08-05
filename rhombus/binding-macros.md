@@ -43,10 +43,10 @@ which makes it four parts:
  * an identifier that will be bound to the binding input value;
 
  * the name of a compile-time transformer function that is bound with
-   `binding_match_macro`; and
+   `bind.matcher`; and
 
  * the name of a compile-time transformer function that is bound with
-   `binding_bind_macro`; and
+   `bind.binder`; and
 
  * data as a syntax object to pass to each of the transformer
    functions (effectively: the fused closure for those two functions).
@@ -67,7 +67,7 @@ Here's a use of the low-level protocol to implement a `fruit` pattern,
 which matches only things that are fruits according to `is_fruit`:
 
 ```
-binding_macro ?(fruit(¿id) ¿tail ...):
+bind.macro ?(fruit(¿id) ¿tail ...):
   values(pack_binding(?(¿id,
                         build_fruit_match,
                         build_fruit_bind,
@@ -75,14 +75,14 @@ binding_macro ?(fruit(¿id) ¿tail ...):
                         ¿id)),
          tail)
 
-binding_match_macro ?(build_fruit_match(¿arg, ¿id, ¿IF, ¿success, ¿failure)):
+bind.matcher ?(build_fruit_match(¿arg, ¿id, ¿IF, ¿success, ¿failure)):
   ?{
     ¿IF is_fruit(¿arg)
     | ¿success
     | ¿failure
   }
 
-binding_bind_macro ?(build_fruit_bind(¿arg, ¿id)):
+bind.binder ?(build_fruit_bind(¿arg, ¿id)):
   ?{
     define ¿id: ¿arg
   }
@@ -95,7 +95,7 @@ snack // prints "apple"
 
 The `fruit` binding form assumes (without directly checking) that its
 argument is an identifier. Binding forms normally should accomodate
-other, nested binding forms, instead. A `binding_operator` transformer
+other, nested binding forms, instead. A `bind.operator` transformer
 receives already-parsed sub-bindings as arguments, and the transformer
 can use `unpack_binding` to extract the three parts of a parsed
 binding.
@@ -111,7 +111,7 @@ extending the `success` form. A builder must be used in tail position,
 and it's `success` position is a tail position.
 
 ```
-binding_operator ?(¿a <&> ¿b):
+bind.operator ?(¿a <&> ¿b):
   match unpack_binding(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        pack_binding(?(¿a_id,
@@ -119,8 +119,8 @@ binding_operator ?(¿a <&> ¿b):
                       build_anding_bind,
                       (¿a, ¿b)))
 
-binding_match_macro ?(build_anding_match(¿in_id, (¿a, ¿b),
-                                         ¿IF, ¿success, ¿failure)):
+bind.matcher ?(build_anding_match(¿in_id, (¿a, ¿b),
+                                  ¿IF, ¿success, ¿failure)):
    match unpack_binding(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        match unpack_binding(b)
@@ -131,7 +131,7 @@ binding_match_macro ?(build_anding_match(¿in_id, (¿a, ¿b),
                          ¿failure)
             }
 
-binding_bind_macro ?(build_anding_bind(¿in_id, (¿a, ¿b))):
+bind.binder ?(build_anding_bind(¿in_id, (¿a, ¿b))):
   match unpack_binding(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
        match unpack_binding(b)

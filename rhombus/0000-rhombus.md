@@ -1065,14 +1065,14 @@ For example, here's a `thunk` macro that expects a block and wraps as
 a zero-argument function:
 
 ```
-expression_macro ?(thunk { ¿body ... } ¿tail ...):
-  vals(?(fun () { ¿body ... } ), tail)
+expr.macro ?(thunk { ¿body ... } ¿tail ...):
+  values(?(fun () { ¿body ... } ), tail)
 
 thunk { 1 + "oops" } // prints a function
 thunk { 1 + 3 } ()   // prints 4
 ```
 
-The `expression_macro` form expects a `?` and then parentheses to
+The `expr.macro` form expects a `?` and then parentheses to
 create a pattern that matches a sequence of terms. Either the first or
 second term within the pattern is an _unescaped_ identifier or
 operator to be defined; conceptually, it's unescaped because the macro
@@ -1096,8 +1096,8 @@ postfix `!` might be defined (shadowing the normal `!` for “not”) like
 this:
 
 ```
-expression_macro ?(¿a ! ¿tail ...):
-  vals(?(factorial(¿a)), tail)
+expr.macro ?(¿a ! ¿tail ...):
+  values(?(factorial(¿a)), tail)
 
 fun
  | factorial(0): 1
@@ -1119,21 +1119,21 @@ term, which would enable reporting a specific error if a parsed
 expression is put into a non-expression context. Probably it should do
 that._
 
-The `def` form turns itself into `expression_macro` when it is
+The `def` form turns itself into `expr.macro` when it is
 followed by a `?` pattern that would be suitable for
-`expression_macro`.
+`expr.macro`.
 
-Besides `expression_macro`, there is also `expression_operator`. The
-`expression_operator` form provides the same parsing benefits for a
-right-hand expression argument as `expression_macro` provides
+Besides `expr.macro`, there is also `expr.operator`. The
+`expr.operator` form provides the same parsing benefits for a
+right-hand expression argument as `expr.macro` provides
 already for the left-hand argument of an infix macro. Normally, in
-that case, you might as well use `operator`, but `expression_operator`
+that case, you might as well use `operator`, but `expr.operator`
 provides control over evaluator order. For example, this `+<=`
 operator is like `+`, but evaluates its right-hand side before it's
 left-hand side:
 
 ```
-expression_operator ?(¿a +<= ¿b):  
+expr.operator ?(¿a +<= ¿b):  
   ?(¿b + ¿a)
 
 1 +<= 2                       // prints 3
@@ -1141,17 +1141,17 @@ expression_operator ?(¿a +<= ¿b):
 ```
 
 In the same way that `operator` supports operators that are both
-prefix and infix, you can use an alt-block with `expression_macro` or
-`expression_operator` to create a prefix-and-infix macro.
+prefix and infix, you can use an alt-block with `expr.macro` or
+`expr.operator` to create a prefix-and-infix macro.
 
-_It would make sense for `expression_operator` to further support
+_It would make sense for `expr.operator` to further support
 multiple cases that differ by pattern instead of infix vs. prefix,
 but the implementation does not yet do that._
 
 ## Definition and declaration macros
 
 The `definition_macro` form defines a definition macro. It is similar
-to `expression_macro` in prefix form, except that the name must be an
+to `expr.macro` in prefix form, except that the name must be an
 identifier (never an operator), and the result syntax object should
 represent a block, which is spliced into the definition context where
 the macro is used.
@@ -1184,14 +1184,14 @@ syntax for that combination should be straightforward._
 
 ## Binding macros
 
-Macros can extend binding-position syntax, too, via `binding_macro`
-and `binding_operator`. In the simplest case, a binding operator is
+Macros can extend binding-position syntax, too, via `bind.macro`
+and `bind.operator`. In the simplest case, a binding operator is
 implemented by expanding to other binding operators, like this
 definition of `$` as a prefix operator to constrain a pattern to
 number inputs:
 
 ```
-binding_operator ?($ ¿n):
+bind.operator ?($ ¿n):
   ?(¿n :: Number)
 
 val $salary: 100.0
@@ -1268,13 +1268,13 @@ ways. In examples like `Posn(1, 2).x` or `p.x`, the left-hand side of
 posn.(<>) 2`, the left-hand side of `.` is not a definition or
 expression, and `.` as a binary operator would not be able to produce
 a binary operator (at least not while implementing the target
-operator's intended precdence).
+operator's intended precedence).
 
 ## Define
 
 The `def` form may or may not be a good idea. Some programmers may
 prefer the generality of `def`, while others may prefer the
-specificity of `val`, `fun`, and `expression_macro`. Some
+specificity of `val`, `fun`, and `expr.macro`. Some
 programmers may dislike that there's more than one way. But having
 `def` also makes it easier to have `let`. A `let` modifier
 that could be applied to any definition form creates a lot of extra
