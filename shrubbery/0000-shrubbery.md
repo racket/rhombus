@@ -94,8 +94,9 @@ is meant to accommodate a particular kind of syntax for nested blocks
 Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of `char-symbolic?`,
 roughly. No spaces are needed between operators and non-operators, so
-`1+2` and `1 + 2` mean the same thing. Comments are C-style. See
-[lexeme parsing](#lexeme-parsing) for more information.
+`1+2` and `1 + 2` mean the same thing. Comments are C-style, plus a
+`#//` group-comment form. See [lexeme parsing](#lexeme-parsing) for
+more information.
 
 The following tokens are used for grouping, in addition to line breaks
 and indentation:
@@ -400,10 +401,10 @@ line as it if were one line continuing with the next line. The itself
 line (followed by whitespace and coments) is treated the same as
 whitespace.
 
-Lines contianing only whitespace and comments do not count as “the
-next line” even for `\` continuations, so any number of whitespace of
-comment lines in the next can appear between `\` and the line that it
-continues.
+Lines contianing only whitespace and (non-term) comments do not count
+as “the next line” even for `\` continuations, so any number of
+whitespace and comment lines can appear between `\` and the line that
+it continues.
 
 
 ```
@@ -431,6 +432,81 @@ this is a group \
                 \
        list)
 
+```
+
+## Group comments
+
+When `#//` appears on its own line (or with only whitespace and
+non-term comments), then its indentation does not matter, and it
+comments out the next group—with might be a single-line group, block,
+or `|` block. A `#//` is not allowed without a group afterward to
+comment out, and `#//`s do not nest (i.e., two `#//`s in a row is
+always an error.
+
+The following three blocks all parse the same:
+
+```
+{
+  hello:
+    val x: f(1, 2 + 3)
+    match x
+     | 1: 'one'
+     | 2: 'two'
+}
+
+{
+  hello:
+    val x:
+      #//
+      g(-1)
+      f(#//
+        0,
+        1,
+        2 + 3,
+        #//
+        4 + 5)
+    #//
+    not included in the code
+    match x
+     #//
+     | 0: no
+     | 1: 'one'
+     #//
+     | 1.5: no
+     | 2: 'two'
+     #//
+     | 3: no
+  #//
+  goodbye:
+    the enclosing group of the block is commented out
+}
+
+{
+  hello:
+    val x:
+      #//
+      g(-1)
+      f(#//
+        0,
+        1,
+        2 + 3,
+        #//
+        4 + 5)
+    #//
+    not included in the code
+    match x
+     #//
+     | 0: no
+     | 1: 'one'
+     #//
+     | 1.5: no
+     | 2: 'two'
+     #//
+     | 3: no
+  #//
+  goodbye:
+    the enclosing group of the block is commented out
+}
 ```
 
 ## More examples
@@ -750,6 +826,8 @@ would create ambiguous or ill-formed representations.
 |   |                 |     |                                                           |                                |
 | * | _comment_       | is  | `//` _nonnlchar_                                          |                                |
 |   |                 | or  | `/*` _anychar_ `*/`                                       | nesting allowed                |
+|   |                 |     |                                                           |                                |
+| * | _termcomment_   | is  | `#//`                                                     |                                |
 |   |                 |     |                                                           |                                |
 |   | _nonnlchar_     |     | **any character other than newline**                      |                                |
 

@@ -93,7 +93,8 @@
                            "#neginf"
                            "#nan"))]
 
-  [bad-hash (:- (:: "#" (:* non-delims))
+  [bad-hash (:- (:or (:: "#" (:* non-delims))
+                     "#/")
                 boolean
                 special-number)]
 
@@ -265,6 +266,8 @@
               end-offset
               'initial))]
    ["/*" (read-nested-comment 1 start-pos input-port)]
+   ["#//"
+    (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
    [(:: (:or "#lang " "#!")
         (:or langchar
              (:: langchar (:* (:or langchar "/")) langchar)))
