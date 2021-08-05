@@ -9,26 +9,23 @@
 
 (module+ for-dot-provider
   (begin-for-syntax
-    (provide rhombus-dot-provider
-             rhombus-dot-provider?
-             rhombus-dot-provider-handler
+    (provide (property-out dot-provider)
              
              (property-out dot-provider)
              in-dot-provider-space
 
              wrap-dot-provider))
-  (provide define-dot-provider-syntax))
+  (provide define-dot-provider-syntax
+           define-dot-provider-syntax/maybe))
 
 (begin-for-syntax
-  (struct rhombus-dot-provider (handler))
+  (property dot-provider (handler))
 
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot-provider))
 
   (define (wrap-dot-provider expr provider-stx)
     #`(begin (quote-syntax (#%dot-provider #,provider-stx))
-             #,expr))
-  
-  (property dot-provider rhombus-dot-provider))
+             #,expr)))
 
 (define-syntax #%dot-provider #f)
 
@@ -42,7 +39,7 @@
        [(dot field:identifier . tail)
         (define (apply-provider p form)
           (values
-           ((rhombus-dot-provider-handler p) p form #'dot #'field)
+           ((dot-provider-handler p) form #'dot #'field)
            #'tail))
         (define (fail)
           (raise-syntax-error #f
@@ -78,3 +75,9 @@
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-dot-provider-space #'id)
          rhs)]))
+
+(define-syntax (define-dot-provider-syntax/maybe stx)
+  (syntax-parse stx
+    [(_ id (_ (_ #f))) #'(begin)]
+    [(_ id rhs)
+     #'(define-dot-provider-syntax id rhs)]))

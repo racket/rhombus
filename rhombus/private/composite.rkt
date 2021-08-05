@@ -8,7 +8,7 @@
 
 (provide (for-syntax make-composite-binding-transformer))
 
-(define-for-syntax (make-composite-binding-transformer predicate selectors contracts)
+(define-for-syntax (make-composite-binding-transformer predicate selectors dot-providers)
   (lambda (tail)
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -23,11 +23,11 @@
                                      (length (syntax->list #'(a ...))))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
-       (define keep-contracts (for/list ([ctc (in-list contracts)]
-                                         [a (in-list as)])
-                                (syntax-parse a
-                                  [((~datum group) a:identifier) ctc]
-                                  [_ #f])))
+       (define keep-dot-providers (for/list ([ctc (in-list dot-providers)]
+                                             [a (in-list as)])
+                                    (syntax-parse a
+                                      [((~datum group) a:identifier) ctc]
+                                      [_ #f])))
        (values
         (binding-form
          #'composite
@@ -35,7 +35,7 @@
          #'composite-binder
          #`(#,predicate
             #,selectors
-            #,keep-contracts
+            #,keep-dot-providers
             #,(generate-temporaries #'(a-parsed.arg-id ...))
             (a-parsed.arg-id ...)
             (a-parsed.matcher-id ...)
@@ -45,7 +45,7 @@
 
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors contracts tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
+    [(_ c-arg-id (predicate selectors dot-providers tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
            #,(let loop ([selectors (syntax->list #'selectors)]
                         [tmp-ids (syntax->list #'tmp-ids)]
@@ -67,16 +67,9 @@
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors (contract ...) (tmp-id ...) (arg-id ...) matcher-ids (binder-id ...) (data ...)))
+    [(_ c-arg-id (predicate selectors (dot-provider ...) (tmp-id ...) (arg-id ...) matcher-ids (binder-id ...) (data ...)))
      #`(begin
          (binder-id tmp-id data)
          ...
-         (define-dot-provider-syntax/maybe arg-id (rhombus-contracted (quote-syntax contract)))
+         (define-dot-provider-syntax/maybe arg-id (indirect-dot-provider (quote-syntax dot-provider)))
          ...)]))
-
-
-(define-syntax (define-dot-provider-syntax/maybe stx)
-  (syntax-parse stx
-    [(_ id (_ (_ #f))) #'(begin)]
-    [(_ id rhs)
-     #'(define-dot-provider-syntax id rhs)]))

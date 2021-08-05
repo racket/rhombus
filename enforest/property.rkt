@@ -54,7 +54,7 @@
              (struct convenience-name base-name ... (field ...)
                #:property prop:name (lambda (self) self)
                #:reflection-name 'name)
-             (define name convenience-name)
+             (define-syntax name (make-rename-transformer #'convenience-name))
              define-accessor ...)))]))
 
 (define-provide-syntax (property-out stx)

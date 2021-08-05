@@ -7,7 +7,7 @@
          "parse.rkt"
          "implicit.rkt"
          "contract.rkt"
-         (submod "struct.rkt" for-call))
+         (submod "contract.rkt" for-struct))
 
 (provide val)
 
@@ -83,7 +83,7 @@
      (syntax-parse rhs-stx
        #:datum-literals (block group parens)
        [(block (group rator:identifier ((~and tag parens) . _)))
-        #:do [(define provider (syntax-local-result-provider #'rator))]
+        #:do [(define provider (syntax-local-result-dot-provider #'rator))]
         #:when (and provider
                     (free-identifier=? #'#%call (datum->syntax #'tag '#%call)))
         #`(group id (op ::) #,provider)]

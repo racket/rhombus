@@ -11,7 +11,6 @@
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
-         (submod "struct.rkt" for-call)
          (submod "dot.rkt" for-dot-provider)
          "contract.rkt"
          (submod "contract.rkt" for-struct)
@@ -255,7 +254,7 @@
             (for/and ([ctc (in-list (cdr ctcs))])
               (same-expression? (car ctcs) ctc)))
        (cons
-        #`(define-contracted-syntax #,name (rhombus-contracted (quote-syntax (#%result #,(car ctcs)))))
+        #`(define-contracted-syntax #,name (contracted (quote-syntax #,(car ctcs))))
         defns)]
       [else defns])))
 
@@ -305,7 +304,7 @@
                                    (if (syntax-e kw)
                                        (list kw parsed)
                                        (list parsed)))
-     (define provider (syntax-local-result-provider rator))
+     (define provider (syntax-local-result-dot-provider rator))
      (define e (datum->syntax (quote-syntax here)
                               (cons rator #'(arg-form ... ...))
                               (span-srcloc rator #'head)
