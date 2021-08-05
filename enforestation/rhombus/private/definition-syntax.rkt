@@ -5,7 +5,7 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "tail.rkt")
-         "lexicon.rkt"
+         "name-root.rkt"
          "definition.rkt"
          "syntax.rkt"
          "parse.rkt")
@@ -13,7 +13,7 @@
 (provide defn)
 
 (define-syntax defn
-  (simple-lexicon macro))
+  (simple-name-root macro))
 
 (define-syntax macro
   (make-identifier-syntax-definition-transformer (lambda (x) x)

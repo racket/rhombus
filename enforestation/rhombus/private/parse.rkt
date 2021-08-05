@@ -4,7 +4,8 @@
                      syntax/stx
                      enforest
                      enforest/transformer
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "name-path-op.rkt")
          "forwarding-sequence.rkt"
          "declaration.rkt"
          "definition.rkt"
@@ -35,13 +36,13 @@
   ;; Form at the top of a module:
   (define-transform-class :declaration
     "declaration"
-    declaration-transformer-ref
+    name-path-op declaration-transformer-ref
     check-declaration-result)
 
   ;; Form in a definition context:
   (define-transform-class :definition
     "definition"
-    definition-transformer-ref
+    name-path-op definition-transformer-ref
     check-definition-result)
 
   ;; Form in an expression context:
@@ -49,7 +50,7 @@
     :expression :prefix-op+expression+tail :infix-op+expression+tail
     "expression" "expression operator"
     in-expression-space
-    expression-prefix-operator-ref expression-infix-operator-ref
+    name-path-op expression-prefix-operator-ref expression-infix-operator-ref
     check-expression-result
     make-identifier-expression)
 
@@ -58,7 +59,7 @@
     :binding :prefix-op+binding+tail :infix-op+binding+tail
     "binding" "binding operator"
     in-binding-space
-    binding-prefix-operator-ref binding-infix-operator-ref
+    name-path-op binding-prefix-operator-ref binding-infix-operator-ref
     check-binding-result
     make-identifier-binding))
 
@@ -70,8 +71,8 @@
      (define parsed
        (with-syntax-error-respan
          (syntax-local-introduce
-          ;; note that we may perform lexicon resolution up to
-          ;; three times, since resolution for `:declaration`
+          ;; note that we may perform hierarchical name resolution
+          ;; up to three times, since resolution for `:declaration`
           ;; doesn't carry over
           (syntax-parse (syntax-local-introduce #'form)
             [e::declaration #'(begin . e.parsed)]

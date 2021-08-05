@@ -5,8 +5,9 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
-                     enforest/lexicon
-                     "srcloc.rkt")
+                     enforest/name-root
+                     "srcloc.rkt"
+                     "name-path-op.rkt")
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -43,7 +44,7 @@
     :import :import-prefix-op+form+tail :import-infix-op+form+tail
     "import" "import operator"
     in-import-space
-    import-prefix-operator-ref import-infix-operator-ref
+    name-path-op import-prefix-operator-ref import-infix-operator-ref
     check-import-result
     make-identifier-import)
 
@@ -64,6 +65,7 @@
                                                      ""))
                      r
                      r)]
+      [((~literal rename-in) mp . _) (extract-prefix #'mp)]
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              r)]))
@@ -102,10 +104,10 @@
                                             [parsed (in-list parseds)])
                                    (if (syntax-e prefix)
                                        #`(define-syntax #,prefix
-                                           (lexicon (lambda (tail)
-                                                      (parse-import-dot
-                                                       (quote-syntax #,(datum->syntax parsed 'ctx))
-                                                       tail))))
+                                           (name-root (lambda (tail)
+                                                        (parse-import-dot
+                                                         (quote-syntax #,(datum->syntax parsed 'ctx))
+                                                         tail))))
                                        #'(begin)))])
           #`((require r-parsed ...)
              def ...))]))))
@@ -127,7 +129,15 @@
     [(_ (op |.|) field:identifier . tail)
      (values (relocate #'field (get "identifier" #'field)) #'tail)]
     [(_ (op |.|) (parens (group (~and target (op field))))  . tail)
-     (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]))
+     (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]
+    [(form-id (op (~and dot |.|)) . tail)
+     (raise-syntax-error #f
+                         "expected an identifier or parentheses after dot"
+                         #'dot)]
+    [(form-id . tail)
+     (raise-syntax-error #f
+                         "expected a dot after import name"
+                         #'form-id)]))
   
 (define-syntax (define-import-syntax stx)
   (syntax-parse stx
