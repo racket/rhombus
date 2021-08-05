@@ -215,7 +215,7 @@ Rhombus language likely allows extensions to create even more
 contexts, just like Racket program can have more contexts through
 syntactic extensions, such as `match` or Typed Racket.
 
-## Hierarchical naming and lexicons
+## Hierarchical naming
 
 A language implemented with the Rhombus expander may have another
 dimension of name resolution that is orthogonal to different mapping
@@ -230,12 +230,13 @@ The example language “overloads” `.` for hierarchical namespace use as
 well as field access, but the Rhombus expander minimizes any
 assumptions about the form of hierarchical names. A hierarchical
 reference must start with an identifier or operator that is mapped in
-the default space to a _lexicon_. A lexicon is implemented by a
-transformer that is similar to a prefix macro transformer (as
-explained in the next section), but it ”expands” to a new identifier
-whose binding is checked in a space that's suitable to the context—or
-it expands to a reference to another lexicon, in which case the new
-lexicon use is expanded recursively).
+the default space to a _name root_, and that identifier must be
+followed with the use of a designated name-path operator. A name root
+is implemented by a transformer that is similar to a prefix macro
+transformer (as explained in the next section), but it ”expands” to a
+new identifier whose binding is checked in a space that's suitable to
+the context—or it expands to a reference to another name root, in
+which case the new root is expanded recursively).
 
 ## Operator and macro transformers
 
@@ -471,10 +472,11 @@ The Rhombus parsing algorithm is similar to figure 1 of [the Honu
 paper](http://www.cs.utah.edu/plt/publications/gpce12-rf.pdf), but
 with some key differences:
 
- * When the inital term is an identifier or operator where `lookup`
-   produces a lexicon, the lexicon transformer is applied and its
-   result (a new term and tail) are used for the new state, without
-   changing the current operator (if any).
+ * When the inital term is an identifier followed by a name-path
+   operator and `lookup` produces a name root for the identifier, the
+   name-root transformer is applied. Its result, a new term and tail,
+   are used for the new state, without changing the current operator
+   (if any).
 
  * A prefix or infix operator has an associated transformer procedure
    to produce a Racket form, instead of always making a `bin` or `un`
@@ -527,17 +529,17 @@ kind of context.
 The Rhombus expander's primary API consists of three Racket structure
 types and one macro:
 
- * A `lexicon` structure with one field:
+ * A `name-root` structure with one field:
 
       - `proc`: a transformer procedure, which takes a syntactic list
         of tokens and returns two values: a new head identifier or
         operator token, and a new tail syntactic list of tokens.
 
-   A `prop:lexicon` structure type property is also provided, and
-   `lexicon?` refers to implementations of `prop:lexicon`. The
+   A `prop:name-root` structure type property is also provided, and
+   `name-root?` refers to implementations of `prop:name-root`. The
    property value must be a function that takes a structure
-   implementing the property and returns a `lexicon` instance. The
-   `lexicon` structure implements `prop:lexicon` with a function that
+   implementing the property and returns a `name-root` instance. The
+   `name-root` structure implements `prop:name-root` with a function that
    results the structure instance itself.
 
  * An `operator` structure type with `infix-operator` and
@@ -602,6 +604,9 @@ types and one macro:
     - `in-space`: a function that takes an identifier syntax object
       and adds a space scope if the enforesting context uses a space.
 
+    - `name-path-op`: an operator name that is recognized after a
+      name-root identifier for hierarhical name references.
+
     - `prefix-operator-ref` and `infix-operator-ref`: functions that
       take a compile-time value and extract an instance of
       `prefix-operator` or `infix-operator`, respectively, if the
@@ -622,9 +627,9 @@ types and one macro:
 
    The `define-enforest` macro is provided by the `enforest` library.
 
-To support simple contexts that have only prefix transformers and
-lexicons, the Rhombus expander API provides an additional structure
-type and macro:
+To support simple contexts that have only prefix transformers and name
+roots, the Rhombus expander API provides an additional structure type
+and macro:
 
  * A `transformer` structure type with one field:
 
@@ -639,6 +644,9 @@ type and macro:
        an `parsed` attribute representing the parsed result.
 
     - `form-kind-str`: string used in error reporting.
+
+    - `name-path-op`: an operator name that is recognized after a
+      name-root identifier for hierarhical name references.
 
     - `transformer-ref`: function that takes a compile-time value and
       extract an instance of `transformer`, if the value has one
@@ -755,7 +763,7 @@ Here's the definition of the `:expression` syntax class:
     :expression :prefix-op+expression+tail :infix-op+expression+tail
     "expression" "expression operator"
     in-expression-space
-    expression-prefix-operator-ref expression-infix-operator-ref
+    '|.| expression-prefix-operator-ref expression-infix-operator-ref
     check-expression-result
     make-identifier-expression)
 ```
@@ -835,7 +843,7 @@ Racket, it's a relatively new and unproven feature.
 For opinions on non-transitive operator precedence, see
 [Jeff Walker's blog post](https://blog.adamant-lang.org/2019/operator-precedence/).
 
-Although lexicon-like name resolution could be implemented to some
+Although hierarchical name resolution could be implemented to some
 degree through a prefix macro that works in any space, that approach
 would not interact well with precedence or multiple contexts that use
 the same mapping space (such as definitions and expressions). For
