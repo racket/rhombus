@@ -72,7 +72,7 @@
                       :form :prefix-op+form+tail :infix-op+form+tail
                       form-kind-str operator-kind-str
                       in-space
-                      prefix-operator-ref infix-operator-ref
+                      hierarchy-op prefix-operator-ref infix-operator-ref
                       check-result
                       make-identifier-form)
   (begin
@@ -99,7 +99,7 @@
 
     (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                               in-space
-                                              prefix-operator-ref infix-operator-ref
+                                              hierarchy-op prefix-operator-ref infix-operator-ref
                                               check-result
                                               make-identifier-form))
     (define enforest (make-enforest enforest-step))))
@@ -121,7 +121,7 @@
 
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space
-                            prefix-operator-ref infix-operator-ref
+                            hierarchy-op prefix-operator-ref infix-operator-ref
                             check-result
                             make-identifier-form)
   (define (raise-unbound-operator op-stx)
@@ -138,8 +138,10 @@
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
+           (define hier-ref? (starts-wth-hierarchy-op? #'tail))
            (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (lexicon-ref v)
+                                          (lambda (v) (or (and hier-ref?
+                                                               (lexicon-ref v))
                                                           (prefix-operator-ref v)
                                                           (infix-operator-ref v)))))
            (cond
@@ -197,8 +199,10 @@
           [() (values init-form stxes)]
           [(head::reference . tail)
            (define head-id (in-space #'head.name))
+           (define hier-ref? (starts-wth-hierarchy-op? #'tail))
            (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (lexicon-ref v)
+                                          (lambda (v) (or (and hier-ref?
+                                                               (lexicon-ref v))
                                                           (infix-operator-ref v)
                                                           (prefix-operator-ref v)))))
            (cond
@@ -284,6 +288,11 @@
                                                             operator-kind-str form-kind-str))
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
           (dispatch-infix-operator op stxes synthetic-stxes op-stx)))]))
+
+  (define (starts-wth-hierarchy-op? tail)
+    (syntax-parse tail
+      [(((~datum op) sep) . _) (eq? (syntax-e #'sep) hierarchy-op)]
+      [_ #f]))
 
   ;; improves errors when nothin appears after an operator:
   (define (check-empty op-stx tail form-kind-str)

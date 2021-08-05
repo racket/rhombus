@@ -4,7 +4,8 @@
                      enforest
                      enforest/operator
                      enforest/property
-                     enforest/proc-name)
+                     enforest/proc-name
+                     "hierarchy-op.rkt")
          "declaration.rkt")
 
 (provide export
@@ -34,7 +35,7 @@
     :export :export-prefix-op+form+tail :export-infix-op+form+tail
     "export" "export operator"
     in-export-space
-    export-prefix-operator-ref export-infix-operator-ref
+    hierarchy-op export-prefix-operator-ref export-infix-operator-ref
     check-export-result
     make-identifier-export))
 

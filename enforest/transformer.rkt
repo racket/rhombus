@@ -17,11 +17,11 @@
 (define-syntax-rule (define-transform-class
                       :form
                       form-kind-str
-                      transformer-ref
+                      hierarchy-op transformer-ref
                       check-result)
   (begin
     (define-syntax-class :form
-      (pattern ((~datum group) . (~var ref (:hierarchical-ref-seq values)))
+      (pattern ((~datum group) . (~var ref (:hierarchical-ref-seq values hierarchy-op)))
                #:do [(define head-id (transform-in #'ref.name))]
                #:do [(define t (syntax-local-value* head-id transformer-ref))]
                #:when t

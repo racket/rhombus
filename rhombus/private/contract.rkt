@@ -5,7 +5,8 @@
                      enforest/syntax-local
                      enforest/hierarchical-ref-parse
                      enforest/property
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "hierarchy-op.rkt")
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
@@ -56,7 +57,7 @@
   (define in-contracted-space (make-interned-syntax-introducer 'rhombus/contracted))
 
   (define-syntax-class :contract-seq
-    (pattern (~var ref (:hierarchical-ref-seq in-contract-space))
+    (pattern (~var ref (:hierarchical-ref-seq in-contract-space hierarchy-op))
              #:do [(define v (syntax-local-value* (in-contract-space #'ref.name) contract-ref))]
              #:when v
              #:attr predicate (contract-predicate-stx v)

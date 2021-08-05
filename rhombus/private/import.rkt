@@ -6,7 +6,8 @@
                      enforest/property
                      enforest/proc-name
                      enforest/lexicon
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "hierarchy-op.rkt")
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -43,7 +44,7 @@
     :import :import-prefix-op+form+tail :import-infix-op+form+tail
     "import" "import operator"
     in-import-space
-    import-prefix-operator-ref import-infix-operator-ref
+    hierarchy-op import-prefix-operator-ref import-infix-operator-ref
     check-import-result
     make-identifier-import)
 
