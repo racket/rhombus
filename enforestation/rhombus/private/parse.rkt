@@ -70,6 +70,9 @@
      (define parsed
        (with-syntax-error-respan
          (syntax-local-introduce
+          ;; note that we may perform lexicon resolution up to
+          ;; three times, since resolution for `:declaration`
+          ;; doesn't carry over
           (syntax-parse (syntax-local-introduce #'form)
             [e::declaration #'(begin . e.parsed)]
             [e::definition #'(begin . e.parsed)]

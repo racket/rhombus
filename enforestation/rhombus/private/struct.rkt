@@ -8,17 +8,15 @@
          "binding.rkt"
          "contract.rkt"
          (submod "contract.rkt" for-struct)
+         (submod "dot.rkt" for-dot-provider)
          "composite.rkt"
          "assign.rkt")
 
-(provide (rename-out [rhombus-struct struct])
-         |.|)
-
-(module+ for-call
-  (provide (for-syntax syntax-local-struct-contract)))
+(provide (rename-out [rhombus-struct struct]))
 
 (begin-for-syntax
-  (struct struct-contract rhombus-contract (constructor-id fields))
+  (struct struct-contract contract (constructor-id fields))
+  (define (struct-contract-ref v) (and (struct-contract? v) v))
 
   (define-syntax-class :field
     #:datum-literals (group op)
@@ -26,9 +24,10 @@
     (pattern (group (~optional mutable
                                #:defaults ([mutable #'#f]))
                     name:identifier
-                    (~optional (~seq (op ::) contract::contract)
-                               #:defaults ([contract #'#f])))
-             #:attr predicate #`(~? contract.predicate #f))))
+                    (~optional (~seq (op ::) contract::contract)))
+             #:attr predicate #`(~? contract.predicate #f)
+             #:attr dot-provider #`(~? contract.dot-provider #f)
+             #:attr contract-name #`(~? contract.name #f))))
                                  
 (define-syntax rhombus-struct
   (definition-transformer
@@ -45,6 +44,7 @@
                 (values (cons field imm) m))))
         (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                       [(struct:name) (generate-temporaries #'(name))]
+                      [name-instance (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (datum->syntax field
                                                          (string->symbol (format "~a.~a"
@@ -84,12 +84,24 @@
                (binding-transformer
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
-                                                    (list (quote-syntax name-field) ...))))
+                                                    (list (quote-syntax name-field) ...)
+                                                    (list (quote-syntax field.dot-provider) ...))))
            #'(define-contract-syntax name
                (struct-contract (quote-syntax name?)
+                                (quote-syntax name-instance)
                                 (quote-syntax name)
-                                (list (list 'field.name (quote-syntax name-field) (quote-syntax field.contract))
-                                      ...)))))]))))
+                                (list (list 'field.name (quote-syntax name-field) (quote-syntax field.dot-provider))
+                                      ...)))
+           #'(define-dot-provider-syntax name
+               (dot-provider (make-handle-struct-type-dot (quote-syntax name))))
+           #'(define-contracted-syntax name
+               (contracted (quote-syntax name)))
+           #'(define-dot-provider-syntax name-instance
+               (dot-provider (make-handle-struct-instance-dot (quote-syntax name))))
+           #'(begin
+               (define-contracted-syntax/maybe name-field
+                 (contracted (quote-syntax field.dot-provider)))
+               ...)))]))))
 
 (define-for-syntax (build-guard-expr fields predicates)
   (and (for/or ([predicate (in-list predicates)])
@@ -105,65 +117,45 @@
                                                             #,(format "~a" (syntax-e predicate))
                                                             #,field))]))))))
 
-(define-for-syntax (syntax-local-struct-contract form)
-  ;; FIXME: we should check an expression-space binding
-  ;; for `form1` and get from there to a struct-contract...
-  (syntax-local-value* (in-contract-space form) struct-contract?))
+;; dot provider for a structure name used before a `.`
+(define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)
+  (define contract (syntax-local-value* (in-contract-space name) struct-contract-ref))
+  (unless contract (error "cannot find contract binding for dot provider"))
+  (define accessor-id
+    (for/or ([field+acc (in-list (struct-contract-fields contract))])
+      (and (eq? (car field+acc) (syntax-e field-id))
+           (cadr field+acc))))
+  (unless accessor-id
+    (raise-syntax-error #f
+                        "cannot find field in structure"
+                        field-id))
+  (relocate (span-srcloc form1 field-id) accessor-id))
 
-(define-syntax |.|
-  (expression-infix-operator
-   (quote-syntax |.|)
-   '((default . stronger))
-   'macro
-   (lambda (form1 tail)
-     (syntax-parse tail
-       [(dot field:identifier . tail)
-        (cond
-          [(and (identifier? form1)
-                (syntax-local-struct-contract form1))
-           => (lambda (contract)
-                (define accessor-id
-                  (for/or ([field+acc (in-list (struct-contract-fields contract))])
-                    (and (eq? (car field+acc) (syntax-e #'field))
-                         (cadr field+acc))))
-                (unless accessor-id
-                  (raise-syntax-error #f
-                                      "cannot find field in structure"
-                                      #'field))
-                (values accessor-id
-                        #'tail))]
-          [else
-           (define contract-id (rhombus-syntax-local-contract form1))
-           (define contract (and (identifier? contract-id)
-                                 (syntax-local-value* (in-contract-space contract-id) struct-contract?)))
-           (define accessor-id+contract (and (struct-contract? contract)
-                                             (for/or ([field+acc (in-list (struct-contract-fields contract))])
-                                               (and (eq? (car field+acc) (syntax-e #'field))
-                                                    (cdr field+acc)))))
-           (unless accessor-id+contract
-             (raise-syntax-error #f
-                                 "don't know how to access field"
-                                 #'field))
-           (define accessor-id (car accessor-id+contract))
-           (define e (datum->syntax (quote-syntax here)
-                                    (list accessor-id form1)
-                                    (span-srcloc form1 #'field)
-                                    #'dot))
-           (define maybe-contract-e (if (syntax-e (cadr accessor-id+contract))
-                                        (syntax-property e
-                                                         rhombus-contract-property
-                                                         (cadr accessor-id+contract))
-                                        e))
-           (values maybe-contract-e 
-                   #'tail)])]
-       [(dot other . tail)
-        (raise-syntax-error #f
-                            "expected an identifier for a field name, but found something else"
-                            #'dot
-                            #f
-                            (list #'other))]
-       [(dot)
-        (raise-syntax-error #f
-                            "expected an identifier for a field name"
-                            #'dot)]))
-   'left))
+;; dot provider for a structure instance used before a `.`
+(define-for-syntax ((make-handle-struct-instance-dot name) form1 dot field-id)
+  (define contract (syntax-local-value* (in-contract-space name) struct-contract-ref))
+  (unless contract (error "cannot find contract binding for instance dot provider"))
+  (define accessor+provider-ids
+    (for/or ([field+acc (in-list (struct-contract-fields contract))])
+      (and (eq? (car field+acc) (syntax-e field-id))
+           (cdr field+acc))))
+  (unless accessor+provider-ids
+    (raise-syntax-error #f
+                        "don't know how to access field"
+                        field-id))
+  (define accessor-id (car accessor+provider-ids))
+  (define e (datum->syntax (quote-syntax here)
+                           (list accessor-id form1)
+                           (span-srcloc form1 field-id)
+                           #'dot))
+  (define maybe-contract-e (if (syntax-e (cadr accessor+provider-ids))
+                               (wrap-dot-provider e
+                                                  (cadr accessor+provider-ids))
+                               e))
+  maybe-contract-e)
+
+(define-syntax (define-contracted-syntax/maybe stx)
+  (syntax-parse stx
+    [(_ id (_ (_ #f))) #'(begin)]
+    [(_ id rhs)
+     #'(define-contracted-syntax id rhs)]))

@@ -1,6 +1,8 @@
 #lang racket/base
+(require shrubbery/srcloc)
 
-(provide span-srcloc
+(provide syntax-srcloc
+         span-srcloc
          relocate
          respan-empty
          respan

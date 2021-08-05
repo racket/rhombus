@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/boundmap
-                     enforest/operator-parse
+                     "operator-parse.rkt"
                      "consistent.rkt"
                      "srcloc.rkt")
          (rename-in "quasiquote.rkt"
@@ -32,7 +32,7 @@
     (pattern (op name))
     (pattern (~and name #:other)))
 
-  (define (combine-prec strongers weakers sames)
+  (define (combine-prec strongers weakers sames same-on-lefts same-on-rights)
     (define ht (make-free-identifier-mapping))
     (define said-other? #f)
     (define prec '())
@@ -58,34 +58,46 @@
       (add! weaker 'weaker))
     (for ([same (in-list sames)])
       (add! same 'same))
+    (for ([same (in-list same-on-lefts)])
+      (add! same 'same-on-left))
+    (for ([same (in-list same-on-rights)])
+      (add! same 'same-on-right))
     (datum->syntax #f prec))
 
   (define-syntax-class :operator-definition-group
     #:datum-literals (op group)
     #:literals (?)
-    (pattern (group (op ¿) _ _::operator . _))
-    (pattern (group ::operator . _)))
+    (pattern (group (op ¿) _ _::operator-or-identifier . _))
+    (pattern (group ::operator-or-identifier . _)))
 
   (define-splicing-syntax-class :operator-options
     #:datum-literals (op block group
                          stronger_than
                          weaker_than
-                         same_as)
-    (pattern (~seq (~alt (~optional (group #:stronger_than (block (group stronger::op/other ...) ...))
+                         same_as
+                         same_on_left_as
+                         same_on_right_as)
+    (pattern (~seq (~alt (~optional (group #:stronger_than ~! (block (group stronger::op/other ...) ...))
                                     #:defaults ([(stronger.name 2) '()]))
-                         (~optional (group #:weaker_than (block (group weaker::op/other ...) ...))
+                         (~optional (group #:weaker_than ~! (block (group weaker::op/other ...) ...))
                                     #:defaults ([(weaker.name 2) '()]))
-                         (~optional (group #:same_as (block (group same::op/other ...) ...))
-                                    #:defaults ([(same.name 2) '()])))
+                         (~optional (group #:same_as ~! (block (group same::op/other ...) ...))
+                                    #:defaults ([(same.name 2) '()]))
+                         (~optional (group #:same_on_left_as ~! (block (group same-on-left::op/other ...) ...))
+                                    #:defaults ([(same-on-left.name 2) '()]))
+                         (~optional (group #:same_on_right_as ~! (block (group same-on-right::op/other ...) ...))
+                                    #:defaults ([(same-on-right.name 2) '()])))
                    ...)
              #:attr prec (combine-prec (syntax->list #'(stronger.name ... ...))
                                        (syntax->list #'(weaker.name ... ...))
-                                       (syntax->list #'(same.name ... ...)))))
+                                       (syntax->list #'(same.name ... ...))
+                                       (syntax->list #'(same-on-left.name ... ...))
+                                       (syntax->list #'(same-on-right.name ... ...)))))
 
   (define-splicing-syntax-class :self-operator-options
     #:datum-literals (op block group
                          opt_stx)
-    (pattern (~seq (~alt (~optional (group #:op_stx (block (group self-id:identifier)))
+    (pattern (~seq (~alt (~optional (group #:op_stx ~! (block (group self-id:identifier)))
                                     #:defaults ([self-id #'self])))
                    ...)))
 
@@ -107,9 +119,10 @@
                          associativity)
     (pattern (~seq (~alt (~optional op-opt::operator-options
                                     #:defaults ([op-opt.prec #'()]))
-                         (~optional (group #:associativity (block (group (~and assc
-                                                                               (~or right left none)))))
-                                    #:defaults ([assc #'none])))
+                         (~optional (group #:associativity ~!
+                                           (block (group (~and assc
+                                                               (~or #:right #:left #:none)))))
+                                    #:defaults ([assc #'#:left])))
                    ...)
              #:attr prec #'op-opt.prec))
              
@@ -131,8 +144,8 @@
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
     #:literals (¿ ?)
-    (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator . _)))))
-    (pattern (~seq (op ?) (parens (~and g (group ::operator . _))))))
+    (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator-or-identifier . _)))))
+    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _))))))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -141,7 +154,7 @@
                    [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
   
   (define (convert-assc assc)
-    #`'#,assc))
+    #`'#,(string->symbol (keyword->string (syntax-e assc)))))
 
 (define-for-syntax (parse-one-automatic-operator-definition make-prefix-id make-infix-id)
   (lambda (g rhs)
@@ -149,7 +162,7 @@
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
       [(group (op ¿) left:identifier
-              op-name::operator
+              op-name::operator-or-identifier
               (op ¿) right:identifier)
        (syntax-parse rhs
          [((~and tag block) opt::self-infix-operator-options rhs ...)
@@ -161,7 +174,7 @@
                                    (rhombus-expression (group (tag rhs ...))))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
-      [(group op-name::operator
+      [(group op-name::operator-or-identifier
               (op ¿) arg:identifier)
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
@@ -186,7 +199,7 @@
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
       [(group (op ¿) left:identifier
-              op-name::operator
+              op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::self-infix-operator-options rhs ...)
@@ -199,7 +212,7 @@
                                                  #'(tag rhs ...)))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
-      [(group op-name::operator
+      [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
