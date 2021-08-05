@@ -27,32 +27,32 @@ to support:
 ```
 #lang rhombus
 
-require:
-  "weather.rhm" // provides currently_raining
+import:
+  weather
 
 struct Posn(x, y)  
 
-value home :: Posn:
+val home :: Posn:
   Posn(3, 7)
 
-function abs(n): if n < 0 | -n | n
+fun abs(n): if n < 0 | -n | n
 
-function manhattan_distance(p :: Posn):
+fun manhattan_distance(p :: Posn):
   abs(home.x - p.x) + 5 * abs(home.y - p.y)
 
-function another_manhattan_distance(Posn(x, y)):
+fun another_manhattan_distance(Posn(x, y)):
   abs(home.x - x) + 5 * abs(home.y - y)
 
-function
+fun
  | should_take_cab(Posn(0, 0)): #false
  | should_take_cab(p :: Posn):
-     manhattan_distance(p) > 10 || currently_raining()
+     manhattan_distance(p) > 10 || weather.currently_raining()
  | should_take_cab(#false): #false
 ```
 
-The intent here is that `value` and `function` are macro-implemented
-and recognize various forms of definitions, including simple binding,
-functions, and functions that have pattern-matching cases. The `value`
+The intent here is that `val` and `fun` are macro-implemented and
+recognize various forms of definitions, including simple binding,
+functions, and functions that have pattern-matching cases. The `val`
 and `function` forms are not meant to know about `::` specifically;
 the `::` is meant to be a binding operator that checks whether the
 value flowing to the binding satisfies a predicate, and it may also
@@ -60,10 +60,15 @@ associate compile-time information to a binding, such as the
 information that `p` is a `Posn` instance. The name `Posn` works in an
 expression to construct a position value, while in a binding position,
 `Posn` works to construct a pattern-matching binding (again, without
-`define` knowing anything specific about `Posn`). Meanwhile, `.`, `-`,
+`val` or `fun` knowing anything specific about `Posn`). Meanwhile, `.`, `-`,
 `+`, `*`, `<`, and `||` are the obvious operators with the usual
 precedence. Unlike the other operators, the `.` operator's right-hand
-side is not an expression; it must always be an identifier.
+side is not an expression; it must always be an identifier. The
+`weather.currently_raining` form looks like a use of the `.` operator,
+but it's meant here to be a use of the namer `weather` that is bound by
+`import` and recognizes `.` to access the imported `currently_raining`
+binding, which might be a macro instead of a variable that is bound to
+a function.
 
 The Rhombus expander is further meant to a support a language where
 new operators can be defined in a function-like way, like this:
@@ -82,26 +87,27 @@ right-hand side of `.` is not an expression. Using `?` for “quote” and
 pattern-matching macro as
 
 ```
-expression_macro ?(¿x -> ¿y ¿tail ...):
+expr.macro ?(¿x -> ¿y ¿tail ...):
   values(?(¿x . ¿y), tail)
 
 home->x + 1 // same as home.x + 1
 ```
 
-The intent here is that `expression_macro` allows a macro to consume
-as many terms after the operator as it wants, and the macro must
-return two values: a quoted expression for the expansion plus leftover
-terms for further expression parsing (i.e., `tail` in the example use
-will hold `+ 1`). Macros can work for other contexts, too, such as
-binding positions. Here's a definition that extends the `<>` operator
-to make it work in binding positions:
+The intent here is that `expr.macro` (the `.` there is like using an
+import, accessing the `macro` form within an `expr` group of bindings)
+allows a macro to consume as many terms after the operator as it
+wants, and the macro must return two values: a quoted expression for
+the expansion plus leftover terms for further expression parsing
+(i.e., `tail` in the example use will hold `+ 1`). Macros can work for
+other contexts, too, such as binding positions. Here's a definition
+that extends the `<>` operator to make it work in binding positions:
 
 ```
-binding_macro ?(¿x <> ¿y ¿tail ...):
+bind.macro ?(¿x <> ¿y ¿tail ...):
   values(?(Posn(¿x, ¿y)), tail)
 
 // uses <> both for argument binding and result expression:
-function flip(x <> y):
+fun flip(x <> y):
   y <> x
 
 flip(1 <> 2) // produces 2 <> 1
@@ -193,7 +199,7 @@ sense of `(provide (for-space ....))`. Contexts like declarations,
 definitions, and expressions are likely to use the default space,
 while binding, require, and provide contexts might use their own
 spaces. For example, in the prototype language supplied with this
-proposal, `operator` and `binding_macro` can both bind `<>` because
+proposal, `operator` and `bind.macro` can both bind `<>` because
 the former binds in the default space and the latter in the binding
 space. The Rhombus expander itself is, again, parameterized over the
 way that mapping spaces are used.
@@ -208,6 +214,28 @@ different or more syntactic categories than the ones listed above. A
 Rhombus language likely allows extensions to create even more
 contexts, just like Racket program can have more contexts through
 syntactic extensions, such as `match` or Typed Racket.
+
+## Hierarchical naming and lexicons
+
+A language implemented with the Rhombus expander may have another
+dimension of name resolution that is orthogonal to different mapping
+spaces. For example, a language include a hierarchical naming strategy
+to reach a binding through sequence of identifiers separated by `.`,
+and hierarchical references might be used to reach mappings for
+expressions, bindings, or more. In the initial example in this
+proposal `weather.currently_raining` is that kind of access, as is
+`expr.macro` and `bind.macro`.
+
+The example language “overloads” `.` for hierarchical namespace use as
+well as field access, but the Rhombus expander minimizes any
+assumptions about the form of hierarchical names. A hierarchical
+reference must start with an identifier or operator that is mapped in
+the default space to a _lexicon_. A lexicon is implemented by a
+transformer that is similar to a prefix macro transformer (as
+explained in the next section), but it ”expands” to a new identifier
+whose binding is checked in a space that's suitable to the context—or
+it expands to a reference to another lexicon, in which case the new
+lexicon use is expanded recursively).
 
 ## Operator and macro transformers
 
@@ -254,11 +282,11 @@ postfix `!` might be defined (shadowing the normal `!` for “not”) as
 follows:
 
 ```
-function
+fun
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
-expression_macro ?(¿a ! ¿tail ...):
+expr.macro ?(¿a ! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
 10! + 1 // = 3628801
@@ -282,8 +310,10 @@ Instead of attaching a numeric precedence to each operator, as in
 Honu, each operator declares its precedence relative to other
 operators. That is, an operator can declare that its precedence is
 stronger than certain other operators, weaker than certain other
-operators, and the same as certain other operators (implicitly
-including the operator itself). An infix operator's associativity is
+operators, the same as certain other operators (implicitly
+including the operator itself), and the same as certain other operators
+when in a specific order (e.g., `*` is not allowed to the right of `/`).
+An infix operator's associativity is
 relevant only for operators at the same precedence (including the
 operator itself), as either left-associative, right-associative, or
 non-associative.
@@ -408,7 +438,7 @@ layer of patterning matching. For example, in the earlier example
 implementing the `->` macro infix operator,
 
 ```
-expression_macro ?(¿x -> ¿y ¿tail ...):
+expr.macro ?(¿x -> ¿y ¿tail ...):
   values(?(¿x . ¿y), tail)
 ```
 
@@ -430,7 +460,7 @@ together into a parsed form using `pack_binding`.
 
 Some contexts may oblige a macro transformer to consume all of the
 remaining terms in a group. For example, a definition or declaration
-context based on prefix identifiers like `require`, `define`, and
+context based on prefix identifiers like `import`, `val`, `fun`, and
 `struct` might report an error if a transformer does not consume all
 available terms (and that's the case in the prototype `#lang
 rhombus`).
@@ -441,15 +471,20 @@ The Rhombus parsing algorithm is similar to figure 1 of [the Honu
 paper](http://www.cs.utah.edu/plt/publications/gpce12-rf.pdf), but
 with some key differences:
 
+ * When the inital term is an identifier or operator where `lookup`
+   produces a lexicon, the lexicon transformer is applied and its
+   result (a new term and tail) are used for the new state, without
+   changing the current operator (if any).
+
  * A prefix or infix operator has an associated transformer procedure
    to produce a Racket form, instead of always making a `bin` or `un`
    AST node. Whether the Racket form is an expression or some other
    form (such as pieces of a binding) depends on the context.
   
- * Operators using the _automatic_ are dispatched as in the figure. If
-   a prefix operator's protocol is _macro_, it behaves the same as the
-   figure's case of an identifier that is mapped to a transformer. A
-   macro infix operator's treatment is analogous.
+ * Operators using the _automatic_ protocol are dispatched as in the
+   figure. If a prefix operator's protocol is _macro_, it behaves the
+   same as the figure's case of an identifier that is mapped to a
+   transformer. A macro infix operator's treatment is analogous.
 
  * Function calls, array references, and list construction are not
    built-in in the same way as Honu. Instead, those positions
@@ -492,15 +527,30 @@ kind of context.
 The Rhombus expander's primary API consists of three Racket structure
 types and one macro:
 
+ * A `lexicon` structure with one field:
+
+      - `proc`: a transformer procedure, which takes a syntactic list
+        of tokens and returns two values: a new head identifier or
+        operator token, and a new tail syntactic list of tokens.
+
+   A `prop:lexicon` structure type property is also provided, and
+   `lexicon?` refers to implementations of `prop:lexicon`. The
+   property value must be a function that takes a structure
+   implementing the property and returns a `lexicon` instance. The
+   `lexicon` structure implements `prop:lexicon` with a function that
+   results the structure instance itself.
+
  * An `operator` structure type with `infix-operator` and
    `prefix-operator` structure subtypes. An `operator` structure has
 
       - `name`: an identifier syntax object
 
       - `precs`: an association list from identifiers
-        to `'stronger`, `'weaker`, or `'same`, indicating that the
+        to `'stronger`, `'weaker`, `'same`, `'same-on-left`, or
+        `'same-on-right`, indicating that the
         `operator` instance's precedence is stronger than, weaker
-        than, or the same as the associated identifier; `'default` can
+        than, or the same as (when on the indicated side of) the
+        associated identifier; `'default` can
         be used instead of an identifier to specify a default
         relationship
 
@@ -572,9 +622,9 @@ types and one macro:
 
    The `define-enforest` macro is provided by the `enforest` library.
 
-To support simple contexts that have only identifier-named prefix
-transformers, the Rhombus expander API provides an additional
-structure type and macro:
+To support simple contexts that have only prefix transformers and
+lexicons, the Rhombus expander API provides an additional structure
+type and macro:
 
  * A `transformer` structure type with one field:
 
@@ -658,16 +708,16 @@ makes sure that the low-level transformer returns at least a
 list-shaped syntax object, but that's just for earlier error
 detection.
 
-A simple implementation of the `value` definition form could be like
+A simple implementation of the `val` definition form could be like
 this:
 
 ```
-(define-syntax value
+(define-syntax val
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (block)
-        ;; match `value <binding>: <form> ... `, where
+        ;; match `val <binding>: <form> ... `, where
         ;; `:` grouping is represented by `block`
         [(_ b::binding (block rhs ...))
          (build-values-definitions #'b.parsed
@@ -738,7 +788,7 @@ macro scope introductions, supports a `define*`-like `forward`
 definition form, implements more complicated syntax, and so on. Some
 part of the language would be built in this low-level way, including
 operator- and macro-defining forms like `operator` and
-`expression_macro`, and then more of the Rhombus prototype language
+`expr.macro`, and then more of the Rhombus prototype language
 could be built using the Rhombus prototype language.
 
 # Reference-level explanation
@@ -784,6 +834,17 @@ Racket, it's a relatively new and unproven feature.
 
 For opinions on non-transitive operator precedence, see
 [Jeff Walker's blog post](https://blog.adamant-lang.org/2019/operator-precedence/).
+
+Although lexicon-like name resolution could be implemented to some
+degree through a prefix macro that works in any space, that approach
+would not interact well with precedence or multiple contexts that use
+the same mapping space (such as definitions and expressions). For
+example, if `weather.(***)` and `weather.(!!!)` are meant to access
+the `***` and `!!!` operators from the `weather` imported module,
+those operators might have different precedences or associativity,
+while `weather` by itself (or `.` as an operator) can have only one
+predecence and associativity. Hierarchical naming seems common and
+important enough to support well in the Rhombus expander.
 
 Operator transformers could implement all operators, with full
 precedence handling, but supporting non-transformer operators is
