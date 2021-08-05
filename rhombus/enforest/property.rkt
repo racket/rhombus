@@ -22,7 +22,7 @@
 ;;   `name` - convenience constructor for an instance of `prop:name`
 (define-syntax (property stx)
   (syntax-parse stx
-    [(_ name base-name (~optional (~seq #:super prop-super)))
+    [(_ name (~or base-name:identifier (field ...)) (~optional (~seq #:super prop-super)))
      (with-syntax ([prop:name (format-id "prop:~a" #'name)]
                    [name-ref (format-id "~a-ref" #'name)]
                    [name? (format-id "~a?" #'name)]
@@ -30,16 +30,32 @@
                    [super-spec (if (attribute prop-super)
                                    #'(list (cons prop-super values))
                                    #'null)])
-       #'(begin
-           (define-values (prop:name name? ref)
-             (make-struct-type-property 'name #f super-spec))
-           (define (name-ref v)
-             (define acc (ref v (lambda () #f)))
-             (and acc (acc v)))
-           (struct convenience-name base-name ()
-             #:property prop:name (lambda (self) self)
-             #:reflection-name 'name)
-           (define name convenience-name)))]))
+       (with-syntax ([(base-name ...) (if (attribute base-name)
+                                          (list #'base-name)
+                                          (list))]
+                     [(field ...) (if (attribute base-name)
+                                      (list)
+                                      #'(field ...))]
+                     [(define-accessor ...) (if (attribute base-name)
+                                                (list)
+                                                (for/list ([field (in-list (syntax->list #'(field ...)))])
+                                                  (define (acc name)
+                                                    (datum->syntax name
+                                                                   (string->symbol (format "~a-~a"
+                                                                                           (syntax-e name)
+                                                                                           (syntax-e field)))))
+                                                  #`(define #,(acc #'name) #,(acc #'convenience-name))))])
+         #'(begin
+             (define-values (prop:name name? ref)
+               (make-struct-type-property 'name #f super-spec))
+             (define (name-ref v)
+               (define acc (ref v (lambda () #f)))
+               (and acc (acc v)))
+             (struct convenience-name base-name ... (field ...)
+               #:property prop:name (lambda (self) self)
+               #:reflection-name 'name)
+             (define-syntax name (make-rename-transformer #'convenience-name))
+             define-accessor ...)))]))
 
 (define-provide-syntax (property-out stx)
   (syntax-parse stx

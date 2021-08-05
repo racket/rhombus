@@ -284,17 +284,17 @@ interactions window in DrRacket will work to call
 `fahrenheit_to_celsius`. For now, though, you have to add an extra
 line with just `;` to evaluate a form._
 
-A Rhombus module can provide definitions to other modules using
-`provide`, and it can require other modules using `require`. The
-`#lang rhombus` line is a kind of `require` already, so normally more
-`require`s are written at the top of a module, and then `provide`s,
+A Rhombus module can export definitions to other modules using
+`export`, and it can import other modules using `import`. The
+`#lang rhombus` line is a kind of `import` already, so normally more
+`import`s are written at the top of a module, and then `export`s,
 and then the definitions.
 
 ```
 // f2c.rhm
 #lang rhombus
 
-provide:
+export:
   fahrenheit_freezing
   fahrenheit_to_celsius
 
@@ -308,11 +308,53 @@ fun fahrenheit_to_celsius(f):
 // freezing.rhm
 #lang rhombus
 
-require:
+import:
   "f2c.rhm"
 
-fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
+f2c.fahrenheit_to_celsius(f2cfahrenheit_freezing)  // prints 0
 ```
+
+Unlike Racket, imported bindings must accessed using a prefix name and
+then `.`, at least by default. The prefix is inferred from a module
+path by taking its last component and removing any extension, so
+that's why the import of `"f2c.rhm"` leads to the `f2c` prefix. To
+supply an explicit prefix, use `=`:
+
+```
+import:
+  convert = "f2c.rhm"
+
+convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
+```
+
+Using `=` with no name before it imports without a prefix, but this
+kind of “namespace dumping” is considered bad style in most cases:
+
+```
+import:
+  = "f2c.rhm"
+
+fahrenheit_to_celsius(fahrenheit_freezing)
+```
+
+_If the left-dangling `=` as above is slightly uncomfortable, that may
+be good as a discoragement again dumping._
+
+Module paths in Racket are written with a `/` separator. In Rhombus,
+`.` as an import operator combines module-path elements, and the last
+element is the one tat determines the default import prefix:
+
+```
+import:
+  racket.math
+
+math.pi  // prints 3.141592653589793
+```
+
+_The use of `.` with an import name as a hierarchical reference is not
+the same as the `.` described in the next section. See also the
+current [rationale](#rationale-and-alternatives)._
+
 
 ## Definitions
 
@@ -395,7 +437,21 @@ fun flip_origin(Posn(0, 0)):
   origin
 
 // flip_origin(Posn(1, 2))  // would be a run-time error
-flip_origin(origin) // prints Posn(0, 0)
+flip_origin(origin)  // prints Posn(0, 0)
+```
+
+Finally, a function can have a result contract, which is written with
+`::` after the parentheses for the function's argument. Every return
+value from the function is checked against the contract. Beware that a
+function's body does not count as being tail position when the
+function is declared with a result contract.
+
+```
+fun same_posn(p) :: Posn:
+  p
+
+same_posn(origin)  // prints Posn(0, 0)
+// same_posn(5)    // woudl be a run-time error
 ```
 
 The `def` form is a kind of do-what-I-mean form that acts like
@@ -451,6 +507,11 @@ binding operator gets an opportunity to adjust the value delivered to
 a variable, non-predicate contracts fit naturally into the language's
 framework._
 
+The `::` operator also works in expression positions. In that case,
+the right-hand expression must produce a value that satisfies the
+right-hand contract, otherwise a run-time contract exception is
+raised.
+
 When `struct` defines a new structure type, a contract can be
 associated with each field. The contract is checked when an instance
 is created.
@@ -474,25 +535,22 @@ def l1 :: Line:
 l1.p2.x  // prints 3
 ```
 
-The `.` operator to access a structure field (or accessor, when used
-with a structure type name) only works for left-hand expressions that
-have a statically known contract. Using `::` as binding operator
-associates a static contract to an identifier, and using `.` to access
-a field that has a contract gives the overall `.` expression a
-contract.
+More generally, the left-hand side of `.` needs to be an expression
+that can act as a _dot provider_. A structure-type name is a dot
+provider, and it provides access to field-accessor functions, as in
+`Posn.x` (which doesn't get a specific `x`, but produces a function
+that can be called on a `Posn` instance to extract its `x` field). An
+identifier that is bound using `::` and a structure-type name is also a
+dot provider, and it provides access to fields of a structure instance.
+More generally, a contract that is associated to a binding or
+expression with `::` might give the binding or expression a dot
+provider. See [a separate document](dot-provider.md) for more
+information on dot providers.
 
-The `def` and `val` forms recognize when the left-hand side of a
-definition is a plain identifier and the right-hand side is an
-immediate application of a structure constructor, and they implicitly
-add a `::` annotation to the binding in that case. So, `l1` above does
-not need an explicit `:: Line` declaration:
-
-```
-def l1: Line(Posn(1, 2), Posn(3, 4))
-```
-
-_How far should this type-like propagation of contracts go? 
- See the current [rationale](#rationale-and-alternatives)._
+_Using `.` to reach an imported binding, as in
+`f2c.fahrenheit_to_celsius`, is a different kind of `.` than the infix
+expression operator. See the current
+[rationale](#rationale-and-alternatives)._
 
 
 ## Function expressions
@@ -829,6 +887,31 @@ Use the keyword `'other'` in `'weaker_than'`, `'stronger_than'`, or
 `'same_as'` to declare a precedence relationship for operators not
 otherwise mentioned.
 
+To export an operator, use an `operator` block with `export`:
+
+```
+export:
+  operator: <>
+```
+
+_Why require `operator:` here? See the current
+[rationale](#rationale-and-alternatives)._
+
+On the import side, to refer to an operator that has a prefix, put the
+operator after `.` in parentheses:
+
+```
+import:
+  "posn.rhm"
+
+1 posn.(<>) 2
+```
+
+If the point of an operator is terseness, an import prefix may defeat
+the point. Using a library that supplies operators may be one reason
+to import with a leading `=` to avoid a prefix on the imports.
+
+
 ## Syntax objects
 
 The `?` operator quotes an immediately following shrubbery term to
@@ -1087,8 +1170,8 @@ v  // prints 5
 ```
 
 Declarations macros are written with `declaration_macro`, and the
-block produced by expansion can use forms like `require` and
-`provide`.
+block produced by expansion can use forms like `import` and
+`export`.
 
 By distinguishing between expression macros, definition macros, and
 declaration macros, Rhombus can report errors for out-of-place uses
@@ -1142,7 +1225,7 @@ constructor calls. Meanwhile, an unchecked mode (not quite as far as
 unsafe) could elide all contract checks that would otherwise guard
 `::` annotations.
 
-Contract annotations could be supported in `provide`.
+Contract annotations could be supported in `export`.
 
 
 # Reference-level explanation
@@ -1170,6 +1253,23 @@ constrained by choices in other dimensions.
 # Rationale and alternatives
 [rationale-and-alternatives]: #rationale-and-alternatives
 
+## Overloading `.` for hierarchical naming and field access
+
+While the use of `.` for hierarchical naming in something like
+`f2c.fahrenheit_to_celsius` may seem related to the use of `.` for a
+field access like `p.x`. They're fundamentally different ideas,
+however, and they're supported by different mechanisms in the Rhombus
+expander. The overloading of `.` here is Java-like; Rust, in contrast,
+uses `::` for import paths and `.` for field access.
+
+The two uses of `.` cannot be unified, because they work in different
+ways. In examples like `Posn(1, 2).x` or `p.x`, the left-hand side of
+`.` is an expression that is already parsed. In `expr.macro` or `1
+posn.(<>) 2`, the left-hand side of `.` is not a definition or
+expression, and `.` as a binary operator would not be able to produce
+a binary operator (at least not while implementing the target
+operator's intended precdence).
+
 ## Define
 
 The `def` form may or may not be a good idea. Some programmers may
@@ -1181,33 +1281,29 @@ that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
 some of them need to refer to each other.
 
-## The dot operator
+## The dot operator and dot providers
 
-Exactly how far to push this type-like propagation of contracts used
-by `.` is unclear. In the current prototype, using `Posn` as a binding
-pattern does not propagate the static contract to the binding, but
-that should be easy to fix. Similarly, calling the function `Line.p1`
-doesn't add a static contract for the function call result, but maybe
-it should.
+The rules for propagating dot-provider information are reminiscent of
+type rules in Turnstile (Chang et al.), but must more limited. The
+goal here is to make `.` notation reasonably consistent while keeping
+`.` uses as efficient as Racket-style accessors.
 
-Although the applicable cases for `.` should likely be extensible in a
-full design, the intent is that a use of `.` statically selects an
-efficient, immediate accessor. The operator should not be overload to,
-say, look up a symbol-keyed value in a hash table; “array”-access
-notation should be used for that.
-
-## Operator names
-
-Identifier-named infix operators are supported because they see
-useful. The `mod` operator is one example. Another is the `rename`
-operator, which modifies an import to add renamings:
+Most rules can be viewed as macro bindings that expand to provide
+dot-provider information in the expansion for consumption by the
+immediate enclosing expression. Indeed, that is mostly the
+implementation. The rule that's ad hoc and does not fit that pattern
+is the one for for `val` or `def` with an right-hand side that is an
+immediate call; the rule is in terms of an unparsed expression on the
+right-hand side. The rule is nevertheless included, otherwise
 
 ```
-require
-  "elsewhere.rhm" rename:
-                    here 'to' there
-                    there 'to' here
+def origin: Point(0, 0)
 ```
+
+would need an extra `:: Point` in the middle to make `origin.x` and
+`origin.y` work, and that would look silly. The rule is generalized to
+functions with return contracts so that other constructor functions
+can have the same status as the structure type name as a constructor.
 
 ## Multiple values
 
@@ -1216,6 +1312,33 @@ useful, but also often a pain to abstract over. It's tempting to
 simplify by getting rid of multiple values, but then we'd lose the
 benefits that the compiler provides for multiple-value results, and
 interoperation with Racket libraries would be slightly more difficult.
+
+## Operator names
+
+Identifier-named infix operators are supported because they cause no
+particular prolem for parsing and may be useful, such as for the `mod`
+operator. It may make sense to require infix forms to use shrubbery
+operators, though, to reduce the space of possible parses of a
+shrubbery independent of binding.
+
+## Exporting operators
+
+It might make sense to export operators just the same as identifiers,
+which don't require an `identifier:` block:
+
+```
+export:
+  fahrenheit_freezing
+  fahrenheit_to_celsius
+```
+
+The difference right now is how the enforestation process works.
+Enforestation is relevant to `export` because export operators are
+supported. The Rhombus expander's enforestation process allows
+identifiers that are not bound as export operators to expand as
+themselves. It does not treat operators that way. Maybe that should be
+an option to `define-enforest`, or maybe `operator:` is a good idea
+for clarity
 
 ## Syntax patterns
 

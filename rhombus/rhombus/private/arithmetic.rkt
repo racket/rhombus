@@ -33,6 +33,10 @@
                      #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
                      #:defaults ([(same-op 1) '()]))
+          (~optional (~seq #:same-on-right-as (same-on-right-op ...))
+                     #:defaults ([(same-on-right-op 1) '()]))
+          (~optional (~seq #:same-on-left-as (same-on-left-op ...))
+                     #:defaults ([(same-on-left-op 1) '()]))
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()])))
        #`(expression-prefix-operator (quote-syntax name)
@@ -41,6 +45,12 @@
                                            ...
                                            (cons (quote-syntax same-op)
                                                  'same)
+                                           ...
+                                           (cons (quote-syntax same-on-right-op)
+                                                 'same-on-right)
+                                           ...
+                                           (cons (quote-syntax same-on-left-op)
+                                                 'same-on-left)
                                            ...
                                            (cons (quote-syntax stronger-op)
                                                  'stronger)
@@ -59,6 +69,8 @@
                      #:defaults ([(weaker-op 1) '()]))
           (~optional (~seq #:same-as (same-op ...))
                      #:defaults ([(same-op 1) '()]))
+          (~optional (~seq #:same-on-left-as (same-on-left-op ...))
+                     #:defaults ([(same-on-left-op 1) '()]))
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:associate assoc)
@@ -69,6 +81,9 @@
                                           ...
                                           (cons (quote-syntax same-op)
                                                 'same)
+                                          ...
+                                          (cons (quote-syntax same-on-left-op)
+                                                'same-on-left)
                                           ...
                                           (cons (quote-syntax stronger-op)
                                                 'stronger)
@@ -101,7 +116,7 @@
    (infix rhombus- - #:weaker-than (rhombus* rhombus/))))
 
 (define-infix rhombus* *
-  #:same-as (rhombus/))
+  #:same-on-left-as (rhombus/))
 
 (define-infix rhombus/ /)
 

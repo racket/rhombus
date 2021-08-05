@@ -7,15 +7,15 @@
          "parse.rkt"
          "implicit.rkt"
          "contract.rkt"
-         (submod "struct.rkt" for-call))
+         (submod "contract.rkt" for-struct))
 
-(provide value)
+(provide val)
 
 (module+ for-define
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(define-syntax value
+(define-syntax val
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
@@ -77,17 +77,15 @@
   (raise-binding-failure who "value" val binding))
 
 (define-for-syntax (maybe-add-struct-contract g-stx rhs-stx)
-  ;; Ad hoc contracting rule: if we have a plain identifier
-  ;; and the right-hand side is a struct constrcution, then
-  ;; add the structure type a contract on the variable
   (syntax-parse g-stx
     #:datum-literals (group)
     [(group id:identifier)
      (syntax-parse rhs-stx
        #:datum-literals (block group parens)
        [(block (group rator:identifier ((~and tag parens) . _)))
-        #:when (and (syntax-local-struct-contract #'rator)
+        #:do [(define provider (syntax-local-result-dot-provider #'rator))]
+        #:when (and provider
                     (free-identifier=? #'#%call (datum->syntax #'tag '#%call)))
-        #'(group id (op ::) rator)]
+        #`(group id (op ::) #,provider)]
        [_ g-stx])]
     [_ g-stx]))
