@@ -47,7 +47,7 @@ hexadecimal integers written with `0x`:
 0xf00ba7ba2
 ```
 
-Identifiers are Unicode alphanumeric and `_` with a initial character
+Identifiers are Unicode alphanumeric and `_` with an initial character
 that is not numeric.
 
 ```
@@ -103,13 +103,13 @@ Strings and byte strings:
 #"a byte string"
 ```
 
-Comments are C-style:
+Comments are C-style, but block comments are nestable:
 
 ```
 // This is a line comment
 
 /* This is a multiline
-   comment that continues
+   comment that /* continues */
    on further lines */
 ```
 
