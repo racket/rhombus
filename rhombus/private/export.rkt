@@ -29,15 +29,31 @@
       (raise-syntax-error 'export
                           "not a valid module path element"
                           id))
-    id)
+    (define for-spaces
+      (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
+                  [(intro) (in-value (make-interned-syntax-introducer sym))]
+                  [(space-id) (in-value (intro id))]
+                  #:when (and (not (free-identifier=? id space-id))
+                              (identifier-binding space-id)))
+        #`(for-space #,sym #,id)))
+    (cond
+      [(identifier-binding id)
+       (if (null? for-spaces)
+           id
+           #`(combine-out #,id . #,for-spaces))]
+      [(null? for-spaces) id]
+      [else #`(combine-out . #,for-spaces)]))
 
-  (define-enforest export-enforest export-enforest-step
-    :export :export-prefix-op+form+tail :export-infix-op+form+tail
-    "export" "export operator"
-    in-export-space
-    name-path-op export-prefix-operator-ref export-infix-operator-ref
-    check-export-result
-    make-identifier-export))
+  (define-enforest
+    #:syntax-class :export
+    #:desc "export"
+    #:operator-desc "export operator"
+    #:in-space in-export-space
+    #:name-path-op name-path-op
+    #:prefix-operator-ref export-prefix-operator-ref
+    #:infix-operator-ref export-infix-operator-ref
+    #:check-result check-export-result
+    #:make-identifier-form make-identifier-export))
 
 (define-syntax export
   (declaration-transformer

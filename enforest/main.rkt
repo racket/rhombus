@@ -1,5 +1,7 @@
 #lang racket/base
-(require syntax/parse
+(require (for-syntax racket/base
+                     syntax/parse)
+         syntax/parse
          syntax/stx
          "operator.rkt"
          (submod "operator.rkt" for-parse)
@@ -7,7 +9,9 @@
          "syntax-local.rkt"
          "ref-parse.rkt"
          "name-root.rkt"
-         (submod "name-root.rkt" for-parse))
+         (submod "name-root.rkt" for-parse)
+         "private/name-path-op.rkt"
+         "private/check.rkt")
 
 (provide define-enforest)
 
@@ -23,6 +27,12 @@
 ;;   operators could be implemented as transformers, but we provide
 ;;   support for non-transformer operators as a convenience and as a
 ;;   way to understand the implementation.
+;;
+;; * When the inital term is an identifier followed by a name-path
+;;   operator and the `lookup` analog produces a name root for the
+;;   identifier, the name-root transformer is applied. Its result, a
+;;   new term and tail, are used for the new state, without changing
+;;   the current operator (if any).
 ;;
 ;; * A prefix or infix operator has an associated combiner procedure
 ;;   to produce a Racket expression form, instead of always making a
@@ -51,6 +61,11 @@
 ;;   two operators must be compared fr precedence and have no declared
 ;;   order. See "operator.rkt" for more on precedence.
 ;;
+;;  * Already-parsed forms that are encoded with `parsed` (which are
+;;   "term"s in the figure's terminology) are immediately converted to
+;;   parsed form (i.e., "tree term"s in the figure) by removing the
+;;   `parsed` wrapper.
+;;
 ;; Terminology compared to the paper: "form" means "tree term", and
 ;; "stx" means "term". A "head" or "tail" is a stx/term.
 
@@ -68,41 +83,63 @@
 
 (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
-(define-syntax-rule (define-enforest enforest enforest-step
-                      :form :prefix-op+form+tail :infix-op+form+tail
-                      form-kind-str operator-kind-str
-                      in-space
-                      name-path-op prefix-operator-ref infix-operator-ref
-                      check-result
-                      make-identifier-form)
-  (begin
-    (define-syntax-class :form
-      (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))
+(define-syntax (define-enforest stx)
+  (syntax-parse stx
+    [(_ (~alt (~optional (~seq #:enforest enforest)
+                         #:defaults ([enforest #'enforest]))
+              (~optional (~seq #:enforest-step enforest-step)
+                         #:defaults ([enforest-step #'enforest-step]))
+              (~optional (~seq #:syntax-class form)
+                         #:defaults ([form #':form]))
+              (~optional (~seq #:prefix-more-syntax-class prefix-op+form+tail)
+                         #:defaults ([prefix-op+form+tail #':prefix-op+form+tail]))
+              (~optional (~seq #:infix-more-syntax-class infix-op+form+tail)
+                         #:defaults ([infix-op+form+tail #':infix-op+form+tail]))
+              (~optional (~seq #:desc form-kind-str)
+                         #:defaults ([form-kind-str #'"expression"]))
+              (~optional (~seq #:operator-desc operator-kind-str)
+                         #:defaults ([operator-kind-str #'"operator"]))
+              (~optional (~seq #:in-space in-space)
+                         #:defaults ([in-space #'values]))
+              (~optional (~seq #:name-path-op name-path-op)
+                         #:defaults ([name-path-op #'name-path-op]))
+              (~optional (~seq #:prefix-operator-ref prefix-operator-ref)
+                         #:defaults ([prefix-operator-ref #'prefix-operator-ref]))
+              (~optional (~seq #:infix-operator-ref infix-operator-ref)
+                         #:defaults ([infix-operator-ref #'infix-operator-ref]))
+              (~optional (~seq #:check-result check-result)
+                         #:defaults ([check-result #'check-is-syntax]))
+              (~optional (~seq #:make-identifier-form make-identifier-form)
+                         #:defaults ([make-identifier-form #'values])))
+        ...)
+     #'(begin
+         (define-syntax-class form
+           (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))
 
-    ;; For reentering the enforestation loop within a group, stopping when
-    ;; the group ends or when an operator with weaker precedence than `op`
-    ;; is found
-    (define-splicing-syntax-class :prefix-op+form+tail
-      (pattern (op-name:identifier . in-tail)
-               #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
-                                                                          prefix-operator-ref)))
-                     (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
-               #:attr parsed (transform-out form)
-               #:attr tail (transform-out new-tail)))
-    (define-splicing-syntax-class :infix-op+form+tail
-      (pattern (op-name:identifier . in-tail)
-               #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
-                                                                         infix-operator-ref)))
-                     (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
-               #:attr parsed (transform-out form)
-               #:attr tail (transform-out new-tail)))
+         ;; For reentering the enforestation loop within a group, stopping when
+         ;; the group ends or when an operator with weaker precedence than `op`
+         ;; is found
+         (define-splicing-syntax-class prefix-op+form+tail
+           (pattern (op-name:identifier . in-tail)
+                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
+                                                                               prefix-operator-ref)))
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
+                    #:attr parsed (transform-out form)
+                    #:attr tail (transform-out new-tail)))
+         (define-splicing-syntax-class infix-op+form+tail
+           (pattern (op-name:identifier . in-tail)
+                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
+                                                                              infix-operator-ref)))
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
+                    #:attr parsed (transform-out form)
+                    #:attr tail (transform-out new-tail)))
 
-    (define enforest-step (make-enforest-step form-kind-str operator-kind-str
-                                              in-space
-                                              name-path-op prefix-operator-ref infix-operator-ref
-                                              check-result
-                                              make-identifier-form))
-    (define enforest (make-enforest enforest-step))))
+         (define enforest-step (make-enforest-step form-kind-str operator-kind-str
+                                                   in-space
+                                                   name-path-op prefix-operator-ref infix-operator-ref
+                                                   check-result
+                                                   make-identifier-form))
+         (define enforest (make-enforest enforest-step)))]))
 
 (define (make-enforest enforest-step)
   (lambda (stxes)

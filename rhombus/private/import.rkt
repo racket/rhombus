@@ -3,7 +3,9 @@
                      syntax/parse
                      enforest
                      enforest/operator
+                     enforest/transformer
                      enforest/property
+                     enforest/syntax-local
                      enforest/proc-name
                      enforest/name-root
                      "srcloc.rkt"
@@ -21,11 +23,15 @@
          (for-space rhombus/import
                     #%literal
                     |.|
-                    rename))
+                    rename
+                    only
+                    except))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
   (property import-infix-operator infix-operator)
+
+  (property import-modifier transformer)
 
   (define in-import-space (make-interned-syntax-introducer 'rhombus/import))
 
@@ -40,13 +46,31 @@
                           id))
     id)
 
-  (define-enforest import-enforest import-enforest-step
-    :import :import-prefix-op+form+tail :import-infix-op+form+tail
-    "import" "import operator"
-    in-import-space
-    name-path-op import-prefix-operator-ref import-infix-operator-ref
-    check-import-result
-    make-identifier-import)
+  (define-enforest
+    #:syntax-class :import
+    #:desc "import"
+    #:operator-desc "import operator"
+    #:in-space in-import-space
+    #:name-path-op name-path-op
+    #:prefix-operator-ref import-prefix-operator-ref
+    #:infix-operator-ref import-infix-operator-ref
+    #:check-result check-import-result
+    #:make-identifier-form make-identifier-import)
+
+  (define (make-import-modifier-ref transform-in req)
+    ;; "accessor" closes over `req`:
+    (lambda (v)
+      (define mod (import-modifier-ref v))
+      (and mod
+           (transformer (lambda (stx)
+                          ((transformer-proc mod) (transform-in req) stx))))))
+
+  (define-transform
+    #:syntax-class (:import-modifier req)
+    #:desc "import modifier"
+    #:in-space in-import-space
+    #:name-path-op name-path-op
+    #:transformer-ref (make-import-modifier-ref transform-in req))
 
   (define (extract-prefix r)
     (syntax-parse r
@@ -66,51 +90,80 @@
                      r
                      r)]
       [((~literal rename-in) mp . _) (extract-prefix #'mp)]
+      [((~literal only-in) mp . _) (extract-prefix #'mp)]
+      [((~literal except-in) mp . _) (extract-prefix #'mp)]
+      [((~literal prefix-in) _ mp) (extract-prefix #'mp)]
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              r)]))
 
+  (define-syntax-class :import+mods
+    #:datum-literals (block group)
+    (pattern (group req ... (block mod ...))
+             #:with r::import #'(group req ...)
+             #:attr parsed (apply-modifiers (syntax->list #'(mod ...))
+                                            #'r.parsed))
+    (pattern r::import
+             #:attr parsed #'r.parsed))
+  
   (define-syntax-class :import-block
     #:datum-literals (block group op)
     #:literals (rhombus=)
-    (pattern (group prefix:identifier (op rhombus=) req ...)
-             #:with r::import #'(group req ...)
+    (pattern (group (~optional prefix:identifier
+                               #:defaults ([prefix #'#f]))
+                    (op rhombus=)
+                    req ...)
+             #:with r::import+mods #'(group req ...)
              #:attr parsed #'r.parsed)
-    (pattern (group (op rhombus=) req ...)
-             #:with r::import #'(group req ...)
-             #:attr parsed #'r.parsed
-             #:attr prefix #'#f)
     (pattern (group req ...)
-             #:with r::import #'(group req ...)
+             #:with r::import+mods #'(group req ...)
              #:attr parsed #'r.parsed
-             #:attr prefix (extract-prefix #'r.parsed))))
+             #:attr prefix (extract-prefix #'r.parsed)))
+
+  (define (apply-modifiers mods r-parsed)
+    (cond
+      [(null? mods) r-parsed]
+      [else
+       (syntax-parse (car mods)
+         #:datum-literals (group)
+         [(~var im (:import-modifier r-parsed))
+          (apply-modifiers (cdr mods) #'im.parsed)]
+         [(group id:identifier . _)
+          (raise-syntax-error #f
+                              "not an import modifier"
+                              #'id)]
+         [_
+          (raise-syntax-error #f
+                              "expected an import modifier"
+                              (car mods))])])))
 
 (define-syntax import
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (block)
-       [(_ (block r::import-block ...))
-        (define prefixes (syntax->list #'(r.prefix ...)))
-        (define intros (for/list ([prefix (in-list prefixes)])
-                         (if (syntax-e prefix)
-                             (make-syntax-introducer)
-                             values)))
-        (define parseds (for/list ([intro (in-list intros)]
-                                   [r-parsed (syntax->list #'(r.parsed ...))])
-                          (intro r-parsed)))
-        (with-syntax ([(r-parsed ...) parseds]
-                      [(def ...) (for/list ([prefix (in-list prefixes)]
-                                            [parsed (in-list parseds)])
-                                   (if (syntax-e prefix)
-                                       #`(define-syntax #,prefix
-                                           (name-root (lambda (tail)
-                                                        (parse-import-dot
-                                                         (quote-syntax #,(datum->syntax parsed 'ctx))
-                                                         tail))))
-                                       #'(begin)))])
-          #`((require r-parsed ...)
-             def ...))]))))
+       [(_ (block r ...))
+        #'((rhombus-import r ...))]))))
+
+(define-syntax (rhombus-import stx)
+  ;; handle one `import-block` at a time, so it can import
+  ;; transformers that are used for later imports
+  (syntax-parse stx
+    [(_) #'(begin)]
+    [(_ r::import-block . more)
+     (define prefix #'r.prefix)
+     (define intros (if (syntax-e prefix)
+                        (make-syntax-introducer)
+                        values))
+     #`(begin
+         (require r.parsed)
+         #,(if (syntax-e prefix)
+               #`(define-syntax #,prefix
+                   (name-root (lambda (tail)
+                                (parse-import-dot
+                                 (quote-syntax #,(datum->syntax #'r.parsed 'ctx))
+                                 tail))))
+               #'(begin))
+         (rhombus-import . more))]))
 
 (define-for-syntax (parse-import-dot ctx stxes)
   (define (get what name)
@@ -188,18 +241,32 @@
    'left))
 
 (define-import-syntax rename
-  (import-infix-operator
-   #'rename
-   '((default . stronger))
-   'macro
+  (import-modifier
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
        [(_ (block (group int:identifier #:to ext:identifier)
-                  ...)
-           . tail)
-        (values (datum->syntax req
-                               (list* #'rename-in req #'([int ext] ...))
-                               req)
-                #'tail)]))
-   'none))
+                  ...))
+        (datum->syntax req
+                       (list* #'rename-in req #'([int ext] ...))
+                       req)]))))
+
+(define-import-syntax only
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       #:datum-literals (block group)
+       [(_ (block (group id ...) ...))
+        (datum->syntax req
+                       (list* #'only-in req #'(id ... ...))
+                       req)]))))
+
+(define-import-syntax except
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       #:datum-literals (block group)
+       [(_ (block (group id ...) ...))
+        (datum->syntax req
+                       (list* #'except-in req #'(id ... ...))
+                       req)]))))
