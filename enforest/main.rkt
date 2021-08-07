@@ -184,7 +184,7 @@
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step (cons head tail) current-op current-op-stx)]
+              (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx)]
              [(prefix-operator? v)
               (dispatch-prefix-operator v #'tail stxes head-id)]
              [(infix-operator? v)

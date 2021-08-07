@@ -22,7 +22,7 @@
 
          (for-space rhombus/import
                     #%literal
-                    |.|
+                    /
                     rename
                     only
                     except))
@@ -213,7 +213,7 @@
         (values #'a
                 #'tail)]))))
 
-(define-import-syntax |.|
+(define-import-syntax /
   (import-infix-operator
    #'%literal
    '((default . stronger))
