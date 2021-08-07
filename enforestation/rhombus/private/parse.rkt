@@ -34,34 +34,48 @@
 
 (begin-for-syntax
   ;; Form at the top of a module:
-  (define-transform-class :declaration
-    "declaration"
-    name-path-op declaration-transformer-ref
-    check-declaration-result)
+  (define-transform
+    #:syntax-class :declaration
+    #:desc "declaration"
+    #:name-path-op name-path-op
+    #:transformer-ref declaration-transformer-ref
+    #:check-result check-declaration-result)
 
   ;; Form in a definition context:
-  (define-transform-class :definition
-    "definition"
-    name-path-op definition-transformer-ref
-    check-definition-result)
+  (define-transform
+    #:syntax-class :definition
+    #:desc "definition"
+    #:name-path-op name-path-op
+    #:transformer-ref definition-transformer-ref
+    #:check-result check-definition-result)
 
   ;; Form in an expression context:
-  (define-enforest enforest-expression enforest-expression-step
-    :expression :prefix-op+expression+tail :infix-op+expression+tail
-    "expression" "expression operator"
-    in-expression-space
-    name-path-op expression-prefix-operator-ref expression-infix-operator-ref
-    check-expression-result
-    make-identifier-expression)
+  (define-enforest
+    #:syntax-class :expression
+    #:prefix-more-syntax-class :prefix-op+expression+tail
+    #:infix-more-syntax-class :infix-op+expression+tail
+    #:desc "expression"
+    #:operator-desc "expression operator"
+    #:in-space in-expression-space
+    #:name-path-op name-path-op
+    #:prefix-operator-ref expression-prefix-operator-ref
+    #:infix-operator-ref expression-infix-operator-ref
+    #:check-result check-expression-result
+    #:make-identifier-form make-identifier-expression)
 
   ;; Form in a binding context:
-  (define-enforest enforest-binding enforest-binding-step
-    :binding :prefix-op+binding+tail :infix-op+binding+tail
-    "binding" "binding operator"
-    in-binding-space
-    name-path-op binding-prefix-operator-ref binding-infix-operator-ref
-    check-binding-result
-    make-identifier-binding))
+  (define-enforest
+    #:syntax-class :binding
+    #:prefix-more-syntax-class :prefix-op+binding+tail
+    #:infix-more-syntax-class :infix-op+binding+tail
+    #:desc "binding"
+    #:operator-desc "binding operator"
+    #:in-space in-binding-space
+    #:name-path-op name-path-op
+    #:prefix-operator-ref binding-prefix-operator-ref
+    #:infix-operator-ref binding-infix-operator-ref
+    #:check-result check-binding-result
+    #:make-identifier-form make-identifier-binding))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
