@@ -110,7 +110,9 @@
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax]))
               (~optional (~seq #:make-identifier-form make-identifier-form)
-                         #:defaults ([make-identifier-form #'values])))
+                         #:defaults ([make-identifier-form #'values]))
+              (~optional (~seq #:make-operator-form make-operator-form)
+                         #:defaults ([make-operator-form #'#f])))
         ...)
      #'(begin
          (define-syntax-class form
@@ -119,18 +121,18 @@
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`
          ;; is found
-         (define-splicing-syntax-class prefix-op+form+tail
-           (pattern (op-name:identifier . in-tail)
-                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name)
+         (define-syntax-class prefix-op+form+tail
+           (pattern (op-ref::reference . in-tail)
+                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
                                                                                prefix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
-         (define-splicing-syntax-class infix-op+form+tail
-           (pattern (op-name:identifier . in-tail)
-                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name)
+         (define-syntax-class infix-op+form+tail
+           (pattern (op-ref::reference . in-tail)
+                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
                                                                               infix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
 
@@ -138,7 +140,8 @@
                                                    in-space
                                                    name-path-op prefix-operator-ref infix-operator-ref
                                                    check-result
-                                                   make-identifier-form))
+                                                   make-identifier-form
+                                                   make-operator-form))
          (define enforest (make-enforest enforest-step)))]))
 
 (define (make-enforest enforest-step)
@@ -160,7 +163,8 @@
                             in-space
                             name-path-op prefix-operator-ref infix-operator-ref
                             check-result
-                            make-identifier-form)
+                            make-identifier-form
+                            make-operator-form)
   (define (raise-unbound-operator op-stx)
     (raise-syntax-error #f
                         (string-append "unbound " operator-kind-str)
@@ -192,7 +196,9 @@
              [(identifier? #'head)
               (enforest-step (make-identifier-form #'head) #'tail current-op current-op-stx)]
              [else
-              (raise-unbound-operator #'head.name)])]
+              (if make-operator-form
+                  (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx)
+                  (raise-unbound-operator #'head.name))])]
           [(((~datum parsed) inside) . tail)
            (enforest-step #'inside #'tail current-op current-op-stx)]
           [(((~and tag (~datum parens)) . inside) . tail)
@@ -253,7 +259,9 @@
              [(identifier? #'head)
               (dispatch-infix-implicit juxtapose-name #'head)]
              [else
-              (raise-unbound-operator #'head.name)])]
+              (if make-operator-form
+                  (dispatch-infix-implicit juxtapose-name #'head)
+                  (raise-unbound-operator #'head.name))])]
           [(((~datum parsed) . _) . _)
            (dispatch-infix-implicit juxtapose-name #'head)]
           [(((~and tag (~datum parens)) . inside) . tail)

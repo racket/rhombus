@@ -6,23 +6,28 @@
                      enforest/transformer
                      enforest/property
                      enforest/syntax-local
+                     enforest/ref-parse
                      enforest/proc-name
                      enforest/name-root
                      "srcloc.rkt"
                      "name-path-op.rkt")
+         (submod "module-path.rkt" for-import-export)
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
          (only-in "assign.rkt"
                   [= rhombus=])
          (only-in "implicit.rkt"
-                  #%literal))
+                  #%literal)
+         (only-in "arithmetic.rkt"
+                  [/ rhombus/]))
 
 (provide import
 
          (for-space rhombus/import
+                    #%juxtapose
                     #%literal
-                    /
+                    (rename-out [rhombus/ /])
                     rename
                     only
                     except))
@@ -96,15 +101,6 @@
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              r)]))
-
-  (define-syntax-class :import+mods
-    #:datum-literals (block group)
-    (pattern (group req ... (block mod ...))
-             #:with r::import #'(group req ...)
-             #:attr parsed (apply-modifiers (syntax->list #'(mod ...))
-                                            #'r.parsed))
-    (pattern r::import
-             #:attr parsed #'r.parsed))
   
   (define-syntax-class :import-block
     #:datum-literals (block group op)
@@ -113,10 +109,10 @@
                                #:defaults ([prefix #'#f]))
                     (op rhombus=)
                     req ...)
-             #:with r::import+mods #'(group req ...)
+             #:with r::import #'(group req ...)
              #:attr parsed #'r.parsed)
     (pattern (group req ...)
-             #:with r::import+mods #'(group req ...)
+             #:with r::import #'(group req ...)
              #:attr parsed #'r.parsed
              #:attr prefix (extract-prefix #'r.parsed)))
 
@@ -128,14 +124,10 @@
          #:datum-literals (group)
          [(~var im (:import-modifier r-parsed))
           (apply-modifiers (cdr mods) #'im.parsed)]
-         [(group id:identifier . _)
+         [(group form . _)
           (raise-syntax-error #f
                               "not an import modifier"
-                              #'id)]
-         [_
-          (raise-syntax-error #f
-                              "expected an import modifier"
-                              (car mods))])])))
+                              #'form)])])))
 
 (define-syntax import
   (declaration-transformer
@@ -198,57 +190,39 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-import-space #'name) rhs))]))
 
-(define-import-syntax #%literal
-  (import-prefix-operator
-   #'%literal
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(_ a . tail)
-        (unless (module-path? (syntax->datum #'a))
-          (raise-syntax-error 'import
-                              "not a valid module path"
-                              #'a))
-        (values #'a
-                #'tail)]))))
-
-(define-import-syntax /
+(define-import-syntax #%juxtapose
   (import-infix-operator
-   #'%literal
-   '((default . stronger))
+   #'#%juxtapose
+   '((default . weaker))
    'macro
    (lambda (form1 stx)
-     (unless (identifier? form1)
-       (raise-syntax-error 'import
-                           "not a valid module path element"
-                           form1))
      (syntax-parse stx
-       [(_ a . tail)
-        (unless (and (identifier? #'a)
-                     (module-path? (syntax->datum #'a)))
-          (raise-syntax-error 'import
-                              "not a valid module path element"
-                              #'a))
-        (values (datum->syntax #'a
-                               (string->symbol
-                                (format "~a/~a"
-                                        (syntax-e form1)
-                                        (syntax-e #'a)))
-                               (span-srcloc form1 #'a)
-                               #'a)
-                #'tail)]))
+       #:datum-literals (block group)
+       [(_ (block mod ...))
+        (values (apply-modifiers (syntax->list #'(mod ...))
+                                 form1)
+                #'())]
+       [(_ form . _)
+        (raise-syntax-error #f
+                            "unexpected term after import"
+                            #'form)]))
    'left))
+
+(define-import-syntax #%literal
+  (make-module-path-literal-operator import-prefix-operator))
+
+(define-import-syntax rhombus/
+  (make-module-path-/-operator import-infix-operator))
 
 (define-import-syntax rename
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group int:identifier #:to ext:identifier)
+       [(_ (block (group int::reference #:to ext::reference)
                   ...))
         (datum->syntax req
-                       (list* #'rename-in req #'([int ext] ...))
+                       (list* #'rename-in req #'([int.name ext.name] ...))
                        req)]))))
 
 (define-import-syntax only
@@ -256,9 +230,9 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group id ...) ...))
+       [(_ (block (group ref::reference ...) ...))
         (datum->syntax req
-                       (list* #'only-in req #'(id ... ...))
+                       (list* #'only-in req #'(ref.name ... ...))
                        req)]))))
 
 (define-import-syntax except
@@ -266,7 +240,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group id ...) ...))
+       [(_ (block (group ref::reference ...) ...))
         (datum->syntax req
-                       (list* #'except-in req #'(id ... ...))
+                       (list* #'except-in req #'(ref.name ... ...))
                        req)]))))
