@@ -3,12 +3,12 @@
                      syntax/parse)
          "parse.rkt"
          "binding.rkt"
-         (submod "dot.rkt" for-dot-provider)
+         "static-info.rkt"
          (submod "contract.rkt" for-struct))
 
 (provide (for-syntax make-composite-binding-transformer))
 
-(define-for-syntax (make-composite-binding-transformer predicate selectors dot-providers)
+(define-for-syntax (make-composite-binding-transformer predicate selectors static-infoss)
   (lambda (tail)
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -20,14 +20,14 @@
                                                     "  expected: ~a\n"
                                                     "  given: ~a")
                                      (length selectors)
-                                     (length (syntax->list #'(a ...))))
+                                     (length as))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
-       (define keep-dot-providers (for/list ([ctc (in-list dot-providers)]
-                                             [a (in-list as)])
-                                    (syntax-parse a
-                                      [((~datum group) a:identifier) ctc]
-                                      [_ #f])))
+       (define keep-static-infoss (for/list ([sis (in-list static-infoss)]
+                                             [matcher-id (in-list (syntax->list #'(a-parsed.matcher-id ...)))])
+                                    (if (free-identifier=? matcher-id #'identifier-succeed)
+                                        sis
+                                        '())))
        (values
         (binding-form
          #'composite
@@ -35,7 +35,7 @@
          #'composite-binder
          #`(#,predicate
             #,selectors
-            #,keep-dot-providers
+            #,keep-static-infoss
             #,(generate-temporaries #'(a-parsed.arg-id ...))
             (a-parsed.arg-id ...)
             (a-parsed.matcher-id ...)
@@ -45,7 +45,7 @@
 
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors dot-providers tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
+    [(_ c-arg-id (predicate selectors static-infoss tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
            #,(let loop ([selectors (syntax->list #'selectors)]
                         [tmp-ids (syntax->list #'tmp-ids)]
@@ -67,9 +67,9 @@
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors (dot-provider ...) (tmp-id ...) (arg-id ...) matcher-ids (binder-id ...) (data ...)))
+    [(_ c-arg-id (predicate selectors (static-infos ...) (tmp-id ...) (arg-id ...) matcher-ids (binder-id ...) (data ...)))
      #`(begin
          (binder-id tmp-id data)
          ...
-         (define-dot-provider-syntax/maybe arg-id (indirect-dot-provider (quote-syntax dot-provider)))
+         (define-static-info-syntax/maybe arg-id . static-infos)
          ...)]))

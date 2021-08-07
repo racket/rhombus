@@ -11,4 +11,4 @@
 (define-binding-syntax cons  
   (binding-transformer
    #'cons
-   (make-composite-binding-transformer #'pair? (list #'car #'cdr) (list #'#f #'#f))))
+   (make-composite-binding-transformer #'pair? (list #'car #'cdr) (list #'() #'()))))

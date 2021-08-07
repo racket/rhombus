@@ -10,7 +10,9 @@
          (submod "contract.rkt" for-struct)
          (submod "dot.rkt" for-dot-provider)
          "composite.rkt"
-         "assign.rkt")
+         "assign.rkt"
+         "result.rkt"
+         "static-info.rkt")
 
 (provide (rename-out [rhombus-struct struct]))
 
@@ -26,7 +28,7 @@
                     name:identifier
                     (~optional (~seq (op ::) contract::contract)))
              #:attr predicate #`(~? contract.predicate #f)
-             #:attr dot-provider #`(~? contract.dot-provider #f)
+             #:attr static-infos #`(~? contract.static-infos ())
              #:attr contract-name #`(~? contract.name #f))))
                                  
 (define-syntax rhombus-struct
@@ -85,22 +87,20 @@
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
                                                     (list (quote-syntax name-field) ...)
-                                                    (list (quote-syntax field.dot-provider) ...))))
+                                                    (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name
                (struct-contract (quote-syntax name?)
-                                (quote-syntax name-instance)
+                                (quote-syntax ((#%dot-provider name-instance)))
                                 (quote-syntax name)
-                                (list (list 'field.name (quote-syntax name-field) (quote-syntax field.dot-provider))
+                                (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
                                       ...)))
            #'(define-dot-provider-syntax name
                (dot-provider (make-handle-struct-type-dot (quote-syntax name))))
-           #'(define-contracted-syntax name
-               (contracted (quote-syntax name)))
            #'(define-dot-provider-syntax name-instance
                (dot-provider (make-handle-struct-instance-dot (quote-syntax name))))
+           #'(define-static-info-syntax name (#%result ((#%dot-provider name-instance))))
            #'(begin
-               (define-contracted-syntax/maybe name-field
-                 (contracted (quote-syntax field.dot-provider)))
+               (define-static-info-syntax/maybe* name-field (#%result field.static-infos))
                ...)))]))))
 
 (define-for-syntax (build-guard-expr fields predicates)
@@ -135,27 +135,23 @@
 (define-for-syntax ((make-handle-struct-instance-dot name) form1 dot field-id)
   (define contract (syntax-local-value* (in-contract-space name) struct-contract-ref))
   (unless contract (error "cannot find contract binding for instance dot provider"))
-  (define accessor+provider-ids
+  (define accessor-id+static-infos
     (for/or ([field+acc (in-list (struct-contract-fields contract))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cdr field+acc))))
-  (unless accessor+provider-ids
+  (unless accessor-id+static-infos
     (raise-syntax-error #f
                         "don't know how to access field"
                         field-id))
-  (define accessor-id (car accessor+provider-ids))
+  (define accessor-id (car accessor-id+static-infos))
   (define e (datum->syntax (quote-syntax here)
                            (list accessor-id form1)
                            (span-srcloc form1 field-id)
                            #'dot))
-  (define maybe-contract-e (if (syntax-e (cadr accessor+provider-ids))
-                               (wrap-dot-provider e
-                                                  (cadr accessor+provider-ids))
-                               e))
-  maybe-contract-e)
+  (wrap-static-info* e (cadr accessor-id+static-infos)))
 
-(define-syntax (define-contracted-syntax/maybe stx)
+
+(define-syntax (define-static-info-syntax/maybe* stx)
   (syntax-parse stx
-    [(_ id (_ (_ #f))) #'(begin)]
-    [(_ id rhs)
-     #'(define-contracted-syntax id rhs)]))
+    [(_ id (_)) #'(begin)]
+    [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))

@@ -10,7 +10,7 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
-         (submod "dot.rkt" for-dot-provider))
+         "static-info.rkt")
 
 (provide ::
 
@@ -22,46 +22,26 @@
   (begin-for-syntax
    (provide (property-out contract)
             contract-predicate-stx
-            contract-dot-provider-stx
+            contract-static-infos
 
             in-contract-space
-
-            contracted
-            in-contracted-space
-            indirect-dot-provider
             
             :contract
-            :contract-seq
-            
-            syntax-local-result-dot-provider))
+            :contract-seq))
 
-  (provide define-contract-syntax
-           define-contracted-syntax
-           
-           #%result))
+  (provide define-contract-syntax))
 
 (begin-for-syntax
-  (property contract (predicate-stx dot-provider-stx))
+  (property contract (predicate-stx static-infos))
 
   (define in-contract-space (make-interned-syntax-introducer 'rhombus/contract))
-
-  (struct contracted (result-dot-provider-stx))
-  (define (contracted-ref v) (and (contracted? v) v))
-  
-  (struct indirect-dot-provider (dot-provider-stx)
-    #:property prop:dot-provider (lambda (self)
-                                   (define stx (indirect-dot-provider-dot-provider-stx self))
-                                   (syntax-local-value* (in-dot-provider-space stx)
-                                                        dot-provider-ref)))
-
-  (define in-contracted-space (make-interned-syntax-introducer 'rhombus/contracted))
 
   (define-syntax-class :contract-seq
     (pattern (~var ref (:name-ref-seq in-contract-space name-path-op))
              #:do [(define v (syntax-local-value* (in-contract-space #'ref.name) contract-ref))]
              #:when v
              #:attr predicate (contract-predicate-stx v)
-             #:attr dot-provider (contract-dot-provider-stx v)
+             #:attr static-infos (contract-static-infos v)
              #:attr name #'ref.name
              #:attr tail #'ref.tail))
 
@@ -71,7 +51,7 @@
              #:with () #'c.tail
              #:attr name #'c.name
              #:attr predicate #'c.predicate
-             #:attr dot-provider #'c.dot-provider)))
+             #:attr static-infos #'c.static-infos)))
 
 (define-syntax ::
   (make-expression+binding-infix-operator
@@ -84,12 +64,12 @@
      (syntax-parse tail
        [(op . t::contract-seq)
         (values
-         (wrap-dot-provider
+         (wrap-static-info*
           #`(let ([val #,form])
               (if (t.predicate val)
                   val
                   (raise-contract-failure val 't.name)))
-          #'t.dot-provider)
+          #'t.static-infos)
          #'t.tail)]))
    ;; binding
    (lambda (form tail)
@@ -106,7 +86,7 @@
              #'just-check-predicate-matcher
              #'bind-contracted-identifier
              #'(t.predicate
-                t.dot-provider
+                t.static-infos
                 left.arg-id))]
            [else (binding-form
                   #'left.arg-id
@@ -137,43 +117,27 @@
 
 (define-syntax (just-check-predicate-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (predicate dot-provider bind-id) IF success fail)
+    [(_ arg-id (predicate static-infos bind-id) IF success fail)
      #'(IF (predicate arg-id)
            success
            fail)]))
 
 (define-syntax (bind-contracted-identifier stx)
   (syntax-parse stx
-    [(_ arg-id (predicate dot-provider bind-id))
+    [(_ arg-id (predicate static-infos bind-id))
      #'(begin
          (define bind-id arg-id)
-         (define-dot-provider-syntax/maybe bind-id
-           (indirect-dot-provider (quote-syntax dot-provider))))]))
+         (define-static-info-syntax/maybe bind-id . static-infos))]))
 
-(define-syntax Integer (contract #'exact-integer? #'#f))
-(define-syntax Number (contract #'number? #'#f))
-(define-syntax String (contract #'string? #'#f))
-(define-syntax #%result #f) ;; contract constructor, probably to be replaced by -> 
+(define-syntax Integer (contract #'exact-integer? #'()))
+(define-syntax Number (contract #'number? #'()))
+(define-syntax String (contract #'string? #'()))
 
 (define-syntax (define-contract-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-contract-space #'id)
          rhs)]))
-
-(define-syntax (define-contracted-syntax stx)
-  (syntax-parse stx
-    [(_ id:identifier rhs)
-     #`(define-syntax #,(in-contracted-space #'id)
-         rhs)]))
-
-(define-for-syntax (syntax-local-result-dot-provider rator)
-  (cond
-    [(and (identifier? rator)
-          (syntax-local-value* (in-contracted-space rator) contracted-ref))
-     => (lambda (cted)
-          (contracted-result-dot-provider-stx cted))]
-    [else #f]))
 
 (define (raise-contract-failure val contract)
   (error '::
