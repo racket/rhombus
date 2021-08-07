@@ -22,7 +22,11 @@
 ;;   `name` - convenience constructor for an instance of `prop:name`
 (define-syntax (property stx)
   (syntax-parse stx
-    [(_ name (~or base-name:identifier (field ...)) (~optional (~seq #:super prop-super)))
+    [(_ name
+        (~optional base-name:identifier)
+        (~optional (field:identifier ...)
+                   #:defaults ([(field 1) '()]))
+        (~optional (~seq #:super prop-super)))
      (with-syntax ([prop:name (format-id "prop:~a" #'name)]
                    [name-ref (format-id "~a-ref" #'name)]
                    [name? (format-id "~a?" #'name)]
@@ -33,18 +37,13 @@
        (with-syntax ([(base-name ...) (if (attribute base-name)
                                           (list #'base-name)
                                           (list))]
-                     [(field ...) (if (attribute base-name)
-                                      (list)
-                                      #'(field ...))]
-                     [(define-accessor ...) (if (attribute base-name)
-                                                (list)
-                                                (for/list ([field (in-list (syntax->list #'(field ...)))])
-                                                  (define (acc name)
-                                                    (datum->syntax name
-                                                                   (string->symbol (format "~a-~a"
-                                                                                           (syntax-e name)
-                                                                                           (syntax-e field)))))
-                                                  #`(define #,(acc #'name) #,(acc #'convenience-name))))])
+                     [(define-accessor ...) (for/list ([field (in-list (syntax->list #'(field ...)))])
+                                              (define (acc name)
+                                                (datum->syntax name
+                                                               (string->symbol (format "~a-~a"
+                                                                                       (syntax-e name)
+                                                                                       (syntax-e field)))))
+                                              #`(define #,(acc #'name) #,(acc #'convenience-name)))])
          #'(begin
              (define-values (prop:name name? ref)
                (make-struct-type-property 'name #f super-spec))

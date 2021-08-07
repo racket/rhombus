@@ -9,9 +9,11 @@
                      enforest/name-ref-parse
                      enforest/proc-name
                      enforest/syntax-local
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     "srcloc.rkt")
          "declaration.rkt"
-         (submod "module-path.rkt" for-import-export))
+         (submod "module-path.rkt" for-import-export)
+         (submod "import.rkt" for-export))
 
 (provide export
 
@@ -20,6 +22,7 @@
                     except
                     names
                     all_from
+                    all_in
                     |.|
                     #%juxtapose))
 
@@ -160,6 +163,28 @@
          [(_ (parens mod-path::module-path)
              . tail)
           (values #`(all-from-out mod-path.parsed)
+                  #'tail)])))))
+
+(define-export-syntax all_in
+  (export-prefix-operator
+   #'all_from
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (parameterize ([current-module-path-context 'export])
+       (syntax-parse stx
+         #:datum-literals (parens group)
+         [(form-id (~and arg ((~and tag parens) (group id:identifier)))
+                   . tail)
+          (define v (syntax-local-value* #'id import-name-root-ref))
+          (unless v
+            (raise-syntax-error #f
+                                "not an import name"
+                                (datum->syntax #f
+                                               (list #'form-id #'arg)
+                                               (span-srcloc #'form-id #'tag))))
+          (values #`(all-from-out #,(relocate #'id
+                                              (import-name-root-module-path v)))
                   #'tail)])))))
 
 (define-export-syntax #%juxtapose

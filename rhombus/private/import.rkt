@@ -30,13 +30,20 @@
                     (rename-out [rhombus/ /])
                     rename
                     only
-                    except))
+                    except
+                    expose))
+
+(module+ for-export
+  (provide (for-syntax import-name-root-ref
+                       import-name-root-module-path)))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
   (property import-infix-operator infix-operator)
 
   (property import-modifier transformer)
+
+  (property import-name-root name-root (module-path))
 
   (define in-import-space (make-interned-syntax-introducer 'rhombus/import))
 
@@ -77,30 +84,53 @@
     #:name-path-op name-path-op
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
-  (define (extract-prefix r)
+  (define (extract-module-path r)
     (syntax-parse r
+      [_:string r]
+      [_:identifier r]
+      [((~literal rename-in) mp . _) (extract-module-path #'mp)]
+      [((~literal only-in) mp . _) (extract-module-path #'mp)]
+      [((~literal except-in) mp . _) (extract-module-path #'mp)]
+      [((~literal expose-in) mp . _) (extract-module-path #'mp)]
+      [((~literal module-path-in) _ mp) (extract-module-path #'mp)]
+      [_ (raise-syntax-error 'import
+                             "don't know how to extract module path"
+                             r)]))
+
+  (define (introduce-but-skip-exposed intro r)
+    (syntax-parse r
+      [_:string (intro r)]
+      [_:identifier (intro r)]
+      [((~literal expose-in) mp name ...)
+       #`(rename-in #,(introduce-but-skip-exposed intro #'mp)
+                    #,@(for/list ([name (in-list (syntax->list #'(name ...)))])
+                         #`[#,(intro name) #,name]))]
+      [(form-id mp . more)
+       (quasisyntax/loc r (form-id #,(introduce-but-skip-exposed intro #'mp)
+                                   . #,(intro #'more)))]
+      [_ (raise-syntax-error 'import
+                             "don't know how to expose"
+                             r)]))
+
+  (define (extract-prefix r)
+    (define mp (extract-module-path r))
+    (syntax-parse mp
       [_:string (datum->syntax
-                 r
+                 mp
                  (string->symbol
                   (regexp-replace #rx"[.].*$"
-                                  (regexp-replace #rx"^.*/" (syntax-e r) "")
+                                  (regexp-replace #rx"^.*/" (syntax-e mp) "")
                                   ""))
-                 r
-                 r)]
+                 mp)]
       [_:identifier (datum->syntax
-                     r
+                     mp
                      (string->symbol (regexp-replace #rx"^.*/"
-                                                     (symbol->string (syntax-e r))
+                                                     (symbol->string (syntax-e mp))
                                                      ""))
-                     r
-                     r)]
-      [((~literal rename-in) mp . _) (extract-prefix #'mp)]
-      [((~literal only-in) mp . _) (extract-prefix #'mp)]
-      [((~literal except-in) mp . _) (extract-prefix #'mp)]
-      [((~literal prefix-in) _ mp) (extract-prefix #'mp)]
+                     mp)]
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
-                             r)]))
+                             mp)]))
   
   (define-syntax-class :import-block
     #:datum-literals (block group op)
@@ -143,17 +173,19 @@
     [(_) #'(begin)]
     [(_ r::import-block . more)
      (define prefix #'r.prefix)
-     (define intros (if (syntax-e prefix)
-                        (make-syntax-introducer)
-                        values))
+     (define intro (if (syntax-e prefix)
+                       (make-syntax-introducer)
+                       values))
+     (define r-parsed (introduce-but-skip-exposed intro #'r.parsed))
      #`(begin
-         (require r.parsed)
+         (require #,r-parsed)
          #,(if (syntax-e prefix)
                #`(define-syntax #,prefix
-                   (name-root (lambda (tail)
-                                (parse-import-dot
-                                 (quote-syntax #,(datum->syntax #'r.parsed 'ctx))
-                                 tail))))
+                   (import-name-root (lambda (tail)
+                                       (parse-import-dot
+                                        (quote-syntax #,(datum->syntax (intro #'r.parsed) 'ctx))
+                                        tail))
+                                     (quote-syntax #,(extract-module-path r-parsed))))
                #'(begin))
          (rhombus-import . more))]))
 
@@ -165,7 +197,7 @@
                               name))
     (unless (identifier-binding id)
       (raise-syntax-error #f
-                          (format "no such importd ~a" what)
+                          (format "no such imported ~a" what)
                           name))
     id)
   (syntax-parse stxes
@@ -243,4 +275,14 @@
        [(_ (block (group ref::reference ...) ...))
         (datum->syntax req
                        (list* #'except-in req #'(ref.name ... ...))
+                       req)]))))
+
+(define-import-syntax expose
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       #:datum-literals (block group)
+       [(_ (block (group ref::reference ...) ...))
+        (datum->syntax req
+                       (list* #'expose-in req #'(ref.name ... ...))
                        req)]))))
