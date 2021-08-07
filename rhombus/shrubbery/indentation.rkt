@@ -31,16 +31,24 @@
      (define delta (or (line-delta t start #:unless-empty? #t) 0))
      (cond
        [(eqv? delta 0)
+        (define (like-enclosing #:as-bar? [as-bar? #f]
+                                #:also-zero? [also-zero? #f])
+          (indent-like-enclosing-group t start current-tab
+                                       #:multi? multi?
+                                       #:as-bar? as-bar?
+                                       #:also-zero? also-zero?))
         (case (send t classify-position (+ start current-tab))
           [(parenthesis)
            (indent-like-parenthesis t start current-tab)]
           [(bar-operator)
-           (indent-like-enclosing-group t start current-tab
-                                        #:multi? multi?
-                                        #:as-bar? #t)]
+           (like-enclosing #:as-bar? #t)]
+          [(comment)
+           (define group-comment? (is-group-comment? t (+ start current-tab)))
+           (like-enclosing #:as-bar? (and group-comment?
+                                          (bar-after-group-comment? t (+ start current-tab) start))
+                           #:also-zero? group-comment?)]
           [else
-           (indent-like-enclosing-group t start current-tab
-                                        #:multi? multi?)])]
+           (like-enclosing)])]
        [else
         ;; don't change indentation for a continuation line
         current-tab])]))
@@ -96,13 +104,16 @@
 
 (define (indent-like-enclosing-group t start current-tab
                                      #:as-bar? [as-bar? #f]
-                                     #:multi? [multi? #f])
+                                     #:multi? [multi? #f]
+                                     #:also-zero? [also-zero? #f])
   ;; candidates are sorted right (larger tab) to left (smaller tab)
+  (define (add-zero l) (if also-zero? (add-zero-to-end l) l))
   (define candidates (remove-dups (indentation-candidates t (sub1 start) #:as-bar? as-bar?)))
   (define delta (line-delta t start))
-  (define tabs (for/list ([col (in-list candidates)]
-                          #:when (col . >= . delta))
-                 (- col delta)))
+  (define tabs  (add-zero
+                 (for/list ([col (in-list candidates)]
+                            #:when (col . >= . delta))
+                   (- col delta))))
   ;; if the current state matches a candidate tab, we'll
   ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))
@@ -411,6 +422,20 @@
          [else #f])]
       [else #f])))
 
+(define (is-group-comment? t pos)
+  (define-values (s e) (send t get-token-range pos))
+  (and (= e (+ s 3))
+       (equal? "#//" (send t get-text s e))))
+
+(define (bar-after-group-comment? t pos at-start)
+  (let loop ([pos pos])
+    (define-values (s e) (send t get-token-range pos))
+    (define category (send t classify-position s))
+    (case category
+      [(white-space comment) (loop e)]
+      [(bar-operator) (> (line-start t pos) at-start)]
+      [else #f])))
+
 (define (get-non-empty-lines t s-line e-line)
   (let loop ([line s-line])
     (cond
@@ -448,3 +473,10 @@
 
 (define (min* a b)
   (min a (or b a)))
+
+(define (add-zero-to-end l)
+  (let loop ([l l])
+    (cond
+      [(null? l) (list 0)]
+      [(eqv? (car l) 0) l]
+      [else (cons (car l) (loop (cdr l)))])))

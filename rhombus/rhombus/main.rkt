@@ -23,6 +23,7 @@
         "private/value.rkt"
         "private/import.rkt"
         "private/export.rkt"
+        "private/module-path.rkt"
         "private/expression-syntax.rkt"
         "private/binding-syntax.rkt"
         "private/definition-syntax.rkt"

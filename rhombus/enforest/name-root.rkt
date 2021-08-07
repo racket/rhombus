@@ -6,16 +6,16 @@
          "proc-name.rkt"
          "private/transform.rkt")
 
-(provide (property-out lexicon)
-         lexicon-proc)
+(provide (property-out name-root)
+         name-root-proc)
 
 (module+ for-parse
-  (provide apply-lexicon))
+  (provide apply-name-root))
 
-(property lexicon (proc))
+(property name-root (proc))
   
-(define (apply-lexicon op-stx lxc stxes)
-  (define proc (lexicon-proc lxc))
+(define (apply-name-root op-stx lxc stxes)
+  (define proc (name-root-proc lxc))
   (call-as-transformer
    op-stx
    (lambda (in out)
