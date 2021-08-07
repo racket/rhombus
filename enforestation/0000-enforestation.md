@@ -572,58 +572,72 @@ types and one macro:
    library.
 
  * A `define-enforest` macro that parameterizes the enforestation
-   algorithm over the following:
+   algorithm over the following, which are all optional:
 
-    - `enforest`: the name to bind as an `enforest` function, which is
-      used to start enforestation of a group. It takes a list of
-      S-expressions for parsed shrubberies that were in a group, and
-      it returns a parsed form. The `enforest` function drives a loop
-      that calls the enforest-step function.
+    - `#:enforest`: the name to bind as an enforest function
+      (defaults to a fresh name), which is used to start enforestation
+      of a group. It takes a list of S-expressions for parsed
+      shrubberies that were in a group, and it returns a parsed form.
+      The enforest function drives a loop that calls the
+      enforest-step function.
 
-    - `enforest-step`: the name to bind as an enforest-step function,
-      with continues an enforestation. It takes two arguments, which
-      is the list of renaming terms in a group and the current
-      operator. The result is two values: a parsed form and the
-      remaining sequence of terms (starting with an infix operator
-      that has lower precedence than the input operator).
+    - `#:enforest-step`: the name to bind as an enforest-step function
+      (defaults to a fresh name), with continues an enforestation. It
+      takes two arguments, which is the list of renaming terms in a
+      group and the current operator. The result is two values: a
+      parsed form and the remaining sequence of terms (starting with
+      an infix operator that has lower precedence than the input
+      operator).
 
-    - `:form`: the name of a syntax class to bind (see
-      `syntax-parse`), which matches a `group` shrubbery
-      representation and enforests it. A match has an `parsed`
-      attribute representing the enforestation result.
+    - `#:syntax-class`: the name of a syntax class (see
+      `syntax-parse`) to bind (defaults to a fresh name), which
+      matches a `group` shrubbery representation and enforests it. A
+      match has an `parsed` attribute representing the enforestation
+      result.
 
-    - `:prefix-op+form+tail` and `:infix-op+form+tail`: names of
-      splicing syntax classes that match an operator name followed by
-      a sequence of terms and steps an enforestation. A match has an
-      `parsed` attribute for the parsed result and a `tail` attribute
-      for the remaining terms.
+    - `#:prefix-more-syntax-class` and `#:infix-more-syntax-class`:
+      names of syntax classes (defaulting to fresh names) that match
+      an operator name followed by a sequence of terms and steps an
+      enforestation. A match has an `parsed` attribute for the parsed
+      result and a `tail` attribute for the remaining terms.
 
-    - `form-kind-str` and `operator-kind-str`: string used in error
-      reporting.
+    - `#:desc` and `#:operator-desc`: strings used in error reporting
+      to refer to a form or an operator for a form. The defaults are
+      '"form"' and '"operator"'.
 
-    - `in-space`: a function that takes an identifier syntax object
+    - `#:in-space`: a function that takes an identifier syntax object
       and adds a space scope if the enforesting context uses a space.
+      The default is `values`.
 
-    - `name-path-op`: an operator name that is recognized after a
-      name-root identifier for hierarhical name references.
+    - `#:name-path-op`: an operator name that is recognized after a
+      name-root identifier for hierarhical name references. The
+      default is `'|.|`.
 
-    - `prefix-operator-ref` and `infix-operator-ref`: functions that
-      take a compile-time value and extract an instance of
+    - `#:prefix-operator-ref` and `#:infix-operator-ref`: functions
+      that take a compile-time value and extract an instance of
       `prefix-operator` or `infix-operator`, respectively, if the
       value has one suitable for the context, returning `#f`
       otherwise. Normally, these functions use structure-property
-      accessors.
+      accessors. The defaults are `prefix-operator-ref` and
+      `infix-oerator-ref`.
 
-    - `check-result`: a function that takes the result of an operator
-       and checks whether the result is suitable for the context, used
-       for earlier detection of errors; the `check-result` function
-       should either raise an exception or return its argument
-       (possibly adjusted).
+    - `#:check-result`: a function that takes the result of an
+      operator and checks whether the result is suitable for the
+      context, used for earlier detection of errors; the
+      `check-result` function should either raise an exception or
+      return its argument (possibly adjusted). A second argument to
+      the function is the procedure that produced the result, which
+      can be used for error checking. The default function checks that
+      its first argument is a syntax object and returns it.
 
-    - `make-identifier-form`: a function that takes an identifier an
+    - `#:make-identifier-form`: a function that takes an identifier an
       produces a suitable parsed form. If a context does not have a
       meaning for unbound identifiers, `make-identifier-form` can
-      report a syntax error.
+      report a syntax error. The default is `values`.
+
+    - `#:make-operator-form`: a function that takes an operator an
+      produces a suitable parsed form, or `#f` to have an error
+      tiggered for an unbound operator in an expression position.
 
    The `define-enforest` macro is provided by the `enforest` library.
 
@@ -636,28 +650,41 @@ and macro:
     - `proc`: a procedure that takes a list of terms and returns a
       parsed term
 
- * A `define-transform-class` macro that defines a syntax class to
-   trigger parsing, given the following:
+   The `transformer` structure type is provided by the
+   `enforest/transform` library.
 
-    - `:form`: the name of the syntax class to define, which matches a
-       `group` shrubbery representation and parses it. A match has
-       an `parsed` attribute representing the parsed result.
+ * A `define-transform` macro that defines a syntax class to
+   trigger parsing given the following, which are all optional:
 
-    - `form-kind-str`: string used in error reporting.
+    - `#:syntax-class`: the name of the syntax class to define
+      (defaults to a fresh name), which matches a `group` shrubbery
+      representation and parses it. A match has an `parsed` attribute
+      representing the parsed result.
 
-    - `name-path-op`: an operator name that is recognized after a
-      name-root identifier for hierarhical name references.
+    - `#:desc`: string used in error reporting to refer to a form. The
+      default is '"form"'.
 
-    - `transformer-ref`: function that takes a compile-time value and
-      extract an instance of `transformer`, if the value has one
+    - `#:name-path-op`: an operator name that is recognized after a
+      name-root identifier for hierarhical name references. The
+      default is `'|.|`.
+
+    - `#:transformer-ref`: function that takes a compile-time value
+      and extract an instance of `transformer`, if the value has one
       suitable for the context, returning `#f` otherwise. Normally,
-      these functions use structure-property accessors.
+      these functions use structure-property accessors. The default is
+      `transformer-ref`.
 
-    - `check-result`: a function that takes the result of an
-       transformer and checks whether the result is suitable for the
-       context, used for earlier detection of errors; the
-       `check-result` function should either raise an exception or
-       return its argument (possibly adjusted).
+    - `#:check-result`: a function that takes the result of an
+      transformer and checks whether the result is suitable for the
+      context, used for earlier detection of errors; the
+      `check-result` function should either raise an exception or
+      return its argument (possibly adjusted). A second argument to
+      the function is the procedure that produced the result, which
+      can be used for error checking. The default function checks that
+      its first argument is a syntax object and returns it.
+
+   The `define-transform` function is provided by the
+   `enforest/transform` library.
 
 ## Prototype implementation examples
 
@@ -703,10 +730,11 @@ The `:definition` syntax class is defined using the simplified Rhombus
 expander API:
 
 ```
-  (define-transform-class :definition
-    "definition"
-    definition-transformer-ref
-    check-definition-result)
+  (define-transform
+    #:syntax-class :definition
+    #:desc "definition"
+    #:transformer-ref definition-transformer-ref
+    #:check-result check-definition-result)
 ```
 
 Here, `definition-transformer-ref` refers to a function that extracts
@@ -759,13 +787,18 @@ expression parsing, roughly like this:
 Here's the definition of the `:expression` syntax class:
 
 ```
-  (define-enforest enforest-expression enforest-expression-step
-    :expression :prefix-op+expression+tail :infix-op+expression+tail
-    "expression" "expression operator"
-    in-expression-space
-    '|.| expression-prefix-operator-ref expression-infix-operator-ref
-    check-expression-result
-    make-identifier-expression)
+  (define-enforest
+    #:syntax-class :expression
+    #:prefix-more-syntax-class :prefix-op+expression+tail
+    #:infix-more-syntax-class :infix-op+expression+tail
+    #:desc "expression"
+    #:operator-desc "expression operator"
+    #:in-space in-expression-space
+    #:name-path-op '|.|
+    #:prefix-operator-ref expression-prefix-operator-ref
+    #:infix-operator-ref expression-infix-operator-ref
+    #:check-result check-expression-result
+    #:make-identifier-form make-identifier-expression)
 ```
 
 Expressions use the default mapping space, so `in-expression-space` is
