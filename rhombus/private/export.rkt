@@ -140,7 +140,7 @@
      
 (define-export-syntax names
   (export-prefix-operator
-   #'rename
+   #'names
    '((default . stronger))
    'macro
    (lambda (stx)

@@ -15,11 +15,15 @@
 
 (provide (for-space rhombus/module-path
                     #%literal
-                    (rename-out [rhombus/ /])))
+                    (rename-out [rhombus/ /]
+                                [rhombus-file file]
+                                [rhombus-lib lib])))
 
 (module+ for-import-export
   (provide (for-syntax make-module-path-literal-operator
                        make-module-path-/-operator
+                       make-module-path-file-operator
+                       make-module-path-lib-operator
                        
                        :module-path
                        in-module-path-space
@@ -84,7 +88,7 @@
 
 (define-for-syntax (make-module-path-/-operator infix-operator)
   (infix-operator
-   #'%literal
+   #'rhombus/
    '((default . stronger))
    'macro
    (lambda (form1 stx)
@@ -111,3 +115,42 @@
 
 (define-module-path-syntax rhombus/
   (make-module-path-/-operator module-path-infix-operator))
+
+(define-for-syntax (make-module-path-string-arg-operator prefix-operator name mp-form-id check)
+  (prefix-operator
+   name
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group)
+       [(form-id ((~and tag parens) (group str:string)) . tail)
+        (values (datum->syntax #'str
+                               (list mp-form-id #'str)
+                               (span-srcloc #'form-id #'tag)
+                               #'form-id)
+                #'tail)]))))
+
+(define-for-syntax (make-module-path-file-operator prefix-operator)
+  (make-module-path-string-arg-operator
+   prefix-operator #'rhombus-file #'file
+   (lambda (str)
+     (unless (path-string? (syntax->datum str))
+       (raise-syntax-error (current-module-path-context)
+                           "not a valid path"
+                           str)))))
+
+(define-module-path-syntax rhombus-file
+  (make-module-path-file-operator module-path-prefix-operator))
+
+(define-for-syntax (make-module-path-lib-operator prefix-operator)
+  (make-module-path-string-arg-operator
+   prefix-operator #'rhombus-lib #'lib
+   (lambda (str)
+     (unless (module-path? `(lib ,(syntax->datum str)))
+       (raise-syntax-error (current-module-path-context)
+                           "not a valid library path"
+                           str)))))
+
+(define-module-path-syntax rhombus-lib
+  (make-module-path-lib-operator module-path-prefix-operator))

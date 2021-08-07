@@ -27,7 +27,9 @@
          (for-space rhombus/import
                     #%juxtapose
                     #%literal
-                    (rename-out [rhombus/ /])
+                    (rename-out [rhombus/ /]
+                                [rhombus-file file]
+                                [rhombus-lib lib])
                     rename
                     only
                     except
@@ -88,6 +90,8 @@
     (syntax-parse r
       [_:string r]
       [_:identifier r]
+      [((~literal file) _) r]
+      [((~literal lib) _) r]
       [((~literal rename-in) mp . _) (extract-module-path #'mp)]
       [((~literal only-in) mp . _) (extract-module-path #'mp)]
       [((~literal except-in) mp . _) (extract-module-path #'mp)]
@@ -101,6 +105,8 @@
     (syntax-parse r
       [_:string (intro r)]
       [_:identifier (intro r)]
+      [((~literal file) _) (intro r)]
+      [((~literal lib) _) (intro r)]
       [((~literal expose-in) mp name ...)
        #`(rename-in #,(introduce-but-skip-exposed intro #'mp)
                     #,@(for/list ([name (in-list (syntax->list #'(name ...)))])
@@ -128,6 +134,11 @@
                                                      (symbol->string (syntax-e mp))
                                                      ""))
                      mp)]
+      [((~literal lib) str) (extract-prefix #'str)]
+      [((~literal file) str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
+                               (datum->syntax
+                                mp
+                                (string->symbol (path-replace-suffix name #""))))]
       [_ (raise-syntax-error 'import
                              "don't know how to extract default prefix"
                              mp)]))
@@ -245,6 +256,12 @@
 
 (define-import-syntax rhombus/
   (make-module-path-/-operator import-infix-operator))
+
+(define-import-syntax rhombus-file
+  (make-module-path-file-operator import-prefix-operator))
+
+(define-import-syntax rhombus-lib
+  (make-module-path-lib-operator import-prefix-operator))
 
 (define-import-syntax rename
   (import-modifier

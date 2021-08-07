@@ -26,7 +26,7 @@
     [(_ (~alt (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
               (~optional (~seq #:desc form-kind-str)
-                         #:defaults ([form-kind-str "transformer"]))
+                         #:defaults ([form-kind-str "form"]))
               (~optional (~seq #:in-space in-space)
                          #:defaults ([in-space #'values]))
               (~optional (~seq #:name-path-op name-path-op)

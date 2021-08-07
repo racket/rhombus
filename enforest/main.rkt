@@ -96,7 +96,7 @@
               (~optional (~seq #:infix-more-syntax-class infix-op+form+tail)
                          #:defaults ([infix-op+form+tail #':infix-op+form+tail]))
               (~optional (~seq #:desc form-kind-str)
-                         #:defaults ([form-kind-str #'"expression"]))
+                         #:defaults ([form-kind-str #'"form"]))
               (~optional (~seq #:operator-desc operator-kind-str)
                          #:defaults ([operator-kind-str #'"operator"]))
               (~optional (~seq #:in-space in-space)
