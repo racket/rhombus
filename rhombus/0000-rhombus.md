@@ -340,21 +340,25 @@ fahrenheit_to_celsius(fahrenheit_freezing)
 _If the left-dangling `=` as above is slightly uncomfortable, that may
 be good as a discoragement again dumping._
 
-Module paths in Racket are written with a `/` separator. In Rhombus,
-`.` as an import operator combines module-path elements, and the last
-element is the one tat determines the default import prefix:
+Module paths are written with a `/` separator as in Racket, and the
+last path element is the one that determines the default import
+prefix:
 
 ```
 import:
-  racket.math
+  racket/math
 
 math.pi  // prints 3.141592653589793
 ```
 
 _The use of `.` with an import name as a hierarchical reference is not
-the same as the `.` described in the next section. See also the
+the same as the `.` described in the next section. We stick with `/`
+for module paths to avoid overloading `.` further. See also the
 current [rationale](#rationale-and-alternatives)._
 
+There's a lot more to the syntax or `import` and `export` for
+renaming, re-exporting, and so on. See [a separate
+document](import-export.md) for more information.
 
 ## Definitions
 
@@ -887,15 +891,12 @@ Use the keyword `'other'` in `'weaker_than'`, `'stronger_than'`, or
 `'same_as'` to declare a precedence relationship for operators not
 otherwise mentioned.
 
-To export an operator, use an `operator` block with `export`:
+An operator can be exported the same as identifiers:
 
 ```
 export:
-  operator: <>
+  <>
 ```
-
-_Why require `operator:` here? See the current
-[rationale](#rationale-and-alternatives)._
 
 On the import side, to refer to an operator that has a prefix, put the
 operator after `.` in parentheses:
@@ -909,7 +910,17 @@ import:
 
 If the point of an operator is terseness, an import prefix may defeat
 the point. Using a library that supplies operators may be one reason
-to import with a leading `=` to avoid a prefix on the imports.
+to import with a leading `=` to avoid a prefix on the imports. To
+selectively make an operator accessible without it import's prefix,
+use the `expose` import modifier:
+
+```
+import:
+  "posn.rhm":
+    expose: <>
+
+1 <> 2
+```
 
 
 ## Syntax objects
@@ -1255,20 +1266,38 @@ constrained by choices in other dimensions.
 
 ## Overloading `.` for hierarchical naming and field access
 
-While the use of `.` for hierarchical naming in something like
+The use of `.` for hierarchical naming in something like
 `f2c.fahrenheit_to_celsius` may seem related to the use of `.` for a
-field access like `p.x`. They're fundamentally different ideas,
-however, and they're supported by different mechanisms in the Rhombus
-expander. The overloading of `.` here is Java-like; Rust, in contrast,
-uses `::` for import paths and `.` for field access.
+field access like `p.x`. They're different ideas from the perspective
+of enforestation, however, and they're supported by different
+mechanisms in the Rhombus expander. The overloading of `.` here is
+Java-like; Rust, in contrast, uses `::` for import paths and `.` for
+field access.
 
-The two uses of `.` cannot be unified, because they work in different
-ways. In examples like `Posn(1, 2).x` or `p.x`, the left-hand side of
-`.` is an expression that is already parsed. In `expr.macro` or `1
-posn.(<>) 2`, the left-hand side of `.` is not a definition or
-expression, and `.` as a binary operator would not be able to produce
-a binary operator (at least not while implementing the target
-operator's intended precedence).
+The two uses of `.` cannot be unified within the Rhombus expander's
+framework, because they work in different ways. In examples like
+`Posn(1, 2).x` or `p.x`, the left-hand side of `.` is an expression
+that is already parsed. In `expr.macro` or `1 posn.(<>) 2`, the
+left-hand side of `.` is not a definition or expression, and `.` as a
+binary operator would not be able to produce a binary operator (at
+least not while implementing the target operator's intended
+precedence).
+
+The `.` could be further overloaded for module paths, as in
+`racket.math` or `racket.base` instead of `racket/math` or
+`racket/base`. In that case, `.` corresponds to an infix dot operator
+in a module-path context. But it also invitates generalizations that
+are difficult to implement on top of Racket without a new layer of
+searching (keeping in mind that searching is the root of many evils).
+For example, why not `racket.math.pi`, instead of having to import
+`racket.math`? If a module imports `racket/math` as `math`, then it can
+export `math` (as opposed to `all_in(math)`), and then an importing
+module can use `math.pi`; but importing `racket` and then having an
+importing use `racket.math.pi` would be a similar sort of problem.
+Meanwhile, using `/` instead of `.` in module paths leaves open the
+door to using `.` for referencing a submodule. Finally, using `/`
+preserves the connection to filesystem paths and the relative-path
+string form of module paths.
 
 ## Define
 
@@ -1320,25 +1349,6 @@ particular prolem for parsing and may be useful, such as for the `mod`
 operator. It may make sense to require infix forms to use shrubbery
 operators, though, to reduce the space of possible parses of a
 shrubbery independent of binding.
-
-## Exporting operators
-
-It might make sense to export operators just the same as identifiers,
-which don't require an `identifier:` block:
-
-```
-export:
-  fahrenheit_freezing
-  fahrenheit_to_celsius
-```
-
-The difference right now is how the enforestation process works.
-Enforestation is relevant to `export` because export operators are
-supported. The Rhombus expander's enforestation process allows
-identifiers that are not bound as export operators to expand as
-themselves. It does not treat operators that way. Maybe that should be
-an option to `define-enforest`, or maybe `operator:` is a good idea
-for clarity
 
 ## Syntax patterns
 
