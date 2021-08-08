@@ -17,8 +17,10 @@
 (provide (rename-out [rhombus-struct struct]))
 
 (begin-for-syntax
-  (struct struct-contract contract (constructor-id fields))
-  (define (struct-contract-ref v) (and (struct-contract? v) v))
+  (struct struct-desc (constructor-id fields))
+  (define (struct-desc-ref v) (and (struct-desc? v) v))
+
+  (define in-struct-desc-space (make-interned-syntax-introducer 'rhombus/struct))
 
   (define-syntax-class :field
     #:datum-literals (group op)
@@ -26,10 +28,12 @@
     (pattern (group (~optional mutable
                                #:defaults ([mutable #'#f]))
                     name:identifier
-                    (~optional (~seq (op ::) contract::contract)))
-             #:attr predicate #`(~? contract.predicate #f)
-             #:attr static-infos #`(~? contract.static-infos ())
-             #:attr contract-name #`(~? contract.name #f))))
+                    (~optional c::inline-contract))
+             #:with c-parsed::contract-form (if (attribute c)
+                                                #'c.parsed
+                                                #'(#f ()))
+             #:attr predicate #'c-parsed.predicate
+             #:attr static-infos #'c-parsed.static-infos)))
                                  
 (define-syntax rhombus-struct
   (definition-transformer
@@ -89,11 +93,13 @@
                                                     (list (quote-syntax name-field) ...)
                                                     (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name
-               (struct-contract (quote-syntax name?)
-                                (quote-syntax ((#%dot-provider name-instance)))
-                                (quote-syntax name)
-                                (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
-                                      ...)))
+               (identifier-contract (quote-syntax name)
+                                    (quote-syntax name?)
+                                    (quote-syntax ((#%dot-provider name-instance)))))
+           #'(define-struct-desc-syntax name
+               (struct-desc (quote-syntax name)
+                            (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
+                                  ...)))
            #'(define-dot-provider-syntax name
                (dot-provider (make-handle-struct-type-dot (quote-syntax name))))
            #'(define-dot-provider-syntax name-instance
@@ -119,10 +125,10 @@
 
 ;; dot provider for a structure name used before a `.`
 (define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)
-  (define contract (syntax-local-value* (in-contract-space name) struct-contract-ref))
-  (unless contract (error "cannot find contract binding for dot provider"))
+  (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
+  (unless desc (error "cannot find contract binding for dot provider"))
   (define accessor-id
-    (for/or ([field+acc (in-list (struct-contract-fields contract))])
+    (for/or ([field+acc (in-list (struct-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cadr field+acc))))
   (unless accessor-id
@@ -133,10 +139,10 @@
 
 ;; dot provider for a structure instance used before a `.`
 (define-for-syntax ((make-handle-struct-instance-dot name) form1 dot field-id)
-  (define contract (syntax-local-value* (in-contract-space name) struct-contract-ref))
-  (unless contract (error "cannot find contract binding for instance dot provider"))
+  (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
+  (unless desc (error "cannot find contract binding for instance dot provider"))
   (define accessor-id+static-infos
-    (for/or ([field+acc (in-list (struct-contract-fields contract))])
+    (for/or ([field+acc (in-list (struct-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cdr field+acc))))
   (unless accessor-id+static-infos
@@ -150,6 +156,11 @@
                            #'dot))
   (wrap-static-info* e (cadr accessor-id+static-infos)))
 
+(define-syntax (define-struct-desc-syntax stx)
+  (syntax-parse stx
+    [(_ id:identifier rhs)
+     #`(define-syntax #,(in-struct-desc-space #'id)
+         rhs)]))
 
 (define-syntax (define-static-info-syntax/maybe* stx)
   (syntax-parse stx

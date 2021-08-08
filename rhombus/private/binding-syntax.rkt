@@ -16,17 +16,23 @@
          (submod "quasiquote.rkt" convert)
          "parse.rkt"
          ;; for `matcher` and `binder`:
-         (for-syntax "parse.rkt"))
+         (for-syntax "parse.rkt")
+         ;; for `bind_ct`:
+         (for-syntax "name-root.rkt"))
 
 (provide bind
-         (for-syntax unpack_binding
-                     pack_binding))
+         (for-syntax bind_ct))
 
 (define-syntax bind
   (simple-name-root operator
                     macro
                     matcher
                     binder))
+
+(begin-for-syntax
+  (define-syntax bind_ct
+    (simple-name-root pack
+                      unpack)))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic
@@ -47,7 +53,7 @@
     #:property prop:binding-prefix-operator (lambda (self) (prefix+infix-prefix self))
     #:property prop:binding-infix-operator (lambda (self) (prefix+infix-infix self))))
 
-(define-for-syntax (unpack_binding stx)
+(define-for-syntax (unpack stx)
   (syntax-parse stx
     [((~datum parsed) b::binding-form)
      #`(parens (group b.arg-id)
@@ -55,7 +61,7 @@
                (group chain-to-binder)
                (group (parsed (b.matcher-id b.binder-id b.data))))]))
 
-(define-for-syntax (pack_binding stx)
+(define-for-syntax (pack stx)
   #`(parsed
      #,(syntax-parse stx
          #:datum-literals (parens group block)

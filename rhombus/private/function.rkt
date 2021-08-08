@@ -66,12 +66,21 @@
              #:attr kw #'#f
              #:attr parsed #'arg.parsed))
 
+  (define-syntax-class :not-block
+    #:datum-literals (op parens braces)
+    (pattern _:identifier)
+    (pattern (op . _))
+    (pattern (parens . _))
+    (pattern (braces . _)))
+
   (define-splicing-syntax-class :ret-contract
-    #:datum-literals (block group)
+    #:datum-literals (block group op)
     #:literals (::)
-    (pattern (~seq (op ::) c::contract)
-             #:attr static-infos #'c.static-infos
-             #:attr predicate #'c.predicate)
+    (pattern (~seq (op ::) ctc::not-block ...)
+             #:with c::contract #'(group ctc ...)
+             #:with c-parsed::contract-form #'c.parsed
+             #:attr static-infos #'c-parsed.static-infos
+             #:attr predicate #'c-parsed.predicate)
     (pattern (~seq)
              #:attr static-infos #'()
              #:attr predicate #'#f)))

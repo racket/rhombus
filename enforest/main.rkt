@@ -125,14 +125,14 @@
            (pattern (op-ref::reference . in-tail)
                     #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
                                                                                prefix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
          (define-syntax-class infix-op+form+tail
            (pattern (op-ref::reference . in-tail)
                     #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
                                                                               infix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
 
@@ -148,7 +148,7 @@
   (lambda (stxes)
     ;; either `stxes` starts with a prefix operator or this first step
     ;; will dispatch to a suitable implicit prefix operator
-    (define-values (form tail) (enforest-step stxes #f #f))
+    (define-values (form tail) (enforest-step stxes #f #f #f))
     (let loop ([init-form form] [stxes tail])
       (cond
         [(stx-null? stxes) init-form]
@@ -156,7 +156,7 @@
          ;; either `stxes` starts with an infix operator (which was weaker
          ;; precedence than consumed in the previous step), or this step will
          ;; dispatch to a suitable implicit infix operator, like `#%juxtapose`
-         (define-values (form tail) (enforest-step init-form stxes #f #f))
+         (define-values (form tail) (enforest-step init-form stxes #f #f #f))
          (loop form tail)]))))
 
 (define (make-enforest-step form-kind-str operator-kind-str
@@ -173,7 +173,7 @@
   ;; Takes 3 or 4 arguments, depending on whether a preceding expression is available
   (define enforest-step
     (case-lambda
-      [(stxes current-op current-op-stx)
+      [(stxes current-op current-op-stx stop-on-unbound?)
        ;; No preceding expression, so dispatch to prefix (possibly implicit)
        ((syntax-parse stxes
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
@@ -188,19 +188,19 @@
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx)]
+              (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?)]
              [(prefix-operator? v)
               (dispatch-prefix-operator v #'tail stxes head-id)]
              [(infix-operator? v)
               (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
              [(identifier? #'head)
-              (enforest-step (make-identifier-form #'head) #'tail current-op current-op-stx)]
+              (enforest-step (make-identifier-form #'head) #'tail current-op current-op-stx stop-on-unbound?)]
              [else
               (if make-operator-form
-                  (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx)
+                  (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx stop-on-unbound?)
                   (raise-unbound-operator #'head.name))])]
           [(((~datum parsed) inside) . tail)
-           (enforest-step #'inside #'tail current-op current-op-stx)]
+           (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
           [(((~and tag (~datum parens)) . inside) . tail)
            (dispatch-prefix-implicit tuple-name #'tag)]
           [(((~and tag (~datum braces)) . inside) . tail)
@@ -219,15 +219,16 @@
             [(eq? (operator-protocol op) 'macro)
              ;; it's up to the transformer to consume whatever it wants after the operator
              (define-values (form new-tail) (apply-prefix-transformer-operator op op-stx stxes check-result))
-             (enforest-step form new-tail current-op current-op-stx)]
+             (enforest-step form new-tail current-op current-op-stx stop-on-unbound?)]
             [else
              ;; new operator sets precedence, defer application of operator until a suitable
              ;; argument is parsed
-             (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx))
+             (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx stop-on-unbound?))
              (enforest-step (apply-prefix-direct-operator op form op-stx check-result)
                             new-tail
                             current-op
-                            current-op-stx)]))
+                            current-op-stx
+                            stop-on-unbound?)]))
 
         (define (dispatch-prefix-implicit implicit-name head-stx)
           (define-values (op op-stx) (lookup-prefix-implicit implicit-name head-stx in-space
@@ -236,7 +237,7 @@
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
           (dispatch-prefix-operator op stxes synthetic-stxes op-stx)))]
 
-      [(init-form stxes current-op current-op-stx)
+      [(init-form stxes current-op current-op-stx stop-on-unbound?)
        ;; Has a preceding expression, so dispatch to infix (possibly implicit)
        ((syntax-parse stxes
           [() (values init-form stxes)]
@@ -251,11 +252,12 @@
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step init-form (cons head tail) current-op current-op-stx)]
+              (enforest-step init-form (cons head tail) current-op current-op-stx stop-on-unbound?)]
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
              [(prefix-operator? v)
               (dispatch-infix-implicit juxtapose-name #'head)]
+             [stop-on-unbound? (values init-form stxes)]
              [(identifier? #'head)
               (dispatch-infix-implicit juxtapose-name #'head)]
              [else
@@ -287,15 +289,16 @@
                [(eq? (operator-protocol op) 'macro)
                 ;; it's up to the transformer to consume whatever it wants after the operator
                 (define-values (form new-tail) (apply-infix-transformer-operator op op-stx init-form stxes check-result))
-                (enforest-step form new-tail current-op current-op-stx)]
+                (enforest-step form new-tail current-op current-op-stx stop-on-unbound?)]
                [else
                 ;; new operator sets precedence, defer application of operator until a suitable
                 ;; right-hand argument is parsed
-                (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx))
+                (define-values (form new-tail) (enforest-step (check-empty op-stx tail form-kind-str) op op-stx stop-on-unbound?))
                 (enforest-step (apply-infix-direct-operator op init-form form op-stx check-result)
                                new-tail
                                current-op
-                               current-op-stx)])]
+                               current-op-stx
+                               stop-on-unbound?)])]
             [(eq? rel-prec 'weaker)
              (values init-form stxes)]
             [else
@@ -330,9 +333,14 @@
         (define (dispatch-infix-implicit implicit-name head-stx)
           (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form head-stx in-space
                                                             infix-operator-ref
-                                                            operator-kind-str form-kind-str))
-          (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
-          (dispatch-infix-operator op stxes synthetic-stxes op-stx)))]))
+                                                            operator-kind-str form-kind-str
+                                                            stop-on-unbound?))
+          (cond
+            [(not op) ; => `stop-on-unbound?`
+             (values init-form stxes)]
+            [else
+             (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
+             (dispatch-infix-operator op stxes synthetic-stxes op-stx)])))]))
 
   (define (starts-like-name-path? head tail)
     (and (identifier? head)

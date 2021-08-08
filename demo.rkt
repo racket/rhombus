@@ -167,6 +167,12 @@ expr.macro ?(prefix_plus ¿a ¿b ¿c ...):
 
 prefix_plus 7 9
 
+// an identifier macro
+
+expr.macro ?just_five: ?"five"
+
+just_five +$ " is the result"
+
 // another way to write that
 
 def ?(also_prefix_plus ¿e ...):
@@ -190,16 +196,16 @@ apply_interest(7)
 
 // define <> as revese-cons pattern
 bind.operator ?(¿a <> ¿b):
-  pack_binding(?(pair,
+  bind_ct.pack(?(pair,
                  build_reverse_cons_match,
                  build_reverse_cons_bind,
                  (¿a, ¿b, a_part, b_part)))
 
 bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
                                         ¿IF, ¿success, ¿fail)):
-  match unpack_binding(a)
+  match bind_ct.unpack(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
-       match unpack_binding(b)
+       match bind_ct.unpack(b)
         | ?(¿b_id, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
               // check for pair an extract reversed pieces
@@ -224,9 +230,9 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
             }
 
 bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
-  match unpack_binding(a)
+  match bind_ct.unpack(a)
    | ?(¿a_id, ¿a_matcher, ¿a_binder, ¿a_data):
-       match unpack_binding(b)
+       match bind_ct.unpack(b)
         | ?(¿b_id, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
               ¿a_binder(¿a_part_id, ¿a_data)
@@ -334,3 +340,35 @@ on_diag(1).x
 
 val known_posn: on_diag(2)
 known_posn.x
+
+// contracts and dot providers
+
+import:
+  = racket/base:
+    only: atan
+
+contract.macro ?AlsoPosn: ?Posn
+Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
+
+bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ...):
+  values(?(Posn(¿x, ¿y)), tail)
+                       
+contract.macro ?Vector:
+  contract_ct.pack_predicate(?(fun (x): x is_a Posn),
+                             ?((¿(dot.provider_key), vector_dot_provider)))
+
+
+dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):
+  match right
+   | ?angle: ?(vector_angle(¿left))
+   | ?magnitude: ?(vector_magnitude(¿left))
+
+fun vector_angle(Posn(x, y)): atan(y, x)
+fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
+
+let vec :: Vector: Posn(3, 4)
+vec.angle
+vec.magnitude
+
+def AlsoPosn(also_x, also_y): Posn(10, 20)
+also_x +$ "," +$ also_y

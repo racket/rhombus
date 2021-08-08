@@ -7,7 +7,8 @@
          "name-root.rkt"
          "syntax.rkt"
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (for-template "result.rkt"))
 
 (provide expr)
 
@@ -17,7 +18,8 @@
 
 (define-syntax expr
   (simple-name-root operator
-                    macro))
+                    macro
+                    result_key))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic
@@ -67,3 +69,5 @@
          #`(rhombus-expression (group #,(check-expression-result
                                          (proc #`(parsed #,form) stx)
                                          proc)))))))
+
+(define result_key #'#%result)

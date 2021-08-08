@@ -145,7 +145,8 @@
     #:datum-literals (op parens group)
     #:literals (¿ ?)
     (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator-or-identifier . _)))))
-    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _))))))
+    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _)))))
+    (pattern (~seq (op ?) g::operator-or-identifier)))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -198,6 +199,7 @@
     (syntax-parse g
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
+      ;; infix protocol
       [(group (op ¿) left:identifier
               op-name::operator-or-identifier
               . tail-pattern)
@@ -212,6 +214,7 @@
                                                  #'(tag rhs ...)))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
+      ;; prefix protocol
       [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
@@ -223,6 +226,18 @@
              (let ([op-name.name (lambda (tail opt.self-id)
                                    #,(macro-body #'opt.self-id #'tail #'tail-pattern
                                                  #'(tag rhs ...)))])
+               op-name.name))])]
+      ;; nofix protocol
+      [op-name::operator-or-identifier
+       (syntax-parse rhs
+         [((~and tag block) opt::self-prefix-operator-options rhs ...)
+          #`(#,make-prefix-id
+             (quote-syntax op-name.name)
+             #,(convert-prec #'opt.prec)
+             'macro
+             (let ([op-name.name (lambda (tail opt.self-id)
+                                   (values (rhombus-block rhs ...)
+                                           tail))])
                op-name.name))])])))
 
 (define-for-syntax (parse-operator-definition protocol g rhs

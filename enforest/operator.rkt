@@ -142,7 +142,7 @@
                         adj-context))
   (values op op-stx))
 
-(define (lookup-infix-implicit adjacent-name prev-form adj-context in-space operator-ref operator-kind form-kind)
+(define (lookup-infix-implicit adjacent-name prev-form adj-context in-space operator-ref operator-kind form-kind stop-on-unbound?)
   (define op-stx (datum->syntax adj-context adjacent-name))
   (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
@@ -159,7 +159,7 @@
                             adjacent-name
                             operator-kind)
                            prev-form)]
-      [else
+      [(not stop-on-unbound?)
        (raise-syntax-error #f
                            (format
                             (string-append

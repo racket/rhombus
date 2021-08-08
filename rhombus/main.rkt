@@ -36,7 +36,10 @@
         "private/cond.rkt"
         "private/match.rkt"
         "private/quasiquote.rkt"
-        "private/values.rkt")
+        "private/values.rkt"
+        "private/contract-syntax.rkt"
+        "private/static-info-syntax.rkt"
+        "private/dot-syntax.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus
