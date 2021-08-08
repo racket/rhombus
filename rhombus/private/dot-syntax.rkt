@@ -28,5 +28,5 @@
 (define-for-syntax (make-dot-provider-transformer proc)
   (dot-provider
    (lambda (left dot right)
-     (define e (proc (pack-tail #`(#,left #,dot #,right)) dot))
+     (define e (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot))
      #`(rhombus-expression (group #,e)))))

@@ -260,7 +260,7 @@
         [else (equal? a b)]))
     (cond
       [(and (pair? static-infoss)
-            (syntax-e (car static-infoss))
+            (pair? (syntax-e (car static-infoss)))
             (for/and ([static-infos (in-list (cdr static-infoss))])
               (same-expression? (car static-infoss) static-infos)))
        (cons

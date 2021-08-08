@@ -372,3 +372,17 @@ vec.magnitude
 
 def AlsoPosn(also_x, also_y): Posn(10, 20)
 also_x +$ "," +$ also_y
+
+expr.macro ?(or_zero ¿p ¿tail ...):
+  values(static_info_ct.wrap(?(¿p || Posn(0,0)),
+                             ?((¿(dot_ct.provider_key),
+                                vector_dot_provider))),
+         tail)
+  
+or_zero(Posn(3, 4)).magnitude
+
+fun zero_vec(): Posn(0, 0)
+static_info.macro ?zero_vec: ?((¿(expr_ct.call_result_key),
+                                ¿(static_info_ct.pack(?((¿(dot_ct.provider_key),
+                                                         vector_dot_provider))))))
+zero_vec().magnitude

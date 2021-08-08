@@ -9,6 +9,7 @@
          "expression.rkt"
          "parse.rkt"
          "call-result-key.rkt"
+         "wrap-expression.rkt"
          (for-syntax "name-root.rkt"))
 
 (provide expr
@@ -49,13 +50,13 @@
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
+         (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))
        (lambda (form1 form2 stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form1) #`(parsed #,form2) stx)
-                                         proc)))))
+         (wrap-expression (check-expression-result
+                           (proc #`(parsed #,form1) #`(parsed #,form2) stx)
+                           proc))))
    assc))
 
 (define-for-syntax (make-expression-prefix-operator name prec protocol proc)
@@ -67,12 +68,12 @@
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
+         (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))
        (lambda (form stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form) stx)
-                                         proc)))))))
+         (wrap-expression (check-expression-result
+                           (proc #`(parsed #,form) stx)
+                           proc))))))
 
 (define-for-syntax call_result_key #'#%call-result)
