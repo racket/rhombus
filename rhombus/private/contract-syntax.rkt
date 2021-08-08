@@ -24,7 +24,7 @@
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro
-                                        (lambda (x) x)
+                                        in-contract-space
                                         #'make-contract-prefix-operator
                                         #'make-contract-infix-operator
                                         #'contract-prefix+infix-operator))

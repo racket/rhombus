@@ -11,7 +11,7 @@
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
-         "result.rkt"
+         "call-result-key.rkt"
          "static-info.rkt"
          "contract.rkt"
          (submod "contract.rkt" for-struct)
@@ -264,7 +264,7 @@
             (for/and ([static-infos (in-list (cdr static-infoss))])
               (same-expression? (car static-infoss) static-infos)))
        (cons
-        #`(define-static-info-syntax #,name (#%result #,(car static-infoss)))
+        #`(define-static-info-syntax #,name (#%call-result #,(car static-infoss)))
         defns)]
       [else defns])))
 
@@ -318,7 +318,7 @@
                               (cons rator #'(arg-form ... ...))
                               (span-srcloc rator #'head)
                               #'head))
-     (define result-static-infos (or (syntax-local-static-info rator #'#%result)
+     (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
                                      #'()))
      (values (wrap-static-info* e result-static-infos)
              #'tail)]))

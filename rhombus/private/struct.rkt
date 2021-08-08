@@ -9,9 +9,9 @@
          "contract.rkt"
          (submod "contract.rkt" for-struct)
          (submod "dot.rkt" for-dot-provider)
+         "call-result-key.rkt"
          "composite.rkt"
          "assign.rkt"
-         "result.rkt"
          "static-info.rkt")
 
 (provide (rename-out [rhombus-struct struct]))
@@ -104,9 +104,9 @@
                (dot-provider (make-handle-struct-type-dot (quote-syntax name))))
            #'(define-dot-provider-syntax name-instance
                (dot-provider (make-handle-struct-instance-dot (quote-syntax name))))
-           #'(define-static-info-syntax name (#%result ((#%dot-provider name-instance))))
+           #'(define-static-info-syntax name (#%call-result ((#%dot-provider name-instance))))
            #'(begin
-               (define-static-info-syntax/maybe* name-field (#%result field.static-infos))
+               (define-static-info-syntax/maybe* name-field (#%call-result field.static-infos))
                ...)))]))))
 
 (define-for-syntax (build-guard-expr fields predicates)

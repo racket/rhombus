@@ -3,18 +3,22 @@
                      syntax/parse
                      "tail.rkt")
          "name-root.rkt"
+         (for-syntax "name-root.rkt")
          (submod "dot.rkt" for-dot-provider)
-         (for-template (submod "dot.rkt" for-dot-provider))
          "syntax.rkt"
          "parse.rkt")
 
-(provide dot)
+(provide dot
+         (for-syntax dot_ct))
 
 (define-syntax dot
-  (simple-name-root provider_key
-                    macro))
+  (simple-name-root macro))
 
-(define provider_key #'#%dot-provider)
+(begin-for-syntax
+  (define-syntax dot_ct
+    (simple-name-root provider_key)))
+
+(define-for-syntax provider_key #'#%dot-provider)
 
 (define-syntax macro
   (make-identifier-syntax-definition-transformer

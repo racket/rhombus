@@ -355,7 +355,7 @@ bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ...):
                        
 contract.macro ?Vector:
   contract_ct.pack_predicate(?(fun (x): x is_a Posn),
-                             ?((¿(dot.provider_key), vector_dot_provider)))
+                             ?((¿(dot_ct.provider_key), vector_dot_provider)))
 
 
 dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):

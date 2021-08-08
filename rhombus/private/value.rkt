@@ -7,7 +7,7 @@
          "parse.rkt"
          "implicit.rkt"
          "contract.rkt"
-         "result.rkt"
+         "call-result-key.rkt"
          "static-info.rkt")
 
 (provide val)
@@ -101,7 +101,7 @@
        #:datum-literals (block)
        [(block f::simple-call)
         #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
-        #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%result)
+        #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%call-result)
                                               #'()))]
         #`(begin
             (define #,bind-id #,tmp-id)

@@ -8,9 +8,11 @@
          "syntax.rkt"
          "expression.rkt"
          "parse.rkt"
-         (for-template "result.rkt"))
+         "call-result-key.rkt"
+         (for-syntax "name-root.rkt"))
 
-(provide expr)
+(provide expr
+         (for-syntax expr_ct))
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
@@ -18,8 +20,11 @@
 
 (define-syntax expr
   (simple-name-root operator
-                    macro
-                    result_key))
+                    macro))
+
+(begin-for-syntax
+  (define-syntax expr_ct
+    (simple-name-root call_result_key)))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic
@@ -70,4 +75,4 @@
                                          (proc #`(parsed #,form) stx)
                                          proc)))))))
 
-(define result_key #'#%result)
+(define-for-syntax call_result_key #'#%call-result)

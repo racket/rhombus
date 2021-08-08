@@ -4,7 +4,8 @@
                      enforest/property
                      enforest/syntax-local)
          "expression.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "dot-provider-key.rkt")
 
 (provide |.|)
 
@@ -34,8 +35,6 @@
              #:when (syntax-local-value* (in-dot-provider-space #'id) dot-provider-ref))
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
-
-(define-syntax #%dot-provider #f)
 
 (define-syntax |.|
   (expression-infix-operator
