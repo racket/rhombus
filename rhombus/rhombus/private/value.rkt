@@ -7,7 +7,8 @@
          "parse.rkt"
          "implicit.rkt"
          "contract.rkt"
-         (submod "contract.rkt" for-struct))
+         "call-result-key.rkt"
+         "static-info.rkt")
 
 (provide val)
 
@@ -31,7 +32,7 @@
                                  values)]))))
 
 (define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition)
-  (syntax-parse (maybe-add-struct-contract g-stx rhs-stx)
+  (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
      #:with rhs rhs-stx
@@ -44,7 +45,8 @@
                           (void)
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
       (wrap-definition
-       #`(lhs-e.binder-id tmp-id lhs-e.data)))]))
+       (or (generate-dot-provider-binding #'lhs-e.matcher-id #'lhs-e.arg-id #'tmp-id rhs-stx)
+           #`(lhs-e.binder-id tmp-id lhs-e.data))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
   (syntax-parse gs-stx
@@ -76,16 +78,33 @@
 (define (rhs-binding-failure who val binding)
   (raise-binding-failure who "value" val binding))
 
-(define-for-syntax (maybe-add-struct-contract g-stx rhs-stx)
-  (syntax-parse g-stx
-    #:datum-literals (group)
-    [(group id:identifier)
+(begin-for-syntax
+  (define-syntax-class :simple-rator
+    #:datum-literals (group parens)
+    (pattern rator:identifier)
+    (pattern ((~and tag parens) (group f::simple-rator))
+             #:when (free-identifier=? #'#%parens (datum->syntax #'tag '#%parens))
+             #:attr rator #'f.rator))
+  (define-syntax-class :simple-call
+    #:datum-literals (group parens)
+    (pattern (group r::simple-rator ((~and tag parens) . _))
+             #:attr rator #'r.rator)
+    (pattern (group ((~and p-tag parens) (group f::simple-call)))
+             #:when (free-identifier=? #'#%parens (datum->syntax #'p-tag '#%parens))
+             #:attr tag #'f.tag
+             #:attr rator #'f.rator)))
+
+(define-for-syntax (generate-dot-provider-binding matcher-id bind-id tmp-id rhs-stx)
+  (cond
+    [(free-identifier=? matcher-id #'identifier-succeed)
      (syntax-parse rhs-stx
-       #:datum-literals (block group parens)
-       [(block (group rator:identifier ((~and tag parens) . _)))
-        #:do [(define provider (syntax-local-result-dot-provider #'rator))]
-        #:when (and provider
-                    (free-identifier=? #'#%call (datum->syntax #'tag '#%call)))
-        #`(group id (op ::) #,provider)]
-       [_ g-stx])]
-    [_ g-stx]))
+       #:datum-literals (block)
+       [(block f::simple-call)
+        #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
+        #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%call-result)
+                                              #'()))]
+        #`(begin
+            (define #,bind-id #,tmp-id)
+            (define-static-info-syntax/maybe #,bind-id . #,result-static-infos))]
+       [_ #f])]
+    [else #f]))

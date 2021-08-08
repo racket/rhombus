@@ -11,7 +11,8 @@
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
-         (submod "dot.rkt" for-dot-provider)
+         "call-result-key.rkt"
+         "static-info.rkt"
          "contract.rkt"
          (submod "contract.rkt" for-struct)
          (only-in "assign.rkt"
@@ -65,14 +66,23 @@
              #:attr kw #'#f
              #:attr parsed #'arg.parsed))
 
+  (define-syntax-class :not-block
+    #:datum-literals (op parens braces)
+    (pattern _:identifier)
+    (pattern (op . _))
+    (pattern (parens . _))
+    (pattern (braces . _)))
+
   (define-splicing-syntax-class :ret-contract
-    #:datum-literals (block group)
+    #:datum-literals (block group op)
     #:literals (::)
-    (pattern (~seq (op ::) c::contract)
-             #:attr ctc #'c.name
-             #:attr predicate #'c.predicate)
+    (pattern (~seq (op ::) ctc::not-block ...)
+             #:with c::contract #'(group ctc ...)
+             #:with c-parsed::contract-form #'c.parsed
+             #:attr static-infos #'c-parsed.static-infos
+             #:attr predicate #'c-parsed.predicate)
     (pattern (~seq)
-             #:attr ctc #'#f
+             #:attr static-infos #'()
              #:attr predicate #'#f)))
 
 (define-syntax fun
@@ -116,7 +126,7 @@
          (define the-name (car names))
          (check-consistent stx names "name")
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.ctc ...))
+          the-name (syntax->list #'(ret.static-infos ...))
           (list
            #`(define #,the-name
                #,(build-case-function #'form-id
@@ -128,7 +138,7 @@
                   ret::ret-contract
                   (~and rhs (block body ...)))
          (maybe-add-function-result-definition
-          #'name (list #'ret.ctc)
+          #'name (list #'ret.static-infos)
           (list
            #`(define name
                #,(build-function #'form-id
@@ -237,7 +247,7 @@
                                     pred
                                     (rhombus-expression (group rhs)))))))]))])))))
 
-  (define (maybe-add-function-result-definition name ctcs defns)
+  (define (maybe-add-function-result-definition name static-infoss defns)
     (define (same-expression? a b)
       (cond
         [(identifier? a) (and (identifier? b)
@@ -249,12 +259,12 @@
                         (same-expression? (cdr a) (cdr b)))]
         [else (equal? a b)]))
     (cond
-      [(and (pair? ctcs)
-            (syntax-e (car ctcs))
-            (for/and ([ctc (in-list (cdr ctcs))])
-              (same-expression? (car ctcs) ctc)))
+      [(and (pair? static-infoss)
+            (pair? (syntax-e (car static-infoss)))
+            (for/and ([static-infos (in-list (cdr static-infoss))])
+              (same-expression? (car static-infoss) static-infos)))
        (cons
-        #`(define-contracted-syntax #,name (contracted (quote-syntax #,(car ctcs))))
+        #`(define-static-info-syntax #,name (#%call-result #,(car static-infoss)))
         defns)]
       [else defns])))
 
@@ -304,13 +314,11 @@
                                    (if (syntax-e kw)
                                        (list kw parsed)
                                        (list parsed)))
-     (define provider (syntax-local-result-dot-provider rator))
      (define e (datum->syntax (quote-syntax here)
                               (cons rator #'(arg-form ... ...))
                               (span-srcloc rator #'head)
                               #'head))
-     (define e-maybe-contract (if provider
-                                  (wrap-dot-provider e provider)
-                                  e))
-     (values e-maybe-contract
+     (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
+                                     #'()))
+     (values (wrap-static-info* e result-static-infos)
              #'tail)]))
