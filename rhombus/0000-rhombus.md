@@ -505,16 +505,17 @@ Besides structure types defined with `struct`, a few predefined
 contracts work with the `::` contract operator, including `Integer`
 (meaning exact integer), `Number`, and `String`.
 
-_The currently prototype doesn't offer a direct way to define new
-predicate-based contracts, but that will be straightforward. Since a
-binding operator gets an opportunity to adjust the value delivered to
-a variable, non-predicate contracts fit naturally into the language's
-framework._
-
 The `::` operator also works in expression positions. In that case,
 the right-hand expression must produce a value that satisfies the
 right-hand contract, otherwise a run-time contract exception is
-raised.
+raised. The `is_a` operator takes a contract like `::`, but only
+checks whether the result of the left-hand expression matches the
+contract.
+
+_Since a binding operator gets an opportunity to adjust the value
+delivered to a variable, non-predicate contracts fit naturally into
+the language's framework. Probably `is_a` should fail on non-predicate
+contracts._
 
 When `struct` defines a new structure type, a contract can be
 associated with each field. The contract is checked when an instance
@@ -547,9 +548,10 @@ that can be called on a `Posn` instance to extract its `x` field). An
 identifier that is bound using `::` and a structure-type name is also a
 dot provider, and it provides access to fields of a structure instance.
 More generally, a contract that is associated to a binding or
-expression with `::` might give the binding or expression a dot
+expression with `::` might make the binding or expression a dot
 provider. See [a separate document](dot-provider.md) for more
-information on dot providers.
+information on dot providers and other static information, but
+only after reading the rest of this document.
 
 _Using `.` to reach an imported binding, as in
 `f2c.fahrenheit_to_celsius`, is a different kind of `.` than the infix
@@ -560,7 +562,7 @@ expression operator. See the current
 ## Function expressions
 
 The `fun` form also works in a function position (as λ). Just
-like `fun` in JavaScript, the expression variant omits a function
+like `function` in JavaScript, the expression variant omits a function
 name.
 
 ```
@@ -1083,14 +1085,18 @@ thunk { 1 + "oops" } // prints a function
 thunk { 1 + 3 } ()   // prints 4
 ```
 
-The `expr.macro` form expects a `?` and then parentheses to
-create a pattern that matches a sequence of terms. Either the first or
+The `expr.macro` form expects a `?` and then either parentheses or an 
+identifier or operator to create a pattern that matches a sequence of
+terms. With parentheses after `?`, either the first or
 second term within the pattern is an _unescaped_ identifier or
 operator to be defined; conceptually, it's unescaped because the macro
 matches a sequence of terms that use that identifier or operator
 literally. If the first term in the pattern is an unescaped identifier
 or operator, a prefix macro is defined; otherwise, the second term
-must be unescaped, and an infix macro is defined.
+must be unescaped, and an infix macro is defined. If the part after `?`
+is just an identifier or parentheses, then it's shorthand for an prefix
+macro that consumes none of the tail, and the macro body returns just
+the expansion part (i.e., normally the first of two results).
 
 In the second use of `thunk` above, the `thunk` macro consumes the
 block containing `1 + 3`, but it does not consume the `()`, so parsing
@@ -1310,20 +1316,23 @@ that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
 some of them need to refer to each other.
 
-## The dot operator and dot providers
+## Static information and dot providers
 
-The rules for propagating dot-provider information are reminiscent of
-type rules in Turnstile (Chang et al.), but must more limited. The
-goal here is to make `.` notation reasonably consistent while keeping
-`.` uses as efficient as Racket-style accessors.
+The rules for propagating static information, as used for dot
+providers, are reminiscent of type rules in Turnstile (Chang et al.).
+The rules here are more limited, however. The primary goal is to make
+`.` notation reasonably consistent while keeping `.` uses as efficient
+as Racket-style accessors. The general system of static information is
+meant to support other purposes that are similar.
 
-Most rules can be viewed as macro bindings that expand to provide
-dot-provider information in the expansion for consumption by the
-immediate enclosing expression. Indeed, that is mostly the
-implementation. The rule that's ad hoc and does not fit that pattern
-is the one for for `val` or `def` with an right-hand side that is an
-immediate call; the rule is in terms of an unparsed expression on the
-right-hand side. The rule is nevertheless included, otherwise
+The static-information rules are based on the idea that only
+already-parsed terms have static information (although parsed terms
+may wrap yet-unparsed terms). That approach constrains the direction
+that information can flow. One static-information rule is ad hoc and
+does not fit the constraint: the one for for `val` or `def` with an
+right-hand side that is an immediate call; the rule is in terms of an
+unparsed expression on the right-hand side. The rule is nevertheless
+included, otherwise an example like
 
 ```
 def origin: Point(0, 0)
@@ -1345,10 +1354,10 @@ interoperation with Racket libraries would be slightly more difficult.
 ## Operator names
 
 Identifier-named infix operators are supported because they cause no
-particular prolem for parsing and may be useful, such as for the `mod`
-operator. It may make sense to require infix forms to use shrubbery
-operators, though, to reduce the space of possible parses of a
-shrubbery independent of binding.
+particular prolem for parsing and may be useful, such as for the
+`is_a` or `mod` operator. It may make sense to require infix forms to
+use shrubbery operators, though, to reduce the space of possible
+parses of a shrubbery independent of binding.
 
 ## Syntax patterns
 
