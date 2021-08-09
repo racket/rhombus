@@ -386,3 +386,28 @@ static_info.macro ?zero_vec: ?((¿(expr_ct.call_result_key),
                                 ¿(static_info_ct.pack(?((¿(dot_ct.provider_key),
                                                          vector_dot_provider))))))
 zero_vec().magnitude
+
+// indexables
+
+val nums: [1, 2, 3]
+
+nums[1]
+
+val nums_a: Array([1, 2, 3])
+
+nums_a[1]
+nums_a[2] = 30
+nums_a[2]
+
+val map: Map["x" = "hello", "y" = "goodbye"]
+
+map
+map["y"]
+
+val also_map: Map(1, "one", 2, "two")
+also_map[2]
+
+val mut_map: make_map(1, "mone")
+mut_map[1]
+mut_map[2] = "mtwo"
+mut_map[2]

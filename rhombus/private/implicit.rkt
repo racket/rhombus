@@ -6,12 +6,15 @@
          "binding.rkt"
          "expression+binding.rkt"
          "parse.rkt"
-         (submod "function.rkt" for-call))
+         (submod "function.rkt" for-call)
+         (submod "indexed.rkt" for-ref))
 
 (provide #%block
          #%literal
          #%tuple
-         #%call)
+         #%call
+         #%array
+         #%ref)
 
 (define-syntax #%block
   (expression-prefix-operator
@@ -101,4 +104,25 @@
    'macro
    (lambda (rator stxes)
      (parse-function-call rator stxes))
+   'left))
+
+(define-syntax #%array
+  (expression-prefix-operator
+   #'%array
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ ((~and tag (~datum brackets)) arg ...) . tail)
+        (values (syntax/loc #'tag
+                  (list (rhombus-expression arg) ...))
+                #'tail)]))))
+
+(define-syntax #%ref
+  (expression-infix-operator
+   #'%ref
+   '((default . stronger))
+   'macro
+   (lambda (array stxes)
+     (parse-indexed-ref-or-set array stxes))
    'left))

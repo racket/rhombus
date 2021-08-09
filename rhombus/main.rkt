@@ -31,6 +31,8 @@
         "private/operator.rkt"
         "private/contract.rkt"
         "private/list.rkt"
+        "private/array.rkt"
+        "private/map.rkt"
         "private/assign.rkt"
         "private/function.rkt"
         "private/cond.rkt"

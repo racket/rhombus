@@ -203,7 +203,7 @@
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
           [(((~and tag (~datum parens)) . inside) . tail)
            (dispatch-prefix-implicit tuple-name #'tag)]
-          [(((~and tag (~datum braces)) . inside) . tail)
+          [(((~and tag (~datum brackets)) . inside) . tail)
            (dispatch-prefix-implicit array-name #'tag)]
           [(((~and tag (~datum block)) . inside) . tail)
            (dispatch-prefix-implicit block-name #'tag)]
@@ -268,7 +268,7 @@
            (dispatch-infix-implicit juxtapose-name #'head)]
           [(((~and tag (~datum parens)) . inside) . tail)
            (dispatch-infix-implicit call-name #'tag)]
-          [(((~and tag (~datum braces)) . inside) . tail)
+          [(((~and tag (~datum brackets)) . inside) . tail)
            (dispatch-infix-implicit ref-name #'tag)]
           [(((~and tag (~datum block)) . inside) . tail)
            (dispatch-infix-implicit juxtapose-name #'tag)]

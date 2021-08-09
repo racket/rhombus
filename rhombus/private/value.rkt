@@ -8,6 +8,7 @@
          "implicit.rkt"
          "contract.rkt"
          "call-result-key.rkt"
+         "indexed-ref-key.rkt"
          "static-info.rkt")
 
 (provide val)
@@ -98,7 +99,7 @@
   (cond
     [(free-identifier=? matcher-id #'identifier-succeed)
      (syntax-parse rhs-stx
-       #:datum-literals (block)
+       #:datum-literals (block brackets)
        [(block f::simple-call)
         #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
         #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%call-result)
@@ -106,5 +107,10 @@
         #`(begin
             (define #,bind-id #,tmp-id)
             (define-static-info-syntax/maybe #,bind-id . #,result-static-infos))]
+       [(block ((~and tag brackets) . _))
+        #:when (free-identifier=? #'#%array (datum->syntax #'tag '#%array))
+        #`(begin
+            (define #,bind-id #,tmp-id)
+            (define-static-info-syntax #,bind-id (#%indexed-ref list-ref)))]
        [_ #f])]
     [else #f]))
