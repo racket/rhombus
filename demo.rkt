@@ -411,3 +411,18 @@ val mut_map: make_map(1, "mone")
 mut_map[1]
 mut_map[2] = "mtwo"
 mut_map[2]
+
+def [x, ys, ...]: nums
+ys
+
+def Array(ax, ay, az): nums_a
+az
+
+def local_map: Map["alice home" = Posn(4, 5),
+                   "bob home" = Posn(7, 9)];
+
+def lookup(who):
+  def Map[who +$ " home" = Posn(who_x, who_y)]: local_map
+  who_x +$ ", " +$ who_y
+
+lookup("alice")

@@ -90,6 +90,7 @@
                (binding-transformer
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
+                                                    #f
                                                     (list (quote-syntax name-field) ...)
                                                     (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name

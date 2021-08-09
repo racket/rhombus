@@ -8,7 +8,7 @@
 
 (provide (for-syntax make-composite-binding-transformer))
 
-(define-for-syntax (make-composite-binding-transformer predicate selectors static-infoss)
+(define-for-syntax (make-composite-binding-transformer predicate steppers selectors static-infoss [rest-id #f] [rest-selector #f])
   (lambda (tail)
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -34,40 +34,66 @@
          #'composite-matcher
          #'composite-binder
          #`(#,predicate
+            #,steppers
             #,selectors
             #,keep-static-infoss
             #,(generate-temporaries #'(a-parsed.arg-id ...))
             (a-parsed.arg-id ...)
             (a-parsed.matcher-id ...)
             (a-parsed.binder-id ...)
-            (a-parsed.data ...)))
+            (a-parsed.data ...)
+            #,rest-id
+            #,rest-selector))
         #'new-tail)])))
 
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors static-infoss tmp-ids arg-ids matcher-ids binder-ids datas) IF success-expr fail-expr)
+    [(_ c-arg-id
+        (predicate steppers selectors static-infoss tmp-ids
+                   arg-ids matcher-ids binder-ids datas
+                   rest-id rest-selector)
+        IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
-           #,(let loop ([selectors (syntax->list #'selectors)]
+           #,(let loop ([c-arg-id #'c-arg-id]
+                        [steppers (syntax->list #'steppers)]
+                        [selectors (syntax->list #'selectors)]
                         [tmp-ids (syntax->list #'tmp-ids)]
                         [arg-ids (syntax->list #'arg-ids)]
                         [matcher-ids (syntax->list #'matcher-ids)]
                         [datas (syntax->list #'datas)])
                (cond
                  [(null? arg-ids)
-                  #`(IF #t success-expr fail-expr)]
+                  #`(IF #t
+                        #,(if (syntax-e #'rest-id)
+                              #`(begin
+                                  (define rest-id (rest-selector #,c-arg-id))
+                                  success-expr)
+                              #'success-expr)
+                        fail-expr)]
                  [else
+                  (define new-c-arg-id (if steppers
+                                           (car (generate-temporaries '(c-arg-id)))
+                                           c-arg-id))
                   #`(begin
-                      (define #,(car tmp-ids) (let ([#,(car arg-ids) (#,(car selectors) c-arg-id)])
+                      #,@(if steppers
+                             #`((define #,new-c-arg-id (#,(car steppers) #,c-arg-id)))
+                             #'())
+                      (define #,(car tmp-ids) (let ([#,(car arg-ids) (#,(car selectors) #,new-c-arg-id)])
                                                 #,(car arg-ids)))
                       (#,(car matcher-ids) #,(car tmp-ids) #,(car datas)
                        IF
-                       #,(loop (cdr selectors) (cdr tmp-ids) (cdr arg-ids) (cdr matcher-ids) (cdr datas))
+                       #,(loop new-c-arg-id
+                               (and steppers (cdr steppers)) (cdr selectors)
+                               (cdr tmp-ids) (cdr arg-ids) (cdr matcher-ids)
+                               (cdr datas))
                        fail-expr))]))
            fail-expr)]))
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate selectors (static-infos ...) (tmp-id ...) (arg-id ...) matcher-ids (binder-id ...) (data ...)))
+    [(_ c-arg-id (predicate steppers selectors (static-infos ...) (tmp-id ...)
+                            (arg-id ...) matcher-ids (binder-id ...) (data ...)
+                            rest-id rest-selector))
      #`(begin
          (binder-id tmp-id data)
          ...

@@ -7,7 +7,8 @@
          "expression+binding.rkt"
          "parse.rkt"
          (submod "function.rkt" for-call)
-         (submod "indexed.rkt" for-ref))
+         (submod "indexed.rkt" for-ref)
+         (submod "list.rkt" for-binding))
 
 (provide #%block
          #%literal
@@ -107,16 +108,20 @@
    'left))
 
 (define-syntax #%array
-  (expression-prefix-operator
+  (make-expression+binding-prefix-operator
    #'%array
    '((default . stronger))
    'macro
+   ;; expression
    (lambda (stxes)
      (syntax-parse stxes
        [(_ ((~and tag (~datum brackets)) arg ...) . tail)
         (values (syntax/loc #'tag
                   (list (rhombus-expression arg) ...))
-                #'tail)]))))
+                #'tail)]))
+   ;; binding
+   (lambda (stxes)
+     (parse-list-binding stxes))))
 
 (define-syntax #%ref
   (expression-infix-operator
