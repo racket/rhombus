@@ -5,7 +5,6 @@
                      enforest
                      enforest/operator
                      enforest/syntax-local
-                     enforest/name-ref-parse
                      enforest/property
                      enforest/proc-name
                      enforest/operator

@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     enforest/ref-parse
+                     enforest/name-parse
                      "tail.rkt")
          "definition.rkt"
          "name-root.rkt"
@@ -32,9 +32,9 @@
       (syntax-parse stx
         #:datum-literals (op block)
         #:literals (?)
-        [(_ (op ?) ref::reference (block body ...))
-         #`((define-syntax #,(in-static-info-space #'ref.name)
-              (convert-static-info 'ref.name (rhombus-block body ...))))]))))
+        [(_ (op ?) name::name (block body ...))
+         #`((define-syntax #,(in-static-info-space #'name.name)
+              (convert-static-info 'name.name (rhombus-block body ...))))]))))
 
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)

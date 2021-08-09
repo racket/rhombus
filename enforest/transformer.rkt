@@ -4,7 +4,7 @@
          syntax/parse
          "syntax-local.rkt"
          "private/transform.rkt"
-         "name-ref-parse.rkt"
+         "hier-name-parse.rkt"
          "private/name-path-op.rkt"
          "private/check.rkt")
 
@@ -38,13 +38,13 @@
         ...)
      #'(begin
          (define-syntax-class form
-           (pattern ((~datum group) . (~var ref (:name-ref-seq values name-path-op)))
-                    #:do [(define head-id (transform-in #'ref.name))]
+           (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op)))
+                    #:do [(define head-id (transform-in #'hname.name))]
                     #:do [(define t (let ([transform-in-id transform-in])
                                       (syntax-local-value* (in-space head-id) transformer-ref)))]
                     #:when t
                     #:attr parsed (apply-transformer t head-id
-                                                     (datum->syntax #f (cons head-id #'ref.tail))
+                                                     (datum->syntax #f (cons head-id #'hname.tail))
                                                      check-result))))]))
 
 (define (apply-transformer t id stx checker)
