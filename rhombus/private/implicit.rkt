@@ -116,11 +116,7 @@
    'macro
    ;; expression
    (lambda (stxes)
-     (syntax-parse stxes
-       [(_ ((~and tag (~datum brackets)) arg ...) . tail)
-        (values (syntax/loc #'tag
-                  (list (rhombus-expression arg) ...))
-                #'tail)]))
+     (parse-list-expression stxes))
    ;; binding
    (lambda (stxes)
      (parse-list-binding stxes))))

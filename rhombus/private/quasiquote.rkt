@@ -294,5 +294,5 @@
      (syntax-parse stx
        [(op::operator . tail)
         (raise-syntax-error #f
-                            "misuse outside of ?"
+                            "misuse outside of a pattern"
                             #'op.name)]))))

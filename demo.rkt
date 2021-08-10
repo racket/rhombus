@@ -436,6 +436,26 @@ lookup("alice")
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x
 
+fun 
+ | is_sorted([]): #true
+ | is_sorted([head]): #true
+ | is_sorted([head, next, tail, ...]):
+    head <= next && is_sorted([next, tail, ...])
+
+is_sorted([1, 2, 30, 4, 5])
+
+
+fun 
+ | got_milk([]): #false
+ | got_milk([head, tail, ...]):
+    head === "milk" || got_milk(tail)
+
+got_milk([])
+got_milk(["apple", "milk", "banana"])
+got_milk(["apple", "coffee", "banana"])
+
+List(1, 2, [3, 4], ...)
+
 // rest arguments
 
 fun f_rest(x, ys :: Integer, ...):
@@ -487,3 +507,4 @@ fun get_pts_x2(pts :: ListOf(Posn)):
   pts[0].x
 
 get_pts_x2([Posn(5, 7)])
+
