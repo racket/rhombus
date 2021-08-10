@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse)
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_]))
 
 (provide (rename-out [rhombus-if if]
                      [rhombus-cond cond]))
@@ -38,7 +40,8 @@
        [(form-id (alts
                   (block (group pred ... ((~and tag block) rhs ...)))
                   ...
-                  (block (group #:else ((~and else-tag block) else-rhs ...))))
+                  (block (group (~or #:else (~literal rhombus-_))
+                                ((~and else-tag block) else-rhs ...))))
                  . tail)
         (values
          #'(cond

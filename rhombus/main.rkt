@@ -16,6 +16,7 @@
                                 (for-syntax (all-from-out mod))))
                 ...))]))
 (bounce "private/implicit.rkt"
+        "private/underscore.rkt"
         "private/arithmetic.rkt"
         "private/dot.rkt"
         "private/struct.rkt"
