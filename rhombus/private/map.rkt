@@ -90,6 +90,7 @@
         (with-syntax-parse ([composite::binding-form composite])
           (values
            (binding-form #'map
+                         #'composite.bind-ids
                          #'map-matcher
                          #'map-binder
                          #`(#,key-parseds

@@ -136,25 +136,15 @@
         #:with c-parsed::contract-form #'t.parsed
         #:with left::binding-form form
         (values
-         (cond
-           [(free-identifier=? #'left.matcher-id #'identifier-succeed)
-            ;; binding an identifier instead of a general pattern,
-            ;; so we can bind that name to have contract information
-            (binding-form
-             #'left.arg-id
-             #'just-check-predicate-matcher
-             #'bind-contracted-identifier
-             #'(c-parsed.predicate
-                c-parsed.static-infos
-                left.arg-id))]
-           [else (binding-form
-                  #'left.arg-id
-                  #'check-predicate-matcher
-                  #'bind-nothing-new
-                  #'(c-parsed.predicate
-                     left.matcher-id
-                     left.binder-id
-                     left.data))])
+         (binding-form
+          #'left.arg-id
+          (extend-bind-input #'c-parsed.static-infos (syntax->list #'left.bind-ids))
+          #'check-predicate-matcher
+          #'bind-nothing-new
+          #'(c-parsed.predicate
+             left.matcher-id
+             left.binder-id
+             left.data))
          #'t.tail)]))))
 
 (define-syntax is_a
@@ -187,20 +177,6 @@
   (syntax-parse stx
     [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
      #'(left-binder-id arg-id left-data)]))
-
-(define-syntax (just-check-predicate-matcher stx)
-  (syntax-parse stx
-    [(_ arg-id (predicate static-infos bind-id) IF success fail)
-     #'(IF (predicate arg-id)
-           success
-           fail)]))
-
-(define-syntax (bind-contracted-identifier stx)
-  (syntax-parse stx
-    [(_ arg-id (predicate static-infos bind-id))
-     #'(begin
-         (define bind-id arg-id)
-         (define-static-info-syntax/maybe bind-id . static-infos))]))
 
 (define-syntax Integer (identifier-contract #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-contract #'Number #'number? #'()))

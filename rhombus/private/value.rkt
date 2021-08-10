@@ -47,7 +47,10 @@
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
       (wrap-definition
        (or (generate-dot-provider-binding #'lhs-e.matcher-id #'lhs-e.arg-id #'tmp-id rhs-stx)
-           #`(lhs-e.binder-id tmp-id lhs-e.data))))]))
+           #`(begin
+               (lhs-e.binder-id tmp-id lhs-e.data)
+               (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.static-info ...)
+               ...))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
   (syntax-parse gs-stx
@@ -67,6 +70,10 @@
                             (rhs-binding-failure '#,form-id tmp-id 'lhs))
           ...
           (lhs-e.binder-id tmp-id lhs-e.data)
+          ...
+          (begin
+            (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.static-info ...)
+            ...)
           ...)))]))
 
 (define-syntax (flattened-if stx)

@@ -17,6 +17,7 @@
         (values
          (binding-form
           #'id
+          #'((id))
           #'mutable-identifier-succeed
           #'mutable-bind
           #'id)

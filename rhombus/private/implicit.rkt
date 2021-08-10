@@ -44,6 +44,7 @@
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (binding-form #'literal
+                              #'()
                               #'literal-matcher
                               #'literal-bind-nothing
                               #'datum)

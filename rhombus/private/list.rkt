@@ -40,35 +40,30 @@
   (#%call-result ((#%indexed-ref list-ref))))
 
 (define-for-syntax (parse-list-binding stx)
-  (define (generate-binding form-id pred args tail [rest-id #f] [rest-selector #f])
+  (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f])
     ((make-composite-binding-transformer pred
-                                         (cons #'values
-                                               (for/list ([arg (in-list (cdr args))])
-                                                 #'cdr))
+                                         (if (null? args)
+                                             null
+                                             (cons #'values
+                                                   (for/list ([arg (in-list (cdr args))])
+                                                     #'cdr)))
                                          (for/list ([arg (in-list args)])
                                            #'car)
                                          (for/list ([arg (in-list args)])
                                            #'())
-                                         rest-id
                                          rest-selector)
-     #`(#,form-id (parens . #,args) . #,tail)))
+     #`(#,form-id (parens . #,args) . #,tail)
+     rest-arg))
   (syntax-parse stx
     #:datum-literals (brackets group op)
     #:literals (rhombus...)
-    [(form-id ((~and tag brackets) arg ... rest-group (group (op rhombus...))) . tail)
-     (define rest-id
-       (syntax-parse #'rest-group
-         #:datum-literals (group)
-         [(group rest-id:identifier) #'rest-id]
-         [_ (raise-syntax-error (syntax-e #'form-id)
-                                "expected an identifier before ellipsis"
-                                #'rest-group)]))
+    [(form-id ((~and tag brackets) arg ... rest-arg (group (op rhombus...))) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
                            (>= (length v) #,len))))
-     (generate-binding #'form-id pred args #'tail rest-id (if (null? args) #'values #'cdr))]
+     (generate-binding #'form-id pred args #'tail #'rest-arg (if (null? args) #'values #'cdr))]
     [(form-id ((~and tag brackets) arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))

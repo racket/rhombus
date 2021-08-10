@@ -4,7 +4,8 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
-                     enforest/syntax-local))
+                     enforest/syntax-local)
+         "bind-input-key.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -19,7 +20,9 @@
            check-binding-result
            
            in-binding-space
-           :non-binding-identifier))
+           :non-binding-identifier
+
+           extend-bind-input))
 
 (provide define-binding-syntax
          raise-binding-failure
@@ -33,6 +36,7 @@
   (define-syntax-class :binding-form
     #:datum-literals (parens group)
     (pattern (arg-id:identifier
+              (~and bind-ids ((bind-id:identifier (~and static-info (:identifier _)) ...) ...))
               matcher-id:identifier
               binder-id:identifier
               data)))
@@ -44,14 +48,16 @@
     (binding-prefix-operator name '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
-  (define (binding-form arg-id matcher-id binder-id data)
+  (define (binding-form arg-id bind-ids matcher-id binder-id data)
     (datum->syntax #f (list arg-id
+                            bind-ids
                             matcher-id
                             binder-id
                             data)))
 
   (define (make-identifier-binding id)
     (binding-form id
+                  (list #`(#,id (#%bind-input #t)))
                   #'identifier-succeed
                   #'identifier-bind
                   id))
@@ -65,7 +71,16 @@
 
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?)))))
+             #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?))))
+
+  ;; adds `input-static-infos` to any static info that has `#%bind-input`:
+  (define (extend-bind-input input-static-infos static-infoss)
+    (for/list ([static-infos (in-list static-infoss)])
+      (syntax-parse static-infos
+        #:literals (#%bind-input)
+        [(_ ... (#%bind-input #t) _ ...)
+         (append (syntax->list static-infos) input-static-infos)]
+        [_ static-infos]))))
 
 (define-syntax (identifier-succeed stx)
   (syntax-parse stx

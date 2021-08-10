@@ -11,6 +11,7 @@
          "expression+definition.rkt"
          "syntax.rkt"
          "binding.rkt"
+         "bind-input-key.rkt"
          (rename-in "quasiquote.rkt"
                     [... rhombus...])
          (submod "quasiquote.rkt" convert)
@@ -32,7 +33,9 @@
 (begin-for-syntax
   (define-syntax bind_ct
     (simple-name-root pack
-                      unpack)))
+                      unpack
+                      unpack_sole
+                      bind_input_key)))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic
@@ -53,23 +56,39 @@
     #:property prop:binding-prefix-operator (lambda (self) (prefix+infix-prefix self))
     #:property prop:binding-infix-operator (lambda (self) (prefix+infix-infix self))))
 
-(define-for-syntax (unpack stx)
+(define-for-syntax (do-unpack stx filter-static-infos)
   (syntax-parse stx
     [((~datum parsed) b::binding-form)
+     #:with ((b-static-info ...) ...) (filter-static-infos #'((b.static-info ...) ...))
      #`(parens (group b.arg-id)
+               (group (parens (group (parens (group b.bind-id) (group (b-static-info ...))) ...)))
                (group chain-to-matcher)
                (group chain-to-binder)
                (group (parsed (b.matcher-id b.binder-id b.data))))]))
+
+(define-for-syntax (unpack stx)
+  (do-unpack stx (lambda (static-infoss)
+                   (for/list ([static-infos (in-list (syntax->list static-infoss))])
+                     (for/list ([static-info (in-list (syntax->list static-infos))]
+                                #:unless (syntax-parse static-info
+                                           [((~literal #%bind-input) _) #t]
+                                           [_ #f]))
+                       static-info)))))
+
+(define-for-syntax (unpack_sole stx)
+  (do-unpack stx values))
 
 (define-for-syntax (pack stx)
   #`(parsed
      #,(syntax-parse stx
          #:datum-literals (parens group block)
          [(parens (group arg-id:identifier)
+                  (group (parens (group (parens (group bind-id) (group static-infos)) ...)))
                   (group matcher-id:identifier)
                   (group binder-id:identifier)
                   (group data))
           (binding-form #'arg-id
+                        #'((bind-id . static-infos) ...)
                         #'matcher-id
                         #'binder-id
                         #'data)]
@@ -237,3 +256,5 @@
        (lambda (form stx)
          (extract-binding (proc (wrap-parsed form) stx)
                           proc)))))
+
+(define-for-syntax bind_input_key #'#%bind-input)

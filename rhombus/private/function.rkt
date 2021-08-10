@@ -203,6 +203,10 @@
                 ...
                 (begin
                   (arg-parsed.binder-id tmp-id arg-parsed.data) ...
+                  (begin
+                    (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
+                    ...)
+                  ...
                   (add-contract-check
                    #,function-name #,pred
                    (rhombus-expression (group rhs)))))))))))
@@ -242,6 +246,10 @@
                                  ...
                                  (begin
                                    (arg-parsed.binder-id arg-id arg-parsed.data) ...
+                                   (begin
+                                     (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
+                                     ...)
+                                   ...
                                    (add-contract-check
                                     #,function-name
                                     pred
