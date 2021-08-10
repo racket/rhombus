@@ -434,3 +434,31 @@ lookup("alice")
 
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x
+
+// rest arguments
+
+fun f_rest(x, ys :: Integer, ...):
+  ys
+
+f_rest(10, 11, 12, 13)
+
+fun
+ | g_rest(): "no"
+ | g_rest(x :: Integer): "simple"
+ | g_rest(x :: Integer, ys :: Integer, ...):
+    ys
+ | g_rest(x): x
+
+g_rest()
+g_rest(1) === "simple"
+g_rest(1, 2, 3)
+g_rest("hello") === "hello"
+
+fun
+ | posns_y(ps :: Posn, ...):
+     ps[1].y
+ | posns_y(x):
+     x
+
+posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+posns_y(10)

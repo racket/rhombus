@@ -11,7 +11,8 @@
 ;; to a composite datatype, but the `rest` support is currently
 ;; hardwired to lists.
 
-(provide (for-syntax make-composite-binding-transformer))
+(provide (for-syntax make-composite-binding-transformer
+                     make-rest-match))
 
 (define-for-syntax (make-composite-binding-transformer predicate     ; predicate for the composite value
                                                        steppers      ; usually #f, but a sequence of `cdr`s for lists
@@ -95,7 +96,8 @@
                   #`(begin
                       (define #,(car tmp-ids) #,(make-rest-match c-arg-id #'rest-ids (car accessors)
                                                                  (car arg-ids) (car matcher-ids) (car binder-ids)
-                                                                 (car datas)))
+                                                                 (car datas)
+                                                                 #'(lambda (arg) #f)))
                       (IF #,(car tmp-ids)
                           success-expr
                           fail-expr))]
@@ -141,17 +143,21 @@
 ;; until the whole list is found to match
 (define-for-syntax (make-rest-match c-arg-id rest-ids selector
                                     arg-id matcher-id binder-id
-                                    data)
+                                    data
+                                    fail)
   #`(get-rest-getters '#,rest-ids
                       (let ([#,arg-id (#,selector #,c-arg-id)])
                         #,arg-id)
                       (lambda (arg-id)
                         (#,matcher-id arg-id #,data
-                         if
+                         if/blocked
                          (lambda ()
                            (#,binder-id arg-id #,data)
                            (values . #,rest-ids))
-                         #f))))
+                         (#,fail arg-id)))))
+
+(define-syntax-rule (if/blocked tst thn els)
+  (if tst (let () thn) els))
 
 ;; run-time support for "rest" matching
 (define (get-rest-getters rest-syms rest-val get-one-getter)
@@ -175,15 +181,16 @@
          (getter)))]
     [else
      ;; each getter returns multiple values
-     (apply
-      values
-      (let loop ([getters (reverse accum)])
-        (cond
-          [(null? (cdr getters))
-           (for/list ([rest-sym (in-list rest-syms)]) null)]
-          [else
-           (define vals (call-with-values (car getters) list))
-           (define rest-valss (loop (cdr getters)))
-           (for/list ([val (in-list vals)]
-                      [rest-vals (in-list rest-valss)])
-             (cons val rest-vals))])))]))
+     (lambda ()
+       (apply
+        values
+        (let loop ([getters (reverse accum)])
+          (cond
+            [(null? getters)
+             (for/list ([rest-sym (in-list rest-syms)]) null)]
+            [else
+             (define vals (call-with-values (car getters) list))
+             (define rest-valss (loop (cdr getters)))
+             (for/list ([val (in-list vals)]
+                        [rest-vals (in-list rest-valss)])
+               (cons val rest-vals))]))))]))

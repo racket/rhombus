@@ -34,7 +34,7 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
+       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
                                                      ret::ret-contract
                                                      (~and rhs (block body ...))))
                                        ...+))
@@ -46,10 +46,11 @@
           #`(define #,the-id
               #,(build-case-function the-id
                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                     #'(rest.arg ...) #'(rest.parsed ...)
                                      #'(ret.predicate ...)
                                      #'(rhs ...)
                                      #'form-id #'alts-tag))))]
-       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
+       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
                  ret::ret-contract
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
@@ -58,6 +59,7 @@
           #`(define id
               #,(build-function #'id
                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                                #'rest.arg #'rest.parsed
                                 #'ret.predicate
                                 #'rhs
                                 #'form-id

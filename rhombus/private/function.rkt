@@ -12,8 +12,11 @@
          "parse.rkt"
          "nested-bindings.rkt"
          "call-result-key.rkt"
+         "ref-result-key.rkt"
          "static-info.rkt"
          "contract.rkt"
+         (only-in "quasiquote.rkt"
+                  [... rhombus...])
          (submod "contract.rkt" for-struct)
          (only-in "assign.rkt"
                   [= rhombus=]))
@@ -23,6 +26,8 @@
 (module+ for-build
   (provide (for-syntax :kw-opt-binding
                        :ret-contract
+                       :maybe-arg-rest
+                       :non-...-binding
                        build-function
                        build-case-function)))
 
@@ -30,13 +35,23 @@
   (provide (for-syntax parse-function-call)))
 
 (begin-for-syntax
+  (define-syntax-class :non-...-binding
+    (pattern form
+             #:when (syntax-parse #'form
+                      #:datum-literals (group op)
+                      [(group (op (~literal rhombus...))) #f]
+                      [_ #t])
+             #:with arg::binding #'form
+             #:with parsed #'arg.parsed))
+  
   (define (empty->keyword g kw)
     (syntax-parse g
       [(_) #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw))]
       [_ g]))
+  
   (define-syntax-class :kw-opt-binding
     #:datum-literals (op block group)
-    #:literals (rhombus=)
+    #:literals (rhombus= rhombus...)
     (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...+)))
              #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:with default #'(group e ...)
@@ -61,7 +76,7 @@
              #:with default #'(group e ...)
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
-    (pattern arg::binding
+    (pattern arg::non-...-binding
              #:attr default #'#f
              #:attr kw #'#f
              #:attr parsed #'arg.parsed))
@@ -83,7 +98,16 @@
              #:attr predicate #'c-parsed.predicate)
     (pattern (~seq)
              #:attr static-infos #'()
-             #:attr predicate #'#f)))
+             #:attr predicate #'#f))
+
+  (define-splicing-syntax-class :maybe-arg-rest
+    #:datum-literals (group op)
+    #:literals (rhombus...)
+    (pattern (~seq arg::non-...-binding (group (op rhombus...)))
+             #:with parsed #'arg.parsed)
+    (pattern (~seq)
+             #:attr arg #'#f
+             #:attr parsed #'#f)))
 
 (define-syntax fun
   (make-expression+definition-transformer
@@ -93,23 +117,25 @@
       (syntax-parse stx
         #:datum-literals (parens group block alts)
         [(form-id ((~and alts-tag alts)
-                   (block (group (parens arg::binding ...) ret::ret-contract
+                   (block (group (parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-contract
                                  (~and rhs (block body ...))))
                    ...+)
                   . tail)
          (values
           (build-case-function #'form-id
                                #'((arg ...) ...) #'((arg.parsed ...) ...)
+                               #'(rest.arg ...) #'(rest.parsed ...)
                                #'(ret.predicate ...)
                                #'(rhs ...)
                                #'form-id #'alts-tag)
           #'tail)]
-        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ...) ret::ret-contract
+        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-contract
                   (~and rhs (block body ...))
                   . tail)
          (values
           (build-function #'form-id
                           #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                          #'rest.arg #'rest.parsed
                           #'ret.predicate
                           #'rhs
                           #'form-id #'parens-tag)
@@ -119,7 +145,8 @@
       (syntax-parse stx
         #:datum-literals (parens group block alts)
         [(form-id ((~and alts-tag alts)
-                   (block (group name:identifier (parens arg::binding ...) ret::ret-contract
+                   (block (group name:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
+                                 ret::ret-contract
                                  (~and rhs (block body ...))))
                    ...+))
          (define names (syntax->list #'(name ...)))
@@ -131,10 +158,11 @@
            #`(define #,the-name
                #,(build-case-function #'form-id
                                       #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                      #'(rest.arg ...) #'(rest.parsed ...)
                                       #'(ret.predicate ...)
                                       #'(rhs ...)
                                       #'form-id #'alts-tag))))]
-        [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
+        [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
                   ret::ret-contract
                   (~and rhs (block body ...)))
          (maybe-add-function-result-definition
@@ -143,6 +171,7 @@
            #`(define name
                #,(build-function #'form-id
                                  #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                                 #'rest.arg #'rest.parsed
                                  #'ret.predicate
                                  #'rhs
                                  #'form-id #'parens-tag))))]
@@ -156,25 +185,29 @@
 
 (begin-for-syntax
 
-  (struct fcase (args arg-parseds pred rhs))
-  
-  (define (group-by-counts fcases)
-    (define ht
-      (for/fold ([ht #hasheqv()]) ([fc (in-list fcases)])
-        (define n (length (fcase-args fc)))
-        (hash-set ht n (cons fc (hash-ref ht n '())))))
-    (for/list ([sames (in-hash-values ht)])
-      (reverse sames)))
+  (struct fcase (args arg-parseds rest-arg rest-arg-parsed pred rhs))
 
   (define (build-function function-name
                           kws args arg-parseds defaults
+                          rest-arg rest-parsed
                           pred
                           rhs
                           start end)
     (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds])
       (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-parsed.arg-id ...))]
                     [(arg ...) args]
-                    [rhs rhs])
+                    [rhs rhs]
+                    [(maybe-rest-tmp maybe-match-rest
+                                     (maybe-bind-rest ...)
+                                     (maybe-bind-rest-static-rest ...))
+                     (if (syntax-e rest-arg)
+                         (with-syntax-parse ([rest::binding-form rest-parsed])
+                           #`(rest-tmp
+                              (rest-tmp rest-getter #,rest-parsed #,rest-arg)
+                              ((define-values (rest.bind-id ...) (rest-getter)))
+                              ((define-static-info-syntax rest.bind-id (#%ref-result (rest.static-info ...)))
+                               ...)))
+                         #'(() #f () ()))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
                        (for/list ([kw (in-list (syntax->list kws))]
                                   [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
@@ -195,65 +228,99 @@
                             (list (list kw arg+default) default)]))])
           (relocate
            (span-srcloc start end)
-           #`(lambda (arg-form ... ...)
+           #`(lambda (arg-form ... ... . maybe-rest-tmp)
                (nested-bindings
                 #,function-name
                 #f argument-binding-failure
                 (tmp-id arg-parsed arg arg-default)
                 ...
+                maybe-match-rest
                 (begin
                   (arg-parsed.binder-id tmp-id arg-parsed.data) ...
+                  maybe-bind-rest ...
                   (begin
                     (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
                     ...)
                   ...
+                  maybe-bind-rest-static-rest ...
                   (add-contract-check
                    #,function-name #,pred
                    (rhombus-expression (group rhs)))))))))))
   
   (define (build-case-function function-name
                                argss-stx arg-parsedss-stx
+                               rest-args-stx rest-parseds-stx
                                preds-stx
                                rhss-stx
                                start end)
     (define argss (map syntax->list (syntax->list argss-stx)))
     (define arg-parsedss (map syntax->list (syntax->list arg-parsedss-stx)))
+    (define rest-args (syntax->list rest-args-stx))
+    (define rest-parseds (syntax->list rest-parseds-stx))
     (define preds (syntax->list preds-stx))
     (define rhss (syntax->list rhss-stx))
-    (define sames (group-by-counts (map fcase argss arg-parsedss preds rhss)))
+    (define n+sames (group-by-counts (map fcase argss arg-parsedss rest-args rest-parseds preds rhss)))
     (relocate
      (span-srcloc start end)
      #`(case-lambda
-         #,@(for/list ([same (in-list sames)])
+         #,@(for/list ([n+same (in-list n+sames)])
+              (define n (car n+same))
+              (define same (cdr n+same))
               (with-syntax ([(try-next arg-id ...) (generate-temporaries
-                                                    (cons 'try-next (fcase-args (car same))))])
-                #`[(arg-id ...)
+                                                    (cons 'try-next
+                                                          (fcase-args (find-matching-case n same))))]
+                            [maybe-rest-tmp (if (negative? n)
+                                                #'rest-tmp
+                                                #'())]
+                            [maybe-rest-tmp-use (if (negative? n)
+                                                    #'rest-tmp
+                                                    #'null)])
+                #`[(arg-id ... . maybe-rest-tmp)
                    #,(let loop ([same same])
                        (cond
                          [(null? same)
-                          #`(cases-failure '#,function-name arg-id ...)]
+                          #`(cases-failure '#,function-name maybe-rest-tmp-use arg-id ...)]
                          [else
-                          (with-syntax-parse ([(arg ...) (fcase-args (car same))]
-                                              [(arg-parsed::binding-form ...) (fcase-arg-parseds (car same))]
-                                              [pred (fcase-pred (car same))]
-                                              [rhs (fcase-rhs (car same))])
+                          (define fc (car same))
+                          (define-values (this-args wrap-adapted-arguments)
+                            (adapt-arguments-for-count fc n #'(arg-id ...) #'rest-tmp #'try-next))
+                          (with-syntax-parse ([(arg ...) (fcase-args fc)]
+                                              [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
+                                              [(this-arg-id ...) this-args]
+                                              [pred (fcase-pred fc)]
+                                              [rhs (fcase-rhs fc)]
+                                              [(maybe-match-rest (maybe-bind-rest ...) (maybe-bind-rest-static-info ...))
+                                               (cond
+                                                 [(syntax-e (fcase-rest-arg fc))
+                                                  (define rest-parsed (fcase-rest-arg-parsed fc))
+                                                  (with-syntax-parse ([rest::binding-form rest-parsed])
+                                                    #`((rest-tmp rest-getter #,rest-parsed #,(fcase-rest-arg fc))
+                                                       ((define-values (rest.bind-id ...) (rest-getter)))
+                                                       ((define-static-info-syntax rest.bind-id (#%ref-result (rest.static-info ...)))
+                                                        ...)))]
+                                                 [else
+                                                  #'(#f () ())])])
                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
-                                (nested-bindings
-                                 #,function-name
-                                 try-next
-                                 argument-binding-failure
-                                 (arg-id arg-parsed arg #f)
-                                 ...
-                                 (begin
-                                   (arg-parsed.binder-id arg-id arg-parsed.data) ...
-                                   (begin
-                                     (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
-                                     ...)
-                                   ...
-                                   (add-contract-check
-                                    #,function-name
-                                    pred
-                                    (rhombus-expression (group rhs)))))))]))])))))
+                                #,(wrap-adapted-arguments
+                                   #`(nested-bindings
+                                      #,function-name
+                                      try-next
+                                      argument-binding-failure
+                                      (this-arg-id arg-parsed arg #f)
+                                      ...
+                                      maybe-match-rest
+                                      (begin
+                                        (arg-parsed.binder-id this-arg-id arg-parsed.data) ...
+                                        maybe-bind-rest ...
+                                        (begin
+                                          (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
+                                          ...)
+                                        ...
+                                        maybe-bind-rest-static-info ...
+                                        (add-contract-check
+                                         #,function-name
+                                         pred
+                                         (rhombus-expression (group rhs))))))))]))])))))
 
   (define (maybe-add-function-result-definition name static-infoss defns)
     (define (same-expression? a b)
@@ -274,12 +341,82 @@
        (cons
         #`(define-static-info-syntax #,name (#%call-result #,(car static-infoss)))
         defns)]
-      [else defns])))
+      [else defns]))
+
+  ;; returns (listof (cons n (listof fcase)))
+  ;; where `n` is the argument count, and a negative
+  ;; `n` means "-(n+1) or more"; although the `n`s
+  ;; can be in any order, the `fcase`s are kept in the same
+  ;; order within the group for one `n`
+  (define (group-by-counts fcases)
+    ;; if there is any rest clause, then other clauses
+    ;; whose arity overlaps needs to be merged; a rest
+    ;; clause requiring at least N arguments will merge
+    ;; with any clause that accepts N or more
+    (define rest-min
+      (for/fold ([rest-min #f]) ([fc (in-list fcases)])
+        (cond
+          [(syntax-e (fcase-rest-arg fc))
+           (define n (length (fcase-args fc)))
+           (if rest-min (min rest-min n) n)]
+          [else rest-min])))
+    (define ht
+      (for/fold ([ht #hasheqv()]) ([fc (in-list fcases)])
+        (define n (length (fcase-args fc)))
+        (define key (if (and rest-min (>= n rest-min))
+                        (- (add1 rest-min))
+                        n))
+        (hash-set ht key (cons fc (hash-ref ht key '())))))
+    (for/list ([(key sames) (in-hash ht)])
+      (cons key (reverse sames))))
+
+  (define (find-matching-case n same)
+    (define find-n (if (negative? n) (- (add1 n)) n))
+    (for/or ([fc (in-list same)])
+      (define fc-n (length (fcase-args fc)))
+      (and (eqv? find-n fc-n)
+           fc)))
+
+  ;; when a clause that expects n' (or more) arguments is merged
+  ;; with a clause that expects n or more arguments (so n <= n'), then
+  ;; the rest argument needs to be unpacked to extra arguments
+  (define (adapt-arguments-for-count fc n arg-ids-stx rest-tmp try-next)
+    (define base-f-n (length (fcase-args fc)))
+    (define f-n (if (syntax-e (fcase-rest-arg fc))
+                    (- (add1 base-f-n))
+                    base-f-n))
+    (cond
+      [(eqv? n f-n) (values arg-ids-stx values)]
+      [else
+       (unless (negative? n) (error "assert failed in wrap-adapted"))
+       (define base-n (- (add1 n)))
+       (define arg-ids (syntax->list arg-ids-stx))
+       (define new-arg-ids (append arg-ids
+                                   (generate-temporaries (list-tail (fcase-args fc) base-n))))
+       (values
+        new-arg-ids
+        (lambda (body)
+          (let loop ([new-arg-ids (list-tail new-arg-ids base-n)])
+            (cond
+              [(null? new-arg-ids)
+               (if (negative? f-n)
+                   body
+                   #`(if (null? #,rest-tmp)
+                         (let ()
+                           #,body)
+                         (#,try-next)))]
+              [else
+               #`(if (pair? #,rest-tmp)
+                     (let ([#,(car new-arg-ids) (car #,rest-tmp)])
+                       (let ([rest-tmp (cdr #,rest-tmp)])
+                         #,(loop (cdr new-arg-ids))))
+                     (#,try-next))]))))])))
 
 (define (argument-binding-failure who val binding)
   (raise-binding-failure who "argument" val binding))
 
-(define (cases-failure who . args)
+(define (cases-failure who rest-args . base-args)
+  (define args (append base-args rest-args))
   (apply error who
          (apply string-append "no matching case for arguments\n"
                 "  arguments...:"

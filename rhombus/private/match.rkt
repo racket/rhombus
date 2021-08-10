@@ -41,6 +41,7 @@
                                                          #'else-binder
                                                          #'(#t ignored))))
                                    (falses #'(b ...))
+                                   (falses #'(b ...)) (falses #'(b ...))
                                    #'(clause.rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
@@ -61,6 +62,7 @@
                                                          #'else-binder
                                                          #'(#f unmatched))))
                                    (falses #'(b ...))
+                                   (falses #'(b ...)) (falses #'(b ...))
                                    #`(rhs ... (parsed
                                                (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag)
