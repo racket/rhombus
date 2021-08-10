@@ -15,6 +15,7 @@
          (for-space rhombus/binding cons)
 
          List
+         (for-space rhombus/binding List)
          (for-space rhombus/contract List)
          (for-space rhombus/static-info List))
 
@@ -34,6 +35,18 @@
 (define-static-info-syntax List
   (#%call-result ((#%indexed-ref list-ref))))
 
+(define-binding-syntax List
+  (binding-prefix-operator
+   #'List
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id ((~and tag (~datum parens)) arg ...) . tail)
+        (parse-list-binding stx)]))))
+
+;; parses a list pattern that has already been checked for use with a
+;; suitable `parens` or `brackets` form
 (define-for-syntax (parse-list-binding stx)
   (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f])
     ((make-composite-binding-transformer pred
@@ -52,14 +65,14 @@
   (syntax-parse stx
     #:datum-literals (brackets group op)
     #:literals (rhombus...)
-    [(form-id ((~and tag brackets) arg ... rest-arg (group (op rhombus...))) . tail)
+    [(form-id (_ arg ... rest-arg (group (op rhombus...))) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
                            (>= (length v) #,len))))
      (generate-binding #'form-id pred args #'tail #'rest-arg (if (null? args) #'values #'cdr))]
-    [(form-id ((~and tag brackets) arg ...) . tail)
+    [(form-id (_ arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
