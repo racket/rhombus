@@ -10,6 +10,7 @@
          "static-info.rkt"
          "indexed-ref-set-key.rkt"
          "call-result-key.rkt"
+         "ref-result-key.rkt"
          (only-in "quasiquote.rkt"
                   [... rhombus...])
          "parse.rkt")
@@ -51,7 +52,13 @@
         (parse-list-binding stx)]))))
 
 (define-contract-syntax List
-  (identifier-contract #'List #'list? #'((#%indexed-ref list-ref))))
+  (contract-constructor #'List #'list? #'((#%indexed-ref list-ref))
+                        1
+                        (lambda (arg-id predicate-stxs)
+                          #`(for/and ([e (in-list #,arg-id)])
+                              (#,(car predicate-stxs) e)))
+                        (lambda (static-infoss)
+                          #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax List
   (#%call-result ((#%indexed-ref list-ref))))

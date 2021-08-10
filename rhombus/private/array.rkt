@@ -17,8 +17,14 @@
 (define Array vector)
 
 (define-contract-syntax Array
-  (identifier-contract #'Array #'vector? #'((#%indexed-ref vector-ref)
-                                            (#%indexed-set! vector-set!))))
+  (contract-constructor #'Array #'vector? #'((#%indexed-ref vector-ref)
+                                             (#%indexed-set! vector-set!))
+                        1
+                        (lambda (arg-id predicate-stxs)
+                          #`(for/and ([e (in-vector #,arg-id)])
+                              (#,(car predicate-stxs) e)))
+                        (lambda (static-infoss)
+                          #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax Array
   (#%call-result ((#%indexed-ref vector-ref)

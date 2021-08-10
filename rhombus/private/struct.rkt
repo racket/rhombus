@@ -95,9 +95,13 @@
                                                     #:accessor->info? #t
                                                     (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name
-               (identifier-contract (quote-syntax name)
-                                    (quote-syntax name?)
-                                    (quote-syntax ((#%dot-provider name-instance)))))
+               (let ([accessors (list (quote-syntax name-field) ...)])
+                 (contract-constructor (quote-syntax name)
+                                       (quote-syntax name?)
+                                       (quote-syntax ((#%dot-provider name-instance)))
+                                       cnt
+                                       (make-struct-instance-predicate accessors)
+                                       (make-struct-instance-static-infos accessors))))
            #'(define-struct-desc-syntax name
                (struct-desc (quote-syntax name)
                             (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
@@ -124,6 +128,18 @@
                                       (raise-argument-error who
                                                             #,(format "~a" (syntax-e predicate))
                                                             #,field))]))))))
+
+(define-for-syntax (make-struct-instance-predicate accessors)
+  (lambda (arg predicate-stxs)
+    #`(and #,@(for/list ([acc (in-list accessors)]
+                         [pred (in-list predicate-stxs)])
+                #`(#,pred (#,acc #,arg))))))
+
+(define-for-syntax (make-struct-instance-static-infos accessors)
+  (lambda (statis-infoss)
+    (for/list ([acc (in-list accessors)]
+               [static-infos (in-list statis-infoss)])
+      #`(#,acc #,static-infos))))
 
 ;; dot provider for a structure name used before a `.`
 (define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)

@@ -396,16 +396,22 @@ zero_vec().magnitude
 // indexables
 
 val nums: [1, 2, 3]
+val yes_nums :: List: nums
+val yep_nums :: List.of(Integer): nums
 
 nums[1]
 
 val nums_a: Array(1, 2, 3)
+val yes_nums_a :: Array: nums_a
+val yep_nums_a :: Array.of(Integer): nums_a
 
 nums_a[1]
 nums_a[2] = 30
 nums_a[2]
 
 val map: Map["x" = "hello", "y" = "goodbye"]
+val yes_map :: Map : map
+val yup_map :: Map.of(String, String) : map
 
 map
 map["y"]
@@ -455,6 +461,9 @@ got_milk(["apple", "milk", "banana"])
 got_milk(["apple", "coffee", "banana"])
 
 List(1, 2, [3, 4], ...)
+
+val nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)): Posn(1, Posn(3, 4))
+nested_p.y.x
 
 // rest arguments
 

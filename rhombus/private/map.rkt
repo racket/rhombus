@@ -46,10 +46,17 @@
   (let ([Map (lambda args
                (apply hash args))])
     Map))
-       
+
 (define-contract-syntax Map
-  (identifier-contract #'Map #'hash? #'((#%indexed-ref hash-ref)
-                                        (#%indexed-set! hash-set!))))
+  (contract-constructor #'Map #'hash? #'((#%indexed-ref hash-ref)
+                                         (#%indexed-set! hash-set!))
+                        2
+                        (lambda (arg-id predicate-stxs)
+                          #`(for/and ([(k v) (in-hash #,arg-id)])
+                              (and (#,(car predicate-stxs) k)
+                                   (#,(cadr predicate-stxs) v))))
+                        (lambda (static-infoss)
+                          #`((#%ref-result #,(cadr static-infoss))))))
 
 (define-static-info-syntax Map
   (#%call-result ((#%indexed-ref hash-ref))))

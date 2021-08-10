@@ -35,6 +35,7 @@
              (property-out contract-infix-operator)
 
              identifier-contract
+             contract-constructor
              
              in-contract-space
 
@@ -113,7 +114,44 @@
      (lambda (stx)
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
-                        [_ 'does-not-happen]))))))
+                        [_ 'does-not-happen])))))
+
+  (define (contract-constructor name predicate-stx static-infos
+                                sub-n predicate-maker info-maker)
+    (contract-prefix-operator
+     name
+     '((default . stronger))
+     'macro
+     (lambda (stx)
+       (syntax-parse stx
+         #:datum-literals (op |.| parens of)
+         [(form-id (op |.|) of ((~and tag parens) g ...) . tail)
+          (define gs (syntax->list #'(g ...)))
+          (unless (= (length gs) sub-n)
+            (raise-syntax-error #f
+                                "wrong number of subcontracts in parentheses"
+                                #'form-id
+                                #f
+                                (list #'tag)))
+          (define c-parseds (for/list ([g (in-list gs)])
+                              (syntax-parse g
+                                [c::contract #'c.parsed])))
+          (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
+                                 (syntax-parse c-parsed
+                                   [c::contract-form #'c.predicate])))
+          (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
+                                    (syntax-parse c-parsed
+                                      [c::contract-form #'c.static-infos])))
+          (values (contract-form #`(lambda (v)
+                                     (and (#,predicate-stx v)
+                                          #,(predicate-maker #'v c-predicates)))
+                                 #`(#,@(info-maker c-static-infoss)
+                                    . #,static-infos))
+                  #'tail)]
+         [(_ . tail)
+          (values (contract-form predicate-stx
+                                 static-infos)
+                  #'tail)])))))
 
 (define-syntax ::
   (make-expression+binding-infix-operator
