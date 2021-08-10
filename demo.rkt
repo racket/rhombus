@@ -399,7 +399,7 @@ val nums: [1, 2, 3]
 
 nums[1]
 
-val nums_a: Array([1, 2, 3])
+val nums_a: Array(1, 2, 3)
 
 nums_a[1]
 nums_a[2] = 30
