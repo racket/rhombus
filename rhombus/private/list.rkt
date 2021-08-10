@@ -26,12 +26,7 @@
    #'cons
    (make-composite-binding-transformer #'pair? (list #'car #'cdr) (list #'() #'()))))
 
-(define (List l)
-  (if (list? l)
-      l
-      (raise-argument-error 'List
-                            "list?"
-                            l)))
+(define (List . l) l)
 
 (define-contract-syntax List
   (identifier-contract #'List #'list? #'((#%indexed-ref list-ref))))

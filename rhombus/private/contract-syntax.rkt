@@ -3,12 +3,12 @@
                      syntax/parse
                      enforest/transformer-result
                      enforest/proc-name
-                     "tail.rkt")
+                     "tail.rkt"
+                     "static-info-pack.rkt")
          "definition.rkt"
          (submod "contract.rkt" for-struct)
          "syntax.rkt"
          "name-root.rkt"
-         (submod "static-info-syntax.rkt" for-static-info)
          (for-syntax "name-root.rkt")
          "parse.rkt")
 
@@ -65,6 +65,6 @@
                                (unpack-tail new-tail proc)
                                proc))))
   
-(define-for-syntax (pack_predicate predicate [static-infos '()])
+(define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
   #`(parsed #,(contract-form #`(rhombus-expression (group #,predicate))
-                             (pack-static-info static-infos))))
+                             (pack-static-infos static-infos 'contract.pack_predicate))))
