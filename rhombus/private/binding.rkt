@@ -36,7 +36,8 @@
   (define-syntax-class :binding-form
     #:datum-literals (parens group)
     (pattern (arg-id:identifier
-              (~and bind-ids ((bind-id:identifier (~and static-info (:identifier _)) ...) ...))
+              (~and static-infos ((:identifier _) ...))
+              (~and bind-ids ((bind-id:identifier (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
               binder-id:identifier
               data)))
@@ -48,8 +49,9 @@
     (binding-prefix-operator name '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
-  (define (binding-form arg-id bind-ids matcher-id binder-id data)
+  (define (binding-form arg-id static-infos bind-ids matcher-id binder-id data)
     (datum->syntax #f (list arg-id
+                            static-infos
                             bind-ids
                             matcher-id
                             binder-id
@@ -57,7 +59,8 @@
 
   (define (make-identifier-binding id)
     (binding-form id
-                  (list #`(#,id (#%bind-input #t)))
+                  #'()
+                  #`((#,id (#%bind-input #t)))
                   #'identifier-succeed
                   #'identifier-bind
                   id))
@@ -73,13 +76,14 @@
     (pattern id:identifier
              #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?))))
 
-  ;; adds `input-static-infos` to any static info that has `#%bind-input`:
+  ;; adds `input-static-infos` to any static info that has `#%bind-input`,
+  ;; while also stripping `#%bind-input`
   (define (extend-bind-input input-static-infos static-infoss)
     (for/list ([static-infos (in-list static-infoss)])
       (syntax-parse static-infos
         #:literals (#%bind-input)
-        [(_ ... (#%bind-input #t) _ ...)
-         (append (syntax->list static-infos) input-static-infos)]
+        [(pre ... (#%bind-input #t) post ...)
+         (append (syntax->list #'(pre ... post ...)) input-static-infos)]
         [_ static-infos]))))
 
 (define-syntax (identifier-succeed stx)

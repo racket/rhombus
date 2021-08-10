@@ -5,6 +5,7 @@
          "binding.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
+         "bind-input-key.rkt"
          (submod "contract.rkt" for-struct))
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
@@ -15,10 +16,12 @@
                      make-rest-match))
 
 (define-for-syntax (make-composite-binding-transformer predicate     ; predicate for the composite value
-                                                       steppers      ; usually #f, but a sequence of `cdr`s for lists
                                                        accessors     ; one accessor per component
                                                        static-infoss ; one set of static info per component
-                                                       [rest-accessor #f]) ; for a list "rest"
+                                                       #:steppers [steppers #f] ; a sequence of `cdr`s for lists
+                                                       #:static-infos [composite-static-infos #'()] ; for the composite value
+                                                       #:accessor->info? [accessor->info? #f] ; extend composite info?
+                                                       #:rest-accessor [rest-accessor #f]) ; for a list "rest"
   (lambda (tail [rest-arg #f])
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -39,7 +42,7 @@
        (define new-bind-ids (apply
                              append
                              (append
-                              ;; strip `#%bind-input` from any component sttaic info, but in that case,
+                              ;; strip `#%bind-input` from any component static info, but in that case,
                               ;; add information from `static-infos`
                               (for/list ([sis (in-list static-infoss)]
                                          [matcher-id (in-list (syntax->list #'(a-parsed.matcher-id ...)))]
@@ -51,9 +54,23 @@
                                 (syntax-parse static-bind-ids-stx
                                   [((bind-id . static-infos) ...)
                                    (syntax->list #'((bind-id (#%ref-result static-infos)) ...))])))))
+       (define all-composite-static-infos
+         (let* ([composite-static-infos composite-static-infos]
+                [composite-static-infos (if (and rest-arg
+                                                 (null? accessors))
+                                            #`((#%ref-result rest-a-parsed.static-infos ...) . #,composite-static-infos)
+                                            composite-static-infos)]
+                [composite-static-infos (if accessor->info?
+                                            #`(#,@(for/list ([accessor accessors]
+                                                             [static-infos (syntax->list #'(a-parsed.static-infos ...))])
+                                                    #`(#,accessor #,static-infos))
+                                               . #,composite-static-infos)
+                                            composite-static-infos)])
+           composite-static-infos))
        (values
         (binding-form
          #'composite
+         all-composite-static-infos
          new-bind-ids
          #'composite-matcher
          #'composite-binder

@@ -49,7 +49,7 @@
        (or (generate-dot-provider-binding #'lhs-e.matcher-id #'lhs-e.arg-id #'tmp-id rhs-stx)
            #`(begin
                (lhs-e.binder-id tmp-id lhs-e.data)
-               (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.static-info ...)
+               (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.bind-static-info ...)
                ...))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
@@ -72,7 +72,7 @@
           (lhs-e.binder-id tmp-id lhs-e.data)
           ...
           (begin
-            (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.static-info ...)
+            (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.bind-static-info ...)
             ...)
           ...)))]))
 

@@ -15,14 +15,19 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "bind-input-key.rkt"
+         "parse.rkt")
 
 (provide ::
          is_a
+         matching
 
          Integer
          Number
-         String)
+         String
+
+         (for-space rhombus/contract #%tuple))
 
 (module+ for-struct
   (begin-for-syntax
@@ -138,6 +143,7 @@
         (values
          (binding-form
           #'left.arg-id
+          #'c-parsed.static-infos
           (extend-bind-input #'c-parsed.static-infos (syntax->list #'left.bind-ids))
           #'check-predicate-matcher
           #'bind-nothing-new
@@ -195,3 +201,44 @@
                         "  contract: ~s")
          val
          ctc))
+
+(define-syntax matching
+  (contract-prefix-operator
+   #'matching
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens)
+       [(_ (parens arg::binding) . tail)
+        #:with arg-parsed::binding-form #'arg.parsed
+        (values
+         #`((lambda (arg-parsed.arg-id)
+              (arg-parsed.matcher-id arg-parsed.arg-id
+                                     arg-parsed.data
+                                     if/blocked
+                                     #t
+                                     #f))
+            arg-parsed.static-infos)
+         #'tail)]))))
+
+(define-syntax-rule (if/blocked tst thn els)
+  (if tst (let () thn) els))
+
+(define-contract-syntax #%tuple
+  (contract-prefix-operator
+   #'%tuple
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ (~and head ((~datum parens) . args)) . tail)
+        (let ([args (syntax->list #'args)])
+          (cond
+            [(null? args)
+             (raise-syntax-error #f "empty contract" #'head)]
+            [(pair? (cdr args))
+             (raise-syntax-error #f "too many contracts" #'head)]
+            [else
+             (syntax-parse (car args)
+               [c::contract (values #'c.parsed #'tail)])]))]))))

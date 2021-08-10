@@ -197,10 +197,11 @@ apply_interest(7)
 // define <> as revese-cons pattern
 bind.operator ?(¿a <> ¿b):
   match bind_ct.unpack(a)
-   | ?(¿a_id, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
+   | ?(¿a_id, ¿a_info, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
        match bind_ct.unpack(b)
-        | ?(¿b_id, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
+        | ?(¿b_id, ¿b_info, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
             bind_ct.pack(?(pair,
+                           (),
                            (¿a_bind_info ... ¿b_bind_info ...),
                            build_reverse_cons_match,
                            build_reverse_cons_bind,
@@ -209,9 +210,9 @@ bind.operator ?(¿a <> ¿b):
 bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
                                         ¿IF, ¿success, ¿fail)):
   match bind_ct.unpack(a)
-   | ?(¿a_id, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
        match bind_ct.unpack(b)
-        | ?(¿b_id, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
+        | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
               // check for pair an extract reversed pieces
               val (is_match, ¿a_part_id, ¿b_part_id):
@@ -236,9 +237,9 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
 
 bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
   match bind_ct.unpack(a)
-   | ?(¿a_id, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
        match bind_ct.unpack(b)
-        | ?(¿b_id, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
+        | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
               ¿a_binder(¿a_part_id, ¿a_data)
               ¿b_binder(¿b_part_id, ¿b_data)
@@ -462,3 +463,27 @@ fun
 
 posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
 posns_y(10)
+
+// `matching` contracts
+
+fun get_pt_x(pt :: matching(Posn(_, _))):
+  pt.x
+
+get_pt_x(Posn(1, 2))
+
+fun get_pts_x(pts :: matching([Posn(_, _), ...])):
+  pts[0].x
+
+get_pts_x([Posn(1, 2)])
+
+fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
+  pt.x.x
+
+contract.macro ?(ListOf (¿contract ...) ¿tail ...):
+  values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
+         tail)
+
+fun get_pts_x2(pts :: ListOf(Posn)):
+  pts[0].x
+
+get_pts_x2([Posn(5, 7)])

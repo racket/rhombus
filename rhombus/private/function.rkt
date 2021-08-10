@@ -205,7 +205,7 @@
                            #`(rest-tmp
                               (rest-tmp rest-getter #,rest-parsed #,rest-arg)
                               ((define-values (rest.bind-id ...) (rest-getter)))
-                              ((define-static-info-syntax rest.bind-id (#%ref-result (rest.static-info ...)))
+                              ((define-static-info-syntax/maybe rest.bind-id (#%ref-result (rest.bind-static-info ...)))
                                ...)))
                          #'(() #f () ()))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
@@ -239,7 +239,7 @@
                   (arg-parsed.binder-id tmp-id arg-parsed.data) ...
                   maybe-bind-rest ...
                   (begin
-                    (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
+                    (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.bind-static-info ...)
                     ...)
                   ...
                   maybe-bind-rest-static-rest ...
@@ -296,7 +296,7 @@
                                                   (with-syntax-parse ([rest::binding-form rest-parsed])
                                                     #`((rest-tmp rest-getter #,rest-parsed #,(fcase-rest-arg fc))
                                                        ((define-values (rest.bind-id ...) (rest-getter)))
-                                                       ((define-static-info-syntax rest.bind-id (#%ref-result (rest.static-info ...)))
+                                                       ((define-static-info-syntax/maybe rest.bind-id (#%ref-result (rest.bind-static-info ...)))
                                                         ...)))]
                                                  [else
                                                   #'(#f () ())])])
@@ -313,7 +313,7 @@
                                         (arg-parsed.binder-id this-arg-id arg-parsed.data) ...
                                         maybe-bind-rest ...
                                         (begin
-                                          (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.static-info ...)
+                                          (define-static-info-syntax/maybe arg-parsed.bind-id arg-parsed.bind-static-info ...)
                                           ...)
                                         ...
                                         maybe-bind-rest-static-info ...

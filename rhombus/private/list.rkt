@@ -24,7 +24,7 @@
 (define-binding-syntax cons  
   (binding-transformer
    #'cons
-   (make-composite-binding-transformer #'pair? #f (list #'car #'cdr) (list #'() #'()))))
+   (make-composite-binding-transformer #'pair? (list #'car #'cdr) (list #'() #'()))))
 
 (define (List l)
   (if (list? l)
@@ -42,16 +42,16 @@
 (define-for-syntax (parse-list-binding stx)
   (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f])
     ((make-composite-binding-transformer pred
-                                         (if (null? args)
-                                             null
-                                             (cons #'values
-                                                   (for/list ([arg (in-list (cdr args))])
-                                                     #'cdr)))
+                                         #:steppers (if (null? args)
+                                                        null
+                                                        (cons #'values
+                                                              (for/list ([arg (in-list (cdr args))])
+                                                                #'cdr)))
                                          (for/list ([arg (in-list args)])
                                            #'car)
                                          (for/list ([arg (in-list args)])
                                            #'())
-                                         rest-selector)
+                                         #:rest-accessor rest-selector)
      #`(#,form-id (parens . #,args) . #,tail)
      rest-arg))
   (syntax-parse stx

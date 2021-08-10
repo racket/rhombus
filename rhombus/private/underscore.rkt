@@ -3,7 +3,8 @@
                      syntax/parse)
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt")
+         "expression+binding.rkt"
+         "bind-input-key.rkt")
 
 (provide (rename-out [rhombus-_ _]))
 
@@ -25,7 +26,8 @@
      (syntax-parse stx
        [(form-id . tail)
         (values (binding-form #'ignored
-                              #'()
+                              #'() ; static-infos
+                              #'() ; bind-ids
                               #'always-succeed
                               #'nothing-bind
                               #'#f)

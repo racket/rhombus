@@ -59,8 +59,9 @@
 (define-for-syntax (do-unpack stx filter-static-infos)
   (syntax-parse stx
     [((~datum parsed) b::binding-form)
-     #:with ((b-static-info ...) ...) (filter-static-infos #'((b.static-info ...) ...))
+     #:with ((b-static-info ...) ...) (filter-static-infos #'((b.bind-static-info ...) ...))
      #`(parens (group b.arg-id)
+               (group (parens . b.static-infos))
                (group (parens (group (parens (group b.bind-id) (group (b-static-info ...))) ...)))
                (group chain-to-matcher)
                (group chain-to-binder)
@@ -83,12 +84,14 @@
      #,(syntax-parse stx
          #:datum-literals (parens group block)
          [(parens (group arg-id:identifier)
-                  (group (parens (group (parens (group bind-id) (group static-infos)) ...)))
+                  (group (parens . static-infos))
+                  (group (parens (group (parens (group bind-id) (group bind-static-infos)) ...)))
                   (group matcher-id:identifier)
                   (group binder-id:identifier)
                   (group data))
           (binding-form #'arg-id
-                        #'((bind-id . static-infos) ...)
+                        #'static-infos
+                        #'((bind-id . bind-static-infos) ...)
                         #'matcher-id
                         #'binder-id
                         #'data)]

@@ -241,6 +241,7 @@
             (values
              (binding-form
               #'syntax
+              #'()
               #'((id) ...)
               #'syntax-matcher
               #'syntax-binder

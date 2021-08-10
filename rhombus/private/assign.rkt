@@ -17,7 +17,8 @@
         (values
          (binding-form
           #'id
-          #'((id))
+          #'()
+          #'((id)) ; mutable => don't claim input's static info
           #'mutable-identifier-succeed
           #'mutable-bind
           #'id)

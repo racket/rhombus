@@ -90,8 +90,9 @@
                (binding-transformer
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
-                                                    #f
+                                                    #:static-infos (quote-syntax ((#%dot-provider name-instance)))
                                                     (list (quote-syntax name-field) ...)
+                                                    #:accessor->info? #t
                                                     (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name
                (identifier-contract (quote-syntax name)
@@ -150,12 +151,22 @@
     (raise-syntax-error #f
                         "don't know how to access field"
                         field-id))
+
   (define accessor-id (car accessor-id+static-infos))
   (define e (datum->syntax (quote-syntax here)
-                           (list accessor-id form1)
+                           (list (relocate field-id accessor-id) form1)
                            (span-srcloc form1 field-id)
                            #'dot))
-  (wrap-static-info* e (cadr accessor-id+static-infos)))
+
+  (define static-infos (cadr accessor-id+static-infos))
+  (define more-static-infos (syntax-local-static-info form1 accessor-id))
+  (define all-static-infos (if more-static-infos
+                               (datum->syntax #f
+                                              (append (syntax->list more-static-infos)
+                                                      static-infos))
+                               static-infos))
+
+  (wrap-static-info* e all-static-infos))
 
 (define-syntax (define-struct-desc-syntax stx)
   (syntax-parse stx

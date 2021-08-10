@@ -81,7 +81,6 @@
         (define tmp-ids (generate-temporaries #'((key ...) ...)))
         (define-values (composite new-tail)
           ((make-composite-binding-transformer #'(lambda (v) #t)
-                                               #f
                                                (for/list ([tmp-id (in-list tmp-ids)])
                                                  #`(lambda (v) #,tmp-id))
                                                (for/list ([arg (in-list tmp-ids)])
@@ -90,6 +89,7 @@
         (with-syntax-parse ([composite::binding-form composite])
           (values
            (binding-form #'map
+                         #'composite.static-infos
                          #'composite.bind-ids
                          #'map-matcher
                          #'map-binder

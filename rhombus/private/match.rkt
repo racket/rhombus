@@ -36,6 +36,7 @@
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'ignored
+                                                         #'()
                                                          #'((ignored))
                                                          #'else-matcher
                                                          #'else-binder
@@ -57,6 +58,7 @@
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'unmatched
+                                                         #'()
                                                          #'((unmatched))
                                                          #'else-matcher
                                                          #'else-binder
