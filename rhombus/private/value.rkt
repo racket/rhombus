@@ -46,10 +46,12 @@
                           (void)
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
       (wrap-definition
-       (or (generate-dot-provider-binding #'lhs-e.matcher-id #'lhs-e.arg-id #'tmp-id rhs-stx)
+       (with-syntax ([((_ . static-infos) ...)
+                      (extend-bind-input (syntax->list #'lhs-e.bind-ids)
+                                         (infer-static-infos rhs-stx))])
            #`(begin
                (lhs-e.binder-id tmp-id lhs-e.data)
-               (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.bind-static-info ...)
+               (define-static-info-syntax/maybe lhs-e.bind-id . static-infos)
                ...))))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
@@ -100,24 +102,34 @@
     (pattern (group ((~and p-tag parens) (group f::simple-call)))
              #:when (free-identifier=? #'#%parens (datum->syntax #'p-tag '#%parens))
              #:attr tag #'f.tag
-             #:attr rator #'f.rator)))
+             #:attr rator #'f.rator))
 
-(define-for-syntax (generate-dot-provider-binding matcher-id bind-id tmp-id rhs-stx)
-  (cond
-    [(free-identifier=? matcher-id #'identifier-succeed)
-     (syntax-parse rhs-stx
-       #:datum-literals (block brackets)
-       [(block f::simple-call)
-        #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
-        #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%call-result)
-                                              #'()))]
-        #`(begin
-            (define #,bind-id #,tmp-id)
-            (define-static-info-syntax/maybe #,bind-id . #,result-static-infos))]
-       [(block ((~and tag brackets) . _))
-        #:when (free-identifier=? #'#%array (datum->syntax #'tag '#%array))
-        #`(begin
-            (define #,bind-id #,tmp-id)
-            (define-static-info-syntax #,bind-id (#%indexed-ref list-ref)))]
-       [_ #f])]
-    [else #f]))
+  (define-syntax-class :simple-indexed
+    #:datum-literals (group parens)
+    (pattern indexed:identifier)
+    (pattern ((~and tag parens) (group i::simple-indexed))
+             #:when (free-identifier=? #'#%parens (datum->syntax #'tag '#%parens))
+             #:attr indexed #'i.indexed))
+  (define-syntax-class :simple-ref
+    #:datum-literals (group brackets)
+    (pattern (group i::simple-indexed ((~and tag brackets) . _))
+             #:attr indexed #'i.indexed)
+    (pattern (group ((~and p-tag brackets) (group f::simple-call)))
+             #:when (free-identifier=? #'#%array (datum->syntax #'p-tag '#%array))
+             #:attr tag #'i.tag
+             #:attr indexed #'i.indexed)))
+
+(define-for-syntax (infer-static-infos rhs-stx)
+  (syntax-parse rhs-stx
+    #:datum-literals (block brackets)
+    [(block f::simple-call)
+     #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
+     (or (syntax-local-static-info #'f.rator #'#%call-result)
+         #'())]
+    [(block ((~and tag brackets) . _))
+     #'((#%indexed-ref list-ref))]
+    [(block a::simple-ref)
+     #:when (free-identifier=? #'#%array (datum->syntax #'a.tag '#%array))
+     (or (syntax-local-static-info #'a.indexed #'#%ref-result)
+         #'())]
+    [_ #'()]))

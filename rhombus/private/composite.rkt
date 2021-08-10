@@ -47,7 +47,7 @@
                               (for/list ([sis (in-list static-infoss)]
                                          [matcher-id (in-list (syntax->list #'(a-parsed.matcher-id ...)))]
                                          [bind-ids-stx (in-list (syntax->list #'(a-parsed.bind-ids ...)))])
-                                (extend-bind-input sis (syntax->list bind-ids-stx)))
+                                (extend-bind-input (syntax->list bind-ids-stx) sis))
                               ;; for a "rest" pattern, push all static info under `#%ref-result`,
                               ;; since each "rest" pattern variable turns into a list
                               (for/list ([static-bind-ids-stx (in-list (syntax->list #'(rest-a-parsed.bind-ids ...)))])

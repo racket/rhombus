@@ -182,7 +182,8 @@
          (binding-form
           #'left.arg-id
           #'c-parsed.static-infos
-          (extend-bind-input #'c-parsed.static-infos (syntax->list #'left.bind-ids))
+          (extend-bind-input (syntax->list #'left.bind-ids) #'c-parsed.static-infos
+                             #:strip-bind-input? #f)
           #'check-predicate-matcher
           #'bind-nothing-new
           #'(c-parsed.predicate

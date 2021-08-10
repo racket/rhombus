@@ -76,14 +76,17 @@
     (pattern id:identifier
              #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?))))
 
-  ;; adds `input-static-infos` to any static info that has `#%bind-input`,
-  ;; while also stripping `#%bind-input`
-  (define (extend-bind-input input-static-infos static-infoss)
+  ;; adds `new-static-infos` to any static info that has `#%bind-input`,
+  ;; while optionally also stripping `#%bind-input`; the `static-infoss`
+  ;; argument can have elements that start with a bind id
+  (define (extend-bind-input static-infoss new-static-infos #:strip-bind-input? [strip-bind-input? #t])
     (for/list ([static-infos (in-list static-infoss)])
       (syntax-parse static-infos
         #:literals (#%bind-input)
         [(pre ... (#%bind-input #t) post ...)
-         (append (syntax->list #'(pre ... post ...)) input-static-infos)]
+         (append (syntax->list #'(pre ... post ...))
+                 (if strip-bind-input? '() (list #'(#%bind-input #t)))
+                 new-static-infos)]
         [_ static-infos]))))
 
 (define-syntax (identifier-succeed stx)

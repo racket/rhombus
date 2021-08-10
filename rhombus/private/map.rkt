@@ -79,6 +79,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (brackets block group op)
+       #:literals (rhombus=)
        [(form-id (brackets (group key ... (op rhombus=) val ...) ...) . tail)
         ;; eager parsing of key forms, partly because we expect then
         ;; to be constants, but more generaly because we think of them
