@@ -30,7 +30,9 @@
                      :prefix-op+expression+tail
                      :infix-op+expression+tail
                      :prefix-op+binding+tail
-                     :infix-op+binding+tail))
+                     :infix-op+binding+tail
+
+                     enforest-expression-block))
 
 (begin-for-syntax
   ;; Form at the top of a module:
@@ -44,6 +46,7 @@
   ;; Form in a definition context:
   (define-transform
     #:syntax-class :definition
+    #:predicate definition?
     #:desc "definition"
     #:name-path-op name-path-op
     #:transformer-ref definition-transformer-ref
@@ -143,3 +146,15 @@
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
       [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
+
+;; If `e` is a block with a single group, and if the group is not a
+;; definition, then parse the expression
+(define-for-syntax (enforest-expression-block e)
+  (syntax-parse e
+    [((~datum block) g)
+     (cond
+       [(definition? #'g) #`(rhombus-expression (group #,e))]
+       [else
+        (syntax-parse #'g
+          [g-e::expression #'g-e.parsed])])]
+    [_ #`(rhombus-expression (group #,e))]))

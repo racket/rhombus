@@ -25,6 +25,8 @@
   (syntax-parse stx
     [(_ (~alt (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
+              (~optional (~seq #:predicate form?)
+                         #:defaults ([form? #'#f]))
               (~optional (~seq #:desc form-kind-str)
                          #:defaults ([form-kind-str "form"]))
               (~optional (~seq #:in-space in-space)
@@ -36,16 +38,23 @@
               (~optional (~seq #:check-result check-result)
                          #:defaults ([check-result #'check-is-syntax])))
         ...)
-     #'(begin
+     #`(begin
          (define-syntax-class form
            (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op)))
-                    #:do [(define head-id (transform-in #'hname.name))]
-                    #:do [(define t (let ([transform-in-id transform-in])
-                                      (syntax-local-value* (in-space head-id) transformer-ref)))]
+                    #:do [(define head-id #'hname.name)]
+                    #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
                     #:attr parsed (apply-transformer t head-id
                                                      (datum->syntax #f (cons head-id #'hname.tail))
-                                                     check-result))))]))
+                                                     check-result)))
+         #,@(if (syntax-e #'form?)
+                #`((define (form? e)
+                     (syntax-parse e
+                       [((~datum group) . (~var hname (:hier-name-seq values name-path-op)))
+                        (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
+                             #t)]
+                       [_ #f])))
+                '()))]))
 
 (define (apply-transformer t id stx checker)
   (define proc (transformer-proc t))

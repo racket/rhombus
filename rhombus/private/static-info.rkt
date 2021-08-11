@@ -22,7 +22,8 @@
            wrap-static-info
            wrap-static-info*
            :static-info
-           syntax-local-static-info))
+           syntax-local-static-info
+           extract-static-infos))
 
 (provide define-static-info-syntax
          define-static-info-syntax/maybe)
@@ -64,7 +65,19 @@
     (syntax-parse expr
       [(~var dp (:static-info key-id))
        #'dp.val]
-      [_ #f])))
+      [_ #f]))
+
+  (define (extract-static-infos e)
+    (syntax-parse e
+      #:literals (begin quote-syntax)
+      [id:identifier
+       (define v (syntax-local-value* (in-static-info-space #'id) static-info-ref))
+       (if v
+           (static-info-stxs v)
+           null)]
+      [(begin (quote-syntax (~and form (key:identifier val))) e)
+       (cons #'form (extract-static-infos #'e))]
+      [_ null])))
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx
