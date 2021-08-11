@@ -31,7 +31,7 @@
 
 (define-syntax (mutable-bind stx)
   (syntax-parse stx
-    [(_ arg-id bind-id)
+    [(_ arg-id bind-id static-info)
      #'(begin
          (define mutable-id arg-id)
          (begin (set! mutable-id mutable-id))
