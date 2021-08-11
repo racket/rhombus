@@ -23,7 +23,8 @@
            wrap-static-info*
            :static-info
            syntax-local-static-info
-           extract-static-infos))
+           extract-static-infos
+           static-info-lookup))
 
 (provide define-static-info-syntax
          define-static-info-syntax/maybe)
@@ -77,7 +78,14 @@
            null)]
       [(begin (quote-syntax (~and form (key:identifier val))) e)
        (cons #'form (extract-static-infos #'e))]
-      [_ null])))
+      [_ null]))
+
+  (define (static-info-lookup static-infos find-key)
+    (for/or ([static-info (in-list (syntax->list static-infos))])
+      (syntax-parse static-info
+        [(key val) (and (free-identifier=? #'key find-key)
+                        #'val)]
+        [_ #f]))))
 
 (define-syntax (define-static-info-syntax stx)
   (syntax-parse stx
@@ -88,5 +96,5 @@
 (define-syntax (define-static-info-syntax/maybe stx)
   (syntax-parse stx
     [(_ id) #'(begin)]
-    [(_ id ((~literal #%bind-input) . _)) #'(begin)]
+    ; [(_ id ((~literal #%bind-input) . _)) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))

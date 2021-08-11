@@ -37,6 +37,7 @@
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
      #:with rhs (enforest-expression-block rhs-stx)
+     #:with static-infos (extract-static-infos #'rhs)
      (list
       #'(define tmp-id (let ([lhs-e.arg-id rhs])
                          lhs-e.arg-id))
@@ -46,13 +47,7 @@
                           (void)
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
       (wrap-definition
-       (with-syntax ([((_ . static-infos) ...)
-                      (extend-bind-input (syntax->list #'lhs-e.bind-ids)
-                                         (extract-static-infos #'rhs))])
-           #`(begin
-               (lhs-e.binder-id tmp-id lhs-e.data)
-               (define-static-info-syntax/maybe lhs-e.bind-id . static-infos)
-               ...))))]))
+       #`(lhs-e.binder-id tmp-id lhs-e.data static-infos)))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
   (syntax-parse gs-stx
@@ -71,11 +66,7 @@
                             (begin)
                             (rhs-binding-failure '#,form-id tmp-id 'lhs))
           ...
-          (lhs-e.binder-id tmp-id lhs-e.data)
-          ...
-          (begin
-            (define-static-info-syntax/maybe lhs-e.bind-id lhs-e.bind-static-info ...)
-            ...)
+          (lhs-e.binder-id tmp-id lhs-e.data ())
           ...)))]))
 
 (define-syntax (flattened-if stx)

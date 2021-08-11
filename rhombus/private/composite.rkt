@@ -39,21 +39,22 @@
                                      (length as))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
+       (define rest-bind-idss
+         ;; for a "rest" pattern, push all static info under `#%ref-result`,
+         ;; since each "rest" pattern variable turns into a list
+         (for/list ([static-bind-ids-stx (in-list (syntax->list #'(rest-a-parsed.bind-ids ...)))])
+           (syntax-parse static-bind-ids-stx
+             [((bind-id . static-infos) ...)
+              (syntax->list #'((bind-id (#%ref-result static-infos)) ...))])))
        (define new-bind-ids (apply
                              append
                              (append
                               ;; strip `#%bind-input` from any component static info, but in that case,
                               ;; add information from `static-infos`
                               (for/list ([sis (in-list static-infoss)]
-                                         [matcher-id (in-list (syntax->list #'(a-parsed.matcher-id ...)))]
                                          [bind-ids-stx (in-list (syntax->list #'(a-parsed.bind-ids ...)))])
                                 (extend-bind-input (syntax->list bind-ids-stx) sis))
-                              ;; for a "rest" pattern, push all static info under `#%ref-result`,
-                              ;; since each "rest" pattern variable turns into a list
-                              (for/list ([static-bind-ids-stx (in-list (syntax->list #'(rest-a-parsed.bind-ids ...)))])
-                                (syntax-parse static-bind-ids-stx
-                                  [((bind-id . static-infos) ...)
-                                   (syntax->list #'((bind-id (#%ref-result static-infos)) ...))])))))
+                              rest-bind-idss)))
        (define all-composite-static-infos
          (let* ([composite-static-infos composite-static-infos]
                 [composite-static-infos (if (and rest-arg
@@ -77,14 +78,14 @@
          #`(#,predicate
             #,steppers
             #,(if rest-arg (append accessors (list rest-accessor)) accessors)
+            #,static-infoss
             #,(generate-temporaries #'(a-parsed.arg-id ... rest-a-parsed.arg-id ...))
             (a-parsed.arg-id ... rest-a-parsed.arg-id ...)
             (a-parsed.matcher-id ... rest-a-parsed.matcher-id ...)
             (a-parsed.binder-id ... rest-a-parsed.binder-id ...)
             (a-parsed.data ... rest-a-parsed.data ...)
-            #,(and rest-arg
-                   ;; so we know what results to collect from each "rest" element match:
-                   #`(rest-a-parsed.bind-id ... ...))))
+            #,accessor->info?
+            #,(and rest-arg (car rest-bind-idss))))
         #'new-tail)])))
 
 (require (for-syntax racket/pretty))
@@ -92,9 +93,9 @@
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
     [(_ c-arg-id
-        (predicate steppers accessors tmp-ids
+        (predicate steppers accessors static-infoss tmp-ids
                    arg-ids matcher-ids binder-ids datas
-                   rest-ids)
+                   accessor->info? rest-bind-ids)
         IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
            #,(let loop ([c-arg-id #'c-arg-id]
@@ -108,16 +109,17 @@
                (cond
                  [(null? arg-ids)
                   #`(IF #t success-expr fail-expr)]
-                 [(and (syntax-e #'rest-ids)
+                 [(and (syntax-e #'rest-bind-ids)
                        (null? (cdr arg-ids)))
-                  #`(begin
-                      (define #,(car tmp-ids) #,(make-rest-match c-arg-id #'rest-ids (car accessors)
-                                                                 (car arg-ids) (car matcher-ids) (car binder-ids)
-                                                                 (car datas)
-                                                                 #'(lambda (arg) #f)))
-                      (IF #,(car tmp-ids)
-                          success-expr
-                          fail-expr))]
+                  (with-syntax ([((rest-id . _) ...) #'rest-bind-ids])
+                    #`(begin
+                        (define #,(car tmp-ids) #,(make-rest-match c-arg-id #'(rest-id ...) (car accessors)
+                                                                   (car arg-ids) (car matcher-ids) (car binder-ids)
+                                                                   (car datas)
+                                                                   #'(lambda (arg) #f)))
+                        (IF #,(car tmp-ids)
+                            success-expr
+                            fail-expr)))]
                  [else
                   (define new-c-arg-id (if steppers
                                            (car (generate-temporaries '(c-arg-id)))
@@ -139,19 +141,44 @@
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate steppers accessors (tmp-id ...)
+    [(_ c-arg-id (predicate steppers accessors (static-infos ...) (tmp-id ...)
                             (arg-id ...) matcher-ids (binder-id ...) (data ...)
-                            #f))
+                            accessor->info? #f)
+        composite-static-infos)
+     (add-composite-info
+      #'accessor->info? #'accessors #'composite-static-infos
+      #'(begin
+          (binder-id tmp-id data static-infos)
+          ...))]
+    [(_ c-arg-id
+        (predicate steppers (accessor ... rest-accessor) (static-infos ...) (tmp-id ... rest-tmp-id)
+                   (arg-id ...) matcher-ids (binder-id ... rest-binder-id) (data ... rest-data)
+                   accessor->info? ((rest-id . rest-static-info) ...))
+        composite-static-infos)
      #`(begin
-         (binder-id tmp-id data)
-         ...)]
-    [(_ c-arg-id (predicate steppers accessors (tmp-id ... rest-tmp-id)
-                            (arg-id ...) matcher-ids (binder-id ... rest-binder-id) (data ... rest-data)
-                            (rest-id ...)))
-     #`(begin
-         (binder-id tmp-id data)
-         ...
-         (define-values (rest-id ...) (rest-tmp-id)))]))
+         #,(add-composite-info
+            #'accessor->info? #'(accessor ...) #'composite-static-infos
+            #'(begin
+                (binder-id tmp-id data static-infos)
+                ...))
+         (define-values (rest-id ...) (rest-tmp-id))
+         (define-static-info-syntax/maybe rest-id . rest-static-info)
+         ...)]))
+
+(define-for-syntax (add-composite-info add?-stx accessors composite-static-infos defns)
+  (cond
+    [(not (syntax-e add?-stx))
+     defns]
+    [else
+     (with-syntax ([(more-static-infos ...)
+                    (for/list ([accessor (in-list (syntax->list accessors))])
+                      (or (static-info-lookup composite-static-infos accessor)
+                          '()))]
+                   [(_ (binder-id tmp-id data (static-info ...)) ...)
+                    defns])
+       #'(begin
+           (binder-id tmp-id data (static-info ... . more-static-infos))
+           ...))]))
 
 ;; ------------------------------------------------------------
 
@@ -169,7 +196,7 @@
                         (#,matcher-id arg-id #,data
                          if/blocked
                          (lambda ()
-                           (#,binder-id arg-id #,data)
+                           (#,binder-id arg-id #,data ())
                            (values . #,rest-ids))
                          (#,fail arg-id)))))
 

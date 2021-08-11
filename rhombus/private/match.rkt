@@ -108,5 +108,5 @@
 
 (define-syntax (else-binder stx)
   (syntax-parse stx
-    [(_ arg-id (_ bind-id))
+    [(_ arg-id (_ bind-id) static-infos)
      #'(define bind-id arg-id)]))

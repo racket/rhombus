@@ -187,6 +187,7 @@
           #'check-predicate-matcher
           #'bind-nothing-new
           #'(c-parsed.predicate
+             c-parsed.static-infos
              left.matcher-id
              left.binder-id
              left.data))
@@ -208,7 +209,7 @@
 
 (define-syntax (check-predicate-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (predicate left-matcher-id left-binder-id left-data) IF success fail)
+    [(_ arg-id (predicate static-infos left-matcher-id left-binder-id left-data) IF success fail)
      #'(IF (predicate arg-id)
            (left-matcher-id
             arg-id
@@ -220,8 +221,9 @@
 
 (define-syntax (bind-nothing-new stx)
   (syntax-parse stx
-    [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
-     #'(left-binder-id arg-id left-data)]))
+    [(_ arg-id (predicate (static-info ...) left-matcher-id left-binder-id left-data)
+        static-infos)
+     #'(left-binder-id arg-id left-data (static-info ... . static-infos))]))
 
 (define-syntax Integer (identifier-contract #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-contract #'Number #'number? #'()))

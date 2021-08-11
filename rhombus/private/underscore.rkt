@@ -40,4 +40,4 @@
 
 (define-syntax (nothing-bind stx)
   (syntax-parse stx
-    [(_ _ _) #'(begin)]))
+    [(_ _ _ _) #'(begin)]))

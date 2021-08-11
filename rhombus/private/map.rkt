@@ -133,5 +133,5 @@
   
 (define-syntax (map-binder stx)
   (syntax-parse stx
-    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id  composite-data))
-     #`(composite-binder-id 'map composite-data)]))
+    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id  composite-data) static-infos)
+     #`(composite-binder-id 'map composite-data static-infos)]))

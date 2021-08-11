@@ -187,9 +187,10 @@
                    #:datum-literals (parsed group parens)
                    #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id binder-id data)))))
+                               (group (parsed (matcher-id binder-id data)))
+                               (group static-infos)))
                     #:with rhombus rhombus
-                    #'(binder-id arg-id data)]))])
+                    #`(binder-id arg-id data #,(pack-static-infos #'static-infos 'binder))]))])
     (make-expression+definition-transformer
      (expression-transformer
       #'chain-to-matcher
@@ -205,19 +206,26 @@
         #:literals (? ¿)
         [(form-id (op ?) (parens (group builder-id:identifier
                                         (parens (group (op ¿) arg-id:identifier)
-                                                data-pattern)))
+                                                data-pattern
+                                                static-info-pattern)))
                   (block body ...))
-         (define-values (converted-pattern idrs can-be-empty?) (convert-pattern #'data-pattern))
-         (with-syntax ([((id id-ref) ...) idrs])
+         (define-values (converted-data-pattern data-idrs data-can-be-empty?) (convert-pattern #'data-pattern))
+         (define-values (converted-info-pattern info-idrs info-can-be-empty?) (convert-pattern #'static-info-pattern))
+         (with-syntax ([((data-id data-id-ref) ...) data-idrs]
+                       [((info-id info-id-ref) ...) info-idrs])
            (list
             #`(define-syntax (builder-id stx)
                 (syntax-parse stx
-                  [(_ arg-id data)
+                  [(_ arg-id data info)
                    (syntax-parse #'(group data)
-                     [#,converted-pattern
-                      (let ([id id-ref] ... [arg-id #'arg-id])
-                        (unwrap-block
-                         (rhombus-block body ...)))])]))))]))))
+                     [#,converted-data-pattern
+                      (syntax-parse #`(group #,(unpack-static-infos #'info))
+                        [#,converted-info-pattern
+                         (let ([arg-id #'arg-id]
+                               [data-id data-id-ref] ...
+                               [info-id info-id-ref] ...)
+                           (unwrap-block
+                            (rhombus-block body ...)))])])]))))]))))
 
 (define-for-syntax (unwrap-block stx)
   (syntax-parse stx

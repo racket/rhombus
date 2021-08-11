@@ -235,14 +235,14 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
                | ¿fail
             }
 
-bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
+bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id), ¿static_infos)):
   match bind_ct.unpack(a)
    | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
        match bind_ct.unpack(b)
         | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
-              ¿a_binder(¿a_part_id, ¿a_data)
-              ¿b_binder(¿b_part_id, ¿b_data)
+              ¿a_binder(¿a_part_id, ¿a_data, ())
+              ¿b_binder(¿b_part_id, ¿b_data, ())
             }
 
 // an expression operator that's consistent with the pattern
@@ -392,6 +392,13 @@ static_info.macro ?zero_vec: ?((¿(expr_ct.call_result_key),
                                 ¿(static_info_ct.pack(?((¿(dot_ct.provider_key),
                                                          vector_dot_provider))))))
 zero_vec().magnitude
+
+{
+  let p1 :: Posn.of(Integer, Posn): Posn(1, Posn(3, 4))
+  // RHS influences info for LHS:
+  let Posn(px, py): p1
+  py.y
+}
 
 // indexables
 

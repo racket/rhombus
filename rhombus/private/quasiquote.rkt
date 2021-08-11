@@ -271,7 +271,7 @@
 
 (define-syntax (syntax-binder stx)
   (syntax-parse stx
-    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)))
+    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)) static-infos)
      #'(begin
          (define id tmp-id) ...)]))
 

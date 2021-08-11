@@ -60,7 +60,7 @@
 
 (define-syntax (literal-bind-nothing stx)
   (syntax-parse stx
-    [(_ arg-id datum)
+    [(_ arg-id datum static-infos)
      #'(begin)]))
 
 (define-for-syntax (raise-keyword-error datum)

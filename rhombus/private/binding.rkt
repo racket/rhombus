@@ -5,7 +5,8 @@
                      enforest/property
                      enforest/proc-name
                      enforest/syntax-local)
-         "bind-input-key.rkt")
+         "bind-input-key.rkt"
+         "static-info.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -96,8 +97,10 @@
 
 (define-syntax (identifier-bind stx)
   (syntax-parse stx
-    [(_ arg-id bind-id)
-     #'(define bind-id arg-id)]))
+    [(_ arg-id bind-id static-infos)
+     #'(begin
+         (define bind-id arg-id)
+         (define-static-info-syntax/maybe bind-id . static-infos))]))
 
 (define-syntax (define-binding-syntax stx)
   (syntax-parse stx
