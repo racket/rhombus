@@ -35,11 +35,7 @@
          #`(#,(build-case-function #'match
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
-                                                         #'ignored
-                                                         #'()
-                                                         #'((ignored))
-                                                         #'else-matcher
-                                                         #'else-binder
+                                                         #'else-infoer
                                                          #'(#t ignored))))
                                    (falses #'(b ...))
                                    (falses #'(b ...)) (falses #'(b ...))
@@ -57,11 +53,7 @@
          #`(#,(build-case-function #'match
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
-                                                         #'unmatched
-                                                         #'()
-                                                         #'((unmatched))
-                                                         #'else-matcher
-                                                         #'else-binder
+                                                         #'else-infoer
                                                          #'(#f unmatched))))
                                    (falses #'(b ...))
                                    (falses #'(b ...)) (falses #'(b ...))
@@ -99,6 +91,16 @@
 (define (match-fallthrough who v loc)
   (raise-srcloc-error who v loc))
 
+(define-syntax (else-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (ok? bind-id))
+     (binding-info #'bind-id
+                   #'static-infos
+                   #'()
+                   #'else-matcher
+                   #'else-binder
+                   #'(ok? bind-id))]))
+
 (define-syntax (else-matcher stx)
   (syntax-parse stx
     [(_ arg-id (ok? bind-id) IF success fail)
@@ -108,5 +110,5 @@
 
 (define-syntax (else-binder stx)
   (syntax-parse stx
-    [(_ arg-id (_ bind-id) static-infos)
+    [(_ arg-id (ok? bind-id))
      #'(define bind-id arg-id)]))

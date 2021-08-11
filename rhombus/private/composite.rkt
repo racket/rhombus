@@ -5,7 +5,6 @@
          "binding.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
-         "bind-input-key.rkt"
          (submod "contract.rkt" for-struct))
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
@@ -39,87 +38,100 @@
                                      (length as))
                              (syntax/loc #'form-id
                                #'(group form-id (parens a ...)))))
-       (define rest-bind-idss
-         ;; for a "rest" pattern, push all static info under `#%ref-result`,
-         ;; since each "rest" pattern variable turns into a list
-         (for/list ([static-bind-ids-stx (in-list (syntax->list #'(rest-a-parsed.bind-ids ...)))])
-           (syntax-parse static-bind-ids-stx
-             [((bind-id . static-infos) ...)
-              (syntax->list #'((bind-id (#%ref-result static-infos)) ...))])))
-       (define new-bind-ids (apply
-                             append
-                             (append
-                              ;; strip `#%bind-input` from any component static info, but in that case,
-                              ;; add information from `static-infos`
-                              (for/list ([sis (in-list static-infoss)]
-                                         [bind-ids-stx (in-list (syntax->list #'(a-parsed.bind-ids ...)))])
-                                (extend-bind-input (syntax->list bind-ids-stx) sis))
-                              rest-bind-idss)))
-       (define all-composite-static-infos
-         (let* ([composite-static-infos composite-static-infos]
-                [composite-static-infos (if (and rest-arg
-                                                 (null? accessors))
-                                            #`((#%ref-result rest-a-parsed.static-infos ...) . #,composite-static-infos)
-                                            composite-static-infos)]
-                [composite-static-infos (if accessor->info?
-                                            #`(#,@(for/list ([accessor accessors]
-                                                             [static-infos (syntax->list #'(a-parsed.static-infos ...))])
-                                                    #`(#,accessor #,static-infos))
-                                               . #,composite-static-infos)
-                                            composite-static-infos)])
-           composite-static-infos))
        (values
         (binding-form
-         #'composite
-         all-composite-static-infos
-         new-bind-ids
-         #'composite-matcher
-         #'composite-binder
+         #'composite-infoer
          #`(#,predicate
+            #,composite-static-infos
             #,steppers
-            #,(if rest-arg (append accessors (list rest-accessor)) accessors)
+            #,accessors
             #,static-infoss
-            #,(generate-temporaries #'(a-parsed.arg-id ... rest-a-parsed.arg-id ...))
-            (a-parsed.arg-id ... rest-a-parsed.arg-id ...)
-            (a-parsed.matcher-id ... rest-a-parsed.matcher-id ...)
-            (a-parsed.binder-id ... rest-a-parsed.binder-id ...)
-            (a-parsed.data ... rest-a-parsed.data ...)
+            (a-parsed.infoer-id ... )
+            (a-parsed.data ...)
             #,accessor->info?
-            #,(and rest-arg (car rest-bind-idss))))
+            #,(and rest-arg
+                   #`(#,rest-accessor
+                      rest-a-parsed.infoer-id ...
+                      rest-a-parsed.data ...))))
         #'new-tail)])))
 
 (require (for-syntax racket/pretty))
 
+(define-syntax (composite-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (predicate (composite-static-info ...)
+                                steppers accessors ((static-info ...) ...)
+                                (infoer-id ...) (data ...)
+                                accessor->info?
+                                rest-data))
+     #:with (arg-static-infos ...) (for/list ([accessor (in-list (syntax->list #'accessors))])
+                                     (or (and (syntax-e #'accessor->info?)
+                                              (static-info-lookup #'static-infos accessor))
+                                         '()))
+     #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
+     #:with (a-info::binding-info ...) #'(a-impl.info ...)
+
+     (define-values (new-rest-data rest-static-infos rest-bind-infos rest-name-id)
+       (syntax-parse #'rest-data
+         [#f (values #'#f #'() #'() #'rest)]
+         [(rest-accessor rest-infoer-id rest-a-data)
+          #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
+          #:with rest-info::binding-info #'rest-impl.info
+          #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
+          (values #`(rest-tmp-id rest-accessor rest-info)
+                  #'rest-info.static-infos
+                  (syntax-parse #'rest-info.bind-infos
+                    [((bind-id . static-infos) ...)
+                     #'((bind-id (#%ref-result static-infos)) ...)])
+                  #'rest-info.name-id)]))
+
+     (define all-composite-static-infos
+       (let* ([composite-static-infos #'(composite-static-info ... . static-infos)]
+              [composite-static-infos (if (or (null? (syntax-e rest-static-infos))
+                                              (not (null? (syntax-e #'accessors))))
+                                          composite-static-infos
+                                          #`((#%ref-result #,rest-static-infos) . #,composite-static-infos))]
+              [composite-static-infos (if (syntax-e #'accessor->info?)
+                                          #`(#,@(for/list ([accessor (syntax->list #'accessors)]
+                                                           [static-infos (syntax->list #'(a-info.static-infos ...))])
+                                                  #`(#,accessor #,static-infos))
+                                             . #,composite-static-infos)
+                                          composite-static-infos)])
+         composite-static-infos))
+     (binding-info #'composite
+                   all-composite-static-infos
+                   #`((a-info.bind-id a-info.bind-static-info ...) ... ... #,@rest-bind-infos)
+                   #'composite-matcher
+                   #'composite-binder
+                   #`(predicate steppers accessors #,(generate-temporaries #'(a-info.name-id ...))
+                                (a-info.name-id ...) (a-info.matcher-id ...) (a-info.binder-id ...) (a-info.data ...)
+                                #,new-rest-data))]))
+
 (define-syntax (composite-matcher stx)
   (syntax-parse stx
     [(_ c-arg-id
-        (predicate steppers accessors static-infoss tmp-ids
-                   arg-ids matcher-ids binder-ids datas
-                   accessor->info? rest-bind-ids)
+        (predicate steppers accessors tmp-ids
+                   name-ids matcher-ids binder-ids datas
+                   rest-data)
         IF success-expr fail-expr)
      #`(IF (predicate c-arg-id)
            #,(let loop ([c-arg-id #'c-arg-id]
                         [steppers (syntax->list #'steppers)]
                         [accessors (syntax->list #'accessors)]
                         [tmp-ids (syntax->list #'tmp-ids)]
-                        [arg-ids (syntax->list #'arg-ids)]
+                        [name-ids (syntax->list #'name-ids)]
                         [matcher-ids (syntax->list #'matcher-ids)]
-                        [binder-ids (syntax->list #'binder-ids)]
                         [datas (syntax->list #'datas)])
                (cond
-                 [(null? arg-ids)
-                  #`(IF #t success-expr fail-expr)]
-                 [(and (syntax-e #'rest-bind-ids)
-                       (null? (cdr arg-ids)))
-                  (with-syntax ([((rest-id . _) ...) #'rest-bind-ids])
-                    #`(begin
-                        (define #,(car tmp-ids) #,(make-rest-match c-arg-id #'(rest-id ...) (car accessors)
-                                                                   (car arg-ids) (car matcher-ids) (car binder-ids)
-                                                                   (car datas)
-                                                                   #'(lambda (arg) #f)))
-                        (IF #,(car tmp-ids)
-                            success-expr
-                            fail-expr)))]
+                 [(null? name-ids)
+                  (syntax-parse #'rest-data
+                    [#f #`(IF #t success-expr fail-expr)]
+                    [(rest-tmp-id rest-accessor rest-info)
+                     #`(begin
+                         (define rest-tmp-id #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
+                         (IF rest-tmp-id
+                             success-expr
+                             fail-expr))])]
                  [else
                   (define new-c-arg-id (if steppers
                                            (car (generate-temporaries '(c-arg-id)))
@@ -128,77 +140,49 @@
                       #,@(if steppers
                              #`((define #,new-c-arg-id (#,(car steppers) #,c-arg-id)))
                              #'())
-                      (define #,(car tmp-ids) (let ([#,(car arg-ids) (#,(car accessors) #,new-c-arg-id)])
-                                                #,(car arg-ids)))
+                      (define #,(car tmp-ids) (let ([#,(car name-ids) (#,(car accessors) #,new-c-arg-id)])
+                                                #,(car name-ids)))
                       (#,(car matcher-ids) #,(car tmp-ids) #,(car datas)
                        IF
                        #,(loop new-c-arg-id
                                (and steppers (cdr steppers)) (cdr accessors)
-                               (cdr tmp-ids) (cdr arg-ids) (cdr matcher-ids) (cdr binder-ids)
+                               (cdr tmp-ids) (cdr name-ids) (cdr matcher-ids)
                                (cdr datas))
                        fail-expr))]))
            fail-expr)]))
 
 (define-syntax (composite-binder stx)
   (syntax-parse stx
-    [(_ c-arg-id (predicate steppers accessors (static-infos ...) (tmp-id ...)
-                            (arg-id ...) matcher-ids (binder-id ...) (data ...)
-                            accessor->info? #f)
-        composite-static-infos)
-     (add-composite-info
-      #'accessor->info? #'accessors #'composite-static-infos
-      #'(begin
-          (binder-id tmp-id data static-infos)
-          ...))]
-    [(_ c-arg-id
-        (predicate steppers (accessor ... rest-accessor) (static-infos ...) (tmp-id ... rest-tmp-id)
-                   (arg-id ...) matcher-ids (binder-id ... rest-binder-id) (data ... rest-data)
-                   accessor->info? ((rest-id . rest-static-info) ...))
-        composite-static-infos)
+    [(_ c-arg-id (predicate steppers accessors (tmp-id ...)
+                            name-ids matcher-ids (binder-id ...) (data ...)
+                            rest-data))
      #`(begin
-         #,(add-composite-info
-            #'accessor->info? #'(accessor ...) #'composite-static-infos
-            #'(begin
-                (binder-id tmp-id data static-infos)
-                ...))
-         (define-values (rest-id ...) (rest-tmp-id))
-         (define-static-info-syntax/maybe rest-id . rest-static-info)
-         ...)]))
-
-(define-for-syntax (add-composite-info add?-stx accessors composite-static-infos defns)
-  (cond
-    [(not (syntax-e add?-stx))
-     defns]
-    [else
-     (with-syntax ([(more-static-infos ...)
-                    (for/list ([accessor (in-list (syntax->list accessors))])
-                      (or (static-info-lookup composite-static-infos accessor)
-                          '()))]
-                   [(_ (binder-id tmp-id data (static-info ...)) ...)
-                    defns])
-       #'(begin
-           (binder-id tmp-id data (static-info ... . more-static-infos))
-           ...))]))
+         (binder-id tmp-id data)
+         ...
+         #,@(syntax-parse #'rest-data
+              [#f #'()]
+              [(rest-tmp-id rest-accessor rest-info)
+               #:with rest::binding-info #'rest-info
+               #'((define-values (rest.bind-id ...) (rest-tmp-id)))]))]))
 
 ;; ------------------------------------------------------------
 
 ;; a match result for a "rest" match is a function that gets
 ;; lists of results; the binder step for each element is delayed
 ;; until the whole list is found to match
-(define-for-syntax (make-rest-match c-arg-id rest-ids selector
-                                    arg-id matcher-id binder-id
-                                    data
-                                    fail)
-  #`(get-rest-getters '#,rest-ids
-                      (let ([#,arg-id (#,selector #,c-arg-id)])
-                        #,arg-id)
-                      (lambda (arg-id)
-                        (#,matcher-id arg-id #,data
-                         if/blocked
-                         (lambda ()
-                           (#,binder-id arg-id #,data ())
-                           (values . #,rest-ids))
-                         (#,fail arg-id)))))
+(define-for-syntax (make-rest-match c-arg-id accessor rest-info fail)
+  (syntax-parse rest-info
+    [rest::binding-info
+     #`(get-rest-getters '(rest.bind-id ...)
+                         (let ([rest.name-id (#,accessor #,c-arg-id)])
+                           rest.name-id)
+                         (lambda (arg-id)
+                           (rest.matcher-id arg-id rest.data
+                            if/blocked
+                            (lambda ()
+                              (rest.binder-id arg-id rest.data)
+                              (values rest.bind-id ...))
+                            (#,fail arg-id))))]))
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))

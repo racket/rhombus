@@ -14,11 +14,9 @@
     [(_ who try-next failure rest body)
      (syntax-parse #'rest
        [#f #'(let () body)]
-       [(rest-id rest-getter-id rest::binding-form rest-pat)
+       [(rest-getter-id rest-pat rest-id rest-info)
         #`(let ([rest-getter-id
-                 #,(make-rest-match #'rest-id #'(rest.bind-id ...) #'values
-                                    #'rest.arg-id #'rest.matcher-id #'rest.binder-id
-                                    #'rest.data
+                 #,(make-rest-match #'rest-id #'values #'rest-info
                                     #'(lambda (arg)
                                         (static-if try-next
                                                    #f
@@ -31,11 +29,11 @@
                 (static-if try-next
                            (try-next)
                            (failure 'who rest-id 'list))))])]
-    [(_ who try-next failure (arg-id arg::binding-form arg-pat arg-default) rest . tail)
+    [(_ who try-next failure (arg-id arg::binding-info arg-pat arg-default) rest . tail)
      #:with arg-rhs (if (syntax-e #'arg-default)
                         #'(if (eq? arg-id unsafe-undefined)
-                              (let ([arg.arg-id (rhombus-expression arg-default)])
-                                arg.arg-id)
+                              (let ([arg-info.name-id (rhombus-expression arg-default)])
+                                arg-info.name-id)
                               arg-id)
                         #'arg-id)
      #`(let ([arg-id arg-rhs])

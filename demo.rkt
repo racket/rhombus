@@ -196,22 +196,28 @@ apply_interest(7)
 
 // define <> as revese-cons pattern
 bind.operator ?(¿a <> ¿b):
-  match bind_ct.unpack(a)
+  bind_ct.pack(?(build_reverse_cons_infoer,
+                 (¿a, ¿b)))
+
+bind.infoer ?(build_reverse_cons_infoer(¿in_id, (¿a_in, ¿b_in))):
+  val a: bind_ct.get_info(a_in, ?())
+  val b: bind_ct.get_info(b_in, ?())
+  match bind_ct.unpack_info(a)
    | ?(¿a_id, ¿a_info, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack(b)
+       match bind_ct.unpack_info(b)
         | ?(¿b_id, ¿b_info, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
-            bind_ct.pack(?(pair,
-                           (),
-                           (¿a_bind_info ... ¿b_bind_info ...),
-                           build_reverse_cons_match,
-                           build_reverse_cons_bind,
-                           (¿a, ¿b, a_part, b_part)))
+            ?(pair,
+              (),
+              (¿a_bind_info ... ¿b_bind_info ...),
+              build_reverse_cons_match,
+              build_reverse_cons_bind,
+              (¿a, ¿b, a_part, b_part))
 
 bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
                                         ¿IF, ¿success, ¿fail)):
-  match bind_ct.unpack(a)
+  match bind_ct.unpack_info(a)
    | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack(b)
+       match bind_ct.unpack_info(b)
         | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
               // check for pair an extract reversed pieces
@@ -235,14 +241,14 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
                | ¿fail
             }
 
-bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id), ¿static_infos)):
-  match bind_ct.unpack(a)
+bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
+  match bind_ct.unpack_info(a)
    | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack(b)
+       match bind_ct.unpack_info(b)
         | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
             ?{
-              ¿a_binder(¿a_part_id, ¿a_data, ())
-              ¿b_binder(¿b_part_id, ¿b_data, ())
+              ¿a_binder(¿a_part_id, ¿a_data)
+              ¿b_binder(¿b_part_id, ¿b_data)
             }
 
 // an expression operator that's consistent with the pattern

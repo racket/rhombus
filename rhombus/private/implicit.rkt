@@ -43,13 +43,19 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (binding-form #'literal
-                              #'()
-                              #'()
-                              #'literal-matcher
-                              #'literal-bind-nothing
+        (values (binding-form #'literal-infoer
                               #'datum)
                 #'tail)]))))
+
+(define-syntax (literal-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos datum)
+     (binding-info #'literal
+                   #'static-infos
+                   #'()
+                   #'literal-matcher
+                   #'literal-bind-nothing
+                   #'datum)]))
 
 (define-syntax (literal-matcher stx)
   (syntax-parse stx
@@ -60,7 +66,7 @@
 
 (define-syntax (literal-bind-nothing stx)
   (syntax-parse stx
-    [(_ arg-id datum static-infos)
+    [(_ arg-id datum)
      #'(begin)]))
 
 (define-for-syntax (raise-keyword-error datum)

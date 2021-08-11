@@ -3,8 +3,7 @@
                      syntax/parse)
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt"
-         "bind-input-key.rkt")
+         "expression+binding.rkt")
 
 (provide (rename-out [rhombus-_ _]))
 
@@ -25,13 +24,19 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
-        (values (binding-form #'ignored
-                              #'() ; static-infos
-                              #'() ; bind-ids
-                              #'always-succeed
-                              #'nothing-bind
+        (values (binding-form #'ignored-info
                               #'#f)
                 #'tail)]))))
+
+(define-syntax (ignored-info stx)
+  (syntax-parse stx
+    [(_ static-infos _)
+     (binding-info #'ignored
+                   #'static-infos
+                   #'()
+                   #'always-succeed
+                   #'nothing-bind
+                   #'())]))
 
 (define-syntax (always-succeed stx)
   (syntax-parse stx
@@ -40,4 +45,4 @@
 
 (define-syntax (nothing-bind stx)
   (syntax-parse stx
-    [(_ _ _ _) #'(begin)]))
+    [(_ _ _) #'(begin)]))

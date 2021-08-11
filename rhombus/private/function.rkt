@@ -193,19 +193,23 @@
                           pred
                           rhs
                           start end)
-    (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds])
-      (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-parsed.arg-id ...))]
+    (with-syntax-parse ([(arg-parsed::binding-form ...) arg-parseds]
+                        [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
+                        [(arg-info::binding-info ...) #'(arg-impl.info ...)])
+      (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))]
                     [(arg ...) args]
                     [rhs rhs]
                     [(maybe-rest-tmp maybe-match-rest
                                      (maybe-bind-rest ...)
                                      (maybe-bind-rest-static-info ...))
                      (if (syntax-e rest-arg)
-                         (with-syntax-parse ([rest::binding-form rest-parsed])
+                         (with-syntax-parse ([rest::binding-form rest-parsed]
+                                             [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
+                                             [rest-info::binding-info #'rest-impl.info])
                            #`(rest-tmp
-                              (rest-tmp rest-getter #,rest-parsed #,rest-arg)
-                              ((define-values (rest.bind-id ...) (rest-getter)))
-                              ((define-static-info-syntax/maybe rest.bind-id (#%ref-result (rest.bind-static-info ...)))
+                              (rest-getter #,rest-arg rest-tmp rest-info)
+                              ((define-values (rest-info.bind-id ...) (rest-getter)))
+                              ((define-static-info-syntax/maybe rest-info.bind-id (#%ref-result (rest-info.bind-static-info ...)))
                                ...)))
                          #'(() #f () ()))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
@@ -232,11 +236,15 @@
                (nested-bindings
                 #,function-name
                 #f argument-binding-failure
-                (tmp-id arg-parsed arg arg-default)
+                (tmp-id arg-info arg arg-default)
                 ...
                 maybe-match-rest
                 (begin
-                  (arg-parsed.binder-id tmp-id arg-parsed.data ()) ...
+                  (arg-info.binder-id tmp-id arg-info.data) ...
+                  (begin
+                    (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                    ...)
+                  ...
                   maybe-bind-rest ...
                   maybe-bind-rest-static-info ...
                   (add-contract-check
@@ -282,6 +290,8 @@
                             (adapt-arguments-for-count fc n #'(arg-id ...) #'rest-tmp #'try-next))
                           (with-syntax-parse ([(arg ...) (fcase-args fc)]
                                               [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
+                                              [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
+                                              [(arg-info::binding-info ...) #'(arg-impl.info ...)]
                                               [(this-arg-id ...) this-args]
                                               [pred (fcase-pred fc)]
                                               [rhs (fcase-rhs fc)]
@@ -289,10 +299,12 @@
                                                (cond
                                                  [(syntax-e (fcase-rest-arg fc))
                                                   (define rest-parsed (fcase-rest-arg-parsed fc))
-                                                  (with-syntax-parse ([rest::binding-form rest-parsed])
-                                                    #`((rest-tmp rest-getter #,rest-parsed #,(fcase-rest-arg fc))
-                                                       ((define-values (rest.bind-id ...) (rest-getter)))
-                                                       ((define-static-info-syntax/maybe rest.bind-id (#%ref-result (rest.bind-static-info ...)))
+                                                  (with-syntax-parse ([rest::binding-form rest-parsed]
+                                                                      [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
+                                                                      [rest-info::binding-info #'rest-impl.info])
+                                                    #`((rest-getter #,(fcase-rest-arg fc) rest-tmp rest-info)
+                                                       ((define-values (rest-info.bind-id ...) (rest-getter)))
+                                                       ((define-static-info-syntax/maybe rest-info.bind-id (#%ref-result (rest-info.bind-static-info ...)))
                                                         ...)))]
                                                  [else
                                                   #'(#f () ())])])
@@ -302,11 +314,15 @@
                                       #,function-name
                                       try-next
                                       argument-binding-failure
-                                      (this-arg-id arg-parsed arg #f)
+                                      (this-arg-id arg-info arg #f)
                                       ...
                                       maybe-match-rest
                                       (begin
-                                        (arg-parsed.binder-id this-arg-id arg-parsed.data ()) ...
+                                        (arg-info.binder-id this-arg-id arg-info.data) ...
+                                        (begin
+                                          (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                          ...)
+                                        ...
                                         maybe-bind-rest ...
                                         maybe-bind-rest-static-info ...
                                         (add-contract-check

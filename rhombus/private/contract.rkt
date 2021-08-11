@@ -16,7 +16,6 @@
          "binding.rkt"
          "expression+binding.rkt"
          "static-info.rkt"
-         "bind-input-key.rkt"
          "parse.rkt")
 
 (provide ::
@@ -180,16 +179,10 @@
         #:with left::binding-form form
         (values
          (binding-form
-          #'left.arg-id
-          #'c-parsed.static-infos
-          (extend-bind-input (syntax->list #'left.bind-ids) #'c-parsed.static-infos
-                             #:strip-bind-input? #f)
-          #'check-predicate-matcher
-          #'bind-nothing-new
+          #'contract-infoer
           #'(c-parsed.predicate
              c-parsed.static-infos
-             left.matcher-id
-             left.binder-id
+             left.infoer-id
              left.data))
          #'t.tail)]))))
 
@@ -207,9 +200,21 @@
          #'t.tail)]))
    'none))
 
+(define-syntax (contract-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (predicate (static-info ...) left-infoer-id left-data))
+     #:with left-impl::binding-impl #'(left-infoer-id (static-info ... . static-infos) left-data)
+     #:with left::binding-info #'left-impl.info
+     (binding-info #'left.name-id
+                   #'left.static-infos
+                   #'left.bind-infos
+                   #'check-predicate-matcher
+                   #'bind-nothing-new
+                   #'(predicate left.matcher-id left.binder-id left.data))]))
+
 (define-syntax (check-predicate-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (predicate static-infos left-matcher-id left-binder-id left-data) IF success fail)
+    [(_ arg-id (predicate left-matcher-id left-binder-id left-data) IF success fail)
      #'(IF (predicate arg-id)
            (left-matcher-id
             arg-id
@@ -221,9 +226,8 @@
 
 (define-syntax (bind-nothing-new stx)
   (syntax-parse stx
-    [(_ arg-id (predicate (static-info ...) left-matcher-id left-binder-id left-data)
-        static-infos)
-     #'(left-binder-id arg-id left-data (static-info ... . static-infos))]))
+    [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
+     #'(left-binder-id arg-id left-data)]))
 
 (define-syntax Integer (identifier-contract #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-contract #'Number #'number? #'()))
@@ -253,14 +257,16 @@
        #:datum-literals (parens)
        [(_ (parens arg::binding) . tail)
         #:with arg-parsed::binding-form #'arg.parsed
+        #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+        #:with arg-info::binding-info #'arg-impl.info
         (values
-         #`((lambda (arg-parsed.arg-id)
-              (arg-parsed.matcher-id arg-parsed.arg-id
-                                     arg-parsed.data
-                                     if/blocked
-                                     #t
-                                     #f))
-            arg-parsed.static-infos)
+         #`((lambda (arg-info.name-id)
+              (arg-info.matcher-id arg-info.name-id
+                                   arg-info.data
+                                   if/blocked
+                                   #t
+                                   #f))
+            arg-info.static-infos)
          #'tail)]))))
 
 (define-syntax-rule (if/blocked tst thn els)

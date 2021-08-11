@@ -244,16 +244,22 @@
           (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
             (values
              (binding-form
-              #'syntax
-              #'()
-              #'((id) ...)
-              #'syntax-matcher
-              #'syntax-binder
+              #'syntax-infoer
               #`(#,pattern
                  (tmp-id ...)
                  (id ...)
                  (id-ref ...)))
              #'tail)))]))))
+
+(define-syntax (syntax-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (pattern tmp-ids (id ...) id-refs))
+     (binding-info #'syntax
+                   #'()
+                   #'((id) ...)
+                   #'syntax-matcher
+                   #'syntax-binder
+                   #'(pattern tmp-ids (id ...) id-refs))]))
 
 (define-syntax (syntax-matcher stx)
   (syntax-parse stx
@@ -271,7 +277,7 @@
 
 (define-syntax (syntax-binder stx)
   (syntax-parse stx
-    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)) static-infos)
+    [(_ arg-id (pattern (tmp-id ...) (id ...) (id-ref ...)))
      #'(begin
          (define id tmp-id) ...)]))
 

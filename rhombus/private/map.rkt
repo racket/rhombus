@@ -96,15 +96,10 @@
            #`(form-id (parens (group val ...) ...) . tail)))
         (with-syntax-parse ([composite::binding-form composite])
           (values
-           (binding-form #'map
-                         #'composite.static-infos
-                         #'composite.bind-ids
-                         #'map-matcher
-                         #'map-binder
+           (binding-form #'map-infoer
                          #`(#,key-parseds
                             #,tmp-ids
-                            composite.matcher-id
-                            composite.binder-id
+                            composite.infoer-id
                             composite.data))
            new-tail))]
        [(form-id (~and wrong (brackets . _)) . tail)
@@ -113,9 +108,21 @@
                             (relocate (span-srcloc #'form-id #'wrong)
                                       #'(form-id wrong)))]))))
 
+(define-syntax (map-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (keys tmp-ids composite-infoer-id composite-data))
+     #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
+     #:with composite-info::binding-info #'composite-impl.info
+     (binding-info #'composite-info.name-id
+                   #'composite-info.static-infos
+                   #'composite-info.bind-infos
+                   #'map-matcher
+                   #'map-binder
+                   #'(keys tmp-ids composite-info.matcher-id composite-info.binder-id composite-info.data))]))
+
 (define-syntax (map-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id  composite-data)
+    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id composite-data)
         IF success failure)
      #`(IF (hash? arg-id)
            #,(let loop ([keys (syntax->list #'keys)]
@@ -133,5 +140,5 @@
   
 (define-syntax (map-binder stx)
   (syntax-parse stx
-    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id  composite-data) static-infos)
-     #`(composite-binder-id 'map composite-data static-infos)]))
+    [(_ arg-id (keys tmp-ids composite-matcher-id composite-binder-id composite-data))
+     #`(composite-binder-id 'map composite-data)]))

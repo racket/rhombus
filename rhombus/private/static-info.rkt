@@ -3,8 +3,7 @@
                      syntax/parse
                      enforest/property
                      enforest/syntax-local)
-         "expression.rkt"
-         "bind-input-key.rkt")
+         "expression.rkt")
 
 ;; Represent static information in either of two ways:
 ;;
@@ -96,5 +95,4 @@
 (define-syntax (define-static-info-syntax/maybe stx)
   (syntax-parse stx
     [(_ id) #'(begin)]
-    ; [(_ id ((~literal #%bind-input) . _)) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))

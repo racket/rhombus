@@ -16,6 +16,7 @@
 
          transform-in
          transform-out
+         call-as-transformer
 
          define-transform)
 
