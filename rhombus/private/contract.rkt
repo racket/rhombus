@@ -22,9 +22,11 @@
          is_a
          matching
 
+         Any
          Integer
          Number
          String
+         Keyword
 
          (for-space rhombus/contract #%tuple))
 
@@ -229,9 +231,11 @@
     [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
      #'(left-binder-id arg-id left-data)]))
 
+(define-syntax Any (identifier-contract #'Any #'(lambda (x) #t) #'()))
 (define-syntax Integer (identifier-contract #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-contract #'Number #'number? #'()))
 (define-syntax String (identifier-contract #'String #'string? #'()))
+(define-syntax Keyword (identifier-contract #'Keyword #'keyword? #'()))
 
 (define-syntax (define-contract-syntax stx)
   (syntax-parse stx

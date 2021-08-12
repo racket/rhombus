@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
+                     enforest/syntax-local
                      "srcloc.rkt")
          "parse.rkt"
          "indexed-ref-set-key.rkt"
@@ -21,7 +22,7 @@
      (define indexed-set!-id (or (syntax-local-static-info indexed #'#%indexed-set!)
                                  #'indexed-set!))
      (define e (datum->syntax (quote-syntax here)
-                              (list indexed-set!-id indexed #'(rhombus-expression index) #'rhs.parsed)
+                              (list indexed-set!-id indexed (index->expression #'index) #'rhs.parsed)
                               (span-srcloc indexed #'head)
                               #'head))
      (values e
@@ -30,13 +31,19 @@
      (define indexed-ref-id (or (syntax-local-static-info indexed #'#%indexed-ref)
                                 #'indexed-ref))
      (define e (datum->syntax (quote-syntax here)
-                              (list indexed-ref-id indexed #'(rhombus-expression index))
+                              (list indexed-ref-id indexed (index->expression #'index))
                               (span-srcloc indexed #'head)
                               #'head))
      (define result-static-infos (or (syntax-local-static-info indexed #'#%ref-result)
                                      #'()))
      (values (wrap-static-info* e result-static-infos)
              #'tail)]))
+
+(define-for-syntax (index->expression index)
+  (syntax-parse index
+    #:datum-literals (group)
+    [(group key:keyword) #'(quote key)]
+    [g #'(rhombus-expression g)]))
 
 (define (indexed-ref indexed index)
   (cond

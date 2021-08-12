@@ -39,6 +39,7 @@
         "private/cond.rkt"
         "private/match.rkt"
         "private/quasiquote.rkt"
+        "private/keyword.rkt"
         "private/values.rkt"
         "private/contract-syntax.rkt"
         "private/static-info-syntax.rkt"

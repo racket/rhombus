@@ -422,12 +422,12 @@ nums_a[1]
 nums_a[2] = 30
 nums_a[2]
 
-val map: Map["x" = "hello", "y" = "goodbye"]
+val map: Map('x': "hello", 'y': "goodbye")
 val yes_map :: Map : map
-val yup_map :: Map.of(String, String) : map
+val yup_map :: Map.of(Keyword, String) : map
 
 map
-map["y"]
+map['y']
 
 val also_map: Map(1, "one", 2, "two")
 also_map[2]
@@ -443,14 +443,14 @@ ys
 def Array(ax, ay, az): nums_a
 az
 
-def local_map: Map["alice home" = Posn(4, 5),
-                   "bob home" = Posn(7, 9)];
+def local_map: Map('alice': Posn(4, 5),
+                   'bob': Posn(7, 9))
 
-def lookup(who):
-  def Map[who +$ " home" = Posn(who_x, who_y)]: local_map
-  who_x +$ ", " +$ who_y
+fun locale(who, neighborhood :: Map.of(Keyword, Posn)):
+  val p: neighborhood[who]
+  p.x +$ ", " +$ p.y
 
-lookup("alice")
+locale(keyword('alice'), local_map)
 
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x

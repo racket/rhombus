@@ -8,6 +8,7 @@
          "binding.rkt"
          (submod "contract.rkt" for-struct)
          "static-info.rkt"
+         "ref-result-key.rkt"
          "indexed-ref-set-key.rkt"
          "call-result-key.rkt"
          (only-in "assign.rkt"
@@ -23,29 +24,24 @@
          make_map
          (for-space rhombus/static-info make_map))
 
-(define-syntax Map
-  (expression-transformer
-   #'Map
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (brackets block group op)
-       [(_ (brackets (group key ... (op rhombus=) val ...) ...) . tail)
-        (values #'(hash (~@ (rhombus-expression (group key ...))
-                            (rhombus-expression (group val ...)))
-                        ...)
-                #'tail)]
-       [(form-id (~and wrong (brackets . _)) . tail)
-        (raise-syntax-error #f
-                            "bad group within brackets"
-                            (relocate (span-srcloc #'form-id #'wrong)
-                                      #'(form-id wrong)))]
-       [(_ . tail) (values #'Map-op
-                           #'tail)]))))
-
-(define Map-op
-  (let ([Map (lambda args
-               (apply hash args))])
-    Map))
+(define Map
+  (make-keyword-procedure
+   (lambda (kws vals . more)
+     (define base-ht (if (and (null? more) (not (null? kws)))
+                         (hasheq)
+                         (hash)))
+     (define ht (for/fold ([ht base-ht]) ([key (in-list kws)]
+                                          [val (in-list vals)])
+                  (hash-set ht key val)))
+     (let loop ([ht ht] [more more])
+       (cond
+         [(null? more) ht]
+         [(null? (cdr more))
+          (raise-arguments-error 'Map
+                                 (string-append "key does not have a value"
+                                                " (i.e., an odd number of arguments were provided)")
+                                 "key" (car more))]
+         [else (loop (hash-set ht (car more) (cadr more)) (cddr more))])))))
 
 (define-contract-syntax Map
   (contract-constructor #'Map #'hash? #'((#%indexed-ref hash-ref)
@@ -59,9 +55,6 @@
                           #`((#%ref-result #,(cadr static-infoss))))))
 
 (define-static-info-syntax Map
-  (#%call-result ((#%indexed-ref hash-ref))))
-
-(define-static-info-syntax Map-op
   (#%call-result ((#%indexed-ref hash-ref))))
 
 (define (make_map . l)
@@ -78,15 +71,13 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (brackets block group op)
+       #:datum-literals (parens block group op)
        #:literals (rhombus=)
-       [(form-id (brackets (group key ... (op rhombus=) val ...) ...) . tail)
+       [(form-id (parens (group key:keyword (block (group val ...))) ...) . tail)
         ;; eager parsing of key forms, partly because we expect then
         ;; to be constants, but more generaly because we think of them
         ;; as earlier than the value patterns
-        (define key-parseds (syntax-parse #'((group key ...) ...)
-                              [(key::expression ...) #'(key.parsed ...)]))
-        (define tmp-ids (generate-temporaries #'((key ...) ...)))
+        (define tmp-ids (generate-temporaries #'(key ...)))
         (define-values (composite new-tail)
           ((make-composite-binding-transformer #'(lambda (v) #t)
                                                (for/list ([tmp-id (in-list tmp-ids)])
@@ -97,7 +88,7 @@
         (with-syntax-parse ([composite::binding-form composite])
           (values
            (binding-form #'map-infoer
-                         #`(#,key-parseds
+                         #`((key ...)
                             #,tmp-ids
                             composite.infoer-id
                             composite.data))
@@ -132,7 +123,7 @@
                   #`(composite-matcher-id 'map composite-data IF success failure)]
                  [else
                   #`(begin
-                      (define #,(car tmp-ids) (hash-ref arg-id #,(car keys) unsafe-undefined))
+                      (define #,(car tmp-ids) (hash-ref arg-id (quote #,(car keys)) unsafe-undefined))
                       (IF (not (eq? #,(car tmp-ids) unsafe-undefined))
                           #,(loop (cdr keys) (cdr tmp-ids))
                           failure))]))
