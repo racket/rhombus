@@ -5,7 +5,7 @@
          "binding.rkt"
          (submod "contract.rkt" for-struct)
          "static-info.rkt"
-         "indexed-ref-set-key.rkt"
+         "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "composite.rkt")
 
@@ -17,8 +17,8 @@
 (define Array vector)
 
 (define-contract-syntax Array
-  (contract-constructor #'Array #'vector? #'((#%indexed-ref vector-ref)
-                                             (#%indexed-set! vector-set!))
+  (contract-constructor #'Array #'vector? #'((#%map-ref vector-ref)
+                                             (#%map-set! vector-set!))
                         1
                         (lambda (arg-id predicate-stxs)
                           #`(for/and ([e (in-vector #,arg-id)])
@@ -27,8 +27,8 @@
                           #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax Array
-  (#%call-result ((#%indexed-ref vector-ref)
-                  (#%indexed-set! vector-set!))))
+  (#%call-result ((#%map-ref vector-ref)
+                  (#%map-set! vector-set!))))
 
 (define-binding-syntax Array
   (binding-prefix-operator

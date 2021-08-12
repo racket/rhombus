@@ -7,7 +7,7 @@
          "expression+binding.rkt"
          "parse.rkt"
          (submod "function.rkt" for-call)
-         (submod "indexed.rkt" for-ref)
+         (submod "map-ref.rkt" for-ref)
          (submod "list.rkt" for-binding))
 
 (provide #%block
@@ -133,5 +133,5 @@
    '((default . stronger))
    'macro
    (lambda (array stxes)
-     (parse-indexed-ref-or-set array stxes))
+     (parse-map-ref-or-set array stxes))
    'left))

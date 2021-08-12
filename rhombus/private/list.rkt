@@ -8,7 +8,7 @@
          "expression+binding.rkt"
          (submod "contract.rkt" for-struct)
          "static-info.rkt"
-         "indexed-ref-set-key.rkt"
+         "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
          (only-in "quasiquote.rkt"
@@ -52,7 +52,7 @@
         (parse-list-binding stx)]))))
 
 (define-contract-syntax List
-  (contract-constructor #'List #'list? #'((#%indexed-ref list-ref))
+  (contract-constructor #'List #'list? #'((#%map-ref list-ref))
                         1
                         (lambda (arg-id predicate-stxs)
                           #`(for/and ([e (in-list #,arg-id)])
@@ -61,7 +61,7 @@
                           #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax List
-  (#%call-result ((#%indexed-ref list-ref))))
+  (#%call-result ((#%map-ref list-ref))))
 
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form

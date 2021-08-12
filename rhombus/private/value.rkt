@@ -8,7 +8,6 @@
          "implicit.rkt"
          "contract.rkt"
          "call-result-key.rkt"
-         "indexed-ref-key.rkt"
          "static-info.rkt")
 
 (provide val)

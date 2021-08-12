@@ -9,7 +9,7 @@
          (submod "contract.rkt" for-struct)
          "static-info.rkt"
          "ref-result-key.rkt"
-         "indexed-ref-set-key.rkt"
+         "map-ref-set-key.rkt"
          "call-result-key.rkt"
          (only-in "assign.rkt"
                   [= rhombus=])
@@ -44,8 +44,8 @@
          [else (loop (hash-set ht (car more) (cadr more)) (cddr more))])))))
 
 (define-contract-syntax Map
-  (contract-constructor #'Map #'hash? #'((#%indexed-ref hash-ref)
-                                         (#%indexed-set! hash-set!))
+  (contract-constructor #'Map #'hash? #'((#%map-ref hash-ref)
+                                         (#%map-set! hash-set!))
                         2
                         (lambda (arg-id predicate-stxs)
                           #`(for/and ([(k v) (in-hash #,arg-id)])
@@ -55,14 +55,14 @@
                           #`((#%ref-result #,(cadr static-infoss))))))
 
 (define-static-info-syntax Map
-  (#%call-result ((#%indexed-ref hash-ref))))
+  (#%call-result ((#%map-ref hash-ref))))
 
 (define (make_map . l)
   (hash-copy (apply hash l)))
 
 (define-static-info-syntax make_map
-  (#%call-result ((#%indexed-ref hash-ref)
-                  (#%indexed-set! hash-set!))))
+  (#%call-result ((#%map-ref hash-ref)
+                  (#%map-set! hash-set!))))
 
 (define-binding-syntax Map
   (binding-prefix-operator
