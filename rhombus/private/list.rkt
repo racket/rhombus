@@ -77,6 +77,7 @@
                                            #'car)
                                          (for/list ([arg (in-list args)])
                                            #'())
+                                         #:ref-result-info? #t
                                          #:rest-accessor rest-selector)
      #`(#,form-id (parens . #,args) . #,tail)
      rest-arg))

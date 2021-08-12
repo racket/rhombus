@@ -83,7 +83,8 @@
                                                (for/list ([tmp-id (in-list tmp-ids)])
                                                  #`(lambda (v) #,tmp-id))
                                                (for/list ([arg (in-list tmp-ids)])
-                                                 #'()))
+                                                 #'())
+                                               #:ref-result-info? #t)
            #`(form-id (parens (group val ...) ...) . tail)))
         (with-syntax-parse ([composite::binding-form composite])
           (values
