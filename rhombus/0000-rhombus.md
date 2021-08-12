@@ -417,6 +417,21 @@ val (flipped :: Posn):  flip(Posn(1, 2))
 flipped.x  // prints 2
 ```
 
+The `Posn` definition does not place any constraints on its `x` and
+`y` fields, so using `Posn` as a contract similarly does not constrain
+them. Instead of to using just `Posn` as a contract, however, you can
+use `Posn.of` followed by parentheses containing contracts for the `x`
+and `y` fields. More generally, a `struct` definition binds the name
+so that `.of` accesses a contract constructor.
+
+```
+fun flip_ints(p :: Posn.of(Integer, Integer)):
+  Posn(p.y, p.x)
+
+flip_ints(Posn(1, 2))       // prints Posn(2, 1)
+// flip_ints(Posn("a", 2))  // would be a run-time error
+```
+
 Finally, a structure-type name like `Posn` can also work in binding
 positions as a pattern-matching form. Here's a implementation of
 `flip` that uses pattern matching for its argument:
@@ -499,11 +514,31 @@ def after: 3
 get_after()  // prints 3
 ```
 
+The identifier `_` is similar to `Posn` and `::` in the sense that
+it's a binding operator. As a binding, `_` matches any value and binds
+no variables. Use it as an argument name or subpattern form when you
+don't need the corresponding argument or value, but `_` nested in a
+binding pattern like `::` can still constrain allowed values.
+
+```
+fun omnivore(_): "yum"
+fun omnivore2(_, _): "yum"
+fun nomivore(_ :: Number): "yum"
+
+omnivore(1)        // prints "yum"
+omnivore("apple")  // prints "yum"
+omnivore2("a", 1)  // prints "yum"
+nomivore(1)        // prints "yum"
+// nomivore("a")   // would be a run-time error
+```
+
+
 ## Contracts and the dot operator
 
 Besides structure types defined with `struct`, a few predefined
 contracts work with the `::` contract operator, including `Integer`
-(meaning exact integer), `Number`, and `String`.
+(meaning exact integer), `Number`, `String`, `Keyword`, and `Any`
+(meaning any value).
 
 The `::` operator also works in expression positions. In that case,
 the right-hand expression must produce a value that satisfies the
@@ -549,7 +584,7 @@ identifier that is bound using `::` and a structure-type name is also a
 dot provider, and it provides access to fields of a structure instance.
 More generally, a contract that is associated to a binding or
 expression with `::` might make the binding or expression a dot
-provider. See [a separate document](dot-provider.md) for more
+provider. See [a separate document](static-info.md) for more
 information on dot providers and other static information, but
 only after reading the rest of this document.
 
@@ -608,7 +643,9 @@ transform(Posn(1, 2), 'dx': 7, 'scale': 2)  // prints Posn(9, 4)
 
 Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated
-as an actual argument or binding pattern by itself.
+as an actual argument or binding pattern by itself. The `keyword` form
+turns a keyword into an expression that produces the keyword, as in
+`keyword('scale')`.
 
 _Why `'` for keywords? See the rationale in the 
 [Shrubbery notation](https://github.com/mflatt/rhombus-brainstorming/blob/shrubbery/shrubbery/0000-shrubbery.md)
@@ -684,7 +721,9 @@ If there's no `'else'` case and no matching case, then `cond` reports
 an error at run time (unlike Racket, which returns void in that case).
 Note that `'else'` is a keyword, and not an identifier. If it were an
 identifier, then `else` might get bound in some context to `#false`,
-which would be confusing.
+which would be confusing. As another special case, `_` is allowed in
+place of `else`; although it is possible to bind `_`, it takes a
+specifical effort because `_` is a binding operator.
 
 Although `cond` is better than `if` for `fib`, the `match` form is
 even better. The `match` form expects an expression and then an
@@ -692,14 +731,14 @@ alts-block where each `|` has a binding pattern followed by a block.
 The `match` form evaluates that first expression, and dispatches to
 the first block whose pattern accepts the expression's value. Similar
 to `cond`, `match` supports `'else`' in place of a final binding
-pattern:
+pattern, but using the binding operator `_` is more common.
 
 ```
 fun fib(n):
   match n
    | 0: 1
    | 1: 1
-   | 'else': fib(n-1) + fib(n-2)
+   | _: fib(n-1) + fib(n-2)
 ```
 
 This kind of immediate pattern-matching dispatch on a function
@@ -713,7 +752,8 @@ fun
  | fib(n): fib(n-1) + fib(n-2)
 ```
 
-There's no `'else'` for this fused form. Also, the function name and
+There's no `'else'` for this fused form, but `_` can be useful in
+catch-call clauses where the argument is not used. Also, the function name and
 all relevant argument positions have to be repeated in every case, but
 that's often a readable trade-off. Match-dispatching functions cannot
 have optional or keyword arguments, but different cases can have
@@ -924,6 +964,220 @@ import:
 1 <> 2
 ```
 
+## Lists
+
+A `[` ... `]` form as an expression creates a list:
+
+```
+[1, 2, 3]                // prints [1, 2, 3]
+[0, "apple", Posn(1, 2]] // prints [0, "apple", Posn(1, 2]]
+```
+
+You can also use the `List` constructor, which takes any number of
+arguments:
+
+```
+List(1, 2, 3)  // prints [1, 2, 3]
+```
+
+A list is a “linked list,” in the sense that getting the _n_th element
+takes O(_n_) time, and adding to the front takes constant time. A list
+is immutable.
+
+`List` works as a contract with `::`:
+
+```
+fun 
+ | classify(_ :: List): "list"
+ | classify(_ :: Number): "number"
+ | classify(_): "other"
+
+classify([1])  // prints "list"
+classify(1)    // prints "number"
+classify("1")  // prints "other"
+```
+
+As pattern, `[` ... `]` matches a list, and list elements can be
+matched with specific subpatterns. The `List` binding operator works
+the same in bindings, too.
+
+```
+fun three_sorted([a, b, c]):
+  a <= b && b <= c
+
+three_sorted([1, 2, 3]) // prints #true
+three_sorted([1, 3, 2]) // prints #false
+```
+
+The last element in a `[` ... `]` binding pattern can be `...`, which
+means zero or more repetitions of the preceding pattern, and each
+variable bound by the preceding pattern is instead bound to a list of
+matches.
+
+```
+fun 
+ | got_milk([]): #false
+ | got_milk([head, tail, ...]):
+    head === "milk" || got_milk(tail)
+
+got_milk([])                             // prints #false
+got_milk(["apple", "milk", "banana"])    // prints #true
+got_milk(["apple", "coffee", "banana"])  // prints #false
+```
+
+A use of `[` ... `]` or `List` for an expression also supports `...`
+in place of a last argument, in which case the preceding argument is
+treated as a list that is the tail of the new list.
+
+```
+[1, 2, [3, 4], ...]  // prints [1, 2, 3, 4]
+
+fun 
+ | is_sorted([]): #true
+ | is_sorted([head]): #true
+ | is_sorted([head, next, tail, ...]):
+    head <= next && is_sorted([next, tail ...])
+
+is_sorted([1, 2, 3, 3, 5]) // prints #true
+is_sorted([1, 2, 9, 3, 5]) // prints #false
+```
+
+When `[` ... `]`appears after an expression, then instead of forming a
+list, it accesses an element of an _map_ value. Lists are
+maps that are indexed by natural numbers starting with `0`:
+
+```
+val groceries: ["apple", "banana", "milk"]
+
+groceries[0] // prints "apple"
+groceries[2] // prints "milk"
+```
+
+Indexing with `[` ... `]` is sensitive to binding-based static
+information in the same way as `.` For example, a function's argument
+can use a binding pattern that indicates a list of `Posn`s, and then
+`.` can be used after `[` ... `]` to access a fied of a `Posn`
+instance:
+
+```
+fun nth_x([ps :: Posn, ...], n):
+  ps[n].x
+
+nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
+```
+
+An equivalent way to write `nth_x` is with the `List.of` contract
+constructor. It expects on contract that every element of the list
+must satisfy:
+
+```
+fun nth_x(ps :: List.of(Posn), n):
+  ps[n].x
+```
+
+The `nth_x` function could have been written as follows, but unlike
+the previous versions, this one creates an intermediate list `xs`:
+
+```
+fun nth_x([Posn(xs, _), ...], n):
+  xs[n]
+
+nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
+```
+
+
+## Arrays and maps
+
+The `Array` constructor is similar to `List`, but it creates an array,
+which has a fixed length at the time that it's created and offers
+constant-time acc<ess to any element of the array. Like a list, and
+array is a map. Unlike a list, an array is mutable, so `[` ...
+`]` for indexing can be combined with `=` for assignment.
+
+```
+val buckets: Array(1, 2, 3, 4)
+
+buckets[0]      // prints 1
+buckets[1] = 5  // prints 5
+buckets         // prints Array1, 5, 3, 4)
+```
+
+`Array` is also a contract and a binding contructor, analogous to
+`List`, and `Array.of` is a contract constructor. The `Array` binding
+and expression constructors do not support `...`.
+
+The `Map` constructor creates an immutable mapping of arbitrary keys
+to values. The term “map” is meant to be generic, and `Map` as a
+constructor just uses a default implementation of maps. The `Map`
+constructor can be used like a function, in which case it accepts keys
+alternating with values:
+
+```
+val neighborhood: Map("alice", Posn(4, 5),
+                      "bob", Posn(7, 9))
+
+neighborhood["alice"]     // prints Posn(4, 5)
+// neighborhood["clara"]  // would be a run-time error
+```
+
+Alternatively, use the `Map` constructor with keyword arguments, where
+the keywords are keys:
+
+```
+val neighborhood: Map('alice': Posn(4, 5),
+                      'bob': Posn(7, 9))
+
+neighborhood['alice']  // prints Posn(4, 5)
+```
+
+Keywords are not expressions, so `'alice'` in an expression position
+is normally disallowed. However, `[` ... `]` allows a keyword by
+itself as a key in an indexed reference.
+
+The `Map` function accepts a mixture of keyword-and non-keyword
+arguments, in which case it starts with a map containing the keyword
+keys and then adds additional keys. If a non-keyword key is used
+multiple times, the last use replaces the earlier ones. A map created
+by `Map` uses `equal?` hashing if no keywords arguments are provided
+or if any non-keyword arguments are provided, otherwise it uses `eq?`
+hashing.
+
+`Map` is also a contract and a binding constructor. As a contract or
+binding constructor, `Map` refers to map values genercially, and not
+to a specific implementation. For example, a list can be passed to a
+function that expects a `Map` argument.
+
+A binding use of `Map` must use keyword-only form, where the value
+positions are binding subpattern positions.
+
+```
+fun alice_home(Map('alice': p)): p
+
+alice_home(neighborhood)  // prints Posn(4, 5)
+```
+
+The `Map.of` contract constructor takes two contracts, one for keys
+and one for values:
+
+```
+fun locale(who, neighborhood :: Map.of(Keyword, Posn)):
+  val p: neighborhood[who]
+  p.x +$ ", " +$ p.y
+
+locale(keyword('alice'), neighborhood)  // prints "4, 5"
+```
+
+_The notation `<map-expr>[<keyword>: <val-expr>]` should extend a
+persistent map, while `<map-expr>[<index-expr>] = <val-expr>` modifies
+a mutable map. There should be more map constructors than `Map` for
+different equality functions and mutability._
+
+Unlike `.`, indexed access via `[` ... `]` works even without static
+information to say that the access will succeed. Still, static
+information can select a more specific and potentially fast indexing
+operator. For example, `buckets[0]` above statically resolves to the
+use of array lookup, instead of going through a generic function for
+maps at run time.
 
 ## Syntax objects
 
@@ -1061,7 +1315,7 @@ y  // prints a shrubbery: (2 + 3)
 ```
 
 _In the current implementation of `?` patterns, a `¿` escape must be
-followed by an identifier. Generalizing the position after `¿` can
+followed by an identifier or `_`. Generalizing the position after `¿` can
 open the door to more `syntax-parse` goodness._
 
 ## Expression macros
@@ -1199,7 +1453,7 @@ both expression and definition transformers, etc. Adding a Rhombus
 syntax for that combination should be straightforward._
 
 
-## Binding macros
+## Binding and contract macros
 
 Macros can extend binding-position syntax, too, via `bind.macro`
 and `bind.operator`. In the simplest case, a binding operator is
@@ -1218,31 +1472,86 @@ salary  // prints 100.0
 
 More expressive binding operators can use a lower-level protocol where
 a binding is represented by transformers that generate checking and
-binding code. It gets complicated, so the details are pushed out to [a
+binding code. It gets complicated, and it's tied up with the
+propagation of static information, so the details are pushed out to [a
 separate document](binding-macros.md). After an expressive set of
 binding forms are implemented with the low-level interface, however,
 many others can be implemented though simple expansion.
+
+The `contract.macro` form is similar to `bind.macro`, but for
+contracts. 
+
+```
+contract.macro ?PosnList: ?List.of(Posn)
+
+fun nth_x(ps :: PosnList, n):
+  ps[n].x
+```
+
+Details on the low-level contract protocol are also in [a separate
+document](contract-macros.md).
+
+## Contracts versus binding patterns
+
+Contracts and binding patterns serve similar and interacting purposes.
+The `::` binding operator puts a contract to work in a binding. For
+the other direction, the `matching` contract operator puts a binding
+to work in a contract.
+
+For example, suppose you want a contract `PersonList`, which is a list
+of maps, and each map must at least relate `"name"` to a `String` and
+`"location"` to a `Posn`. The `Map.of` contract combination cannot
+express a per-key specialization, but the `Map` binding pattern can.
+
+```
+contract.macro ?PersonList: 
+  ?(List.of(matching(Map('name': (_ :: String),
+                         'location': (_ :: Posn)])))
+
+val players :: PersonList:
+  [Map('name': "alice", 'location': Posn(1, 2)),
+   Map('name': "bob", 'location': Posn(3, 4))]
+```
+
+As another example, here's how a `ListOf` contract constructor could be
+implemented if `List.of` did not exists already:
+
+```
+contract.macro ?(ListOf (¿contract ...) ¿tail ...):
+  values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
+         tail)
+```
+
+At a lower level, the bridge between binding patterns and contracts is
+based on their shared use of [static information](static-info.md) as
+described in the [binding API](binding-macros.md) and the [contract
+API](contract-macros.md).
 
 
 ## More
 [more]: #more
 
-Probably `[` ... `]` notation should be used for literal lists as
-expression and list patterns as bindings.
+Assuming that all contracts are checked, the type-like use of
+contracts and binding patterns will encourage programmers to create
+expensive run-time checks. For example, this `sum` runs in quadratic
+time:
 
-Array-reference notation _expr_ `[` _key_ `]` should probably be a
-kind of general accessor form, where contract annotations can
-specialize to a specific reference operator (such as Racket's
-`list-ref`, `vector-ref`, `hash-ref`, etc.).
+```
+fun
+ | sum([]): 0
+ | sum([head :: Number, tail :: Number, ...]):
+    head + sum(tail)
+```
 
-Maybe function declarations should allow result contracts, which would
-be checked before returning from the function, and then a function
-call could have a static contract—generalizing the static contract on
-constructor calls. Meanwhile, an unchecked mode (not quite as far as
-unsafe) could elide all contract checks that would otherwise guard
-`::` annotations.
+An obvious strategy is to disable, either by default or at option, the
+run-time checking implied by contracts while keeping the static
+resolution of operations that contracts enables (especially for using
+`.`).
 
-Contract annotations could be supported in `export`.
+Contract annotations also could be supported in `export`.
+
+The datatype support in this proposal is primitive. Some combination
+of Racket's `for` and Clojure's transducers is the next step.
 
 
 # Reference-level explanation
@@ -1316,32 +1625,93 @@ that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
 some of them need to refer to each other.
 
-## Static information and dot providers
+## Static information
+[static-information]: #static-information
 
-The rules for propagating static information, as used for dot
-providers, are reminiscent of type rules in Turnstile (Chang et al.).
-The rules here are more limited, however. The primary goal is to make
-`.` notation reasonably consistent while keeping `.` uses as efficient
-as Racket-style accessors. The general system of static information is
-meant to support other purposes that are similar.
+The rules for propagating static information—used, for example, for to
+resolve a `.` field access—are reminiscent of type rules in Turnstile
+(Chang et al.). At the level of binding operators, there is
+“downward”-flowing information from a context, and there is “upward”
+information that originates from binding operators. For expressions,
+the only “downward” mechanism is binding, and otherwise static
+information flows “upward” from subexpressions. By convention, static
+information does not flow “upward” out of blocks.
 
-The static-information rules are based on the idea that only
-already-parsed terms have static information (although parsed terms
-may wrap yet-unparsed terms). That approach constrains the direction
-that information can flow. One static-information rule is ad hoc and
-does not fit the constraint: the one for for `val` or `def` with an
-right-hand side that is an immediate call; the rule is in terms of an
-unparsed expression on the right-hand side. The rule is nevertheless
-included, otherwise an example like
+A primary goal of static information is to make `.` notation
+reasonably convenient but statically resolved, where static resolution
+keeps `.` uses as efficient as Racket-style accessors for structure
+instances. Static information is not specifically tied to `.`,
+however, and `.` itself is not tied to structures. The general system
+of static information can support other, similar uses, both for `.`
+and for other forms.
+
+Static information does not make Rhombus statically typed, but static
+information does constrain programs syntactically. For example, a `.`
+expression operator can only be used when the left-hand side resolves
+the meaning of the `.`. It will probably also make sense to use static
+information for function bindings to reject programs that directly
+apply a function with the wrong number of arguments or wrong keywords.
+
+Rhombus is an extensible language, and extensions are free to create
+an use static information as they see fit. However, since extensions
+need to cooperate, and since arbitrary static-information flows (say,
+toward a sound type system with inference) would make that cooperation
+complex, this proposal defines some relatively simple rules and
+conventions that are hopefully effective without being surprising to
+programmers or onerous to language extensions. The convention about
+not propagating information from blocks, for example, is easy to
+reason about syntactically and avoids a swath of semantic questions
+(such as how to unify results from branches of an `if` or `match`) and
+expansion-order problems (such as needing to expand the body of a
+function to get static information for use at call sites).
+
+The `val` rule is a special case, in that it takes static information
+from its right-hand side, which is in a block, and propagates it
+“downward” into the binding on its left-hand side. Without that rule,
+an example like
 
 ```
-def origin: Point(0, 0)
+val origin: Point(0, 0)
 ```
 
 would need an extra `:: Point` in the middle to make `origin.x` and
-`origin.y` work, and that would look silly. The rule is generalized to
-functions with return contracts so that other constructor functions
-can have the same status as the structure type name as a constructor.
+`origin.y` work, and that would look silly. More generally, the idea
+is that it should be possible to give a name to the result of an
+expression without losing static information that the expression
+itself would have.
+
+To allow `val` to propoagate information that way, the usual order of
+parsing must be adjusted to parse the right-hand side earlier. Early
+expansion could have unexpected effects, however. In the following
+example, `p.x` is rejected because the detinition of `p` has not been
+seen when the definition of `v` is being parsed, but parsing for `val
+v` forces parsing of `p.x`:
+
+````
+fun f(p :: Number):
+  val v: p.x
+  val p: Posn(5, 6)
+  v
+````
+
+Of course, if this example did parse, it would cause an error at run
+time, because `p` is used before it is defined. If the reference to
+`p.x` is delayed at all, such as being under `fun` or even just
+delayed in a parsing sense by being under `if`, then the `p.x`
+reference parses as expected. The fact that a forwad reference
+requires some sort of delay to be sensible suggests that
+parse-reordering by `val` can be practical. Still, to further decrease
+the likelihood of surprises due to parse ordering, early expansion of
+a `val` right-hand side is constrained to the cases where a `val` form
+has a block with a single group and the group does not start with a
+name that implements a definition form.
+
+This type-like-without-being-types approach to static information has
+precedents in Lisp implementations, Smalltalk implementations,
+TypeScript, and probably other systems that might be described as
+gradually typed. The [protocol](binding-macros.md) that allows binding
+forms to propagate static information “upward” and “downward” is like
+a bidirectional type system.
 
 ## Multiple values
 
@@ -1369,6 +1739,35 @@ creates macros that look prettier, the implicit unquoting of variables
 in patterns and templates confuses many newcomers. Unification with
 `match` is a big advantage of escaped pattern variables.
 
+## Datatypes and genericity
+
+The `List` and `Array` contracts refer to implementations, while `Map`
+refers to an abstraction. The intent is that generic code uses `Map`,
+not specifying an implementation of the map, in the same way that `[`
+... `]` indexing is generic. At the same time, `Map` as a constructor
+can provide a sensible default, instead of forcing programmers to pick
+a specific implementation. There is some performance penalty to using
+generic maps, but the distasterous performance penalty of
+`racket/dict` will be avoided by not putting dependent contracts on
+the basic operations like indexing and update.
+
+Following the good example of Clojure, Rhombus programmers should use
+maps for representing domain data, not structs (even prefabs) as a
+Racket programmer would. Maybe there should be a `map` form, as in
+
+```
+map Person('name' :: String, 'location' :: Posn)
+```
+
+to serve as a shorthand for `contract.macro` plus `fun`:
+
+```
+contract.macro ?Person:
+  ?Map.of('name': String, 'location': Posn)
+
+fun Person('name': n :: String, 'location': l :: Posn):
+  Map('name': n, 'location': l)
+```
 
 # Prior art
 [prior-art]: #prior-art
