@@ -35,37 +35,48 @@
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
-     #:with rhs rhs-stx
+     #:with rhs (enforest-expression-block rhs-stx)
+     #:with static-infos (extract-static-infos #'rhs)
+     #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
+     #:with lhs-i::binding-info #'lhs-impl.info
      (list
-      #'(define tmp-id (let ([lhs-e.arg-id (rhombus-expression (group rhs))])
-                         lhs-e.arg-id))
-      #`(lhs-e.matcher-id tmp-id
-                          lhs-e.data
+      #'(define tmp-id (let ([lhs-i.name-id rhs])
+                         lhs-i.name-id))
+      #`(lhs-i.matcher-id tmp-id
+                          lhs-i.data
                           flattened-if
                           (void)
                           (rhs-binding-failure '#,form-id tmp-id 'lhs))
       (wrap-definition
-       (or (generate-dot-provider-binding #'lhs-e.matcher-id #'lhs-e.arg-id #'tmp-id rhs-stx)
-           #`(lhs-e.binder-id tmp-id lhs-e.data))))]))
+       #`(begin
+           (lhs-i.binder-id tmp-id lhs-i.data)
+           (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+           ...)))]))
 
 (define-for-syntax (build-values-definitions form-id gs-stx rhs-stx wrap-definition)
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
      #:with rhs rhs-stx
-     #:with (tmp-id ...) (generate-temporaries #'(lhs-e.arg-id ...))
+     #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id () lhs-e.data) ...)
+     #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
+     #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      (list
-      #'(define-values (tmp-id ...) (let-values ([(lhs-e.arg-id ...) (rhombus-expression (group rhs))])
-                                      (values lhs-e.arg-id ...)))
+      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) (rhombus-expression (group rhs))])
+                                      (values lhs-i.name-id ...)))
      (wrap-definition
       #`(begin
-          (lhs-e.matcher-id tmp-id
-                            lhs-e.data
+          (lhs-i.matcher-id tmp-id
+                            lhs-i.data
                             flattened-if
                             (begin)
                             (rhs-binding-failure '#,form-id tmp-id 'lhs))
           ...
-          (lhs-e.binder-id tmp-id lhs-e.data)
+          (lhs-i.binder-id tmp-id lhs-i.data)
+          ...
+          (begin
+            (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
+            ...)
           ...)))]))
 
 (define-syntax (flattened-if stx)
@@ -77,34 +88,3 @@
 
 (define (rhs-binding-failure who val binding)
   (raise-binding-failure who "value" val binding))
-
-(begin-for-syntax
-  (define-syntax-class :simple-rator
-    #:datum-literals (group parens)
-    (pattern rator:identifier)
-    (pattern ((~and tag parens) (group f::simple-rator))
-             #:when (free-identifier=? #'#%parens (datum->syntax #'tag '#%parens))
-             #:attr rator #'f.rator))
-  (define-syntax-class :simple-call
-    #:datum-literals (group parens)
-    (pattern (group r::simple-rator ((~and tag parens) . _))
-             #:attr rator #'r.rator)
-    (pattern (group ((~and p-tag parens) (group f::simple-call)))
-             #:when (free-identifier=? #'#%parens (datum->syntax #'p-tag '#%parens))
-             #:attr tag #'f.tag
-             #:attr rator #'f.rator)))
-
-(define-for-syntax (generate-dot-provider-binding matcher-id bind-id tmp-id rhs-stx)
-  (cond
-    [(free-identifier=? matcher-id #'identifier-succeed)
-     (syntax-parse rhs-stx
-       #:datum-literals (block)
-       [(block f::simple-call)
-        #:when (free-identifier=? #'#%call (datum->syntax #'f.tag '#%call))
-        #:do [(define result-static-infos (or (syntax-local-static-info #'f.rator #'#%call-result)
-                                              #'()))]
-        #`(begin
-            (define #,bind-id #,tmp-id)
-            (define-static-info-syntax/maybe #,bind-id . #,result-static-infos))]
-       [_ #f])]
-    [else #f]))

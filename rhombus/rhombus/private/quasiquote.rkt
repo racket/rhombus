@@ -9,6 +9,8 @@
          "binding.rkt"
          "expression+binding.rkt"
          "tail.rkt"
+         (only-in "underscore.rkt"
+                  [_ rhombus-_])
          ;; because `expression_macro` uses the result of `convert-syntax`
          ;; as a compile-time pattern:
          (for-syntax "tail.rkt"))
@@ -52,7 +54,7 @@
               (cond
                 [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
                  (handle-maybe-empty-alts #'tag ps idrs)]
-                [(and can-be-empty? (eq? (syntax-e #'tag) 'group))
+                [(and can-be-empty? (eq? (syntax-e #'tag) 'group) (not empty-ok?))
                  (handle-maybe-empty-group #'tag ps idrs)]
                 [else
                  (values (quasisyntax/loc e (#,(make-datum #'tag) . #,ps))
@@ -67,8 +69,8 @@
                                     (deepen-escape idr)))
             (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps) can-be-empty?)]
            [(((~datum op) (~and (~literal ¿) ¿-id)) esc . gs)
-            (define-values (id idr) (handle-escape #'¿-id #'esc e))
-            (loop #'gs (list idr) (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)))]
+            (define-values (id new-idrs) (handle-escape #'¿-id #'esc e))
+            (loop #'gs new-idrs (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)))]
            [(g . gs)
             (define-values (p new-ids nested-can-be-empty?) (convert #'g #f))
             (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)))]))]
@@ -90,7 +92,9 @@
                   ;; handle-escape:
                   (lambda (¿-id e in-e)
                     (if (identifier? e)
-                        (values e #`[#,e (pack-tail* (syntax #,e) 0)])
+                        (if (free-identifier=? e #'rhombus-_)
+                            (values #'_ null)
+                            (values e (list #`[#,e (pack-tail* (syntax #,e) 0)])))
                         (raise-syntax-error #f
                                             (format "expected an identifier after ~a"
                                                     (syntax-e #'¿-id))
@@ -137,7 +141,7 @@
                   ;; handle-escape:
                   (lambda (¿-id e in-e)
                     (define id (car (generate-temporaries (list e))))
-                    (values id #`[#,id (unpack-tail* (rhombus-expression (group #,e)) 0)]))
+                    (values id (list #`[#,id (unpack-tail* (rhombus-expression (group #,e)) 0)])))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
@@ -240,14 +244,22 @@
           (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
             (values
              (binding-form
-              #'syntax
-              #'syntax-matcher
-              #'syntax-binder
+              #'syntax-infoer
               #`(#,pattern
                  (tmp-id ...)
                  (id ...)
                  (id-ref ...)))
              #'tail)))]))))
+
+(define-syntax (syntax-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (pattern tmp-ids (id ...) id-refs))
+     (binding-info #'syntax
+                   #'()
+                   #'((id) ...)
+                   #'syntax-matcher
+                   #'syntax-binder
+                   #'(pattern tmp-ids (id ...) id-refs))]))
 
 (define-syntax (syntax-matcher stx)
   (syntax-parse stx
@@ -288,5 +300,5 @@
      (syntax-parse stx
        [(op::operator . tail)
         (raise-syntax-error #f
-                            "misuse outside of ?"
+                            "misuse outside of a pattern"
                             #'op.name)]))))

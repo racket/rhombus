@@ -16,6 +16,7 @@
                                 (for-syntax (all-from-out mod))))
                 ...))]))
 (bounce "private/implicit.rkt"
+        "private/underscore.rkt"
         "private/arithmetic.rkt"
         "private/dot.rkt"
         "private/struct.rkt"
@@ -31,11 +32,14 @@
         "private/operator.rkt"
         "private/contract.rkt"
         "private/list.rkt"
+        "private/array.rkt"
+        "private/map.rkt"
         "private/assign.rkt"
         "private/function.rkt"
         "private/cond.rkt"
         "private/match.rkt"
         "private/quasiquote.rkt"
+        "private/keyword.rkt"
         "private/values.rkt"
         "private/contract-syntax.rkt"
         "private/static-info-syntax.rkt"

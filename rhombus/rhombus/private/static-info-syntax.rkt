@@ -1,8 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     enforest/ref-parse
-                     "tail.rkt")
+                     enforest/name-parse
+                     "tail.rkt"
+                     "static-info-pack.rkt")
          "definition.rkt"
          "name-root.rkt"
          "quasiquote.rkt"
@@ -15,15 +16,13 @@
 (provide static_info
          (for-syntax static_info_ct))
 
-(module+ for-static-info
-  (provide (for-syntax (rename-out [pack pack-static-info]))))
-
 (define-syntax static_info
   (simple-name-root macro))
 
 (begin-for-syntax
   (define-syntax static_info_ct
     (simple-name-root pack
+                      unpack
                       wrap)))
 
 (define-syntax macro
@@ -32,9 +31,9 @@
       (syntax-parse stx
         #:datum-literals (op block)
         #:literals (?)
-        [(_ (op ?) ref::reference (block body ...))
-         #`((define-syntax #,(in-static-info-space #'ref.name)
-              (convert-static-info 'ref.name (rhombus-block body ...))))]))))
+        [(_ (op ?) name::name (block body ...))
+         #`((define-syntax #,(in-static-info-space #'name.name)
+              (convert-static-info 'name.name (rhombus-block body ...))))]))))
 
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
@@ -42,14 +41,10 @@
   (static-info (syntax->list (pack stx))))
 
 (define-for-syntax (pack v)
-  (datum->syntax
-   #f
-   (map (lambda (p)
-          (syntax-parse p
-            #:datum-literals (group parens)
-            [(parens (group key) (group val))
-             #'(key val)]))
-        (syntax->list (unpack-tail v pack)))))
+  (pack-static-infos v 'static_info_ct.pack))
+
+(define-for-syntax (unpack v)
+  (unpack-static-infos v))
 
 (define-for-syntax (wrap form info)
   #`(parsed #,(wrap-static-info* (wrap-expression form)

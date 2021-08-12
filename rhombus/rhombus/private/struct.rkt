@@ -90,12 +90,18 @@
                (binding-transformer
                 #'name
                 (make-composite-binding-transformer (quote-syntax name?)
+                                                    #:static-infos (quote-syntax ((#%dot-provider name-instance)))
                                                     (list (quote-syntax name-field) ...)
+                                                    #:accessor->info? #t
                                                     (list (quote-syntax field.static-infos) ...))))
            #'(define-contract-syntax name
-               (identifier-contract (quote-syntax name)
-                                    (quote-syntax name?)
-                                    (quote-syntax ((#%dot-provider name-instance)))))
+               (let ([accessors (list (quote-syntax name-field) ...)])
+                 (contract-constructor (quote-syntax name)
+                                       (quote-syntax name?)
+                                       (quote-syntax ((#%dot-provider name-instance)))
+                                       cnt
+                                       (make-struct-instance-predicate accessors)
+                                       (make-struct-instance-static-infos accessors))))
            #'(define-struct-desc-syntax name
                (struct-desc (quote-syntax name)
                             (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
@@ -123,6 +129,18 @@
                                                             #,(format "~a" (syntax-e predicate))
                                                             #,field))]))))))
 
+(define-for-syntax (make-struct-instance-predicate accessors)
+  (lambda (arg predicate-stxs)
+    #`(and #,@(for/list ([acc (in-list accessors)]
+                         [pred (in-list predicate-stxs)])
+                #`(#,pred (#,acc #,arg))))))
+
+(define-for-syntax (make-struct-instance-static-infos accessors)
+  (lambda (statis-infoss)
+    (for/list ([acc (in-list accessors)]
+               [static-infos (in-list statis-infoss)])
+      #`(#,acc #,static-infos))))
+
 ;; dot provider for a structure name used before a `.`
 (define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)
   (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
@@ -149,12 +167,22 @@
     (raise-syntax-error #f
                         "don't know how to access field"
                         field-id))
+
   (define accessor-id (car accessor-id+static-infos))
   (define e (datum->syntax (quote-syntax here)
-                           (list accessor-id form1)
+                           (list (relocate field-id accessor-id) form1)
                            (span-srcloc form1 field-id)
                            #'dot))
-  (wrap-static-info* e (cadr accessor-id+static-infos)))
+
+  (define static-infos (cadr accessor-id+static-infos))
+  (define more-static-infos (syntax-local-static-info form1 accessor-id))
+  (define all-static-infos (if more-static-infos
+                               (datum->syntax #f
+                                              (append (syntax->list more-static-infos)
+                                                      static-infos))
+                               static-infos))
+
+  (wrap-static-info* e all-static-infos))
 
 (define-syntax (define-struct-desc-syntax stx)
   (syntax-parse stx

@@ -7,7 +7,7 @@
          (submod "operator.rkt" for-parse)
          "private/transform.rkt"
          "syntax-local.rkt"
-         "ref-parse.rkt"
+         "name-parse.rkt"
          "name-root.rkt"
          (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
@@ -122,17 +122,17 @@
          ;; the group ends or when an operator with weaker precedence than `op`
          ;; is found
          (define-syntax-class prefix-op+form+tail
-           (pattern (op-ref::reference . in-tail)
-                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
+           (pattern (op-name::name . in-tail)
+                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name.name)
                                                                                prefix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name #t))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
          (define-syntax-class infix-op+form+tail
-           (pattern (op-ref::reference . in-tail)
-                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-ref.name)
+           (pattern (op-name::name . in-tail)
+                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name.name)
                                                                               infix-operator-ref)))
-                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-ref.name #t))]
+                          (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
 
@@ -177,7 +177,7 @@
        ;; No preceding expression, so dispatch to prefix (possibly implicit)
        ((syntax-parse stxes
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
-          [(head::reference . tail)
+          [(head::name . tail)
            (define head-id (in-space #'head.name))
            (define name-path? (starts-like-name-path? #'head #'tail))
            (define v (syntax-local-value* head-id
@@ -203,7 +203,7 @@
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
           [(((~and tag (~datum parens)) . inside) . tail)
            (dispatch-prefix-implicit tuple-name #'tag)]
-          [(((~and tag (~datum braces)) . inside) . tail)
+          [(((~and tag (~datum brackets)) . inside) . tail)
            (dispatch-prefix-implicit array-name #'tag)]
           [(((~and tag (~datum block)) . inside) . tail)
            (dispatch-prefix-implicit block-name #'tag)]
@@ -241,7 +241,7 @@
        ;; Has a preceding expression, so dispatch to infix (possibly implicit)
        ((syntax-parse stxes
           [() (values init-form stxes)]
-          [(head::reference . tail)
+          [(head::name . tail)
            (define head-id (in-space #'head.name))
            (define name-path? (starts-like-name-path? #'head #'tail))
            (define v (syntax-local-value* head-id
@@ -268,7 +268,7 @@
            (dispatch-infix-implicit juxtapose-name #'head)]
           [(((~and tag (~datum parens)) . inside) . tail)
            (dispatch-infix-implicit call-name #'tag)]
-          [(((~and tag (~datum braces)) . inside) . tail)
+          [(((~and tag (~datum brackets)) . inside) . tail)
            (dispatch-infix-implicit ref-name #'tag)]
           [(((~and tag (~datum block)) . inside) . tail)
            (dispatch-infix-implicit juxtapose-name #'tag)]

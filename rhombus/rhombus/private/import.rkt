@@ -6,7 +6,7 @@
                      enforest/transformer
                      enforest/property
                      enforest/syntax-local
-                     enforest/ref-parse
+                     enforest/name-parse
                      enforest/proc-name
                      enforest/name-root
                      "srcloc.rkt"
@@ -268,7 +268,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group int::reference #:to ext::reference)
+       [(_ (block (group int::name #:to ext::name)
                   ...))
         (datum->syntax req
                        (list* #'rename-in req #'([int.name ext.name] ...))
@@ -279,9 +279,9 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group ref::reference ...) ...))
+       [(_ (block (group name::name ...) ...))
         (datum->syntax req
-                       (list* #'only-in req #'(ref.name ... ...))
+                       (list* #'only-in req #'(name.name ... ...))
                        req)]))))
 
 (define-import-syntax except
@@ -289,9 +289,9 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group ref::reference ...) ...))
+       [(_ (block (group name::name ...) ...))
         (datum->syntax req
-                       (list* #'except-in req #'(ref.name ... ...))
+                       (list* #'except-in req #'(name.name ... ...))
                        req)]))))
 
 (define-import-syntax expose
@@ -299,7 +299,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group ref::reference ...) ...))
+       [(_ (block (group name::name ...) ...))
         (datum->syntax req
-                       (list* #'expose-in req #'(ref.name ... ...))
+                       (list* #'expose-in req #'(name.name ... ...))
                        req)]))))
