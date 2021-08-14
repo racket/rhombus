@@ -170,7 +170,9 @@
              [candidate #f]
              ;; filter out possibilities to the right (exclusive)
              ;; of the limit
-             [limit #f])
+             [limit #f]
+             ;; 
+             [bar-after? as-bar?])
     ;; helper
     (define (maybe-list col)
       (cond
@@ -180,7 +182,7 @@
         [else null]))
     ;; helper: loops where the candidate also works as a refined limit
     (define (loop* pos new-candidate)
-      (loop pos new-candidate (min new-candidate (or limit new-candidate))))
+      (loop pos new-candidate (min new-candidate (or limit new-candidate)) #f))
     (define (keep s)
       (define start (line-start t s))
       (define delta (line-delta t start))
@@ -202,7 +204,7 @@
           ;; we don't do anything special with continue-operator here,
           ;; because we avoid looking at line numbers, anyway, and `line-delta`
           ;; is responsible for computing continuation columns
-          (loop (sub1 s) candidate limit)]
+          (loop (sub1 s) candidate limit bar-after?)]
          [(block-operator)
           ;; a block creates an indentation candidate that's 2 (or 1 for a `|`)
           ;; to the right of the enclosing group's indentation
@@ -219,8 +221,10 @@
                                       (col-of (add1 next-s) start delta)))
           ;; look further outside this block, and don't consider anything
           ;; that would appear to be nested in the block:
-          (define outer-candidates (loop next-s next-candidate (min* block-col limit)))
+          (define outer-candidates (loop next-s next-candidate (min* block-col limit) #f))
           (append (cond
+                    [(and bar-after? (not as-bar?))
+                     null]
                     [candidate
                      ;; we already have something after `:`, so
                      ;; use its indentation
@@ -284,7 +288,7 @@
                   [(and another-bar-start as-bar?)
                    ;; don't treat the current bar as a source
                    ;; of indentation:
-                   (loop (sub1 s) #f (min* s limit))]
+                   (loop (sub1 s) #f (min* s limit) #t)]
                   [as-bar?
                    (define delta (line-delta t start))
                    (define col (col-of s start delta))
@@ -299,15 +303,18 @@
                       (define b-col (col-of limit-pos b-start b-delta))
                       (append (maybe-list col)
                               ;; outer candidates:
-                              (loop (sub1 limit-pos) b-col (min* (min col (sub1 b-col))
-                                                                 limit)))])]
+                              (loop (sub1 limit-pos)
+                                    b-col
+                                    (min* (min col (sub1 b-col)) limit)
+                                    #t))])]
                   [else
                    ;; line up within bar or outside [another] bar
-                   (append (maybe-list candidate)
+                   (define bar-column (col-of s start (line-delta t start)))
+                   (append (maybe-list (or candidate (+ bar-column 2)))
                            (if (not limit-pos)
                                null
                                ;; outer candidates
-                               (loop (sub1 (or another-bar-start s)) #f limit)))])]
+                               (loop (sub1 (or another-bar-start s)) #f (min* (sub1 bar-column) limit) #t)))])]
                [(separator)
                 (cond
                   [candidate (maybe-list candidate)]
@@ -429,12 +436,15 @@
 
 (define (bar-after-group-comment? t pos at-start)
   (let loop ([pos pos])
-    (define-values (s e) (send t get-token-range pos))
-    (define category (send t classify-position s))
-    (case category
-      [(white-space comment) (loop e)]
-      [(bar-operator) (> (line-start t pos) at-start)]
-      [else #f])))
+    (cond
+      [(= pos (send t last-position)) #f]
+      [else
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment) (loop e)]
+         [(bar-operator) (> (line-start t pos) at-start)]
+         [else #f])])))
 
 (define (get-non-empty-lines t s-line e-line)
   (let loop ([line s-line])

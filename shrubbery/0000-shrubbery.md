@@ -51,26 +51,26 @@ breaks and indentation in the source are not misleading.
 Here are some example shrubberies. Each line either uses old
 indentation to continue a nesting level that was started on a previous
 line, starts with new indentation and follows a line that ends with
-`:`, or starts with new indentation and a `|` on the same line. A `:`
-or `|` can also appear in the middle of a line, but that's roughly a
-shorthand for starting a new indented line after the `:` or before the
-`|`. The complete rules involve more terminology, but that's enough to
-get a sense of the examples.
+`:`. A `:` or `|` can also appear in the middle of a line, but that's
+roughly a shorthand for starting a new indented line after the `:` or
+starting a new line before the `|` matching the indentation of a
+previous `|`. The complete rules involve more terminology, but that's
+enough to get a sense of the examples.
 
 ```
 define identity(x): x
 
 define fib(n):
-  cond
+  cond:
    | n == 0: 0
    | n == 1: 1
    | else: fib(n-1) + fib(n-2)
 
 define print_sexp(v):
-  match v
+  match v:
    | empty: display("()")
    | cons(a, d):
-       if is_list(d)
+       if is_list(d):
         | display("(")
           print_sexp(a)
           for (v = in_list(d)):
@@ -271,7 +271,7 @@ hello {
 ```
 
 Indentation to start a group is allowed only on a line where the
-previous line ends with `:` or the indented line starts with `|`.
+previous line ends with `:` or `|`.
 
 ```
 // Not allowed
@@ -292,27 +292,6 @@ hello: world
        universe
 ```
 
-As a special rule, if the block that would be created by `:` has one
-group that is itself a block, then `:` does not create a new block.
-This rule is consistent with `:` as a kind of redundant indicator for
-indentation, and it generalizes by allowing an optional `:` before an
-explicit `{`. In fact, any number of optional `:`s can appear. The
-following groups are the same as the earlier examples:
-
-```
-hello: {world; universe}
-
-hello: : : : : world
-               universe
-```
-
-This special rule for `:` means that you don't have to worry about
-whether a `:` is redundant or whether it creates some subtle or
-important extra layer of blocking, and the parser will not be
-needlessly pendantic when you're writing or revising code. However,
-the standard style, which might be enforced with a code-formatting
-tool, is to omit any `:` that is not required.
-
 Note that if a `:` appears at the end of a group, then it forces an
 empty block, which means that a `:` doesn't just disappear if there's
 no content after it. For example `(void:)` is the same as `(void {})`,
@@ -324,66 +303,51 @@ means that a programmer can choose between single-line forms using
 
 ## Grouping by `|`
 
-A `|` is implicitly shifted half a column right (so, implicitly nested),
-and it is implicitly followed by a `:` that conceptually occupies same
-column as the `|`. When a `|` is not at the start of a group or its
-group is at the start of a block or after an opener, then the `|`
-is also implicitly *preceded* by a `:`. Note that the implicit `:` following a
-`|` is subject to the special rules for `:`, which is that it doesn't
-create a new block if one is already created (by indentation or `{`),
-and it can force an empty block.
+A `|` is implicitly shifted half a column right (so, implicitly
+nested), and it is implicitly followed by a `:` that conceptually
+occupies same column as the `|`. That is, like `:`, a `|` always forms
+a block. Furthermore, a `|` may only appear immediately within a
+block; it cannot be a in a top-level sequences of groups or start a
+group immediately within `()` or `[]`. So, a `|` always forms a group
+within a block, as well as forming its own nested block.
 
 ```
-hello
+hello:
  | world
  | universe
 
-hello
+hello:
 | world
 | universe
 
 hello: | world
        | universe
 
-hello | world
-      | universe
+hello: |
+         world
+       |
+         universe
 
-hello |
-        world
-      |
-        universe
-
-hello | { world }
-      | { universe }
-
-hello { | { world }
-        | { universe } }
+hello { | world
+        | universe }
 ```
 
-A `|` has its own special rule: if a `|` appears on the same line as a
-`|` and would start a block immediately within that `|`'s block, then
-`|` instead terminates the previous `|`'s block and continues its
-enclosing group sequence with a new `|` group that is *not* implicitly
-preceded by a `:`. The intent and consequence of this rule is that
-multiple `|`s can be used on a single line as an alternative to
-starting each `|` on its own line, making the following groups the
-same as the above groups:
+If a `|` appears on the same line as an earlier `|` and is not more
+nested inside `()`, `[]`, or `{}`, then the `|` terminates the earlier
+`|`'s block and continues its enclosing block with a new `|` group.
+The intent and consequence of this rule is that multiple `|`s can be
+used on a single line as an alternative to starting each `|` on its
+own line, making the following groups the same as the above groups:
 
 ```
-hello | world | universe
-
 hello: | world | universe
 
-hello
+hello:
  | world | universe
-
-hello | { world } | { universe }
 
 hello { | world | universe }
 
-hello { | { world } | { universe } }
-
-hello { | { world } ; | { universe } }
+hello { | world ; | universe }
 ```
 
 The implicit shifting of `|` by half a column is consistent with its
@@ -437,8 +401,8 @@ this is a group \
 ## Group comments
 
 When `#//` appears on its own line (or with only whitespace and
-non-term comments), then its indentation does not matter, and it
-comments out the next group—with might be a single-line group, block,
+non-group comments), then its indentation does not matter, and it
+comments out the next group—witch might be a single-line group, block,
 or `|` block. A `#//` is not allowed without a group afterward to
 comment out, and `#//`s do not nest (i.e., two `#//`s in a row is
 always an error.
@@ -520,25 +484,25 @@ potential ways of using the notation.
 ```
 define pi: 3.14
 
-define
+define:
  | fib(0): 0
  | fib(1): 1
  | fib(n): fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n
+  match n:
    | 0: 0
    | 1: 1
    | n: fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n | 0: 0
-          | 1: 1
-          | n: (fib(n-1)
-                + fib(n-2))
+  match n: | 0: 0
+           | 1: 1
+           | n: (fib(n-1)
+                 + fib(n-2))
 
 define fib(n):
-  match n
+  match n:
    | 0:
        0
    | 1:
@@ -568,8 +532,8 @@ define go():
   define helper(n):
     list(n, n)
   define more(m):
-    if m == 0 | "done"
-              | more(m - 1)
+    if m == 0: | "done"
+               | more(m - 1)
   helper(more(9))
 
 define curried:
@@ -662,7 +626,7 @@ define fourth(n: integer):
 ```
 
 ```
-if x = y
+if x = y:
  | same
  | different
 
@@ -672,7 +636,7 @@ if x = y
 
 ```
 define fib(n):
-  match n
+  match n:
    | 0: 0
    | 1: 1
    | n: fib(n-1) + fib(n-2)
@@ -846,13 +810,6 @@ See [demo.shrb](demo.shrb), [interp.shrb](interp.shrb), and
 # Drawbacks
 [drawbacks]: #drawbacks
 
-The parsing rules for shrubbery notation are somewhat complex. There
-are several special cases for `:` and `|`, for example, that make the
-parser implementation irregular. This complexity is arguably
-deceptive, however, because it serves to reduce rather than increase
-differentiation in parsed output, which is intended to make the
-notation easier for humans to read and write.
-
 Shrubbery notation may not be a good choice where precise and complete
 grouping is needed, both because its grouping is coarse-grained and
 the grouping rules generate lots of extra `group` layers.
@@ -945,8 +902,8 @@ Sampling notation's rules relating indentation, lines, `{}`, `;`, and
 something`](https://github.com/tonyg/racket-something) reader, which
 also targets an underlying expander that further groups tokens.
 Shrubbery notation departs from `#lang something` conventions in a few
-ways, such as ignoring more `:`s and preserving indentation in `()`, and
-it adds the treatment of `,` and `|`.
+ways, such as preserving indentation in `()`, and it adds the
+treatment of `,` and `|`.
 
 Shrubbery notation is also based on
 [Lexprs](https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/lexpr/0004-lexpr.md),
