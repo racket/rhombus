@@ -312,6 +312,17 @@
                     w:
     ^             ^ ^ ^q}
 
+ @e{z: | x
+    ^    ^y}
+
+ @e{z:
+      | x
+    ^   ^y}
+
+ @e|{|z {
+        | x
+          ^y|}|
+
  @e{define fib(n):
       match n
        | 0

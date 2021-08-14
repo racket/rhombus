@@ -48,5 +48,6 @@
                                                         [i (in-naturals)])
                                                #`(lambda (v) (vector-ref v #,i)))
                                              (for/list ([arg (in-list args)])
-                                               #'()))
+                                               #'())
+                                             #:ref-result-info? #t)
          stx)]))))

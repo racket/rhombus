@@ -20,6 +20,7 @@
                                                        #:steppers [steppers #f] ; a sequence of `cdr`s for lists
                                                        #:static-infos [composite-static-infos #'()] ; for the composite value
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
+                                                       #:ref-result-info? [ref-result-info? #f]
                                                        #:rest-accessor [rest-accessor #f]) ; for a list "rest"
   (lambda (tail [rest-arg #f])
     (syntax-parse tail
@@ -48,7 +49,7 @@
             #,static-infoss
             (a-parsed.infoer-id ... )
             (a-parsed.data ...)
-            #,accessor->info?
+            #,accessor->info? #,ref-result-info?
             #,(and rest-arg
                    #`(#,rest-accessor
                       rest-a-parsed.infoer-id ...
@@ -62,11 +63,13 @@
     [(_ static-infos (predicate (composite-static-info ...)
                                 steppers accessors ((static-info ...) ...)
                                 (infoer-id ...) (data ...)
-                                accessor->info?
+                                accessor->info? ref-result-info?
                                 rest-data))
      #:with (arg-static-infos ...) (for/list ([accessor (in-list (syntax->list #'accessors))])
                                      (or (and (syntax-e #'accessor->info?)
                                               (static-info-lookup #'static-infos accessor))
+                                         (and (syntax-e #'ref-result-info?)
+                                              (static-info-lookup #'static-infos #'#%ref-result))
                                          '()))
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
@@ -81,8 +84,10 @@
           (values #`(rest-tmp-id rest-accessor rest-info)
                   #'rest-info.static-infos
                   (syntax-parse #'rest-info.bind-infos
-                    [((bind-id . static-infos) ...)
-                     #'((bind-id (#%ref-result static-infos)) ...)])
+                    [((bind-id bind-static-info ...) ...)
+                     #:with ref-static-infos (or (static-info-lookup #'static-infos #'#%ref-result)
+                                                 '())
+                     #'((bind-id (#%ref-result (bind-static-info ... . ref-static-infos))) ...)])
                   #'rest-info.name-id)]))
 
      (define all-composite-static-infos
@@ -91,12 +96,20 @@
                                               (not (null? (syntax-e #'accessors))))
                                           composite-static-infos
                                           #`((#%ref-result #,rest-static-infos) . #,composite-static-infos))]
-              [composite-static-infos (if (syntax-e #'accessor->info?)
-                                          #`(#,@(for/list ([accessor (syntax->list #'accessors)]
-                                                           [static-infos (syntax->list #'(a-info.static-infos ...))])
-                                                  #`(#,accessor #,static-infos))
-                                             . #,composite-static-infos)
-                                          composite-static-infos)])
+              [composite-static-infos (cond
+                                        [(syntax-e #'accessor->info?)
+                                         #`(#,@(for/list ([accessor (syntax->list #'accessors)]
+                                                          [static-infos (syntax->list #'(a-info.static-infos ...))])
+                                                 #`(#,accessor #,static-infos))
+                                            . #,composite-static-infos)]
+                                        [else composite-static-infos])]
+              [composite-static-infos (cond
+                                        [(and (syntax-e #'ref-result-info?)
+                                              (static-info-lookup #'static-infos #'#%ref-result))
+                                         => (lambda (ref-result)
+                                              #`((#%ref-result #,ref-result)
+                                                 . #,composite-static-infos))]
+                                        [else composite-static-infos])])
          composite-static-infos))
      (binding-info #'composite
                    all-composite-static-infos
