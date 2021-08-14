@@ -152,9 +152,9 @@ bind.infoer ?(fruit_infoer(¿static_info, ¿id)):
 
 bind.matcher ?(fruit_matcher(¿arg, ¿id, ¿IF, ¿success, ¿failure)):
   ?{
-    ¿IF is_fruit(¿arg)
-    | ¿success
-    | ¿failure
+    ¿IF is_fruit(¿arg):
+     | ¿success
+     | ¿failure
   }
 
 bind.binder ?(fruit_binder(¿arg, ¿id)):

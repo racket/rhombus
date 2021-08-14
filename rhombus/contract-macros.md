@@ -70,7 +70,7 @@ functions:
 
 ```
 dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):
-  match right
+  match right:
    | ?angle: ?(vector_angle(¿left))
    | ?magnitude: ?(vector_magnitude(¿left))
 
@@ -142,7 +142,7 @@ argument:
 
 ```
 dot.macro ?(hello ¿left ¿dot ¿right):
-  match right
+  match right:
    | ?english: ?"Hi"
    | ?chinese: ?"你好"
    | ?spanish: ?"Hola"

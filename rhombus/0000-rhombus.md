@@ -118,25 +118,37 @@ numbers), escape to S-expression notation with `#{` ... `}`.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks
 and indentation for grouping. A line with more indentation starts a
-_block_, and it's always either after a line that ends `:` or on a
-line starts with `|`:
+_block_, and it's always after a line that ends `:` or (much less
+commonly) `|`:
 
 ```
 begin:
   group within block
   another group within block
 
-if is_rotten(apple)
+if is_rotten(apple):
  | get_another()
  | take_bite()
    be_happy()
 
-match x
+match x:
  | 0:
     def zero = x
     x + zero
  | n:
     n + 1
+
+cond:
+ | // check the weather
+   is_raining():
+     take_umbrella()
+ | // check the destination
+   going_to_beach():
+     wear_sunscreen()
+     take_umbrella()
+ | // assume a hat is enough
+   _:
+     wear_hat() 
 ```
 
 _Even if you don't normally use DrRacket, you should proabably try it
@@ -151,12 +163,11 @@ shifts remaining lines by same amount. There should be some way to
 normalize indentation while preserving the current parse, but that's
 not yet implemented._
 
-A `|` at a new indentation starts two blocks: one that has multiple
-`|`-starting parts within the same block, plus a subblock on the
-right-hand side of the `|`. Each subsequent `|` at the same
+A `|` is allowed only within a block, and it also starts a subblock on
+the right-hand side of the `|`. Each subsequent `|` at the same
 indentation creates a new subblock. Shrubbery notation allows `|` only
-within a block whose groups all contain an immediate `|` subblock.
-A block of `|` subblocks is an _alts-block_.
+within a block whose groups all contain an immediate `|` subblock. A
+block of `|` subblocks is an _alts-block_.
 
 Each line within a block forms a _group_. Groups are important,
 because post-shrubbery parsing and macro expansion are constrained to
@@ -175,17 +186,18 @@ examples:
 begin: group within block
        another group within block
 
-if is_rotten(apple) | get_another() | take_bite()
-                                      be_happy()
+if is_rotten(apple): | get_another() | take_bite()
+                                       be_happy()
 
-match x | 0: def zero = x
-             x + zero
-        | n: n + 1
+match x: | 0: def zero = x
+              x + zero
+         | n: n + 1
+
+cond: | is_raining(): take_umbrella()
+      | going_to_beach(): wear_sunscreen()
+                          take_umbrella()
+      | _: wear_hat() 
 ```
-
-Extra `:`s are ok and end up being ignored. For example, `match x:`
-would work the same as `match x` just before a `|` that's on the same
-line or the next line. Standard style is to not use redundant `:`s.
 
 Within a block, a `;` can be used instead of a new line to start a new
 group, so these examples also parse the same:
@@ -193,28 +205,38 @@ group, so these examples also parse the same:
 ```
 begin: group within block; another group within block
 
-if is_rotten(apple) | get_another() | take_bite(); be_happy()
+if is_rotten(apple): | get_another() | take_bite(); be_happy()
 
-match x | 0: def zero = x; x + zero
-        | n: n + 1
+match x: | 0: def zero = x; x + zero
+         | n: n + 1
+
+cond: | is_raining(): take_umbrella()
+      | going_to_beach(): wear_sunscreen(); take_umbrella()
+      | _: wear_hat() 
 ```
 
 You can add extra `;`s, such as at the end of lines, since `;` will
 never create an empty group.
 
-Finally, `:` plus indentation can be written instead with `{` ... `}`,
-so blocks can be fully braced, if you like. In the following example,
-three pairs of braces replace three `:`s, while the other pairs are
-allowed but redundant due to `|` rules, and every block in the example now has braces
-(but this is definitely not the intended style):
+Finally, `:` plus indentation can be written instead with `{` ... `}`.
+Fully bracketing with `{` ... `}` can completely replace the role of
+newlines and indentation—when combined with `;` as needed to separate
+groups—but bracketing does not disable the meaning of newlines and
+indentation.
 
 ```
 begin { group within block; another group within block }
 
-if is_rotten(apple) { | { get_another() } | { take_bite(); be_happy() } }
+if is_rotten(apple) { | get_another() | take_bite(); be_happy() }
 
-match x { | { 0 { def zero = x; x + zero } }
-          | { n { n + 1 } } }
+// could be all on one line:
+match x { | 0 { def zero = x; x + zero }
+          | n { n + 1 } }
+
+// could be all on one line:
+cond { | is_raining() { take_umbrella() }
+       | going_to_beach() { wear_sunscreen(); take_umbrella() }
+       | _ { wear_hat() } }
 ```
 
 Parentheses `(` ... `)` and square brackets `[` ... `]` similarly
@@ -246,8 +268,7 @@ map(fun (x):
 ```
 
 There are some subtleties related to the “precedence” of `|`, `;`, and
-`,`, but they're likely to work as you expect in a given example. When
-in doubt, you can add parentheses or curly braces.
+`,`, but they're likely to work as you expect in a given example.
 
 ## Modules
 
@@ -691,7 +712,7 @@ two `|`s. The first `|` holds the “then” branch, and the second `|`
 holds the “else” branch:
 
 ```
-if 1 == 2
+if 1 == 2:
  | "same"
  | "different"
 ```
@@ -709,7 +730,7 @@ to the block after first test that produces a non-`#false` value. The
 
 ```
 fun fib(n):
-  cond
+  cond:
    | n == 0: 1
    | n == 1: 1
    | 'else': fib(n-1) + fib(n-2)
@@ -735,7 +756,7 @@ pattern, but using the binding operator `_` is more common.
 
 ```
 fun fib(n):
-  match n
+  match n:
    | 0: 1
    | 1: 1
    | _: fib(n-1) + fib(n-2)
@@ -746,7 +767,7 @@ argument is common enough that `fun` supports it directly,
 fusing the function declaration and the pattern match, like this:
 
 ```
-fun 
+fun:
  | fib(0): 1
  | fib(1): 1
  | fib(n): fib(n-1) + fib(n-2)
@@ -761,11 +782,11 @@ different numbers of arguments, and a call will find a matching case
 with the right number of arguments.
 
 ```
-fun
+fun:
  | hello(name):
-    "Hello, " +$ name    // +$ coerces to strings and concatenates
+     "Hello, " +$ name    // +$ coerces to strings and concatenates
  | hello(first, last):
-    hello(first +$ " " +$ last)
+     hello(first +$ " " +$ last)
 
 hello("World")             // prints "Hello, World"
 hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
@@ -886,7 +907,7 @@ the same way that functions can be defined to accept one or two
 arguments:
 
 ```
-operator 
+operator:
  | ((x :: Integer) <> (y :: Integer)):
      Posn(x, y)
  | (<> (x ::Integer)):
@@ -987,7 +1008,7 @@ is immutable.
 `List` works as a contract with `::`:
 
 ```
-fun 
+fun:
  | classify(_ :: List): "list"
  | classify(_ :: Number): "number"
  | classify(_): "other"
@@ -1015,7 +1036,7 @@ variable bound by the preceding pattern is instead bound to a list of
 matches.
 
 ```
-fun 
+fun:
  | got_milk([]): #false
  | got_milk([head, tail, ...]):
     head === "milk" || got_milk(tail)
@@ -1032,11 +1053,11 @@ treated as a list that is the tail of the new list.
 ```
 [1, 2, [3, 4], ...]  // prints [1, 2, 3, 4]
 
-fun 
+fun:
  | is_sorted([]): #true
  | is_sorted([head]): #true
  | is_sorted([head, next, tail, ...]):
-    head <= next && is_sorted([next, tail ...])
+    head <= next && is_sorted([next, tail, ...])
 
 is_sorted([1, 2, 3, 3, 5]) // prints #true
 is_sorted([1, 2, 9, 3, 5]) // prints #false
@@ -1370,7 +1391,7 @@ this:
 expr.macro ?(¿a ! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
-fun
+fun:
  | factorial(0): 1
  | factorial(n): n*factorial(n-1)
          
@@ -1537,7 +1558,7 @@ expensive run-time checks. For example, this `sum` runs in quadratic
 time:
 
 ```
-fun
+fun:
  | sum([]): 0
  | sum([head :: Number, tail :: Number, ...]):
     head + sum(tail)
