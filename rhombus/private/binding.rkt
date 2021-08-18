@@ -29,11 +29,7 @@
            :non-binding-identifier))
 
 (provide define-binding-syntax
-         raise-binding-failure
-
-         ;; used by "contract.rkt":
-         identifier-succeed
-         identifier-bind)
+         raise-binding-failure)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:

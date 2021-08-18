@@ -1,5 +1,7 @@
 #lang rhombus
 
+use_static_dot
+
 // Some expressions
 
 10 * (-3) + 2
@@ -34,12 +36,16 @@ f(cons(22, #false))
 
 struct Posn(x, y)
 
-def md(p :: Posn):
+def md(p -: Posn):
+  p.x + p.y
+def md2(p):
+  use_dynamic_dot
   p.x + p.y
 
 Posn.x(Posn(1, 4))
 
 md(Posn(1, 4))
+md2(Posn(1, 4))
 
 // more definitions
 
@@ -59,7 +65,7 @@ ca
 def:
  | size(n :: Integer):
      n
- | size(p ::Posn):
+ | size(p :: Posn):
      p.x + p.y
  | size(a, b):
      a+b
@@ -67,7 +73,7 @@ def:
 size(Posn(8, 6))
 size(1, 2)
 
-def Posn(px, py) :: Posn: Posn(1, 2)
+def Posn(px, py) -: Posn: Posn(1, 2)
 cons(px, py)
 
 def identity: fun (x): x
@@ -359,15 +365,15 @@ import:
   = racket/base:
     only: atan
 
-contract.macro ?AlsoPosn: ?Posn
+annotation.macro ?AlsoPosn: ?Posn
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
 
 bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ...):
   values(?(Posn(¿x, ¿y)), tail)
                        
-contract.macro ?Vector:
-  contract_ct.pack_predicate(?(fun (x): x is_a Posn),
-                             ?((¿(dot_ct.provider_key), vector_dot_provider)))
+annotation.macro ?Vector:
+  annotation_ct.pack_predicate(?(fun (x): x is_a Posn),
+                               ?((¿(dot_ct.provider_key), vector_dot_provider)))
 
 
 dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):
@@ -521,12 +527,11 @@ get_pts_x([Posn(1, 2)])
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-contract.macro ?(ListOf (¿contract ...) ¿tail ...):
+annotation.macro ?(ListOf (¿contract ...) ¿tail ...):
   values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
          tail)
 
-fun get_pts_x2(pts :: ListOf(Posn)):
+fun get_pts_x2(pts -: ListOf(Posn)):
   pts[0].x
 
 get_pts_x2([Posn(5, 7)])
-

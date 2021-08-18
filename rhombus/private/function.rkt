@@ -14,10 +14,10 @@
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "static-info.rkt"
-         "contract.rkt"
+         "annotation.rkt"
          (only-in "quasiquote.rkt"
                   [... rhombus...])
-         (submod "contract.rkt" for-struct)
+         (submod "annotation.rkt" for-struct)
          (only-in "assign.rkt"
                   [= rhombus=]))
 
@@ -25,7 +25,7 @@
 
 (module+ for-build
   (provide (for-syntax :kw-opt-binding
-                       :ret-contract
+                       :ret-annotation
                        :maybe-arg-rest
                        :non-...-binding
                        build-function
@@ -88,14 +88,19 @@
     (pattern (parens . _))
     (pattern (braces . _)))
 
-  (define-splicing-syntax-class :ret-contract
+  (define-splicing-syntax-class :ret-annotation
     #:datum-literals (block group op)
-    #:literals (::)
+    #:literals (:: -:)
     (pattern (~seq (op ::) ctc::not-block ...)
-             #:with c::contract #'(group ctc ...)
-             #:with c-parsed::contract-form #'c.parsed
+             #:with c::annotation #'(group ctc ...)
+             #:with c-parsed::annotation-form #'c.parsed
              #:attr static-infos #'c-parsed.static-infos
              #:attr predicate #'c-parsed.predicate)
+    (pattern (~seq (op -:) ctc::not-block ...)
+             #:with c::annotation #'(group ctc ...)
+             #:with c-parsed::annotation-form #'c.parsed
+             #:attr static-infos #'c-parsed.static-infos
+             #:attr predicate #'#f)
     (pattern (~seq)
              #:attr static-infos #'()
              #:attr predicate #'#f))
@@ -117,7 +122,7 @@
       (syntax-parse stx
         #:datum-literals (parens group block alts)
         [(form-id ((~and alts-tag alts)
-                   (block (group (parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-contract
+                   (block (group (parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-annotation
                                  (~and rhs (block body ...))))
                    ...+)
                   . tail)
@@ -129,7 +134,7 @@
                                #'(rhs ...)
                                #'form-id #'alts-tag)
           #'tail)]
-        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-contract
+        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
                   (~and rhs (block body ...))
                   . tail)
          (values
@@ -146,7 +151,7 @@
         #:datum-literals (parens group block alts)
         [(form-id ((~and alts-tag alts)
                    (block (group name:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
-                                 ret::ret-contract
+                                 ret::ret-annotation
                                  (~and rhs (block body ...))))
                    ...+))
          (define names (syntax->list #'(name ...)))
@@ -163,7 +168,7 @@
                                       #'(rhs ...)
                                       #'form-id #'alts-tag))))]
         [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
-                  ret::ret-contract
+                  ret::ret-annotation
                   (~and rhs (block body ...)))
          (maybe-add-function-result-definition
           #'name (list #'ret.static-infos)
@@ -247,7 +252,7 @@
                   ...
                   maybe-bind-rest ...
                   maybe-bind-rest-static-info ...
-                  (add-contract-check
+                  (add-annotation-check
                    #,function-name #,pred
                    (rhombus-expression (group rhs)))))))))))
   
@@ -325,7 +330,7 @@
                                         ...
                                         maybe-bind-rest ...
                                         maybe-bind-rest-static-info ...
-                                        (add-contract-check
+                                        (add-annotation-check
                                          #,function-name
                                          pred
                                          (rhombus-expression (group rhs))))))))]))])))))
@@ -432,7 +437,7 @@
                   "\n   ~e"))
          args))
 
-(define-syntax (add-contract-check stx)
+(define-syntax (add-annotation-check stx)
   (syntax-parse stx
     [(_ name pred e)
      (cond
@@ -445,8 +450,8 @@
 
 (define (result-failure who val)
   (error who
-         (string-append "result does not match contract\n"
-                        "  result: ~v\n")
+         (string-append "result does not match annotation\n"
+                        "  result: ~v")
          val))
 
 (begin-for-syntax

@@ -6,7 +6,7 @@
                      "with-syntax.rkt")
          "expression.rkt"
          "binding.rkt"
-         (submod "contract.rkt" for-struct)
+         (submod "annotation.rkt" for-struct)
          "static-info.rkt"
          "ref-result-key.rkt"
          "map-ref-set-key.rkt"
@@ -18,7 +18,7 @@
 
 (provide Map
          (for-space rhombus/binding Map)
-         (for-space rhombus/contract Map)
+         (for-space rhombus/annotation Map)
          (for-space rhombus/static-info Map)
 
          make_map
@@ -43,16 +43,16 @@
                                  "key" (car more))]
          [else (loop (hash-set ht (car more) (cadr more)) (cddr more))])))))
 
-(define-contract-syntax Map
-  (contract-constructor #'Map #'hash? #'((#%map-ref hash-ref)
-                                         (#%map-set! hash-set!))
-                        2
-                        (lambda (arg-id predicate-stxs)
-                          #`(for/and ([(k v) (in-hash #,arg-id)])
-                              (and (#,(car predicate-stxs) k)
-                                   (#,(cadr predicate-stxs) v))))
-                        (lambda (static-infoss)
-                          #`((#%ref-result #,(cadr static-infoss))))))
+(define-annotation-syntax Map
+  (annotation-constructor #'Map #'hash? #'((#%map-ref hash-ref)
+                                           (#%map-set! hash-set!))
+                          2
+                          (lambda (arg-id predicate-stxs)
+                            #`(for/and ([(k v) (in-hash #,arg-id)])
+                                (and (#,(car predicate-stxs) k)
+                                     (#,(cadr predicate-stxs) v))))
+                          (lambda (static-infoss)
+                            #`((#%ref-result #,(cadr static-infoss))))))
 
 (define-static-info-syntax Map
   (#%call-result ((#%map-ref hash-ref))))

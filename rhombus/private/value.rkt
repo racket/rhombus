@@ -6,7 +6,7 @@
          "binding.rkt"
          "parse.rkt"
          "implicit.rkt"
-         "contract.rkt"
+         "annotation.rkt"
          "call-result-key.rkt"
          "static-info.rkt")
 

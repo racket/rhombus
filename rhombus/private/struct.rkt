@@ -6,8 +6,8 @@
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
-         "contract.rkt"
-         (submod "contract.rkt" for-struct)
+         "annotation.rkt"
+         (submod "annotation.rkt" for-struct)
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
          "composite.rkt"
@@ -24,17 +24,18 @@
 
   (define-syntax-class :field
     #:datum-literals (group op)
-    #:literals (:: mutable)
+    #:literals (mutable)
     (pattern (group (~optional mutable
                                #:defaults ([mutable #'#f]))
                     name:identifier
-                    (~optional c::inline-contract))
-             #:with c-parsed::contract-form (if (attribute c)
-                                                #'c.parsed
-                                                #'(#f ()))
-             #:attr predicate #'c-parsed.predicate
-             #:attr static-infos #'c-parsed.static-infos)))
-                                 
+                    (~optional c::inline-annotation))
+             #:attr predicate (if (attribute c)
+                                  #'c.predicate
+                                  #'#f)
+             #:attr static-infos (if (attribute c)
+                                     #'c.static-infos
+                                     #'()))))
+
 (define-syntax rhombus-struct
   (definition-transformer
    (lambda (stxes)
@@ -77,7 +78,9 @@
           (list
            #`(define-values (struct:name name name? name-field ... set-name-field! ...)
                (let-values ([(struct:name name name? name-ref name-set!)
-                             (make-struct-type 'name #f cnt 0 #f null #f #f
+                             (make-struct-type 'name #f cnt 0 #f
+                                               (list (cons prop:field-name->accessor '(field.name ...)))
+                                               #f #f
                                                '(immutable-field-index ...)
                                                #,(build-guard-expr fields
                                                                    (syntax->list #'(field.predicate ...))))])
@@ -94,14 +97,14 @@
                                                     (list (quote-syntax name-field) ...)
                                                     #:accessor->info? #t
                                                     (list (quote-syntax field.static-infos) ...))))
-           #'(define-contract-syntax name
+           #'(define-annotation-syntax name
                (let ([accessors (list (quote-syntax name-field) ...)])
-                 (contract-constructor (quote-syntax name)
-                                       (quote-syntax name?)
-                                       (quote-syntax ((#%dot-provider name-instance)))
-                                       cnt
-                                       (make-struct-instance-predicate accessors)
-                                       (make-struct-instance-static-infos accessors))))
+                 (annotation-constructor (quote-syntax name)
+                                         (quote-syntax name?)
+                                         (quote-syntax ((#%dot-provider name-instance)))
+                                         cnt
+                                         (make-struct-instance-predicate accessors)
+                                         (make-struct-instance-static-infos accessors))))
            #'(define-struct-desc-syntax name
                (struct-desc (quote-syntax name)
                             (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
@@ -144,7 +147,7 @@
 ;; dot provider for a structure name used before a `.`
 (define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)
   (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
-  (unless desc (error "cannot find contract binding for dot provider"))
+  (unless desc (error "cannot find annotation binding for dot provider"))
   (define accessor-id
     (for/or ([field+acc (in-list (struct-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
@@ -158,7 +161,7 @@
 ;; dot provider for a structure instance used before a `.`
 (define-for-syntax ((make-handle-struct-instance-dot name) form1 dot field-id)
   (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
-  (unless desc (error "cannot find contract binding for instance dot provider"))
+  (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define accessor-id+static-infos
     (for/or ([field+acc (in-list (struct-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
@@ -181,7 +184,7 @@
                                               (append (syntax->list more-static-infos)
                                                       static-infos))
                                static-infos))
-
+  
   (wrap-static-info* e all-static-infos))
 
 (define-syntax (define-struct-desc-syntax stx)
