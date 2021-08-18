@@ -89,7 +89,7 @@ parts:
 
  * ”Upward” static information associated with the overall value for a
    successful match with the binding. This infomation is used by the
-   `matching` contract operator, for example, as well as propagated
+   `matching` annotation operator, for example, as well as propagated
    outward by binding forms that correspond to composite data types.
    The information is independent of static information for individual
    names within the binding, but it should be the same as information

@@ -392,58 +392,100 @@ struct Posn(x, y)
 ```
 
 A structure-type name can be used like a function to construct an
-instance of the structure type. The structure-type name followed by
-`.` and a field name gets a function to extract the field value from
-an instance of the structure.
+instance of the structure type. A structure-instance expression
+followed by `.` and a field name extracts the field value from the
+structure instance.
 
 ```
 val origin: Posn(0, 0)
 
-origin  // prints Posn(0, 0)
+origin    // prints Posn(0, 0)
 
-Posn.x(origin)  // prints 0
+origin.x  // prints 0
 ```
 
 _Printing is not yet implemented in the `shrubbery-rhombus-0` package,
 so you'll see Racket printing for now._
 
-A structure-type name can also be used after a function-argument name
-and `::` to constrain the values that are allowed for the argument.
-This `flip` function will report an error if its argument is not a
-`Posn` instance:
+A structure-type name followed by `.` and a field name gets an
+accessor function to extract the field value from an instance of the
+structure:
 
 ```
-fun flip(p :: Posn):
-  Posn(Posn.y(p), Posn.x(p))
+Posn.x(origin)  // prints 0
+```
 
-// flip(0)  // would be a run-time error
+Comparing `Posn.x` to a function that uses `.x` on its argument, the
+difference is that `Posn.x` works only on `Posn` instances. That
+constraint makes field access via `Posn.x` more efficient than a
+generic lookup of a field with `.x`.
+
+An _annotation_ associated with a binding or expression can make field
+access with `.x` the same as using a structure-specific accessor.
+Annotations are particularly encouraged for a function argument that
+is a structure instances, and the annotation is written after the
+argument name with `-:` and the structure type name:
+
+```
+fun flip(p -: Posn):
+  Posn(p.y, p.x)
+
 flip(Posn(1, 2))  // prints Posn(2, 1)
 ```
 
-Furthermore, the `:: Posn` declaration on `p` makes `.` work directly
-to access fields of `p`:
+Using `-:` makes an assertion about values that are provided as
+arguments, but that assertion is not checked when the argument is
+provided. In effect, the annotation simply selects a structure-specific field
+accessor for `.x`. If `flip` is called with `0`, then a run-time error
+will occur at the point that `p.y` attempts to access the `y` field of
+a `Posn` instance:
+
+```
+// flip(0)  // would be a run-time error from `.y`
+```
+
+The `::` binding operator is another way to annotate a variable.
+Unlike `-:`, `::` installs a run-time check that a value supplied for
+the variable satisfies its annotation. The following variant of the
+`flip` function will report an error if its argument is not a `Posn`
+instance, and the error is from `flip` instead of delayed to the
+access of `y`:
 
 ```
 fun flip(p :: Posn):
   Posn(p.y, p.x)
+
+// flip(0)  // would be a run-time error from `flip`
 ```
 
-The use of `::` in this way is not specific to `fun`. The `::`
-binding operator works in any binding position, including the one for
-`val`:
+A run-time check implied by `::` can be expensive, depending on the
+annotation and context. In the case of `flip`, this check is unlikely
+to matter, but if a programmer uses `::` everywhere to try to get
+maximum checking and maximum guarantees, it's easy to create expensive
+function boundaries. Rhombus programmers are encouraged to use `-:`
+when the goal is to hint for better performance, and use `::` only
+where a defensive check is needed, such as for the arguments of an
+exported function.
+
+_The [rationale](#static-dynamic) says more about `-:` and `::`._
+
+The use of `-:` or `::` as above is not specific to `fun`. The `-:`
+and `::` binding operators work in any binding position, including the
+one for `val`:
 
 ```
-val (flipped :: Posn):  flip(Posn(1, 2))
+val (flipped -: Posn):  flip(Posn(1, 2))
 
 flipped.x  // prints 2
 ```
 
-The `Posn` definition does not place any constraints on its `x` and
-`y` fields, so using `Posn` as a contract similarly does not constrain
-them. Instead of to using just `Posn` as a contract, however, you can
-use `Posn.of` followed by parentheses containing contracts for the `x`
-and `y` fields. More generally, a `struct` definition binds the name
-so that `.of` accesses a contract constructor.
+The `struct Posn(x, y)` definition does not place any constraints on
+its `x` and `y` fields, so using `Posn` as a annotation similarly does
+not imply any annotations on the field results. Instead of using just
+`Posn` as a annotation, however, you can use `Posn.of` followed by
+parentheses containing annotations for the `x` and `y` fields. More
+generally, a `struct` definition binds the name so that `.of` accesses
+an annotation constructor.
 
 ```
 fun flip_ints(p :: Posn.of(Integer, Integer)):
@@ -467,7 +509,9 @@ flip(Posn(1, 2))  // prints Posn(2, 1)
 
 As a function-argument pattern, `Posn(x, y)` both requires the
 argument to be a `Posn` instance and binds the identifiers `x` and `y`
-to the values of the instance's fields.
+to the values of the instance's fields. There's no need to skip the
+check that the argument is a `Posn`, because the check is anyway part
+of extracting `x` and `y` fields.
 
 As you would expect, the fields in a `Posn` binding pattern are
 themselves patterns. Here's a function that works only on the origin:
@@ -480,18 +524,26 @@ fun flip_origin(Posn(0, 0)):
 flip_origin(origin)  // prints Posn(0, 0)
 ```
 
-Finally, a function can have a result contract, which is written with
-`::` after the parentheses for the function's argument. Every return
-value from the function is checked against the contract. Beware that a
-function's body does not count as being tail position when the
-function is declared with a result contract.
+Finally, a function can have a result annotation, which is written
+with `-:` or `::` after the parentheses for the function's argument.
+With a `::` result annotation, every return value from the function is
+checked against the annotation. Beware that a function's body does not
+count as being tail position when the function is declared with a `::`
+result annotation.
 
 ```
-fun same_posn(p) :: Posn:
+fun same_posn(p) -: Posn:
   p
 
-same_posn(origin)  // prints Posn(0, 0)
-// same_posn(5)    // woudl be a run-time error
+same_posn(origin)    // prints Posn(0, 0)
+same_posn(5)         // prints 5, since `-:` does not check
+same_posn(origin).x  // prints 0 through efficient field access
+
+fun checked_same_posn(p) :: Posn:
+  p
+
+checked_same_posn(origin)  // prints Posn(0, 0)
+// checked_same_posn(5)    // woudl be a run-time error
 ```
 
 The `def` form is a kind of do-what-I-mean form that acts like
@@ -535,7 +587,7 @@ def after: 3
 get_after()  // prints 3
 ```
 
-The identifier `_` is similar to `Posn` and `::` in the sense that
+The identifier `_` is similar to `Posn` and `-:` in the sense that
 it's a binding operator. As a binding, `_` matches any value and binds
 no variables. Use it as an argument name or subpattern form when you
 don't need the corresponding argument or value, but `_` nested in a
@@ -554,28 +606,37 @@ nomivore(1)        // prints "yum"
 ```
 
 
-## Contracts and the dot operator
+## Annotations and the dot operator
 
 Besides structure types defined with `struct`, a few predefined
-contracts work with the `::` contract operator, including `Integer`
-(meaning exact integer), `Number`, `String`, `Keyword`, and `Any`
-(meaning any value).
+annotations work with the `-:` and `::` annotation operators, including
+`Integer` (meaning exact integer), `Number`, `String`, `Keyword`, and
+`Any` (meaning any value).
 
-The `::` operator also works in expression positions. In that case,
-the right-hand expression must produce a value that satisfies the
-right-hand contract, otherwise a run-time contract exception is
-raised. The `is_a` operator takes a contract like `::`, but only
-checks whether the result of the left-hand expression matches the
-contract.
+The `-:` and `::` operators also work in expression positions. In that
+case, the assertion or check is about the expression on the left-hand
+side of `-:` or `::`. For `::`, the left-hand expression must produce
+a value that satisfies the right-hand annotation, otherwise a run-time
+exception is raised. The `is_a` operator takes an annotation like
+`::`, but it produces a boolean result indicating whether the result
+of the left-hand expression matches the annotation.
 
-_Since a binding operator gets an opportunity to adjust the value
-delivered to a variable, non-predicate contracts fit naturally into
-the language's framework. Probably `is_a` should fail on non-predicate
-contracts._
+```
+(flip(origin) -: Posn).x  // prints 0
+// (1 :: Posn)            // would be a run-time error
 
-When `struct` defines a new structure type, a contract can be
-associated with each field. The contract is checked when an instance
-is created.
+origin is_a Posn  // prints #true
+1 is_a Posn       // prints #false
+```
+
+_Since a binding operator or `::` as an expression gets an opportunity
+to adjust the value delivered to a variable, non-predicate contracts
+fit naturally into the annotation framework. Probably `is_a` should
+fail on non-predicate annotations._
+
+When `struct` defines a new structure type, an annotation can be
+associated with each field. When the annotation is written with `::`,
+then the annotation is checked when an instance is created.
 
 ```
 struct Posn(x :: Integer, y :: Integer)
@@ -584,11 +645,12 @@ Posn(1, 2)       // prints Posn(1, 2)
 // Posn(1, "2")  // would be a run-time error
 ```
 
-Naturally, structure-type contracts can be used as field contracts,
-and then the `.` operator can be chained in the expected way:
+Naturally, structure-type annotations can be used as field
+annotations, and then the `.` operator can be chained for efficient
+access:
 
 ```
-struct Line(p1 :: Posn, p2 :: Posn)
+struct Line(p1 -: Posn, p2 -: Posn)
 
 def l1 :: Line:
   Line(Posn(1, 2), Posn(3, 4))
@@ -596,18 +658,32 @@ def l1 :: Line:
 l1.p2.x  // prints 3
 ```
 
-More generally, the left-hand side of `.` needs to be an expression
-that can act as a _dot provider_. A structure-type name is a dot
+More generally, `.` access is efficient when the left-hand side of `.` is an
+expression that can act as a _dot provider_. A structure-type name is a dot
 provider, and it provides access to field-accessor functions, as in
 `Posn.x` (which doesn't get a specific `x`, but produces a function
 that can be called on a `Posn` instance to extract its `x` field). An
-identifier that is bound using `::` and a structure-type name is also a
+identifier that is bound using `-:` or `::` and a structure-type name is also a
 dot provider, and it provides access to fields of a structure instance.
-More generally, a contract that is associated to a binding or
-expression with `::` might make the binding or expression a dot
+More generally, an annotation that is associated to a binding or
+expression with `-:` or `::` might make the binding or expression a dot
 provider. See [a separate document](static-info.md) for more
 information on dot providers and other static information, but
 only after reading the rest of this document.
+
+The `use_static_dot` definition form binds the `.` operator so that it
+works only in efficient mode with a dot provider. If the left-hand
+side of the `.` is not a dot provider, then the `.` defined by
+`use_static_dot` reports a compile-time error. The `use_dynamic_dot`
+form binds `.` to the default `.`, which allows dynamic field lookup
+if the left-hand side is not a dot provider.
+
+```
+use_static_dot
+
+l1.p2.x  // prints 3
+// 1.x   // disallowed statically
+```
 
 _Using `.` to reach an imported binding, as in
 `f2c.fahrenheit_to_celsius`, is a different kind of `.` than the infix
@@ -617,8 +693,8 @@ expression operator. See the current
 
 ## Function expressions
 
-The `fun` form also works in a function position (as λ). Just
-like `function` in JavaScript, the expression variant omits a function
+The `fun` form works in an expression position as λ. Just like
+`function` in JavaScript, the expression variant omits a function
 name.
 
 ```
@@ -716,10 +792,6 @@ if 1 == 2:
  | "same"
  | "different"
 ```
-
-Shrubbery reminder: You can write a `:` after the test expression for
-`if`, but a `:` is not needed when the first indented line starts with
-`|`.
 
 Although an `if` could be nested further in the “else” branch to
 implement an “if” ... “else if” ... “else if” ... combination, the `cond`
@@ -1005,7 +1077,7 @@ A list is a “linked list,” in the sense that getting the _n_th element
 takes O(_n_) time, and adding to the front takes constant time. A list
 is immutable.
 
-`List` works as a contract with `::`:
+`List` works as an annotation with `-:` and `::`:
 
 ```
 fun:
@@ -1077,22 +1149,22 @@ groceries[2] // prints "milk"
 Indexing with `[` ... `]` is sensitive to binding-based static
 information in the same way as `.` For example, a function's argument
 can use a binding pattern that indicates a list of `Posn`s, and then
-`.` can be used after `[` ... `]` to access a fied of a `Posn`
+`.` can be used after `[` ... `]` to efficiently access a field of a `Posn`
 instance:
 
 ```
-fun nth_x([ps :: Posn, ...], n):
+fun nth_x([ps -: Posn, ...], n):
   ps[n].x
 
 nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
 ```
 
-An equivalent way to write `nth_x` is with the `List.of` contract
-constructor. It expects on contract that every element of the list
+An equivalent way to write `nth_x` is with the `List.of` annotation
+constructor. It expects an annotation that every element of the list
 must satisfy:
 
 ```
-fun nth_x(ps :: List.of(Posn), n):
+fun nth_x(ps -: List.of(Posn), n):
   ps[n].x
 ```
 
@@ -1123,8 +1195,8 @@ buckets[1] = 5  // prints 5
 buckets         // prints Array1, 5, 3, 4)
 ```
 
-`Array` is also a contract and a binding contructor, analogous to
-`List`, and `Array.of` is a contract constructor. The `Array` binding
+`Array` is also an annotation and a binding contructor, analogous to
+`List`, and `Array.of` is an annotation constructor. The `Array` binding
 and expression constructors do not support `...`.
 
 The `Map` constructor creates an immutable mapping of arbitrary keys
@@ -1163,7 +1235,7 @@ by `Map` uses `equal?` hashing if no keywords arguments are provided
 or if any non-keyword arguments are provided, otherwise it uses `eq?`
 hashing.
 
-`Map` is also a contract and a binding constructor. As a contract or
+`Map` is also an annotation and a binding constructor. As an annotation or
 binding constructor, `Map` refers to map values genercially, and not
 to a specific implementation. For example, a list can be passed to a
 function that expects a `Map` argument.
@@ -1177,11 +1249,11 @@ fun alice_home(Map('alice': p)): p
 alice_home(neighborhood)  // prints Posn(4, 5)
 ```
 
-The `Map.of` contract constructor takes two contracts, one for keys
+The `Map.of` annotation constructor takes two annottaions, one for keys
 and one for values:
 
 ```
-fun locale(who, neighborhood :: Map.of(Keyword, Posn)):
+fun locale(who, neighborhood -: Map.of(Keyword, Posn)):
   val p: neighborhood[who]
   p.x +$ ", " +$ p.y
 
@@ -1474,7 +1546,7 @@ both expression and definition transformers, etc. Adding a Rhombus
 syntax for that combination should be straightforward._
 
 
-## Binding and contract macros
+## Binding and annotation macros
 
 Macros can extend binding-position syntax, too, via `bind.macro`
 and `bind.operator`. In the simplest case, a binding operator is
@@ -1499,33 +1571,35 @@ separate document](binding-macros.md). After an expressive set of
 binding forms are implemented with the low-level interface, however,
 many others can be implemented though simple expansion.
 
-The `contract.macro` form is similar to `bind.macro`, but for
-contracts. 
+The `annotation.macro` form is similar to `bind.macro`, but for
+annotations. 
 
 ```
-contract.macro ?PosnList: ?List.of(Posn)
+use_static_dot
 
-fun nth_x(ps :: PosnList, n):
+annotation.macro ?PosnList: ?List.of(Posn)
+
+fun nth_x(ps -: PosnList, n):
   ps[n].x
 ```
 
-Details on the low-level contract protocol are also in [a separate
-document](contract-macros.md).
+Details on the low-level annotation protocol are also in [a separate
+document](annotation-macros.md).
 
-## Contracts versus binding patterns
+## Annotations versus binding patterns
 
-Contracts and binding patterns serve similar and interacting purposes.
-The `::` binding operator puts a contract to work in a binding. For
-the other direction, the `matching` contract operator puts a binding
-to work in a contract.
+Annotations and binding patterns serve similar and interacting purposes.
+The `-:` and `::` binding operators put annotations to work in a binding. For
+the other direction, the `matching` annotation operator puts a binding form
+to work in a annotation.
 
-For example, suppose you want a contract `PersonList`, which is a list
+For example, suppose you want a annotation `PersonList`, which is a list
 of maps, and each map must at least relate `"name"` to a `String` and
-`"location"` to a `Posn`. The `Map.of` contract combination cannot
+`"location"` to a `Posn`. The `Map.of` annotation combination cannot
 express a per-key specialization, but the `Map` binding pattern can.
 
 ```
-contract.macro ?PersonList: 
+annotation.macro ?PersonList: 
   ?(List.of(matching(Map('name': (_ :: String),
                          'location': (_ :: Posn)])))
 
@@ -1534,42 +1608,28 @@ val players :: PersonList:
    Map('name': "bob", 'location': Posn(3, 4))]
 ```
 
-As another example, here's how a `ListOf` contract constructor could be
+As another example, here's how a `ListOf` annotation constructor could be
 implemented if `List.of` did not exists already:
 
 ```
-contract.macro ?(ListOf (¿contract ...) ¿tail ...):
-  values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
+annotation.macro ?(ListOf (¿annotation ...) ¿tail ...):
+  values(?(matching([_ :: (¿annotation ...), ¿(? ...)])),
          tail)
 ```
 
-At a lower level, the bridge between binding patterns and contracts is
+At a lower level, the bridge between binding patterns and annotations is
 based on their shared use of [static information](static-info.md) as
-described in the [binding API](binding-macros.md) and the [contract
-API](contract-macros.md).
+described in the [binding API](binding-macros.md) and the [annotation
+API](annotation-macros.md).
 
 
 ## More
 [more]: #more
 
-Assuming that all contracts are checked, the type-like use of
-contracts and binding patterns will encourage programmers to create
-expensive run-time checks. For example, this `sum` runs in quadratic
-time:
+Annotation annotations could be supported in `export`.
 
-```
-fun:
- | sum([]): 0
- | sum([head :: Number, tail :: Number, ...]):
-    head + sum(tail)
-```
-
-An obvious strategy is to disable, either by default or at option, the
-run-time checking implied by contracts while keeping the static
-resolution of operations that contracts enables (especially for using
-`.`).
-
-Contract annotations also could be supported in `export`.
+For bug-finding purposes, it might make sense to have a
+`use_checked_assert` form that defines `-:` as `::`.
 
 The datatype support in this proposal is primitive. Some combination
 of Racket's `for` and Clojure's transducers is the next step.
@@ -1646,45 +1706,86 @@ that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
 some of them need to refer to each other.
 
-## Static information
+## Static information versus dynamic checking
+[static-dynamic]: #static-dynamic
+
+It's not obvious that a framework for static information falls within
+the mission of Rhombus. If the project is about pushing Racket-style
+language extensibility to new notations, that can be done while
+just changing `posn-x` to `Posn.x`, and so on.
+
+At the same time, static information interacts with notation choices,
+and potential effect on a language's idioms make it difficult to
+ignore. Resolving `.` to a static accessor is the most obvious
+example; writing `p.x` is nicer than `Posn.x(p)`. Similarly, it's nice
+to use `[` ... `]` for generic index-based lookups and, when useful,
+separately indicate what kind of lookup is involved: array, list, etc.
+These static choices can be implemented as dynamic mechanisms plus a
+sufficiently clever compiler, but Racket is better positioned through
+its macro system for dealing with static information.
+
+We know from experience in Typed Racket that the boundary between
+static and dynamic enforcement is itself fraught with performance
+pitfalls. The inclusion of both `-:` and `::` is an attempt to
+navigate that space. We know, in particular, that the way that `::`
+annotations look like types can encourage programmers to create
+expensive run-time checks. For example, this `sum` runs in quadratic
+time:
+
+```
+fun:
+ | sum([]): 0
+ | sum([head :: Number, tail :: Number, ...]):
+    head + sum(tail)
+```
+
+Encouraging `-:` over `::` is an attempt to avoid this problem.
+Removing `::` or changing it to be `-:` would avoid the problem more
+reliably, but dynamic checking is sometimes needed. For example, it's
+appropriate to check all arguments to a library function before
+enterting the function body, and `::` is a better way to write that
+compared to explicit checks in the function body. Also, a predicate
+triggered by `::` interacts well with `match` dispatch. The current
+bet in this proposal is that programmers can learn the difference
+between `-:` and `::` and use each effectively.
+
+Static information can be used to enable things like `.` for efficient
+access, but it can also be used to statically reject programs that
+would otherwise be allowed. The choices in this proposal shy away from
+that direction (which, in the limit, is a type system), but not
+rigidly. Continuing `.` as the key example, a `.` is normally allowed
+with a left-hand side that has no static information, in which case it
+becomes a dynamic field lookup, but using `use_static_dot` opts in to
+a syntactic prohibition against dynamic lookup. Static information
+might similarly be used to reject programs that directly apply a
+function with the wrong number of arguments or wrong keywords, but
+if so, that should also be opt-in.
+
+## Propagating static information
 [static-information]: #static-information
 
-The rules for propagating static information—used, for example, for to
-resolve a `.` field access—are reminiscent of type rules in Turnstile
-(Chang et al.). At the level of binding operators, there is
-“downward”-flowing information from a context, and there is “upward”
-information that originates from binding operators. For expressions,
-the only “downward” mechanism is binding, and otherwise static
-information flows “upward” from subexpressions. By convention, static
-information does not flow “upward” out of blocks.
+The rules for propagating static information are reminiscent of type
+rules in Turnstile (Chang et al.). At the level of binding operators,
+there is “downward”-flowing information from a context, and there is
+“upward” information that originates from binding operators. For
+expressions, the only “downward” mechanism is binding, and otherwise
+static information flows “upward” from subexpressions. By convention,
+static information does not flow “upward” out of blocks.
 
-A primary goal of static information is to make `.` notation
-reasonably convenient but statically resolved, where static resolution
-keeps `.` uses as efficient as Racket-style accessors for structure
-instances. Static information is not specifically tied to `.`,
-however, and `.` itself is not tied to structures. The general system
-of static information can support other, similar uses, both for `.`
-and for other forms.
-
-Static information does not make Rhombus statically typed, but static
-information does constrain programs syntactically. For example, a `.`
-expression operator can only be used when the left-hand side resolves
-the meaning of the `.`. It will probably also make sense to use static
-information for function bindings to reject programs that directly
-apply a function with the wrong number of arguments or wrong keywords.
-
-Rhombus is an extensible language, and extensions are free to create
-an use static information as they see fit. However, since extensions
-need to cooperate, and since arbitrary static-information flows (say,
-toward a sound type system with inference) would make that cooperation
-complex, this proposal defines some relatively simple rules and
-conventions that are hopefully effective without being surprising to
-programmers or onerous to language extensions. The convention about
-not propagating information from blocks, for example, is easy to
-reason about syntactically and avoids a swath of semantic questions
-(such as how to unify results from branches of an `if` or `match`) and
-expansion-order problems (such as needing to expand the body of a
-function to get static information for use at call sites).
+Rhombus macro extensions are free to create and use static information
+as they see fit. However, since extensions need to cooperate, and
+since arbitrary static-information flows (say, toward a sound type
+system with inference) would make that cooperation complex, this
+proposal defines some relatively simple rules and conventions that are
+hopefully effective without being surprising to programmers or onerous
+to language extensions. The convention about not propagating
+information from blocks, for example, is easy to reason about
+syntactically and avoids a swath of semantic questions (such as how to
+unify results from branches of an `if` or `match`) and expansion-order
+problems (such as needing to expand the body of a function to get
+static information for use at call sites). If the rules work well
+enough to make static `.` convenient, then hopefully they work well in
+general.
 
 The `val` rule is a special case, in that it takes static information
 from its right-hand side, which is in a block, and propagates it
@@ -1695,7 +1796,7 @@ an example like
 val origin: Point(0, 0)
 ```
 
-would need an extra `:: Point` in the middle to make `origin.x` and
+would need an extra `-: Point` in the middle to make `origin.x` and
 `origin.y` work, and that would look silly. More generally, the idea
 is that it should be possible to give a name to the result of an
 expression without losing static information that the expression
@@ -1709,7 +1810,9 @@ seen when the definition of `v` is being parsed, but parsing for `val
 v` forces parsing of `p.x`:
 
 ````
-fun f(p :: Number):
+use_static_dot
+
+fun f(p -: Number):
   val v: p.x
   val p: Posn(5, 6)
   v
@@ -1726,13 +1829,6 @@ the likelihood of surprises due to parse ordering, early expansion of
 a `val` right-hand side is constrained to the cases where a `val` form
 has a block with a single group and the group does not start with a
 name that implements a definition form.
-
-This type-like-without-being-types approach to static information has
-precedents in Lisp implementations, Smalltalk implementations,
-TypeScript, and probably other systems that might be described as
-gradually typed. The [protocol](binding-macros.md) that allows binding
-forms to propagate static information “upward” and “downward” is like
-a bidirectional type system.
 
 ## Multiple values
 
@@ -1762,7 +1858,7 @@ in patterns and templates confuses many newcomers. Unification with
 
 ## Datatypes and genericity
 
-The `List` and `Array` contracts refer to implementations, while `Map`
+The `List` and `Array` annotations refer to implementations, while `Map`
 refers to an abstraction. The intent is that generic code uses `Map`,
 not specifying an implementation of the map, in the same way that `[`
 ... `]` indexing is generic. At the same time, `Map` as a constructor
@@ -1780,10 +1876,10 @@ Racket programmer would. Maybe there should be a `map` form, as in
 map Person('name' :: String, 'location' :: Posn)
 ```
 
-to serve as a shorthand for `contract.macro` plus `fun`:
+to serve as a shorthand for `annotation.macro` plus `fun`:
 
 ```
-contract.macro ?Person:
+annotation.macro ?Person:
   ?Map.of('name': String, 'location': Posn)
 
 fun Person('name': n :: String, 'location': l :: Posn):

@@ -61,13 +61,13 @@ Static information is associated to a binding through a binding
 operator/macro, and it can be associated to an expression through a
 binding or through an expression operator/macro that adds static
 information to its parsed form (i.e., expansion). For example, the
-`::` operator associates static information through a contract. A
-contract pairs a predicate with a set of static information to
-associate with any variable that is bound with the contract. That's
-why a binding `p :: Posn` makes every `p` a dot provider: the contract
-`Posn` indicates that every binding with the contract gets a dot
+`::` operator associates static information through an annotation. An
+annotation pairs a predicate with a set of static information to
+associate with any variable that is bound with the annotation. That's
+why a binding `p :: Posn` makes every `p` a dot provider: the annotation
+`Posn` indicates that every binding with the annotation gets a dot
 provider to access `x` and `y`. When `::` is used in an expression,
-then static information indicated by the contract is similarly
+then static information indicated by the annotation is similarly
 associated with the overall `::` expression, which is why `(e ::
 Posn)` is a dot provider for any expression `e`. Function-call forms
 and map-reference forms similarly attach static information to
@@ -80,7 +80,7 @@ of being called directly as a constructor), then the function
 ultimately receives a value and knows nothing of the expression that
 generated the value. That is, no part of the function's implementation
 can take advantage of the fact that directly calling `Posn` would have
-formed a dot provider. The function might have an contract on its
+formed a dot provider. The function might have an annotation on its
 argument that indicates a dot-provider constructor, but that's a
 feature of the formal argument, and not of an actual value.
 
@@ -140,31 +140,31 @@ types:
  * A structure-type name bound by `struct` is a dot provider. It
    provides field-accessor functions, as in `Posn.x`.
 
- * As a contract, a structure-type name makes any binding or
-   expression using the contract a dot provider. A structure type name
+ * As an annotation, a structure-type name makes any binding or
+   expression using the annotation a dot provider. A structure type name
    followed by `.of` has the same effect; in addition, it associates
-   any information implied by the argument contracts as static
+   any information implied by the argument annotations as static
    information for fields accessed from the binding or exression
    through a dot. For example, assuming a `struct Rect(top_left,
    side)` declaration, `r :: Rect.of(Posn, Integer)` causes
    `r.top_left` to have `Posn` information, with means that
    `r.top_left.x` works.
 
- * When a structure-type field has a contract, then that contract's
+ * When a structure-type field has an annotation, then that annotation's
    static information is associated with a field accessed through `.`.
    In the `Line` example, the `p2` field of `Line` has a `Posn`
-   contract, so a `l1 :: Line` binding means that `l1.p2` is a dot
+   annotation, so a `l1 :: Line` binding means that `l1.p2` is a dot
    provider to access `x` and `y`.
 
- * When a structure-type field has a contract, then that contract's
+ * When a structure-type field has an annotation, then that annotation's
    static information is associated as result information for a field
    accessor accessed through `.`. For example, `Line.p1` gets the
-   `Posn` contract's static information as its call-result
+   `Posn` annotation's static information as its call-result
    information, so `Line.p1(e)` has that information, which means that
    `Line.p1(e)` is a dot provider.
 
- * When a structure-type field has a contract, and when the structure
-   type is used as a pattern form in a binding, then the contract's
+ * When a structure-type field has an annotation, and when the structure
+   type is used as a pattern form in a binding, then the annotation's
    static information is associated with the argument pattern. For
    example, `Line(p1, p2)` as a binding pattern associates `Posn`
    information to `p1` and to `p2`, which means that they're dot
@@ -176,8 +176,8 @@ types:
    that information is propoagated as “downward” information to the
    corersponding binding subpattern. For example, if `Rect(tl, s)` as
    a binding receives “downward” information that associates (the
-   internal key for) `Rect.top_left` to `Posn`-contract information,
-   then the binding form `tl` receives `Posn`-contract information.
+   internal key for) `Rect.top_left` to `Posn`-annotation information,
+   then the binding form `tl` receives `Posn`-annotation information.
 
 More rules about static information in general:
 
@@ -189,8 +189,8 @@ More rules about static information in general:
    information. For example, since `Line.p1` has result information
    that describes a dot provider, `Line.p1(e)` is a dot provider.
 
- * When a `fun` defintition form includes a result contract, then the
-   contract's information is associated to the defined function name
+ * When a `fun` defintition form includes a result annotation, then the
+   annotation's information is associated to the defined function name
    as call-result information. For example, if a function defintion
    starts `fun flip(x) :: Posn`, then `Posn` static information is
    associated to `flip` as result information, so `flip(x)` is a dot
@@ -213,28 +213,28 @@ after a binding subpattern, the “upward” static information of the
 subpattern for each identifier wrapped as reference-result information
 for the identifier outside the list pattern, since each; for example
 `[p :: Posn, ...]` as a binding pattern causes `p` to have static
-information that says its reference result as `Posn`-contract
-information. The `List.of`, `Array.of`, and `Map.of` contract forms in
-bindings propagate “downward“ reference-result information to nsted
-contracts. “Downward” static information is used by `List` or `[` ...
+information that says its reference result as `Posn`-annotation
+information. The `List.of`, `Array.of`, and `Map.of` annotation forms in
+bindings propagate “downward“ reference-result information to nested
+annotations. “Downward” static information is used by `List` or `[` ...
 `]` pattern constructions only in the case that there's a single
 element binding pattern followed by `...`, while `Array` and `Map` as
 pattern constructors cannot use “downward” information.
 
-The `::` binding form and the `matching` contract form allow static
+The `::` binding form and the `matching` annotation form allow static
 information to flow both “downward” and “upward” through both
-contracts and binding patterns.
+annotations and binding patterns.
 
 ## Binding patterns and static information
 
 See [the low-level binding API](binding-macros.md) for information on
 how binding macros receive and produce static information. A
-Turnstile-like sets of forms should be built on top of that low-level
+Turnstile-like set of forms should be built on top of that low-level
 API.
 
-## Contracts and static information
+## Annotations and static information
 
-See [the low-level contract API](contract-macros.md) for information on
-how contract macros receive and produce static information. A
+See [the low-level annotation API](annotation-macros.md) for information on
+how annotation macros receive and produce static information. A
 Turnstile-like sets of forms should be built on top of that low-level
 API, too.

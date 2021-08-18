@@ -1,22 +1,22 @@
-# Contracts
+# Annotations
 
-Contracts produce [static information](static-info.md) when used with
+Annotations produce [static information](static-info.md) when used with
 the `::` binding or expression operator. Similar to binding macros,
-which can either be simple expansions or use lower-level machines, a
-contract macro can use lower-level machinery to explicitly produce
+which can either be simple expansions or use lower-level machines, an
+annotation macro can use lower-level machinery to explicitly produce
 static information or manipulate static information produced by
-subcontract forms.
+subannotation forms.
 
-The `contract.macro` form defines a contract. In the simplest case,
-the expansion of a contract can be another contract:
+The `annotation.macro` form defines an annotation. In the simplest case,
+the expansion of an annotation can be another annotation:
 
 ```
-contract.macro ?AlsoPosn: ?Posn
+annotation.macro ?AlsoPosn: ?Posn
 
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
 ```
 
-Note that `contract.macro` defines only a contract. To make `AlsoPosn`
+Note that `annotation.macro` defines only an annotation. To make `AlsoPosn`
 also a binding operator, use `bind.macro`, and so on:
 
 ```
@@ -27,38 +27,38 @@ def AlsoPosn(x, y): Posn(1, 2)
 x  // prints 1
 ```
 
-To define a contract with explicit control over the associated
-predicate, use `contract_ct.pack_predicate`. This implementation if
+To define an annotation with explicit control over the associated
+predicate, use `annotation_ct.pack_predicate`. This implementation if
 `IsPosn` creates a new predicate that uses `is_a` with `Posn`, so it
 checks whether something is a `Posn` instance, but it doesn't act as a
 `Posn`-like binding form or constructor:
 
 ```
-contract.macro ?IsPosn:
-  contract_ct.pack_predicate(?(fun (x): x is_a Posn))
+annotation.macro ?IsPosn:
+  annotation_ct.pack_predicate(?(fun (x): x is_a Posn))
 
 fun get_x(p :: IsPosn): Posn.x(p)
 get_x(Posn(1, 2)) // prints 1
 // get_x(10)      // would be a run-time error
 ```
 
-The `contract_ct.pack_predicate` takes an optional second argument,
-which is static information to associate with uses of the contract.
+The `annotation_ct.pack_predicate` takes an optional second argument,
+which is static information to associate with uses of the annotation.
 Static information (the second argument to
-`contract_ct.pack_predicate`) is a a parenthesized sequence of
+`annotation_ct.pack_predicate`) is a a parenthesized sequence of
 parenthesized two-group elements, where the first group in each
 element is a key and the second element is a value.
 
 A value for `dot_ct.provider_key` should be a syntax object naming a
-dot-provider transformer. So, if we want to define a `Vector` contract
+dot-provider transformer. So, if we want to define a `Vector` annotation
 that is another view on `Posn` where the ”fields” are `angle` and
-`magnitude` instead of `x` and `y`, we start with a contract
+`magnitude` instead of `x` and `y`, we start with an annotation
 definition that refers to a `vector_dot_provider` that we will define:
 
 ```
-contract.macro ?Vector:
-  contract_ct.pack_predicate(?(fun (x): x is_a Posn),
-                             ?((¿(dot_ct.provider_key), vector_dot_provider)))
+annotation.macro ?Vector:
+  annotation_ct.pack_predicate(?(fun (x): x is_a Posn),
+                               ?((¿(dot_ct.provider_key), vector_dot_provider)))
 ```
 
 A dot-provider transformer is defined using `dot.macro`. A
@@ -110,13 +110,13 @@ and instead claims that it will always work as a `Vector`.
 If a name is otherwise bound but has no static information associated
 with the binding, the `static_info.macro` form can associate static
 information. In the following example, `zero` is defined without a
-result contract, but `static_info.macro` is used to associate static
+result annotation, but `static_info.macro` is used to associate static
 information to `zero` using `expr_ct.call_result_key`. The value for
 `expr_ct.call_result_key` should be static information itself, so we
 use `static_info_ct.pack` to pack it from a syntax-object
 representation.
 
-_The `static_info_ct.wrap` and `contract_ct.pack_predicate` functions
+_The `static_info_ct.wrap` and `annotation_ct.pack_predicate` functions
 automatically pack for you, because they expect a syntax object that
 represents static information. The overall right-hand side result for
 `static_info.macro` is similarly automatically packed._
