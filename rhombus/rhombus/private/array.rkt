@@ -3,7 +3,7 @@
                      syntax/parse
                      syntax/stx)
          "binding.rkt"
-         (submod "contract.rkt" for-struct)
+         (submod "annotation.rkt" for-struct)
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
@@ -11,20 +11,20 @@
 
 (provide Array
          (for-space rhombus/binding Array)
-         (for-space rhombus/contract Array)
+         (for-space rhombus/annotation Array)
          (for-space rhombus/static-info Array))
 
 (define Array vector)
 
-(define-contract-syntax Array
-  (contract-constructor #'Array #'vector? #'((#%map-ref vector-ref)
-                                             (#%map-set! vector-set!))
-                        1
-                        (lambda (arg-id predicate-stxs)
-                          #`(for/and ([e (in-vector #,arg-id)])
-                              (#,(car predicate-stxs) e)))
-                        (lambda (static-infoss)
-                          #`((#%ref-result #,(car static-infoss))))))
+(define-annotation-syntax Array
+  (annotation-constructor #'Array #'vector? #'((#%map-ref vector-ref)
+                                               (#%map-set! vector-set!))
+                          1
+                          (lambda (arg-id predicate-stxs)
+                            #`(for/and ([e (in-vector #,arg-id)])
+                                (#,(car predicate-stxs) e)))
+                          (lambda (static-infoss)
+                            #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax Array
   (#%call-result ((#%map-ref vector-ref)

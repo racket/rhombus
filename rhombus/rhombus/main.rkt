@@ -30,7 +30,7 @@
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"
         "private/operator.rkt"
-        "private/contract.rkt"
+        "private/annotation.rkt"
         "private/list.rkt"
         "private/array.rkt"
         "private/map.rkt"
@@ -41,7 +41,7 @@
         "private/quasiquote.rkt"
         "private/keyword.rkt"
         "private/values.rkt"
-        "private/contract-syntax.rkt"
+        "private/annotation-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt")
 

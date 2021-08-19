@@ -19,6 +19,7 @@
          "parse.rkt")
 
 (provide ::
+         -:
          is_a
          matching
 
@@ -28,87 +29,94 @@
          String
          Keyword
 
-         (for-space rhombus/contract #%tuple))
+         (for-space rhombus/annotation #%tuple))
 
 (module+ for-struct
   (begin-for-syntax
-    (provide (property-out contract-prefix-operator)
-             (property-out contract-infix-operator)
+    (provide (property-out annotation-prefix-operator)
+             (property-out annotation-infix-operator)
 
-             identifier-contract
-             contract-constructor
+             identifier-annotation
+             annotation-constructor
              
-             in-contract-space
+             in-annotation-space
 
-             check-contract-result
+             check-annotation-result
 
-             :contract
-             :contract-form
-             :inline-contract
+             :annotation
+             :annotation-form
+             :inline-annotation
 
-             contract-form))
+             annotation-form))
   
-  (provide define-contract-syntax))
+  (provide define-annotation-syntax))
 
 (begin-for-syntax
-  (property contract-prefix-operator prefix-operator)
-  (property contract-infix-operator infix-operator)
+  (property annotation-prefix-operator prefix-operator)
+  (property annotation-infix-operator infix-operator)
 
-  (property contract (predicate-stx static-infos))
+  (property annotation (predicate-stx static-infos))
 
-  (define in-contract-space (make-interned-syntax-introducer 'rhombus/contract))
+  (define in-annotation-space (make-interned-syntax-introducer 'rhombus/annotation))
 
-  (define (raise-not-a-contract id)
+  (define (raise-not-a-annotation id)
     (raise-syntax-error #f
-                        "not bound as a contract"
+                        "not bound as a annotation"
                         id))
 
-  (define (check-contract-result stx proc)
+  (define (check-annotation-result stx proc)
     (unless (and (syntax? stx)
                  (let ([l (syntax->list stx)])
                    (and l
                         (= (length l) 2))))
       (raise-result-error (proc-name proc)
-                          "contract-syntax?"
+                          "annotation-syntax?"
                           stx))
     stx)
 
   (define-enforest
-    #:enforest enforest-contract
-    #:syntax-class :contract
-    #:infix-more-syntax-class :contract-infix-op+form+tail
-    #:desc "contract"
-    #:operator-desc "contract operator"
-    #:in-space in-contract-space
+    #:enforest enforest-annotation
+    #:syntax-class :annotation
+    #:infix-more-syntax-class :annotation-infix-op+form+tail
+    #:desc "annotation"
+    #:operator-desc "annotation operator"
+    #:in-space in-annotation-space
     #:name-path-op name-path-op
-    #:prefix-operator-ref contract-prefix-operator-ref
-    #:infix-operator-ref contract-infix-operator-ref
-    #:check-result check-contract-result
-    #:make-identifier-form raise-not-a-contract)
+    #:prefix-operator-ref annotation-prefix-operator-ref
+    #:infix-operator-ref annotation-infix-operator-ref
+    #:check-result check-annotation-result
+    #:make-identifier-form raise-not-a-annotation)
 
-  (define-syntax-class :contract-seq
+  (define-syntax-class :annotation-seq
     (pattern stxes
-             #:with c::contract-infix-op+form+tail #'(:: . stxes)
+             #:with c::annotation-infix-op+form+tail #'(:: . stxes)
              #:attr parsed #'c.parsed
              #:attr tail #'c.tail))
 
 
-  (define-splicing-syntax-class :inline-contract
+  (define-splicing-syntax-class :inline-annotation
     #:datum-literals (op)
-    #:literals (::)
+    #:literals (:: -:)
     (pattern (~seq (op ::) ctc ...)
-             #:with c::contract #'(group ctc ...)
-             #:attr parsed #'c.parsed))
+             #:with c::annotation #'(group ctc ...)
+             #:with c-parsed::annotation-form #'c.parsed
+             #:attr predicate #'c-parsed.predicate
+             #:attr static-infos #'c-parsed.static-infos)
+    (pattern (~seq (op -:) ctc ...)
+             #:with c::annotation #'(group ctc ...)
+             #:with c-parsed::annotation-form #'c.parsed
+             #:attr predicate #'#f
+             #:attr static-infos #'c-parsed.static-infos))
 
-  (define-syntax-class :contract-form
+  (define-syntax-class :annotation-form
     (pattern (predicate static-infos)))
 
-  (define (contract-form predicate static-infos)
+  (define (annotation-form predicate static-infos)
     #`(#,predicate #,static-infos))
   
-  (define (identifier-contract name predicate-stx static-infos)
+  (define (identifier-annotation name predicate-stx static-infos)
     (define packed #`(#,predicate-stx #,static-infos))
-    (contract-prefix-operator
+    (annotation-prefix-operator
      name
      '((default . stronger))
      'macro
@@ -117,9 +125,9 @@
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
 
-  (define (contract-constructor name predicate-stx static-infos
+  (define (annotation-constructor name predicate-stx static-infos
                                 sub-n predicate-maker info-maker)
-    (contract-prefix-operator
+    (annotation-prefix-operator
      name
      '((default . stronger))
      'macro
@@ -130,89 +138,99 @@
           (define gs (syntax->list #'(g ...)))
           (unless (= (length gs) sub-n)
             (raise-syntax-error #f
-                                "wrong number of subcontracts in parentheses"
+                                "wrong number of subannotations in parentheses"
                                 #'form-id
                                 #f
                                 (list #'tag)))
           (define c-parseds (for/list ([g (in-list gs)])
                               (syntax-parse g
-                                [c::contract #'c.parsed])))
+                                [c::annotation #'c.parsed])))
           (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
                                  (syntax-parse c-parsed
-                                   [c::contract-form #'c.predicate])))
+                                   [c::annotation-form #'c.predicate])))
           (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
                                     (syntax-parse c-parsed
-                                      [c::contract-form #'c.static-infos])))
-          (values (contract-form #`(lambda (v)
+                                      [c::annotation-form #'c.static-infos])))
+          (values (annotation-form #`(lambda (v)
                                      (and (#,predicate-stx v)
                                           #,(predicate-maker #'v c-predicates)))
                                  #`(#,@(info-maker c-static-infoss)
                                     . #,static-infos))
                   #'tail)]
          [(_ . tail)
-          (values (contract-form predicate-stx
+          (values (annotation-form predicate-stx
                                  static-infos)
                   #'tail)])))))
 
-(define-syntax ::
+(define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator
-   #'::
+   name
    '((default . weaker))
    'macro
    'none
    ;; expression
    (lambda (form tail)
      (syntax-parse tail
-       [(op . t::contract-seq)
-        #:with c-parsed::contract-form #'t.parsed
+       [(op . t::annotation-seq)
+        #:with c-parsed::annotation-form #'t.parsed
         (values
          (wrap-static-info*
-          #`(let ([val #,form])
-              (if (c-parsed.predicate val)
-                  val
-                  (raise-contract-failure val 't.parsed)))
+          (if checked?
+              #`(let ([val #,form])
+                  (if (c-parsed.predicate val)
+                      val
+                      (raise-annotation-failure val 't.parsed)))
+              form)
           #'c-parsed.static-infos)
          #'t.tail)]))
    ;; binding
    (lambda (form tail)
      (syntax-parse tail
-       [(op . t::contract-seq)
-        #:with c-parsed::contract-form #'t.parsed
+       [(op . t::annotation-seq)
+        #:with c-parsed::annotation-form #'t.parsed
         #:with left::binding-form form
         (values
          (binding-form
-          #'contract-infoer
-          #'(c-parsed.predicate
+          #'annotation-infoer
+          #`(#,(and checked? #'c-parsed.predicate)
              c-parsed.static-infos
              left.infoer-id
              left.data))
          #'t.tail)]))))
 
+(define-syntax ::
+  (make-annotation-apply-operator #':: #t))
+
+(define-syntax -:
+  (make-annotation-apply-operator #'-: #f))
+
 (define-syntax is_a
   (expression-infix-operator
-   #'::
+   #'is_a
    '((default . weaker))
    'macro
    (lambda (form tail)
      (syntax-parse tail
-       [(op . t::contract-seq)
-        #:with c-parsed::contract-form #'t.parsed
+       [(op . t::annotation-seq)
+        #:with c-parsed::annotation-form #'t.parsed
         (values
          #`(c-parsed.predicate #,form)
          #'t.tail)]))
    'none))
 
-(define-syntax (contract-infoer stx)
+(define-syntax (annotation-infoer stx)
   (syntax-parse stx
     [(_ static-infos (predicate (static-info ...) left-infoer-id left-data))
      #:with left-impl::binding-impl #'(left-infoer-id (static-info ... . static-infos) left-data)
      #:with left::binding-info #'left-impl.info
-     (binding-info #'left.name-id
-                   #'left.static-infos
-                   #'left.bind-infos
-                   #'check-predicate-matcher
-                   #'bind-nothing-new
-                   #'(predicate left.matcher-id left.binder-id left.data))]))
+     (if (syntax-e #'predicate)
+         (binding-info #'left.name-id
+                       #'left.static-infos
+                       #'left.bind-infos
+                       #'check-predicate-matcher
+                       #'bind-nothing-new
+                       #'(predicate left.matcher-id left.binder-id left.data))
+         #'left)]))
 
 (define-syntax (check-predicate-matcher stx)
   (syntax-parse stx
@@ -231,28 +249,28 @@
     [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
      #'(left-binder-id arg-id left-data)]))
 
-(define-syntax Any (identifier-contract #'Any #'(lambda (x) #t) #'()))
-(define-syntax Integer (identifier-contract #'Integer #'exact-integer? #'()))
-(define-syntax Number (identifier-contract #'Number #'number? #'()))
-(define-syntax String (identifier-contract #'String #'string? #'()))
-(define-syntax Keyword (identifier-contract #'Keyword #'keyword? #'()))
+(define-syntax Any (identifier-annotation #'Any #'(lambda (x) #t) #'()))
+(define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
+(define-syntax Number (identifier-annotation #'Number #'number? #'()))
+(define-syntax String (identifier-annotation #'String #'string? #'()))
+(define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
 
-(define-syntax (define-contract-syntax stx)
+(define-syntax (define-annotation-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
-     #`(define-syntax #,(in-contract-space #'id)
+     #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
 
-(define (raise-contract-failure val ctc)
+(define (raise-annotation-failure val ctc)
   (error '::
-         (string-append "value does not match contract\n"
+         (string-append "value does not match annotation\n"
                         "  argument: ~v\n"
-                        "  contract: ~s")
+                        "  annotation: ~s")
          val
          ctc))
 
 (define-syntax matching
-  (contract-prefix-operator
+  (annotation-prefix-operator
    #'matching
    '((default . stronger))
    'macro
@@ -276,8 +294,8 @@
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
 
-(define-contract-syntax #%tuple
-  (contract-prefix-operator
+(define-annotation-syntax #%tuple
+  (annotation-prefix-operator
    #'%tuple
    '((default . stronger))
    'macro
@@ -287,9 +305,9 @@
         (let ([args (syntax->list #'args)])
           (cond
             [(null? args)
-             (raise-syntax-error #f "empty contract" #'head)]
+             (raise-syntax-error #f "empty annotation" #'head)]
             [(pair? (cdr args))
-             (raise-syntax-error #f "too many contracts" #'head)]
+             (raise-syntax-error #f "too many annotations" #'head)]
             [else
              (syntax-parse (car args)
-               [c::contract (values #'c.parsed #'tail)])]))]))))
+               [c::annotation (values #'c.parsed #'tail)])]))]))))

@@ -6,7 +6,7 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
-         (submod "contract.rkt" for-struct)
+         (submod "annotation.rkt" for-struct)
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
@@ -19,7 +19,7 @@
          (for-space rhombus/binding cons)
 
          List
-         (for-space rhombus/contract List)
+         (for-space rhombus/annotation List)
          (for-space rhombus/static-info List))
 
 (module+ for-binding
@@ -51,14 +51,14 @@
        [(form-id ((~and tag (~datum parens)) arg ...) . tail)
         (parse-list-binding stx)]))))
 
-(define-contract-syntax List
-  (contract-constructor #'List #'list? #'((#%map-ref list-ref))
-                        1
-                        (lambda (arg-id predicate-stxs)
-                          #`(for/and ([e (in-list #,arg-id)])
-                              (#,(car predicate-stxs) e)))
-                        (lambda (static-infoss)
-                          #`((#%ref-result #,(car static-infoss))))))
+(define-annotation-syntax List
+  (annotation-constructor #'List #'list? #'((#%map-ref list-ref))
+                          1
+                          (lambda (arg-id predicate-stxs)
+                            #`(for/and ([e (in-list #,arg-id)])
+                                (#,(car predicate-stxs) e)))
+                          (lambda (static-infoss)
+                            #`((#%ref-result #,(car static-infoss))))))
 
 (define-static-info-syntax List
   (#%call-result ((#%map-ref list-ref))))

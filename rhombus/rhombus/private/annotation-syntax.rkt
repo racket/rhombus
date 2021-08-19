@@ -6,65 +6,65 @@
                      "tail.rkt"
                      "static-info-pack.rkt")
          "definition.rkt"
-         (submod "contract.rkt" for-struct)
+         (submod "annotation.rkt" for-struct)
          "syntax.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")
          "parse.rkt")
 
-(provide (rename-out [rhombus-contract contract])
-         (for-syntax contract_ct))
+(provide annotation
+         (for-syntax annotation_ct))
 
-(define-syntax rhombus-contract
+(define-syntax annotation
   (simple-name-root macro))
 
 (begin-for-syntax
-  (define-syntax contract_ct
+  (define-syntax annotation_ct
     (simple-name-root pack_predicate)))
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro
-                                        in-contract-space
-                                        #'make-contract-prefix-operator
-                                        #'make-contract-infix-operator
-                                        #'contract-prefix+infix-operator))
+                                        in-annotation-space
+                                        #'make-annotation-prefix-operator
+                                        #'make-annotation-infix-operator
+                                        #'annotation-prefix+infix-operator))
 
 (begin-for-syntax
-  (struct contract-prefix+infix-operator (prefix infix)
-    #:property prop:contract-prefix-operator (lambda (self) (contract-prefix+infix-operator-prefix self))
-    #:property prop:contract-infix-operator (lambda (self) (contract-prefix+infix-operator-infix self))))
+  (struct annotation-prefix+infix-operator (prefix infix)
+    #:property prop:annotation-prefix-operator (lambda (self) (annotation-prefix+infix-operator-prefix self))
+    #:property prop:annotation-infix-operator (lambda (self) (annotation-prefix+infix-operator-infix self))))
 
-(define-for-syntax (parse-contract-macro-result form proc)
+(define-for-syntax (parse-annotation-macro-result form proc)
   (unless (syntax? form)
     (raise-result-error (proc-name proc) "syntax?" form))
   (syntax-parse #`(group #,form)
-    [c::contract #'c.parsed]))
+    [c::annotation #'c.parsed]))
 
-(define-for-syntax (make-contract-infix-operator name prec protocol proc assc)
-  (contract-infix-operator
+(define-for-syntax (make-annotation-infix-operator name prec protocol proc assc)
+  (annotation-infix-operator
    name
    prec
    protocol
    (lambda (form1 tail)
      (define-values (form new-tail) (syntax-parse tail
                                       [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
-     (check-transformer-result (parse-contract-macro-result form proc)
+     (check-transformer-result (parse-annotation-macro-result form proc)
                                (unpack-tail new-tail proc)
                                proc))
    assc))
 
-(define-for-syntax (make-contract-prefix-operator name prec protocol proc)
-  (contract-prefix-operator
+(define-for-syntax (make-annotation-prefix-operator name prec protocol proc)
+  (annotation-prefix-operator
    name
    prec
    protocol
    (lambda (tail)
      (define-values (form new-tail) (syntax-parse tail
                                       [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-transformer-result (parse-contract-macro-result form proc)
+     (check-transformer-result (parse-annotation-macro-result form proc)
                                (unpack-tail new-tail proc)
                                proc))))
   
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
-  #`(parsed #,(contract-form #`(rhombus-expression (group #,predicate))
-                             (pack-static-infos static-infos 'contract.pack_predicate))))
+  #`(parsed #,(annotation-form #`(rhombus-expression (group #,predicate))
+                               (pack-static-infos static-infos 'annotation.pack_predicate))))

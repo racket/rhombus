@@ -35,7 +35,7 @@
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
        [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
-                                                     ret::ret-contract
+                                                     ret::ret-annotation
                                                      (~and rhs (block body ...))))
                                        ...+))
         (define ids (syntax->list #'(id ...)))
@@ -51,7 +51,7 @@
                                      #'(rhs ...)
                                      #'form-id #'alts-tag))))]
        [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
-                 ret::ret-contract
+                 ret::ret-annotation
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (list
