@@ -1,7 +1,8 @@
 #lang racket/base
 (require racket/pretty
          "lex.rkt"
-         "srcloc.rkt")
+         "srcloc.rkt"
+         (submod "print.rkt" for-parse))
 
 (provide parse-all)
 
@@ -760,33 +761,6 @@
               stx))
         (cdr l)))
 
-(define (syntax-to-raw g)
-  (let loop ([g g] [tail null] [use-prefix? #f])
-    (cond
-      [(null? g) tail]
-      [(pair? g)
-       (define a-stx (car g))
-       (define post (syntax-property a-stx 'raw-tail))
-       (define a (loop a-stx null use-prefix?))
-       (define d (loop (cdr g)
-                       (if post
-                           (if (null? tail)
-                               post
-                               (cons tail post))
-                           tail)
-                       #t))
-       (if (null? a) d (cons a d))]
-      [(syntax? g)
-       (define pre (and use-prefix?
-                        (syntax-property g 'raw-prefix)))
-       (define r (syntax-property g 'raw))
-       (define raw (if (and pre r)
-                       (cons pre r)
-                       (or pre r null)))
-       (define d (loop (syntax-e g) tail use-prefix?))
-       (if (null? raw) d (cons raw d))]
-      [else tail])))
-
 ;; ----------------------------------------
 
 (define (parse-all in #:source [source (object-name in)])
@@ -796,7 +770,8 @@
       (parse-top-groups l)))
   
 (module+ main
-  (require racket/cmdline)
+  (require racket/cmdline
+           "print.rkt")
 
   (define show-raw? #f)
 
@@ -807,21 +782,11 @@
       (cond
         [show-raw?
          (for ([s (syntax->list e)])
-           (printf "#|\n~a\n|#\n" (extract-raw s))
+           (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s))
            (pretty-write (syntax->datum s)))]
         [else
          (pretty-write
           (syntax->datum e))])))
-
-  (define (extract-raw s)
-    (define o (open-output-string))
-    (let loop ([l (syntax-to-raw s)])
-      (cond
-        [(pair? l) (loop (car l)) (loop (cdr l))]
-        [(null? l) (void)]
-        [(string? l) (display l o)]
-        [else (void)]))
-    (get-output-string o))
 
   (command-line
    #:once-each

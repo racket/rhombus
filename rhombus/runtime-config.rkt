@@ -3,7 +3,8 @@
 (require racket/runtime-config
          racket/keyword
          racket/symbol
-         shrubbery/parse)
+         shrubbery/parse
+         shrubbery/print)
 
 (current-read-interaction
  (lambda (src in)
@@ -145,3 +146,7 @@
       (display "#{'" op)
       (orig-print v op 1)
       (display "}")])))
+
+(error-syntax->string-handler
+ (lambda (s len)
+   (shrubbery-syntax->string s #:max-length len)))

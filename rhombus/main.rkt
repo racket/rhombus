@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     shrubbery/print)
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
 
@@ -65,6 +66,9 @@
   (require rhombus/runtime-config))
 
 (define-syntax (rhombus-module-begin stx)
+  (error-syntax->string-handler
+   (lambda (s len)
+     (shrubbery-syntax->string s #:max-length len)))
   (syntax-parse stx
     [(_ (top . content))
      (unless (eq? 'top (syntax-e #'top))
