@@ -183,25 +183,27 @@
 
 (define get-next-comment
   (lexer
-   ["/*" (values 1 end-pos)]
-   ["*/" (values -1 end-pos)]
+   ["/*" (values 1 end-pos lexeme)]
+   ["*/" (values -1 end-pos lexeme)]
    [(:or "/" "*" (:* (:~ "*" "/")))
-    (get-next-comment input-port)]
-   [(eof) (values 'eof end-pos)]
+    (let-values ([(delta end-pos rest-lexeme) (get-next-comment input-port)])
+      (values delta end-pos (string-append lexeme rest-lexeme)))]
+   [(eof) (values 'eof end-pos "")]
    [(special)
     (get-next-comment input-port)]
    [(special-comment)
     (get-next-comment input-port)]))
 
-(define (read-nested-comment num-opens start-pos input)
-  (let-values ([(diff end) (get-next-comment input)])
-    (cond
-      ((eq? 'eof diff) (ret 'fail eof 'error #f start-pos end 'initial))
-      (else
-       (let ((next-num-opens (+ diff num-opens)))
-         (cond
-           ((= 0 next-num-opens) (ret 'comment "" 'comment #f start-pos end 'initial))
-           (else (read-nested-comment next-num-opens start-pos input))))))))
+(define (read-nested-comment num-opens start-pos lexeme input)
+  (define-values (diff end next-lexeme) (get-next-comment input))
+  (cond
+    [(eq? 'eof diff) (ret 'fail eof 'error #f start-pos end 'initial)]
+    [else
+     (define all-lexeme (string-append lexeme next-lexeme))
+     (define next-num-opens (+ diff num-opens))
+     (cond
+       [(= 0 next-num-opens) (ret 'comment all-lexeme 'comment #f start-pos end 'initial)]
+       [else (read-nested-comment next-num-opens start-pos all-lexeme input)])]))
 
 (define (get-offset i)
   (let-values (((x y offset) (port-next-location i)))
@@ -274,7 +276,7 @@
               (position-offset start-pos)
               end-offset
               'initial))]
-   ["/*" (read-nested-comment 1 start-pos input-port)]
+   ["/*" (read-nested-comment 1 start-pos lexeme input-port)]
    ["#//"
     (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
    [(:: (:or "#lang " "#!")
