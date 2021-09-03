@@ -436,12 +436,11 @@
           [else
            (error "unexpected" t)])])]))
 
-(define (parse-block block-t l
+(define (parse-block t l
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:delta in-delta
                      #:raw in-raw)
-  (define t (car l))
   (define line (token-line t))
   (define-values (group-commenting next-l last-line delta raw)
     (next-of/commenting (cdr l) line in-delta null))
@@ -470,15 +469,15 @@
              tail-raw)]
     [else
      (values (list (add-raw-to-prefix
-                    block-t raw
+                    t in-raw
                     (add-span-srcloc
-                     block-t #f
+                     t #f
                      (tag-as-block null))))
              next-l
              line
              delta
              group-commenting
-             null)]))
+             raw)]))
 
 (define (tag-as-block gs)
   (cond

@@ -127,7 +127,7 @@
        [else 'same])]
     [else dir]))
 
-(define (lookup-prefix-implicit alone-name adj-context in-space operator-ref operator-kind form-kind)
+(define (lookup-prefix-implicit alone-name adj-context adj-form in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context alone-name))
   (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
@@ -139,10 +139,10 @@
                                 form-kind form-kind
                                 alone-name
                                 operator-kind)
-                        adj-context))
+                        adj-form))
   (values op op-stx))
 
-(define (lookup-infix-implicit adjacent-name prev-form adj-context in-space operator-ref operator-kind form-kind stop-on-unbound?)
+(define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind stop-on-unbound?)
   (define op-stx (datum->syntax adj-context adjacent-name))
   (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
@@ -169,7 +169,7 @@
                             form-kind form-kind
                             adjacent-name
                             operator-kind)
-                           adj-context)]))
+                           adj-form)]))
   (values op op-stx))
 
 (define (apply-prefix-direct-operator op form stx checker)

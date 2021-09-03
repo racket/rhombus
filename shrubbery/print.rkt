@@ -22,7 +22,12 @@
          [(null? l) (void)]
          [(string? l) (display l o)]
          [else (void)]))
-     (define str (get-output-string o))
+     (define orig-str (get-output-string o))
+     (define starting-col (extract-starting-column s))
+     ;; strip `string-col` spaces from the start of lines after the first one:
+     (define str (regexp-replace* (string-append "\n" (make-string starting-col #\space))
+                                  orig-str
+                                  "\n"))
      (if (and max-length
               ((string-length str) . > . max-length))
          (string-append (substring str 0 (max 0 (- max-length 3)))
@@ -67,8 +72,19 @@
     [(syntax? s)
      (or (syntax-property s 'raw)
          (let ([e (syntax-e s)])
-           (and (pair? e)
-                (all-raw-available? e))))]
+           (or (and (pair? e)
+                    (all-raw-available? e))
+               (null? e))))]
     [(pair? s) (and (all-raw-available? (car s))
                     (all-raw-available? (cdr s)))]
     [else #t]))
+
+(define (extract-starting-column s)
+  (cond
+    [(syntax? s)
+     (or (syntax-column s)
+         (let ([e (syntax-e s)])
+           (and (pair? e)
+                (extract-starting-column (car e))))
+         0)]
+    [else 0]))

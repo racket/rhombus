@@ -24,11 +24,11 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
-       [(form-id in ... ((~and alts-tag alts)
-                         clause::pattern-clause
-                         ...
-                         (block (group #:else
-                                       (~and else-rhs (block . _)))))
+       [(form-id in ...+ ((~and alts-tag alts)
+                          clause::pattern-clause
+                          ...
+                          (block (group #:else
+                                        (~and else-rhs (block . _)))))
                  . tail)
         #:with (b::binding ...) #'((group clause.bind ...) ...)
         (values
@@ -43,10 +43,10 @@
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ... ((~and alts-tag alts)
-                         (block (group bind ...
-                                       (~and rhs (block . _))))
-                         ...)
+       [(form-id in ...+ ((~and alts-tag alts)
+                          (block (group bind ...
+                                        (~and rhs (block . _))))
+                          ...)
                  . tail)
         #:with (b::binding ...) #'((group bind ...) ...)
         (values
@@ -62,12 +62,12 @@
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ... ((~and block-tag block)) . tail)
+       [(form-id in ...+ ((~and block-tag block)) . tail)
         (values
          #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ... (alts clause ...) . tail)
+       [(form-id in ...+ (alts clause ...) . tail)
         (for ([c (in-list (syntax->list #'(clause ...)))])
           (syntax-parse c
             [(c::pattern-clause ...) (void)]

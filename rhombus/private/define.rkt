@@ -90,7 +90,7 @@
                                      in-expression-space
                                      #'make-expression-prefix-operator
                                      #'make-expression-infix-operator)))]
-       [(form-id any ... (~and rhs (block body ...)))
+       [(form-id any ...+ (~and rhs (block body ...)))
         (build-value-definitions #'form-id #'(group any ...) #'rhs
                                  wrap-definition)]))))
 

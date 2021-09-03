@@ -166,9 +166,13 @@
                          offset)))
   (token name (let loop ([e e] [raw raw])
                 (let ([e (if (pair? e)
-                             (for/list ([e (in-list e)])
-                               (loop e #f))
-                             e)])
+                             (let p-loop ([e e])
+                               (cond
+                                 [(null? (cdr e)) (list (loop (car e) raw))]
+                                 [else (cons (loop (car e) #f)
+                                             (p-loop (cdr e)))]))
+                             e)]
+                      [raw (if (pair? e) #f raw)])
                   (define stx (datum->syntax #f
                                              e
                                              loc
