@@ -256,13 +256,13 @@
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
              [(prefix-operator? v)
-              (dispatch-infix-implicit juxtapose-name #'head)]
+              (dispatch-infix-implicit juxtapose-name #'head #'head)]
              [stop-on-unbound? (values init-form stxes)]
              [(identifier? #'head)
-              (dispatch-infix-implicit juxtapose-name #'head)]
+              (dispatch-infix-implicit juxtapose-name #'head #'head)]
              [else
               (if make-operator-form
-                  (dispatch-infix-implicit juxtapose-name #'head)
+                  (dispatch-infix-implicit juxtapose-name #'head #'head)
                   (raise-unbound-operator #'head.name))])]
           [((~and head ((~datum parsed) . _)) . _)
            (dispatch-infix-implicit juxtapose-name #'head #'head)]
