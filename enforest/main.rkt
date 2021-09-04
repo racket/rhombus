@@ -348,7 +348,7 @@
            [(((~datum op) sep) . _) (eq? (syntax-e #'sep) name-path-op)]
            [_ #f])))
 
-  ;; improves errors when nothin appears after an operator:
+  ;; improves errors when nothing appears after an operator:
   (define (check-empty op-stx tail form-kind-str)
     (cond
       [(or (null? tail)

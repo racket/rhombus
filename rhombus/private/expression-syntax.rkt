@@ -49,7 +49,7 @@
    (if (eq? protocol 'macro)
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
+                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))
@@ -67,7 +67,7 @@
    (if (eq? protocol 'macro)
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail) #'head)]))
+                                          [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))

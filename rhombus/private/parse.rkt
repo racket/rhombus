@@ -120,10 +120,14 @@
           #:need-end-expr #,stx
           (rhombus-body . tail)))]))
 
+;; Similar to `rhombus-block`, but goes through `#%block`:
 (define-syntax (rhombus-block-at stx)
   (syntax-parse stx
     [(_ tag . tail)
-     (syntax/loc #'tag (rhombus-block . tail))]))
+     (quasisyntax/loc #'tag
+       (rhombus-expression (group #,(datum->syntax #'tag '#%block #'tag #'tag)
+                                  (#,(syntax-property (datum->syntax #f 'block #'tag) 'raw "")
+                                   . tail))))]))
 
 ;; For a definition context, interleaves expansion and enforestation:
 (define-syntax (rhombus-body stx)
