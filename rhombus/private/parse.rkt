@@ -4,6 +4,7 @@
                      syntax/stx
                      enforest
                      enforest/transformer
+                     enforest/sequence
                      "srcloc.rkt"
                      "name-path-op.rkt")
          "forwarding-sequence.rkt"
@@ -52,6 +53,15 @@
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
 
+  ;; Form in a definition context that can consume extra groups:
+  (define-sequence-transform
+    #:syntax-class :definition-sequence
+    #:predicate definition-sequence?
+    #:desc "definition sequence"
+    #:name-path-op name-path-op
+    #:transformer-ref definition-sequence-transformer-ref
+    #:check-result check-definition-result)
+
   ;; Form in an expression context:
   (define-enforest
     #:syntax-class :expression
@@ -82,22 +92,24 @@
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
-  (syntax-parse stx
-    [(_) #'(begin)]
-    [(_ form . forms)
-     (define parsed
-       (with-syntax-error-respan
-         (syntax-local-introduce
-          ;; note that we may perform hierarchical name resolution
-          ;; up to three times, since resolution for `:declaration`
-          ;; doesn't carry over
-          (syntax-parse (syntax-local-introduce #'form)
+  (with-syntax-error-respan
+    (syntax-local-introduce
+     (syntax-parse (syntax-local-introduce stx)
+       [(_) #'(begin)]
+       ;; note that we may perform hierarchical name resolution
+       ;; up to four times, since resolution in `:declaration`,
+       ;; `:definition`, etc., doesn't carry over
+       [(_ e::definition-sequence)
+        #`(begin (begin . e.parsed) (rhombus-top . e.tail))]
+       [(_ form . forms)
+        (define parsed
+          (syntax-parse #'form
             [e::declaration #'(begin . e.parsed)]
             [e::definition #'(begin . e.parsed)]
-            [e::expression #'(#%expression e.parsed)]))))
-     (syntax-parse #'forms
-       [() parsed]
-       [_ #`(begin #,parsed (rhombus-top . forms))])]))
+            [e::expression #'(#%expression e.parsed)]))
+        (syntax-parse #'forms
+          [() parsed]
+          [_ #`(begin #,parsed (rhombus-top . forms))])]))))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
@@ -134,6 +146,11 @@
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
       [(_) #'(begin)]
+      [(_ e::definition-sequence)
+       (syntax-local-introduce
+        #`(begin
+            (begin . e.parsed)
+            (rhombus-body . e.tail)))]
       [(_ e::definition . tail)
        (syntax-local-introduce
         #`(begin

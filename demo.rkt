@@ -535,3 +535,14 @@ fun get_pts_x2(pts -: ListOf(Posn)):
   pts[0].x
 
 get_pts_x2([Posn(5, 7)])
+
+// definition-sequence macros
+
+defn.sequence_macro ?{reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...}:
+  values(?{ ¿defn2 ...; ¿defn1 ... }, ?{ ¿tail; ...})
+
+reverse_defns
+def seq_x: seq_y+1
+def seq_y: 10
+
+seq_x
