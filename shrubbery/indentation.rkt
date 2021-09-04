@@ -317,6 +317,8 @@
                                (loop (sub1 (or another-bar-start s)) #f (min* (sub1 bar-column) limit) #t)))])]
                [(separator)
                 (cond
+                  [(equal? ";" (send t get-text (sub1 e) e))
+                   (loop (sub1 s) candidate limit bar-after?)]
                   [candidate (maybe-list candidate)]
                   [else
                    (define i-pos (get-inside-start t pos))
