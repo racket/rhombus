@@ -62,13 +62,13 @@ mb
 val cons(ca, cb): cons(1, 2)
 ca
 
-def:
- | size(n :: Integer):
-     n
- | size(p :: Posn):
-     p.x + p.y
- | size(a, b):
-     a+b
+def
+| size(n :: Integer):
+    n
+| size(p :: Posn):
+    p.x + p.y
+| size(a, b):
+    a+b
 
 size(Posn(8, 6))
 size(1, 2)
@@ -117,41 +117,41 @@ operator (!! b):
 
 // defining an operator that is both prefix and infix
 
-operator:
- | (** exponent):
-     2 ** exponent
- | (base ** exponent):
-     if exponent == 0:
-     | 1
-     | base * (base ** (exponent-1))
+operator
+| (** exponent):
+    2 ** exponent
+| (base ** exponent):
+    if exponent == 0
+    | 1
+    | base * (base ** (exponent-1))
 
 3 ** 8
 ** 10 // = 2 ** 10
 
 // match
 
-match cons(7, 8):
- | cons(a, b):
-     b
- | x:
-     x
- | 'else':
-     "other"
+match cons(7, 8)
+| cons(a, b):
+    b
+| x:
+    x
+| 'else':
+    "other"
 
-match ?(z + y, {[10, 11, 12]}):
- | ?(x ¿a): a
- | ?(¿a + y, {[¿n, ...]}): cons(a, n)
+match ?(z + y, {[10, 11, 12]})
+| ?(x ¿a): a
+| ?(¿a + y, {[¿n, ...]}): cons(a, n)
 
-cond:
- | #true: 17
- | 'else': 18
+cond
+| #true: 17
+| 'else': 18
 
 // postfix as a macro "infix" operator;
 
-fun:
- | factorial(0): 1
- | factorial(n): n*factorial(n-1)
-         
+fun
+| factorial(0): 1
+| factorial(n): n*factorial(n-1)
+
 expr.macro ?(¿a *! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
@@ -182,11 +182,11 @@ just_five +$ " is the result"
 // another way to write that
 
 def ?(also_prefix_plus ¿e ...):
-  match e:
-   | ?(¿a ¿b ¿c ...):
-       values(a, ?(+ ¿b ¿c ...))
-   | 'else':
-       values(?"this is terrible error reporting", ?())
+  match e
+  | ?(¿a ¿b ¿c ...):
+      values(a, ?(+ ¿b ¿c ...))
+  | 'else':
+      values(?"this is terrible error reporting", ?())
 
 also_prefix_plus 7 9
 
@@ -208,54 +208,54 @@ bind.operator ?(¿a <> ¿b):
 bind.infoer ?(build_reverse_cons_infoer(¿in_id, (¿a_in, ¿b_in))):
   val a: bind_ct.get_info(a_in, ?())
   val b: bind_ct.get_info(b_in, ?())
-  match bind_ct.unpack_info(a):
-   | ?(¿a_id, ¿a_info, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack_info(b):
-        | ?(¿b_id, ¿b_info, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
-            ?(pair,
-              (),
-              (¿a_bind_info ... ¿b_bind_info ...),
-              build_reverse_cons_match,
-              build_reverse_cons_bind,
-              (¿a, ¿b, a_part, b_part))
+  match bind_ct.unpack_info(a)
+  | ?(¿a_id, ¿a_info, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
+      match bind_ct.unpack_info(b)
+      | ?(¿b_id, ¿b_info, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
+          ?(pair,
+            (),
+            (¿a_bind_info ... ¿b_bind_info ...),
+            build_reverse_cons_match,
+            build_reverse_cons_bind,
+            (¿a, ¿b, a_part, b_part))
 
 bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
                                         ¿IF, ¿success, ¿fail)):
-  match bind_ct.unpack_info(a):
-   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack_info(b):
-        | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-            ?{
-              // check for pair an extract reversed pieces
-              val (is_match, ¿a_part_id, ¿b_part_id):
-                match ¿in_id:
-                 | cons(¿b_id, ¿a_id):
-                     values(#true, ¿a_id, ¿b_id)
-                 | 'else':
-                     values(#false, #false, #false)
-              // if a match, chain to a and b matchers
-              ¿IF is_match:
-               | ¿a_matcher(¿a_part_id,
-                            ¿a_data,
-                            ¿IF,
-                            ¿b_matcher(¿b_part_id,
-                                       ¿b_data,
-                                       ¿IF,
-                                       ¿success,
-                                       ¿fail),
-                            ¿fail)
-               | ¿fail
-            }
+  match bind_ct.unpack_info(a)
+  | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+      match bind_ct.unpack_info(b)
+      | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
+          ?{
+            // check for pair an extract reversed pieces
+            val (is_match, ¿a_part_id, ¿b_part_id):
+              match ¿in_id
+              | cons(¿b_id, ¿a_id):
+                  values(#true, ¿a_id, ¿b_id)
+              | 'else':
+                  values(#false, #false, #false)
+            // if a match, chain to a and b matchers
+            ¿IF is_match
+            | ¿a_matcher(¿a_part_id,
+                         ¿a_data,
+                         ¿IF,
+                         ¿b_matcher(¿b_part_id,
+                                    ¿b_data,
+                                    ¿IF,
+                                    ¿success,
+                                    ¿fail),
+                         ¿fail)
+            | ¿fail
+          }
 
 bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
-  match bind_ct.unpack_info(a):
-   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
-       match bind_ct.unpack_info(b):
-        | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-            ?{
-              ¿a_binder(¿a_part_id, ¿a_data)
-              ¿b_binder(¿b_part_id, ¿b_data)
-            }
+  match bind_ct.unpack_info(a)
+  | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+      match bind_ct.unpack_info(b)
+      | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
+          ?{
+            ¿a_binder(¿a_part_id, ¿a_data)
+            ¿b_binder(¿b_part_id, ¿b_data)
+          }
 
 // an expression operator that's consistent with the pattern
 expr.operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
@@ -267,18 +267,18 @@ rx
 // or a block of definitions and a sequence of expressions
 
 defn.macro ?(define_eight ¿e ...):
-  match e:
-   | ?(¿name):
-       ?{def ¿name: 8}
+  match e
+  | ?(¿name):
+      ?{def ¿name: 8}
        
 define_eight ate
 ate
 
 defn.macro ?(define_and_use ¿e ...):
-  match e:
-   | ?(¿name {¿rhs ...}):
-       ?{def ¿name {¿rhs ...}
-         ?(¿name)}
+  match e
+  | ?(¿name {¿rhs ...}):
+      ?{def ¿name {¿rhs ...}
+        ?(¿name)}
 
 define_and_use nine: 1+8
 nine
@@ -286,9 +286,9 @@ nine
 // declaration form
 
 decl.macro ?(empty_import ¿e ...):
-  match e:
-   | ?():
-       ?{import:}
+  match e
+  | ?():
+      ?{import:}
 
 empty_import
 
@@ -330,18 +330,18 @@ fun (p): (p :: IPosn).x
 // function result contracts
 
 fun add1(x) :: Integer:
-  match x:
+  match x
    | n :: Integer : x + 1
    | 'else': x
 
 add1(100)
 // add1("oops")
 
-fun:
- | add_two(x) :: Number:
-     x + 2.0
- | add_two(x, y) :: String:
-     x +$ " and " +$ y
+fun
+| add_two(x) :: Number:
+    x + 2.0
+| add_two(x, y) :: String:
+    x +$ " and " +$ y
 
 add_two(7) == 9.0
 add_two(6, 7) === "6 and 7"
@@ -377,9 +377,9 @@ annotation.macro ?Vector:
 
 
 dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):
-  match right:
-   | ?angle: ?(vector_angle(¿left))
-   | ?magnitude: ?(vector_magnitude(¿left))
+  match right
+  | ?angle: ?(vector_angle(¿left))
+  | ?magnitude: ?(vector_magnitude(¿left))
 
 fun vector_angle(Posn(x, y)): atan(y, x)
 fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
@@ -461,19 +461,19 @@ locale(keyword('alice'), local_map)
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x
 
-fun :
- | is_sorted([]): #true
- | is_sorted([head]): #true
- | is_sorted([head, next, tail, ...]):
-    head <= next && is_sorted([next, tail, ...])
+fun
+| is_sorted([]): #true
+| is_sorted([head]): #true
+| is_sorted([head, next, tail, ...]):
+   head <= next && is_sorted([next, tail, ...])
 
 is_sorted([1, 2, 30, 4, 5])
 
 
-fun:
- | got_milk([]): #false
- | got_milk([head, tail, ...]):
-    head === "milk" || got_milk(tail)
+fun
+| got_milk([]): #false
+| got_milk([head, tail, ...]):
+   head === "milk" || got_milk(tail)
 
 got_milk([])
 got_milk(["apple", "milk", "banana"])
@@ -491,23 +491,23 @@ fun f_rest(x, ys :: Integer, ...):
 
 f_rest(10, 11, 12, 13)
 
-fun:
- | g_rest(): "no"
- | g_rest(x :: Integer): "simple"
- | g_rest(x :: Integer, ys :: Integer, ...):
-    ys
- | g_rest(x): x
+fun
+| g_rest(): "no"
+| g_rest(x :: Integer): "simple"
+| g_rest(x :: Integer, ys :: Integer, ...):
+   ys
+| g_rest(x): x
 
 g_rest()
 g_rest(1) === "simple"
 g_rest(1, 2, 3)
 g_rest("hello") === "hello"
 
-fun:
- | posns_y(ps :: Posn, ...):
-     ps[1].y
- | posns_y(x):
-     x
+fun
+| posns_y(ps :: Posn, ...):
+    ps[1].y
+| posns_y(x):
+    x
      
 posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
 posns_y(10)

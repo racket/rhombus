@@ -15,6 +15,9 @@
 (provide shrubbery-indentation
          shrubbery-range-indentation)
 
+(define NORMAL-INDENT 2)
+(define BAR-INDENT 0)
+
 (define (shrubbery-indentation t pos
                                #:multi? [multi? #f]
                                #:always? [always? multi?])
@@ -186,7 +189,7 @@
     (define (keep s)
       (define start (line-start t s))
       (define delta (line-delta t start))
-      (define new-candidate (col-of (if as-bar? (add1 s) s) start delta))
+      (define new-candidate (col-of (if as-bar? (+ s BAR-INDENT) s) start delta))
       (loop* (sub1 s)
              ;; don't forget the old candidate if the new candidate would
              ;; be too deeply indented
@@ -206,7 +209,7 @@
           ;; is responsible for computing continuation columns
           (loop (sub1 s) candidate limit bar-after?)]
          [(block-operator)
-          ;; a block creates an indentation candidate that's 2 (or 1 for a `|`)
+          ;; a block creates an indentation candidate that's
           ;; to the right of the enclosing group's indentation
           (define start (line-start t pos))
           (define delta (line-delta t start))
@@ -219,9 +222,11 @@
           ;; then indentation under the block operator is valid
           (define next-candidate (and (empty-before-block-operator? t next-s start)
                                       (col-of (add1 next-s) start delta)))
+          ;; a `|` cannot appear just after a `:`, so look before that block
+          (define adj-block-col (if as-bar? (sub1 block-col) block-col))
           ;; look further outside this block, and don't consider anything
           ;; that would appear to be nested in the block:
-          (define outer-candidates (loop next-s next-candidate (min* block-col limit) #f))
+          (define outer-candidates (loop next-s next-candidate (min* adj-block-col limit) #f))
           (append (cond
                     [(and bar-after? (not as-bar?))
                      null]
@@ -232,13 +237,13 @@
                     [else
                      ;; we haven't found anything in the block, so
                      ;; indent as the first thing in the block
-                     (maybe-list (+ block-col (if as-bar? 1 2)))])
+                     (maybe-list (+ block-col (if as-bar? BAR-INDENT NORMAL-INDENT)))])
                   outer-candidates)]
          [else
           (cond
             [(and candidate
-                  (eqv? candidate (if as-bar? 1 0))
-                  (or (not limit) (limit . >= . (if as-bar? 1 0))))
+                  (eqv? candidate (if as-bar? BAR-INDENT 0))
+                  (or (not limit) (limit . >= . (if as-bar? BAR-INDENT 0))))
              ;; already found minimal column, so stop here
              (list candidate)]
             [else
@@ -249,8 +254,11 @@
                   [(opener? paren)
                    ;; we're inside parentheses, brackets, etc.
                    (cond
+                     [(and bar-after? (not as-bar?))
+                      ;; opener followed by a bar: no more candidates
+                      null]
                      [candidate (maybe-list candidate)]
-                     [(zero? s) (maybe-list 2)]
+                     [(zero? s) (maybe-list NORMAL-INDENT)]
                      [else
                       (define start (line-start t pos))
                       (define delta (line-delta t start))
@@ -265,8 +273,8 @@
                       (define block-col (get-block-column t next-s col start
                                                           #:for-outdent? #t))
                       (if (and block-col (block-col . < . col))
-                          (maybe-list (+ block-col 2))
-                          (maybe-list (+ col 2)))])]
+                          (maybe-list (+ block-col NORMAL-INDENT))
+                          (maybe-list (+ col NORMAL-INDENT)))])]
                   [else
                    ;; found parenthesized while walking backward
                    (define r (send t backward-match e 0))
@@ -310,11 +318,11 @@
                   [else
                    ;; line up within bar or outside [another] bar
                    (define bar-column (col-of s start (line-delta t start)))
-                   (append (maybe-list (or candidate (+ bar-column 2)))
+                   (append (maybe-list (or candidate (+ bar-column NORMAL-INDENT)))
                            (if (not limit-pos)
                                null
                                ;; outer candidates
-                               (loop (sub1 (or another-bar-start s)) #f (min* (sub1 bar-column) limit) #t)))])]
+                               (loop (sub1 (or another-bar-start s)) #f (min* bar-column limit) #t)))])]
                [(separator)
                 (cond
                   [(equal? ";" (send t get-text (sub1 e) e))

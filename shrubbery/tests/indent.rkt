@@ -195,12 +195,12 @@
 
  @e{define fib(n):
      cond | n == 0: 0
-          ^          ^|}
+          ^         ^|}
 
  @e{define fib(n):
      log_error("fib called")
      cond | n == 0: 0
-          ^          ^|}
+          ^         ^|}
  
  @e{define
      | fib(0): 0
@@ -211,8 +211,8 @@
  @e{define fib:
      lambda (n):
        cond
-        | n == 0: 0
-        ^          ^| n == 1: 1}
+       | n == 0: 0
+       ^         ^| n == 1: 1}
 
  @e|{define fib(n):
       match n { | 0 { 0 }
@@ -220,8 +220,8 @@
 
  @e{define analyze(n):
       if n == 0
-       | printf("zero\n")
-    ^ ^  ^printf}
+      | printf("zero\n")
+    ^ ^ ^printf}
 
  @e{define go():
       define more(m):
@@ -236,9 +236,9 @@
 
  @e{define approx_thunk(x):
       match x
-       | something(v): lambda
-                        | (): v
-       ^                ^      ^| (n): v+n}
+      | something(v): lambda
+                      | (): v
+      ^               ^     ^| (n): v+n}
 
  @e{define colors:
      list(
@@ -267,7 +267,7 @@
 
  @e{this is | one: a \
                     long result
-            ^       ^| two}
+            ^      ^| two}
 
  @e{this is | one: a \
                     long result
@@ -347,7 +347,7 @@
           define values(is_a_match, ar):
             ¿a_pred(av)
           if is_a_match
-      ^    ^| define}
+      ^   ^| define}
  
  )
 
