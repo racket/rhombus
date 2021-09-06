@@ -51,38 +51,38 @@ breaks and indentation in the source are not misleading.
 Here are some example shrubberies. Each line either uses old
 indentation to continue a nesting level that was started on a previous
 line, starts with new indentation and follows a line that ends with
-`:`. A `:` or `|` can also appear in the middle of a line, but that's
-roughly a shorthand for starting a new indented line after the `:` or
-starting a new line before the `|` matching the indentation of a
-previous `|`. The complete rules involve more terminology, but that's
-enough to get a sense of the examples.
+`:`, or starts with new indentation and a `|` on the same line. A `:`
+or `|` can also appear in the middle of a line, but that's roughly a
+shorthand for starting a new indented line after the `:` or before the
+`|`. The complete rules involve more terminology, but that's enough to
+get a sense of the examples.
 
 ```
 define identity(x): x
 
 define fib(n):
-  cond:
-   | n == 0: 0
-   | n == 1: 1
-   | else: fib(n-1) + fib(n-2)
+  cond
+  | n == 0: 0
+  | n == 1: 1
+  | else: fib(n-1) + fib(n-2)
 
 define print_sexp(v):
-  match v:
-   | empty: display("()")
-   | cons(a, d):
-       if is_list(d):
-        | display("(")
-          print_sexp(a)
-          for (v = in_list(d)):
-            display(" ")
-            print_sexp(v)
-          display(")")
-        | display("(")
-          print_sexp(a)
-          display(". ")
-          print_sexp(d)
-          display(")")
-   | v: print_atom(v)
+  match v
+  | empty: display("()")
+  | cons(a, d):
+      if is_list(d)
+      | display("(")
+        print_sexp(a)
+        for (v = in_list(d)):
+          display(" ")
+          print_sexp(v)
+        display(")")
+      | display("(")
+        print_sexp(a)
+        display(". ")
+        print_sexp(d)
+        display(")")
+  | v: print_atom(v)
 ```
 
 Forms like `define`, `cond`, and `match` are not specified by
@@ -271,7 +271,8 @@ hello {
 ```
 
 Indentation to start a group is allowed only on a line where the
-previous line ends with `:` or `|`.
+previous line ends with `:` or `|` or the indented line starts with
+`|`.
 
 ```
 // Not allowed
@@ -306,31 +307,37 @@ means that a programmer can choose between single-line forms using
 A `|` is implicitly shifted half a column right (so, implicitly
 nested), and it is implicitly followed by a `:` that conceptually
 occupies same column as the `|`. That is, like `:`, a `|` always forms
-a block. Furthermore, a `|` may only appear immediately within a
-block; it cannot be a in a top-level sequences of groups or start a
-group immediately within `()` or `[]`. So, a `|` always forms a group
-within a block, as well as forming its own nested block.
+a block. When a `|` is not at the start of a group, then the `|` is
+also implicitly *preceded* by a `:`. Similarly, a `|` can appear at
+the start of a line with new indentation, in which case the previous
+line implicitly ends with `:` (so the indentation is allowed, and it
+starts a new block). A `|` cannot be a in a top-level sequence of
+groups or start a group immediately within `()` or `[]`.
 
 ```
-hello:
- | world
- | universe
-
-hello:
+hello
 | world
 | universe
 
-hello: | world
-       | universe
+hello
+  | world
+  | universe
 
-hello: |
-         world
-       |
-         universe
+hello | world
+      | universe
+
+hello |
+        world
+      |
+        universe
 
 hello { | world
         | universe }
 ```
+
+As the last example above illustrates, using `{` makes the block for a
+sequence of `|` blocks explicit, as opposed to the implicit `:` that
+conceptually appears before the first `|` otherwise.
 
 If a `|` appears on the same line as an earlier `|` and is not more
 nested inside `()`, `[]`, or `{}`, then the `|` terminates the earlier
@@ -340,10 +347,10 @@ used on a single line as an alternative to starting each `|` on its
 own line, making the following groups the same as the above groups:
 
 ```
-hello: | world | universe
+hello | world | universe
 
-hello:
- | world | universe
+hello
+| world | universe
 
 hello { | world | universe }
 
@@ -353,8 +360,8 @@ hello { | world ; | universe }
 The implicit shifting of `|` by half a column is consistent with its
 visual representation, and it avoids the possibility of a group
 sequence that contains a mixture of `|`-started groups and other kinds
-of groups. Nevertheless, standard indentation includes a one additional
-space of indentation before `|`.
+of groups. Standard indentation uses no additional space of
+indentation before `|` relative to its enclosing block's group.
 
 ## Continuing a line with `\`
 
@@ -414,8 +421,8 @@ The following three blocks all parse the same:
   hello:
     val x: f(1, 2 + 3)
     match x
-     | 1: 'one'
-     | 2: 'two'
+    | 1: 'one'
+    | 2: 'two'
 }
 
 {
@@ -432,14 +439,14 @@ The following three blocks all parse the same:
     #//
     not included in the code
     match x
-     #//
-     | 0: no
-     | 1: 'one'
-     #//
-     | 1.5: no
-     | 2: 'two'
-     #//
-     | 3: no
+    #//
+    | 0: no
+    | 1: 'one'
+    #//
+    | 1.5: no
+    | 2: 'two'
+    #//
+    | 3: no
   #//
   goodbye:
     the enclosing group of the block is commented out
@@ -459,14 +466,14 @@ The following three blocks all parse the same:
     #//
     not included in the code
     match x
-     #//
-     | 0: no
-     | 1: 'one'
-     #//
-     | 1.5: no
-     | 2: 'two'
-     #//
-     | 3: no
+    #//
+    | 0: no
+    | 1: 'one'
+    #//
+    | 1.5: no
+    | 2: 'two'
+    #//
+    | 3: no
   #//
   goodbye:
     the enclosing group of the block is commented out
@@ -484,31 +491,31 @@ potential ways of using the notation.
 ```
 define pi: 3.14
 
-define:
- | fib(0): 0
- | fib(1): 1
- | fib(n): fib(n-1) + fib(n-2)
+define
+| fib(0): 0
+| fib(1): 1
+| fib(n): fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n:
-   | 0: 0
-   | 1: 1
-   | n: fib(n-1) + fib(n-2)
+  match n
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n: | 0: 0
-           | 1: 1
-           | n: (fib(n-1)
-                 + fib(n-2))
+  match n | 0: 0
+          | 1: 1
+          | n: (fib(n-1)
+                + fib(n-2))
 
 define fib(n):
-  match n:
-   | 0:
-       0
-   | 1:
-       1
-   | n:
-       fib(n-1) + fib(n-2)
+  match n
+  | 0:
+      0
+  | 1:
+      1
+  | n:
+      fib(n-1) + fib(n-2)
 
 define make_adder(n):
   lambda (m):
@@ -532,8 +539,8 @@ define go():
   define helper(n):
     list(n, n)
   define more(m):
-    if m == 0: | "done"
-               | more(m - 1)
+    if m == 0 | "done"
+              | more(m - 1)
   helper(more(9))
 
 define curried:
@@ -626,9 +633,9 @@ define fourth(n: integer):
 ```
 
 ```
-if x = y:
- | same
- | different
+if x = y
+| same
+| different
 
 (group if x (op =) y (alts (block (group same))
                            (block (group different))))
@@ -636,10 +643,10 @@ if x = y:
 
 ```
 define fib(n):
-  match n:
-   | 0: 0
-   | 1: 1
-   | n: fib(n-1) + fib(n-2)
+  match n
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
 (group define
        fib
@@ -842,9 +849,15 @@ common. A distinct, pleasant, and uniform pattern for conditionals
 deserves direct support in the notation.
 
 Shrubbery notation would be consistent and without ambiguity if we
-drop the requrement to precede indentation with `:` or `|`. Requiring
-a preceding `:` or `|` is a kind of consistency check to enable better
-and earlier errors when indentation goes wrong.
+drop the requrement to precede indentation with `:` or precede/follow
+indentation with `|`. Requiring a preceding `:` or preceding/following
+`|` is a kind of consistency check to enable better and earlier errors
+when indentation goes wrong. Always requiring a preceding `:` before
+an indented `|` line would also be consistent, but adds extras `:`s
+where `|` already provides one consistency check. Allowing an optional
+`:` before `|` would work, but programmers may then choose differently
+on omitting or including the `:`, leading to subtly divergent
+conventions.
 
 Making whitespace and comment lines ignored in all contexts means that
 they can be freely added without intefering with grouping. The `\`
