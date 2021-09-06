@@ -28,7 +28,8 @@
          ;;  'EOF
          ;;
          ;;  'fail
-         
+
+         token?
          token-value
          token-e
          token-line
@@ -148,14 +149,14 @@
   [non-number-delims (:or non-delims ".")]
   [non-delims (:or alphabetic numeric "_")])
 
-(define (ret name lexeme type paren start-pos end-pos status)
-  (values (make-token name lexeme start-pos end-pos)
+(define (ret name lexeme #:raw [raw #f] type paren start-pos end-pos status)
+  (values (make-token name lexeme start-pos end-pos raw)
           type paren (position-offset start-pos) (position-offset end-pos) status))
 
 (define stx-for-original-property (read-syntax #f (open-input-string "original")))
 (define current-lexer-source (make-parameter "input"))
 
-(define (make-token name e start-pos end-pos)
+(define (make-token name e start-pos end-pos [raw #f])
   (define offset (position-offset start-pos))
   (define loc (vector (current-lexer-source)
                       (position-line start-pos)
@@ -163,36 +164,46 @@
                       offset
                       (- (position-offset end-pos)
                          offset)))
-  (token name (let loop ([e e])
+  (token name (let loop ([e e] [raw raw])
                 (let ([e (if (pair? e)
-                             (map loop e)
-                             e)])
-                  (datum->syntax #f
-                                 e
-                                 loc
-                                 stx-for-original-property)))))
-         
+                             (let p-loop ([e e])
+                               (cond
+                                 [(null? (cdr e)) (list (loop (car e) raw))]
+                                 [else (cons (loop (car e) #f)
+                                             (p-loop (cdr e)))]))
+                             e)]
+                      [raw (if (pair? e) #f raw)])
+                  (define stx (datum->syntax #f
+                                             e
+                                             loc
+                                             stx-for-original-property))
+                  (if (eq? name 'comment)
+                      stx
+                      (syntax-property stx 'raw (or raw (if (string? e) e ""))))))))
+
 (define get-next-comment
   (lexer
-   ["/*" (values 1 end-pos)]
-   ["*/" (values -1 end-pos)]
+   ["/*" (values 1 end-pos lexeme)]
+   ["*/" (values -1 end-pos lexeme)]
    [(:or "/" "*" (:* (:~ "*" "/")))
-    (get-next-comment input-port)]
-   [(eof) (values 'eof end-pos)]
+    (let-values ([(delta end-pos rest-lexeme) (get-next-comment input-port)])
+      (values delta end-pos (string-append lexeme rest-lexeme)))]
+   [(eof) (values 'eof end-pos "")]
    [(special)
     (get-next-comment input-port)]
    [(special-comment)
     (get-next-comment input-port)]))
 
-(define (read-nested-comment num-opens start-pos input)
-  (let-values ([(diff end) (get-next-comment input)])
-    (cond
-      ((eq? 'eof diff) (ret 'fail eof 'error #f start-pos end 'initial))
-      (else
-       (let ((next-num-opens (+ diff num-opens)))
-         (cond
-           ((= 0 next-num-opens) (ret 'comment "" 'comment #f start-pos end 'initial))
-           (else (read-nested-comment next-num-opens start-pos input))))))))
+(define (read-nested-comment num-opens start-pos lexeme input)
+  (define-values (diff end next-lexeme) (get-next-comment input))
+  (cond
+    [(eq? 'eof diff) (ret 'fail eof 'error #f start-pos end 'initial)]
+    [else
+     (define all-lexeme (string-append lexeme next-lexeme))
+     (define next-num-opens (+ diff num-opens))
+     (cond
+       [(= 0 next-num-opens) (ret 'comment all-lexeme 'comment #f start-pos end 'initial)]
+       [else (read-nested-comment next-num-opens start-pos all-lexeme input)])]))
 
 (define (get-offset i)
   (let-values (((x y offset) (port-next-location i)))
@@ -243,29 +254,29 @@
   (lexer
    [(:+ whitespace)
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
-   [str (ret 'literal (parse-string lexeme) 'string #f start-pos end-pos 'datum)]
-   [byte-str (ret 'literal (parse-byte-string lexeme) 'string #f start-pos end-pos 'datum)]
+   [str (ret 'literal (parse-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
+   [byte-str (ret 'literal (parse-byte-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [bad-number
     (ret 'fail lexeme 'error #f start-pos end-pos 'continuing)]
    [number
-    (ret 'literal (parse-number lexeme) 'constant #f start-pos end-pos 'continuing)]
+    (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
    [special-number
     (let ([num (case lexeme
                  [("#inf") +inf.0]
                  [("#neginf") -inf.0]
                  [("#nan") +nan.0])])
-      (ret 'literal num 'constant #f start-pos end-pos 'continuing))]
+      (ret 'literal num #:raw lexeme 'constant #f start-pos end-pos 'continuing))]
    [boolean
-    (ret 'literal (equal? lexeme "#true") 'constant #f start-pos end-pos 'continuing)]
+    (ret 'literal (equal? lexeme "#true") #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
    ["//"
-    (let ([comment (apply string (read-line/skip-over-specials input-port))])
+    (let ([comment (apply string (list* #\/ #\/ (read-line/skip-over-specials input-port)))])
       (define-values (end-line end-col end-offset) (port-next-location input-port))
       (values (make-token 'comment comment start-pos (position end-offset end-line end-col))
               'comment #f 
               (position-offset start-pos)
               end-offset
               'initial))]
-   ["/*" (read-nested-comment 1 start-pos input-port)]
+   ["/*" (read-nested-comment 1 start-pos lexeme input-port)]
    ["#//"
     (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
    [(:: (:or "#lang " "#!")
@@ -293,12 +304,12 @@
    [";"
     (ret 'semicolon-operator lexeme 'separator #f start-pos end-pos 'initial)]
    [identifier
-    (ret 'identifier (string->symbol lexeme) 'symbol #f start-pos end-pos 'continuing)]
+    (ret 'identifier (string->symbol lexeme) #:raw lexeme 'symbol #f start-pos end-pos 'continuing)]
    [operator
-    (ret 'operator (list 'op (string->symbol lexeme)) 'operator #f start-pos end-pos 'initial)]
+    (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial)]
    [keyword
     (let ([kw (string->keyword (substring lexeme 1 (sub1 (string-length lexeme))))])
-      (ret 'identifier kw 'keyword #f start-pos end-pos 'continuing))]
+      (ret 'identifier kw #:raw lexeme 'keyword #f start-pos end-pos 'continuing))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))

@@ -134,7 +134,7 @@
         [(form-id (op ?) (parens (group infoer-id:identifier
                                         (parens info-pattern
                                                 data-pattern)))
-                  (block body ...))
+                  ((~and block-tag block) body ...))
          (define-values (converted-info-pattern info-idrs info-can-be-empty?) (convert-pattern #'info-pattern))
          (define-values (converted-data-pattern data-idrs data-can-be-empty?) (convert-pattern #'data-pattern))
          (with-syntax ([((info-id info-id-ref) ...) info-idrs]
@@ -151,7 +151,7 @@
                                [info-id info-id-ref] ...
                                [data-id data-id-ref] ...)
                            (pack-info
-                            (rhombus-block body ...)))])])]))))]))))
+                            (rhombus-block-at block-tag body ...)))])])]))))]))))
 
 (define-syntax matcher
   (definition-transformer
@@ -165,7 +165,7 @@
                                                 (group (op ¿) IF-id:identifier)
                                                 (group (op ¿) success-id:identifier)
                                                 (group (op ¿) fail-id:identifier))))
-                  (block body ...))
+                  ((~and block-tag block) body ...))
          (define-values (converted-pattern idrs can-be-empty?) (convert-pattern #'data-pattern))
          (with-syntax ([((id id-ref) ...) idrs])
            (list
@@ -181,7 +181,7 @@
                                 ;; helps make sure it's used correctly
                                 [fail-id #'(parsed (if-bridge IF fail))])
                             (unwrap-block
-                             (rhombus-block body ...)))))])]))))]))))
+                             (rhombus-block-at block-tag body ...)))))])]))))]))))
 
 (define-syntax if-bridge
   ;; depending on `IF`, `if-bridge` will be used in an expression
@@ -254,7 +254,7 @@
         [(form-id (op ?) (parens (group builder-id:identifier
                                         (parens (group (op ¿) arg-id:identifier)
                                                 data-pattern)))
-                  (block body ...))
+                  ((~and block-tag block) body ...))
          (define-values (converted-data-pattern data-idrs data-can-be-empty?) (convert-pattern #'data-pattern))
          (with-syntax ([((data-id data-id-ref) ...) data-idrs])
            (list
@@ -266,7 +266,7 @@
                       (let ([arg-id #'arg-id]
                             [data-id data-id-ref] ...)
                         (unwrap-block
-                         (rhombus-block body ...)))])]))))]))))
+                         (rhombus-block-at block-tag body ...)))])]))))]))))
 
 (define-for-syntax (unwrap-block stx)
   (syntax-parse stx
@@ -290,7 +290,7 @@
    (if (eq? protocol 'macro)
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail) #'head)]))
+                                          [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (extract-binding form proc)
                                    (unpack-tail new-tail proc)
                                    proc))
@@ -307,7 +307,7 @@
    (if (eq? protocol 'macro)
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail) #'head)]))
+                                          [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (extract-binding form proc)
                                    (unpack-tail new-tail proc)
                                    proc))

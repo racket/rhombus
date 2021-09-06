@@ -16,6 +16,7 @@
 
 (provide (for-syntax make-operator-definition-transformer
                      make-identifier-syntax-definition-transformer
+                     make-identifier-syntax-definition-sequence-transformer
 
                      parse-operator-definition
                      parse-operator-definitions
@@ -321,10 +322,18 @@
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
-    (pattern (group _:identifier . _))))
+    (pattern (group _:identifier . _)))
+  
+  (define-splicing-syntax-class :identifier-sequence-syntax-quote
+    #:datum-literals (op block parens group)
+    #:literals (?)
+    (pattern (~seq (op ?) (block g::identifier-definition-group
+                                 . gs)))))
 
 (define-for-syntax (parse-transformer-definition g self-id rhs
-                                                 in-space make-transformer-id)
+                                                 in-space make-transformer-id
+                                                 #:tail-ids [tail-ids '()]
+                                                 #:wrap-for-tail [wrap-for-tail values])
   (syntax-parse g
     #:datum-literals (group op)
     #:literals (¿ rhombus...)
@@ -333,11 +342,12 @@
      (with-syntax ([((p-id id-ref) ...) idrs])
        #`(define-syntax #,(in-space #'id)
            (#,make-transformer-id
-            (let ([id (lambda (tail #,self-id)
+            (let ([id (lambda (tail #,@tail-ids #,self-id)
                         (syntax-parse (respan-empty #,self-id tail)
                           [#,pattern
                            (let ([p-id id-ref] ...)
-                             (rhombus-expression (group #,rhs)))]))])
+                             #,(wrap-for-tail
+                                #`(rhombus-expression (group #,rhs))))]))])
               id))))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer in-space
@@ -353,3 +363,26 @@
                             body ...)))
         (list (parse-transformer-definition #'q.g #'self-id #'rhs
                                             in-space make-transformer-id))]))))
+
+(define-for-syntax (make-identifier-syntax-definition-sequence-transformer in-space
+                                                                           make-transformer-id)
+  (definition-transformer
+    (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group block alts op)
+       [(form-id q::identifier-sequence-syntax-quote
+                 (~and rhs (block
+                            (~optional (group #:op_stx (block (group self-id:identifier)))
+                                       #:defaults ([self-id #'self]))
+                            body ...)))
+        (list (parse-transformer-definition #'q.g #'self-id #'rhs
+                                            in-space make-transformer-id
+                                            #:tail-ids #'(tail-id)
+                                            #:wrap-for-tail
+                                            (lambda (body)
+                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(block . q.gs)))
+                                              (with-syntax ([((p-id id-ref) ...) idrs])
+                                                #`(syntax-parse tail-id
+                                                    [#,pattern
+                                                     (let ([p-id id-ref] ...)
+                                                       #,body)])))))]))))

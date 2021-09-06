@@ -201,16 +201,16 @@
                   (raise-unbound-operator #'head.name))])]
           [(((~datum parsed) inside) . tail)
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
-          [(((~and tag (~datum parens)) . inside) . tail)
-           (dispatch-prefix-implicit tuple-name #'tag)]
-          [(((~and tag (~datum brackets)) . inside) . tail)
-           (dispatch-prefix-implicit array-name #'tag)]
-          [(((~and tag (~datum block)) . inside) . tail)
-           (dispatch-prefix-implicit block-name #'tag)]
-          [(((~and tag (~datum alts)) . inside) . tail)
-           (dispatch-prefix-implicit alts-name #'tag)]
+          [((~and head ((~and tag (~datum parens)) . inside)) . tail)
+           (dispatch-prefix-implicit tuple-name #'tag #'head)]
+          [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
+           (dispatch-prefix-implicit array-name #'tag #'head)]
+          [((~and head ((~and tag (~datum block)) . inside)) . tail)
+           (dispatch-prefix-implicit block-name #'tag #'head)]
+          [((~and head ((~and tag (~datum alts)) . inside)) . tail)
+           (dispatch-prefix-implicit alts-name #'tag #'head)]
           [(literal . tail)
-           (dispatch-prefix-implicit literal-name #'literal)])
+           (dispatch-prefix-implicit literal-name #'literal #'literal)])
 
         . where .
 
@@ -230,8 +230,8 @@
                             current-op-stx
                             stop-on-unbound?)]))
 
-        (define (dispatch-prefix-implicit implicit-name head-stx)
-          (define-values (op op-stx) (lookup-prefix-implicit implicit-name head-stx in-space
+        (define (dispatch-prefix-implicit implicit-name context-stx head-stx)
+          (define-values (op op-stx) (lookup-prefix-implicit implicit-name context-stx head-stx in-space
                                                              prefix-operator-ref
                                                              operator-kind-str form-kind-str))
           (define synthetic-stxes (datum->syntax #f (cons op-stx stxes)))
@@ -256,26 +256,26 @@
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
              [(prefix-operator? v)
-              (dispatch-infix-implicit juxtapose-name #'head)]
+              (dispatch-infix-implicit juxtapose-name #'head #'head)]
              [stop-on-unbound? (values init-form stxes)]
              [(identifier? #'head)
-              (dispatch-infix-implicit juxtapose-name #'head)]
+              (dispatch-infix-implicit juxtapose-name #'head #'head)]
              [else
               (if make-operator-form
-                  (dispatch-infix-implicit juxtapose-name #'head)
+                  (dispatch-infix-implicit juxtapose-name #'head #'head)
                   (raise-unbound-operator #'head.name))])]
-          [(((~datum parsed) . _) . _)
-           (dispatch-infix-implicit juxtapose-name #'head)]
-          [(((~and tag (~datum parens)) . inside) . tail)
-           (dispatch-infix-implicit call-name #'tag)]
-          [(((~and tag (~datum brackets)) . inside) . tail)
-           (dispatch-infix-implicit ref-name #'tag)]
-          [(((~and tag (~datum block)) . inside) . tail)
-           (dispatch-infix-implicit juxtapose-name #'tag)]
-          [(((~and tag (~datum alts)) . inside) . tail)
-           (dispatch-infix-implicit juxtapose-name #'tag)]
+          [((~and head ((~datum parsed) . _)) . _)
+           (dispatch-infix-implicit juxtapose-name #'head #'head)]
+          [((~and head ((~and tag (~datum parens)) . inside)) . tail)
+           (dispatch-infix-implicit call-name #'tag #'head)]
+          [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
+           (dispatch-infix-implicit ref-name #'tag #'head)]
+          [((~and head ((~and tag (~datum block)) . inside)) . tail)
+           (dispatch-infix-implicit juxtapose-name #'tag #'head)]
+          [((~and head ((~and tag (~datum alts)) . inside)) . tail)
+           (dispatch-infix-implicit juxtapose-name #'tag #'head)]
           [(literal . tail)
-           (dispatch-infix-implicit juxtapose-name #'literal)])
+           (dispatch-infix-implicit juxtapose-name #'literal #'literal)])
 
         . where . 
 
@@ -330,8 +330,8 @@
                                      (syntax-e (operator-name current-op)))
                                     op-stx)])]))
 
-        (define (dispatch-infix-implicit implicit-name head-stx)
-          (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form head-stx in-space
+        (define (dispatch-infix-implicit implicit-name context-stx head-stx)
+          (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form context-stx head-stx in-space
                                                             infix-operator-ref
                                                             operator-kind-str form-kind-str
                                                             stop-on-unbound?))
@@ -348,7 +348,7 @@
            [(((~datum op) sep) . _) (eq? (syntax-e #'sep) name-path-op)]
            [_ #f])))
 
-  ;; improves errors when nothin appears after an operator:
+  ;; improves errors when nothing appears after an operator:
   (define (check-empty op-stx tail form-kind-str)
     (cond
       [(or (null? tail)

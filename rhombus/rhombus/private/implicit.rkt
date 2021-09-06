@@ -25,7 +25,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
-        (values (quasisyntax/loc #'tag (rhombus-block . body))
+        (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-block #'tag #'tag) #'body) #'tag)
                 #'tail)]))))
 
 (define-syntax #%literal

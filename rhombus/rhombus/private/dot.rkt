@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/property
-                     enforest/syntax-local)
+                     enforest/syntax-local
+                     "operator-parse.rkt")
          "definition.rkt"
          "expression.rkt"
          "static-info.rkt"
@@ -47,12 +48,12 @@
    'macro
    (lambda (form1 tail)
      (syntax-parse tail
-       [(dot field:identifier . tail)
+       [(dot::operator field:identifier . tail)
         (define (generic)
           (if strict?
               (raise-syntax-error #f
                                   "strict operator not supported for left-hand side"
-                                  #'dot
+                                  #'dot.name
                                   #f
                                   (list form1))
               (values #`(dot-lookup-by-name #,form1 'field)
@@ -66,10 +67,10 @@
                 #'tail)
                (generic))]
           [_ (generic)])]
-       [(dot other . tail)
+       [(dot::operator other . tail)
         (raise-syntax-error #f
                             "expected an identifier for a field name, but found something else"
-                            #'dot
+                            #'dot.name
                             #f
                             (list #'other))]))
    'left))

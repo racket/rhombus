@@ -118,37 +118,41 @@ numbers), escape to S-expression notation with `#{` ... `}`.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks
 and indentation for grouping. A line with more indentation starts a
-_block_, and it's always after a line that ends `:` or (much less
-commonly) `|`:
+_block_, and it's always after a line that ends `:`, that ends `|`
+(much less commonly), or that starts `|`. You can think of a
+more-indented `|` as being preceded implicitly by a `:` at the end of
+the previous line. A `|` counts as being indented by half a column, so
+the `|`s below are indented even when they are written right under
+`if`, `match`, or `cond`:
 
 ```
 begin:
   group within block
   another group within block
 
-if is_rotten(apple):
- | get_another()
- | take_bite()
-   be_happy()
+if is_rotten(apple)
+| get_another()
+| take_bite()
+  be_happy()
 
-match x:
- | 0:
-    def zero = x
-    x + zero
- | n:
-    n + 1
+match x
+| 0:
+   def zero = x
+   x + zero
+| n:
+   n + 1
 
-cond:
- | // check the weather
-   is_raining():
-     take_umbrella()
- | // check the destination
-   going_to_beach():
-     wear_sunscreen()
-     take_umbrella()
- | // assume a hat is enough
-   _:
-     wear_hat() 
+cond
+| // check the weather
+  is_raining():
+    take_umbrella()
+| // check the destination
+  going_to_beach():
+    wear_sunscreen()
+    take_umbrella()
+| // assume a hat is enough
+  _:
+    wear_hat() 
 ```
 
 _Even if you don't normally use DrRacket, you should proabably try it
@@ -167,7 +171,9 @@ A `|` is allowed only within a block, and it also starts a subblock on
 the right-hand side of the `|`. Each subsequent `|` at the same
 indentation creates a new subblock. Shrubbery notation allows `|` only
 within a block whose groups all contain an immediate `|` subblock. A
-block of `|` subblocks is an _alts-block_.
+block of `|` subblocks is an _alts-block_. A `:` isn't needed or
+allowed before the first `|` in an _alts-block_, because the `|`
+itself is enough of an indication that a _alts-block_ is starting.
 
 Each line within a block forms a _group_. Groups are important,
 because post-shrubbery parsing and macro expansion are constrained to
@@ -186,17 +192,17 @@ examples:
 begin: group within block
        another group within block
 
-if is_rotten(apple): | get_another() | take_bite()
-                                       be_happy()
+if is_rotten(apple) | get_another() | take_bite()
+                                      be_happy()
 
-match x: | 0: def zero = x
-              x + zero
-         | n: n + 1
+match x | 0: def zero = x
+             x + zero
+        | n: n + 1
 
-cond: | is_raining(): take_umbrella()
-      | going_to_beach(): wear_sunscreen()
-                          take_umbrella()
-      | _: wear_hat() 
+cond | is_raining(): take_umbrella()
+     | going_to_beach(): wear_sunscreen()
+                         take_umbrella()
+     | _: wear_hat() 
 ```
 
 Within a block, a `;` can be used instead of a new line to start a new
@@ -205,14 +211,14 @@ group, so these examples also parse the same:
 ```
 begin: group within block; another group within block
 
-if is_rotten(apple): | get_another() | take_bite(); be_happy()
+if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
-match x: | 0: def zero = x; x + zero
-         | n: n + 1
+match x | 0: def zero = x; x + zero
+        | n: n + 1
 
-cond: | is_raining(): take_umbrella()
-      | going_to_beach(): wear_sunscreen(); take_umbrella()
-      | _: wear_hat() 
+cond | is_raining(): take_umbrella()
+     | going_to_beach(): wear_sunscreen(); take_umbrella()
+     | _: wear_hat() 
 ```
 
 You can add extra `;`s, such as at the end of lines, since `;` will
@@ -403,9 +409,6 @@ origin    // prints Posn(0, 0)
 
 origin.x  // prints 0
 ```
-
-_Printing is not yet implemented in the `shrubbery-rhombus-0` package,
-so you'll see Racket printing for now._
 
 A structure-type name followed by `.` and a field name gets an
 accessor function to extract the field value from an instance of the
@@ -788,9 +791,9 @@ two `|`s. The first `|` holds the “then” branch, and the second `|`
 holds the “else” branch:
 
 ```
-if 1 == 2:
- | "same"
- | "different"
+if 1 == 2
+| "same"
+| "different"
 ```
 
 Although an `if` could be nested further in the “else” branch to
@@ -802,10 +805,10 @@ to the block after first test that produces a non-`#false` value. The
 
 ```
 fun fib(n):
-  cond:
-   | n == 0: 1
-   | n == 1: 1
-   | 'else': fib(n-1) + fib(n-2)
+  cond
+  | n == 0: 1
+  | n == 1: 1
+  | 'else': fib(n-1) + fib(n-2)
 
 fib(5) // prints 8
 ```
@@ -828,10 +831,10 @@ pattern, but using the binding operator `_` is more common.
 
 ```
 fun fib(n):
-  match n:
-   | 0: 1
-   | 1: 1
-   | _: fib(n-1) + fib(n-2)
+  match n
+  | 0: 1
+  | 1: 1
+  | _: fib(n-1) + fib(n-2)
 ```
 
 This kind of immediate pattern-matching dispatch on a function
@@ -839,10 +842,10 @@ argument is common enough that `fun` supports it directly,
 fusing the function declaration and the pattern match, like this:
 
 ```
-fun:
- | fib(0): 1
- | fib(1): 1
- | fib(n): fib(n-1) + fib(n-2)
+fun
+| fib(0): 1
+| fib(1): 1
+| fib(n): fib(n-1) + fib(n-2)
 ```
 
 There's no `'else'` for this fused form, but `_` can be useful in
@@ -854,11 +857,11 @@ different numbers of arguments, and a call will find a matching case
 with the right number of arguments.
 
 ```
-fun:
- | hello(name):
-     "Hello, " +$ name    // +$ coerces to strings and concatenates
- | hello(first, last):
-     hello(first +$ " " +$ last)
+fun
+| hello(name):
+    "Hello, " +$ name    // +$ coerces to strings and concatenates
+| hello(first, last):
+    hello(first +$ " " +$ last)
 
 hello("World")             // prints "Hello, World"
 hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
@@ -979,11 +982,11 @@ the same way that functions can be defined to accept one or two
 arguments:
 
 ```
-operator:
- | ((x :: Integer) <> (y :: Integer)):
-     Posn(x, y)
- | (<> (x ::Integer)):
-     Posn(x, x)
+operator
+| ((x :: Integer) <> (y :: Integer)):
+    Posn(x, y)
+| (<> (x ::Integer)):
+    Posn(x, x)
 
 1 <> 2  // prints Posn(1, 2)
 <> 3    // prints Posn(3, 3)
@@ -1080,10 +1083,10 @@ is immutable.
 `List` works as an annotation with `-:` and `::`:
 
 ```
-fun:
- | classify(_ :: List): "list"
- | classify(_ :: Number): "number"
- | classify(_): "other"
+fun
+| classify(_ :: List): "list"
+| classify(_ :: Number): "number"
+| classify(_): "other"
 
 classify([1])  // prints "list"
 classify(1)    // prints "number"
@@ -1108,10 +1111,10 @@ variable bound by the preceding pattern is instead bound to a list of
 matches.
 
 ```
-fun:
- | got_milk([]): #false
- | got_milk([head, tail, ...]):
-    head === "milk" || got_milk(tail)
+fun
+| got_milk([]): #false
+| got_milk([head, tail, ...]):
+   head === "milk" || got_milk(tail)
 
 got_milk([])                             // prints #false
 got_milk(["apple", "milk", "banana"])    // prints #true
@@ -1125,11 +1128,11 @@ treated as a list that is the tail of the new list.
 ```
 [1, 2, [3, 4], ...]  // prints [1, 2, 3, 4]
 
-fun:
- | is_sorted([]): #true
- | is_sorted([head]): #true
- | is_sorted([head, next, tail, ...]):
-    head <= next && is_sorted([next, tail, ...])
+fun
+| is_sorted([]): #true
+| is_sorted([head]): #true
+| is_sorted([head, next, tail, ...]):
+   head <= next && is_sorted([next, tail, ...])
 
 is_sorted([1, 2, 3, 3, 5]) // prints #true
 is_sorted([1, 2, 9, 3, 5]) // prints #false
@@ -1463,10 +1466,10 @@ this:
 expr.macro ?(¿a ! ¿tail ...):
   values(?(factorial(¿a)), tail)
 
-fun:
- | factorial(0): 1
- | factorial(n): n*factorial(n-1)
-         
+fun
+| factorial(0): 1
+| factorial(n): n*factorial(n-1)
+
 10! + 1 // = 3628801
 ```
 
@@ -1514,7 +1517,7 @@ but the implementation does not yet do that._
 
 ## Definition and declaration macros
 
-The `definition_macro` form defines a definition macro. It is similar
+The `defn.macro` form defines a definition macro. It is similar
 to `expr.macro` in prefix form, except that the name must be an
 identifier (never an operator), and the result syntax object should
 represent a block, which is spliced into the definition context where
@@ -1524,7 +1527,7 @@ Here's the classic `def_five` macro:
 
 
 ```
-definition_macro ?(def_five ¿id):
+defn.macro ?(def_five ¿id):
   ?{
     def ¿id: 5
   }
@@ -1533,7 +1536,7 @@ def_five v
 v  // prints 5
 ```
 
-Declarations macros are written with `declaration_macro`, and the
+Declarations macros are written with `decl.macro`, and the
 block produced by expansion can use forms like `import` and
 `export`.
 
@@ -1733,9 +1736,9 @@ expensive run-time checks. For example, this `sum` runs in quadratic
 time:
 
 ```
-fun:
- | sum([]): 0
- | sum([head :: Number, tail :: Number, ...]):
+fun
+| sum([]): 0
+| sum([head :: Number, tail :: Number, ...]):
     head + sum(tail)
 ```
 
