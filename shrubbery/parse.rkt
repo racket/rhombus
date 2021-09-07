@@ -10,7 +10,8 @@
 (struct state (line            ; current group's line and last consumed token's line
                column          ; group's column; below ends group, above starts indented
                paren-immed?    ; immediately in `()` or `[]`?
-               bar-closes?     ; does `|` end a group?
+               bar-closes?     ; does `|` always end a group?
+               bar-closes-line ; `|` (also) ends a group on this line
                delta           ; column delta created by `\`, applied to `line` continuation
                raw))           ; reversed whitespace (and comments) to be remembered
 
@@ -18,12 +19,14 @@
                     #:column column
                     #:paren-immed? [paren-immed? #f]
                     #:bar-closes? [bar-closes? #f]
+                    #:bar-closes-line [bar-closes-line #f]
                     #:delta delta
                     #:raw [raw null])
   (state line
          column
          paren-immed?
          bar-closes?
+         bar-closes-line
          delta
          raw))
 
@@ -32,7 +35,8 @@
                      paren-immed?   ; immediately in `()` or `[]`?
                      column         ; not #f => required indentation check checking
                      check-column?  ; #f => allow any sufficiently large (based on closer) indentation
-                     bar-closes?    ; does `|` end the sequence of groups?
+                     bar-closes?    ; does `|` always end the sequence of groups?
+                     bar-closes-line ; `|` (also) ends a sequence of groups on this line
                      bar-mode       ; ok to start with a bar group?: 'allowed, 'misplaced, or colon token
                      comma-time?    ; allow and expect a comma next
                      last-line      ; most recently consumed line
@@ -46,6 +50,7 @@
                           #:column column
                           #:check-column? [check-column? #t]
                           #:bar-closes? [bar-closes? #f]
+                          #:bar-closes-line [bar-closes-line #f]
                           #:bar-mode [bar-mode 'misplaced]
                           #:last-line last-line
                           #:delta delta
@@ -56,6 +61,7 @@
                column
                check-column?
                bar-closes?
+               bar-closes-line
                bar-mode
                #f
                last-line
@@ -224,12 +230,13 @@
                              "within parentheses or braces")))
            (case (token-name t)
              [(bar-operator)
+              (define line (token-line t))
               (cond
-                [(group-state-bar-closes? sg)
+                [(or (group-state-bar-closes? sg)
+                     (eqv? line (group-state-bar-closes-line sg)))
                  (done #f)]
                 [(eq? (group-state-bar-mode sg) 'allowed)
                  ;; Bar at the start of a group
-                 (define line (token-line t))
                  (define same-line? (or (not (group-state-last-line sg))
                                         (= line (group-state-last-line sg))))
                  (when (group-state-check-column? sg)
@@ -241,9 +248,10 @@
                                         (group-state-tail-commenting sg)))
                  (define-values (g rest-l group-end-line group-end-delta block-tail-commenting block-tail-raw)
                    (parse-block t (cdr l)
-                                #:line (token-line t)
+                                #:line line
                                 #:closer (column-next column)
                                 #:bar-closes? #t
+                                #:bar-closes-line line
                                 #:delta (group-state-delta sg)
                                 #:raw (if commenting
                                           null
@@ -293,6 +301,7 @@
                                            #:line line
                                            #:column column
                                            #:bar-closes? (group-state-bar-closes? sg)
+                                           #:bar-closes-line (group-state-bar-closes-line sg)
                                            #:delta (group-state-delta sg)
                                            #:raw null)))
               (define-values (gs rest-rest-l end-line end-delta end-t tail-commenting tail-raw)
@@ -373,6 +382,7 @@
                               #:line (token-line t)
                               #:closer (token-column t)
                               #:bar-closes? #f
+                              #:bar-closes-line #f
                               #:delta (state-delta s)
                               #:raw (state-raw s))]
                 [else
@@ -400,19 +410,22 @@
                         #:line (token-line t)
                         #:closer (column-half-next (state-column s))
                         #:delta (state-delta s)
-                        #:raw (state-raw s))]
+                        #:raw (state-raw s)
+                        #:bar-closes? #f
+                        #:bar-closes-line (state-bar-closes-line s))]
           [(bar-operator)
+           (define line (token-line t))
            (cond
-             [(state-bar-closes? s)
+             [(or (state-bar-closes? s)
+                  (eqv? line (state-bar-closes-line s)))
               (done)]
              [else
-              #;
-              (fail t "misplaced `|` or missing `:` before")
               (parse-block #f l
                            #:bar-mode 'allowed
-                           #:line (token-line t)
+                           #:line line
                            #:closer (token-column t)
                            #:bar-closes? #f
+                           #:bar-closes-line #f
                            #:delta (state-delta s)
                            #:raw (state-raw s))])]
           [(opener)
@@ -473,6 +486,7 @@
                      #:line line
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
+                     #:bar-closes-line [bar-closes-line #f]
                      #:delta in-delta
                      #:raw in-raw
                      #:bar-mode [bar-mode t])
@@ -487,6 +501,7 @@
                                        #:column (+ (token-column next-t) delta)
                                        #:last-line last-line
                                        #:bar-closes? bar-closes?
+                                       #:bar-closes-line bar-closes-line
                                        #:bar-mode bar-mode
                                        #:delta delta
                                        #:commenting group-commenting
@@ -659,7 +674,7 @@
             (cond
               [(null? l) (values null raw)]
               [else (case (token-name (car l))
-                      [(raw comment) (loop (cdr l) (cons (car l) raw))]
+                      [(whitespace comment) (loop (cdr l) (cons (car l) raw))]
                       [else (values l raw)])])))
         (cond
           [(and (pair? next-l)
