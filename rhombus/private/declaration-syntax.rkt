@@ -28,8 +28,8 @@
 
 (define-for-syntax (unpack-declarations form proc)
   (syntax-parse form
-    #:datum-literals (block group)
-    [(block (group d ...) ...)
+    #:datum-literals (parens block group)
+    [(parens (group (block (group d ...) ...)))
      #`((rhombus-top (group d ...))
         ...)]
     [_ (raise-result-error (proc-name proc) "declaration-list?" form)]))

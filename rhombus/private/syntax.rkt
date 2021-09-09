@@ -380,7 +380,7 @@
                                             #:tail-ids #'(tail-id)
                                             #:wrap-for-tail
                                             (lambda (body)
-                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(block . q.gs)))
+                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group (block . q.gs)))))
                                               (with-syntax ([((p-id id-ref) ...) idrs])
                                                 #`(syntax-parse tail-id
                                                     [#,pattern

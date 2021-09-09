@@ -93,6 +93,22 @@
 ;; and any delimiters used to form it (such as parentheses or a `:`
 ;; that starts a block).
 
+;; Raw text is preserved as syntax properties so that the original
+;; program text can be reconstructed. Raw text is represented as a
+;; `cons`-based tree of strings to be rendered through an inorder
+;; traversal. The relevant syntax properties are 'raw, 'raw-prefix,
+;; and 'raw-tail. The 'raw property on an atom is the original text
+;; for the atom; whitespace and comments that precede the atom are
+;; normally attached as 'raw-prefix. For a compound term, the
+;; contained terms must be traversed to gather all the raw text; in
+;; addition to 'raw-prefix and 'raw attached to the compound-term tag,
+;; a 'raw-tail property holds raw text to be written after all of the
+;; compound term's subterms. For example, the closing `)` for a
+;; `parens` term will be attached to 'raw-tail on the 'parens tag. The
+;; `group` and `top` tags may have non-empty 'raw-prefix and 'raw-tail
+;; syntax properties, even though those tags don't have source
+;; locations.
+
 ;; Parse all groups in a stream
 (define (parse-top-groups l)
   (define-values (gs rest-l end-line end-delta end-t tail-commenting tail-raw)
@@ -115,7 +131,7 @@
 ;;          delta of last consumed
 ;;          last token consumed (if a closer)
 ;;          pending group-comment token from end
-;;          pending raw whitespace
+;;          pending raw whitespace/comments
 (define (parse-groups l sg)
   (define (check-no-commenting #:tail-ok? [tail-ok? #f])
     (define commenting (or (group-state-commenting sg)
@@ -641,64 +657,6 @@
       (and (syntax? e)
            (eq? sym (syntax-e e)))))
 
-(define (add-span-srcloc start-t end-t l #:alt [alt-start-t #f])
-  (define (add-srcloc l loc)
-    (cons (let ([stx (datum->syntax #f (car l) loc stx-for-original-property)])
-            (if (syntax? start-t)
-                (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
-                       [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)])
-                  stx)
-                stx))
-          (cdr l)))
-  (define last-t/e (or end-t
-                       ;; when `end-t` is false, we go looking for the
-                       ;; end in `l`; this search walks down the end
-                       ;; of `l`, and it may recur into the last element,
-                       ;; but it should go only a couple of levels that way,
-                       ;; since non-`group` tags have spanning locations
-                       ;; gather from their content
-                       (let loop ([e l])
-                         (cond
-                           [(syntax? e) e]
-                           [(not (pair? e)) #f]
-                           [(null? (cdr e))
-                            (define a (car e))
-                            (if (and (pair? a)
-                                     (syntax? (car a)))
-                                ;; found a tag like `block`
-                                (car a)
-                                (loop a))]
-                           [else (loop (cdr e))]))))
-  (define s-loc (cond
-                  [(not start-t)
-                   (token-srcloc alt-start-t)]
-                  [(syntax? start-t)
-                   (syntax-srcloc start-t)]
-                  [else
-                   (token-srcloc start-t)]))
-  (define e-loc (and last-t/e
-                     (if (syntax? last-t/e)
-                         (syntax-srcloc last-t/e)
-                         (token-srcloc last-t/e))))
-  (define s-position (srcloc-position s-loc))
-  (add-srcloc l (srcloc (srcloc-source s-loc)
-                        (srcloc-line s-loc)
-                        (srcloc-column s-loc)
-                        s-position
-                        (if e-loc
-                            (let ([s s-position]
-                                  [e (srcloc-position e-loc)]
-                                  [sp (srcloc-span e-loc)])
-                              (and s e sp
-                                   (+ (max (- e s) 0) sp)))
-                            (srcloc-span s-loc)))))
-
-(define (syntax-property-copy dest src prop)
-  (define v (prop src))
-  (if v
-      (prop dest v)
-      dest))
-
 ;; Like `datum->syntax`, but propagates the source location of
 ;; a start of a list (if any) to the list itself. That starting
 ;; item is expected to be a tag that has the span of the whole
@@ -839,6 +797,60 @@
       (+ c 0.5)
       (column-next c)))
 
+;; ----------------------------------------
+
+(define (add-span-srcloc start-t end-t l #:alt [alt-start-t #f])
+  (define (add-srcloc l loc)
+    (cons (let ([stx (datum->syntax #f (car l) loc stx-for-original-property)])
+            (if (syntax? start-t)
+                (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
+                       [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)])
+                  stx)
+                stx))
+          (cdr l)))
+  (define last-t/e (or end-t
+                       ;; when `end-t` is false, we go looking for the
+                       ;; end in `l`; this search walks down the end
+                       ;; of `l`, and it may recur into the last element,
+                       ;; but it should go only a couple of levels that way,
+                       ;; since non-`group` tags have spanning locations
+                       ;; gather from their content
+                       (let loop ([e l])
+                         (cond
+                           [(syntax? e) e]
+                           [(not (pair? e)) #f]
+                           [(null? (cdr e))
+                            (define a (car e))
+                            (if (and (pair? a)
+                                     (syntax? (car a)))
+                                ;; found a tag like `block`
+                                (car a)
+                                (loop a))]
+                           [else (loop (cdr e))]))))
+  (define s-loc (cond
+                  [(not start-t)
+                   (token-srcloc alt-start-t)]
+                  [(syntax? start-t)
+                   (syntax-srcloc start-t)]
+                  [else
+                   (token-srcloc start-t)]))
+  (define e-loc (and last-t/e
+                     (if (syntax? last-t/e)
+                         (syntax-srcloc last-t/e)
+                         (token-srcloc last-t/e))))
+  (define s-position (srcloc-position s-loc))
+  (add-srcloc l (srcloc (srcloc-source s-loc)
+                        (srcloc-line s-loc)
+                        (srcloc-column s-loc)
+                        s-position
+                        (if e-loc
+                            (let ([s s-position]
+                                  [e (srcloc-position e-loc)]
+                                  [sp (srcloc-span e-loc)])
+                              (and s e sp
+                                   (+ (max (- e s) 0) sp)))
+                            (srcloc-span s-loc)))))
+
 (define (token-raw t)
   (define value (token-value t))
   (or (syntax-raw-property value)
@@ -915,6 +927,12 @@
     [(null? a) b]
     [(null? b) a]
     [else (cons a b)]))
+
+(define (syntax-property-copy dest src prop)
+  (define v (prop src))
+  (if v
+      (prop dest v)
+      dest))
 
 ;; ----------------------------------------
 
