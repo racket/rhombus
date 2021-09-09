@@ -7,9 +7,7 @@ use_static_dot
 10 * (-3) + 2
 10 + (-3) * 2
 
-{
-  #false || !(#false || #false)
-}
+#false || !(#false || #false)
 
 "hello" +$ " " +$ "world"
 
@@ -77,7 +75,7 @@ def Posn(px, py) -: Posn: Posn(1, 2)
 cons(px, py)
 
 def identity: fun (x): x
-identity(1 + fun (x) { x } (99) )
+identity(1 + (fun (x): x) (99) )
 
 size
 
@@ -225,7 +223,7 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
       match bind_ct.unpack_info(b)
       | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?{
+          ? :{
             // check for pair an extract reversed pieces
             val (is_match, ¿a_part_id, ¿b_part_id):
               match ¿in_id
@@ -252,7 +250,7 @@ bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_
   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
       match bind_ct.unpack_info(b)
       | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?{
+          ? :{
             ¿a_binder(¿a_part_id, ¿a_data)
             ¿b_binder(¿b_part_id, ¿b_data)
           }
@@ -269,16 +267,16 @@ rx
 defn.macro ?(define_eight ¿e ...):
   match e
   | ?(¿name):
-      ?{def ¿name: 8}
+      ? :{def ¿name: 8}
        
 define_eight ate
 ate
 
 defn.macro ?(define_and_use ¿e ...):
   match e
-  | ?(¿name {¿rhs ...}):
-      ?{def ¿name {¿rhs ...}
-        ?(¿name)}
+  | ?(¿name :{¿rhs ...}):
+      ? :{def ¿name :{¿rhs ...}
+          ?(¿name)}
 
 define_and_use nine: 1+8
 nine
@@ -288,7 +286,7 @@ nine
 decl.macro ?(empty_import ¿e ...):
   match e
   | ?():
-      ?{import:}
+      ? :{import:}
 
 empty_import
 
@@ -322,10 +320,14 @@ ILine.p1(l1).x
 
 fun (p): (p :: IPosn).x
 
-{
+expr.macro ?(begin: ¿e ...; ...):
+  values(?(cond
+           | 'else': ¿e ...; ...),
+         ?())
+
+begin:
   val ILine(p1, p2): l1
   p1.x + p2.y
-}
 
 // function result contracts
 
@@ -346,10 +348,9 @@ fun
 add_two(7) == 9.0
 add_two(6, 7) === "6 and 7"
 
-{
+begin:
   val f: fun (x) :: Integer: x
   f(10)
-}
 
 fun on_diag(n :: Integer) :: Posn:
   Posn(n, n)
@@ -405,12 +406,11 @@ static_info.macro ?zero_vec: ?((¿(expr_ct.call_result_key),
                                                          vector_dot_provider))))))
 zero_vec().magnitude
 
-{
+begin:
   let p1 :: Posn.of(Integer, Posn): Posn(1, Posn(3, 4))
   // RHS influences info for LHS:
   let Posn(px, py): p1
   py.y
-}
 
 // indexables
 
@@ -537,9 +537,8 @@ fun get_pts_x2(pts -: ListOf(Posn)):
 get_pts_x2([Posn(5, 7)])
 
 // definition-sequence macros
-
-defn.sequence_macro ?{reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...}:
-  values(?{ ¿defn2 ...; ¿defn1 ... }, ?{ ¿tail; ...})
+defn.sequence_macro ?(:{reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...}):
+  values(? :{ ¿defn2 ...; ¿defn1 ... }, ? :{ ¿tail; ...})
 
 reverse_defns
 def seq_x: seq_y+1

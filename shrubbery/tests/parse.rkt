@@ -1,5 +1,6 @@
 #lang racket/base
-(require "../parse.rkt")
+(require "../parse.rkt"
+         racket/pretty)
 
 (define input1
 #<<INPUT
@@ -87,22 +88,22 @@ define fib(n):
        fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n { | 0 { 0 }
-            | 1 { 1 }
-            | n { fib(n-1) + fib(n-2) } }
+  match n { | 0: { 0 }
+            | 1: { 1 }
+            | n: { fib(n-1) + fib(n-2) } }
 
 define fib(n):
   match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
 
 define fib(n): match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
 
-define fib(n) { match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) } }
+define fib(n): { match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) } }
 
-define fib(n) { match n { | 0 {0} | 1 {1} | n { fib(n-1) + fib(n-2) } } }
+define fib(n): { match n { | 0: {0} | 1: {1} | n: { fib(n-1) + fib(n-2) } } }
 
-define fib(n) { match n { | { 0 {0} } | { 1 {1} } | { n { fib(n-1) + fib(n-2) } } } }
+define fib(n): { match n { | { 0: {0} } | { 1: {1} } | { n: { fib(n-1) + fib(n-2) } } } }
 
-define fib(n) { match n | { 0 {0} } | { 1 {1} } | { n { fib(n-1) + fib(n-2) } } }
+define fib(n): { match n | { 0: {0} } | { 1: {1} } | { n: { fib(n-1) + fib(n-2) } } }
 
 // END equivalent `fib` definitions
 
@@ -559,50 +560,8 @@ INPUT
        match
        n
        (alts
-        (block (group (block (group 0 (block (group 0))))))
-        (block (group (block (group 1 (block (group 1))))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group (block (group 0 (block (group 0))))))
-        (block (group (block (group 1 (block (group 1))))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group (block (group 0 (block (group 0))))))
-        (block (group (block (group 1 (block (group 1))))))
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
         (block
          (group
           n
@@ -643,20 +602,18 @@ INPUT
        match
        n
        (alts
-        (block (group (block (group 0 (block (group 0))))))
-        (block (group (block (group 1 (block (group 1))))))
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
         (block
          (group
+          n
           (block
            (group
-            n
-            (block
-             (group
-              fib
-              (parens (group n (op -) 1))
-              (op +)
-              fib
-              (parens (group n (op -) 2))))))))))))
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
     (group
      define
      fib
@@ -666,20 +623,60 @@ INPUT
        match
        n
        (alts
-        (block (group (block (group 0 (block (group 0))))))
-        (block (group (block (group 1 (block (group 1))))))
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
         (block
          (group
+          n
           (block
            (group
-            n
-            (block
-             (group
-              fib
-              (parens (group n (op -) 1))
-              (op +)
-              fib
-              (parens (group n (op -) 2))))))))))))
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
     (group
      define
      make_adder
@@ -1529,7 +1526,17 @@ INPUT
 (define (check input expected)
   (let ([in (open-input-string input)])
     (port-count-lines! in)
-    (unless (equal? expected (syntax->datum (parse-all in)))
+    (define parsed (syntax->datum (parse-all in)))
+    (unless (equal? expected parsed)
+      (define (out name parsed)
+        (define path (build-path (find-system-path 'temp-dir) name))
+        (printf "~a\n" path)
+        (call-with-output-file*
+         path
+         #:exists 'truncate
+         (lambda (o) (pretty-write parsed o))))
+      (out "expected" expected)
+      (out "parsed" parsed)
       (error "failed"))))
 
 (check input1 expected1)

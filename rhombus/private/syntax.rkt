@@ -327,8 +327,8 @@
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
     #:datum-literals (op block parens group)
     #:literals (?)
-    (pattern (~seq (op ?) (block g::identifier-definition-group
-                                 . gs)))))
+    (pattern (~seq (op ?) (parens (group (block g::identifier-definition-group
+                                                . gs)))))))
 
 (define-for-syntax (parse-transformer-definition g self-id rhs
                                                  in-space make-transformer-id
