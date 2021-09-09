@@ -2,7 +2,8 @@
 (require racket/pretty
          "lex.rkt"
          "srcloc.rkt"
-         (submod "print.rkt" for-parse))
+         (submod "print.rkt" for-parse)
+         "private/property.rkt")
 
 (provide parse-all)
 
@@ -80,7 +81,7 @@
 (define (closer-expected-opener closer) (and (pair? closer) (cdr closer)))
 (define (make-closer-expected str tok) (cons str tok))
 
-(define group-tag (syntax-property (datum->syntax #f 'group) 'raw ""))
+(define group-tag (syntax-raw-property (datum->syntax #f 'group) '()))
 
 ;; ----------------------------------------
 
@@ -644,8 +645,8 @@
   (define (add-srcloc l loc)
     (cons (let ([stx (datum->syntax #f (car l) loc stx-for-original-property)])
             (if (syntax? start-t)
-                (let* ([stx (syntax-property-copy stx start-t 'raw)]
-                       [stx (syntax-property-copy stx start-t 'raw-prefix)])
+                (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
+                       [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)])
                   stx)
                 stx))
           (cdr l)))
@@ -693,9 +694,9 @@
                             (srcloc-span s-loc)))))
 
 (define (syntax-property-copy dest src prop)
-  (define v (syntax-property src prop))
+  (define v (prop src))
   (if v
-      (syntax-property dest prop v)
+      (prop dest v)
       dest))
 
 ;; Like `datum->syntax`, but propagates the source location of
@@ -840,25 +841,26 @@
 
 (define (token-raw t)
   (define value (token-value t))
-  (or (syntax-property value 'raw)
+  (or (syntax-raw-property value)
       (syntax-e value)))
 
 (define (record-raw stx t pre-raw)
   (define stx+raw (if t
-                      (syntax-property stx 'raw (cons (token-raw t)
-                                                      (or (syntax-property stx 'raw) '())))
-                      (if (syntax-property stx 'raw)
+                      (syntax-raw-property stx (raw-cons (token-raw t)
+                                                         (or (syntax-raw-property stx) '())))
+                      (if (syntax-raw-property stx)
                           stx
-                          (syntax-property stx 'raw ""))))
+                          (syntax-raw-property stx '()))))
   (if (null? pre-raw)
       stx+raw
-      (syntax-property stx+raw 'raw-prefix (cons (raw-tokens->raw pre-raw)
-                                                 (or (syntax-property stx 'raw-prefix) '())))))
+      (syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
+                                                    (or (syntax-raw-prefix-property stx) '())))))
+
 (define (add-raw-tail top raw)
   (if (null? raw)
       top
       (datum->syntax top
-                     (cons (syntax-property (car (syntax-e top)) 'raw-tail (raw-tokens->raw raw))
+                     (cons (syntax-raw-tail-property (car (syntax-e top)) (raw-tokens->raw raw))
                            (cdr (syntax-e top)))
                      top
                      top)))
@@ -866,27 +868,27 @@
 (define (add-pre-raw stx pre-raw)
   (if (null? pre-raw)
       stx
-      (syntax-property stx 'raw-prefix (raw-tokens->raw pre-raw))))
+      (syntax-raw-prefix-property stx (raw-tokens->raw pre-raw))))
 
 (define (move-pre-raw from-stx to)
   (define pre-raw (and (syntax? from-stx)
-                       (syntax-property from-stx 'raw-prefix)))
+                       (syntax-raw-prefix-property from-stx)))
   (cond
     [pre-raw
      (define a (car to))
-     (cons (syntax-property a 'raw (cons pre-raw
-                                         (or (syntax-property a 'raw) '())))
+     (cons (syntax-raw-property a (raw-cons pre-raw
+                                            (or (syntax-raw-property a) '())))
            (cdr to))]
     [else to]))
 
 (define (move-post-raw from-stx to)
   (define post-raw (and (syntax? from-stx)
-                        (syntax-property from-stx 'raw-tail)))
+                        (syntax-raw-tail-property from-stx)))
   (cond
     [post-raw
      (define a (datum->syntax #f (car to)))
-     (cons (syntax-property a 'raw-tail (cons (or (syntax-property a 'raw-tail) '())
-                                              post-raw))
+     (cons (syntax-raw-tail-property a (raw-cons (or (syntax-raw-tail-property a) '())
+                                                 post-raw))
            (cdr to))]
     [else to]))
 
@@ -899,14 +901,20 @@
 (define (add-raw-to-prefix t pre-raw l #:tail [post-raw #f])
   (cons (let ([stx (record-raw (car l) t pre-raw)])
           (if post-raw
-              (syntax-property stx 'raw-tail (cons (or (syntax-property stx 'raw-tail) '())
-                                                   (raw-tokens->raw post-raw)))
+              (syntax-raw-tail-property stx (raw-cons (or (syntax-raw-tail-property stx) '())
+                                                      (raw-tokens->raw post-raw)))
               stx))
         (cdr l)))
 
 (define (add-tail-raw-to-prefix post-raw l)
-  (cons (syntax-property (datum->syntax #f (car l)) 'raw-tail (raw-tokens->raw post-raw))
+  (cons (syntax-raw-tail-property (datum->syntax #f (car l)) (raw-tokens->raw post-raw))
         (cdr l)))
+
+(define (raw-cons a b)
+  (cond
+    [(null? a) b]
+    [(null? b) a]
+    [else (cons a b)]))
 
 ;; ----------------------------------------
 

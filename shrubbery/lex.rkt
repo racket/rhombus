@@ -2,7 +2,8 @@
 
 (require parser-tools/lex
          racket/contract
-         (prefix-in : parser-tools/lex-sre))
+         (prefix-in : parser-tools/lex-sre)
+         "private/property.rkt")
 
 (provide lex/status
          lex-all
@@ -179,7 +180,7 @@
                                              stx-for-original-property))
                   (if (eq? name 'comment)
                       stx
-                      (syntax-property stx 'raw (or raw (if (string? e) e ""))))))))
+                      (syntax-raw-property stx (or raw (if (string? e) e '()))))))))
 
 (define get-next-comment
   (lexer

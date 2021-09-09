@@ -1,4 +1,5 @@
 #lang racket/base
+(require "private/property.rkt")
 
 (provide shrubbery-syntax->string)
 
@@ -46,7 +47,7 @@
       [(null? g) tail]
       [(pair? g)
        (define a-stx (car g))
-       (define post (syntax-property a-stx 'raw-tail))
+       (define post (syntax-raw-tail-property a-stx))
        (define a (loop a-stx null use-prefix?))
        (define d (loop (cdr g)
                        (if post
@@ -58,8 +59,8 @@
        (if (null? a) d (cons a d))]
       [(syntax? g)
        (define pre (and use-prefix?
-                        (syntax-property g 'raw-prefix)))
-       (define r (syntax-property g 'raw))
+                        (syntax-raw-prefix-property g)))
+       (define r (syntax-raw-property g))
        (define raw (if (and pre r)
                        (cons pre r)
                        (or pre r null)))
@@ -70,7 +71,7 @@
 (define (all-raw-available? s)
   (cond
     [(syntax? s)
-     (or (syntax-property s 'raw)
+     (or (syntax-raw-property s)
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
