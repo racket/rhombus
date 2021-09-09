@@ -82,6 +82,7 @@
 (define (make-closer-expected str tok) (cons str tok))
 
 (define group-tag (syntax-raw-property (datum->syntax #f 'group) '()))
+(define top-tag (syntax-raw-property (datum->syntax #f 'top) '()))
 
 ;; ----------------------------------------
 
@@ -120,7 +121,7 @@
   (when tail-commenting (fail-no-comment-group tail-commenting))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
-  (define top (lists->syntax (cons 'top (bars-insert-alts gs))))
+  (define top (lists->syntax (cons top-tag (bars-insert-alts gs))))
   (add-raw-tail top tail-raw))
 
 ;; Parse a sequence of groups (top level, in opener-closer, or after `:`)
@@ -370,7 +371,7 @@
      (define line (token-line t))
      (define (check-block-mode)
        (when (eq? (state-block-mode s) 'end)
-         (fail t "no terms allowed after `»` in a group")))
+         (fail t "no terms allowed after `»` within a group")))
      ;; Consume a token
      (define (keep delta)
        (check-block-mode)
@@ -474,6 +475,8 @@
                            #:closer (make-closer-expected "»" t)
                            #:bar-closes? #f
                            #:bar-closes-line #f
+                           #:post-bar-closes? (state-bar-closes? s)
+                           #:post-bar-closes-line (state-bar-closes-line s)
                            #:delta (state-delta s)
                            #:raw raw)]
              [else
@@ -534,6 +537,8 @@
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:bar-closes-line [bar-closes-line #f]
+                     #:post-bar-closes? [post-bar-closes? bar-closes?]
+                     #:post-bar-closes-line [post-bar-closes-line bar-closes-line]
                      #:delta in-delta
                      #:raw in-raw
                      #:block-mode [block-mode t])
@@ -564,8 +569,8 @@
            ;; in 'end mode, so errors or returns a null group:
            (parse-group rest-l (make-state #:line end-line
                                            #:column +inf.0
-                                           #:bar-closes? bar-closes?
-                                           #:bar-closes-line bar-closes-line
+                                           #:bar-closes? post-bar-closes?
+                                           #:bar-closes-line post-bar-closes-line
                                            #:block-mode 'end
                                            #:delta end-delta
                                            #:raw null))
@@ -682,7 +687,7 @@
         ;; a continue operator not followed only by whitespace and
         ;; comments is just treated as whitespace
         (define-values (next-l next-raw)
-          (let loop ([l (cdr l)] [raw raw])
+          (let loop ([l (cdr l)] [raw (cons t raw)])
             (cond
               [(null? l) (values null raw)]
               [else (case (token-name (car l))

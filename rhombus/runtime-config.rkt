@@ -1,10 +1,9 @@
 #lang racket/base
 
 (require racket/runtime-config
-         racket/keyword
-         racket/symbol
          shrubbery/parse
-         shrubbery/print)
+         shrubbery/print
+         shrubbery/write)
 
 (current-read-interaction
  (lambda (src in)
@@ -23,61 +22,7 @@
 
 (print-boolean-long-form #t)
 
-(define rx:identifier #px"^(?:\\p{L}|_)(?:\\p{L}|\\p{N}|_)*$")
-
 (define orig-print (global-port-print-handler))
-
-(define (print-code v op #:sole? [sole? #f])
-  (cond
-    [(list? v)
-     (cond
-       [(null? v)
-        (error 'print-code "unexpected ~s" v)]
-       [(eq? 'op (car v))
-        (cond
-          [(and (not sole?)
-                (memq (cadr v) '(... ¿)) )
-           (display "¿(? " op)
-           (display (cadr v) op)
-           (display ")" op)]
-          [else
-           (display (cadr v) op)])]
-       [(eq? 'alts (car v))
-        (display "{" op)
-        (for ([v (in-list (cdr v))])
-          (display " | ")
-          (unless (and (pair? v) (eq? (car v) 'block))
-            (error 'print-code "unexpected ~s" v))
-          (for/fold ([first? #t]) ([v (in-list (cdr v))])
-            (unless first? (display "; " op))
-            (print-code v op)
-            #f))
-        (display " }" op)]
-       [else
-        (define-values (open sep close)
-          (case (car v)
-            [(group) (values "" " "  "")]
-            [(block) (values "{ " "; " " }")]
-            [(parens) (values "(" ", " ")")]
-            [(brackets) (values "[" ", " "]")]
-            [else (error 'print-code "unexpected ~s" (car v))]))
-        (display open op)
-        (for/fold ([first? #t]) ([v (in-list (cdr v))])
-          (unless first? (display sep op))
-          (print-code v op)
-          #f)
-        (display close op)])]
-    [(symbol? v)
-     (define s (symbol->immutable-string v))
-     (cond
-       [(regexp-match? rx:identifier s)
-        (display s op)]
-       [else
-        (display "#{")
-        (write v op)
-        (display "}")])]
-    [else
-     (print v op)]))
 
 (global-port-print-handler
  (lambda (v op [mode 0])
@@ -121,11 +66,9 @@
       (for/fold ([first? #t]) ([(k v) (in-hash v)])
         (unless first? (display ", " op))
         (cond
-          [(and (keyword? k)
-                (regexp-match? rx:identifier (keyword->immutable-string k)))
-           (display "'" op)
-           (display (keyword->immutable-string k) op)
-           (display "': " op)
+          [(keyword? k)
+           (write-shrubbery k op)
+           (display ": " op)
            (print v op)]
           [else
            (print k op)
@@ -139,7 +82,7 @@
       (when (and (pair? s)
                  (eq? 'op (car s)))
         (display " " op))
-      (print-code s op #:sole? #t)]
+      (write-shrubbery s op)]
      [(procedure? v)
       (write v op)]
      [else

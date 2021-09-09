@@ -1,5 +1,7 @@
 #lang racket/base
 (require "../parse.rkt"
+         "../print.rkt"
+         "../write.rkt"
          racket/pretty)
 
 (define input1
@@ -302,7 +304,9 @@ local:
    x+y
 
 if t | if f | a | b | y
+if t | «if f | a | b» | y
 if t | «tag: if f | a | b» | y
+if t | «tag: «if f | a | b»» | y
 
 x: y: a; b ; c
 x: y:« a; b »; c
@@ -1204,6 +1208,8 @@ INPUT
         (group define y (block (group 2)))))
       (group in (block (group x (op +) y)))))
     (group if t (alts (block (group if f)) (block (group a)) (block (group b)) (block (group y))))
+    (group if t (alts (block (group if f (alts (block (group a)) (block (group b))))) (block (group y))))
+    (group if t (alts (block (group tag (block (group if f (alts (block (group a)) (block (group b))))))) (block (group y))))
     (group if t (alts (block (group tag (block (group if f (alts (block (group a)) (block (group b))))))) (block (group y))))
     (group x (block (group y (block (group a) (group b) (group c)))))
     (group x (block (group y (block (group a) (group b))) (group c)))
@@ -1541,19 +1547,38 @@ INPUT
 
 (define (check input expected)
   (let ([in (open-input-string input)])
+    (define (out name parsed write)
+      (define path (build-path (find-system-path 'temp-dir) name))
+      (printf "~a\n" path)
+      (call-with-output-file*
+       path
+       #:exists 'truncate
+       (lambda (o) (write parsed o))))
     (port-count-lines! in)
-    (define parsed (syntax->datum (parse-all in)))
+    (define parsed-stx (parse-all in))
+    (define parsed (syntax->datum parsed-stx))
     (unless (equal? expected parsed)
-      (define (out name parsed)
-        (define path (build-path (find-system-path 'temp-dir) name))
-        (printf "~a\n" path)
-        (call-with-output-file*
-         path
-         #:exists 'truncate
-         (lambda (o) (pretty-write parsed o))))
-      (out "expected" expected)
-      (out "parsed" parsed)
-      (error "failed"))))
+      (out "expected" expected pretty-write)
+      (out "parsed" parsed pretty-write)
+      (error "parse failed"))
+    (define printed (shrubbery-syntax->string parsed-stx))
+    (unless (equal? input printed)
+      (out "expected" input display)
+      (out "printed" printed display)
+      (error "print failed"))
+    (define reparsed (let ([o (open-output-bytes)])
+                       (write-shrubbery parsed o)
+                       (or (with-handlers ([exn:fail? (lambda (exn) (eprintf "~a\n" (exn-message exn)) #f)])
+                             (define in (open-input-bytes (get-output-bytes o)))
+                             (port-count-lines! in)
+                             (syntax->datum (parse-all in)))
+                           (begin
+                             (out "wrote" (get-output-bytes o) displayln)
+                             (error "parse of wrote failed")))))
+    (unless (equal? parsed reparsed)
+      (out "expected" parsed pretty-print)
+      (out "reparsed" reparsed pretty-print)
+      (error "print failed"))))
 
 (define (check-fail input rx)
   (let ([in (open-input-string input)])

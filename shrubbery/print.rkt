@@ -1,6 +1,8 @@
 #lang racket/base
 (require "private/property.rkt")
 
+;; Printing syntax object using raw-text properties
+
 (provide shrubbery-syntax->string)
 
 (module+ for-parse
@@ -75,7 +77,11 @@
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
-               (null? e))))]
+               (null? e)))
+         (begin
+           (log-error ">> ~s" s)
+           #f)
+         )]
     [(pair? s) (and (all-raw-available? (car s))
                     (all-raw-available? (cdr s)))]
     [else #t]))
