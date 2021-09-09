@@ -108,7 +108,8 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"" "'")))]
+               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
+                                    "(" ")" "[" "]" "{" "}" "«" "»")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "." "/"))
                      (:+ ".")
@@ -288,9 +289,9 @@
     (ret 'fail lexeme 'error #f start-pos end-pos 'initial)]
    [script
     (ret 'comment lexeme 'comment #f start-pos end-pos 'initial)]
-   [(:or "(" "[" "{")
+   [(:or "(" "[" "{" "«")
     (ret 'opener lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'initial)]
-   [(:or ")" "]" "}")
+   [(:or ")" "]" "}" "»")
     (ret 'closer lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'continuing)]
    ["#{"
     (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0))]

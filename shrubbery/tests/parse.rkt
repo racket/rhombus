@@ -88,22 +88,22 @@ define fib(n):
        fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n { | 0: { 0 }
-            | 1: { 1 }
-            | n: { fib(n-1) + fib(n-2) } }
+  match n « | 0: « 0 »
+            | 1: « 1 »
+            | n: « fib(n-1) + fib(n-2) » »
 
 define fib(n):
-  match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
+  match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
 
-define fib(n): match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
+define fib(n): match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
 
-define fib(n): { match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) } }
+define fib(n): « match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) » »
 
-define fib(n): { match n { | 0: {0} | 1: {1} | n: { fib(n-1) + fib(n-2) } } }
+define fib(n): « match n « | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » » »
 
-define fib(n): { match n { | { 0: {0} } | { 1: {1} } | { n: { fib(n-1) + fib(n-2) } } } }
+define fib(n): « match n « | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » » »
 
-define fib(n): { match n | { 0: {0} } | { 1: {1} } | { n: { fib(n-1) + fib(n-2) } } }
+define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
 
 // END equivalent `fib` definitions
 
@@ -300,6 +300,15 @@ local:
     define y: 2
   in:
    x+y
+
+if t | if f | a | b | y
+if t | «tag: if f | a | b» | y
+
+x: y: a; b ; c
+x: y:« a; b »; c
+
+if t | x | y; z
+if t «| x | y»; z
 INPUT
 )
 
@@ -1193,7 +1202,14 @@ INPUT
        (block
         (group define x (block (group 1)))
         (group define y (block (group 2)))))
-      (group in (block (group x (op +) y)))))))
+      (group in (block (group x (op +) y)))))
+    (group if t (alts (block (group if f)) (block (group a)) (block (group b)) (block (group y))))
+    (group if t (alts (block (group tag (block (group if f (alts (block (group a)) (block (group b))))))) (block (group y))))
+    (group x (block (group y (block (group a) (group b) (group c)))))
+    (group x (block (group y (block (group a) (group b))) (group c)))
+    (group if t (alts (block (group x)) (block (group y) (group z))))
+    (group if t (alts (block (group x)) (block (group y))))
+    (group z)))
 
   
 (define input2
@@ -1539,5 +1555,18 @@ INPUT
       (out "parsed" parsed)
       (error "failed"))))
 
+(define (check-fail input rx)
+  (let ([in (open-input-string input)])
+    (port-count-lines! in)
+    (unless (with-handlers ([exn:fail? (lambda (exn) (regexp-match? rx (exn-message exn)))])
+              (parse-all in)
+              #f)
+      (error "failed to fail: ~s" input))))
+
 (check input1 expected1)
 (check input2 expected2)
+
+(check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
+(check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
+(check-fail "if t «| x | y» more; z" #rx"no terms allowed after `»`")
+

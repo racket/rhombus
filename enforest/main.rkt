@@ -72,7 +72,8 @@
 ;; implicit prefix operator names:
 (define tuple-name   '#%tuple)       ; parentheses not after an expression
 (define array-name   '#%array)       ; square brackets not after an expression
-(define block-name   '#%block)       ; curly braces (normally mapped to `rhombus-block`)
+(define set-name     '#%set)         ; curly braces not after an expression
+(define block-name   '#%block)       ; colon (normally mapped to `rhombus-block`)
 (define alts-name    '#%alts)        ; vertical bars
 (define literal-name '#%literal)     ; numbers, strings, etc.
 
@@ -205,6 +206,8 @@
            (dispatch-prefix-implicit tuple-name #'tag #'head)]
           [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
            (dispatch-prefix-implicit array-name #'tag #'head)]
+          [((~and head ((~and tag (~datum braces)) . inside)) . tail)
+           (dispatch-prefix-implicit set-name #'tag #'head)]
           [((~and head ((~and tag (~datum block)) . inside)) . tail)
            (dispatch-prefix-implicit block-name #'tag #'head)]
           [((~and head ((~and tag (~datum alts)) . inside)) . tail)
@@ -270,6 +273,8 @@
            (dispatch-infix-implicit call-name #'tag #'head)]
           [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
            (dispatch-infix-implicit ref-name #'tag #'head)]
+          [((~and head ((~and tag (~datum braces)) . inside)) . tail)
+           (dispatch-infix-implicit juxtapose-name #'tag #'head)]
           [((~and head ((~and tag (~datum block)) . inside)) . tail)
            (dispatch-infix-implicit juxtapose-name #'tag #'head)]
           [((~and head ((~and tag (~datum alts)) . inside)) . tail)

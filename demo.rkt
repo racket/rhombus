@@ -223,37 +223,37 @@ bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_par
   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
       match bind_ct.unpack_info(b)
       | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?(:{
-               // check for pair an extract reversed pieces
-               val (is_match, ¿a_part_id, ¿b_part_id):
-                 match ¿in_id
-                 | cons(¿b_id, ¿a_id):
-                     values(#true, ¿a_id, ¿b_id)
-                 | 'else':
-                     values(#false, #false, #false)
-               // if a match, chain to a and b matchers
-               ¿IF is_match
-               | ¿a_matcher(¿a_part_id,
-                            ¿a_data,
-                            ¿IF,
-                            ¿b_matcher(¿b_part_id,
-                                       ¿b_data,
-                                       ¿IF,
-                                       ¿success,
-                                       ¿fail),
-                            ¿fail)
-               | ¿fail
-             })
+          ?(:
+              // check for pair an extract reversed pieces
+              val (is_match, ¿a_part_id, ¿b_part_id):
+                match ¿in_id
+                | cons(¿b_id, ¿a_id):
+                    values(#true, ¿a_id, ¿b_id)
+                | 'else':
+                    values(#false, #false, #false)
+              // if a match, chain to a and b matchers
+              ¿IF is_match
+              | ¿a_matcher(¿a_part_id,
+                           ¿a_data,
+                           ¿IF,
+                           ¿b_matcher(¿b_part_id,
+                                      ¿b_data,
+                                      ¿IF,
+                                      ¿success,
+                                      ¿fail),
+                           ¿fail)
+              | ¿fail
+          )
 
 bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
   match bind_ct.unpack_info(a)
   | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
       match bind_ct.unpack_info(b)
       | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?(:{
-               ¿a_binder(¿a_part_id, ¿a_data)
-               ¿b_binder(¿b_part_id, ¿b_data)
-             })
+          ?(:
+              ¿a_binder(¿a_part_id, ¿a_data)
+              ¿b_binder(¿b_part_id, ¿b_data)
+          )
 
 // an expression operator that's consistent with the pattern
 expr.operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
@@ -267,16 +267,16 @@ rx
 defn.macro ?(define_eight ¿e ...):
   match e
   | ?(¿name):
-      ?(:{def ¿name: 8})
+      ?(: def ¿name: 8)
        
 define_eight ate
 ate
 
 defn.macro ?(define_and_use ¿e ...):
   match e
-  | ?(¿name :{¿rhs ...}):
-      ?(:{def ¿name :{¿rhs ...}
-          ?(¿name)})
+  | ?(¿name: ¿rhs ...):
+      ?(: def ¿name: ¿rhs ...
+          ?(¿name))
 
 define_and_use nine: 1+8
 nine
@@ -286,7 +286,7 @@ nine
 decl.macro ?(empty_import ¿e ...):
   match e
   | ?():
-      ?(:{import:})
+      ?(: import:)
 
 empty_import
 
@@ -532,8 +532,8 @@ fun get_pts_x2(pts -: ListOf(Posn)):
 get_pts_x2([Posn(5, 7)])
 
 // definition-sequence macros
-defn.sequence_macro ?(:{reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...}):
-  values(?(:{ ¿defn2 ...; ¿defn1 ... }), ?(:{ ¿tail; ...}))
+defn.sequence_macro ?(: reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...):
+  values(?(: ¿defn2 ...; ¿defn1 ... ), ?(: ¿tail; ...))
 
 reverse_defns
 def seq_x: seq_y+1
