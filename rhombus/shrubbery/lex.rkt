@@ -2,7 +2,8 @@
 
 (require parser-tools/lex
          racket/contract
-         (prefix-in : parser-tools/lex-sre))
+         (prefix-in : parser-tools/lex-sre)
+         "private/property.rkt")
 
 (provide lex/status
          lex-all
@@ -107,7 +108,8 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" "(" ")" "[" "]" "{" "}" "#" "\\" "_" "@" "\"" "'")))]
+               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
+                                    "(" ")" "[" "]" "{" "}" "«" "»")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "." "/"))
                      (:+ ".")
@@ -179,7 +181,7 @@
                                              stx-for-original-property))
                   (if (eq? name 'comment)
                       stx
-                      (syntax-property stx 'raw (or raw (if (string? e) e ""))))))))
+                      (syntax-raw-property stx (or raw (if (string? e) e '()))))))))
 
 (define get-next-comment
   (lexer
@@ -287,9 +289,9 @@
     (ret 'fail lexeme 'error #f start-pos end-pos 'initial)]
    [script
     (ret 'comment lexeme 'comment #f start-pos end-pos 'initial)]
-   [(:or "(" "[" "{")
+   [(:or "(" "[" "{" "«")
     (ret 'opener lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'initial)]
-   [(:or ")" "]" "}")
+   [(:or ")" "]" "}" "»")
     (ret 'closer lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'continuing)]
    ["#{"
     (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0))]

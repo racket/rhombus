@@ -327,8 +327,8 @@
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
     #:datum-literals (op block parens group)
     #:literals (?)
-    (pattern (~seq (op ?) (block g::identifier-definition-group
-                                 . gs)))))
+    (pattern (~seq (op ?) (parens (group (block g::identifier-definition-group
+                                                . gs)))))))
 
 (define-for-syntax (parse-transformer-definition g self-id rhs
                                                  in-space make-transformer-id
@@ -380,7 +380,7 @@
                                             #:tail-ids #'(tail-id)
                                             #:wrap-for-tail
                                             (lambda (body)
-                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(block . q.gs)))
+                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group (block . q.gs)))))
                                               (with-syntax ([((p-id id-ref) ...) idrs])
                                                 #`(syntax-parse tail-id
                                                     [#,pattern

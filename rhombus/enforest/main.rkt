@@ -11,7 +11,8 @@
          "name-root.rkt"
          (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
-         "private/check.rkt")
+         "private/check.rkt"
+         "implicit.rkt")
 
 (provide define-enforest)
 
@@ -45,11 +46,11 @@
 ;;
 ;; * Function calls, array references, and list construction are not
 ;;   quite built-in. Instead, those positions correspond to the use
-;;   of implicit operators, such as `#%call`. Many of these
-;;   operators are special because they're N-ary (e.g., `f(1,2)` has
-;;   three "arguments" `f`, `1`, and `2`), so they use a special
-;;   protocol as non-transformer operators, but they can follow the
-;;   regular protocol as transformers.
+;;   of implicit operators, such as `#%call`. The enforestation
+;;   function is parameterized over the mapping from head terms to
+;;   implicit operators, but there must be at least a `#%juxtapose`
+;;   implicit for use when, for example, an identifier follows a
+;;   term without an infix operator in between.
 ;;
 ;; * The paper's prefix-operator case seems wrong; the old operator
 ;;   and combiner should be pushed onto the stack, as reflected by a
@@ -68,18 +69,6 @@
 ;;
 ;; Terminology compared to the paper: "form" means "tree term", and
 ;; "stx" means "term". A "head" or "tail" is a stx/term.
-
-;; implicit prefix operator names:
-(define tuple-name   '#%tuple)       ; parentheses not after an expression
-(define array-name   '#%array)       ; square brackets not after an expression
-(define block-name   '#%block)       ; curly braces (normally mapped to `rhombus-block`)
-(define alts-name    '#%alts)        ; vertical bars
-(define literal-name '#%literal)     ; numbers, strings, etc.
-
-;; implicit infix operator names:
-(define call-name      '#%call)      ; parentheses adjacent to preceding expression
-(define ref-name       '#%ref)       ; square brackets adjacent to preceding expression
-(define juxtapose-name '#%juxtapose) ; exprs with no operator between, when not #%call or #%ref
 
 (define-syntax-rule (where expr helper ...) (begin helper ... expr))
 
@@ -112,7 +101,13 @@
               (~optional (~seq #:make-identifier-form make-identifier-form)
                          #:defaults ([make-identifier-form #'values]))
               (~optional (~seq #:make-operator-form make-operator-form)
-                         #:defaults ([make-operator-form #'#f])))
+                         #:defaults ([make-operator-form #'#f]))
+              (~optional (~seq #:select-prefix-implicit -select-prefix-implicit)
+                         #:defaults ([-select-prefix-implicit #'select-prefix-implicit]))
+              (~optional (~seq #:select-infix-implicit -select-infix-implicit)
+                         #:defaults ([-select-infix-implicit #'select-infix-implicit]))
+              (~optional (~seq #:juxtapose-implicit-name -juxtapose-implicit-name)
+                         #:defaults ([-juxtapose-implicit-name #'juxtapose-implicit-name])))
         ...)
      #'(begin
          (define-syntax-class form
@@ -141,7 +136,8 @@
                                                    name-path-op prefix-operator-ref infix-operator-ref
                                                    check-result
                                                    make-identifier-form
-                                                   make-operator-form))
+                                                   make-operator-form
+                                                   -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name))
          (define enforest (make-enforest enforest-step)))]))
 
 (define (make-enforest enforest-step)
@@ -164,7 +160,8 @@
                             name-path-op prefix-operator-ref infix-operator-ref
                             check-result
                             make-identifier-form
-                            make-operator-form)
+                            make-operator-form
+                            select-prefix-implicit select-infix-implicit juxtapose-implicit-name)
   (define (raise-unbound-operator op-stx)
     (raise-syntax-error #f
                         (string-append "unbound " operator-kind-str)
@@ -201,16 +198,9 @@
                   (raise-unbound-operator #'head.name))])]
           [(((~datum parsed) inside) . tail)
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
-          [((~and head ((~and tag (~datum parens)) . inside)) . tail)
-           (dispatch-prefix-implicit tuple-name #'tag #'head)]
-          [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
-           (dispatch-prefix-implicit array-name #'tag #'head)]
-          [((~and head ((~and tag (~datum block)) . inside)) . tail)
-           (dispatch-prefix-implicit block-name #'tag #'head)]
-          [((~and head ((~and tag (~datum alts)) . inside)) . tail)
-           (dispatch-prefix-implicit alts-name #'tag #'head)]
-          [(literal . tail)
-           (dispatch-prefix-implicit literal-name #'literal #'literal)])
+          [(head . _)
+           (define-values (implicit-name ctx) (select-prefix-implicit #'head))
+           (dispatch-prefix-implicit implicit-name ctx #'head)])
 
         . where .
 
@@ -256,26 +246,19 @@
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
              [(prefix-operator? v)
-              (dispatch-infix-implicit juxtapose-name #'head #'head)]
+              (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
              [stop-on-unbound? (values init-form stxes)]
              [(identifier? #'head)
-              (dispatch-infix-implicit juxtapose-name #'head #'head)]
+              (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
              [else
               (if make-operator-form
-                  (dispatch-infix-implicit juxtapose-name #'head #'head)
+                  (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)
                   (raise-unbound-operator #'head.name))])]
           [((~and head ((~datum parsed) . _)) . _)
-           (dispatch-infix-implicit juxtapose-name #'head #'head)]
-          [((~and head ((~and tag (~datum parens)) . inside)) . tail)
-           (dispatch-infix-implicit call-name #'tag #'head)]
-          [((~and head ((~and tag (~datum brackets)) . inside)) . tail)
-           (dispatch-infix-implicit ref-name #'tag #'head)]
-          [((~and head ((~and tag (~datum block)) . inside)) . tail)
-           (dispatch-infix-implicit juxtapose-name #'tag #'head)]
-          [((~and head ((~and tag (~datum alts)) . inside)) . tail)
-           (dispatch-infix-implicit juxtapose-name #'tag #'head)]
-          [(literal . tail)
-           (dispatch-infix-implicit juxtapose-name #'literal #'literal)])
+           (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
+          [(head . _)
+           (define-values (implicit-name ctx) (select-infix-implicit #'head))
+           (dispatch-infix-implicit implicit-name ctx #'head)])
 
         . where . 
 

@@ -48,5 +48,5 @@
   (cond
     [(eqv? depth 0) r]
     [(eqv? depth 1) (unpack-tail r 'unquote)]
-    [else (for/list ([r (in-list (unpack-tail r 'unquote))])
+    [else (for/list ([r (in-list (syntax->list (unpack-tail r 'unquote)))])
             (unpack-tail* r (sub1 depth)))]))

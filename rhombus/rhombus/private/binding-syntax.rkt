@@ -270,8 +270,8 @@
 
 (define-for-syntax (unwrap-block stx)
   (syntax-parse stx
-    #:datum-literals (block)
-    [(block g ...)
+    #:datum-literals (group parens block)
+    [(parens (group (block g ...)))
      #'(rhombus-body g ...)]))
 
 (define-for-syntax (wrap-parsed stx)

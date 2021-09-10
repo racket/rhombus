@@ -37,6 +37,7 @@
         "private/map.rkt"
         "private/assign.rkt"
         "private/function.rkt"
+        "private/begin.rkt"
         "private/cond.rkt"
         "private/match.rkt"
         "private/quasiquote.rkt"

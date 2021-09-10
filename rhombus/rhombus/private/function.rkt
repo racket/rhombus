@@ -182,7 +182,7 @@
                                  #'form-id #'parens-tag))))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or (parens _ ...)
-                 (alts (block (group (parens _ ...))) ...+))
+                 (alts (block (group (parens _ ...) . _)) ...+))
             . _)
          (syntax-parse #`(group . #,stx)
            [e::expression

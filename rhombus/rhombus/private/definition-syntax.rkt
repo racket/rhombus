@@ -31,8 +31,8 @@
 
 (define-for-syntax (unpack-definitions form proc)
   (syntax-parse form
-    #:datum-literals (block group)
-    [(block (group d ...) ...)
+    #:datum-literals (parens block group)
+    [(parens (group (block (group d ...) ...)))
      #`((rhombus-definition (group d ...))
         ...)]
     [_ (raise-result-error (proc-name proc) "definition-list?" form)]))
@@ -57,13 +57,18 @@
   (define block-with-raw (syntax-property
                           (syntax-property (datum->syntax #f 'block) 'raw "{ ")
                           'raw-tail " }"))
+  (define parens-with-raw (syntax-property
+                           (syntax-property (datum->syntax #f 'parens) 'raw "(")
+                           'raw-tail ")"))
+  (define group-with-raw (syntax-property (datum->syntax #f 'group) 'raw '()))
 
   (define (pack-block-tail tail)
-    #`(#,block-with-raw . #,tail))
+    #`(#,parens-with-raw (#,group-with-raw (#,block-with-raw . #,tail))))
 
   (define (unpack-block-tail packed-tail proc)
     (syntax-parse packed-tail
-      [((~datum block) . tail) #'tail]
+      #:datum-literals (block group parens)
+      [(parens (group (block . tail))) #'tail]
       [else
        (raise-result-error (if (symbol? proc) proc (proc-name proc))
                            "rhombus-syntax-block?"

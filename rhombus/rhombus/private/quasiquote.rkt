@@ -34,9 +34,9 @@
                                    handle-maybe-empty-alts handle-maybe-empty-group)
   (let convert ([e e] [empty-ok? #f])
     (syntax-parse e
-      [((~and tag (~or (~datum parens) (~datum brackets) (~datum block)))
+      [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block)))
         (~and g ((~datum group) . _)))
-       ;; Special case: for a single group with (), [], or {}, if the group
+       ;; Special case: for a single group with (), [], {}, or block, if the group
        ;; can be empty, allow a match/construction with zero groups
        (define-values (p new-idrs can-be-empty?) (convert #'g #t))
        (if can-be-empty?
@@ -44,7 +44,7 @@
            (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
                    new-idrs 
                    #f))]
-      [((~and tag (~or (~datum parens) (~datum brackets) (~datum block) (~datum alts) (~datum group)))
+      [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block) (~datum alts) (~datum group)))
         g ...)
        (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t])
          (syntax-parse gs
