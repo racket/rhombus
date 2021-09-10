@@ -20,8 +20,8 @@ define
 define
  | fib(0): 0
  | fib(1): 1
- | fib(n): (fib(n-1) // in parens => `+` continues this line
-            + fib(n-2))
+ | fib(n): fib(n-1)
+             + fib(n-2)
 
 define fib:
   lambda (n):
@@ -35,7 +35,7 @@ define fib:
 // style (which is to omit unnecessary colons).
 define fib:
   lambda (n):
-    cond:
+    cond
      | n == 0: 0
      | n == 1: 1
      | else: fib(n-1) + fib(n-2)
@@ -62,7 +62,7 @@ define fib(n):
    | n: fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n:
+  match n
    | 0: 0
    | 1: 1
    | n: fib(n-1) + fib(n-2)
@@ -82,22 +82,22 @@ define fib(n):
        fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n { | 0 { 0 }
-            | 1 { 1 }
-            | n { fib(n-1) + fib(n-2) } }
+  match n « | 0: « 0 »
+            | 1: « 1 »
+            | n: « fib(n-1) + fib(n-2) » »
 
 define fib(n):
-  match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
+  match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
 
-define fib(n): match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) }
+define fib(n): match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
 
-define fib(n) { match n { | { 0: 0 } | { 1: 1 } | n: fib(n-1) + fib(n-2) } }
+define fib(n): « match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) » »
 
-define fib(n) { match n { | 0 {0} | 1 {1} | n { fib(n-1) + fib(n-2) } } }
+define fib(n): « match n « | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » » »
 
-define fib(n) { match n { | { 0 {0} } | { 1 {1} } | { n { fib(n-1) + fib(n-2) } } } }
+define fib(n): « match n « | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » » »
 
-define fib(n) { match n | { 0 {0} } | { 1 {1} } | { n { fib(n-1) + fib(n-2) } } }
+define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
 
 // END equivalent `fib` definitions
 
