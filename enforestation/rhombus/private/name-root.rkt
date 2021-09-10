@@ -15,8 +15,7 @@
     (name-root
      (lambda (stxes)
        (syntax-parse stxes
-         #:datum-literals (op)
-         #:literals (|.|)
+         #:datum-literals (op |.|)
          [(form-id (op |.|) key:identifier . tail)
           (define id (hash-ref ht (syntax-e #'key) #f))
           (unless id

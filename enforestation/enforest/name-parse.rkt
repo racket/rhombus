@@ -1,8 +1,8 @@
 #lang racket/base
 (require syntax/parse)
 
-(provide :reference)
+(provide :name)
 
-(define-syntax-class :reference
+(define-syntax-class :name
   (pattern ((~datum op) name))
   (pattern name:identifier))

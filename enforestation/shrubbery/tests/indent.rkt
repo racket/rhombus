@@ -167,19 +167,19 @@
     ^      ^ ^x}
 
  @e{apple: :
-    ^        ^x}
+    ^      ^ ^x}
 
  @e{(a:
      ^ ^x}
 
  @e{(:
-       ^x}
+     ^ ^x}
 
  @e{[a:
      ^ ^x}
 
  @e{[:
-       ^x}
+     ^ ^x}
 
  @e|{{a:
       ^ ^x}|
@@ -195,33 +195,54 @@
 
  @e{define fib(n):
      cond | n == 0: 0
-          ^          ^|}
+          ^         ^|}
 
  @e{define fib(n):
      log_error("fib called")
      cond | n == 0: 0
-          ^          ^|}
+          ^         ^|}
  
  @e{define
      | fib(0): 0
      | fib(1): 1
+     | fib(n): fib(n-1) // in parens => `+` continues this line
+    ^  ^       ^ ^+ fib(n-2))}
+
+ @e{define
+     | fib(0): 0
+     | fib(1): 1
      | fib(n): (fib(n-1) // in parens => `+` continues this line
-                ^+ fib(n-2))}
+                ^ ^+ fib(n-2))}
 
  @e{define fib:
      lambda (n):
        cond
-        | n == 0: 0
-        ^          ^| n == 1: 1}
+       | n == 0: 0
+       ^         ^| n == 1: 1}
 
  @e|{define fib(n):
       match n { | 0 { 0 }
                 ^| 1 { 1 }}|
 
+ @e{1 + x: « 3
+             ^4 »}
+
+ @e{1 + x: « 3
+             ^ ^+ 4 »}
+                
+ @e{1 + x: 3
+    ^      ^ ^+ 4}
+
+ @e{x: 1 + x: 3
+    ^  ^      ^ ^+ 4}
+                
+ @e{x: 1 + x | 3
+    ^  ^       ^ ^+ 4}
+                
  @e{define analyze(n):
       if n == 0
-       | printf("zero\n")
-    ^ ^  ^printf}
+      | printf("zero\n")
+    ^ ^ ^printf}
 
  @e{define go():
       define more(m):
@@ -236,9 +257,9 @@
 
  @e{define approx_thunk(x):
       match x
-       | something(v): lambda
-                        | (): v
-       ^                ^      ^| (n): v+n}
+      | something(v): lambda
+                      | (): v
+      ^               ^     ^| (n): v+n}
 
  @e{define colors:
      list(
@@ -267,7 +288,7 @@
 
  @e{this is | one: a \
                     long result
-            ^       ^| two}
+            ^      ^| two}
 
  @e{this is | one: a \
                     long result
@@ -305,12 +326,23 @@
                                  ^ ^things}
 
  @e{x + w | z : :
-    ^       ^     ^y}
+    ^       ^   ^ ^y}
 
  @e{x something | a
                   y:
                     w:
     ^             ^ ^ ^q}
+
+ @e{z: | x
+    ^    ^y}
+
+ @e{z:
+      | x
+    ^   ^y}
+
+ @e|{|z {
+        | x
+          ^y|}|
 
  @e{define fib(n):
       match n
@@ -336,7 +368,7 @@
           define values(is_a_match, ar):
             ¿a_pred(av)
           if is_a_match
-      ^    ^| define}
+      ^   ^| define}
  
  )
 

@@ -5,8 +5,8 @@
                      enforest/operator
                      enforest/property
                      enforest/transformer
-                     enforest/ref-parse
-                     enforest/name-ref-parse
+                     enforest/name-parse
+                     enforest/hier-name-parse
                      enforest/proc-name
                      enforest/syntax-local
                      "name-path-op.rkt"
@@ -112,8 +112,8 @@
 (begin-for-syntax
   (define-syntax-class :renaming
     #:datum-literals (group)
-    (pattern (group . (~var int (:name-ref-seq values name-path-op)))
-             #:with (#:to ext::reference) #'int.tail
+    (pattern (group . (~var int (:hier-name-seq values name-path-op)))
+             #:with (#:to ext::name) #'int.tail
              #:attr int-name #'int.name
              #:attr ext-name #'ext.name)))
 
@@ -146,9 +146,9 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group ref::reference ...) ...)
+       [(_ (block (group name::name ...) ...)
            . tail)
-        (values #`(combine-out ref.name ... ...)
+        (values #`(combine-out name.name ... ...)
                 #'tail)]))))
 
 (define-export-syntax all_from

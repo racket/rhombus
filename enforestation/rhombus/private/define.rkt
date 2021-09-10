@@ -34,8 +34,8 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::binding ...)
-                                                     ret::ret-contract
+       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
+                                                     ret::ret-annotation
                                                      (~and rhs (block body ...))))
                                        ...+))
         (define ids (syntax->list #'(id ...)))
@@ -46,11 +46,12 @@
           #`(define #,the-id
               #,(build-case-function the-id
                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                     #'(rest.arg ...) #'(rest.parsed ...)
                                      #'(ret.predicate ...)
                                      #'(rhs ...)
                                      #'form-id #'alts-tag))))]
-       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ...)
-                 ret::ret-contract
+       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
+                 ret::ret-annotation
                  (~and rhs (block body ...)))
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (list
@@ -58,6 +59,7 @@
           #`(define id
               #,(build-function #'id
                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                                #'rest.arg #'rest.parsed
                                 #'ret.predicate
                                 #'rhs
                                 #'form-id
@@ -88,7 +90,7 @@
                                      in-expression-space
                                      #'make-expression-prefix-operator
                                      #'make-expression-infix-operator)))]
-       [(form-id any ... (~and rhs (block body ...)))
+       [(form-id any ...+ (~and rhs (block body ...)))
         (build-value-definitions #'form-id #'(group any ...) #'rhs
                                  wrap-definition)]))))
 

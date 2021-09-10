@@ -8,22 +8,19 @@
          "private/name-path-op.rkt"
          "private/check.rkt")
 
-;; Degenerate variant of enforestation with only prefix operators
-;; that must consume the full group
+;; Degenerate variant of enforestation with only prefix operators that
+;; must consume the full group, but also with the opportinuty consume
+;; subsequent groups
 
-(provide transformer?
-         transformer-proc
-         transformer
+(provide sequence-transformer?
+         sequence-transformer-proc
+         sequence-transformer
 
-         transform-in
-         transform-out
-         call-as-transformer
+         define-sequence-transform)
 
-         define-transform)
+(struct sequence-transformer (proc))
 
-(struct transformer (proc))
-
-(define-syntax (define-transform stx)
+(define-syntax (define-sequence-transform stx)
   (syntax-parse stx
     [(_ (~alt (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
@@ -41,14 +38,18 @@
                          #:defaults ([check-result #'check-is-syntax])))
         ...)
      #`(begin
-         (define-syntax-class form
-           (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op)))
+         (define-splicing-syntax-class form
+           (pattern (~seq ((~datum group) . (~var hname (:hier-name-seq values name-path-op))) tail-in (... ...))
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
-                    #:attr parsed (apply-transformer t head-id
-                                                     (datum->syntax #f (cons head-id #'hname.tail))
-                                                     check-result)))
+                    #:do [(define-values (parsed tail)
+                            (apply-sequence-transformer t head-id
+                                                        (datum->syntax #f (cons head-id #'hname.tail))
+                                                        #'(tail-in (... ...))
+                                                        check-result))]
+                    #:attr parsed parsed
+                    #:attr tail tail))
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e
@@ -58,10 +59,12 @@
                        [_ #f])))
                 '()))]))
 
-(define (apply-transformer t id stx checker)
-  (define proc (transformer-proc t))
+(define (apply-sequence-transformer t id stx tail checker)
+  (define proc (sequence-transformer-proc t))
   (call-as-transformer
    id
    (lambda (in out)
-     (define forms (checker (proc (in stx)) proc))
-     (out (datum->syntax #f forms)))))
+     (define-values (forms new-tail) (proc (in stx) (in tail)))
+     (check-transformer-result (out (datum->syntax #f (checker forms proc)))
+                               (out new-tail)
+                               proc))))

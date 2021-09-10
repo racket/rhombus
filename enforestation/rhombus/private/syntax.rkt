@@ -16,6 +16,7 @@
 
 (provide (for-syntax make-operator-definition-transformer
                      make-identifier-syntax-definition-transformer
+                     make-identifier-syntax-definition-sequence-transformer
 
                      parse-operator-definition
                      parse-operator-definitions
@@ -145,7 +146,8 @@
     #:datum-literals (op parens group)
     #:literals (¿ ?)
     (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator-or-identifier . _)))))
-    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _))))))
+    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _)))))
+    (pattern (~seq (op ?) g::operator-or-identifier)))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -198,6 +200,7 @@
     (syntax-parse g
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
+      ;; infix protocol
       [(group (op ¿) left:identifier
               op-name::operator-or-identifier
               . tail-pattern)
@@ -212,6 +215,7 @@
                                                  #'(tag rhs ...)))])
                op-name.name)
              #,(convert-assc #'opt.assc))])]
+      ;; prefix protocol
       [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
@@ -223,6 +227,18 @@
              (let ([op-name.name (lambda (tail opt.self-id)
                                    #,(macro-body #'opt.self-id #'tail #'tail-pattern
                                                  #'(tag rhs ...)))])
+               op-name.name))])]
+      ;; nofix protocol
+      [op-name::operator-or-identifier
+       (syntax-parse rhs
+         [((~and tag block) opt::self-prefix-operator-options rhs ...)
+          #`(#,make-prefix-id
+             (quote-syntax op-name.name)
+             #,(convert-prec #'opt.prec)
+             'macro
+             (let ([op-name.name (lambda (tail opt.self-id)
+                                   (values (rhombus-block rhs ...)
+                                           tail))])
                op-name.name))])])))
 
 (define-for-syntax (parse-operator-definition protocol g rhs
@@ -306,10 +322,18 @@
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
-    (pattern (group _:identifier . _))))
+    (pattern (group _:identifier . _)))
+  
+  (define-splicing-syntax-class :identifier-sequence-syntax-quote
+    #:datum-literals (op block parens group)
+    #:literals (?)
+    (pattern (~seq (op ?) (parens (group (block g::identifier-definition-group
+                                                . gs)))))))
 
 (define-for-syntax (parse-transformer-definition g self-id rhs
-                                                 in-space make-transformer-id)
+                                                 in-space make-transformer-id
+                                                 #:tail-ids [tail-ids '()]
+                                                 #:wrap-for-tail [wrap-for-tail values])
   (syntax-parse g
     #:datum-literals (group op)
     #:literals (¿ rhombus...)
@@ -318,11 +342,12 @@
      (with-syntax ([((p-id id-ref) ...) idrs])
        #`(define-syntax #,(in-space #'id)
            (#,make-transformer-id
-            (let ([id (lambda (tail #,self-id)
+            (let ([id (lambda (tail #,@tail-ids #,self-id)
                         (syntax-parse (respan-empty #,self-id tail)
                           [#,pattern
                            (let ([p-id id-ref] ...)
-                             (rhombus-expression (group #,rhs)))]))])
+                             #,(wrap-for-tail
+                                #`(rhombus-expression (group #,rhs))))]))])
               id))))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer in-space
@@ -338,3 +363,26 @@
                             body ...)))
         (list (parse-transformer-definition #'q.g #'self-id #'rhs
                                             in-space make-transformer-id))]))))
+
+(define-for-syntax (make-identifier-syntax-definition-sequence-transformer in-space
+                                                                           make-transformer-id)
+  (definition-transformer
+    (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group block alts op)
+       [(form-id q::identifier-sequence-syntax-quote
+                 (~and rhs (block
+                            (~optional (group #:op_stx (block (group self-id:identifier)))
+                                       #:defaults ([self-id #'self]))
+                            body ...)))
+        (list (parse-transformer-definition #'q.g #'self-id #'rhs
+                                            in-space make-transformer-id
+                                            #:tail-ids #'(tail-id)
+                                            #:wrap-for-tail
+                                            (lambda (body)
+                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group (block . q.gs)))))
+                                              (with-syntax ([((p-id id-ref) ...) idrs])
+                                                #`(syntax-parse tail-id
+                                                    [#,pattern
+                                                     (let ([p-id id-ref] ...)
+                                                       #,body)])))))]))))

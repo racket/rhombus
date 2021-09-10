@@ -2,9 +2,11 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/operator
+                     enforest/transformer
                      enforest/property
                      enforest/proc-name
-                     enforest/syntax-local))
+                     enforest/syntax-local)
+         "static-info.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -17,22 +19,51 @@
            :binding-form
            binding-form
            check-binding-result
+
+           :binding-impl
            
+           :binding-info
+           binding-info
+
            in-binding-space
            :non-binding-identifier))
 
 (provide define-binding-syntax
-         raise-binding-failure
-
-         ;; used by "contract.rkt":
-         identifier-succeed
-         identifier-bind)
+         raise-binding-failure)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:
   (define-syntax-class :binding-form
     #:datum-literals (parens group)
-    (pattern (arg-id:identifier
+    (pattern (infoer-id:identifier
+              data)))
+
+  ;; To call an infoer:
+  (define-syntax-class :binding-impl
+    #:datum-literals (parens group)
+    (pattern (~and form (infoer-id . _))
+             #:do [(define proc (syntax-local-value* #'infoer-id (lambda (v)
+                                                                   (and (procedure? v)
+                                                                        v))))
+                   (unless proc
+                     (raise-syntax-error #f
+                                         "cannot find a transformer for an infoer"
+                                         #'infoer-id))]
+             #:with info (check-binding-info-result
+                          (transform-out
+                           (let ([form (transform-in #'form)])
+                             (call-as-transformer
+                              #'infoer-id
+                              (lambda (in out)
+                                (out (proc (in form)))))))
+                          proc)))
+
+  ;; To unpack a binding infoer result:
+  (define-syntax-class :binding-info
+    #:datum-literals (parens group)
+    (pattern (name-id:identifier
+              (~and static-infos ((:identifier _) ...))
+              (~and bind-infos ((bind-id:identifier (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
               binder-id:identifier
               data)))
@@ -44,16 +75,21 @@
     (binding-prefix-operator name '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
-  (define (binding-form arg-id matcher-id binder-id data)
-    (datum->syntax #f (list arg-id
+  (define (binding-form infoer-id data)
+    (datum->syntax #f (list infoer-id
+                            data)))
+
+  ;; puts pieces together into a `:binding-info`
+  (define (binding-info name-id static-infos bind-infos matcher-id binder-id data)
+    (datum->syntax #f (list name-id
+                            static-infos
+                            bind-infos
                             matcher-id
                             binder-id
                             data)))
 
   (define (make-identifier-binding id)
-    (binding-form id
-                  #'identifier-succeed
-                  #'identifier-bind
+    (binding-form #'identifier-info
                   id))
 
   (define (check-binding-result form proc)
@@ -61,11 +97,26 @@
       [_::binding-form form]
       [_ (raise-result-error (proc-name proc) "binding-result?" form)]))
 
+  (define (check-binding-info-result form proc)
+    (syntax-parse (if (syntax? form) form #'#f)
+      [_::binding-info form]
+      [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
+
   (define in-binding-space (make-interned-syntax-introducer 'rhombus/binding))
 
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
              #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?)))))
+
+(define-syntax (identifier-info stx)
+  (syntax-parse stx
+    [(_ static-infos id)
+     (binding-info #'id
+                   #'static-infos
+                   #'((id . static-infos))
+                   #'identifier-succeed
+                   #'identifier-bind
+                   #'id)]))
 
 (define-syntax (identifier-succeed stx)
   (syntax-parse stx

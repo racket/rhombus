@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     shrubbery/print)
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
 
@@ -16,6 +17,7 @@
                                 (for-syntax (all-from-out mod))))
                 ...))]))
 (bounce "private/implicit.rkt"
+        "private/underscore.rkt"
         "private/arithmetic.rkt"
         "private/dot.rkt"
         "private/struct.rkt"
@@ -29,14 +31,21 @@
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"
         "private/operator.rkt"
-        "private/contract.rkt"
+        "private/annotation.rkt"
         "private/list.rkt"
+        "private/array.rkt"
+        "private/map.rkt"
         "private/assign.rkt"
         "private/function.rkt"
+        "private/begin.rkt"
         "private/cond.rkt"
         "private/match.rkt"
         "private/quasiquote.rkt"
-        "private/values.rkt")
+        "private/keyword.rkt"
+        "private/values.rkt"
+        "private/annotation-syntax.rkt"
+        "private/static-info-syntax.rkt"
+        "private/dot-syntax.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus
@@ -58,6 +67,9 @@
   (require rhombus/runtime-config))
 
 (define-syntax (rhombus-module-begin stx)
+  (error-syntax->string-handler
+   (lambda (s len)
+     (shrubbery-syntax->string s #:max-length len)))
   (syntax-parse stx
     [(_ (top . content))
      (unless (eq? 'top (syntax-e #'top))

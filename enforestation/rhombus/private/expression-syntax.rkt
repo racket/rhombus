@@ -7,9 +7,13 @@
          "name-root.rkt"
          "syntax.rkt"
          "expression.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "call-result-key.rkt"
+         "wrap-expression.rkt"
+         (for-syntax "name-root.rkt"))
 
-(provide expr)
+(provide expr
+         (for-syntax expr_ct))
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
@@ -18,6 +22,10 @@
 (define-syntax expr
   (simple-name-root operator
                     macro))
+
+(begin-for-syntax
+  (define-syntax expr_ct
+    (simple-name-root call_result_key)))
 
 (define-syntax operator
   (make-operator-definition-transformer 'automatic
@@ -41,14 +49,14 @@
    (if (eq? protocol 'macro)
        (lambda (form1 tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
+                                          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail #:after #'head) #'head)]))
+         (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))
        (lambda (form1 form2 stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form1) #`(parsed #,form2) stx)
-                                         proc)))))
+         (wrap-expression (check-expression-result
+                           (proc #`(parsed #,form1) #`(parsed #,form2) stx)
+                           proc))))
    assc))
 
 (define-for-syntax (make-expression-prefix-operator name prec protocol proc)
@@ -59,11 +67,13 @@
    (if (eq? protocol 'macro)
        (lambda (tail)
          (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail) #'head)]))
-         (check-transformer-result #`(rhombus-expression (group #,(check-expression-result form proc)))
+                                          [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
+         (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc)
                                    proc))
        (lambda (form stx)
-         #`(rhombus-expression (group #,(check-expression-result
-                                         (proc #`(parsed #,form) stx)
-                                         proc)))))))
+         (wrap-expression (check-expression-result
+                           (proc #`(parsed #,form) stx)
+                           proc))))))
+
+(define-for-syntax call_result_key #'#%call-result)

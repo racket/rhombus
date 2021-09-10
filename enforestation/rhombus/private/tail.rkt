@@ -8,10 +8,24 @@
          unpack-tail
          unpack-tail*)
 
-(define (pack-tail tail)
+(define parens-blank (syntax-property (datum->syntax #f 'parens) 'raw ""))
+(define group-blank (syntax-property (datum->syntax #f 'group) 'raw ""))
+
+(define (pack-tail tail #:after [after #f])
   (if (stx-null? tail)
-      #`(parens)
-      #`(parens (group . #,tail))))
+      (cond
+        [(and after
+              (syntax-position after)
+              (syntax-span after))
+         (define loc (srcloc (syntax-source after)
+                             (syntax-line after)
+                             (let ([col (syntax-column after)])
+                               (and col (+ col (syntax-span after))))
+                             (+ (syntax-position after) (syntax-span after))
+                             0))
+         #`(#,(syntax-property (syntax/loc loc parens) 'raw ""))]
+        [else #`(#,parens-blank)])
+      #`(#,parens-blank (#,group-blank . #,tail))))
 
 (define (pack-tail* stx depth)
   (cond
@@ -34,5 +48,5 @@
   (cond
     [(eqv? depth 0) r]
     [(eqv? depth 1) (unpack-tail r 'unquote)]
-    [else (for/list ([r (in-list (unpack-tail r 'unquote))])
+    [else (for/list ([r (in-list (syntax->list (unpack-tail r 'unquote)))])
             (unpack-tail* r (sub1 depth)))]))

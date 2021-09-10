@@ -16,11 +16,19 @@
        [(_ id:identifier . new-tail)
         (values
          (binding-form
-          #'id
-          #'mutable-identifier-succeed
-          #'mutable-bind
+          #'mutable-info
           #'id)
          #'new-tail)]))))
+
+(define-syntax (mutable-info stx)
+  (syntax-parse stx
+    [(_ static-infos id)
+     (binding-info #'id
+                   #'() ; mutable => don't claim input's static info
+                   #'((id))
+                   #'mutable-identifier-succeed
+                   #'mutable-bind
+                   #'id)]))
 
 (define-syntax (mutable-identifier-succeed stx)
   (syntax-parse stx
