@@ -9,7 +9,7 @@
          get-block-column)
 
 (define (opener? s)
-  (member s '("(" "{" "[")))
+  (member s '("(" "{" "[" "«")))
 
 (define (line-start t pos)
   (send t paragraph-start-position (send t position-paragraph pos #t)))

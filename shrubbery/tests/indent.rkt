@@ -167,19 +167,19 @@
     ^      ^ ^x}
 
  @e{apple: :
-    ^        ^x}
+    ^      ^ ^x}
 
  @e{(a:
      ^ ^x}
 
  @e{(:
-       ^x}
+     ^ ^x}
 
  @e{[a:
      ^ ^x}
 
  @e{[:
-       ^x}
+     ^ ^x}
 
  @e|{{a:
       ^ ^x}|
@@ -205,8 +205,14 @@
  @e{define
      | fib(0): 0
      | fib(1): 1
+     | fib(n): fib(n-1) // in parens => `+` continues this line
+    ^  ^       ^ ^+ fib(n-2))}
+
+ @e{define
+     | fib(0): 0
+     | fib(1): 1
      | fib(n): (fib(n-1) // in parens => `+` continues this line
-                ^+ fib(n-2))}
+                ^ ^+ fib(n-2))}
 
  @e{define fib:
      lambda (n):
@@ -218,6 +224,21 @@
       match n { | 0 { 0 }
                 ^| 1 { 1 }}|
 
+ @e{1 + x: « 3
+             ^4 »}
+
+ @e{1 + x: « 3
+             ^ ^+ 4 »}
+                
+ @e{1 + x: 3
+    ^      ^ ^+ 4}
+
+ @e{x: 1 + x: 3
+    ^  ^      ^ ^+ 4}
+                
+ @e{x: 1 + x | 3
+    ^  ^       ^ ^+ 4}
+                
  @e{define analyze(n):
       if n == 0
       | printf("zero\n")
@@ -305,7 +326,7 @@
                                  ^ ^things}
 
  @e{x + w | z : :
-    ^       ^     ^y}
+    ^       ^   ^ ^y}
 
  @e{x something | a
                   y:

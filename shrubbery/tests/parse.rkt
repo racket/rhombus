@@ -28,8 +28,8 @@ define
 define
  | fib(0): 0
  | fib(1): 1
- | fib(n): (fib(n-1) // in parens => `+` continues this line
-            + fib(n-2))
+ | fib(n): fib(n-1)
+             + fib(n-2)
 
 define fib:
   lambda (n):
@@ -313,6 +313,12 @@ x: y:« a; b »; c
 
 if t | x | y; z
 if t «| x | y»; z
+
+x: x
+    «
+      #//
+    | 2
+    | 3 »
 INPUT
 )
 
@@ -375,13 +381,11 @@ INPUT
         (parens (group n))
         (block
          (group
-          (parens
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
+          fib
+          (parens (group n (op -) 1))
+          (op +)
+          fib
+          (parens (group n (op -) 2))))))))
     (group
      define
      fib
@@ -1215,7 +1219,8 @@ INPUT
     (group x (block (group y (block (group a) (group b))) (group c)))
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group if t (alts (block (group x)) (block (group y))))
-    (group z)))
+    (group z)
+    (group x (block (group x (alts (block (group 3))))))))
 
   
 (define input2
@@ -1588,6 +1593,9 @@ INPUT
               #f)
       (error "failed to fail: ~s" input))))
 
+(define (lines s . ss)
+  (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
+
 (check input1 expected1)
 (check input2 expected2)
 
@@ -1595,3 +1603,16 @@ INPUT
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
 (check-fail "if t «| x | y» more; z" #rx"no terms allowed after `»`")
 
+(check-fail (lines "x"
+                   " y")
+            #rx"wrong indentation")
+(check-fail (lines "1"
+                   " + 2"
+                   "   + 3")
+            #rx"wrong indentation")
+(check-fail (lines "1: 2"
+                   " + 3")
+            #rx"wrong indentation")
+(check-fail (lines "x | y | c"
+                   "  + 3")
+            #rx"wrong indentation")
