@@ -58,14 +58,15 @@ underscore_case
 camelCase
 ```
 
-These characters are used for shrubbery structure and are not
+These characters are used for shrubbery structure and are mostly not
 available for use in operators:
 
 ```
-( ) [ ] { }   ; ,   : |   \   " '  # @
+( ) [ ] { }   ; ,   : |   « »  \   " '  # @
 ```
 
-Any other Unicode punctuation or symbol is fair game for an
+The `:` and `|` characters can be used as part of an operator, and any
+other Unicode punctuation or symbol character is fair game for an
 operator:
 
 ```
@@ -224,33 +225,16 @@ cond | is_raining(): take_umbrella()
 You can add extra `;`s, such as at the end of lines, since `;` will
 never create an empty group.
 
-Finally, `:` plus indentation can be written instead with `{` ... `}`.
-Fully bracketing with `{` ... `}` can completely replace the role of
-newlines and indentation—when combined with `;` as needed to separate
-groups—but bracketing does not disable the meaning of newlines and
-indentation.
+Finally, anything that can be written with newlines and indentation
+can be written on a single line, but `«` and `»` may be required to
+delimit a block. Normally, parentheses work just as well.
 
-```
-begin { group within block; another group within block }
-
-if is_rotten(apple) { | get_another() | take_bite(); be_happy() }
-
-// could be all on one line:
-match x { | 0 { def zero = x; x + zero }
-          | n { n + 1 } }
-
-// could be all on one line:
-cond { | is_raining() { take_umbrella() }
-       | going_to_beach() { wear_sunscreen(); take_umbrella() }
-       | _ { wear_hat() } }
-```
-
-Parentheses `(` ... `)` and square brackets `[` ... `]` similarly
-combine a sequence of groups. Unlike `{` ... `}`, a comma `,` can be
-used to separate groups on one line between `(` ... `)` or `[` ...
-`]`. Also unlike `{` ... `}`, a `,` is _required_ to separate groups
-within between `(` ... `)` or `[` ... `]`, even if they're not on the same
-line. You can't have extra `,`s, except after the last group.
+Parentheses `(` ... `)`, square brackets `[` ... `]`, and curly braces
+`{` ... `}` similarly combine a sequence of groups. A comma `,` can be
+used to separate groups on one line between the opener and closer.
+Furthermore, a `,` is _required_ to separate groups, even if they're
+not on the same line. You can't have extra `,`s, except after the last
+group.
 
 ```
 f(1, 2,
@@ -264,8 +248,8 @@ f(1, 2,
 map(add_five, [1, 2, 3, 4,])
 ```
 
-Indentation still works for creating blocks within `{` ... `}`, `(`
-... `)` or `[` ... `]`:
+Indentation still works for creating blocks within `(` ... `)`, `[`
+... `]`, or `{` ... `}`:
 
 ```
 map(fun (x):
@@ -273,8 +257,9 @@ map(fun (x):
     [1, 2, 3, 4])
 ```
 
-There are some subtleties related to the “precedence” of `|`, `;`, and
-`,`, but they're likely to work as you expect in a given example.
+There are some subtleties related to the “precedence” of `:`, `|`,
+`;`, and `,`, but they're likely to work as you expect in a given
+example.
 
 ## Modules
 
@@ -1226,6 +1211,10 @@ val neighborhood: Map('alice': Posn(4, 5),
 neighborhood['alice']  // prints Posn(4, 5)
 ```
 
+_Using `{` ... `}` could be a shorthand for `Map(` ... `)` when it has
+all keyword arguments or `Set(` ... `)` when it has no keyword
+arguments._
+
 Keywords are not expressions, so `'alice'` in an expression position
 is normally disallowed. However, `[` ... `]` allows a keyword by
 itself as a key in an indexed reference.
@@ -1286,7 +1275,7 @@ shrubbery, not a parsed Rhombus expression.
 ?hello     // prints a shrubbery: hello
 ?(1 + 2)   // prints a shrubbery: (1 + 2)
 ?(x:
-    y)     // prints a shrubbery: x { y }
+    y)     // prints a shrubbery: x:« y »
 // ?1 + 2  // would be a run-time error, since ?1 is not a number
 ```
 
@@ -1370,7 +1359,7 @@ Along the same lines, `...` just after a `|` can replicate a preceding
 ```
 def seq: ?(1 2 3)
 
-?{ | ¿seq | ... } // prints a shrubbery: { | 1 | 2 | 3 }
+?(cond | ¿seq | ...) // prints a shrubbery: cond «| 1 | 2 | 3 »}
 ```
 
 In other words, `...` in various places within a quoted shrubbery
@@ -1428,11 +1417,11 @@ For example, here's a `thunk` macro that expects a block and wraps as
 a zero-argument function:
 
 ```
-expr.macro ?(thunk { ¿body ... } ¿tail ...):
-  values(?(fun () { ¿body ... } ), tail)
+expr.macro ?(thunk: ¿body ...):
+  values(?(fun (): ¿body ...), ?())
 
-thunk { 1 + "oops" } // prints a function
-thunk { 1 + 3 } ()   // prints 4
+thunk: 1 + "oops"  // prints a function
+(thunk: 1 + 3)()   // prints 4
 ```
 
 The `expr.macro` form expects a `?` and then either parentheses or an 
@@ -1528,9 +1517,9 @@ Here's the classic `def_five` macro:
 
 ```
 defn.macro ?(def_five ¿id):
-  ?{
-    def ¿id: 5
-  }
+  ?(:
+      def ¿id: 5
+  )
 
 def_five v
 v  // prints 5

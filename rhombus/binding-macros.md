@@ -151,16 +151,16 @@ bind.infoer ?(fruit_infoer(¿static_info, ¿id)):
     ¿id)
 
 bind.matcher ?(fruit_matcher(¿arg, ¿id, ¿IF, ¿success, ¿failure)):
-  ?{
-    ¿IF is_fruit(¿arg):
-     | ¿success
-     | ¿failure
-  }
+  ?(:
+      ¿IF is_fruit(¿arg)
+      | ¿success
+      | ¿failure
+  )
 
 bind.binder ?(fruit_binder(¿arg, ¿id)):
-  ?{
-    def ¿id: ¿arg
-  }
+  ?(:
+      def ¿id: ¿arg
+  )
 
 fun is_fruit(v):
   v === "apple" || v === "banana"
@@ -214,19 +214,19 @@ bind.matcher ?(anding_matcher(¿in_id, (¿a_info, ¿b_info),
                               ¿IF, ¿success, ¿failure)):
   val ?(¿_, ¿_, ¿_, ¿a_matcher, ¿_, ¿a_data): bind_ct.unpack_info(a_info)
   val ?(¿_, ¿_, ¿_, ¿b_matcher, ¿_, ¿b_data): bind_ct.unpack_info(b_info)
-  ?{
-    ¿a_matcher(¿in_id, ¿a_data, ¿IF,
-               ¿b_matcher(¿in_id, ¿b_data, ¿IF, ¿success, ¿failure),
-               ¿failure)
-  }
+  ?(:
+      ¿a_matcher(¿in_id, ¿a_data, ¿IF,
+                 ¿b_matcher(¿in_id, ¿b_data, ¿IF, ¿success, ¿failure),
+                 ¿failure)
+  )
 
 bind.binder ?(anding_binder(¿in_id, (¿a_info, ¿b_info))):
   val ?(¿_, ¿_, ¿_, ¿_, ¿a_binder, ¿a_data): bind_ct.unpack_info(a_info)
   val ?(¿_, ¿_, ¿_, ¿_, ¿b_binder, ¿b_data): bind_ct.unpack_info(b_info)
-  ?{
-    ¿a_binder(¿in_id, ¿a_data)
-    ¿b_binder(¿in_id, ¿b_data)
-  }
+  ?(:
+      ¿a_binder(¿in_id, ¿a_data)
+      ¿b_binder(¿in_id, ¿b_data)
+  )
 
 val one <&> 1: 1
 one  // prints 1
