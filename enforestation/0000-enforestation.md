@@ -44,10 +44,10 @@ fun another_manhattan_distance(Posn(x, y)):
   abs(home.x - x) + 5 * abs(home.y - y)
 
 fun
- | should_take_cab(Posn(0, 0)): #false
- | should_take_cab(p :: Posn):
-     manhattan_distance(p) > 10 || weather.currently_raining()
- | should_take_cab(#false): #false
+| should_take_cab(Posn(0, 0)): #false
+| should_take_cab(p :: Posn):
+    manhattan_distance(p) > 10 || weather.currently_raining()
+| should_take_cab(#false): #false
 ```
 
 The intent here is that `val` and `fun` are macro-implemented and
@@ -284,8 +284,8 @@ follows:
 
 ```
 fun
- | factorial(0): 1
- | factorial(n): n*factorial(n-1)
+| factorial(0): 1
+| factorial(n): n*factorial(n-1)
          
 expr.macro ?(¿a ! ¿tail ...):
   values(?(factorial(¿a)), tail)
@@ -372,41 +372,56 @@ is involved in a precedence comparison, the other operator is always a
 later infix operator.
 
 ## Implicit operators
+[implicit-operators]: #implicit-operators
 
 In much the same way that `#%app` and `#%datum` are implicitly used in
-many Racket expressions, Rhombus enforestation consults a number of
-implicit operators:
-
- * `#%call`: implicit infix for an expression followed by a parenthesized
-   term
+many Racket expressions, Rhombus enforestation needs at least two
+implicit forms: an implicit prefix operator for a non-identifier form
+by itself (somewhat like `#%datum`), and an implicit infix operator
+for the juxtaposition of a parsed form and another form without a
+binary operator in between (somewhat like `#%app`). To help
+enforestation applications avoid a level of indirection between those
+minimal implicit forms, however, enforestation is parameterized over
+functions that select implicit prefix and infix forms. The default
+selection function generates references to the following forms:
 
  * `#%tuple`: implicit prefix for a parenthesized term that is not
-   immediately after an expression
+   immediately after a parsed form
 
- * `#%ref`: implicit infix for an expression followed by a
-   square-bracketed term
+ * `#%call`: implicit infix for a parsed form followed by a
+   parenthesized term
 
  * `#%array`: implicit prefix for a square-bracketed term that is not
-   immediately after an expression
+   immediately after a parsed form
+
+ * `#%ref`: implicit infix for a parsed form followed by a
+   square-bracketed term
+
+ * `#%set`: implicit prefix for a curly-braced term that is not
+   immediately after a parsed form
+
+ * `#%comp`: implicit infix for a parsed form followed by a
+   curly-braced term
 
  * `#%juxtapose`: implicit infix for adjacent expressions with no
-   operator between them when `#%call` and `#%ref` do not apply
+   operator between them when `#%call`, `#%ref`, and `#%comp` do not
+   apply
 
- * `#%block`: implicit prefix for a block (written in curly braces or
-   indentation) in an expression position
+ * `#%block`: implicit prefix for a block (written with `:`) not
+   immediately after a parsed form
 
  * `#%alts`: implicit prefix for a block of alternatives (written with
-   bar notation) in an expression position
+   `|` notation) not
+   immediately after a parsed form
 
- * `#%literal`: implicit prefix for a literal, such as a number o
-   boolean
+ * `#%literal`: implicit prefix for a literal, such as a number or
+   boolean, not immediately after a parsed form
 
 In an expression context, a Rhombus language's `#%call` implementation
 most likely creates a function call, `#%tuple` most likely does
 nothing for a single expression in parentheses (so parentheses can be
 used for grouping) and might otherwise create a tuple value or return
-multiple values, `#%juxtapose` probably reports an error, and
-`#%block` probably creates a nested definition context. Implicit
+multiple values, `#%juxtapose` probably reports an error. Implicit
 operators are likely to have the highest possible precedence and be
 left-associative, but they are not constrained to those conventions by
 the Rhombus expander. Implicit operators are likely to be implemented
@@ -454,10 +469,10 @@ already-parsed terms, in which case they are similarly opaque to the
 `->` transformer.
 
 For binding-operator macros, the prototype `#lang rhombus` supplied
-with this proposal includes `unpack_binding` to expose certain pieces
-of a binding's implementation, which allows the macro to compose or
+with this proposal includes `bind.unpack` to expose certain pieces of
+a binding's implementation, which allows the macro to compose or
 adjust other binding expansions. New binding pieces can be put back
-together into a parsed form using `pack_binding`.
+together into a parsed form using `bind.pack`.
 
 Some contexts may oblige a macro transformer to consume all of the
 remaining terms in a group. For example, a definition or declaration
@@ -638,6 +653,25 @@ types and one macro:
     - `#:make-operator-form`: a function that takes an operator an
       produces a suitable parsed form, or `#f` to have an error
       tiggered for an unbound operator in an expression position.
+
+    - `#:juxtapose-implicit-name`: a symbol for the implicit infix
+      form used on an identifier after a parsed term with no infix
+      operator in between. The default is `'#%juxtapose`.
+
+    - `#:select-implicit-prefix`: a function that takes a term within
+      a group that is not an operator and does not follow an infix
+      operator. The result should be two values: a symbol for an
+      implicit prefix form name and a syntax object whose lexical
+      context is added to the symbol to look up the implement binding.
+      The default is described in [the section on
+      implicits](#implicit-operators).
+
+    - `#:select-implicit-infix`: a function that takes a term within a
+      group that is not an operator and follows a parsed term. The
+      result should be two values: a symbol for an implicit infix form
+      name and a syntax object whose lexical context is added to the
+      symbol to look up the implement binding. The default is
+      described in [the section on implicits](#implicit-operators).
 
    The `define-enforest` macro is provided by the `enforest` library.
 
