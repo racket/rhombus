@@ -35,7 +35,7 @@
               (unless first? (display "; " op))
               (loop v #f)
               #f)
-            (display "»" op)
+            (display " »" op)
             #f)]
          [(eq? 'top (car v))
           (for/fold ([first? #t]) ([v (in-list (cdr v))])
@@ -47,7 +47,7 @@
           (define-values (open sep close)
             (case (car v)
               [(group) (values "" " "  "")]
-              [(block) (values ":« " "; " "»")]
+              [(block) (values ":« " "; " " »")]
               [(parens) (values "(" ", " ")")]
               [(brackets) (values "[" ", " "]")]
               [(braces) (values "{" ", " "}")]

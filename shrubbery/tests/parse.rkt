@@ -90,20 +90,18 @@ define fib(n):
        fib(n-1) + fib(n-2)
 
 define fib(n):
-  match n « | 0: « 0 »
-            | 1: « 1 »
-            | n: « fib(n-1) + fib(n-2) » »
+  match n | 0: « 0 »
+          | 1: « 1 »
+          | n: « fib(n-1) + fib(n-2) »
 
 define fib(n):
-  match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
+  match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2)
 
-define fib(n): match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
+define fib(n): « match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
 
-define fib(n): « match n « | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) » »
+define fib(n): « match n | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » »
 
-define fib(n): « match n « | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » » »
-
-define fib(n): « match n « | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » » »
+define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
 
 define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
 
@@ -304,21 +302,20 @@ local:
    x+y
 
 if t | if f | a | b | y
-if t | «if f | a | b» | y
-if t | «tag: if f | a | b» | y
-if t | «tag: «if f | a | b»» | y
+if t |« if f | a | b » | y
+if t |« tag: if f | a | b » | y
+if t |« tag: «if f | a | b » » | y
 
 x: y: a; b ; c
 x: y:« a; b »; c
 
 if t | x | y; z
-if t «| x | y»; z
+if t | x |« y »; z
 
-x: x
-    «
-      #//
-    | 2
-    | 3 »
+x:«
+    #//
+    2
+    3 »
 
 branch |« x»;
 INPUT
@@ -465,27 +462,6 @@ INPUT
                       (op +)
                       fib
                       (parens (group n (op -) 2))))))))))))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
     (group
      define
      fib
@@ -1222,7 +1198,7 @@ INPUT
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group if t (alts (block (group x)) (block (group y))))
     (group z)
-    (group x (block (group x (alts (block (group 3))))))
+    (group x (block (group 3)))
     (group branch (alts (block (group x))))))
 
   
@@ -1604,7 +1580,6 @@ INPUT
 
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
-(check-fail "if t «| x | y» more; z" #rx"no terms allowed after `»`")
 
 (check-fail (lines "x"
                    " y")

@@ -15,7 +15,6 @@
                bar-closes?     ; does `|` always end a group?
                bar-closes-line ; `|` (also) ends a group on this line
                block-mode      ; 'inside, #f, `:` or `|` token, or 'end
-               start-of-group? ; #t => looking for first item in a group
                delta           ; column delta created by `\`, applied to `line` continuation
                raw))           ; reversed whitespace (and comments) to be remembered
 
@@ -35,7 +34,6 @@
          bar-closes?
          bar-closes-line
          block-mode
-         #t ; start-of-group?
          delta
          raw))
 
@@ -390,8 +388,7 @@
                                            [delta delta]
                                            [raw null]
                                            [block-mode #f]
-                                           [operator-column operator-column]
-                                           [start-of-group? #f])))
+                                           [operator-column operator-column])))
        (define elem (record-raw (token-value t) #f (state-raw s)))
        (values (cons elem g) rest-l end-line end-delta tail-commenting tail-raw))
      ;; Dispatch
@@ -482,69 +479,46 @@
                            #:raw (state-raw s))])]
           [(opener)
            (check-block-mode)
-           (define opener (token-e t))
-           (case opener
-             [("«")
-              (define-values (group-commenting next-l last-line delta raw)
-                (next-of/commenting (cdr l) line (state-delta s) (cons t (state-raw s))))
-              (define bar-t (and (pair? next-l)
-                                 (car next-l)))
-              (unless (and bar-t (eq? (token-name bar-t) 'bar-operator))
-                (fail t "misplaced `«`"))
-              (when (state-start-of-group? s)
-                (fail bar-t "misplaced `|`"))
-              (parse-block #f next-l
-                           #:block-mode 'inside
-                           #:line line
-                           #:closer (make-closer-expected "»" t)
-                           #:bar-closes? #f
-                           #:bar-closes-line #f
-                           #:post-bar-closes? (state-bar-closes? s)
-                           #:post-bar-closes-line (state-bar-closes-line s)
-                           #:delta delta
-                           #:raw raw
-                           #:group-commenting group-commenting)]
-             [else
-              (define-values (closer tag)
-                (case opener
-                  [("(") (values ")" 'parens)]
-                  [("{") (values "}" 'braces)]
-                  [("[") (values "]" 'brackets)]
-                  [else (error "unknown opener" t)]))
-              (define pre-raw (state-raw s))
-              (define-values (group-commenting next-l last-line delta raw)
-                (next-of/commenting (cdr l) line (state-delta s) null))
-              (define sub-column
-                (if (pair? next-l)
-                    (+ (token-column (car next-l)) (state-delta s))
-                    (column-next (+ (token-column t) (state-delta s)))))
-              (define-values (gs rest-l close-line close-delta end-t never-tail-commenting group-tail-raw)
-                (parse-groups next-l (make-group-state #:closer (make-closer-expected closer t)
-                                                       #:paren-immed? #t
-                                                       #:block-mode #f
-                                                       #:column sub-column
-                                                       #:last-line last-line
-                                                       #:delta delta
-                                                       #:commenting group-commenting
-                                                       #:raw raw)))
-              (define-values (g rest-rest-l end-line end-delta tail-commenting tail-raw)
-                (parse-group rest-l (struct-copy state s
-                                                 [line close-line]
-                                                 [delta close-delta]
-                                                 [block-mode #f]
-                                                 [raw null]
-                                                 [start-of-group? #f])))
-              (values (cons (add-raw-to-prefix
-                             t pre-raw #:tail group-tail-raw
-                             (add-span-srcloc
-                              t end-t
-                              (cons tag gs)))
-                            g)
-                      rest-rest-l
-                      end-line
-                      end-delta
-                      tail-commenting
-                      tail-raw)])]
+           (define-values (closer tag)
+             (case (token-e t)
+               [("(") (values ")" 'parens)]
+               [("{") (values "}" 'braces)]
+               [("[") (values "]" 'brackets)]
+               [("«") (fail t "misplaced `«`")]
+               [else (error "unknown opener" t)]))
+           (define pre-raw (state-raw s))
+           (define-values (group-commenting next-l last-line delta raw)
+             (next-of/commenting (cdr l) line (state-delta s) null))
+           (define sub-column
+             (if (pair? next-l)
+                 (+ (token-column (car next-l)) (state-delta s))
+                 (column-next (+ (token-column t) (state-delta s)))))
+           (define-values (gs rest-l close-line close-delta end-t never-tail-commenting group-tail-raw)
+             (parse-groups next-l (make-group-state #:closer (make-closer-expected closer t)
+                                                    #:paren-immed? #t
+                                                    #:block-mode #f
+                                                    #:column sub-column
+                                                    #:last-line last-line
+                                                    #:delta delta
+                                                    #:commenting group-commenting
+                                                    #:raw raw)))
+           (define-values (g rest-rest-l end-line end-delta tail-commenting tail-raw)
+             (parse-group rest-l (struct-copy state s
+                                              [line close-line]
+                                              [delta close-delta]
+                                              [block-mode #f]
+                                              [raw null])))
+           (values (cons (add-raw-to-prefix
+                          t pre-raw #:tail group-tail-raw
+                          (add-span-srcloc
+                           t end-t
+                           (cons tag gs)))
+                         g)
+                   rest-rest-l
+                   end-line
+                   end-delta
+                   tail-commenting
+                   tail-raw)]
           [(whitespace comment continue-operator)
            (define-values (next-l line delta raw)
              (next-of l (state-line s) (state-delta s) (state-raw s)))
