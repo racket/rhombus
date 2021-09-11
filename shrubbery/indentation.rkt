@@ -307,7 +307,8 @@
                 (define-values (another-bar-start limit-pos)
                   (find-bar-same-line t s start as-bar?))
                 (cond
-                  [(and another-bar-start as-bar?)
+                  [(or (and another-bar-start as-bar?)
+                       (next-is-block-bracket? t e))
                    ;; don't treat the current bar as a source
                    ;; of indentation:
                    (loop (sub1 s) #f (min* s limit) #t #f)]
@@ -440,6 +441,18 @@
        (case category
          [(white-space comment) (loop e)]
          [(bar-operator) (> (line-start t pos) at-start)]
+         [else #f])])))
+
+(define (next-is-block-bracket? t pos)
+  (let loop ([pos pos])
+    (cond
+      [(= pos (send t last-position)) #f]
+      [else
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment) (loop e)]
+         [(parenthesis) (equal? (send t get-text s e) "«")]
          [else #f])])))
 
 (define (get-non-empty-lines t s-line e-line)

@@ -319,6 +319,8 @@ x: x
       #//
     | 2
     | 3 »
+
+branch |« x»;
 INPUT
 )
 
@@ -1220,7 +1222,8 @@ INPUT
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group if t (alts (block (group x)) (block (group y))))
     (group z)
-    (group x (block (group x (alts (block (group 3))))))))
+    (group x (block (group x (alts (block (group 3))))))
+    (group branch (alts (block (group x))))))
 
   
 (define input2
@@ -1616,3 +1619,7 @@ INPUT
 (check-fail (lines "x | y | c"
                    "  + 3")
             #rx"wrong indentation")
+
+(check-fail "(«| a | c»)" #rx"misplaced `|`")
+(check-fail "z «|« « | y » » »" #rx"misplaced `|`")
+(check-fail "«|« w « | y » » »" #rx"misplaced `|`")
