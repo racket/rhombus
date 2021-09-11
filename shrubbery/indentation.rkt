@@ -13,7 +13,8 @@
 ;;   tab = indentation relative to start, does not include delta
 
 (provide shrubbery-indentation
-         shrubbery-range-indentation)
+         shrubbery-range-indentation
+         shrubbery-paren-matches)
 
 (define NORMAL-INDENT 2)
 (define BAR-INDENT 0)
@@ -499,3 +500,9 @@
       [(null? l) (list 0)]
       [(eqv? (car l) 0) l]
       [else (cons (car l) (loop (cdr l)))])))
+
+(define shrubbery-paren-matches
+  '((|(| |)|)
+    (|[| |]|)
+    (|{| |}|)
+    (« »)))
