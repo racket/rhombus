@@ -448,12 +448,9 @@ hello: if x | world | universe; the end
 
 A block can be delimited explicitly with `«` and `»` to indicate where
 it ends, and any form can be written on a single line using `«` and
-`»`. Since there are three ways that a block is created, there are
-three places where `«` can be used: immediately after `:` to start the
-block that the `:` creates to its right, immediately after `|` to
-start the block that the `|` creates to its right, and immediately
-before a leading `|` to start the enclosing block to hold multiple `|`
-forms. A `»` indicates the end of the block.
+`»`. A `«` can be used immediately after `:` or immediately after `|`,
+and a `»` indicates the end of the block that starts after the `:` or
+`|`.
 
 Each pair of groups here represent the same group:
 
@@ -470,7 +467,7 @@ if true
   | y
 | z
 
-if | true |« if false | x | y »| z
+if | true |« if false | x | y » | z
 
 hello:
   if x
@@ -478,7 +475,7 @@ hello:
   | universe
   the end
 
-hello: if x «| world | universe»; the end
+hello: if x | world |« universe »; the end
 ```
 
 Delimiting blocks with `«` and `»` is expected to be rare in practice,
