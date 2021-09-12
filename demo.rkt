@@ -150,14 +150,14 @@ fun
 | factorial(0): 1
 | factorial(n): n*factorial(n-1)
 
-expr.macro ?(¿a *! ¿tail ...):
+expr.macro ?(¿a *! ¿tail ......):
   values(?(factorial(¿a)), tail)
 
 10*!
 
 // ?? is an alias for ¿
 
-expr.macro ?(??a **! ??tail ...):
+expr.macro ?(??a **! ??tail ......):
   values(?(factorial(??a)), tail)
 
 10**!
@@ -166,8 +166,8 @@ expr.macro ?(??a **! ??tail ...):
 // a macro with an identifier name that does a weird
 // thing with the result tail
 
-expr.macro ?(prefix_plus ¿a ¿b ¿c ...):
-  values(a, ?(+ ¿b ¿c ...))
+expr.macro ?(prefix_plus ¿a ¿b ¿c ......):
+  values(a, ?(+ ¿b ¿c ......))
 
 prefix_plus 7 9
 
@@ -264,7 +264,7 @@ rx
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 
-defn.macro ?(define_eight ¿e ...):
+defn.macro ?(define_eight ¿e ......):
   match e
   | ?(¿name):
       ?(: def ¿name: 8)
@@ -272,7 +272,7 @@ defn.macro ?(define_eight ¿e ...):
 define_eight ate
 ate
 
-defn.macro ?(define_and_use ¿e ...):
+defn.macro ?(define_and_use ¿e ......):
   match e
   | ?(¿name: ¿rhs ...):
       ?(: def ¿name: ¿rhs ...
@@ -283,7 +283,7 @@ nine
 
 // declaration form
 
-decl.macro ?(empty_import ¿e ...):
+decl.macro ?(empty_import ¿e ......):
   match e
   | ?():
       ?(: import:)
@@ -364,7 +364,7 @@ import:
 annotation.macro ?AlsoPosn: ?Posn
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
 
-bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ...):
+bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ......):
   values(?(Posn(¿x, ¿y)), tail)
                        
 annotation.macro ?Vector:
@@ -387,7 +387,7 @@ vec.magnitude
 def AlsoPosn(also_x, also_y): Posn(10, 20)
 also_x +$ "," +$ also_y
 
-expr.macro ?(or_zero ¿p ¿tail ...):
+expr.macro ?(or_zero ¿p ¿tail ......):
   values(static_info_ct.wrap(?(¿p || Posn(0,0)),
                              ?((¿(dot_ct.provider_key),
                                 vector_dot_provider))),
@@ -522,7 +522,7 @@ get_pts_x([Posn(1, 2)])
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-annotation.macro ?(ListOf (¿contract ...) ¿tail ...):
+annotation.macro ?(ListOf (¿contract ...) ¿tail ......):
   values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
          tail)
 
@@ -532,8 +532,8 @@ fun get_pts_x2(pts -: ListOf(Posn)):
 get_pts_x2([Posn(5, 7)])
 
 // definition-sequence macros
-defn.sequence_macro ?(: reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ...):
-  values(?(: ¿defn2 ...; ¿defn1 ... ), ?(: ¿tail; ...))
+defn.sequence_macro ?(: reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ......):
+  values(?(: ¿defn2 ...; ¿defn1 ... ), ?(: ¿tail; ......))
 
 reverse_defns
 def seq_x: seq_y+1

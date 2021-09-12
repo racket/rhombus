@@ -664,8 +664,8 @@
      (define new-l (for/list ([e (in-list l)])
                      (lists->syntax e)))
      (if (syntax? a)
-         (datum->syntax #f new-l a stx-for-original-property)
-         (datum->syntax #f new-l))]
+         (datum->syntax* #f new-l a stx-for-original-property)
+         (datum->syntax* #f new-l))]
     [else l]))
 
 ;; Consume whitespace and comments, including continuing backslashes,
@@ -812,7 +812,7 @@
 
 (define (add-span-srcloc start-t end-t l #:alt [alt-start-t #f])
   (define (add-srcloc l loc)
-    (cons (let ([stx (datum->syntax #f (car l) loc stx-for-original-property)])
+    (cons (let ([stx (datum->syntax* #f (car l) loc stx-for-original-property)])
             (if (syntax? start-t)
                 (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
                        [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)])
@@ -882,11 +882,11 @@
 (define (add-raw-tail top raw)
   (if (null? raw)
       top
-      (datum->syntax top
-                     (cons (syntax-raw-tail-property (car (syntax-e top)) (raw-tokens->raw raw))
-                           (cdr (syntax-e top)))
-                     top
-                     top)))
+      (datum->syntax* top
+                      (cons (syntax-raw-tail-property (car (syntax-e top)) (raw-tokens->raw raw))
+                            (cdr (syntax-e top)))
+                      top
+                      top)))
 
 (define (add-pre-raw stx pre-raw)
   (if (null? pre-raw)
@@ -909,7 +909,7 @@
                         (syntax-raw-tail-property from-stx)))
   (cond
     [post-raw
-     (define a (datum->syntax #f (car to)))
+     (define a (datum->syntax* #f (car to)))
      (cons (syntax-raw-tail-property a (raw-cons (or (syntax-raw-tail-property a) '())
                                                  post-raw))
            (cdr to))]
@@ -930,7 +930,7 @@
         (cdr l)))
 
 (define (add-tail-raw-to-prefix post-raw l)
-  (cons (syntax-raw-tail-property (datum->syntax #f (car l)) (raw-tokens->raw post-raw))
+  (cons (syntax-raw-tail-property (datum->syntax* #f (car l)) (raw-tokens->raw post-raw))
         (cdr l)))
 
 (define (raw-cons a b)
@@ -944,6 +944,25 @@
   (if v
       (prop dest v)
       dest))
+
+;; like `datum->syntax`, but ensures that a sequence of pairs is not
+;; too long before there's a syntax pair
+(define (datum->syntax* ctx v [src #f] [props #f])
+  (datum->syntax
+   ctx
+   (let loop ([v v] [depth 0])
+     (cond
+       [(pair? v)
+        (cond
+          [(depth . >= . 32)
+           (datum->syntax ctx
+                          (cons (loop (car v) 0) (loop (cdr v) 0))
+                          src)]
+          [else
+           (cons (loop (car v) 0) (loop (cdr v) (add1 depth)))])]
+       [else v]))
+   src
+   props))
 
 ;; ----------------------------------------
 
