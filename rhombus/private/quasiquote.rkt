@@ -50,7 +50,8 @@
          (syntax-parse gs
            [()
             (let ([ps (reverse ps)]
-                  [idrs (append (or pend-idrs '()) idrs)])
+                  [idrs (append (or pend-idrs '()) idrs)]
+                  [can-be-empty? (and can-be-empty? (not pend-idrs))])
               (cond
                 [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
                  (handle-maybe-empty-alts #'tag ps idrs)]
@@ -210,8 +211,6 @@
      l]
     [else (for/list ([g (in-list (syntax->list l))])
             (error-empty-group (sub1 at-depth) g))]))
-
-(require (for-syntax racket/pretty))
 
 (define-syntax ?
   (make-expression+binding-prefix-operator
