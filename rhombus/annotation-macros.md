@@ -20,7 +20,7 @@ Note that `annotation.macro` defines only an annotation. To make `AlsoPosn`
 also a binding operator, use `bind.macro`, and so on:
 
 ```
-bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ...):
+bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ......):
   values(?(Posn(¿x, ¿y)), tail)
 
 def AlsoPosn(x, y): Posn(1, 2)
@@ -91,7 +91,7 @@ A macro can explicitly associate static information with an expression
 by using `static_info_ct.wrap`:
 
 ```
-expr.macro ?(or_zero ¿p ¿tail ...):
+expr.macro ?(or_zero ¿p ¿tail ......):
   val expansion: ?(¿p || Posn(0,0))
   values(static_info_ct.wrap(expansion,
                              ?((¿(dot_ct.provider_key),

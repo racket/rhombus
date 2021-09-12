@@ -1301,38 +1301,35 @@ A `¿` only unquotes when it is followed by a term, otherwise the `¿`
 itself remains quoted.
 
 ```
-?(1 + ¿(? ¿) 2)  // prints a shrubbery: (1 + ¿ 2)
+?(1 + ¿(? ¿) 2)  // prints a shrubbery: ?(1 + ¿ 2)
 ```
 
-Besides `¿`, `...` is treated specially within a `?`-quoted term
-(except, like `¿` when it's the only thing in the term). When `...`
-immediately follows a term that includes at least one `¿`, the value
-of the expression after that `¿` must produce a parenthesized-group
-syntax object. Then, instead of the parenthesized group in place of
-`¿`, the term before `...` is replicated as many times as the
-parenthesized group has terms, and each of those terms is used in one
-replication.
+Like `¿`, `...` is treated specially within a `?`-quoted term (except,
+like `¿` when it's the only thing in the term). When `...` immediately
+follows a term that includes at least one `¿`, the value of the
+expression after that `¿` must produce a list of syntax objects. Then,
+instead of the parenthesized group in place of `¿`, the term before
+`...` is replicated as many times as the list has items, and each of
+those items is used in one replication.
 
 ```
-def seq: ?(1 2 3)
+def seq: [?1, ?2, ?3]
 
 ?((hi ¿seq) ...) // prints a shrubbery: ((hi 1) (hi 2) (hi 3))
 ```
 
 There's a subtlety here: could `seq` have zero elements? If so,
 replicating the `hi` form zero times within a group would leave an
-empty group, but a shrubbery never has an empty group. The same
-problem happens with any attempt to represent an empty sequence in the
-first place. To manage this gap, a parenthesized shrubbery form with
-zero groups is treated as equivalent for `¿` replication to a
-parenthesized form with an empty group. Similarly, when a `?` form
-describes a single parenthesized group that turns out to be
-empty, it instead produces a parenthesized form with zero groups.
-Attempting to generate a group with no terms within a parenthesized
-form with multiple groups is an error.
+empty group, but a shrubbery never has an empty group. To manage this
+gap, a parenthesized shrubbery form with zero groups is treated as
+equivalent for `¿` replication to a parenthesized form with an empty
+group. Similarly, when a `?` form describes a single parenthesized
+group that turns out to be empty, it instead produces a parenthesized
+form with zero groups. Attempting to generate a group with no terms
+within a parenthesized form with multiple groups is an error.
 
 ```
-def seq: ?()
+def seq: []
 
 ?((hi ¿seq) ...)          // prints a shrubbery: ()
 // ?(x, (hi ¿seq) ..., y) // would be a run-time error
@@ -1348,7 +1345,7 @@ group before the `,`, which effectively replicates that group with its
 separating comma:
 
 ```
-def seq: ?(1 2 3)
+def seq: [?1, ?2, ?3]
 
 ?(hi ¿seq, ...) // prints a shrubbery: (hi 1, hi 2, hi 3)
 ```
@@ -1357,9 +1354,9 @@ Along the same lines, `...` just after a `|` can replicate a preceding
 `|` block:
 
 ```
-def seq: ?(1 2 3)
+def seq: [?1, ?2, ?3]
 
-?(cond | ¿seq | ...) // prints a shrubbery: cond «| 1 | 2 | 3 »}
+?(cond | ¿seq | ...) // prints a shrubbery: cond |« 1  »|« 2  »|« 3 »}
 ```
 
 In other words, `...` in various places within a quoted shrubbery
@@ -1390,18 +1387,46 @@ that would be parsed as an expression. For example, a pattern variable
 ```
 
 Meanwhile, `...` works the way you would expect in a pattern, matching
-any `...`-replicated pattern variables to form a sequence of matches:
+any `...`-replicated pattern variables to form a list of matches:
 
 ```
 val ?(¿x + ¿y ...): ?(1 + 2 + 3)
 
 x  // prints a shrubbery: 1
-y  // prints a shrubbery: (2 + 3)
+y  // prints a list: [?2, ? +, ?3]
 ```
 
 _In the current implementation of `?` patterns, a `¿` escape must be
 followed by an identifier or `_`. Generalizing the position after `¿` can
 open the door to more `syntax-parse` goodness._
+
+A `......` behaves similarly to `...`, but for a _tail replication_
+that can only appear at the end of a group. In a patttern, an escaped
+variable must appear before `......`, and instead of binding the
+variable to a list, the variable is bound to a syntax object for a
+parenthesized term that contains the matched tail. In a template, an
+escaped expression must appear before `......`, and it must produce a
+syntax object for a parenthesized term.
+
+Use `......` for tail sequences that you don't need to inspect,
+because the syntax-object representation can avoid work proportional
+to the length of the matched tail. Avoiding that work can be important
+for macros.
+
+```
+val ?(¿head ¿tail ......): ?(1 2 3 4 5)
+
+head  // prints a shrubbery: 1
+tail  // prints a shrubbery: (2 3 4 5)
+?(0 ¿tail ......) // prints a shrubbery: (0 2 3 4 5)
+```
+
+_Using `......` is similar to using `.` in S-expression patterns and
+templates. The difference can avoid quadratic expansion costs, which
+is all the more important in the Rhombus expansion protocol, which
+must thread potentially long sequences into and out of macro
+transformers._
+
 
 ## Expression macros
 
@@ -1417,8 +1442,8 @@ For example, here's a `thunk` macro that expects a block and wraps as
 a zero-argument function:
 
 ```
-expr.macro ?(thunk: ¿body ...):
-  values(?(fun (): ¿body ...), ?())
+expr.macro ?(thunk: ¿body ......):
+  values(?(fun (): ¿body ......), ?())
 
 thunk: 1 + "oops"  // prints a function
 (thunk: 1 + 3)()   // prints 4
@@ -1433,18 +1458,9 @@ matches a sequence of terms that use that identifier or operator
 literally. If the first term in the pattern is an unescaped identifier
 or operator, a prefix macro is defined; otherwise, the second term
 must be unescaped, and an infix macro is defined. If the part after `?`
-is just an identifier or parentheses, then it's shorthand for an prefix
+is just an identifier or parentheses, then it's shorthand for a prefix
 macro that consumes none of the tail, and the macro body returns just
 the expansion part (i.e., normally the first of two results).
-
-In the second use of `thunk` above, the `thunk` macro consumes the
-block containing `1 + 3`, but it does not consume the `()`, so parsing
-continues and produces a call to thunk. Note that returning `tail`
-from the macro is the same as returning `?(¿tail ...)`.
-
-_The current implementation's reporting of errors is especially bad
-for a macro use that doesn't match the macro's pattern, but there
-appears to be no fundamental obstacle to improving error reporting._
 
 A postfix macro can be implemented as an infix operator that
 consumes no additional terms after the operator. For example, a
@@ -1452,8 +1468,8 @@ postfix `!` might be defined (shadowing the normal `!` for “not”) like
 this:
 
 ```
-expr.macro ?(¿a ! ¿tail ...):
-  values(?(factorial(¿a)), tail)
+expr.macro ?(¿a ! ¿tail ......):
+  values(?(factorial(¿a)), ?(tail ......))
 
 fun
 | factorial(0): 1
@@ -1475,9 +1491,36 @@ term, which would enable reporting a specific error if a parsed
 expression is put into a non-expression context. Probably it should do
 that._
 
-The `def` form turns itself into `expr.macro` when it is
-followed by a `?` pattern that would be suitable for
-`expr.macro`.
+The `!` macro matches an unconsumed tail with `......` instead of
+`...`. Using `...` would implement the same transformation, but
+less efficiently:
+
+```
+expr.macro ?(¿a ! ¿tail ...):
+  values(?(factorial(¿a)), ?(tail ...))
+
+// changing to 2000 `!`s or so makes parsing take noticeably long:
+0 ! ! ! ! ! ! ! ! ! ! ! !
+```
+
+Since `......` after `tail` in a pattern binds `tail` to a
+parenthesized sequence, the macro's second result can be written as
+just `tail`. That's convenenient, although not inherently more
+efficient:
+
+```
+expr.macro ?(¿a ! ¿tail ......):
+  values(?(factorial(¿a)), tail)
+```
+
+The `def` form turns itself into `expr.macro` when it is followed by a
+`?` pattern that would be suitable for `expr.macro`, so `!` could be
+defined with that shorthand:
+
+```
+def ?(¿a ! ¿tail ......):
+  values(?(factorial(¿a)), tail)
+```
 
 Besides `expr.macro`, there is also `expr.operator`. The
 `expr.operator` form provides the same parsing benefits for a
@@ -1604,7 +1647,7 @@ As another example, here's how a `ListOf` annotation constructor could be
 implemented if `List.of` did not exists already:
 
 ```
-annotation.macro ?(ListOf (¿annotation ...) ¿tail ...):
+annotation.macro ?(ListOf (¿annotation ...) ¿tail ......):
   values(?(matching([_ :: (¿annotation ...), ¿(? ...)])),
          tail)
 ```

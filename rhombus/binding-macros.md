@@ -133,7 +133,7 @@ Here's a use of the low-level protocol to implement a `fruit` pattern,
 which matches only things that are fruits according to `is_fruit`:
 
 ```
-bind.macro ?(fruit(¿id) ¿tail ...):
+bind.macro ?(fruit(¿id) ¿tail ......):
   values(bind_ct.pack(?(fruit_infoer,
                         // remember the id:
                         ¿id)),
