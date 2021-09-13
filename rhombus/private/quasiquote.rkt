@@ -12,7 +12,7 @@
          "syntax-list.rkt"
          (only-in "underscore.rkt"
                   [_ rhombus-_])
-         ;; because `expression_macro` uses the result of `convert-syntax`
+         ;; because `expression_macro` uses the result of `convert-pattern`
          ;; as a compile-time pattern:
          (for-syntax "tail.rkt"
                      "syntax-list.rkt"))

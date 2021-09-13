@@ -1,5 +1,8 @@
 #lang rhombus
 
+import:
+  = rhombus/macro
+
 use_static_dot
 
 // Some expressions

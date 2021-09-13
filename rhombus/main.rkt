@@ -2,20 +2,13 @@
 (require (for-syntax racket/base
                      syntax/parse
                      shrubbery/print)
+         "private/bounce.rkt"
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin])
          #%top-interaction)
 
-(define-syntax (bounce stx)
-  (syntax-case stx ()
-    [(_ mod ...)
-     (with-syntax ([(mod ...) ((make-syntax-introducer) #'(mod ...))])
-       #'(begin (begin (require mod (for-syntax mod))
-                       (provide (all-from-out mod)
-                                (for-syntax (all-from-out mod))))
-                ...))]))
 (bounce "private/implicit.rkt"
         "private/underscore.rkt"
         "private/arithmetic.rkt"
@@ -26,10 +19,6 @@
         "private/import.rkt"
         "private/export.rkt"
         "private/module-path.rkt"
-        "private/expression-syntax.rkt"
-        "private/binding-syntax.rkt"
-        "private/definition-syntax.rkt"
-        "private/declaration-syntax.rkt"
         "private/operator.rkt"
         "private/annotation.rkt"
         "private/list.rkt"
@@ -42,10 +31,7 @@
         "private/match.rkt"
         "private/quasiquote.rkt"
         "private/keyword.rkt"
-        "private/values.rkt"
-        "private/annotation-syntax.rkt"
-        "private/static-info-syntax.rkt"
-        "private/dot-syntax.rkt")
+        "private/values.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus
