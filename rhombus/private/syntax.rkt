@@ -4,7 +4,8 @@
                      syntax/boundmap
                      "operator-parse.rkt"
                      "consistent.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "syntax-class-mixin.rkt")
          (rename-in "quasiquote.rkt"
                     [... rhombus...])
          (submod "quasiquote.rkt" convert)
@@ -71,99 +72,70 @@
     (pattern (group (op ¿) _ _::operator-or-identifier . _))
     (pattern (group ::operator-or-identifier . _)))
 
-  (define-splicing-syntax-class :operator-options
+  (define-syntax-class-mixin operator-options
     #:datum-literals (op block group
                          stronger_than
                          weaker_than
                          same_as
                          same_on_left_as
                          same_on_right_as)
-    (pattern (~seq (~alt (~optional (group #:stronger_than ~! (block (group stronger::op/other ...) ...))
-                                    #:defaults ([(stronger.name 2) '()]))
-                         (~optional (group #:weaker_than ~! (block (group weaker::op/other ...) ...))
-                                    #:defaults ([(weaker.name 2) '()]))
-                         (~optional (group #:same_as ~! (block (group same::op/other ...) ...))
-                                    #:defaults ([(same.name 2) '()]))
-                         (~optional (group #:same_on_left_as ~! (block (group same-on-left::op/other ...) ...))
-                                    #:defaults ([(same-on-left.name 2) '()]))
-                         (~optional (group #:same_on_right_as ~! (block (group same-on-right::op/other ...) ...))
-                                    #:defaults ([(same-on-right.name 2) '()])))
-                   ...)
-             #:attr prec (combine-prec (syntax->list #'(stronger.name ... ...))
-                                       (syntax->list #'(weaker.name ... ...))
-                                       (syntax->list #'(same.name ... ...))
-                                       (syntax->list #'(same-on-left.name ... ...))
-                                       (syntax->list #'(same-on-right.name ... ...)))))
+    (~alt (~optional (group #:stronger_than ~! (block (group stronger::op/other ...) ...))
+                     #:defaults ([(stronger.name 2) '()]))
+          (~optional (group #:weaker_than ~! (block (group weaker::op/other ...) ...))
+                     #:defaults ([(weaker.name 2) '()]))
+          (~optional (group #:same_as ~! (block (group same::op/other ...) ...))
+                     #:defaults ([(same.name 2) '()]))
+          (~optional (group #:same_on_left_as ~! (block (group same-on-left::op/other ...) ...))
+                     #:defaults ([(same-on-left.name 2) '()]))
+          (~optional (group #:same_on_right_as ~! (block (group same-on-right::op/other ...) ...))
+                     #:defaults ([(same-on-right.name 2) '()])))
+    #:attr prec (combine-prec (syntax->list #'(stronger.name ... ...))
+                              (syntax->list #'(weaker.name ... ...))
+                              (syntax->list #'(same.name ... ...))
+                              (syntax->list #'(same-on-left.name ... ...))
+                              (syntax->list #'(same-on-right.name ... ...))))
 
-  (define-splicing-syntax-class :self-operator-options
+  (define-syntax-class-mixin self-options
     #:datum-literals (op block group
                          opt_stx)
-    (pattern (~seq (~alt (~optional (group #:op_stx ~! (block (group self-id:identifier)))
-                                    #:defaults ([self-id #'self])))
-                   ...)))
+    (~alt (~optional (group #:op_stx ~! (block (group self-id:identifier)))
+                     #:defaults ([self-id #'self]))))
 
-  (define-splicing-syntax-class :parsed-right-operator-options
+  (define-syntax-class-mixin parsed-right-options
     #:datum-literals (op block group
                          opt_stx)
-    (pattern (~seq (~alt (~optional (group (~and parsed-right? #:parsed_right))
-                                    #:defaults ([parsed-right? #'#f])))
-                   ...)))
+    (~alt (~optional (group (~and parsed-right? #:parsed_right))
+                     #:defaults ([parsed-right? #'#f]))))
 
-  (define-splicing-syntax-class :prefix-operator-options
-    (pattern (~seq opt::operator-options)
-             #:attr prec #'opt.prec))
+  (define-composed-splicing-syntax-class :prefix-operator-options
+    operator-options)
+
+  (define-composed-splicing-syntax-class :self-prefix-operator-options
+    operator-options
+    self-options)
   
-  (define-splicing-syntax-class :self-prefix-operator-options
-    (pattern (~seq (~alt (~optional pre-opt::prefix-operator-options
-                                    #:defaults ([pre-opt.prec #'()]))
-                         (~optional self-opt::self-operator-options
-                                    #:defaults ([self-opt.self-id #'self])))
-                   ...)
-             #:attr prec #'pre-opt.prec
-             #:attr self-id #'self-opt.self-id
-             #:attr parsed-right? #'macro-opt.parsed-right?))
-  
-  (define-splicing-syntax-class :macro-prefix-operator-options
-    (pattern (~seq (~alt (~optional pre-opt::prefix-operator-options
-                                    #:defaults ([pre-opt.prec #'()]))
-                         (~optional self-opt::self-operator-options
-                                    #:defaults ([self-opt.self-id #'self]))
-                         (~optional parsed-right-opt::parsed-right-operator-options
-                                    #:defaults ([parsed-right-opt.parsed-right? #'#f])))
-                   ...)
-             #:attr prec #'pre-opt.prec
-             #:attr self-id #'macro-opt.self-id
-             #:attr parsed-right? #'parsed-right-opt.parsed-right?))
-             
-  (define-splicing-syntax-class :infix-operator-options
+  (define-composed-splicing-syntax-class :macro-prefix-operator-options
+    operator-options
+    self-options
+    parsed-right-options)
+
+  (define-syntax-class-mixin infix-operator-options
     #:datum-literals (op block group
                          associativity)
-    (pattern (~seq (~alt (~optional op-opt::operator-options
-                                    #:defaults ([op-opt.prec #'()]))
-                         (~optional (group #:associativity ~!
-                                           (block (group (~and assc
-                                                               (~or #:right #:left #:none)))))
-                                    #:defaults ([assc #'#:left])))
-                   ...)
-             #:attr prec #'op-opt.prec))
+    (~alt (~optional (group #:associativity ~!
+                            (block (group (~and assc
+                                                (~or #:right #:left #:none)))))
+                     #:defaults ([assc #'#:left]))))
+
+  (define-composed-splicing-syntax-class :infix-operator-options
+    operator-options
+    infix-operator-options)
              
-  (define-splicing-syntax-class :macro-infix-operator-options
-    #:datum-literals (op parens group
-                         stronger_than
-                         weaker_than
-                         same_as)
-    (pattern (~seq (~alt (~optional in-opt::infix-operator-options
-                                    #:defaults ([in-opt.prec #'()]
-                                                [in-opt.assc #'none]))
-                         (~optional self-opt::self-operator-options
-                                    #:defaults ([self-opt.self-id #'self]))
-                         (~optional parsed-right-opt::parsed-right-operator-options
-                                    #:defaults ([parsed-right-opt.parsed-right? #'#f])))
-                   ...)
-             #:attr prec #'in-opt.prec
-             #:attr assc #'in-opt.assc
-             #:attr self-id #'self-opt.self-id
-             #:attr parsed-right? #'parsed-right-opt.parsed-right?))
+  (define-composed-splicing-syntax-class :macro-infix-operator-options
+    operator-options
+    infix-operator-options
+    self-options
+    parsed-right-options)
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
