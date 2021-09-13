@@ -25,8 +25,8 @@
          (for-syntax bind_ct))
 
 (define-syntax bind
-  (simple-name-root operator
-                    macro
+  (simple-name-root macro
+                    rule
                     infoer
                     matcher
                     binder))
@@ -39,15 +39,15 @@
                       unpack_info
                       get_info)))
 
-(define-syntax operator
-  (make-operator-definition-transformer 'automatic
+(define-syntax macro
+  (make-operator-definition-transformer 'macro
                                         in-binding-space
                                         #'make-binding-prefix-operator
                                         #'make-binding-infix-operator
                                         #'prefix+infix))
 
-(define-syntax macro
-  (make-operator-definition-transformer 'macro
+(define-syntax rule
+  (make-operator-definition-transformer 'rule
                                         in-binding-space
                                         #'make-binding-prefix-operator
                                         #'make-binding-infix-operator

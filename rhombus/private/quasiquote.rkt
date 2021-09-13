@@ -12,8 +12,8 @@
          "syntax-list.rkt"
          (only-in "underscore.rkt"
                   [_ rhombus-_])
-         ;; because `expression_macro` uses the result of `convert-pattern`
-         ;; as a compile-time pattern:
+         ;; because `expr.macro` uses the result of `convert-pattern`
+         ;; as a compile-time pattern, for example:
          (for-syntax "tail.rkt"
                      "syntax-list.rkt"))
 
@@ -24,7 +24,8 @@
          ......)
 
 (module+ convert
-  (provide (for-syntax convert-pattern)))
+  (provide (for-syntax convert-pattern
+                       convert-template)))
 
 (begin-for-syntax
   (define-syntax-class list-repetition
@@ -119,7 +120,7 @@
                             (values e (list #`[#,e (pack-list* (syntax #,e) 0)])))
                         (raise-syntax-error #f
                                             (format "expected an identifier after ~a"
-                                                    (syntax-e #'¿-id))
+                                                    (syntax-e ¿-id))
                                             in-e
                                             e)))
                   ;; deepen-escape
@@ -163,53 +164,67 @@
                     (values #`((~datum #,tag) . #,ps) idrs #t))))
 
 
-(define-for-syntax (convert-template e)
-  (convert-syntax e
-                  ;; make-datum
-                  (lambda (d) d)
-                  ;; make-literal
-                  (lambda (d) d)
-                  ;; handle-escape:
-                  (lambda (¿-id e in-e)
-                    (define id (car (generate-temporaries (list e))))
-                    (values id (list #`[#,id (unpack-list* (rhombus-expression (group #,e)) 0)])))
-                  ;; deepen-escape
-                  (lambda (idr)
-                    (syntax-parse idr
-                      [(id-pat ((~literal unpack-list*) e depth))
-                       #`[(id-pat (... ...)) (unpack-list* e #,(add1 (syntax-e #'depth)))]]
-                      [(id-pat (converter depth (qs t) . args))
-                       #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
-                  ;; handle-tail-escape:
-                  (lambda (name e in-e)
-                    (define id (car (generate-temporaries (list e))))
-                    (values id (list #`[#,id (unpack-list* (unpack-tail (rhombus-expression (group #,e)) '#,name) 0)])))
-                  ;; handle-maybe-empty-sole-group
-                  (lambda (tag template idrs)
-                    ;; if `template` generates `(group)`, then instead of `(tag (group))`,
-                    ;; produce `(tag)`
-                    (define id (car (generate-temporaries '(group))))
-                    (values #`(#,tag #,id (... ...))
-                            (cons #`[(#,id (... ...))
-                                     (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
-                                  idrs)
-                            #f))
-                  ;; handle-maybe-empty-alts
-                  (lambda (tag ts idrs)
-                    ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
-                    (define id (car (generate-temporaries '(alts))))
-                    (values id
-                            (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
-                                  idrs)
-                            #f))
-                  ;; handle-maybe-empty-group
-                  (lambda (tag ts idrs)
-                    ;; if `(tag . ts)` generates `(group)`, then error
-                    (define id (car (generate-temporaries '(group))))
-                    (values id
-                            (cons #`[#,id (error-empty-group 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
-                                  idrs)
-                            #f))))
+(define-for-syntax (convert-template e
+                                     #:check-escape [check-escape (lambda (e) (void))]
+                                     #:rhombus-expression [rhombus-expression #'rhombus-expression])
+  (define-values (template idrs can-be-empty?)
+    (convert-syntax e
+                    ;; make-datum
+                    (lambda (d) d)
+                    ;; make-literal
+                    (lambda (d) d)
+                    ;; handle-escape:
+                    (lambda (¿-id e in-e)
+                      (check-escape e)
+                      (define id (car (generate-temporaries (list e))))
+                      (values id (list #`[#,id (unpack-list* (#,rhombus-expression (group #,e)) 0)])))
+                    ;; deepen-escape
+                    (lambda (idr)
+                      (syntax-parse idr
+                        [(id-pat ((~literal unpack-list*) e depth))
+                         #`[(id-pat (... ...)) (unpack-list* e #,(add1 (syntax-e #'depth)))]]
+                        [(id-pat (converter depth (qs t) . args))
+                         #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
+                    ;; handle-tail-escape:
+                    (lambda (name e in-e)
+                      (define id (car (generate-temporaries (list e))))
+                      (values id (list #`[#,id (unpack-list* (unpack-tail (#,rhombus-expression (group #,e)) '#,name) 0)])))
+                    ;; handle-maybe-empty-sole-group
+                    (lambda (tag template idrs)
+                      ;; if `template` generates `(group)`, then instead of `(tag (group))`,
+                      ;; produce `(tag)`
+                      (define id (car (generate-temporaries '(group))))
+                      (values #`(#,tag #,id (... ...))
+                              (cons #`[(#,id (... ...))
+                                       (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
+                                    idrs)
+                              #f))
+                    ;; handle-maybe-empty-alts
+                    (lambda (tag ts idrs)
+                      ;; if `(tag . ts)` generates `(alts)`, then produce `(block)` instead
+                      (define id (car (generate-temporaries '(alts))))
+                      (values id
+                              (cons #`[#,id (convert-empty-alts 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
+                                    idrs)
+                              #f))
+                    ;; handle-maybe-empty-group
+                    (lambda (tag ts idrs)
+                      ;; if `(tag . ts)` generates `(group)`, then error
+                      (define id (car (generate-temporaries '(group))))
+                      (values id
+                              (cons #`[#,id (error-empty-group 0 (#,(quote-syntax quasisyntax) (#,tag . #,ts)))]
+                                    idrs)
+                              #f))))
+  (define (wrap-bindings idrs body)
+    (cond
+      [(null? idrs) body]
+      [else
+       (wrap-bindings (cdr idrs)
+                      (syntax-parse (car idrs)
+                        [(id-pat e)
+                         #`(with-syntax ([id-pat e])
+                             #,body)]))]))
+  (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
 
 (define (convert-empty-group at-depth l)
   (cond
@@ -255,18 +270,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(op e . tail)
-        (define-values (template idrs can-be-empty?) (convert-template #'e))
-        (define (wrap-bindings idrs body)
-          (cond
-            [(null? idrs) body]
-            [else
-             (wrap-bindings
-              (cdr idrs)
-              (syntax-parse (car idrs)
-                [(id-pat e)
-                 #`(with-syntax ([id-pat e])
-                     #,body)]))]))
-        (values (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template))
+        (values (convert-template #'e)
                 #'tail)]))
    ;; pattern
    (lambda (stx)

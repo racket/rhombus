@@ -102,6 +102,13 @@
                                     #:defaults ([self-id #'self])))
                    ...)))
 
+  (define-splicing-syntax-class :parsed-right-operator-options
+    #:datum-literals (op block group
+                         opt_stx)
+    (pattern (~seq (~alt (~optional (group (~and parsed-right? #:parsed_right))
+                                    #:defaults ([parsed-right? #'#f])))
+                   ...)))
+
   (define-splicing-syntax-class :prefix-operator-options
     (pattern (~seq opt::operator-options)
              #:attr prec #'opt.prec))
@@ -113,7 +120,20 @@
                                     #:defaults ([self-opt.self-id #'self])))
                    ...)
              #:attr prec #'pre-opt.prec
-             #:attr self-id #'self-opt.self-id))
+             #:attr self-id #'self-opt.self-id
+             #:attr parsed-right? #'macro-opt.parsed-right?))
+  
+  (define-splicing-syntax-class :macro-prefix-operator-options
+    (pattern (~seq (~alt (~optional pre-opt::prefix-operator-options
+                                    #:defaults ([pre-opt.prec #'()]))
+                         (~optional self-opt::self-operator-options
+                                    #:defaults ([self-opt.self-id #'self]))
+                         (~optional parsed-right-opt::parsed-right-operator-options
+                                    #:defaults ([parsed-right-opt.parsed-right? #'#f])))
+                   ...)
+             #:attr prec #'pre-opt.prec
+             #:attr self-id #'macro-opt.self-id
+             #:attr parsed-right? #'parsed-right-opt.parsed-right?))
              
   (define-splicing-syntax-class :infix-operator-options
     #:datum-literals (op block group
@@ -127,7 +147,7 @@
                    ...)
              #:attr prec #'op-opt.prec))
              
-  (define-splicing-syntax-class :self-infix-operator-options
+  (define-splicing-syntax-class :macro-infix-operator-options
     #:datum-literals (op parens group
                          stronger_than
                          weaker_than
@@ -136,12 +156,15 @@
                                     #:defaults ([in-opt.prec #'()]
                                                 [in-opt.assc #'none]))
                          (~optional self-opt::self-operator-options
-                                    #:defaults ([self-opt.self-id #'self])))
+                                    #:defaults ([self-opt.self-id #'self]))
+                         (~optional parsed-right-opt::parsed-right-operator-options
+                                    #:defaults ([parsed-right-opt.parsed-right? #'#f])))
                    ...)
              #:attr prec #'in-opt.prec
              #:attr assc #'in-opt.assc
-             #:attr self-id #'self-opt.self-id))
-             
+             #:attr self-id #'self-opt.self-id
+             #:attr parsed-right? #'parsed-right-opt.parsed-right?))
+
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
     #:literals (¿ ?)
@@ -158,45 +181,43 @@
   (define (convert-assc assc)
     #`'#,(string->symbol (keyword->string (syntax-e assc)))))
 
-(define-for-syntax (parse-one-automatic-operator-definition make-prefix-id make-infix-id)
+(define-for-syntax (parse-one-macro-definition kind make-prefix-id make-infix-id)
   (lambda (g rhs)
-    (syntax-parse g
-      #:datum-literals (group op)
-      #:literals (¿ rhombus...)
-      [(group (op ¿) left:identifier
-              op-name::operator-or-identifier
-              (op ¿) right:identifier)
-       (syntax-parse rhs
-         [((~and tag block) opt::self-infix-operator-options rhs ...)
-          #`(#,make-infix-id
-             (quote-syntax op-name.name)
-             #,(convert-prec #'opt.prec)
-             'automatic
-             (let ([op-name.name (lambda (left right opt.self-id)
-                                   (rhombus-expression (group (tag rhs ...))))])
-               op-name.name)
-             #,(convert-assc #'opt.assc))])]
-      [(group op-name::operator-or-identifier
-              (op ¿) arg:identifier)
-       (syntax-parse rhs
-         [((~and tag block) opt::self-prefix-operator-options rhs ...)
-          #`(#,make-prefix-id
-             (quote-syntax op-name.name)
-             #,(convert-prec #'opt.prec)
-             'automatic
-             (let ([op-name.name (lambda (arg opt.self-id)
-                                   (rhombus-expression (group (tag rhs ...))))])
-               op-name.name))])])))
-
-(define-for-syntax (parse-one-macro-operator-definition make-prefix-id make-infix-id)
-  (lambda (g rhs)
-    (define (macro-body self-id tail-id tail-pattern rhs)
-      (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . #,tail-pattern))))
+    (define (macro-body self-id left-ids tail-id tail-pattern rhs)
+      (define-values (pattern idrs can-be-empty?)
+        (if (eq? kind 'rule)
+            (convert-pattern #`(parens (group #,@tail-pattern (op ¿) tail (op ......))))
+            (convert-pattern #`(parens (group . #,tail-pattern)))))
       (with-syntax ([((id id-ref) ...) idrs])
+        (define body
+          (if (eq? kind 'rule)
+              (let ([ids (cons self-id (append left-ids (syntax->list #'(id ...))))])
+                #`(values #,(convert-rule-template rhs ids) tail))
+              #`(rhombus-expression (group #,rhs))))
         #`(syntax-parse (respan-empty #,self-id #,tail-id)
             [#,pattern
              (let ([id id-ref] ...)
-               (rhombus-expression (group #,rhs)))])))
+               #,body)])))
+    (define (convert-rule-template block ids)
+      (syntax-parse block
+        #:datum-literals (block group op)
+        #:literals (?)
+        [(block (group (op (~and t-op ?)) template))
+         (convert-template #'template
+                           #:rhombus-expression #'rhombus-expression
+                           #:check-escape (lambda (e)
+                                            (unless (and (identifier? e)
+                                                         (for/or ([id (in-list ids)])
+                                                           (free-identifier=? e id)))
+                                              (raise-syntax-error #f
+                                                                  "expected an identifier bound by the pattern"
+                                                                  #'t-op
+                                                                  e))))]))
+    (define (extract-pattern-id tail-pattern)
+      (syntax-parse tail-pattern
+        #:datum-literals (op)
+        #:literals (¿)
+        [((op ¿) id:identifier) #'id]))
     (syntax-parse g
       #:datum-literals (group op)
       #:literals (¿ rhombus...)
@@ -205,29 +226,55 @@
               op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
-         [((~and tag block) opt::self-infix-operator-options rhs ...)
+         [((~and tag block) opt::macro-infix-operator-options rhs ...)
           #`(#,make-infix-id
              (quote-syntax op-name.name)
              #,(convert-prec #'opt.prec)
-             'macro
-             (let ([op-name.name (lambda (left tail opt.self-id)
-                                   #,(macro-body #'opt.self-id #'tail #'tail-pattern
-                                                 #'(tag rhs ...)))])
-               op-name.name)
+             #,(if (syntax-e #'opt.parsed-right?)
+                   #''automatic
+                   #''macro)
+             #,(cond
+                 [(syntax-e #'opt.parsed-right?)
+                  (define right-id (extract-pattern-id #'tail-pattern))
+                  #`(let ([op-name.name (lambda (left #,right-id opt.self-id)
+                                          #,(if (eq? kind 'rule)
+                                                (convert-rule-template #'(tag rhs ...)
+                                                                       (list #'left right-id #'opt.self-id))
+                                                #`(rhombus-expression (group (tag rhs ...)))))])
+                      op-name.name)]
+                 [else
+                  #`(let ([op-name.name (lambda (left tail opt.self-id)
+                                          #,(macro-body #'opt.self-id (list #'left)
+                                                        #'tail #'tail-pattern
+                                                        #'(tag rhs ...)))])
+                      op-name.name)])
              #,(convert-assc #'opt.assc))])]
       ;; prefix protocol
       [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
-         [((~and tag block) opt::self-prefix-operator-options rhs ...)
+         [((~and tag block) opt::macro-prefix-operator-options rhs ...)
           #`(#,make-prefix-id
              (quote-syntax op-name.name)
              #,(convert-prec #'opt.prec)
-             'macro
-             (let ([op-name.name (lambda (tail opt.self-id)
-                                   #,(macro-body #'opt.self-id #'tail #'tail-pattern
-                                                 #'(tag rhs ...)))])
-               op-name.name))])]
+             #,(if (syntax-e #'opt.parsed-right?)
+                   #''automatic
+                   #''macro)
+             #,(cond
+                 [(syntax-e #'opt.parsed-right?)
+                  (define arg-id (extract-pattern-id #'tail-pattern))
+                  #`(let ([op-name.name (lambda (#,arg-id opt.self-id)
+                                          #,(if (eq? kind 'rule)
+                                                (convert-rule-template #'(tag rhs ...)
+                                                                       (list arg-id #'opt-self-id))
+                                                #`(rhombus-expression (group (tag rhs ...)))))])
+                      op-name.name)]
+                 [else
+                  #`(let ([op-name.name (lambda (tail opt.self-id)
+                                          #,(macro-body #'opt.self-id '()
+                                                        #'tail #'tail-pattern
+                                                        #'(tag rhs ...)))])
+                      op-name.name)]))])]
       ;; nofix protocol
       [op-name::operator-or-identifier
        (syntax-parse rhs
@@ -237,24 +284,22 @@
              #,(convert-prec #'opt.prec)
              'macro
              (let ([op-name.name (lambda (tail opt.self-id)
-                                   (values (rhombus-block rhs ...)
+                                   (values #,(if (eq? kind 'rule)
+                                                 (convert-rule-template #'(tag rhs ...)
+                                                                        (list #'opt.self-id))
+                                                 #`(rhombus-block-at tag rhs ...))
                                            tail))])
                op-name.name))])])))
 
-(define-for-syntax (parse-operator-definition protocol g rhs
+(define-for-syntax (parse-operator-definition kind g rhs
                                               in-space make-prefix-id make-infix-id)
-  (define p ((if (eq? protocol 'automatic)
-                 (parse-one-automatic-operator-definition make-prefix-id make-infix-id)
-                 (parse-one-macro-operator-definition make-prefix-id make-infix-id))
-             g rhs))
+  (define p ((parse-one-macro-definition kind make-prefix-id make-infix-id) g rhs))
   (define op (syntax-parse p [(_ (_ op-name) . _) #'op-name]))
   #`(define-syntax #,(in-space op) #,p))
 
-(define-for-syntax (parse-operator-definitions protocol stx gs rhss
+(define-for-syntax (parse-operator-definitions kind stx gs rhss
                                                in-space make-prefix-id make-infix-id prefix+infix-id)
-  (define ps (map (if (eq? protocol 'automatic)
-                      (parse-one-automatic-operator-definition make-prefix-id make-infix-id)
-                      (parse-one-macro-operator-definition make-prefix-id make-infix-id))
+  (define ps (map (parse-one-macro-definition kind make-prefix-id make-infix-id)
                   gs rhss))
   (define-values (prefixes infixes ops)
     (let loop ([ps ps] [prefixes null] [infixes null] [ops null])
@@ -290,27 +335,28 @@
                                                          prefix+infix-id)
   (definition-transformer
     (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
-                                                     (~and rhs (block body ...))))
-                                       ...+))
-        (list (parse-operator-definitions protocol
-                                          stx
-                                          (syntax->list #'(q.g ...))
-                                          (syntax->list #'(rhs ...))
+      (define (template->macro protocol) (if (eq? protocol 'template) 'macro protocol))
+      (syntax-parse stx
+        #:datum-literals (parens group block alts op)
+        [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
+                                                      (~and rhs (block body ...))))
+                                        ...+))
+         (list (parse-operator-definitions (template->macro protocol)
+                                           stx
+                                           (syntax->list #'(q.g ...))
+                                           (syntax->list #'(rhs ...))
+                                           in-space
+                                           make-prefix-id
+                                           make-infix-id
+                                           prefix+infix-id))]
+        [(form-id q::operator-syntax-quote
+                  (~and rhs (block body ...)))
+         (list (parse-operator-definition (template->macro protocol)
+                                          #'q.g
+                                          #'rhs
                                           in-space
                                           make-prefix-id
-                                          make-infix-id
-                                          prefix+infix-id))]
-       [(form-id q::operator-syntax-quote
-                 (~and rhs (block body ...)))
-        (list (parse-operator-definition protocol
-                                         #'q.g
-                                         #'rhs
-                                         in-space
-                                         make-prefix-id
-                                         make-infix-id))]))))
+                                          make-infix-id))]))))
 
 ;; ----------------------------------------
 

@@ -182,7 +182,7 @@ just_five +$ " is the result"
 
 // another way to write that
 
-def ?(also_prefix_plus ¿e ...):
+expr.macro ?(also_prefix_plus ¿e ...):
   match e
   | ?(¿a ¿b ¿c ...):
       values(a, ?(+ ¿b ¿c ...))
@@ -193,7 +193,8 @@ also_prefix_plus 7 9
 
 // define a binding operator
 
-bind.operator ?($ ¿n):
+bind.rule ?($ ¿n):
+  'parsed_right'
   ?(¿n :: Integer)
 
 fun apply_interest($ n):
@@ -202,7 +203,8 @@ fun apply_interest($ n):
 apply_interest(7)
 
 // define <> as revese-cons pattern
-bind.operator ?(¿a <> ¿b):
+bind.macro ?(¿a <> ¿b):
+  'parsed_right'
   bind_ct.pack(?(build_reverse_cons_infoer,
                  (¿a, ¿b)))
 
@@ -259,7 +261,7 @@ bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_
           )
 
 // an expression operator that's consistent with the pattern
-expr.operator ?(¿a <> ¿b): ?(cons(¿b, ¿a))
+expr.rule ?(¿a <> ¿b): 'parsed_right'; ?(cons(¿b, ¿a))
 
 def rx <> (ry :: Integer) : "2" <> 1
 rx
