@@ -174,7 +174,7 @@ snack // prints "apple"
 The `fruit` binding form assumes (without directly checking) that its
 argument is an identifier, and its infoer discards static information.
 Binding forms normally need to accomodate other, nested binding forms,
-instead. A `bind.operator` transformer receives already-parsed
+instead. A `bind.macro` transformer with `parsed_right` receives already-parsed
 sub-bindings as arguments, and the infoer function can use
 `bind_ct.get_info` on a parsed binding form to call its internal
 infoer function. The result is packed static information, which can be

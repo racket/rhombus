@@ -1434,22 +1434,26 @@ Macros extend the syntax available for expressions, bindings,
 definitions, and more. Each kind of macro extension has a different
 protocol and a different form for defining a macro. In the case of
 expressions, a macro receives the sequence of terms starting with the
-macro operator/identifier within a group, and the macro returns two
-values: an expansion and the remaining terms that the macro did not
-consume.
+macro operator/identifier within a group. A _rule_ macro consumes only
+the tokens that its pattern matches, and it's right-hand side is an
+immediate template expression that produces the macro expansion. A
+general form of macro is implemented with arbitrary compile-time
+computation, and it can return terms that the macro does not consume.
 
 For example, here's a `thunk` macro that expects a block and wraps as
-a zero-argument function:
+a zero-argument function
 
 ```
-expr.macro ?(thunk: ¿body ......):
-  values(?(fun (): ¿body ......), ?())
+import: = rhombus/syntax
+
+expr.rule ?(thunk: ¿body ...):
+  ?(fun (): ¿body ...)
 
 thunk: 1 + "oops"  // prints a function
 (thunk: 1 + 3)()   // prints 4
 ```
 
-The `expr.macro` form expects a `?` and then either parentheses or an 
+The `expr.rule` form expects a `?` and then either parentheses or an 
 identifier or operator to create a pattern that matches a sequence of
 terms. With parentheses after `?`, either the first or
 second term within the pattern is an _unescaped_ identifier or
@@ -1459,8 +1463,20 @@ literally. If the first term in the pattern is an unescaped identifier
 or operator, a prefix macro is defined; otherwise, the second term
 must be unescaped, and an infix macro is defined. If the part after `?`
 is just an identifier or parentheses, then it's shorthand for a prefix
-macro that consumes none of the tail, and the macro body returns just
-the expansion part (i.e., normally the first of two results).
+macro that consumes none of the tail.
+
+The `expr.rule` form must be imported from `rhombus/syntax`, but `def`
+behaves like `expr.rule` when the part before `:` is valid for
+`expr.rule`:
+
+```
+// no import needed
+
+def ?(thunk: ¿body ...):
+  ?(fun (): ¿body ...)
+
+(thunk: 1 + 3)()   // prints 4
+```
 
 A postfix macro can be implemented as an infix operator that
 consumes no additional terms after the operator. For example, a
@@ -1468,8 +1484,8 @@ postfix `!` might be defined (shadowing the normal `!` for “not”) like
 this:
 
 ```
-expr.macro ?(¿a ! ¿tail ......):
-  values(?(factorial(¿a)), ?(tail ......))
+def ?(¿a !):
+  ?(factorial(¿a))
 
 fun
 | factorial(0): 1
@@ -1478,9 +1494,28 @@ fun
 10! + 1 // = 3628801
 ```
 
-When the macro transformer for `!` is called, `a` will be bound to a
-syntax object representing a parsed Rhombus expression, as opposed to
-an unparsed shrubbery. Currently, there's no way for a transformer to
+The `expr.rule` or `def` form is a shorthand for a more general
+`expr.macro` macro form. With `expr.macro`, the macro implementation
+after `:` is compile-time code. Importing `rhombus/macro` imports all
+of the same bindings as `rhombus` into the compile-time phase, in
+addition to making forms like `expr.macro` available. In addition, a
+macro defined with `expr.macro` receives all remaining terms in the
+enclosing group as input, and it must return two values: the expanded
+expression and the remaining terms that have not been consumed.
+
+For example, the `!` macro can be equivalently written like this:
+
+```
+expr.macro ?(¿a ! ¿tail ......):
+  values(?(factorial(¿a)), ?(tail ......))
+```
+
+Since an `expr.macro` implementation can use arbitrary compile-time
+code, it can inspect the input syntax objects in more way than just
+pattern matching. However, already-parsed terms will be opaque. When
+the macro transformer for `!` is called, `a` will be bound to a syntax
+object representing a parsed Rhombus expression, as opposed to an
+unparsed shrubbery. Currently, there's no way for a transformer to
 inspect a parsed Rhombus expression (except by escaping to Racket).
 When the parsed expression is injected back into an unparsed
 shrubbery, as happens in `?(factorial(¿a))`, it will later simply
@@ -1513,39 +1548,45 @@ expr.macro ?(¿a ! ¿tail ......):
   values(?(factorial(¿a)), tail)
 ```
 
-The `def` form turns itself into `expr.macro` when it is followed by a
-`?` pattern that would be suitable for `expr.macro`, so `!` could be
-defined with that shorthand:
+The `......` operator cannot be used at the end of the input group for
+a rule macro, because there's implicitly a `¿tail ......` at the end
+of every rule-macro pattern. If you try replacing `...` in the `thunk`
+implementation with `......`, it will work, but that's because the
+`......` in that case is under a block created by `:`, and not in the
+enclosing input group.
 
-```
-def ?(¿a ! ¿tail ......):
-  values(?(factorial(¿a)), tail)
-```
-
-Besides `expr.macro`, there is also `expr.operator`. The
-`expr.operator` form provides the same parsing benefits for a
-right-hand expression argument as `expr.macro` provides
-already for the left-hand argument of an infix macro. Normally, in
-that case, you might as well use `operator`, but `expr.operator`
-provides control over evaluator order. For example, this `+<=`
+Whether pattern-based or not, an infix-operator macro's left-hand
+input is parsed. A prefix or infix macro's right-hand input is not
+parsed by default. To trigger parsing for a right-hand argument,
+include `'parsed_right'` as a declaration at the start of the macro
+body. Often, in that case, you might as well use `operator`, but
+macros provide control over evaluator order. For example, this `+<=`
 operator is like `+`, but evaluates its right-hand side before it's
 left-hand side:
 
 ```
-expr.operator ?(¿a +<= ¿b):  
+def ?(¿a +<= ¿b): 
+  'parsed_right'
   ?(¿b + ¿a)
 
 1 +<= 2                       // prints 3
 // (1+"oops") +<= (2+"ouch")  // would complain about "ouch", not "oops"
 ```
 
-In the same way that `operator` supports operators that are both
-prefix and infix, you can use an alt-block with `expr.macro` or
-`expr.operator` to create a prefix-and-infix macro.
+Declaring `'parsed_right'` affects a `expr.macro` macro in a second
+way: the macro will receive only the left (if any) and right
+arguments, and will not receieve or return the tail of the ennclosing
+group. In other words, declaring `'parse_right'` uses the same
+argument and return protocol as a rule-based macro, but the template
+part can be implemented by arbitrary compile-time expressions.
 
-_It would make sense for `expr.operator` to further support
-multiple cases that differ by pattern instead of infix vs. prefix,
-but the implementation does not yet do that._
+In the same way that `operator` supports operators that are both
+prefix and infix, you can use an alt-block with `expr.rule` or
+`expr.macro` to create a prefix-and-infix macro.
+
+_It will make sense for `expr.rule` and `expr.macro` to further
+support multiple cases that differ by pattern instead of infix vs.
+prefix, but the implementation does not yet do that._
 
 ## Definition and declaration macros
 
@@ -1559,6 +1600,8 @@ Here's the classic `def_five` macro:
 
 
 ```
+import: = rhombus/syntax
+
 defn.macro ?(def_five ¿id):
   ?(:
       def ¿id: 5
@@ -1583,14 +1626,16 @@ syntax for that combination should be straightforward._
 
 ## Binding and annotation macros
 
-Macros can extend binding-position syntax, too, via `bind.macro`
-and `bind.operator`. In the simplest case, a binding operator is
-implemented by expanding to other binding operators, like this
-definition of `$` as a prefix operator to constrain a pattern to
-number inputs:
+Macros can extend binding-position syntax, too, via `bind.rule` and
+`bind.macro`. In the simplest case, a binding operator is implemented
+by expanding to other binding operators, like this definition of `$`
+as a prefix operator to constrain a pattern to number inputs:
 
 ```
-bind.operator ?($ ¿n):
+import: = rhombus/syntax
+
+bind.rule ?($ ¿n):
+  'parsed_right'
   ?(¿n :: Number)
 
 val $salary: 100.0
