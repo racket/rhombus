@@ -836,7 +836,7 @@ Special floating-point values similarly use a `#` notation.
 
 Identifiers are formed from Unicode alphanumeric characters plus `_`,
 where the initial character must not be a numeric character. An
-identifier surrounded by `'` forms a keyword, analogous to prefixin an
+identifier prefixed with `~` forms a keyword, analogous to prefixing an
 identifier with `#:` in Racket.
 
 Operators are formed from Unicode symbolic and punctuation characters
@@ -881,21 +881,21 @@ would create ambiguous or ill-formed representations.
 |   | _alphanum_      | is  | _alpha_                                                   |                                |
 |   |                 | or  | **a numeric Unicode character**                           |                                |
 |   |                 |     |                                                           |                                |
-| * | _keyword_       | is  | `'` _identifier_  `'`                                     |                                |
+| * | _keyword_       | is  | `~` _identifier_                                          |                                |
 |   |                 |     |                                                           |                                |
 | * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **not** `|` **or** `:` ...     |
 |   |                 | or  | `.` +                                                     | ... **or containing** `//` ... |
 |   |                 | or  | `+` +                                                     | ... **or containing** `/*`     |
 |   |                 | or  | `-` +                                                     |                                |
 |   |                 |     |                                                           |                                |
-|   | _opchar_        | is  | **a symbolic Unicode character**                          |                                |
+|   | _opchar_        | is  | **a symbolic Unicode character not in** _special_         |                                |
 |   |                 | or  | **a punctuation Unicode character not in** _special_      |                                |
 |   |                 | or  | **one of ** `:`, `|`                                      |                                |
 |   |                 |     |                                                           |                                |
 |   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`, `/`    |                                |
 |   |                 |     |                                                           |                                |
 |   | _special_       | is  | **one of** `(`, `)`, `[`, `]`, `{`, `}`, `«`, `»`         |                                |
-|   |                 | or  | **one of** `"`, `;`, `,`, `#`, `\`, `_`, `@`              |                                |
+|   |                 | or  | **one of** `"`, `;`, `,`, `~`, `#`, `\`, `_`, `@`         |                                |
 |   |                 |     |                                                           |                                |
 | * | _number_        | is  | _integer_                                                 |                                |
 |   |                 | or  | _float_                                                   |                                |
@@ -1033,20 +1033,13 @@ role of `\` also means that spaces can be turned into `\` to “harden”
 code for transfer via media (such as email) that might mangle
 consecutive spaces.
 
-Some languages allow either `"` or `'` to be used for forming strings.
-In the interest of making programs more consistent, shrubbery notion
-allows only `"` for strings. While `'` could be used for C-style
-characters, character constants are so rarely needed that using `'`
-for that purpose seems like a waste. The notion of keywords as
-distinct from identifiers, meanwhile, as been liberating for Racket
-syntax (particularly since keywords can be kept disintinct from
-expressions more generally), and we expect similar benefits for having
-keywords in shrubbery notation. While a leading `'` character could
-suffice to designate a keyword, programmers from languages other than
-Lisp will expect `'`s to be balanced. Furthermore, if keywords are
-combined with `:`, then the `'` just before `:` helps highlight that
-that the `:` is associated with a keyword rather than some other kind
-of syntactic form.
+Using `~` for keywords has a precedent in OCaml. Using `~` for
+keywords uses up a character that might otherwise be used for
+operators, but keywords seem useful enough to be worth this cost. The
+notion of keywords as distinct from identifiers has been liberating
+for Racket syntax (particularly since keywords can be kept disintinct
+from expressions more generally), and we expect similar benefits for
+having keywords in shrubbery notation.
 
 The `#{....}` escape to S-expressions bridges between shrubbery
 notation and Racket identifiers. For example, `#{exact-integer?}` is
