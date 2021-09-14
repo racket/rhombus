@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  = rhombus/macro
+  rhombus/macro: no_prefix
 
 use_static_dot
 
@@ -355,8 +355,9 @@ known_posn.x
 // contracts and dot providers
 
 import:
-  = racket/base:
-    only: atan
+ racket/base:
+   no_prefix
+   only: atan
 
 annotation.macro 'AlsoPosn: 'Posn
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
