@@ -20,7 +20,7 @@
          &&
          \|\|
 
-         +$
+         &
          ===)
 
 (begin-for-syntax
@@ -144,7 +144,7 @@
 (define-comp-infix rhombus> >)
 (define-comp-infix === equal?)
 
-(define-infix +$ append-as-strings
+(define-infix & append-as-strings
   #:stronger-than (===))
 
 (define (append-as-strings a b)

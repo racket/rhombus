@@ -33,6 +33,9 @@
       [(drracket:range-indentation)
        (dynamic-require 'shrubbery/indentation
                         'shrubbery-range-indentation)]
+      [(drracket:paren-matches)
+       (dynamic-require 'shrubbery/indentation
+                        'shrubbery-paren-matches)]
       [(drracket:grouping-position)
        (dynamic-require 'shrubbery/navigation
                         'shrubbery-grouping-position)]

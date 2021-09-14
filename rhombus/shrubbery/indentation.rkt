@@ -13,7 +13,8 @@
 ;;   tab = indentation relative to start, does not include delta
 
 (provide shrubbery-indentation
-         shrubbery-range-indentation)
+         shrubbery-range-indentation
+         shrubbery-paren-matches)
 
 (define NORMAL-INDENT 2)
 (define BAR-INDENT 0)
@@ -307,7 +308,8 @@
                 (define-values (another-bar-start limit-pos)
                   (find-bar-same-line t s start as-bar?))
                 (cond
-                  [(and another-bar-start as-bar?)
+                  [(or (and another-bar-start as-bar?)
+                       (next-is-block-bracket? t e))
                    ;; don't treat the current bar as a source
                    ;; of indentation:
                    (loop (sub1 s) #f (min* s limit) #t #f)]
@@ -442,6 +444,18 @@
          [(bar-operator) (> (line-start t pos) at-start)]
          [else #f])])))
 
+(define (next-is-block-bracket? t pos)
+  (let loop ([pos pos])
+    (cond
+      [(= pos (send t last-position)) #f]
+      [else
+       (define-values (s e) (send t get-token-range pos))
+       (define category (send t classify-position s))
+       (case category
+         [(white-space comment) (loop e)]
+         [(parenthesis) (equal? (send t get-text s e) "«")]
+         [else #f])])))
+
 (define (get-non-empty-lines t s-line e-line)
   (let loop ([line s-line])
     (cond
@@ -486,3 +500,9 @@
       [(null? l) (list 0)]
       [(eqv? (car l) 0) l]
       [else (cons (car l) (loop (cdr l)))])))
+
+(define shrubbery-paren-matches
+  '((|(| |)|)
+    (|[| |]|)
+    (|{| |}|)
+    (« »)))

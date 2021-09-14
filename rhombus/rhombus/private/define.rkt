@@ -72,7 +72,7 @@
                                        ...+))
         (list
          (wrap-definition
-          (parse-operator-definitions 'macro
+          (parse-operator-definitions 'rule
                                       stx
                                       (syntax->list #'(q.g ...))
                                       (syntax->list #'(rhs ...))
@@ -84,7 +84,7 @@
                  (~and rhs (block body ...)))
         (list
          (wrap-definition
-          (parse-operator-definition 'macro
+          (parse-operator-definition 'rule
                                      #'q.g
                                      #'rhs
                                      in-expression-space
