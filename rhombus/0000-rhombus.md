@@ -26,7 +26,7 @@ particular theme and direction.
 Before we start, here’s a recap on shrubbery notation.
 
 _If you install
-[https://github.com/mflatt/shrubbery-rhombus-0](https://github.com/mflatt/shrubbery-rhombus-0),
+[https://github.com/mflatt/shrubbery-rhombus-0.git](https://github.com/mflatt/shrubbery-rhombus-0),
 then you can run `#lang shrubbery` (not `#lang rhombus` for this part)
 to see how example shrubberies parse into an S-expression
 representation. Unfortunately, it needs a development version of
@@ -138,7 +138,7 @@ if is_rotten(apple)
 
 match x
 | 0:
-   def zero = x
+   def zero: x
    x + zero
 | n:
    n + 1
@@ -196,7 +196,7 @@ begin: group within block
 if is_rotten(apple) | get_another() | take_bite()
                                       be_happy()
 
-match x | 0: def zero = x
+match x | 0: def zero: x
              x + zero
         | n: n + 1
 
@@ -214,7 +214,8 @@ begin: group within block; another group within block
 
 if is_rotten(apple) | get_another() | take_bite(); be_happy()
 
-match x | 0: def zero = x; x + zero
+match x | 0: def zero: x
+             x + zero
         | n: n + 1
 
 cond | is_raining(): take_umbrella()
@@ -227,11 +228,19 @@ never create an empty group.
 
 Finally, anything that can be written with newlines and indentation
 can be written on a single line, but `«` and `»` may be required to
-delimit a block. Normally, parentheses work just as well.
+delimit a block using `«` just after `:` or `|` and `»` at the end of
+the block. Normally, parentheses work just as well, but the `match`
+example above illustrates a rare case where `«` and `»` would be
+needed to fit on a single line. Without `«` and `»`, the following
+form would put `x + zero` insinde the definition of `zero`:
+
+```
+match x | 0: def zero:« x »; x + zero | n: n + 1
+```
 
 Parentheses `(` ... `)`, square brackets `[` ... `]`, and curly braces
-`{` ... `}` similarly combine a sequence of groups. A comma `,` can be
-used to separate groups on one line between the opener and closer.
+`{` ... `}` combine a sequence of groups. A comma `,` can be used to
+separate groups on one line between the opener and closer.
 Furthermore, a `,` is _required_ to separate groups, even if they’re
 not on the same line. You can’t have extra `,`s, except after the last
 group.
@@ -330,27 +339,24 @@ Unlike Racket, imported bindings must accessed using a prefix name and
 then `.`, at least by default. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
 that’s why the import of `"f2c.rhm"` leads to the `f2c` prefix. To
-supply an explicit prefix, use `=`:
+supply an explicit prefix, use the `prefix` modifier:
 
 ```
 import:
-  convert = "f2c.rhm"
+  "f2c.rhm": prefix convert
 
 convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
 ```
 
-Using `=` with no name before it imports without a prefix, but this
-kind of “namespace dumping” is considered bad style in most cases:
+Use the `no_prefix` modifier to import without a prefix, but this kind
+of “namespace dumping” is considered bad style in most cases:
 
 ```
 import:
-  = "f2c.rhm"
+  "f2c.rhm": no_prefix
 
 fahrenheit_to_celsius(fahrenheit_freezing)
 ```
-
-_If the left-dangling `=` as above is slightly uncomfortable, that may
-be good as a discoragement again dumping._
 
 Module paths are written with a `/` separator as in Racket, and the
 last path element is the one that determines the default import
@@ -1431,7 +1437,8 @@ For example, here’s a `thunk` macro that expects a block and wraps as
 a zero-argument function
 
 ```
-import: = rhombus/syntax
+import:
+  rhombus/macro: no_prefix
 
 expr.rule '(thunk: $body ...):
   '(fun (): $body ...)
@@ -1452,7 +1459,7 @@ must be unescaped, and an infix macro is defined. If the part after `'`
 is just an identifier or parentheses, then it’s shorthand for a prefix
 macro that consumes none of the tail.
 
-The `expr.rule` form must be imported from `rhombus/syntax`, but `def`
+The `expr.rule` form must be imported from `rhombus/macro`, but `def`
 behaves like `expr.rule` when the part before `:` is valid for
 `expr.rule`:
 
@@ -1485,7 +1492,10 @@ The `expr.rule` or `def` form is a shorthand for a more general
 `expr.macro` macro form. With `expr.macro`, the macro implementation
 after `:` is compile-time code. Importing `rhombus/macro` imports all
 of the same bindings as `rhombus` into the compile-time phase, in
-addition to making forms like `expr.macro` available. In addition, a
+addition to making forms like `expr.macro` available. Normally,
+`rhombus/macro` should be imported without a prefix, otherwise a
+prefix would have to be used for all Rhombus forms in compile-time
+code—even for things like `values` and `'`. In addition, a
 macro defined with `expr.macro` receives all remaining terms in the
 enclosing group as input, and it must return two values: the expanded
 expression and the remaining terms that have not been consumed.
@@ -1589,7 +1599,8 @@ Here’s the classic `def_five` macro:
 
 
 ```
-import: = rhombus/syntax
+import:
+  rhombus/macro: no_prefix
 
 defn.macro '(def_five $id):
   '(:
@@ -1621,7 +1632,8 @@ by expanding to other binding operators, like this definition of `$`
 as a prefix operator to constrain a pattern to number inputs:
 
 ```
-import: = rhombus/syntax
+import:
+  rhombus/macro: no_prefix
 
 bind.rule '($ $n):
   ~parsed_right

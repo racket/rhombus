@@ -15,8 +15,6 @@
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
-         (only-in "assign.rkt"
-                  [= rhombus=])
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
@@ -30,6 +28,8 @@
                     (rename-out [rhombus/ /]
                                 [rhombus-file file]
                                 [rhombus-lib lib])
+                    prefix
+                    no_prefix
                     rename
                     only
                     except
@@ -86,20 +86,27 @@
     #:name-path-op name-path-op
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
+  (define (extract-module-path-and-prefixes r)
+    (let extract ([r r] [accum null])
+      (define (done) (values r (reverse accum)))
+      (syntax-parse r
+        [_:string (done)]
+        [_:identifier (done)]
+        [((~literal file) _) (done)]
+        [((~literal lib) _) (done)]
+        [((~literal rename-in) mp . _) (extract #'mp accum)]
+        [((~literal only-in) mp . _) (extract #'mp accum)]
+        [((~literal except-in) mp . _) (extract #'mp accum)]
+        [((~literal expose-in) mp . _) (extract #'mp accum)]
+        [((~literal rhombus-prefix-in) mp name) (extract #'mp (cons r accum))]
+        [((~literal module-path-in) _ mp) (extract #'mp accum)]
+        [_ (raise-syntax-error 'import
+                               "don't know how to extract module path"
+                               r)])))
+
   (define (extract-module-path r)
-    (syntax-parse r
-      [_:string r]
-      [_:identifier r]
-      [((~literal file) _) r]
-      [((~literal lib) _) r]
-      [((~literal rename-in) mp . _) (extract-module-path #'mp)]
-      [((~literal only-in) mp . _) (extract-module-path #'mp)]
-      [((~literal except-in) mp . _) (extract-module-path #'mp)]
-      [((~literal expose-in) mp . _) (extract-module-path #'mp)]
-      [((~literal module-path-in) _ mp) (extract-module-path #'mp)]
-      [_ (raise-syntax-error 'import
-                             "don't know how to extract module path"
-                             r)]))
+    (define-values (mp prefixes) (extract-module-path-and-prefixes r))
+    mp)
 
   (define (introduce-but-skip-exposed intro r)
     (syntax-parse r
@@ -111,6 +118,8 @@
        #`(rename-in #,(introduce-but-skip-exposed intro #'mp)
                     #,@(for/list ([name (in-list (syntax->list #'(name ...)))])
                          #`[#,(intro name) #,name]))]
+      [((~literal rhombus-prefix-in) mp name)
+       (introduce-but-skip-exposed intro #'mp)]
       [(form-id mp . more)
        (quasisyntax/loc r (form-id #,(introduce-but-skip-exposed intro #'mp)
                                    . #,(intro #'more)))]
@@ -119,43 +128,55 @@
                              r)]))
 
   (define (extract-prefix r)
-    (define mp (extract-module-path r))
-    (syntax-parse mp
-      [_:string (datum->syntax
-                 mp
-                 (string->symbol
-                  (regexp-replace #rx"[.].*$"
-                                  (regexp-replace #rx"^.*/" (syntax-e mp) "")
-                                  ""))
-                 mp)]
-      [_:identifier (datum->syntax
-                     mp
-                     (string->symbol (regexp-replace #rx"^.*/"
-                                                     (symbol->string (syntax-e mp))
-                                                     ""))
-                     mp)]
-      [((~literal lib) str) (extract-prefix #'str)]
-      [((~literal file) str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
-                               (datum->syntax
-                                mp
-                                (string->symbol (path-replace-suffix name #""))))]
-      [_ (raise-syntax-error 'import
-                             "don't know how to extract default prefix"
-                             mp)]))
+    (define-values (mp prefixes) (extract-module-path-and-prefixes r))
+    (cond
+      [(null? prefixes)
+       (syntax-parse mp
+         [_:string (datum->syntax
+                    mp
+                    (string->symbol
+                     (regexp-replace #rx"[.].*$"
+                                     (regexp-replace #rx"^.*/" (syntax-e mp) "")
+                                     ""))
+                    mp)]
+         [_:identifier (datum->syntax
+                        mp
+                        (string->symbol (regexp-replace #rx"^.*/"
+                                                        (symbol->string (syntax-e mp))
+                                                        ""))
+                        mp)]
+         [((~literal lib) str) (extract-prefix #'str)]
+         [((~literal file) str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
+                                  (datum->syntax
+                                   mp
+                                   (string->symbol (path-replace-suffix name #""))))]
+         [_ (raise-syntax-error 'import
+                                "don't know how to extract default prefix"
+                                mp)])]
+      [(null? (cdr prefixes))
+       (syntax-parse (car prefixes)
+         [(_ mp name) #'name])]
+      [else
+       (raise-syntax-error 'import
+                           "second prefix specification not allowed"
+                           (cadr prefixes))]))
+
+  (define-splicing-syntax-class :prefix-mode
+    (pattern (~seq #:as prefix:identifier))
+    (pattern (~seq #:open) #:attr prefix #'#f))
   
   (define-syntax-class :import-block
     #:datum-literals (block group op)
-    #:literals (rhombus=)
-    (pattern (group (~optional prefix:identifier
-                               #:defaults ([prefix #'#f]))
-                    (op rhombus=)
-                    req ...)
+    (pattern (group req ... (block mod ...))
              #:with r::import #'(group req ...)
-             #:attr parsed #'r.parsed)
+             #:do [(define mod-r (apply-modifiers (syntax->list #'(mod ...))
+                                                  #'r.parsed))]
+             #:attr prefix (extract-prefix mod-r)
+             #:attr parsed mod-r)
     (pattern (group req ...)
              #:with r::import #'(group req ...)
-             #:attr parsed #'r.parsed
-             #:attr prefix (extract-prefix #'r.parsed)))
+             #:attr prefix (extract-prefix #'r.parsed)
+             #:attr parsed #'r.parsed))
 
   (define (apply-modifiers mods r-parsed)
     (cond
@@ -262,6 +283,24 @@
 
 (define-import-syntax rhombus-lib
   (make-module-path-lib-operator import-prefix-operator))
+
+(define-import-syntax prefix
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       [(_ name:identifier)
+        (datum->syntax req
+                       (list #'rhombus-prefix-in req #'name)
+                       req)]))))
+
+(define-import-syntax no_prefix
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       [(_)
+        (datum->syntax req
+                       (list #'rhombus-prefix-in req #f)
+                       req)]))))
 
 (define-import-syntax rename
   (import-modifier
