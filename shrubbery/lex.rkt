@@ -107,8 +107,8 @@
   
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
-  [opchar (:or (:- symbolic (:or))
-               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
+  [opchar (:or (:- symbolic (:or "~"))
+               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\""
                                     "(" ")" "[" "]" "{" "}" "«" "»")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "." "/"))
@@ -118,10 +118,8 @@
                 "|" ":"
                 (:: (:* any-char) (:or "//" "/*") (:* any-char)))]
 
-  [keyword (:: "\'" identifier "\'")]
-  [bad-keyword (:: "\'" 
-                   (:* (:~ "\'"))
-                   (:? "\'"))]
+  [keyword (:: "~" identifier)]
+  [bad-keyword (:: "~")]
   
   ;; disallows a number that starts +, -, or "."
   [number/continuing (:or decimal-number/continuing
@@ -310,7 +308,7 @@
    [operator
     (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial)]
    [keyword
-    (let ([kw (string->keyword (substring lexeme 1 (sub1 (string-length lexeme))))])
+    (let ([kw (string->keyword (substring lexeme 1))])
       (ret 'identifier kw #:raw lexeme 'keyword #f start-pos end-pos 'continuing))]
    [(special)
     (cond

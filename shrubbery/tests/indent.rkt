@@ -92,11 +92,11 @@
            (case category
              [(parenthesis)
               (case (get-text s e)
-                [("{" "(" "[") (and (not need-close?)
-                                    (if (= depth 0)
-                                        s
-                                        (loop (sub1 s) (sub1 depth) #f)))]
-                [("}" ")" "]") (loop (sub1 s) (add1 depth) #f)]
+                [("{" "(" "[" "«") (and (not need-close?)
+                                        (if (= depth 0)
+                                            s
+                                            (loop (sub1 s) (sub1 depth) #f)))]
+                [("}" ")" "]" "»") (loop (sub1 s) (add1 depth) #f)]
                 [else (error "unexpected parenthesis-class text")])]
              [(whitespace comment)
               (loop (sub1 s) depth need-close?)]
@@ -369,6 +369,9 @@
             ¿a_pred(av)
           if is_a_match
       ^   ^| define}
+
+ @e{a  |« b»
+    ^ c}
  
  )
 

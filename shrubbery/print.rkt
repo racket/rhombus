@@ -77,11 +77,7 @@
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
-               (null? e)))
-         (begin
-           (log-error ">> ~s" s)
-           #f)
-         )]
+               (null? e))))]
     [(pair? s) (and (all-raw-available? (car s))
                     (all-raw-available? (cdr s)))]
     [else #t]))

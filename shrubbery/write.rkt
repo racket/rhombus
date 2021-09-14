@@ -25,16 +25,18 @@
             [else
              (display (cadr v) op)])]
          [(eq? 'alts (car v))
-          (display "«" op)
-          (for ([v (in-list (cdr v))])
-            (display " | " op)
+          (display "" op)
+          (for/fold ([first? #t]) ([v (in-list (cdr v))])
+            (unless first? (display " " op))
+            (display "|« " op)
             (unless (and (pair? v) (eq? (car v) 'block))
               (error 'write-shubbery "unexpected ~s" v))
             (for/fold ([first? #t]) ([v (in-list (cdr v))])
               (unless first? (display "; " op))
               (loop v #f)
-              #f))
-          (display "»" op)]
+              #f)
+            (display " »" op)
+            #f)]
          [(eq? 'top (car v))
           (for/fold ([first? #t]) ([v (in-list (cdr v))])
             (unless first? (display "; " op))
@@ -45,7 +47,7 @@
           (define-values (open sep close)
             (case (car v)
               [(group) (values "" " "  "")]
-              [(block) (values ": «" "; " "»")]
+              [(block) (values ":« " "; " " »")]
               [(parens) (values "(" ", " ")")]
               [(brackets) (values "[" ", " "]")]
               [(braces) (values "{" ", " "}")]
@@ -71,9 +73,8 @@
        (define s (keyword->immutable-string v))
        (cond
          [(regexp-match? rx:identifier s)
-          (display "'" op)
-          (display s op)
-          (display "'" op)]
+          (display "~" op)
+          (display s op)]
          [else
           (display "#{")
           (write v op)
