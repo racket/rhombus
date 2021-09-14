@@ -545,3 +545,22 @@ def seq_x: seq_y+1
 def seq_y: 10
 
 seq_x
+
+// mixin infix and prefix with multiple matching cases
+
+def
+| ?(weirdly coconut):
+    'stronger_than': +
+    ?"donut"
+| ?(weirdly):
+    ?"banana"
+| ?(¿a weirdly ¿b + ¿c):
+    ?(¿a + ¿b - ¿c)
+| ?(¿a weirdly ¿b):
+    ?(¿a + ¿b)
+
+weirdly
+weirdly coconut
+weirdly +$ "none"
+1 weirdly 5
+1 weirdly 5 + 7

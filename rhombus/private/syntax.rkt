@@ -120,8 +120,7 @@
     parsed-right-options)
 
   (define-syntax-class-mixin infix-operator-options
-    #:datum-literals (op block group
-                         associativity)
+    #:datum-literals (op block group)
     (~alt (~optional (group #:associativity ~!
                             (block (group (~and assc
                                                 (~or #:right #:left #:none)))))
@@ -149,27 +148,33 @@
                  (syntax-parse p
                    [(#:other . spec) #`'(default . spec)]
                    [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
-  
-  (define (convert-assc assc)
-    #`'#,(string->symbol (keyword->string (syntax-e assc)))))
 
-(define-for-syntax (parse-one-macro-definition kind make-prefix-id make-infix-id)
+  (define (convert-assc assc)
+    #`'#,(string->symbol (keyword->string (syntax-e assc))))
+  
+  (struct parsed (fixity name opts-stx prec-stx assc-stx parsed-right?
+                         ;; implementation is function stx if `parsed-right?`,
+                         ;; or a clause over #'self and maybe #'left otherwise
+                         impl)))
+
+;; parse one case (possibly the only case) in a macro definition
+(define-for-syntax (parse-one-macro-definition kind)
   (lambda (g rhs)
-    (define (macro-body self-id left-ids tail-id tail-pattern rhs)
+    (define (macro-clause self-id left-ids tail-pattern rhs)
       (define-values (pattern idrs can-be-empty?)
         (if (eq? kind 'rule)
             (convert-pattern #`(parens (group #,@tail-pattern (op ¿) tail (op ......))))
             (convert-pattern #`(parens (group . #,tail-pattern)))))
-      (with-syntax ([((id id-ref) ...) idrs])
+      (with-syntax ([((id id-ref) ...) idrs]
+                    [(left-id ...) left-ids])
         (define body
           (if (eq? kind 'rule)
               (let ([ids (cons self-id (append left-ids (syntax->list #'(id ...))))])
                 #`(values #,(convert-rule-template rhs ids) tail))
               #`(rhombus-expression (group #,rhs))))
-        #`(syntax-parse (respan-empty #,self-id #,tail-id)
-            [#,pattern
-             (let ([id id-ref] ...)
-               #,body)])))
+        #`[#,pattern
+           (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
+             #,body)]))
     (define (convert-rule-template block ids)
       (syntax-parse block
         #:datum-literals (block group op)
@@ -199,106 +204,129 @@
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
-          #`(#,make-infix-id
-             (quote-syntax op-name.name)
-             #,(convert-prec #'opt.prec)
-             #,(if (syntax-e #'opt.parsed-right?)
-                   #''automatic
-                   #''macro)
-             #,(cond
-                 [(syntax-e #'opt.parsed-right?)
-                  (define right-id (extract-pattern-id #'tail-pattern))
-                  #`(let ([op-name.name (lambda (left #,right-id opt.self-id)
-                                          #,(if (eq? kind 'rule)
-                                                (convert-rule-template #'(tag rhs ...)
-                                                                       (list #'left right-id #'opt.self-id))
-                                                #`(rhombus-expression (group (tag rhs ...)))))])
-                      op-name.name)]
-                 [else
-                  #`(let ([op-name.name (lambda (left tail opt.self-id)
-                                          #,(macro-body #'opt.self-id (list #'left)
-                                                        #'tail #'tail-pattern
-                                                        #'(tag rhs ...)))])
-                      op-name.name)])
-             #,(convert-assc #'opt.assc))])]
+          (parsed 'infix
+                  #'op-name.name
+                  #'opt
+                  #'opt.prec
+                  #'opt.assc
+                  (syntax-e #'opt.parsed-right?)
+                  (cond
+                    [(syntax-e #'opt.parsed-right?)
+                     (define right-id (extract-pattern-id #'tail-pattern))
+                     #`(lambda (left #,right-id opt.self-id)
+                         #,(if (eq? kind 'rule)
+                               (convert-rule-template #'(tag rhs ...)
+                                                      (list #'left right-id #'opt.self-id))
+                               #`(rhombus-expression (group (tag rhs ...)))))]
+                    [else
+                     (macro-clause #'opt.self-id (list #'left)
+                                   #'tail-pattern
+                                   #'(tag rhs ...))]))])]
       ;; prefix protocol
       [(group op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::macro-prefix-operator-options rhs ...)
-          #`(#,make-prefix-id
-             (quote-syntax op-name.name)
-             #,(convert-prec #'opt.prec)
-             #,(if (syntax-e #'opt.parsed-right?)
-                   #''automatic
-                   #''macro)
-             #,(cond
-                 [(syntax-e #'opt.parsed-right?)
-                  (define arg-id (extract-pattern-id #'tail-pattern))
-                  #`(let ([op-name.name (lambda (#,arg-id opt.self-id)
-                                          #,(if (eq? kind 'rule)
-                                                (convert-rule-template #'(tag rhs ...)
-                                                                       (list arg-id #'opt-self-id))
-                                                #`(rhombus-expression (group (tag rhs ...)))))])
-                      op-name.name)]
-                 [else
-                  #`(let ([op-name.name (lambda (tail opt.self-id)
-                                          #,(macro-body #'opt.self-id '()
-                                                        #'tail #'tail-pattern
-                                                        #'(tag rhs ...)))])
-                      op-name.name)]))])]
+          (parsed 'prefix
+                  #'op-name.name
+                  #'opt
+                  #'opt.prec
+                  #f
+                  (syntax-e #'opt.parsed-right?)
+                  (cond
+                    [(syntax-e #'opt.parsed-right?)
+                     (define arg-id (extract-pattern-id #'tail-pattern))
+                     #`(lambda (#,arg-id opt.self-id)
+                         #,(if (eq? kind 'rule)
+                               (convert-rule-template #'(tag rhs ...)
+                                                      (list arg-id #'opt-self-id))
+                               #`(rhombus-expression (group (tag rhs ...)))))]
+                    [else
+                     (macro-clause #'opt.self-id '()
+                                   #'tail-pattern
+                                   #'(tag rhs ...))]))])]
       ;; nofix protocol
       [op-name::operator-or-identifier
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
-          #`(#,make-prefix-id
-             (quote-syntax op-name.name)
-             #,(convert-prec #'opt.prec)
-             'macro
-             (let ([op-name.name (lambda (tail opt.self-id)
-                                   (values #,(if (eq? kind 'rule)
-                                                 (convert-rule-template #'(tag rhs ...)
-                                                                        (list #'opt.self-id))
-                                                 #`(rhombus-block-at tag rhs ...))
-                                           tail))])
-               op-name.name))])])))
+          (parsed 'prefix
+                  #'op-name.name
+                  #'opt
+                  #'opt.prec
+                  #f
+                  #f
+                  #`[_ (let ([opt.self-id self])
+                         (values #,(if (eq? kind 'rule)
+                                       (convert-rule-template #'(tag rhs ...)
+                                                              (list #'opt.self-id))
+                                       #`(rhombus-block-at tag rhs ...))
+                                 tail))])])])))
 
+;; combine previously parsed cases (possibly the only case) in a macro
+;; definition that are all either prefix or infix
+(define-for-syntax (build-cases ps prefix? make-id)
+  (define p (car ps))
+  #`(#,make-id
+     (quote-syntax #,(parsed-name p))
+     #,(convert-prec (parsed-prec-stx p))
+     #,(if (parsed-parsed-right? p)
+           #''automatic
+           #''macro)
+     (let ([#,(parsed-name p)
+            #,(if (parsed-parsed-right? p)
+                  (parsed-impl p)
+                  #`(lambda (#,@(if prefix? '() (list #'left)) tail self)
+                      (syntax-parse (respan-empty self tail)
+                        #,@(map parsed-impl ps))))])
+       #,(parsed-name p))
+     #,@(if prefix?
+            '()
+            (list (convert-assc (parsed-assc-stx p))))))
+
+;; single-case macro definition:
 (define-for-syntax (parse-operator-definition kind g rhs
                                               in-space make-prefix-id make-infix-id)
-  (define p ((parse-one-macro-definition kind make-prefix-id make-infix-id) g rhs))
-  (define op (syntax-parse p [(_ (_ op-name) . _) #'op-name]))
-  #`(define-syntax #,(in-space op) #,p))
+  (define p ((parse-one-macro-definition kind) g rhs))
+  (define op (parsed-name p))
+  (define prefix? (eq? 'prefix (parsed-fixity p)))
+  (define make-id (if prefix? make-prefix-id make-infix-id))
+  #`(define-syntax #,(in-space op) #,(build-cases (list p) prefix? make-id)))
 
+;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions kind stx gs rhss
                                                in-space make-prefix-id make-infix-id prefix+infix-id)
-  (define ps (map (parse-one-macro-definition kind make-prefix-id make-infix-id)
+  (define ps (map (parse-one-macro-definition kind)
                   gs rhss))
-  (define-values (prefixes infixes ops)
-    (let loop ([ps ps] [prefixes null] [infixes null] [ops null])
-      (cond
-        [(null? ps) (values (reverse prefixes) (reverse infixes) (reverse ops))]
-        [else
-         (syntax-parse (car ps)
-           [(make (_ op-name) . _)
-            #:when (free-identifier=? #'make make-prefix-id)
-            (loop (cdr ps) (cons (car ps) prefixes) infixes (cons #'op-name ops))]
-           [(make (_ op-name) . _)
-            #:when (free-identifier=? #'make make-infix-id)
-            (loop (cdr ps) prefixes (cons (car ps) infixes) (cons #'op-name ops))])])))
-  (check-consistent stx ops "operator")
-  (unless ((length prefixes) . < . 2)
-    (raise-syntax-error #f
-                        "cannot handle multiple prefix implementations"
-                        stx))
-  (unless ((length infixes) . < . 2)
-    (raise-syntax-error #f
-                        "cannot handle multiple infix implementations"
-                        stx))
-  #`(define-syntax #,(in-space (car ops))
+  (check-consistent stx (map parsed-name ps) "operator")
+  (define prefixes (for/list ([p (in-list ps)] #:when (eq? 'prefix (parsed-fixity p))) p))
+  (define infixes (for/list ([p (in-list ps)] #:when (eq? 'infix (parsed-fixity p))) p))
+  (define (check-fixity-consistent what options ps)
+    (unless ((length ps) . < . 2)
+      (for ([p (in-list ps)]
+            [i (in-naturals)])
+        (when (parsed-parsed-right? p)
+          (raise-syntax-error #f
+                              (format "multiple ~a cases not allowed with a 'parsed_right' case"
+                                      what)
+                              stx))
+        (unless (zero? i)
+          (when (for*/or ([d (syntax->list (parsed-opts-stx p))]
+                          [d (in-list (or (syntax->list d) (list d)))])
+                  (and (keyword? (syntax-e d))
+                       (not (eq? '#:op_stx (syntax-e d)))))
+            (raise-syntax-error #f
+                                (format "~a options not allowed after first ~a case"
+                                        options what)
+                                stx))))))
+  (check-fixity-consistent "prefix" "precedence" prefixes)
+  (check-fixity-consistent "infix" "precedence and associativity" infixes)
+  #`(define-syntax #,(in-space (parsed-name (car ps)))
       #,(cond
-          [(null? prefixes) (car infixes)]
-          [(null? infixes) (car prefixes)]
-          [else #`(#,prefix+infix-id #,(car prefixes) #,(car infixes))])))
+          [(null? prefixes) (build-cases infixes #f make-infix-id)]
+          [(null? infixes) (build-cases prefixes #t make-prefix-id)]
+          [else #`(#,prefix+infix-id
+                   #,(build-cases prefixes #t make-prefix-id)
+                   #,(build-cases infixes #f make-infix-id))])))
 
 (define-for-syntax (make-operator-definition-transformer protocol
                                                          in-space
