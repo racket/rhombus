@@ -14,7 +14,7 @@ language built on those pieces.
 # Motivation
 [motivation]: #motivation
 
-Let's try putting things together. There's much more to do for a full
+Let’s try putting things together. There’s much more to do for a full
 language, but this proposal probably has enough to gauge its
 particular theme and direction.
 
@@ -23,7 +23,7 @@ particular theme and direction.
 
 ## Shrubbery notation
 
-Before we start, here's a recap on shrubbery notation.
+Before we start, here’s a recap on shrubbery notation.
 
 _If you install
 [https://github.com/mflatt/shrubbery-rhombus-0](https://github.com/mflatt/shrubbery-rhombus-0),
@@ -33,7 +33,7 @@ representation. Unfortunately, it needs a development version of
 Racket right now, so you may need to install a
 [snapshot build](https://snapshot.racket-lang.org/)._
 
-Numbers are decimal, either integer or floating-point, or they're
+Numbers are decimal, either integer or floating-point, or they’re
 hexadecimal integers written with `0x`:
 
 ```
@@ -62,7 +62,7 @@ These characters are used for shrubbery structure and are mostly not
 available for use in operators:
 
 ```
-( ) [ ] { }   ; ,   : |   « »  \   " '  # @
+( ) [ ] { }   ; ,   : |   « »  \   " ~  # @
 ```
 
 The `:` and `|` characters can be used as part of an operator, and any
@@ -83,11 +83,11 @@ of that character. So, `++` and `...` are operators, but `!+` is not.
 Similar problems happen with comments, so an operator cannot contain
 `//` or `/*` or have multiple characters and end in `/`.
 
-Keywords are like identifiers, but wrapped with `'`:
+Keywords are like identifiers, but prefixed with `~` and no space:
 
 ```
-'base'
-'stronger_than'
+~base
+~stronger_than
 ```
 
 Booleans:
@@ -100,7 +100,7 @@ Booleans:
 Strings and byte strings:
 
 ```
-"This is a string, just like you'd expect"
+"This is a string, just like you’d expect"
 #"a byte string"
 ```
 
@@ -119,7 +119,7 @@ numbers), escape to S-expression notation with `#{` ... `}`.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks
 and indentation for grouping. A line with more indentation starts a
-_block_, and it's always after a line that ends `:`, that ends `|`
+_block_, and it’s always after a line that ends `:`, that ends `|`
 (much less commonly), or that starts `|`. You can think of a
 more-indented `|` as being preceded implicitly by a `:` at the end of
 the previous line. A `|` counts as being indented by half a column, so
@@ -156,23 +156,23 @@ cond
     wear_hat() 
 ```
 
-_Even if you don't normally use DrRacket, you should proabably try it
-while reading this proposal, since that's where the syntax coloring
+_Even if you don’t normally use DrRacket, you should proabably try it
+while reading this proposal, since that’s where the syntax coloring
 and indentation support for `#lang shrubbery` and `#lang rhombus` are
 currently implemented. Syntax coloring uses the same lexer as the
-language's implementation, so it can't get out of sync. For
+language’s implementation, so it can’t get out of sync. For
 indentation, hit Tab to cycle through the possible indentations for a
 line (based on preceding lines). If multiple lines are selected, then
 Tab cycles through possibilities for the first selected line and
 shifts remaining lines by same amount. There should be some way to
-normalize indentation while preserving the current parse, but that's
+normalize indentation while preserving the current parse, but that’s
 not yet implemented._
 
 A `|` is allowed only within a block, and it also starts a subblock on
 the right-hand side of the `|`. Each subsequent `|` at the same
 indentation creates a new subblock. Shrubbery notation allows `|` only
 within a block whose groups all contain an immediate `|` subblock. A
-block of `|` subblocks is an _alts-block_. A `:` isn't needed or
+block of `|` subblocks is an _alts-block_. A `:` isn’t needed or
 allowed before the first `|` in an _alts-block_, because the `|`
 itself is enough of an indication that a _alts-block_ is starting.
 
@@ -180,12 +180,12 @@ Each line within a block forms a _group_. Groups are important,
 because post-shrubbery parsing and macro expansion are constrained to
 operate on groups (although a group can contain nested blocks, etc.)
 Groups at the same level of indentation as a previous line continue
-that group's block. A `|` can have multiple groups in the subblock to
+that group’s block. A `|` can have multiple groups in the subblock to
 its right, but the block started by `|` turns out to be the only thing
 in its own group.
 
-A `:` doesn't have to be followed by a new line, but it starts a new
-block, anyway. Similarly, a `|` that starts a block doesn't have to be
+A `:` doesn’t have to be followed by a new line, but it starts a new
+block, anyway. Similarly, a `|` that starts a block doesn’t have to be
 on a new line. These examples parse the same as the previous
 examples:
 
@@ -232,8 +232,8 @@ delimit a block. Normally, parentheses work just as well.
 Parentheses `(` ... `)`, square brackets `[` ... `]`, and curly braces
 `{` ... `}` similarly combine a sequence of groups. A comma `,` can be
 used to separate groups on one line between the opener and closer.
-Furthermore, a `,` is _required_ to separate groups, even if they're
-not on the same line. You can't have extra `,`s, except after the last
+Furthermore, a `,` is _required_ to separate groups, even if they’re
+not on the same line. You can’t have extra `,`s, except after the last
 group.
 
 ```
@@ -258,7 +258,7 @@ map(fun (x):
 ```
 
 There are some subtleties related to the “precedence” of `:`, `|`,
-`;`, and `,`, but they're likely to work as you expect in a given
+`;`, and `,`, but they’re likely to work as you expect in a given
 example.
 
 ## Modules
@@ -329,7 +329,7 @@ f2c.fahrenheit_to_celsius(f2cfahrenheit_freezing)  // prints 0
 Unlike Racket, imported bindings must accessed using a prefix name and
 then `.`, at least by default. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
-that's why the import of `"f2c.rhm"` leads to the `f2c` prefix. To
+that’s why the import of `"f2c.rhm"` leads to the `f2c` prefix. To
 supply an explicit prefix, use `=`:
 
 ```
@@ -368,7 +368,7 @@ the same as the `.` described in the next section. We stick with `/`
 for module paths to avoid overloading `.` further. See also the
 current [rationale](#rationale-and-alternatives)._
 
-There's a lot more to the syntax or `import` and `export` for
+There’s a lot more to the syntax or `import` and `export` for
 renaming, re-exporting, and so on. See [a separate
 document](import-export.md) for more information.
 
@@ -449,7 +449,7 @@ fun flip(p :: Posn):
 A run-time check implied by `::` can be expensive, depending on the
 annotation and context. In the case of `flip`, this check is unlikely
 to matter, but if a programmer uses `::` everywhere to try to get
-maximum checking and maximum guarantees, it's easy to create expensive
+maximum checking and maximum guarantees, it’s easy to create expensive
 function boundaries. Rhombus programmers are encouraged to use `-:`
 when the goal is to hint for better performance, and use `::` only
 where a defensive check is needed, such as for the arguments of an
@@ -484,7 +484,7 @@ flip_ints(Posn(1, 2))       // prints Posn(2, 1)
 ```
 
 Finally, a structure-type name like `Posn` can also work in binding
-positions as a pattern-matching form. Here's a implementation of
+positions as a pattern-matching form. Here’s a implementation of
 `flip` that uses pattern matching for its argument:
 
 ```
@@ -497,12 +497,12 @@ flip(Posn(1, 2))  // prints Posn(2, 1)
 
 As a function-argument pattern, `Posn(x, y)` both requires the
 argument to be a `Posn` instance and binds the identifiers `x` and `y`
-to the values of the instance's fields. There's no need to skip the
+to the values of the instance’s fields. There’s no need to skip the
 check that the argument is a `Posn`, because the check is anyway part
 of extracting `x` and `y` fields.
 
 As you would expect, the fields in a `Posn` binding pattern are
-themselves patterns. Here's a function that works only on the origin:
+themselves patterns. Here’s a function that works only on the origin:
 
 ```
 fun flip_origin(Posn(0, 0)):
@@ -513,9 +513,9 @@ flip_origin(origin)  // prints Posn(0, 0)
 ```
 
 Finally, a function can have a result annotation, which is written
-with `-:` or `::` after the parentheses for the function's argument.
+with `-:` or `::` after the parentheses for the function’s argument.
 With a `::` result annotation, every return value from the function is
-checked against the annotation. Beware that a function's body does not
+checked against the annotation. Beware that a function’s body does not
 count as being tail position when the function is declared with a `::`
 result annotation.
 
@@ -536,7 +536,7 @@ checked_same_posn(origin)  // prints Posn(0, 0)
 
 The `def` form is a kind of do-what-I-mean form that acts like
 `val`, `fun`, or certain other definition forms depending on
-the shape of the terms after `def`. It's sensitive to binding
+the shape of the terms after `def`. It’s sensitive to binding
 forms, though, so it will not treat the immediate use of a pattern
 constructor as a function definition.
 
@@ -554,7 +554,7 @@ def Posn(pin_x, pin_y): pin
 pin_x  // prints 3
 ```
 
-_Is `def` a good idea? See the current [rationale](#rationale-and-alternatives)._
+_Is `def` a good idea' See the current [rationale](#rationale-and-alternatives)._
 
 The `let` form is like `def`, but it makes bindings available
 only _after_ the definition, and it shadows any binding before, which
@@ -576,9 +576,9 @@ get_after()  // prints 3
 ```
 
 The identifier `_` is similar to `Posn` and `-:` in the sense that
-it's a binding operator. As a binding, `_` matches any value and binds
+it’s a binding operator. As a binding, `_` matches any value and binds
 no variables. Use it as an argument name or subpattern form when you
-don't need the corresponding argument or value, but `_` nested in a
+don’t need the corresponding argument or value, but `_` nested in a
 binding pattern like `::` can still constrain allowed values.
 
 ```
@@ -649,7 +649,7 @@ l1.p2.x  // prints 3
 More generally, `.` access is efficient when the left-hand side of `.` is an
 expression that can act as a _dot provider_. A structure-type name is a dot
 provider, and it provides access to field-accessor functions, as in
-`Posn.x` (which doesn't get a specific `x`, but produces a function
+`Posn.x` (which doesn’t get a specific `x`, but produces a function
 that can be called on a `Posn` instance to extract its `x` field). An
 identifier that is bound using `-:` or `::` and a structure-type name is also a
 dot provider, and it provides access to fields of a structure instance.
@@ -699,7 +699,7 @@ section) work with `fun` expressions, too.
 ## Keyword and optional arguments
 
 A function argument can be made optional by using `=` after the
-argument's pattern and providing a default-value expression after `=`:
+argument’s pattern and providing a default-value expression after `=`:
 
 ```
 fun scale(Posn(x, y), factor = 1):
@@ -712,44 +712,40 @@ scale(Posn(1, 2), 3)  // prints Posn(3, 6)
 By-keyword arguments are often useful for functions that have multiple
 optional arguments. A keyword argument is indicated by prefixing a
 formal or actual argument with a shrubbery keyword, which is written
-between `'`s, and then starting a block with `:`.
+with a leading `~`, and then starting a block with `:`.
 
 ```
 fun transform(Posn(x, y),
-              'scale': factor = 1,
-              'dx': dx = 0,
-              'dy': dy = 0):
+              ~scale: factor = 1,
+              ~dx: dx = 0,
+              ~dy: dy = 0):
   Posn(factor*x + dx, factor*y + dy)
 
-transform(Posn(1, 2))           // prints Posn(1, 2)
-transform(Posn(1, 2), 'dx': 7)  // prints Posn(8, 2)
-transform(Posn(1, 2), 'dx': 7, 'scale': 2)  // prints Posn(9, 4)
+transform(Posn(1, 2))          // prints Posn(1, 2)
+transform(Posn(1, 2), ~dx: 7)  // prints Posn(8, 2)
+transform(Posn(1, 2), ~dx: 7, ~scale: 2)  // prints Posn(9, 4)
 ```
 
 Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated
 as an actual argument or binding pattern by itself. The `keyword` form
 turns a keyword into an expression that produces the keyword, as in
-`keyword('scale')`.
-
-_Why `'` for keywords? See the rationale in the 
-[Shrubbery notation](https://github.com/mflatt/rhombus-brainstorming/blob/shrubbery/shrubbery/0000-shrubbery.md)
-proposal._
+`keyword(~scale)`.
 
 _The keyword prefix and `=` for default values are not binding
 operators. They are specific to the syntax of `fun`._
 
 If an argument name is the same as its keyword (just without the
-`'`s), then the `:` argument name can be omitted. That only works for
+`~`), then the `:` argument name can be omitted. That only works for
 an argument that would otherwise be just an identifier and maybe a
-default value, because keywords don't work as variable names
+default value, because keywords don’t work as variable names
 in binding patterns.
 
 ```
 fun transform(Posn(x, y),
-              'scale': factor = 1,
-              'dx' = 0,
-              'dy' = 0):
+              ~scale: factor = 1,
+              ~dx = 0,
+              ~dy = 0):
   Posn(factor*x + dx, factor*y + dy)
 ```
 
@@ -767,8 +763,8 @@ Comparison operators and `!` (for “not”) have higher precedence than
 `&&` and `||`, while `&&` has higher precedence than `||`. Arithmetic
 operators have higher precedence than comparison operators, `||`,
 `&&`, but they have no precedence relative to `!`. The `==` operator
-is numerical comparison like Racket's `=`, while `===` operator is
-Racket's `equal?`. Comparison operators are non-associative and have
+is numerical comparison like Racket’s `=`, while `===` operator is
+Racket’s `equal'`. Comparison operators are non-associative and have
 no precedence relationship with each other.
 
 The `if` form expects a test expression followed by an alts-block with
@@ -786,21 +782,21 @@ implement an “if” ... “else if” ... “else if” ... combination, the `
 form supports that combination better. It expects an alts-block where each
 `|` has a test expression followed by a block. Evaluating the `cond` form dispatches
 to the block after first test that produces a non-`#false` value. The
-`'else'` keyword can be used in place of a last test.
+`~else` keyword can be used in place of a last test.
 
 ```
 fun fib(n):
   cond
   | n == 0: 1
   | n == 1: 1
-  | 'else': fib(n-1) + fib(n-2)
+  | ~else: fib(n-1) + fib(n-2)
 
 fib(5) // prints 8
 ```
 
-If there's no `'else'` case and no matching case, then `cond` reports
+If there’s no `~else` case and no matching case, then `cond` reports
 an error at run time (unlike Racket, which returns void in that case).
-Note that `'else'` is a keyword, and not an identifier. If it were an
+Note that `~else` is a keyword, and not an identifier. If it were an
 identifier, then `else` might get bound in some context to `#false`,
 which would be confusing. As another special case, `_` is allowed in
 place of `else`; although it is possible to bind `_`, it takes a
@@ -810,8 +806,8 @@ Although `cond` is better than `if` for `fib`, the `match` form is
 even better. The `match` form expects an expression and then an
 alts-block where each `|` has a binding pattern followed by a block.
 The `match` form evaluates that first expression, and dispatches to
-the first block whose pattern accepts the expression's value. Similar
-to `cond`, `match` supports `'else`' in place of a final binding
+the first block whose pattern accepts the expression’s value. Similar
+to `cond`, `match` supports `~else` in place of a final binding
 pattern, but using the binding operator `_` is more common.
 
 ```
@@ -833,10 +829,10 @@ fun
 | fib(n): fib(n-1) + fib(n-2)
 ```
 
-There's no `'else'` for this fused form, but `_` can be useful in
+There’s no `~else` for this fused form, but `_` can be useful in
 catch-call clauses where the argument is not used. Also, the function name and
 all relevant argument positions have to be repeated in every case, but
-that's often a readable trade-off. Match-dispatching functions cannot
+that’s often a readable trade-off. Match-dispatching functions cannot
 have optional or keyword arguments, but different cases can have
 different numbers of arguments, and a call will find a matching case
 with the right number of arguments.
@@ -875,7 +871,7 @@ s  // prints "apple"
 ```
 
 A definition binding with with `val` or `def` can also use
-`values` in the outermost pattern, and that's the same as not writing
+`values` in the outermost pattern, and that’s the same as not writing
 `values`, but makes the receiver and sender side look more the same:
 
 ```
@@ -890,14 +886,14 @@ specifically received as values. The `values` binding pattern works
 only with definition forms that recognize it, and not, for example, as
 a function argument.
 
-_Get rid of multiple values? See the current
+_Get rid of multiple values' See the current
 [rationale](#rationale-and-alternatives)._
 
 ## Mutable variables
 
 Variables are immutable unless they are declared with the `mutable`
 binding operator. The `=` infix operator assigns to a mutable variable
-while also returning the variable's new value.
+while also returning the variable’s new value.
 
 ```
 def mutable todays_weather: "sunny"
@@ -916,7 +912,7 @@ f(10)  // prints 18
 ```
 
 _The `=` operator should also cooperate with `.` when a structure-type
-field is declared `mutable`, but that's not yet implemented._
+field is declared `mutable`, but that’s not yet implemented._
 
 ## Operators
 
@@ -945,7 +941,7 @@ operator (x mod y):
 10 mod 3  // prints 1
 ```
 
-_It allowing identifiers as “operators” a good idea? See the current
+_It allowing identifiers as “operators” a good idea' See the current
 [rationale](#rationale-and-alternatives)._
 
 The `operator` form must be followed by parentheses and then a block.
@@ -992,26 +988,26 @@ predence and are left-associative. The `*` and `/` operator have the
 same precedence as long as `*` appears only to the left of `/`,
 
 A precedence declaration in `operator` takes the form of keyword
-blocks at the start of the operator's body. The possible keyword
-options for prefix operators are `'weaker_than'`, `'stronger_than'`,
-`'same_as'`, or `'same_as_on_left'`. For infix operators, those options
- apply, as well as `'same_as_on_right'` and `'associativity'`. Operators
-listed with keywords like `'weaker_than'`
+blocks at the start of the operator’s body. The possible keyword
+options for prefix operators are `~weaker_than`, `~stronger_than`,
+`~same_as`, or `~same_as_on_left`. For infix operators, those options
+ apply, as well as `~same_as_on_right` and `~associativity`. Operators
+listed with keywords like `~weaker_than`
 can be grouped on lines however is convenient.
 
 ```
 operator (x <> y):
-  'weaker_than': * / 
-                 + -
-  'associativity': 'right'
+  ~weaker_than: * / 
+                + -
+  ~associativity: ~right
   Posn(x, y)
 
 1 <> 2 * 3  // prints Posn(1, 6)
 1 <> 2 <> 3 // prints Posn(1, Posn(2, 3))
 ```
 
-Use the keyword `'other'` in `'weaker_than'`, `'stronger_than'`, or
-`'same_as'` to declare a precedence relationship for operators not
+Use the keyword `~other` in `~weaker_than`, `~stronger_than`, or
+`~same_as` to declare a precedence relationship for operators not
 otherwise mentioned.
 
 An operator can be exported the same as identifiers:
@@ -1034,7 +1030,7 @@ import:
 If the point of an operator is terseness, an import prefix may defeat
 the point. Using a library that supplies operators may be one reason
 to import with a leading `=` to avoid a prefix on the imports. To
-selectively make an operator accessible without it import's prefix,
+selectively make an operator accessible without it import’s prefix,
 use the `expose` import modifier:
 
 ```
@@ -1135,7 +1131,7 @@ groceries[2] // prints "milk"
 ```
 
 Indexing with `[` ... `]` is sensitive to binding-based static
-information in the same way as `.` For example, a function's argument
+information in the same way as `.` For example, a function’s argument
 can use a binding pattern that indicates a list of `Posn`s, and then
 `.` can be used after `[` ... `]` to efficiently access a field of a `Posn`
 instance:
@@ -1170,7 +1166,7 @@ nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
 ## Arrays and maps
 
 The `Array` constructor is similar to `List`, but it creates an array,
-which has a fixed length at the time that it's created and offers
+which has a fixed length at the time that it’s created and offers
 constant-time acc<ess to any element of the array. Like a list, and
 array is a map. Unlike a list, an array is mutable, so `[` ...
 `]` for indexing can be combined with `=` for assignment.
@@ -1205,17 +1201,17 @@ Alternatively, use the `Map` constructor with keyword arguments, where
 the keywords are keys:
 
 ```
-val neighborhood: Map('alice': Posn(4, 5),
-                      'bob': Posn(7, 9))
+val neighborhood: Map(~alice: Posn(4, 5),
+                      ~bob: Posn(7, 9))
 
-neighborhood['alice']  // prints Posn(4, 5)
+neighborhood[~alice]  // prints Posn(4, 5)
 ```
 
 _Using `{` ... `}` could be a shorthand for `Map(` ... `)` when it has
 all keyword arguments or `Set(` ... `)` when it has no keyword
 arguments._
 
-Keywords are not expressions, so `'alice'` in an expression position
+Keywords are not expressions, so `~alice` in an expression position
 is normally disallowed. However, `[` ... `]` allows a keyword by
 itself as a key in an indexed reference.
 
@@ -1223,8 +1219,8 @@ The `Map` function accepts a mixture of keyword-and non-keyword
 arguments, in which case it starts with a map containing the keyword
 keys and then adds additional keys. If a non-keyword key is used
 multiple times, the last use replaces the earlier ones. A map created
-by `Map` uses `equal?` hashing if no keywords arguments are provided
-or if any non-keyword arguments are provided, otherwise it uses `eq?`
+by `Map` uses `equal'` hashing if no keywords arguments are provided
+or if any non-keyword arguments are provided, otherwise it uses `eq'`
 hashing.
 
 `Map` is also an annotation and a binding constructor. As an annotation or
@@ -1236,7 +1232,7 @@ A binding use of `Map` must use keyword-only form, where the value
 positions are binding subpattern positions.
 
 ```
-fun alice_home(Map('alice': p)): p
+fun alice_home(Map(~alice: p)): p
 
 alice_home(neighborhood)  // prints Posn(4, 5)
 ```
@@ -1249,7 +1245,7 @@ fun locale(who, neighborhood -: Map.of(Keyword, Posn)):
   val p: neighborhood[who]
   p.x +$ ", " +$ p.y
 
-locale(keyword('alice'), neighborhood)  // prints "4, 5"
+locale(keyword(~alice), neighborhood)  // prints "4, 5"
 ```
 
 _The notation `<map-expr>[<keyword>: <val-expr>]` should extend a
@@ -1266,64 +1262,55 @@ maps at run time.
 
 ## Syntax objects
 
-The `?` operator quotes an immediately following shrubbery term to
+The `'` operator quotes an immediately following shrubbery term to
 produce a syntax object. The syntax object holds an unparsed
 shrubbery, not a parsed Rhombus expression.
 
 ```
-?1         // prints a shrubbery: 1
-?hello     // prints a shrubbery: hello
-?(1 + 2)   // prints a shrubbery: (1 + 2)
-?(x:
+'1         // prints a shrubbery: 1
+'hello     // prints a shrubbery: hello
+'(1 + 2)   // prints a shrubbery: (1 + 2)
+'(x:
     y)     // prints a shrubbery: x:« y »
-// ?1 + 2  // would be a run-time error, since ?1 is not a number
+// '1 + 2  // would be a run-time error, since '1 is not a number
 ```
 
-The `?` operator is more precisely a quasiquoting operator. The `¿`
-unquotes the immediate following terms. That is, the term after `¿` is
-a Rhombus expression whose value replaces the `¿` and its argument
+The `'` operator is more precisely a quasiquoting operator. The `$`
+unquotes the immediate following terms. That is, the term after `$` is
+a Rhombus expression whose value replaces the `$` and its argument
 within the quoted form.
 
 ```
-?(1 + ¿(2 + 3))  // prints a shrubbery: (1 + 5)
+'(1 + $(2 + 3))  // prints a shrubbery: (1 + 5)
 ```
 
-_Mac users with a U.S. keyboard layout: Option-? produces “¿”._
-
-In case `¿` is too difficult to type, the `??` operator is an alias
-for `¿`.
-
-```
-?(1 + ??(2 + 3))  // prints a shrubbery: (1 + 5)
-```
-
-A `¿` only unquotes when it is followed by a term, otherwise the `¿`
+A `$` only unquotes when it is followed by a term, otherwise the `$`
 itself remains quoted.
 
 ```
-?(1 + ¿(? ¿) 2)  // prints a shrubbery: ?(1 + ¿ 2)
+'(1 + $(' $) 2)  // prints a shrubbery: '(1 + $ 2)
 ```
 
-Like `¿`, `...` is treated specially within a `?`-quoted term (except,
-like `¿` when it's the only thing in the term). When `...` immediately
-follows a term that includes at least one `¿`, the value of the
-expression after that `¿` must produce a list of syntax objects. Then,
-instead of the parenthesized group in place of `¿`, the term before
+Like `$`, `...` is treated specially within a `'`-quoted term (except,
+like `$` when it’s the only thing in the term). When `...` immediately
+follows a term that includes at least one `$`, the value of the
+expression after that `$` must produce a list of syntax objects. Then,
+instead of the parenthesized group in place of `$`, the term before
 `...` is replicated as many times as the list has items, and each of
 those items is used in one replication.
 
 ```
-def seq: [?1, ?2, ?3]
+def seq: ['1, '2, '3]
 
-?((hi ¿seq) ...) // prints a shrubbery: ((hi 1) (hi 2) (hi 3))
+'((hi $seq) ...) // prints a shrubbery: ((hi 1) (hi 2) (hi 3))
 ```
 
-There's a subtlety here: could `seq` have zero elements? If so,
+There’s a subtlety here: could `seq` have zero elements' If so,
 replicating the `hi` form zero times within a group would leave an
 empty group, but a shrubbery never has an empty group. To manage this
 gap, a parenthesized shrubbery form with zero groups is treated as
-equivalent for `¿` replication to a parenthesized form with an empty
-group. Similarly, when a `?` form describes a single parenthesized
+equivalent for `$` replication to a parenthesized form with an empty
+group. Similarly, when a `'` form describes a single parenthesized
 group that turns out to be empty, it instead produces a parenthesized
 form with zero groups. Attempting to generate a group with no terms
 within a parenthesized form with multiple groups is an error.
@@ -1331,8 +1318,8 @@ within a parenthesized form with multiple groups is an error.
 ```
 def seq: []
 
-?((hi ¿seq) ...)          // prints a shrubbery: ()
-// ?(x, (hi ¿seq) ..., y) // would be a run-time error
+'((hi $seq) ...)          // prints a shrubbery: ()
+// '(x, (hi $seq) ..., y) // would be a run-time error
 ```
 
 Square-bracket forms and block forms have the same special cases to
@@ -1345,29 +1332,29 @@ group before the `,`, which effectively replicates that group with its
 separating comma:
 
 ```
-def seq: [?1, ?2, ?3]
+def seq: ['1, '2, '3]
 
-?(hi ¿seq, ...) // prints a shrubbery: (hi 1, hi 2, hi 3)
+'(hi $seq, ...) // prints a shrubbery: (hi 1, hi 2, hi 3)
 ```
 
 Along the same lines, `...` just after a `|` can replicate a preceding
 `|` block:
 
 ```
-def seq: [?1, ?2, ?3]
+def seq: ['1, '2, '3]
 
-?(cond | ¿seq | ...) // prints a shrubbery: cond |« 1  »|« 2  »|« 3 »}
+'(cond | $seq | ...) // prints a shrubbery: cond |« 1  »|« 2  »|« 3 »}
 ```
 
 In other words, `...` in various places within a quoted shrubbery
-works the way you'd expect it to work.
+works the way you’d expect it to work.
 
-When `?` is used in a binding position, it constructs a pattern that
+When `'` is used in a binding position, it constructs a pattern that
 matches syntax objects, and it binds variables that are escaped in the
-pattern with `¿`.
+pattern with `$`.
 
 ```
-val ?(¿x + ¿y): ?(1 + (2 + 3))
+val ~($x + $y): '(1 + (2 + 3))
 
 x  // prints a shrubbery: 1
 y  // prints a shrubbery: (2 + 3)
@@ -1376,28 +1363,28 @@ y  // prints a shrubbery: (2 + 3)
 _This is like `match`, and not like `syntax-case`. See the current
 [rationale](#rationale-and-alternatives)._
 
-A `¿`-escaped variable in a `?` pattern matches one term. Keep in mind
-that `?` creates syntax objects containing shrubberies that are not
+A `$`-escaped variable in a `'` pattern matches one term. Keep in mind
+that `'` creates syntax objects containing shrubberies that are not
 yet parsed, so a variable will not be matched to a multi-term sequence
 that would be parsed as an expression. For example, a pattern variable
 `y` by itself cannot be matched to a sequence `2 + 3`:
 
 ```
-// val ?(¿x + ¿y): ?(1 + 2 + 3)  // would be a run-time error
+// val '($x + $y): '(1 + 2 + 3)  // would be a run-time error
 ```
 
 Meanwhile, `...` works the way you would expect in a pattern, matching
 any `...`-replicated pattern variables to form a list of matches:
 
 ```
-val ?(¿x + ¿y ...): ?(1 + 2 + 3)
+val '($x + $y ...): '(1 + 2 + 3)
 
 x  // prints a shrubbery: 1
-y  // prints a list: [?2, ? +, ?3]
+y  // prints a list: ['2, ' +, '3]
 ```
 
-_In the current implementation of `?` patterns, a `¿` escape must be
-followed by an identifier or `_`. Generalizing the position after `¿` can
+_In the current implementation of `'` patterns, a `$` escape must be
+followed by an identifier or `_`. Generalizing the position after `$` can
 open the door to more `syntax-parse` goodness._
 
 A `......` behaves similarly to `...`, but for a _tail replication_
@@ -1408,17 +1395,17 @@ parenthesized term that contains the matched tail. In a template, an
 escaped expression must appear before `......`, and it must produce a
 syntax object for a parenthesized term.
 
-Use `......` for tail sequences that you don't need to inspect,
+Use `......` for tail sequences that you don’t need to inspect,
 because the syntax-object representation can avoid work proportional
 to the length of the matched tail. Avoiding that work can be important
 for macros.
 
 ```
-val ?(¿head ¿tail ......): ?(1 2 3 4 5)
+val '($head $tail ......): '(1 2 3 4 5)
 
 head  // prints a shrubbery: 1
 tail  // prints a shrubbery: (2 3 4 5)
-?(0 ¿tail ......) // prints a shrubbery: (0 2 3 4 5)
+'(0 $tail ......) // prints a shrubbery: (0 2 3 4 5)
 ```
 
 _Using `......` is similar to using `.` in S-expression patterns and
@@ -1435,34 +1422,34 @@ definitions, and more. Each kind of macro extension has a different
 protocol and a different form for defining a macro. In the case of
 expressions, a macro receives the sequence of terms starting with the
 macro operator/identifier within a group. A _rule_ macro consumes only
-the tokens that its pattern matches, and it's right-hand side is an
+the tokens that its pattern matches, and it’s right-hand side is an
 immediate template expression that produces the macro expansion. A
 general form of macro is implemented with arbitrary compile-time
 computation, and it can return terms that the macro does not consume.
 
-For example, here's a `thunk` macro that expects a block and wraps as
+For example, here’s a `thunk` macro that expects a block and wraps as
 a zero-argument function
 
 ```
 import: = rhombus/syntax
 
-expr.rule ?(thunk: ¿body ...):
-  ?(fun (): ¿body ...)
+expr.rule '(thunk: $body ...):
+  '(fun (): $body ...)
 
 thunk: 1 + "oops"  // prints a function
 (thunk: 1 + 3)()   // prints 4
 ```
 
-The `expr.rule` form expects a `?` and then either parentheses or an 
+The `expr.rule` form expects a `'` and then either parentheses or an 
 identifier or operator to create a pattern that matches a sequence of
-terms. With parentheses after `?`, either the first or
+terms. With parentheses after `'`, either the first or
 second term within the pattern is an _unescaped_ identifier or
-operator to be defined; conceptually, it's unescaped because the macro
+operator to be defined; conceptually, it’s unescaped because the macro
 matches a sequence of terms that use that identifier or operator
 literally. If the first term in the pattern is an unescaped identifier
 or operator, a prefix macro is defined; otherwise, the second term
-must be unescaped, and an infix macro is defined. If the part after `?`
-is just an identifier or parentheses, then it's shorthand for a prefix
+must be unescaped, and an infix macro is defined. If the part after `'`
+is just an identifier or parentheses, then it’s shorthand for a prefix
 macro that consumes none of the tail.
 
 The `expr.rule` form must be imported from `rhombus/syntax`, but `def`
@@ -1472,8 +1459,8 @@ behaves like `expr.rule` when the part before `:` is valid for
 ```
 // no import needed
 
-def ?(thunk: ¿body ...):
-  ?(fun (): ¿body ...)
+def '(thunk: $body ...):
+  '(fun (): $body ...)
 
 (thunk: 1 + 3)()   // prints 4
 ```
@@ -1484,8 +1471,8 @@ postfix `!` might be defined (shadowing the normal `!` for “not”) like
 this:
 
 ```
-def ?(¿a !):
-  ?(factorial(¿a))
+def '($a !):
+  '(factorial($a))
 
 fun
 | factorial(0): 1
@@ -1506,8 +1493,8 @@ expression and the remaining terms that have not been consumed.
 For example, the `!` macro can be equivalently written like this:
 
 ```
-expr.macro ?(¿a ! ¿tail ......):
-  values(?(factorial(¿a)), ?(tail ......))
+expr.macro '($a ! $tail ......):
+  values('(factorial($a)), '(tail ......))
 ```
 
 Since an `expr.macro` implementation can use arbitrary compile-time
@@ -1515,10 +1502,10 @@ code, it can inspect the input syntax objects in more way than just
 pattern matching. However, already-parsed terms will be opaque. When
 the macro transformer for `!` is called, `a` will be bound to a syntax
 object representing a parsed Rhombus expression, as opposed to an
-unparsed shrubbery. Currently, there's no way for a transformer to
+unparsed shrubbery. Currently, there’s no way for a transformer to
 inspect a parsed Rhombus expression (except by escaping to Racket).
 When the parsed expression is injected back into an unparsed
-shrubbery, as happens in `?(factorial(¿a))`, it will later simply
+shrubbery, as happens in `'(factorial($a))`, it will later simply
 parse as itself.
 
 _The current implementation does not track the category of a parsed
@@ -1531,62 +1518,64 @@ The `!` macro matches an unconsumed tail with `......` instead of
 less efficiently:
 
 ```
-expr.macro ?(¿a ! ¿tail ...):
-  values(?(factorial(¿a)), ?(tail ...))
+expr.macro '($a ! $tail ...):
+  values('(factorial($a)), '(tail ...))
 
 // changing to 2000 `!`s or so makes parsing take noticeably long:
 0 ! ! ! ! ! ! ! ! ! ! ! !
 ```
 
 Since `......` after `tail` in a pattern binds `tail` to a
-parenthesized sequence, the macro's second result can be written as
-just `tail`. That's convenenient, although not inherently more
+parenthesized sequence, the macro’s second result can be written as
+just `tail`. That’s convenenient, although not inherently more
 efficient:
 
 ```
-expr.macro ?(¿a ! ¿tail ......):
-  values(?(factorial(¿a)), tail)
+expr.macro '($a ! $tail ......):
+  values('(factorial($a)), tail)
 ```
 
 The `......` operator cannot be used at the end of the input group for
-a rule macro, because there's implicitly a `¿tail ......` at the end
+a rule macro, because there’s implicitly a `$tail ......` at the end
 of every rule-macro pattern. If you try replacing `...` in the `thunk`
-implementation with `......`, it will work, but that's because the
+implementation with `......`, it will work, but that’s because the
 `......` in that case is under a block created by `:`, and not in the
 enclosing input group.
 
-Whether pattern-based or not, an infix-operator macro's left-hand
-input is parsed. A prefix or infix macro's right-hand input is not
+Whether pattern-based or not, an infix-operator macro’s left-hand
+input is parsed. A prefix or infix macro’s right-hand input is not
 parsed by default. To trigger parsing for a right-hand argument,
-include `'parsed_right'` as a declaration at the start of the macro
+include `~parsed_right` as a declaration at the start of the macro
 body. Often, in that case, you might as well use `operator`, but
 macros provide control over evaluator order. For example, this `+<=`
-operator is like `+`, but evaluates its right-hand side before it's
+operator is like `+`, but evaluates its right-hand side before it’s
 left-hand side:
 
 ```
-def ?(¿a +<= ¿b): 
-  'parsed_right'
-  ?(¿b + ¿a)
+def '($a +<= $b): 
+  ~parsed_right
+  '($b + $a)
 
 1 +<= 2                       // prints 3
 // (1+"oops") +<= (2+"ouch")  // would complain about "ouch", not "oops"
 ```
 
-Declaring `'parsed_right'` affects a `expr.macro` macro in a second
+Declaring `~parsed_right` affects a `expr.macro` macro in a second
 way: the macro will receive only the left (if any) and right
 arguments, and will not receieve or return the tail of the ennclosing
-group. In other words, declaring `'parse_right'` uses the same
+group. In other words, declaring `~parse_right` uses the same
 argument and return protocol as a rule-based macro, but the template
 part can be implemented by arbitrary compile-time expressions.
 
 In the same way that `operator` supports operators that are both
 prefix and infix, you can use an alt-block with `expr.rule` or
-`expr.macro` to create a prefix-and-infix macro.
-
-_It will make sense for `expr.rule` and `expr.macro` to further
-support multiple cases that differ by pattern instead of infix vs.
-prefix, but the implementation does not yet do that._
+`expr.macro` to create a prefix-and-infix macro. Furthermore, an
+`expr.rule` or `expr.macro` form can have multiple prefix blocks or
+multiple infix blocks, where the each block’s pattern is tried in
+order; in that case, only the first prefix block (if any) and first
+infix block (if any) can have precedence and associativity
+declarations that apply to all cases, and none of the cases can use
+`~parsed_right`.
 
 ## Definition and declaration macros
 
@@ -1596,15 +1585,15 @@ identifier (never an operator), and the result syntax object should
 represent a block, which is spliced into the definition context where
 the macro is used.
 
-Here's the classic `def_five` macro:
+Here’s the classic `def_five` macro:
 
 
 ```
 import: = rhombus/syntax
 
-defn.macro ?(def_five ¿id):
-  ?(:
-      def ¿id: 5
+defn.macro '(def_five $id):
+  '(:
+      def $id: 5
   )
 
 def_five v
@@ -1619,7 +1608,7 @@ By distinguishing between expression macros, definition macros, and
 declaration macros, Rhombus can report errors for out-of-place uses
 earlier and more clearly than Racket.
 
-_In the Racket-level interface, it's possible to bind an identifier to
+_In the Racket-level interface, it’s possible to bind an identifier to
 both expression and definition transformers, etc. Adding a Rhombus
 syntax for that combination should be straightforward._
 
@@ -1634,9 +1623,9 @@ as a prefix operator to constrain a pattern to number inputs:
 ```
 import: = rhombus/syntax
 
-bind.rule ?($ ¿n):
-  'parsed_right'
-  ?(¿n :: Number)
+bind.rule '($ $n):
+  ~parsed_right
+  '($n :: Number)
 
 val $salary: 100.0
 
@@ -1645,7 +1634,7 @@ salary  // prints 100.0
 
 More expressive binding operators can use a lower-level protocol where
 a binding is represented by transformers that generate checking and
-binding code. It gets complicated, and it's tied up with the
+binding code. It gets complicated, and it’s tied up with the
 propagation of static information, so the details are pushed out to [a
 separate document](binding-macros.md). After an expressive set of
 binding forms are implemented with the low-level interface, however,
@@ -1657,7 +1646,7 @@ annotations.
 ```
 use_static_dot
 
-annotation.macro ?PosnList: ?List.of(Posn)
+annotation.macro 'PosnList: 'List.of(Posn)
 
 fun nth_x(ps -: PosnList, n):
   ps[n].x
@@ -1679,21 +1668,21 @@ of maps, and each map must at least relate `"name"` to a `String` and
 express a per-key specialization, but the `Map` binding pattern can.
 
 ```
-annotation.macro ?PersonList: 
-  ?(List.of(matching(Map('name': (_ :: String),
-                         'location': (_ :: Posn)])))
+annotation.macro 'PersonList: 
+  '(List.of(matching(Map(~name: (_ :: String),
+                         ~location: (_ :: Posn)])))
 
 val players :: PersonList:
-  [Map('name': "alice", 'location': Posn(1, 2)),
-   Map('name': "bob", 'location': Posn(3, 4))]
+  [Map(~name: "alice", ~location: Posn(1, 2)),
+   Map(~name: "bob", ~location: Posn(3, 4))]
 ```
 
-As another example, here's how a `ListOf` annotation constructor could be
+As another example, here’s how a `ListOf` annotation constructor could be
 implemented if `List.of` did not exists already:
 
 ```
-annotation.macro ?(ListOf (¿annotation ...) ¿tail ......):
-  values(?(matching([_ :: (¿annotation ...), ¿(? ...)])),
+annotation.macro '(ListOf ($annotation ...) $tail ......):
+  values('(matching([_ :: ($annotation ...), $(' ...)])),
          tail)
 ```
 
@@ -1712,13 +1701,13 @@ For bug-finding purposes, it might make sense to have a
 `use_checked_assert` form that defines `-:` as `::`.
 
 The datatype support in this proposal is primitive. Some combination
-of Racket's `for` and Clojure's transducers is the next step.
+of Racket’s `for` and Clojure’s transducers is the next step.
 
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
 
-There's no reference, but the prototype implementation is included
+There’s no reference, but the prototype implementation is included
 with the proposal.
 
 You can most easily run a prototype by
@@ -1744,19 +1733,19 @@ constrained by choices in other dimensions.
 
 The use of `.` for hierarchical naming in something like
 `f2c.fahrenheit_to_celsius` may seem related to the use of `.` for a
-field access like `p.x`. They're different ideas from the perspective
-of enforestation, however, and they're supported by different
+field access like `p.x`. They’re different ideas from the perspective
+of enforestation, however, and they’re supported by different
 mechanisms in the Rhombus expander. The overloading of `.` here is
 Java-like; Rust, in contrast, uses `::` for import paths and `.` for
 field access.
 
-The two uses of `.` cannot be unified within the Rhombus expander's
+The two uses of `.` cannot be unified within the Rhombus expander’s
 framework, because they work in different ways. In examples like
 `Posn(1, 2).x` or `p.x`, the left-hand side of `.` is an expression
 that is already parsed. In `expr.macro` or `1 posn.(<>) 2`, the
 left-hand side of `.` is not a definition or expression, and `.` as a
 binary operator would not be able to produce a binary operator (at
-least not while implementing the target operator's intended
+least not while implementing the target operator’s intended
 precedence).
 
 The `.` could be further overloaded for module paths, as in
@@ -1766,7 +1755,7 @@ in a module-path context. But it also invitates generalizations that
 are difficult to implement on top of Racket without a new layer of
 searching (keeping in mind that searching is the root of many evils).
 For example, why not `racket.math.pi`, instead of having to import
-`racket.math`? If a module imports `racket/math` as `math`, then it can
+`racket.math`' If a module imports `racket/math` as `math`, then it can
 export `math` (as opposed to `all_in(math)`), and then an importing
 module can use `math.pi`; but importing `racket` and then having an
 importing use `racket.math.pi` would be a similar sort of problem.
@@ -1780,7 +1769,7 @@ string form of module paths.
 The `def` form may or may not be a good idea. Some programmers may
 prefer the generality of `def`, while others may prefer the
 specificity of `val`, `fun`, and `expr.macro`. Some
-programmers may dislike that there's more than one way. But having
+programmers may dislike that there’s more than one way. But having
 `def` also makes it easier to have `let`. A `let` modifier
 that could be applied to any definition form creates a lot of extra
 complexity, because definitions can expand to multiple bindings, and
@@ -1789,15 +1778,15 @@ some of them need to refer to each other.
 ## Static information versus dynamic checking
 [static-dynamic]: #static-dynamic
 
-It's not obvious that a framework for static information falls within
+It’s not obvious that a framework for static information falls within
 the mission of Rhombus. If the project is about pushing Racket-style
 language extensibility to new notations, that can be done while
 just changing `posn-x` to `Posn.x`, and so on.
 
 At the same time, static information interacts with notation choices,
-and potential effect on a language's idioms make it difficult to
+and potential effect on a language’s idioms make it difficult to
 ignore. Resolving `.` to a static accessor is the most obvious
-example; writing `p.x` is nicer than `Posn.x(p)`. Similarly, it's nice
+example; writing `p.x` is nicer than `Posn.x(p)`. Similarly, it’s nice
 to use `[` ... `]` for generic index-based lookups and, when useful,
 separately indicate what kind of lookup is involved: array, list, etc.
 These static choices can be implemented as dynamic mechanisms plus a
@@ -1821,7 +1810,7 @@ fun
 
 Encouraging `-:` over `::` is an attempt to avoid this problem.
 Removing `::` or changing it to be `-:` would avoid the problem more
-reliably, but dynamic checking is sometimes needed. For example, it's
+reliably, but dynamic checking is sometimes needed. For example, it’s
 appropriate to check all arguments to a library function before
 enterting the function body, and `::` is a better way to write that
 compared to explicit checks in the function body. Also, a predicate
@@ -1913,8 +1902,8 @@ name that implements a definition form.
 ## Multiple values
 
 Multiple return values are a double-edged sword in Racket: often
-useful, but also often a pain to abstract over. It's tempting to
-simplify by getting rid of multiple values, but then we'd lose the
+useful, but also often a pain to abstract over. It’s tempting to
+simplify by getting rid of multiple values, but then we’d lose the
 benefits that the compiler provides for multiple-value results, and
 interoperation with Racket libraries would be slightly more difficult.
 
@@ -1928,7 +1917,7 @@ parses of a shrubbery independent of binding.
 
 ## Syntax patterns
 
-Syntax patterns with `?` continue in the `match` tradition of
+Syntax patterns with `'` continue in the `match` tradition of
 requiring an escape to create a pattern variable, instead of using the
 macro-by-example and `syntax-case` default of treating an identifier
 as a pattern variable. Although the macro-by-example convention
@@ -1953,17 +1942,17 @@ maps for representing domain data, not structs (even prefabs) as a
 Racket programmer would. Maybe there should be a `map` form, as in
 
 ```
-map Person('name' :: String, 'location' :: Posn)
+map Person(~name :: String, ~location :: Posn)
 ```
 
 to serve as a shorthand for `annotation.macro` plus `fun`:
 
 ```
-annotation.macro ?Person:
-  ?Map.of('name': String, 'location': Posn)
+annotation.macro 'Person:
+  '(Map.of(~name: String, ~location: Posn))
 
-fun Person('name': n :: String, 'location': l :: Posn):
-  Map('name': n, 'location': l)
+fun Person(~name: n :: String, ~location: l :: Posn):
+  Map(~name: n, ~location: l)
 ```
 
 # Prior art
