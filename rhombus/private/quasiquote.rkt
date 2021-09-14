@@ -19,10 +19,9 @@
                      "syntax-list.rkt"
                      "empty-group.rkt"))
 
-(provide ?
-         ¿
-         (rename-out [¿ ??]
-                     [rhombus... ...])
+(provide |'|
+         $
+         (rename-out [rhombus... ...])
          ......)
 
 (module+ convert
@@ -35,12 +34,12 @@
     (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))
     (pattern ((~datum block) ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))))
   (define-splicing-syntax-class tail-repetition
-    #:literals (¿ ......)
+    #:literals ($ ......)
     #:datum-literals (op)
-    (pattern (~seq (op ¿) e (op (~and name ......))))
-    (pattern (~seq ((~datum group) (op ¿) e)
+    (pattern (~seq (op $) e (op (~and name ......))))
+    (pattern (~seq ((~datum group) (op $) e)
                    ((~datum group) (op (~and name ......)))))
-    (pattern (~seq ((~datum block) ((~datum group) (op ¿) e))
+    (pattern (~seq ((~datum block) ((~datum group) (op $) e))
                    ((~datum block) ((~datum group) (op (~and name ......))))))))
 
 (define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape handle-tail-escape
@@ -93,8 +92,8 @@
                                   #'op.name))
             (define-values (id new-idrs) (handle-tail-escape #'op.name #'op.e e))
             (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id)]
-           [(((~datum op) (~and (~literal ¿) ¿-id)) esc . gs)
-            (define-values (id new-idrs) (handle-escape #'¿-id #'esc e))
+           [(((~datum op) (~and (~literal $) $-id)) esc . gs)
+            (define-values (id new-idrs) (handle-escape #'$-id #'esc e))
             (loop #'gs new-idrs (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)) #f)]
            [(g . gs)
             (define-values (p new-ids nested-can-be-empty?) (convert #'g #f))
@@ -115,14 +114,14 @@
                   (lambda (d)
                     #`(~literal #,d))
                   ;; handle-escape:
-                  (lambda (¿-id e in-e)
+                  (lambda ($-id e in-e)
                     (if (identifier? e)
                         (if (free-identifier=? e #'rhombus-_)
                             (values #'_ null)
                             (values e (list #`[#,e (pack-list* (syntax #,e) 0)])))
                         (raise-syntax-error #f
                                             (format "expected an identifier after ~a"
-                                                    (syntax-e ¿-id))
+                                                    (syntax-e $-id))
                                             in-e
                                             e)))
                   ;; deepen-escape
@@ -176,7 +175,7 @@
                     ;; make-literal
                     (lambda (d) d)
                     ;; handle-escape:
-                    (lambda (¿-id e in-e)
+                    (lambda ($-id e in-e)
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-list* (#,rhombus-expression (group #,e)) 0)])))
@@ -228,9 +227,9 @@
                              #,body)]))]))
   (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
 
-(define-syntax ?
+(define-syntax |'|
   (make-expression+binding-prefix-operator
-   (quote-syntax ?)
+   (quote-syntax |'|)
    '((default . stronger))
    'macro
    ;; expression
@@ -285,16 +284,16 @@
      #'(begin
          (define id tmp-id) ...)]))
 
-(define-syntax ¿
+(define-syntax $
   (expression-prefix-operator
-   (quote-syntax ¿)
+   (quote-syntax $)
    '((default . stronger))
    'macro
    (lambda (stx)
      (syntax-parse stx
        [(op . _)
         (raise-syntax-error #f
-                            "misuse outside of ?"
+                            "misuse outside of a pattern or template"
                             #'op)]))))
 
 (define-syntax rhombus...

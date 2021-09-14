@@ -178,10 +178,10 @@ define fourth(n :: Integer):
   printf("~a^4 = ~a\n", n, v)
   v
 
-define exp(n :: Integer, 'base': base = 2.718281828459045):
+define exp(n :: Integer, ~base: base = 2.718281828459045):
   if (n == 1)
    | base
-   | base * exp(n-1, 'base': base)
+   | base * exp(n-1, ~base: base)
 
 define positive_p(n): if n > 0 | true | false
 

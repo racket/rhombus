@@ -130,10 +130,10 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (op parens group block)
-        #:literals (? ¿)
-        [(form-id (op ?) (parens (group infoer-id:identifier
-                                        (parens info-pattern
-                                                data-pattern)))
+        #:literals (|'| $)
+        [(form-id (op |'|) (parens (group infoer-id:identifier
+                                          (parens info-pattern
+                                                  data-pattern)))
                   ((~and block-tag block) body ...))
          (define-values (converted-info-pattern info-idrs info-can-be-empty?) (convert-pattern #'info-pattern))
          (define-values (converted-data-pattern data-idrs data-can-be-empty?) (convert-pattern #'data-pattern))
@@ -158,13 +158,13 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (op parens group block)
-        #:literals (? ¿)
-        [(form-id (op ?) (parens (group builder-id:identifier
-                                        (parens (group (op ¿) arg-id:identifier)
-                                                data-pattern
-                                                (group (op ¿) IF-id:identifier)
-                                                (group (op ¿) success-id:identifier)
-                                                (group (op ¿) fail-id:identifier))))
+        #:literals (|'| $)
+        [(form-id (op |'|) (parens (group builder-id:identifier
+                                          (parens (group (op $) arg-id:identifier)
+                                                  data-pattern
+                                                  (group (op $) IF-id:identifier)
+                                                  (group (op $) success-id:identifier)
+                                                  (group (op $) fail-id:identifier))))
                   ((~and block-tag block) body ...))
          (define-values (converted-pattern idrs can-be-empty?) (convert-pattern #'data-pattern))
          (with-syntax ([((id id-ref) ...) idrs])
@@ -250,10 +250,10 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (op parens group block)
-        #:literals (? ¿)
-        [(form-id (op ?) (parens (group builder-id:identifier
-                                        (parens (group (op ¿) arg-id:identifier)
-                                                data-pattern)))
+        #:literals (|'| $)
+        [(form-id (op |'|) (parens (group builder-id:identifier
+                                          (parens (group (op $) arg-id:identifier)
+                                                  data-pattern)))
                   ((~and block-tag block) body ...))
          (define-values (converted-data-pattern data-idrs data-can-be-empty?) (convert-pattern #'data-pattern))
          (with-syntax ([((data-id data-id-ref) ...) data-idrs])

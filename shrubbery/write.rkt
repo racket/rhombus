@@ -73,9 +73,8 @@
        (define s (keyword->immutable-string v))
        (cond
          [(regexp-match? rx:identifier s)
-          (display "'" op)
-          (display s op)
-          (display "'" op)]
+          (display "~" op)
+          (display s op)]
          [else
           (display "#{")
           (write v op)

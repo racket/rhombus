@@ -30,8 +30,8 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (op block)
-        #:literals (?)
-        [(_ (op ?) name::name (block body ...))
+        #:literals (|'|)
+        [(_ (op |'|) name::name (block body ...))
          #`((define-syntax #,(in-static-info-space #'name.name)
               (convert-static-info 'name.name (rhombus-block body ...))))]))))
 

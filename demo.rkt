@@ -12,7 +12,7 @@ use_static_dot
 
 #false || !(#false || #false)
       
-"hello" +$ " " +$ "world"
+"hello" & " " & "world"
 
 // define and call a function
 
@@ -21,11 +21,11 @@ def five(x):
 
 3*five(#true && #false || 2 < 3)-2
 
-def six(x, 'plus': amt = 0):
+def six(x, ~plus: amt = 0):
   6 + amt
 
 six("anything")
-six("anything", 'plus': 7)
+six("anything", ~plus: 7)
 
 // pattern-matching on a function argument
 
@@ -84,8 +84,8 @@ size
 
 // quasiquoting an expression
 
-?(apple + banana)
-?(apple + ¿(3 + 4))
+'(apple + banana)
+'(apple + $(3 + 4))
 
 // defining an infix operator
 
@@ -102,8 +102,8 @@ operator (x mod y):
 // with precedence and associativity
 
 operator (a ++* b):
-  'weaker_than': *
-  'associativity': 'right'
+  ~weaker_than: *
+  ~associativity: ~right
   (a + b) * b
 
 3 ++* 4 * 2 ++* 5
@@ -136,16 +136,16 @@ match cons(7, 8)
     b
 | x:
     x
-| 'else':
+| ~else:
     "other"
 
-match ?(z + y, {[10, 11, 12]})
-| ?(x ¿a): a
-| ?(¿a + y, {[¿n, ...]}): cons(a, n)
+match '(z + y, {[10, 11, 12]})
+| '(x $a): a
+| '($a + y, {[$n, ...]}): cons(a, n)
 
 cond
 | #true: 17
-| 'else': 18
+| ~else: 18
 
 // postfix as a macro "infix" operator;
 
@@ -153,49 +153,41 @@ fun
 | factorial(0): 1
 | factorial(n): n*factorial(n-1)
 
-expr.macro ?(¿a *! ¿tail ......):
-  values(?(factorial(¿a)), tail)
+expr.macro '($a *! $tail ......):
+  values('(factorial($a)), tail)
 
 10*!
-
-// ?? is an alias for ¿
-
-expr.macro ?(??a **! ??tail ......):
-  values(?(factorial(??a)), tail)
-
-10**!
-
 
 // a macro with an identifier name that does a weird
 // thing with the result tail
 
-expr.macro ?(prefix_plus ¿a ¿b ¿c ......):
-  values(a, ?(+ ¿b ¿c ......))
+expr.macro '(prefix_plus $a $b $c ......):
+  values(a, '(+ $b $c ......))
 
 prefix_plus 7 9
 
 // an identifier macro
 
-expr.macro ?just_five: ?"five"
+expr.macro 'just_five: '"five"
 
-just_five +$ " is the result"
+just_five & " is the result"
 
 // another way to write that
 
-expr.macro ?(also_prefix_plus ¿e ...):
+expr.macro '(also_prefix_plus $e ...):
   match e
-  | ?(¿a ¿b ¿c ...):
-      values(a, ?(+ ¿b ¿c ...))
-  | 'else':
-      values(?"this is terrible error reporting", ?())
+  | '($a $b $c ...):
+      values(a, '(+ $b $c ...))
+  | ~else:
+      values('"this is terrible error reporting", '())
 
 also_prefix_plus 7 9
 
 // define a binding operator
 
-bind.rule ?($ ¿n):
-  'parsed_right'
-  ?(¿n :: Integer)
+bind.rule '($ $n):
+  ~parsed_right
+  '($n :: Integer)
 
 fun apply_interest($ n):
   n * 1.05
@@ -203,65 +195,65 @@ fun apply_interest($ n):
 apply_interest(7)
 
 // define <> as revese-cons pattern
-bind.macro ?(¿a <> ¿b):
-  'parsed_right'
-  bind_ct.pack(?(build_reverse_cons_infoer,
-                 (¿a, ¿b)))
+bind.macro '($a <> $b):
+  ~parsed_right
+  bind_ct.pack('(build_reverse_cons_infoer,
+                 ($a, $b)))
 
-bind.infoer ?(build_reverse_cons_infoer(¿in_id, (¿a_in, ¿b_in))):
-  val a: bind_ct.get_info(a_in, ?())
-  val b: bind_ct.get_info(b_in, ?())
+bind.infoer '(build_reverse_cons_infoer($in_id, ($a_in, $b_in))):
+  val a: bind_ct.get_info(a_in, '())
+  val b: bind_ct.get_info(b_in, '())
   match bind_ct.unpack_info(a)
-  | ?(¿a_id, ¿a_info, (¿a_bind_info ...), ¿a_matcher, ¿a_binder, ¿a_data):
+  | '($a_id, $a_info, ($a_bind_info ...), $a_matcher, $a_binder, $a_data):
       match bind_ct.unpack_info(b)
-      | ?(¿b_id, ¿b_info, (¿b_bind_info ...), ¿b_matcher, ¿b_binder, ¿b_data):
-          ?(pair,
+      | '($b_id, $b_info, ($b_bind_info ...), $b_matcher, $b_binder, $b_data):
+          '(pair,
             (),
-            (¿a_bind_info ... ¿b_bind_info ...),
+            ($a_bind_info ... $b_bind_info ...),
             build_reverse_cons_match,
             build_reverse_cons_bind,
-            (¿a, ¿b, a_part, b_part))
+            ($a, $b, a_part, b_part))
 
-bind.matcher ?(build_reverse_cons_match(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id),
-                                        ¿IF, ¿success, ¿fail)):
+bind.matcher '(build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
+                                        $IF, $success, $fail)):
   match bind_ct.unpack_info(a)
-  | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+  | '($a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data):
       match bind_ct.unpack_info(b)
-      | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?(:
+      | '($b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data):
+          '(:
               // check for pair an extract reversed pieces
-              val (is_match, ¿a_part_id, ¿b_part_id):
-                match ¿in_id
-                | cons(¿b_id, ¿a_id):
-                    values(#true, ¿a_id, ¿b_id)
-                | 'else':
+              val (is_match, $a_part_id, $b_part_id):
+                match $in_id
+                | cons($b_id, $a_id):
+                    values(#true, $a_id, $b_id)
+                | ~else:
                     values(#false, #false, #false)
               // if a match, chain to a and b matchers
-              ¿IF is_match
-              | ¿a_matcher(¿a_part_id,
-                           ¿a_data,
-                           ¿IF,
-                           ¿b_matcher(¿b_part_id,
-                                      ¿b_data,
-                                      ¿IF,
-                                      ¿success,
-                                      ¿fail),
-                           ¿fail)
-              | ¿fail
+              $IF is_match
+              | $a_matcher($a_part_id,
+                           $a_data,
+                           $IF,
+                           $b_matcher($b_part_id,
+                                      $b_data,
+                                      $IF,
+                                      $success,
+                                      $fail),
+                           $fail)
+              | $fail
           )
 
-bind.binder ?(build_reverse_cons_bind(¿in_id, (¿a, ¿b, ¿a_part_id, ¿b_part_id))):
+bind.binder '(build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))):
   match bind_ct.unpack_info(a)
-  | ?(¿a_id, ¿a_info, ¿a_bind_infos, ¿a_matcher, ¿a_binder, ¿a_data):
+  | '($a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data):
       match bind_ct.unpack_info(b)
-      | ?(¿b_id, ¿b_info, ¿b_bind_infos, ¿b_matcher, ¿b_binder, ¿b_data):
-          ?(:
-              ¿a_binder(¿a_part_id, ¿a_data)
-              ¿b_binder(¿b_part_id, ¿b_data)
+      | '($b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data):
+          '(:
+              $a_binder($a_part_id, $a_data)
+              $b_binder($b_part_id, $b_data)
           )
 
 // an expression operator that's consistent with the pattern
-expr.rule ?(¿a <> ¿b): 'parsed_right'; ?(cons(¿b, ¿a))
+expr.rule '($a <> $b): ~parsed_right; '(cons($b, $a))
 
 def rx <> (ry :: Integer) : "2" <> 1
 rx
@@ -269,29 +261,29 @@ rx
 // definition form, which returns either a block of definitions
 // or a block of definitions and a sequence of expressions
 
-defn.macro ?(define_eight ¿e ......):
+defn.macro '(define_eight $e ......):
   match e
-  | ?(¿name):
-      ?(: def ¿name: 8)
+  | '($name):
+      '(: def $name: 8)
        
 define_eight ate
 ate
 
-defn.macro ?(define_and_use ¿e ......):
+defn.macro '(define_and_use $e ......):
   match e
-  | ?(¿name: ¿rhs ...):
-      ?(: def ¿name: ¿rhs ...
-          ?(¿name))
+  | '($name: $rhs ...):
+      '(: def $name: $rhs ...
+          '($name))
 
 define_and_use nine: 1+8
 nine
 
 // declaration form
 
-decl.macro ?(empty_import ¿e ......):
+decl.macro '(empty_import $e ......):
   match e
-  | ?():
-      ?(: import:)
+  | '():
+      '(: import:)
 
 empty_import
 
@@ -334,7 +326,7 @@ begin:
 fun add1(x) :: Integer:
   match x
    | n :: Integer : x + 1
-   | 'else': x
+   | ~else: x
 
 add1(100)
 // add1("oops")
@@ -343,7 +335,7 @@ fun
 | add_two(x) :: Number:
     x + 2.0
 | add_two(x, y) :: String:
-    x +$ " and " +$ y
+    x & " and " & y
 
 add_two(7) == 9.0
 add_two(6, 7) === "6 and 7"
@@ -366,21 +358,21 @@ import:
   = racket/base:
     only: atan
 
-annotation.macro ?AlsoPosn: ?Posn
+annotation.macro 'AlsoPosn: 'Posn
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
 
-bind.macro ?(AlsoPosn (¿x, ¿y) ¿tail ......):
-  values(?(Posn(¿x, ¿y)), tail)
+bind.macro '(AlsoPosn ($x, $y) $tail ......):
+  values('(Posn($x, $y)), tail)
                        
-annotation.macro ?Vector:
-  annotation_ct.pack_predicate(?(fun (x): x is_a Posn),
-                               ?((¿(dot_ct.provider_key), vector_dot_provider)))
+annotation.macro 'Vector:
+  annotation_ct.pack_predicate('(fun (x): x is_a Posn),
+                               '(($(dot_ct.provider_key), vector_dot_provider)))
 
 
-dot.macro ?(vector_dot_provider ¿left ¿dot ¿right):
+dot.macro '(vector_dot_provider $left $dot $right):
   match right
-  | ?angle: ?(vector_angle(¿left))
-  | ?magnitude: ?(vector_magnitude(¿left))
+  | 'angle: '(vector_angle($left))
+  | 'magnitude: '(vector_magnitude($left))
 
 fun vector_angle(Posn(x, y)): atan(y, x)
 fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
@@ -390,19 +382,19 @@ vec.angle
 vec.magnitude
 
 def AlsoPosn(also_x, also_y): Posn(10, 20)
-also_x +$ "," +$ also_y
+also_x & "," & also_y
 
-expr.macro ?(or_zero ¿p ¿tail ......):
-  values(static_info_ct.wrap(?(¿p || Posn(0,0)),
-                             ?((¿(dot_ct.provider_key),
+expr.macro '(or_zero $p $tail ......):
+  values(static_info_ct.wrap('($p || Posn(0,0)),
+                             '(($(dot_ct.provider_key),
                                 vector_dot_provider))),
          tail)
   
 or_zero(Posn(3, 4)).magnitude
 
 fun zero_vec(): Posn(0, 0)
-static_info.macro ?zero_vec: ?((¿(expr_ct.call_result_key),
-                                ¿(static_info_ct.pack(?((¿(dot_ct.provider_key),
+static_info.macro 'zero_vec: '(($(expr_ct.call_result_key),
+                                $(static_info_ct.pack('(($(dot_ct.provider_key),
                                                          vector_dot_provider))))))
 zero_vec().magnitude
 
@@ -428,12 +420,12 @@ nums_a[1]
 nums_a[2] = 30
 nums_a[2]
 
-val map: Map('x': "hello", 'y': "goodbye")
+val map: Map(~x: "hello", ~y: "goodbye")
 val yes_map :: Map : map
 val yup_map :: Map.of(Keyword, String) : map
 
 map
-map['y']
+map[~y]
 
 val also_map: Map(1, "one", 2, "two")
 also_map[2]
@@ -449,14 +441,14 @@ ys
 def Array(ax, ay, az): nums_a
 az
 
-def local_map: Map('alice': Posn(4, 5),
-                   'bob': Posn(7, 9))
+def local_map: Map(~alice: Posn(4, 5),
+                   ~bob: Posn(7, 9))
 
 fun locale(who, neighborhood :: Map.of(Keyword, Posn)):
   val p: neighborhood[who]
-  p.x +$ ", " +$ p.y
+  p.x & ", " & p.y
 
-locale(keyword('alice'), local_map)
+locale(keyword(~alice), local_map)
 
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x
@@ -527,8 +519,8 @@ get_pts_x([Posn(1, 2)])
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-annotation.macro ?(ListOf (¿contract ...) ¿tail ......):
-  values(?(matching([_ :: (¿contract ...), ¿(? ...)])),
+annotation.macro '(ListOf ($contract ...) $tail ......):
+  values('(matching([_ :: ($contract ...), $(' ...)])),
          tail)
 
 fun get_pts_x2(pts -: ListOf(Posn)):
@@ -537,8 +529,8 @@ fun get_pts_x2(pts -: ListOf(Posn)):
 get_pts_x2([Posn(5, 7)])
 
 // definition-sequence macros
-defn.sequence_macro ?(: reverse_defns; ¿defn1 ...; ¿defn2 ...; ¿tail; ......):
-  values(?(: ¿defn2 ...; ¿defn1 ... ), ?(: ¿tail; ......))
+defn.sequence_macro '(: reverse_defns; $defn1 ...; $defn2 ...; $tail; ......):
+  values('(: $defn2 ...; $defn1 ... ), '(: $tail; ......))
 
 reverse_defns
 def seq_x: seq_y+1
@@ -549,18 +541,18 @@ seq_x
 // mixin infix and prefix with multiple matching cases
 
 def
-| ?(weirdly coconut):
-    'stronger_than': +
-    ?"donut"
-| ?(weirdly):
-    ?"banana"
-| ?(¿a weirdly ¿b + ¿c):
-    ?(¿a + ¿b - ¿c)
-| ?(¿a weirdly ¿b):
-    ?(¿a + ¿b)
+| '(weirdly coconut):
+    ~stronger_than: +
+    '"donut"
+| '(weirdly):
+    '"banana"
+| '($a weirdly $b + $c):
+    '($a + $b - $c)
+| '($a weirdly $b):
+    '($a + $b)
 
 weirdly
 weirdly coconut
-weirdly +$ "none"
+weirdly & "none"
 1 weirdly 5
 1 weirdly 5 + 7

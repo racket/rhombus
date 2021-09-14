@@ -34,7 +34,7 @@
      (define u (cdr (syntax-e l)))
      (when (or (null? u)
                (and (syntax? u) (null? (syntax-e u))))
-       (error '? "generated an empty group"))
+       (error '|'| "generated an empty group"))
      l]
     [else (for/list ([g (in-list (syntax->list l))])
             (error-empty-group (sub1 at-depth) g))]))

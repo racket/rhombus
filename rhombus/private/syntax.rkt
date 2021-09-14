@@ -68,8 +68,8 @@
 
   (define-syntax-class :operator-definition-group
     #:datum-literals (op group)
-    #:literals (?)
-    (pattern (group (op ¿) _ _::operator-or-identifier . _))
+    #:literals (|'|)
+    (pattern (group (op $) _ _::operator-or-identifier . _))
     (pattern (group ::operator-or-identifier . _)))
 
   (define-syntax-class-mixin operator-options
@@ -138,10 +138,10 @@
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:datum-literals (op parens group)
-    #:literals (¿ ?)
-    (pattern (~seq (op ?) (parens (~and g (group (op ¿) _ _::operator-or-identifier . _)))))
-    (pattern (~seq (op ?) (parens (~and g (group ::operator-or-identifier . _)))))
-    (pattern (~seq (op ?) g::operator-or-identifier)))
+    #:literals ($ |'|)
+    (pattern (~seq (op |'|) (parens (~and g (group (op $) _ _::operator-or-identifier . _)))))
+    (pattern (~seq (op |'|) (parens (~and g (group ::operator-or-identifier . _)))))
+    (pattern (~seq (op |'|) g::operator-or-identifier)))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -163,7 +163,7 @@
     (define (macro-clause self-id left-ids tail-pattern rhs)
       (define-values (pattern idrs can-be-empty?)
         (if (eq? kind 'rule)
-            (convert-pattern #`(parens (group #,@tail-pattern (op ¿) tail (op ......))))
+            (convert-pattern #`(parens (group #,@tail-pattern (op $) tail (op ......))))
             (convert-pattern #`(parens (group . #,tail-pattern)))))
       (with-syntax ([((id id-ref) ...) idrs]
                     [(left-id ...) left-ids])
@@ -178,8 +178,8 @@
     (define (convert-rule-template block ids)
       (syntax-parse block
         #:datum-literals (block group op)
-        #:literals (?)
-        [(block (group (op (~and t-op ?)) template))
+        #:literals (|'|)
+        [(block (group (op (~and t-op |'|)) template))
          (convert-template #'template
                            #:rhombus-expression #'rhombus-expression
                            #:check-escape (lambda (e)
@@ -193,13 +193,13 @@
     (define (extract-pattern-id tail-pattern)
       (syntax-parse tail-pattern
         #:datum-literals (op)
-        #:literals (¿)
-        [((op ¿) id:identifier) #'id]))
+        #:literals ($)
+        [((op $) id:identifier) #'id]))
     (syntax-parse g
       #:datum-literals (group op)
-      #:literals (¿ rhombus...)
+      #:literals ($ rhombus...)
       ;; infix protocol
-      [(group (op ¿) left:identifier
+      [(group (op $) left:identifier
               op-name::operator-or-identifier
               . tail-pattern)
        (syntax-parse rhs
@@ -363,8 +363,8 @@
 (begin-for-syntax
   (define-splicing-syntax-class :identifier-syntax-quote
     #:datum-literals (op parens group)
-    #:literals (?)
-    (pattern (~seq (op ?) (parens g::identifier-definition-group))))
+    #:literals (|'|)
+    (pattern (~seq (op |'|) (parens g::identifier-definition-group))))
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
@@ -372,9 +372,9 @@
   
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
     #:datum-literals (op block parens group)
-    #:literals (?)
-    (pattern (~seq (op ?) (parens (group (block g::identifier-definition-group
-                                                . gs)))))))
+    #:literals (|'|)
+    (pattern (~seq (op |'|) (parens (group (block g::identifier-definition-group
+                                                  . gs)))))))
 
 (define-for-syntax (parse-transformer-definition g self-id rhs
                                                  in-space make-transformer-id
@@ -382,7 +382,7 @@
                                                  #:wrap-for-tail [wrap-for-tail values])
   (syntax-parse g
     #:datum-literals (group op)
-    #:literals (¿ rhombus...)
+    #:literals ($ rhombus...)
     [(group id:identifier . tail-pattern)
      (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . tail-pattern))))
      (with-syntax ([((p-id id-ref) ...) idrs])
