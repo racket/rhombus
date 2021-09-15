@@ -8,14 +8,17 @@
          "parse.rkt"
          (submod "function.rkt" for-call)
          (submod "map-ref.rkt" for-ref)
-         (submod "list.rkt" for-binding))
+         (submod "list.rkt" for-binding)
+         "setmap.rkt"
+         (submod "map.rkt" for-binding))
 
 (provide #%block
          #%literal
          #%tuple
          #%call
          #%array
-         #%ref)
+         #%ref
+         #%set)
 
 (define-syntax #%block
   (expression-prefix-operator
@@ -135,3 +138,18 @@
    (lambda (array stxes)
      (parse-map-ref-or-set array stxes))
    'left))
+
+(define-syntax #%set
+  (make-expression+binding-prefix-operator
+   #'%ref
+   '((default . stronger))
+   'macro
+   ;; expression
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ braces . tail)
+        (values (parse-setmap-expression #'braces)
+                #'tail)]))
+   ;; binding
+   (lambda (stxes)
+     (parse-map-binding stxes "braces"))))

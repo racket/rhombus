@@ -431,10 +431,24 @@ map[~y]
 val also_map: Map(1, "one", 2, "two")
 also_map[2]
 
+val also_also_map: {(1, "one"), (2, "two")}
+also_also_map[2]
+
+val key_map: {~a: "ay", ~b: "bee"}
+key_map[~a]
+
+val mixed_map: {~a: 1, ("b", 2)}
+mixed_map[~a] + mixed_map["b"]
+
 val mut_map: make_map(1, "mone")
 mut_map[1]
 mut_map[2] = "mtwo"
 mut_map[2]
+
+val a_set: {1, 3, 5, 7, 9}
+if a_set[1] && !a_set[2]
+| "ok"
+| 1/0
 
 def [x, ys, ...]: nums
 ys

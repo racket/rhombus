@@ -23,6 +23,7 @@
            :static-info
            syntax-local-static-info
            extract-static-infos
+           unwrap-static-infos
            static-info-lookup))
 
 (provide define-static-info-syntax
@@ -78,6 +79,13 @@
       [(begin (quote-syntax (~and form (key:identifier val))) e)
        (cons #'form (extract-static-infos #'e))]
       [_ null]))
+
+  (define (unwrap-static-infos e)
+    (syntax-parse e
+      #:literals (begin quote-syntax)
+      [(begin (quote-syntax (~and form (key:identifier val))) e)
+       (unwrap-static-infos #'e)]
+      [_ e]))
 
   (define (static-info-lookup static-infos find-key)
     (for/or ([static-info (in-list (syntax->list static-infos))])

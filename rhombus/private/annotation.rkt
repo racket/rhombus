@@ -126,7 +126,7 @@
                         [_ 'does-not-happen])))))
 
   (define (annotation-constructor name predicate-stx static-infos
-                                sub-n predicate-maker info-maker)
+                                  sub-n predicate-maker info-maker)
     (annotation-prefix-operator
      name
      '((default . stronger))

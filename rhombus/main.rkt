@@ -24,6 +24,8 @@
         "private/list.rkt"
         "private/array.rkt"
         "private/map.rkt"
+        "private/set.rkt"
+        "private/map-ref.rkt"
         "private/assign.rkt"
         "private/function.rkt"
         "private/begin.rkt"

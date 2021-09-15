@@ -3,7 +3,9 @@
 (require racket/runtime-config
          shrubbery/parse
          shrubbery/print
-         shrubbery/write)
+         shrubbery/write
+         "private/set.rkt"
+         (submod "private/set.rkt" for-ref))
 
 (current-read-interaction
  (lambda (src in)
@@ -62,8 +64,10 @@
         #f)
       (display ")" op)]
      [(hash? v)
-      (display "Map(" op)
-      (for/fold ([first? #t]) ([(k v) (in-hash v)])
+      (display "{" op)
+      (for/fold ([first? #t]) ([k+v (hash-map v cons #t)])
+        (define k (car k+v))
+        (define v (cdr k+v))
         (unless first? (display ", " op))
         (cond
           [(keyword? k)
@@ -71,11 +75,20 @@
            (display ": " op)
            (print v op)]
           [else
+           (display "(" op)
            (print k op)
            (display ", " op)
-           (print v op)])
+           (print v op)
+           (display ")" op)])
         #f)
-      (display ")" op)]
+      (display "}" op)]
+     [(set? v)
+      (display "{" op)
+      (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
+        (unless first? (display ", " op))
+        (print v op)
+        #f)
+      (display "}" op)]
      [(syntax? v)
       (define s (syntax->datum v))
       (display "?" op)
@@ -85,10 +98,14 @@
       (write-shrubbery s op)]
      [(procedure? v)
       (write v op)]
+     [(keyword? v)
+      (display "keyword(" op)
+      (write-shrubbery v op)
+      (display ")" op)]
      [else
       (display "#{'" op)
       (orig-print v op 1)
-      (display "}")])))
+      (display "}" op)])))
 
 (error-syntax->string-handler
  (lambda (s len)
