@@ -1213,21 +1213,51 @@ val neighborhood: Map(~alice: Posn(4, 5),
 neighborhood[~alice]  // prints Posn(4, 5)
 ```
 
-_Using `{` ... `}` could be a shorthand for `Map(` ... `)` when it has
-all keyword arguments or `Set(` ... `)` when it has no keyword
-arguments._
-
 Keywords are not expressions, so `~alice` in an expression position
 is normally disallowed. However, `[` ... `]` allows a keyword by
 itself as a key in an indexed reference.
 
-The `Map` function accepts a mixture of keyword-and non-keyword
-arguments, in which case it starts with a map containing the keyword
-keys and then adds additional keys. If a non-keyword key is used
-multiple times, the last use replaces the earlier ones. A map created
-by `Map` uses `equal'` hashing if no keywords arguments are provided
-or if any non-keyword arguments are provided, otherwise it uses `eq'`
-hashing.
+Curly braces `{` ... `}` can be used as a shorthand for writing `Map(`
+... `)`. Keyword keys with values can be written like keyword
+arguments to `Map`, but seperate key and value arguments must be
+combined into a two-element `(` ... `)`:
+
+```
+val neighborhood: {~alice: Posn(4, 5),
+                   ~bob: Posn(7, 9)}
+neighborhood[~alice]       // prints Posn(4, 5)
+
+val str_neighborhood: {("alice", Posn(4, 5)),
+                       ("bob", Posn(7, 9))}
+
+str_neighborhood["alice"]  // prints Posn(4, 5)
+```
+
+To functionally extend a map, use the `++` append operator:
+
+```
+val new_neighborhood: neighborhood ++ {~alice: Posn(40, 50)}
+new_neighborhood[~alice] // prints Posn(40, 50)
+neighborhood[~alice]     // prints Posn(4, 5)
+```
+
+When `++` is used with a left-hand side that is statically known to be
+the default implementation of maps, and when the right-hand argument
+is an immediate map construction with a single element, then the use
+of `++` is compiled as an efficient single-key update of the map.
+Whether optimized or general, the `++` operator will only combine
+certain compatible kinds of maps. For example, `++` will append lists
+and combine default-implementation maps, but it will not combine two
+vectors or combine a list and a default-implementation map with keys
+and values.
+
+The `Map` function and `{` ... `}` shorthand accept a mixture of
+keyword-and non-keyword arguments, in which case it starts with a map
+containing the keyword keys and then adds additional keys. If a
+non-keyword key is used multiple times, the last use replaces the
+earlier ones. A map created by `Map` or `{` ... `}` uses `equal'`
+hashing if no keywords arguments are provided or if any non-keyword
+arguments are provided, otherwise it uses `eq'` hashing.
 
 `Map` is also an annotation and a binding constructor. As an annotation or
 binding constructor, `Map` refers to map values genercially, and not
@@ -1243,7 +1273,7 @@ fun alice_home(Map(~alice: p)): p
 alice_home(neighborhood)  // prints Posn(4, 5)
 ```
 
-The `Map.of` annotation constructor takes two annottaions, one for keys
+The `Map.of` annotation constructor takes two annotations, one for keys
 and one for values:
 
 ```
@@ -1254,17 +1284,51 @@ fun locale(who, neighborhood -: Map.of(Keyword, Posn)):
 locale(keyword(~alice), neighborhood)  // prints "4, 5"
 ```
 
-_The notation `<map-expr>[<keyword>: <val-expr>]` should extend a
-persistent map, while `<map-expr>[<index-expr>] = <val-expr>` modifies
-a mutable map. There should be more map constructors than `Map` for
-different equality functions and mutability._
-
 Unlike `.`, indexed access via `[` ... `]` works even without static
 information to say that the access will succeed. Still, static
 information can select a more specific and potentially fast indexing
 operator. For example, `buckets[0]` above statically resolves to the
 use of array lookup, instead of going through a generic function for
 maps at run time.
+
+The `make_map` function works similarly to the `Map` constructor, but
+it creates a mutable map. A mutable map can be updated using `[` ...
+`]` with `=` just like an array.
+
+```
+val locations: make_map(~alice: Posn(4, 5),
+                        ~bob: Posn(7, 9))
+locations[~alice] = Posn(40, 50)
+locations[~alice]  // prints Posn(40, 50)
+```
+
+## Sets
+
+When `{` ... `}` is used with elements that are not keyword arguments
+and not two-element `(` ... `)` forms, then `{` ... `}` creates a set.
+A set can serve as a map, where the set's elements act as keys and
+each key's value is `#true`. There's a `Set` constructor that's
+analogous to `Map`, but `Set` accepts just values to include in the
+set and does not support keyword arguments. The `++` operator
+effectively unions sets.
+
+```
+val friends: {"alice", "bob", "carol"}
+
+if friends["alice"] && friends["carol"]
+| "I know both"
+| "Who are they?"
+// prints "I know both"
+
+val new_friends: friends ++ {"david"}
+new_friends["david"]  // prints #true
+friends["david"]      // prints #false
+```
+
+`Set.of` and `make_set` work as you'd expect. When `[` ... `]` with
+`=` is used to modify a mutable set, the “key” is removed from the set
+if the assigned value is `#false`, otherwise the “key” is added to the
+set.
 
 ## Syntax objects
 
