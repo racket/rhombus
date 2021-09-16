@@ -38,7 +38,7 @@
          raw))
 
 ;; Parsing state for group sequences: top level, in opener-closer, or after `:`
-(struct group-state (closer         ; expected closer: a string, EOF, or column
+(struct group-state (closer         ; expected closer: a string, EOF, or column (maybe 'any as column)
                      paren-immed?   ; immediately in `()` or `[]`?
                      column         ; not #f => required indentation check checking
                      check-column?  ; #f => allow any sufficiently large (based on closer) indentation
@@ -77,7 +77,7 @@
                commenting
                raw))
 
-(define closer-column? number?)
+(define (closer-column? c) (or (eq? c 'any) (number? c)))
 
 (define closer-expected? pair?)
 (define (closer-expected closer) (if (pair? closer) (car closer) closer))
@@ -149,7 +149,7 @@
             (group-state-raw sg)))
   (define (check-column t column)
     (when (group-state-check-column? sg)
-      (unless (= column (group-state-column sg))
+      (unless (eqv? column (group-state-column sg))
         (fail t "wrong indentation"))))
   (define closer (group-state-closer sg))
   (cond
@@ -160,14 +160,16 @@
      (done)]
     [else
      (define t (car l))
-     (define column (+ (token-column t) (group-state-delta sg)))
+     (define column (column+ (token-column t) (group-state-delta sg)))
      (cond
        [(eq? (token-name t) 'group-comment)
         ;; column doesn't matter
+        (define line (token-line t))
         (define-values (rest-l last-line delta raw)
-          (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))))
+          (next-of (cdr l) line (group-state-delta sg) (cons t (group-state-raw sg))))
         (cond
-          [(and ((token-line t) . > . (group-state-last-line sg))
+          [(and line
+                (line . > . (group-state-last-line sg))
                 (next-line? rest-l last-line))
            ;; structure comment is on its own line, so it comments out next group
            (check-no-commenting)
@@ -183,6 +185,7 @@
                                              [delta delta]
                                              [raw raw]))])]
        [(and (closer-column? closer)
+             column
              (column . < . closer))
         ;; Next token is less indented than this group sequence
         (done)]
@@ -261,7 +264,8 @@
               (define line (token-line t))
               (cond
                 [(or (group-state-bar-closes? sg)
-                     (eqv? line (group-state-bar-closes-line sg)))
+                     (and line
+                          (eqv? line (group-state-bar-closes-line sg))))
                  (done)]
                 [(eq? (group-state-block-mode sg) 'inside)
                  ;; Bar at the start of a group
@@ -277,7 +281,7 @@
                  (define-values (g rest-l group-end-line group-end-delta block-tail-commenting block-tail-raw)
                    (parse-block t (cdr l)
                                 #:line line
-                                #:closer (column-next column)
+                                #:closer (or (column-next column) 'any)
                                 #:bar-closes? #t
                                 #:bar-closes-line line
                                 #:delta (group-state-delta sg)
@@ -393,7 +397,7 @@
        (values (cons elem g) rest-l end-line end-delta tail-commenting tail-raw))
      ;; Dispatch
      (cond
-       [(line . > . (state-line s))
+       [(and line (line . > . (state-line s)))
         ;; new line
         (case (token-name t)
           [(whitespace comment)
@@ -420,7 +424,7 @@
                  (parse-block #f use-l
                               #:block-mode 'inside
                               #:line (token-line use-t)
-                              #:closer (token-column use-t)
+                              #:closer (or (token-column use-t) 'any)
                               #:bar-closes? #f
                               #:bar-closes-line #f
                               #:delta delta
@@ -455,24 +459,27 @@
            (check-block-mode)
            (parse-block t (cdr l)
                         #:line (token-line t)
-                        #:closer (column-half-next (or (state-operator-column s)
-                                                       (state-column s)))
+                        #:closer (or (column-half-next (or (state-operator-column s)
+                                                           (state-column s)))
+                                     'any)
                         #:delta (state-delta s)
                         #:raw (state-raw s)
-                        #:bar-closes? #f
+                        #:bar-closes? (and (state-bar-closes? s)
+                                           (not (state-bar-closes-line s)))
                         #:bar-closes-line (state-bar-closes-line s))]
           [(bar-operator)
            (define line (token-line t))
            (cond
              [(or (state-bar-closes? s)
-                  (eqv? line (state-bar-closes-line s)))
+                  (and line
+                       (eqv? line (state-bar-closes-line s))))
               (done)]
              [else
               (check-block-mode)
               (parse-block #f l
                            #:block-mode 'inside
                            #:line line
-                           #:closer (token-column t)
+                           #:closer (or (token-column t) 'any)
                            #:bar-closes? #f
                            #:bar-closes-line #f
                            #:delta (state-delta s)
@@ -491,8 +498,8 @@
              (next-of/commenting (cdr l) line (state-delta s) null))
            (define sub-column
              (if (pair? next-l)
-                 (+ (token-column (car next-l)) (state-delta s))
-                 (column-next (+ (token-column t) (state-delta s)))))
+                 (column+ (token-column (car next-l)) (state-delta s))
+                 (column-next (column+ (token-column t) (state-delta s)))))
            (define-values (gs rest-l close-line close-delta end-t never-tail-commenting group-tail-raw)
              (parse-groups next-l (make-group-state #:closer (make-closer-expected closer t)
                                                     #:paren-immed? #t
@@ -537,8 +544,6 @@
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:bar-closes-line [bar-closes-line #f]
-                     #:post-bar-closes? [post-bar-closes? bar-closes?]
-                     #:post-bar-closes-line [post-bar-closes-line bar-closes-line]
                      #:delta in-delta
                      #:raw in-raw
                      #:group-commenting [in-group-commenting #f]
@@ -557,7 +562,7 @@
                      (make-group-state #:closer (if opener-t
                                                     (make-closer-expected "»" opener-t)
                                                     closer)
-                                       #:column (+ (token-column next-t) delta)
+                                       #:column (column+ (token-column next-t) delta)
                                        #:last-line last-line
                                        #:bar-closes? (and (not opener-t) bar-closes?)
                                        #:bar-closes-line (and (not opener-t) bar-closes-line)
@@ -572,8 +577,8 @@
            ;; in 'end mode, so errors or returns a null group:
            (parse-group rest-l (make-state #:line end-line
                                            #:column +inf.0
-                                           #:bar-closes? post-bar-closes?
-                                           #:bar-closes-line post-bar-closes-line
+                                           #:bar-closes? bar-closes?
+                                           #:bar-closes-line bar-closes-line
                                            #:block-mode 'end
                                            #:delta end-delta
                                            #:raw null))
@@ -698,7 +703,7 @@
                       [else (values l raw)])])))
         (cond
           [(and (pair? next-l)
-                (= line (token-line (car next-l))))
+                (eqv? line (token-line (car next-l))))
            ;; like whitespace:
            (next-of next-l last-line delta next-raw)]
           [else
@@ -706,16 +711,17 @@
                     ;; whitespace-only lines don't count, so next continues
                     ;; on the same line by definition:
                     #f
-                    (+ (if (or (not last-line) (= line last-line))
-                           delta
-                           0)
-                       (token-column t) 1)
+                    (column+ (token-column t)
+                             (+ (if (or (not last-line) (eqv? line last-line))
+                                    delta
+                                    0)
+                                1))
                     next-raw)])]
        [else
         (define line (token-line t))
         (values l
                 (or last-line line)
-                (if (or (not last-line) (= line last-line))
+                (if (or (not last-line) (eqv? line last-line))
                     delta
                     0)
                 raw)])]))
@@ -770,7 +776,9 @@
 
 (define (next-line? l last-line)
   (and (pair? l)
-       ((token-line (car l)) . > . last-line)))
+       (let ([line (token-line (car l))])
+         (and line
+              (line . > . last-line)))))
 
 (define (fail-no-comment-group t)
   (fail t "no group for term comment"))
@@ -799,14 +807,18 @@
        (list loc)))]))
 
 (define (column-next c)
-  (if (integer? c)
-      (add1 c)
-      (add1 (inexact->exact (floor c)))))
+  (and c
+       (if (integer? c)
+           (add1 c)
+           (add1 (inexact->exact (floor c))))))
 
 (define (column-half-next c)
   (if (integer? c)
       (+ c 0.5)
       (column-next c)))
+
+(define (column+ c n)
+  (and c (+ c n)))
 
 ;; ----------------------------------------
 
@@ -966,8 +978,45 @@
 
 ;; ----------------------------------------
 
+;; check that line-counting is consistent (always on or always off),
+;; and when it's off, make sure there are no newlines except maybe at
+;; the beginning and/or end
+(define (check-line-counting l)
+  (unless (null? l)
+    (define (fail-inconsistent t)
+      (fail t "port did not consistently report lines and columns"))
+    (cond
+      [(and (token-line (car l))
+            (token-column (car l)))
+       (for ([t (in-list l)])
+         (unless (and (token-line t)
+                      (token-column t))
+           (fail-inconsistent t)))]
+      [else
+       (let loop ([l l] [saw-non-ws? #f] [newline-t #f])
+         (unless (null? l)
+           (define t (car l))
+           (when (or (token-line t)
+                     (token-column t))
+             (fail-inconsistent t))
+           (case (token-name t)
+             [(whitespace comment continue-operator)
+              (loop (cdr l)
+                    saw-non-ws?
+                    (and saw-non-ws?
+                         (or newline-t
+                             (and (regexp-match? #rx"[\r\n]" (syntax-e (token-value t)))
+                                  t))))]
+             [else
+              (when newline-t
+                (fail newline-t "port does not count lines, but input includes a newline"))
+              (loop (cdr l) #t #f)])))])))
+
+;; ----------------------------------------
+
 (define (parse-all in #:source [source (object-name in)])
   (define l (lex-all in fail #:source source))
+  (check-line-counting l)
   (if (null? l)
       eof
       (parse-top-groups l)))
@@ -977,9 +1026,11 @@
            "print.rkt")
 
   (define show-raw? #f)
+  (define one-line? #f)
 
   (define (parse-all* in)
-    (port-count-lines! in)
+    (unless one-line?
+      (port-count-lines! in))
     (define e (parse-all in))
     (unless (eof-object? e)
       (cond
@@ -997,6 +1048,8 @@
                   (current-recover-mode #t)]
    [("--raw") "Show raw strings when printing"
               (set! show-raw? #t)]
+   [("--one-line") "Disable line counting to assume a single line"
+                   (set! one-line? #t)]
    #:args file
    (if (null? file)
        (parse-all* (current-input-port))

@@ -379,7 +379,7 @@
   (let ([c (if (located-token? t)
                (srcloc-column (located-token-srcloc t))
                (syntax-column (token-value t)))])
-    (if (eq? (token-name t) 'bar-operator)
+    (if (and c (eq? (token-name t) 'bar-operator))
         (+ c 0.5)
         c)))
 
