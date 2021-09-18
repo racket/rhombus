@@ -49,7 +49,8 @@
       [(null? g) tail]
       [(pair? g)
        (define a-stx (car g))
-       (define post (syntax-raw-tail-property a-stx))
+       (define post (and (syntax? a-stx)
+                         (syntax-raw-tail-property a-stx)))
        (define a (loop a-stx null use-prefix?))
        (define d (loop (cdr g)
                        (if post
@@ -77,7 +78,10 @@
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
-               (null? e))))]
+               (null? e)))
+         #;
+         (and (log-error "?? ~s" s)
+              #f))]
     [(pair? s) (and (all-raw-available? (car s))
                     (all-raw-available? (cdr s)))]
     [else #t]))

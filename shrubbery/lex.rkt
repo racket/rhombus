@@ -36,6 +36,7 @@
          token-line
          token-column
          token-srcloc
+         token-rename
 
          syntax->token
          stx-for-original-property
@@ -181,6 +182,18 @@
                       stx
                       (syntax-raw-property stx (or raw (if (string? e) e '()))))))))
 
+(define (read-line-comment name lexeme input-port start-pos
+                           #:status [status 'initial]
+                           #:consume-newline? [consume-newline? #f])
+  (let ([comment (apply string (append (string->list lexeme) (read-line/skip-over-specials input-port
+                                                                                           consume-newline?)))])
+    (define-values (end-line end-col end-offset) (port-next-location input-port))
+    (values (make-token name comment start-pos (position end-offset end-line end-col))
+            'comment #f 
+            (position-offset start-pos)
+            end-offset
+            status)))
+
 (define get-next-comment
   (lexer
    ["/*" (values 1 end-pos lexeme)]
@@ -209,48 +222,72 @@
   (let-values (((x y offset) (port-next-location i)))
     offset))
 
-(define (read-line/skip-over-specials i)
+(define (read-line/skip-over-specials i consume-newline?)
   (let loop ()
-    (let ((next (peek-char-or-special i)))
-      (cond
-        ((or (eq? next #\newline) (eof-object? next))
-         null)
-        (else
-         (read-char-or-special i)
-         (if (char? next)
-             (cons next (loop))
-             (loop)))))))
+    (define next (peek-char-or-special i))
+    (cond
+      [(eq? next #\newline)
+       (cond
+         [consume-newline?
+          (read-char-or-special i)
+          (list #\newline)]
+         [else null])]
+      [(eof-object? next)
+       null]
+      [else
+       (read-char-or-special i)
+       (if (char? next)
+           (cons next (loop))
+           (loop))])))
 
 (struct s-exp-mode (depth) #:prefab)
+(struct in-at (mode opener shrubbery-status openers) #:prefab)
+(struct in-escaped (shrubbery-status at-status) #:prefab)
 
 (define (lex/status in pos status racket-lexer/status)
   (let-values ([(lexeme type paren start end status)
-                (cond
-                  [(s-exp-mode? status)
-                   (unless racket-lexer/status
-                     (error "shouldn't be in S-expression mode without a Racket lexer"))
-                   (define depth (s-exp-mode-depth status))
-                   (cond
-                     [(and (zero? depth)
-                           (eqv? #\} (peek-char in)))
-                      ;; go out of S-expression mode by using shrubbery lexer again
-                      (shrubbery-lexer/status in)]
-                     [else
-                      (define-values (lexeme type paren start end s-exp-status)
-                        (racket-lexer/status in))
-                      (values lexeme type paren start end (case s-exp-status
-                                                            [(open)
-                                                             (s-exp-mode (add1 depth))]
-                                                            [(close)
-                                                             (s-exp-mode (sub1 depth))]
-                                                            [else status]))])]
-                  [(eq? status 'continuing)
-                   (shrubbery-lexer-continuing/status in)]
-                  [else
-                   (shrubbery-lexer/status in)])])
-    (values lexeme type paren start end 0 status)))
+                (let loop ([status status])
+                  (cond
+                    [(s-exp-mode? status)
+                     ;; within `#{}`
+                     (unless racket-lexer/status
+                       (error "shouldn't be in S-expression mode without a Racket lexer"))
+                     (define depth (s-exp-mode-depth status))
+                     (cond
+                       [(and (zero? depth)
+                             (eqv? #\} (peek-char in)))
+                        ;; go out of S-expression mode by using shrubbery lexer again
+                        (shrubbery-lexer/status in)]
+                       [else
+                        (define-values (lexeme type paren start end s-exp-status)
+                          (racket-lexer/status in))
+                        (values lexeme type paren start end (case s-exp-status
+                                                              [(open)
+                                                               (s-exp-mode (add1 depth))]
+                                                              [(close)
+                                                               (s-exp-mode (sub1 depth))]
+                                                              [else status]))])]
+                    [(in-at? status)
+                     ;; within an `@` sequence
+                     (at-lexer in status (lambda (status) (loop status)))]
+                    [(in-escaped? status)
+                     (define-values (t type paren start end sub-status)
+                       (loop (in-escaped-shrubbery-status status)))
+                     (values t type paren start end (struct-copy in-escaped status
+                                                                 [shrubbery-status sub-status]))]
+                    [(eq? status 'continuing)
+                     ;; normal mode, after a form
+                     (shrubbery-lexer-continuing/status in)]
+                    [else
+                     ;; normal mode, at start or after an operator or whitespace
+                     (shrubbery-lexer/status in)]))])
+    (define backup (cond
+                     ;; If we have "@/{" and we add a "/" after the existing one, backup by one:
+                     [(eq? (token-name lexeme) 'at-opener) 1]
+                     [else 0]))
+    (values lexeme type paren start end backup status)))
 
-(define-syntax-rule (make-lexer/status number bad-number same-status)
+(define-syntax-rule (make-lexer/status number bad-number)
   (lexer
    [(:+ whitespace)
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
@@ -268,14 +305,7 @@
       (ret 'literal num #:raw lexeme 'constant #f start-pos end-pos 'continuing))]
    [boolean
     (ret 'literal (equal? lexeme "#true") #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
-   ["//"
-    (let ([comment (apply string (list* #\/ #\/ (read-line/skip-over-specials input-port)))])
-      (define-values (end-line end-col end-offset) (port-next-location input-port))
-      (values (make-token 'comment comment start-pos (position end-offset end-line end-col))
-              'comment #f 
-              (position-offset start-pos)
-              end-offset
-              'initial))]
+   ["//" (read-line-comment 'comment lexeme input-port start-pos)]
    ["/*" (read-nested-comment 1 start-pos lexeme input-port)]
    ["#//"
     (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
@@ -310,6 +340,15 @@
    [keyword
     (let ([kw (string->keyword (substring lexeme 1))])
       (ret 'identifier kw #:raw lexeme 'keyword #f start-pos end-pos 'continuing))]
+   ["@//"
+    (let ([opener (peek-at-opener input-port)])
+      (if opener
+          (ret 'at-comment lexeme 'at-comment (string->symbol lexeme) start-pos end-pos (in-at 'open opener 'initial '()))
+          (read-line-comment 'at-comment lexeme input-port start-pos)))]
+   ["@"
+    (let ([opener (peek-at-opener input-port)])
+      (define mode (if opener 'open 'initial))
+      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode opener 'initial '())))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
@@ -322,14 +361,259 @@
        (ret 'literal lexeme 'no-color #f start-pos end-pos 'continuing)])]
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
-   [(eof) (values (make-token 'EOF lexeme start-pos end-pos) 'eof #f #f #f #f)]
+   [(eof) (ret-eof start-pos end-pos)]
    [(:or bad-str bad-keyword bad-hash bad-comment)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
-(define shrubbery-lexer/status (make-lexer/status number bad-number 'initial))
-(define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing 'continuing))
+(define (ret-eof start-pos end-pos)
+  (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f #f))
 
+(define shrubbery-lexer/status (make-lexer/status number bad-number))
+(define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
+
+;; after reading `@`, we enter an at-exp state machine for whether
+;; we're in the initial part, within `[]`, or within `{}`; we have to
+;; perform some parsing here to balance openers and closers; we leave
+;; wehite trimming to the parser layer
+(define (at-lexer in status recur)
+  (define in-mode (in-at-mode status))
+  (define (get-expected opener/ch ch/closer)
+    (define (get-all-expected s)
+      (for ([ch (in-string s)])
+        (unless (eqv? ch (read-char in))
+          (error "inconsistent input" ch))))
+    (define start-pos (next-location-as-pos in))
+    (define eof?
+      (cond
+        [(string? opener/ch)
+         (get-all-expected opener/ch)
+         (unless (eqv? ch/closer (read-char in))
+           (error "inconsistent opener input" ch/closer))
+         #f]
+        [else
+         (define ch (read-char in))
+         (cond
+           [(eof-object? ch) #t]
+           [else
+            (unless (eqv? opener/ch ch)
+              (error "inconsistent closer input" opener/ch))
+            (get-all-expected ch/closer)
+            #f])]))
+    (define end-pos (next-location-as-pos in))
+    (values start-pos end-pos eof?))
+  (case in-mode
+    ;; 'initial mode is right after `@` without immediate `{`, and we
+    ;; may transition from 'initial mode to 'brackets mode at `[`
+    [(initial brackets)
+     ;; recur to parse in shrubbery mode:
+     (define-values (t type paren start end sub-status)
+       (recur (in-at-shrubbery-status status)))
+     ;; to keep the term and possibly exit 'initial or 'brackets mode:
+     (define (ok status)
+       (values t type paren start end (cond
+                                        [(and (not (s-exp-mode? sub-status))
+                                              (null? (in-at-openers status)))
+                                         ;; either `{`, `[`, or back to shrubbery mode
+                                         (define opener (peek-at-opener in))
+                                         (cond
+                                           [opener
+                                            (in-at 'open opener sub-status '())]
+                                           [(and (not (eq? in-mode 'brackets))
+                                                 (eqv? #\[ (peek-char in)))
+                                            (in-at 'brackets #f sub-status '())]
+                                           [(in-escaped? sub-status)
+                                            (in-escaped-at-status sub-status)]
+                                           [else sub-status])]
+                                        [else
+                                         ;; continue in-at mode
+                                         status])))
+     ;; converts a token to an error token:
+     (define (error status)
+       (values (struct-copy token t [name 'fail]) 'error #f start end status))
+     ;; update the shrubbery-level status, then keep the term or error,
+     ;; trackig nesting depth through the status as we continue:
+     (let ([status (struct-copy in-at status
+                                [shrubbery-status sub-status])])
+       (case (token-name t)
+         [(opener) (ok (struct-copy in-at status
+                                    [openers (cons (token-e t)
+                                                   (in-at-openers status))]))]
+         [(closer)
+          (cond
+            [(and (pair? (in-at-openers status))
+                  (closer-for? (token-e t) (car (in-at-openers status))))
+             (ok (struct-copy in-at status
+                              [openers (cdr (in-at-openers status))]))]
+            [else
+             (error status)])]
+         [else (ok status)]))]
+    ;; 'open mode is right `@` when the next character is `{`
+    [(open)
+     (define opener (in-at-opener status))
+     (define-values (start-pos end-pos eof?) (get-expected opener #\{))
+     (ret 'at-opener (string-append opener "{") 'parenthesis '|{| start-pos end-pos
+          (struct-copy in-at status [mode 'inside] [openers 0]))]
+    ;; 'inside mode means in `{}` and not currently escaped, and we
+    ;; transition to 'escape mode on a `@`, and we transition to 'close mode
+    ;; on a `}` that is not balancing a `{` within `{}`
+    [(inside)
+     (define opener (in-at-opener status))
+     (define start-pos (next-location-as-pos in))
+     (define o (open-output-string))
+     (let loop ([depth (in-at-openers status)])
+       (define ch (peek-char in))
+       (cond
+         [(eqv? ch #\newline)
+          ;; convert a newline into a separate string input
+          (define s (get-output-string o))
+          (cond
+            [(= 0 (string-length s))
+             (read-char in)
+             (define end-pos (next-location-as-pos in))
+             (ret 'at-content "\n" 'string #f start-pos end-pos
+                  (struct-copy in-at status [mode 'inside] [openers depth]))]
+            [else
+             (define end-pos (next-location-as-pos in))
+             (ret 'at-content s 'string #f start-pos end-pos
+                  (struct-copy in-at status [mode 'inside] [openers depth]))])]
+         [(or (eof-object? ch)
+              (peek-at-closer in #:opener opener))
+          (cond
+            [(zero? depth)
+             (define end-pos (next-location-as-pos in))
+             (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
+                  (struct-copy in-at status [mode 'close]))]
+            [else
+             (if (equal? opener "")
+                 (write-char (read-char in) o)
+                 (write-string (read-string (add1 (bytes-length opener)) in) o))
+             (loop (sub1 depth))])]
+         [(peek-at-prefixed #\@ in #:opener opener)
+          (define end-pos (next-location-as-pos in))
+          (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
+               (struct-copy in-at status [mode 'escape] [openers depth]))]
+         [(peek-at-opener in #:opener opener)
+          (if (equal? opener "")
+              (write-char (read-char in) o)
+              (write-string (read-string (add1 (bytes-length opener)) in) o))
+          (loop (add1 depth))]
+         [else
+          (write-char (read-char in) o)
+          (loop depth)]))]
+    ;; 'escape mode means in `{}`, not currently escaped, and expect `@` next
+    [(escape)
+     (define opener (in-at-opener status))
+     (define-values (start-pos end-pos eof?) (get-expected opener #\@))
+     (cond
+       [(read-at-comment in)
+        => (lambda (slashes)
+             (cond
+               [(peek-at-opener in)
+                => (lambda (opener)
+                     ;; block comment
+                     (define end-pos (next-location-as-pos in))
+                     (ret 'at-comment (string-append opener "@" slashes) 'at-comment #f start-pos end-pos
+                          (in-at 'open opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
+               [else
+                ;; line comment
+                (read-line-comment 'comment (string-append opener "@" slashes) in start-pos
+                                   #:status (struct-copy in-at status [mode 'inside])
+                                   #:consume-newline? #t)]))]
+       [else
+        (define next-opener (peek-at-opener in))
+        (define mode (if next-opener 'open 'initial))
+        (ret 'at (string-append opener "@") 'at #f start-pos end-pos
+             (in-at mode next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
+    ;; 'close mode handles the final `}` of a `{}`
+    [(close)
+     (define closer (at-opener->closer (in-at-opener status)))
+     (define-values (start-pos end-pos eof?) (get-expected #\} closer))
+     (cond
+       [eof? (ret-eof start-pos end-pos)]
+       [else
+        (define sub-status (in-at-shrubbery-status status))
+        (ret 'at-closer (string-append "}" closer) 'parenthesis '|}| start-pos end-pos
+             (if (in-escaped? sub-status)
+                 (in-escaped-at-status sub-status)
+                 sub-status))])]
+    [else (error "unknown at-exp state")]))
+
+(define (peek-at-opener in #:opener [opener #f])
+  (cond
+    [opener
+     ;; look for another instance of the current opener
+     (peek-at-prefixed #\{ in #:opener opener)]
+    [else
+     ;; look for a fresh opener
+     (define ch (peek-char in))
+     (cond
+       [(eqv? ch #\{) ""]
+       [(eqv? ch #\|)
+        (let loop ([chars '(#\|)] [offset 1])
+          (define ch (peek-char in offset))
+          (cond
+            [(eqv? ch #\{) (list->string (reverse chars))]
+            [(and ((char->integer ch) . < . 128)
+                  (or (char-symbolic? ch)
+                      (char-punctuation? ch)))
+             (loop (cons ch chars) (add1 offset))]
+            [else #f]))]
+       [else #f])]))
+
+(define (peek-at-prefixed ch in #:opener opener)
+  (let loop ([offset 0])
+    (cond
+      [(= offset (string-length opener))
+       (if (eqv? ch (peek-char in offset))
+           opener
+           #f)]
+      [(eqv? (peek-char in offset) (string-ref opener offset))
+       (loop (add1 offset))]
+      [else #f])))
+
+(define (peek-at-closer in #:opener [opener #f])
+  (define ch (peek-char in))
+  (cond
+    [(eqv? ch #\})
+     (let loop ([offset 0])
+       (cond
+         [(= offset (string-length opener)) opener]
+         [(eqv? (peek-char in (add1 offset))
+                (flip-at-bracket (string-ref opener (- (string-length opener) offset 1))))
+          (loop (add1 offset))]
+         [else #f]))]
+    [else #f]))
+
+(define (read-at-comment in)
+  (and (eqv? (peek-char in) #\/)
+       (eqv? (peek-char in 1) #\/)
+       (begin
+         (read-char in)
+         (read-char in)
+         "//")))
+
+(define (flip-at-bracket ch)
+  (case ch
+    [(#\<) #\>]
+    [(#\>) #\<]
+    [(#\[) #\]]
+    [(#\]) #\[]
+    [(#\() #\)]
+    [(#\)) #\(]
+    [else ch]))
+
+(define (at-opener->closer opener)
+  (cond
+    [(eqv? 0 (string-length opener)) ""]
+    [else
+     (list->string (reverse (for/list ([ch (in-string opener)])
+                              (flip-at-bracket ch))))]))
+
+(define (next-location-as-pos in)
+  (define-values (line col pos) (port-next-location in))
+  (position pos line col))
+  
 (define (extend-error lexeme start end in)
   (define next (peek-char-or-special in))
   (if (or (memq next
@@ -395,6 +679,9 @@
              (syntax-position s)
              (syntax-span s))]))
 
+(define (token-rename t name)
+  (struct-copy token t [name name]))
+
 (define (syntax->token name s [srcloc #f])
   (if srcloc
       (located-token name s srcloc)
@@ -452,3 +739,11 @@
   (when (pair? (syntax-e v))
     (fail result "S-expression in `#{` and `}` must not be a pair"))
   result)
+
+(define (closer-for? cl op)
+  (equal? cl (case op
+               [("(") ")"]
+               [("[") "]"]
+               [("{") "}"]
+               [("«") "»"]
+               [else #f])))

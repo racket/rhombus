@@ -571,3 +571,25 @@ weirdly coconut
 weirdly & "none"
 1 weirdly 5
 1 weirdly 5 + 7
+
+// shubbery-friendly @-expressions
+
+'(@x)
+'(@f{text})
+'(@f[x, y]{This is plain text.})
+'(@f[x, y])
+'(@{text})
+'(@[x, y]{text})
+'(@« library.f »[x, y]{Text with @escape[].})
+'(@(library.f)[x, y]{Text with @« escape ».})
+'(@explain{Multi-line text
+            has newlines as separate
+            and leading whitespace
+           stripped})
+'(@explain{There are also
+            @// line comments and
+            other things.})
+'(@explain{Here is @//{a block comment
+                       that spans lines
+                       and}
+           stuff afterward.})

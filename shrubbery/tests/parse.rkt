@@ -1529,6 +1529,84 @@ INPUT
      (parens (group a) (group d))
      (block (group f (parens (group a)) (op +) f (parens (group d))))))))))
 
+(define input3
+#<<INPUT
+@(a, b)
+@(a, b)[0]
+
+@[7]
+@{9}
+@[7]{8, 10 @"more"}
+
+@«5»[3]{yohoo @9[a, b, c]{
+               this is plain text
+               inside braces}
+        0
+        }
+
+@«bracketed»["apple"]
+@«{bracketed}»["apple"]
+
+@«1 2 3»: 5
+@«1 2 3»{data}: 5
+
+@x|{hello}there}|
+@x|(<[{hello}there}]>)|
+@x|(<[{hello}|(<[@6 there}]>)|
+
+@x{  2
+  1
+    4
+   5  }
+
+@{4 @//{ this is a comment! }
+  5 @// line comment
+  6}
+
+The end
+INPUT
+  )
+
+(define expected3
+  '(top
+    (group (parens (group a) (group b)))
+    (group (parens (group a) (group b)) (parens (group 0)))
+    (group (parens (group 7)))
+    (group (parens (group (brackets (group "9")))))
+    (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more") (group "")))))
+    (group
+     5
+     (parens
+      (group 3)
+      (group
+       (brackets
+        (group "yohoo ")
+        (group
+         9
+         (parens
+          (group a)
+          (group b)
+          (group c)
+          (group (brackets (group "this is plain text") (group "\n") (group "inside braces")))))
+        (group "\n")
+        (group "0")))))
+    (group bracketed (parens (group "apple")))
+    (group (braces (group bracketed)) (parens (group "apple")))
+    (group 1 2 3 (block (group 5)))
+    (group 1 2 3 (parens (group (brackets (group "data")))) (block (group 5)))
+    (group x (parens (group (brackets (group "hello}there")))))
+    (group x (parens (group (brackets (group "hello}there")))))
+    (group x (parens (group (brackets (group "hello}") (group 6) (group " there")))))
+    (group
+     x
+     (parens
+      (group
+       (brackets (group "  2") (group "\n") (group "1") (group "\n") (group "  ") (group "4") (group "\n") (group " ") (group "5  ")))))
+    (group
+     (parens
+      (group (brackets (group "4 ") (group "\n") (group "5 ") (group "  6")))))
+    (group The end)))
+
 (define (check input expected)
   (let ([in (open-input-string input)])
     (define (out name parsed write)
@@ -1581,6 +1659,7 @@ INPUT
 
 (check input1 expected1)
 (check input2 expected2)
+(check input3 expected3)
 
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
