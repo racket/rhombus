@@ -1,0 +1,176 @@
+#lang racket/base
+(require "property.rkt")
+
+(provide adjust-content-space)
+
+(define (adjust-content-space rev group-tag)
+  (let*-values ([(rev) (remove-trailing-spaces rev)]
+                [(rev end2) (discard-immediate-space rev)]
+                [(rev end1) (discard-immediate-newline rev #f)])
+    (let*-values ([(content) (reverse rev)]
+                  [(content start1) (discard-immediate-space content)]
+                  [(content start2) (discard-immediate-newline content #f)])
+      (let* ([min-col (get-min-column content)]
+             [content (if (eqv? min-col 0)
+                          content
+                          (trim-shared-column content min-col (pair? start2)))])
+        (let-values ([(content comments) (convert-content content group-tag)])
+          (values (append start1 start2)
+                  content
+                  (append (reverse comments) end1 end2)))))))
+
+(define rx:whitespace #px"^\\s*$")
+
+(define (is-newline? c)
+  (and (eq? 'content (car c))
+       (equal? "\n" (syntax-e (cadr c)))))
+
+;; discard space immediately before closer or after opener
+(define (discard-immediate-space lst)
+  (cond
+    [(and (pair? lst)
+          (eq? 'content (caar lst))
+          (pair? (cdr lst))
+          (let ([prev (cadr lst)])
+            (and (eq? 'content (car prev))
+                 (equal? "\n" (syntax-e (cadr prev)))))
+          (regexp-match? rx:whitespace (syntax-e (cadar lst))))
+     (values (cdr lst) (cdar lst))]
+    [else
+     (values lst null)]))
+
+;; discard newline just before closer,
+;; unless a newline is all there will be
+(define (discard-immediate-newline lst check-next-ws?)
+  (cond
+    [(and (pair? lst)
+          (is-newline? (car lst))
+          (not (null? (cdr lst)))
+          (not (and check-next-ws?
+                    (null? (cddr lst))
+                    (let ([prev (cadr lst)])
+                      (and (eq? 'content (car prev))
+                           (regexp-match? rx:whitespace (cadr prev)))))))
+     (values (cdr lst) (cdar lst))]
+    [else
+     (values lst null)]))
+
+(define (remove-trailing-spaces rev)
+  (define (trailing-space-count s)
+    (let loop ([i (string-length s)])
+      (cond
+        [(eqv? i 0) 0]
+        [(char-whitespace? (string-ref s (sub1 i))) (add1 (loop (sub1 i)))]
+        [else 0])))
+  (let loop ([rev rev])
+    (cond
+      [(null? rev) rev]
+      [(is-newline? (car rev))
+       (define next (cdr rev))
+       (cons (car rev)
+             (cond
+               [(null? next) null]
+               [(is-newline? (car next)) (loop next)]
+               [(eq? 'content (caar next))
+                (define n (trailing-space-count (syntax-e (cadar next))))
+                (cond
+                  [(eqv? n 0) (loop next)]
+                  [else
+                   (define a (cadar next))
+                   (define s (syntax-e a))
+                   (cons (list 'content
+                               (datum->syntax a
+                                              (substring s 0 (- (string-length s) n))
+                                              a
+                                              a))
+                         (loop (cdr next)))])]
+               [else (loop next)]))]
+      [else (cons (car rev) (loop (cdr rev)))])))
+
+(define (leading-space-count s)
+  (let loop ([i 0])
+    (cond
+      [(eqv? i (string-length s)) 0]
+      [(char-whitespace? (string-ref s i)) (add1 (loop (add1 i)))]
+      [else 0])))
+
+(define (get-min-column lst)
+  (let loop ([lst lst] [min-col #f] [saw-nl? #t])
+    (cond
+      [(null? lst) min-col]
+      [(is-newline? (car lst))
+       (loop (cdr lst) min-col #t)]
+      [(and saw-nl?
+            (eq? 'content (caar lst)))
+       (define stx (cadar lst))
+       (define s (syntax-e stx))
+       (define n (+ (leading-space-count s) (or (syntax-column stx) 0)))
+       (loop (cdr lst) (min n (or min-col n)) #f)]
+      [else
+       (loop (cdr lst) min-col #f)])))
+
+(define (trim-shared-column lst min-col start-nl?)
+  (let loop ([lst lst] [saw-nl? start-nl?])
+    (cond
+      [(null? lst) null]
+      [(is-newline? (car lst))
+       (cons (car lst)
+             (loop (cdr lst) #t))]
+      [(and saw-nl?
+            (eq? 'content (caar lst)))
+       (define a (cadar lst))
+       (define s (syntax-e a))
+       (define col (or (syntax-column a) 0))
+       (define n (leading-space-count s))
+       (define add-back-n (max 0 (- n min-col)))
+       (define trimmed-s (if (eqv? n 0)
+                             s
+                             (substring s n)))
+       (define trimmed
+         (cons (list 'content
+                     (datum->syntax a
+                                    trimmed-s
+                                    a
+                                    a))
+               (loop (cdr lst) #f)))
+       (if (eqv? add-back-n 0)
+           trimmed
+           (cons (list 'content
+                       (syntax-raw-property (datum->syntax a
+                                                           (make-string add-back-n #\space)
+                                                           a)
+                                            '()))
+                 trimmed))]
+      [else (cons (car lst) (loop (cdr lst) #f))])))
+
+(define (convert-content lst group-tag)
+  (let loop ([lst lst] [accum '()] [comments '()])
+  (cond
+    [(null? lst) (values (reverse accum) (reverse comments))]
+    [else
+     (define c (car lst))
+     (cond
+       [(eq? 'comment (car c))
+        (loop (cdr lst) accum (cons (cadr c) comments))]
+       [(eq? 'content (car c))
+        (loop (cdr lst)
+              (cons (add-comments (cons group-tag (cdr c))
+                                  comments)
+                    accum)
+              null)]
+       [else
+        (loop (cdr lst)
+              (cons (add-comments c comments)
+                    accum)
+              null)])])))
+
+(define (add-comments c comments)
+  (cond
+    [(null? comments) c]
+    [else
+     (define stx (car c))
+     (cons (syntax-raw-prefix-property stx
+                                       (cons (reverse comments)
+                                             (or (syntax-raw-prefix-property stx) '())))
+           (cdr c))]))
+

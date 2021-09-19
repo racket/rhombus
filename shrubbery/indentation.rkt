@@ -55,6 +55,14 @@
                            #:also-zero? group-comment?)]
           [(operator)
            (like-enclosing #:as-operator? #t)]
+          [(string)
+           ;; check for being inside a string, which might be in `@` content
+           (define-values (s e) (send t get-token-range (+ start current-tab)))
+           (cond
+             [(< s (+ start current-tab))
+              current-tab]
+             [else
+              (like-enclosing)])]
           [else
            (like-enclosing)])]
        [else
