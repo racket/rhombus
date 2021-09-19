@@ -870,10 +870,13 @@ keywords. A `#{`...`}` escape must _not_ describe a pair, because
 pairs are used to represent a parsed shrubbery, and allowing pairs
 would create ambiguous or ill-formed representations.
 
+A `@` starts an at-expression form similar to the notaton supported by
+`#lang at-exp` (which oriented toward S-expressions and
+readtable-based). The next subsection explains in more detail, but the
+tabel below sketches the shape of `@` forms.
 
-
-|   | nonterminal     |     |                 production                                | adjustment             |
-|---|-----------------|-----|-----------------------------------------------------------|------------------------|
+|   | nonterminal     |     |                 production                                | adjustment                     |
+|---|-----------------|-----|-----------------------------------------------------------|--------------------------------|
 | * | _identifier_    | is  | _alpha_ _alphanum_ *                                      |                                |
 |   |                 |     |                                                           |                                |
 |   | _alpha_         | is  | **an alphabetic Unicode character or** `_`                |                                |
@@ -951,7 +954,95 @@ would create ambiguous or ill-formed representations.
 | * | _termcomment_   | is  | `#//`                                                     |                                |
 |   |                 |     |                                                           |                                |
 |   | _nonnlchar_     |     | **any character other than newline**                      |                                |
+|   |                 |     |                                                           |                                |
+| * | _atexpression_  | is  | `@` _command_ ? _arguments_ ? _body_ ?                    | no space between these parts   |
+|   |                 |     |                                                           |                                |
+|   | _command_       | is  | _identifier_                                              |                                |
+|   |                 | or  | _keyword_                                                 |                                |
+|   |                 | or  | _operator_                                                |                                |
+|   |                 | or  | _number_                                                  |                                |
+|   |                 | or  | _boolean_                                                 |                                |
+|   |                 | or  | _string_                                                  |                                |
+|   |                 | or  | _bytestring_                                              |                                |
+|   |                 | or  | _racket_                                                  |                                |
+|   |                 | or  | `(` _group_ * `)`                                         | usual comma-separated groups   |
+|   |                 | or  | `«` _group_ `»`                                           | one spliceable group, no block |
+|   |                 |     |                                                           |                                |
+|   | _arguments_     | is  | `[` _group_ * `]`                                         | usual comma-separated groups   |
+|   |                 |     |                                                           |                                |
+|   | _body_          | is  | `{` _text_ `}`                                            | possible escapes in _text_     |
+|   |                 | or  | _atopen_ _text_ _atclose_                                 | _atcloser_ matching _atopen_   |
+|   |                 |     |                                                           |                                |
+|   |  _atopen_       | is  | `|` _asciisym_ * `{`                                      |                                |
+|   |                 |     |                                                           |                                |
+|   |  _atclose_      | is  | `}` _asciisym_ * `|`                                      | reverses and flips paren-like  |
 
+# At-notation using `@`
+
+An `@` form of the shape
+
+```
+ @«command ...»[arg, ...]{ body }
+```
+
+is parsed into the same representation as
+
+```
+ command ...(arg, ..., [parsed_body, ...])
+```
+
+That is, the command part is left at the front and spliced into its
+enclosing group, while the argument and body parts are wrapped with
+parentheses to make them like arguments. The body text is parsed into
+a list of string literals and escapes.
+
+The command part usually does not have `«»`, and it is instead
+usually written as an identifier, operator, or parenthesized term. The
+argument and body parts, when present, always use `[]` and `{}`,
+respectively. Any of the three parts can be omitted, but when
+mulltiple parts are present, they must have no space between them or
+the leading `@`. When the argument and body parts are both
+omitted, the command part is simply spliced into its context.
+
+The conversion to a call-like form and keeping the body in a separate
+list are the two main ways that shrubbery `@` notation differs from
+`#lang at-exp` notation. The other differences are the use of
+`«`...`»` instead of `|`...`|` for delimiting a command, and the use
+of `@//` instead of `@;` for comments. The details are otherwise meant
+to be the same, and the rest of this section is mostly a recap.
+
+The body part is treated as literal text, except where `@` is used in
+the body to escape. An unescaped `}` closes the body, except that an
+unescaped `{` must be balanced by an unescaped `}`, with both treated
+as part of the body text. Instead of `{`, the body-starting opener can
+be `|` plus `{` with any number of ASCII punctuation and symbol
+characters (other than `{`) in between; the corresponding closer is
+then the same sequence in reverse, except that some characters are
+flpped: `{` to `}`, `(` to `)`, `)` to `(`, `[` to `]`, `]` to `[`,
+`<` to `>`, and `>` to `<`. With an `|`...`{` opener, an escape is
+formed by using the opener followed by `@`, while opener–closer pairs
+balance within the body text. The parsed form of the body breaks up
+the body text into lines and `"\n"` as separate string literals in the
+parsed list form, with each escape also being its own element in the
+list form. Parsed body text also has leading and trailing whitespace
+adjusted the same as with `#lang at-exp`.
+
+After the `@` of an escape in body text, the escape has the same
+form as an at-notaton form that starts with `@` as a shubbery. That
+is, `@` forms are essentially the same whether starting in shrubbery
+mode or body-text mode.
+
+In body text, there are two additional comment forms that are not
+supported in shrubbery mode. A `@//{` starts a block comment that ends
+with `}`, and the comment form is not part of the body text. The `@//`
+comment form must be prefixed with an opener when its enclosing body
+is started with an opener that isn't just `{`, and the `{` after `@//`
+can more generally be an `|`...`{` opener with the corresponding
+closer. Opener–closer pairs must be balanced in the commented block,
+the same as in body text. A `@//` comment form (prefixed with an
+opener as needed to form an escape) that is not followed by `{` or an
+`|`...`{` opener comments out the rest of the line, including a
+comment-terminating newline.
 
 # Reference-level explanation
 [reference-level-explanation]: #reference-level-explanation
@@ -1049,8 +1140,15 @@ requiring more space around operators, but the rule for continuing a
 group between `(` and `)` or `[` and `]` currently depends on
 distinguishing operators from non-operators.
 
-The `@` is reserved for a future extension to `at-exp` notation
-adapted suitably to srhubbery notation.
+For `@`, the choice of treating `@f[arg]{text}` as `f(arg, ["text"])`
+instead of `f(arg, "text")` reflects experience with S-expression `@`
+notation. Although it seems convenient that, say `@bold{x}` is treated
+as `(bold "x")`, the consequence is that a function like `bold` might
+be implemented at first to take a single argument; later, a use like
+`@bold{Hello @name}` breaks, because two arguments are provided.
+Making explicit the list that's inherent in body parsing should help
+reduce such mistakes (or bad design choices) for functions that are
+meant to be used with `@` notation.
 
 # Prior art
 [prior-art]: #prior-art
