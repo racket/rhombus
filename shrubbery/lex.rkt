@@ -245,7 +245,7 @@
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 
 (define (lex/status in pos status racket-lexer/status)
-  (let-values ([(lexeme type paren start end status)
+  (let-values ([(tok type paren start end status)
                 (let loop ([status status])
                   (cond
                     [(s-exp-mode? status)
@@ -259,14 +259,14 @@
                         ;; go out of S-expression mode by using shrubbery lexer again
                         (shrubbery-lexer/status in)]
                        [else
-                        (define-values (lexeme type paren start end s-exp-status)
+                        (define-values (tok type paren start end s-exp-status)
                           (racket-lexer/status in))
-                        (values lexeme type paren start end (case s-exp-status
-                                                              [(open)
-                                                               (s-exp-mode (add1 depth))]
-                                                              [(close)
-                                                               (s-exp-mode (sub1 depth))]
-                                                              [else status]))])]
+                        (values tok type paren start end (case s-exp-status
+                                                           [(open)
+                                                            (s-exp-mode (add1 depth))]
+                                                           [(close)
+                                                            (s-exp-mode (sub1 depth))]
+                                                           [else status]))])]
                     [(in-at? status)
                      ;; within an `@` sequence
                      (at-lexer in status (lambda (status) (loop status)))]
@@ -281,11 +281,20 @@
                     [else
                      ;; normal mode, at start or after an operator or whitespace
                      (shrubbery-lexer/status in)]))])
-    (define backup (cond
-                     ;; If we have "@/{" and we add a "/" after the existing one, backup by one:
-                     [(eq? (token-name lexeme) 'at-opener) 1]
-                     [else 0]))
-    (values lexeme type paren start end backup status)))
+    (cond
+      [(and (eq? (token-name tok) 'at-content)
+            (eqv? 0 (string-length (token-e tok))))
+       ;; a syntax coloring lexer must not return a token that
+       ;; consumes no characters, so just drop it by recurring
+       (lex/status in pos status racket-lexer/status)]
+      [else
+       (define backup (cond
+                        ;; If we have "@/{" and we add a "/" after the existing one,
+                        ;; we'll need to back up more:
+                        [(eq? (token-name tok) 'at-opener) 1]
+                        [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
+                        [else 0]))
+       (values tok type paren start end backup status)])))
 
 (define-syntax-rule (make-lexer/status number bad-number)
   (lexer
@@ -481,6 +490,7 @@
               (peek-at-closer in #:opener opener))
           (cond
             [(zero? depth)
+             ;; `lex/status` will handle the case that the content is empty
              (define end-pos (next-location-as-pos in))
              (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
                   (struct-copy in-at status [mode 'close]))]
@@ -490,6 +500,7 @@
                  (write-string (read-string (add1 (bytes-length opener)) in) o))
              (loop (sub1 depth))])]
          [(peek-at-prefixed #\@ in #:opener opener)
+          ;; `lex/status` will handle the case that the content is empty
           (define end-pos (next-location-as-pos in))
           (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
                (struct-copy in-at status [mode 'escape] [openers depth]))]

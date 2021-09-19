@@ -1573,7 +1573,7 @@ INPUT
     (group (parens (group a) (group b)) (parens (group 0)))
     (group (parens (group 7)))
     (group (parens (group (brackets (group "9")))))
-    (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more") (group "")))))
+    (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more")))))
     (group
      5
      (parens
