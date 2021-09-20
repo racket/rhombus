@@ -734,10 +734,10 @@ The parse of a shrubbery can be represented by an S-expression:
  * An element created by `()` is represented by `'parens` consed
    onto a group-sequence list.
    
- * An element created by `[]` is represented by `'braces` consed
+ * An element created by `[]` is represented by `'brackets` consed
    onto a group-sequence list.
 
- * An element created by `{}` is represented by `'brackets` consed
+ * An element created by `{}` is represented by `'braces` consed
    onto a group-sequence list.
 
  * A block is represented as either `'block` or `'alts` consed onto a
