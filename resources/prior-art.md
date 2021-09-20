@@ -91,6 +91,12 @@ These approaches provide a reader that produces s-expressions with a similar amo
 
 * <http://breuleux.net/blog/liso.html>
 
+## Cirru and Calcit
+[Curri-and-Calcit]: #Curri-and-Calcit
+
+ * [Cirru](http://cirru.org/)
+ * [Calcit](http://calcit-lang.org/)
+
 # Grammar composition
 [grammar composition]: #Grammar-composition
 
