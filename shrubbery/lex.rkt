@@ -282,7 +282,8 @@
                      ;; normal mode, at start or after an operator or whitespace
                      (shrubbery-lexer/status in)]))])
     (cond
-      [(and (eq? (token-name tok) 'at-content)
+      [(and (token? tok)
+            (eq? (token-name tok) 'at-content)
             (eqv? 0 (string-length (token-e tok))))
        ;; a syntax coloring lexer must not return a token that
        ;; consumes no characters, so just drop it by recurring
@@ -291,6 +292,7 @@
        (define backup (cond
                         ;; If we have "@/{" and we add a "/" after the existing one,
                         ;; we'll need to back up more:
+                        [(not (token? tok)) 0]
                         [(eq? (token-name tok) 'at-opener) 1]
                         [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
                         [else 0]))
@@ -348,7 +350,7 @@
     (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial)]
    [keyword
     (let ([kw (string->keyword (substring lexeme 1))])
-      (ret 'identifier kw #:raw lexeme 'keyword #f start-pos end-pos 'continuing))]
+      (ret 'identifier kw #:raw lexeme 'hash-colon-keyword #f start-pos end-pos 'continuing))]
    ["@//"
     (let ([opener (peek-at-opener input-port)])
       (if opener
