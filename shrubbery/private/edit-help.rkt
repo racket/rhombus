@@ -1,15 +1,19 @@
 #lang racket/base
 (require racket/class)
 
-(provide opener?
+(provide classify-position
          line-start
          line-delta
          col-of
          only-whitespace-between?
          get-block-column)
 
-(define (opener? s)
-  (member s '("(" "{" "[" "«")))
+(define (classify-position t s)
+  (define attribs (send t classify-position* s))
+  (if (symbol? attribs)
+      attribs
+      (or (hash-ref attribs 'rhombus-type #f)
+          (hash-ref attribs 'type #f))))
 
 (define (line-start t pos)
   (send t paragraph-start-position (send t position-paragraph pos #t)))
@@ -19,8 +23,8 @@
     (cond
       [(eqv? pos 0) 0]
       [else
-       (case (send t classify-position (sub1 pos))
-         [(white-space comment)
+       (case (classify-position t (sub1 pos))
+         [(whitespace comment)
           (define-values (s e) (send t get-token-range (sub1 pos)))
           (loop s)]
          [(continue-operator)
@@ -43,8 +47,8 @@
 (define (only-whitespace-between? t s-pos e-pos
                                   #:or-ws-like? [or-ws-like? #f])
   (let loop ([pos s-pos])
-    (and (case (send t classify-position pos)
-           [(white-space) #t]
+    (and (case (classify-position t pos)
+           [(whitespace) #t]
            [(comment continue-operator) or-ws-like?]
            [else #f])
          (let ()
@@ -64,29 +68,27 @@
        candidate]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment continue-operator)
+         [(whitespace comment continue-operator)
           (if (zero? s)
               (or candidate 0)
               (loop (sub1 s) candidate at-start))]
-         [(parenthesis)
+         [(opener)
+          candidate]
+         [(closer)
+          ;; Found parenthesized while walking backward
+          (define r (send t backward-match e 0))
           (cond
-            [(opener? (send t get-text (sub1 e) e))
-             candidate]
+            [(not r)
+             (define start (line-start t pos))
+             (define delta (line-delta t start))
+             (loop (sub1 s) (col-of s start delta) at-start)]
+            [(zero? r) (list 0)]
             [else
-             ;; Found parenthesized while walking backward
-             (define r (send t backward-match e 0))
-             (cond
-               [(not r)
-                (define start (line-start t pos))
-                (define delta (line-delta t start))
-                (loop (sub1 s) (col-of s start delta) at-start)]
-               [(zero? r) (list 0)]
-               [else
-                (define start (line-start t r))
-                (define delta (line-delta t start))
-                (loop (sub1 r) (col-of r start delta) start)])])]
+             (define start (line-start t r))
+             (define delta (line-delta t start))
+             (loop (sub1 r) (col-of r start delta) start)])]
          [(block-operator bar-operator separator) candidate]
          [else
           (cond

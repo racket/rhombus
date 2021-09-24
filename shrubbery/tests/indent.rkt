@@ -58,10 +58,16 @@
     (define/public (get-text s e)
       (substring content s e))
 
-    (define/public (classify-position pos)
+    (define/public (classify-position* pos)
       (define t+type (or (hash-ref mapping pos #f)
                          (error 'classify-position "lookup failed: ~e" pos)))
       (vector-ref t+type TYPE-SLOT))
+
+    (define/public (classify-position pos)
+      (define attribs (classify-position* pos))
+      (if (symbol? attribs)
+          attribs
+          (hash-ref attribs 'type 'unknown)))
 
     (define/public (get-token-range pos)
       (define t+type (or (hash-ref mapping pos #f)

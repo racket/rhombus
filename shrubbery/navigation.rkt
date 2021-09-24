@@ -12,20 +12,18 @@
   (case direction
     [(backward)
      (define-values (s e) (skip-whitespace #:and-separators? #t t (sub1 pos) -1))
-     (define category (send t classify-position s))
+     (define category (classify-position t s))
      (case category
-       [(parenthesis)
-        (or (send t backward-match e 0)
-            e)]
-       [(bar-operator block-operator) e]
+       [(closer) (send t backward-match e 0)]
+       [(opener bar-operator block-operator) e]
        [else s])]
     [(forward)
      (define-values (s e) (skip-whitespace #:and-separators? #t t pos 1))
-     (define category (send t classify-position s))
+     (define category (classify-position t s))
      (case category
-       [(parenthesis)
-        (or (send t forward-match s (send t last-position))
-            s)]
+       [(opener)
+        (send t forward-match s (send t last-position))]
+       [(closer) s]
        [(block-operator bar-operator)
         (define-values (next-s next-e) (skip-whitespace t e 1))
         (define start (line-start t next-s))
@@ -36,29 +34,25 @@
        [else e])]
     [(down)
      (define-values (s e) (skip-whitespace #:and-separators? #t t pos 1))
-     (define category (send t classify-position s))
+     (define category (classify-position t s))
      (case category
-       [(parenthesis)
-        (and (opener? (send t get-text s e))
-             e)]
+       [(opener)
+        e]
        [(block-operator bar-operator)
         e]
        [else #f])]
     [(up)
      (define start (line-start t pos))
-     (case (send t classify-position pos)
+     (case (classify-position t pos)
        [(bar-operator)
         ;; immediately before a `|` is a special case
         (start-of-alts t pos)]
        [else
         (define-values (s e) (skip-whitespace #:and-separators? #t t (sub1 pos) -1
                                               #:stay-on-line start))
-        (define category (send t classify-position s))
+        (define category (classify-position t s))
         (case category
-          [(parenthesis)
-           (if (opener? (send t get-text s e))
-               s
-               (start-of-group #:or-out? #t t e start))]
+          [(opener) s]
           [(block-operator bar-operator)
            (start-of-group #:or-out? #t t e start)]
           [else
@@ -75,14 +69,14 @@
     [else
      (let loop ([pos pos] [stay-on-line stay-on-line])
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (define (continue #:ok-to-change-line? [ok-to-change-line? #f])
          (define start (and stay-on-line (line-start t s)))
          (cond
            [(and stay-on-line
                  (not ok-to-change-line?)
                  (not (eqv? start stay-on-line))
-                 (not (eq? category 'white-space)))
+                 (not (eq? category 'whitespace)))
             (if (dir . < . 0)
                 (send t get-token-range e)
                 (send t get-token-range (sub1 s)))]
@@ -95,7 +89,7 @@
                     (values s e)
                     (loop e start)))]))
        (case category
-         [(white-space comment)
+         [(whitespace comment)
           (continue)]
          [(continue-operator)
           (continue #:ok-to-change-line? #t)]
@@ -115,9 +109,9 @@
       [(= pos end-pos) end-pos]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment continue-operator)
+         [(whitespace comment continue-operator)
           (loop e last-e)]
          [(separator) s]
          [else
@@ -131,11 +125,12 @@
              (or last-e s)]
             [else
              (case category
-               [(parenthesis)
+               [(opener)
                 (define o-e (send t forward-match s end-pos))
                 (if o-e
                     (loop o-e o-e)
                     s)]
+               [(closer) s]
                [else (loop e e)])])])])))
 
 ;; return the start of the group containing `pos`, but if `pos`
@@ -153,9 +148,9 @@
       [(= pos 0) (or last-pos 0)]
       [else
        (define-values (s e) (send t get-token-range (sub1 pos)))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment)
+         [(whitespace comment)
           (define start (line-start t s))
           (if (eqv? start at-start)
               (loop s last-pos at-start)
@@ -166,7 +161,7 @@
           (or last-pos (if or-out? s orig-pos))]
          [(bar-operator)
           (or last-pos (if or-out? s orig-pos))]
-         [(parenthesis)
+         [(opener closer)
           (define o-s (send t backward-match e 0))
           (cond
             [o-s ; => `s` is a closer
@@ -174,7 +169,7 @@
              (if (eqv? start at-start)
                  (loop o-s o-s (line-start t o-s))
                  (finish last-pos))]
-            [else ; `s` is an opener
+            [else ; `s` is an opener or unmatched closer
              (or last-pos (if or-out? s orig-pos))])]
          [(separator)
           (finish last-pos)]
@@ -200,16 +195,17 @@
          [(= pos 0) 0]
          [else
           (define-values (s e) (send t get-token-range (sub1 pos)))
-          (define category (send t classify-position s))
+          (define category (classify-position t s))
           (case category
-            [(white-space comment continue-operator) (loop s last-pos)]
-            [(parenthesis)
+            [(whitespace comment continue-operator) (loop s last-pos)]
+            [(closer)
              (define o-s (send t backward-match e 0))
              (cond
-               [o-s ; => `s` is a closer
+               [o-s
                 (loop o-s o-s)]
-               [else ; `s` is an opener
-                s])]
+               [else ; unmatched
+                (loop s s)])]
+            [(opener) s]
             [(bar-operator)
              ;; needs to be outdented relative to initial `pos`
              (define s-start (line-start t pos))
@@ -248,9 +244,9 @@
       [(= pos 0) 0]
       [else
        (define-values (s e) (send t get-token-range (sub1 pos)))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment)
+         [(whitespace comment)
           (loop s last-bar col last-block last-pos
                 bar-start at-start)]
          [(continue-operator)
@@ -265,14 +261,16 @@
              => (lambda (pos) pos)]
             [else
              (case category
-               [(parenthesis)
+               [(closer)
                 (define o-s (send t backward-match e 0))
                 (cond
-                  [o-s ; => `s` is a closer
+                  [o-s
                    (loop o-s last-bar col last-block (if (outdented? o-s) o-s last-pos)
                          bar-start (line-start t o-s))]
-                  [else ; `s` is an opener
+                  [else
                    (select last-bar last-block last-pos s)])]
+               [(opener)
+                (select last-bar last-block last-pos s)]
                [(bar-operator)
                 (define s-col (col-of s s-start (line-delta t s-start)))
                 (cond

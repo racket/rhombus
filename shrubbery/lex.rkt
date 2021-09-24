@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require parser-tools/lex
-         racket/contract
+         (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
          "private/property.rkt")
 
@@ -150,9 +150,17 @@
   [non-number-delims (:or non-delims ".")]
   [non-delims (:or alphabetic numeric "_")])
 
-(define (ret name lexeme #:raw [raw #f] type paren start-pos end-pos status)
+(define-syntax (ret stx)
+  (syntax-case stx (quote)
+    [(_ (quote name) lexeme #:raw raw (quote type) more ...)
+     (with-syntax ([ht (hasheq 'type #'type 'rhombus-type #'name)])
+       #`(make-ret (quote name) lexeme #:raw raw ht more ...))]
+    [(_ name lexeme type more ...)
+     #`(ret name lexeme #:raw #f type more ...)]))
+
+(define (make-ret name lexeme #:raw [raw #f] attribs paren start-pos end-pos status)
   (values (make-token name lexeme start-pos end-pos raw)
-          type paren (position-offset start-pos) (position-offset end-pos) status))
+          attribs paren (position-offset start-pos) (position-offset end-pos) status))
 
 (define stx-for-original-property (read-syntax #f (open-input-string "original")))
 (define current-lexer-source (make-parameter "input"))

@@ -43,8 +43,8 @@
                                        #:as-bar? as-bar?
                                        #:as-operator? as-operator?
                                        #:also-zero? also-zero?))
-        (case (send t classify-position (+ start current-tab))
-          [(parenthesis)
+        (case (classify-position t (+ start current-tab))
+          [(closer)
            (indent-like-parenthesis t start current-tab)]
           [(bar-operator)
            (like-enclosing #:as-bar? #t)]
@@ -55,14 +55,9 @@
                            #:also-zero? group-comment?)]
           [(operator)
            (like-enclosing #:as-operator? #t)]
-          [(string)
-           ;; check for being inside a string, which might be in `@` content
-           (define-values (s e) (send t get-token-range (+ start current-tab)))
-           (cond
-             [(< s (+ start current-tab))
-              current-tab]
-             [else
-              (like-enclosing)])]
+          [(at-content)
+           ;; no indenting in `@` context
+           current-tab]
           [else
            (like-enclosing)])]
        [else
@@ -226,9 +221,9 @@
       [(negative? pos) (maybe-list candidate plus-one-more?)]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment continue-operator)
+         [(whitespace comment continue-operator)
           ;; we don't do anything special with continue-operator here,
           ;; because we avoid looking at line numbers, anyway, and `line-delta`
           ;; is responsible for computing continuation columns
@@ -271,44 +266,38 @@
              (maybe-list candidate plus-one-more?)]
             [else
              (case category
-               [(parenthesis)
-                (define paren (send t get-text (sub1 e) e))
+               [(opener)
+                ;; we're inside parentheses, brackets, etc.
                 (cond
-                  [(opener? paren)
-                   ;; we're inside parentheses, brackets, etc.
-                   (cond
-                     [(and bar-after? (not as-bar?))
-                      ;; opener followed by a bar: no more candidates
-                      null]
-                     [candidate (maybe-list candidate plus-one-more?)]
-                     [(zero? s) (maybe-list NORMAL-INDENT)]
-                     [else
-                      (define start (line-start t pos))
-                      (define delta (line-delta t start))
-                      ;; first position within parens/braces/brackets; if
-                      ;; indentation for the bracket's group is before the bracket,
-                      ;; then "outdent" that far
-                      (define col (col-of s start delta))
-                      (define next-s (if (equal? paren "{")
-                                         ;; outdent past redundant operators:
-                                         (skip-redundant-block-operators t (sub1 s) start)
-                                         (sub1 s)))
-                      (define block-col (get-block-column t next-s col start
-                                                          #:for-outdent? #t))
-                      (if (and block-col (block-col . < . col))
-                          (maybe-list (+ block-col NORMAL-INDENT))
-                          (maybe-list (+ col NORMAL-INDENT)))])]
+                  [(and bar-after? (not as-bar?))
+                   ;; opener followed by a bar: no more candidates
+                   null]
+                  [candidate (maybe-list candidate plus-one-more?)]
+                  [(zero? s) (maybe-list NORMAL-INDENT)]
                   [else
-                   ;; found parenthesized while walking backward
-                   (define r (send t backward-match e 0))
+                   (define start (line-start t pos))
+                   (define delta (line-delta t start))
+                   ;; first position within parens/braces/brackets; if
+                   ;; indentation for the bracket's group is before the bracket,
+                   ;; then "outdent" that far
+                   (define col (col-of s start delta))
+                   (define next-s (sub1 s))
+                   (define block-col (get-block-column t next-s col start
+                                                       #:for-outdent? #t))
+                   (if (and block-col (block-col . < . col))
+                       (maybe-list (+ block-col NORMAL-INDENT))
+                       (maybe-list (+ col NORMAL-INDENT)))])]
+               [(closer)
+                ;; found parenthesized while walking backward
+                (define r (send t backward-match e 0))
+                (cond
+                  [(not r)
+                   ;; matching open not found
                    (cond
-                     [(not r)
-                      ;; matching open not found
-                      (cond
-                        [(zero? s) (maybe-list candidate)]
-                        [else (keep s)])]
-                     [(zero? r) null]
-                     [else (keep r)])])]
+                     [(zero? s) (maybe-list candidate)]
+                     [else (keep s)])]
+                  [(zero? r) null]
+                  [else (keep r)])]
                [(bar-operator)
                 (define start (line-start t pos))
                 ;; look back to see whether there's another bar on the
@@ -374,9 +363,9 @@
       [(negative? pos) (values #f limit-pos)]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment)
+         [(whitespace comment)
           (loop (sub1 s) at-start limit-pos)]
          [(continue-operator)
           (loop (sub1 s) (line-start t s) limit-pos)]
@@ -386,16 +375,14 @@
             [(pos-start . < . at-start) (values #f limit-pos)]
             [else
              (case category
-               [(parenthesis)
+               [(opener)
+                (values #f #f)]
+               [(closer)
+                ;; Found parenthesized while walking backward
+                (define r (send t backward-match e 0))
                 (cond
-                  [(opener? (send t get-text (sub1 e) e))
-                   (values #f #f)]
-                  [else
-                   ;; Found parenthesized while walking backward
-                   (define r (send t backward-match e 0))
-                   (cond
-                     [(not r) (loop (sub1 s) at-start s)]
-                     [else (loop (sub1 r) (line-start t r) r)])])]
+                  [(not r) (loop (sub1 s) at-start s)]
+                  [else (loop (sub1 r) (line-start t r) r)])]
                [(bar-operator)
                 (cond
                   [(not as-bar?)
@@ -416,18 +403,16 @@
       [(pos . <= . 0) 0]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment continue-operator)
+         [(whitespace comment continue-operator)
           (loop (sub1 s) last-pos)]
-         [(parenthesis)
-          (cond
-            [(opener? (send t get-text (sub1 e) e))
-             (or last-pos e)]
-            [else
-             ;; Found parenthesized while walking backward
-             (define r (send t backward-match e 0))
-             (loop (sub1 (or r s)) (or r s))])]
+         [(opener)
+          (or last-pos e)]
+         [(closer)
+          ;; Found parenthesized while walking backward
+          (define r (send t backward-match e 0))
+          (loop (sub1 (or r s)) (or r s))]
          [else (loop (sub1 s) s)])])))
 
 ;; block operator just at `pos`+1
@@ -446,9 +431,9 @@
       [(= pos (send t last-position)) #f]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment) (loop e)]
+         [(whitespace comment) (loop e)]
          [(bar-operator) (> (line-start t pos) at-start)]
          [else #f])])))
 
@@ -458,10 +443,10 @@
       [(= pos (send t last-position)) #f]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (send t classify-position s))
+       (define category (classify-position t s))
        (case category
-         [(white-space comment) (loop e)]
-         [(parenthesis) (equal? (send t get-text s e) "«")]
+         [(whitespace comment) (loop e)]
+         [(opener) (equal? (send t get-text s e) "«")]
          [else #f])])))
 
 (define (get-non-empty-lines t s-line e-line)
