@@ -121,7 +121,7 @@
 ;; locations.
 
 ;; Parse all groups in a stream
-(define (parse-top-groups l)
+(define (parse-top-groups l #:interactive? [interactive? #f])
   (define-values (gs rest-l end-line end-delta end-t tail-commenting tail-raw)
     (parse-groups l (make-group-state #:closer eof
                                       #:column #f
@@ -131,8 +131,11 @@
   (when tail-commenting (fail-no-comment-group tail-commenting))
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
-  (define top (lists->syntax (cons top-tag (bars-insert-alts gs))))
-  (add-raw-tail top tail-raw))
+  (cond
+    [(and interactive? (null? gs)) eof]
+    [else
+     (define top (lists->syntax (cons top-tag (bars-insert-alts gs))))
+     (add-raw-tail top tail-raw)]))
 
 ;; Parse a sequence of groups (top level, in opener-closer, or after `:`)
 ;;   consuming the closer in the case of opener-closer context.
@@ -1224,12 +1227,14 @@
 
 ;; ----------------------------------------
 
-(define (parse-all in #:source [source (object-name in)])
-  (define l (lex-all in fail #:source source))
+(define (parse-all in
+                   #:source [source (object-name in)]
+                   #:interactive? [interactive? #f])
+  (define l (lex-all in fail
+                     #:source source
+                     #:stop-at-alone-semicolon? interactive?))
   (check-line-counting l)
-  (if (null? l)
-      eof
-      (parse-top-groups l)))
+  (parse-top-groups l #:interactive? interactive?))
   
 (module+ main
   (require racket/cmdline

@@ -44,7 +44,7 @@
              [(drracket:submit-predicate)
               (lambda (in whitespace-after?)
                 (and whitespace-after?
-                     (regexp-match? #px"(?m:^);$" in)))]
+                     (regexp-match? #px"(?m:^)\\s*;$" in)))]
              [else (get-info-proc key default make-default)]))
   #:whole-body-readers? #t
   (require shrubbery/parse

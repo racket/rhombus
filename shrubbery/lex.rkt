@@ -704,22 +704,45 @@
 ;; for an S-expression escape:
 (define (lex-all in fail
                  #:keep-type? [keep-type? #f]
-                 #:source [source (object-name in)])
+                 #:source [source (object-name in)]
+                 #:stop-at-alone-semicolon? [semi-stop? #f])
   (parameterize ([current-lexer-source source])
-    (let loop ([status 'initial])
+    (let loop ([status 'initial] [depth 0] [non-whitespace-line #f])
       (define-values (tok type paren start-pos end-pos backup new-status)
         (lex/status in (file-position in) status #f))
       (define (wrap r)
         (if keep-type?
             (vector r type paren)
             r))
-      (case (token-name tok)
+      (define name (token-name tok))
+      (case name
         [(EOF) '()]
         [(fail) (fail tok "read error")]
-        [(s-exp)
-         (cons (wrap (finish-s-exp tok in fail)) (loop 'continuing))]
         [else
-         (cons (wrap tok) (loop new-status))]))))
+         (cond
+           [(and (eq? name 'semicolon-operator)
+                 semi-stop?
+                 (eqv? depth 0)
+                 (token-line tok)
+                 (not (eqv? (token-line tok) non-whitespace-line))
+                 (consume-only-whitespace-line? in))
+            (list (wrap tok))]
+           [else
+            (define a (case name
+                        [(s-exp)
+                         (wrap (finish-s-exp tok in fail))]
+                        [else (wrap tok)]))
+            (define d (loop (case name
+                              [(s-exp) 'continuing]
+                              [else new-status])
+                            (case name
+                              [(opener) (add1 depth)]
+                              [(closer) (sub1 depth)]
+                              [else depth])
+                            (case name
+                              [(whitespace) non-whitespace-line]
+                              [else (token-line tok)])))
+            (cons a d)])]))))
 
 (define (finish-s-exp open-tok in fail)
   (define v (read-syntax (current-lexer-source) in))
@@ -760,3 +783,18 @@
                [("{") "}"]
                [("«") "»"]
                [else #f])))
+
+(define (consume-only-whitespace-line? in)
+  (define (consume)
+    (read-line in)
+    #t)
+  (let loop ([i 0])
+    (define ch (peek-char in i))
+    (cond
+      [(eof-object? ch) (consume)]
+      [(or (eqv? ch #\newline)
+           (eqv? ch #\return))
+       (consume)]
+      [(char-whitespace? ch)
+       (loop (+ i (char-utf-8-length ch)))]
+      [else #f])))
