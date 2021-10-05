@@ -89,7 +89,7 @@
       (display "}" op)]
      [(syntax? v)
       (define s (syntax->datum v))
-      (display "?" op)
+      (display "'" op)
       (when (and (pair? s)
                  (eq? 'op (car s)))
         (display " " op))
