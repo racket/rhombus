@@ -316,13 +316,13 @@
                    (cond
                      [(not limit-pos) (maybe-list col)]
                      [else
-                      ;; within the current group but outside the found bar,
-                      ;; a new bar can only line up with outer candidates
+                      ;; a new bar can line up with outer candidates
                       ;; beyond the found bar
                       (define b-start (line-start t limit-pos))
                       (define b-delta (line-delta t b-start))
                       (define b-col (col-of limit-pos b-start b-delta))
-                      (append (maybe-list col)
+                      (append (maybe-list candidate)
+                              (maybe-list col)
                               ;; outer candidates:
                               (loop (sub1 limit-pos)
                                     b-col

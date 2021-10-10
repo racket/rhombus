@@ -251,9 +251,14 @@
     ^ ^ ^printf}
 
  @e{define go():
+      hello
+      | world
+      ^ ^|}
+
+ @e{define go():
       define more(m):
         if m == 0 | "done"
-                  ^|}
+                  ^ ^|}
 
  @e{define go():
       define more(m):
