@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      shrubbery/print)
+         racket/interaction-info
          "private/bounce.rkt"
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
@@ -41,10 +42,6 @@
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
   #:info (lambda (key default make-default)
            (case key
-             [(drracket:submit-predicate)
-              (lambda (in whitespace-after?)
-                (and whitespace-after?
-                     (regexp-match? #px"(?m:^)\\s*;$" in)))]
              [else (get-info-proc key default make-default)]))
   #:whole-body-readers? #t
   (require shrubbery/parse

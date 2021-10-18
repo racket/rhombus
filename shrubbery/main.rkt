@@ -39,4 +39,8 @@
       [(drracket:grouping-position)
        (dynamic-require 'shrubbery/navigation
                         'shrubbery-grouping-position)]
+      [(drracket:submit-predicate)
+       (lambda (in whitespace-after?)
+         (and whitespace-after?
+              (regexp-match? #px"(?m:^)\\s*;$" in)))]
       [else (make-default key default)])))

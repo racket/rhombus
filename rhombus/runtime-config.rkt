@@ -2,11 +2,16 @@
 
 (require racket/runtime-config
          racket/port
+         racket/interaction-info
          shrubbery/parse
          shrubbery/print
          shrubbery/write
          "private/set.rkt"
          (submod "private/set.rkt" for-ref))
+
+(current-interaction-info '#((submod rhombus reader)
+                             get-interaction-info
+                             #f))
 
 (current-read-interaction
  (lambda (src in)
