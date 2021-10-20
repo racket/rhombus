@@ -886,7 +886,7 @@ tabel below sketches the shape of `@` forms.
 |   |                 |     |                                                           |                                |
 | * | _keyword_       | is  | `~` _identifier_                                          |                                |
 |   |                 |     |                                                           |                                |
-| * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **not** `|` **or** `:` ...     |
+| * | _operator_      | is  | _opchar_ * _tailopchar_                                   | **not** `❘` **or** `:` ...     |
 |   |                 | or  | `.` +                                                     | ... **or containing** `//` ... |
 |   |                 | or  | `+` +                                                     | ... **or containing** `/*`     |
 |   |                 | or  | `-` +                                                     |                                |
