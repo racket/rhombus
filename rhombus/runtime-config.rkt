@@ -32,10 +32,15 @@
 (global-port-print-handler
  (lambda (v op [mode 0])
    (cond
+     [(flonum? v)
+      (cond
+        [(eqv? v +inf.0) (display "#inf" op)]
+        [(eqv? v -inf.0) (display "#neginf" op)]
+        [(eqv? v +nan.0) (display "#nan" op)]
+        [else (write v op)])]
      [(or (string? v)
           (bytes? v)
           (exact-integer? v)
-          (flonum? v)
           (boolean? v))
       (write v op)]
      [(struct? v)

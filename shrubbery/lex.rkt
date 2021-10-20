@@ -92,9 +92,9 @@
   [boolean (:or "#true" "#false")]
                       
   [special-number (:: "#"
-                      (:or "#inf"
-                           "#neginf"
-                           "#nan"))]
+                      (:or "inf"
+                           "neginf"
+                           "nan"))]
 
   [bad-hash (:- (:or (:: "#" (:* non-delims))
                      "#/")

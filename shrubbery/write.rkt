@@ -81,9 +81,14 @@
           (display "}")])]
       [(or (string? v)
            (bytes? v)
-           (exact-integer? v)
-           (flonum? v))
+           (exact-integer? v))
        (write v op)]
+      [(flonum? v)
+       (cond
+         [(eqv? v +inf.0) (display "#inf" op)]
+         [(eqv? v -inf.0) (display "#neginf" op)]
+         [(eqv? v +nan.0) (display "#nan" op)]
+         [else (write v op)])]
       [(boolean? v)
        (display (if v "#true" "#false") op)]
       [else
