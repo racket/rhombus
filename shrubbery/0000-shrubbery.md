@@ -893,7 +893,7 @@ tabel below sketches the shape of `@` forms.
 |   |                 |     |                                                           |                                |
 |   | _opchar_        | is  | **a symbolic Unicode character not in** _special_         |                                |
 |   |                 | or  | **a punctuation Unicode character not in** _special_      |                                |
-|   |                 | or  | **one of ** `:`, `|`                                      |                                |
+|   |                 | or  | **one of ** `:`, `❘`                                      |                                |
 |   |                 |     |                                                           |                                |
 |   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`, `/`    |                                |
 |   |                 |     |                                                           |                                |
@@ -973,9 +973,9 @@ tabel below sketches the shape of `@` forms.
 |   | _body_          | is  | `{` _text_ `}`                                            | possible escapes in _text_     |
 |   |                 | or  | _atopen_ _text_ _atclose_                                 | _atcloser_ matching _atopen_   |
 |   |                 |     |                                                           |                                |
-|   |  _atopen_       | is  | `|` _asciisym_ * `{`                                      |                                |
+|   |  _atopen_       | is  | `❘` _asciisym_ * `{`                                      |                                |
 |   |                 |     |                                                           |                                |
-|   |  _atclose_      | is  | `}` _asciisym_ * `|`                                      | reverses and flips paren-like  |
+|   |  _atclose_      | is  | `}` _asciisym_ * `❘`                                      | reverses and flips paren-like  |
 
 # At-notation using `@`
 
