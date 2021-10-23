@@ -31,9 +31,9 @@
       (syntax-parse stx
         #:datum-literals (op block)
         #:literals (|'|)
-        [(_ (op |'|) name::name (block body ...))
+        [(_ (op |'|) name::name ((~and body-tag block) body ...))
          #`((define-syntax #,(in-static-info-space #'name.name)
-              (convert-static-info 'name.name (rhombus-block body ...))))]))))
+              (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)

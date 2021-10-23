@@ -16,5 +16,5 @@
                  . tail)
         (values
          #'(let ()
-             (rhombus-block-at tag form ...))
+             (rhombus-body-at tag form ...))
          #'tail)]))))

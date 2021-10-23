@@ -254,7 +254,7 @@
                   maybe-bind-rest-static-info ...
                   (add-annotation-check
                    #,function-name #,pred
-                   (rhombus-expression (group rhs)))))))))))
+                   (rhombus-body-expression rhs))))))))))
   
   (define (build-case-function function-name
                                argss-stx arg-parsedss-stx
@@ -333,7 +333,7 @@
                                         (add-annotation-check
                                          #,function-name
                                          pred
-                                         (rhombus-expression (group rhs))))))))]))])))))
+                                         (rhombus-body-expression rhs)))))))]))])))))
 
   (define (maybe-add-function-result-definition name static-infoss defns)
     (define (same-expression? a b)

@@ -62,7 +62,7 @@
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      (list
-      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) (rhombus-expression (group rhs))])
+      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) (rhombus-body-expression rhs)])
                                       (values lhs-i.name-id ...)))
      (wrap-definition
       #`(begin

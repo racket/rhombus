@@ -12,7 +12,7 @@
          "setmap.rkt"
          (submod "map.rkt" for-binding))
 
-(provide #%block
+(provide #%body
          #%literal
          #%tuple
          #%call
@@ -20,20 +20,20 @@
          #%ref
          #%set)
 
-(define-syntax #%block
+(define-syntax #%body
   (expression-prefix-operator
-   #'%block
+   #'#%body
    '((default . stronger))
    'macro
    (lambda (stxes)
      (syntax-parse stxes
        [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
-        (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-block #'tag #'tag) #'body) #'tag)
+        (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-body #'tag #'tag) #'body) #'tag)
                 #'tail)]))))
 
 (define-syntax #%literal
   (make-expression+binding-prefix-operator
-   #'%literal
+   #'#%literal
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -79,7 +79,7 @@
 
 (define-syntax #%tuple
   (make-expression+binding-prefix-operator
-   #'%tuple
+   #'#%tuple
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -111,7 +111,7 @@
 
 (define-syntax #%call
   (expression-infix-operator
-   #'%call
+   #'#%call
    '((default . stronger))
    'macro
    (lambda (rator stxes)
@@ -120,7 +120,7 @@
 
 (define-syntax #%array
   (make-expression+binding-prefix-operator
-   #'%array
+   #'#%array
    '((default . stronger))
    'macro
    ;; expression
@@ -132,7 +132,7 @@
 
 (define-syntax #%ref
   (expression-infix-operator
-   #'%ref
+   #'#%ref
    '((default . stronger))
    'macro
    (lambda (array stxes)
@@ -141,7 +141,7 @@
 
 (define-syntax #%set
   (make-expression+binding-prefix-operator
-   #'%ref
+   #'#%set
    '((default . stronger))
    'macro
    ;; expression

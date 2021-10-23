@@ -151,7 +151,7 @@
                                [info-id info-id-ref] ...
                                [data-id data-id-ref] ...)
                            (pack-info
-                            (rhombus-block-at block-tag body ...)))])])]))))]))))
+                            (rhombus-body-at block-tag body ...)))])])]))))]))))
 
 (define-syntax matcher
   (definition-transformer
@@ -181,7 +181,7 @@
                                 ;; helps make sure it's used correctly
                                 [fail-id #'(parsed (if-bridge IF fail))])
                             (unwrap-block
-                             (rhombus-block-at block-tag body ...)))))])]))))]))))
+                             (rhombus-body-at block-tag body ...)))))])]))))]))))
 
 (define-syntax if-bridge
   ;; depending on `IF`, `if-bridge` will be used in an expression
@@ -196,7 +196,7 @@
                       #:literals (if-bridge)
                       [((group (parsed (if-bridge IF fail))))
                        #`(IF (rhombus-expression (group e ...))
-                             (rhombus-body success ...)
+                             (rhombus-body-sequence success ...)
                              fail)]
                       [_ (raise-syntax-error #f
                                              "not the given failure form in the failure branch"
@@ -224,9 +224,9 @@
     (make-expression+definition-transformer
      (expression-transformer
       #'chain-to-matcher
-      (lambda (stx) (values (parse #'rhombus-block stx) #'())))
+      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
-       (lambda (stx) (list (parse #'rhombus-body stx)))))))
+       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
 
 (define-syntax chain-to-binder
   ;; depends on `IF` like `if-bridge` does
@@ -241,9 +241,9 @@
     (make-expression+definition-transformer
      (expression-transformer
       #'chain-to-matcher
-      (lambda (stx) (values (parse #'rhombus-block stx) #'())))
+      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
-       (lambda (stx) (list (parse #'rhombus-body stx)))))))
+       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
 
 (define-syntax binder
   (definition-transformer
@@ -266,13 +266,13 @@
                       (let ([arg-id #'arg-id]
                             [data-id data-id-ref] ...)
                         (unwrap-block
-                         (rhombus-block-at block-tag body ...)))])]))))]))))
+                         (rhombus-body-at block-tag body ...)))])]))))]))))
 
 (define-for-syntax (unwrap-block stx)
   (syntax-parse stx
     #:datum-literals (group parens block)
     [(parens (group (block g ...)))
-     #'(rhombus-body g ...)]))
+     #'(rhombus-body-sequence g ...)]))
 
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #,stx))

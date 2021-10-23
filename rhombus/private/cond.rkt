@@ -23,8 +23,8 @@
             ((~and tag-els block) els ...))
            (values
             #'(if (rhombus-expression (group test ...))
-                  (rhombus-block-at tag-thn thn ...)
-                  (rhombus-block-at tag-els els ...))
+                  (rhombus-body-at tag-thn thn ...)
+                  (rhombus-body-at tag-els els ...))
             #'tail)]
           [_
            (raise-syntax-error #f
@@ -46,10 +46,10 @@
         (values
          #'(cond
              [(rhombus-expression (group pred ...))
-              (rhombus-block-at tag rhs ...)]
+              (rhombus-body-at tag rhs ...)]
              ...
              [else
-              (rhombus-block-at else-tag else-rhs ...)])
+              (rhombus-body-at else-tag else-rhs ...)])
          #'tail)]
        [(form-id (alts
                   (block (group pred ... ((~and tag block) rhs ...)))
@@ -58,7 +58,7 @@
         (values
          #'(cond
              [(rhombus-expression (group pred ...))
-              (rhombus-block-at tag rhs ...)]
+              (rhombus-body-at tag rhs ...)]
              ...
              [else (cond-fallthrough #'form-id)])
          #'tail)]

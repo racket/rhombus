@@ -16,11 +16,12 @@
 
 (provide rhombus-top
          rhombus-definition
-         rhombus-block
+         rhombus-body
          rhombus-expression
 
-         rhombus-block-at
-         rhombus-body
+         rhombus-body-at
+         rhombus-body-expression
+         rhombus-body-sequence
 
          (for-syntax :declaration
                      :definition
@@ -122,7 +123,7 @@
        [(_ e::expression) #'(#%expression e.parsed)]))))
 
 ;; For an expression context, interleaves expansion and enforestation:
-(define-syntax (rhombus-block stx)
+(define-syntax (rhombus-body stx)
   (syntax-parse stx
     [(_)
      (raise-syntax-error #f "block has no expressions" stx)]
@@ -130,19 +131,29 @@
      #`(let ()
          (rhombus-forwarding-sequence
           #:need-end-expr #,stx
-          (rhombus-body . tail)))]))
+          (rhombus-body-sequence . tail)))]))
 
-;; Similar to `rhombus-block`, but goes through `#%block`:
-(define-syntax (rhombus-block-at stx)
+;; Similar to `rhombus-body`, but goes through `#%body`:
+(define-syntax (rhombus-body-at stx)
   (syntax-parse stx
     [(_ tag . tail)
      (quasisyntax/loc #'tag
-       (rhombus-expression (group #,(datum->syntax #'tag '#%block #'tag #'tag)
+       (rhombus-expression (group #,(datum->syntax #'tag '#%body #'tag #'tag)
                                   (#,(syntax-property (datum->syntax #f 'block #'tag) 'raw "")
                                    . tail))))]))
 
+;; Like `(rhombus-expression (group _))`, but recognizes `block` forms
+(define-syntax (rhombus-body-expression stx)
+  (syntax-parse stx
+    [(_ ((~and body-tag (~datum block)) body ...))
+     #'(rhombus-body-at body-tag body ...)]
+    [(_ ((~datum parsed) rhs))
+     #'rhs]
+    [(_ rhs)
+     #'(rhombus-expression (group rhs))]))
+
 ;; For a definition context, interleaves expansion and enforestation:
-(define-syntax (rhombus-body stx)
+(define-syntax (rhombus-body-sequence stx)
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
       [(_) #'(begin)]
@@ -150,17 +161,17 @@
        (syntax-local-introduce
         #`(begin
             (begin . e.parsed)
-            (rhombus-body . e.tail)))]
+            (rhombus-body-sequence . e.tail)))]
       [(_ e::definition . tail)
        (syntax-local-introduce
         #`(begin
             (begin . e.parsed)
-            (rhombus-body . tail)))]
+            (rhombus-body-sequence . tail)))]
       [(_ e::expression . tail)
        (syntax-local-introduce
         #`(begin
             (#%expression e.parsed)
-            (rhombus-body . tail)))])))
+            (rhombus-body-sequence . tail)))])))
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
@@ -174,7 +185,7 @@
   (syntax-parse e
     [((~datum block) g)
      (cond
-       [(definition? #'g) #`(rhombus-expression (group #,e))]
+       [(definition? #'g) #`(rhombus-body-expression #,e)]
        [else
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]

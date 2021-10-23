@@ -171,7 +171,7 @@
           (if (eq? kind 'rule)
               (let ([ids (cons self-id (append left-ids (syntax->list #'(id ...))))])
                 #`(values #,(convert-rule-template rhs ids) tail))
-              #`(rhombus-expression (group #,rhs))))
+              #`(rhombus-body-expression #,rhs)))
         #`[#,pattern
            (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
              #,body)]))
@@ -217,7 +217,7 @@
                          #,(if (eq? kind 'rule)
                                (convert-rule-template #'(tag rhs ...)
                                                       (list #'left right-id #'opt.self-id))
-                               #`(rhombus-expression (group (tag rhs ...)))))]
+                               #`(rhombus-body-expression (tag rhs ...))))]
                     [else
                      (macro-clause #'opt.self-id (list #'left)
                                    #'tail-pattern
@@ -240,7 +240,7 @@
                          #,(if (eq? kind 'rule)
                                (convert-rule-template #'(tag rhs ...)
                                                       (list arg-id #'opt-self-id))
-                               #`(rhombus-expression (group (tag rhs ...)))))]
+                               #`(rhombus-body-expression (tag rhs ...))))]
                     [else
                      (macro-clause #'opt.self-id '()
                                    #'tail-pattern
@@ -259,7 +259,7 @@
                          (values #,(if (eq? kind 'rule)
                                        (convert-rule-template #'(tag rhs ...)
                                                               (list #'opt.self-id))
-                                       #`(rhombus-block-at tag rhs ...))
+                                       #`(rhombus-body-at tag rhs ...))
                                  tail))])])])))
 
 ;; combine previously parsed cases (possibly the only case) in a macro
@@ -393,7 +393,7 @@
                           [#,pattern
                            (let ([p-id id-ref] ...)
                              #,(wrap-for-tail
-                                #`(rhombus-expression (group #,rhs))))]))])
+                                #`(rhombus-body-expression #,rhs)))]))])
               id))))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer in-space
