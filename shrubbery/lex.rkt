@@ -41,7 +41,9 @@
          syntax->token
          stx-for-original-property
 
-         current-lexer-source)
+         current-lexer-source
+
+         lex-nested-status?)
 
 (define-lex-abbrevs
   
@@ -148,7 +150,12 @@
   [bad-comment "*/"]
 
   [non-number-delims (:or non-delims ".")]
-  [non-delims (:or alphabetic numeric "_")])
+  [non-delims (:or alphabetic numeric "_")]
+
+  ;; making whitespace end at newlines is for interactive parsing
+  ;; where we end at a blank line
+  [whitespace-segment (:or (:+ (:- whitespace "\n"))
+                           (:: (:* (:- whitespace "\n")) "\n"))])
 
 (define-syntax (ret stx)
   (syntax-case stx (quote)
@@ -252,6 +259,9 @@
 (struct in-at (mode opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 
+(define (lex-nested-status? status)
+  (not (or (not status) (symbol? status))))
+
 (define (lex/status in pos status racket-lexer/status)
   (let-values ([(tok type paren start end status)
                 (let loop ([status status])
@@ -308,7 +318,7 @@
 
 (define-syntax-rule (make-lexer/status number bad-number)
   (lexer
-   [(:+ whitespace)
+   [whitespace-segment
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
    [str (ret 'literal (parse-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [byte-str (ret 'literal (parse-byte-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
@@ -713,28 +723,37 @@
 (define (lex-all in fail
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
-                 #:stop-at-alone-semicolon? [semi-stop? #f])
+                 #:interactive? [interactive? #f])
   (parameterize ([current-lexer-source source])
-    (let loop ([status 'initial] [depth 0] [non-whitespace-line #f])
-      (define-values (tok type paren start-pos end-pos backup new-status)
-        (lex/status in (file-position in) status #f))
-      (define (wrap r)
-        (if keep-type?
-            (vector r type paren)
-            r))
-      (define name (token-name tok))
-      (case name
-        [(EOF) '()]
-        [(fail) (fail tok "read error")]
+    (let loop ([status 'initial] [depth 0] [blanks 0] [block? #f])
+      (cond
+        [(eof-object? (peek-char in))
+         ;; don't consume an EOF
+         '()]
         [else
-         (cond
-           [(and (eq? name 'semicolon-operator)
-                 semi-stop?
-                 (eqv? depth 0)
-                 (token-line tok)
-                 (not (eqv? (token-line tok) non-whitespace-line))
-                 (consume-only-whitespace-line? in))
-            (list (wrap tok))]
+         (define-values (tok type paren start-pos end-pos backup new-status)
+           (lex/status in (file-position in) status #f))
+         (define (wrap r)
+           (if keep-type?
+               (vector r type paren)
+               r))
+         (define name (token-name tok))
+         (case name
+           [(EOF) '()]
+           [(fail) (fail tok "read error")]
+           [(whitespace)
+            (define a (wrap tok))
+            (define newline? (let* ([s (syntax-e (token-value tok))]
+                                    [len (string-length s)])
+                               (and (positive? len)
+                                    (eqv? #\newline (string-ref s (sub1 len))))))
+            (cond
+              [(and interactive? newline? (zero? depth)
+                    (blanks . >= . (if block? 1 0))
+                    (not (lex-nested-status? status)))
+               (list (wrap tok))]
+              [else (cons (wrap tok)
+                          (loop new-status depth (+ blanks (if newline? 1 0)) block?))])]
            [else
             (define a (case name
                         [(s-exp)
@@ -747,9 +766,12 @@
                               [(opener) (add1 depth)]
                               [(closer) (sub1 depth)]
                               [else depth])
+                            0
                             (case name
-                              [(whitespace) non-whitespace-line]
-                              [else (token-line tok)])))
+                              [(block-operator)
+                               (or block?
+                                   (and (zero? depth) (not (lex-nested-status? status))))]
+                              [else block?])))
             (cons a d)])]))))
 
 (define (finish-s-exp open-tok in fail)

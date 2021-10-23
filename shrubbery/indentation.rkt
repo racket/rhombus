@@ -2,7 +2,8 @@
 (require racket/class
          racket/list
          "lex.rkt"
-         "private/edit-help.rkt")
+         "private/edit-help.rkt"
+         "private/paren.rkt")
          
 ;; Conventions:
 ;;   pos = arbitary position
@@ -493,9 +494,3 @@
       [(null? l) (list 0)]
       [(eqv? (car l) 0) l]
       [else (cons (car l) (loop (cdr l)))])))
-
-(define shrubbery-paren-matches
-  '((|(| |)|)
-    (|[| |]|)
-    (|{| |}|)
-    (« »)))

@@ -9,15 +9,15 @@
            get-info
            get-info-proc)
 
-    (define (shrubbery-read in)
-      (syntax->datum
-       (shrubbery-read-syntax #f in)))
- 
+  (define (shrubbery-read in)
+    (syntax->datum
+     (shrubbery-read-syntax #f in)))
+
   (define (shrubbery-read-syntax src in)
     (strip-context
      #`(module anything racket/base
          '#,(parse-all in))))
- 
+
   (define (get-info in mod line col pos)
     (lambda (key default)
       (get-info-proc key default (lambda (key default) default))))
@@ -40,7 +40,6 @@
        (dynamic-require 'shrubbery/navigation
                         'shrubbery-grouping-position)]
       [(drracket:submit-predicate)
-       (lambda (in whitespace-after?)
-         (and whitespace-after?
-              (regexp-match? #px"(?m:^)\\s*;$" in)))]
+       (dynamic-require 'shrubbery/interaction
+                        'shrubbery-submit-predicate)]
       [else (make-default key default)])))

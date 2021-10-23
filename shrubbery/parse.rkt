@@ -1232,9 +1232,13 @@
                    #:interactive? [interactive? #f])
   (define l (lex-all in fail
                      #:source source
-                     #:stop-at-alone-semicolon? interactive?))
+                     #:interactive? interactive?))
   (check-line-counting l)
-  (parse-top-groups l #:interactive? interactive?))
+  (define v (parse-top-groups l #:interactive? interactive?))
+  (when (and interactive? (eof-object? v))
+    ;; consume the EOF
+    (read-char in))
+  v)
   
 (module+ main
   (require racket/cmdline

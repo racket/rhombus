@@ -64,7 +64,11 @@
         (rhombus-forwarding-sequence
          (rhombus-top . content)))]))
 
+;; splices content of any block as its own top-level group:
 (define-syntax (#%top-interaction stx)
   (syntax-parse stx
+    #:datum-literals (group block)
+    [(form-id . (top form ... (group (block inner-form ...)) . content))
+     #'(form-id . (top form ... inner-form ... . content))]
     [(_ . (top . content))
      #'(rhombus-top . content)]))
