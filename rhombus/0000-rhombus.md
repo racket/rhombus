@@ -302,8 +302,12 @@ fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
 
 _If you have installed the `shrubbery-rhombus-0` package, then the
 interactions window in DrRacket will work to call
-`fahrenheit_to_celsius`. For now, though, you have to add an extra
-line with just `;` to evaluate a form._
+`fahrenheit_to_celsius`. In interactions, a single input line is
+accepted as complete as long as it's openers and closers are balanced,
+and as long as it doesn't contain `:` outside of an opener--closer
+pair. A blank line terminates multi-line input. For multi-line input
+where the first line would otherwise parse as complete, add `:` at
+the front, either on the same line or its own line._
 
 A Rhombus module can export definitions to other modules using
 `export`, and it can import other modules using `import`. The
