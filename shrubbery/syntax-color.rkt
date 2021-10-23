@@ -1,6 +1,7 @@
 #lang racket/base
 (require "lex.rkt"
-         syntax-color/racket-lexer)
+         syntax-color/racket-lexer
+         racket/symbol)
 
 (provide shrubbery-lexer)
 
@@ -13,5 +14,6 @@
         [(string? tok) tok]
         [(token? tok) (to-string-or-eof (token-e tok))]
         [(syntax? tok) (to-string-or-eof (syntax-e tok))]
+        [(symbol? tok) (symbol->immutable-string tok)]
         [else "other"]))
     (values (to-string-or-eof tok) type paren start end backup status)))
