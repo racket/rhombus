@@ -10,7 +10,8 @@
          (submod "map-ref.rkt" for-ref)
          (submod "list.rkt" for-binding)
          "setmap.rkt"
-         (submod "map.rkt" for-binding))
+         (submod "map.rkt" for-binding)
+         "literal.rkt")
 
 (provide #%body
          #%literal
@@ -49,28 +50,6 @@
         (values (binding-form #'literal-infoer
                               #'datum)
                 #'tail)]))))
-
-(define-syntax (literal-infoer stx)
-  (syntax-parse stx
-    [(_ static-infos datum)
-     (binding-info #'literal
-                   #'static-infos
-                   #'()
-                   #'literal-matcher
-                   #'literal-bind-nothing
-                   #'datum)]))
-
-(define-syntax (literal-matcher stx)
-  (syntax-parse stx
-    [(_ arg-id datum IF success fail)
-     #'(IF (equal? arg-id (quote datum))
-           success
-           fail)]))
-
-(define-syntax (literal-bind-nothing stx)
-  (syntax-parse stx
-    [(_ arg-id datum)
-     #'(begin)]))
 
 (define-for-syntax (raise-keyword-error datum)
   (raise-syntax-error #f

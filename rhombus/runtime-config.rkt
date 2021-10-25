@@ -106,6 +106,10 @@
       (write-shrubbery s op)]
      [(procedure? v)
       (write v op)]
+     [(symbol? v)
+      (display "symbol(" op)
+      (write-shrubbery v op)
+      (display ")" op)]
      [(keyword? v)
       (display "keyword(" op)
       (write-shrubbery v op)

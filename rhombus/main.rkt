@@ -34,6 +34,7 @@
         "private/match.rkt"
         "private/quasiquote.rkt"
         "private/keyword.rkt"
+        "private/symbol.rkt"
         "private/values.rkt")
 
 (module reader syntax/module-reader

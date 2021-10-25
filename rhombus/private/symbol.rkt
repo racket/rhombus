@@ -6,24 +6,23 @@
          "expression+binding.rkt"
          "literal.rkt")
 
-(provide keyword)
+(provide symbol)
 
-(define-syntax keyword
+(define-syntax symbol
   (make-expression+binding-prefix-operator
-   #'keyword
+   #'symbol
    '((default . stronger))
    'macro
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group)
-       [(_ (parens (group k:keyword)) . tail)
-        (values (syntax/loc stx (quote k))
+       [(_ (parens (group id:identifier)) . tail)
+        (values (syntax/loc stx (quote id))
                 #'tail)]))
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group)
-       [(_ (parens (group k:keyword)) . tail)
+       [(_ (parens (group id:identifier)) . tail)
         (values (binding-form #'literal-infoer
-                              #'k)
+                              #'id)
                 #'tail)]))))
-
