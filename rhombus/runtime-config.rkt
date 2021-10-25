@@ -77,17 +77,9 @@
         (define k (car k+v))
         (define v (cdr k+v))
         (unless first? (display ", " op))
-        (cond
-          [(keyword? k)
-           (write-shrubbery k op)
-           (display ": " op)
-           (print v op)]
-          [else
-           (display "(" op)
-           (print k op)
-           (display ", " op)
-           (print v op)
-           (display ")" op)])
+        (print k op)
+        (display ": " op)
+        (print v op)
         #f)
       (display "}" op)]
      [(set? v)

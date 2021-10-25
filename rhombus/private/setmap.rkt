@@ -19,14 +19,10 @@
          (define-values (new-shape new-args)
            (syntax-parse elem
              #:datum-literals (block braces parens group)
-             [(group key:keyword (block val)) (values 'map
-                                                      (list* #'(rhombus-expression val)
-                                                             #'key
-                                                             args))]
-             [(group (parens key val)) (values 'map
-                                               (list* #'(rhombus-expression val)
-                                                      #'(rhombus-expression key)
-                                                      args))]
+             [(group key-e ... (block val)) (values 'map
+                                                (list* #'(rhombus-expression val)
+                                                       #'(rhombus-expression (group key-e ...))
+                                                       args))]
              [_ (values 'set (cons #`(rhombus-expression #,elem) args))]))
          (when (and shape (not (eq? shape new-shape)))
            (raise-syntax-error #f

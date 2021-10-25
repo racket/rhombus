@@ -26,7 +26,7 @@
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                                  #'map-set!))
      (define e (datum->syntax (quote-syntax here)
-                              (list map-set!-id map (index->expression #'index) #'rhs.parsed)
+                              (list map-set!-id map #'(rhombus-expression index) #'rhs.parsed)
                               (span-srcloc map #'head)
                               #'head))
      (values e
@@ -35,19 +35,13 @@
      (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
                                 #'map-ref))
      (define e (datum->syntax (quote-syntax here)
-                              (list map-ref-id map (index->expression #'index))
+                              (list map-ref-id map #'(rhombus-expression index))
                               (span-srcloc map #'head)
                               #'head))
      (define result-static-infos (or (syntax-local-static-info map #'#%ref-result)
                                      #'()))
      (values (wrap-static-info* e result-static-infos)
              #'tail)]))
-
-(define-for-syntax (index->expression index)
-  (syntax-parse index
-    #:datum-literals (group)
-    [(group key:keyword) #'(quote key)]
-    [g #'(rhombus-expression g)]))
 
 (define (map-ref map index)
   (cond

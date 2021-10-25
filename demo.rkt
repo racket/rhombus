@@ -421,24 +421,24 @@ nums_a[1]
 nums_a[2] = 30
 nums_a[2]
 
-val map: Map(~x: "hello", ~y: "goodbye")
+val map: Map(symbol(x), "hello", symbol(y), "goodbye")
 val yes_map :: Map : map
-val yup_map :: Map.of(Keyword, String) : map
+val yup_map :: Map.of(Symbol, String) : map
 
 map
-map[~y]
+map[symbol(y)]
 
 val also_map: Map(1, "one", 2, "two")
 also_map[2]
 
-val also_also_map: {(1, "one"), (2, "two")}
+val also_also_map: {1: "one", 2: "two"}
 also_also_map[2]
 
-val key_map: {~a: "ay", ~b: "bee"}
-key_map[~a]
+val key_map: {symbol(a): "ay", symbol(b): "bee"}
+key_map[symbol(a)]
 
-val mixed_map: {~a: 1, ("b", 2)}
-mixed_map[~a] + mixed_map["b"]
+val mixed_map: {symbol(a): 1, "b": 2}
+mixed_map[symbol(a)] + mixed_map["b"]
 
 val mut_map: make_map(1, "mone")
 mut_map[1]
@@ -456,14 +456,20 @@ ys
 def Array(ax, ay, az): nums_a
 az
 
-def local_map: Map(~alice: Posn(4, 5),
-                   ~bob: Posn(7, 9))
+def local_map: Map(symbol(alice), Posn(4, 5),
+                   symbol(bob), Posn(7, 9))
 
-fun locale(who, neighborhood :: Map.of(Keyword, Posn)):
+fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
   val p: neighborhood[who]
   p.x & ", " & p.y
 
-locale(keyword(~alice), local_map)
+locale(symbol(alice), local_map)
+
+def {symbol(bob): bob_loc}: local_map
+bob_loc
+
+def Map(symbol(alice), alice_loc2, symbol(bob), bob_loc2): local_map
+[alice_loc2, bob_loc2]
 
 def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 ps[0].x

@@ -27,6 +27,7 @@
          Integer
          Number
          String
+         Symbol
          Keyword
 
          (for-space rhombus/annotation #%tuple))
@@ -253,6 +254,7 @@
 (define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-annotation #'Number #'number? #'()))
 (define-syntax String (identifier-annotation #'String #'string? #'()))
+(define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
 (define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
 
 (define-syntax (define-annotation-syntax stx)

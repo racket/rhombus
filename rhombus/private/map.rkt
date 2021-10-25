@@ -29,23 +29,17 @@
   (provide (for-syntax map-static-info)))
 
 (define Map
-  (make-keyword-procedure
-   (lambda (kws vals . more)
-     (define base-ht (if (and (null? more) (not (null? kws)))
-                         (hasheq)
-                         (hash)))
-     (define ht (for/fold ([ht base-ht]) ([key (in-list kws)]
-                                          [val (in-list vals)])
-                  (hash-set ht key val)))
-     (let loop ([ht ht] [more more])
-       (cond
-         [(null? more) ht]
-         [(null? (cdr more))
-          (raise-arguments-error 'Map
-                                 (string-append "key does not have a value"
-                                                " (i.e., an odd number of arguments were provided)")
-                                 "key" (car more))]
-         [else (loop (hash-set ht (car more) (cadr more)) (cddr more))])))))
+  (lambda args
+    (define ht (hash))
+    (let loop ([ht ht] [args args])
+      (cond
+        [(null? args) ht]
+        [(null? (cdr args))
+         (raise-arguments-error 'Map
+                                (string-append "key does not have a value"
+                                               " (i.e., an odd number of arguments were provided)")
+                                "key" (car args))]
+        [else (loop (hash-set ht (car args) (cadr args)) (cddr args))]))))
 
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
@@ -66,9 +60,8 @@
   (#%call-result ((#%map-ref hash-ref))))
 
 (define make_map
-  (make-keyword-procedure
-   (lambda (kws vals . l)
-     (hash-copy (keyword-apply Map kws vals l)))))
+  (lambda args
+    (hash-copy (apply Map args))))
 
 (define-static-info-syntax make_map
   (#%call-result ((#%map-ref hash-ref)
@@ -82,39 +75,50 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens)
-       [(form-id (parens . _) . tail)
-        (parse-map-binding stx "parentheses")]))))
+       [(form-id (parens arg ...) . tail)
+        (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
+          (cond
+            [(null? args) (generate-map-binding (reverse keys) (reverse vals) #'tail)]
+            [(null? (cdr args))
+             (raise-syntax-error #f
+                                 (string-append "key expression does not have a value expression"
+                                                " (i.e., an odd number of forms were provided)")
+                                 stx
+                                 (car args))]
+            [else (loop (cddr args) (cons (car args) keys) (cons (cadr args) vals))]))]))))
 
-;; outer shape has been checked
 (define-for-syntax (parse-map-binding stx opener+closer)
   (syntax-parse stx
     #:datum-literals (parens block group op)
-    [(form-id (_ (group key:keyword (block (group val ...))) ...) . tail)
-     ;; eager parsing of key forms, partly because we expect then
-     ;; to be constants, but more generaly because we think of them
-     ;; as earlier than the value patterns
-     (define tmp-ids (generate-temporaries #'(key ...)))
-     (define-values (composite new-tail)
-       ((make-composite-binding-transformer #'(lambda (v) #t)
-                                            (for/list ([tmp-id (in-list tmp-ids)])
-                                              #`(lambda (v) #,tmp-id))
-                                            (for/list ([arg (in-list tmp-ids)])
-                                              #'())
-                                            #:ref-result-info? #t)
-        #`(form-id (parens (group val ...) ...) . tail)))
-     (with-syntax-parse ([composite::binding-form composite])
-       (values
-        (binding-form #'map-infoer
-                      #`((key ...)
-                         #,tmp-ids
-                         composite.infoer-id
-                         composite.data))
-        new-tail))]
+    [(form-id (_ (group key-e ... (block (group val ...))) ...) . tail)
+     (generate-map-binding #'((group key-e ...) ...) #'((group val ...) ...) #'tail)]
     [(form-id wrong . tail)
      (raise-syntax-error #f
                          (format "bad key-value combination within ~a" opener+closer)
                          (relocate (span-srcloc #'form-id #'wrong)
                                    #'(form-id wrong)))]))
+
+(define-for-syntax (generate-map-binding keys vals tail)
+  (with-syntax ([(key ...) keys]
+                [(val ...) vals]
+                [tail tail])
+    (define tmp-ids (generate-temporaries #'(key ...)))
+    (define-values (composite new-tail)
+      ((make-composite-binding-transformer #'(lambda (v) #t)
+                                           (for/list ([tmp-id (in-list tmp-ids)])
+                                             #`(lambda (v) #,tmp-id))
+                                           (for/list ([arg (in-list tmp-ids)])
+                                             #'())
+                                           #:ref-result-info? #t)
+       #`(form-id (parens val ...) . tail)))
+    (with-syntax-parse ([composite::binding-form composite])
+      (values
+       (binding-form #'map-infoer
+                     #`((key ...)
+                        #,tmp-ids
+                        composite.infoer-id
+                        composite.data))
+       new-tail))))
 
 (define-syntax (map-infoer stx)
   (syntax-parse stx
@@ -140,7 +144,7 @@
                   #`(composite-matcher-id 'map composite-data IF success failure)]
                  [else
                   #`(begin
-                      (define #,(car tmp-ids) (hash-ref arg-id (quote #,(car keys)) unsafe-undefined))
+                      (define #,(car tmp-ids) (hash-ref arg-id (rhombus-expression #,(car keys)) unsafe-undefined))
                       (IF (not (eq? #,(car tmp-ids) unsafe-undefined))
                           #,(loop (cdr keys) (cdr tmp-ids))
                           failure))]))
