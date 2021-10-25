@@ -888,9 +888,9 @@ with the right number of arguments.
 ```
 fun
 | hello(name):
-    "Hello, " +$ name    // +$ coerces to strings and concatenates
+    "Hello, " & name    // & coerces to strings and concatenates
 | hello(first, last):
-    hello(first +$ " " +$ last)
+    hello(first & " " & last)
 
 hello("World")             // prints "Hello, World"
 hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
@@ -1301,7 +1301,7 @@ and one for values:
 ```
 fun locale(who, neighborhood -: Map.of(String, Posn)):
   val p: neighborhood[who]
-  p.x +$ ", " +$ p.y
+  p.x & ", " & p.y
 
 locale("alice", neighborhood)  // prints "4, 5"
 ```
@@ -1448,7 +1448,7 @@ matches syntax objects, and it binds variables that are escaped in the
 pattern with `$`.
 
 ```
-val ~($x + $y): '(1 + (2 + 3))
+val '($x + $y): '(1 + (2 + 3))
 
 x  // prints a shrubbery: 1
 y  // prints a shrubbery: (2 + 3)
