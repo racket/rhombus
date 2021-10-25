@@ -11,6 +11,14 @@ and the
 provide a foundation for building a language. This proposal describes a prototype
 language built on those pieces.
 
+Main content:
+
+* [Motivation](#motivation)
+* [Guide-level explanation](#guide-level-explanation)
+* [Reference-level explanation](#reference-level-explanation)
+* [Drawbacks](#drawbacks)
+* [Rationale and alternatives](#rationale-and-alternatives)
+
 # Motivation
 [motivation]: #motivation
 
@@ -21,7 +29,30 @@ particular theme and direction.
 # Guide-level explanation
 [guide-level-explanation]: #guide-level-explanation
 
+Explanation content:
+
+* [Shrubbery notation](#shrubbery-notation)
+* [Modules](#modules)
+* [Definitions](#definitions)
+* [Annotations and the dot operator](#annotations-and-the-dot-operator)
+* [Function expressions](#function-expressions)
+* [Keyword and optional arguments](#keyword-and-optional-arguments)
+* [Conditionals and pattern-matching dispatch](#conditionals-and-pattern-matching-dispatch)
+* [Multiple values](#multiple-values)
+* [Mutable variables](#mutable-variables)
+* [Operators](#operators)
+* [Lists](#lists)
+* [Arrays and maps](#arrays-and-maps)
+* [Sets](#sets)
+* [Syntax objects](#syntax-objects)
+* [Expression macros](#expression-macros)
+* [Definition and declaration macros](#definition-and-declaration-macros)
+* [Binding and annotation macros](#binding-and-annotation-macros)
+* [Annotations versus binding patterns](#annotations-versus-binding-patterns)
+* [More](#more)
+
 ## Shrubbery notation
+[shrubbery-notation]: #shrubbery-notation
 
 Before we start, here’s a recap on shrubbery notation.
 
@@ -271,6 +302,7 @@ There are some subtleties related to the “precedence” of `:`, `|`,
 example.
 
 ## Modules
+[modules]: #modules
 
 A Rhombus module, which implements a program or a library, always
 starts `#lang rhombus`. If you write an expression at the top of a
@@ -383,6 +415,7 @@ renaming, re-exporting, and so on. See [a separate
 document](import-export.md) for more information.
 
 ## Definitions
+[definitions]: #definitions
 
 Besides `val` and `fun`, `struct` is a definition form that
 defines a new structure type. By convention, structure names start
@@ -605,6 +638,8 @@ nomivore(1)        // prints "yum"
 
 
 ## Annotations and the dot operator
+[annotations-and-the-dot-operator]: annotations-and-the-dot-operator
+
 
 Besides structure types defined with `struct`, a few predefined
 annotations work with the `-:` and `::` annotation operators, including
@@ -690,6 +725,7 @@ expression operator. See the current
 
 
 ## Function expressions
+[function-expressions]: #function-expressions
 
 The `fun` form works in an expression position as λ. Just like
 `function` in JavaScript, the expression variant omits a function
@@ -707,6 +743,7 @@ Naturally, keyword and optional arguments (as described in the next
 section) work with `fun` expressions, too.
 
 ## Keyword and optional arguments
+[keyword-and-optional-arguments]: #keyword-and-optional-arguments
 
 A function argument can be made optional by using `=` after the
 argument’s pattern and providing a default-value expression after `=`:
@@ -760,6 +797,7 @@ fun transform(Posn(x, y),
 ```
 
 ## Conditionals and pattern-matching dispatch
+[conditionals-and-pattern-matching-dispatch]: #conditionals-and-pattern-matching-dispatch
 
 The `&&` and `||` operators are short-circuiting “and” and ”or” forms.
 As in Racket, `||` returns the first non-`#false` value, and `&&`
@@ -859,6 +897,7 @@ hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
 ```
 
 ## Multiple values
+[multiple-values]: #multiple-values
 
 The `values` form returns multiple values:
 
@@ -900,6 +939,7 @@ _Get rid of multiple values' See the current
 [rationale](#rationale-and-alternatives)._
 
 ## Mutable variables
+[mutable-variables]: #mutable-variables
 
 Variables are immutable unless they are declared with the `mutable`
 binding operator. The `=` infix operator assigns to a mutable variable
@@ -925,6 +965,7 @@ _The `=` operator should also cooperate with `.` when a structure-type
 field is declared `mutable`, but that’s not yet implemented._
 
 ## Operators
+[operators]: #operators
 
 The `operator` form defines a prefix or infix operator for
 expressions, similar to a function definition:
@@ -1052,6 +1093,7 @@ import:
 ```
 
 ## Lists
+[lists]: #lists
 
 A `[` ... `]` form as an expression creates a list:
 
@@ -1174,6 +1216,7 @@ nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
 
 
 ## Arrays and maps
+[arrays-and-maps]: #arrays-and-maps
 
 The `Array` constructor is similar to `List`, but it creates an array,
 which has a fixed length at the time that it’s created and offers
@@ -1307,6 +1350,7 @@ locations[~alice]  // prints Posn(40, 50)
 ```
 
 ## Sets
+[sets]: #sets
 
 When `{` ... `}` is used with elements that are not keyword arguments
 and not two-element `(` ... `)` forms, then `{` ... `}` creates a set.
@@ -1335,6 +1379,7 @@ if the assigned value is `#false`, otherwise the “key” is added to the
 set.
 
 ## Syntax objects
+[syntax-objects]: #syntax-objects
 
 The `'` operator quotes an immediately following shrubbery term to
 produce a syntax object. The syntax object holds an unparsed
@@ -1490,6 +1535,7 @@ transformers._
 
 
 ## Expression macros
+[expression-macros]: #expression-macros
 
 Macros extend the syntax available for expressions, bindings,
 definitions, and more. Each kind of macro extension has a different
@@ -1656,6 +1702,7 @@ declarations that apply to all cases, and none of the cases can use
 `~parsed_right`.
 
 ## Definition and declaration macros
+[definition-and-declaration-macros]: #definition-and-declaration-macros
 
 The `defn.macro` form defines a definition macro. It is similar
 to `expr.macro` in prefix form, except that the name must be an
@@ -1693,6 +1740,7 @@ syntax for that combination should be straightforward._
 
 
 ## Binding and annotation macros
+[binding-and-annotation-macros]: #binding-and-annotation-macros
 
 Macros can extend binding-position syntax, too, via `bind.rule` and
 `bind.macro`. In the simplest case, a binding operator is implemented
@@ -1736,6 +1784,7 @@ Details on the low-level annotation protocol are also in [a separate
 document](annotation-macros.md).
 
 ## Annotations versus binding patterns
+[annotations-versus-binding-patterns]: #annotations-versus-binding-patterns
 
 Annotations and binding patterns serve similar and interacting purposes.
 The `-:` and `::` binding operators put annotations to work in a binding. For
