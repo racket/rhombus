@@ -258,7 +258,7 @@
            (loop))])))
 
 (struct s-exp-mode (depth status) #:prefab)
-(struct in-at (mode opener shrubbery-status openers) #:prefab)
+(struct in-at (mode comment? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 
 (define (lex-nested-status? status)
@@ -290,7 +290,13 @@
                                                                    (s-exp-mode depth s-exp-status)]))])]
                     [(in-at? status)
                      ;; within an `@` sequence
-                     (at-lexer in status (lambda (status) (loop status)))]
+                     (define-values (tok type paren start end backup new-status)
+                       (at-lexer in status (lambda (status) (loop status))))
+                     (define new-type (if (and (in-at-comment? status)
+                                               (not (eq? type 'eof)))
+                                          (hash-set (if (hash? type) type (hash 'type type)) 'comment? #t)
+                                          type))
+                     (values tok new-type paren start end backup new-status)]
                     [(in-escaped? status)
                      (define-values (t type paren start end backup sub-status)
                        (loop (in-escaped-shrubbery-status status)))
@@ -315,9 +321,10 @@
                             ;; we'll need to back up more:
                             [(not (token? tok)) backup]
                             [(eq? (token-name tok) 'at-opener) 1]
+                            [(eq? (token-name tok) 'at-comment) 3]
                             [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
                             [else backup]))
-       (values tok type paren start end backup status)])))
+       (values tok type paren start end new-backup status)])))
 
 (define-syntax-rule (make-lexer/status number bad-number)
   (lexer
@@ -375,12 +382,12 @@
    ["@//"
     (let ([opener (peek-at-opener input-port)])
       (if opener
-          (ret 'at-comment lexeme 'at-comment (string->symbol lexeme) start-pos end-pos (in-at 'open opener 'initial '()))
+          (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos (in-at 'open #t opener 'initial '()))
           (read-line-comment 'at-comment lexeme input-port start-pos)))]
    ["@"
     (let ([opener (peek-at-opener input-port)])
       (define mode (if opener 'open 'initial))
-      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode opener 'initial '())))]
+      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode #f opener 'initial '())))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
@@ -450,10 +457,10 @@
                                            (define opener (peek-at-opener in))
                                            (cond
                                              [opener
-                                              (in-at 'open opener sub-status '())]
+                                              (in-at 'open (in-at-comment? status) opener sub-status '())]
                                              [(and (not (eq? in-mode 'brackets))
                                                    (eqv? #\[ (peek-char in)))
-                                              (in-at 'brackets #f sub-status '())]
+                                              (in-at 'brackets (in-at-comment? status) #f sub-status '())]
                                              [(in-escaped? sub-status)
                                               (in-escaped-at-status sub-status)]
                                              [else sub-status])]
@@ -503,11 +510,11 @@
             [(= 0 (string-length s))
              (read-char in)
              (define end-pos (next-location-as-pos in))
-             (ret 'at-content "\n" 'string #f start-pos end-pos
+             (ret 'at-content "\n" 'text #f start-pos end-pos
                   (struct-copy in-at status [mode 'inside] [openers depth]))]
             [else
              (define end-pos (next-location-as-pos in))
-             (ret 'at-content s 'string #f start-pos end-pos
+             (ret 'at-content s 'text #f start-pos end-pos
                   (struct-copy in-at status [mode 'inside] [openers depth]))])]
          [(or (eof-object? ch)
               (peek-at-closer in #:opener opener))
@@ -515,7 +522,7 @@
             [(zero? depth)
              ;; `lex/status` will handle the case that the content is empty
              (define end-pos (next-location-as-pos in))
-             (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
+             (ret 'at-content (get-output-string o) 'text #f start-pos end-pos
                   (struct-copy in-at status [mode 'close]))]
             [else
              (if (equal? opener "")
@@ -525,7 +532,7 @@
          [(peek-at-prefixed #\@ in #:opener opener)
           ;; `lex/status` will handle the case that the content is empty
           (define end-pos (next-location-as-pos in))
-          (ret 'at-content (get-output-string o) 'string #f start-pos end-pos
+          (ret 'at-content (get-output-string o) 'text #f start-pos end-pos
                (struct-copy in-at status [mode 'escape] [openers depth]))]
          [(peek-at-opener in #:opener opener)
           (if (equal? opener "")
@@ -547,8 +554,8 @@
                 => (lambda (opener)
                      ;; block comment
                      (define end-pos (next-location-as-pos in))
-                     (ret 'at-comment (string-append opener "@" slashes) 'at-comment #f start-pos end-pos
-                          (in-at 'open opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
+                     (ret 'at-comment (string-append opener "@" slashes) 'comment #f start-pos end-pos
+                          (in-at 'open #t opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
                [else
                 ;; line comment
                 (read-line-comment 'comment (string-append opener "@" slashes) in start-pos
@@ -558,7 +565,7 @@
         (define next-opener (peek-at-opener in))
         (define mode (if next-opener 'open 'initial))
         (ret 'at (string-append opener "@") 'at #f start-pos end-pos
-             (in-at mode next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
+             (in-at mode (in-at-comment? status) next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
     ;; 'close mode handles the final `}` of a `{}`
     [(close)
      (define closer (at-opener->closer (in-at-opener status)))

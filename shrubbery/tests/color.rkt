@@ -60,6 +60,21 @@ kept
 f(#//^#{#(,unquote)}^, 2)
 
 #{#(1 #;^(1 2)^ 3)}
+
+
+@a{@//^{[apple}^ 2}
+@a{@//anything
+   more}
+
+@a{@//^{@a[apple]{banana}}^ 2}
+@a{@//^{@a[apple]{banana @//{nested}}}^ 2}
+@a{@//^{@a[apple]{banana @//{@[#//nested]}}}^ 2}
+@a{@a[apple]{banana @[#//^nested^]} 2}
+ok
+#//
+^@a{@//{[apple]} 2}^
+ok
+
 INPUT
 )
 ;; ^#// #{#(1 @;(1 2) 3)}^

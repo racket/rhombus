@@ -101,29 +101,25 @@
           (finish #f 0)]
          [else
           (finish pending new-depth)])]))
+  (define new-depth
+    (case (and (token? tok) (token-name tok))
+      [(opener at-opener s-exp) (add1 depth)]
+      [(closer at-closer) (max 0 (sub1 depth))]
+      [else depth]))
   (cond
+    [(and (not pending)
+          (token? tok)
+          (eq? 'group-comment (token-name tok)))
+     (finish (pending-comment line
+                              column
+                              (if (eq? line (comment-tracked-last-line status))
+                                  'own-line
+                                  'in-line))
+             0
+             #:comment? pending)]
     [(lex-nested-status? new-inner-status)
-     (finish-plain pending (if (and (token? tok)
-                                    (eq? 's-exp (token-name tok)))
-                               (add1 depth)
-                               depth))]
-    [(not pending)
-     (case (token-name tok)
-       [(group-comment)
-        (finish (pending-comment line
-                                 column
-                                 (if (eq? line (comment-tracked-last-line status))
-                                     'own-line
-                                     'in-line))
-                0
-                #:comment? pending)]
-       [else (finish #f 0)])]
+     (finish-plain pending new-depth)]
     [else
-     (define new-depth
-       (case (token-name tok)
-         [(opener) (add1 depth)]
-         [(closer) (max 0 (sub1 depth))]
-         [else depth]))
      (case (token-name tok)
        [(comment whitespace)
         (finish pending new-depth #:whitespace? #t)]
