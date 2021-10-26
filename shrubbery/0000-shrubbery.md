@@ -547,12 +547,39 @@ this is a group \
 
 ## Group comments
 
-When `#//` appears on its own line (or with only whitespace and
-non-group comments), then its indentation does not matter, and it
-comments out the next group—witch might be a single-line group, block,
-or `|` block. A `#//` is not allowed without a group afterward to
-comment out, and `#//`s do not nest (i.e., two `#//`s in a row is
-always an error.
+A `#//` comments out a group or `|` alternative. To comment out a
+group, `#//` must appear either on its own line before a group or at
+the start of a group. To comment out an alternative, `#//` must appear
+on its own line before the alternative or just before a `|` that does
+*not* start a new line.
+
+The interaction between `#//` and indentation depends on how it is
+used:
+
+ * When `#//` appears completely on its own line (possibly with
+   whitespace and non-group comments), then its indentation does not
+   matter. It comments out the next group or alternative—which might
+   be a single-line group, block, or `|` block.
+
+ * When `#//` appears at the start of a group with more tokens
+   afterward on the same line, it determines that group's indentation,
+   and it must obey any constraints on the group's indentation. When
+   `#//` appears immediately after an opener but with nothing else
+   afterward on the same line, it determines indentation for the
+   groups immediately within the opener, and it comments out the first
+   group.
+
+ * When `#//` appears just before a `|` on the same line, then unlike
+   the case for groups, it does not affect the the column of the `|`
+   as used to align alternatives on later lines. (That's because the
+   half-column alignment of `|` does not fit with the column alignment
+   of `#`.) Along those lines and to avoid an indentation mismatch, a
+   `#//` is not allowed to start a line for commenting out a `|`
+   alternative on the same line.
+
+A `#//` is not allowed without a group or alternative afterward to
+comment out. Multiple `#//`s do not nest (i.e., two `#//`s in a row is
+always an error).
 
 The following three groups all parse the same:
 
@@ -596,35 +623,15 @@ The following three groups all parse the same:
 {
   hello:
     val x:
-      #//
-      g(-1)
-      f(
-        #//
-        0,
-        1,
-        2 + 3,
-        #//
-        4 + 5)
-    #//
-    not included in the code
-    match x
-    #//
-    | 0: no
-    | 1: 'one'
-    #//
-    | 1.5: no
-    | 2: 'two'
-    #//
-    | 3: no,
-  #//
-  goodbye:
+      #// g(-1)
+      f(#// 0, 1, 2 + 3, #// 4 + 5)
+    #// not included in the code
+    match x #// | 0: no | 1: 'one' #// | 1.5: no
+                | 2: 'two' #// | 3: no,
+  #// goodbye:
     the enclosing group of the block is commented out
 }
 ```
-
-Because it must be on it own line, the `#//` group commenting-form is
-limited in its reach. Neverthess, it is expected to be useful for
-commenting out definitions and conditional branches.
 
 ## More examples
 
@@ -893,7 +900,7 @@ tabel below sketches the shape of `@` forms.
 |   |                 |     |                                                           |                                |
 |   | _opchar_        | is  | **a symbolic Unicode character not in** _special_         |                                |
 |   |                 | or  | **a punctuation Unicode character not in** _special_      |                                |
-|   |                 | or  | **one of ** `:`, `❘`                                      |                                |
+|   |                 | or  | **one of** `:`, `❘`                                      |                                |
 |   |                 |     |                                                           |                                |
 |   | _tailopchar_    | is  | **anything in** _opchar_ **except** `+`, `-`, `.`, `/`    |                                |
 |   |                 |     |                                                           |                                |
