@@ -49,11 +49,9 @@
            (indent-like-parenthesis t start current-tab)]
           [(bar-operator)
            (like-enclosing #:as-bar? #t)]
-          [(comment)
-           (define group-comment? (is-group-comment? t (+ start current-tab)))
-           (like-enclosing #:as-bar? (and group-comment?
-                                          (bar-after-group-comment? t (+ start current-tab) start))
-                           #:also-zero? group-comment?)]
+          [(group-comment)
+           (like-enclosing #:as-bar? (bar-after-group-comment? t (+ start current-tab) start)
+                           #:also-zero? #t)]
           [(operator)
            (like-enclosing #:as-operator? #t)]
           [(at-content)
@@ -222,7 +220,11 @@
       [(negative? pos) (maybe-list candidate plus-one-more?)]
       [else
        (define-values (s e) (send t get-token-range pos))
-       (define category (classify-position t s))
+       (define category (let ([c (classify-position t s)])
+                          (if (and (eq? c 'group-comment)
+                                   as-bar?)
+                              'comment
+                              c)))
        (case category
          [(whitespace comment continue-operator)
           ;; we don't do anything special with continue-operator here,
@@ -420,11 +422,6 @@
 (define (skip-redundant-block-operators t pos at-start)
   ;; no block operators are redundant, anymore
   pos)
-
-(define (is-group-comment? t pos)
-  (define-values (s e) (send t get-token-range pos))
-  (and (= e (+ s 3))
-       (equal? "#//" (send t get-text s e))))
 
 (define (bar-after-group-comment? t pos at-start)
   (let loop ([pos pos])

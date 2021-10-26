@@ -1607,6 +1607,153 @@ INPUT
       (group (brackets (group "4 ") (group "\n") (group "5 ") (group "  6")))))
     (group The end)))
 
+(define input4
+#<<INPUT
+#//
+gone:
+  sub
+here:
+  sub
+
+block:
+#//
+  gone
+  here
+
+block:
+  #// gone
+  here
+
+(#// gone,
+ here)
+(#// gone:
+  too,
+ here)
+(#//
+ gone,
+ here)
+(here,
+ #//
+ gone)
+(here,
+#//
+ gone)
+(here,
+ #// gone)
+
+cond
+| #// gone
+  here
+cond
+| 
+  #// gone
+  here
+cond
+| 
+  #//
+  gone
+  here
+| 
+#//
+  gone
+  here
+
+cond #// | gone | here
+cond | here #// | gone
+cond #// | gone
+         | here
+cond | #// gone; here | here
+
+{
+  hello:
+    val x: f(1, 2 + 3)
+    match x
+    | 1: 'one'
+    | 2: 'two'
+}
+
+{
+  hello:
+    val x:
+      #//
+      g(-1)
+      f(
+        #//
+        0,
+        1,
+        2 + 3,
+        #//
+        4 + 5)
+    #//
+    not included in the code
+    match x
+    #//
+    | 0: no
+    | 1: 'one'
+    #//
+    | 1.5: no
+    | 2: 'two'
+    #//
+    | 3: no,
+  #//
+  goodbye:
+    the enclosing group of the block is commented out
+}
+
+{
+  hello:
+    val x:
+      #// g(-1)
+      f(#// 0, 1, 2 + 3, #// 4 + 5)
+    #// not included in the code
+    match x #// | 0: no | 1: 'one' #// | 1.5: no
+                | 2: 'two' #// | 3: no,
+  #// goodbye:
+    the enclosing group of the block is commented out
+}
+INPUT
+)
+
+(define expected4
+  '(top
+    (group here (block (group sub)))
+    (group block (block (group here)))
+    (group block (block (group here)))
+    (group (parens (group here)))
+    (group (parens (group here)))
+    (group (parens (group here)))
+    (group (parens (group here)))
+    (group (parens (group here)))
+    (group (parens (group here)))
+    (group cond (alts (block (group here))))
+    (group cond (alts (block (group here))))
+    (group cond (alts (block (group here)) (block (group here))))
+    (group cond (alts (block (group here))))
+    (group cond (alts (block (group here))))
+    (group cond (alts (block (group here))))
+    (group cond (alts (block (group here)) (block (group here))))
+    (group
+     (braces
+      (group
+       hello
+       (block
+        (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
+        (group match x (alts (block (group 1 (block (group (op |'|) one (op |'|))))) (block (group 2 (block (group (op |'|) two (op |'|)))))))))))
+    (group
+     (braces
+      (group
+       hello
+       (block
+        (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
+        (group match x (alts (block (group 1 (block (group (op |'|) one (op |'|))))) (block (group 2 (block (group (op |'|) two (op |'|)))))))))))
+    (group
+     (braces
+      (group
+       hello
+       (block
+        (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
+        (group match x (alts (block (group 1 (block (group (op |'|) one (op |'|))))) (block (group 2 (block (group (op |'|) two (op |'|)))))))))))))
+
 (define (check input expected)
   (let ([in (open-input-string input)])
     (define (out name parsed write)
@@ -1660,6 +1807,7 @@ INPUT
 (check input1 expected1)
 (check input2 expected2)
 (check input3 expected3)
+(check input4 expected4)
 
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
@@ -1681,3 +1829,14 @@ INPUT
 (check-fail "(«| a | c»)" #rx"misplaced `|`")
 (check-fail "z «|« « | y » » »" #rx"misplaced `|`")
 (check-fail "«|« w « | y » » »" #rx"misplaced `|`")
+
+(check-fail (lines "(#// x,"
+                   "     y)") #rx"wrong indentation")
+(check-fail (lines "(#//"
+                   "   x,"
+                   "   y)") #rx"wrong indentation")
+(check-fail (lines "cond"
+                   "  #// | x") #rx"wrong indentation")
+(check-fail (lines "cond"
+                   "#// | x") #rx"misplaced `[|]`")
+(check-fail "x #// y" #rx"misplaced group comment")
