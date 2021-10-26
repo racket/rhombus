@@ -1,5 +1,6 @@
 #lang racket/base
 (require "lex.rkt"
+         "lex-comment.rkt"
          syntax-color/racket-lexer
          racket/symbol)
 
@@ -7,7 +8,7 @@
 
 (define (shrubbery-lexer in pos status)
   (let-values ([(tok type paren start end backup status)
-                (lex/status in pos status racket-lexer/status)])
+                (lex/comment/status in pos status racket-lexer/status)])
     (define (to-string-or-eof tok)
       (cond
         [(eof-object? tok) tok]

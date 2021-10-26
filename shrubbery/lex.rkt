@@ -1,5 +1,4 @@
 #lang racket/base
-
 (require parser-tools/lex
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
