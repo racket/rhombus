@@ -800,12 +800,15 @@
             (list group-tag (add-tail-raw-to-prefix
                              (list (car l))
                              post-syntaxes
-                             (cons (datum->syntax (token-value init-t)
-                                                  'brackets
-                                                  (token-value init-t)
-                                                  (token-value init-t))
-                                   (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
-                                                       new-content)))))
+                             (let ([tag (datum->syntax (token-value init-t)
+                                                       'brackets
+                                                       (token-value init-t)
+                                                       (token-value init-t))])
+                               (cond
+                                 [(null? new-content) (list tag)]
+                                 [else (cons tag
+                                             (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
+                                                                 new-content))])))))
           (values (lambda (g) (cond
                                 [(not after-bracket?)
                                  (at-call (car g)

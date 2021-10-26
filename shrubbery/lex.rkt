@@ -165,8 +165,10 @@
      #`(ret name lexeme #:raw #f type more ...)]))
 
 (define (make-ret name lexeme #:raw [raw #f] attribs paren start-pos end-pos status)
+  (define backup 0)
   (values (make-token name lexeme start-pos end-pos raw)
-          attribs paren (position-offset start-pos) (position-offset end-pos) status))
+          attribs paren (position-offset start-pos) (position-offset end-pos)
+          backup status))
 
 (define stx-for-original-property (read-syntax #f (open-input-string "original")))
 (define current-lexer-source (make-parameter "input"))
@@ -206,6 +208,7 @@
             'comment #f 
             (position-offset start-pos)
             end-offset
+            0
             status)))
 
 (define get-next-comment
@@ -254,20 +257,20 @@
            (cons next (loop))
            (loop))])))
 
-(struct s-exp-mode (depth) #:prefab)
+(struct s-exp-mode (depth status) #:prefab)
 (struct in-at (mode opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 
 (define (lex-nested-status? status)
   (not (or (not status) (symbol? status))))
 
-(define (lex/status in pos status racket-lexer/status)
-  (let-values ([(tok type paren start end status)
+(define (lex/status in pos status racket-lexer*/status)
+  (let-values ([(tok type paren start end backup status)
                 (let loop ([status status])
                   (cond
                     [(s-exp-mode? status)
                      ;; within `#{}`
-                     (unless racket-lexer/status
+                     (unless racket-lexer*/status
                        (error "shouldn't be in S-expression mode without a Racket lexer"))
                      (define depth (s-exp-mode-depth status))
                      (cond
@@ -276,22 +279,23 @@
                         ;; go out of S-expression mode by using shrubbery lexer again
                         (shrubbery-lexer/status in)]
                        [else
-                        (define-values (tok type paren start end s-exp-status)
-                          (racket-lexer/status in))
-                        (values tok type paren start end (case s-exp-status
-                                                           [(open)
-                                                            (s-exp-mode (add1 depth))]
-                                                           [(close)
-                                                            (s-exp-mode (sub1 depth))]
-                                                           [else status]))])]
+                        (define-values (tok type paren start end backup s-exp-status action)
+                          (racket-lexer*/status in pos (s-exp-mode-status status)))
+                        (values tok type paren start end backup (case action
+                                                                  [(open)
+                                                                   (s-exp-mode (add1 depth) s-exp-status)]
+                                                                  [(close)
+                                                                   (s-exp-mode (sub1 depth) s-exp-status)]
+                                                                  [else
+                                                                   (s-exp-mode depth s-exp-status)]))])]
                     [(in-at? status)
                      ;; within an `@` sequence
                      (at-lexer in status (lambda (status) (loop status)))]
                     [(in-escaped? status)
-                     (define-values (t type paren start end sub-status)
+                     (define-values (t type paren start end backup sub-status)
                        (loop (in-escaped-shrubbery-status status)))
-                     (values t type paren start end (struct-copy in-escaped status
-                                                                 [shrubbery-status sub-status]))]
+                     (values t type paren start end backup (struct-copy in-escaped status
+                                                                        [shrubbery-status sub-status]))]
                     [(eq? status 'continuing)
                      ;; normal mode, after a form
                      (shrubbery-lexer-continuing/status in)]
@@ -304,15 +308,15 @@
             (eqv? 0 (string-length (token-e tok))))
        ;; a syntax coloring lexer must not return a token that
        ;; consumes no characters, so just drop it by recurring
-       (lex/status in pos status racket-lexer/status)]
+       (lex/status in pos status racket-lexer*/status)]
       [else
-       (define backup (cond
-                        ;; If we have "@/{" and we add a "/" after the existing one,
-                        ;; we'll need to back up more:
-                        [(not (token? tok)) 0]
-                        [(eq? (token-name tok) 'at-opener) 1]
-                        [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
-                        [else 0]))
+       (define new-backup (cond
+                            ;; If we have "@/{" and we add a "/" after the existing one,
+                            ;; we'll need to back up more:
+                            [(not (token? tok)) backup]
+                            [(eq? (token-name tok) 'at-opener) 1]
+                            [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
+                            [else backup]))
        (values tok type paren start end backup status)])))
 
 (define-syntax-rule (make-lexer/status number bad-number)
@@ -350,7 +354,7 @@
    [(:or ")" "]" "}" "»")
     (ret 'closer lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'continuing)]
    ["#{"
-    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0))]
+    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0 #f))]
    [":"
     (ret 'block-operator lexeme 'block-operator #f start-pos end-pos 'initial)]
    ["|"
@@ -395,7 +399,7 @@
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
 (define (ret-eof start-pos end-pos)
-  (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f #f))
+  (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f 0 #f))
 
 (define shrubbery-lexer/status (make-lexer/status number bad-number))
 (define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
@@ -435,30 +439,30 @@
     ;; may transition from 'initial mode to 'brackets mode at `[`
     [(initial brackets)
      ;; recur to parse in shrubbery mode:
-     (define-values (t type paren start end sub-status)
+     (define-values (t type paren start end backup sub-status)
        (recur (in-at-shrubbery-status status)))
      ;; to keep the term and possibly exit 'initial or 'brackets mode:
      (define (ok status)
-       (values t type paren start end (cond
-                                        [(and (not (s-exp-mode? sub-status))
-                                              (null? (in-at-openers status)))
-                                         ;; either `{`, `[`, or back to shrubbery mode
-                                         (define opener (peek-at-opener in))
-                                         (cond
-                                           [opener
-                                            (in-at 'open opener sub-status '())]
-                                           [(and (not (eq? in-mode 'brackets))
-                                                 (eqv? #\[ (peek-char in)))
-                                            (in-at 'brackets #f sub-status '())]
-                                           [(in-escaped? sub-status)
-                                            (in-escaped-at-status sub-status)]
-                                           [else sub-status])]
-                                        [else
-                                         ;; continue in-at mode
-                                         status])))
+       (values t type paren start end 0 (cond
+                                          [(and (not (s-exp-mode? sub-status))
+                                                (null? (in-at-openers status)))
+                                           ;; either `{`, `[`, or back to shrubbery mode
+                                           (define opener (peek-at-opener in))
+                                           (cond
+                                             [opener
+                                              (in-at 'open opener sub-status '())]
+                                             [(and (not (eq? in-mode 'brackets))
+                                                   (eqv? #\[ (peek-char in)))
+                                              (in-at 'brackets #f sub-status '())]
+                                             [(in-escaped? sub-status)
+                                              (in-escaped-at-status sub-status)]
+                                             [else sub-status])]
+                                          [else
+                                           ;; continue in-at mode
+                                           status])))
      ;; converts a token to an error token:
      (define (error status)
-       (values (struct-copy token t [name 'fail]) 'error #f start end status))
+       (values (struct-copy token t [name 'fail]) 'error #f start end 0 status))
      ;; update the shrubbery-level status, then keep the term or error,
      ;; trackig nesting depth through the status as we continue:
      (let ([status (struct-copy in-at status

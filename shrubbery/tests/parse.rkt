@@ -1538,6 +1538,7 @@ INPUT
 @{9}
 @[7]{8, 10 @"more"}
 
+@none{}
 @«5»[3]{yohoo @9[a, b, c]{
                this is plain text
                inside braces}
@@ -1574,6 +1575,7 @@ INPUT
     (group (parens (group 7)))
     (group (parens (group (brackets (group "9")))))
     (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more")))))
+    (group none (parens (group (brackets))))
     (group
      5
      (parens
@@ -1754,7 +1756,8 @@ INPUT
         (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
         (group match x (alts (block (group 1 (block (group (op |'|) one (op |'|))))) (block (group 2 (block (group (op |'|) two (op |'|)))))))))))))
 
-(define (check input expected)
+(define (check which input expected)
+  (printf "checking ~s\n" which)
   (let ([in (open-input-string input)])
     (define (out name parsed write)
       (define path (build-path (find-system-path 'temp-dir) name))
@@ -1804,10 +1807,10 @@ INPUT
 (define (lines s . ss)
   (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
 
-(check input1 expected1)
-(check input2 expected2)
-(check input3 expected3)
-(check input4 expected4)
+(check 1 input1 expected1)
+(check 2 input2 expected2)
+(check 3 input3 expected3)
+(check 4 input4 expected4)
 
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")

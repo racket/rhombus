@@ -13,28 +13,28 @@
 {
   hello:
     val x:
-      ^#//
-      g(-1)^
+      #//
+      ^g(-1)^
       f(
-        ^#//
-        0^,
+        #//
+        ^0^,
         1,
         2 + 3,
-        ^#//
-        4 + 5^)
-    ^#//
-    not included in the code^
+        #//
+        ^4 + 5^)
+    #//
+    ^not included in the code^
     match x
-    ^#//
-    | 0: no^
+    #//
+    ^| 0: no^
     | 1: 'one'
-    ^#//
-    | 1.5: no^
+    #//
+    ^| 1.5: no^
     | 2: 'two'
-    ^#//
-    | 3: no^,
-  ^#//
-  goodbye:
+    #//
+    ^| 3: no^,
+  #//
+  ^goodbye:
     the enclosing group of the block is commented out^
 }
 
@@ -44,28 +44,31 @@
 {
   hello:
     val x:
-      ^#// g(-1)^
-      f(^#// 0^, 1, 2 + 3, ^#// 4 + 5^)
-    ^#// not included in the code^
-    match x ^#// | 0: no^ | 1: 'one' ^#// | 1.5: no^
-                | 2: 'two' ^#// | 3: no^,
-  ^#// goodbye:
+      #// ^g(-1)^
+      f(#// ^0^, 1, 2 + 3, #// ^4 + 5^)
+    #// ^not included in the code^
+    match x #// ^| 0: no^ | 1: 'one' #// ^| 1.5: no^
+                | 2: 'two' #// ^| 3: no^,
+  #// ^goodbye:
     the enclosing group of the block is commented out^
 }
 
-^#// #{#(use-s-exp
+#// ^#{#(use-s-exp
 reader
 "all sorts of stuff")}^
 kept
-f(^#//#{#(,unquote)}^, 2)
+f(#//^#{#(,unquote)}^, 2)
+
+#{#(1 #;^(1 2)^ 3)}
 INPUT
 )
+;; ^#// #{#(1 @;(1 2) 3)}^
 
 (define (lex-all-input in fail #:keep-type? [keep-type? #t])
   (let loop ([status 'initial])
     (define-values (start-line start-column start-offset) (port-next-location in))
     (define-values (r type paren start-pos end-pos backup new-status)
-      (lex/comment/status in (file-position in) status racket-lexer/status))
+      (lex/comment/status in (file-position in) status racket-lexer*/status))
     (define-values (end-line end-column end-offset) (port-next-location in))
     (cond
       [(eq? type 'eof)
@@ -98,9 +101,12 @@ INPUT
      (loop (add1 i) j (not comment?))]
     [else
      (define c (send t classify-position* j))
-     (unless (eq? (if (hash? c) (hash-ref c 'type #f) 'white-space) 'white-space)
+     (define-values (s e) (send t get-token-range j))
+     (unless (eq? (if (hash? c) (hash-ref c 'type #f) c) 'white-space)
        (unless (eq? comment? (if (hash? c)
                                  (hash-ref c 'comment? #f)
                                  #f))
          (error 'color-test "wrong ~s at offset ~s" (not comment?) i)))
      (loop (add1 i) (add1 j) comment?)]))
+
+"passed"

@@ -115,7 +115,8 @@
                                  (if (eq? line (comment-tracked-last-line status))
                                      'own-line
                                      'in-line))
-                0)]
+                0
+                #:comment? pending)]
        [else (finish #f 0)])]
     [else
      (define new-depth
