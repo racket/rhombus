@@ -582,6 +582,7 @@ weirdly & "none"
 
 '(@x)
 '(@f{text})
+'(@f{text}{another text})
 '(@f[x, y]{This is plain text.})
 '(@f[x, y])
 '(@{text})

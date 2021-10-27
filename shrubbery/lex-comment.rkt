@@ -112,7 +112,8 @@
           (eq? 'group-comment (token-name tok)))
      (finish (pending-comment line
                               column
-                              (if (eq? line (comment-tracked-last-line status))
+                              (if (or (not status)
+                                      (eq? line (comment-tracked-last-line status)))
                                   'own-line
                                   'in-line))
              0
