@@ -487,7 +487,8 @@
             [else
              (error status)])]
          [else (ok status)]))]
-    ;; 'open mode is right `@` when the next character is `{`
+    ;; 'open mode is right after `@` when the next character is `{`,
+    ;; or after a closing `}` when the next character is `{`
     [(open)
      (define opener (in-at-opener status))
      (define-values (start-pos end-pos eof?) (get-expected opener #\{))
@@ -574,10 +575,14 @@
        [eof? (ret-eof start-pos end-pos)]
        [else
         (define sub-status (in-at-shrubbery-status status))
+        ;; might continue with another immediate opener:
+        (define next-opener (peek-at-opener in))
         (ret 'at-closer (string-append "}" closer) 'parenthesis '|}| start-pos end-pos
-             (if (in-escaped? sub-status)
-                 (in-escaped-at-status sub-status)
-                 sub-status))])]
+             (if next-opener
+                 (in-at 'open (in-at-comment? status) next-opener sub-status '())
+                 (if (in-escaped? sub-status)
+                     (in-escaped-at-status sub-status)
+                     sub-status)))])]
     [else (error "unknown at-exp state")]))
 
 (define (peek-at-opener in #:opener [opener #f])

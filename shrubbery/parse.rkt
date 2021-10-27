@@ -789,7 +789,7 @@
           (eq? 'at-opener (token-name (car l))))
      ;; process a `{`...`}` body, handling escapes and then trimming whitespace
      (define init-t (car l))
-     (let loop ([l (cdr l)] [content '()])
+     (let loop ([l (cdr l)] [content '()] [accum-args '()])
        (case (if (null? l) 'at-closer (token-name (car l)))
          [(at-closer)
           (when (null? l)
@@ -809,29 +809,37 @@
                                  [else (cons tag
                                              (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
                                                                  new-content))])))))
-          (values (lambda (g) (cond
-                                [(not after-bracket?)
-                                 (at-call (car g)
-                                          (list parens-tag c)
-                                          (cdr g))]
-                                [else
-                                 (define bracket (caar g))
-                                 (define new-g (cons (cons parens-tag
-                                                           (append
-                                                            (cdar g)
-                                                            (list
-                                                             (move-post-raw-to-prefix bracket c))))
-                                                     (cdr g)))
-                                 (move-pre-raw bracket
-                                               (add-raw-to-prefix* #f (syntax-to-raw bracket)
-                                                                   new-g))]))
-                  'initial (if (null? l) null (cdr l)) line delta)]
+          (cond
+            [(and (pair? l) (pair? (cdr l)) (eq? 'at-opener (token-name (cadr l))))
+             ;; more `{}` arguments
+             (loop (cddr l) '() (cons c accum-args))]
+            [else
+             (values (lambda (g) (cond
+                                   [(not after-bracket?)
+                                    (at-call (car g)
+                                             (cons parens-tag (reverse (cons c accum-args)))
+                                             (cdr g))]
+                                   [else
+                                    (define bracket (caar g))
+                                    (define new-g (cons (cons parens-tag
+                                                              (append
+                                                               (cdar g)
+                                                               (let ([args (reverse (cons c accum-args))])
+                                                                 (cons
+                                                                  (move-post-raw-to-prefix bracket (car args))
+                                                                  (cdr args)))))
+                                                        (cdr g)))
+                                    (move-pre-raw bracket
+                                                  (add-raw-to-prefix* #f (syntax-to-raw bracket)
+                                                                      new-g))]))
+                     'initial (if (null? l) null (cdr l)) line delta)])]
          [(at-content)
           (loop (cdr l)
                 ;; mark as 'content instead of 'group for now, so we
                 ;; can split and trim whitespace after finding all of it
                 (cons (list 'content (token-value (car l)))
-                      content))]
+                      content)
+                accum-args)]
          [(at at-comment)
           (define t (car l))
           (define comment? (eq? (token-name t) 'at-comment))
@@ -844,12 +852,14 @@
                                      #:column (token-column t)
                                      #:delta 0
                                      #:raw null)))
-          (loop rest-l (cons (if comment?
-                                 (list 'comment (cons (token-raw t) (syntax-to-raw g)))
-                                 (cons group-tag g))
-                             content))]
+          (loop rest-l
+                (cons (if comment?
+                          (list 'comment (cons (token-raw t) (syntax-to-raw g)))
+                          (cons group-tag g))
+                      content)
+                accum-args)]
          [(comment)
-          (loop (cdr l) (cons (list 'comment (token-e (car l))) content))]
+          (loop (cdr l) (cons (list 'comment (token-e (car l))) content) accum-args)]
          [else (error "unexpected in at" (token-name (car l)))]))]
     [else
      (values (lambda (g) g) #f l line delta)]))

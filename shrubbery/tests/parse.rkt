@@ -1538,6 +1538,10 @@ INPUT
 @{9}
 @[7]{8, 10 @"more"}
 
+@apple{one}{two}
+@banana[0]{three}{four}{five}
+@coconut{six} {seven}
+
 @none{}
 @«5»[3]{yohoo @9[a, b, c]{
                this is plain text
@@ -1575,6 +1579,14 @@ INPUT
     (group (parens (group 7)))
     (group (parens (group (brackets (group "9")))))
     (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more")))))
+    (group apple (parens (group (brackets (group "one")))
+                         (group (brackets (group "two")))))
+    (group banana (parens (group 0)
+                          (group (brackets (group "three")))
+                          (group (brackets (group "four")))
+                          (group (brackets (group "five")))))
+    (group coconut (parens (group (brackets (group "six"))))
+           (braces (group seven)))
     (group none (parens (group (brackets))))
     (group
      5
