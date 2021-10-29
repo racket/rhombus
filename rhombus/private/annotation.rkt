@@ -32,7 +32,7 @@
 
          (for-space rhombus/annotation #%tuple))
 
-(module+ for-struct
+(module+ for-class
   (begin-for-syntax
     (provide (property-out annotation-prefix-operator)
              (property-out annotation-infix-operator)

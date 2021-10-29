@@ -33,9 +33,9 @@ def f(cons(x :: Integer, y)): cons(x + 1, y)
 
 f(cons(22, #false))
 
-// structures
+// classes (as records/structures)
 
-struct Posn(x, y)
+class Posn(x, y)
 
 def md(p -: Posn):
   p.x + p.y
@@ -300,11 +300,11 @@ accum
 def ok_later: "ok"
 check_later()
 
-// Nested structure types with contracts
+// Nested class types with contracts
 
-struct IPosn(x :: Integer, y :: Integer)
+class IPosn(x :: Integer, y :: Integer)
 
-struct ILine(p1 :: IPosn, p2 :: IPosn)
+class ILine(p1 :: IPosn, p2 :: IPosn)
 
 def l1: ILine(IPosn(1, 2), IPosn(3, 4))
 

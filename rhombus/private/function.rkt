@@ -17,7 +17,7 @@
          "annotation.rkt"
          (only-in "quasiquote.rkt"
                   [... rhombus...])
-         (submod "annotation.rkt" for-struct)
+         (submod "annotation.rkt" for-class)
          (only-in "assign.rkt"
                   [= rhombus=]))
 

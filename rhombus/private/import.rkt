@@ -160,10 +160,6 @@
        (raise-syntax-error 'import
                            "second prefix specification not allowed"
                            (cadr prefixes))]))
-
-  (define-splicing-syntax-class :prefix-mode
-    (pattern (~seq #:as prefix:identifier))
-    (pattern (~seq #:open) #:attr prefix #'#f))
   
   (define-syntax-class :import-block
     #:datum-literals (block group op)

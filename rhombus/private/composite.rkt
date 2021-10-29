@@ -5,7 +5,7 @@
          "binding.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
-         (submod "annotation.rkt" for-struct))
+         (submod "annotation.rkt" for-class))
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
 ;; to a composite datatype, but the `rest` support is currently

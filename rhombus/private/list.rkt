@@ -6,7 +6,7 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
-         (submod "annotation.rkt" for-struct)
+         (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"

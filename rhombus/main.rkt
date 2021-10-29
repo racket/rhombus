@@ -14,7 +14,7 @@
         "private/underscore.rkt"
         "private/arithmetic.rkt"
         "private/dot.rkt"
-        "private/struct.rkt"
+        "private/class.rkt"
         "private/define.rkt"
         "private/value.rkt"
         "private/import.rkt"

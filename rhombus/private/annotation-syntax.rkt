@@ -6,7 +6,7 @@
                      "tail.rkt"
                      "static-info-pack.rkt")
          "definition.rkt"
-         (submod "annotation.rkt" for-struct)
+         (submod "annotation.rkt" for-class)
          "syntax.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")

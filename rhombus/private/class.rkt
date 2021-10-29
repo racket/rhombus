@@ -7,20 +7,20 @@
          "expression.rkt"
          "binding.rkt"
          "annotation.rkt"
-         (submod "annotation.rkt" for-struct)
+         (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
          "composite.rkt"
          "assign.rkt"
          "static-info.rkt")
 
-(provide (rename-out [rhombus-struct struct]))
+(provide (rename-out [rhombus-class class]))
 
 (begin-for-syntax
-  (struct struct-desc (constructor-id fields))
-  (define (struct-desc-ref v) (and (struct-desc? v) v))
+  (struct class-desc (constructor-id fields))
+  (define (class-desc-ref v) (and (class-desc? v) v))
 
-  (define in-struct-desc-space (make-interned-syntax-introducer 'rhombus/struct))
+  (define in-class-desc-space (make-interned-syntax-introducer 'rhombus/class))
 
   (define-syntax-class :field
     #:datum-literals (group op)
@@ -36,7 +36,7 @@
                                      #'c.static-infos
                                      #'()))))
 
-(define-syntax rhombus-struct
+(define-syntax rhombus-class
   (definition-transformer
    (lambda (stxes)
      (syntax-parse stxes
@@ -50,7 +50,7 @@
                 (values imm (cons field m))
                 (values (cons field imm) m))))
         (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
-                      [(struct:name) (generate-temporaries #'(name))]
+                      [(class:name) (generate-temporaries #'(name))]
                       [name-instance (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name)]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (datum->syntax field
@@ -76,15 +76,15 @@
                                                             [i (in-naturals)])
                                                    i)])
           (list
-           #`(define-values (struct:name name name? name-field ... set-name-field! ...)
-               (let-values ([(struct:name name name? name-ref name-set!)
+           #`(define-values (class:name name name? name-field ... set-name-field! ...)
+               (let-values ([(class:name name name? name-ref name-set!)
                              (make-struct-type 'name #f cnt 0 #f
                                                (list (cons prop:field-name->accessor '(field.name ...)))
                                                #f #f
                                                '(immutable-field-index ...)
                                                #,(build-guard-expr fields
                                                                    (syntax->list #'(field.predicate ...))))])
-                 (values struct:name name name?
+                 (values class:name name name?
                          (make-struct-field-accessor name-ref field-index 'field.name)
                          ...
                          (make-struct-field-accessor name-set! mutable-field-index 'mutable-field)
@@ -103,16 +103,16 @@
                                          (quote-syntax name?)
                                          (quote-syntax ((#%dot-provider name-instance)))
                                          cnt
-                                         (make-struct-instance-predicate accessors)
-                                         (make-struct-instance-static-infos accessors))))
-           #'(define-struct-desc-syntax name
-               (struct-desc (quote-syntax name)
-                            (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
-                                  ...)))
+                                         (make-class-instance-predicate accessors)
+                                         (make-class-instance-static-infos accessors))))
+           #'(define-class-desc-syntax name
+               (class-desc (quote-syntax name)
+                           (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
+                                 ...)))
            #'(define-dot-provider-syntax name
-               (dot-provider (make-handle-struct-type-dot (quote-syntax name))))
+               (dot-provider (make-handle-class-type-dot (quote-syntax name))))
            #'(define-dot-provider-syntax name-instance
-               (dot-provider (make-handle-struct-instance-dot (quote-syntax name))))
+               (dot-provider (make-handle-class-instance-dot (quote-syntax name))))
            #'(define-static-info-syntax name (#%call-result ((#%dot-provider name-instance))))
            #'(begin
                (define-static-info-syntax/maybe* name-field (#%call-result field.static-infos))
@@ -132,38 +132,38 @@
                                                             #,(format "~a" (syntax-e predicate))
                                                             #,field))]))))))
 
-(define-for-syntax (make-struct-instance-predicate accessors)
+(define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)
     #`(and #,@(for/list ([acc (in-list accessors)]
                          [pred (in-list predicate-stxs)])
                 #`(#,pred (#,acc #,arg))))))
 
-(define-for-syntax (make-struct-instance-static-infos accessors)
+(define-for-syntax (make-class-instance-static-infos accessors)
   (lambda (statis-infoss)
     (for/list ([acc (in-list accessors)]
                [static-infos (in-list statis-infoss)])
       #`(#,acc #,static-infos))))
 
-;; dot provider for a structure name used before a `.`
-(define-for-syntax ((make-handle-struct-type-dot name) form1 dot field-id)
-  (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
+;; dot provider for a class name used before a `.`
+(define-for-syntax ((make-handle-class-type-dot name) form1 dot field-id)
+  (define desc (syntax-local-value* (in-class-desc-space name) class-desc-ref))
   (unless desc (error "cannot find annotation binding for dot provider"))
   (define accessor-id
-    (for/or ([field+acc (in-list (struct-desc-fields desc))])
+    (for/or ([field+acc (in-list (class-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cadr field+acc))))
   (unless accessor-id
     (raise-syntax-error #f
-                        "cannot find field in structure"
+                        "cannot find field in class"
                         field-id))
   (relocate (span-srcloc form1 field-id) accessor-id))
 
-;; dot provider for a structure instance used before a `.`
-(define-for-syntax ((make-handle-struct-instance-dot name) form1 dot field-id)
-  (define desc (syntax-local-value* (in-struct-desc-space name) struct-desc-ref))
+;; dot provider for a class instance used before a `.`
+(define-for-syntax ((make-handle-class-instance-dot name) form1 dot field-id)
+  (define desc (syntax-local-value* (in-class-desc-space name) class-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define accessor-id+static-infos
-    (for/or ([field+acc (in-list (struct-desc-fields desc))])
+    (for/or ([field+acc (in-list (class-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cdr field+acc))))
   (unless accessor-id+static-infos
@@ -187,10 +187,10 @@
   
   (wrap-static-info* e all-static-infos))
 
-(define-syntax (define-struct-desc-syntax stx)
+(define-syntax (define-class-desc-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
-     #`(define-syntax #,(in-struct-desc-space #'id)
+     #`(define-syntax #,(in-class-desc-space #'id)
          rhs)]))
 
 (define-syntax (define-static-info-syntax/maybe* stx)
