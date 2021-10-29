@@ -10,21 +10,15 @@ The general syntax of `import` is
 
 ```
 import:
-  <prefix-identifier> = <import-form>:
+  <import-form>:
     <import-modifier>
     ...
   ...
 ```
 
-where `<prefix-identifier>` is optional, `=` can be omitted if
-`<prefix-identifier>` is omitted, and an empty
-`<import-modifier>`block can be omitted. If `<prefix-identifier>` is
-provided, then the corresponding imports are accessed through a
-`<prefix-identifier>.` prefix. If `<prefix-identifier>` is omitted but
-`=` is present, then the imports are accessed without a prefix. If
-both `<prefix-identifier>` and `=` are omitted, then the imports are
-accessed using a prefix that is inferred from the module path in
-`<import-form>`.
+where a prefix identifier is inferred from `<import-form>`, but it can
+be changed or suppressed through an `<import-modifier>`. If a prefix
+identifier is used, the imports are accessed using the prefix.
 
 An `<import-form>` is a module path or a form using an import
 transformer or operator. There are currently no predefined import
@@ -48,14 +42,21 @@ A module path is one of the following:
  * a `file(<string>)` form, where `<string>` is a valid path on the
    current filesystem.
 
-A sequence of `<import-modifier>`s is applied to an `<import-form>` in
-order from first to last. For example, if one `<import-form>` renames
-an import, then any later `<import-modifier>`s uses the new name
-instead of the old one. The set of `<import-modifier>` forms is
-extensible, but it includes the following forms:
+A sequence of `<import-modifier>`s is applied to an `<import-form>`.
+To the degree that order matters, the `<import-modifier>`s are
+applied in order from first to last. For example, if one
+`<import-form>` renames an import, then any later `<import-modifier>`s
+uses the new name instead of the old one. The set of
+`<import-modifier>` forms is extensible, but it includes the following
+forms:
+
+ * `prefix <identifier>`: sets the import prefix to `<identifier>`.
+
+ * `no_prefix`: imports without a prefix, so all of the imports are
+   “dumped” into the namespace.
 
  * `rename` followed by a block with any number of groups of the form
-   `<old-name> 'to' <new-name>`, where each `<old-name>` or
+   `<old-name> ~to <new-name>`, where each `<old-name>` or
    `<new-name>` can be an identifier or an operator. The `rename`
    modifier renames imports.
 
@@ -138,7 +139,7 @@ forms.
 
 export:
   dont_look $
-  rename: bleating 'to' greeting
+  rename: bleating ~to greeting
 
 def dont_look:
   "oops"
@@ -157,17 +158,19 @@ operator (a $ b):
 import:
   "a.rhm":
     except: dont_look
-    rename: $ 'to' $$
-  = lib("racket/base.rkt"):
+    rename: $ ~to $$
+  lib("racket/base.rkt"):
+    no_prefix
     only: modulo remainder
-  base = racket/base:
-    rename: car 'to' kar
-            / 'to' div
+  racket/base:
+    prefix base
+    rename: car ~to kar
+            / ~to div
     expose: gcd
 
 export:
   a base.cdr
-  rename: base.cdr 'to' kdr
+  rename: base.cdr ~to kdr
   all_from(racket/base):
     except: remainder
   all_in(base):

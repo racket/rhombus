@@ -1251,7 +1251,7 @@ neighborhood["alice"]     // prints Posn(4, 5)
 ```
 
 Curly braces `{` ... `}` can be used as a shorthand for writing `Map(`
-... `)`. Within curcly braces, the key and value are joined by `:`.
+... `)`. Within curly braces, the key and value are joined by `:`.
 (If a key expression needs to use `:` itself, the expression will have
 to be in parentheses.)
 
