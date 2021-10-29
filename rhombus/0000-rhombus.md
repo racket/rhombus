@@ -33,7 +33,7 @@ Explanation content:
 
 * [Shrubbery notation](#shrubbery-notation)
 * [Modules](#modules)
-* [Definitions](#definitions)
+* [Definitions and classes](#definitions-and-classes)
 * [Annotations and the dot operator](#annotations-and-the-dot-operator)
 * [Function expressions](#function-expressions)
 * [Keyword and optional arguments](#keyword-and-optional-arguments)
@@ -414,21 +414,21 @@ There’s a lot more to the syntax or `import` and `export` for
 renaming, re-exporting, and so on. See [a separate
 document](import-export.md) for more information.
 
-## Definitions
-[definitions]: #definitions
+## Definitions and classes
+[definitions-and-classes]: #definitions-and-classes
 
-Besides `val` and `fun`, `struct` is a definition form that
-defines a new structure type. By convention, structure names start
+Besides `val` and `fun`, `class` is a definition form that
+defines a new class. By convention, class names start
 with a capital letter.
 
 ```
-struct Posn(x, y)
+class Posn(x, y)
 ```
 
-A structure-type name can be used like a function to construct an
-instance of the structure type. A structure-instance expression
+A class name can be used like a function to construct an
+instance of the class. An instance expression
 followed by `.` and a field name extracts the field value from the
-structure instance.
+instance.
 
 ```
 val origin: Posn(0, 0)
@@ -438,9 +438,9 @@ origin    // prints Posn(0, 0)
 origin.x  // prints 0
 ```
 
-A structure-type name followed by `.` and a field name gets an
+A class name followed by `.` and a field name gets an
 accessor function to extract the field value from an instance of the
-structure:
+class:
 
 ```
 Posn.x(origin)  // prints 0
@@ -452,10 +452,10 @@ constraint makes field access via `Posn.x` more efficient than a
 generic lookup of a field with `.x`.
 
 An _annotation_ associated with a binding or expression can make field
-access with `.x` the same as using a structure-specific accessor.
+access with `.x` the same as using a class-specific accessor.
 Annotations are particularly encouraged for a function argument that
-is a structure instances, and the annotation is written after the
-argument name with `-:` and the structure type name:
+is a class instance, and the annotation is written after the
+argument name with `-:` and the class name:
 
 ```
 fun flip(p -: Posn):
@@ -466,7 +466,7 @@ flip(Posn(1, 2))  // prints Posn(2, 1)
 
 Using `-:` makes an assertion about values that are provided as
 arguments, but that assertion is not checked when the argument is
-provided. In effect, the annotation simply selects a structure-specific field
+provided. In effect, the annotation simply selects a class-specific field
 accessor for `.x`. If `flip` is called with `0`, then a run-time error
 will occur at the point that `p.y` attempts to access the `y` field of
 a `Posn` instance:
@@ -510,12 +510,12 @@ val (flipped -: Posn):  flip(Posn(1, 2))
 flipped.x  // prints 2
 ```
 
-The `struct Posn(x, y)` definition does not place any constraints on
+The `class Posn(x, y)` definition does not place any constraints on
 its `x` and `y` fields, so using `Posn` as a annotation similarly does
 not imply any annotations on the field results. Instead of using just
 `Posn` as a annotation, however, you can use `Posn.of` followed by
 parentheses containing annotations for the `x` and `y` fields. More
-generally, a `struct` definition binds the name so that `.of` accesses
+generally, a `class` definition binds the name so that `.of` accesses
 an annotation constructor.
 
 ```
@@ -526,7 +526,7 @@ flip_ints(Posn(1, 2))       // prints Posn(2, 1)
 // flip_ints(Posn("a", 2))  // would be a run-time error
 ```
 
-Finally, a structure-type name like `Posn` can also work in binding
+Finally, a class name like `Posn` can also work in binding
 positions as a pattern-matching form. Here’s a implementation of
 `flip` that uses pattern matching for its argument:
 
@@ -641,7 +641,7 @@ nomivore(1)        // prints "yum"
 [annotations-and-the-dot-operator]: annotations-and-the-dot-operator
 
 
-Besides structure types defined with `struct`, a few predefined
+Besides classes defined with `class`, a few predefined
 annotations work with the `-:` and `::` annotation operators, including
 `Integer` (meaning exact integer), `Number`, `String`, `Keyword`, and
 `Any` (meaning any value).
@@ -667,23 +667,23 @@ to adjust the value delivered to a variable, non-predicate contracts
 fit naturally into the annotation framework. Probably `is_a` should
 fail on non-predicate annotations._
 
-When `struct` defines a new structure type, an annotation can be
+When `class` defines a new class, an annotation can be
 associated with each field. When the annotation is written with `::`,
 then the annotation is checked when an instance is created.
 
 ```
-struct Posn(x :: Integer, y :: Integer)
+class Posn(x :: Integer, y :: Integer)
 
 Posn(1, 2)       // prints Posn(1, 2)
 // Posn(1, "2")  // would be a run-time error
 ```
 
-Naturally, structure-type annotations can be used as field
+Naturally, class annotations can be used as field
 annotations, and then the `.` operator can be chained for efficient
 access:
 
 ```
-struct Line(p1 -: Posn, p2 -: Posn)
+class Line(p1 -: Posn, p2 -: Posn)
 
 def l1 :: Line:
   Line(Posn(1, 2), Posn(3, 4))
@@ -692,12 +692,12 @@ l1.p2.x  // prints 3
 ```
 
 More generally, `.` access is efficient when the left-hand side of `.` is an
-expression that can act as a _dot provider_. A structure-type name is a dot
+expression that can act as a _dot provider_. A class name is a dot
 provider, and it provides access to field-accessor functions, as in
 `Posn.x` (which doesn’t get a specific `x`, but produces a function
 that can be called on a `Posn` instance to extract its `x` field). An
-identifier that is bound using `-:` or `::` and a structure-type name is also a
-dot provider, and it provides access to fields of a structure instance.
+identifier that is bound using `-:` or `::` and a class name is also a
+dot provider, and it provides access to fields of a class instance.
 More generally, an annotation that is associated to a binding or
 expression with `-:` or `::` might make the binding or expression a dot
 provider. See [a separate document](static-info.md) for more
@@ -961,7 +961,7 @@ f(10)  // prints 18
 // f = 5 // would be an error: f is not mutable
 ```
 
-_The `=` operator should also cooperate with `.` when a structure-type
+_The `=` operator should also cooperate with `.` when a class
 field is declared `mutable`, but that’s not yet implemented._
 
 ## Operators
@@ -2042,7 +2042,7 @@ generic maps, but the distasterous performance penalty of
 the basic operations like indexing and update.
 
 Following the good example of Clojure, Rhombus programmers should use
-maps for representing domain data, not structs (even prefabs) as a
+maps for representing domain data, not classes (even prefabs) as a
 Racket programmer would. Maybe there should be a `map` form, as in
 
 ```

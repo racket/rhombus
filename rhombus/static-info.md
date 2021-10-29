@@ -21,7 +21,7 @@ static-information keys:
 
  * `dot_ct.provider_key` --- names a compile-time function that
    macro-expands any use of `.` after E. For example, assuming a
-   `struct Posn(x, y)` declaration, `p :: Posn` associates
+   `class Posn(x, y)` declaration, `p :: Posn` associates
    `dot_ct.provider_key` with uses of `p` to expand `p.x` and `p.y` to
    field accesses. An expression is a _dot provider_ when it has
    static information mapped by `dot_ct.provider_key`.
@@ -29,7 +29,7 @@ static-information keys:
  * `expr_ct.call_result_key` --- provides static information to be
    attached to a function-call expression where the function position
    is E. (The arguments in the call do not matter.) For example,
-   `struct Posn(x, y)` associates `expr_ct.call_result_key` with
+   `class Posn(x, y)` associates `expr_ct.call_result_key` with
    `Posn` itself, and the associated value is static information with
    `dot_ct.provider_key`. So, `Posn(1, 2)` gets `dot_ct.provider_key`
    that makes `Posn(1, 2).x` select the `1`.
@@ -51,8 +51,8 @@ static-information keys:
    referencing operation, and it associates `expr_ct.map_ref` to
    `p` so that `p[i] = n` uses an array-specific assignment operation.
 
-In addition, a `struct` declaration generates a fresh key for each
-every field in the declared structure type. The value to be associated
+In addition, a `class` declaration generates a fresh key for each
+every field in the declared class. The value to be associated
 with the key is analogous to `expr_ct.call_result_key` or
 `expr_ct.ref_result_key`, but for references to the field through `.`
 or through an accessor function like `Posn.x`.
@@ -134,45 +134,44 @@ notation.
 
 ## Rules for predefined forms
 
-Here's a summary of the static-information behavior of structure
-types:
+Here's a summary of the static-information behavior of classes:
 
- * A structure-type name bound by `struct` is a dot provider. It
+ * A class name bound by `class` is a dot provider. It
    provides field-accessor functions, as in `Posn.x`.
 
- * As an annotation, a structure-type name makes any binding or
-   expression using the annotation a dot provider. A structure type name
+ * As an annotation, a class name makes any binding or
+   expression using the annotation a dot provider. A class name
    followed by `.of` has the same effect; in addition, it associates
    any information implied by the argument annotations as static
    information for fields accessed from the binding or exression
-   through a dot. For example, assuming a `struct Rect(top_left,
+   through a dot. For example, assuming a `class Rect(top_left,
    side)` declaration, `r :: Rect.of(Posn, Integer)` causes
    `r.top_left` to have `Posn` information, with means that
    `r.top_left.x` works.
 
- * When a structure-type field has an annotation, then that annotation's
+ * When a class field has an annotation, then that annotation's
    static information is associated with a field accessed through `.`.
    In the `Line` example, the `p2` field of `Line` has a `Posn`
    annotation, so a `l1 :: Line` binding means that `l1.p2` is a dot
    provider to access `x` and `y`.
 
- * When a structure-type field has an annotation, then that annotation's
+ * When a class field has an annotation, then that annotation's
    static information is associated as result information for a field
    accessor accessed through `.`. For example, `Line.p1` gets the
    `Posn` annotation's static information as its call-result
    information, so `Line.p1(e)` has that information, which means that
    `Line.p1(e)` is a dot provider.
 
- * When a structure-type field has an annotation, and when the structure
-   type is used as a pattern form in a binding, then the annotation's
+ * When a class field has an annotation, and when the class
+   name is used as a pattern form in a binding, then the annotation's
    static information is associated with the argument pattern. For
    example, `Line(p1, p2)` as a binding pattern associates `Posn`
    information to `p1` and to `p2`, which means that they're dot
    providers.
 
- * When a structure-type name is used as a binding pattern, any
+ * When a class name is used as a binding pattern, any
    “downward” static information that flows the binding is checked for
-   static information keyed by the structure type's accessors, and
+   static information keyed by the class's accessors, and
    that information is propoagated as “downward” information to the
    corersponding binding subpattern. For example, if `Rect(tl, s)` as
    a binding receives “downward” information that associates (the
@@ -205,7 +204,7 @@ More rules about static information in general:
    among other things means that `p.x` will be allowed.
 
 The `List`, `Array`, and `Map` expression and binding forms are
-analogous to structure-type forms. For example, `Array` as a
+analogous to class-name forms. For example, `Array` as a
 constructor in an expression form associates reference-result
 information to the overall `Array` expression, as does `[` ... `]` for
 constructing a list. In a list binding pattern, when `...` is used
