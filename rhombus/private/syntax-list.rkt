@@ -12,7 +12,7 @@
 (define (unpack-list* r depth)
   (cond
     [(eqv? depth 0) r]
-    [(eqv? depth 1)
+    [else
      (if (list? r)
          (datum->syntax
           #f
