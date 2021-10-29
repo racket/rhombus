@@ -61,10 +61,9 @@
         (syntax-parse form1
           [dp::dot-provider
            (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
-           (if p
-               (values
-                ((dot-provider-handler p) form1 #'dot #'field)
-                #'tail)
+           (define e ((dot-provider-handler p) form1 #'dot #'field))
+           (if e
+               (values e #'tail)
                (generic))]
           [_ (generic)])]
        [(dot::operator other . tail)

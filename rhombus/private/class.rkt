@@ -166,26 +166,24 @@
     (for/or ([field+acc (in-list (class-desc-fields desc))])
       (and (eq? (car field+acc) (syntax-e field-id))
            (cdr field+acc))))
-  (unless accessor-id+static-infos
-    (raise-syntax-error #f
-                        "don't know how to access field"
-                        field-id))
+  (cond
+    [accessor-id+static-infos
+     (define accessor-id (car accessor-id+static-infos))
+     (define e (datum->syntax (quote-syntax here)
+                              (list (relocate field-id accessor-id) form1)
+                              (span-srcloc form1 field-id)
+                              #'dot))
 
-  (define accessor-id (car accessor-id+static-infos))
-  (define e (datum->syntax (quote-syntax here)
-                           (list (relocate field-id accessor-id) form1)
-                           (span-srcloc form1 field-id)
-                           #'dot))
+     (define static-infos (cadr accessor-id+static-infos))
+     (define more-static-infos (syntax-local-static-info form1 accessor-id))
+     (define all-static-infos (if more-static-infos
+                                  (datum->syntax #f
+                                                 (append (syntax->list more-static-infos)
+                                                         static-infos))
+                                  static-infos))
 
-  (define static-infos (cadr accessor-id+static-infos))
-  (define more-static-infos (syntax-local-static-info form1 accessor-id))
-  (define all-static-infos (if more-static-infos
-                               (datum->syntax #f
-                                              (append (syntax->list more-static-infos)
-                                                      static-infos))
-                               static-infos))
-  
-  (wrap-static-info* e all-static-infos))
+     (wrap-static-info* e all-static-infos)]
+    [else #f]))
 
 (define-syntax (define-class-desc-syntax stx)
   (syntax-parse stx
