@@ -4,8 +4,8 @@
 (provide lex/comment/status
          lex/comment-nested-status?)
 
-(struct comment-tracked (status line column last-line pending depth) #:prefab)
-(struct pending-comment (line column so-far) #:prefab)
+(struct comment-tracked (status line column last-line pending stack) #:prefab)
+(struct pending-comment (line column so-far stack) #:prefab)
 
 (define (lex/comment-nested-status? status)
   (or (lex-nested-status? status)
@@ -34,10 +34,12 @@
                         0))
      (define pending (and (comment-tracked? status)
                           (comment-tracked-pending status)))
-     (define depth (if (comment-tracked? status)
-                       (comment-tracked-depth status)
-                       0))
-     (define (finish pending depth
+     (define stack (if (comment-tracked? status)
+                       (comment-tracked-stack status)
+                       '()))
+     (define (not-line-sensitive?)
+       (member "«" (pending-comment-stack pending)))
+     (define (finish pending stack
                      #:whitespace? [whitespace? #f]
                      #:comment? [comment? pending])
        (define new-status
@@ -52,64 +54,68 @@
                                   0)
                               line)
                           pending
-                          depth))
+                          stack))
        (define new-type
          (if (and comment? (not (eq? type 'eof)))
              (hash-set (if (hash? type) type (hash 'type type)) 'comment? #t)
              type))
        (values tok new-type paren start-pos end-pos backup new-status))
-     (define (finish-plain pending new-depth)
+     (define (finish-plain pending new-stack)
        (cond
-         [(not pending) (finish pending new-depth)]
+         [(not pending) (finish pending new-stack)]
          [(memq (pending-comment-so-far pending) '(own-line in-line))
           (define (pending-new-column #:so-far [so-far 'running])
-            (pending-comment line column so-far))
+            (pending-comment line column so-far stack))
           (case (and (token? tok)
                      (token-name tok))
             [(bar-operator)
              ;; comment token's column doesn't matter
-             (finish (pending-new-column #:so-far 'running-bar) new-depth)]
+             (finish (pending-new-column #:so-far 'running-bar) new-stack)]
             [(comma-operator semicolor-operator closer)
              ;; comment token is bad, so stop
-             (finish #f 0)]
+             (finish #f (pending-comment-stack pending))]
             [else
              (cond
-               [(eqv? line (pending-comment-line pending))
+               [(or (not-line-sensitive?)
+                    (eqv? line (pending-comment-line pending)))
                 ;; comment token's column determines indentation of group
-                (finish (struct-copy pending-comment pending [so-far 'running]) new-depth)]
+                (finish (struct-copy pending-comment pending [so-far 'running]) new-stack)]
                [else
                 ;; comment token, on its own line so first element determines indentation
-                (finish (pending-new-column) new-depth)])])]
+                (finish (pending-new-column) new-stack)])])]
          [else
           (cond
             [(or (eqv? line (comment-tracked-last-line status))
-                 (positive? new-depth)
+                 (not-line-sensitive?)
+                 (pair? new-stack)
                  (lex-nested-status? inner-status))
              ;; same line or in nested => continue comment, usually
              (case (and (token? tok)
                         (token-name tok))
                [(comma-operator semicolon-operator)
-                (finish #f new-depth)]
+                (finish #f new-stack)]
                [(closer)
-                (if (zero? depth)
-                    (finish #f new-depth)
-                    (finish pending new-depth))]
+                (if (null? stack)
+                    (finish #f new-stack)
+                    (finish pending new-stack))]
                [(bar-operator)
                 (if (and (eq? (pending-comment-so-far pending) 'running-bar)
-                         (= line (pending-comment-line pending)))
-                    (finish #f 0)
-                    (finish pending new-depth))]
+                         (or (not (not-line-sensitive?))
+                             (= line (pending-comment-line pending))))
+                    (finish #f (pending-comment-stack pending))
+                    (finish pending new-stack))]
                [else
-                (finish pending new-depth)])]
-            [(column . <= . (pending-comment-column pending))
-             (finish #f 0)]
+                (finish pending new-stack)])]
+            [(and (column . <= . (pending-comment-column pending))
+                  (not (not-line-sensitive?)))
+             (finish #f (pending-comment-stack pending))]
             [else
-             (finish pending new-depth)])]))
-     (define new-depth
+             (finish pending new-stack)])]))
+     (define new-stack
        (case (and (token? tok) (token-name tok))
-         [(opener at-opener s-exp) (add1 depth)]
-         [(closer at-closer) (max 0 (sub1 depth))]
-         [else depth]))
+         [(opener at-opener s-exp) (cons (token-e tok) stack)]
+         [(closer at-closer) (if (pair? stack) (cdr stack) '())]
+         [else stack]))
      (cond
        [(and (not pending)
              (token? tok)
@@ -117,16 +123,19 @@
         (finish (pending-comment line
                                  column
                                  (if (or (not status)
+                                         (and pending
+                                              (not-line-sensitive?))
                                          (eq? line (comment-tracked-last-line status)))
                                      'own-line
-                                     'in-line))
-                0
+                                     'in-line)
+                                 stack)
+                '()
                 #:comment? pending)]
        [(lex-nested-status? new-inner-status)
-        (finish-plain pending new-depth)]
+        (finish-plain pending new-stack)]
        [else
         (case (token-name tok)
           [(comment whitespace)
-           (finish pending new-depth #:whitespace? #t)]
+           (finish pending new-stack #:whitespace? #t)]
           [else
-           (finish-plain pending new-depth)])])]))
+           (finish-plain pending new-stack)])])]))

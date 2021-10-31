@@ -156,8 +156,8 @@
        (or (and (positive? o-s)
                 (let ()
                   (define paren (send t get-text (sub1 e) e))
-                  (define next-s (if (equal? paren "}")
-                                     (skip-redundant-block-operators t (sub1 o-s) o-start)
+                  (define next-s (if (equal? paren "»")
+                                     (skip-block-operator t (sub1 o-s))
                                      (sub1 o-s)))
                   (get-block-column t next-s col o-start
                                     #:for-outdent? #t)))
@@ -239,8 +239,7 @@
           (define block-col (if (zero? s)
                                 0
                                 (get-block-column t (sub1 s) (col-of s start delta) start)))
-          ;; redundant operators are not valid indentation points:
-          (define next-s (skip-redundant-block-operators t (sub1 s) start))
+          (define next-s (sub1 s))
           ;; indentation under the block operator is valid
           (define next-candidate (col-of (add1 next-s) start delta))
           ;; a `|` cannot appear just after a `:`, so look before that block
@@ -284,7 +283,9 @@
                    ;; indentation for the bracket's group is before the bracket,
                    ;; then "outdent" that far
                    (define col (col-of s start delta))
-                   (define next-s (sub1 s))
+                   (define next-s (if (equal? (send t get-text s e) "«")
+                                      (skip-block-operator t (sub1 s))
+                                      (sub1 s)))
                    (define block-col (get-block-column t next-s col start
                                                        #:for-outdent? #t))
                    (if (and block-col (block-col . < . col))
@@ -418,10 +419,14 @@
           (loop (sub1 (or r s)) (or r s))]
          [else (loop (sub1 s) s)])])))
 
-;; block operator just at `pos`+1
-(define (skip-redundant-block-operators t pos at-start)
-  ;; no block operators are redundant, anymore
-  pos)
+(define (skip-block-operator t pos)
+  (define-values (s e) (send t get-token-range pos))
+  (define category (classify-position t s))
+  (case category
+    [(whitespace comment continue-operator)
+     (skip-block-operator t (sub1 s))]
+    [(block-operator) (sub1 s)]
+    [else pos]))
 
 (define (bar-after-group-comment? t pos at-start)
   (let loop ([pos pos])
