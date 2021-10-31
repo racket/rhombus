@@ -42,4 +42,7 @@
       [(drracket:submit-predicate)
        (dynamic-require 'shrubbery/interaction
                         'shrubbery-submit-predicate)]
+      [(drracket:keystrokes)
+       (dynamic-require 'shrubbery/keystroke
+                        'shrubbery-keystrokes)]
       [else (make-default key default)])))

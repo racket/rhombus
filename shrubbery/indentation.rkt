@@ -201,15 +201,21 @@
         [else null]))
     ;; helper: loops where the candidate also works as a refined limit
     (define (loop* pos new-candidate plus-one-more?)
-      (loop pos new-candidate (min new-candidate (or limit new-candidate)) #f plus-one-more?))
+      (define candidate (if new-candidate
+                            (min new-candidate (or limit new-candidate))
+                            limit))
+      (loop pos new-candidate candidate #f plus-one-more?))
     (define (keep s)
       (define start (line-start t s))
       (define delta (line-delta t start))
-      (define new-candidate (col-of (if as-bar? (+ s BAR-INDENT) s) start delta))
+      (define new-candidate (and (not (and as-bar?
+                                           (later-bar-same-line? t s start)))
+                                 (col-of (if as-bar? (+ s BAR-INDENT) s) start delta)))
       (loop* (sub1 s)
              ;; don't forget the old candidate if the new candidate would
              ;; be too deeply indented
-             (if (or (not candidate) (new-candidate . <= . limit))
+             (if (and new-candidate
+                      (or (not candidate) (new-candidate . <= . limit)))
                  new-candidate
                  candidate)
              (and plus-one-more?
@@ -398,6 +404,24 @@
                    (values s 0)])]
                [else (loop (sub1 s) at-start s)])])])])))
 
+(define (later-bar-same-line? t pos at-start)
+  (define start (line-start t pos))
+  (cond
+    [(eqv? start at-start)
+     (define-values (s e) (send t get-token-range pos))
+     (define category (classify-position t s))
+     (case category
+       [(bar-operator) #t]
+       [(opener)
+        (define r (send t forward-match s (send t last-position)))
+        (if r
+            (later-bar-same-line? t r at-start)
+            (later-bar-same-line? t e at-start))]
+       [(closer) #f]
+       [else
+        (later-bar-same-line? t e at-start)])]
+    [else #f]))
+
 ;; Skips back to an unmatched opener and returns the
 ;; position of the first thing after it (not counting
 ;; whitespace or comments)
@@ -461,24 +485,6 @@
                                  (send t paragraph-end-position line))
        (loop (add1 line))]
       [else (cons line (loop (add1 line)))])))
-
-;; determine current indentation starting with `start`
-(define (get-current-tab t start)
-  (define e (send t last-position))
-  (let loop ([pos start])
-    (cond
-      [(= pos e) 0]
-      [else
-       (define str (send t get-text pos (add1 pos)))
-       (cond
-         [(whitespace? str)
-          (+ 1 (loop (add1 pos)))]
-         [else 0])])))
-
-(define (whitespace? str)
-  (and (= (string-length str) 1)
-       (char-whitespace? (string-ref str 0))
-       (not (equal? str "\n"))))
 
 (define (remove-dups l)
   (cond

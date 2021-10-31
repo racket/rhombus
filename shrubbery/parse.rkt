@@ -348,7 +348,8 @@
                                 #:count? (group-state-count? sg)
                                 #:line line
                                 #:closer (or (column-next column) 'any)
-                                #:bar-closes? #t
+                                #:bar-closes? (or (not (group-state-count? sg))
+                                                  (not line))
                                 #:bar-closes-line (and (group-state-count? sg) line)
                                 #:delta (group-state-delta sg)
                                 #:raw (if commenting

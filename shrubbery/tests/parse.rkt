@@ -1278,6 +1278,11 @@ foo
  | again:
               sub
 
+a
+|
+  b | x
+  d
+
 something +
 more stuff
 
@@ -1397,7 +1402,8 @@ INPUT
     (group this (block (group is more) (group foo)))
     (group
      foo
-     (alts (block (group more)) (block (group again (block (group sub))))))
+     (alts (block (group more (alts (block (group again (block (group sub)))))))))
+    (group a (alts (block (group b (alts (block (group x)))) (group d))))
     (group something (op +))
     (group more stuff)
     (group something (block (group more stuff)))

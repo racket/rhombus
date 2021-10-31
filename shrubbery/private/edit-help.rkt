@@ -6,7 +6,8 @@
          line-delta
          col-of
          only-whitespace-between?
-         get-block-column)
+         get-block-column
+         get-current-tab)
 
 (define (classify-position t s)
   (define attribs (send t classify-position* s))
@@ -103,3 +104,21 @@
              (define start (line-start t pos))
              (define delta (line-delta t start))
              (loop (sub1 s) (col-of s start delta) start)])])])))
+
+(define (whitespace? str)
+  (and (= (string-length str) 1)
+       (char-whitespace? (string-ref str 0))
+       (not (equal? str "\n"))))
+
+;; determine current indentation starting with `start`
+(define (get-current-tab t start)
+  (define e (send t last-position))
+  (let loop ([pos start])
+    (cond
+      [(= pos e) 0]
+      [else
+       (define str (send t get-text pos (add1 pos)))
+       (cond
+         [(whitespace? str)
+          (+ 1 (loop (add1 pos)))]
+         [else 0])])))

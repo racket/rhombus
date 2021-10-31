@@ -107,4 +107,24 @@
               (loop (sub1 s) depth need-close?)]
              [else (if need-close?
                        s
-                       (loop (sub1 s) depth #f))])])))))
+                       (loop (sub1 s) depth #f))])])))
+
+    (define/public (forward-match pos cutoff)
+      (let loop ([pos pos] [depth 0])
+        (define-values (s e) (get-token-range pos))
+        (cond
+          [(not s) #f]
+          [else
+           (define category (classify-position pos))
+           (case category
+             [(parenthesis)
+              (case (get-text s e)
+                [("{" "(" "[" "«")
+                 (loop e (add1 depth))]
+                [("}" ")" "]" "»")
+                 (if (depth . <= . 1)
+                     e
+                     (loop e (sub1 depth)))]
+                [else (error "unexpected parenthesis-class text")])]
+             [else
+              (loop e depth)])])))))
