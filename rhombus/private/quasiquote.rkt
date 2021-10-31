@@ -178,18 +178,18 @@
                     (lambda ($-id e in-e)
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-list* (#,rhombus-expression (group #,e)) 0)])))
+                      (values id (list #`[#,id (unpack-list* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)])))
                     ;; deepen-escape
                     (lambda (idr)
                       (syntax-parse idr
-                        [(id-pat ((~literal unpack-list*) e depth))
-                         #`[(id-pat (... ...)) (unpack-list* e #,(add1 (syntax-e #'depth)))]]
+                        [(id-pat ((~literal unpack-list*) q e depth))
+                         #`[(id-pat (... ...)) (unpack-list* q e #,(add1 (syntax-e #'depth)))]]
                         [(id-pat (converter depth (qs t) . args))
                          #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
                     ;; handle-tail-escape:
                     (lambda (name e in-e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-list* (unpack-tail (#,rhombus-expression (group #,e)) '#,name) 0)])))
+                      (values id (list #`[#,id (unpack-list* #f (unpack-tail (#,rhombus-expression (group #,e)) '#,name) 0)])))
                     ;; handle-maybe-empty-sole-group
                     (lambda (tag template idrs)
                       ;; if `template` generates `(group)`, then instead of `(tag (group))`,

@@ -263,15 +263,49 @@
               (check-column t column)
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg)  (cons t (group-state-raw sg))))
-              (parse-groups rest-l (struct-copy group-state sg
-                                                [check-column? (next-line? rest-l last-line)]
-                                                [column (or (group-state-column sg) column)]
-                                                [last-line last-line]
-                                                [delta delta]
-                                                [commenting (group-state-tail-commenting sg)]
-                                                [tail-commenting #f]
-                                                [block-mode (next-block-mode (group-state-block-mode sg))]
-                                                [raw raw]))])]
+              (define next-t (and (pair? rest-l) (car rest-l)))
+              (cond
+                [(and next-t
+                      (eq? 'opener (token-name next-t))
+                      (equal? (token-e next-t) "«"))
+                 ;; group-sequence splice into the enclosing group
+                 (define-values (group-commenting splice-l splice-last-line splice-delta splice-raw)
+                   (next-of/commenting (cdr rest-l) last-line delta (cons next-t raw)))
+                 (define sub-column
+                   (if (pair? splice-l)
+                       (column+ (token-column (car splice-l)) delta)
+                       (column-next (column+ (token-column next-t) delta))))
+                 (define-values (gs close-l close-line close-delta end-t never-tail-commenting group-tail-raw)
+                   (parse-groups splice-l (make-group-state #:closer (make-closer-expected "»" next-t)
+                                                            #:paren-immed? #f
+                                                            #:block-mode 'no
+                                                            #:column sub-column
+                                                            #:last-line splice-last-line
+                                                            #:delta splice-delta
+                                                            #:commenting group-commenting
+                                                            #:raw splice-raw)))
+                 (define-values (more-gs more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)
+                   (parse-groups close-l (struct-copy group-state sg
+                                                      [check-column? (next-line? close-l close-line)]
+                                                      [column (or (group-state-column sg) column)]
+                                                      [last-line close-line]
+                                                      [delta close-delta]
+                                                      [commenting #f]
+                                                      [tail-commenting #f]
+                                                      [block-mode (next-block-mode (group-state-block-mode sg))]
+                                                      [raw group-tail-raw])))
+                 (values (append gs more-gs)
+                         more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)]
+                [else
+                 (parse-groups rest-l (struct-copy group-state sg
+                                                   [check-column? (next-line? rest-l last-line)]
+                                                   [column (or (group-state-column sg) column)]
+                                                   [last-line last-line]
+                                                   [delta delta]
+                                                   [commenting (group-state-tail-commenting sg)]
+                                                   [tail-commenting #f]
+                                                   [block-mode (next-block-mode (group-state-block-mode sg))]
+                                                   [raw raw]))])])]
           [else
            (when (group-state-comma-time? sg)
              (fail t (format "missing comma before new group (~a)"

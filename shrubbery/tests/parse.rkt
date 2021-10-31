@@ -318,6 +318,12 @@ x:«
     3 »
 
 branch |« x»;
+
+;« top_a; top_b » top_c
+;;;« top_d ;« top_e; top_f » »
+
+if t | x | ;« y »; z
+
 INPUT
 )
 
@@ -1199,7 +1205,14 @@ INPUT
     (group if t (alts (block (group x)) (block (group y))))
     (group z)
     (group x (block (group 3)))
-    (group branch (alts (block (group x))))))
+    (group branch (alts (block (group x))))
+    (group top_a)
+    (group top_b)
+    (group top_c)
+    (group top_d)
+    (group top_e)
+    (group top_f)
+    (group if t (alts (block (group x)) (block (group y) (group z))))))
 
   
 (define input2

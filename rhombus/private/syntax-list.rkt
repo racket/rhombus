@@ -9,13 +9,16 @@
     [else (for/list ([t (in-list (syntax->list stx))])
             (pack-list* t (sub1 depth)))]))
 
-(define (unpack-list* r depth)
-  (cond
-    [(eqv? depth 0) r]
-    [else
-     (if (list? r)
-         (datum->syntax
-          #f
-          (for/list ([r (in-list r)])
-            (unpack-list* r (sub1 depth))))
-         (raise-argument-error '... "list?" r))]))
+(define (unpack-list* qs r depth)
+  (datum->syntax
+   qs
+   (let unpack-list* ([r r] [depth depth])
+     (cond
+       [(eqv? depth 0) r]
+       [else
+        (if (list? r)
+            (datum->syntax
+             qs
+             (for/list ([r (in-list r)])
+               (unpack-list* r (sub1 depth))))
+            (raise-argument-error '... "list?" r))]))))
