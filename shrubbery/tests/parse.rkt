@@ -1,5 +1,6 @@
 #lang racket/base
-(require "../parse.rkt"
+(require "../lex.rkt"
+         "../parse.rkt"
          "../print.rkt"
          "../write.rkt"
          racket/pretty)
@@ -314,7 +315,7 @@ if t | x |« y »; z
 
 x:«
     #//
-    2
+    2;
     3 »
 
 branch |« x»;
@@ -1803,23 +1804,39 @@ INPUT
       (out "expected" input display)
       (out "printed" printed display)
       (error "print failed"))
-    (define (check-reparse count-lines?)
+    (define (check-reparse mode)
+      (define (add-newlines bstr)
+        (define in (open-input-bytes bstr))
+        (define out (open-output-bytes))
+        (display ";«" out)
+        (for ([tok (in-list (lex-all in error))])
+          (define loc (token-srcloc tok))
+          (define pos (sub1 (srcloc-position loc)))
+          (display (subbytes bstr pos (+ pos (srcloc-span loc))) out)
+          (newline out))
+        (display "»" out)
+        (get-output-bytes out))
       (define reparsed (let ([o (open-output-bytes)])
                          (write-shrubbery parsed o)
+                         (define new-in (let ([bstr (get-output-bytes o)])
+                                          (cond
+                                            [(eq? mode 'add-newlines) (add-newlines bstr)]
+                                            [else bstr])))
                          (or (with-handlers ([exn:fail? (lambda (exn) (eprintf "~a\n" (exn-message exn)) #f)])
-                               (define in (open-input-bytes (get-output-bytes o)))
-                               (when count-lines?
+                               (define in (open-input-bytes new-in))
+                               (when (eq? mode 'count)
                                  (port-count-lines! in))
                                (syntax->datum (parse-all in)))
                              (begin
-                               (out "wrote" (get-output-bytes o) displayln)
+                               (out "wrote" new-in displayln)
                                (error "parse of wrote failed")))))
       (unless (equal? parsed reparsed)
         (out "expected" parsed pretty-print)
         (out "reparsed" reparsed pretty-print)
         (error "print failed")))
-    (check-reparse #t)
-    (check-reparse #f)))
+    (check-reparse 'count)
+    (check-reparse 'no-count)
+    (check-reparse 'add-newlines)))
 
 (define (check-fail input rx)
   (let ([in (open-input-string input)])
