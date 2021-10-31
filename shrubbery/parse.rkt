@@ -282,6 +282,7 @@
                 [(and next-t
                       (eq? 'opener (token-name next-t))
                       (equal? (token-e next-t) "«"))
+                 (check-same-line t next-t (group-state-count? sg))
                  ;; group-sequence splice into the enclosing group
                  (define-values (group-commenting splice-l splice-last-line splice-delta splice-raw)
                    (next-of/commenting (cdr rest-l) last-line delta (cons next-t raw)
@@ -668,6 +669,7 @@
               (parse-group null s)]
              [else
               (define next-t (cadr l))
+              (check-same-line t next-t (state-count? s))
               (case (token-name next-t)
                 [(opener)
                  (case (token-e next-t)
@@ -684,6 +686,8 @@
                                                    [at-mode 'initial]))]
                 [(at-opener)
                  (keep (state-delta s) #:at-mode 'no-initial)]
+                [(whitespace)
+                 (fail next-t "whitespace is invalid after `@`")]
                 [else
                  (fail next-t "invalid after `@`")])])]
           [(at-comment)
@@ -703,6 +707,8 @@
                      #:block-mode [block-mode t])
   (define-values (opener-t opener-l opener-line opener-delta opener-raw)
     (next-of/opener l line in-delta null count?))
+  (when opener-t
+    (check-same-line t opener-t count?))
   (define inside-count? (and count? (not opener-t)))
   (define-values (group-commenting next-l last-line delta raw)
     (if in-group-commenting
@@ -1073,6 +1079,12 @@
        (let ([line (token-line (car l))])
          (and line
               (line . > . last-line)))))
+
+(define (check-same-line t next-t count?)
+  (when count?
+    (unless (eqv? (token-line t) (token-line next-t))
+      (fail next-t (format "not on the same line as preceding `~a`"
+                           (token-e t))))))
 
 (define (fail-no-comment-group t)
   (fail t "no group for term comment"))

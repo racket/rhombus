@@ -1871,9 +1871,13 @@ INPUT
                    "  + 3")
             #rx"wrong indentation")
 
-(check-fail "(«| a | c»)" #rx"misplaced `|`")
-(check-fail "z «|« « | y » » »" #rx"misplaced `|`")
-(check-fail "«|« w « | y » » »" #rx"misplaced `|`")
+(check-fail "a:\n«c»" #rx"not on the same line")
+(check-fail "a |\n«c»" #rx"not on the same line")
+(check-fail ";\n«c»" #rx"not on the same line")
+
+(check-fail "(«| a | c»)" #rx"misplaced `«`")
+(check-fail "z «|« « | y » » »" #rx"misplaced `«`")
+(check-fail "«|« w « | y » » »" #rx"misplaced `«`")
 
 (check-fail (lines "(#// x,"
                    "     y)") #rx"wrong indentation")
