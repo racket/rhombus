@@ -67,7 +67,7 @@
                        (group-in-at? (car (parse-state-gs state))))
               ;; line comment => don't adjust next lines indentation
               (hash-set! skip-adjust-lines (add1 (send t position-paragraph s)) #t))
-            (loop e prev-end #f state inserts)]
+            (loop e prev-end init? state inserts)]
            [(group-comment)
             (define next-pos (skip-whitespace t e end))
             (loop next-pos prev-end #t state (if (and (not init?)
