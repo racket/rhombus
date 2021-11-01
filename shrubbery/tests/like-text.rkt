@@ -18,7 +18,7 @@
 
     (super-new)
 
-    (define-values (position-paragraphs paragraph-starts)
+    (define/private (find-paragraphs)
       (let loop ([pos 0] [para 0] [pos-para #hasheqv()] [para-pos #hasheqv((0 . 0))])
         (cond
           [(= pos (string-length content))
@@ -29,6 +29,9 @@
                  (hash-set para-pos (add1 para) (add1 pos)))]
           [else
            (loop (add1 pos) para (hash-set pos-para pos para) para-pos)])))
+
+    (define-values (position-paragraphs paragraph-starts)
+      (find-paragraphs))
 
     (define tokens
       (lex-all-input (let ([p (open-input-string content)])
@@ -86,6 +89,20 @@
     (define/public (paragraph-start-position para)
       (or (hash-ref paragraph-starts para #f)
           (error 'paragraph-start-position "lookup failed: ~e" para)))
+
+    (define/public (paragraph-end-position para)
+      (or (hash-ref paragraph-starts (add1 para) #f)
+          (last-position)))
+
+    (define/public (begin-edit-sequence . args) (void))
+    (define/public (end-edit-sequence . args) (void))
+
+    (define/public (insert str pos)
+      (set! content (string-append
+                     (substring content 0 pos)
+                     str
+                     (substring content pos)))
+      (set!-values (position-paragraphs paragraph-starts) (find-paragraphs)))
 
     (define/public (backward-match pos cutoff)
       (let loop ([pos (sub1 pos)] [depth -1] [need-close? #t])

@@ -1338,7 +1338,8 @@
                  saw-non-ws?
                  (and saw-non-ws?
                       (or newline-t
-                          (and (regexp-match? #rx"[\r\n]" (syntax-e (token-value t)))
+                          (and (null? stack)
+                               (regexp-match? #rx"[\r\n]" (syntax-e (token-value t)))
                                t)))
                  stack)]
           [else
@@ -1348,7 +1349,7 @@
               (loop (cdr l) #t newline-t (cons t stack))]
              [(and (eq? 'closer (token-name t))
                    (equal? (token-e t) "»"))
-              (loop (cdr l) #t newline-t (if (pair? stack) (cdr stack) '()))]
+              (loop (cdr l) #f newline-t (if (pair? stack) (cdr stack) '()))]
              [else
               (loop (cdr l) #t newline-t stack)])])))))
 
