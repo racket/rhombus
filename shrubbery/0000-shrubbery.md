@@ -401,23 +401,79 @@ group is a block that contains a single group:
  universe)
 ```
 
-## Delimiting blocks with `«` and `»`
+## Line- and column-insensitivity with `«` and `»`
 
-Many shrubbery forms can be written with `:`, `|`, and `;` on a single
-line. For example, the following two groups are the same:
+A block can be delimited explicitly with `«` and `»` to disable the
+use of line and column information for parsing between `«` and `»`. A
+`«` can be used immediately after `:` or immediately after `|`, in
+which case a `»` indicates the end of the block that starts after the
+`:` or `|`. Within the block, an explicit `;` must be used to separate
+groups.
+
+A sequence of groups, either at the top level or within a block, can
+be written without line and column sensitivity as `;` followed
+immediately by `«`, in which case a `»` indicates the end of the
+sequence, and groups within the sequence are separated by `;`. When
+parsing, the groups within the sequence are spliced into the enclosing
+context. The combination of `;` and `«` is intended for entering line-
+and column-insensitive mode for a single group or for representing a
+sequence of groups that is not within a block.
+
+Whitespace and block comments are allowed between a `:`, `|`, or `;`
+and its `«`, but in a line-sensitive context, the `«` must be on the
+same line as its `:`, `|`, or `;`.
+
+The following five groups are the same:
 
 ```
-hello: if x | world; planet | universe
-
 hello:
   if x
   | world
     planet
   | universe
+
+hello: if x | world; planet | universe
+
+hello:«
+  if x
+  |« world;
+     planet »
+  |« universe »»
+
+hello:« if x |« world; planet » |« universe »»
+
+;«hello
+  :
+  «
+  if
+  x
+  |
+  «
+  world
+  ;
+  planet
+  »
+  |
+  «
+  universe
+  »
+  »
+  »
 ```
 
-Not all forms can be collapsed to a single line without extra
-delimiters, however. For example, these six groups are all different:
+Using `«` and `»` can “armor” a shrubbery for transport from one
+context to another where its line breaks or indentation might get
+mangled. For example, an editor might offer an operation to armor a
+range of text in perparation for moving or copying the text, and then
+it can be properly indentend in its destination before unmarmoring.
+Along similar lines, when writing code as data to be read back later,
+it's easy for a printer to insert explicit `«` and `»`.
+
+In rare cases, a programmer might write `«` and `»` directly. Although
+many shrubbery forms can be written with `:`, `|`, and `;` on a single
+line, as illustrated above, not all forms can be collapsed to a single
+line without extra delimiters. For example, these six groups are all
+different:
 
 ```
 outside:
@@ -446,13 +502,7 @@ hello:
 hello: if x | world | universe; the end
 ```
 
-A block can be delimited explicitly with `«` and `»` to indicate where
-it ends, and any form can be written on a single line using `«` and
-`»`. A `«` can be used immediately after `:` or immediately after `|`,
-and a `»` indicates the end of the block that starts after the `:` or
-`|`.
-
-Each pair of groups here represent the same group:
+Using `«` and `»` can help in those cases:
 
 ```
 outside:
@@ -478,12 +528,12 @@ hello:
 hello: if x | world |« universe »; the end
 ```
 
-Delimiting blocks with `«` and `»` is expected to be rare in practice,
-both because programmers are likely to break things across lines and
-because a language that uses shrubbery notation is likely to allow
-`()` in places where grouping might be needed. For example, assuming
-that `if` is an expression form and `()` can wrap an expression, a
-nested conditional is probably better written like this:
+Even so, delimiting blocks with `«` and `»` is expected to be rare in
+practice, both because programmers are likely to break things across
+lines and because a language that uses shrubbery notation is likely to
+allow `()` in places where grouping might be needed. For example,
+assuming that `if` is an expression form and `()` can wrap an
+expression, a nested conditional is probably better written like this:
 
 ```
 if | true | (if false | x | y) | z
