@@ -189,7 +189,9 @@
              ;; saw a bar in this group?
              [bar-after? as-bar?]
              ;; can also indent by an extra step?
-             [plus-one-more? as-operator?])
+             [plus-one-more? as-operator?]
+             ;; did we just skip over and armored sequence?
+             [armored? #f])
     ;; helper
     (define (maybe-list col [plus-one-more? #f])
       (cond
@@ -200,12 +202,12 @@
              (list col))]
         [else null]))
     ;; helper: loops where the candidate also works as a refined limit
-    (define (loop* pos new-candidate plus-one-more?)
+    (define (loop* pos new-candidate plus-one-more? armored?)
       (define candidate (if new-candidate
                             (min new-candidate (or limit new-candidate))
                             limit))
-      (loop pos new-candidate candidate #f plus-one-more?))
-    (define (keep s)
+      (loop pos new-candidate candidate #f plus-one-more? armored?))
+    (define (keep s #:armored? [armored? #f])
       (define start (line-start t s))
       (define delta (line-delta t start))
       (define new-candidate (and (not (and as-bar?
@@ -220,7 +222,8 @@
                  candidate)
              (and plus-one-more?
                   (or (eqv? new-candidate 0)
-                      (= start (line-start t (sub1 s)))))))
+                      (= start (line-start t (sub1 s)))))
+             armored?))
     (cond
       [(eqv? limit -1) null]
       [(negative? pos) (maybe-list candidate plus-one-more?)]
@@ -236,35 +239,40 @@
           ;; we don't do anything special with continue-operator here,
           ;; because we avoid looking at line numbers, anyway, and `line-delta`
           ;; is responsible for computing continuation columns
-          (loop (sub1 s) candidate limit bar-after? plus-one-more?)]
+          (loop (sub1 s) candidate limit bar-after? plus-one-more? armored?)]
          [(block-operator)
-          ;; a block creates an indentation candidate that's
-          ;; to the right of the enclosing group's indentation
-          (define start (line-start t pos))
-          (define delta (line-delta t start))
-          (define block-col (if (zero? s)
-                                0
-                                (get-block-column t (sub1 s) (col-of s start delta) start)))
-          (define next-s (sub1 s))
-          ;; indentation under the block operator is valid
-          (define next-candidate (col-of (add1 next-s) start delta))
-          ;; a `|` cannot appear just after a `:`, so look before that block
-          (define adj-block-col (if as-bar? (sub1 block-col) block-col))
-          ;; look further outside this block, and don't consider anything
-          ;; that would appear to be nested in the block:
-          (define outer-candidates (loop next-s next-candidate (min* adj-block-col limit) #f #f))
-          (append (cond
-                    [(and bar-after? (not as-bar?))
-                     null]
-                    [candidate
-                     ;; we already have something after `:`, so
-                     ;; use its indentation
-                     (maybe-list candidate plus-one-more?)]
-                    [else
-                     ;; we haven't found anything in the block, so
-                     ;; indent as the first thing in the block
-                     (maybe-list (+ block-col (if as-bar? BAR-INDENT NORMAL-INDENT)))])
-                  outer-candidates)]
+          (cond
+            [armored?
+             ;; indentation under the block is not valid
+             (keep s)]
+            [else
+             ;; a block creates an indentation candidate that's
+             ;; to the right of the enclosing group's indentation
+             (define start (line-start t pos))
+             (define delta (line-delta t start))
+             (define block-col (if (zero? s)
+                                   0
+                                   (get-block-column t (sub1 s) (col-of s start delta) start)))
+             (define next-s (sub1 s))
+             ;; indentation under the block operator is valid unless armored
+             (define next-candidate (col-of (add1 next-s) start delta))
+             ;; a `|` cannot appear just after a `:`, so look before that block
+             (define adj-block-col (if as-bar? (sub1 block-col) block-col))
+             ;; look further outside this block, and don't consider anything
+             ;; that would appear to be nested in the block:
+             (define outer-candidates (loop next-s next-candidate (min* adj-block-col limit) #f #f #f))
+             (append (cond
+                       [(and bar-after? (not as-bar?))
+                        null]
+                       [candidate
+                        ;; we already have something after `:`, so
+                        ;; use its indentation
+                        (maybe-list candidate plus-one-more?)]
+                       [else
+                        ;; we haven't found anything in the block, so
+                        ;; indent as the first thing in the block
+                        (maybe-list (+ block-col (if as-bar? BAR-INDENT NORMAL-INDENT)))])
+                     outer-candidates)])]
          [else
           (cond
             [(and candidate
@@ -307,6 +315,8 @@
                      [(zero? s) (maybe-list candidate)]
                      [else (keep s)])]
                   [(zero? r) null]
+                  [(equal? "«" (send t get-text r (add1 r)))
+                   (loop (sub1 r) candidate limit bar-after? plus-one-more? #t)]
                   [else (keep r)])]
                [(bar-operator)
                 (define start (line-start t pos))
@@ -319,7 +329,7 @@
                        (next-is-block-bracket? t e))
                    ;; don't treat the current bar as a source
                    ;; of indentation:
-                   (loop (sub1 s) #f (min* s limit) #t #f)]
+                   (loop (sub1 s) #f (min* s limit) #t #f #f)]
                   [as-bar?
                    (define delta (line-delta t start))
                    (define col (col-of s start delta))
@@ -338,6 +348,7 @@
                                     b-col
                                     (min* (min col (sub1 b-col)) limit)
                                     #t
+                                    #f
                                     #f))])]
                   [else
                    ;; line up within bar or outside [another] bar
@@ -346,17 +357,17 @@
                            (if (not limit-pos)
                                null
                                ;; outer candidates
-                               (loop (sub1 (or another-bar-start s)) #f (min* bar-column limit) #t #f)))])]
-               [(separator)
+                               (loop (sub1 (or another-bar-start s)) #f (min* bar-column limit) #t #f #f)))])]
+               [(semicolon-operator)
+                (loop (sub1 s) candidate limit bar-after? #f #f)]
+               [(comma-operator)
                 (cond
-                  [(equal? ";" (send t get-text (sub1 e) e))
-                   (loop (sub1 s) candidate limit bar-after? #f)]
                   [candidate (maybe-list candidate plus-one-more?)]
                   [else
                    (define i-pos (get-inside-start t pos))
                    (define start (line-start t i-pos))
                    (define delta (line-delta t start))
-                   (maybe-list (col-of i-pos start delta) plus-one-more?)])]
+                   (maybe-list (col-of i-pos start delta) #f)])]
                [else
                 (keep s)])])])])))
 

@@ -307,7 +307,18 @@
       ^ ^| me}
  @e{b | x | y
       ^| me}
- 
+
+ @e{a(x,
+      ^+1}
+ @e{a: x;
+    ^  ^+1}
+ @e{a:«x»
+    ^x}
+ @e{z:
+      a:«x»
+      b
+      ^|x}
+  
  )
 
 (when failed?
