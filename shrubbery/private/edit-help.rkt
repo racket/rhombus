@@ -23,7 +23,6 @@
 ;; backs up over continuing lines
 (define (line-orig-start t pos #:limit [limit 0])
   (define start (line-start t pos))
-  (define orig-start start)
   (let loop ([pos start] [start start])
     (cond
       [(pos . <= . limit) limit]
@@ -37,7 +36,7 @@
           ;; continue operator applies
           (define c-start (line-start t (sub1 pos)))
           (loop c-start c-start)]
-         [else (log-error "~s -> ~s" orig-start start) start])])))
+         [else start])])))
 
 (define (line-delta t start #:unless-empty? [unless-empty? #f])
   (let loop ([pos start])
