@@ -24,6 +24,7 @@
          matching
 
          Any
+         Boolean
          Integer
          Number
          String
@@ -251,6 +252,7 @@
      #'(left-binder-id arg-id left-data)]))
 
 (define-syntax Any (identifier-annotation #'Any #'(lambda (x) #t) #'()))
+(define-syntax Boolean (identifier-annotation #'Boolean #'boolean? #'()))
 (define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-annotation #'Number #'number? #'()))
 (define-syntax String (identifier-annotation #'String #'string? #'()))
