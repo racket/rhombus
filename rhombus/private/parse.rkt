@@ -34,7 +34,9 @@
                      :prefix-op+binding+tail
                      :infix-op+binding+tail
 
-                     enforest-expression-block))
+                     enforest-expression-block
+                     expression-relative-precedence
+                     binding-relative-precedence))
 
 (begin-for-syntax
   ;; Form at the top of a module:
@@ -75,7 +77,8 @@
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
     #:check-result check-expression-result
-    #:make-identifier-form make-identifier-expression)
+    #:make-identifier-form make-identifier-expression
+    #:relative-precedence expression-relative-precedence)
 
   ;; Form in a binding context:
   (define-enforest
@@ -89,7 +92,8 @@
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
     #:check-result check-binding-result
-    #:make-identifier-form make-identifier-binding))
+    #:make-identifier-form make-identifier-binding
+    #:relative-precedence binding-relative-precedence))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)

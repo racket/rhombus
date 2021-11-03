@@ -71,13 +71,16 @@
 ;; `op` is the operator just found, and `left-op` is the
 ;; "current" operator previously found on the left;
 ;; returns either
-;;   * a successful comparison: 'stronger or 'weaker
+;;   * a successful comparison:
+;;       - 'stronger (left takes precedence)
+;;       - 'weaker (right takes precedence)
 ;;   * an error comparision, where the result desribes why:
+;;       - 'inconsistent-prec
+;;       - 'inconsistent-assoc
 ;;       - 'same (error because no associativity)
-;;       - 'same-on-right (error because on left)
 ;;       - 'same-on-left (error because on right)
 ;;       - #f (no precedence relation)
-(define (relative-precedence op left-op head)
+(define (relative-precedence left-op op)
   (define (find op-name this-op-name precs)
     (let loop ([precs precs] [default #f])
       (cond
@@ -98,34 +101,30 @@
   (define left-op-name (operator-name left-op))
   (define dir1 (find left-op-name op-name (operator-precedences op)))
   (define dir2 (invert (find op-name left-op-name (operator-precedences left-op))))
-  (define (raise-inconsistent how)
-    (raise-syntax-error #f
-                        (format
-                         (string-append "inconsistent operator ~a declared\n"
-                                        "  left operator: ~a\n"
-                                        "  right operator: ~a")
-                         how
-                         (syntax-e (operator-name left-op))
-                         (syntax-e (operator-name op)))
-                        head))
-  (when (and dir1 dir2 (not (eq? dir1 dir2)))
-    (raise-inconsistent "precedence"))
-  (define dir (or dir1 dir2
-                  (and (free-identifier=? (operator-name op)
-                                          (operator-name left-op))
-                       'same)))
   (cond
-    [(or (eq? 'same dir)
-         (eq? 'same-on-right dir))
-     (define op-a (infix-operator-assoc op))
-     (when (infix-operator? left-op)
-       (unless (eq? op-a (infix-operator-assoc left-op))
-         (raise-inconsistent "associativity")))
-     (case op-a
-       [(left) 'weaker]
-       [(right) 'stronger]
-       [else 'same])]
-    [else dir]))
+    [(and dir1 dir2 (not (eq? dir1 dir2)))
+     'inconsistent-prec]
+    [else
+     (define dir (or dir1 dir2
+                     (and (free-identifier=? (operator-name op)
+                                             (operator-name left-op))
+                          'same)))
+     (cond
+       [(or (eq? 'same dir)
+            (eq? 'same-on-right dir))
+        (define op-a (infix-operator-assoc op))
+        (cond
+          [(and (infix-operator? left-op)
+                (not (eq? op-a (infix-operator-assoc left-op))))
+           'inconsistent-assoc]
+          [else
+           (case op-a
+             [(left) 'stronger]
+             [(right) 'weaker]
+             [else 'same])])]
+       [(eq? 'stronger dir) 'weaker]
+       [(eq? 'weaker dir) 'stronger]
+       [else dir])]))
 
 (define (lookup-prefix-implicit alone-name adj-context adj-form in-space operator-ref operator-kind form-kind)
   (define op-stx (datum->syntax adj-context alone-name))

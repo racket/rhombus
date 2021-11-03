@@ -78,6 +78,7 @@
                          #:defaults ([enforest #'enforest]))
               (~optional (~seq #:enforest-step enforest-step)
                          #:defaults ([enforest-step #'enforest-step]))
+              (~optional (~seq #:relative-precedence relative-precedence))
               (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
               (~optional (~seq #:prefix-more-syntax-class prefix-op+form+tail)
@@ -138,7 +139,13 @@
                                                    make-identifier-form
                                                    make-operator-form
                                                    -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name))
-         (define enforest (make-enforest enforest-step)))]))
+         (define enforest (make-enforest enforest-step))
+
+         (~? (define relative-precedence (make-relative-precedence
+                                          'relative-precedence
+                                          operator-kind-str
+                                          in-space
+                                          name-path-op prefix-operator-ref infix-operator-ref))))]))
 
 (define (make-enforest enforest-step)
   (lambda (stxes)
@@ -264,10 +271,10 @@
 
         (define (dispatch-infix-operator op tail stxes op-stx)
           (define rel-prec (if (not current-op)
-                               'stronger
-                               (relative-precedence op current-op op-stx)))
+                               'weaker
+                               (relative-precedence current-op op)))
           (cond
-            [(eq? rel-prec 'stronger)
+            [(eq? rel-prec 'weaker)
              (cond
                [(eq? (operator-protocol op) 'macro)
                 ;; it's up to the transformer to consume whatever it wants after the operator
@@ -282,10 +289,23 @@
                                current-op
                                current-op-stx
                                stop-on-unbound?)])]
-            [(eq? rel-prec 'weaker)
+            [(eq? rel-prec 'stronger)
              (values init-form stxes)]
             [else
              (cond
+               [(or (eq? rel-prec 'inconsistent-prec)
+                    (eq? rel-prec 'inconsistent-assoc))
+                (raise-syntax-error #f
+                                    (format
+                                     (string-append "inconsistent operator ~a declared\n"
+                                                    "  left operator: ~a\n"
+                                                    "  right operator: ~a")
+                                     (if (eq? rel-prec 'inconsistent-prec)
+                                         "precedence"
+                                         "associativity")
+                                     (syntax-e current-op-stx)
+                                     (syntax-e op-stx))
+                                    op-stx)]
                [(eq? rel-prec 'same)
                 (raise-syntax-error #f
                                     "non-associative operator needs explicit parenthesization"
@@ -343,3 +363,26 @@
       [else tail]))
 
   enforest-step)
+
+;; see `relative-precedence` in "operator.rkt" for possible results,
+;; but add 'unbound to the set of possibilities
+(define (make-relative-precedence who
+                                  operator-kind-str
+                                  in-space
+                                  name-path-op prefix-operator-ref infix-operator-ref)
+  (lambda (left-mode left-op-stx right-mode right-op-stx)
+    (define (lookup mode op-stx)
+      (case mode
+        [(prefix)
+         (prefix-operator-ref (syntax-local-value* (in-space op-stx)
+                                                   prefix-operator-ref))]
+        [(infix)
+         (infix-operator-ref (syntax-local-value* (in-space op-stx)
+                                                  infix-operator-ref))]
+        [else
+         (raise-argument-error who "(or/c 'prefix 'infix)" mode)]))
+    (define left-op (lookup left-mode left-op-stx))
+    (define right-op (lookup right-mode right-op-stx))
+    (if (and left-op right-op)
+        (relative-precedence left-op right-op)
+        'unbound)))

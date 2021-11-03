@@ -227,6 +227,45 @@
                              #,body)]))]))
   (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
 
+(define-for-syntax (call-with-quoted-expression stx k)
+  (define (classify-follower next-stx)
+    (syntax-parse next-stx
+      #:datum-literals (op parens brackets braces)
+      [(op name)
+       (values #'name "subsequent operator")]
+      [(parens . _)
+       (values (datum->syntax next-stx '#%call) "subsequent parentheses")]
+      [(brackets . _)
+       (values (datum->syntax next-stx '#%ref) "subsequent brackets")]
+      [(braces . _)
+       (values (datum->syntax next-stx '#%comp) "subsequent braces")]
+      [(braces . _)
+       (values (datum->syntax next-stx '#%juxtapose) "subsequent expression")]
+      [else #f]))
+  (syntax-parse stx
+    #:datum-literals (op)
+    [((op q) e)
+     (values (k #'e) #'())]
+    [((op q) (op name) . _)
+     (raise-syntax-error #f
+                         "need parentheses to quote an operator"
+                         #'q
+                         #'name)]
+    [((op q) e next . _)
+     #:do [(define-values (next-op what) (classify-follower #'next))
+           (define prec (if next-op
+                            (expression-relative-precedence 'prefix #'q 'infix next-op)
+                            'stronger))]
+     #:when (not (eq? prec 'stronger))
+     (raise-syntax-error #f
+                         (format "ambiguous quoting due to ~a; add parentheses"
+                                 what)
+                         #'q
+                         #'next)]
+    [((op q) e . tail)
+     (values (k #'e)
+             #'tail)]))
+
 (define-syntax |'|
   (make-expression+binding-prefix-operator
    (quote-syntax |'|)
@@ -234,25 +273,21 @@
    'macro
    ;; expression
    (lambda (stx)
-     (syntax-parse stx
-       [(op e . tail)
-        (values (convert-template #'e)
-                #'tail)]))
+     (call-with-quoted-expression stx convert-template))
    ;; pattern
    (lambda (stx)
-     (syntax-parse stx
-       [(op e . tail)
-        (define-values (pattern idrs can-be-empty?) (convert-pattern #'e))
+     (call-with-quoted-expression
+      stx
+      (lambda (e)
+        (define-values (pattern idrs can-be-empty?) (convert-pattern e))
         (with-syntax ([((id id-ref) ...) idrs])
           (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
-            (values
-             (binding-form
-              #'syntax-infoer
-              #`(#,pattern
-                 (tmp-id ...)
-                 (id ...)
-                 (id-ref ...)))
-             #'tail)))]))))
+            (binding-form
+             #'syntax-infoer
+             #`(#,pattern
+                (tmp-id ...)
+                (id ...)
+                (id-ref ...))))))))))
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
