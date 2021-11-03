@@ -10,7 +10,8 @@
                      enforest/operator
                      "srcloc.rkt"
                      "name-path-op.rkt"
-                     "tail.rkt")
+                     "tail.rkt"
+                     "misuse.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -54,8 +55,10 @@
   (provide define-annotation-syntax))
 
 (begin-for-syntax
-  (property annotation-prefix-operator prefix-operator)
-  (property annotation-infix-operator infix-operator)
+  (property annotation-prefix-operator prefix-operator
+            #:property prop:procedure (make-raise-misuse "annotation"))
+  (property annotation-infix-operator infix-operator
+            #:property prop:procedure (make-raise-misuse "annotation"))
 
   (property annotation (predicate-stx static-infos))
 

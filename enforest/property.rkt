@@ -26,7 +26,9 @@
         (~optional base-name:identifier)
         (~optional (field:identifier ...)
                    #:defaults ([(field 1) '()]))
-        (~optional (~seq #:super prop-super)))
+        (~optional (~seq #:super prop-super))
+        (~seq #:property prop-expr prop-val-expr)
+        ...)
      (with-syntax ([prop:name (format-id "prop:~a" #'name)]
                    [name-ref (format-id "~a-ref" #'name)]
                    [name? (format-id "~a?" #'name)]
@@ -52,7 +54,8 @@
                (and acc (acc v)))
              (struct convenience-name base-name ... (field ...)
                #:property prop:name (lambda (self) self)
-               #:reflection-name 'name)
+               #:reflection-name 'name
+               (~@ #:property prop-expr prop-val-expr) ...)
              (define-syntax name (make-rename-transformer #'convenience-name))
              define-accessor ...)))]))
 
