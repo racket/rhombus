@@ -94,7 +94,7 @@ operator (a +* b):
 
 3 +* 4
 
-operator (x mod y):
+operator (;«x mod y»):
   x - floor(x / y) * y
 
 10 mod 3  // prints 1

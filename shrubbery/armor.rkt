@@ -29,28 +29,41 @@
   (group col bar-line add-semi? close? in-at?))
 
 (define (toggle-armor t e)
-  (armor-region t
-                (send t get-start-position)
-                (send t get-end-position)))
-
-(define (armor-region t orig-from-pos to-pos)
+  (define orig-from-pos (send t get-start-position))
+  (define orig-to-pos (send t get-end-position))
   (define from-pos (start-of-group t orig-from-pos (line-start t orig-from-pos)))
-  (define start (line-start t from-pos))
-  (define end (let loop ([end from-pos])
-                (define-values (s e) (skip-whitespace t end 1))
-                (cond
-                  [(or (and (s . > . to-pos)
-                            ((send t position-paragraph s) . > . (send t position-paragraph to-pos)))
-                       (end . >= . (send t last-position)))
-                   end]
-                  [else
-                   (define next (end-of-current t s #:stop-at-comma? #t))
+  (define last-pos (send t last-position))
+  (define to-pos (let loop ([end from-pos])
+                   (define-values (s e) (skip-whitespace t end 1))
                    (cond
-                     [(eqv? next end) end]
-                     [else (loop next)])])))
+                     [(or (and (s . > . orig-to-pos)
+                               ((send t position-paragraph s) . > . (send t position-paragraph orig-to-pos)))
+                          (end . >= . last-pos))
+                      end]
+                     [else
+                      (define next (end-of-current t s #:stop-at-comma? #t))
+                      (cond
+                        [(eqv? next end) end]
+                        [else (loop next)])])))
+  (cond
+    [(and (from-pos . >= . 2)
+          (to-pos . <= . (- last-pos 1))
+          (equal? ";«" (send t get-text (- from-pos 2) from-pos))
+          (equal? "»" (send t get-text to-pos (+ to-pos 1))))
+     (unarmor-region t (- from-pos 2) (+ to-pos 1))]
+    [(and (from-pos . <= . (- to-pos 3))
+          (equal? ";«" (send t get-text from-pos (+ from-pos 2)))
+          (equal? "»" (send t get-text (- to-pos 1) to-pos)))
+     (unarmor-region t from-pos to-pos)]
+    [else
+     (armor-region t from-pos to-pos)]))
+
+(define (armor-region t from-pos to-pos)
+  (define end to-pos)
+  (define start (line-start t from-pos))
   (define col (- from-pos start))
   (cond
-    [(not (parses-ok? t col from-pos end))
+    [(not (parse-text t col from-pos end))
      (void)]
     [else
      (define end-maybe-line (send t position-paragraph end))
@@ -248,17 +261,118 @@
      (send t set-position from-pos (send t get-end-position))
      (send t end-edit-sequence)]))
 
-(define (parses-ok? t col from-pos end)
-  (define str (string-append (make-string col #\space)
-                             (send t get-text from-pos end)))
+(define (unarmor-region t from-pos to-pos)
+  (define orig-parse (parse-text t 0 from-pos to-pos))
+  (cond
+    [(not orig-parse)
+     (void)]
+    [else
+     (define deletes
+       (let loop ([pos from-pos] [prev-pos #f] [prev-category #f] [deletes '()])
+         (cond
+           [(pos . >= . to-pos) (reverse deletes)]
+           [else
+            (define-values (s e) (send t get-token-range pos))
+            (define category (classify-position t pos))
+            (case category
+              [(opener)
+               (cond
+                 [(and prev-pos
+                       (memq prev-category '(semicolon-operator block-operator bar-operator))
+                       (armor-opener? t pos))
+                  (loop e #f #f (cons (if (eq? prev-category 'semicolon-operator)
+                                          (cons prev-pos 2)
+                                          (cons pos 1))
+                                      deletes))]
+                 [else
+                  (loop e #f #f deletes)])]
+              [(closer)
+               (cond
+                 [(armor-closer? t pos)
+                  (loop e #f #f (cons (cons pos 1) deletes))]
+                 [else
+                  (loop e #f #f deletes)])]
+              [(whitespace)
+               (cond
+                 [(and (eq? prev-category 'semicolon-operator)
+                       ((line-start t e) . > . (line-start t s)))
+                  (loop e #f #f (cons (cons prev-pos 1) deletes))]
+                 [else
+                  (loop e #f #f deletes)])]
+              [else
+               (loop e pos category deletes)])])))
+     (define start (line-start t from-pos))
+     (define col (- from-pos start))
+     ;; check whether this is going to work:
+     (define chars (string->list
+                    (string-append (make-string col #\space)
+                                   (send t get-text from-pos to-pos))))
+     (define (delete-leading column n chars)
+       (cond
+         [(zero? column) chars]
+         [(null? chars) null]
+         [(char=? #\newline (car chars))
+          (define start-chars chars)
+          (let loop ([i 0] [chars (cdr chars)])
+            (cond
+              [(= i (+ column n))
+               (let loop ([i 0] [chars (delete-leading column n chars)])
+                 (if (= i column)
+                     (cons #\newline chars)
+                     (loop (add1 i) (cons #\space chars))))]
+              [(char=? #\space (car chars))
+               (loop (add1 i) (cdr chars))]
+              [else
+               ;; didn't find enough leading spaces
+               start-chars]))]
+         [else
+          ;; keep looking for a newline:
+          (cons (car chars) (delete-leading column n (cdr chars)))]))
+     (define new-string
+       (list->string
+        (let loop ([i start] [column 0] [chars chars] [deletes deletes])
+          (cond
+            [(null? deletes) chars]
+            [(eqv? i (caar deletes))
+             (define n (cdar deletes))
+             (define rest-chars (loop (+ i n) (+ column n) (list-tail chars n) (cdr deletes)))
+             (delete-leading column n rest-chars)]
+            [else
+             (define ch (car chars))
+             (cons ch (loop (add1 i)
+                            (if (char=? #\newline ch)
+                                0
+                                (add1 column))
+                            (cdr chars)
+                            deletes))]))))
+     (define new-parse (parse-string new-string))
+     (cond
+       [(and new-parse
+             (equal? (syntax->datum orig-parse)
+                     (syntax->datum new-parse)))
+        (define str (substring new-string col))
+        (send t begin-edit-sequence)
+        (send t insert str from-pos to-pos)
+        (send t set-position from-pos (+ from-pos (string-length str)))
+        (send t end-edit-sequence)]
+       [else
+        (void)])]))
+
+(define (parse-text t col from-pos end)
+  (parse-string (string-append (make-string col #\space)
+                               (send t get-text from-pos end))))
+
+(define (parse-string str)
   (with-handlers ([exn:fail? (lambda (exn) #f)])
     (define in (open-input-string str))
     (port-count-lines! in)
-    (parse-all in)
-    #t))
+    (parse-all in)))
 
 (define (armor-opener? t pos)
   (equal? (send t get-text pos (add1 pos)) "«"))
+
+(define (armor-closer? t pos)
+  (equal? (send t get-text pos (add1 pos)) "»"))
 
 ;; todo: unify with `skip-whitespace`
 (define (skip-whitespace2 t pos end
