@@ -113,3 +113,7 @@
 (check-fail (lines "cond"
                    "#// | x") #rx"misplaced `[|]`")
 (check-fail "x #// y" #rx"misplaced group comment")
+
+(check-fail "a(;«1» 2)" #rx"comma")
+(check-fail "a(;«1; 2», 2)" #rx"multi-group splice")
+

@@ -272,9 +272,6 @@
                                                 [delta delta]
                                                 [raw raw]))])]
           [(semicolon-operator)
-           (when (group-state-paren-immed? sg)
-             (fail t (format "misplaced semicolon (~a)"
-                             "immdiately within parentheses, brackets, or braces")))
            (cond
              [(eq? (group-state-block-mode sg) 'inside) (done)]
              [else
@@ -302,8 +299,13 @@
                                                             #:delta splice-delta
                                                             #:commenting group-commenting
                                                             #:raw splice-raw)))
+                 (when (group-state-paren-immed? sg)
+                   (unless (= 1 (length gs))
+                     (fail t (format "multi-group splice not allowed (~a)"
+                                     "immediately within parentheses, brackets, or braces"))))
                  (define-values (more-gs more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)
                    (parse-groups close-l (struct-copy group-state sg
+                                                      [comma-time? (group-state-paren-immed? sg)]
                                                       [check-column? (next-line?* close-l close-line)]
                                                       [column (or (group-state-column sg) column)]
                                                       [last-line close-line]
@@ -314,7 +316,11 @@
                                                       [raw group-tail-raw])))
                  (values (append gs more-gs)
                          more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)]
+                
                 [else
+                 (when (group-state-paren-immed? sg)
+                   (fail t (format "misplaced semicolon (~a)"
+                                   "immediately within parentheses, brackets, or braces")))
                  (parse-groups rest-l (struct-copy group-state sg
                                                    [check-column? (next-line?* rest-l last-line)]
                                                    [column (or (group-state-column sg) column)]

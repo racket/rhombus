@@ -332,6 +332,8 @@ branch |« x»;
 
 if t | x | ;« y »; z
 
+a(;«1», 2)
+
 INPUT
 )
 
@@ -1220,7 +1222,8 @@ INPUT
     (group top_d)
     (group top_e)
     (group top_f)
-    (group if t (alts (block (group x)) (block (group y) (group z))))))
+    (group if t (alts (block (group x)) (block (group y) (group z))))
+    (group a (parens (group 1) (group 2)))))
 
   
 (define input2

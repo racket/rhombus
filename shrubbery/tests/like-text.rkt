@@ -82,6 +82,11 @@
     (define/public (last-position)
       (string-length content))
 
+    (define/public (set-position start [end start])
+      (void))
+    (define/public (get-end-position)
+      (last-position))
+
     (define/public (position-paragraph pos [eol? #f])
       (or (hash-ref position-paragraphs pos #f)
           (error 'position-paragraph "lookup failed: ~e" pos)))
