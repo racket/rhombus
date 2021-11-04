@@ -45,15 +45,17 @@
                       (cond
                         [(eqv? next end) end]
                         [else (loop next)])])))
+  (define openers '(";«" "|«"))
+  (define closer "»")
   (cond
     [(and (from-pos . >= . 2)
           (to-pos . <= . (- last-pos 1))
-          (equal? ";«" (send t get-text (- from-pos 2) from-pos))
-          (equal? "»" (send t get-text to-pos (+ to-pos 1))))
+          (member (send t get-text (- from-pos 2) from-pos) openers)
+          (equal? (send t get-text to-pos (+ to-pos 1)) closer))
      (unarmor-region t (- from-pos 2) (+ to-pos 1))]
     [(and (from-pos . <= . (- to-pos 3))
-          (equal? ";«" (send t get-text from-pos (+ from-pos 2)))
-          (equal? "»" (send t get-text (- to-pos 1) to-pos)))
+          (member (send t get-text from-pos (+ from-pos 2)) openers)
+          (equal? (send t get-text (- to-pos 1) to-pos) closer))
      (unarmor-region t from-pos to-pos)]
     [else
      (armor-region t from-pos to-pos)]))
@@ -66,15 +68,18 @@
     [(not (parse-text t col from-pos end))
      (void)]
     [else
+     (define bar? (equal? "|" (send t get-text from-pos (add1 from-pos))))
      (define end-maybe-line (send t position-paragraph end))
      (define end-line (if (= (send t paragraph-start-position end-maybe-line) end)
                           (sub1 end-maybe-line)
                           end-maybe-line))
      (define skip-adjust-lines (make-hasheqv))
      (define init from-pos)
-     (define gs (list (make-group col)))
+     (define gs (list (make-group col #:close? (not bar?))))
      (define inserts
-       (let loop ([pos init] [prev-end init] [init? #t] [state (make-parse-state gs)] [inserts (list (cons init 'enter))])
+       (let loop ([pos init] [prev-end init] [init? #t] [state (make-parse-state gs)] [inserts (if bar?
+                                                                                                   null
+                                                                                                   (list (cons init 'enter)))])
          (define (close-one)
            (loop pos prev-end #f
                  (struct-copy parse-state state
@@ -345,7 +350,7 @@
                                 (add1 column))
                             (cdr chars)
                             deletes))]))))
-     (define new-parse (parse-string new-string))
+     (define new-parse (parse-string new-string col))
      (cond
        [(and new-parse
              (equal? (syntax->datum orig-parse)
@@ -360,11 +365,20 @@
 
 (define (parse-text t col from-pos end)
   (parse-string (string-append (make-string col #\space)
-                               (send t get-text from-pos end))))
+                               (send t get-text from-pos end))
+                col))
 
-(define (parse-string str)
+(define (parse-string str col)
   (with-handlers ([exn:fail? (lambda (exn) #f)])
-    (define in (open-input-string str))
+    (define in (open-input-string (cond
+                                    [(and ((string-length str) . > . 0)
+                                          (char=? #\| (string-ref str col)))
+                                     ;; Make a `|` form by itself parse:
+                                     (string-append (make-string col #\space)
+                                                    "bar"
+                                                    "\n"
+                                                    str)]
+                                    [else str])))
     (port-count-lines! in)
     (parse-all in)))
 
