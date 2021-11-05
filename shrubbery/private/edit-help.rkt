@@ -11,7 +11,8 @@
          get-current-tab
          end-of-current
          start-of-group
-         skip-whitespace)
+         skip-whitespace
+         skip-hash-lang)
 
 (define (classify-position t s)
   (define attribs (send t classify-position* s))
@@ -328,3 +329,17 @@
               (continue)
               (values s e))]
          [else (values s e)]))]))
+
+(define (skip-hash-lang t pos)
+  (define category (send t classify-position pos)) ; not `classify-position*`
+  (case category
+    [(other)
+     ;; keep skiping past non-comment whitespace
+     (define-values (s e) (send t get-token-range pos))
+     (let loop ([pos e])
+       (case (classify-position t pos)
+         [(whitespace)
+          (define-values (s e) (send t get-token-range pos))
+          (loop e)]
+         [else pos]))]
+    [else pos]))
