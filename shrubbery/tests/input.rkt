@@ -3,6 +3,9 @@
 (provide input1
          expected1
 
+         input1a
+         expected1a
+
          input2
          expected2
 
@@ -96,22 +99,6 @@ define fib(n):
        1
    | n:
        fib(n-1) + fib(n-2)
-
-define fib(n):
-  match n | 0: « 0 »
-          | 1: « 1 »
-          | n: « fib(n-1) + fib(n-2) »
-
-define fib(n):
-  match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2)
-
-define fib(n): « match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
-
-define fib(n): « match n | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » »
-
-define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
-
-define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
 
 // END equivalent `fib` definitions
 
@@ -308,31 +295,6 @@ local:
     define y: 2
   in:
    x+y
-
-if t | if f | a | b | y
-if t |« if f | a | b » | y
-if t |« tag: if f | a | b » | y
-if t |« tag: «if f | a | b » » | y
-
-x: y: a; b ; c
-x: y:« a; b »; c
-
-if t | x | y; z
-if t | x |« y »; z
-
-x:«
-    #//
-    2;
-    3 »
-
-branch |« x»;
-
-;« top_a; top_b » top_c
-;;;« top_d ;« top_e; top_f » »
-
-if t | x | ;« y »; z
-
-a(;«1», 2)
 
 INPUT
 )
@@ -561,133 +523,7 @@ INPUT
             (parens (group n (op -) 1))
             (op +)
             fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
-    (group
-     define
-     fib
-     (parens (group n))
-     (block
-      (group
-       match
-       n
-       (alts
-        (block (group 0 (block (group 0))))
-        (block (group 1 (block (group 1))))
-        (block
-         (group
-          n
-          (block
-           (group
-            fib
-            (parens (group n (op -) 1))
-            (op +)
-            fib
-            (parens (group n (op -) 2))))))))))
+            (parens (group n (op -) 2))))))))))    
     (group
      define
      make_adder
@@ -1204,7 +1040,182 @@ INPUT
        (block
         (group define x (block (group 1)))
         (group define y (block (group 2)))))
-      (group in (block (group x (op +) y)))))
+      (group in (block (group x (op +) y)))))))
+
+;; has « », so unarmoring won't work
+(define input1a
+#<<INPUT
+define fib(n):
+  match n | 0: « 0 »
+          | 1: « 1 »
+          | n: « fib(n-1) + fib(n-2) »
+
+define fib(n):
+  match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2)
+
+define fib(n): « match n | « 0: 0 » | « 1: 1 » | n: fib(n-1) + fib(n-2) »
+
+define fib(n): « match n | 0: «0» | 1: «1» | n: « fib(n-1) + fib(n-2) » »
+
+define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
+
+define fib(n): « match n | « 0: «0» » | « 1: «1» » | « n: « fib(n-1) + fib(n-2) » » »
+
+if t | if f | a | b | y
+if t |« if f | a | b » | y
+if t |« tag: if f | a | b » | y
+if t |« tag: «if f | a | b » » | y
+
+x: y: a; b ; c
+x: y:« a; b »; c
+
+if t | x | y; z
+if t | x |« y »; z
+
+x:«
+    #//
+    2;
+    3 »
+
+branch |« x»;
+
+;« top_a; top_b » top_c
+;;;« top_d ;« top_e; top_f » »
+
+if t | x | ;« y »; z
+
+a(;«1», 2)
+INPUT
+  )
+
+(define expected1a
+  '(top
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
+    (group
+     define
+     fib
+     (parens (group n))
+     (block
+      (group
+       match
+       n
+       (alts
+        (block (group 0 (block (group 0))))
+        (block (group 1 (block (group 1))))
+        (block
+         (group
+          n
+          (block
+           (group
+            fib
+            (parens (group n (op -) 1))
+            (op +)
+            fib
+            (parens (group n (op -) 2))))))))))
     (group if t (alts (block (group if f)) (block (group a)) (block (group b)) (block (group y))))
     (group if t (alts (block (group if f (alts (block (group a)) (block (group b))))) (block (group y))))
     (group if t (alts (block (group tag (block (group if f (alts (block (group a)) (block (group b))))))) (block (group y))))
@@ -1224,7 +1235,6 @@ INPUT
     (group top_f)
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group a (parens (group 1) (group 2)))))
-
   
 (define input2
 #<<INPUT

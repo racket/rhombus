@@ -15,10 +15,11 @@
    #:exists 'truncate
    (lambda (o) (write parsed o))))
 
-(define (check what input expected)
+(define (check what input expected #:unarmor? [unarmor? #t])
   (printf "checking ~s\n" what)
   (define t (new like-text% [content input]))
   (define length (string-length input))
+
   (armor-region t 0 length)
   (define in (open-input-string input))
   (port-count-lines! in)
@@ -35,10 +36,21 @@
   (unless (equal? orig-parsed armor-parsed)
     (out "original" orig-parsed pretty-write)
     (out "armored" armor-parsed pretty-write)
-    (error "parse of armored is different")))
+    (error "parse of armored is different"))
+
+  (when unarmor?
+    (define t2 (new like-text% [content armored]))
+    (unarmor-region t2 0 (send t2 last-position))
+    (define unarmored (send t2 get-text 0 (send t2 last-position)))
+    (unless (equal? input unarmored)
+      (out "input" input display)
+      (out "unarmored" unarmored display)
+      (out "armored" armored display)
+      (error "unarmored is different from input"))))
 
 (check "simple" "a: 1 2" '(top (group a (block (group 1) (group 2)))))
 (check 1 input1 expected1)
-(check 2 input2 expected2)
+(check '1a input1a expected1a #:unarmor? #f)
+(check 2 input2 expected2 #:unarmor? #f) ; unarmor not right yet for continuing
 (check 3 input3 expected3)
 (check 4 input4 expected4)

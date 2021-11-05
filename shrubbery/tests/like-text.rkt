@@ -102,11 +102,11 @@
     (define/public (begin-edit-sequence . args) (void))
     (define/public (end-edit-sequence . args) (void))
 
-    (define/public (insert str pos)
+    (define/public (insert str pos [end pos])
       (set! content (string-append
                      (substring content 0 pos)
                      str
-                     (substring content pos)))
+                     (substring content end)))
       (set!-values (position-paragraphs paragraph-starts) (find-paragraphs)))
 
     (define/public (backward-match pos cutoff)

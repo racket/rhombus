@@ -152,6 +152,7 @@
   (define-values (s e) (send t get-token-range s-in))
   (define category (classify-position t s))
   (case category
+    [(#f) s]
     [(opener)
      (send t forward-match s (send t last-position))]
     [(closer) s]

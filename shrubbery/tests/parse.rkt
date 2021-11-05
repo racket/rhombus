@@ -74,6 +74,7 @@
   (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
 
 (check 1 input1 expected1)
+(check '1a input1a expected1a)
 (check 2 input2 expected2)
 (check 3 input3 expected3)
 (check 4 input4 expected4)

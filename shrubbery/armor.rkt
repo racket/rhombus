@@ -4,7 +4,8 @@
          (only-in "parse.rkt" parse-all))
 
 (provide toggle-armor
-         armor-region)
+         armor-region
+         unarmor-region)
 
 (struct parse-state (gs skip? prev))
 (struct group (col
@@ -38,7 +39,8 @@
                    (cond
                      [(or (and (s . > . orig-to-pos)
                                ((send t position-paragraph s) . > . (send t position-paragraph orig-to-pos)))
-                          (end . >= . last-pos))
+                          (end . >= . last-pos)
+                          (eq? 'whitespace (classify-position t s)))
                       end]
                      [else
                       (define next (end-of-current t s #:stop-at-comma? #t))
@@ -100,7 +102,7 @@
                (when (and (eq? category 'comment)
                           (pair? (parse-state-gs state))
                           (group-in-at? (car (parse-state-gs state))))
-                 ;; line comment => don't adjust next lines indentation
+                 ;; line comment => don't adjust next line's indentation
                  (hash-set! skip-adjust-lines (add1 (send t position-paragraph s)) #t))
                (loop e prev-end init? state inserts)]
               [(group-comment)
@@ -272,8 +274,9 @@
     [(not orig-parse)
      (void)]
     [else
+     (define skip-adjust-lines (make-hasheqv))
      (define deletes
-       (let loop ([pos from-pos] [prev-pos #f] [prev-category #f] [deletes '()])
+       (let loop ([pos from-pos] [prev-pos #f] [prev-category #f] [deletes '()] [stack '()])
          (cond
            [(pos . >= . to-pos) (reverse deletes)]
            [else
@@ -282,72 +285,103 @@
             (case category
               [(opener)
                (cond
-                 [(and prev-pos
-                       (memq prev-category '(semicolon-operator block-operator bar-operator))
-                       (armor-opener? t pos))
-                  (loop e #f #f (cons (if (eq? prev-category 'semicolon-operator)
-                                          (cons prev-pos 2)
-                                          (cons pos 1))
-                                      deletes))]
+                 [(armor-opener? t pos)
+                  (cond
+                    [(and prev-pos
+                          (memq prev-category '(semicolon-operator block-operator bar-operator)))
+                     (loop e #f #f (cons (if (eq? prev-category 'semicolon-operator)
+                                             (cons prev-pos 2)
+                                             (cons pos 1))
+                                         deletes)
+                           (cons 'open stack))]
+                    [else
+                     (loop e #f #f deletes (cons 'skip stack))])]
                  [else
-                  (loop e #f #f deletes)])]
+                  (loop e #f #f deletes stack)])]
+              [(at-opener)
+               (loop e #f #f deletes (cons 'at stack))]
+              [(at-closer)
+               (loop e #f #f deletes (if (pair? stack) (cdr stack) stack))]
               [(closer)
                (cond
                  [(armor-closer? t pos)
-                  (loop e #f #f (cons (cons pos 1) deletes))]
+                  (define next-deletes
+                    (if (eq? prev-category 'semicolon-operator)
+                        (cons (cons prev-pos 1) deletes)
+                        deletes))
+                  (loop e #f #f (if (and (pair? stack)
+                                         (eq? 'open (car stack)))
+                                    (cons (cons pos 1) next-deletes)
+                                    next-deletes)
+                        (if (pair? stack) (cdr stack) stack))]
                  [else
-                  (loop e #f #f deletes)])]
+                  (loop e #f #f deletes stack)])]
               [(whitespace)
                (cond
                  [(and (eq? prev-category 'semicolon-operator)
                        ((line-start t e) . > . (line-start t s)))
-                  (loop e #f #f (cons (cons prev-pos 1) deletes))]
+                  (loop e #f #f (cons (cons prev-pos 1) deletes) stack)]
                  [else
-                  (loop e #f #f deletes)])]
+                  (loop e #f #f deletes stack)])]
+              [(comment)
+               (when (and (pair? stack) (eq? 'at (car stack)))
+                 ;; line comment => don't adjust next line's indentation
+                 (hash-set! skip-adjust-lines (add1 (send t position-paragraph s)) #t))
+               (loop e pos category deletes stack)]
               [else
-               (loop e pos category deletes)])])))
+               (loop e pos category deletes stack)])])))
      (define start (line-start t from-pos))
+     (define start-line (send t position-paragraph start))
      (define col (- from-pos start))
      ;; check whether this is going to work:
      (define chars (string->list
                     (string-append (make-string col #\space)
                                    (send t get-text from-pos to-pos))))
-     (define (delete-leading column n chars)
+     (define (delete-leading column n line chars)
        (cond
-         [(zero? column) chars]
+         [(zero? n) chars]
          [(null? chars) null]
          [(char=? #\newline (car chars))
-          (define start-chars chars)
-          (let loop ([i 0] [chars (cdr chars)])
-            (cond
-              [(= i (+ column n))
-               (let loop ([i 0] [chars (delete-leading column n chars)])
-                 (if (= i column)
-                     (cons #\newline chars)
-                     (loop (add1 i) (cons #\space chars))))]
-              [(char=? #\space (car chars))
-               (loop (add1 i) (cdr chars))]
-              [else
-               ;; didn't find enough leading spaces
-               start-chars]))]
+          (cond
+            [(hash-ref skip-adjust-lines (add1 line) #f)
+             (cons #\newline
+                   (delete-leading column n (add1 line) (cdr chars)))]
+            [else
+             (define start-chars chars)
+             (let loop ([i 0] [chars (cdr chars)])
+               (cond
+                 [(= i (+ column n))
+                  (let loop ([i 0] [chars (delete-leading column n (add1 line) chars)])
+                    (if (= i column)
+                        (cons #\newline chars)
+                        (loop (add1 i) (cons #\space chars))))]
+                 [(and (pair? chars)
+                       (char=? #\space (car chars)))
+                  (loop (add1 i) (cdr chars))]
+                 [else
+                  ;; didn't find enough leading spaces
+                  start-chars]))])]
          [else
           ;; keep looking for a newline:
-          (cons (car chars) (delete-leading column n (cdr chars)))]))
+          (cons (car chars) (delete-leading column n line (cdr chars)))]))
      (define new-string
        (list->string
-        (let loop ([i start] [column 0] [chars chars] [deletes deletes])
+        (let loop ([i start] [column 0] [line start-line] [chars chars] [deletes deletes])
           (cond
             [(null? deletes) chars]
             [(eqv? i (caar deletes))
              (define n (cdar deletes))
-             (define rest-chars (loop (+ i n) (+ column n) (list-tail chars n) (cdr deletes)))
-             (delete-leading column n rest-chars)]
+             (define rest-chars (loop (+ i n) (+ column n) line (list-tail chars n) (cdr deletes)))
+             (delete-leading column n line rest-chars)]
             [else
              (define ch (car chars))
              (cons ch (loop (add1 i)
                             (if (char=? #\newline ch)
                                 0
                                 (add1 column))
+                            (if (char=? #\newline ch)
+                                (add1 line)
+                                line)
                             (cdr chars)
                             deletes))]))))
      (define new-parse (parse-string new-string col))
