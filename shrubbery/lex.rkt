@@ -63,12 +63,12 @@
   
   [str (:: "\"" (:* string-element ) "\"")]
 
-  [string-element (:or (:~ "\"" "\\")
+  [string-element (:or (:~ "\"" "\\" "\n" "\r")
                        (:: "\\" unicode)
                        string-escape)]
 
   [byte-str (:: "#\"" (:* byte-string-element) "\"")]
-  [byte-string-element (:or (:- (:/ "\x00" "\xFF") "\"" "\\")
+  [byte-string-element (:or (:- (:/ "\x00" "\xFF") "\"" "\\" "\n" "\r")
                             string-escape)]
   [string-escape (:or "\\\""
                       "\\\\"
@@ -82,8 +82,7 @@
                       "\\e"
                       "\\'"
                       (:: "\\" (:** 1 3 digit8))
-                      (:: "\\x" (:** 1 2 digit16))
-                      (:: "\\" #\newline))]
+                      (:: "\\x" (:** 1 2 digit16)))]
 
   [bad-str (:: (:? "#") "\"" 
                (:* (:~ "\"" "\\")
