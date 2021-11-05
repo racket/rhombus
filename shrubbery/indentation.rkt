@@ -3,7 +3,8 @@
          racket/list
          "lex.rkt"
          "private/edit-help.rkt"
-         "private/paren.rkt")
+         "private/paren.rkt"
+         "private/delta-text.rkt")
          
 ;; Conventions:
 ;;   pos = arbitary position
@@ -79,38 +80,70 @@
      (list (list (max 0 (- current-amt amt))
                  (make-string (max 0 (- amt current-amt)) #\space)))]
     [else
-     ;; compute indentation for the first non-empty line; as long as that
-     ;; involves inserting space or deleting no more space than is
-     ;; available in all lines, shift all the lines the same
-     (define lines (get-non-empty-lines t s-line e-line))
+     (define changes (indent-interior t s-line e-line))
      (cond
-       [(null? lines) '()]
-       [else
-        (define (line-position line) (send t paragraph-start-position line))
-        (define pos (line-position (car lines)))
-        (define amt-or-multi-amt (shrubbery-indentation t pos #:multi? #t))
-        (define amts (if (list? amt-or-multi-amt)
-                         amt-or-multi-amt
-                         (list amt-or-multi-amt)))
-        (define current-amt (get-current-tab t pos))
-        (or
-         ;; try each possible shift:
-         (for/or ([amt (in-list amts)])
-           (cond
-             [(current-amt . < . amt)
-              ;; insert in all lines
-              (define ins-str (make-string (- amt current-amt) #\space))
-              (for/list ([line (in-range s-line (add1 e-line))])
-                (list 0 (if (memv line lines) ins-str "")))]
-             [(current-amt . > . amt)
-              (define delta (- current-amt amt))
-              (and (for/and ([line (in-list lines)])
-                     (delta . <= . (get-current-tab t (send t paragraph-start-position line))))
-                   (for/list ([line (in-range s-line (add1 e-line))])
-                     (list (if (memv line lines) delta 0) "")))]
-             [else #f]))
-         ;; no change
-         '())])]))
+       [(or (not changes)
+            (for/and ([change (in-list changes)])
+              (equal? change '(0 ""))))
+        ;; compute indentation for the first non-empty line; as long as that
+        ;; involves inserting space or deleting no more space than is
+        ;; available in all lines, shift all the lines the same
+        (define lines (get-non-empty-lines t s-line e-line))
+        (cond
+          [(null? lines) '()]
+          [else
+           (define (line-position line) (send t paragraph-start-position line))
+           (define pos (line-position (car lines)))
+           (define amt-or-multi-amt (shrubbery-indentation t pos #:multi? #t))
+           (define amts (if (list? amt-or-multi-amt)
+                            amt-or-multi-amt
+                            (list amt-or-multi-amt)))
+           (define current-amt (get-current-tab t pos))
+           (or
+            ;; try each possible shift:
+            (for/or ([amt (in-list amts)])
+              (cond
+                [(current-amt . < . amt)
+                 ;; insert in all lines
+                 (define ins-str (make-string (- amt current-amt) #\space))
+                 (for/list ([line (in-range s-line (add1 e-line))])
+                   (list 0 (if (memv line lines) ins-str "")))]
+                [(current-amt . > . amt)
+                 (define delta (- current-amt amt))
+                 (and (for/and ([line (in-list lines)])
+                        (delta . <= . (get-current-tab t (send t paragraph-start-position line))))
+                      (for/list ([line (in-range s-line (add1 e-line))])
+                        (list (if (memv line lines) delta 0) "")))]
+                [else #f]))
+            ;; no change
+            '())])]
+       [else (cons '(0 "") changes)])]))
+
+(define (indent-interior t s-line e-line)
+  (cond
+    [(= s-line e-line) '()]
+    [else
+     (define pos (send t paragraph-start-position (add1 s-line)))
+     (define indent (shrubbery-indentation t pos
+                                           #:multi? #t))
+     (cond
+       [(or (not (list? indent))
+            (= 1 (length indent)))
+        (define amt (if (pair? indent) (car indent) indent))
+        (define current (get-current-tab t pos))
+        (define one
+          (if (current . < . amt)
+              (list 0 (make-string (- amt current) #\space))
+              (list (- current amt) "")))
+        (define changes
+          (indent-interior (if (= current amt)
+                               t
+                               (make-delta-text t (+ pos current) (- amt current)))
+                           (add1 s-line)
+                           e-line))
+        (and changes
+             (cons one changes))]
+       [else #f])]))
 
 (define (indent-like-enclosing-group t start current-tab
                                      #:as-bar? [as-bar? #f]
@@ -362,7 +395,7 @@
                 (loop (sub1 s) candidate limit bar-after? #f #f)]
                [(comma-operator)
                 (cond
-                  [candidate (maybe-list candidate plus-one-more?)]
+                  [candidate null]
                   [else
                    (define i-pos (get-inside-start t pos))
                    (define start (line-start t i-pos))
