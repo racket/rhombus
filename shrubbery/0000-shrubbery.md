@@ -242,12 +242,13 @@ function(
 )
 ```
 
-A block that is started with `:` can be empty, and `:` can be used at
-the start of a group so that the group contains only a block. For
-example, the first of the following two top-level groups has `empty`
-followed by a block with zero groups, and the second top-level group
-has just a block that contains one group with the single element
-`untagged`:
+A block that is started with `:` cannot be empty (usless
+explicit-grouping `«` and `»` are used as described in a later
+section), but `:` can be used at the start of a group so that the
+group contains only a block. For example, the first of the following
+two top-level groups has `empty` followed by a block with zero groups,
+and the second top-level group has just a block that contains one
+group with the single element `untagged`:
 
 ```
 empty:
@@ -331,7 +332,8 @@ block as `universe` in a single group.
 
 A `|` cannot be a in a top-level sequence of groups or start a group
 immediately within `()`, `[]`, or `{}`, and it cannot appear just
-after `:`.
+after `:`. Like `:`, the content of a block after `|` cannot be empty
+unless explicit-grouping `«` and `»` are used.
 
 If a `|` appears on the same line as an earlier `|` and is not more
 nested inside `()`, `[]`, or `{}`, then the `|` terminates the earlier
