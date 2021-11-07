@@ -14,6 +14,8 @@ a language name to be chosen later.
       [(discussion)](https://github.com/racket/rhombus-brainstorming/pull/162)
     - [Rhombus protoype](https://github.com/mflatt/rhombus-brainstorming/blob/rhombus/rhombus/0000-rhombus.md)
       [(discussion)](https://github.com/racket/rhombus-brainstorming/pull/163)
+      and
+      [examples](https://github.com/samdphillips/rhombus-examples)
 
 * [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
 
