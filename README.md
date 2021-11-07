@@ -35,21 +35,21 @@ is especially beneficial.
 
 ## Conversations as Discussion
 
-GitHub [**discussions**](discussions) provide a forum for discussing
+GitHub [**discussions**](../../discussions) provide a forum for discussing
 Rhombus broadly, as opposed to discusssing details of specific
 proposals.
 
 
 ## Issues as a Wish List
 
-GitHub [**issues**](issues) for this repository represent a kind of wish list.
+GitHub [**issues**](../../issues) for this repository represent a kind of wish list.
 Post there for an idea about some way that you think a new language
 should be different than the current Racket language. Discuss other
 suggestions there.
 
 ## Pull Requests as Draft Proposals
 
-GitHub [**pull requests**](pulls) for this repository can represent more concrete
+GitHub [**pull requests**](../../pulls) for this repository can represent more concrete
 proposals. Proposals here do not have to be exhaustive, but they
 should be concrete enough to enable discussion of the pros and cons of
 a specific solution. There can and should be multiple conflicting
@@ -63,7 +63,7 @@ supporting material (such as an implementation).
 
 ## Pull Requests as Resource Updates
 
-GitHub [**pull requests**](pulls) for this repository can also be suggestions
+GitHub [**pull requests**](../../pulls) for this repository can also be suggestions
 to update resources listed above. These resources are intended to be
 uncontroversial summaries, although they may point toward
 controversial or conflicting perspectives.
