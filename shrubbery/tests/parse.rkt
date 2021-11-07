@@ -79,6 +79,11 @@
 (check 3 input3 expected3)
 (check 4 input4 expected4)
 
+(check-fail "x:" #rx"empty block")
+(check-fail "x:\ny" #rx"empty block")
+(check-fail "x |" #rx"empty block")
+(check-fail "x |\ny" #rx"empty block")
+
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
 

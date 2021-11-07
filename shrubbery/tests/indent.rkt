@@ -60,37 +60,45 @@
     ^x}
 
  @e{a:
+      ^x}
+ @e{a:
+      y
     ^ ^x}
+ @e{a: y
+    ^  ^x}
 
  @e{apple:
-    ^ ^x}
+      ^x}
 
  @e{apple: banana:
+             ^x}
+ @e{apple: banana:
+             y
     ^      ^ ^x}
 
  @e{apple: :
-    ^      ^ ^x}
+             ^x}
 
  @e{(a:
-     ^ ^x}
+       ^x}
 
  @e{(:
-     ^ ^x}
+       ^x}
 
  @e{[a:
-     ^ ^x}
+       ^x}
 
  @e{[:
-     ^ ^x}
+       ^x}
 
  @e|{{a:
-      ^ ^x}|
+        ^x}|
 
  @e|{{:
-      ^ ^x}|
+        ^x}|
 
  @e{define pi:
-    ^ ^x}
+      ^x}
 
  @e{define pi: 3.14
     ^          ^x}
@@ -216,7 +224,7 @@
 
  @e{hello | a | c\
      :
-    ^           ^    ^d}
+                     ^d}
 
  @e{nonsense:
       hello | there 4.5
@@ -232,20 +240,32 @@
                                    more
                                  ^ ^things}
 
- @e{x + w | z : :
+ @e{x + w | z : : x
     ^       ^   ^ ^y}
+ @e{x + w | z : :
+                  ^y}
 
  @e{x something | a
                   y:
                     w:
+                      ^q}
+ @e{x something | a
+                  y:
+                    w:
+                      z
     ^             ^ ^ ^q}
 
  @e{z: | x
-    ^    ^y}
+         ^y}
+ @e{z: q | x
+    ^  ^   ^y}
 
  @e{z:
       | x
-    ^   ^y}
+        ^y}
+ @e{z: r
+       | x
+    ^  ^ ^y}
 
  @e|{|z {
         | x
@@ -288,8 +308,11 @@
         ^x}
  @e{a: (#//
         ^x}
- @e{a: #// x:
-    ^  ^ ^x}
+ @e{a: #// x: q
+    ^  ^      ^x} ; would be nice to not include that first stop
+ @e{a: #// x: q
+       w
+    ^  ^x}
  @e{a: #// x: y
     ^  ^      ^x}
  @e{a: #// | x
@@ -307,6 +330,11 @@
       ^ ^| me}
  @e{b | x | y
       ^| me}
+
+ @e{b | 
+        ^me}
+ @e{b | x
+    ^   ^me}
 
  @e{a(x,
       ^+1}

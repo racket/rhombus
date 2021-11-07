@@ -293,7 +293,10 @@
              (define adj-block-col (if as-bar? (sub1 block-col) block-col))
              ;; look further outside this block, and don't consider anything
              ;; that would appear to be nested in the block:
-             (define outer-candidates (loop next-s next-candidate (min* adj-block-col limit) #f #f #f))
+             (define outer-candidates (if candidate
+                                          (loop next-s next-candidate (min* adj-block-col limit) #f #f #f)
+                                          ;; block is empty so far, so son't go outside it
+                                          null))
              (append (cond
                        [(and bar-after? (not as-bar?))
                         null]
@@ -387,7 +390,9 @@
                    ;; line up within bar or outside [another] bar
                    (define bar-column (col-of s start (line-delta t start)))
                    (append (maybe-list (or candidate (+ bar-column NORMAL-INDENT)) (and candidate plus-one-more?))
-                           (if (not limit-pos)
+                           (if (or (not limit-pos)
+                                   ;; if block is empty so far, so son't go outside it
+                                   (not candidate))
                                null
                                ;; outer candidates
                                (loop (sub1 (or another-bar-start s)) #f (min* bar-column limit) #t #f #f)))])]

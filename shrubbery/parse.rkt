@@ -729,6 +729,9 @@
     (if in-group-commenting
         (values in-group-commenting opener-l opener-line opener-delta opener-raw)
         (next-of/commenting opener-l opener-line opener-delta opener-raw inside-count?)))
+  (define (fail-empty)
+    (fail t (format "empty block not allowed after `~a` (except with `«»`)"
+                    (token-e t))))
   (cond
     [(pair? next-l)
      (define next-t (car next-l))
@@ -746,6 +749,8 @@
                                        #:delta delta
                                        #:commenting group-commenting
                                        #:raw raw)))
+     (when (and (null? indent-gs) t (not opener-t))
+       (fail-empty))
      (define used-closer? (or opener-t
                               (closer-expected? closer)))
      (define-values (null-g post-l post-line post-delta post-tail-commenting post-tail-raw)
@@ -775,6 +780,7 @@
              post-tail-raw)]
     [else
      (when opener-t (fail opener-t (format "expected `»`")))
+     (when (and t (not opener-t)) (fail-empty))
      (values (list (add-raw-to-prefix
                     t in-raw
                     (add-span-srcloc

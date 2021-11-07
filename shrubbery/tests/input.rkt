@@ -1072,6 +1072,8 @@ x: y:« a; b »; c
 if t | x | y; z
 if t | x |« y »; z
 
+empty:«»
+
 x:«
     #//
     2;
@@ -1225,6 +1227,7 @@ INPUT
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group if t (alts (block (group x)) (block (group y))))
     (group z)
+    (group empty (block))
     (group x (block (group 3)))
     (group branch (alts (block (group x))))
     (group top_a)
@@ -1324,7 +1327,7 @@ define
 nonsense:
   hello | there 4.5
         | more f(8)
-          next (ok |
+          next (ok | stuff
                    | stuff: (begin:
                                more
                                things
@@ -1471,7 +1474,7 @@ INPUT
            (group
             ok
             (alts
-             (block)
+             (block (group stuff))
              (block
               (group
                stuff
