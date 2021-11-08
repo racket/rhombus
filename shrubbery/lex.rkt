@@ -739,7 +739,7 @@
                  #:source [source (object-name in)]
                  #:interactive? [interactive? #f])
   (parameterize ([current-lexer-source source])
-    (let loop ([status 'initial] [depth 0] [blanks 0] [block? #f])
+    (let loop ([status 'initial] [depth 0] [blanks 0] [multi? #f])
       (cond
         [(eof-object? (peek-char in))
          ;; don't consume an EOF
@@ -763,11 +763,11 @@
                                     (eqv? #\newline (string-ref s (sub1 len))))))
             (cond
               [(and interactive? newline? (zero? depth)
-                    (blanks . >= . (if block? 1 0))
+                    (blanks . >= . (if multi? 1 0))
                     (not (lex-nested-status? status)))
                (list (wrap tok))]
               [else (cons (wrap tok)
-                          (loop new-status depth (+ blanks (if newline? 1 0)) block?))])]
+                          (loop new-status depth (+ blanks (if newline? 1 0)) multi?))])]
            [else
             (define a (case name
                         [(s-exp)
@@ -782,10 +782,10 @@
                               [else depth])
                             0
                             (case name
-                              [(block-operator)
-                               (or block?
+                              [(block-operator semicolon-operator)
+                               (or multi?
                                    (and (zero? depth) (not (lex-nested-status? status))))]
-                              [else block?])))
+                              [else multi?])))
             (cons a d)])]))))
 
 (define (finish-s-exp open-tok in fail)
