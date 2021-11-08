@@ -17,7 +17,8 @@
 (module+ for-ref
   (provide (for-syntax parse-map-ref-or-set)))
 
-(define-for-syntax (parse-map-ref-or-set map stxes)
+(define-for-syntax (parse-map-ref-or-set map-in stxes)
+  (define map (rhombus-local-expand map-in))
   (syntax-parse stxes
     #:datum-literals (brackets op)
     #:literals (rhombus=)
@@ -67,7 +68,8 @@
    (quote-syntax ++)
    null
    'automatic
-   (lambda (form1 form2 stx)
+   (lambda (form1-in form2 stx)
+     (define form1 (rhombus-local-expand form1-in))
      (define append-id (or (syntax-local-static-info form1 #'#%map-append)
                           #'map-append))
      (datum->syntax (quote-syntax here)

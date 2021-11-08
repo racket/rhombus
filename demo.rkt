@@ -283,7 +283,7 @@ nine
 decl.macro '(empty_import $e ......):
   match e
   | '():
-      '(: import:)
+      '(: import:«»)
 
 empty_import
 

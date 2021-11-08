@@ -35,7 +35,7 @@
   (syntax-parse g-stx
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
-     #:with rhs (enforest-expression-block rhs-stx)
+     #:with rhs (rhombus-local-expand (enforest-expression-block rhs-stx))
      #:with static-infos (extract-static-infos #'rhs)
      #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
      #:with lhs-i::binding-info #'lhs-impl.info

@@ -36,7 +36,9 @@
 
                      enforest-expression-block
                      expression-relative-precedence
-                     binding-relative-precedence))
+                     binding-relative-precedence
+
+                     rhombus-local-expand))
 
 (begin-for-syntax
   ;; Form at the top of a module:
@@ -179,6 +181,9 @@
 
 ;; For an expression context:
 (define-syntax (rhombus-expression stx)
+  (enforest-rhombus-expression stx))
+
+(define-for-syntax (enforest-rhombus-expression stx)
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
       [(_ e::expression) (syntax-local-introduce #'e.parsed)])))
@@ -194,3 +199,13 @@
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]
     [_ #`(rhombus-expression (group #,e))]))
+
+;; Forces enforestation through `rhombus-expression`; note that
+;; `#%tuple` eagerly enforests its content, so this effectively
+;; goes eagerly through parentheses
+(define-for-syntax (rhombus-local-expand stx)
+  (syntax-parse stx
+    #:literals (rhombus-expression)
+    [(rhombus-expression . _)
+     (enforest-rhombus-expression stx)]
+    [_ stx]))

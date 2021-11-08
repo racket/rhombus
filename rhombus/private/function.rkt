@@ -137,14 +137,17 @@
         [(form-id ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
                   (~and rhs (block body ...))
                   . tail)
-         (values
-          (build-function #'form-id
-                          #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
-                          #'rest.arg #'rest.parsed
-                          #'ret.predicate
-                          #'rhs
-                          #'form-id #'parens-tag)
-          #'tail)])))
+         (define fun
+           (build-function #'form-id
+                           #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                           #'rest.arg #'rest.parsed
+                           #'ret.predicate
+                           #'rhs
+                           #'form-id #'parens-tag))
+         (values (if (pair? (syntax-e #'ret.static-infos))
+                     (wrap-static-info fun #'#%call-result #'ret.static-infos)
+                     fun)
+                 #'tail)])))
    (definition-transformer
      (lambda (stx)
       (syntax-parse stx
@@ -464,7 +467,8 @@
              #:attr kw #'#f
              #:attr parsed #'exp.parsed)))
 
-(define-for-syntax (parse-function-call rator stxes)
+(define-for-syntax (parse-function-call rator-in stxes)
+  (define rator (rhombus-local-expand rator-in))
   (syntax-parse stxes
     [(_ ((~and head (~datum parens)) rand::kw-expression ...) . tail)
      #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
