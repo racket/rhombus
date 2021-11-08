@@ -336,9 +336,9 @@ _If you have installed the `shrubbery-rhombus-0` package, then the
 interactions window in DrRacket will work to call
 `fahrenheit_to_celsius`. In interactions, a single input line is
 accepted as complete as long as it's openers and closers are balanced,
-and as long as it doesn't contain `:` outside of an opener--closer
+and as long as it doesn't contain `:` or `;` outside of an opener--closer
 pair. A blank line terminates multi-line input. For multi-line input
-where the first line would otherwise parse as complete, add `:` at
+where the first line would otherwise parse as complete, add `;` at
 the front, either on the same line or its own line._
 
 A Rhombus module can export definitions to other modules using
