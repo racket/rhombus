@@ -71,13 +71,13 @@
 (define (only-whitespace-between? t s-pos e-pos
                                   #:or-ws-like? [or-ws-like? #f])
   (let loop ([pos s-pos])
-    (and (case (classify-position t pos)
-           [(whitespace) #t]
-           [(comment continue-operator) or-ws-like?]
-           [else #f])
-         (let ()
-           (define-values (s e) (send t get-token-range pos))
-           (or (e . >= . e-pos)
+    (or (pos . >= . e-pos)
+        (and (case (classify-position t pos)
+               [(whitespace) #t]
+               [(comment continue-operator) or-ws-like?]
+               [else #f])
+             (let ()
+               (define-values (s e) (send t get-token-range pos))
                (loop e))))))
 
 ;; find the current indentation of the block that starts at or before `pos`,

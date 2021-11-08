@@ -179,8 +179,20 @@
 (define (indent-like-parenthesis t start current-tab)
   (define-values (s e) (send t get-token-range (+ start current-tab)))
   (define o-s (send t backward-match e 0))
+  (define (own-line? t pos #:direction dir)
+    (define para (send t position-paragraph pos))
+    (if (eq? dir 'before)
+        (only-whitespace-between? t
+                                  (send t paragraph-start-position para)
+                                  pos)
+        (only-whitespace-between? t
+                                  pos
+                                  (send t paragraph-end-position para))))
   (cond
-    [o-s ; => s is closer
+    [(and o-s ; => s is closer
+          ;; opener and closer on their own lines?
+          (own-line? t (add1 o-s) #:direction 'after)
+          (own-line? t s #:direction 'before))
      (define o-start (line-start t o-s))
      (define o-delta (line-delta t o-start))
      (define col (col-of o-s o-start o-delta))
