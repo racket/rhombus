@@ -600,3 +600,27 @@ weirdly & "none"
                        that spans lines
                        and}
            stuff afterward.})
+
+// checking some static-info propagation cases
+
+dot.macro '(myint_dot_provider $left $dot $right):
+  match right
+  | 'is_zero: '($left == 0)
+  | 'add: '(fun (v -: MyInt) -: MyInt: $left + v)
+
+annotation.macro 'MyInt:
+  annotation_ct.pack_predicate('(fun (x): x is_a Integer),
+                               '(($(dot_ct.provider_key), myint_dot_provider)))
+
+val (one -: MyInt): 1
+
+one.add(4).is_zero
+
+((one.add(4)) -: MyInt).is_zero
+
+val two: 2 :: MyInt
+two.is_zero
+
+expr.rule '(I($n)): '($n -: MyInt)
+val three: (I(3))
+three.is_zero
