@@ -823,7 +823,8 @@
          (fail bad "expected only whitespace or `}` after S-expression")])))
   (define result
     (syntax->token (if (identifier? v) 'identifier 'literal)
-                   v
+                   (syntax-raw-property v
+                                        (format "#{~s}" (syntax->datum v)))
                    (let ([loc (token-srcloc open-tok)])
                      (struct-copy srcloc loc
                                   [span (- end-pos (srcloc-position loc))]))))

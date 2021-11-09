@@ -11,7 +11,7 @@
        ;; land by using `racket-lexer/status`:
        (let loop ([prev-status 'initial] [something? #f] [depth 0] [blanks 0] [multi? #f])
          (let-values ([(tok type paren start end backup status)
-                       (lex/status in (file-position in) prev-status racket-lexer/status)])
+                       (lex/status in (file-position in) prev-status racket-lexer*/status)])
            (case (cond
                    [(eof-object? tok) 'EOF]
                    [(token? tok) (token-name tok)]
