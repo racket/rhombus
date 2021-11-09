@@ -32,6 +32,7 @@
   (define-syntax-class :op/other
     #:datum-literals (op)
     (pattern (op name))
+    (pattern name:identifier)
     (pattern (~and name #:other)))
 
   (define (combine-prec strongers weakers sames same-on-lefts same-on-rights)
