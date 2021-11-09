@@ -266,7 +266,7 @@
                 (fail t (format "misplaced comma~a"
                                 (if (group-state-paren-immed? sg)
                                     ""
-                                    " (not immdiately within parentheses, brackets, or braces)"))))
+                                    " (not immediately within parentheses, brackets, or braces)"))))
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))
                          (group-state-count? sg)))
