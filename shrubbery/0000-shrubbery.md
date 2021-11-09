@@ -242,18 +242,31 @@ function(
 )
 ```
 
-A block that is started with `:` cannot be empty (usless
+A block that is started with `:` normally cannot be empty (unless
 explicit-grouping `«` and `»` are used as described in a later
-section), but `:` can be used at the start of a group so that the
-group contains only a block. For example, the first of the following
-two top-level groups has `empty` followed by a block with zero groups,
-and the second top-level group has just a block that contains one
-group with the single element `untagged`:
+section), so the following is ill-formed:
 
 ```
-empty:
+bad_empty:  // empty block disallowed
+```
 
+However, `:` can be used at the start of a group so that the group
+contains only a block. When `:` starts a group that is in the
+top-level sequence or within an _opener_-_closer_ pair, the block
+created by `:` is allowed to be empty (because that provides a way to
+express an empty in a context where it likely to be intentional
+instead of confusing). For example, the first of the following three
+top-level groups has just a block that contains one group with the
+single element `untagged`, the second top-level group has just a
+block with zero groups, and the third has a group with one parenthesized
+sequence of groups where the middle one has an empty block:
+
+```
 : untagged
+
+:
+
+(1, :, 2)
 ```
 
 ## Continuing with indentation and an operator
