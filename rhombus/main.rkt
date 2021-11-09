@@ -43,6 +43,7 @@
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
   #:info (lambda (key default make-default)
            (case key
+             [(drracket:default-extension) "rhm"]
              [else (get-info-proc key default make-default)]))
   #:whole-body-readers? #t
   (require shrubbery/parse
