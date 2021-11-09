@@ -16,7 +16,8 @@
 
 (provide shrubbery-indentation
          shrubbery-range-indentation
-         shrubbery-paren-matches)
+         shrubbery-paren-matches
+         shrubbery-quote-matches)
 
 (define NORMAL-INDENT 2)
 (define BAR-INDENT 0)
