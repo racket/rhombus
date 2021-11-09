@@ -4,7 +4,8 @@
          syntax-color/racket-lexer
          racket/symbol)
 
-(provide shrubbery-lexer)
+(provide shrubbery-lexer
+         shrubbery-text-mode-lexer)
 
 (define (shrubbery-lexer in pos status)
   (let-values ([(tok type paren start end backup status)
@@ -18,3 +19,7 @@
         [(symbol? tok) (symbol->immutable-string tok)]
         [else "other"]))
     (values (to-string-or-eof tok) type paren start end backup status)))
+
+(define (shrubbery-text-mode-lexer in pos status)
+  (shrubbery-lexer in pos (or status
+                              (make-in-text-status))))

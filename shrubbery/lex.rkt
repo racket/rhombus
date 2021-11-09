@@ -42,6 +42,7 @@
 
          current-lexer-source
 
+         make-in-text-status
          lex-nested-status?)
 
 (define-lex-abbrevs
@@ -257,8 +258,11 @@
            (loop))])))
 
 (struct s-exp-mode (depth status) #:prefab)
-(struct in-at (mode comment? opener shrubbery-status openers) #:prefab)
+(struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
+
+(define (make-in-text-status)
+  (in-at 'inside #f #f "" 'initial 0))
 
 (define (lex-nested-status? status)
   (not (or (not status) (symbol? status))))
@@ -381,12 +385,12 @@
    ["@//"
     (let ([opener (peek-at-opener input-port)])
       (if opener
-          (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos (in-at 'open #t opener 'initial '()))
+          (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos (in-at 'open #t #t opener 'initial '()))
           (read-line-comment 'at-comment lexeme input-port start-pos)))]
    ["@"
     (let ([opener (peek-at-opener input-port)])
       (define mode (if opener 'open 'initial))
-      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode #f opener 'initial '())))]
+      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode #f #t opener 'initial '())))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
@@ -456,10 +460,10 @@
                                            (define opener (peek-at-opener in))
                                            (cond
                                              [opener
-                                              (in-at 'open (in-at-comment? status) opener sub-status '())]
+                                              (in-at 'open (in-at-comment? status) #t opener sub-status '())]
                                              [(and (not (eq? in-mode 'brackets))
                                                    (eqv? #\[ (peek-char in)))
-                                              (in-at 'brackets (in-at-comment? status) #f sub-status '())]
+                                              (in-at 'brackets (in-at-comment? status) #t #f sub-status '())]
                                              [(in-escaped? sub-status)
                                               (in-escaped-at-status sub-status)]
                                              [else sub-status])]
@@ -498,6 +502,7 @@
     ;; on a `}` that is not balancing a `{` within `{}`
     [(inside)
      (define opener (in-at-opener status))
+     (define closeable? (in-at-closeable? status))
      (define start-pos (next-location-as-pos in))
      (define o (open-output-string))
      (let loop ([depth (in-at-openers status)])
@@ -517,7 +522,8 @@
              (ret 'at-content s 'text #f start-pos end-pos
                   (struct-copy in-at status [mode 'inside] [openers depth]))])]
          [(or (eof-object? ch)
-              (peek-at-closer in #:opener opener))
+              (and closeable?
+                   (peek-at-closer in #:opener opener)))
           (cond
             [(zero? depth)
              ;; `lex/status` will handle the case that the content is empty
@@ -534,7 +540,8 @@
           (define end-pos (next-location-as-pos in))
           (ret 'at-content (get-output-string o) 'text #f start-pos end-pos
                (struct-copy in-at status [mode 'escape] [openers depth]))]
-         [(peek-at-opener in #:opener opener)
+         [(and closeable?
+               (peek-at-opener in #:opener opener))
           (if (equal? opener "")
               (write-char (read-char in) o)
               (write-string (read-string (add1 (bytes-length opener)) in) o))
@@ -555,7 +562,7 @@
                      ;; block comment
                      (define end-pos (next-location-as-pos in))
                      (ret 'at-comment (string-append opener "@" slashes) 'comment #f start-pos end-pos
-                          (in-at 'open #t opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
+                          (in-at 'open #t #t opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
                [else
                 ;; line comment
                 (read-line-comment 'comment (string-append opener "@" slashes) in start-pos
@@ -565,7 +572,7 @@
         (define next-opener (peek-at-opener in))
         (define mode (if next-opener 'open 'initial))
         (ret 'at (string-append opener "@") 'at #f start-pos end-pos
-             (in-at mode (in-at-comment? status) next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
+             (in-at mode (in-at-comment? status) #t next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
     ;; 'close mode handles the final `}` of a `{}`
     [(close)
      (define closer (at-opener->closer (in-at-opener status)))
@@ -578,7 +585,7 @@
         (define next-opener (peek-at-opener in))
         (ret 'at-closer (string-append "}" closer) 'parenthesis '|}| start-pos end-pos
              (if next-opener
-                 (in-at 'open (in-at-comment? status) next-opener sub-status '())
+                 (in-at 'open (in-at-comment? status) #t next-opener sub-status '())
                  (if (in-escaped? sub-status)
                      (in-escaped-at-status sub-status)
                      sub-status)))])]
@@ -735,11 +742,15 @@
 ;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
 ;; for an S-expression escape:
 (define (lex-all in fail
+                 #:text-mode? [text-mode? #f]
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
                  #:interactive? [interactive? #f])
+  (define status (if text-mode?
+                     (make-in-text-status)
+                     'initial))
   (parameterize ([current-lexer-source source])
-    (let loop ([status 'initial] [depth 0] [blanks 0] [multi? #f])
+    (let loop ([status status] [depth 0] [blanks 0] [multi? #f])
       (cond
         [(eof-object? (peek-char in))
          ;; don't consume an EOF

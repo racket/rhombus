@@ -110,6 +110,7 @@
 (define group-tag (syntax-raw-property (datum->syntax #f 'group) '()))
 (define top-tag (syntax-raw-property (datum->syntax #f 'top) '()))
 (define parens-tag (syntax-raw-property (datum->syntax #f 'parens) '()))
+(define brackets-tag (syntax-raw-property (datum->syntax #f 'brackets) '()))
 
 ;; ----------------------------------------
 
@@ -894,30 +895,16 @@
           (eq? 'at-opener (token-name (car l))))
      ;; process a `{`...`}` body, handling escapes and then trimming whitespace
      (define init-t (car l))
-     (let loop ([l (cdr l)] [content '()] [accum-args '()])
-       (case (if (null? l) 'at-closer (token-name (car l)))
-         [(at-closer)
-          (when (null? l)
-            (fail init-t "missing closer for `@` content"))
-          (define-values (prefix-syntaxes new-content post-syntaxes)
-            (adjust-content-space content group-tag))
-          (define c
-            (list group-tag (add-tail-raw-to-prefix
-                             (list (car l))
-                             post-syntaxes
-                             (let ([tag (datum->syntax (token-value init-t)
-                                                       'brackets
-                                                       (token-value init-t)
-                                                       (token-value init-t))])
-                               (cond
-                                 [(null? new-content) (list tag)]
-                                 [else (cons tag
-                                             (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
-                                                                 new-content))])))))
+     (let loop ([l (cdr l)] [accum-args '()])
+       (parse-text-sequence
+        l
+        #:count? count?
+        (lambda (seq l)
+          (define c (list group-tag seq))
           (cond
             [(and (pair? l) (pair? (cdr l)) (eq? 'at-opener (token-name (cadr l))))
              ;; more `{}` arguments
-             (loop (cddr l) '() (cons c accum-args))]
+             (loop (cddr l) (cons c accum-args))]
             [else
              (values (lambda (g) (cond
                                    [(not after-bracket?)
@@ -937,38 +924,65 @@
                                     (move-pre-raw bracket
                                                   (add-raw-to-prefix* #f (syntax-to-raw bracket)
                                                                       new-g))]))
-                     'initial (if (null? l) null (cdr l)) line delta)])]
-         [(at-content)
-          (loop (cdr l)
-                ;; mark as 'content instead of 'group for now, so we
-                ;; can split and trim whitespace after finding all of it
-                (cons (list 'content (token-value (car l)))
-                      content)
-                accum-args)]
-         [(at at-comment)
-          (define t (car l))
-          (define comment? (eq? (token-name t) 'at-comment))
-          ;; `parse-group` work will be delimited by 'at-content or 'at-closer
-          (define-values (g rest-l group-end-line group-delta group-tail-commenting group-tail-raw)
-            (parse-group (if comment?
-                             (cons (token-rename t 'at) (cdr l))
-                             l)
-                         (make-state #:count? count?
-                                     #:line (token-line t)
-                                     #:column (token-column t)
-                                     #:delta zero-delta
-                                     #:raw null)))
-          (loop rest-l
-                (cons (if comment?
-                          (list 'comment (cons (token-raw t) (syntax-to-raw g)))
-                          (cons group-tag g))
-                      content)
-                accum-args)]
-         [(comment)
-          (loop (cdr l) (cons (list 'comment (token-e (car l))) content) accum-args)]
-         [else (error "unexpected in at" (token-name (car l)))]))]
+                     'initial (if (null? l) null (cdr l)) line delta)]))))]
     [else
      (values (lambda (g) g) #f l line delta)]))
+
+(define (parse-text-sequence l done-k
+                             #:opener-t [opener-t #f]
+                             #:count? [count? #t])
+  (let loop ([l l] [content '()])
+    (case (if (null? l) 'at-closer (token-name (car l)))
+      [(at-closer)
+       (when (and (null? l) opener-t)
+         (fail opener-t "missing closer for `@` content"))
+       (define-values (prefix-syntaxes new-content post-syntaxes)
+         (adjust-content-space content group-tag))
+       (define seq
+         (add-tail-raw-to-prefix
+          (if (null? l)
+              null
+              (list (car l)))
+          post-syntaxes
+          (let ([tag (if opener-t
+                         (datum->syntax (token-value opener-t)
+                                        'brackets
+                                        (token-value opener-t)
+                                        (token-value opener-t))
+                         brackets-tag)])
+            (cond
+              [(null? new-content) (list tag)]
+              [else (cons tag
+                          (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
+                                              new-content))]))))
+       (done-k seq l)]
+      [(at-content)
+       (loop (cdr l)
+             ;; mark as 'content instead of 'group for now, so we
+             ;; can split and trim whitespace after finding all of it
+             (cons (list 'content (token-value (car l)))
+                   content))]
+      [(at at-comment)
+       (define t (car l))
+       (define comment? (eq? (token-name t) 'at-comment))
+       ;; `parse-group` work will be delimited by 'at-content or 'at-closer
+       (define-values (g rest-l group-end-line group-delta group-tail-commenting group-tail-raw)
+         (parse-group (if comment?
+                          (cons (token-rename t 'at) (cdr l))
+                          l)
+                      (make-state #:count? count?
+                                  #:line (token-line t)
+                                  #:column (token-column t)
+                                  #:delta zero-delta
+                                  #:raw null)))
+       (loop rest-l
+             (cons (if comment?
+                       (list 'comment (cons (token-raw t) (syntax-to-raw g)))
+                       (cons group-tag g))
+                   content))]
+      [(comment)
+       (loop (cdr l) (cons (list 'comment (token-e (car l))) content))]
+      [else (error "unexpected in at" (token-name (car l)))])))
 
 (define (splice-at t g tail-raw)
   (define gs (car g))
@@ -1400,12 +1414,16 @@
 
 (define (parse-all in
                    #:source [source (object-name in)]
-                   #:interactive? [interactive? #f])
+                   #:interactive? [interactive? #f]
+                   #:text-mode? [text-mode? #f])
   (define l (lex-all in fail
                      #:source source
-                     #:interactive? interactive?))
+                     #:interactive? interactive?
+                     #:text-mode? text-mode?))
   (check-line-counting l)
-  (define v (parse-top-groups l #:interactive? interactive?))
+  (define v (if text-mode?
+                (parse-text-sequence l (lambda (c l) (datum->syntax #f c)))
+                (parse-top-groups l #:interactive? interactive?)))
   (when (and interactive? (eof-object? v))
     ;; consume the EOF
     (read-char in))
@@ -1416,12 +1434,13 @@
            "print.rkt")
 
   (define show-raw? #f)
+  (define text-mode? #f)
   (define one-line? #f)
 
   (define (parse-all* in)
     (unless one-line?
       (port-count-lines! in))
-    (define e (parse-all in))
+    (define e (parse-all in #:text-mode? text-mode?))
     (unless (eof-object? e)
       (cond
         [show-raw?
@@ -1434,6 +1453,8 @@
 
   (command-line
    #:once-each
+   [("--text") "Start as if within `@{`...`}`"
+               (set! text-mode? #t)]
    [("--recover") "Continue parsing after an error"
                   (current-recover-mode #t)]
    [("--raw") "Show raw strings when printing"
