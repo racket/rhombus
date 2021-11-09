@@ -223,7 +223,8 @@
                               (syntax-e name)
                               name
                               name))
-    (unless (identifier-binding id)
+    (unless (and (identifier-binding id)
+                 (not (free-identifier=? name id)))
       (raise-syntax-error #f
                           (format "no such imported ~a" what)
                           name))
