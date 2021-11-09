@@ -29,7 +29,8 @@
                        :maybe-arg-rest
                        :non-...-binding
                        build-function
-                       build-case-function)))
+                       build-case-function
+                       maybe-add-function-result-definition)))
 
 (module+ for-call
   (provide (for-syntax parse-function-call)))

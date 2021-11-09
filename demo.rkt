@@ -624,3 +624,8 @@ two.is_zero
 expr.rule '(I($n)): '($n -: MyInt)
 val three: (I(3))
 three.is_zero
+
+operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
+  x.add(y)
+
+(-2 my_plus 2).is_zero
