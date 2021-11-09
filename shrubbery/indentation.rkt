@@ -305,7 +305,8 @@
              (define adj-block-col (if as-bar? (sub1 block-col) block-col))
              ;; look further outside this block, and don't consider anything
              ;; that would appear to be nested in the block:
-             (define outer-candidates (if candidate
+             (define outer-candidates (if (or candidate
+                                              (block-not-disallowed-empty? t pos start))
                                           (loop next-s next-candidate (min* adj-block-col limit) #f #f #f)
                                           ;; block is empty so far, so son't go outside it
                                           null))

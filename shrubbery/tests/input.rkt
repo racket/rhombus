@@ -296,6 +296,11 @@ local:
   in:
    x+y
 
+:
+(:)
+(:, 2)
+(1, :)
+
 INPUT
 )
 
@@ -1040,7 +1045,11 @@ INPUT
        (block
         (group define x (block (group 1)))
         (group define y (block (group 2)))))
-      (group in (block (group x (op +) y)))))))
+      (group in (block (group x (op +) y)))))
+    (group (block))
+    (group (parens (group (block))))
+    (group (parens (group (block)) (group 2)))
+    (group (parens (group 1) (group (block))))))
 
 ;; has « », so unarmoring won't work
 (define input1a

@@ -67,6 +67,9 @@
  @e{a: y
     ^  ^x}
 
+ @e{:
+    ^ ^x}
+
  @e{apple:
       ^x}
 
@@ -83,19 +86,19 @@
        ^x}
 
  @e{(:
-       ^x}
+     ^ ^x}
 
  @e{[a:
        ^x}
 
  @e{[:
-       ^x}
+     ^ ^x}
 
  @e|{{a:
         ^x}|
 
  @e|{{:
-        ^x}|
+      ^ ^x}|
 
  @e{define pi:
       ^x}
@@ -243,6 +246,8 @@
  @e{x + w | z : : x
     ^       ^   ^ ^y}
  @e{x + w | z : :
+                  ^y}
+ @e{x + w | z : q:
                   ^y}
 
  @e{x something | a

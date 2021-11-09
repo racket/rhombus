@@ -83,6 +83,8 @@
 (check-fail "x:\ny" #rx"empty block")
 (check-fail "x |" #rx"empty block")
 (check-fail "x |\ny" #rx"empty block")
+(check-fail "(x:)" #rx"empty block")
+(check-fail "(1, x:)" #rx"empty block")
 
 (check-fail "if t | «tag: if f | a | b» more | y" #rx"no terms allowed after `»`")
 (check-fail "x: y:« a; b » more; c" #rx"no terms allowed after `»`")
@@ -122,4 +124,3 @@
 
 (check-fail "a(;«1» 2)" #rx"comma")
 (check-fail "a(;«1; 2», 2)" #rx"multi-group splice")
-

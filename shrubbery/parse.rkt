@@ -17,6 +17,7 @@
                bar-closes?     ; does `|` always end a group?
                bar-closes-line ; `|` (also) ends a group on this line
                block-mode      ; 'inside, #f, `:` or `|` token, or 'end
+               can-empty?      ; in a context where a `:` can be empty?
                delta           ; a `cont-delta`, tracks `\` continuations
                raw             ; reversed whitespace (and comments) to be remembered
                at-mode))       ; look for `@` continuation after term: #f, 'initial, or 'no-initial
@@ -29,6 +30,7 @@
                     #:bar-closes? [bar-closes? #f]
                     #:bar-closes-line [bar-closes-line #f]
                     #:block-mode [block-mode #f]
+                    #:can-empty? [can-empty? #t]
                     #:delta delta
                     #:raw [raw null])
   (state count?
@@ -39,6 +41,7 @@
          bar-closes?
          bar-closes-line
          block-mode
+         can-empty?
          delta
          raw
          #f))
@@ -52,6 +55,7 @@
                      bar-closes?    ; does `|` always end the sequence of groups?
                      bar-closes-line ; `|` (also) ends a sequence of groups on this line
                      block-mode     ; 'inside, #f, `:` or `|` token, or 'end
+                     can-empty?      ; in a context where a `:` can be empty?
                      comma-time?    ; allow and expect a comma next
                      sequence-mode  ; 'any, 'one, or 'none
                      last-line      ; most recently consumed line
@@ -68,6 +72,7 @@
                           #:bar-closes? [bar-closes? #f]
                           #:bar-closes-line [bar-closes-line #f]
                           #:block-mode [block-mode #f]
+                          #:can-empty? [can-empty? #t]
                           #:sequence-mode [sequence-mode 'any]
                           #:last-line last-line
                           #:delta delta
@@ -81,6 +86,7 @@
                bar-closes?
                bar-closes-line
                block-mode
+               can-empty?
                #f
                sequence-mode
                last-line
@@ -294,6 +300,7 @@
                                                             #:closer (make-closer-expected "»" next-t)
                                                             #:paren-immed? #f
                                                             #:block-mode #f
+                                                            #:can-empty? #f
                                                             #:column #f
                                                             #:last-line splice-last-line
                                                             #:delta splice-delta
@@ -313,6 +320,7 @@
                                                       [commenting #f]
                                                       [tail-commenting #f]
                                                       [block-mode (next-block-mode (group-state-block-mode sg))]
+                                                      [can-empty? #f]
                                                       [raw group-tail-raw])))
                  (values (append gs more-gs)
                          more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)]
@@ -422,6 +430,7 @@
                                            #:bar-closes? (group-state-bar-closes? sg)
                                            #:bar-closes-line (group-state-bar-closes-line sg)
                                            #:block-mode (group-state-block-mode sg)
+                                           #:can-empty? (group-state-can-empty? sg)
                                            #:delta (group-state-delta sg)
                                            #:raw null)))
               (define-values (gs rest-rest-l end-line end-delta end-t tail-commenting tail-raw)
@@ -488,6 +497,7 @@
                                         [delta at-delta]
                                         [raw null]
                                         [block-mode (next-block-mode (state-block-mode s))]
+                                        [can-empty? #f]
                                         [operator-column operator-column]
                                         [at-mode new-at-mode])))
        (define elem (record-raw (token-value t) #f (state-raw s)))
@@ -596,7 +606,9 @@
                         #:raw (state-raw s)
                         #:bar-closes? (and (state-bar-closes? s)
                                            (not (state-bar-closes-line s)))
-                        #:bar-closes-line (state-bar-closes-line s))]
+                        #:bar-closes-line (state-bar-closes-line s)
+                        #:can-empty? (state-can-empty? s)
+                        #:could-empty-if-start? #t)]
           [(bar-operator)
            (parse-alts-block t l)]
           [(opener)
@@ -719,7 +731,9 @@
                      #:delta in-delta
                      #:raw in-raw
                      #:group-commenting [in-group-commenting #f]
-                     #:block-mode [block-mode t])
+                     #:block-mode [block-mode t]
+                     #:can-empty? [can-empty? #f]
+                     #:could-empty-if-start? [could-empty-if-start? #f])
   (define-values (opener-t opener-l opener-line opener-delta opener-raw)
     (next-of/opener l line in-delta null count?))
   (when opener-t
@@ -730,8 +744,11 @@
         (values in-group-commenting opener-l opener-line opener-delta opener-raw)
         (next-of/commenting opener-l opener-line opener-delta opener-raw inside-count?)))
   (define (fail-empty)
-    (fail t (format "empty block not allowed after `~a` (except with `«»`)"
-                    (token-e t))))
+    (fail t (format "empty block not allowed after `~a` (except with `«»`~a)"
+                    (token-e t)
+                    (if could-empty-if-start?
+                        ", at top, or in an opener-closer pair"
+                        ""))))
   (cond
     [(pair? next-l)
      (define next-t (car next-l))
@@ -746,10 +763,11 @@
                                        #:bar-closes? (and (not opener-t) bar-closes?)
                                        #:bar-closes-line (and (not opener-t) inside-count? bar-closes-line)
                                        #:block-mode block-mode
+                                       #:can-empty? #f
                                        #:delta delta
                                        #:commenting group-commenting
                                        #:raw raw)))
-     (when (and (null? indent-gs) t (not opener-t))
+     (when (and (not can-empty?) (null? indent-gs) t (not opener-t))
        (fail-empty))
      (define used-closer? (or opener-t
                               (closer-expected? closer)))
@@ -780,7 +798,7 @@
              post-tail-raw)]
     [else
      (when opener-t (fail opener-t (format "expected `»`")))
-     (when (and t (not opener-t)) (fail-empty))
+     (when (and (not can-empty?) t (not opener-t)) (fail-empty))
      (values (list (add-raw-to-prefix
                     t in-raw
                     (add-span-srcloc

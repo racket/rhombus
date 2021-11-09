@@ -8,6 +8,7 @@
          col-of
          only-whitespace-between?
          get-block-column
+         block-not-disallowed-empty?
          get-current-tab
          end-of-current
          start-of-group
@@ -113,20 +114,40 @@
              (define start (line-start t r))
              (define delta (line-delta t start))
              (loop (sub1 r) (col-of r start delta) start)])]
-         [(block-operator bar-operator separator) candidate]
+         [(block-operator bar-operator comma-operator semicolon-operator) candidate]
          [else
           (cond
-            [(and #f ;; not sure why special-casing operators seemed like a good idea
-                  for-outdent?
-                  (eq? category 'operator))
-             (if (zero? s)
-                 (or candidate 0)
-                 (loop (sub1 s) candidate at-start))]
             [(zero? s) 0]
             [else
              (define start (line-start t pos))
              (define delta (line-delta t start))
              (loop (sub1 s) (col-of s start delta) start)])])])))
+
+(define (block-not-disallowed-empty? t init-pos init-at-start)
+  (or (zero? init-pos)
+      (let loop ([pos (sub1 init-pos)] [at-start init-at-start])
+        (define-values (s e) (send t get-token-range pos))
+        (define category (classify-position t s))
+        (case category
+          [(whitespace comment semicolon-operator) (or (zero? s) (loop (sub1 s) at-start))]
+          [(continue-operator)
+           (define pos-start (line-start t s))
+           (and (or (= pos-start at-start)
+                    (= (add1 pos-start) at-start))
+                (or (zero? s)
+                    (loop (sub1 s) pos-start)))]
+          [(opener comma-operator) #t]
+          [(bar-operator) #f]
+          [(block-operator)
+           ;; only if this block operator is same indentation
+           ;; and also not disallowed empty
+           (define pos-start (line-start t s))
+           (and (pos-start . < . at-start)
+                (= (col-of init-pos init-at-start (line-delta t init-at-start))
+                   (col-of pos pos-start (line-delta t pos-start)))
+                (block-not-disallowed-empty? t pos pos-start))]
+          [else
+           (not (= (line-start t s) at-start))]))))
 
 (define (whitespace? str)
   (and (= (string-length str) 1)
