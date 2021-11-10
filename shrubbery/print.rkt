@@ -15,7 +15,7 @@
      (define (full?)
        (and max-length
             ((file-position o) . > . max-length)))
-     (let loop ([l (syntax-to-raw s)])
+     (let loop ([l (syntax-to-raw s #:keep-suffix? #f)])
        (cond
          [(pair? l)
           (unless (full?)
@@ -43,22 +43,25 @@
            (format "~.s" v))
          (format "~s" v))]))
 
-(define (syntax-to-raw g)
-  (let loop ([g g] [tail null] [use-prefix? #f])
+(define (syntax-to-raw g #:keep-suffix? [keep-suffix? #t])
+  (let loop ([g g] [tail null] [use-prefix? #f] [keep-suffix? keep-suffix?])
     (cond
       [(null? g) tail]
       [(pair? g)
        (define a-stx (car g))
        (define post (and (syntax? a-stx)
                          (syntax-raw-tail-property a-stx)))
-       (define a (loop a-stx null use-prefix?))
+       (define a (loop a-stx null use-prefix? (or keep-suffix?
+                                                  (not (null? tail))
+                                                  (not (null? (cdr g))))))
        (define d (loop (cdr g)
                        (if post
                            (if (null? tail)
                                post
                                (cons tail post))
                            tail)
-                       #t))
+                       #t
+                       keep-suffix?))
        (if (null? a) d (cons a d))]
       [(syntax? g)
        (define pre (and use-prefix?
@@ -67,8 +70,17 @@
        (define raw (if (and pre r)
                        (cons pre r)
                        (or pre r null)))
-       (define d (loop (syntax-e g) tail use-prefix?))
-       (if (null? raw) d (cons raw d))]
+       (define suffix (and (or keep-suffix?
+                               (not (null? tail)))
+                           (or (syntax-raw-suffix-property g)
+                               null)))
+       (define raw+suffix (if (null? suffix)
+                              raw
+                              (if (null? raw)
+                                  suffix
+                                  (cons raw suffix))))
+       (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
+       (if (null? raw+suffix) d (cons raw+suffix d))]
       [else tail])))
 
 (define (all-raw-available? s)

@@ -488,10 +488,15 @@
      ;; Consume a token
      (define (keep delta
                    #:operator-column [operator-column (state-operator-column s)]
-                   #:at-mode [at-mode (state-at-mode s)])
+                   #:at-mode [at-mode (state-at-mode s)]
+                   #:suffix? [suffix? #t])
        (check-block-mode)
+       (define-values (suffix-raw suffix-l suffix-line suffix-delta)
+         (if suffix?
+             (get-suffix-comments (cdr l) line delta)
+             (values null (cdr l) line delta)))
        (define-values (at-adjust new-at-mode at-l at-line at-delta)
-         (continue-at at-mode #f (cdr l) line delta (state-count? s)))
+         (continue-at at-mode #f suffix-l suffix-line suffix-delta (state-count? s)))
        (define-values (g rest-l end-line end-delta tail-commenting tail-raw)
          (parse-group at-l (struct-copy state s
                                         [line at-line]
@@ -501,7 +506,7 @@
                                         [can-empty? #f]
                                         [operator-column operator-column]
                                         [at-mode new-at-mode])))
-       (define elem (record-raw (token-value t) #f (state-raw s)))
+       (define elem (record-raw (token-value t) #f (state-raw s) suffix-raw))
        (values (at-adjust (cons elem g)) rest-l end-line end-delta tail-commenting tail-raw))
      (define (parse-alts-block t l
                                #:group-commenting [group-commenting #f]
@@ -706,14 +711,14 @@
                                                       [raw (cons t (state-raw s))]
                                                       [at-mode 'initial]))]
                    [("[")
-                    (keep (state-delta s) #:at-mode 'no-initial)]
+                    (keep (state-delta s) #:at-mode 'no-initial #:suffix? #f)]
                    [else (error "unexpected" (token-name next-t))])]
                 [(identifier number literal operator opener)
                  (parse-group (cdr l) (struct-copy state s
                                                    [raw (cons t (state-raw s))]
                                                    [at-mode 'initial]))]
                 [(at-opener)
-                 (keep (state-delta s) #:at-mode 'no-initial)]
+                 (keep (state-delta s) #:at-mode 'no-initial #:suffix? #f)]
                 [(whitespace)
                  (fail next-t "whitespace is invalid after `@`")]
                 [else
@@ -898,6 +903,7 @@
      (let loop ([l (cdr l)] [accum-args '()])
        (parse-text-sequence
         l
+        #:opener-t init-t
         #:count? count?
         (lambda (seq l)
           (define c (list group-tag seq))
@@ -1128,6 +1134,27 @@
       [else
        (values commenting t (cons t l) line delta raw)])))
 
+;; consumes whitespace and comments that stay on the same line; we
+;; check the whitespace and comment content for "\n" to decide whether
+;; it stays on the same line
+(define (get-suffix-comments l line delta)
+  (cond
+    [(null? l) (values null null line delta)]
+    [else
+     (define t (car l))
+     (case (token-name t)
+       [(whitespace comment)
+        (cond
+          [(regexp-match? #rx"\n" (token-e t))
+           (values null l line delta)]
+          [else
+           ;; consume suffix comment
+           (define-values (raw rest-l rest-line rest-delta)
+             (get-suffix-comments (cdr l) line delta))
+           (values (cons (car l) raw) rest-l rest-line rest-delta)])]
+       [else
+        (values null l line delta)])]))
+
 (define (next-line? l last-line count?)
   (and count?
        (pair? l)
@@ -1194,7 +1221,8 @@
     (cons (let ([stx (datum->syntax* #f (car l) loc stx-for-original-property)])
             (if (syntax? start-t)
                 (let* ([stx (syntax-property-copy stx start-t syntax-raw-property)]
-                       [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)])
+                       [stx (syntax-property-copy stx start-t syntax-raw-prefix-property)]
+                       [stx (syntax-property-copy stx start-t syntax-raw-suffix-property)])
                   stx)
                 stx))
           (cdr l)))
@@ -1246,32 +1274,33 @@
   (or (syntax-raw-property value)
       (syntax-e value)))
 
-(define (into-op syntax-raw-property stx v #:and-outer? [and-outer? #f])
+(define (record-raw stx t pre-raw suffix-raw)
   (define e (syntax-e stx))
   (cond
     [(and (pair? e)
           (tag? 'op (car e)))
-     (define new-e (cons (syntax-raw-property (car e) v)
-                         (cdr e)))
+     (define new-op (record-raw (cadr e) t pre-raw suffix-raw))
+     (define new-e (list (car e) new-op))
      (define new-stx (datum->syntax stx new-e stx stx))
-     (if (or (not and-outer?) (syntax-raw-property new-stx))
+     (if (syntax-raw-property new-stx)
          new-stx
          (syntax-raw-property new-stx '()))]
     [else
-     (syntax-raw-property stx v)]))
-
-(define (record-raw stx t pre-raw)
-  (define stx+raw (if t
-                      (into-op syntax-raw-property stx (raw-cons (token-raw t)
-                                                                 (or (syntax-raw-property stx) '()))
-                               #:and-outer? #t)
-                      (if (syntax-raw-property stx)
-                          stx
-                          (syntax-raw-property stx '()))))
-  (if (null? pre-raw)
-      stx+raw
-      (into-op syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
-                                                            (or (syntax-raw-prefix-property stx) '())))))
+     (define stx+raw (if t
+                         (syntax-raw-property stx (raw-cons (token-raw t)
+                                                            (or (syntax-raw-property stx) '())))
+                         (if (syntax-raw-property stx)
+                             stx
+                             (syntax-raw-property stx '()))))
+     (define stx+pre-raw
+       (if (null? pre-raw)
+           stx+raw
+           (syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
+                                                         (or (syntax-raw-prefix-property stx) '())))))
+     (if (null? suffix-raw)
+         stx+pre-raw
+         (syntax-raw-suffix-property stx+pre-raw (raw-cons (or (syntax-raw-suffix-property stx) '())
+                                                           (raw-tokens->raw suffix-raw))))]))
 
 (define (add-raw-tail top raw)
   (if (null? raw)
@@ -1333,7 +1362,7 @@
         raw-t)))
 
 (define (add-raw-to-prefix t pre-raw l #:tail [post-raw #f])
-  (cons (let ([stx (record-raw (car l) t pre-raw)])
+  (cons (let ([stx (record-raw (car l) t pre-raw null)])
           (if post-raw
               (syntax-raw-tail-property stx (raw-cons (or (syntax-raw-tail-property stx) '())
                                                       (raw-tokens->raw post-raw)))
