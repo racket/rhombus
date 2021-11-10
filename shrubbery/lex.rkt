@@ -605,6 +605,7 @@
         (let loop ([chars '(#\|)] [offset 1])
           (define ch (peek-char in offset))
           (cond
+            [(eof-object? ch) #f]
             [(eqv? ch #\{) (list->string (reverse chars))]
             [(and ((char->integer ch) . < . 128)
                   (or (char-symbolic? ch)
