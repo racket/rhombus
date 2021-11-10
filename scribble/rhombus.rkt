@@ -53,7 +53,7 @@
     [(_ (brackets g ...))
      #`(doc:#%module-begin
         #:id #,(datum->syntax stx 'doc)
-        #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
+        ;; #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
         (rhombus-expression g)
         ...)]))

@@ -6,7 +6,7 @@
   '(["base" #:version "8.3.0.2"]
     "syntax-color-lib"
     "parser-tools-lib"
-    ["scribble-lib" #:version "1.41"]))
+    "scribble-lib" #;["scribble-lib" #:version "1.41"]))
 
 (define build-deps
   '("at-exp-lib"))
