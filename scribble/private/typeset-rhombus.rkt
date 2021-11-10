@@ -24,18 +24,18 @@
   ;; colorer. Why didn't we use a string to start with?
   ;; Because having `rhm` work on implicitly quoted syntax
   ;; means that you get nice editor support.
-  (define content-stx
+  (define block-stx
     (syntax-case stx ()
-      [(_ (_ (block group ...))) #'(group ...)]))
-  (define str (shrubbery-syntax->string content-stx))
-  (define init-col (or (syntax-case content-stx ()
-                         [((_ a . _) . _) (syntax-column #'a)]
-                         [else #f])
-                       0))
+      [(_ (_ block)) #'block]))
+  (define str (block-string->content-string (shrubbery-syntax->string block-stx)
+                                            (syntax-case block-stx ()
+                                              [(b . _)
+                                               (syntax-column #'b)])))
+  (define init-col (infer-indentation str))
   (define in (open-input-string str))
   (port-count-lines! in)
   (define elements+linebreaks
-    (let loop ([state #f] [pos 0] [skip-ws 0])
+    (let loop ([state #f] [pos 0] [skip-ws init-col])
       (define-values (lexeme attribs paren start+1 end+1 backup new-state)
         (shrubbery-lexer in 0 state))
       (cond
@@ -132,3 +132,28 @@
 
 (define tt-style (style 'tt null))
 (define hspace-style (style 'hspace null))
+
+(define (block-string->content-string str col)
+  ;; strip `:` from the beginning, add spaces
+  ;; corresponding to `col`, then strip any blank newlines
+  (define-values (content-str prefix-len)
+    (cond
+      [(regexp-match-positions #rx"^:«(.*)»" str)
+       => (lambda (m)
+            (values (substring str (caadr m) (cdadr m))
+                    (+ (or col 0) 2)))]
+      [(regexp-match? #rx"^:" str)
+       (values (substring str 1) (+ (or col 0) 1))]))
+  (define full-str
+    (string-append (make-string prefix-len #\space) content-str))
+  (regexp-replace* #px"\\s*\n$"
+                   (regexp-replace* #px"^\\s*\n" full-str "")
+                   ""))
+
+(define (infer-indentation str)
+  (define m (regexp-match-positions #px"[^ ]" str))
+  (if m
+      (caar m)
+      0))
+
+  
