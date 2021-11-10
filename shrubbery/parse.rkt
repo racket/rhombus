@@ -1246,17 +1246,32 @@
   (or (syntax-raw-property value)
       (syntax-e value)))
 
+(define (into-op syntax-raw-property stx v #:and-outer? [and-outer? #f])
+  (define e (syntax-e stx))
+  (cond
+    [(and (pair? e)
+          (tag? 'op (car e)))
+     (define new-e (cons (syntax-raw-property (car e) v)
+                         (cdr e)))
+     (define new-stx (datum->syntax stx new-e stx stx))
+     (if (or (not and-outer?) (syntax-raw-property new-stx))
+         new-stx
+         (syntax-raw-property new-stx '()))]
+    [else
+     (syntax-raw-property stx v)]))
+
 (define (record-raw stx t pre-raw)
   (define stx+raw (if t
-                      (syntax-raw-property stx (raw-cons (token-raw t)
-                                                         (or (syntax-raw-property stx) '())))
+                      (into-op syntax-raw-property stx (raw-cons (token-raw t)
+                                                                 (or (syntax-raw-property stx) '()))
+                               #:and-outer? #t)
                       (if (syntax-raw-property stx)
                           stx
                           (syntax-raw-property stx '()))))
   (if (null? pre-raw)
       stx+raw
-      (syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
-                                                    (or (syntax-raw-prefix-property stx) '())))))
+      (into-op syntax-raw-prefix-property stx+raw (raw-cons (raw-tokens->raw pre-raw)
+                                                            (or (syntax-raw-prefix-property stx) '())))))
 
 (define (add-raw-tail top raw)
   (if (null? raw)
