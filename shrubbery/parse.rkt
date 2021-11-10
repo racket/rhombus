@@ -750,7 +750,7 @@
         (values in-group-commenting opener-l opener-line opener-delta opener-raw)
         (next-of/commenting opener-l opener-line opener-delta opener-raw inside-count?)))
   (define (fail-empty)
-    (fail t (format "empty block not allowed after `~a` (except with `«»`~a)"
+    (fail t (format "empty block not allowed after `~a` (except with `«` and `»`~a)"
                     (token-e t)
                     (if could-empty-if-start?
                         ", at top, or in an opener-closer pair"

@@ -2,6 +2,8 @@
 (require shrubbery/print
          shrubbery/syntax-color
          scribble/racket
+         syntax/parse
+         racket/list
          (only-in scribble/core
                   element
                   paragraph
@@ -13,11 +15,49 @@
          typeset-rhombusblock)
 
 (define (typeset-rhombus stx)
-  (define content-stx
-    (syntax-case stx ()
-      [(_ group) #'group]))
-  (define str (shrubbery-syntax->string content-stx))
-  (element tt-style str))
+  ;; "pretty" prints to a single line
+  ;; FIXME: doesn't yet insert `«` and `»` where needed
+  (syntax-parse stx
+    #:datum-literals (parens)
+    [(parens g)
+     (let loop ([stx #'g])
+       (define (seq open elems-stx close)
+         (list (element paren-color open)
+               (add-between (map loop (syntax->list elems-stx))
+                            (element tt-style ", "))
+               (element paren-color close)))
+       (syntax-parse stx
+         #:datum-literals (group parens brackets braces block alts)
+         [(group elem ... (block g ...))
+          (list (add-between (map loop (syntax->list #'(elem ...)))
+                             (element tt-style " "))
+                (element tt-style ": ")
+                (add-between (map loop (syntax->list #'(g ...)))
+                             (element tt-style "; ")))]
+         [(group elem ... (alts (block g ...) ...+))
+          (list (add-between (map loop (syntax->list #'(elem ...)))
+                             (element tt-style " "))
+                (element tt-style " | ")
+                (add-between
+                 (for/list ([gs (in-list (syntax->list #'((g ...) ...)))])
+                   (add-between (map loop (syntax->list gs))
+                                (element tt-style "; ")))
+                 (element tt-style " | ")))]
+         [(group elem ...)
+          (add-between (map loop (syntax->list #'(elem ...)))
+                       (element tt-style " "))]
+         [(parens elem ...) (seq "(" #'(elem ...) ")")]
+         [(brackets elem ...) (seq "[" #'(elem ...) "]")]
+         [(braces elem ...) (seq "{" #'(elem ...) "}")]
+         [(op . _)
+          (element tt-style (shrubbery-syntax->string stx))]
+         [_
+          (define d (syntax->datum stx))
+          (element (cond
+                     [(symbol? d) symbol-color]
+                     [(keyword? d) paren-color]
+                     [else value-color])
+            (shrubbery-syntax->string stx))]))]))
 
 (define (typeset-rhombusblock stx)
   ;; Go back to a string, then parse again using the
