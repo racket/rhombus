@@ -11,4 +11,5 @@
         "private/annotation-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt"
-        "private/syntax-error.rkt")
+        "private/syntax-error.rkt"
+        "private/parsed.rkt")

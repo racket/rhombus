@@ -1300,7 +1300,7 @@
      (if (null? suffix-raw)
          stx+pre-raw
          (syntax-raw-suffix-property stx+pre-raw (raw-cons (or (syntax-raw-suffix-property stx) '())
-                                                           (raw-tokens->raw suffix-raw))))]))
+                                                           (raw-tokens->raw (reverse suffix-raw)))))]))
 
 (define (add-raw-tail top raw)
   (if (null? raw)
@@ -1478,6 +1478,7 @@
            "print.rkt")
 
   (define show-raw? #f)
+  (define show-property? #f)
   (define text-mode? #f)
   (define one-line? #f)
 
@@ -1487,13 +1488,43 @@
     (define e (parse-all in #:text-mode? text-mode?))
     (unless (eof-object? e)
       (cond
-        [show-raw?
+        [(or show-raw? show-property?)
          (for ([s (syntax->list e)])
-           (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s))
+           (when show-raw?
+             (printf "#|\n~a\n|#\n" (shrubbery-syntax->string s)))
+           (when show-property?
+             (show-properties s))
            (pretty-write (syntax->datum s)))]
         [else
          (pretty-write
           (syntax->datum e))])))
+
+  (define (show-properties s)
+    (cond
+      [(pair? s)
+       (define a (car s))
+       (show-properties a)
+       (show-properties (cdr s))
+       (define tail (syntax-raw-tail-property a))
+       (when tail
+         (printf " ... ~s\n" tail))]
+      [(null? s) (void)]
+      [else
+       (define prefix (syntax-raw-prefix-property s))
+       (define raw (syntax-raw-property s))
+       (define suffix (syntax-raw-suffix-property s))
+       (printf "~.s: ~a~s~a\n"
+               (syntax->datum s)
+               (if prefix
+                   (format "~s " prefix)
+                   "")
+               raw
+               (if suffix
+                   (format " ~s" suffix)
+                   ""))
+       (define e (syntax-e s))
+       (when (pair? e)
+         (show-properties e))]))
 
   (command-line
    #:once-each
@@ -1503,6 +1534,8 @@
                   (current-recover-mode #t)]
    [("--raw") "Show raw strings when printing"
               (set! show-raw? #t)]
+   [("--property") "Show raw-string properties when printing"
+                   (set! show-property? #t)]
    [("--one-line") "Disable line counting to assume a single line"
                    (set! one-line? #t)]
    #:args file

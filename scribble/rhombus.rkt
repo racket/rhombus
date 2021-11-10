@@ -2,17 +2,24 @@
 (require (for-syntax racket/base
                      syntax/parse)
          rhombus/private/parse
+         rhombus/private/forwarding-sequence
          (prefix-in doc: scribble/doclang2)
          (rename-in scribble/base
-                    [verbatim base:verbatim])
+                    [verbatim base:verbatim]
+                    [table-of-contents table_of_contents])
          scribble/private/manual-defaults
-         "private/rhombus.rkt")
+         "private/rhombus.rkt"
+         "private/include.rkt")
 
 (provide (rename-out [module-begin #%module-begin])
          (except-out (all-from-out scribble/base)
-                     base:verbatim)
+                     base:verbatim
+                     include-section)
          verbatim
-         (all-from-out "private/rhombus.rkt"))
+         pkg
+         include_section
+         (all-from-out "private/rhombus.rkt"
+                       "private/include.rkt"))
 (define-syntax-rule (rhombus-out)
   (begin
     (require (except-in rhombus #%module-begin))
@@ -51,14 +58,22 @@
   (syntax-parse stx
     #:datum-literals (brackets)
     [(_ (brackets g ...))
+     #:with (g-unwrapped ...) (for/list ([g (in-list (syntax->list #'(g ...)))])
+                                (syntax-parse g
+                                  #:datum-literals (group parens)
+                                  [(group (parens sub-g)) #'sub-g]
+                                  [else g]))
      #`(doc:#%module-begin
         #:id #,(datum->syntax stx 'doc)
         ;; #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
-        (rhombus-expression g)
-        ...)]))
+        (rhombus-forwarding-sequence
+         (rhombus-top g-unwrapped ...)))]))
 
 ;; ----------------------------------------
 
 (define (verbatim #:indent [indent 0] l)
   (base:verbatim #:indent indent (car l)))
+
+(define (pkg l)
+  (tt l))

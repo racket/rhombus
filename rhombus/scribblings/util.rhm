@@ -1,0 +1,12 @@
+#lang rhombus
+
+import:
+  scribble/rhombus:
+    prefix scribble
+
+export:
+  aside
+
+def aside(content):
+  scribble.nested(~style: symbol(inset), content)
+  
