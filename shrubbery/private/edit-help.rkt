@@ -227,14 +227,15 @@
 ;; enclosing group
 (define (start-of-group t orig-pos at-start
                         #:or-out? [or-out? #f])
-  (define (finish last-pos)
-    (or last-pos
-        (if or-out?
-            (start-of-enclosing-block t orig-pos)
-            orig-pos)))
-  (let loop ([pos orig-pos] [last-pos #f] [at-start at-start])
+  (define (finish last-pos need-opener?)
+    (and (not need-opener?)
+         (or last-pos
+             (if or-out?
+                 (start-of-enclosing-block t orig-pos)
+                 orig-pos))))
+  (let loop ([pos orig-pos] [last-pos #f] [at-start at-start] [need-opener? #f])
     (cond
-      [(= pos 0) (or last-pos 0)]
+      [(= pos 0) (and (not need-opener?) (or last-pos 0))]
       [else
        (define-values (s e) (send t get-token-range (sub1 pos)))
        (define category (classify-position t s))
@@ -242,31 +243,40 @@
          [(whitespace comment)
           (define start (line-start t s))
           (if (eqv? start at-start)
-              (loop s last-pos at-start)
-              (finish last-pos))]
+              (loop s last-pos at-start need-opener?)
+              (finish last-pos need-opener?))]
          [(continue-operator)
-          (loop s last-pos (line-start t s))]
+          (loop s last-pos (line-start t s) need-opener?)]
          [(block-operator)
           (or last-pos (if or-out? s orig-pos))]
          [(bar-operator)
           (or last-pos (if or-out? s orig-pos))]
-         [(opener closer)
-          (define o-s (send t backward-match e 0))
+         [(closer at-closer)
+          (define start (line-start t s))
           (cond
-            [o-s ; => `s` is a closer
-             (define start (line-start t e))
-             (if (eqv? start at-start)
-                 (loop o-s o-s (line-start t o-s))
-                 (finish last-pos))]
-            [else ; `s` is an opener or unmatched closer
-             (or last-pos (if or-out? s orig-pos))])]
+            [(eqv? start at-start)
+             (define o-s (send t backward-match e 0))
+             (cond
+               [o-s
+                (define start (line-start t e))
+                (if (eqv? start at-start)
+                    (loop o-s o-s (line-start t o-s) need-opener?)
+                    (finish last-pos need-opener?))]
+               [else ; unmatched closer
+                (loop s s at-start need-opener?)])]
+            [else
+             (finish last-pos need-opener?)])]
+         [(opener at-opener)
+          (or last-pos (if or-out? s orig-pos))]
          [(comma-operator)
-          (finish last-pos)]
+          (finish last-pos need-opener?)]
+         [(at-content)
+          (loop s last-pos (line-start t s) #t)]
          [else
           (define start (line-start t s))
           (if (eqv? start at-start)
-              (loop s s at-start)
-              (finish last-pos))])])))
+              (loop s s at-start need-opener?)
+              (finish last-pos need-opener?))])])))
 
 ;; return the start of the block or parens containing the group containg `pos`
 (define (start-of-enclosing-block t pos)

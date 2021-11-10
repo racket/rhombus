@@ -47,7 +47,10 @@
         (case category
           [(opener) s]
           [else
-           (min pos (start-of-group #:or-out? #t t e start))])])]
+           (define sog (start-of-group #:or-out? #t t e start))
+           (and sog
+                (not (eq? sog pos))
+                (min pos sog))])])]
     [else #f]))
 
 ;; give a `pos` that's right before a bar, return the start of the

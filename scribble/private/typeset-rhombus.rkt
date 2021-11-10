@@ -29,7 +29,7 @@
       [(_ (_ (block group ...))) #'(group ...)]))
   (define str (shrubbery-syntax->string content-stx))
   (define init-col (or (syntax-case content-stx ()
-                         [(_ (_ a . _) . _) (syntax-column #'a)]
+                         [((_ a . _) . _) (syntax-column #'a)]
                          [else #f])
                        0))
   (define in (open-input-string str))
@@ -63,10 +63,25 @@
                     [(comment) comment-color]
                     [(white-space) hspace-style]
                     [else tt-style]))
-                (element style (substring str start (if (and (positive? skip-ws)
-                                                             (eq? type 'white-space))
-                                                        (max start (- end skip-ws))
-                                                        end))))
+                (define show-str
+                  (substring str
+                             (let loop ([start start] [skip-ws skip-ws])
+                               (cond
+                                 [(skip-ws . <= . 0) start]
+                                 [(start . >= . end) start]
+                                 [(char=? #\space (string-ref str start))
+                                  (loop (add1 start) (sub1 skip-ws))]
+                                 [else start]))
+                             end))
+                (define m (and (not (eq? style hspace-style))
+                               (regexp-match-positions #rx"[^ ]" show-str)))
+                (cond
+                  [(and m (positive? (caar m)))
+                   (list
+                    (element hspace-style (make-string (caar m) #\space))
+                    (element style (substring show-str (caar m))))]
+                  [else
+                   (element style show-str)]))
               (let token-loop ([start start] [end end] [skip-ws skip-ws])
                 (define nl (regexp-match-positions #rx"\n" str start end))
                 (cond

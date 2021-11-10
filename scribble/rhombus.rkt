@@ -40,13 +40,20 @@
       [(color-lexer)
        (dynamic-require 'shrubbery/syntax-color
                         'shrubbery-text-mode-lexer)]
+      [(drracket:keystrokes)
+       (append (shrubbery:get-info-proc key default make-default)
+               (dynamic-require 'scribble/private/indentation 'keystrokes))]
+      [(drracket:toolbar-buttons)
+       (dynamic-require 'scribble/tools/drracket-buttons 'drracket-buttons)]
       [else (shrubbery:get-info-proc key default make-default)])))
 
 (define-syntax (module-begin stx)
   (syntax-parse stx
     #:datum-literals (brackets)
     [(_ (brackets g ...))
-     #'(doc:#%module-begin
+     #`(doc:#%module-begin
+        #:id #,(datum->syntax stx 'doc)
+        #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
         (rhombus-expression g)
         ...)]))
