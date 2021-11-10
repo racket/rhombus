@@ -46,7 +46,7 @@
   (property import-modifier transformer)
 
   (property import-name-root name-root (module-path))
-
+<
   (define in-import-space (make-interned-syntax-introducer 'rhombus/import))
 
   (define (check-import-result form proc)
@@ -211,20 +211,24 @@
                #`(define-syntax #,prefix
                    (import-name-root (lambda (tail)
                                        (parse-import-dot
+                                        (quote-syntax #,(datum->syntax #'r.parsed 'pre-ctx))
                                         (quote-syntax #,(datum->syntax (intro #'r.parsed) 'ctx))
                                         tail))
                                      (quote-syntax #,(extract-module-path r-parsed))))
                #'(begin))
          (rhombus-import . more))]))
 
-(define-for-syntax (parse-import-dot ctx stxes)
+(define-for-syntax (parse-import-dot pre-ctx ctx stxes)
   (define (get what name)
     (define id (datum->syntax ctx
                               (syntax-e name)
                               name
                               name))
+    (define pre-id (datum->syntax pre-ctx (syntax-e name)))
     (unless (and (identifier-binding id)
-                 (not (free-identifier=? name id)))
+                 ;; make sure that `ctx` mattered;
+                 (not (equal? (identifier-binding pre-id)
+                              (identifier-binding id))))
       (raise-syntax-error #f
                           (format "no such imported ~a" what)
                           name))
