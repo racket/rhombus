@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/provide-transform
+                     racket/phase+space
                      syntax/parse
                      enforest
                      enforest/operator
@@ -39,20 +41,7 @@
     form)
 
   (define (make-identifier-export id)
-    (define for-spaces
-      (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
-                  [(intro) (in-value (make-interned-syntax-introducer sym))]
-                  [(space-id) (in-value (intro id))]
-                  #:when (and (not (free-identifier=? id space-id))
-                              (identifier-binding space-id)))
-        #`(for-space #,sym #,id)))
-    (cond
-      [(identifier-binding id)
-       (if (null? for-spaces)
-           id
-           #`(combine-out #,id . #,for-spaces))]
-      [(null? for-spaces) id]
-      [else #`(combine-out . #,for-spaces)]))
+    #`(all-spaces-out #,id))
 
   (define-enforest
     #:syntax-class :export
@@ -94,6 +83,43 @@
           (raise-syntax-error #f
                               "not an export modifier"
                               #'form)])])))
+
+(define-syntax all-spaces-out
+  (make-provide-transformer
+   (lambda (stx phase+spaces)
+     (define phases (if (null? phase+spaces)
+                        (list 0)
+                        (hash-keys
+                         (for/hash ([p+s (in-list phase+spaces)])
+                           (phase+space-phase p+s)))))
+     (define id (syntax-parse stx [(_ id) #'id]))
+     (define (make-export phase space id)
+       (export id
+               (syntax-e id)
+               (phase+space phase space)
+               #f ; not protected
+               id))
+     (apply
+      append
+      (for/list ([phase (in-list phases)])
+        (define space+ids
+          (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
+                      [(intro) (in-value (make-interned-syntax-introducer sym))]
+                      [(space-id) (in-value (intro id))]
+                      #:when (and (identifier-binding space-id)
+                                  (not (free-identifier=? id space-id))))
+            (cons sym space-id)))
+        (append
+         (cond
+           [(identifier-binding id phase)
+            (list (make-export phase #f id))]
+           [(null? space+ids)
+            (raise-syntax-error 'export
+                                "identifier is not defined or imported"
+                                id)]
+           [else null])
+         (for/list ([space+id (in-list space+ids)])
+           (make-export phase (car space+id) (cdr space+id)))))))))
 
 (define-syntax export
   (declaration-transformer
