@@ -1,3 +1,3 @@
 #lang info
 
-(define module-suffixes '(#".rhm"))
+(define module-suffixes '(#"rhm"))
