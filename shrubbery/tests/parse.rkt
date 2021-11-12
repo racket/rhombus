@@ -68,7 +68,7 @@
     (unless (with-handlers ([exn:fail? (lambda (exn) (regexp-match? rx (exn-message exn)))])
               (parse-all in)
               #f)
-      (error "failed to fail: ~s" input))))
+      (error 'check-fail "failed to fail: ~s" input))))
 
 (define (lines s . ss)
   (apply string-append s (for/list ([s (in-list ss)]) (string-append "\n" s))))
@@ -78,6 +78,7 @@
 (check 2 input2 expected2)
 (check 3 input3 expected3)
 (check 4 input4 expected4)
+(check 5 input5 expected5)
 
 (check-fail "x:" #rx"empty block")
 (check-fail "x:\ny" #rx"empty block")
@@ -124,3 +125,14 @@
 
 (check-fail "a(;«1» 2)" #rx"comma")
 (check-fail "a(;«1; 2», 2)" #rx"multi-group splice")
+
+(check-fail "1x" #rx"read error")
+(check-fail "1x_y" #rx"read error")
+(check-fail "1.x" #rx"read error")
+(check-fail "1.2x" #rx"read error")
+(check-fail "1.2ex" #rx"read error")
+(check-fail "1.2e5x" #rx"read error")
+(check-fail "1.2e5.x" #rx"read error")
+(check-fail "1.2e5.0x" #rx"read error")
+(check-fail "1." #rx"read error")
+(check-fail "1.2.3" #rx"read error")

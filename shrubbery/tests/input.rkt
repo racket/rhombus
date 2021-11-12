@@ -13,7 +13,10 @@
          expected3
 
          input4
-         expected4)
+         expected4
+
+         input5
+         expected5)
 
 (define input1
 #<<INPUT
@@ -1819,3 +1822,54 @@ INPUT
        (block
         (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
         (group match x (alts (block (group 1 (block (group (op |'|) one (op |'|))))) (block (group 2 (block (group (op |'|) two (op |'|)))))))))))))
+
+(define input5
+#<<INPUT
+1
+1.0
+1.0e1
+1.0e+1
+1.0e-1
+-1.0e-1
+
+1.2
+1 .2
+1 . 2
+
+1..2
+1.=9
+
+1 + 2
+1+ 2
+1 + -2
+1 -2
+1 - 2
+1 +- 2
+1 -+ 2
+1 + +2
+1 ++ 2
+INPUT
+)
+
+(define expected5
+  '(top
+    (group 1)
+    (group 1.0)
+    (group 10.0)
+    (group 10.0)
+    (group 0.1)
+    (group -0.1)
+    (group 1.2)
+    (group 1 0.2)
+    (group 1 (op |.|) 2)
+    (group 1 (op ..) 2)
+    (group 1 (op .=) 9)
+    (group 1 (op +) 2)
+    (group 1 (op +) 2)
+    (group 1 (op +) -2)
+    (group 1 -2)
+    (group 1 (op -) 2)
+    (group 1 (op +) (op -) 2)
+    (group 1 (op -) (op +) 2)
+    (group 1 (op +) 2)
+    (group 1 (op ++) 2)))
