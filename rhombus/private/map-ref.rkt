@@ -56,7 +56,7 @@
 (define (map-set! map index val)
   (cond
     [(vector? map) (vector-set! map index val)]
-    [(and (hash? map) (not (immutable? map))) (hash-set! map index)]
+    [(and (hash? map) (not (immutable? map))) (hash-set! map index val)]
     [(and (set? map) (not (immutable? (set-ht map)))) (if val
                                                           (hash-set! (set-ht map) index #t)
                                                           (hash-remove! (set-ht map) index))]
