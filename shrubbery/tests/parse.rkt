@@ -134,5 +134,5 @@
 (check-fail "1.2e5x" #rx"read error")
 (check-fail "1.2e5.x" #rx"read error")
 (check-fail "1.2e5.0x" #rx"read error")
-(check-fail "1." #rx"read error")
+(check-fail "1..2" #rx"read error")
 (check-fail "1.2.3" #rx"read error")

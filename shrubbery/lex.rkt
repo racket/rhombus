@@ -119,9 +119,6 @@
                      (:+ "-"))
                 "|" ":"
                 (:: (:* any-char) (:or "//" "/*") (:* any-char)))]
-  [bad-operator/post-number "."]
-  [operator/post-number (:- operator
-                            bad-operator/post-number)]
 
   [keyword (:: "~" identifier)]
   [bad-keyword (:: "~")]
@@ -136,25 +133,22 @@
   [uinteger (:: (:* digit_) digit)]
   [uinteger16 (:: (:* digit16_) digit16)]
   
-  [decimal-number/continuing (:or (:: uinteger maybe-number-exponent)
-                                  (:: uinteger "." uinteger maybe-number-exponent)
-                                  (:: uinteger "." number-exponent))]
+  [decimal-number/continuing (:or (:: uinteger number-exponent)
+                                  (:: uinteger "." (:? uinteger) number-exponent))]
   [decimal-number (:or decimal-number/continuing
-                       (:: "." uinteger maybe-number-exponent))]
-  [maybe-number-exponent (:or "" number-exponent)]
-  [number-exponent (:: exponent-marker (:? sign) uinteger)]
+                       (:: "." uinteger number-exponent))]
+  [number-exponent (:or "" (:: exponent-marker (:? sign) uinteger))]
   [hex-number (:: "0x" uinteger16)]
 
-  [bad-number/continuing (:- (:: number/continuing bad-number-finish)
+  [bad-number/continuing (:- (:: digit (:+ non-number-delims))
                              identifier
                              number/continuing)]
-  [bad-number (:- (:: number bad-number-finish)
+  [bad-number (:- (:: (:? sign) digit (:+ non-number-delims))
                   identifier
                   number)]
   [bad-comment "*/"]
 
-  [bad-number-finish (:+ non-delims)]
-  
+  [non-number-delims (:or non-delims ".")]
   [non-delims (:or alphabetic numeric "_")]
 
   ;; making whitespace end at newlines is for interactive parsing
@@ -314,9 +308,6 @@
                     [(eq? status 'continuing)
                      ;; normal mode, after a form
                      (shrubbery-lexer-continuing/status in)]
-                    [(eq? status 'post-number)
-                     ;; just after a number
-                     (shrubbery-lexer-post-number/status in)]
                     [else
                      ;; normal mode, at start or after an operator or whitespace
                      (shrubbery-lexer/status in)]))])
@@ -338,7 +329,7 @@
                             [else backup]))
        (values tok type paren start end new-backup status)])))
 
-(define-syntax-rule (make-lexer/status number bad-number operator/maybe-post bad-operator)
+(define-syntax-rule (make-lexer/status number bad-number)
   (lexer
    [whitespace-segment
     (ret 'whitespace lexeme 'white-space #f start-pos end-pos 'initial)]
@@ -347,7 +338,7 @@
    [bad-number
     (ret 'fail lexeme 'error #f start-pos end-pos 'continuing)]
    [number
-    (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'post-number)]
+    (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
    [special-number
     (let ([num (case lexeme
                  [("#inf") +inf.0]
@@ -386,10 +377,8 @@
     (ret 'semicolon-operator lexeme 'separator #f start-pos end-pos 'initial)]
    [identifier
     (ret 'identifier (string->symbol lexeme) #:raw lexeme 'symbol #f start-pos end-pos 'continuing)]
-   [operator/maybe-post
+   [operator
     (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial)]
-   [bad-operator
-    (ret 'fail lexeme 'error #f start-pos end-pos 'initial)]
    [keyword
     (let ([kw (string->keyword (substring lexeme 1))])
       (ret 'identifier kw #:raw lexeme 'hash-colon-keyword #f start-pos end-pos 'continuing))]
@@ -422,12 +411,8 @@
 (define (ret-eof start-pos end-pos)
   (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f 0 #f))
 
-(define shrubbery-lexer/status (make-lexer/status number bad-number
-                                                  operator nothing))
-(define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing
-                                                             operator nothing))
-(define shrubbery-lexer-post-number/status (make-lexer/status number/continuing bad-number/continuing
-                                                              operator/post-number bad-operator/post-number))
+(define shrubbery-lexer/status (make-lexer/status number bad-number))
+(define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
 
 ;; after reading `@`, we enter an at-exp state machine for whether
 ;; we're in the initial part, within `[]`, or within `{}`; we have to

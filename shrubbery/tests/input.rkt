@@ -1826,8 +1826,10 @@ INPUT
 (define input5
 #<<INPUT
 1
+1.
 1.0
 1.0e1
+1.e1
 1.0e+1
 1.0e-1
 -1.0e-1
@@ -1835,9 +1837,7 @@ INPUT
 1.2
 1 .2
 1 . 2
-
-1..2
-1.=9
+1.=2
 
 1 + 2
 1+ 2
@@ -1855,6 +1855,8 @@ INPUT
   '(top
     (group 1)
     (group 1.0)
+    (group 1.0)
+    (group 10.0)
     (group 10.0)
     (group 10.0)
     (group 0.1)
@@ -1862,8 +1864,7 @@ INPUT
     (group 1.2)
     (group 1 0.2)
     (group 1 (op |.|) 2)
-    (group 1 (op ..) 2)
-    (group 1 (op .=) 9)
+    (group 1.0 (op =) 2)
     (group 1 (op +) 2)
     (group 1 (op +) 2)
     (group 1 (op +) -2)
