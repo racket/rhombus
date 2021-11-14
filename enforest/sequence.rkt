@@ -5,6 +5,7 @@
          "syntax-local.rkt"
          "private/transform.rkt"
          "hier-name-parse.rkt"
+         "name-root.rkt"
          "private/name-path-op.rkt"
          "private/check.rkt")
 
@@ -32,6 +33,8 @@
                          #:defaults ([in-space #'values]))
               (~optional (~seq #:name-path-op name-path-op)
                          #:defaults ([name-path-op #'name-path-op]))
+              (~optional (~seq #:name-root-ref name-root-ref)
+                         #:defaults ([name-root-ref #'name-root-ref]))
               (~optional (~seq #:transformer-ref transformer-ref)
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
@@ -39,7 +42,7 @@
         ...)
      #`(begin
          (define-splicing-syntax-class form
-           (pattern (~seq ((~datum group) . (~var hname (:hier-name-seq values name-path-op))) tail-in (... ...))
+           (pattern (~seq ((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref))) tail-in (... ...))
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
@@ -53,7 +56,7 @@
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e
-                       [((~datum group) . (~var hname (:hier-name-seq values name-path-op)))
+                       [((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
                        [_ #f])))

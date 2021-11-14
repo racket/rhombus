@@ -32,7 +32,9 @@
                                           ;; etc.
                                           #'begin
                                           #'provide
-                                          #'require)
+                                          #'require
+                                          #'#%require
+                                          #'#%provide)
                                     #f))
      (syntax-parse exp-form
        #:literals (begin define-values define-syntaxes rhombus-forward)

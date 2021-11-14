@@ -93,6 +93,8 @@
                          #:defaults ([in-space #'values]))
               (~optional (~seq #:name-path-op name-path-op)
                          #:defaults ([name-path-op #'name-path-op]))
+              (~optional (~seq #:name-root-ref name-root-ref)
+                         #:defaults ([name-root-ref #'name-root-ref]))
               (~optional (~seq #:prefix-operator-ref prefix-operator-ref)
                          #:defaults ([prefix-operator-ref #'prefix-operator-ref]))
               (~optional (~seq #:infix-operator-ref infix-operator-ref)
@@ -135,6 +137,7 @@
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space
                                                    name-path-op prefix-operator-ref infix-operator-ref
+                                                   name-root-ref
                                                    check-result
                                                    make-identifier-form
                                                    make-operator-form
@@ -165,6 +168,7 @@
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space
                             name-path-op prefix-operator-ref infix-operator-ref
+                            name-root-ref
                             check-result
                             make-identifier-form
                             make-operator-form

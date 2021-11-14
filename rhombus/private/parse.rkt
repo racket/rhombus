@@ -7,6 +7,7 @@
                      enforest/sequence
                      "srcloc.rkt"
                      "name-path-op.rkt")
+         "name-root-ref.rkt"
          "forwarding-sequence.rkt"
          "declaration.rkt"
          "definition.rkt"
@@ -46,6 +47,7 @@
     #:syntax-class :declaration
     #:desc "declaration"
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:transformer-ref declaration-transformer-ref
     #:check-result check-declaration-result)
 
@@ -55,6 +57,7 @@
     #:predicate definition?
     #:desc "definition"
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
 
@@ -64,6 +67,7 @@
     #:predicate definition-sequence?
     #:desc "definition sequence"
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:transformer-ref definition-sequence-transformer-ref
     #:check-result check-definition-result)
 
@@ -76,6 +80,7 @@
     #:operator-desc "expression operator"
     #:in-space in-expression-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
     #:check-result check-expression-result
@@ -91,6 +96,7 @@
     #:operator-desc "binding operator"
     #:in-space in-binding-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
     #:check-result check-binding-result

@@ -13,9 +13,9 @@
                      enforest/syntax-local
                      "name-path-op.rkt"
                      "srcloc.rkt")
+         "name-root-ref.rkt"
          "declaration.rkt"
-         (submod "module-path.rkt" for-import-export)
-         (submod "import.rkt" for-export))
+         (submod "module-path.rkt" for-import-export))
 
 (provide export
 
@@ -50,6 +50,7 @@
     #:operator-desc "export operator"
     #:in-space in-export-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:prefix-operator-ref export-prefix-operator-ref
     #:infix-operator-ref export-infix-operator-ref
     #:check-result check-export-result
@@ -69,6 +70,7 @@
     #:desc "export modifier"
     #:in-space in-export-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:transformer-ref (make-export-modifier-ref transform-in req))
 
   (define (apply-modifiers mods e-parsed)
@@ -138,7 +140,7 @@
 (begin-for-syntax
   (define-syntax-class :renaming
     #:datum-literals (group)
-    (pattern (group . (~var int (:hier-name-seq values name-path-op)))
+    (pattern (group . (~var int (:hier-name-seq values name-path-op name-root-ref)))
              #:with (#:to ext::name) #'int.tail
              #:attr int-name #'int.name
              #:attr ext-name #'ext.name)))
@@ -202,15 +204,21 @@
          #:datum-literals (parens group)
          [(form-id (~and arg ((~and tag parens) (group id:identifier)))
                    . tail)
-          (define v (syntax-local-value* #'id import-name-root-ref))
+          (define v (syntax-local-value* #'id
+                                         (lambda (v)
+                                           (and
+                                            (portal-syntax? v)
+                                            (syntax-parse (portal-syntax-content v)
+                                              [([(~datum import) mod] pre-ctx-s ctx-s)
+                                               (datum->syntax #'ctx-s (syntax-e #'mod))]
+                                              [_ #f])))))
           (unless v
             (raise-syntax-error #f
                                 "not an import name"
                                 (datum->syntax #f
                                                (list #'form-id #'arg)
                                                (span-srcloc #'form-id #'tag))))
-          (values #`(all-from-out #,(relocate #'id
-                                              (import-name-root-module-path v)))
+          (values #`(all-from-out #,(relocate #'id v))
                   #'tail)])))))
 
 (define-export-syntax #%juxtapose

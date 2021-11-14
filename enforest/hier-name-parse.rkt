@@ -2,12 +2,11 @@
 (require syntax/parse
          "name-parse.rkt"
          "syntax-local.rkt"
-         "name-root.rkt"
          (submod "name-root.rkt" for-parse))
 
 (provide :hier-name-seq)
 
-(define-syntax-class (:hier-name-seq in-space name-path-op)
+(define-syntax-class (:hier-name-seq in-space name-path-op name-root-ref)
   #:datum-literals (op)
   (pattern (~and stxes (root::name (op sep) . _))
            #:when (eq? name-path-op (syntax-e #'sep))
@@ -15,7 +14,7 @@
                  (define lxc (syntax-local-value* head-id name-root-ref))]
            #:when lxc
            #:do [(define-values (head tail) (apply-name-root head-id lxc #'stxes))]
-           #:with (~var hname (:hier-name-seq in-space name-path-op)) (cons head tail)
+           #:with (~var hname (:hier-name-seq in-space name-path-op name-root-ref)) (cons head tail)
            #:attr name #'hname.name
            #:attr tail #'hname.tail)
   (pattern (base::name . tail)

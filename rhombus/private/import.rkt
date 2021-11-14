@@ -8,13 +8,14 @@
                      enforest/syntax-local
                      enforest/name-parse
                      enforest/proc-name
-                     enforest/name-root
                      "srcloc.rkt"
                      "name-path-op.rkt")
+         "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
          "declaration.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "lower-require.rkt"
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
@@ -33,11 +34,8 @@
                     rename
                     only
                     except
-                    expose))
-
-(module+ for-export
-  (provide (for-syntax import-name-root-ref
-                       import-name-root-module-path)))
+                    expose
+                    for_meta))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
@@ -45,8 +43,6 @@
 
   (property import-modifier transformer)
 
-  (property import-name-root name-root (module-path))
-<
   (define in-import-space (make-interned-syntax-introducer 'rhombus/import))
 
   (define (check-import-result form proc)
@@ -66,6 +62,7 @@
     #:operator-desc "import operator"
     #:in-space in-import-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:prefix-operator-ref import-prefix-operator-ref
     #:infix-operator-ref import-infix-operator-ref
     #:check-result check-import-result
@@ -84,6 +81,7 @@
     #:desc "import modifier"
     #:in-space in-import-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
   (define (extract-module-path-and-prefixes r)
@@ -99,7 +97,7 @@
         [((~literal except-in) mp . _) (extract #'mp accum)]
         [((~literal expose-in) mp . _) (extract #'mp accum)]
         [((~literal rhombus-prefix-in) mp name) (extract #'mp (cons r accum))]
-        [((~literal module-path-in) _ mp) (extract #'mp accum)]
+        [((~literal for-meta) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
@@ -107,25 +105,6 @@
   (define (extract-module-path r)
     (define-values (mp prefixes) (extract-module-path-and-prefixes r))
     mp)
-
-  (define (introduce-but-skip-exposed intro r)
-    (syntax-parse r
-      [_:string (intro r)]
-      [_:identifier (intro r)]
-      [((~literal file) _) (intro r)]
-      [((~literal lib) _) (intro r)]
-      [((~literal expose-in) mp name ...)
-       #`(rename-in #,(introduce-but-skip-exposed intro #'mp)
-                    #,@(for/list ([name (in-list (syntax->list #'(name ...)))])
-                         #`[#,(intro name) #,name]))]
-      [((~literal rhombus-prefix-in) mp name)
-       (introduce-but-skip-exposed intro #'mp)]
-      [(form-id mp . more)
-       (quasisyntax/loc r (form-id #,(introduce-but-skip-exposed intro #'mp)
-                                   . #,(intro #'more)))]
-      [_ (raise-syntax-error 'import
-                             "don't know how to expose"
-                             r)]))
 
   (define (extract-prefix r)
     (define-values (mp prefixes) (extract-module-path-and-prefixes r))
@@ -204,50 +183,13 @@
      (define intro (if (syntax-e prefix)
                        (make-syntax-introducer)
                        values))
-     (define r-parsed (introduce-but-skip-exposed intro #'r.parsed))
+     ;; The name-root expansion of import prefixes is handled by
+     ;; `name-root-ref`
      #`(begin
-         (require #,r-parsed)
-         #,(if (syntax-e prefix)
-               #`(define-syntax #,prefix
-                   (import-name-root (lambda (tail)
-                                       (parse-import-dot
-                                        (quote-syntax #,(datum->syntax #'r.parsed 'pre-ctx))
-                                        (quote-syntax #,(datum->syntax (intro #'r.parsed) 'ctx))
-                                        tail))
-                                     (quote-syntax #,(extract-module-path r-parsed))))
-               #'(begin))
+         (#%require #,@(lower-require-clause #'r.parsed
+                                             (and (syntax-e prefix)
+                                                  prefix)))
          (rhombus-import . more))]))
-
-(define-for-syntax (parse-import-dot pre-ctx ctx stxes)
-  (define (get what name)
-    (define id (datum->syntax ctx
-                              (syntax-e name)
-                              name
-                              name))
-    (define pre-id (datum->syntax pre-ctx (syntax-e name)))
-    (unless (and (identifier-binding id)
-                 ;; make sure that `ctx` mattered;
-                 (not (equal? (identifier-binding pre-id)
-                              (identifier-binding id))))
-      (raise-syntax-error #f
-                          (format "no such imported ~a" what)
-                          name))
-    id)
-  (syntax-parse stxes
-    #:datum-literals (op parens)
-    #:literals (|.|)
-    [(_ (op |.|) field:identifier . tail)
-     (values (relocate #'field (get "identifier" #'field)) #'tail)]
-    [(_ (op |.|) (parens (group (~and target (op field))))  . tail)
-     (values (relocate #'target #`(op #,(get "operator" #'field))) #'tail)]
-    [(form-id (op (~and dot |.|)) . tail)
-     (raise-syntax-error #f
-                         "expected an identifier or parentheses after dot"
-                         #'dot)]
-    [(form-id . tail)
-     (raise-syntax-error #f
-                         "expected a dot after import name"
-                         #'form-id)]))
   
 (define-syntax (define-import-syntax stx)
   (syntax-parse stx
@@ -343,3 +285,16 @@
         (datum->syntax req
                        (list* #'expose-in req #'(name.name ... ...))
                        req)]))))
+
+(define-import-syntax for_meta
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       #:datum-literals (block group)
+       [(form phase)
+        (define ph (syntax-e #'phase))
+        (unless (or (not ph) (exact-integer? ph))
+          (raise-syntax-error #f "not a valid phase" stx #'p<hase))
+        (datum->syntax req (list (syntax/loc #'form for-meta) #'phase req) req)]
+       [(form) 
+        (datum->syntax req (list (syntax/loc #'form for-meta) #'1 req) req)]))))
