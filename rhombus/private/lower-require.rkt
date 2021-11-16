@@ -146,10 +146,17 @@
                        #:when (or (not for-expose?)
                                   (expose? v)))
               #`(rename #,lower-r #,(plain-id v) #,k))])]
-        [(or (zero? (hash-count renames))
-             (for/and ([(k v) (in-hash renames)])
-               (and (expose? v)
-                    (eq? k (syntax-e (expose-id v))))))
+        [(and for-expose?
+              (or (zero? (hash-count renames))
+                  (for/and ([(k v) (in-hash renames)])
+                    (not (expose? v)))))
+         ;; none exposed
+         null]
+        [(and (not for-expose?)
+              (or (zero? (hash-count renames))
+                  (for/and ([(k v) (in-hash renames)])
+                    (and (expose? v)
+                         (eq? k (syntax-e (expose-id v)))))))
          ;; all ids, none renamed (but some exposed)
          (list lower-r)]
         [else
