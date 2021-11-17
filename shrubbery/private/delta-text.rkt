@@ -5,81 +5,70 @@
 
 (define delta-text%
   (class object%
-    (init-field next
-                at-pos
-                delta)
+    (init-field next    ; the text that this is a delta from
+                at-pos  ; the start of a line where whitespace is inserted or deleted
+                delta)  ; amount to insert or (when negative) delete
 
     (super-new)
 
-    (define pre (if (negative? delta)
-                    (+ at-pos delta)
-                    at-pos))
-    (define post (if (positive? delta)
-                     (+ at-pos delta)
-                     at-pos))
-    
+    ;; No effect before this position:
+    (define pre at-pos)
+    ;; Simple token shifting after this position (new coordinates):
+    (define post (let-values ([(s e) (send next get-token-range pre)])
+                   (unless (= pre s) (error "bad delta construction"))
+                   (+ e delta)))
+    ;; The range from `pre` to `post` is a whitespace token,
+    ;; either newly extended to newly truncated
+
     (define/public (get-text s e)
       (cond
         [(e . <= . pre) (send next get-text s e)]
-        [(or (s . >= . post)
-             (and (negative? delta)
-                  (s . >= . pre)))
+        [(s . >= . post)
          (send next get-text (- s delta) (- e delta))]
-        [(negative? delta)
+        [(s . < . pre)
          (string-append
-          (send next get-text s pre)
-          (send next get-text (- pre delta) (- e delta)))]
+          (get-text s pre)
+          (get-text pre e))]
+        [(e . > . post)
+         (string-append
+          (get-text s post)
+          (get-text post e))]
         [else
-         (string-append
-          (if (s . < . pre)
-              (send next get-text s pre)
-              "")
-          (make-string (min (- e pre) delta) #\space)
-          (if (e . > . post)
-              (send next get-text at-pos (- e delta))
-              ""))]))
+         ;; bounds are completely in whitespace region:
+         (make-string #\space (- e s))]))
 
     (define/public (classify-position* pos)
-      (define c
-        (send next classify-position* (cond
-                                        [(pos . < . pre) pos]
-                                        [(or (pos . >= . post)
-                                             (delta . < . 0))
-                                         (- pos delta)]
-                                        [else at-pos])))
-      #;(log-error "[~s/~s] ~s = ~s" at-pos delta pos c)
-      c)
+      (cond
+        [(pos . < . pre)
+         (send next classify-position* pos)]
+        [(pos . >= . post)
+         (send next classify-position* (- pos delta))]
+        [else 'white-space]))
     
     (define/public (classify-position pos)
       (define type (classify-position* pos))
       (if (hash? type) (hash-ref type 'type 'unknown) type))
 
     (define/public (get-token-range pos)
-      (define-values (s e)
-        (cond
-          [(pos . < . pre)
-           (define-values (s e) (send next get-token-range pos))
-           (values s (shift-out e))]
-          [(or (pos . >= . post)
-               (negative? delta))
-           (define-values (s e) (send next get-token-range (- pos delta)))
-           (values (shift-out s) (+ e delta))]
-          [else
-           (define-values (s e) (send next get-token-range at-pos))
-           (values (shift-out s) (shift-out e))]))
-      #;(log-error "[~s/~s] ~s -> ~s ~s" at-pos delta pos s e)
-      (values s e))
+      (cond
+        [(pos . < . pre)
+         (send next get-token-range pos)]
+        [(pos . >= . post)
+         (define-values (s e) (send next get-token-range (- pos delta)))
+         (values (+ s delta) (+ e delta))]
+        [else (values pre post)]))
 
     (define/private (shift-in r)
-      (if (r . <= . pre)
+      (if (r . < . pre)
           r
-          (- r delta)))
+          (max pre (- r delta))))
 
+    ;; biased to the end of inserted whitespace
     (define/private (shift-out r)
       (and r
-           (if (r . <= . pre)
-               r
-               (+ r delta))))
+           (cond
+             [(r . <= . pre) r]
+             [else (max pre (+ r delta))])))
     
     (define/public (last-position)
       (shift-out (send next last-position)))
@@ -104,4 +93,3 @@
        [next t]
        [at-pos at-pos]
        [delta delta]))
-

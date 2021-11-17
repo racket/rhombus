@@ -140,7 +140,7 @@
         (define changes
           (indent-interior (if (= current amt)
                                t
-                               (make-delta-text t (+ pos current) (- amt current)))
+                               (make-delta-text t pos (- amt current)))
                            (add1 s-line)
                            e-line))
         (and changes

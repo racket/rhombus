@@ -1,11 +1,13 @@
 #lang racket/base
 (require racket/class
-         "../lex.rkt")
+         "../lex.rkt"
+         "../private/paren.rkt")
 
 (provide like-text%)
 
 (define TOKEN-SLOT 0)
 (define TYPE-SLOT 1)
+(define PAREN-SLOT 2)
 
 ;; fix 1-based indexing...
 (define (srcloc-0position loc)
@@ -71,6 +73,11 @@
           attribs
           (hash-ref attribs 'type 'unknown)))
 
+    (define/private (get-paren pos)
+      (define t+type (or (hash-ref mapping pos #f)
+                         (error 'get-paren "lookup failed: ~e" pos)))
+      (vector-ref t+type PAREN-SLOT))
+
     (define/public (get-token-range pos)
       (define t+type (or (hash-ref mapping pos #f)
                          (error 'get-token-range "lookup failed: ~e" pos)))
@@ -110,26 +117,60 @@
       (set!-values (position-paragraphs paragraph-starts) (find-paragraphs)))
 
     (define/public (backward-match pos cutoff)
-      (let loop ([pos (sub1 pos)] [depth -1] [need-close? #t])
+      (backward-matching-search pos cutoff 'one))
+
+    (define/public (backward-containing-sexp pos cutoff)
+      (backward-matching-search pos cutoff 'all))
+
+    (define/private (backward-matching-search init-pos cutoff mode)
+      (define start-pos (if (and (eq? mode 'all)
+                                 (init-pos . <= . cutoff))
+                            cutoff
+                            (sub1 init-pos)))
+      (let loop ([pos start-pos] [depth (if (eq? mode 'one) -1 0)] [need-close? (eq? mode 'one)])
         (cond
-          [(pos . < . 0) #f]
+          [(pos . < . cutoff) #f]
           [else
            (define-values (s e) (get-token-range pos))
-           (define category (classify-position pos))
-           (case category
-             [(parenthesis)
-              (case (get-text s e)
-                [("{" "(" "[" "«") (and (not need-close?)
-                                        (if (= depth 0)
-                                            s
-                                            (loop (sub1 s) (sub1 depth) #f)))]
-                [("}" ")" "]" "»") (loop (sub1 s) (add1 depth) #f)]
-                [else (error "unexpected parenthesis-class text")])]
-             [(whitespace comment)
-              (loop (sub1 s) depth need-close?)]
-             [else (if need-close?
-                       s
-                       (loop (sub1 s) depth #f))])])))
+           (define (atom)
+             (if need-close?
+                 s
+                 (loop (sub1 s) depth #f)))
+           (define sym (get-paren s))
+           (cond
+             [sym
+              (let paren-loop ([parens shrubbery-paren-matches])
+                (cond
+                  [(null? parens)
+                   ;; treat an unrecognized parenthesis like an atom
+                   (atom)]
+                  [(eq? sym (caar parens))
+                   (and (not need-close?)
+                        (if (= depth 0)
+                            (cond
+                              [(eq? mode 'all)
+                               ;; color:text% method skips back over whitespace, but
+                               ;; doesn't go beyond the starting position
+                               (min (skip-whitespace e 'forward #f)
+                                    init-pos)]
+                              [else s])
+                            (loop (sub1 s) (sub1 depth) #f)))]
+                  [(eq? sym (cadar parens))
+                   (cond
+                     [(e . > . init-pos)
+                      ;; started in middle of closer
+                      (if (eq? mode 'one)
+                          s
+                          (loop (sub1 s) depth #f))]
+                     [else (loop (sub1 s) (add1 depth) #f)])]
+                  [else
+                   (paren-loop (cdr parens))]))]
+             [else
+              (define category (classify-position pos))
+              (case category
+                [(white-space comment)
+                 (loop (sub1 s) depth need-close?)]
+                [else (atom)])])])))
 
     (define/public (forward-match pos cutoff)
       (let loop ([pos pos] [depth 0])
@@ -137,16 +178,60 @@
         (cond
           [(not s) #f]
           [else
-           (define category (classify-position pos))
-           (case category
-             [(parenthesis)
-              (case (get-text s e)
-                [("{" "(" "[" "«")
-                 (loop e (add1 depth))]
-                [("}" ")" "]" "»")
-                 (if (depth . <= . 1)
-                     e
-                     (loop e (sub1 depth)))]
-                [else (error "unexpected parenthesis-class text")])]
+           (define sym (get-paren s))
+           (define (atom)
+             (if (zero? depth)
+                 e ;; didn't find paren to match, so finding token end
+                 (loop e depth)))
+           (cond
+             [sym
+              (let paren-loop ([parens shrubbery-paren-matches])
+                (cond
+                  [(null? parens)
+                   ;; treat an unrecognized parenthesis like an atom
+                   (atom)]
+                  [(eq? sym (caar parens))
+                   (if (eqv? pos s) ; don't count the middle of a parenthesis token
+                       (loop e (add1 depth))
+                       e)]
+                  [(eq? sym (cadar parens))
+                   (cond
+                     [(depth . <= . 0) #f]
+                     [(depth . = . 1) e]
+                     [else (loop e (sub1 depth))])]
+                  [else
+                   (paren-loop (cdr parens))]))]
              [else
-              (loop e depth)])])))))
+              (define category (classify-position pos))
+              (case category
+                [(white-space comment) (loop e depth)]
+                [else (atom)])])])))
+
+    (define/public (skip-whitespace pos dir comments?)
+      (define (skip? category)
+        (or (eq? category 'white-space)
+            (and comments? (eq? category 'comment))))
+      (case dir
+        [(forward)
+         (let loop ([pos pos])
+           (define category (classify-position pos))
+           (cond
+             [(skip? category)
+              (define-values (s e) (get-token-range pos))
+              (if e
+                  (loop e)
+                  pos)]
+             [else pos]))]
+        [(backward)
+         (cond
+           [(zero? pos) 0]
+           [else
+            (let loop ([pos (sub1 pos)] [end-pos pos])
+              (define category (classify-position pos))
+              (cond
+                [(skip? category)
+                 (define-values (s e) (get-token-range pos))
+                 (loop (sub1 s) s)]
+                [else end-pos]))])]
+        [else
+         (error 'skip-whitespace "bad direction: ~e" dir)]))))
