@@ -390,7 +390,7 @@
    ["@"
     (let ([opener (peek-at-opener input-port)])
       (define mode (if opener 'open 'initial))
-      (ret 'at lexeme 'at (string->symbol lexeme) start-pos end-pos (in-at mode #f #t opener 'initial '())))]
+      (ret 'at lexeme 'at #f start-pos end-pos (in-at mode #f #t opener 'initial '())))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))

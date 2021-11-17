@@ -29,7 +29,9 @@
   (cond
     ;; If `always?` is #f, we got here by the Return key;
     ;; don't indent when just inserting new lines
-    [(and (not always?) (= (line-start t (sub1 pos)) (sub1 pos)))
+    [(and (not always?)
+          (or (zero? pos) ; shouldn't happen in a real editor!
+              (= (line-start t (sub1 pos)) (sub1 pos))))
      current-tab]
     [else
      ;; tabbing only makes sense if the target line is not a continuation
