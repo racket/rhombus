@@ -24,19 +24,39 @@
        (define (seq open elems-stx close)
          (list (element paren-color open)
                (add-between (map loop (syntax->list elems-stx))
-                            (element tt-style ", "))
+                            tt-comma)
                (element paren-color close)))
+       (define (group elems-stx)
+         (let g-loop ([elems (syntax->list elems-stx)] [pre-space? #f])
+           (cond
+             [(null? elems) null]
+             [else
+              (define elem (car elems))
+              (define alt-elem (syntax-parse elem
+                                 #:datum-literals (op)
+                                 [(op x) #'x]
+                                 [_ #f]))
+              (define (prefixed? stx)
+                (not (null? (or (syntax-property stx 'raw-prefix) '()))))
+              (define (suffixed? stx)
+                (not (null? (or (syntax-property stx 'raw-suffix) '()))))
+              (define add-space?
+                (or pre-space? (prefixed? elem) (and alt-elem (prefixed? alt-elem))))
+              (define e (loop (car elems)))
+              (cons (cond
+                      [add-space? (list tt-space e)]
+                      [else e])
+                    (g-loop (cdr elems)
+                            (or (suffixed? elem) (and alt-elem (suffixed? alt-elem)))))])))
        (syntax-parse stx
          #:datum-literals (group parens brackets braces block alts)
          [(group elem ... (block g ...))
-          (list (add-between (map loop (syntax->list #'(elem ...)))
-                             (element tt-style " "))
+          (list (group #'(elem ...))
                 (element tt-style ": ")
                 (add-between (map loop (syntax->list #'(g ...)))
                              (element tt-style "; ")))]
          [(group elem ... (alts (block g ...) ...+))
-          (list (add-between (map loop (syntax->list #'(elem ...)))
-                             (element tt-style " "))
+          (list (group #'(elem ...))
                 (element tt-style " | ")
                 (add-between
                  (for/list ([gs (in-list (syntax->list #'((g ...) ...)))])
@@ -44,8 +64,7 @@
                                 (element tt-style "; ")))
                  (element tt-style " | ")))]
          [(group elem ...)
-          (add-between (map loop (syntax->list #'(elem ...)))
-                       (element tt-style " "))]
+          (group #'(elem ...))]
          [(parens elem ...) (seq "(" #'(elem ...) ")")]
          [(brackets elem ...) (seq "[" #'(elem ...) "]")]
          [(braces elem ...) (seq "{" #'(elem ...) "}")]
@@ -67,7 +86,7 @@
   (define block-stx
     (syntax-case stx ()
       [(_ (_ block)) #'block]))
-  (define str (block-string->content-string (shrubbery-syntax->string block-stx)
+  (define str (block-string->content-string (shrubbery-syntax->string block-stx #:keep-suffix? #t)
                                             (syntax-case block-stx ()
                                               [(b . _)
                                                (syntax-column #'b)])))
@@ -172,6 +191,9 @@
 
 (define tt-style (style 'tt null))
 (define hspace-style (style 'hspace null))
+
+(define tt-space (element tt-style " "))
+(define tt-comma (element tt-style ","))
 
 (define (block-string->content-string str col)
   ;; strip `:` from the beginning, add spaces

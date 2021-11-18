@@ -1,9 +1,12 @@
 #lang racket/base
-(require scribble/rhombus
+(require (except-in scribble/rhombus
+                    if)
          (prefix-in manual: scribble/manual))
 (provide (all-from-out scribble/rhombus)
          litchar
-         (rename-out [manual:deftech deftech]))
+         (rename-out [manual:deftech deftech]
+                     [manual:tech tech]
+                     [manual:math math]))
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual
@@ -14,5 +17,5 @@
   (require (submod scribble/rhombus reader)))
 
 (define (litchar ls)
-  (manual:litchar (car ls)))
+  (manual:litchar (if (string? ls) ls (car ls))))
 

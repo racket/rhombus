@@ -73,7 +73,7 @@
 ;; ----------------------------------------
 
 (define (verbatim #:indent [indent 0] l)
-  (base:verbatim #:indent indent (car l)))
+  (apply base:verbatim #:indent indent l))
 
 (define (pkg l)
   (tt l))

@@ -8,14 +8,16 @@
 (module+ for-parse
   (provide syntax-to-raw))
 
-(define (shrubbery-syntax->string s #:max-length [max-length #f])
+(define (shrubbery-syntax->string s
+                                  #:max-length [max-length #f]
+                                  #:keep-suffix? [keep-suffix? #f])
   (cond
     [(all-raw-available? s)
      (define o (open-output-string))
      (define (full?)
        (and max-length
             ((file-position o) . > . max-length)))
-     (let loop ([l (syntax-to-raw s #:keep-suffix? #f)])
+     (let loop ([l (syntax-to-raw s #:keep-suffix? keep-suffix?)])
        (cond
          [(pair? l)
           (unless (full?)

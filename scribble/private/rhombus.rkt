@@ -8,12 +8,12 @@ export:
   rhombusblock
 
 expr.rule '(rhombus ($form ...)):
-  '(#{typeset-rhombus}('($form ...)))
+  '(#{typeset-rhombus}(literal_syntax($form ...)))
 
 expr.macro '(rhombusblock $tail ...):
   ~op_stx: me
   match '($tail ...)
   | '(: $content ...; ...):
-      values('(#{typeset-rhombusblock}('($tail ...))), '())
+      values('(#{typeset-rhombusblock}(literal_syntax($tail ...))), '())
   | ~else: raise_syntax_error("expected a block", '($me $tail ...))
 

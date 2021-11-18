@@ -22,7 +22,8 @@
 (provide |'|
          $
          (rename-out [rhombus... ...])
-         ......)
+         ......
+         literal_syntax)
 
 (module+ convert
   (provide (for-syntax convert-pattern
@@ -368,3 +369,12 @@
         (raise-syntax-error #f
                             "misuse outside of a pattern"
                             #'op.name)]))))
+
+(define-syntax literal_syntax
+  (expression-transformer
+   #'literal_syntax
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group)
+       [(_ form . tail)
+        (values #'(quote-syntax form) #'tail)]))))
