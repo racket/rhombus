@@ -45,13 +45,13 @@
 (define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape handle-tail-escape
                                    handle-maybe-empty-sole-group
                                    handle-maybe-empty-alts handle-maybe-empty-group)
-  (let convert ([e e] [empty-ok? #f])
+  (let convert ([e e] [empty-ok? #f] [depth 0])
     (syntax-parse e
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block)))
         (~and g ((~datum group) . _)))
        ;; Special case: for a single group with (), [], {}, or block, if the group
        ;; can be empty, allow a match/construction with zero groups
-       (define-values (p new-idrs can-be-empty?) (convert #'g #t))
+       (define-values (p new-idrs can-be-empty?) (convert #'g #t depth))
        (if can-be-empty?
            (handle-maybe-empty-sole-group #'tag p new-idrs)
            (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
@@ -59,7 +59,18 @@
                    #f))]
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block) (~datum alts) (~datum group)))
         g ...)
-       (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t] [tail #f])
+       (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
+         (define (simple gs a-depth)
+           (syntax-parse gs
+             [(g . gs)
+              (define-values (p new-ids nested-can-be-empty?) (convert #'g #f a-depth))
+              (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
+         (define (simple2 gs a-depth)
+           (syntax-parse gs
+             [(g0 g1 . gs)
+              (define-values (p0 new-ids0 nested-can-be-empty?0) (convert #'g0 #f a-depth))
+              (define-values (p1 new-ids1 nested-can-be-empty?1) (convert #'g1 #f a-depth))
+              (loop #'gs (append new-ids0 new-ids1) (append (or pend-idrs '()) idrs) (list* p1 p0 ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
          (syntax-parse gs
            [()
             (let ([ps (let ([ps (reverse ps)])
@@ -78,26 +89,33 @@
                          idrs
                          can-be-empty?)]))]
            [(op:list-repetition . gs)
+            #:when (zero? depth)
             (unless pend-idrs
               (raise-syntax-error #f
                                   "misplaced repetition"
                                   #'op.name))
             (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
                                     (deepen-escape idr)))
-            (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps) can-be-empty? #f)]
+            (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
            [(op:tail-repetition . gs)
+            #:when (zero? depth)
             (unless (null? (syntax-e #'gs))
               (raise-syntax-error #f
                                   "misplaced tail repetition"
                                   #'op.name))
             (define-values (id new-idrs) (handle-tail-escape #'op.name #'op.e e))
-            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id)]
-           [(((~datum op) (~and (~literal $) $-id)) esc . gs)
-            (define-values (id new-idrs) (handle-escape #'$-id #'esc e))
-            (loop #'gs new-idrs (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)) #f)]
-           [(g . gs)
-            (define-values (p new-ids nested-can-be-empty?) (convert #'g #f))
-            (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)) #f)]))]
+            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
+           [(((~datum op) (~and (~literal $) $-id)) esc . n-gs)
+            (cond
+              [(zero? depth)
+               (define-values (id new-idrs) (handle-escape #'$-id #'esc e))
+               (loop #'n-gs new-idrs (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)) #f depth)]
+              [else
+               (simple2 gs (sub1 depth))])]
+           [(((~datum op) (~literal |'|)) unesc . _)
+            (simple2 gs (add1 depth))]
+           [(g . _)
+            (simple gs depth)]))]
       [((~and tag (~datum op)) op-name)
        (values (quasisyntax/loc e (#,(make-datum #'tag) #,(make-literal #'op-name))) null #f)]
       [id:identifier

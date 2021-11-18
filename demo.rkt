@@ -86,6 +86,7 @@ size
 
 '(apple + banana)
 '(apple + $(3 + 4))
+'(apple + '($(3 + 4)))
 
 // defining an infix operator
 
