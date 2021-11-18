@@ -86,7 +86,11 @@
   (define block-stx
     (syntax-case stx ()
       [(_ (_ block)) #'block]))
-  (define str (block-string->content-string (shrubbery-syntax->string block-stx #:keep-suffix? #t)
+  (define tag-stx
+    (syntax-case stx ()
+      [(_ (_ self)) #'self]))
+  (define str (block-string->content-string (shrubbery-syntax->string block-stx
+                                                                      #:keep-suffix? #t)
                                             (syntax-case block-stx ()
                                               [(b . _)
                                                (syntax-column #'b)])))

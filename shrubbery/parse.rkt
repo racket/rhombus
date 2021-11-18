@@ -646,8 +646,10 @@
                                                     #:commenting group-commenting
                                                     #:raw raw
                                                     #:sequence-mode (if (eq? tag 'at) 'one 'any))))
+           (define-values (suffix-raw suffix-l suffix-line suffix-delta)
+             (get-suffix-comments rest-l close-line close-delta))
            (define-values (at-adjust new-at-mode at-l at-line at-delta)
-             (continue-at (state-at-mode s) (equal? closer "]") rest-l close-line close-delta (state-count? s)))
+             (continue-at (state-at-mode s) (equal? closer "]") suffix-l suffix-line suffix-delta (state-count? s)))
            (define-values (g rest-rest-l end-line end-delta tail-commenting tail-raw)
              (parse-group at-l (struct-copy state s
                                             [line at-line]
@@ -657,7 +659,7 @@
                                             [at-mode new-at-mode])))
            (define new-g (at-adjust
                           (cons (add-raw-to-prefix
-                                 t pre-raw #:tail group-tail-raw
+                                 t pre-raw #:tail (append (reverse suffix-raw) group-tail-raw)
                                  (add-span-srcloc
                                   t end-t
                                   (cons tag gs)))
@@ -1510,7 +1512,7 @@
        (show-properties (cdr s))
        (define tail (syntax-raw-tail-property a))
        (when tail
-         (printf " ... ~s\n" tail))]
+         (printf " ~s... ~s\n" a tail))]
       [(null? s) (void)]
       [else
        (define prefix (syntax-raw-prefix-property s))
