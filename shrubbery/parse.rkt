@@ -903,9 +903,10 @@
      (let loop ([l (cdr l)] [accum-args '()])
        (parse-text-sequence
         l
+        line delta
         #:opener-t init-t
         #:count? count?
-        (lambda (seq l)
+        (lambda (seq l line delta)
           (define c (list group-tag seq))
           (cond
             [(and (pair? l) (pair? (cdr l)) (eq? 'at-opener (token-name (cadr l))))
@@ -934,7 +935,8 @@
     [else
      (values (lambda (g) g) #f l line delta)]))
 
-(define (parse-text-sequence l done-k
+(define (parse-text-sequence l line delta
+                             done-k
                              #:opener-t [opener-t #f]
                              #:count? [count? #t])
   (let loop ([l l] [content '()])
@@ -961,7 +963,8 @@
               [else (cons tag
                           (add-raw-to-prefix* #f (map syntax-to-raw prefix-syntaxes)
                                               new-content))]))))
-       (done-k seq l)]
+       (define end-line (if (pair? l) (token-line (car l)) line))
+       (done-k seq l end-line (if (eqv? line end-line) delta zero-delta))]
       [(at-content)
        (loop (cdr l)
              ;; mark as 'content instead of 'group for now, so we
@@ -1466,7 +1469,7 @@
                      #:text-mode? text-mode?))
   (check-line-counting l)
   (define v (if text-mode?
-                (parse-text-sequence l (lambda (c l) (datum->syntax #f c)))
+                (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
                 (parse-top-groups l #:interactive? interactive?)))
   (when (and interactive? (eof-object? v))
     ;; consume the EOF

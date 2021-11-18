@@ -1623,6 +1623,11 @@ INPUT
   5 @// line comment
   6}
 
+@itemlist[@item{x
+                y},
+          @item{z
+                w}]
+
 The end
 INPUT
   )
@@ -1674,6 +1679,15 @@ INPUT
     (group
      (parens
       (group (brackets (group "4 ") (group "\n") (group "5 ") (group "  6")))))
+    (group
+     itemlist
+     (parens
+      (group
+       item
+       (parens (group (brackets (group "x") (group "\n") (group "y")))))
+      (group
+       item
+       (parens (group (brackets (group "z") (group "\n") (group "w")))))))
     (group The end)))
 
 (define input4
