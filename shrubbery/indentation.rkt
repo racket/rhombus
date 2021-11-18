@@ -151,17 +151,20 @@
                                      #:as-bar? [as-bar? #f]
                                      #:as-operator? [as-operator? #f]
                                      #:multi? [multi? #f]
-                                     #:also-zero? [also-zero? #f])
+                                     #:also-zero? [also-zero? #f]
+                                     #:leftmost? [leftmost? #f])
   ;; candidates are sorted right (larger tab) to left (smaller tab)
   (define (add-zero l) (if also-zero? (add-zero-to-end l) l))
+  (define (leftmost l) (if (and leftmost? (pair? l)) (list (last l)) l))
   (define candidates (remove-dups (indentation-candidates t (sub1 start)
                                                           #:as-bar? as-bar?
                                                           #:as-operator? as-operator?)))
   (define delta (line-delta t start))
-  (define tabs  (add-zero
-                 (for/list ([col (in-list candidates)]
-                            #:when (col . >= . delta))
-                   (- col delta))))
+  (define tabs  (leftmost
+                 (add-zero
+                  (for/list ([col (in-list candidates)]
+                             #:when (col . >= . delta))
+                    (- col delta)))))
   ;; if the current state matches a candidate tab, we'll
   ;; use the next one (to the left)
   (define next-tabs (memv current-tab tabs))
@@ -214,8 +217,10 @@
          (- use-col s-delta)
          0)]
     [else
-     ;; didn't find match, so treat like other tokens
-     (indent-like-enclosing-group t start current-tab)]))
+     ;; didn't find match, so treat mostly like other tokens,
+     ;; but use only the leftmost possibility
+     (indent-like-enclosing-group t start current-tab
+                                  #:leftmost? #t)]))
 
 ;; Gets list of candiates with further-right candidates first starting
 ;; search with the token that contains `pos` (inclusive on the left

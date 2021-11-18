@@ -365,6 +365,13 @@
        1,
      ^)}
   
+  @e{(apple:
+        nested
+      ^)}
+  @e{(more (apple:
+              nested
+            ^)}
+
  )
 
 (when failed?
