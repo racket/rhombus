@@ -274,7 +274,7 @@ defn.macro '(define_and_use $e ......):
   match e
   | '($name: $rhs ...):
       '(: def $name: $rhs ...
-          '($name))
+          literal_syntax($name))
 
 define_and_use nine: 1+8
 nine
