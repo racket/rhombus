@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "util.rhm": no_prefix)
 
-@title[~tag: "syntax"]{Syntax objects}
+@title[~tag: "syntax"]{Syntax Objects}
 
 The @rhombus['] operator quotes an immediately following shrubbery term
 to produce a syntax object. The syntax object holds an unparsed

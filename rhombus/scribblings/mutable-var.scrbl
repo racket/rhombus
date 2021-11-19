@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "util.rhm": no_prefix)
 
-@title[~tag: "mutable-vars"]{Mutable variables}
+@title[~tag: "mutable-vars"]{Mutable Variables}
 
 Variables are immutable unless they are declared with the
 @rhombus[mutable] binding operator. The @rhombus[=] infix operator

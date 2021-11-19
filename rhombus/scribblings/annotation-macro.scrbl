@@ -160,7 +160,7 @@ argument:
     hello.spanish  // prints "Hola"
     hello.english  // prints "Hello"
     // hello.greek  // would be a compile-time match error
-    )
+  )
 
 A direct use like this makes sense when a dot provider is not associated
 with a run-time value. Attempting to use @rhombus[hello] in an

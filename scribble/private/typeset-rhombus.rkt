@@ -204,7 +204,7 @@
   ;; corresponding to `col`, then strip any blank newlines
   (define-values (content-str prefix-len)
     (cond
-      [(regexp-match-positions #rx"^:«(.*)»" str)
+      [(regexp-match-positions #rx"^:«(.*)»[ ]*$" str)
        => (lambda (m)
             (values (substring str (caadr m) (cdadr m))
                     (+ (or col 0) 2)))]
@@ -212,7 +212,7 @@
        (values (substring str 1) (+ (or col 0) 1))]))
   (define full-str
     (string-append (make-string prefix-len #\space) content-str))
-  (regexp-replace* #px"\\s*\n$"
+  (regexp-replace* #px"\\s*\n\\s*$"
                    (regexp-replace* #px"^\\s*\n" full-str "")
                    ""))
 

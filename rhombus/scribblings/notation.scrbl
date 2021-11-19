@@ -84,7 +84,8 @@ Comments are C-style, but block comments are nestable:
 
     /* This is a multiline
        comment that /* continues */
-       on further lines */»)
+       on further lines */
+  »)
 
 If you need anything more at the lexeme level (such as fancier numbers),
 escape to S-expression notation with @litchar|{#{}| ... @litchar|{}}|.

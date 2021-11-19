@@ -760,13 +760,14 @@
   (cond
     [(pair? next-l)
      (define next-t (car next-l))
-     (define-values (indent-gs rest-l end-line end-delta end-t tail-commenting tail-raw)
+     (define content-column (column+ (token-column next-t) (cont-delta-column delta)))
+     (define-values (indent-gs rest-l end-line end-delta end-t tail-commenting tail-and-suffix-raw)
        (parse-groups next-l
                      (make-group-state #:count? inside-count?
                                        #:closer (if opener-t
                                                     (make-closer-expected "»" opener-t)
                                                     closer)
-                                       #:column (column+ (token-column next-t) (cont-delta-column delta))
+                                       #:column content-column
                                        #:last-line last-line
                                        #:bar-closes? (and (not opener-t) bar-closes?)
                                        #:bar-closes-line (and (not opener-t) inside-count? bar-closes-line)
@@ -777,6 +778,10 @@
                                        #:raw raw)))
      (when (and (not can-empty?) (null? indent-gs) t (not opener-t))
        (fail-empty))
+     (define-values (tail-raw rev-suffix-raw)
+       ;; potential (but unlikely) quadratric behavior here; see
+       ;; `keep-same-indentation-comments` for more information
+       (keep-same-indentation-comments content-column tail-and-suffix-raw))
      (define used-closer? (or opener-t
                               (closer-expected? closer)))
      (define-values (null-g post-l post-line post-delta post-tail-commenting post-tail-raw)
@@ -795,7 +800,10 @@
                                                                      tail-raw))))
      (unless (null? null-g) (error "internal error, parsed more"))
      (values (list (add-raw-to-prefix
-                    t in-raw #:tail (and used-closer? tail-raw)
+                    t in-raw #:tail (let ([tail-raw (and used-closer? tail-raw)])
+                                      (if (pair? rev-suffix-raw)
+                                          (append (or tail-raw null) rev-suffix-raw)
+                                          tail-raw))
                     (add-span-srcloc
                      t end-t #:alt next-t
                      (tag-as-block indent-gs))))
@@ -1160,6 +1168,33 @@
        [else
         (values null l line delta)])]))
 
+;; extract a prefix of the reversed `tail-raw` where comments
+;; line up with `column`; since we reverse `tail-raw` and
+;; reverse is back, there's a potentially of O(N^2) behavior
+;; if blocks are nested N deep with N comments afterwards --- but
+;; that would be an unusual source file, so we don't worry about
+;; it for now
+(define (keep-same-indentation-comments column tail-raw)
+  (cond
+    [(not column) (values tail-raw null)]
+    [else
+     (let loop ([raw (reverse tail-raw)] [pending null] [rev-suffix-raw null])
+       (define (done)
+         (values (reverse (append (reverse pending) raw)) rev-suffix-raw))
+       (cond
+         [(null? raw) (done)]
+         [else
+          (define t (car raw))
+          (case (token-name t)
+            [(whitespace)
+             (loop (cdr raw) (cons t pending) rev-suffix-raw)]
+            [(comment)
+             (cond
+               [(eqv? column (token-column t))
+                (loop (cdr raw) null (cons t (append pending rev-suffix-raw)))]
+               [else (done)])]
+            [else (done)])]))]))
+
 (define (next-line? l last-line count?)
   (and count?
        (pair? l)
@@ -1368,7 +1403,7 @@
 
 (define (add-raw-to-prefix t pre-raw l #:tail [post-raw #f])
   (cons (let ([stx (record-raw (car l) t pre-raw null)])
-          (if post-raw
+          (if (and post-raw (not (null? post-raw)))
               (syntax-raw-tail-property stx (raw-cons (or (syntax-raw-tail-property stx) '())
                                                       (raw-tokens->raw post-raw)))
               stx))

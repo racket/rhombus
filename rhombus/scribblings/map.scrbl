@@ -29,13 +29,13 @@ keys to values. The term @deftech{map} is meant to be generic, and
 maps. The @rhombus[Map] constructor can be used like a function, in
 which case it accepts keys alternating with values:
 
-@(rhombusblock:
+@(rhombusblock:«
     val neighborhood: Map("alice", Posn(4, 5),
                           "bob", Posn(7, 9))
 
     neighborhood["alice"]     // prints Posn(4, 5)
     // neighborhood["clara"]  // would be a run-time error
-  )
+  »)
 
 Curly braces @litchar["{"]...@litchar["}"] can be used as a shorthand
 for writing @rhombus[Map(...)]. Within curly braces, the key and value
