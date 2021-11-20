@@ -8,13 +8,15 @@
   (BNF (list @nonterm{parsed}
              @racket[(top @#,nonterm{group} ...)])
        (list @nonterm{group}
-             @racket[(group @#,nonterm{term} ...)])
+             @racket[(group @#,nonterm{term} ... @#,nonterm{tail-term})])
        (list @nonterm{term}
              @nonterm{atom}
              @racket[(op @#,nonterm{symbol})]
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
-             @racket[(braces @#,nonterm{group} ...)]
+             @racket[(braces @#,nonterm{group} ...)])
+       (list @nonterm{tail-term}
+             @nonterm{term}
              @nonterm{block}
              @racket[(alts @#,nonterm{block} ...)])
        (list @nonterm{block}
