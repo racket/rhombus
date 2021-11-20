@@ -251,7 +251,7 @@ conceptually occupies same column as the @litchar{|}. That is, like
 @litchar{|} starts an enclosing block that includes the @litchar{|}
 block plus subsequent @litchar{|} blocks that are at the same
 indentation. An overall sequence of blocks created with @litchar{|} and
-under an implicit @litchar{;} is an @tech{alt-block}.
+under an implicit @litchar{:} is an @tech{alt-block}.
 
 A @litchar{|} that starts the enclosing block can appear at the start of
 a line with new indentation. The following four groups are the same:
@@ -327,7 +327,7 @@ separates groups. The following three blocks are the same:
 
 The @litchar{;} and @litchar{,} separators interact differently with blocks formed by
 @litchar{:} and @litchar{|}. A @litchar{,} closes subgroups and blocks as necessary to reach
-an enclosing @litchar{()}, @litchar{[]}, or @litchar{{}}, while a @litchar{;} separate groups within a
+an enclosing @litchar{()}, @litchar{[]}, or @litchar{{}}, while a @litchar{;} separates groups within a
 nested group sequence. If @litchar{;} would create an empty group, it is
 ignored.
 
@@ -436,7 +436,7 @@ different:
       inside: fruit
       rind
 
-    // not the same, because @litchar{rind} is within @litchar{inside:}
+    // not the same, because `rind` is within `inside:`
     outside: inside: fruit; rind
 
     if true
@@ -445,7 +445,7 @@ different:
       | y
     | z
 
-    // not the same, because there's one block with five @litchar{|} alternatives
+    // not the same, because there's one block with five `|` alternatives
     if | true | if false | x | y | z
 
     hello:
@@ -454,7 +454,7 @@ different:
       | universe
       the end
 
-    // not the same, because @litchar{the end} is in the second @litchar{|}:
+    // not the same, because `the end` is in the second `|`:
     hello: if x | world | universe; the end
   )
 
@@ -495,9 +495,12 @@ expression, a nested conditional is probably better written like this:
     if | true | (if false | x | y) | z
 )
 
-Using @litchar{()} in this way does not produce an equivalent shrubbery to `if
-| true |« if false | x | y »| z`, but it might represent an equivalent
-expression in the language using shrubbery notation.
+Using @litchar{()} in this way does not produce an equivalent shrubbery to
+
+@(rhombusblock: if | true |« if false | x | y »| z)
+
+but it might represent an equivalent expression in the language using
+shrubbery notation.
 
 To stay consistent with blocks expressed through line breaks and
 indentation, a block with @litchar{«} and @litchar{»} must still appear at the end of
@@ -555,7 +558,7 @@ A @litchar{#//} comments out a group or @litchar{|} alternative. To comment out 
 group, @litchar{#//} must appear either on its own line before a group or at
 the start of a group. To comment out an alternative, @litchar{#//} must appear
 on its own line before the alternative or just before a @litchar{|} that does
-*not* start a new line.
+@emph{not} start a new line.
 
 The interaction between @litchar{#//} and indentation depends on how it is
 used:
