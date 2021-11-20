@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm": no_prefix)
 
-@title{Syntactic categories}
+@title{Syntactic Categories}
 
 Rhombus expansion involves various syntactic categories that determine
 different kinds of expansion contexts. The specific set of contexts

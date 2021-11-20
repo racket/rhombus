@@ -23,6 +23,8 @@ notation is line- and indentation-sensitive, and the parsed form of a
 shrubbery imposes grouping to ensure that further parsing is consistent
 with the shrubbery's lines and indentation.
 
+@table_of_contents[]
+
 @section{Motivation}
 
 S-expression notation imposes a grouping at the lexeme level that is all
@@ -931,7 +933,7 @@ define fib(n):
                                 (parens (group n (op -) 2))))))))))))
 }
 
-@section{Lexeme Parsing}
+@section[~tag: "lexeme-parsing"]{Lexeme Parsing}
 
 The tokens used for grouping and indentation are distinct lexemes:
 

@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm": no_prefix)
 
-@title{Hierarchical naming}
+@title{Hierarchical Naming}
 
 A language implemented with the Rhombus expander may have another
 dimension of name resolution that is orthogonal to different mapping

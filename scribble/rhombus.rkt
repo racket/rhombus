@@ -6,7 +6,8 @@
          (prefix-in doc: scribble/doclang2)
          (rename-in scribble/base
                     [verbatim base:verbatim]
-                    [table-of-contents table_of_contents])
+                    [table-of-contents table_of_contents]
+                    [local-table-of-contents local_table_of_contents])
          scribble/private/manual-defaults
          "private/rhombus.rkt"
          "private/include.rkt")

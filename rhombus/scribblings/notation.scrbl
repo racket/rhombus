@@ -1,7 +1,11 @@
 #lang scribble/rhombus/manual
 @(import: "util.rhm": no_prefix)
 
-@title{Notation Overview}
+@title{Notation}
+
+This provides is a summary of
+@seclink[~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"]{Shrubbery notation}
+as used for Rhombus.
 
 @aside{If you install @tt{https://github.com/mflatt/shrubbery-rhombus-0.git},
   then you can use @litchar{#lang shrubbery} (not @litchar{#lang rhombus}
