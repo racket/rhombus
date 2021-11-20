@@ -6,7 +6,8 @@
          litchar
          (rename-out [manual:deftech deftech]
                      [manual:tech tech]
-                     [manual:math math]))
+                     [manual:math math]
+                     [manual:filepath filepath]))
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual
