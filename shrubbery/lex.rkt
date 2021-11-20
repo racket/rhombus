@@ -43,7 +43,8 @@
          current-lexer-source
 
          make-in-text-status
-         lex-nested-status?)
+         lex-nested-status?
+         lex-dont-stop-status?)
 
 (define-lex-abbrevs
   
@@ -298,6 +299,10 @@
   (if (pending-backup-mode? status)
       (lex-nested-status? (pending-backup-mode-status status))
       (not (or (not status) (symbol? status)))))
+
+(define (lex-dont-stop-status? status)
+  ;; anything involving a peek has a pending backup
+  (pending-backup-mode? status))
 
 (define (lex/status in pos status-in racket-lexer*/status)
   (define prev-pending-backup (if (pending-backup-mode? status-in)

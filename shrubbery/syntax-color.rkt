@@ -2,6 +2,7 @@
 (require "lex.rkt"
          "lex-comment.rkt"
          syntax-color/racket-lexer
+         syntax-color/lexer-contract
          racket/symbol)
 
 (provide shrubbery-lexer
@@ -18,7 +19,10 @@
         [(syntax? tok) (to-string-or-eof (syntax-e tok))]
         [(symbol? tok) (symbol->immutable-string tok)]
         [else "other"]))
-    (values (to-string-or-eof tok) type paren start end backup status)))
+    (values (to-string-or-eof tok) type paren start end backup
+            (if (lex/comment-dont-stop-status? status)
+                (dont-stop status)
+                status))))
 
 (define (shrubbery-text-mode-lexer in pos status)
   (shrubbery-lexer in pos (or status

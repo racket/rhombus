@@ -2,15 +2,11 @@
 (require "lex.rkt")
 
 (provide lex/comment/status
-         lex/comment-nested-status?)
+         lex/comment-nested-status?
+         lex/comment-dont-stop-status?)
 
 (struct comment-tracked (status line column last-line pending stack) #:prefab)
 (struct pending-comment (line column so-far stack) #:prefab)
-
-(define (lex/comment-nested-status? status)
-  (or (lex-nested-status? status)
-      (and (comment-tracked? status)
-           (lex-nested-status? (comment-tracked-status status)))))
 
 ;; wraps `lex/status` to track group comments
 (define (lex/comment/status in pos status racket-lexer/status)
@@ -139,3 +135,13 @@
            (finish pending new-stack #:whitespace? #t)]
           [else
            (finish-plain pending new-stack)])])]))
+
+(define (lex/comment-nested-status? status)
+  (or (lex-nested-status? status)
+      (and (comment-tracked? status)
+           (lex-nested-status? (comment-tracked-status status)))))
+
+(define (lex/comment-dont-stop-status? status)
+  (or (lex-dont-stop-status? status)
+      (and (comment-tracked? status)
+           (lex-dont-stop-status? (comment-tracked-status status)))))
