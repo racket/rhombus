@@ -14,7 +14,11 @@
    qs
    (let unpack-list* ([r r] [depth depth])
      (cond
-       [(eqv? depth 0) r]
+       [(eqv? depth 0)
+        (when (or (null? r) (pair? r))
+          (raise-arguments-error '|$| "cannot coerce list to syntax"
+                                 "list" r))
+        r]
        [else
         (if (list? r)
             (datum->syntax

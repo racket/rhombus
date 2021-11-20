@@ -10,7 +10,8 @@
 
 (define (shrubbery-syntax->string s
                                   #:max-length [max-length #f]
-                                  #:keep-suffix? [keep-suffix? #f])
+                                  #:keep-suffix? [keep-suffix? #f]
+                                  #:infer-starting-indentation? [infer-starting-indentation? #t])
   (cond
     [(all-raw-available? s)
      (define o (open-output-string))
@@ -28,11 +29,14 @@
          [(string? l) (display l o)]
          [else (void)]))
      (define orig-str (get-output-string o))
-     (define starting-col (extract-starting-column s))
+     (define starting-col (and infer-starting-indentation?
+                               (extract-starting-column s)))
      ;; strip `string-col` spaces from the start of lines after the first one:
-     (define str (regexp-replace* (string-append "\n" (make-string starting-col #\space))
-                                  orig-str
-                                  "\n"))
+     (define str (if infer-starting-indentation?
+                     (regexp-replace* (string-append "\n" (make-string starting-col #\space))
+                                      orig-str
+                                      "\n")
+                     orig-str))
      (if (and max-length
               ((string-length str) . > . max-length))
          (string-append (substring str 0 (max 0 (- max-length 3)))

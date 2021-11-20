@@ -20,10 +20,10 @@
                      "empty-group.rkt"))
 
 (provide |'|
+         syntax_term
          $
          (rename-out [rhombus... ...])
-         ......
-         literal_syntax)
+         ......)
 
 (module+ convert
   (provide (for-syntax convert-pattern
@@ -285,6 +285,17 @@
      (values (k #'e)
              #'tail)]))
 
+(define-for-syntax (convert-pattern/generate-match e)
+  (define-values (pattern idrs can-be-empty?) (convert-pattern e))
+  (with-syntax ([((id id-ref) ...) idrs])
+    (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
+      (binding-form
+       #'syntax-infoer
+       #`(#,pattern
+          (tmp-id ...)
+          (id ...)
+          (id-ref ...))))))
+
 (define-syntax |'|
   (make-expression+binding-prefix-operator
    (quote-syntax |'|)
@@ -295,18 +306,25 @@
      (call-with-quoted-expression stx convert-template))
    ;; pattern
    (lambda (stx)
-     (call-with-quoted-expression
-      stx
-      (lambda (e)
-        (define-values (pattern idrs can-be-empty?) (convert-pattern e))
-        (with-syntax ([((id id-ref) ...) idrs])
-          (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
-            (binding-form
-             #'syntax-infoer
-             #`(#,pattern
-                (tmp-id ...)
-                (id ...)
-                (id-ref ...))))))))))
+     (call-with-quoted-expression stx convert-pattern/generate-match))))
+
+(define-syntax syntax_term
+  (make-expression+binding-prefix-operator
+   (quote-syntax syntax_term)
+   '((default . stronger))
+   'macro
+   ;; expression
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group)
+       [(_ (parens (group term)) . tail)
+        (values (convert-template #'term) #'tail)]))
+   ;; pattern
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens group)
+       [(_ (parens (group term)) . tail)
+        (values (convert-pattern/generate-match #'term) #'tail)]))))
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
@@ -369,12 +387,3 @@
         (raise-syntax-error #f
                             "misuse outside of a pattern"
                             #'op.name)]))))
-
-(define-syntax literal_syntax
-  (expression-transformer
-   #'literal_syntax
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (parens group)
-       [(_ form . tail)
-        (values #'(quote-syntax form) #'tail)]))))

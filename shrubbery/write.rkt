@@ -66,9 +66,9 @@
          [(regexp-match? rx:identifier s)
           (display s op)]
          [else
-          (display "#{")
+          (display "#{" op)
           (write v op)
-          (display "}")])]
+          (display "}" op)])]
       [(keyword? v)
        (define s (keyword->immutable-string v))
        (cond

@@ -24,6 +24,8 @@
          rhombus-body-expression
          rhombus-body-sequence
 
+         rhombus-top-step
+
          (for-syntax :declaration
                      :definition
                      :expression
@@ -64,6 +66,7 @@
   ;; Form in a definition context that can consume extra groups:
   (define-sequence-transform
     #:syntax-class :definition-sequence
+    #:apply-transformer apply-definition-sequence-transformer
     #:predicate definition-sequence?
     #:desc "definition sequence"
     #:name-path-op name-path-op
@@ -105,16 +108,23 @@
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
+  (syntax-parse stx
+    [(_ . rest) #'(rhombus-top-step rhombus-top . rest)]))
+
+;; Trampoline variant where `top` for return is provided first
+(define-syntax (rhombus-top-step stx)
   (with-syntax-error-respan
     (syntax-local-introduce
      (syntax-parse (syntax-local-introduce stx)
-       [(_) #'(begin)]
+       [(_ top) #`(begin)]
        ;; note that we may perform hierarchical name resolution
        ;; up to four times, since resolution in `:declaration`,
        ;; `:definition`, etc., doesn't carry over
-       [(_ e::definition-sequence)
-        #`(begin (begin . e.parsed) (rhombus-top . e.tail))]
-       [(_ form . forms)
+       [(_ top e::definition-sequence . tail)
+        (define-values (parsed new-tail)
+          (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
+        #`(begin (begin . #,parsed) (top . #,new-tail))]
+       [(_ top form . forms)
         (define parsed
           (syntax-parse #'form
             [e::declaration #'(begin . e.parsed)]
@@ -122,7 +132,7 @@
             [e::expression #'(#%expression e.parsed)]))
         (syntax-parse #'forms
           [() parsed]
-          [_ #`(begin #,parsed (rhombus-top . forms))])]))))
+          [_ #`(begin #,parsed (top . forms))])]))))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)
@@ -169,11 +179,13 @@
   (with-syntax-error-respan
     (syntax-parse (syntax-local-introduce stx)
       [(_) #'(begin)]
-      [(_ e::definition-sequence)
+      [(_ e::definition-sequence . tail)
+       (define-values (parsed new-tail)
+         (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
        (syntax-local-introduce
         #`(begin
-            (begin . e.parsed)
-            (rhombus-body-sequence . e.tail)))]
+            (begin . #,parsed)
+            (rhombus-body-sequence . #,new-tail)))]
       [(_ e::definition . tail)
        (syntax-local-introduce
         #`(begin

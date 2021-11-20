@@ -8,7 +8,8 @@
          "name-root.rkt"
          "declaration.rkt"
          "syntax.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "implicit.rkt")
 
 (provide decl)
 

@@ -264,6 +264,19 @@
 (define (make-in-text-status)
   (in-at 'inside #f #f "" 'initial 0))
 
+(define (out-of-s-exp-mode status)
+  (cond
+    [(s-exp-mode? status) (s-exp-mode-status status)]
+    [(in-at? status) (struct-copy in-at status
+                                  [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status))]
+                                  [openers (let ([openers (in-at-openers status)])
+                                             (unless (and (pair? openers) (equal? "{" (car openers)))
+                                               (error 'out-of-s-exp-mode "expected opener not found"))
+                                             (cdr openers))])]
+    [(in-escaped? status) (struct-copy in-escaped status
+                                       [shrubbery-status (out-of-s-exp-mode (in-escaped-shrubbery-status status))])]
+    [else (error 'out-of-s-exp-mode "not in S-expression mode!")]))
+
 (define (lex-nested-status? status)
   (not (or (not status) (symbol? status))))
 
@@ -474,13 +487,15 @@
      (define (error status)
        (values (struct-copy token t [name 'fail]) 'error #f start end 0 status))
      ;; update the shrubbery-level status, then keep the term or error,
-     ;; trackig nesting depth through the status as we continue:
+     ;; tracking nesting depth through the status as we continue:
      (let ([status (struct-copy in-at status
                                 [shrubbery-status sub-status])])
-       (case (token-name t)
-         [(opener) (ok (struct-copy in-at status
-                                    [openers (cons (token-e t)
-                                                   (in-at-openers status))]))]
+       (case (and (token? t) (token-name t))
+         [(opener s-exp) (ok (struct-copy in-at status
+                                          [openers (cons (if (eq? 's-exp (token-name t))
+                                                             "{"
+                                                             (token-e t))
+                                                         (in-at-openers status))]))]
          [(closer)
           (cond
             [(and (pair? (in-at-openers status))
@@ -786,7 +801,7 @@
                          (wrap (finish-s-exp tok in fail))]
                         [else (wrap tok)]))
             (define d (loop (case name
-                              [(s-exp) 'continuing]
+                              [(s-exp) (out-of-s-exp-mode new-status)]
                               [else new-status])
                             (case name
                               [(opener) (add1 depth)]

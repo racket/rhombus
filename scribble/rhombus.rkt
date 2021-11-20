@@ -65,11 +65,26 @@
                                   [else g]))
      #`(doc:#%module-begin
         #:id #,(datum->syntax stx 'doc)
-        ;; #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
+        #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
         (rhombus-forwarding-sequence
-         (rhombus-top g-unwrapped ...)))]))
+         (scribble-rhombus-top g-unwrapped ...)))]))
 
+;; Includes shortcut for string literals:
+(define-syntax (scribble-rhombus-top stx)
+  (let loop ([stx stx] [accum null])
+    (syntax-parse stx
+      [(_ str:string . rest)
+       (loop #'(t . rest)
+             (cons #'str accum))]
+      [(_ . rest)
+       (define top #`(rhombus-top-step scribble-rhombus-top . rest))
+       (if (null? accum)
+           top
+           #`(begin
+               #,@(reverse accum)
+               top))])))
+    
 ;; ----------------------------------------
 
 (define (verbatim #:indent [indent 0] l)

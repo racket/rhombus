@@ -57,6 +57,7 @@
       (unless (equal? parsed reparsed)
         (out "expected" parsed pretty-print)
         (out "reparsed" reparsed pretty-print)
+        (out "printed" printed display)
         (error "print failed")))
     (check-reparse 'count)
     (check-reparse 'no-count)

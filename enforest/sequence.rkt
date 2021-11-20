@@ -25,6 +25,8 @@
   (syntax-parse stx
     [(_ (~alt (~optional (~seq #:syntax-class form)
                          #:defaults ([form #':form]))
+              (~optional (~seq #:apply-transformer apply-transformer)
+                         #:defaults ([apply-transformer #'apply-transformer]))
               (~optional (~seq #:predicate form?)
                          #:defaults ([form? #'#f]))
               (~optional (~seq #:desc form-kind-str)
@@ -41,18 +43,19 @@
                          #:defaults ([check-result #'check-is-syntax])))
         ...)
      #`(begin
-         (define-splicing-syntax-class form
-           (pattern (~seq ((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref))) tail-in (... ...))
+         (define-syntax-class form
+           (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref)))
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
-                    #:do [(define-values (parsed tail)
-                            (apply-sequence-transformer t head-id
-                                                        (datum->syntax #f (cons head-id #'hname.tail))
-                                                        #'(tail-in (... ...))
-                                                        check-result))]
-                    #:attr parsed parsed
-                    #:attr tail tail))
+                    #:attr id head-id
+                    #:attr tail #'hname.tail))
+         (define (apply-transformer head-id head-tail tail-tail)
+           (define t (syntax-local-value* (in-space head-id) transformer-ref))
+           (apply-sequence-transformer t head-id
+                                       (datum->syntax #f (cons head-id head-tail))
+                                       tail-tail
+                                       check-result))
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e

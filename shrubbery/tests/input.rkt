@@ -1628,6 +1628,9 @@ INPUT
           @item{z
                 w}]
 
+@(in #{s-exp} mode)
+@{also in @(#{s-exp}) mode}
+
 The end
 INPUT
   )
@@ -1688,6 +1691,14 @@ INPUT
       (group
        item
        (parens (group (brackets (group "z") (group "\n") (group "w")))))))
+    (group (parens (group in s-exp mode)))
+    (group
+     (parens
+      (group
+       (brackets
+        (group "also in ")
+        (group (parens (group s-exp)))
+        (group " mode")))))
     (group The end)))
 
 (define input4
