@@ -3,9 +3,62 @@
          syntax-color/racket-lexer
          "../lex.rkt"
          "../lex-comment.rkt"
-         "like-text.rkt")
+         "like-text.rkt"
+         "input.rkt")
 
+(define (lex-all-input in fail #:keep-type? [keep-type? #t])
+  (let loop ([status #f])
+    (define-values (start-line start-column start-offset) (port-next-location in))
+    (define-values (r type paren start-pos end-pos backup new-status)
+      (lex/comment/status in 0 status racket-lexer*/status))
+    (define-values (end-line end-column end-offset) (port-next-location in))
+    (cond
+      [(eq? type 'eof)
+       null]
+      [else
+       (define tok (if (token? r)
+                       r
+                       (syntax->token 'other
+                                      r
+                                      (srcloc (object-name in)
+                                              start-line
+                                              start-column
+                                              start-offset
+                                              (- end-offset start-offset)))))
+       (cons (if keep-type?
+                 (vector tok type paren)
+                 tok)
+             (loop new-status))])))
 
+;; Check that the color lexer doesn't crash, even if the input is ill-formed
+(define (color-test which str)
+  (printf "coloring ~s\n" which)
+  (new like-text%
+       [lex-all-input lex-all-input]
+       [content str])
+  ;; try dropping (random) characters:
+  (define try-all? ((string-length str) . < . 2000))
+  (for ([i (in-range (if try-all? (string-length str) 200))])
+    (define pos (if try-all?
+                    i
+                    (random (string-length str))))
+    (with-handlers ([exn:fail? (lambda (exn)
+                                 (log-error "fail at ~s" pos)
+                                 (raise exn))])
+      (new like-text%
+           [lex-all-input lex-all-input]
+           [content (string-append
+                     (substring str 0 pos)
+                     (substring str (add1 pos)))]))))
+
+(color-test 1 input1)
+(color-test "1a" input1a)
+(color-test 2 input2)
+(color-test 3 input3)
+(color-test 4 input4)
+(color-test 5 input5)
+
+;; Check tracking of comment regiions.
 ;; The "^"s here show the range of commenting. Each "^" will be stripped
 ;; to produce the actual input.
 (define example1
@@ -85,30 +138,6 @@ three
 INPUT
 )
 ;; ^#// #{#(1 @;(1 2) 3)}^
-
-(define (lex-all-input in fail #:keep-type? [keep-type? #t])
-  (let loop ([status 'initial])
-    (define-values (start-line start-column start-offset) (port-next-location in))
-    (define-values (r type paren start-pos end-pos backup new-status)
-      (lex/comment/status in (file-position in) status racket-lexer*/status))
-    (define-values (end-line end-column end-offset) (port-next-location in))
-    (cond
-      [(eq? type 'eof)
-       null]
-      [else
-       (define tok (if (token? r)
-                       r
-                       (syntax->token 'other
-                                      r
-                                      (srcloc (object-name in)
-                                              start-line
-                                              start-column
-                                              start-offset
-                                              (- end-offset start-offset)))))
-       (cons (if keep-type?
-                 (vector tok type paren)
-                 tok)
-             (loop new-status))])))
 
 (define clean-example1 (regexp-replace* #rx"\\^" example1 ""))
 

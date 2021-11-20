@@ -39,8 +39,8 @@
       (lex-all-input (let ([p (open-input-string content)])
                        (port-count-lines! p)
                        p)
-                     (lambda args
-                       (error "unexpected lex failure: ~s" args))
+                     (lambda (tok msg)
+                       (error 'lex "unexpected lex failure: ~s ~s" tok msg))
                      #:keep-type? #t))
 
     ;; position -> token

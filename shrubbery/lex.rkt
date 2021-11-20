@@ -164,11 +164,13 @@
     [(_ name lexeme type more ...)
      #`(ret name lexeme #:raw #f type more ...)]))
 
-(define (make-ret name lexeme #:raw [raw #f] attribs paren start-pos end-pos status)
+(define (make-ret name lexeme #:raw [raw #f] attribs paren start-pos end-pos status
+                  #:pending-backup [pending-backup 0])
   (define backup 0)
   (values (make-token name lexeme start-pos end-pos raw)
           attribs paren (position-offset start-pos) (position-offset end-pos)
-          backup status))
+          backup status
+          pending-backup))
 
 (define stx-for-original-property (read-syntax #f (open-input-string "original")))
 (define current-lexer-source (make-parameter "input"))
@@ -200,7 +202,8 @@
 
 (define (read-line-comment name lexeme input-port start-pos
                            #:status [status 'initial]
-                           #:consume-newline? [consume-newline? #f])
+                           #:consume-newline? [consume-newline? #f]
+                           #:pending-backup [pending-backup 0])
   (let ([comment (apply string (append (string->list lexeme) (read-line/skip-over-specials input-port
                                                                                            consume-newline?)))])
     (define-values (end-line end-col end-offset) (port-next-location input-port))
@@ -209,7 +212,8 @@
             (position-offset start-pos)
             end-offset
             0
-            status)))
+            status
+            pending-backup)))
 
 (define get-next-comment
   (lexer
@@ -261,11 +265,24 @@
 (struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
 
+;; A pending-backup mode causes a non-zero `backup` count for one or
+;; more future tokens; for example, when parsing `@|{`, there's a peek
+;; triggered by `@` that decides how to proceed next, and if that
+;; peek's result changes, then we'll need to go back to the `@` token.
+;; The `amount` of pending backup is how many characters need to be
+;; consumed before the pending backup expires. For example, with
+;; `@|<<<x`, the peek stopped at `x` while looking for `{`, and we'll
+;; need to re-lex starting from `@` before operators `|` and `<<<`.
+(struct pending-backup-mode (amount status) #:prefab)
+
 (define (make-in-text-status)
   (in-at 'inside #f #f "" 'initial 0))
 
 (define (out-of-s-exp-mode status)
   (cond
+    [(pending-backup-mode? status) (struct-copy pending-backup-mode status
+                                                [status (out-of-s-exp-mode
+                                                         (pending-backup-mode-status status))])]
     [(s-exp-mode? status) (s-exp-mode-status status)]
     [(in-at? status) (struct-copy in-at status
                                   [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status))]
@@ -278,10 +295,18 @@
     [else (error 'out-of-s-exp-mode "not in S-expression mode!")]))
 
 (define (lex-nested-status? status)
-  (not (or (not status) (symbol? status))))
+  (if (pending-backup-mode? status)
+      (lex-nested-status? (pending-backup-mode-status status))
+      (not (or (not status) (symbol? status)))))
 
-(define (lex/status in pos status racket-lexer*/status)
-  (let-values ([(tok type paren start end backup status)
+(define (lex/status in pos status-in racket-lexer*/status)
+  (define prev-pending-backup (if (pending-backup-mode? status-in)
+                                  (pending-backup-mode-amount status-in)
+                                  0))
+  (define status (if (pending-backup-mode? status-in)
+                     (pending-backup-mode-status status-in)
+                     status-in))
+  (let-values ([(tok type paren start end backup status pending-backup)
                 (let loop ([status status])
                   (cond
                     [(s-exp-mode? status)
@@ -303,21 +328,23 @@
                                                                   [(close)
                                                                    (s-exp-mode (sub1 depth) s-exp-status)]
                                                                   [else
-                                                                   (s-exp-mode depth s-exp-status)]))])]
+                                                                   (s-exp-mode depth s-exp-status)])
+                                0)])]
                     [(in-at? status)
                      ;; within an `@` sequence
-                     (define-values (tok type paren start end backup new-status)
+                     (define-values (tok type paren start end backup new-status pending-backup)
                        (at-lexer in status (lambda (status) (loop status))))
                      (define new-type (if (and (in-at-comment? status)
                                                (not (eq? type 'eof)))
                                           (hash-set (if (hash? type) type (hash 'type type)) 'comment? #t)
                                           type))
-                     (values tok new-type paren start end backup new-status)]
+                     (values tok new-type paren start end backup new-status pending-backup)]
                     [(in-escaped? status)
-                     (define-values (t type paren start end backup sub-status)
+                     (define-values (t type paren start end backup sub-status pending-backup)
                        (loop (in-escaped-shrubbery-status status)))
                      (values t type paren start end backup (struct-copy in-escaped status
-                                                                        [shrubbery-status sub-status]))]
+                                                                        [shrubbery-status sub-status])
+                             pending-backup)]
                     [(eq? status 'continuing)
                      ;; normal mode, after a form
                      (shrubbery-lexer-continuing/status in)]
@@ -333,14 +360,25 @@
        (lex/status in pos status racket-lexer*/status)]
       [else
        (define new-backup (cond
+                            [(zero? prev-pending-backup) backup]
+                            [#t (max 1 backup)]
                             ;; If we have "@/{" and we add a "/" after the existing one,
                             ;; we'll need to back up more:
                             [(not (token? tok)) backup]
                             [(eq? (token-name tok) 'at-opener) 1]
+                            [(eq? (token-name tok) 'at-closer) 1]
+                            [(eq? (token-name tok) 'at) 1]
                             [(eq? (token-name tok) 'at-comment) 3]
                             [(and (in-at? status) (eq? (token-name tok) 'operator)) 2]
                             [else backup]))
-       (values tok type paren start end new-backup status)])))
+       (define new-pending-backup (max pending-backup
+                                       (if (and end start)
+                                           (- prev-pending-backup (- end start))
+                                           0)))
+       (define status/backup (if (zero? new-pending-backup)
+                                 status
+                                 (pending-backup-mode new-pending-backup status)))
+       (values tok type paren start end new-backup status/backup)])))
 
 (define-syntax-rule (make-lexer/status number bad-number)
   (lexer
@@ -349,7 +387,9 @@
    [str (ret 'literal (parse-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [byte-str (ret 'literal (parse-byte-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [bad-number
-    (ret 'fail lexeme 'error #f start-pos end-pos 'continuing)]
+    (ret 'fail lexeme 'error #f start-pos end-pos 'continuing
+         ;; backup is needed if the next character is `+` or `-`; ok to conservatively back up
+         #:pending-backup 1)]
    [number
     (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
    [special-number
@@ -398,12 +438,15 @@
    ["@//"
     (let ([opener (peek-at-opener input-port)])
       (if opener
-          (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos (in-at 'open #t #t opener 'initial '()))
-          (read-line-comment 'at-comment lexeme input-port start-pos)))]
+          (let ([status (in-at 'open #t #t opener 'initial '())])
+            (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos status #:pending-backup 1))
+          ;; all characters up to an opener-deciding character are part of the comment, so pending-backup = 1
+          (read-line-comment 'at-comment lexeme input-port start-pos #:pending-backup 1)))]
    ["@"
-    (let ([opener (peek-at-opener input-port)])
+    (let-values ([(opener pending-backup) (peek-at-opener* input-port)])
       (define mode (if opener 'open 'initial))
-      (ret 'at lexeme 'at #f start-pos end-pos (in-at mode #f #t opener 'initial '())))]
+      (ret 'at lexeme 'at #f start-pos end-pos (in-at mode #f #t opener 'initial '())
+           #:pending-backup (if opener 1 pending-backup)))]
    [(special)
     (cond
       [(or (number? lexeme) (boolean? lexeme))
@@ -422,7 +465,7 @@
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
 (define (ret-eof start-pos end-pos)
-  (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f 0 #f))
+  (values (make-token 'EOF eof start-pos end-pos) 'eof #f #f #f 0 #f 0))
 
 (define shrubbery-lexer/status (make-lexer/status number bad-number))
 (define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
@@ -433,6 +476,7 @@
 ;; wehite trimming to the parser layer
 (define (at-lexer in status recur)
   (define in-mode (in-at-mode status))
+  ;; anything that uses `get-expected` should trigger a non-zero backup
   (define (get-expected opener/ch ch/closer)
     (define (get-all-expected s)
       (for ([ch (in-string s)])
@@ -462,30 +506,37 @@
     ;; may transition from 'initial mode to 'brackets mode at `[`
     [(initial brackets)
      ;; recur to parse in shrubbery mode:
-     (define-values (t type paren start end backup sub-status)
+     (define-values (t type paren start end backup sub-status pending-backup)
        (recur (in-at-shrubbery-status status)))
      ;; to keep the term and possibly exit 'initial or 'brackets mode:
      (define (ok status)
-       (values t type paren start end 0 (cond
-                                          [(and (not (s-exp-mode? sub-status))
-                                                (null? (in-at-openers status)))
-                                           ;; either `{`, `[`, or back to shrubbery mode
-                                           (define opener (peek-at-opener in))
-                                           (cond
-                                             [opener
-                                              (in-at 'open (in-at-comment? status) #t opener sub-status '())]
-                                             [(and (not (eq? in-mode 'brackets))
-                                                   (eqv? #\[ (peek-char in)))
-                                              (in-at 'brackets (in-at-comment? status) #t #f sub-status '())]
-                                             [(in-escaped? sub-status)
-                                              (in-escaped-at-status sub-status)]
-                                             [else sub-status])]
-                                          [else
-                                           ;; continue in-at mode
-                                           status])))
+       (define-values (next-status pending-backup)
+         (cond
+           [(and (not (s-exp-mode? sub-status))
+                 (null? (in-at-openers status)))
+            ;; either `{`, `[`, or back to shrubbery mode
+            (define-values (opener pending-backup) (peek-at-opener* in))
+            (cond
+              [opener
+               (values (in-at 'open (in-at-comment? status) #t opener sub-status '())
+                       1)]
+              [else
+               (values
+                (cond
+                  [(and (not (eq? in-mode 'brackets))
+                        (eqv? #\[ (peek-char in)))
+                   (in-at 'brackets (in-at-comment? status) #t #f sub-status '())]
+                  [(in-escaped? sub-status)
+                   (in-escaped-at-status sub-status)]
+                  [else sub-status])
+                pending-backup)])]
+           [else
+            ;; continue in-at mode
+            (values status 0)]))
+       (values t type paren start end 0  next-status pending-backup))
      ;; converts a token to an error token:
      (define (error status)
-       (values (struct-copy token t [name 'fail]) 'error #f start end 0 status))
+       (values (struct-copy token t [name 'fail]) 'error #f start end 0 status 0))
      ;; update the shrubbery-level status, then keep the term or error,
      ;; tracking nesting depth through the status as we continue:
      (let ([status (struct-copy in-at status
@@ -544,22 +595,24 @@
              ;; `lex/status` will handle the case that the content is empty
              (define end-pos (next-location-as-pos in))
              (ret 'at-content (get-output-string o) 'text #f start-pos end-pos
-                  (struct-copy in-at status [mode 'close]))]
+                  (struct-copy in-at status [mode 'close])
+                  #:pending-backup 1)]
             [else
              (if (equal? opener "")
                  (write-char (read-char in) o)
-                 (write-string (read-string (add1 (bytes-length opener)) in) o))
+                 (write-string (read-string (add1 (string-length opener)) in) o))
              (loop (sub1 depth))])]
          [(peek-at-prefixed #\@ in #:opener opener)
           ;; `lex/status` will handle the case that the content is empty
           (define end-pos (next-location-as-pos in))
           (ret 'at-content (get-output-string o) 'text #f start-pos end-pos
-               (struct-copy in-at status [mode 'escape] [openers depth]))]
+               (struct-copy in-at status [mode 'escape] [openers depth])
+               #:pending-backup 1)]
          [(and closeable?
                (peek-at-opener in #:opener opener))
           (if (equal? opener "")
               (write-char (read-char in) o)
-              (write-string (read-string (add1 (bytes-length opener)) in) o))
+              (write-string (read-string (add1 (string-length opener)) in) o))
           (loop (add1 depth))]
          [else
           (write-char (read-char in) o)
@@ -577,17 +630,20 @@
                      ;; block comment
                      (define end-pos (next-location-as-pos in))
                      (ret 'at-comment (string-append opener "@" slashes) 'comment #f start-pos end-pos
-                          (in-at 'open #t #t opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())))]
+                          (in-at 'open #t #t opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())
+                          #:pending-backup 1))]
                [else
                 ;; line comment
                 (read-line-comment 'comment (string-append opener "@" slashes) in start-pos
                                    #:status (struct-copy in-at status [mode 'inside])
-                                   #:consume-newline? #t)]))]
+                                   #:consume-newline? #t
+                                   #:pending-backup 1)]))]
        [else
-        (define next-opener (peek-at-opener in))
+        (define-values (next-opener pending-backup) (peek-at-opener* in))
         (define mode (if next-opener 'open 'initial))
         (ret 'at (string-append opener "@") 'at #f start-pos end-pos
-             (in-at mode (in-at-comment? status) #t next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '()))])]
+             (in-at mode (in-at-comment? status) #t next-opener (in-escaped 'initial (struct-copy in-at status [mode 'inside])) '())
+             #:pending-backup (if next-opener 1 pending-backup))])]
     ;; 'close mode handles the final `}` of a `{}`
     [(close)
      (define closer (at-opener->closer (in-at-opener status)))
@@ -597,37 +653,51 @@
        [else
         (define sub-status (in-at-shrubbery-status status))
         ;; might continue with another immediate opener:
-        (define next-opener (peek-at-opener in))
+        (define-values (next-opener pending-backup) (peek-at-opener* in))
         (ret 'at-closer (string-append "}" closer) 'parenthesis '|}| start-pos end-pos
              (if next-opener
                  (in-at 'open (in-at-comment? status) #t next-opener sub-status '())
                  (if (in-escaped? sub-status)
                      (in-escaped-at-status sub-status)
-                     sub-status)))])]
+                     sub-status))
+             #:pending-backup (if next-opener
+                                  1
+                                  pending-backup))])]
     [else (error "unknown at-exp state")]))
 
 (define (peek-at-opener in #:opener [opener #f])
+  (define-values (found-opener pending-backup)
+    (peek-at-opener* in #:opener opener))
+  found-opener)
+
+;; returns opener or #f, plus a pending-backup amount;
+;; the pending-backup amount can be > 1 if opener is #f, and
+;; it represents the number of characters that need to be consumed
+;; to get past the point where the content is a known non-opener
+(define (peek-at-opener* in #:opener [opener #f])
   (cond
     [opener
      ;; look for another instance of the current opener
-     (peek-at-prefixed #\{ in #:opener opener)]
+     (values (peek-at-prefixed #\{ in #:opener opener)
+             1)]
     [else
      ;; look for a fresh opener
      (define ch (peek-char in))
      (cond
-       [(eqv? ch #\{) ""]
+       [(eqv? ch #\{) (values "" 1)]
        [(eqv? ch #\|)
         (let loop ([chars '(#\|)] [offset 1])
           (define ch (peek-char in offset))
           (cond
-            [(eof-object? ch) #f]
-            [(eqv? ch #\{) (list->string (reverse chars))]
+            [(eof-object? ch) (values #f (add1 offset))]
+            [(eqv? ch #\{) (values (list->string (reverse chars))
+                                   1)]
             [(and ((char->integer ch) . < . 128)
                   (or (char-symbolic? ch)
                       (char-punctuation? ch)))
              (loop (cons ch chars) (add1 offset))]
-            [else #f]))]
-       [else #f])]))
+            [else (values #f (add1 offset))]))]
+       [else (values #f 1)])]))
 
 (define (peek-at-prefixed ch in #:opener opener)
   (let loop ([offset 0])
@@ -773,7 +843,7 @@
          '()]
         [else
          (define-values (tok type paren start-pos end-pos backup new-status)
-           (lex/status in (file-position in) status #f))
+           (lex/status in 0 status #f))
          (define (wrap r)
            (if keep-type?
                (vector r type paren)

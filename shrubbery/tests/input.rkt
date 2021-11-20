@@ -1,6 +1,7 @@
 #lang racket/base
 
-(provide input1
+(provide input1s
+         input1
          expected1
 
          input1a
@@ -18,7 +19,9 @@
          input5
          expected5)
 
-(define input1
+;; input1 is split into parts to accomodate O(n^2) tests
+(define input1s
+  (list
 #<<INPUT
 let (x = 1,
      y = 2):
@@ -75,6 +78,11 @@ define fib:
 // For maximal noise, you could add parentheses and trailing colons.
 // But we won't.
 
+INPUT
+
+;; ----------------------------------------
+
+#<<INPUT
 // START: all of the next `fib` definitions are exactly the same
 
 define fib(n):
@@ -155,7 +163,11 @@ struct posn(x, y):
          eql(a.x, b.x) && eql(a.y, b.y),
        hc,
        hc)
+INPUT
 
+;; ----------------------------------------
+
+#<<INPUT
 // Another possibile approach to syntax for `struct`:
 struct posn:
   fields:
@@ -221,6 +233,12 @@ define approx_thunk(x):
    | nothing: lambda
                | (): 0
                | (n): n
+
+INPUT
+
+;; ----------------------------------------
+
+#<<INPUT
 
 define curried:
   lambda (x):
@@ -305,7 +323,9 @@ local:
 (1, :)
 
 INPUT
-)
+))
+
+(define input1 (apply string-append input1s))
 
 (define expected1
   '(top
@@ -1254,7 +1274,7 @@ INPUT
 (define input2
 #<<INPUT
 
-// A set of examples to see what happens with verious forms,
+// A set of examples to see what happens with various forms,
 // where many of them seem nonsensical
 
 somthing else: 8
