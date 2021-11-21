@@ -596,7 +596,8 @@
               (and closeable?
                    (peek-at-closer in #:opener opener)))
           (cond
-            [(zero? depth)
+            [(or (zero? depth)
+                 (eof-object? ch))
              ;; `lex/status` will handle the case that the content is empty
              (define end-pos (next-location-as-pos in))
              (ret 'at-content (get-output-string o) 'text #f start-pos end-pos

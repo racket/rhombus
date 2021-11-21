@@ -161,3 +161,6 @@
 (try-input 3 input3)
 (try-input 4 input4)
 (try-input 5 input5)
+
+;; make sure in EOF here is ok:
+(try-input "open" "@{{")
