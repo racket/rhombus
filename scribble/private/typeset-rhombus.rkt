@@ -113,12 +113,27 @@
   (define tag-stx
     (syntax-case stx ()
       [(_ (_ self)) #'self]))
+  (define stx-ranges (make-hasheq))
   (define str (block-string->content-string (shrubbery-syntax->string block-stx
+                                                                      #:use-raw? #t
                                                                       #:keep-suffix? #t
-                                                                      #:infer-starting-indentation? #f)
+                                                                      #:infer-starting-indentation? #f
+                                                                      #:register-stx-range
+                                                                      (lambda (stx start end)
+                                                                        (hash-set! stx-ranges stx (cons start end)))
+                                                                      #:render-stx-hook
+                                                                      (lambda (stx output)
+                                                                        (cond
+                                                                          [(element? (syntax-e stx))
+                                                                           (display "ELEM" output)
+                                                                           #t]
+                                                                          [else #f])))
                                             (syntax-case block-stx ()
                                               [(b . _)
-                                               (syntax-column #'b)])))
+                                               (syntax-column #'b)])
+                                            stx-ranges))
+  (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])
+                           (hash-set ht (car v) (cons k (hash-ref ht (car v) '())))))
   (define init-col (infer-indentation str))
   (define in (open-input-string str))
   (port-count-lines! in)
@@ -142,34 +157,39 @@
                                (hash-ref attribs 'type 'other)
                                attribs))
               (define (make-element start end skip-ws)
-                (define style
-                  (case type
-                    [(string text constant) value-color]
-                    [(symbol) symbol-color]
-                    [(parenthesis hash-colon-keyword) paren-color]
-                    [(error) error-color]
-                    [(comment) comment-color]
-                    [(white-space) hspace-style]
-                    [else tt-style]))
-                (define show-str
-                  (substring str
-                             (let loop ([start start] [skip-ws skip-ws])
-                               (cond
-                                 [(skip-ws . <= . 0) start]
-                                 [(start . >= . end) start]
-                                 [(char=? #\space (string-ref str start))
-                                  (loop (add1 start) (sub1 skip-ws))]
-                                 [else start]))
-                             end))
-                (define m (and (not (eq? style hspace-style))
-                               (regexp-match-positions #rx"[^ ]" show-str)))
                 (cond
-                  [(and m (positive? (caar m)))
-                   (list
-                    (element hspace-style (make-string (caar m) #\space))
-                    (element style (substring show-str (caar m))))]
+                  [(lookup-stx-typeset start end position-stxes stx-ranges)
+                   => (lambda (e)
+                        e)]
                   [else
-                   (element style show-str)]))
+                   (define style
+                     (case type
+                       [(string text constant) value-color]
+                       [(symbol) symbol-color]
+                       [(parenthesis hash-colon-keyword) paren-color]
+                       [(error) error-color]
+                       [(comment) comment-color]
+                       [(white-space) hspace-style]
+                       [else tt-style]))
+                   (define show-str
+                     (substring str
+                                (let loop ([start start] [skip-ws skip-ws])
+                                  (cond
+                                    [(skip-ws . <= . 0) start]
+                                    [(start . >= . end) start]
+                                    [(char=? #\space (string-ref str start))
+                                     (loop (add1 start) (sub1 skip-ws))]
+                                    [else start]))
+                                end))
+                   (define m (and (not (eq? style hspace-style))
+                                  (regexp-match-positions #rx"[^ ]" show-str)))
+                   (cond
+                     [(and m (positive? (caar m)))
+                      (list
+                       (element hspace-style (make-string (caar m) #\space))
+                       (element style (substring show-str (caar m))))]
+                     [else
+                      (element style show-str)])]))
               (let token-loop ([start start] [end end] [skip-ws skip-ws])
                 (define nl (regexp-match-positions #rx"\n" str start end))
                 (cond
@@ -224,17 +244,28 @@
 (define tt-space (element tt-style " "))
 (define tt-comma (element tt-style ", "))
 
-(define (block-string->content-string str col)
+(define (block-string->content-string str col stx-ranges)
   ;; strip `:` from the beginning, add spaces
   ;; corresponding to `col`, then strip any blank newlines
+  (define (shift-stxes! after delta)
+    ;; shift earlier by `delta`
+    (unless (zero? delta)
+      (for ([(k v) (in-hash stx-ranges)])
+        (when ((car v) . > . after)
+          (hash-set! stx-ranges k (cons (- (car v) delta) (- (cdr v) delta)))))))
   (define-values (content-str prefix-len)
     (cond
       [(regexp-match-positions #rx"^:«(.*)»[ ]*$" str)
        => (lambda (m)
-            (values (substring str (caadr m) (cdadr m))
+            (define delta (caadr m))
+            (shift-stxes! 0 delta)
+            (values (substring str delta (cdadr m))
                     (+ (or col 0) 2)))]
       [(regexp-match? #rx"^:" str)
-       (values (substring str 1) (+ (or col 0) 1))]))
+       (shift-stxes! 0 1)
+       (values (substring str 1) (+ (or col 0) 1))]
+      [else (values str 0)]))
+  (shift-stxes! 0 (- prefix-len))
   (define full-str
     (string-append (make-string prefix-len #\space) content-str))
   (regexp-replace* #px"\\s*\n\\s*$"
@@ -247,4 +278,11 @@
       (caar m)
       0))
 
-  
+(define (lookup-stx-typeset start end position-stxes stx-ranges)
+  (define stxes (hash-ref position-stxes start '()))
+  (for/or ([k (in-list stxes)])
+    (define p (hash-ref stx-ranges k))
+    (and (= (cdr p) end)
+         (cond
+           [(element? (syntax-e k)) (syntax-e k)]
+           [else #f]))))

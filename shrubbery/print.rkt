@@ -9,25 +9,22 @@
   (provide syntax-to-raw))
 
 (define (shrubbery-syntax->string s
+                                  #:use-raw? [use-raw? #f]
                                   #:max-length [max-length #f]
                                   #:keep-suffix? [keep-suffix? #f]
-                                  #:infer-starting-indentation? [infer-starting-indentation? #t])
+                                  #:infer-starting-indentation? [infer-starting-indentation? #t]
+                                  #:register-stx-range [register-stx-range void]
+                                  #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
   (cond
-    [(all-raw-available? s)
+    [(or use-raw?
+         (all-raw-available? s))
      (define o (open-output-string))
-     (define (full?)
-       (and max-length
-            ((file-position o) . > . max-length)))
-     (let loop ([l (syntax-to-raw s #:keep-suffix? keep-suffix?)])
-       (cond
-         [(pair? l)
-          (unless (full?)
-            (loop (car l))
-            (unless (full?)
-              (loop (cdr l))))]
-         [(null? l) (void)]
-         [(string? l) (display l o)]
-         [else (void)]))
+     (syntax-to-raw s
+                    #:output o
+                    #:max-length max-length
+                    #:keep-suffix? keep-suffix?
+                    #:register-stx-range register-stx-range
+                    #:render-stx-hook render-stx-hook)
      (define orig-str (get-output-string o))
      (define starting-col (and infer-starting-indentation?
                                (extract-starting-column s)))
@@ -49,10 +46,33 @@
            (format "~.s" v))
          (format "~s" v))]))
 
-(define (syntax-to-raw g #:keep-suffix? [keep-suffix? #t])
+(define (to-output raw output max-length)
+  (define (full?)
+    (and max-length
+         ((file-position output) . > . max-length)))
+  (let loop ([l raw])
+    (cond
+      [(pair? l)
+       (unless (full?)
+         (loop (car l))
+         (unless (full?)
+           (loop (cdr l))))]
+      [(null? l) (void)]
+      [(string? l) (display l output)]
+      [else (void)])))
+
+(define (syntax-to-raw g
+                       #:output [output #f]
+                       #:max-length [max-length #f]
+                       #:keep-suffix? [keep-suffix? #t]
+                       #:register-stx-range [register-stx-range void]
+                       #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
   (let loop ([g g] [tail null] [use-prefix? #f] [keep-suffix? keep-suffix?])
     (cond
-      [(null? g) tail]
+      [(null? g)
+       (if output
+           (to-output tail output max-length)
+           tail)]
       [(pair? g)
        (define a-stx (car g))
        (define post (and (syntax? a-stx)
@@ -70,24 +90,48 @@
                        keep-suffix?))
        (if (null? a) d (cons a d))]
       [(syntax? g)
+       (define start-pos (and register-stx-range
+                              output
+                              (file-position output)))
        (define pre (and use-prefix?
                         (syntax-raw-prefix-property g)))
-       (define r (syntax-raw-property g))
-       (define raw (if (and pre r)
-                       (cons pre r)
-                       (or pre r null)))
-       (define suffix (and (or keep-suffix?
-                               (not (null? tail)))
-                           (or (syntax-raw-suffix-property g)
-                               null)))
-       (define raw+suffix (if (null? suffix)
-                              raw
-                              (if (null? raw)
-                                  suffix
-                                  (cons raw suffix))))
-       (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
-       (if (null? raw+suffix) d (cons raw+suffix d))]
-      [else tail])))
+       (when output
+         (to-output pre output max-length))
+       (define-values (raw+suffix d)
+         (cond
+           [(render-stx-hook g output)
+            => (lambda (raw)
+                 (values raw '()))]
+           [else
+            (define r (syntax-raw-property g))
+            (define raw (let ([pre (and (not output) pre)])
+                          (if (and pre r)
+                              (cons pre r)
+                              (or pre r null))))
+            (define suffix (and (or keep-suffix?
+                                    (not (null? tail)))
+                                (or (syntax-raw-suffix-property g)
+                                    null)))
+            (define raw+suffix
+              (if (null? suffix)
+                  raw
+                  (if (null? raw)
+                      suffix
+                      (cons raw suffix))))
+            (when output
+              (to-output raw+suffix output max-length))
+            (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
+            (values raw+suffix d)]))
+       (cond
+         [output
+          (when start-pos
+            (register-stx-range g start-pos (file-position output)))]
+         [else
+          (if (null? raw+suffix) d (cons raw+suffix d))])]
+      [else
+       (if output
+           (to-output tail output max-length)
+           tail)])))
 
 (define (all-raw-available? s)
   (cond

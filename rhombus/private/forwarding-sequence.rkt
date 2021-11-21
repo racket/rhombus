@@ -38,7 +38,8 @@
                                             #'provide
                                             #'require
                                             #'#%require
-                                            #'#%provide)
+                                            #'#%provide
+                                            #'begin-for-syntax)
                                       #f))
        (syntax-parse exp-form
          #:literals (begin define-values define-syntaxes rhombus-forward)

@@ -4,7 +4,8 @@
 (require (for-syntax "main.rkt"))
 (provide (for-syntax (all-from-out "main.rkt")))
 
-(bounce "private/expression-syntax.rkt"
+(bounce "private/for-meta.rkt"
+        "private/expression-syntax.rkt"
         "private/binding-syntax.rkt"
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"

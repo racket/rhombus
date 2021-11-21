@@ -10,30 +10,37 @@ export:
   rhombus
   rhombusblock
 
-expr.macro '(rhombus ($forms ...) $main_tail ......):
+for_meta:
   def | map(proc, []): []
       | map(proc, [a, as, ...]): cons(proc(a), map(proc, as))
+
   def | andmap(proc, []): #true
-      | andmap(proc, [a, as, ...]): proc(a) && andmap(proc, as)  
+      | andmap(proc, [a, as, ...]): proc(a) && andmap(proc, as)
+
   def head_context(stxs):
     match stxs
     | '($head $_ ......):
         relocate_syntax('#false, head)
+
   def head_escape_context(stxs):
     match stxs
     | '($head $esc $_ ......):
         relocate_span_syntax('#false, [head, esc])
+
   def literal(stxs):
     '(literal_syntax $stxs)
+
   def is_literal(stx):
     match stx
     | '(literal_syntax $_): #true
     | ~else: #false
+
   def nested(ess, builder, stxs):
     val new_ess: map(fun(es): escape('($es ...)), ess)
     if andmap(is_literal, new_ess)
     | literal(stxs)
     | '($builder([$new_ess, ...], literal_syntax_term($(head_context(stxs)))))
+
   def escape(stxs):
     match stxs
     | '($$($expr ...) $tail ......):
@@ -55,8 +62,6 @@ expr.macro '(rhombus ($forms ...) $main_tail ......):
     | '(: $ess ...; ...):
         nested(ess, 'block_syntax, stxs)
     | ~else: literal(stxs)
-  values('(#{typeset-rhombus}($(escape('($forms ...))))),
-         main_tail)
 
 fun as_seq(v): '($v)
 
@@ -88,9 +93,15 @@ fun block_syntax(gs, context):
   match gs
   | ['($g ...), ...]: as_seq(relocate_syntax(syntax_term(: $g ...; ...), context))
 
+// ----------------------------------------
+
+expr.macro '(rhombus ($forms ...) $main_tail ......):
+  values('(#{typeset-rhombus}($(escape('($forms ...))))),
+         main_tail)
+
 expr.macro '(rhombusblock $tail ...):
   ~op_stx: me
   match '($tail ...)
   | '(: $content ...; ...):
-      values('(#{typeset-rhombusblock}(literal_syntax($tail ...))), '())
+      values('(#{typeset-rhombusblock}($(escape('($tail ...))))), '())
   | ~else: raise_syntax_error("expected a block", '($me $tail ...))
