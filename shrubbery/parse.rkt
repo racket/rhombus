@@ -825,7 +825,7 @@
              delta
              group-commenting
              raw)]))
-      
+
 (define (tag-as-block gs)
   (cond
     [(and (pair? gs)

@@ -1612,6 +1612,8 @@ INPUT
 @[7]
 @{9}
 @[7]{8, 10 @"more"}
+then @[7]{8}
+then @{8}
 
 @apple{one}{two}
 @banana[0]{three}{four}{five}
@@ -1662,6 +1664,8 @@ INPUT
     (group (parens (group 7)))
     (group (parens (group (brackets (group "9")))))
     (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more")))))
+    (group then (parens (group 7) (group (brackets (group "8")))))
+    (group then (parens (group (brackets (group "8")))))
     (group apple (parens (group (brackets (group "one")))
                          (group (brackets (group "two")))))
     (group banana (parens (group 0)
