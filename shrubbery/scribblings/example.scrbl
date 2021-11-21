@@ -43,15 +43,15 @@ Forms like @litchar{def}, @litchar{cond}, and @litchar{match} are not
 specified by shrubbery notation, since specifying those forms is up to a
 language that is built on top of shrubbery notation. Still, shrubbery
 notation is meant to accommodate a particular kind of syntax for nested
-blocks (via @litchar{:} and indentation) and conditional branches (via
+blocks (via @litchar{:} and indentation) and conditional blocks (via
 @litchar{|}).
 
 Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of
 @litchar{char-symbolic?}, roughly. No spaces are needed between
 operators and non-operators, so @litchar{1+2} and @litchar{1 + 2} mean
-the same thing. Comments are C-style, plus a @litchar{#//} group-comment
-form. See @secref["lexeme-parsing"] for more information.
+the same thing. Comments are C-style. See @secref["lexeme-parsing"]
+for more information.
 
 The following tokens are used for grouping, in addition to line breaks
 and indentation:
@@ -64,8 +64,8 @@ Parentheses, square brackets, and curly braces are used to delimit
 groups in the obvious way. A @litchar{;} or @litchar{,} acts as a group
 separator, even within a single line. A @litchar{:} or @litchar{|}
 treats remaining item on the same line like a new indented line, which
-forms a subgroup. A guillemot pair @litchar{«} and @litchar{»} can be
-used (probably very rarely) to explicitly bracket subgroups formed by
+forms a block of nested groups. A guillemot pair @litchar{«} and @litchar{»} can be
+used in rare cases to explicitly bracket subgroups formed by
 @litchar{:} and @litchar{|} without line breaks. A @litchar{\} continues
 a line, effectively shifting all columns on the next line as if they
 appeared immediately after the @litchar{\}.

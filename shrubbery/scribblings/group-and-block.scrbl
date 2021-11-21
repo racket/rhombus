@@ -9,8 +9,9 @@
 
 The heart of shrubbery notation is its set of rules for organizing
 @deftech{terms} into @deftech{groups}, @deftech{blocks}, and
-@deftech{alt-blocks}. This grammar summarizes the abstract structure
-(not the literal syntax) of a shrubbery-notation document:
+@deftech{alt-blocks}. The following grammar summarizes the abstract
+structure of a shrubbery-notation document, where literal fragments like
+@litchar{(} serve merely as tags:
 
 @nested[~style: symbol(inset),
         bnf.BNF([@nonterm{document},
@@ -31,20 +32,26 @@ The heart of shrubbery notation is its set of rules for organizing
                 [@nonterm{alt-block},
                  bseq(@litchar["|"], kleenestar(@nonterm{block}))])]
 
-Overall, a document is a sequence of groups, each of which is a
-non-empty sequence of terms. Terms include @deftech{atoms}, which are
-individual @seclink["lexeme-parsing"]{lexeme tokens}, as well as blocks,
-but blocks are constrained to appear at the end of group. Groups are further
-combined into sequences either within a particular @opener_closer pair
-or within a block.
+A document is a sequence of groups, each of which is a non-empty
+sequence of terms. Terms include @deftech{atoms}, which are either
+individual @seclink["lexeme-parsing"]{lexeme tokens}, @opener_closer
+pairs that contain groups, or blocks as created with @litchar{:} or
+@litchar{|}---but a block as a term is constrained to appear only at the
+end of a group.
 
 An alt-block, as created with @litchar{|}, is a special kind of block
 that contains a sequence of blocks. Conceptually, each nested block in
-an alt-block is in its own group, but the group is syntactically
-constrained to have a single block. Also, the fact that an alt-block was
-created with @litchar{|} is recorded in the abstract syntax, much in the
-same way that specific @opener_closer pairs @litchar{()}, @litchar{[]},
-and @litchar{{}} are recorded as creating certain terms.
+an alt-block is in a group, but the group is constrained to have a
+single block, so a layer is collapsed in the abstract structure.
+The fact that an alt-block was created with @litchar{|} is tagged in the
+abstract structure, much in the same way that specific @opener_closer
+pairs @litchar{()}, @litchar{[]}, and @litchar{{}} tag the terms that
+they create.
+
+Although an @opener_closer pair contains a sequence of groups, that
+content is not a block, since it is not created via @litchar{:} or
+@litchar{|}. Simialrly, a document overall is a sequence of groups but
+not a block.
 
 @section{Grouping by Lines}
 
