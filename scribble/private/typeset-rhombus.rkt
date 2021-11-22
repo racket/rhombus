@@ -4,6 +4,7 @@
          scribble/racket
          syntax/parse
          racket/list
+         shrubbery/property
          (only-in scribble/core
                   element
                   element?
@@ -39,7 +40,7 @@
                                  [_ #f]))
               (define (prefixed? stx)
                 (and check-prefix?
-                     (not (null? (or (syntax-property stx 'raw-prefix) '())))))
+                     (not (null? (or (syntax-raw-prefix-property stx) '())))))
               (define (ends p)
                 (cond
                   [(null? p) 'empty]
@@ -55,9 +56,9 @@
                      [else 'nonspace])]
                   [else 'empty]))
               (define (suffixed? stx)
-                (not (null? (or (eq? 'space (ends (syntax-property stx 'raw-suffix)))
+                (not (null? (or (eq? 'space (ends (syntax-raw-suffix-property stx)))
                                 (syntax-case stx ()
-                                  [(head . _) (eq? 'space (ends (syntax-property #'head 'raw-tail)))]
+                                  [(head . _) (eq? 'space (ends (syntax-raw-tail-property #'head)))]
                                   [_ #f])
                                 '()))))
               (define add-space?

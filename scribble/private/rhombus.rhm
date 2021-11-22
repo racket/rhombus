@@ -17,6 +17,9 @@ for_meta:
   def | andmap(proc, []): #true
       | andmap(proc, [a, as, ...]): proc(a) && andmap(proc, as)
 
+  def | map2(proc, [], []): []
+      | map2(proc, [a, as, ...], [b, bs, ...]): cons(proc(a, b), map2(proc, as, bs))
+
   def head_context(stxs):
     match stxs
     | '($head $_ ......):
@@ -35,11 +38,17 @@ for_meta:
     | '(literal_syntax $_): #true
     | ~else: #false
 
-  def nested(ess, builder, stxs):
-    val new_ess: map(fun(es): escape('($es ...)), ess)
-    if andmap(is_literal, new_ess)
+  def build_relocate_group(ts, g):
+    if is_literal(ts)
+    | ts
+    | '(as_seq(relocate_group($ts, literal_syntax_term($(relocate_syntax('#false, g))))))
+
+  def nested(gs, builder, stxs):
+    val tss: map(fun(g): escape('($g)), gs)
+    if andmap(is_literal, tss)
     | literal(stxs)
-    | '($builder([$new_ess, ...], literal_syntax_term($(head_context(stxs)))))
+    | val new_gs: map2(build_relocate_group, tss, gs)
+      '($builder([$new_gs, ...], literal_syntax_term($(head_context(stxs)))))
 
   def escape(stxs):
     match stxs
@@ -53,14 +62,14 @@ for_meta:
         | literal(stxs)
         | '(sequence_append_syntax($(escape('($head))), $new_tail,
                                    literal_syntax_term($(head_context(stxs)))))
-    | '(($ess ..., ...)):
-        nested(ess, 'parens_syntax, stxs)
-    | '([$ess ..., ...]):
-        nested(ess, 'brackets_syntax, stxs)
-    | '({$ess ..., ...}):
-        nested(ess, 'braces_syntax, stxs)
-    | '(: $ess ...; ...):
-        nested(ess, 'block_syntax, stxs)
+    | '(($gs, ...)):
+        nested(gs, 'parens_syntax, stxs)
+    | '([$gs, ...]):
+        nested(gs, 'brackets_syntax, stxs)
+    | '({$gs, ...}):
+        nested(gs, 'braces_syntax, stxs)
+    | '(: $gs; ...):
+        nested(gs, 'block_syntax, stxs)
     | ~else: literal(stxs)
 
 fun as_seq(v): '($v)
@@ -77,21 +86,26 @@ fun sequence_append_syntax(d1, d2, context):
       | '($e2 ......):
           relocate_syntax('($e1 ... $e2 ......), context)
       
-fun parens_syntax(gs, context):
-  match gs
-  | ['($g ...), ...]: as_seq(relocate_syntax('($g ..., ...), context))
+fun parens_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('($t, ...), context))
 
-fun brackets_syntax(gs, context):
-  match gs
-  | ['($g ...), ...]: as_seq(relocate_syntax('[$g ..., ...], context))
+fun brackets_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('[$t, ...], context))
 
-fun braces_syntax(gs, context):
-  match gs
-  | ['($g ...), ...]: as_seq(relocate_syntax('{$g ..., ...}, context))
+fun braces_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('{$t, ...}, context))
 
-fun block_syntax(gs, context):
-  match gs
-  | ['($g ...), ...]: as_seq(relocate_syntax(syntax_term(: $g ...; ...), context))
+fun block_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax(syntax_term(: $t; ...), context))
+
+import: racket/base
+fun relocate_group(ts, context):
+  match ts
+  | '($g): relocate_syntax(g, context)
 
 // ----------------------------------------
 

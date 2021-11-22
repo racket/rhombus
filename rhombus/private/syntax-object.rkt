@@ -3,6 +3,7 @@
                      syntax/parse)
          syntax/parse
          racket/syntax-srcloc
+         shrubbery/property
          "expression.rkt")
 
 (provide literal_syntax
@@ -58,27 +59,27 @@
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))
   (let loop ([ctx-stxes (cdr ctx-stxes)]
              [loc (syntax-srcloc (car ctx-stxes))]
-             [pre (or (syntax-property (car ctx-stxes) 'raw-prefix) null)]
-             [raw (or (syntax-property (car ctx-stxes) 'raw) null)]
-             [suffix (combine-raw (or (syntax-property (car ctx-stxes) 'raw-suffix) null)
-                                  ;; treating tail like suffix on te grounds that
+             [pre (or (syntax-raw-prefix-property (car ctx-stxes)) null)]
+             [raw (or (syntax-raw-property (car ctx-stxes)) null)]
+             [suffix (combine-raw (or (syntax-raw-suffix-property (car ctx-stxes)) null)
+                                  ;; treating tail like suffix on the grounds that
                                   ;; we do not expect `stx` to be a head like `parens`
-                                  (or (syntax-property (car ctx-stxes) 'raw-tail) null))])
+                                  (or (syntax-raw-tail-property (car ctx-stxes)) null))])
     (cond
       [(null? ctx-stxes)
        (let* ([ctx (datum->syntax #f #f loc)]
               [ctx (if (null? pre)
                        ctx
-                       (syntax-property ctx 'raw-prefix pre))]
-              [ctx (syntax-property ctx 'raw raw)]
+                       (syntax-raw-prefix-property ctx pre))]
+              [ctx (syntax-raw-property ctx raw)]
               [ctx (if (null? suffix)
                        ctx
-                       (syntax-property ctx 'raw-suffix suffix))])
+                       (syntax-raw-suffix-property ctx suffix))])
          (relocate_syntax stx ctx))]
       [else
        (define empty-raw? (and (null? raw) (null? suffix)))
        (define ctx (car ctx-stxes))
-       (define new-raw (or (syntax-property ctx 'raw) null))
+       (define new-raw (or (syntax-raw-property ctx) null))
        (define new-loc (syntax-srcloc ctx))
        (loop (cdr ctx-stxes)
              (if (and loc
@@ -98,13 +99,13 @@
                              (srcloc-span loc)))
                  loc)
              (if empty-raw?
-                 (combine-raw pre (or (syntax-property ctx 'raw-prefix) null))
+                 (combine-raw pre (or (syntax-raw-prefix-property ctx) null))
                  pre)
              (if empty-raw?
-                 (or (syntax-property ctx 'raw) null)
+                 (or (syntax-raw-property ctx) null)
                  (combine-raw (combine-raw (combine-raw raw suffix)
-                                           (or (syntax-property ctx 'raw-prefix) null))
-                              (or (syntax-property ctx 'raw) null)))
-             (combine-raw (or (syntax-property ctx 'raw-suffix) null)
-                          (or (syntax-property ctx 'raw-tail) null)))])))
+                                           (or (syntax-raw-prefix-property ctx) null))
+                              (or (syntax-raw-property ctx) null)))
+             (combine-raw (or (syntax-raw-suffix-property ctx) null)
+                          (or (syntax-raw-tail-property ctx) null)))])))
 
