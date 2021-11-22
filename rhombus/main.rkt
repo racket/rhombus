@@ -36,7 +36,8 @@
         "private/keyword.rkt"
         "private/symbol.rkt"
         "private/values.rkt"
-        "private/syntax-object.rkt")
+        "private/syntax-object.rkt"
+        "private/syntax-class.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

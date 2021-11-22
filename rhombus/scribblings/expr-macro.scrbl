@@ -21,8 +21,8 @@ wraps as a zero-argument function
     import:
       rhombus/macro: no_prefix
 
-    expr.rule '(thunk: $body ...):
-      '(fun (): $body ...)
+    expr.rule '(thunk: $body):
+      '(fun (): $body)
 
     thunk: 1 + "oops"  // prints a function
     (thunk: 1 + 3)()   // prints 4
@@ -48,8 +48,8 @@ The @rhombus[expr.rule] form must be imported from
 @(rhombusblock:
     // no import needed
 
-    def '(thunk: $body ...):
-      '(fun (): $body ...)
+    def '(thunk: $body):
+      '(fun (): $body)
 
     (thunk: 1 + 3)()   // prints 4
   )

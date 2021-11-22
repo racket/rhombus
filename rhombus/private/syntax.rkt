@@ -18,7 +18,7 @@
 (provide (for-syntax make-operator-definition-transformer
                      make-identifier-syntax-definition-transformer
                      make-identifier-syntax-definition-sequence-transformer
-
+<
                      parse-operator-definition
                      parse-operator-definitions
                      :operator-syntax-quote
@@ -165,7 +165,7 @@
       (define-values (pattern idrs can-be-empty?)
         (if (eq? kind 'rule)
             (convert-pattern #`(parens (group #,@tail-pattern (op $) tail (op ......))))
-            (convert-pattern #`(parens (group . #,tail-pattern)))))
+            (convert-pattern #`(parens (group . #,tail-pattern)) #:as-tail? #t)))
       (with-syntax ([((id id-ref) ...) idrs]
                     [(left-id ...) left-ids])
         (define body
@@ -385,7 +385,7 @@
     #:datum-literals (group op)
     #:literals ($ rhombus...)
     [(group id:identifier . tail-pattern)
-     (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . tail-pattern))))
+     (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group . tail-pattern)) #:as-tail? #t))
      (with-syntax ([((p-id id-ref) ...) idrs])
        #`(define-syntax #,(in-space #'id)
            (#,make-transformer-id
@@ -427,7 +427,8 @@
                                             #:tail-ids #'(tail-id)
                                             #:wrap-for-tail
                                             (lambda (body)
-                                              (define-values (pattern idrs can-be-empty?) (convert-pattern #`(parens (group (block . q.gs)))))
+                                              (define-values (pattern idrs can-be-empty?)
+                                                (convert-pattern #`(parens (group (block . q.gs)))))
                                               (with-syntax ([((p-id id-ref) ...) idrs])
                                                 #`(syntax-parse tail-id
                                                     [#,pattern

@@ -74,7 +74,9 @@
                (group #,(pack-tail #`((parens (group b.bind-id) (group unpacked-static-infos)) ...)))
                (group chain-to-matcher)
                (group chain-to-binder)
-               (group (parsed (b.matcher-id b.binder-id b.data))))]))
+               (group (parsed (b.matcher-id b.binder-id b.data))))]
+    ;; accomodate a group syntax object
+    [((~datum group) e) (unpack_info #'e)]))
 
 (define-for-syntax (pack stx)
   #`(parsed
@@ -115,11 +117,14 @@
 
 (define-for-syntax (get_info stx unpacked-static-infos)
   (syntax-parse stx
-    #:datum-literals (parsed)
+    #:datum-literals (parsed group)
     [(parsed b::binding-form)
      (define static-infos (pack-static-infos unpacked-static-infos 'binding.get_info))
      (syntax-parse #`(b.infoer-id #,static-infos b.data)
        [impl::binding-impl #'(parsed impl.info)])]
+    ;; accomodate a group syntax object
+    [(group e)
+     (get_info #'e unpacked-static-infos)]
     [else
      (raise-argument-error 'binding.get_info
                            "binding-form?"

@@ -11,6 +11,8 @@
          "tail.rkt"
          "syntax-list.rkt"
          "empty-group.rkt"
+         "syntax-class.rkt"
+         (submod "syntax-class.rkt" for-quasiquote)
          (only-in "underscore.rkt"
                   [_ rhombus-_])
          ;; because `expr.macro` uses the result of `convert-pattern`
@@ -43,34 +45,44 @@
     (pattern (~seq ((~datum block) ((~datum group) (op $) e))
                    ((~datum block) ((~datum group) (op (~and name ......))))))))
 
-(define-for-syntax (convert-syntax e make-datum make-literal handle-escape deepen-escape handle-tail-escape
+(define-for-syntax (convert-syntax e make-datum make-literal
+                                   handle-escape handle-group-escape deepen-escape handle-tail-escape
                                    handle-maybe-empty-sole-group
-                                   handle-maybe-empty-alts handle-maybe-empty-group)
-  (let convert ([e e] [empty-ok? #f] [depth 0])
+                                   handle-maybe-empty-alts handle-maybe-empty-group
+                                   #:as-tail? [as-tail? #f])
+  (let convert ([e e] [empty-ok? #f] [depth 0] [as-tail? as-tail?])
     (syntax-parse e
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block)))
         (~and g ((~datum group) . _)))
        ;; Special case: for a single group with (), [], {}, or block, if the group
        ;; can be empty, allow a match/construction with zero groups
-       (define-values (p new-idrs can-be-empty?) (convert #'g #t depth))
+       (define-values (p new-idrs can-be-empty?) (convert #'g #t depth as-tail?))
        (if can-be-empty?
            (handle-maybe-empty-sole-group #'tag p new-idrs)
            (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
                    new-idrs 
                    #f))]
+      [((~and tag (~datum group))
+        ((~datum op) (~and (~literal $) $-id)) esc)
+       #:when (and (zero? depth) (not as-tail?))
+       ;; Special case: a group whose content is an escape; the escape
+       ;; defaults to "group" mode instead of "term" mode
+       #:do [(define-values (p new-idrs) (handle-group-escape  #'$-id #'esc e))]
+       #:when p
+       (values p new-idrs #f)]
       [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block) (~datum alts) (~datum group)))
         g ...)
        (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
          (define (simple gs a-depth)
            (syntax-parse gs
              [(g . gs)
-              (define-values (p new-ids nested-can-be-empty?) (convert #'g #f a-depth))
+              (define-values (p new-ids nested-can-be-empty?) (convert #'g #f a-depth #f))
               (loop #'gs new-ids (append (or pend-idrs '()) idrs) (cons p ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
          (define (simple2 gs a-depth)
            (syntax-parse gs
              [(g0 g1 . gs)
-              (define-values (p0 new-ids0 nested-can-be-empty?0) (convert #'g0 #f a-depth))
-              (define-values (p1 new-ids1 nested-can-be-empty?1) (convert #'g1 #f a-depth))
+              (define-values (p0 new-ids0 nested-can-be-empty?0) (convert #'g0 #f a-depth #f))
+              (define-values (p1 new-ids1 nested-can-be-empty?1) (convert #'g1 #f a-depth #f))
               (loop #'gs (append new-ids0 new-ids1) (append (or pend-idrs '()) idrs) (list* p1 p0 ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
          (syntax-parse gs
            [()
@@ -124,8 +136,35 @@
       [_
        (values e null #f)])))
 
-(define-for-syntax (convert-pattern e)
+(define-for-syntax (convert-pattern e #:as-tail? [as-tail? #f])
+  (define (handle-escape $-id e in-e pack* context-syntax-class group?)
+    (syntax-parse e
+      #:datum-literals (parens op group)
+      #:literals (rhombus-_ $:)
+      [rhombus-_ (values #'_ null)]
+      [_:identifier
+       (values e (list #`[#,e (#,pack* (syntax #,e) 0)]))]
+      [(parens (group id:identifier (op $:) stx-class:identifier))
+       #:when group?
+       #:when (free-identifier=? (in-syntax-class-space #'stx-class)
+                                 (in-syntax-class-space #'Term))
+       (values #f #f)]
+      [(parens (group id:identifier (op $:) stx-class:identifier))
+       (if (free-identifier=? (in-syntax-class-space #'stx-class)
+                              (in-syntax-class-space context-syntax-class))
+           (values #'id (list #`[id (#,pack* (syntax id) 0)]))
+           (raise-syntax-error #f
+                               "unknown syntax class or incompatible with this context"
+                               in-e
+                               #'stx-class))]
+      [else
+       (raise-syntax-error #f
+                           (format "expected an identifier or `(id $: Class)` after ~a"
+                                   (syntax-e $-id))
+                           in-e
+                           e)]))
   (convert-syntax e
+                  #:as-tail? as-tail?
                   ;; make-datum
                   (lambda (d)
                     #`(~datum #,d))
@@ -134,20 +173,15 @@
                     #`(~literal #,d))
                   ;; handle-escape:
                   (lambda ($-id e in-e)
-                    (if (identifier? e)
-                        (if (free-identifier=? e #'rhombus-_)
-                            (values #'_ null)
-                            (values e (list #`[#,e (pack-list* (syntax #,e) 0)])))
-                        (raise-syntax-error #f
-                                            (format "expected an identifier after ~a"
-                                                    (syntax-e $-id))
-                                            in-e
-                                            e)))
+                    (handle-escape $-id e in-e #'pack-list* #'Term #f))
+                  ;; handle-group-escape:
+                  (lambda ($-id e in-e)
+                    (handle-escape $-id e in-e #'pack-group* #'Group #t))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
-                      [(id (_ (_ stx) depth))
-                       #`(id (pack-list* (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
+                      [(id (pack (_ stx) depth))
+                       #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
                     (if (identifier? e)
@@ -198,11 +232,18 @@
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-list* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)])))
+                    ;; handle-group-escape:
+                    (lambda ($-id e in-e)
+                      (check-escape e)
+                      (define id (car (generate-temporaries (list e))))
+                      (values id (list #`[#,id (unpack-group* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)])))
                     ;; deepen-escape
                     (lambda (idr)
                       (syntax-parse idr
                         [(id-pat ((~literal unpack-list*) q e depth))
                          #`[(id-pat (... ...)) (unpack-list* q e #,(add1 (syntax-e #'depth)))]]
+                        [(id-pat ((~literal unpack-group*) q e depth))
+                         #`[(id-pat (... ...)) (unpack-group* q e #,(add1 (syntax-e #'depth)))]]
                         [(id-pat (converter depth (qs t) . args))
                          #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
                     ;; handle-tail-escape:
@@ -342,7 +383,7 @@
      #'(IF (syntax? arg-id)
            (begin
              (define-values (match? tmp-id ...)
-               (syntax-parse arg-id
+               (syntax-parse (unpack-single-term-group arg-id)
                  [pattern (values #t id-ref ...)]
                  [_ (values #f 'id ...)]))
              (IF match?

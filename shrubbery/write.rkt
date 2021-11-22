@@ -9,6 +9,16 @@
 (define rx:identifier #px"^(?:\\p{L}|_)(?:\\p{L}|\\p{N}|_)*$")
 
 (define (write-shrubbery v [op (current-output-port)])
+  (cond
+    [(and (pair? v) (eq? 'group (car v)))
+     ;; printing a raw group
+     (display "«" op)
+     (write-shrubbery-term v op)
+     (display "»" op)]
+    [else
+     (write-shrubbery-term v op)]))
+
+(define (write-shrubbery-term v op)
   (let loop ([v v] [sole? #t])
     (cond
       [(list? v)

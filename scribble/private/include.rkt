@@ -6,6 +6,6 @@ import:
 export:
   include_section
 
-defn.macro '(include_section($mod)):  
+defn.macro '(include_section($(mod $: Term))):
   '(:
       $(parsed(['#{include-section}, mod])))

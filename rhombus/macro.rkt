@@ -14,3 +14,6 @@
         "private/dot-syntax.rkt"
         "private/syntax-error.rkt"
         "private/parsed.rkt")
+
+(require (only-in "private/import.rkt" for_meta))
+(provide (for-space rhombus/import for_meta))
