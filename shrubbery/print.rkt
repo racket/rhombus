@@ -67,6 +67,11 @@
                        #:keep-suffix? [keep-suffix? #t]
                        #:register-stx-range [register-stx-range void]
                        #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
+  (define (raw-cons a b) (if (and a (not (null? a)))
+                             (if (and b (not (null? b)))
+                                 (cons a b)
+                                 a)
+                             b))
   (let loop ([g g] [tail null] [use-prefix? #f] [keep-suffix? keep-suffix?])
     (cond
       [(null? g)
@@ -77,55 +82,54 @@
        (define a-stx (car g))
        (define post (and (syntax? a-stx)
                          (syntax-raw-tail-property a-stx)))
+       (define post-suffix (and (syntax? a-stx)
+                                keep-suffix?
+                                (syntax-raw-tail-suffix-property a-stx)))
        (define a (loop a-stx null use-prefix? (or keep-suffix?
                                                   (not (null? tail))
                                                   (not (null? (cdr g))))))
        (define d (loop (cdr g)
-                       (if post
-                           (if (null? tail)
-                               post
-                               (cons tail post))
-                           tail)
+                       (raw-cons tail (raw-cons post post-suffix))
                        #t
                        keep-suffix?))
        (if (null? a) d (cons a d))]
       [(syntax? g)
-       (define start-pos (and register-stx-range
-                              output
-                              (file-position output)))
        (define pre (and use-prefix?
                         (syntax-raw-prefix-property g)))
        (when output
          (to-output pre output max-length))
-       (define-values (raw+suffix d)
+       (define start-pos (and register-stx-range
+                              output
+                              (file-position output)))
+       (define r
          (cond
            [(render-stx-hook g output)
-            => (lambda (raw)
-                 (values raw '()))]
+            => (lambda (raw) raw)]
            [else
-            (define r (syntax-raw-property g))
-            (define raw (let ([pre (and (not output) pre)])
-                          (if (and pre r)
-                              (cons pre r)
-                              (or pre r null))))
-            (define suffix (and (or keep-suffix?
-                                    (not (null? tail)))
-                                (or (syntax-raw-suffix-property g)
-                                    null)))
-            (define raw+suffix
-              (if (null? suffix)
-                  raw
-                  (if (null? raw)
-                      suffix
-                      (cons raw suffix))))
-            (when output
-              (to-output raw+suffix output max-length))
-            (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
-            (values raw+suffix d)]))
+            (syntax-raw-property g)]))
+       (when output
+         (to-output r output max-length))
+       (when start-pos
+         (register-stx-range g start-pos (file-position output)))
+       (define raw (and (not output)
+                        (if (and pre r)
+                            (cons pre r)
+                            (or pre r null))))
+       (define suffix (and (or keep-suffix?
+                               (not (null? tail)))
+                           (or (syntax-raw-suffix-property g)
+                               null)))
+       (when output
+         (to-output suffix output max-length))
+       (define raw+suffix
+         (if (or output (null? suffix))
+             raw
+             (if (null? raw)
+                 suffix
+                 (cons raw suffix))))
+       (define d (loop (syntax-e g) tail use-prefix? keep-suffix?))
        (cond
-         [output
-          (when start-pos
-            (register-stx-range g start-pos (file-position output)))]
+         [output (void)]
          [else
           (if (null? raw+suffix) d (cons raw+suffix d))])]
       [else

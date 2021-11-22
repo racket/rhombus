@@ -17,7 +17,10 @@
          expected4
 
          input5
-         expected5)
+         expected5
+
+         input6
+         expected6)
 
 ;; input1 is split into parts to accomodate O(n^2) tests
 (define input1s
@@ -1923,3 +1926,34 @@ INPUT
     (group 1 (op -) (op +) 2)
     (group 1 (op +) 2)
     (group 1 (op ++) 2)))
+
+(define input6
+#<<INPUT
+
+1 // comment on same line
+
+2
+  /* comment weidly indented */
+
+begin:
+ 1+2
+ // comment sticks with block
+ // and this one, too
+
+ // and even this one
+
+(begin:
+   x
+   // block
+ // inner comment
+ ) // after comment
+
+INPUT
+)
+
+(define expected6
+  '(top
+    (group 1)
+    (group 2)
+    (group begin (block (group 1 (op +) 2)))
+    (group (parens (group begin (block (group x)))))))

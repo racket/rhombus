@@ -53,18 +53,25 @@
     [_
      (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx)]))
 
-(define (relocate_span_syntax stx ctx-stxes-in)
+(define (relocate_span_syntax stx ctx-stxes-in
+                              #:keep_raw_interior [keep-raw-interior? #f])
   (unless (syntax? stx) (raise-argument-error 'relocate_span_syntax "syntax?" stx))
   (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))
   (let loop ([ctx-stxes (cdr ctx-stxes)]
              [loc (syntax-srcloc (car ctx-stxes))]
              [pre (or (syntax-raw-prefix-property (car ctx-stxes)) null)]
-             [raw (or (syntax-raw-property (car ctx-stxes)) null)]
-             [suffix (combine-raw (or (syntax-raw-suffix-property (car ctx-stxes)) null)
-                                  ;; treating tail like suffix on the grounds that
-                                  ;; we do not expect `stx` to be a head like `parens`
-                                  (or (syntax-raw-tail-property (car ctx-stxes)) null))])
+             [raw (if keep-raw-interior?
+                      (or (syntax-raw-property (car ctx-stxes)) null)
+                      null)]
+             [suffix (combine-raw
+                      (if keep-raw-interior?
+                          (or (syntax-raw-tail-property (car ctx-stxes)) null)
+                          null)
+                      (if (or keep-raw-interior?
+                              (null? (cdr ctx-stxes)))
+                          (or (syntax-raw-suffix-property (car ctx-stxes)) null)
+                          null))])
     (cond
       [(null? ctx-stxes)
        (let* ([ctx (datum->syntax #f #f loc)]
@@ -76,6 +83,9 @@
                        ctx
                        (syntax-raw-suffix-property ctx suffix))])
          (relocate_syntax stx ctx))]
+      [(and (pair? (cdr ctx-stxes))
+            (not keep-raw-interior?))
+       (loop (cdr ctx-stxes) pre raw suffix)]
       [else
        (define empty-raw? (and (null? raw) (null? suffix)))
        (define ctx (car ctx-stxes))
@@ -106,6 +116,10 @@
                  (combine-raw (combine-raw (combine-raw raw suffix)
                                            (or (syntax-raw-prefix-property ctx) null))
                               (or (syntax-raw-property ctx) null)))
-             (combine-raw (or (syntax-raw-suffix-property ctx) null)
-                          (or (syntax-raw-tail-property ctx) null)))])))
+             (combine-raw (if keep-raw-interior?
+                              (or (syntax-raw-tail-property ctx) null)
+                              null)
+                          (combine-raw
+                           (or (syntax-raw-tail-suffix-property ctx) null)
+                           (or (syntax-raw-suffix-property ctx) null))))])))
 
