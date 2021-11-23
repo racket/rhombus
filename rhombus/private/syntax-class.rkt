@@ -3,6 +3,7 @@
 
 (provide $:
          Term
+         Id
          Group)
 
 (module+ for-quasiquote
@@ -13,4 +14,5 @@
 
 (define-syntax $: "only in patterns")
 (define-syntax Term "predefined syntax class")
+(define-syntax Id "predefined syntax class")
 (define-syntax Group "predefined syntax class")

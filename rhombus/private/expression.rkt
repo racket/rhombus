@@ -3,7 +3,8 @@
                      syntax/parse
                      enforest/operator
                      enforest/property
-                     enforest/proc-name))
+                     enforest/proc-name
+                     "introducer.rkt"))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -35,7 +36,7 @@
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
-  (define in-expression-space (make-interned-syntax-introducer 'rhombus/expression)))
+  (define in-expression-space (make-interned-syntax-introducer/add 'rhombus/expression)))
 
 (define-syntax (define-expression-syntax stx)
   (syntax-parse stx

@@ -1,0 +1,34 @@
+#lang rhombus
+
+import:
+  rhombus/macro:
+    no_prefix
+  scribble/manual:
+    expose: defmodule
+  "rhombus.rhm":
+    no_prefix
+  racket/base:
+    for_meta
+
+export:
+  docmodule
+
+for_meta:
+  fun translate_mod(mod):
+    match mod
+    | '($(a $: Id)): a
+    | '($a / $b ...):
+        base.#{string->symbol}(unwrap_syntax(a)
+                                 & "/"
+                                 & unwrap_syntax(translate_mod('($b ...))))
+    | '(lib($str)):
+        [symbol(lib), str]
+
+expr.macro
+| '(docmodule ($mod ...)):
+    values(parsed(['defmodule,
+                   keyword(#{#:require-form}),
+                   unparsed('(fun (mod): @rhombus[import: $$(mod)])),
+                   translate_mod('($mod ...))]),
+           '())
+

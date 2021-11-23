@@ -5,7 +5,8 @@
                      enforest/transformer
                      enforest/property
                      enforest/proc-name
-                     enforest/syntax-local)
+                     enforest/syntax-local
+                     "introducer.rkt")
          "static-info.rkt")
 
 (begin-for-syntax
@@ -102,7 +103,7 @@
       [_::binding-info form]
       [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
 
-  (define in-binding-space (make-interned-syntax-introducer 'rhombus/binding))
+  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/binding))
 
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier

@@ -121,8 +121,8 @@
            [(((~datum op) (~and (~literal $) $-id)) esc . n-gs)
             (cond
               [(zero? depth)
-               (define-values (id new-idrs) (handle-escape #'$-id #'esc e))
-               (loop #'n-gs new-idrs (append (or pend-idrs '()) idrs) (cons id ps) (and can-be-empty? (not pend-idrs)) #f depth)]
+               (define-values (pat new-idrs) (handle-escape #'$-id #'esc e))
+               (loop #'n-gs new-idrs (append (or pend-idrs '()) idrs) (cons pat ps) (and can-be-empty? (not pend-idrs)) #f depth)]
               [else
                (simple2 gs (sub1 depth))])]
            [(((~datum op) (~literal |'|)) unesc . _)
@@ -146,17 +146,24 @@
        (values e (list #`[#,e (#,pack* (syntax #,e) 0)]))]
       [(parens (group id:identifier (op $:) stx-class:identifier))
        #:when group?
-       #:when (free-identifier=? (in-syntax-class-space #'stx-class)
-                                 (in-syntax-class-space #'Term))
+       #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
+                                     (in-syntax-class-space #'Term))
+                  (free-identifier=? (in-syntax-class-space #'stx-class)
+                                     (in-syntax-class-space #'Id)))
        (values #f #f)]
       [(parens (group id:identifier (op $:) stx-class:identifier))
-       (if (free-identifier=? (in-syntax-class-space #'stx-class)
-                              (in-syntax-class-space context-syntax-class))
-           (values #'id (list #`[id (#,pack* (syntax id) 0)]))
-           (raise-syntax-error #f
-                               "unknown syntax class or incompatible with this context"
-                               in-e
-                               #'stx-class))]
+       (cond
+         [(free-identifier=? (in-syntax-class-space #'stx-class)
+                             (in-syntax-class-space context-syntax-class))
+          (values #'id (list #`[id (#,pack* (syntax id) 0)]))]
+         [(free-identifier=? (in-syntax-class-space #'stx-class)
+                             (in-syntax-class-space #'Id))
+          (values #'(~var id identifier) (list #`[id (#,pack* (syntax id) 0)]))]
+         [else
+          (raise-syntax-error #f
+                              "unknown syntax class or incompatible with this context"
+                              in-e
+                              #'stx-class)])]
       [else
        (raise-syntax-error #f
                            (format "expected an identifier or `(id $: Class)` after ~a"

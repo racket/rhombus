@@ -11,7 +11,8 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "tail.rkt"
-                     "misuse.rkt")
+                     "misuse.rkt"
+                     "introducer.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -62,7 +63,7 @@
 
   (property annotation (predicate-stx static-infos))
 
-  (define in-annotation-space (make-interned-syntax-introducer 'rhombus/annotation))
+  (define in-annotation-space (make-interned-syntax-introducer/add 'rhombus/annotation))
 
   (define (raise-not-a-annotation id)
     (raise-syntax-error #f

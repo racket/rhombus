@@ -130,8 +130,7 @@
                                                                            #t]
                                                                           [else #f])))
                                             (syntax-case block-stx ()
-                                              [(b . _)
-                                               (syntax-column #'b)])
+                                              [(b . _) (syntax-column #'b)])
                                             stx-ranges))
   (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])
                            (hash-set ht (car v) (cons k (hash-ref ht (car v) '())))))
@@ -265,8 +264,9 @@
       [(regexp-match? #rx"^:" str)
        (shift-stxes! 0 1)
        (values (substring str 1) (+ (or col 0) 1))]
-      [else (values str 0)]))
-  (shift-stxes! 0 (- prefix-len))
+      [else
+       (values str (or col 0))]))
+  (shift-stxes! -1 (- prefix-len))
   (define full-str
     (string-append (make-string prefix-len #\space) content-str))
   (regexp-replace* #px"\\s*\n\\s*$"

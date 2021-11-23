@@ -9,6 +9,7 @@
 (provide literal_syntax
          literal_syntax_term
          to_syntax
+         unwrap_syntax
          relocate_syntax
          relocate_span_syntax)
 
@@ -40,6 +41,9 @@
 
 (define (to_syntax v)
   (datum->syntax #f v))
+
+(define (unwrap_syntax v)
+  (syntax-e v))
 
 (define (relocate_syntax stx ctx-stx-in)
   (unless (syntax? stx) (raise-argument-error 'relocate_syntax "syntax?" stx))

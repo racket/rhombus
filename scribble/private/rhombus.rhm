@@ -2,6 +2,8 @@
 import:
   rhombus/macro: no_prefix
   "typeset-rhombus.rkt": no_prefix
+  "typeset_meta.rhm":
+    for_meta
   scribble/base:
     prefix scribble
     expose: elem
@@ -70,6 +72,13 @@ for_meta:
         nested(gs, 'braces_syntax, stxs)
     | '(: $gs; ...):
         nested(gs, 'block_syntax, stxs)
+    | '($(id $: Id)):
+        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        match mv
+        | typeset_meta.Transformer(proc):
+            '(relocate_expansion($(proc(id)),
+                                 literal_syntax_term($(head_context(stxs)))))
+        | ~else: literal(stxs)
     | ~else: literal(stxs)
 
 fun as_seq(v): '($v)
@@ -102,10 +111,12 @@ fun block_syntax(ts, context):
   match ts
   | ['($t), ...]: as_seq(relocate_syntax(syntax_term(: $t; ...), context))
 
-import: racket/base
 fun relocate_group(ts, context):
   match ts
   | '($g): relocate_syntax(g, context)
+
+fun relocate_expansion(e, context):
+  as_seq(relocate_syntax(to_syntax(e), context))
 
 // ----------------------------------------
 

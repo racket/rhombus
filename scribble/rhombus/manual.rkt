@@ -2,7 +2,8 @@
 (require (except-in scribble/rhombus
                     if)
          (prefix-in manual: scribble/manual)
-         "../private/doc.rhm")
+         "../private/doc.rhm"
+         "../private/docmodule.rhm")
 
 (provide (all-from-out scribble/rhombus)
          litchar
@@ -10,7 +11,8 @@
                      [manual:tech tech]
                      [manual:math math]
                      [manual:filepath filepath])
-         doc)
+         doc
+         docmodule)
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual
