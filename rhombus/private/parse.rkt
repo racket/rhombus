@@ -117,6 +117,8 @@
     (syntax-local-introduce
      (syntax-parse (syntax-local-introduce stx)
        [(_ top) #`(begin)]
+       [(_ top ((~datum group) ((~datum parsed) decl)) . forms)
+        #`(begin decl (top . forms))]
        ;; note that we may perform hierarchical name resolution
        ;; up to four times, since resolution in `:declaration`,
        ;; `:definition`, etc., doesn't carry over

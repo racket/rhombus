@@ -36,7 +36,8 @@
                     only
                     except
                     expose
-                    for_meta))
+                    for_meta
+                    for_label))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
@@ -291,11 +292,17 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       #:datum-literals (block group)
        [(form phase)
         (define ph (syntax-e #'phase))
-        (unless (or (not ph) (exact-integer? ph))
+        (unless (exact-integer? ph)
           (raise-syntax-error #f "not a valid phase" stx #'p<hase))
         (datum->syntax req (list (syntax/loc #'form for-meta) #'phase req) req)]
        [(form) 
         (datum->syntax req (list (syntax/loc #'form for-meta) #'1 req) req)]))))
+
+(define-import-syntax for_label
+  (import-modifier
+   (lambda (req stx)
+     (syntax-parse stx
+       [(form) 
+        (datum->syntax req (list (syntax/loc #'form for-meta) #f req) req)]))))

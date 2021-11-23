@@ -123,6 +123,10 @@
            (define new-shift (and shift (syntax-e #'phase)
                                   (+ shift (syntax-e #'phase))))
            (values phase+spaces core-p p new-shift renames revnames only-mentioned?)]
+          [((~literal for-label) mp)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+           (define new-shift #f)
+           (values phase+spaces core-p p new-shift renames revnames only-mentioned?)]
           [((~literal rhombus-prefix-in) mp name) (extract #'mp)]
           [_ (raise-syntax-error 'import
                                  "don't know how to lower"

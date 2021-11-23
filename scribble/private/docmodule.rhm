@@ -9,6 +9,10 @@ import:
     no_prefix
   racket/base:
     for_meta
+  rhombus:
+    for_label
+    expose: import
+   
 
 export:
   docmodule
@@ -24,11 +28,8 @@ for_meta:
     | '(lib($str)):
         [symbol(lib), str]
 
-expr.macro
-| '(docmodule ($mod ...)):
-    values(parsed(['defmodule,
-                   keyword(#{#:require-form}),
-                   unparsed('(fun (mod): @rhombus[import: $$(mod)])),
-                   translate_mod('($mod ...))]),
-           '())
-
+decl.macro '(docmodule ($mod ...)):
+  '(: $(parsed(['defmodule,
+                keyword(#{#:require-form}),
+                unparsed('(fun (mod): @rhombus[import: $$(mod)])),
+                translate_mod('($mod ...))])))

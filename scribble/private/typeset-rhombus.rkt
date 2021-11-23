@@ -8,10 +8,12 @@
          (only-in scribble/core
                   element
                   element?
+                  content?
                   paragraph
                   table
                   style
-                  plain))
+                  plain)
+         (submod scribble/racket id-element))
 
 (provide typeset-rhombus
          typeset-rhombusblock)
@@ -71,7 +73,7 @@
                             (or (suffixed? elem) (and alt-elem (suffixed? alt-elem)))
                             #t))])))
        (cond
-         [(element? (syntax-e stx)) (syntax-e stx)]
+         [(element*? (syntax-e stx)) (syntax-e stx)]
          [else
           (syntax-parse stx
             #:datum-literals (group parens brackets braces block alts op)
@@ -95,6 +97,9 @@
             [(braces elem ...) (seq "{" #'(elem ...) "}")]
             [(op . _)
              (element tt-style (shrubbery-syntax->string stx))]
+            [id:identifier
+             #:when (identifier-binding #'id #f)
+             (make-id-element stx (shrubbery-syntax->string stx) #f)]
             [_
              (define d (syntax->datum stx))
              (element (cond
@@ -125,7 +130,7 @@
                                                                       #:render-stx-hook
                                                                       (lambda (stx output)
                                                                         (cond
-                                                                          [(element? (syntax-e stx))
+                                                                          [(element*? (syntax-e stx))
                                                                            (display "ELEM" output)
                                                                            #t]
                                                                           [else #f])))
@@ -285,5 +290,10 @@
     (define p (hash-ref stx-ranges k))
     (and (= (cdr p) end)
          (cond
-           [(element? (syntax-e k)) (syntax-e k)]
+           [(element*? (syntax-e k)) (syntax-e k)]
            [else #f]))))
+
+(define (element*? v)
+  (and (not (string? v))
+       (not (symbol? v))
+       (content? v)))
