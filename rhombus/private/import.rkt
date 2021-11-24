@@ -299,7 +299,7 @@
        [(form phase)
         (define ph (syntax-e #'phase))
         (unless (exact-integer? ph)
-          (raise-syntax-error #f "not a valid phase" stx #'p<hase))
+          (raise-syntax-error #f "not a valid phase" stx #'phase))
         (datum->syntax req (list (syntax/loc #'form for-meta) #'phase req) req)]
        [(form) 
         (datum->syntax req (list (syntax/loc #'form for-meta) #'1 req) req)]))))

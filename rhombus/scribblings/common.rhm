@@ -1,0 +1,13 @@
+#lang rhombus
+
+import:
+  rhombus/macro:
+    no_prefix
+  rhombus:
+    no_prefix
+    for_label
+
+export:
+  all_from(rhombus/macro)
+  all_from(rhombus):
+    for_label
