@@ -4,6 +4,7 @@
          (prefix-in manual: scribble/manual)
          "../private/doc.rhm"
          "../private/docmodule.rhm"
+         "../private/example.rhm"
          (only-in "../private/typeset-doc.rkt"
                   grammar))
 
@@ -15,7 +16,8 @@
                      [manual:filepath filepath])
          doc
          docmodule
-         grammar)
+         grammar
+         examples)
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual
@@ -27,4 +29,3 @@
 
 (define (litchar ls)
   (manual:litchar (if (string? ls) ls (car ls))))
-

@@ -8,3 +8,6 @@
 
 @include_section["ref-def.scrbl"]
 @include_section["ref-import.scrbl"]
+
+@include_section["ref-annotation.scrbl"]
+@include_section["ref-list.scrbl"]

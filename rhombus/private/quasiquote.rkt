@@ -12,6 +12,7 @@
          "syntax-list.rkt"
          "empty-group.rkt"
          "syntax-class.rkt"
+         "operator-parse.rkt"
          (submod "syntax-class.rkt" for-quasiquote)
          (only-in "underscore.rkt"
                   [_ rhombus-_])
@@ -149,7 +150,9 @@
        #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
                                      (in-syntax-class-space #'Term))
                   (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Id)))
+                                     (in-syntax-class-space #'Id))
+                  (free-identifier=? (in-syntax-class-space #'stx-class)
+                                     (in-syntax-class-space #'Op)))
        (values #f #f)]
       [(parens (group id:identifier (op $:) stx-class:identifier))
        (cond
@@ -159,6 +162,9 @@
          [(free-identifier=? (in-syntax-class-space #'stx-class)
                              (in-syntax-class-space #'Id))
           (values #'(~var id identifier) (list #`[id (#,pack* (syntax id) 0)]))]
+         [(free-identifier=? (in-syntax-class-space #'stx-class)
+                             (in-syntax-class-space #'Op))
+          (values #'(~var id :operator) (list #`[id (#,pack* (syntax id) 0)]))]
          [else
           (raise-syntax-error #f
                               "unknown syntax class or incompatible with this context"

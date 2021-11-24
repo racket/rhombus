@@ -12,7 +12,8 @@
                   paragraph
                   table
                   style
-                  plain)
+                  plain
+                  nested-flow)
          (submod scribble/racket id-element))
 
 (provide typeset-rhombus
@@ -100,8 +101,11 @@
             [(parens elem ...) (seq "(" #'(elem ...) ")")]
             [(brackets elem ...) (seq "[" #'(elem ...) "]")]
             [(braces elem ...) (seq "{" #'(elem ...) "}")]
-            [(op . _)
-             (element tt-style (shrubbery-syntax->string stx))]
+            [(op id)
+             (define str (shrubbery-syntax->string stx))
+             (if (identifier-binding (add-space #'id) #f)
+                 (element tt-style (make-id-element (add-space #'id) str #f))
+                 (element tt-style str))]
             [id:identifier
              #:when (identifier-binding (add-space stx) #f)
              (element tt-style (make-id-element (add-space stx) (shrubbery-syntax->string stx) #f))]
@@ -114,7 +118,9 @@
                (shrubbery-syntax->string stx))])]))]))
 
 (define (typeset-rhombusblock stx
-                              #:indent [indent-amt 2])
+                              #:inset [inset? #t]
+                              #:indent [indent-amt 0]
+                              #:prompt [prompt ""])
   ;; Go back to a string, then parse again using the
   ;; colorer. Why didn't we use a string to start with?
   ;; Because having `rhm` work on implicitly quoted syntax
@@ -172,6 +178,11 @@
                   [(lookup-stx-typeset start end position-stxes stx-ranges)
                    => (lambda (e)
                         e)]
+                  [(and (or (eq? type 'symbol)
+                            (eq? type 'operator))
+                        (lookup-stx-identifier start end position-stxes stx-ranges))
+                   => (lambda (id)
+                        (element tt-style (make-id-element id (shrubbery-syntax->string id) #f)))]
                   [else
                    (define style
                      (case type
@@ -236,20 +247,32 @@
                          (cons (cons (car l) (car r))
                                (cdr r))])))
   (define indent (element hspace-style (make-string indent-amt #\space)))
-  (define (make-line elements)
+  (define (make-line elements #:first? first?)
     (paragraph plain (if (zero? indent-amt)
                          elements
-                         (cons indent elements))))
-  (cond
-    [(null? elementss)
-     (element plain "")]
-    [(null? (cdr elementss))
-     (make-line (car elementss))]
-    [else
-     (table plain
-            (map (lambda (elements)
-                   (list (make-line elements)))
-                 elementss))]))
+                         (cons (cond
+                                 [first?
+                                  (define len (string-length prompt))
+                                  (list (element tt-style (substring prompt 0 (min len indent-amt)))
+                                        (element hspace-style
+                                          (make-string (- indent-amt (min len indent-amt)) #\space)))]
+                                 [else indent])
+                               elements))))
+  (define output-block
+    (cond
+      [(null? elementss)
+       (element plain "")]
+      [(null? (cdr elementss))
+       (make-line (car elementss) #:first? #t)]
+      [else
+       (table plain
+              (for/list ([elements (in-list elementss)]
+                         [i (in-naturals)])
+                (list (make-line elements #:first? (zero? i)))))]))
+  (if inset?
+      (nested-flow (style 'code-inset null) (list output-block))
+      output-block))
+  
 
 (define tt-style (style 'tt null))
 (define hspace-style (style 'hspace null))
@@ -292,16 +315,26 @@
       (caar m)
       0))
 
-(define (lookup-stx-typeset start end position-stxes stx-ranges)
+(define (lookup-stx keep? start end position-stxes stx-ranges)
   (define stxes (hash-ref position-stxes start '()))
   (for/or ([k (in-list stxes)])
     (define p (hash-ref stx-ranges k))
     (and (= (cdr p) end)
          (cond
-           [(element*? (syntax-e k)) (syntax-e k)]
+           [(keep? k) k]
            [else #f]))))
 
+(define (lookup-stx-typeset start end position-stxes stx-ranges)
+  (define k (lookup-stx (lambda (k) (element*? (syntax-e k)))
+                         start end position-stxes stx-ranges))
+  (and k (syntax-e k)))
+
+(define (lookup-stx-identifier start end position-stxes stx-ranges)
+  (lookup-stx (lambda (stx) (and (identifier? stx) (identifier-binding stx #f)))
+              start end position-stxes stx-ranges))
+
 (define (element*? v)
-  (and (not (string? v))
+  (and (not (null? v))
+       (not (string? v))
        (not (symbol? v))
        (content? v)))

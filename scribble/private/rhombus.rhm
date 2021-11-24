@@ -79,6 +79,13 @@ for_meta:
             '(relocate_expansion($(proc(id)),
                                  literal_syntax_term($(head_context(stxs)))))
         | ~else: literal(stxs)
+    | '($(op $: Op)):
+        val mv: syntax_meta_value(typeset_meta.in_space(op), #false)
+        match mv
+        | typeset_meta.Transformer(proc):
+            '(relocate_expansion($(proc(op)),
+                                 literal_syntax_term($(head_context(stxs)))))
+        | ~else: literal(stxs)
     | ~else: literal(stxs)
 
 fun as_seq(v): '($v)
@@ -135,11 +142,15 @@ expr.macro '(rhombusblock $tail ...):
     | '(: $content ...; ...):
         values('(#{typeset-rhombusblock}($option, ..., $(escape('($fin_tail ...))))), '())
     | ~else: raise_syntax_error("expected a block", '($me $tail ...))
-  fun parse_options(options):
+  fun check_options(options):
     match '($options, ...)
-    | '(~indent: $amt): options
-    | ~else: raise_syntax_error("invalid options", '($me ($options, ...)))
+    | '(): #true
+    | '(~inset: $on, $more, ...): check_options(more)
+    | '(~indent: $amt, $more, ...): check_options(more)
+    | '(~prompt: $prompt, $more, ...): check_options(more)
+    | '($opt, $_, ...): raise_syntax_error("invalid option", opt)
   match '($tail ...)
   | '(($options, ...) $new_tail ...):
-      finish(parse_options(options), new_tail)
+      check_options(options)
+      finish(options, new_tail)
   | ~else: finish([], tail)

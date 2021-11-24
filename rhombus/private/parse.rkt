@@ -218,7 +218,7 @@
        [else
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]
-    [_ #`(rhombus-expression (group #,e))]))
+    [((~datum block) g ...) #`(rhombus-body g ...)]))
 
 ;; Forces enforestation through `rhombus-expression`; note that
 ;; `#%tuple` eagerly enforests its content, so this effectively
