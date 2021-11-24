@@ -54,8 +54,8 @@
   grammar arg_binding:
     binding
     keyword: binding
-    binding = default_expr
-    keyword: binding = default_expr,
+    binding $$(@tt{=}) default_expr
+    keyword: binding $$(@tt{=}) default_expr,
   
   grammar maybe_result_annotation:
     :: annotation

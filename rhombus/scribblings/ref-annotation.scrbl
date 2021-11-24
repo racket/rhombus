@@ -15,3 +15,12 @@
 ]
 
 }
+
+@doc[
+  annotation.macro 'Any
+]{
+
+  Matches any value.
+
+}
+

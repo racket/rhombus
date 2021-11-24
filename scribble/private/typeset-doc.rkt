@@ -6,10 +6,12 @@
          racket/list
          (only-in (submod rhombus/private/import for-meta)
                   in-import-space)
+         (only-in (submod rhombus/private/annotation for-class)
+                  in-annotation-space)
          (only-in rhombus
                   def val fun operator :: |'| |.|)
          (only-in rhombus/macro
-                  decl defn expr imp)
+                  decl defn expr imp annotation)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
@@ -154,13 +156,14 @@
 
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl imp |.| |'| grammar)
+    #:literals (def val fun operator :: defn decl imp annotation |.| |'| grammar)
     #:datum-literals (parens group op modifier macro)
     [(group (~or def fun) id:identifier (parens g ...) . _) #'id]
     [(group (~or def val) id:identifier . _) #'id]
     [(group operator (parens (group (op id) . _)) . _) #'id]
     [(group operator (parens (group arg1 (op id) . _)) . _) #'id]
     [(group (~or defn decl) (op |.|) macro (op |'|) (parens (group id t ...))) #'id]
+    [(group (~or annotation) (op |.|) macro (op |'|) id) #'id]
     [(group (~or imp) (op |.|) modifier (op |'|) (parens (group id t ...))) #'id]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
@@ -170,7 +173,7 @@
 
 (define-for-syntax (extract-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl imp |.| |'| grammar)
+    #:literals (def val fun operator :: defn decl imp annotation |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or def fun) id:identifier (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
@@ -239,11 +242,13 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def val fun expr defn decl imp operator |.| |'| grammar)
+    #:literals (def val fun expr defn decl imp annotation operator |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or expr defn decl imp) (op |.|) _ (op |'|) (parens (~and g (group id e ...))))
      (rb #:at #'g
          #`(group #,@(subst #'id) e ...))]
+    [(group (~or annotation) (op |.|) _ (op |'|) id)
+     #`(paragraph plain #,def-id-as-def)]
     [(group grammar id (block g ...))
      #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
                         #,@(for/list ([g (syntax->list #'(g ...))])
@@ -261,19 +266,21 @@
 
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (imp |.|)
+    #:literals (imp annotation |.|)
     #:datum-literals (parens group op)
     [(group imp . _) in-import-space]
+    [(group annotation . _) in-annotation-space]
     [_ values]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr imp |.| |'| grammar)
+    #:literals (defn decl expr imp annotation |.| |'| grammar)
     #:datum-literals (parens group op macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
     [(group imp . _) "import modifier"]
+    [(group annotation . _) "annotation"]
     [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]
     [(group operator . _) "operator"]

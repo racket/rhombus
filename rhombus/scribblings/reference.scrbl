@@ -9,5 +9,8 @@
 @include_section["ref-def.scrbl"]
 @include_section["ref-import.scrbl"]
 
-@include_section["ref-annotation.scrbl"]
+@include_section["ref-boolean.scrbl"]
+@include_section["ref-number.scrbl"]
 @include_section["ref-list.scrbl"]
+@include_section["ref-equal.scrbl"]
+@include_section["ref-annotation.scrbl"]
