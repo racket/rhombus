@@ -3,7 +3,9 @@
                     if)
          (prefix-in manual: scribble/manual)
          "../private/doc.rhm"
-         "../private/docmodule.rhm")
+         "../private/docmodule.rhm"
+         (only-in "../private/typeset-doc.rkt"
+                  grammar))
 
 (provide (all-from-out scribble/rhombus)
          litchar
@@ -12,7 +14,8 @@
                      [manual:math math]
                      [manual:filepath filepath])
          doc
-         docmodule)
+         docmodule
+         grammar)
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual

@@ -18,7 +18,12 @@
 (provide typeset-rhombus
          typeset-rhombusblock)
 
-(define (typeset-rhombus stx)
+(define (typeset-rhombus stx
+                         #:space [space #f])
+  (define (add-space stx)
+    (if space
+        ((make-interned-syntax-introducer space) stx 'add)
+        stx))
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
   (syntax-parse stx
@@ -98,8 +103,8 @@
             [(op . _)
              (element tt-style (shrubbery-syntax->string stx))]
             [id:identifier
-             #:when (identifier-binding #'id #f)
-             (make-id-element stx (shrubbery-syntax->string stx) #f)]
+             #:when (identifier-binding (add-space stx) #f)
+             (element tt-style (make-id-element (add-space stx) (shrubbery-syntax->string stx) #f))]
             [_
              (define d (syntax->datum stx))
              (element (cond
@@ -108,7 +113,8 @@
                         [else value-color])
                (shrubbery-syntax->string stx))])]))]))
 
-(define (typeset-rhombusblock stx)
+(define (typeset-rhombusblock stx
+                              #:indent [indent-amt 2])
   ;; Go back to a string, then parse again using the
   ;; colorer. Why didn't we use a string to start with?
   ;; Because having `rhm` work on implicitly quoted syntax
@@ -229,9 +235,11 @@
                          (define r (loop (cdr l)))
                          (cons (cons (car l) (car r))
                                (cdr r))])))
-  (define indent (element hspace-style "  "))
+  (define indent (element hspace-style (make-string indent-amt #\space)))
   (define (make-line elements)
-    (paragraph plain (cons indent elements)))
+    (paragraph plain (if (zero? indent-amt)
+                         elements
+                         (cons indent elements))))
   (cond
     [(null? elementss)
      (element plain "")]
@@ -266,7 +274,7 @@
             (shift-stxes! 0 delta)
             (values (substring str delta (cdadr m))
                     (+ (or col 0) 2)))]
-      [(regexp-match? #rx"^:" str)
+      [(regexp-match? #rx"^[:\n]" str)
        (shift-stxes! 0 1)
        (values (substring str 1) (+ (or col 0) 1))]
       [else

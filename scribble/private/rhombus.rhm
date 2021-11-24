@@ -120,13 +120,26 @@ fun relocate_expansion(e, context):
 
 // ----------------------------------------
 
-expr.macro '(rhombus ($forms ...) $main_tail ......):
-  values('(#{typeset-rhombus}($(escape('($forms ...))))),
-         main_tail)
+expr.macro
+| '(rhombus ($forms ...) $main_tail ......):
+    values('(#{typeset-rhombus}($(escape('($forms ...))))),
+           main_tail)
+| '(rhombus ($forms ..., ~space: $space) $main_tail ......):
+    values('(#{typeset-rhombus}(~space: symbol($space), $(escape('($forms ...))))),
+           main_tail)
 
 expr.macro '(rhombusblock $tail ...):
   ~op_stx: me
+  fun finish(option, fin_tail):
+    match '($fin_tail ...)
+    | '(: $content ...; ...):
+        values('(#{typeset-rhombusblock}($option, ..., $(escape('($fin_tail ...))))), '())
+    | ~else: raise_syntax_error("expected a block", '($me $tail ...))
+  fun parse_options(options):
+    match '($options, ...)
+    | '(~indent: $amt): options
+    | ~else: raise_syntax_error("invalid options", '($me ($options, ...)))
   match '($tail ...)
-  | '(: $content ...; ...):
-      values('(#{typeset-rhombusblock}($(escape('($tail ...))))), '())
-  | ~else: raise_syntax_error("expected a block", '($me $tail ...))
+  | '(($options, ...) $new_tail ...):
+      finish(parse_options(options), new_tail)
+  | ~else: finish([], tail)

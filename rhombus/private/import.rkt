@@ -39,6 +39,10 @@
                     for_meta
                     for_label))
 
+(module+ for-meta
+  (provide (for-syntax import-modifier
+                       in-import-space)))
+
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)
   (property import-infix-operator infix-operator)

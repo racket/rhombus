@@ -4,12 +4,15 @@
                      (prefix-in typeset-meta: "typeset_meta.rhm")
                      shrubbery/property)
          racket/list
+         (only-in (submod rhombus/private/import for-meta)
+                  in-import-space)
          (only-in rhombus
                   def val fun :: |'| |.|)
          (only-in rhombus/macro
-                  decl defn expr)
+                  decl defn expr imp)
          (only-in "rhombus.rhm"
-                  rhombusblock)
+                  rhombusblock
+                  [rhombus one-rhombus])
          (only-in rhombus/parse
                   rhombus-expression)
          (only-in scribble/manual
@@ -35,44 +38,52 @@
          (only-in scribble/private/manual-vars
                   add-background-label))
 
-(provide typeset-doc)
+(provide typeset-doc
+         grammar)
 
 (define-syntax (typeset-doc stx)
   (syntax-parse stx
-    #:datum-literals (parens group brackets)
-    [(_ (parens (group form ...) ...
+    #:datum-literals (parens group brackets block)
+    [(_ (parens (~optional (group #:literal (block (group literal-id ...) ...)))
+                (group form ...) ...
                 (group
                  (brackets content-group ...))))
      (define forms (syntax->list #'((group form ...) ...)))
-     (define def-ids (for/list ([form (in-list forms)])
+     (define introducers (for/list ([form (in-list forms)])
+                           (extract-introducer form)))
+     (define def-ids (for/list ([form (in-list forms)]
+                                [introducer (in-list introducers)])
                        (define def-id (extract-defined form))
-                       (unless (identifier-binding def-id #f)
-                         (raise-syntax-error 'doc
-                                             "identifier to document has no for-label binding"
-                                             def-id))
+                       (when def-id
+                         (define s-def-id (introducer def-id))
+                         (unless (identifier-binding s-def-id #f)
+                           (raise-syntax-error 'doc
+                                               "identifier to document has no for-label binding"
+                                               s-def-id)))
                        def-id))
      (define wrap-defs (for/fold ([rev-wrap-defs '()] [seen #hasheq()] #:result (reverse rev-wrap-defs))
-                                 ([def-id (in-list def-ids)])
+                                 ([def-id (in-list def-ids)]
+                                  [introducer (in-list introducers)])
                          (cond
-                           [(hash-ref seen (syntax-e def-id) #f)
+                           [(not def-id)
                             (values (cons #'(values) rev-wrap-defs)
                                     seen)]
                            [else
-                            (values (cons #`(let-syntax ([#,(typeset-meta:in_space def-id)
-                                                          (make-def-id-transformer (quote-syntax #,def-id))]))
-                                          rev-wrap-defs)
-                                    (hash-set seen (syntax-e def-id) #t))])))
-     (define vars (for/fold ([vars #hasheq()]) ([form (in-list forms)])
-                    (extract-metavariables form vars)))
-     (define t-forms (map extract-typeset forms))
+                            (values
+                             (cons #`(let-syntax ([#,(typeset-meta:in_space def-id)
+                                                   (#,(if (hash-ref seen (syntax-e def-id) #f)
+                                                          #'make-redef-id-transformer
+                                                          #'make-def-id-transformer)
+                                                    (quote-syntax #,(introducer def-id)))]))
+                                   rev-wrap-defs)
+                             (hash-set seen (syntax-e def-id) #t))])))
+     (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)])
+                        (extract-metavariables form vars)))
+     (define vars (for/fold ([vars all-vars]) ([id (in-list (syntax->list #'(~? (literal-id ... ...) ())))])
+                    (hash-remove vars (syntax-e id))))
+     (define typesets (map extract-typeset forms))
      (define kind-strs (map extract-kind-str forms))
-     (with-syntax ([(t-form ...) t-forms]
-                   [(t-block ...) (for/list ([t-form (in-list t-forms)])
-                                    (syntax-raw-property
-                                     (datum->syntax #f 'block
-                                                    (syntax-parse t-form
-                                                      [(_ a . _) #'a]))
-                                     ""))]
+     (with-syntax ([(typeset ...) typesets]
                    [((wrap-def ...) ...) wrap-defs]
                    [(kind-str ...) kind-strs])
        #`(let-syntax #,(for/list ([id (in-hash-values vars)])
@@ -82,7 +93,7 @@
              boxed-style
              (insert-labels
               (list
-               (wrap-def ... (rhombus-expression (group rhombusblock (t-block t-form))))
+               (wrap-def ... typeset)
                ...)
               '(kind-str ...)))
             (rhombus-expression content-group)
@@ -92,6 +103,11 @@
   (typeset-meta:Transformer
    (lambda (use-stx)
      #`(parsed (make-def-id (quote-syntax #,id))))))
+
+(define-for-syntax (make-redef-id-transformer id)
+  (typeset-meta:Transformer
+   (lambda (use-stx)
+     #`(parsed (make-redef-id (quote-syntax #,id))))))
 
 (define (make-def-id id)
   (define (make-content defn?)
@@ -119,6 +135,10 @@
                       ref-content)))]
     [else content]))
 
+(define (make-redef-id id)
+  (racketidfont
+   (make-id-element id (symbol->string (syntax-e id)) #t)))
+
 (define-for-syntax (make-meta-id-transformer id)
   (typeset-meta:Transformer
    (lambda (use-stx)
@@ -126,11 +146,13 @@
 
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
-    #:literals (def val fun :: defn decl |.| |'|)
-    #:datum-literals (parens group op)
+    #:literals (def val fun :: defn decl imp |.| |'| grammar)
+    #:datum-literals (parens group op modifier macro)
     [(group (~or def fun) id:identifier (parens g ...) . _) #'id]
     [(group (~or def val) id:identifier . _) #'id]
     [(group (~or defn decl) (op |.|) macro (op |'|) (parens (group id t ...))) #'id]
+    [(group (~or imp) (op |.|) modifier (op |'|) (parens (group id t ...))) #'id]
+    [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
 
 (define-for-syntax (add-metavariable vars id)
@@ -138,14 +160,16 @@
 
 (define-for-syntax (extract-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun :: defn decl |.| |'|)
+    #:literals (def val fun :: defn decl imp |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or def fun) id:identifier (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
     [(group (~or def val) id:identifier . _) vars]
-    [(group (~or defn decl) (op |.|) macro (op |'|) (parens (group id t ...)))
+    [(group (~or defn decl imp) (op |.|) _ (op |'|) (parens (group id t ...)))
      (extract-group-metavariables #'(group t ...)  vars)]
+    [(group grammar id (block g ...))
+     (extract-groups-metavariables #'(g ...) (add-metavariable vars #'id))]
     [_ vars]))
 
 (define-for-syntax (extract-binding-metavariables stx vars)
@@ -171,20 +195,46 @@
     [id:identifier (add-metavariable vars #'id)]
     [_ vars]))
 
+(define-for-syntax (extract-groups-metavariables gs vars)
+  (for/fold ([vars vars]) ([g (in-list (syntax->list gs))])
+    (extract-group-metavariables g vars)))
+
 (define-for-syntax (extract-typeset stx)
+  (define (rb form #:options [options #'()])
+    (with-syntax ([t-form form]
+                  [t-block (syntax-raw-property
+                            (datum->syntax #f 'block
+                                           (syntax-parse form
+                                             [(_ a . _) #'a]))
+                            "")]
+                  [(option ...) options])
+      #'(rhombus-expression (group rhombusblock option ... (t-block t-form)))))
   (syntax-parse stx
-    #:literals (defn decl |.| |'|)
-    #:datum-literals (parens group op macro)
-    [(group (~or defn decl) (op |.|) macro (op |'|) (parens g)) #'g]
-    [_ stx]))
+    #:literals (expr defn decl imp |.| |'| grammar)
+    #:datum-literals (parens group op)
+    [(group (~or expr defn decl imp) (op |.|) _ (op |'|) (parens g)) (rb #'g)]
+    [(group grammar id (block g ...))
+     #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
+                        #,@(for/list ([g (syntax->list #'(g ...))])
+                             (rb g #:options #'((parens (group #:indent (block (group (parsed 0)))))))))]
+    [_ (rb stx)]))
+
+(define-for-syntax (extract-introducer stx)
+  (syntax-parse stx
+    #:literals (imp |.|)
+    #:datum-literals (parens group op)
+    [(group imp . _) in-import-space]
+    [_ values]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr |.| |'|)
+    #:literals (defn decl expr imp |.| |'| grammar)
     #:datum-literals (parens group op macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
+    [(group imp . _) "import modifier"]
+    [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]
     [_ "value"]))
 
@@ -195,7 +245,7 @@
      (map
       list
       (append
-       ((add-background-label (car lbls))
+       ((if (car lbls) (add-background-label (car lbls)) values)
         (list (car l)))
        (let loop ([l (cdr l)] [lbls (cdr lbls)])
          (cond
@@ -203,6 +253,18 @@
            [else
             (cons
              (paragraph plain (hspace 1))
-             (append ((add-background-label (car lbls))
+             (append ((if (car lbls) (add-background-label (car lbls)) values)
                       (list (car l)))
                      (loop (cdr l) (cdr lbls))))]))))]))
+
+(define-syntax grammar "to be used in `doc`")
+
+(define (typeset-grammar id . prods)
+  (define (p c) (paragraph plain c))
+  (define (sp s) (p (list (hspace 1) s (hspace 1))))
+  (table
+   plain
+   (cons
+    (list (p (hspace 2)) (p id) (sp "=") (car prods))
+    (for/list ([prod (in-list (cdr prods))])
+      (list (p (hspace 2)) (p "") (sp "|") prod)))))

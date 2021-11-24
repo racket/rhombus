@@ -12,6 +12,7 @@
         "private/annotation-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt"
+        "private/import-syntax.rkt"
         "private/syntax-error.rkt"
         "private/parsed.rkt"
         "private/syntax-meta-value.rkt")
