@@ -6,7 +6,8 @@
          Id
          Op
          Id_Op
-         Group)
+         Group
+         Block)
 
 (module+ for-quasiquote
   (provide (for-syntax in-syntax-class-space)))
@@ -20,3 +21,4 @@
 (define-syntax Op "predefined syntax class")
 (define-syntax Id_Op "predefined syntax class")
 (define-syntax Group "predefined syntax class")
+(define-syntax Block "predefined syntax class")

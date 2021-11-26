@@ -42,7 +42,8 @@ for_meta:
         | '(literal_syntax($tail ......)):
             '(literal_syntax($head ... $tail ......))
 
-  def literal_rebuilt_parens(tss, gs, stxs):
+  import: racket/base
+  def literal_rebuilt_nested(tss, gs, stxs):
     def new_gs: map2(fun (ts, orig_g):
                        match ts
                        | '(literal_syntax($g)):
@@ -56,6 +57,9 @@ for_meta:
       | '({$_, ...}): '{$new_gs, ...}
       | '(: $_; ...): match '(: $new_gs; ...)
                       | '($(t $: Term)): t
+      | '(| $(_ $: Block) | ...): match '($new_gs, ...)
+                                  | '($(new_ts $: Term), ...):
+                                      '(| $new_ts | ...)
     literal('($(relocate_syntax(new, head_context(stxs)))))
 
   def is_literal(stx):
@@ -65,13 +69,15 @@ for_meta:
 
   def build_relocate_group(ts, g):
     if is_literal(ts)
-    | ts
+    | match ts
+      | '(literal_syntax($new_g)):
+          '(literal_syntax($(relocate_syntax(new_g, g))))
     | '(as_seq(relocate_group($ts, literal_syntax_term($(relocate_syntax('#false, g))))))
 
   def nested(gs, builder, stxs):
     val tss: map(fun(g): escape('($g)), gs)
     if andmap(is_literal, tss)
-    | literal_rebuilt_parens(tss, gs, stxs)
+    | literal_rebuilt_nested(tss, gs, stxs)
     | val new_gs: map2(build_relocate_group, tss, gs)
       '($builder([$new_gs, ...], literal_syntax_term($(head_context(stxs)))))
 
@@ -100,6 +106,8 @@ for_meta:
         nested(gs, 'braces_syntax, stxs)
     | '(: $gs; ...):
         nested(gs, 'block_syntax, stxs)
+    | '(| $(bs $: Block) | ...):
+        nested(bs, 'alts_syntax, stxs)
     | '($(id $: Id_Op)):
         val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
         match mv
@@ -148,6 +156,11 @@ fun braces_syntax(ts, context):
 fun block_syntax(ts, context):
   match ts
   | ['($t), ...]: as_seq(relocate_syntax(syntax_term(: $t; ...), context))
+
+fun alts_syntax(ts, context):
+  match ts
+  | ['($(t $: Term)), ...]:
+      as_seq(relocate_syntax(syntax_term(| $t | ...), context))
 
 fun relocate_group(ts, context):
   match ts

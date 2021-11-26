@@ -47,14 +47,31 @@
                    ((~datum block) ((~datum group) (op (~and name ......))))))))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
-                                   handle-escape handle-group-escape deepen-escape handle-tail-escape
+                                   handle-escape handle-group-escape handle-block-escape
+                                   deepen-escape handle-tail-escape
                                    handle-maybe-empty-sole-group
                                    handle-maybe-empty-alts handle-maybe-empty-group
                                    #:as-tail? [as-tail? #f])
   (let convert ([e e] [empty-ok? #f] [depth 0] [as-tail? as-tail?])
     (syntax-parse e
-      [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block)))
-        (~and g ((~datum group) . _)))
+      #:datum-literals (parens brackets braces block group alts)
+      [(group
+        (op (~and (~literal $) $-id)) esc)
+       #:when (and (zero? depth) (not as-tail?))
+       ;; Special case: a group whose content is an escape; the escape
+       ;; defaults to "group" mode instead of "term" mode
+       #:do [(define-values (p new-idrs) (handle-group-escape  #'$-id #'esc e))]
+       #:when p
+       (values p new-idrs #f)]
+      [(block
+        (group (op (~and (~literal $) $-id)) esc))
+       #:when (and (zero? depth) (not as-tail?))
+       ;; Analogous special case, but for blocks within an `alts`
+       #:do [(define-values (p new-idrs) (handle-block-escape  #'$-id #'esc e))]
+       #:when p
+       (values p new-idrs #f)]
+      [((~and tag (~or parens brackets braces block))
+        (~and g (group . _)))
        ;; Special case: for a single group with (), [], {}, or block, if the group
        ;; can be empty, allow a match/construction with zero groups
        (define-values (p new-idrs can-be-empty?) (convert #'g #t depth as-tail?))
@@ -63,15 +80,7 @@
            (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
                    new-idrs 
                    #f))]
-      [((~and tag (~datum group))
-        ((~datum op) (~and (~literal $) $-id)) esc)
-       #:when (and (zero? depth) (not as-tail?))
-       ;; Special case: a group whose content is an escape; the escape
-       ;; defaults to "group" mode instead of "term" mode
-       #:do [(define-values (p new-idrs) (handle-group-escape  #'$-id #'esc e))]
-       #:when p
-       (values p new-idrs #f)]
-      [((~and tag (~or (~datum parens) (~datum brackets) (~datum braces) (~datum block) (~datum alts) (~datum group)))
+      [((~and tag (~or parens brackets braces block alts group))
         g ...)
        (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
          (define (simple gs a-depth)
@@ -130,7 +139,7 @@
             (simple2 gs (add1 depth))]
            [(g . _)
             (simple gs depth)]))]
-      [((~and tag (~datum op)) op-name)
+      [((~and tag op) op-name)
        (values (quasisyntax/loc e (#,(make-datum #'tag) #,(make-literal #'op-name))) null #f)]
       [id:identifier
        (values (make-literal #'id) null #f)]
@@ -138,7 +147,7 @@
        (values e null #f)])))
 
 (define-for-syntax (convert-pattern e #:as-tail? [as-tail? #f])
-  (define (handle-escape $-id e in-e pack* context-syntax-class group?)
+  (define (handle-escape $-id e in-e pack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group)
       #:literals (rhombus-_ $:)
@@ -146,7 +155,7 @@
       [_:identifier
        (values e (list #`[#,e (#,pack* (syntax #,e) 0)]))]
       [(parens (group id:identifier (op $:) stx-class:identifier))
-       #:when group?
+       #:when (not (eq? kind 'term))
        #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
                                      (in-syntax-class-space #'Term))
                   (free-identifier=? (in-syntax-class-space #'stx-class)
@@ -155,6 +164,11 @@
                                      (in-syntax-class-space #'Op))
                   (free-identifier=? (in-syntax-class-space #'stx-class)
                                      (in-syntax-class-space #'Id_Op)))
+       (values #f #f)]
+      [(parens (group id:identifier (op $:) stx-class:identifier))
+       #:when (eq? kind 'block)
+       #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
+                                     (in-syntax-class-space #'Group)))
        (values #f #f)]
       [(parens (group id:identifier (op $:) stx-class:identifier))
        (cond
@@ -191,10 +205,13 @@
                     #`(~literal #,d))
                   ;; handle-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape $-id e in-e #'pack-list* #'Term #f))
+                    (handle-escape $-id e in-e #'pack-list* #'Term 'term))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape $-id e in-e #'pack-group* #'Group #t))
+                    (handle-escape $-id e in-e #'pack-group* #'Group 'group))
+                  ;; handle-block-escape:
+                  (lambda ($-id e in-e)
+                    (handle-escape $-id e in-e #'pack-block* #'Block 'block))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
@@ -255,13 +272,17 @@
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-group* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)])))
+                    ;; handle-block-escape:
+                    (lambda ($-id e in-e)
+                      (check-escape e)
+                      (define id (car (generate-temporaries (list e))))
+                      (values id (list #`[#,id (unpack-block* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)])))
                     ;; deepen-escape
                     (lambda (idr)
                       (syntax-parse idr
-                        [(id-pat ((~literal unpack-list*) q e depth))
-                         #`[(id-pat (... ...)) (unpack-list* q e #,(add1 (syntax-e #'depth)))]]
-                        [(id-pat ((~literal unpack-group*) q e depth))
-                         #`[(id-pat (... ...)) (unpack-group* q e #,(add1 (syntax-e #'depth)))]]
+                        #:literals (unpack-list* unpack-group* unpack-block*)
+                        [(id-pat ((~and unpack (~or unpack-list* unpack-group* unpack-block*)) q e depth))
+                         #`[(id-pat (... ...)) (unpack q e #,(add1 (syntax-e #'depth)))]]
                         [(id-pat (converter depth (qs t) . args))
                          #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
                     ;; handle-tail-escape:

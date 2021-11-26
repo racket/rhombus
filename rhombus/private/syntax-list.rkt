@@ -4,7 +4,9 @@
          unpack-list*
          pack-group*
          unpack-group*
-         unpack-single-term-group)
+         unpack-single-term-group
+         pack-block*
+         unpack-block*)
 
 (define (pack-list* stx depth)
   (cond
@@ -70,3 +72,29 @@
   (and (syntax? r)
        (pair? (syntax-e r))
        (eq? 'group (syntax-e (car (syntax-e r))))))
+
+(define (pack-block* stx depth)
+  (pack-list* stx depth))
+
+(define (unpack-block* qs r depth)
+  (datum->syntax
+   qs
+   (let unpack-block* ([r r] [depth depth])
+     (cond
+       [(eqv? depth 0)
+        (cond
+          [(block-syntax? r) r]
+          [(group-syntax? r) (list 'block r)]
+          [else (list 'block (list 'group r))])]
+       [else
+        (if (list? r)
+            (datum->syntax
+             qs
+             (for/list ([r (in-list r)])
+               (unpack-block* r (sub1 depth))))
+            (raise-argument-error '... "list?" r))]))))
+
+(define (block-syntax? r)
+  (and (syntax? r)
+       (pair? (syntax-e r))
+       (eq? 'block (syntax-e (car (syntax-e r))))))
