@@ -34,8 +34,8 @@
                 #:when (not (escape? #'a escape))
                 #`(parens
                    (group
-                    #,(cons (term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
-                            #'more)))]
+                    #,(term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
+                    . more))]
                [_ tail])))))
 
 (define-spacer fun

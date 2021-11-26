@@ -310,9 +310,9 @@
   (shift-stxes! -1 (- prefix-len))
   (define full-str
     (string-append (make-string prefix-len #\space) content-str))
-  (regexp-replace* #px"\\s*\n\\s*$"
-                   (regexp-replace* #px"^\\s*\n" full-str "")
-                   ""))
+  (define strip-pre-str (regexp-replace* #px"^\\s*\n" full-str ""))
+  (shift-stxes! -1 (- (string-length full-str) (string-length strip-pre-str)))
+  (regexp-replace* #px"\\s*\n\\s*$" strip-pre-str ""))
 
 (define (infer-indentation str)
   (define m (regexp-match-positions #px"[^ ]" str))

@@ -150,16 +150,20 @@
 
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl bind imp annotation |.| |'| grammar)
+    #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar)
     #:datum-literals (parens group op modifier macro rule)
     [(group (~or def fun) id:identifier (parens g ...) . _) #'id]
     [(group (~or def val) id:identifier . _) #'id]
     [(group operator (parens (group (op id) . _)) . _) #'id]
     [(group operator (parens (group arg1 (op id) . _)) . _) #'id]
-    [(group (~or defn decl) (op |.|) macro (op |'|) (parens (group id t ...))) #'id]
+    [(group (~or expr) (op |.|) macro (op |'|) (parens (group (op id) t ...))) #'id]
+    [(group (~or expr) (op |.|) macro (op |'|) (parens (group t0 (op id) t ...))) #'id]
+    [(group (~or defn decl expr) (op |.|) macro (op |'|) (parens (group id:identifier t ...))) #'id]
     [(group (~or annotation) (op |.|) macro (op |'|) (parens (group a1 (op id) a2))) #'id]
-    [(group (~or annotation) (op |.|) macro (op |'|) id) #'id]
-    [(group (~or bind) (op |.|) rule (op |'|) (parens (group a1 (op id) . _))) #'id]
+    [(group (~or annotation) (op |.|) macro (op |'|) id:identifier) #'id]
+    [(group (~or bind) (op |.|) (~or rule macro) (op |'|) (parens (group (op id) . _))) #'id]
+    [(group (~or bind) (op |.|) (~or rule macro) (op |'|) (parens (group a1 (op id) . _))) #'id]
+    [(group (~or bind) (op |.|) (~or rule macro) (op |'|) (parens (group id:identifier . _))) #'id]
     [(group (~or imp) (op |.|) modifier (op |'|) (parens (group id t ...))) #'id]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
@@ -169,7 +173,7 @@
 
 (define-for-syntax (extract-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl bind imp annotation |.| |'| grammar)
+    #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or def fun) id:identifier (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
@@ -180,13 +184,19 @@
     [(group operator (parens (group arg0 (op id) arg1)) . _)
      (define vars0 (extract-binding-metavariables #'(group arg0) vars))
      (extract-binding-metavariables #'(group arg1) vars0)]
-    [(group (~or defn decl imp) (op |.|) _ (op |'|) (parens (group id t ...)))
-     (extract-group-metavariables #'(group t ...)  vars)]
+    [(group (~or expr) (op |.|) _ (op |'|) (parens (group (op id) t ...)))
+     (extract-group-metavariables #'(group t ...) vars)]
+    [(group (~or expr) (op |.|) _ (op |'|) (parens (group t0 (op id) t ...)))
+     (extract-group-metavariables #'(group t0 t ...) vars)]
+    [(group (~or defn decl imp expr) (op |.|) _ (op |'|) (parens (group id t ...)))
+     (extract-group-metavariables #'(group t ...) vars)]
     [(group (~or annotation) (op |.|) _ (op |'|) (parens (group arg0 (op id) arg1)))
      (define vars0 (extract-binding-metavariables #'(group arg0) vars))
      (extract-binding-metavariables #'(group arg1) vars0)]
     [(group (~or bind) (op |.|) _ (op |'|) (parens (group t0 (op id) t ...)))
      (extract-group-metavariables #'(group t0 t ...) vars)]
+    [(group (~or bind) (op |.|) _ (op |'|) (parens (group _ t ...)))
+     (extract-group-metavariables #'(group t ...) vars)]
     [(group grammar id (block g ...))
      (extract-groups-metavariables #'(g ...) (add-metavariable vars #'id))]
     [_ vars]))
@@ -245,6 +255,12 @@
   (syntax-parse stx
     #:literals (def val fun expr defn decl imp bind annotation operator |.| |'| grammar)
     #:datum-literals (parens group op)
+    [(group (~or expr) (op |.|) _ (op |'|) (parens (~and g (group (op id) e ...))))
+     (rb #:at #'g
+         #`(group #,@(subst #'id) e ...))]
+    [(group (~or expr) (op |.|) _ (op |'|) (parens (~and g (group e0 (op id) e ...))))
+     (rb #:at #'g
+         #`(group e0 #,@(subst #'id) e ...))]
     [(group (~or expr defn decl imp) (op |.|) _ (op |'|) (parens (~and g (group id e ...))))
      (rb #:at #'g
          #`(group #,@(subst #'id) e ...))]
@@ -256,6 +272,9 @@
     [(group (~or bind) (op |.|) _ (op |'|) (parens (~and g (group t0 (op id) t ...))))
      (rb #:at #'g
          #`(group t0 #,@(subst #'id) t ...))]
+    [(group (~or bind) (op |.|) _ (op |'|) (parens (~and g (group id t ...))))
+     (rb #:at #'g
+         #`(group #,@(subst #'id) t ...))]
     [(group grammar id (block g ...))
      #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
                         #,@(for/list ([g (syntax->list #'(g ...))])
