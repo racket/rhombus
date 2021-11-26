@@ -32,8 +32,8 @@
 
  A @rhombus[module_path] clause can be be adjusted through one or more
  @rhombus[import_modifier]s. The set of modifiers is extensible, but
- includes @rhombus[no_prefix, ~space: #{rhombus/import}], @rhombus[rename, ~space: #{rhombus/import}], and
- @rhombus[expose, ~space: #{rhombus/import}].
+ includes @rhombus[no_prefix, ~impmod], @rhombus[rename, ~impmod], and
+ @rhombus[expose, ~impmod].
 
  A @rhombus[module_path] references a module in one of several possible
  forms:

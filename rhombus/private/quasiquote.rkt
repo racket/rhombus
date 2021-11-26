@@ -152,7 +152,9 @@
                   (free-identifier=? (in-syntax-class-space #'stx-class)
                                      (in-syntax-class-space #'Id))
                   (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Op)))
+                                     (in-syntax-class-space #'Op))
+                  (free-identifier=? (in-syntax-class-space #'stx-class)
+                                     (in-syntax-class-space #'Id_Op)))
        (values #f #f)]
       [(parens (group id:identifier (op $:) stx-class:identifier))
        (cond
@@ -165,6 +167,9 @@
          [(free-identifier=? (in-syntax-class-space #'stx-class)
                              (in-syntax-class-space #'Op))
           (values #'(~var id :operator) (list #`[id (#,pack* (syntax id) 0)]))]
+         [(free-identifier=? (in-syntax-class-space #'stx-class)
+                             (in-syntax-class-space #'Id_Op))
+          (values #'(~var id :operator-or-identifier) (list #`[id (#,pack* (syntax id) 0)]))]
          [else
           (raise-syntax-error #f
                               "unknown syntax class or incompatible with this context"

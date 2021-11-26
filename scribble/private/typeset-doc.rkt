@@ -11,7 +11,7 @@
          (only-in rhombus
                   def val fun operator :: |'| |.|)
          (only-in rhombus/macro
-                  decl defn expr imp annotation)
+                  decl defn expr imp annotation bind)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
@@ -55,6 +55,8 @@
      (define forms (syntax->list #'((group form ...) ...)))
      (define introducers (for/list ([form (in-list forms)])
                            (extract-introducer form)))
+     (define space-names (for/list ([form (in-list forms)])
+                           (extract-space-name form)))
      (define def-ids (for/list ([form (in-list forms)]
                                 [introducer (in-list introducers)])
                        (define def-id (extract-defined form))
@@ -67,7 +69,8 @@
                        def-id))
      (define def-id-as-defs (for/fold ([rev-as-defs '()] [seen #hasheq()] #:result (reverse rev-as-defs))
                                       ([def-id (in-list def-ids)]
-                                       [introducer (in-list introducers)])
+                                       [introducer (in-list introducers)]
+                                       [space-name (in-list space-names)])
                               (cond
                                 [(not def-id)
                                  (values (cons #f rev-as-defs)
@@ -77,7 +80,8 @@
                                   (cons #`(#,(if (hash-ref seen (syntax-e def-id) #f)
                                                  #'make-redef-id
                                                  #'make-def-id)
-                                           (quote-syntax #,(introducer def-id)))
+                                           (quote-syntax #,(introducer def-id))
+                                           (quote #,space-name))
                                         rev-as-defs)
                                   (hash-set seen (syntax-e def-id) #t))])))
      (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)])
@@ -104,27 +108,17 @@
             (rhombus-expression content-group)
             ...)))]))
 
-(define-for-syntax (make-def-id-transformer id)
-  (typeset-meta:Transformer
-   (lambda (use-stx)
-     #`(parsed (make-def-id (quote-syntax #,id))))))
-
-(define-for-syntax (make-redef-id-transformer id)
-  (typeset-meta:Transformer
-   (lambda (use-stx)
-     #`(parsed (make-redef-id (quote-syntax #,id))))))
-
 (define-for-syntax (make-ellipsis-transformer)
   (typeset-meta:Transformer
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id)
+(define (make-def-id id space)
   (define (make-content defn?)
     (racketidfont
-     (make-id-element id (symbol->string (syntax-e id)) defn?)))
+     (make-id-element id (symbol->string (syntax-e id)) defn? #:space space)))
   (define content (annote-exporting-library (make-content #t)))
-  (define target-maker (id-to-target-maker id #t))
+  (define target-maker (id-to-target-maker id #t #:space space))
   (cond
     [target-maker
      (define name (syntax-e id))
@@ -145,9 +139,9 @@
                       ref-content)))]
     [else content]))
 
-(define (make-redef-id id)
+(define (make-redef-id id space)
   (racketidfont
-   (make-id-element id (symbol->string (syntax-e id)) #t)))
+   (make-id-element id (symbol->string (syntax-e id)) #t #:space space)))
 
 (define-for-syntax (make-meta-id-transformer id)
   (typeset-meta:Transformer
@@ -156,14 +150,16 @@
 
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl imp annotation |.| |'| grammar)
-    #:datum-literals (parens group op modifier macro)
+    #:literals (def val fun operator :: defn decl bind imp annotation |.| |'| grammar)
+    #:datum-literals (parens group op modifier macro rule)
     [(group (~or def fun) id:identifier (parens g ...) . _) #'id]
     [(group (~or def val) id:identifier . _) #'id]
     [(group operator (parens (group (op id) . _)) . _) #'id]
     [(group operator (parens (group arg1 (op id) . _)) . _) #'id]
     [(group (~or defn decl) (op |.|) macro (op |'|) (parens (group id t ...))) #'id]
+    [(group (~or annotation) (op |.|) macro (op |'|) (parens (group a1 (op id) a2))) #'id]
     [(group (~or annotation) (op |.|) macro (op |'|) id) #'id]
+    [(group (~or bind) (op |.|) rule (op |'|) (parens (group a1 (op id) . _))) #'id]
     [(group (~or imp) (op |.|) modifier (op |'|) (parens (group id t ...))) #'id]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
@@ -173,7 +169,7 @@
 
 (define-for-syntax (extract-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn decl imp annotation |.| |'| grammar)
+    #:literals (def val fun operator :: defn decl bind imp annotation |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or def fun) id:identifier (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
@@ -186,6 +182,11 @@
      (extract-binding-metavariables #'(group arg1) vars0)]
     [(group (~or defn decl imp) (op |.|) _ (op |'|) (parens (group id t ...)))
      (extract-group-metavariables #'(group t ...)  vars)]
+    [(group (~or annotation) (op |.|) _ (op |'|) (parens (group arg0 (op id) arg1)))
+     (define vars0 (extract-binding-metavariables #'(group arg0) vars))
+     (extract-binding-metavariables #'(group arg1) vars0)]
+    [(group (~or bind) (op |.|) _ (op |'|) (parens (group t0 (op id) t ...)))
+     (extract-group-metavariables #'(group t0 t ...) vars)]
     [(group grammar id (block g ...))
      (extract-groups-metavariables #'(g ...) (add-metavariable vars #'id))]
     [_ vars]))
@@ -242,13 +243,19 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def val fun expr defn decl imp annotation operator |.| |'| grammar)
+    #:literals (def val fun expr defn decl imp bind annotation operator |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or expr defn decl imp) (op |.|) _ (op |'|) (parens (~and g (group id e ...))))
      (rb #:at #'g
          #`(group #,@(subst #'id) e ...))]
+    [(group (~or annotation) (op |.|) _ (op |'|) (parens (~and g (group a1 (op id) a2))))
+     (rb #:at #'g
+         #`(group a1 #,@(subst #'id) a2))]
     [(group (~or annotation) (op |.|) _ (op |'|) id)
      #`(paragraph plain #,def-id-as-def)]
+    [(group (~or bind) (op |.|) _ (op |'|) (parens (~and g (group t0 (op id) t ...))))
+     (rb #:at #'g
+         #`(group t0 #,@(subst #'id) t ...))]
     [(group grammar id (block g ...))
      #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
                         #,@(for/list ([g (syntax->list #'(g ...))])
@@ -266,21 +273,31 @@
 
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (imp annotation |.|)
+    #:literals (imp annotation)
     #:datum-literals (parens group op)
     [(group imp . _) in-import-space]
     [(group annotation . _) in-annotation-space]
     [_ values]))
 
+(define-for-syntax (extract-space-name stx)
+  (syntax-parse stx
+    #:literals (imp annotation bind)
+    #:datum-literals (parens group op)
+    [(group imp . _) 'impmod]
+    [(group annotation . _) 'ann]
+    [(group bind . _) 'bind]
+    [_ #f]))
+
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr imp annotation |.| |'| grammar)
-    #:datum-literals (parens group op macro)
+    #:literals (defn decl expr imp annotation bind grammar)
+    #:datum-literals (parens group op)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
     [(group imp . _) "import modifier"]
     [(group annotation . _) "annotation"]
+    [(group bind . _) "binding operator"]
     [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]
     [(group operator . _) "operator"]

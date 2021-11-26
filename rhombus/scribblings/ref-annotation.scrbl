@@ -17,6 +17,19 @@
 }
 
 @doc[
+  bind.rule '(binding :: annotation)
+]{
+
+ Binds the same as @rhombus[binding], but first checks that the value to
+ be bound satisfies @rhombus[annotation].
+
+@examples[
+  val x :: List: [1, 2, 3]
+]
+
+}
+
+@doc[
   annotation.macro 'Any
 ]{
 

@@ -20,13 +20,10 @@
          typeset-rhombusblock)
 
 (define (typeset-rhombus stx
-                         #:space [space #f])
-  (define (add-space stx)
-    (if space
-        ((make-interned-syntax-introducer space) stx 'add)
-        stx))
+                         #:space [space-name #f])
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
+  (define (id-space-name* id) (id-space-name id space-name))
   (syntax-parse stx
     #:datum-literals (parens)
     [(parens g)
@@ -103,12 +100,18 @@
             [(braces elem ...) (seq "{" #'(elem ...) "}")]
             [(op id)
              (define str (shrubbery-syntax->string stx))
-             (if (identifier-binding (add-space #'id) #f)
-                 (element tt-style (make-id-element (add-space #'id) str #f))
+             (define space-name (id-space-name* #'id))
+             (if (identifier-binding (add-space #'id space-name) #f)
+                 (element tt-style (make-id-element (add-space #'id space-name) str #f
+                                                    #:space space-name))
                  (element tt-style str))]
             [id:identifier
-             #:when (identifier-binding (add-space stx) #f)
-             (element tt-style (make-id-element (add-space stx) (shrubbery-syntax->string stx) #f))]
+             (define str (shrubbery-syntax->string stx))
+             (define space-name (id-space-name* #'id))
+             (if (identifier-binding (add-space stx space-name) #f)
+                 (element tt-style (make-id-element (add-space stx space-name) str #f
+                                                    #:space space-name))
+                 (element symbol-color str))]
             [_
              (define d (syntax->datum stx))
              (element (cond
@@ -182,7 +185,9 @@
                             (eq? type 'operator))
                         (lookup-stx-identifier start end position-stxes stx-ranges))
                    => (lambda (id)
-                        (element tt-style (make-id-element id (shrubbery-syntax->string id) #f)))]
+                        (define space-name (id-space-name id))
+                        (element tt-style (make-id-element (add-space id space-name) (shrubbery-syntax->string id) #f
+                                                           #:space space-name)))]
                   [else
                    (define style
                      (case type
@@ -330,7 +335,9 @@
   (and k (syntax-e k)))
 
 (define (lookup-stx-identifier start end position-stxes stx-ranges)
-  (lookup-stx (lambda (stx) (and (identifier? stx) (identifier-binding stx #f)))
+  (lookup-stx (lambda (stx)
+                (and (identifier? stx)
+                     (identifier-binding (add-space stx (id-space-name stx)) #f)))
               start end position-stxes stx-ranges))
 
 (define (element*? v)
@@ -338,3 +345,15 @@
        (not (string? v))
        (not (symbol? v))
        (content? v)))
+
+(define (add-space stx space-name)
+  (define space (case space-name
+                  [(impmod) 'rhombus/import]
+                  [(ann) 'rhombus/annotation]
+                  [else #f]))
+  (if space
+      ((make-interned-syntax-introducer space) stx 'add)
+      stx))
+
+(define (id-space-name id [default-name #f])
+  (or (syntax-property id 'typeset-space-name) default-name))

@@ -35,6 +35,29 @@ for_meta:
   def literal(stxs):
     '(literal_syntax $stxs)
 
+  def literal_rebuilt(heads, tails):
+    match heads
+    | '(literal_syntax($head ...)):
+        match tails
+        | '(literal_syntax($tail ......)):
+            '(literal_syntax($head ... $tail ......))
+
+  def literal_rebuilt_parens(tss, gs, stxs):
+    def new_gs: map2(fun (ts, orig_g):
+                       match ts
+                       | '(literal_syntax($g)):
+                           relocate_syntax(g, orig_g),
+                     tss,
+                     gs)
+    def new:
+      match stxs
+      | '(($_, ...)): '($new_gs, ...)
+      | '([$_, ...]): '[$new_gs, ...]
+      | '({$_, ...}): '{$new_gs, ...}
+      | '(: $_; ...): match '(: $new_gs; ...)
+                      | '($(t $: Term)): t
+    literal('($(relocate_syntax(new, head_context(stxs)))))
+
   def is_literal(stx):
     match stx
     | '(literal_syntax $_): #true
@@ -48,7 +71,7 @@ for_meta:
   def nested(gs, builder, stxs):
     val tss: map(fun(g): escape('($g)), gs)
     if andmap(is_literal, tss)
-    | literal(stxs)
+    | literal_rebuilt_parens(tss, gs, stxs)
     | val new_gs: map2(build_relocate_group, tss, gs)
       '($builder([$new_gs, ...], literal_syntax_term($(head_context(stxs)))))
 
@@ -57,13 +80,18 @@ for_meta:
     | '($$($expr ...) $tail ......):
         '(sequence_cons_syntax(elem($expr ...), $(escape(tail)),
                                literal_syntax_term($(head_escape_context(stxs)))))
-    | '($head $next $tail ......):
-        val new_head: escape('($head))
-        val new_tail: escape('($next $tail ......))
+    | '($head $tail ......):
+        val values(a_head, a_tail): adjust_spaces(head, tail)
+        val new_head: escape_one('($a_head))
+        val new_tail: escape('($a_tail ......))
         if is_literal(new_head)  && is_literal(new_tail)
-        | literal(stxs)
-        | '(sequence_append_syntax($(escape('($head))), $new_tail,
+        | literal_rebuilt(new_head, new_tail)
+        | '(sequence_append_syntax($new_head, $new_tail,
                                    literal_syntax_term($(head_context(stxs)))))
+    | ~else: literal(stxs)
+
+  def escape_one(stxs):
+    match stxs
     | '(($gs, ...)):
         nested(gs, 'parens_syntax, stxs)
     | '([$gs, ...]):
@@ -72,21 +100,24 @@ for_meta:
         nested(gs, 'braces_syntax, stxs)
     | '(: $gs; ...):
         nested(gs, 'block_syntax, stxs)
-    | '($(id $: Id)):
+    | '($(id $: Id_Op)):
         val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Transformer(proc):
             '(relocate_expansion($(proc(id)),
                                  literal_syntax_term($(head_context(stxs)))))
         | ~else: literal(stxs)
-    | '($(op $: Op)):
-        val mv: syntax_meta_value(typeset_meta.in_space(op), #false)
-        match mv
-        | typeset_meta.Transformer(proc):
-            '(relocate_expansion($(proc(op)),
-                                 literal_syntax_term($(head_context(stxs)))))
-        | ~else: literal(stxs)
     | ~else: literal(stxs)
+
+  def adjust_spaces(head, tail):
+    match '($head)
+    | '($(id $: Id_Op)):
+        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        match mv
+        | typeset_meta.Spacer(proc):
+            proc(head, tail, ' $$)                
+        | ~else: values(head, tail)
+    | ~else: values(head, tail)
 
 fun as_seq(v): '($v)
 
@@ -131,8 +162,11 @@ expr.macro
 | '(rhombus ($forms ...) $main_tail ......):
     values('(#{typeset-rhombus}($(escape('($forms ...))))),
            main_tail)
-| '(rhombus ($forms ..., ~space: $space) $main_tail ......):
-    values('(#{typeset-rhombus}(~space: symbol($space), $(escape('($forms ...))))),
+| '(rhombus ($forms ..., ~impmod) $main_tail ......):
+    values('(#{typeset-rhombus}(~space: symbol(impmod), $(escape('($forms ...))))),
+           main_tail)
+| '(rhombus ($forms ..., ~ann) $main_tail ......):
+    values('(#{typeset-rhombus}(~space: symbol(ann), $(escape('($forms ...))))),
            main_tail)
 
 expr.macro '(rhombusblock $tail ...):

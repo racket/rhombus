@@ -5,6 +5,7 @@
          Term
          Id
          Op
+         Id_Op
          Group)
 
 (module+ for-quasiquote
@@ -17,4 +18,5 @@
 (define-syntax Term "predefined syntax class")
 (define-syntax Id "predefined syntax class")
 (define-syntax Op "predefined syntax class")
+(define-syntax Id_Op "predefined syntax class")
 (define-syntax Group "predefined syntax class")

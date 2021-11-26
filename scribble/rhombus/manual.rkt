@@ -6,7 +6,8 @@
          "../private/docmodule.rhm"
          "../private/example.rhm"
          (only-in "../private/typeset-doc.rkt"
-                  grammar))
+                  grammar)
+         "../private/rhombus-spacer.rkt")
 
 (provide (all-from-out scribble/rhombus)
          litchar
@@ -17,7 +18,8 @@
          doc
          docmodule
          grammar
-         examples)
+         examples
+         (all-from-out "../private/rhombus-spacer.rkt"))
 
 (module reader syntax/module-reader
   #:language 'scribble/rhombus/manual
