@@ -286,11 +286,11 @@ The block has two groups, each of which is a more nested block. The
 first nested block has @litchar{world} in a single group, and the second
 nested block as @litchar{universe} in a single group.
 
-A @litchar{|} cannot be a in a top-level sequence of groups or start a
-group immediately within @litchar{()}, @litchar{[]}, or @litchar{{}},
-and it cannot appear just after @litchar{:}. Like @litchar{:}, the
-content of a block after @litchar{|} cannot be empty unless
-explicit-grouping @litchar{«} and @litchar{»} are used.
+A @litchar{|} cannot be a in a top-level sequence of groups, and it
+cannot appear just after @litchar{:}, but a @litchar{|} can start a
+group immediately within @litchar{()}, @litchar{[]}, or @litchar{{}}.
+Like @litchar{:}, the content of a block after @litchar{|} cannot be
+empty unless explicit-grouping @litchar{«} and @litchar{»} are used.
 
 If a @litchar{|} appears on the same line as an earlier @litchar{|} and
 is not more nested inside @litchar{()}, @litchar{[]}, or @litchar{{}},

@@ -343,7 +343,8 @@
            (when (group-state-comma-time? sg)
              (fail t (format "missing comma before new group (~a)"
                              "within parentheses, brackets, or braces")))
-           (case (token-name t)
+           (case (and (not (eq? (group-state-block-mode sg) 'start))
+                      (token-name t))
              [(bar-operator)
               (define line (token-line t))
               (cond
@@ -639,7 +640,7 @@
              (parse-groups next-l (make-group-state #:count? (state-count? s)
                                                     #:closer (make-closer-expected closer t)
                                                     #:paren-immed? #t
-                                                    #:block-mode (if (eq? tag 'at) 'no #f)
+                                                    #:block-mode (if (eq? tag 'at) 'no 'start)
                                                     #:column sub-column
                                                     #:last-line last-line
                                                     #:delta delta

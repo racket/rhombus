@@ -325,6 +325,8 @@ local:
 (:, 2)
 (1, :)
 
+(| 1 | 2)
+
 INPUT
 ))
 
@@ -1075,7 +1077,9 @@ INPUT
     (group (block))
     (group (parens (group (block))))
     (group (parens (group (block)) (group 2)))
-    (group (parens (group 1) (group (block))))))
+    (group (parens (group 1) (group (block))))
+    (group (parens (group (alts (block (group 1)) (block (group 2))))))
+    ))
 
 ;; has « », so unarmoring won't work
 (define input1a
