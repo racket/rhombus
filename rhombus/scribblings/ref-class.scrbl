@@ -5,11 +5,11 @@
 
 @doc[
   ~literal: ::,
-  defn.macro '(class identifier(field, ...)),
+  defn.macro '(class $identifier($field, ...)),
   
   grammar field:
-    identifier
-    identifier :: annotation
+    $identifier
+    $identifier :: $annotation
 ]{
 
  Binds @rhombus[identifier] as a class name, which serves several roles:

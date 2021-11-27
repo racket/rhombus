@@ -4,7 +4,7 @@
 @title{Syntax Objects}
 
 @doc[
-  expr.macro '(' form)
+  expr.macro '(' $form)
 ]{
 
  Creates a syntax object quoting @rhombus[form].
@@ -27,7 +27,7 @@
 
 
 @doc[
-  expr.macro '($ expr)
+  expr.macro '($ $expr)
 ]{
 
  Only allowed within a @rhombus['] form, escapes so that the value of
@@ -37,7 +37,7 @@
 
 
 @doc[
-  bind.macro '(' form)
+  bind.macro '(' $form)
 ]{
 
  Matches a syntax object consistent with @rhombus[form].
@@ -55,8 +55,8 @@
 
 
 @doc[
-  bind.macro '($ identifier),
-  bind.macro '($ (identifier $: syntax_class)),
+  bind.macro '($ $identifier),
+  bind.macro '($ ($identifier $: $syntax_class)),
 ]{
 
  Only allowed within a @rhombus[', ~bind] binding pattern, escapes so that
@@ -69,7 +69,7 @@
 }
 
 @doc[
-  expr.macro '(identifier $: syntax_class)
+  expr.macro '($identifier $: $syntax_class)
 ]{
 
  Only allowed with @rhombus[$] within a template, matches and binds

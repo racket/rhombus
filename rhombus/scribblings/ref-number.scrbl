@@ -12,6 +12,14 @@
 }
 
 @doc[
+  annotation.macro 'Integer
+]{
+
+  Matches exact integers.
+
+}
+
+@doc[
   operator ((x :: Number) + (y :: Number)) :: Number,
   operator ((x :: Number) - (y :: Number)) :: Number,
   operator ((x :: Number) * (y :: Number)) :: Number,

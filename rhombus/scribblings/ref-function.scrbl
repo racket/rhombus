@@ -4,22 +4,22 @@
 @title{Functions}
 
 @doc[
-  defn.macro '(fun identifier(arg_binding, ...) maybe_result_annotation:
-                 body
+  defn.macro '(fun $identifier($arg_binding, ...) $maybe_result_annotation:
+                 $body
                  ...),
 
-  expr.macro '(fun (arg_binding, ...) maybe_result_annotation:
-                 body
+  expr.macro '(fun ($arg_binding, ...) $maybe_result_annotation:
+                 $body
                  ...),
   
   grammar arg_binding:
-    binding
-    keyword: binding
-    binding $$(@tt{=}) default_expr
-    keyword: binding $$(@tt{=}) default_expr,
+    $binding
+    $keyword: $binding
+    $binding $$(@tt{=}) $default_expr
+    $keyword: $binding $$(@tt{=}) $default_expr,
   
   grammar maybe_result_annotation:
-    :: annotation
+    :: $annotation
     $$("ϵ")
 ]{
 
@@ -29,11 +29,11 @@
 }
 
 @doc[
-  defn.macro '(operator (opname arg_binding)  maybe_result_annotation:
-                 body
+  defn.macro '(operator ($opname $arg_binding) $maybe_result_annotation:
+                 $body
                  ...),
-  defn.macro '(operator (arg_binding opname arg_binding) maybe_result_annotation:
-                 body
+  defn.macro '(operator ($arg_binding $opname $arg_binding) $maybe_result_annotation:
+                 $body
                  ...),
 ]{
 

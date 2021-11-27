@@ -5,7 +5,7 @@
 
 @doc[
   decl.macro '(begin:
-                 body
+                 $body
                  ...)
 ]{
 

@@ -1,13 +1,15 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title[~tag: "annotation"]{Annotations and the Dot Operator}
 
 Besides classes defined with @rhombus[class], a few predefined
-annotations work with the @rhombus[-:] and @rhombus[::] annotation
-operators, including @rhombus[Integer] (meaning exact integer),
-@rhombus[Number], @rhombus[String], @rhombus[Keyword], and @rhombus[Any]
-(meaning any value).
+annotations work with the @rhombus[-:, ~bind] and @rhombus[::, ~bind]
+annotation operators, including @rhombus[Integer, ~ann] (meaning exact
+integer), @rhombus[Number, ~ann], @rhombus[String, ~ann],
+@rhombus[Keyword, ~ann], and @rhombus[Any, ~ann] (meaning any value).
 
 The @rhombus[-:] and @rhombus[::] operators also work in expression
 positions. In that case, the assertion or check is about the expression

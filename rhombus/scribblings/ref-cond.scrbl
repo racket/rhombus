@@ -4,10 +4,10 @@
 @title{Conditionals}
 
 @doc[
-  decl.macro '(if test_expr
-               | then_body
+  decl.macro '(if $test_expr
+               | $then_body
                  ...
-               | else_body
+               | $else_body
                  ...)
 ]{
 
@@ -29,17 +29,17 @@
 
 @doc[
   decl.macro '(cond
-               | clause_test_expr:
-                   clause_result_body
+               | $clause_test_expr:
+                   $clause_result_body
                    ...
                | ...),
   decl.macro '(cond
-               | clause_test_expr:
-                   clause_result_body
+               | $clause_test_expr:
+                   $clause_result_body
                    ...
                | ...
                | ~else:
-                   clause_result_body
+                   $clause_result_body
                    ...)
 ]{
 

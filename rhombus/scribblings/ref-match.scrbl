@@ -4,18 +4,18 @@
 @title{Matching}
 
 @doc[
-  decl.macro '(match target_expr
-               | binding:
-                   result_body
+  decl.macro '(match $target_expr
+               | $binding:
+                   $result_body
                    ...
                | ...),
-  decl.macro '(match target_expr
-               | binding:
-                   result_body
+  decl.macro '(match $target_expr
+               | $binding:
+                   $result_body
                    ...
                | ...
                | ~else:
-                   result_body
+                   $result_body
                    ...)
 ]{
 

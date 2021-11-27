@@ -4,7 +4,7 @@
 @title{Dot}
 
 @doc[
-  expr.macro '(target . identifier)
+  expr.macro '($target . $identifier)
 ]{
 
  Accesses a component of @rhombus[target], either statically or

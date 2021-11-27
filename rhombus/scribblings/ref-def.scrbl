@@ -4,8 +4,8 @@
 @title{Definitions}
 
 @doc[
-  defn.macro '(val binding:
-                 body
+  defn.macro '(val $binding:
+                 $body
                  ...)
 ]{
 
@@ -47,26 +47,44 @@
 
 
 @doc[
-  defn.macro '(def binding:
-                 body
+  defn.macro '(def $binding:
+                 $body
                  ...),
-  defn.macro '(def identifier (arg_binding, ...) maybe_result_annotation:
-                 body
+  defn.macro '(def $identifier ($arg_binding, ...) $maybe_result_annotation:
+                 $body
                  ...),
-  defn.macro '(def 'expr_pattern:
-                 body
+  defn.macro '(def ' $expr_pattern:
+                 $body
                  ...),
   grammar expr_pattern:
-    identifier
-    (identifier_or_operator pattern ...)
-    ($identifier identifier_or_operator pattern ...),
+    $identifier
+    ($identifier_or_operator $pattern ...)
+    ($ $identifier $identifier_or_operator $pattern ...),
   grammar identifier_or_operator:
-    identifier
-    operator
+    $identifier
+    $operator
 ]{
 
  Like @rhombus[val], @rhombus[def], or @rhombus[expr.rule], depending on
  the form. The @rhombus[fun]-like form matches only if
  @rhombus[identifier] is not bound as a pattern operator.
+
+}
+
+
+
+@doc[
+  defn.macro '(let $binding:
+                 $body
+                 ...),
+  defn.macro '(let $identifier ($arg_binding, ...) $maybe_result_annotation:
+                 $body
+                 ...),
+  defn.macro '(let ' $expr_pattern:
+                 $body)
+]{
+
+ Like @rhombus[def], but for bindings that become visible only after the
+ @rhombus[let] form within its definition context.
 
 }

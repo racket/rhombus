@@ -4,22 +4,21 @@
 @title{Import}
 
 @doc[
-  ~literal: lib file,
   decl.macro '(import:
-                 module_path:
-                   import_modifier
+                 $module_path:
+                   $import_modifier
                    ...
                  ...),
   
   grammar module_path:
-    collection_module_path
-    string
-    lib(string)
-    file(string),
+    $collection_module_path
+    $string
+    lib($string)
+    file($string),
 
   grammar collection_module_path:
-    identifier
-    identifier / collection_module_path
+    $identifier
+    $identifier / $collection_module_path
 
 ]{
 
@@ -69,7 +68,7 @@
 }
 
 @doc[
-  imp.modifier '(prefix identifier)
+  imp.modifier '(prefix $identifier)
 ]{
 
  Modifies an @rhombus[import] clause to bind the prefix
@@ -89,7 +88,7 @@
 
 @doc[
   imp.modifier '(expose:
-                   identifier ...
+                   $identifier ...
                    ...)
 ]{
 
@@ -101,7 +100,7 @@
 
 @doc[
   imp.modifier '(rename:
-                   identifier ~to local_identifier
+                   $identifier ~to $local_identifier
                    ...)
 ]{
 
@@ -114,7 +113,7 @@
 
 @doc[
   imp.modifier '(only:
-                   identifier ...
+                   $identifier ...
                    ...)
 ]{
 
@@ -125,7 +124,7 @@
 
 @doc[
   imp.modifier '(except:
-                   identifier ...
+                   $identifier ...
                    ...)
 ]{
 

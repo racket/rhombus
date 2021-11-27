@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title{Definitions and Classes}
 
@@ -183,7 +185,7 @@ pattern constructor as a function definition.
   )
 
 The @rhombus[let] form is like @rhombus[def], but it makes bindings
-available only _after_ the definition, and it shadows any binding
+available only @emph{after} the definition, and it shadows any binding
 before, which is useful for binding a sequence of results to the same
 name. The @rhombus[let] form does not change the binding region of other
 definitions, so a @rhombus[def] after @rhombus[let] binds a name that is
@@ -201,12 +203,13 @@ visible before the @rhombus[let] form.
     get_after()  // prints 3
   )
 
-The identifier @rhombus[_] is similar to @rhombus[Posn] and @rhombus[-:]
-in the sense that it’s a binding operator. As a binding, @rhombus[_]
-matches any value and binds no variables. Use it as an argument name or
-subpattern form when you don’t need the corresponding argument or value,
-but @rhombus[_] nested in a binding pattern like @rhombus[::] can still
-constrain allowed values.
+The identifier @rhombus[_, ~bind] is similar to @rhombus[Posn] and
+@rhombus[-:, ~bind] in the sense that it’s a binding operator. As a
+binding, @rhombus[_, ~bind] matches any value and binds no variables.
+Use it as an argument name or subpattern form when you don’t need the
+corresponding argument or value, but @rhombus[_, ~bind] nested in a
+binding pattern like @rhombus[::, ~bind] can still constrain allowed
+values.
 
 @(rhombusblock:
     fun omnivore(_): "yum"
