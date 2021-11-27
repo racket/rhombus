@@ -14,7 +14,8 @@
                   style
                   plain
                   nested-flow)
-         (submod scribble/racket id-element))
+         (submod scribble/racket id-element)
+         (for-template "typeset-help.rkt"))
 
 (provide typeset-rhombus
          typeset-rhombusblock)
@@ -40,6 +41,9 @@
          (let g-loop ([elems (syntax->list elems-stx)] [pre-space? #f] [check-prefix? #f])
            (cond
              [(null? elems) null]
+             [(initial-name-ref elems space-name) ; detect `root.field` paths
+              => (lambda (new-elems)
+                   (g-loop new-elems pre-space? check-prefix?))]
              [else
               (define elem (car elems))
               (define alt-elem (syntax-parse elem
@@ -144,7 +148,7 @@
     (syntax-case stx ()
       [(_ (_ self)) #'self]))
   (define stx-ranges (make-hasheq))
-  (define str (block-string->content-string (shrubbery-syntax->string block-stx
+  (define str (block-string->content-string (shrubbery-syntax->string (replace-name-refs block-stx)
                                                                       #:use-raw? #t
                                                                       #:keep-suffix? #t
                                                                       #:infer-starting-indentation? #f
@@ -374,3 +378,66 @@
 
 (define (id-space-name id [default-name #f])
   (or (syntax-property id 'typeset-space-name) default-name))
+
+(define (initial-name-ref elems space-name)
+  (cond
+    [(and (identifier? (car elems))
+          (pair? (cdr elems))
+          (let ([op (syntax->list (cadr elems))])
+            (and op
+                 (= (length op) 2)
+                 (eq? (syntax-e (car op)) 'op)
+                 (eq? (syntax-e (cadr op)) '|.|)))
+          (pair? (cddr elems))
+          (identifier? (caddr elems)))
+     (define target (resolve-name-ref (car elems) (caddr elems)))
+     (cond
+       [target
+        (define id (car elems))
+        (cons (datum->syntax target
+                             (element tt-style
+                               (make-id-element (add-space id space-name)
+                                                (symbol->string (syntax-e target))
+                                                #f
+                                                #:space (list (syntax-e target) space-name)
+                                                #:unlinked-ok? #t))
+                             target
+                             target)
+              (cdddr elems))]
+       [else #f])]
+    [else #f]))
+
+;; replace `root.field` with a typeset element
+(define (replace-name-refs block-stx)
+  (define (replace-in-groups gs)
+    (for/list ([g (in-list (syntax->list gs))])
+      (replace-in-group g)))
+  (define (replace-in-group g)
+    (syntax-parse g
+      #:datum-literals (group)
+      [((~and tag group) t ...)
+       (datum->syntax g (cons #'tag (replace-in-terms #'(t ...))) g g)]))
+  (define (replace-in-terms ts)
+    (let loop ([elems (syntax->list ts)])
+      (cond
+        [(null? elems) null]
+        [(initial-name-ref elems #f) ; detect `root.field` paths
+         => (lambda (new-elems) (loop new-elems))]
+        [else
+         (cons (replace-in-term (car elems))
+               (loop (cdr elems)))])))
+  (define (replace-in-term stx)
+    (syntax-parse stx
+      #:datum-literals (parens brackets braces block alts op)
+      [((~and tag (~or parens brackets braces block)) g ...)
+       (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
+      [((~and tag alts) b ...)
+       (datum->syntax stx (cons #'tag (replace-in-terms #'(b ...))) stx stx)]
+      [((~and tag parens) g ...)
+       (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
+      [((~and tag parens) g ...)
+       (datum->syntax stx (cons #'tag (replace-in-groups #'(g ...))) stx stx)]
+      [else stx]))
+  (replace-in-term block-stx))
+
+  

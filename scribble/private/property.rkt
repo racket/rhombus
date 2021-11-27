@@ -16,7 +16,7 @@
     (syntax-parse g
       #:datum-literals (group)
       [((~and tag group) t ...)
-       (datum->syntax stx (cons #'tag (add-to-terms #'(t ...))) stx stx)]))
+       (datum->syntax g (cons #'tag (add-to-terms #'(t ...))) g g)]))
   (define (add-to-terms ts)
     (for/list ([t (in-list (syntax->list ts))])
       (add-to-term t)))

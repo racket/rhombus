@@ -12,7 +12,7 @@
 }
 
 @doc[
-  operator (v1 & v2):: String
+  operator (v1 & v2) :: String
 ]{
 
  Coerces @rhombus[v1] and @rhombus[v2] to a string, then appends the strings.
