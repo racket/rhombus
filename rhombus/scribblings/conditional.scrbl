@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title[~tag: "conditional"]{Conditionals and Pattern-Matching Dispatch}
 
@@ -16,8 +18,8 @@ precedence than @rhombus[&&] and @rhombus[||], while @rhombus[&&] has
 higher precedence than @rhombus[||]. Arithmetic operators have higher
 precedence than comparison operators, @rhombus[||], @rhombus[&&], but
 they have no precedence relative to @rhombus[!]. The @rhombus[==]
-operator is numerical comparison like Racket’s @rhombus[=], while
-@rhombus[===] operator is Racket’s @rhombus[equal']. Comparison
+operator is numerical comparison like Racket’s @tt{=}, while
+@rhombus[===] operator is Racket’s @tt{equal?}. Comparison
 operators are non-associative and have no precedence relationship with
 each other.
 
@@ -86,7 +88,7 @@ function declaration and the pattern match, like this:
     | fib(n): fib(n-1) + fib(n-2)
   )
 
-There’s no @rhombus[~else] for this fused form, but @rhombus[_] can be
+There’s no @rhombus[~else] for this fused form, but @rhombus[_, ~bind] can be
 useful in catch-call clauses where the argument is not used. Also, the
 function name and all relevant argument positions have to be repeated in
 every case, but that’s often a readable trade-off. Match-dispatching

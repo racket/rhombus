@@ -101,6 +101,8 @@
          [else (write v op)])]
       [(boolean? v)
        (display (if v "#true" "#false") op)]
+      [(void? v)
+       (display "#void" op)]
       [else
        (display "#{")
        (write v op)

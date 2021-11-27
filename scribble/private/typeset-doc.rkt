@@ -12,7 +12,8 @@
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
                   in-syntax-class-space)
          (only-in rhombus
-                  def val fun operator :: |'| |.| $)
+                  def val fun operator :: |'| |.| $
+                  [= rhombus-=])
          (only-in rhombus/macro
                   decl defn expr imp annotation bind
                   [syntax rhombus-syntax])
@@ -215,9 +216,10 @@
 
 (define-for-syntax (extract-binding-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun ::)
+    #:literals (def val fun :: rhombus-=)
     #:datum-literals (parens group op)
-    [(group lhs (op ::) _) (extract-binding-metavariables #'(group lhs) vars)]
+    [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
+    [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
     [(group (parens g)) (extract-binding-metavariables #'g vars)]
     [(group id:identifier) (add-metavariable vars #'id)]
     [_ vars]))

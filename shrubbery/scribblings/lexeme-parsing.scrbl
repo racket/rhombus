@@ -21,6 +21,7 @@ floating-point values use a @litchar{#} notation: @litchar{#inf},
 @litchar{#neginf}, and @litchar{#nan}.
 
 Boolean literals are Racket-style @litchar{#true} and @litchar{#false}.
+The void value is @litchar{#void}.
 
 Identifiers are formed from Unicode alphanumeric characters plus @litchar{_},
 where the initial character must not be a numeric character. An
@@ -151,6 +152,8 @@ the table below sketches the shape of @litchar["@"] forms.
     empty_line,
     [is_lex, @nonterm{boolean}, bis, @litchar{#true}, ""],
     ["", "", bor, @litchar{#false}, ""],
+    empty_line,
+    [is_lex, @nonterm{void}, bis, @litchar{#void}, ""],
     empty_line,
     [is_lex, @nonterm{string}, bis, bseq(@litchar{"}, kleenestar(@nonterm{strelem}), @litchar{"}), ""],
     empty_line,

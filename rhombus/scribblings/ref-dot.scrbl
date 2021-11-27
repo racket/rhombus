@@ -12,3 +12,13 @@
   provider}.
 
 }
+
+
+@doc[
+  defn.macro 'use_static_dot
+]{
+
+ (Re-)defines @rhombus[.] so that it accesses a component of a target
+ only when the access can be resolved statically.
+
+}

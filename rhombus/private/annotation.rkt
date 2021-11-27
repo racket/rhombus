@@ -32,6 +32,7 @@
          String
          Symbol
          Keyword
+         Void
 
          (for-space rhombus/annotation #%tuple))
 
@@ -262,6 +263,7 @@
 (define-syntax String (identifier-annotation #'String #'string? #'()))
 (define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
 (define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
+(define-syntax Void (identifier-annotation #'Void #'void? #'()))
 
 (define-syntax (define-annotation-syntax stx)
   (syntax-parse stx

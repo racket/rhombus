@@ -92,6 +92,7 @@
                (:? "\\" "\""))]
 
   [boolean (:or "#true" "#false")]
+  [void-const "#void"]
                       
   [special-number (:: "#"
                       (:or "inf"
@@ -101,6 +102,7 @@
   [bad-hash (:- (:or (:: "#" (:* non-delims))
                      "#/")
                 boolean
+                void-const
                 special-number)]
 
   [exponent-marker e]
@@ -405,6 +407,8 @@
       (ret 'literal num #:raw lexeme 'constant #f start-pos end-pos 'continuing))]
    [boolean
     (ret 'literal (equal? lexeme "#true") #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
+   [void-const
+    (ret 'literal (void) #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
    ["//" (read-line-comment 'comment lexeme input-port start-pos)]
    ["/*" (read-nested-comment 1 start-pos lexeme input-port)]
    ["#//"
@@ -454,7 +458,7 @@
            #:pending-backup (if opener 1 pending-backup)))]
    [(special)
     (cond
-      [(or (number? lexeme) (boolean? lexeme))
+      [(or (number? lexeme) (boolean? lexeme) (void? lexeme))
        (ret 'literal lexeme 'constant #f start-pos end-pos 'continuing)]
       [(string? lexeme)
        (ret 'literal lexeme 'string #f start-pos end-pos 'continuing)]

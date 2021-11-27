@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "typeset_meta.rhm"
-                     "property.rkt"))
+                     "property.rkt")
+         (only-in rhombus
+                  [= rhombus-=]))
 
 (provide (for-space rhombus/scribble/typeset
                     ::
@@ -63,7 +65,15 @@
   (Spacer
    (lambda (head tail escape)
      (define (arg-spacer stx)
-       (group-identifiers-syntax-property stx 'typeset-space-name 'bind))
+       (syntax-parse stx
+         #:datum-literals (group op)
+         #:literals (rhombus-=)
+         [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
+          #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
+                      (term-identifiers-syntax-property a 'typeset-space-name 'bind))
+                 eq
+                 e ...)]
+         [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
      (define (post-spacer stx)
        (syntax-parse stx
          #:datum-literals (op)

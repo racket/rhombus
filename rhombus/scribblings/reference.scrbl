@@ -18,8 +18,12 @@
 
 @include_section["ref-boolean.scrbl"]
 @include_section["ref-number.scrbl"]
+@include_section["ref-string.scrbl"]
 @include_section["ref-list.scrbl"]
+@include_section["ref-void.scrbl"]
 @include_section["ref-equal.scrbl"]
 @include_section["ref-dot.scrbl"]
 @include_section["ref-annotation.scrbl"]
 @include_section["ref-stxobj.scrbl"]
+
+@include_section["ref-io.scrbl"]
