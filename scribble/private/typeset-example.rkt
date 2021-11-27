@@ -6,7 +6,8 @@
          rhombus/parse
          racket/sandbox
          (only-in scribble/example
-                  make-base-eval)
+                  make-base-eval
+                  close-eval)
          (only-in scribble/manual
                   hspace
                   racketresultfont)
@@ -18,13 +19,19 @@
                   plain)
          "rhombus.rhm")
 
-(provide typeset-examples)
+(provide typeset-examples
+         make-rhombus-eval
+         close-eval)
 
 (define-syntax (typeset-examples stx)
   (syntax-parse stx
     #:datum-literals (parens group block)
     [(_ (parens (~or (~optional (group #:label (block label-expr))
-                                #:defaults ([label-expr #'(group (parsed "Examples:"))])))
+                                #:defaults ([label-expr #'(group (parsed "Examples:"))]))
+                     (~optional (group #:eval (block eval-expr))
+                                #:defaults ([eval-expr #'(group (parsed (make-rhombus-eval)))]))
+                     (~optional (group #:hidden (block hidden-expr))
+                                #:defaults ([hidden-expr #'(group (parsed #f))])))
                 ...
                 (group form ...) ...))
      (define (rb form)
@@ -42,8 +49,9 @@
      (with-syntax ([(t-form ...)
                     (map rb (syntax->list #'((group form ...) ...)))])
        #'(examples
-          #:eval (make-rhombus-eval)
+          #:eval (rhombus-expression eval-expr)
           #:label (rhombus-expression label-expr)
+          #:hidden? (rhombus-expression hidden-expr)
           (list
            (list t-form
                  '(top (group form ...)))
@@ -57,6 +65,7 @@
 
 (define (examples #:eval eval
                   #:label label
+                  #:hidden? hidden?
                   rb+exprs)
   (define example-block
     (nested-flow
@@ -79,7 +88,8 @@
                  (call-in-sandbox-context eval (lambda () (print v o)))
                  (for/list ([str (in-list (string-split (get-output-string o) "\n"))])
                    (paragraph plain (racketresultfont str)))]))))))))))
-  (if label
-      (list label example-block)
-      example-block))
+  (cond
+    [hidden? null]
+    [label (list label example-block)]
+    [else example-block]))
 

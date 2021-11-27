@@ -210,8 +210,8 @@
   (syntax-parse stx
     #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar rhombus-syntax $)
     #:datum-literals (parens group op modifier macro rule class)
-    [(group (~or def fun) id:identifier (parens . _) . _) #'id]
-    [(group (~or def val) id:identifier . _) #'id]
+    [(group (~or def fun) id:identifier-target (parens . _) . _) #'id.name]
+    [(group (~or def val) id:identifier-target . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
     [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
     [(group _:operator-macro-head (op |'|) (parens (group (op $) _:identifier id:target . _))) #'id.name]
@@ -229,10 +229,10 @@
   (syntax-parse stx
     #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar)
     #:datum-literals (parens group op)
-    [(group (~or def fun) _ (parens g ...) . _)
+    [(group (~or def fun) _:identifier-target (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
-    [(group (~or def val) id:identifier . _) vars]
+    [(group (~or def val) _:identifier-target . _) vars]
     [(group (~or operator) (parens (group (op id) arg)) . _)
      (extract-binding-metavariables #'(group arg) vars)]
     [(group (~or operator) (parens (group arg0 (op id) arg1)) . _)
@@ -334,9 +334,9 @@
   (syntax-parse stx
     #:literals (def val fun expr defn decl imp rhombus-syntax bind annotation operator |.| |'| |$| grammar)
     #:datum-literals (parens group op)
-    [(group (~and tag (~or def val fun)) id e ...)
+    [(group (~and tag (~or def val fun)) id:identifier-target e ...)
      (rb #:at stx
-         #`(group tag #,@(subst #'id) e ...))]
+         #`(group tag #,@(subst #'id.name) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)
      (rb #:at stx
          #`(group tag (p-tag (g-tag #,@(subst #'id) arg)) e ...))]

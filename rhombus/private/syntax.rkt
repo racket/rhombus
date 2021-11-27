@@ -18,7 +18,7 @@
 (provide (for-syntax make-operator-definition-transformer
                      make-identifier-syntax-definition-transformer
                      make-identifier-syntax-definition-sequence-transformer
-<
+
                      parse-operator-definition
                      parse-operator-definitions
                      :operator-syntax-quote

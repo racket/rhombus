@@ -53,6 +53,11 @@
   defn.macro '(def $identifier ($arg_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
+  defn.macro '(def
+               | $identifier ($arg_binding, ...) $maybe_result_annotation:
+                   $body
+                   ...
+               | ...),
   defn.macro '(def ' $expr_pattern:
                  $body
                  ...),
@@ -80,6 +85,11 @@
   defn.macro '(let $identifier ($arg_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
+  defn.macro '(let
+               | $identifier ($arg_binding, ...) $maybe_result_annotation:
+                   $body
+                   ...
+               | ...),
   defn.macro '(let ' $expr_pattern:
                  $body)
 ]{

@@ -13,7 +13,7 @@
 (provide defn)
 
 (define-simple-name-root defn
-   macro
+  macro
   sequence_macro)
 
 ;; ----------------------------------------

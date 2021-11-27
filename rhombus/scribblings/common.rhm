@@ -6,8 +6,13 @@ import:
   rhombus:
     no_prefix
     for_label
+  rhombus/macro:
+    no_prefix
+    for_label
 
 export:
   all_from(rhombus/macro)
   all_from(rhombus):
+    for_label
+  all_from(rhombus/macro):
     for_label

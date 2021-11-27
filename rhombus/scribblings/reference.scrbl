@@ -31,5 +31,7 @@
 @include_section["ref-values.scrbl"]
 @include_section["ref-annotation.scrbl"]
 @include_section["ref-stxobj.scrbl"]
+@include_section["ref-macro.scrbl"]
 
 @include_section["ref-io.scrbl"]
+

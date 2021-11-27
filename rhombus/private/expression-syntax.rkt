@@ -20,7 +20,7 @@
                        make-expression-prefix-operator)))
 
 (define-simple-name-root expr
-   macro
+  macro
   rule)
 
 (begin-for-syntax

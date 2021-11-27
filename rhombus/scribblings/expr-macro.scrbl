@@ -31,7 +31,7 @@ wraps as a zero-argument function
 The @rhombus[expr.rule] form expects a @rhombus['] and then either
 parentheses or an identifier or operator to create a pattern that
 matches a sequence of terms. With parentheses after @rhombus['], either
-the first or second term within the pattern is an _unescaped_ identifier
+the first or second term within the pattern is an @emph{unescaped} identifier
 or operator to be defined; conceptually, it’s unescaped because the
 macro matches a sequence of terms that use that identifier or operator
 literally. If the first term in the pattern is an unescaped identifier

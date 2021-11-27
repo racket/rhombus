@@ -397,7 +397,7 @@
         (cons (datum->syntax target
                              (element tt-style
                                (make-id-element (add-space id space-name)
-                                                (symbol->string (syntax-e target))
+                                                (shrubbery-syntax->string target)
                                                 #f
                                                 #:space (list (syntax-e target) space-name)
                                                 #:unlinked-ok? #t))
@@ -440,4 +440,3 @@
       [else stx]))
   (replace-in-term block-stx))
 
-  

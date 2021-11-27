@@ -4,7 +4,7 @@ import:
   rhombus/macro:
     no_prefix
   scribble/manual:
-    expose: defmodule
+    expose: defmodule racketmodname
   "rhombus.rhm":
     no_prefix
   racket/base:
@@ -16,6 +16,7 @@ import:
 
 export:
   docmodule
+  rhombusmodname
 
 for_meta:
   fun translate_mod(mod):
@@ -33,3 +34,7 @@ decl.macro '(docmodule ($mod ...)):
                 keyword(#{#:require-form}),
                 unparsed('(fun (mod): @rhombus[import: $$(mod)])),
                 translate_mod('($mod ...))])))
+
+expr.macro '(rhombusmodname ($mod ...) $tail ......):
+  values(parsed(['racketmodname, translate_mod('($mod ...))]),
+         tail)

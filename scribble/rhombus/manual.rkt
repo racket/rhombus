@@ -17,8 +17,11 @@
                      [manual:filepath filepath])
          doc
          docmodule
+         rhombusmodname
          grammar
          examples
+         make_rhombus_eval
+         close_eval
          (all-from-out "../private/rhombus-spacer.rkt"))
 
 (module reader syntax/module-reader
