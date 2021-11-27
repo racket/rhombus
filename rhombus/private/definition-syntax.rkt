@@ -12,9 +12,9 @@
 
 (provide defn)
 
-(define-syntax defn
-  (simple-name-root macro
-                    sequence_macro))
+(define-simple-name-root defn
+   macro
+  sequence_macro)
 
 ;; ----------------------------------------
 

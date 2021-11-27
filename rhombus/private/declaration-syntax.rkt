@@ -13,8 +13,8 @@
 
 (provide decl)
 
-(define-syntax decl
-  (simple-name-root macro))
+(define-simple-name-root decl
+  macro)
 
 (define-syntax macro
   (make-identifier-syntax-definition-transformer (lambda (x) x)

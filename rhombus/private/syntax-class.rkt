@@ -39,8 +39,8 @@
 (define-syntax Group (rhombus-syntax-class 'group #f))
 (define-syntax Block (rhombus-syntax-class 'block #f))
 
-(define-syntax syntax
-  (simple-name-root class))
+(define-simple-name-root syntax
+  class)
 
 (define-syntax class
   (definition-transformer

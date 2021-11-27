@@ -19,13 +19,13 @@
   (provide (for-syntax make-expression-infix-operator
                        make-expression-prefix-operator)))
 
-(define-syntax expr
-  (simple-name-root macro
-                    rule))
+(define-simple-name-root expr
+   macro
+  rule)
 
 (begin-for-syntax
-  (define-syntax expr_ct
-    (simple-name-root call_result_key)))
+  (define-simple-name-root expr_ct
+    call_result_key))
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro

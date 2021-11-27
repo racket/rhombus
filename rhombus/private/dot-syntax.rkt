@@ -11,12 +11,12 @@
 (provide dot
          (for-syntax dot_ct))
 
-(define-syntax dot
-  (simple-name-root macro))
+(define-simple-name-root dot
+  macro)
 
 (begin-for-syntax
-  (define-syntax dot_ct
-    (simple-name-root provider_key)))
+  (define-simple-name-root dot_ct
+    provider_key))
 
 (define-for-syntax provider_key #'#%dot-provider)
 

@@ -16,14 +16,14 @@
 (provide static_info
          (for-syntax static_info_ct))
 
-(define-syntax static_info
-  (simple-name-root macro))
+(define-simple-name-root static_info
+  macro)
 
 (begin-for-syntax
-  (define-syntax static_info_ct
-    (simple-name-root pack
-                      unpack
-                      wrap)))
+  (define-simple-name-root static_info_ct
+    pack
+    unpack
+    wrap))
 
 (define-syntax macro
   (definition-transformer

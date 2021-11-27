@@ -15,12 +15,12 @@
 (provide annotation
          (for-syntax annotation_ct))
 
-(define-syntax annotation
-  (simple-name-root macro))
+(define-simple-name-root annotation
+  macro)
 
 (begin-for-syntax
-  (define-syntax annotation_ct
-    (simple-name-root pack_predicate)))
+  (define-simple-name-root annotation_ct
+    pack_predicate))
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro

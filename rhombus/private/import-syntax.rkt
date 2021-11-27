@@ -12,8 +12,8 @@
 
 (provide imp)
 
-(define-syntax imp
-  (simple-name-root modifier))
+(define-simple-name-root imp
+  modifier)
 
 (define-syntax modifier
   (make-identifier-syntax-definition-transformer (lambda (x) x)

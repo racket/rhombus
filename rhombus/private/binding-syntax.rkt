@@ -24,20 +24,20 @@
 (provide bind
          (for-syntax bind_ct))
 
-(define-syntax bind
-  (simple-name-root macro
-                    rule
-                    infoer
-                    matcher
-                    binder))
+(define-simple-name-root bind
+  macro
+  rule
+  infoer
+  matcher
+  binder)
 
 (begin-for-syntax
-  (define-syntax bind_ct
-    (simple-name-root pack
-                      pack_info
-                      unpack
-                      unpack_info
-                      get_info)))
+  (define-simple-name-root bind_ct
+    pack
+    pack_info
+    unpack
+    unpack_info
+    get_info))
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro
