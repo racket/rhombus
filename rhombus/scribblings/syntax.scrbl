@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title[~tag: "syntax"]{Syntax Objects}
 
@@ -147,7 +149,7 @@ group is interchangeable with a single-term syntax object:
   )
 
 To match a single term in a group context, annotate the pattern variable
-with the @rhombus[Term] syntax class using the @rhombus[$:] operator.
+with the @rhombus[Term, ~stxclass] syntax class using the @rhombus[$:] operator.
 
 @(rhombusblock:
     val '($(x $: Term)): '(1)
@@ -156,8 +158,9 @@ with the @rhombus[Term] syntax class using the @rhombus[$:] operator.
     // val '($(x $: Term)): '(1 + 2) // would be an run-time error
   )
 
-Meanwhile, @rhombus[...] works the way you would expect in a pattern, matching
-any @rhombus[...]-replicated pattern variables to form a list of matches:
+Meanwhile, @rhombus[..., ~bind] works the way you would expect in a
+pattern, matching any @rhombus[..., ~bind]-replicated pattern variables
+to form a list of matches:
 
 @(rhombusblock:
     val '($x + $y ...): '(1 + 2 + 3)
@@ -166,15 +169,16 @@ any @rhombus[...]-replicated pattern variables to form a list of matches:
     y  // prints a list: ['2, ' +, '3]
   )
 
-A @rhombus[......] behaves similarly to @rhombus[...], but for a @deftech{tail
-replication} that can only appear at the end of a group. In a patttern,
-an escaped variable must appear before @rhombus[......], and instead of
-binding the variable to a list, the variable is bound to a syntax object
-for a parenthesized term that contains the matched tail. In a template,
-an escaped expression must appear before @rhombus[......], and it must
-produce a syntax object for a parenthesized term.
+A @rhombus[......, ~bind] behaves similarly to @rhombus[..., ~bind], but
+for a @deftech{tail replication} that can only appear at the end of a
+group. In a patttern, an escaped variable must appear before
+@rhombus[......, ~bind], and instead of binding the variable to a list, the
+variable is bound to a syntax object for a parenthesized term that
+contains the matched tail. In a template, an escaped expression must
+appear before @rhombus[......, ~bind], and it must produce a syntax object for
+a parenthesized term.
 
-Use @rhombus[......] for tail sequences that you don’t need to inspect,
+Use @rhombus[......, ~bind] for tail sequences that you don’t need to inspect,
 because the syntax-object representation can avoid work proportional to
 the length of the matched tail. Avoiding that work can be important for
 macros.
@@ -187,7 +191,7 @@ macros.
     '(0 $tail ......) // prints a shrubbery: (0 2 3 4 5)
   )
 
-@aside{Using @rhombus[......] is similar to using @rhombus[.] in
+@aside{Using @rhombus[......, ~bind] is similar to using @litchar{.} in
  S-expression patterns and templates. The difference can avoid quadratic
  expansion costs, which is all the more important in the Rhombus
  expansion protocol, which must thread potentially long sequences into

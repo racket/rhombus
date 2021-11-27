@@ -177,7 +177,8 @@ expr.macro
            main_tail)
 | '(rhombus ($forms ..., $(kw_stx $: Keyw)) $main_tail ......):
     val kw: unwrap_syntax(kw_stx)
-    if (kw === keyword(~bind)
+    if (kw === keyword(~var)
+          || kw === keyword(~bind)
           || kw === keyword(~impmod)
           || kw === keyword(~ann)
           || kw === keyword(~stxclass))

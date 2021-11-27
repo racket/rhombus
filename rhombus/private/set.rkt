@@ -60,12 +60,15 @@
 (define (make_set . vals)
   (define ht (make-hash))
   (for ([v (in-list vals)])
-    (hash-set! ht v))
+    (hash-set! ht v #t))
   (set ht))
 
 (define-static-info-syntax make_set
   (#%call-result ((#%map-ref set-member?)
                   (#%map-set! set-member!))))
+
+(define (set-ref s v)
+  (hash-ref (set-ht s) v #f))
 
 ;; macro to optimize to an inline functional update
 (define-syntax (set-append stx)

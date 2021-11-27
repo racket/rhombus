@@ -5,6 +5,14 @@
 
 @title{Lists}
 
+Lists can be constructed using the syntax
+@rhombus[[$$(@rhombus[expr, ~var]), ...]], which creates list containing
+the values of the @rhombus[expr, ~var]s as elements.
+
+A list works with map-referencing square brackets to access a list
+element by position (in time proportional to the position), and it works
+with the @rhombus[++] operator to append lists.
+
 @doc[
   fun List(v :: Any, ...) :: List
 ]{
@@ -13,7 +21,10 @@
  @rhombus[[v, ...]].
 
 @examples[
-  List(1, 2, 3)
+  val lst: List(1, 2, 3),
+  lst,
+  lst[0],
+  lst ++ [4, 5]
 ]
 
 }
@@ -40,10 +51,12 @@
 }
 
 @doc[
-  annotation.macro 'List
+  annotation.macro 'List,
+  annotation.macro '(List.of($annotation)),
 ]{
 
- Matches any list.
+ Matches any list in the form without @rhombus[of]. The @rhombus[of]
+ variant matches a list whose elements satisfy @rhombus[annotation].
 
 }
 

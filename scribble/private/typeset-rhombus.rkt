@@ -112,11 +112,15 @@
             [id:identifier
              (define str (shrubbery-syntax->string stx))
              (define space-name (id-space-name* #'id))
-             (if (identifier-binding (add-space stx space-name) #f)
-                 (element tt-style (make-id-element (add-space stx space-name) str #f
-                                                    #:space space-name
-                                                    #:unlinked-ok? #t))
-                 (element symbol-color str))]
+             (cond
+               [(eq? space-name 'var)
+                (element variable-color str)]
+               [(identifier-binding (add-space stx space-name) #f)
+                (element tt-style (make-id-element (add-space stx space-name) str #f
+                                                   #:space space-name
+                                                   #:unlinked-ok? #t))]
+               [else
+                (element symbol-color str)])]
             [_
              (define d (syntax->datum stx))
              (element (cond
@@ -190,10 +194,15 @@
                             (eq? type 'operator))
                         (lookup-stx-identifier start end position-stxes stx-ranges))
                    => (lambda (id)
+                        (define str (shrubbery-syntax->string id))
                         (define space-name (id-space-name id))
-                        (element tt-style (make-id-element (add-space id space-name) (shrubbery-syntax->string id) #f
-                                                           #:space space-name
-                                                           #:unlinked-ok? #t)))]
+                        (cond
+                          [(eq? space-name 'var)
+                           (element variable-color str)]
+                          [else
+                           (element tt-style (make-id-element (add-space id space-name) str #f
+                                                              #:space space-name
+                                                              #:unlinked-ok? #t))]))]
                   [else
                    (define style
                      (case type

@@ -21,6 +21,9 @@
 @include_section["ref-number.scrbl"]
 @include_section["ref-string.scrbl"]
 @include_section["ref-list.scrbl"]
+@include_section["ref-array.scrbl"]
+@include_section["ref-map.scrbl"]
+@include_section["ref-set.scrbl"]
 @include_section["ref-void.scrbl"]
 
 @include_section["ref-equal.scrbl"]

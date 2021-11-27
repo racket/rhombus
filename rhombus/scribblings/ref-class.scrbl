@@ -27,8 +27,8 @@
 
  @item{a dot povider to access accessor functions @rhombus[identifier.field]},
 
- @item{a dot povider to access an annotation constructor @rhombus[identifier.of],
-   which takes as many annotation arguments as supplied @rhombus[field]s.}
+ @item{an annotation constructor @rhombus[identifier.of], which takes as
+   many annotation arguments as supplied @rhombus[field]s.}
 
 ]
 

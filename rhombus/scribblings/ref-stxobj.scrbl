@@ -100,3 +100,15 @@
  bound to a match for the entire block.
 
 }
+
+
+@doc[
+  bind.macro '(......)
+]{
+
+ Used within @rhombus[', ~bind] binding patterns to indicate tail
+ repetition.
+
+}
+
+

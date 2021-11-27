@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title[~tag: "map"]{Arrays and Maps}
 
@@ -21,7 +23,7 @@ for assignment.
 @rhombus[Array] is also an annotation and a binding contructor,
 analogous to @rhombus[List], and @rhombus[Array.of] is an annotation
 constructor. The @rhombus[Array] binding and expression constructors do
-not support @rhombus[...].
+not support @rhombus[..., ~bind].
 
 The @rhombus[Map] constructor creates an immutable mapping of arbitrary
 keys to values. The term @deftech{map} is meant to be generic, and
