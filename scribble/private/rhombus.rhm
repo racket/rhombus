@@ -175,12 +175,15 @@ expr.macro
 | '(rhombus ($forms ...) $main_tail ......):
     values('(#{typeset-rhombus}($(escape('($forms ...))))),
            main_tail)
-| '(rhombus ($forms ..., ~impmod) $main_tail ......):
-    values('(#{typeset-rhombus}(~space: symbol(impmod), $(escape('($forms ...))))),
-           main_tail)
-| '(rhombus ($forms ..., ~ann) $main_tail ......):
-    values('(#{typeset-rhombus}(~space: symbol(ann), $(escape('($forms ...))))),
-           main_tail)
+| '(rhombus ($forms ..., $(kw_stx $: Keyw)) $main_tail ......):
+    val kw: unwrap_syntax(kw_stx)
+    if (kw === keyword(~bind)
+          || kw === keyword(~impmod)
+          || kw === keyword(~ann)
+          || kw === keyword(~stxclass))
+    | values('(#{typeset-rhombus}(~space: keyword($kw), $(escape('($forms ...))))),
+             main_tail)
+    | raise_syntax_error("invalid space", kw)
 
 expr.macro '(rhombusblock $tail ...):
   ~op_stx: me

@@ -6,7 +6,9 @@
 
 (provide (for-space rhombus/scribble/typeset
                     ::
-                    fun))
+                    |'|
+                    fun
+                    match))
 
 (define-syntax (define-spacer stx)
   (syntax-parse stx
@@ -35,6 +37,25 @@
                 #`(parens
                    (group
                     #,(term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
+                    . more))]
+               [_ tail])))))
+
+(define-spacer |'|
+  (Spacer
+   (lambda (head tail escape)
+     (values head
+             (syntax-parse tail
+               #:datum-literals (parens group)
+               [(parens (group ((~and tag parens) g) . more))
+                #`(parens
+                   (group
+                    (tag
+                     #,(group-identifiers-syntax-property #'g
+                                                          (lambda (id)
+                                                            (if (eq? (syntax-e id) '$)
+                                                                id
+                                                                (syntax-property id 'typeset-space-name #f)))
+                                                          #f))
                     . more))]
                [_ tail])))))
 
@@ -70,5 +91,28 @@
                             (group
                              #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
                              . #,(post-spacer #'more)))]
+                        [_ tail]))
+     (values head new-tail))))
+
+(define-spacer match
+  (Spacer
+   (lambda (head tail escape)
+     (define (binding-spacer stx)
+       (term-identifiers-syntax-property stx 'typeset-space-name 'bind))
+     (define new-tail (syntax-parse tail
+                        #:datum-literals (alts group)
+                        [(parens (group expr ... ((~and tag alts) b ...)))
+                         #`(parens
+                            (group
+                             expr ...
+                             (tag
+                              #,@(for/list ([b (in-list (syntax->list #'(b ...)))])
+                                   (syntax-parse b
+                                     #:datum-literals (block)
+                                     [((~and tag block) ((~and g-tag group) form ... (~and b (block . _))))
+                                      #`(tag
+                                         (g-tag #,@(map binding-spacer (syntax->list #'(form ...)))
+                                                b))]
+                                     [_ b])))))]
                         [_ tail]))
      (values head new-tail))))

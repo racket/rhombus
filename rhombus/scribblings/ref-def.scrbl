@@ -43,5 +43,30 @@
   ns
 ]
 
+}
+
+
+@doc[
+  defn.macro '(def binding:
+                 body
+                 ...),
+  defn.macro '(def identifier (arg_binding, ...) maybe_result_annotation:
+                 body
+                 ...),
+  defn.macro '(def 'expr_pattern:
+                 body
+                 ...),
+  grammar expr_pattern:
+    identifier
+    (identifier_or_operator pattern ...)
+    ($identifier identifier_or_operator pattern ...),
+  grammar identifier_or_operator:
+    identifier
+    operator
+]{
+
+ Like @rhombus[val], @rhombus[def], or @rhombus[expr.rule], depending on
+ the form. The @rhombus[fun]-like form matches only if
+ @rhombus[identifier] is not bound as a pattern operator.
 
 }

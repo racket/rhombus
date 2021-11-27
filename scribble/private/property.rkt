@@ -6,7 +6,9 @@
 
 (define (term-identifiers-syntax-property stx property val [preserved? #t])
   (define (add-to-atom a)
-    (syntax-property a property val preserved?))
+    (if (procedure? property)
+        (property a)
+        (syntax-property a property val preserved?)))
   (define (add-to-groups gs)
     (for/list ([g (in-list (syntax->list gs))])
       (add-to-group g)))

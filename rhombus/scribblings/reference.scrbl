@@ -13,6 +13,8 @@
 @include_section["ref-class.scrbl"]
 
 @include_section["ref-cond.scrbl"]
+@include_section["ref-match.scrbl"]
+@include_section["ref-begin.scrbl"]
 
 @include_section["ref-boolean.scrbl"]
 @include_section["ref-number.scrbl"]
@@ -20,3 +22,4 @@
 @include_section["ref-equal.scrbl"]
 @include_section["ref-dot.scrbl"]
 @include_section["ref-annotation.scrbl"]
+@include_section["ref-stxobj.scrbl"]

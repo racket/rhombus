@@ -155,46 +155,40 @@
       [_:identifier
        (values e (list #`[#,e (#,pack* (syntax #,e) 0)]))]
       [(parens (group id:identifier (op $:) stx-class:identifier))
-       #:when (not (eq? kind 'term))
-       #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Term))
-                  (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Id))
-                  (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Op))
-                  (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Id_Op)))
-       (values #f #f)]
-      [(parens (group id:identifier (op $:) stx-class:identifier))
-       #:when (eq? kind 'block)
-       #:when (or (free-identifier=? (in-syntax-class-space #'stx-class)
-                                     (in-syntax-class-space #'Group)))
-       (values #f #f)]
-      [(parens (group id:identifier (op $:) stx-class:identifier))
+       (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
+       (define (compat)
+         (define sc (rhombus-syntax-class-class rsc))
+         (values (if sc
+                     #`(~var id #,sc)
+                     #'id)
+                 (list #`[id (#,pack* (syntax id) 0)])))
+       (define (incompat)
+         (raise-syntax-error #f
+                             "unknown syntax class or incompatible with this context"
+                             in-e
+                              #'stx-class))
        (cond
-         [(free-identifier=? (in-syntax-class-space #'stx-class)
-                             (in-syntax-class-space context-syntax-class))
-          (values #'id (list #`[id (#,pack* (syntax id) 0)]))]
-         [(free-identifier=? (in-syntax-class-space #'stx-class)
-                             (in-syntax-class-space #'Id))
-          (values #'(~var id identifier) (list #`[id (#,pack* (syntax id) 0)]))]
-         [(free-identifier=? (in-syntax-class-space #'stx-class)
-                             (in-syntax-class-space #'Op))
-          (values #'(~var id :operator) (list #`[id (#,pack* (syntax id) 0)]))]
-         [(free-identifier=? (in-syntax-class-space #'stx-class)
-                             (in-syntax-class-space #'Id_Op))
-          (values #'(~var id :operator-or-identifier) (list #`[id (#,pack* (syntax id) 0)]))]
-         [else
+         [(not (rhombus-syntax-class? rsc))
           (raise-syntax-error #f
-                              "unknown syntax class or incompatible with this context"
+                              "not bound as a syntax class"
                               in-e
-                              #'stx-class)])]
-      [else
-       (raise-syntax-error #f
-                           (format "expected an identifier or `(id $: Class)` after ~a"
-                                   (syntax-e $-id))
-                           in-e
-                           e)]))
+                              #'stx-class)]
+         [(eq? (rhombus-syntax-class-kind rsc) 'term)
+          (cond
+            [(not (eq? kind 'term))
+             (values #f #f)]
+            [else (compat)])]
+         [(eq? (rhombus-syntax-class-kind rsc) 'group)
+          (cond
+            [(eq? kind 'term) (incompat)]
+            [(not (eq? kind 'group)) (values #f #f)]
+            [else (compat)])]
+         [(eq? (rhombus-syntax-class-kind rsc) 'block)
+          (cond
+            [(eq? kind 'block) (compat)]
+            [else (incompat)])]
+         [else
+          (error "unrecognized kind" kind)])]))
   (convert-syntax e
                   #:as-tail? as-tail?
                   ;; make-datum

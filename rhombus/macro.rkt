@@ -15,7 +15,8 @@
         "private/import-syntax.rkt"
         "private/syntax-error.rkt"
         "private/parsed.rkt"
-        "private/syntax-meta-value.rkt")
+        "private/syntax-meta-value.rkt"
+        (submod "private/syntax-class.rkt" for-macro))
 
 (require (only-in "private/import.rkt" for_meta))
 (provide (for-space rhombus/import for_meta))

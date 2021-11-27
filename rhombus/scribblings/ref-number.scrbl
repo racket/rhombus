@@ -31,3 +31,19 @@
 ]
 
 }
+
+@doc[
+  operator ((x :: Number) > (y :: Number)) :: Boolean,
+  operator ((x :: Number) >= (y :: Number)) :: Boolean,
+  operator ((x :: Number) < (y :: Number)) :: Boolean,
+  operator ((x :: Number) <= (y :: Number)) :: Boolean
+]{
+
+ The usual comparsion operators.
+
+@examples[
+  1 < 2,
+  3 >= 3.0
+]
+
+}

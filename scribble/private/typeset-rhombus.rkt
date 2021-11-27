@@ -20,7 +20,10 @@
          typeset-rhombusblock)
 
 (define (typeset-rhombus stx
-                         #:space [space-name #f])
+                         #:space [space-name-in #f])
+  (define space-name (if (keyword? space-name-in)
+                         (string->symbol (keyword->string space-name-in))
+                         space-name-in))
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
   (define (id-space-name* id) (id-space-name id space-name))
@@ -348,8 +351,10 @@
 
 (define (add-space stx space-name)
   (define space (case space-name
+                  [(bind) 'rhombus/binding]
                   [(impmod) 'rhombus/import]
                   [(ann) 'rhombus/annotation]
+                  [(stxclass) 'rhombus/syntax-class]
                   [else #f]))
   (if space
       ((make-interned-syntax-introducer space) stx 'add)
