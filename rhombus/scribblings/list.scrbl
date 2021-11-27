@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
 @title[~tag: "list"]{Lists}
 
@@ -21,7 +23,8 @@ A list is a ``linked list,'' in the sense that getting the _n_th element
 takes @math{O(n)} time, and adding to the front takes constant time. A
 list is immutable.
 
-@rhombus[List] works as an annotation with @rhombus[-:] and @rhombus[::]:
+@rhombus[List, ~ann] works as an annotation with @rhombus[-:, ~bind] and
+@rhombus[::, ~bind]:
 
 @(rhombusblock:
     fun
@@ -35,7 +38,7 @@ list is immutable.
   )
 
 As pattern, @litchar{[}...@litchar{]} matches a list, and list elements
-can be matched with specific subpatterns. The @rhombus[List] binding
+can be matched with specific subpatterns. The @rhombus[List, ~bind] binding
 operator works the same in bindings, too.
 
 @(rhombusblock:

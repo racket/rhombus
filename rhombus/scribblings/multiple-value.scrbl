@@ -1,7 +1,9 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm": no_prefix
+    "common.rhm": no_prefix)
 
-@title[~tag: "multiple-values"]{Multiple values}
+@title[~tag: "multiple-values"]{Multiple Values}
 
 The @rhombus[values] form returns multiple values:
 

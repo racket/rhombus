@@ -10,6 +10,8 @@
                     ::
                     |'|
                     fun
+                    val
+                    def
                     match))
 
 (define-syntax (define-spacer stx)
@@ -64,45 +66,78 @@
 (define-spacer fun
   (Spacer
    (lambda (head tail escape)
-     (define (arg-spacer stx)
-       (syntax-parse stx
-         #:datum-literals (group op)
-         #:literals (rhombus-=)
-         [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
-          #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
-                      (term-identifiers-syntax-property a 'typeset-space-name 'bind))
-                 eq
-                 e ...)]
-         [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
-     (define (post-spacer stx)
-       (syntax-parse stx
-         #:datum-literals (op)
-         [((~and ann (op _)) . more)
-          (cons (term-identifiers-syntax-property #'ann 'typeset-space-name 'bind)
-                #'more)]
-         [else stx]))
-     (define new-tail (syntax-parse tail
-                        #:datum-literals (parens group op)
-                        [(parens (group esc form ((~and tag parens) arg ...) . more))
-                         #:when (escape? #'esc escape)
-                         #`(parens
-                            (group
-                             esc form
-                             #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
-                             . #,(post-spacer #'more)))]
-                        [(parens (group id ((~and tag parens) arg ...) . more))
-                         #`(parens
-                            (group
-                             id
-                             #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
-                             . #,(post-spacer #'more)))]
-                        [(parens (group ((~and tag parens) arg ...) . more))
-                         #`(parens
-                            (group
-                             #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
-                             . #,(post-spacer #'more)))]
-                        [_ tail]))
-     (values head new-tail))))
+     (fun-spacer head tail escape))))
+
+(define-spacer val
+  (Spacer
+   (lambda (head tail escape)
+     (val-spacer head tail escape))))
+
+(define-for-syntax (fun-spacer head tail escape)
+  (define (arg-spacer stx)
+    (syntax-parse stx
+      #:datum-literals (group op)
+      #:literals (rhombus-=)
+      [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
+       #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
+                   (term-identifiers-syntax-property a 'typeset-space-name 'bind))
+              eq
+              e ...)]
+      [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
+  (define (post-spacer stx)
+    (syntax-parse stx
+      #:datum-literals (op)
+      [((~and ann (op _)) . more)
+       (cons (term-identifiers-syntax-property #'ann 'typeset-space-name 'bind)
+             #'more)]
+      [else stx]))
+  (define new-tail (syntax-parse tail
+                     #:datum-literals (parens group op)
+                     [(parens (group esc form ((~and tag parens) arg ...) . more))
+                      #:when (escape? #'esc escape)
+                      #`(parens
+                         (group
+                          esc form
+                          #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
+                          . #,(post-spacer #'more)))]
+                     [(parens (group id ((~and tag parens) arg ...) . more))
+                      #`(parens
+                         (group
+                          id
+                          #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
+                          . #,(post-spacer #'more)))]
+                     [(parens (group ((~and tag parens) arg ...) . more))
+                      #`(parens
+                         (group
+                          #,(cons #'tag (map arg-spacer (syntax->list #'(arg ...))))
+                          . #,(post-spacer #'more)))]
+                     [_ tail]))
+  (values head new-tail))
+
+(define-for-syntax (val-spacer head tail escape)
+  (define new-tail (syntax-parse tail
+                     #:datum-literals (parens group block)
+                     [(parens (group b ... (~and bl (block . _))))
+                      #`(parens
+                         (group
+                          #,(for/list ([b (in-list (syntax->list #'(b ...)))])
+                              (term-identifiers-syntax-property b 'typeset-space-name 'bind))
+                          bl))]
+                     [_ tail]))
+  (values head new-tail))
+
+(define-spacer def
+  (Spacer
+   (lambda (head tail escape)
+     (syntax-parse tail
+       #:datum-literals (parens group op)
+       [(parens (group esc form ((~and tag parens) arg ...) . more))
+        #:when (escape? #'esc escape)
+        (fun-spacer head tail escape)]
+       [(parens (group id ((~and tag parens) arg ...) . more))
+        (fun-spacer head tail escape)]
+       [else
+        (val-spacer head tail escape)]))))
 
 (define-spacer match
   (Spacer

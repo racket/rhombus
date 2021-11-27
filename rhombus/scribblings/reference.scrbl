@@ -11,6 +11,7 @@
 @include_section["ref-export.scrbl"]
 @include_section["ref-function.scrbl"]
 @include_section["ref-class.scrbl"]
+@include_section["ref-mutable.scrbl"]
 
 @include_section["ref-cond.scrbl"]
 @include_section["ref-match.scrbl"]
@@ -21,8 +22,10 @@
 @include_section["ref-string.scrbl"]
 @include_section["ref-list.scrbl"]
 @include_section["ref-void.scrbl"]
+
 @include_section["ref-equal.scrbl"]
 @include_section["ref-dot.scrbl"]
+@include_section["ref-values.scrbl"]
 @include_section["ref-annotation.scrbl"]
 @include_section["ref-stxobj.scrbl"]
 
