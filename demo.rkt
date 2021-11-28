@@ -27,6 +27,14 @@ def six(x, ~plus: amt = 0):
 six("anything")
 six("anything", ~plus: 7)
 
+def seven(x, ~plus: amt = x, y = amt):
+  7 + amt - y
+
+seven(12)
+seven("anything", ~plus: 13)
+seven(12, 10)
+seven(12, 10, ~plus: 8)
+
 // pattern-matching on a function argument
 
 def f(cons(x :: Integer, y)): cons(x + 1, y)

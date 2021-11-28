@@ -244,16 +244,14 @@
            #`(lambda (arg-form ... ... . maybe-rest-tmp)
                (nested-bindings
                 #,function-name
-                #f argument-binding-failure
+                #f ; try-next
+                argument-binding-failure
                 (tmp-id arg-info arg arg-default)
                 ...
                 maybe-match-rest
                 (begin
-                  (arg-info.binder-id tmp-id arg-info.data) ...
-                  (begin
-                    (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                    ...)
-                  ...
+                  ;; `arg-info.binder-id` and `arg-info.bind-id` are used in
+                  ;; `nested-bindings` because `try-next` above is `#f`
                   maybe-bind-rest ...
                   maybe-bind-rest-static-info ...
                   (add-annotation-check

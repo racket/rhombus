@@ -47,7 +47,11 @@
                                               (group #:inset (block (group (parsed #f)))))
                                       (t-block t-form)))))
      (with-syntax ([(t-form ...)
-                    (map rb (syntax->list #'((group form ...) ...)))])
+                    (for/list ([form (in-list (syntax->list #'((group form ...) ...)))])
+                      (syntax-parse form
+                        #:datum-literals (group)
+                        [(group #:blank) #'(quote #:blank)]
+                        [_ (rb form)]))])
        #'(examples
           #:eval (rhombus-expression eval-expr)
           #:label (rhombus-expression label-expr)
@@ -78,16 +82,21 @@
         (apply
          append
          (for/list ([rb+expr (in-list rb+exprs)])
-           (cons
-            (car rb+expr)
-            (let ([v (eval (cadr rb+expr))])
-              (cond
-                [(void? v) null]
-                [else
-                 (define o (open-output-string))
-                 (call-in-sandbox-context eval (lambda () (print v o)))
-                 (for/list ([str (in-list (string-split (get-output-string o) "\n"))])
-                   (paragraph plain (racketresultfont str)))]))))))))))
+           (define typeset (car rb+expr))
+           (cond
+             [(eq? typeset '#:blank)
+              (list (paragraph plain (hspace 1)))]
+             [else
+              (cons
+               typeset
+               (let ([v (eval (cadr rb+expr))])
+                 (cond
+                   [(void? v) null]
+                   [else
+                    (define o (open-output-string))
+                    (call-in-sandbox-context eval (lambda () (print v o)))
+                    (for/list ([str (in-list (string-split (get-output-string o) "\n"))])
+                      (paragraph plain (racketresultfont str)))])))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]

@@ -4,16 +4,16 @@
 @title{Functions}
 
 @doc[
-  defn.macro '(fun $identifier($arg_binding, ...) $maybe_result_annotation:
+  defn.macro '(fun $identifier($arg_kwopt_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
   defn.macro '(fun
-               | $identifier($arg_binding, ...) $maybe_result_annotation:
+               | $identifier($binding, ...) $maybe_result_annotation:
                    $body
                    ...
                | ...),
 
-  expr.macro '(fun ($arg_binding, ...) $maybe_result_annotation:
+  expr.macro '(fun ($arg_kwopt_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
 
@@ -23,7 +23,7 @@
                    ...
                | ...),
   
-  grammar arg_binding:
+  grammar arg_kwopt_binding:
     $binding
     $keyword: $binding
     $binding $$(@tt{=}) $default_expr
@@ -37,11 +37,62 @@
  Binds @rhombus[identifier] as a function, or when @rhombus[identifier]
  is not supplied, serves as an expression that produces a function value.
 
+@examples[
+  fun f(x):
+    x+1,
+  f(0),
+  ~blank,
+  val identity: fun (x): x,
+  identity(1),
+  ~blank,
+  fun curried_add(x):
+    fun(y):
+      x + y,
+  curried_add(1)(2)
+]
+
+ When @litchar{|} is not used, then arguments can have keywords and/or
+ default values. Bindings for earlier arguments are visible in each
+ @rhombus[default_expr], but not bindings for later arguments;
+ accordingly, matching actions are interleaved with binding effects (such
+ as rejecting a non-matching argument) left-to-right, except that the
+ result of a @rhombus[default_expr] is subject to the same constraints
+ imposed by annotations and patterns for its argument as an explicitly
+ supplied argument would be.
+
+@examples[
+  fun f(x, y = x+1):
+    [x, y],
+  f(0),
+  f(0, 2),
+  ~blank,
+  fun transform([x, y],
+                ~scale: factor = 1,
+                ~dx: dx = 0,
+                ~dy: dy = 0):
+    [factor*x + dx, factor*y + dy],
+  transform([1, 2]),
+  transform([1, 2], ~dx: 7),
+  transform([1, 2], ~dx: 7, ~scale: 2)
+]
+
  When alternatives are specified with multiple @litchar{|} clauses, the
  alternatives are tried in order when the function is called. The
- alternatives can different by number of required and optional arguments
- only when no alternative includes keyword arguments. The alternatives
- can always differ by annotations and binding patterns.
+ alternatives can differ by number of arguments as well as annotations
+ and binding patterns.
+
+@examples[
+  fun | hello(name):
+          "Hello, " & name
+      | hello(first, last):
+          hello(first & " " & last),
+  hello("World"),
+  hello("Inigo", "Montoya"),
+  ~blank,
+  fun | is_passing(n :: Number): n >= 70
+      | is_passing(pf :: Boolean): pf,
+  is_passing(80) && is_passing(#true)
+]
 
 }
 

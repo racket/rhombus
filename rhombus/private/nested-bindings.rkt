@@ -5,7 +5,8 @@
          "binding.rkt"
          "parse.rkt"
          "forwarding-sequence.rkt"
-         "composite.rkt")
+         "composite.rkt"
+         "static-info.rkt")
 
 (provide nested-bindings)
 
@@ -40,7 +41,14 @@
          (arg.matcher-id arg-id
                          arg.data
                          if-block
-                         (nested-bindings who try-next failure rest . tail)
+                         #,(if (syntax-e #'try-next)
+                               #`(nested-bindings who try-next failure rest . tail)
+                               #`(begin
+                                   (arg.binder-id arg-id arg.data)
+                                   (begin
+                                     (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)
+                                     ...)
+                                   (nested-bindings who try-next failure rest . tail)))
                          (static-if try-next
                                     (try-next)
                                     (failure 'who arg-id 'arg-pat))))]))
