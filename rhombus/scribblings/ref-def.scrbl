@@ -53,7 +53,8 @@
 ]{
 
  Like @rhombus[val], but for bindings that become visible only after the
- @rhombus[let] form within its definition context.
+ @rhombus[let] form within its definition context. The @rhombus[let] form
+ cannot be used in a top-level context outside of a module or local block.
 
 @examples[
   begin:

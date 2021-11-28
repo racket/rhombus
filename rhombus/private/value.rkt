@@ -18,26 +18,33 @@
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(define-for-syntax (make-val wrap-definition)
+(define-for-syntax (make-val #:wrap-definition [wrap-definition values]
+                             #:check-context [check-context void])
   (definition-transformer
     (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (parens group block alts op)
-       [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
-        (build-values-definitions #'form-id
-                                  #'(g ...) #'rhs
-                                  wrap-definition)]
-       [(form-id any ... (~and rhs (block body ...)))
-        (build-value-definitions #'form-id
-                                 #'(group any ...)
-                                 #'rhs
-                                 wrap-definition)]))))
+      (check-context stx)
+      (syntax-parse stx
+        #:datum-literals (parens group block alts op)
+        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
+         (build-values-definitions #'form-id
+                                   #'(g ...) #'rhs
+                                   wrap-definition)]
+        [(form-id any ... (~and rhs (block body ...)))
+         (build-value-definitions #'form-id
+                                  #'(group any ...)
+                                  #'rhs
+                                  wrap-definition)]))))
 
 (define-syntax val
-  (make-val values))
+  (make-val))
 
 (define-syntax rhombus-let
-  (make-val (lambda (defn) #`(rhombus-forward #,defn))))
+  (make-val #:wrap-definition (lambda (defn) #`(rhombus-forward #,defn))
+            #:check-context (lambda (stx)
+                              (when (eq? (syntax-local-context) 'top-level)
+                                (raise-syntax-error #f
+                                                    "not allowed in a top-level context"
+                                                    stx)))))
 
 (define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition)
   (syntax-parse g-stx
