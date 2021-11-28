@@ -8,15 +8,17 @@
          "implicit.rkt"
          "annotation.rkt"
          "call-result-key.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "forwarding-sequence.rkt")
 
-(provide val)
+(provide val
+         (rename-out [rhombus-let let]))
 
 (module+ for-define
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(define-syntax val
+(define-for-syntax (make-val wrap-definition)
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
@@ -24,12 +26,18 @@
        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
         (build-values-definitions #'form-id
                                   #'(g ...) #'rhs
-                                  values)]
+                                  wrap-definition)]
        [(form-id any ... (~and rhs (block body ...)))
         (build-value-definitions #'form-id
                                  #'(group any ...)
                                  #'rhs
-                                 values)]))))
+                                 wrap-definition)]))))
+
+(define-syntax val
+  (make-val values))
+
+(define-syntax rhombus-let
+  (make-val (lambda (defn) #`(rhombus-forward #,defn))))
 
 (define-for-syntax (build-value-definitions form-id g-stx rhs-stx wrap-definition)
   (syntax-parse g-stx

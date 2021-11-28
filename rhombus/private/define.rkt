@@ -11,13 +11,11 @@
          (submod "function.rkt" for-build)
          "quasiquote.rkt"
          (for-syntax "parse.rkt")
-         "forwarding-sequence.rkt"
          (submod "value.rkt" for-define)
          "syntax.rkt"
          (submod "expression-syntax.rkt" for-define))
 
-(provide (rename-out [rhombus-define def]
-                     [rhombus-let let]))
+(provide (rename-out [rhombus-define def]))
 
 (begin-for-syntax
   (struct fcase (args arg-parseds rhs))
@@ -96,6 +94,3 @@
 
 (define-syntax rhombus-define
   (make-define (lambda (defn) defn)))
-
-(define-syntax rhombus-let
-  (make-define (lambda (defn) #`(rhombus-forward #,defn))))

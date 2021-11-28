@@ -10,7 +10,8 @@
                   close-eval)
          (only-in scribble/manual
                   hspace
-                  racketresultfont)
+                  racketresultfont
+                  racketerror)
          (only-in scribble/core
                   table
                   paragraph
@@ -51,6 +52,8 @@
                       (syntax-parse form
                         #:datum-literals (group)
                         [(group #:blank) #'(quote #:blank)]
+                        [(group #:error form ...) #`(list (quote #:error)
+                                                          #,(rb #'(group form ...)))]
                         [_ (rb form)]))])
        #'(examples
           #:eval (rhombus-expression eval-expr)
@@ -82,23 +85,59 @@
         (apply
          append
          (for/list ([rb+expr (in-list rb+exprs)])
-           (define typeset (car rb+expr))
+           (define rb (car rb+expr))
            (cond
-             [(eq? typeset '#:blank)
+             [(eq? rb '#:blank)
               (list (paragraph plain (hspace 1)))]
              [else
+              (define-values (plain-rb mode)
+                (cond
+                  [(and (pair? rb) (eq? (car rb) '#:error))
+                   (values (cadr rb) 'error)]
+                  [else (values rb 'success)]))
+              (define expr (cadr rb+expr))
               (cons
-               typeset
-               (let ([v (eval (cadr rb+expr))])
+               plain-rb
+               (let ([v (with-handlers ([exn:fail? (lambda (exn)
+                                                     (define msg (format-exception exn eval))
+                                                     (if (eq? mode 'error)
+                                                         msg
+                                                         (raise-arguments-error
+                                                          'examples
+                                                          "error during example"
+                                                          "example" expr
+                                                          "message" msg)))])
+                          (cond
+                            [(eq? mode 'error) (begin
+                                                 (eval expr)
+                                                 'oops)]
+                            [else (eval expr)]))])
                  (cond
+                   [(eq? mode 'error)
+                    (if (string? v)
+                        (format-lines v racketerror)
+                        (raise-arguments-error
+                         'examples
+                         "example did not error"
+                         "example" expr))]
                    [(void? v) null]
                    [else
                     (define o (open-output-string))
                     (call-in-sandbox-context eval (lambda () (print v o)))
-                    (for/list ([str (in-list (string-split (get-output-string o) "\n"))])
-                      (paragraph plain (racketresultfont str)))])))]))))))))
+                    (format-lines (get-output-string o) racketresultfont)])))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]
     [else example-block]))
 
+(define (format-lines str format-line)
+  (for/list ([line-str (in-list (string-split str "\n"))])
+    (paragraph plain (racketresultfont line-str))))
+
+(define (format-exception exn eval)
+  (define o (open-output-string))
+  (call-in-sandbox-context eval (lambda ()
+                                  (parameterize ([error-print-context-length 0]
+                                                 [current-error-port o])
+                                    ((error-display-handler) (exn-message exn) exn))))
+  (get-output-string o))

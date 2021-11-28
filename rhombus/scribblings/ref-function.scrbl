@@ -4,7 +4,7 @@
 @title{Functions}
 
 @doc[
-  defn.macro '(fun $identifier($arg_kwopt_binding, ...) $maybe_result_annotation:
+  defn.macro '(fun $identifier($kwopt_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
   defn.macro '(fun
@@ -13,7 +13,7 @@
                    ...
                | ...),
 
-  expr.macro '(fun ($arg_kwopt_binding, ...) $maybe_result_annotation:
+  expr.macro '(fun ($kwopt_binding, ...) $maybe_result_annotation:
                  $body
                  ...),
 
@@ -23,7 +23,7 @@
                    ...
                | ...),
   
-  grammar arg_kwopt_binding:
+  grammar kwopt_binding:
     $binding
     $keyword: $binding
     $binding $$(@tt{=}) $default_expr
@@ -41,10 +41,16 @@
   fun f(x):
     x+1,
   f(0),
-  ~blank,
+]
+
+@examples[
+  ~label: #false,
   val identity: fun (x): x,
   identity(1),
-  ~blank,
+]
+
+@examples[
+  ~label: #false,
   fun curried_add(x):
     fun(y):
       x + y,
@@ -65,7 +71,10 @@
     [x, y],
   f(0),
   f(0, 2),
-  ~blank,
+]
+
+@examples[
+  ~label: #false,
   fun transform([x, y],
                 ~scale: factor = 1,
                 ~dx: dx = 0,
@@ -88,7 +97,10 @@
           hello(first & " " & last),
   hello("World"),
   hello("Inigo", "Montoya"),
-  ~blank,
+]
+
+@examples[
+  ~label: #false,
   fun | is_passing(n :: Number): n >= 70
       | is_passing(pf :: Boolean): pf,
   is_passing(80) && is_passing(#true)
