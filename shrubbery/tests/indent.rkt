@@ -356,7 +356,6 @@
      a:
        ^x}
 
-
   @e{apple(
      ^)}
   @e{apple(1,
@@ -371,6 +370,13 @@
   @e{(more (apple:
               nested
             ^)}
+
+  @e{(1,
+      apple
+      ^|}
+  @e{(1,
+      apple
+      ^ ^+}
 
  )
 

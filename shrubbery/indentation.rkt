@@ -421,7 +421,7 @@
                 (loop (sub1 s) candidate limit bar-after? #f #f)]
                [(comma-operator)
                 (cond
-                  [candidate null]
+                  [candidate (maybe-list candidate plus-one-more?)]
                   [else
                    (define i-pos (get-inside-start t pos))
                    (define start (line-start t i-pos))
