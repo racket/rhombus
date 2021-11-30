@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import:
+    "util.rhm" open
+    "common.rhm" open)
 
 @title[~tag: "defn-macro"]{Definition and Declaration Macros}
 

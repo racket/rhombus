@@ -1,14 +1,25 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm": no_prefix)
+@(import: "common.rhm" open)
 
 @title{Import}
 
 @doc[
   decl.macro '(import:
-                 $module_path:
-                   $import_modifier
-                   ...
+                 $import_clause
                  ...),
+
+  grammar import_clause:
+    $module_path
+    $module_path:
+      $modifier
+      ...
+    $module_path $modifier
+    $module_path $modifier:
+      $modifier
+      ...
+    $modifier:
+      $import_clause
+      ...,
   
   grammar module_path:
     $collection_module_path
@@ -24,6 +35,30 @@
 
  Imports into the enclosing module.
 
+ The @rhombus[import_clause] variant @rhombus[module_path] or
+ @rhombus[module_path: modifier; ...] are the canonical forms. The other
+ @rhombus[import_clause] forms are converted into a canonical form:
+
+@itemlist[
+
+ @item{@rhombus[module_path modifier] is the same as
+   @rhombus[module_path: modifier], where @rhombus[modifier] might include
+   a block argument. This form is handy when only one modifier is needed.},
+
+ @item{@rhombus[module_path modifier: modifier; ...] is the same as
+   @rhombus[module_path: modifier; modifier; ...] where the initial
+   @rhombus[modifier] does not accept a block argument. This form is
+   especially handy when the initial @rhombus[modifier] is @rhombus[open]
+   or @rhombus[as $$(@rhombus[identifier,~var])] and additional modifiers
+   are needed.},
+
+ @item{@rhombus[modifier: import_clause; ....] is the same as the
+   sequence of @rhombus[import_clause]s with @rhombus[modifier] add to the
+   @emph{end} of each @rhombus[import_clause]. This form is especialy handy
+   when @rhombus[modifier] is @rhombus[for_meta].}
+
+]
+
  By default, each clause with a @rhombus[module_path] binds a prefix
  name that is derived from the @rhombus[module_path]'s last element.
  Imports from the module are then accessed using the prefix, @litchar{.},
@@ -31,7 +66,7 @@
 
  A @rhombus[module_path] clause can be be adjusted through one or more
  @rhombus[import_modifier]s. The set of modifiers is extensible, but
- includes @rhombus[no_prefix, ~impmod], @rhombus[rename, ~impmod], and
+ includes @rhombus[as, ~impmod], @rhombus[rename, ~impmod], and
  @rhombus[expose, ~impmod].
 
  A @rhombus[module_path] references a module in one of several possible
@@ -68,7 +103,7 @@
 }
 
 @doc[
-  imp.modifier '(prefix $identifier)
+  imp.modifier '(as $identifier)
 ]{
 
  Modifies an @rhombus[import] clause to bind the prefix
@@ -78,7 +113,7 @@
 }
 
 @doc[
-  imp.modifier '(no_prefix)
+  imp.modifier '(open)
 ]{
 
  Modifies an @rhombus[import] clause so that no prefix (normally based on the
@@ -100,7 +135,7 @@
 
 @doc[
   imp.modifier '(rename:
-                   $identifier ~to $local_identifier
+                   $identifier as $local_identifier
                    ...)
 ]{
 

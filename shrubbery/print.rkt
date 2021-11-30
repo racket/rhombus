@@ -17,7 +17,7 @@
                                   #:render-stx-hook [render-stx-hook (lambda (stx output) #f)])
   (cond
     [(or use-raw?
-         (all-raw-available? s))
+         (and (syntax? s) (all-raw-available? s)))
      (define o (open-output-string))
      (syntax-to-raw s
                     #:output o

@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm": no_prefix
-    "common.rhm": no_prefix)
+    "util.rhm" open
+    "common.rhm" open)
 
 @title[~tag: "syntax"]{Syntax Objects}
 

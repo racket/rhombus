@@ -1,14 +1,10 @@
 #lang rhombus
 
 import:
-  rhombus/macro:
-    no_prefix
-  rhombus:
-    no_prefix
-    for_label
-  rhombus/macro:
-    no_prefix
-    for_label
+  rhombus/macro open
+  for_label:
+    rhombus open
+    rhombus/macro open
 
 export:
   all_from(rhombus/macro)

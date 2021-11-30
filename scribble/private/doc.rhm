@@ -1,10 +1,8 @@
 #lang rhombus
 
 import:
-  rhombus/macro:
-    no_prefix
-  "typeset-doc.rkt":
-    no_prefix
+  rhombus/macro open
+  "typeset-doc.rkt" open
 
 export:
   doc

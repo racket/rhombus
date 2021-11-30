@@ -1,18 +1,15 @@
 #lang rhombus
 
 import:
-  rhombus/macro:
-    no_prefix
-  scribble/manual:
-    expose: defmodule racketmodname
-  "rhombus.rhm":
-    no_prefix
-  racket/base:
-    for_meta
-  rhombus:
-    for_label
-    expose: import
-   
+  rhombus/macro open
+  scribble/manual expose:
+    defmodule racketmodname
+  "rhombus.rhm" open
+  for_meta:
+    racket/base
+  for_label:
+    rhombus expose:
+      import
 
 export:
   docmodule

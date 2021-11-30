@@ -1,5 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: "util.rhm": no_prefix)
+@(import: "util.rhm" open)
 
 @title[~tag: "annotation-macro"]{Annotations}
 

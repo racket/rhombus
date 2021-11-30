@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  rhombus/macro: no_prefix
+  rhombus/macro open
 
 use_static_dot
 
@@ -364,8 +364,7 @@ known_posn.x
 // contracts and dot providers
 
 import:
- racket/base:
-   no_prefix
+ racket/base open:
    only: atan
 
 annotation.macro 'AlsoPosn: 'Posn

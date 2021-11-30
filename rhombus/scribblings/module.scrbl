@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
-    "util.rhm": no_prefix    
-    "common.rhm": no_prefix)
+    "util.rhm" open
+    "common.rhm" open)
 
 @title{Modules}
 
@@ -77,21 +77,21 @@ Unlike Racket, imported bindings must accessed using a prefix name and
 then @litchar{.}, at least by default. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
 that’s why the import of @rhombus["f2c.rhm"] leads to the @rhombus[f2c] prefix. To
-supply an explicit prefix, use the @rhombus[prefix] modifier:
+supply an explicit prefix, use the @rhombus[as, ~impmod] modifier:
 
 @(rhombusblock:
     import:
-      "f2c.rhm": prefix convert
+      "f2c.rhm" as convert
 
     convert.fahrenheit_to_celsius(convert.fahrenheit_freezing))
 
-Use the @rhombus[no_prefix] modifier to import without a prefix, but
+Use the @rhombus[open, ~impmod] modifier to import without a prefix, but
 this kind of ``namespace dumping'' is considered bad style in most
 cases:
 
 @(rhombusblock:
     import:
-      "f2c.rhm": no_prefix
+      "f2c.rhm" open
 
     fahrenheit_to_celsius(fahrenheit_freezing))
 
@@ -110,6 +110,7 @@ prefix:
 the same as the @rhombus[.] operator described in the next section. We stick with @litchar{/}
 for module paths to avoid overloading @litchar{.} further.}
 
-There’s a lot more to the syntax or @rhombus[import] and @rhombus[export] for
-renaming, re-exporting, and so on. See [a separate
-document](import-export.md) for more information.
+There’s a lot more to the syntax or @rhombus[import] and
+@rhombus[export] for renaming, re-exporting, and so on. See the
+documentation of @rhombus[import] and @rhombus[export] for more
+information.

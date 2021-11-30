@@ -14,6 +14,6 @@ fun make_macro_eval():
   @examples[
     ~eval: macro_eval,
     ~hidden: #true,
-    import: rhombus/macro: no_prefix
+    import: rhombus/macro open
   ]
   macro_eval

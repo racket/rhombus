@@ -1,11 +1,10 @@
 #lang rhombus
 import:
-  rhombus/macro: no_prefix
-  "typeset-rhombus.rkt": no_prefix
-  "typeset_meta.rhm":
-    for_meta
-  scribble/base:
-    prefix scribble
+  rhombus/macro open
+  "typeset-rhombus.rkt" open
+  for_meta:
+    "typeset_meta.rhm"
+  scribble/base as scribble:
     expose: elem
 
 export:

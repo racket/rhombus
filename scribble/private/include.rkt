@@ -1,7 +1,7 @@
 #lang rhombus
 import:
-  rhombus/macro: no_prefix
-  scribble/base: expose: #{include-section}
+  rhombus/macro open
+  scribble/base expose: #{include-section}
 
 export:
   include_section

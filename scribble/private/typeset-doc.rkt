@@ -35,7 +35,9 @@
                   element
                   index-element
                   toc-target2-element
-                  plain)
+                  plain
+                  style
+                  table-cells)
          (only-in scribble/private/manual-vars
                   boxed-style)
          (only-in scribble/private/manual-bind
@@ -312,6 +314,8 @@
                   [t-block (syntax-raw-property
                             (datum->syntax #f 'block
                                            (syntax-parse at-form
+                                             #:datum-literals (op)
+                                             [(_ (op a) . _) #'a]
                                              [(_ a . _) #'a]))
                             "")]
                   [(option ...) options])
@@ -337,7 +341,7 @@
     [(group (~and tag (~or def val fun)) id:identifier-target e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
-    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)
+    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) <arg)) e ...)
      (rb #:at stx
          #`(group tag (p-tag (g-tag #,@(subst #'id) arg)) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) arg0 (op id) arg1)) e ...)
@@ -361,10 +365,14 @@
      #`(paragraph plain #,def-id-as-def)]
     [(group grammar id (block g ...))
      #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
-                        #,@(for/list ([g (syntax->list #'(g ...))])
-                             (rb g
-                                 #:pattern? #t
-                                 #:options #'((parens (group #:inset (block (group (parsed #f)))))))))]
+                        #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
+                             (syntax-parse g
+                               #:datum-literals (group)
+                               [(group t ...)
+                                (rb #'(group t ...)
+                                    #:at g
+                                    #:pattern? #t
+                                    #:options #'((parens (group #:inset (block (group (parsed #f)))))))])))]
     [_ (rb stx)]))
 
 (define-for-syntax (drop-pattern-escapes g)
@@ -458,7 +466,9 @@
   (define (p c) (paragraph plain c))
   (define (sp s) (p (list (hspace 1) s (hspace 1))))
   (table
-   plain
+   (style #f (list (table-cells (for/list ([prod (in-list prods)])
+                                  (define bl (style #f '(top)))
+                                  (list bl bl bl)))))
    (cons
     (list (p id) (sp "=") (car prods))
     (for/list ([prod (in-list (cdr prods))])

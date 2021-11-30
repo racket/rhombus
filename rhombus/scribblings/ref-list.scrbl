@@ -1,5 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm": no_prefix)
+@(import: "common.rhm" open)
 
 @(val dots: @rhombus[..., ~bind])
 
