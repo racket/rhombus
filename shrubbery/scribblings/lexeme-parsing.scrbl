@@ -47,13 +47,20 @@ a set of delimiter requirements: numbers, @litchar{#true}, and
 @litchar{#false} must be followed by a delimiter. For example,
 @litchar{1x} is a lexical error, because the @litchar{x} after
 @litchar{1} is not a delimiter. Non-alphanumeric characters other than
-@litchar{_} and @litchar{.} are delimiters. Finally, the treatment of
-@litchar{+} and @litchar{-} as a number prefix versus an operator is
-subject to a special rule: they are parsed as operators when immediately
-preceded by an alphanumeric character, @litchar{_}, @litchar{)},
-@litchar{]}, or @litchar["}"] with no whitespace in between. For
-example, @litchar{1+2} is @litchar{1} plus @litchar{2}, but @litchar{1
- +2} is @litchar{1} followed by the number @litchar{+2}.
+@litchar{_} are delimiters.
+
+Certain ambiguities related to number and operator parsing are
+resolved by special rules. A number ends with a trailing @litchar{.}
+only if the @litchar{.} cannot be treated as the start of a
+multi-character operator; also, a @litchar{.} that is not part of a
+multi-character operator cannot appear @emph{after} a number. The
+@litchar{+} and @litchar{-} characters as a number prefix versus an
+operator are also subject to a special rule: they are parsed as
+operators when immediately preceded by an alphanumeric character,
+@litchar{_}, @litchar{.}, @litchar{)}, @litchar{]}, or @litchar["}"]
+with no whitespace in between. For example, @litchar{1+2} is
+@litchar{1} plus @litchar{2}, but @litchar{1 +2} is @litchar{1}
+followed by the number @litchar{+2}.
 
 When a @litchar["#{"]...@litchar["}"] escape describes an identifier
 S-expression, it is an identifier in the same sense as a

@@ -2,7 +2,8 @@
 (require parser-tools/lex
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
-         "private/property.rkt")
+         "private/property.rkt"
+         "private/peek-port.rkt")
 
 (provide lex/status
          lex-all
@@ -135,12 +136,15 @@
   
   [uinteger (:: (:* digit_) digit)]
   [uinteger16 (:: (:* digit16_) digit16)]
-  
-  [decimal-number/continuing (:or (:: uinteger number-exponent)
-                                  (:: uinteger "." (:? uinteger) number-exponent))]
+
+  ;; doesn't match digits ending with "."; that case is handled with
+  ;; a follow-up peek to use "." when not part of an multi-char operator
+  [decimal-number/continuing (:or (:: uinteger (:? number-exponent))
+                                  (:: uinteger "." (:? uinteger) number-exponent)
+                                  (:: uinteger "." uinteger))]
   [decimal-number (:or decimal-number/continuing
-                       (:: "." uinteger number-exponent))]
-  [number-exponent (:or "" (:: exponent-marker (:? sign) uinteger))]
+                       (:: "." uinteger (:? number-exponent)))]
+  [number-exponent (:: exponent-marker (:? sign) uinteger)]
   [hex-number (:: "0x" uinteger16)]
 
   [bad-number/continuing (:- (:: digit (:+ non-number-delims))
@@ -148,10 +152,12 @@
                              number/continuing)]
   [bad-number (:- (:: (:? sign) digit (:+ non-number-delims))
                   identifier
+                  (:: identifier ".")
                   number)]
   [bad-comment "*/"]
 
-  [non-number-delims (:or non-delims ".")]
+  [non-number-delims (:or non-delims
+                          (:: "." non-delims))]
   [non-delims (:or alphabetic numeric "_")]
 
   ;; making whitespace end at newlines is for interactive parsing
@@ -276,6 +282,8 @@
 ;; consumed before the pending backup expires. For example, with
 ;; `@|<<<x`, the peek stopped at `x` while looking for `{`, and we'll
 ;; need to re-lex starting from `@` before operators `|` and `<<<`.
+;; A pending backup is not needed if only one character is peeked, since
+;; the colorer would check the token just before a change, anyway.
 (struct pending-backup-mode (amount status) #:prefab)
 
 (define (make-in-text-status)
@@ -394,11 +402,26 @@
    [str (ret 'literal (parse-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [byte-str (ret 'literal (parse-byte-string lexeme) #:raw lexeme 'string #f start-pos end-pos 'datum)]
    [bad-number
-    (ret 'fail lexeme 'error #f start-pos end-pos 'continuing
-         ;; backup is needed if the next character is `+` or `-`; ok to conservatively back up
-         #:pending-backup 1)]
+    (let-values ([(dot? new-lexeme new-end-pos pending-backup) (maybe-consume-trailing-dot input-port lexeme end-pos)])
+      (ret 'fail new-lexeme 'error #f start-pos new-end-pos 'continuing
+           ;; backup is needed if the next character is `+` or `-`; ok to conservatively back up
+           #:pending-backup 1))]
    [number
-    (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing)]
+    (let-values ([(dot? new-lexeme new-end-pos pending-backup) (maybe-consume-trailing-dot input-port lexeme end-pos)])
+      (cond
+        [dot?
+         (cond
+           [(decimal-integer? lexeme)
+            ;; add `.` to end of number
+            (ret 'literal (parse-number new-lexeme) #:raw new-lexeme 'constant #f start-pos new-end-pos 'continuing
+                 #:pending-backup pending-backup)]
+           [else
+            ;; count `.` as error
+            (ret 'fail new-lexeme 'error #f start-pos new-end-pos 'continuing
+                 #:pending-backup pending-backup)])]
+        [else
+         (ret 'literal (parse-number lexeme) #:raw lexeme 'constant #f start-pos end-pos 'continuing
+              #:pending-backup pending-backup)]))]
    [special-number
     (let ([num (case lexeme
                  [("#inf") +inf.0]
@@ -795,6 +818,48 @@
                                             (substring s 1 (sub1 (string-length s)))
                                             "\""))))
   (string-ref str 0))
+
+;; argument string matches `number`; check whether adding "." to the end could make sense
+(define (decimal-integer? s)
+  (let loop ([i (case (string-ref s 0)
+                  [(#\+ #\-) 1]
+                  [else 0])])
+    (cond
+      [(= i (string-length s)) #t]
+      [else
+       (define ch (string-ref s i))
+       (and (or (char-numeric? ch)
+                (eqv? ch #\_))
+            (loop (add1 i)))])))
+
+(define operator-lexer
+  (lexer
+   [operator ((string-length lexeme) . > . 1)]
+   [(eof) #f]
+   [any-char #f]))
+
+(define (peek-multi-char-operator? input-port)
+  (call-with-peeking-port
+   input-port
+   (lambda (p)
+     (operator-lexer p))))
+
+(define (maybe-consume-trailing-dot input-port lexeme end-pos)
+  (define ch (peek-char input-port))
+  (cond
+    [(eqv? ch #\.)
+     (cond
+       [(peek-multi-char-operator? input-port)
+        (values #f lexeme end-pos 1)]
+       [else
+        (read-char input-port)
+        (define new-lexeme (string-append lexeme "."))
+        (define new-end-pos (struct-copy position end-pos
+                                         [offset (add1 (position-offset end-pos))]
+                                         [col (let ([c (position-col end-pos)])
+                                                (and c (add1 c)))]))
+        (values #t new-lexeme new-end-pos 1)])]
+    [else (values #f lexeme end-pos 0)]))
 
 (struct token (name value))
 (struct located-token token (srcloc))
