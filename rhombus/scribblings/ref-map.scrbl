@@ -12,7 +12,7 @@ separate values, instead of a key--value mapping.
 
 To access a mapping, use square brackets after a map expression with an
 expression for the key within square brackets. Mutable maps can be
-updated with a combination of square brackets and the @rhombus[=]
+updated with a combination of square brackets and the @rhombus[:=]
 operator.
 
 @doc[
@@ -69,7 +69,7 @@ operator.
   val m: make_map("x", 1, "y", 2),
   m,
   m["x"],
-  m["x"] = 0,
+  m["x"] := 0,
   m
 ]
 

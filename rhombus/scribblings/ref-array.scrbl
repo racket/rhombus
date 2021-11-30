@@ -5,7 +5,7 @@
 
 An array works with map-referencing square brackets to access a list
 element by position (in constant time), and it works with square
-brackets in combination with the assignment operator @rhombus[=] to
+brackets in combination with the assignment operator @rhombus[:=] to
 update the array.
 
 @doc[
@@ -18,7 +18,7 @@ update the array.
   val a: Array(1, 2, 3),
   a,
   a[0],
-  a[0] = 0,
+  a[0] := 0,
   a
 ]
 

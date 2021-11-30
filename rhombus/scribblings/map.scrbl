@@ -9,15 +9,15 @@ The @rhombus[Array] constructor is similar to @rhombus[List], but it
 creates an array, which has a fixed length at the time that it’s created
 and offers constant-time access to any element of the array. Like a
 list, and array is a map. Unlike a list, an array is mutable, so
-@litchar{[}...@litchar{]} for indexing can be combined with @rhombus[=]
+@litchar{[}...@litchar{]} for indexing can be combined with @rhombus[:=]
 for assignment.
 
 @(rhombusblock:
     val buckets: Array(1, 2, 3, 4)
 
-    buckets[0]      // prints 1
-    buckets[1] = 5  // prints 5
-    buckets         // prints Array1, 5, 3, 4)
+    buckets[0]       // prints 1
+    buckets[1] := 5  // prints 5
+    buckets          // prints Array1, 5, 3, 4)
   )
 
 @rhombus[Array] is also an annotation and a binding contructor,
@@ -104,12 +104,12 @@ a generic function for maps at run time.
 
 The @rhombus[make_map] function works similarly to the @rhombus[Map]
 constructor, but it creates a mutable map. A mutable map can be updated
-using @litchar{[}...@litchar{]} with @rhombus[=] just like an array.
+using @litchar{[}...@litchar{]} with @rhombus[:=] just like an array.
 
 @(rhombusblock:
     val locations: make_map("alice", Posn(4, 5),
                             "bob", Posn(7, 9))
-    locations["alice"] = Posn(40, 50)
+    locations["alice"] := Posn(40, 50)
     locations["alice"]  // prints Posn(40, 50)
   )
 

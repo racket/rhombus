@@ -58,7 +58,7 @@ bound to a list of matches.
     fun
     | got_milk([]): #false
     | got_milk([head, tail, ...]):
-       head === "milk" || got_milk(tail)
+       head == "milk" || got_milk(tail)
 
     got_milk([])                             // prints #false
     got_milk(["apple", "milk", "banana"])    // prints #true

@@ -5,7 +5,7 @@
          "binding.rkt"
          "expression.rkt")
 
-(provide (rename-out [rhombus= =])
+(provide :=
          mutable)
 
 (define-syntax mutable
@@ -49,9 +49,9 @@
     #:property prop:rename-transformer (struct-field-index id))
   (define (mutable-variable-ref v) (and (mutable-variable? v) v)))
 
-(define-syntax rhombus=
+(define-syntax :=
   (expression-infix-operator
-   #'rhombus=
+   #':=
    '((default . weaker))
    'automatic
    (lambda (form1 form2 self-stx)

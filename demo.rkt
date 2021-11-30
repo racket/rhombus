@@ -346,8 +346,8 @@ fun
 | add_two(x, y) :: String:
     x & " and " & y
 
-add_two(7) == 9.0
-add_two(6, 7) === "6 and 7"
+add_two(7) .= 9.0
+add_two(6, 7) == "6 and 7"
 
 begin:
   val f: fun (x) :: Integer: x
@@ -427,7 +427,7 @@ val yes_nums_a :: Array: nums_a
 val yep_nums_a :: Array.of(Integer): nums_a
 
 nums_a[1]
-nums_a[2] = 30
+nums_a[2] := 30
 nums_a[2]
 
 val map: Map(symbol(x), "hello", symbol(y), "goodbye")
@@ -451,7 +451,7 @@ mixed_map[symbol(a)] + mixed_map["b"]
 
 val mut_map: make_map(1, "mone")
 mut_map[1]
-mut_map[2] = "mtwo"
+mut_map[2] := "mtwo"
 mut_map[2]
 
 val a_set: {1, 3, 5, 7, 9}
@@ -495,7 +495,7 @@ is_sorted([1, 2, 30, 4, 5])
 fun
 | got_milk([]): #false
 | got_milk([head, tail, ...]):
-   head === "milk" || got_milk(tail)
+   head == "milk" || got_milk(tail)
 
 got_milk([])
 got_milk(["apple", "milk", "banana"])
@@ -521,9 +521,9 @@ fun
 | g_rest(x): x
 
 g_rest()
-g_rest(1) === "simple"
+g_rest(1) == "simple"
 g_rest(1, 2, 3)
-g_rest("hello") === "hello"
+g_rest("hello") == "hello"
 
 fun
 | posns_y(ps :: Posn, ...):
@@ -614,7 +614,7 @@ weirdly & "none"
 
 dot.macro '(myint_dot_provider $left $dot $right):
   match right
-  | 'is_zero: '($left == 0)
+  | 'is_zero: '($left .= 0)
   | 'add: '(fun (v -: MyInt) -: MyInt: $left + v)
 
 annotation.macro 'MyInt:

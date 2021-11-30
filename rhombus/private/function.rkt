@@ -18,7 +18,7 @@
          (only-in "quasiquote.rkt"
                   [... rhombus...])
          (submod "annotation.rkt" for-class)
-         (only-in "assign.rkt"
+         (only-in "equal.rkt"
                   [= rhombus=]))
 
 (provide fun)

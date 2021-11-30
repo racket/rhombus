@@ -29,6 +29,7 @@
         "private/set.rkt"
         "private/map-ref.rkt"
         "private/assign.rkt"
+        "private/equal.rkt"
         "private/function.rkt"
         "private/begin.rkt"
         "private/cond.rkt"

@@ -8,7 +8,7 @@
 ]{
 
  Binds @rhombus[identifier] so that its vaue can be changed using
- @rhombus[=].
+ @rhombus[:=].
 
  No static information is associated with @rhombus[identifier], even if
  a surrounding binding pattern would otherwise associate static
@@ -17,7 +17,7 @@
 }
 
 @doc[
-  expr.macro '($identifier = $expr)
+  expr.macro '($identifier := $expr)
 ]{
 
  Changes the value of @rhombus[identifier] to the result of
@@ -26,7 +26,7 @@
 
 @examples[
   val mutable count: 0,
-  count = count + 1,
+  count := count + 1,
   count
 ]
 

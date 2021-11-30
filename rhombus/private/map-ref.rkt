@@ -9,7 +9,7 @@
          "ref-result-key.rkt"
          "static-info.rkt"
          (only-in "assign.rkt"
-                  [= rhombus=])
+                  :=)
          (submod "set.rkt" for-ref))
 
 (provide ++)
@@ -21,9 +21,9 @@
   (define map (rhombus-local-expand map-in))
   (syntax-parse stxes
     #:datum-literals (brackets op)
-    #:literals (rhombus=)
-    [(_ ((~and head brackets) index) (op rhombus=) . rhs+tail)
-     #:with rhs::infix-op+expression+tail #'(rhombus= . rhs+tail)
+    #:literals (:=)
+    [(_ ((~and head brackets) index) (op :=) . rhs+tail)
+     #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                                  #'map-set!))
      (define e (datum->syntax (quote-syntax here)
