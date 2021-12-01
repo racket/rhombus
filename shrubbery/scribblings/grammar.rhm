@@ -1,12 +1,11 @@
 #lang rhombus
 
 import:
-  scribble/rhombus:
-    no_prefix
+  scribble/rhombus open
   scribble/bnf:
-    rename: #{BNF-seq} ~to bseq
-            #{BNF-alt} ~to balt
-            optional ~to boptional
+    rename: #{BNF-seq} as bseq
+            #{BNF-alt} as balt
+            optional as boptional
     expose: nonterm bseq balt kleenestar kleeneplus boptional
 
 export:

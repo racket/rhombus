@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
-    "grammar.rhm": no_prefix
-    "grammar-s-exp.rkt": no_prefix)
+    "grammar.rhm" open
+    "grammar-s-exp.rkt" open)
 
 @title{Parsed Representation}
 

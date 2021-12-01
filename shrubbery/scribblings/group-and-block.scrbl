@@ -1,5 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: "grammar.rhm": no_prefix)
+@(import: "grammar.rhm" open)
 
 @(def opener: @emph{opener})
 @(def closer: @emph{closer})

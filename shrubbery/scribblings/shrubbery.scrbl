@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 @(import:
-    "grammar.rhm": no_prefix
+    "grammar.rhm" open
     "grammar-s-exp.rkt":
       expose: shrubbery_s_expression_grammar)
 

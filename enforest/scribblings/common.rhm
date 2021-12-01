@@ -1,10 +1,8 @@
 #lang rhombus
 
 import:
-  scribble/rhombus/manual:
-    no_prefix
-  "racket.rkt":
-    no_prefix
+  scribble/rhombus/manual open
+  "racket.rkt" open
 
 export:
   all_from("racket.rkt")

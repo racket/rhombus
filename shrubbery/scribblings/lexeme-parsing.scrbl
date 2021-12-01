@@ -1,5 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: "grammar.rhm": no_prefix)
+@(import: "grammar.rhm" open)
 
 @title[~tag: "lexeme-parsing"]{Lexeme Parsing}
 
