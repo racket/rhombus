@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     shrubbery/print)
          racket/unsafe/undefined
          "binding.rkt"
          "parse.rkt"
@@ -51,7 +52,7 @@
                                    (nested-bindings who try-next failure rest . tail)))
                          (static-if try-next
                                     (try-next)
-                                    (failure 'who arg-id 'arg-pat))))]))
+                                    (failure 'who arg-id '#,(shrubbery-syntax->string #'arg-pat)))))]))
 
 (define-syntax (if-block stx)
   (syntax-parse stx

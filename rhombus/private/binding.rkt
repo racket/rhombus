@@ -135,11 +135,11 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-binding-space #'name) rhs))]))
 
-(define (raise-binding-failure who what val binding)
+(define (raise-binding-failure who what val binding-str)
   (error who
          (string-append "~a does not match binding pattern\n"
                         "  argument: ~v\n"
-                        "  binding: ~s")
+                        "  binding: ~a")
          what
          val
-         binding))
+         binding-str))

@@ -5,6 +5,7 @@
                      "consistent.rkt"
                      "with-syntax.rkt")
          racket/unsafe/undefined
+         "parens.rkt"
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
@@ -121,10 +122,10 @@
     #'fun
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts)
+        #:datum-literals (group block alts)
         [(form-id ((~and alts-tag alts)
-                   (block (group (parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                                 (~and rhs (block body ...))))
+                   (block (group (_::parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-annotation
+                                 (~and rhs (_::block body ...))))
                    ...+)
                   . tail)
          (values
@@ -135,8 +136,8 @@
                                #'(rhs ...)
                                #'form-id #'alts-tag)
           #'tail)]
-        [(form-id ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                  (~and rhs (block body ...))
+        [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
+                  (~and rhs (_::block body ...))
                   . tail)
          (define fun
            (build-function #'form-id
@@ -152,11 +153,11 @@
    (definition-transformer
      (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts)
+        #:datum-literals (group block alts parens)
         [(form-id ((~and alts-tag alts)
-                   (block (group name:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
+                   (block (group name:identifier (_::parens arg::non-...-binding ... rest::maybe-arg-rest)
                                  ret::ret-annotation
-                                 (~and rhs (block body ...))))
+                                 (~and rhs (_::block body ...))))
                    ...+))
          (define names (syntax->list #'(name ...)))
          (define the-name (car names))
@@ -171,9 +172,9 @@
                                       #'(ret.predicate ...)
                                       #'(rhs ...)
                                       #'form-id #'alts-tag))))]
-        [(form-id name:identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
+        [(form-id name:identifier (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
                   ret::ret-annotation
-                  (~and rhs (block body ...)))
+                  (~and rhs (_::block body ...)))
          (maybe-add-function-result-definition
           #'name (list #'ret.static-infos)
           (list
@@ -427,8 +428,8 @@
                          #,(loop (cdr new-arg-ids))))
                      (#,try-next))]))))])))
 
-(define (argument-binding-failure who val binding)
-  (raise-binding-failure who "argument" val binding))
+(define (argument-binding-failure who val binding-str)
+  (raise-binding-failure who "argument" val binding-str))
 
 (define (cases-failure who rest-args . base-args)
   (define args (append base-args rest-args))
@@ -469,7 +470,7 @@
 (define-for-syntax (parse-function-call rator-in stxes)
   (define rator (rhombus-local-expand rator-in))
   (syntax-parse stxes
-    [(_ ((~and head (~datum parens)) rand::kw-expression ...) . tail)
+    [(_ (head::parens rand::kw-expression ...) . tail)
      #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                             [parsed (in-list (syntax->list #'(rand.parsed ...)))])
                                    (if (syntax-e kw)

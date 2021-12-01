@@ -1,6 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
+                     shrubbery/print
+                     shrubbery/property
                      "infer-name.rkt")
          "definition.rkt"
          "binding.rkt"
@@ -30,8 +32,9 @@
                                    #'(g ...) #'rhs
                                    wrap-definition)]
         [(form-id any ... (~and rhs (block body ...)))
+         #:with g-tag (syntax-raw-property (datum->syntax #f 'group) "")
          (build-value-definitions #'form-id
-                                  #'(group any ...)
+                                  #'(g-tag any ...)
                                   #'rhs
                                   wrap-definition)]))))
 
@@ -61,7 +64,7 @@
                           lhs-i.data
                           flattened-if
                           (void)
-                          (rhs-binding-failure '#,form-id tmp-id 'lhs))
+                          (rhs-binding-failure '#,form-id tmp-id '#,(shrubbery-syntax->string #'lhs)))
       (wrap-definition
        #`(begin
            (lhs-i.binder-id tmp-id lhs-i.data)
@@ -76,6 +79,8 @@
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id () lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
+     #:with (lhs-str ...) (for/list ([lhs (in-list (syntax->list #'(lhs ...)))])
+                            (shrubbery-syntax->string lhs))
      (list
       #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) (rhombus-body-expression rhs)])
                                       (values lhs-i.name-id ...)))
@@ -85,7 +90,7 @@
                             lhs-i.data
                             flattened-if
                             (begin)
-                            (rhs-binding-failure '#,form-id tmp-id 'lhs))
+                            (rhs-binding-failure '#,form-id tmp-id 'lhs-str))
           ...
           (lhs-i.binder-id tmp-id lhs-i.data)
           ...
@@ -101,5 +106,5 @@
          (unless check-expr fail-expr)
          success-expr)]))
 
-(define (rhs-binding-failure who val binding)
-  (raise-binding-failure who "value" val binding))
+(define (rhs-binding-failure who val binding-str)
+  (raise-binding-failure who "value" val binding-str))

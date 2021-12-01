@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx
+                     shrubbery/print
                      enforest
                      enforest/operator
                      enforest/syntax-local
@@ -186,7 +187,7 @@
               #`(let ([val #,form])
                   (if (c-parsed.predicate val)
                       val
-                      (raise-annotation-failure val 't.parsed)))
+                      (raise-annotation-failure val '#,(shrubbery-syntax->string #'t))))
               form)
           #'c-parsed.static-infos)
          #'t.tail)]))
@@ -275,7 +276,7 @@
   (error '::
          (string-append "value does not match annotation\n"
                         "  argument: ~v\n"
-                        "  annotation: ~s")
+                        "  annotation: ~a")
          val
          ctc))
 
