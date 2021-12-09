@@ -12,3 +12,5 @@
 (define build-deps
   '("at-exp-lib"
     "racket-doc"))
+
+(define version "0.1")
