@@ -1,0 +1,17 @@
+#lang rhombus
+
+import:
+  rhombus/macro open
+  "typeset-doc.rkt" open
+
+export:
+  doc
+
+expr.macro '(doc $parens $tail ......):
+  ~op_stx: me
+  match parens
+  | '($_ ..., ..., [$_ ..., ...]):
+      values(parsed(['#{typeset-doc}, me, parens]),
+             tail)
+  | ~else:
+      raise_syntax_error("expected forms and documentation content", '($me $parens))

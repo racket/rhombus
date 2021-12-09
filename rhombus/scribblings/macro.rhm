@@ -1,0 +1,19 @@
+#lang rhombus
+
+import:
+  scribble/rhombus/manual:
+    expose: examples
+            close_eval
+
+export:
+  make_macro_eval
+  close_eval
+
+fun make_macro_eval():
+  val macro_eval: manual.make_rhombus_eval()
+  @examples[
+    ~eval: macro_eval,
+    ~hidden: #true,
+    import: rhombus/macro open
+  ]
+  macro_eval

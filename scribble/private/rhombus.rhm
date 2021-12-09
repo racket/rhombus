@@ -1,0 +1,206 @@
+#lang rhombus
+import:
+  rhombus/macro open
+  "typeset-rhombus.rkt" open
+  for_meta:
+    "typeset_meta.rhm"
+  scribble/base as scribble:
+    expose: elem
+
+export:
+  rhombus
+  rhombusblock
+
+for_meta:
+  def | map(proc, []): []
+      | map(proc, [a, as, ...]): cons(proc(a), map(proc, as))
+
+  def | andmap(proc, []): #true
+      | andmap(proc, [a, as, ...]): proc(a) && andmap(proc, as)
+
+  def | map2(proc, [], []): []
+      | map2(proc, [a, as, ...], [b, bs, ...]): cons(proc(a, b), map2(proc, as, bs))
+
+  def head_context(stxs):
+    match stxs
+    | '($head $_ ......):
+        relocate_syntax('#false, head)
+
+  def head_escape_context(stxs):
+    match stxs
+    | '($head $esc $_ ......):
+        relocate_span_syntax('#false, [head, esc])
+
+  def literal(stxs):
+    '(literal_syntax $stxs)
+
+  def literal_rebuilt(heads, tails):
+    match heads
+    | '(literal_syntax($head ...)):
+        match tails
+        | '(literal_syntax($tail ......)):
+            '(literal_syntax($head ... $tail ......))
+
+  import: racket/base
+  def literal_rebuilt_nested(tss, gs, stxs):
+    def new_gs: map2(fun (ts, orig_g):
+                       match ts
+                       | '(literal_syntax($g)):
+                           relocate_syntax(g, orig_g),
+                     tss,
+                     gs)
+    def new:
+      match stxs
+      | '(($_, ...)): '($new_gs, ...)
+      | '([$_, ...]): '[$new_gs, ...]
+      | '({$_, ...}): '{$new_gs, ...}
+      | '(: $_; ...): match '(: $new_gs; ...)
+                      | '($(t $: Term)): t
+      | '(| $(_ $: Block) | ...): match '($new_gs, ...)
+                                  | '($(new_ts $: Term), ...):
+                                      '(| $new_ts | ...)
+    literal('($(relocate_syntax(new, head_context(stxs)))))
+
+  def is_literal(stx):
+    match stx
+    | '(literal_syntax $_): #true
+    | ~else: #false
+
+  def build_relocate_group(ts, g):
+    if is_literal(ts)
+    | match ts
+      | '(literal_syntax($new_g)):
+          '(literal_syntax($(relocate_syntax(new_g, g))))
+    | '(as_seq(relocate_group($ts, literal_syntax_term($(relocate_syntax('#false, g))))))
+
+  def nested(gs, builder, stxs):
+    val tss: map(fun(g): escape('($g)), gs)
+    if andmap(is_literal, tss)
+    | literal_rebuilt_nested(tss, gs, stxs)
+    | val new_gs: map2(build_relocate_group, tss, gs)
+      '($builder([$new_gs, ...], literal_syntax_term($(head_context(stxs)))))
+
+  def escape(stxs):
+    match stxs
+    | '($$($expr ...) $tail ......):
+        '(sequence_cons_syntax(elem($expr ...), $(escape(tail)),
+                               literal_syntax_term($(head_escape_context(stxs)))))
+    | '($head $tail ......):
+        val values(a_head, a_tail): adjust_spaces(head, tail)
+        val new_head: escape_one('($a_head))
+        val new_tail: escape('($a_tail ......))
+        if is_literal(new_head)  && is_literal(new_tail)
+        | literal_rebuilt(new_head, new_tail)
+        | '(sequence_append_syntax($new_head, $new_tail,
+                                   literal_syntax_term($(head_context(stxs)))))
+    | ~else: literal(stxs)
+
+  def escape_one(stxs):
+    match stxs
+    | '(($gs, ...)):
+        nested(gs, 'parens_syntax, stxs)
+    | '([$gs, ...]):
+        nested(gs, 'brackets_syntax, stxs)
+    | '({$gs, ...}):
+        nested(gs, 'braces_syntax, stxs)
+    | '(: $gs; ...):
+        nested(gs, 'block_syntax, stxs)
+    | '(| $(bs $: Block) | ...):
+        nested(bs, 'alts_syntax, stxs)
+    | '($(id $: Id_Op)):
+        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        match mv
+        | typeset_meta.Transformer(proc):
+            '(relocate_expansion($(proc(id)),
+                                 literal_syntax_term($(head_context(stxs)))))
+        | ~else: literal(stxs)
+    | ~else: literal(stxs)
+
+  def adjust_spaces(head, tail):
+    match '($head)
+    | '($(id $: Id_Op)):
+        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        match mv
+        | typeset_meta.Spacer(proc):
+            proc(head, tail, ' $$)                
+        | ~else: values(head, tail)
+    | ~else: values(head, tail)
+
+fun as_seq(v): '($v)
+
+fun sequence_cons_syntax(a, d, context):
+  let a_r: relocate_syntax(to_syntax(a), context);
+  match d
+  | '($e ......): '($a_r $e ......)
+
+fun sequence_append_syntax(d1, d2, context):
+  match d1
+  | '($e1 ...):
+      match d2
+      | '($e2 ......):
+          relocate_syntax('($e1 ... $e2 ......), context)
+      
+fun parens_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('($t, ...), context))
+
+fun brackets_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('[$t, ...], context))
+
+fun braces_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax('{$t, ...}, context))
+
+fun block_syntax(ts, context):
+  match ts
+  | ['($t), ...]: as_seq(relocate_syntax(syntax_term(: $t; ...), context))
+
+fun alts_syntax(ts, context):
+  match ts
+  | ['($(t $: Term)), ...]:
+      as_seq(relocate_syntax(syntax_term(| $t | ...), context))
+
+fun relocate_group(ts, context):
+  match ts
+  | '($g): relocate_syntax(g, context)
+
+fun relocate_expansion(e, context):
+  as_seq(relocate_syntax(to_syntax(e), context))
+
+// ----------------------------------------
+
+expr.macro
+| '(rhombus ($forms ...) $main_tail ......):
+    values('(#{typeset-rhombus}($(escape('($forms ...))))),
+           main_tail)
+| '(rhombus ($forms ..., $(kw_stx $: Keyw)) $main_tail ......):
+    val kw: unwrap_syntax(kw_stx)
+    if (kw === keyword(~var)
+          || kw === keyword(~bind)
+          || kw === keyword(~impmod)
+          || kw === keyword(~ann)
+          || kw === keyword(~stxclass))
+    | values('(#{typeset-rhombus}(~space: keyword($kw), $(escape('($forms ...))))),
+             main_tail)
+    | raise_syntax_error("invalid space", kw)
+
+expr.macro '(rhombusblock $tail ...):
+  ~op_stx: me
+  fun finish(option, fin_tail):
+    match '($fin_tail ...)
+    | '(: $content ...; ...):
+        values('(#{typeset-rhombusblock}($option, ..., $(escape('($fin_tail ...))))), '())
+    | ~else: raise_syntax_error("expected a block", '($me $tail ...))
+  fun check_options(options):
+    match '($options, ...)
+    | '(): #true
+    | '(~inset: $on, $more, ...): check_options(more)
+    | '(~indent: $amt, $more, ...): check_options(more)
+    | '(~prompt: $prompt, $more, ...): check_options(more)
+    | '($opt, $_, ...): raise_syntax_error("invalid option", opt)
+  match '($tail ...)
+  | '(($options, ...) $new_tail ...):
+      check_options(options)
+      finish(options, new_tail)
+  | ~else: finish([], tail)

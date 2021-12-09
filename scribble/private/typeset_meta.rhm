@@ -1,0 +1,15 @@
+#lang rhombus
+
+import:
+  racket/base
+
+export:
+  Transformer
+  Spacer
+  in_space
+
+class Transformer(proc)
+class Spacer(proc)
+
+fun in_space(stx):
+  base.#{make-interned-syntax-introducer}(symbol(#{rhombus/scribble/typeset}))(stx)

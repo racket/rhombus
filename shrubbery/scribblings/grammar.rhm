@@ -1,0 +1,17 @@
+#lang rhombus
+
+import:
+  scribble/rhombus open
+  scribble/bnf:
+    rename: #{BNF-seq} as bseq
+            #{BNF-alt} as balt
+            optional as boptional
+    expose: nonterm bseq balt kleenestar kleeneplus boptional
+
+export:
+  bnf
+  bseq balt boptional nonterm bseq kleenestar kleeneplus boptional
+  bis bor
+
+def bis: @elem{@hspace[1]::=@hspace[1]}
+def bor: @elem{@hspace[1] | @hspace[1]}

@@ -1,0 +1,639 @@
+#lang rhombus
+
+import:
+  rhombus/macro open
+
+use_static_dot
+
+// Some expressions
+
+10 * (-3) + 2
+10 + (-3) * 2
+
+#false || !(#false || #false)
+      
+"hello" & " " & "world"
+
+// define and call a function
+
+def five(x):
+  5
+
+3*five(#true && #false || 2 < 3)-2
+
+def six(x, ~plus: amt = 0):
+  6 + amt
+
+six("anything")
+six("anything", ~plus: 7)
+
+def seven(x, ~plus: amt = x, y = amt):
+  7 + amt - y
+
+seven(12)
+seven("anything", ~plus: 13)
+seven(12, 10)
+seven(12, 10, ~plus: 8)
+
+// pattern-matching on a function argument
+
+def f(cons(x :: Integer, y)): cons(x + 1, y)
+
+f(cons(22, #false))
+
+// classes (as records/structures)
+
+class Posn(x, y)
+
+def md(p -: Posn):
+  p.x + p.y
+def md2(p):
+  use_dynamic_dot
+  p.x + p.y
+
+Posn.x(Posn(1, 4))
+
+md(Posn(1, 4))
+md2(Posn(1, 4))
+
+// more definitions
+
+def π: 3.14
+π
+
+def (((ππ))): π * π
+ππ
+
+def (ma, mb, mc):
+  values("1", "2", "3")
+mb
+  
+val cons(ca, cb): cons(1, 2)
+ca
+
+def
+| size(n :: Integer):
+    n
+| size(p :: Posn):
+    p.x + p.y
+| size(a, b):
+    a+b
+
+size(Posn(8, 6))
+size(1, 2)
+
+def Posn(px, py) -: Posn: Posn(1, 2)
+cons(px, py)
+
+def identity: fun (x): x
+identity(1 + (fun (x): x) (99) )
+
+size
+
+// quasiquoting an expression
+
+'(apple + banana)
+'(apple + $(3 + 4))
+'(apple + '($(3 + 4)))
+
+// defining an infix operator
+
+operator (a +* b):
+  (a + b) * b
+
+3 +* 4
+
+operator (;«x mod y»):
+  x - floor(x / y) * y
+
+10 mod 3  // prints 1
+
+// with precedence and associativity
+
+operator (a ++* b):
+  ~weaker_than: *
+  ~associativity: ~right
+  (a + b) * b
+
+3 ++* 4 * 2 ++* 5
+3 ++* ((4 * 2) ++* 5)
+
+// defining a prefix operator
+
+operator (!! b):
+  ! ! b
+
+!!#true
+
+// defining an operator that is both prefix and infix
+
+operator
+| (** exponent):
+    2 ** exponent
+| (base ** exponent):
+    if exponent == 0
+    | 1
+    | base * (base ** (exponent-1))
+
+3 ** 8
+** 10 // = 2 ** 10
+
+// match
+
+match cons(7, 8)
+| cons(a, b):
+    b
+| x:
+    x
+| ~else:
+    "other"
+
+match '(z + y, {[10, 11, 12]})
+| '(x $a): a
+| '($a + y, {[$n, ...]}): cons(a, n)
+
+cond
+| #true: 17
+| ~else: 18
+
+// postfix as a macro "infix" operator;
+
+fun
+| factorial(0): 1
+| factorial(n): n*factorial(n-1)
+
+expr.macro '($a *! $tail ......):
+  values('(factorial($a)), tail)
+
+10*!
+
+// a macro with an identifier name that does a weird
+// thing with the result tail
+
+expr.macro '(prefix_plus $a $b $c ......):
+  values(a, '(+ $b $c ......))
+
+prefix_plus 7 9
+
+// an identifier macro
+
+expr.macro 'just_five: '"five"
+
+just_five & " is the result"
+
+// another way to write that
+
+expr.macro '(also_prefix_plus $e ...):
+  match e
+  | '($a $b $c ...):
+      values(a, '(+ $b $c ...))
+  | ~else:
+      values('"this is terrible error reporting", '())
+
+also_prefix_plus 7 9
+
+// define a binding operator
+
+bind.rule '($ $n):
+  ~parsed_right
+  '($n :: Integer)
+
+fun apply_interest($ n):
+  n * 1.05
+
+apply_interest(7)
+
+// define <> as revese-cons pattern
+bind.macro '($a <> $b):
+  ~parsed_right
+  bind_ct.pack('(build_reverse_cons_infoer,
+                 ($a, $b)))
+
+bind.infoer '(build_reverse_cons_infoer($in_id, ($a_in, $b_in))):
+  val a: bind_ct.get_info(a_in, '())
+  val b: bind_ct.get_info(b_in, '())
+  match bind_ct.unpack_info(a)
+  | '($a_id, $a_info, ($a_bind_info ...), $a_matcher, $a_binder, $a_data):
+      match bind_ct.unpack_info(b)
+      | '($b_id, $b_info, ($b_bind_info ...), $b_matcher, $b_binder, $b_data):
+          '(pair,
+            (),
+            ($a_bind_info ... $b_bind_info ...),
+            build_reverse_cons_match,
+            build_reverse_cons_bind,
+            ($a, $b, a_part, b_part))
+
+bind.matcher '(build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
+                                        $IF, $success, $fail)):
+  match bind_ct.unpack_info(a)
+  | '($a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data):
+      match bind_ct.unpack_info(b)
+      | '($b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data):
+          '(:
+              // check for pair an extract reversed pieces
+              val (is_match, $a_part_id, $b_part_id):
+                match $in_id
+                | cons($b_id, $a_id):
+                    values(#true, $a_id, $b_id)
+                | ~else:
+                    values(#false, #false, #false)
+              // if a match, chain to a and b matchers
+              $IF is_match
+              | $a_matcher($a_part_id,
+                           $a_data,
+                           $IF,
+                           $b_matcher($b_part_id,
+                                      $b_data,
+                                      $IF,
+                                      $success,
+                                      $fail),
+                           $fail)
+              | $fail
+          )
+
+bind.binder '(build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))):
+  match bind_ct.unpack_info(a)
+  | '($a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data):
+      match bind_ct.unpack_info(b)
+      | '($b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data):
+          '(:
+              $a_binder($a_part_id, $a_data)
+              $b_binder($b_part_id, $b_data)
+          )
+
+// an expression operator that's consistent with the pattern
+expr.rule '($a <> $b): ~parsed_right; '(cons($b, $a))
+
+def rx <> (ry :: Integer) : "2" <> 1
+rx
+
+// definition form, which returns either a block of definitions
+// or a block of definitions and a sequence of expressions
+
+defn.macro '(define_eight $e ......):
+  match e
+  | '($name):
+      '(: def $name: 8)
+       
+define_eight ate
+ate
+
+defn.macro '(define_and_use $e ......):
+  match e
+  | '($name: $rhs ...):
+      '(: def $name: $rhs ...
+          literal_syntax($name))
+
+define_and_use nine: 1+8
+nine
+
+// declaration form
+
+decl.macro '(empty_import $e ......):
+  match e
+  | '():
+      '(: import:«»)
+
+empty_import
+
+// `forward` is a definition that is only visible later
+
+def check_later():
+  ok_later
+
+let accum: 1
+let accum: accum+1
+let accum: accum+1
+accum
+
+def ok_later: "ok"
+check_later()
+
+// Nested class types with contracts
+
+class IPosn(x :: Integer, y :: Integer)
+
+class ILine(p1 :: IPosn, p2 :: IPosn)
+
+def l1: ILine(IPosn(1, 2), IPosn(3, 4))
+
+l1.p2.x
+
+IPosn(1, 2).x
+
+ILine.p1(l1).x
+(l1.p1 :: IPosn).x
+
+fun (p): (p :: IPosn).x
+
+begin:
+  val ILine(p1, p2): l1
+  p1.x + p2.y
+
+// function result contracts
+
+fun add1(x) :: Integer:
+  match x
+   | n :: Integer : x + 1
+   | ~else: x
+
+add1(100)
+// add1("oops")
+
+fun
+| add_two(x) :: Number:
+    x + 2.0
+| add_two(x, y) :: String:
+    x & " and " & y
+
+add_two(7) .= 9.0
+add_two(6, 7) == "6 and 7"
+
+begin:
+  val f: fun (x) :: Integer: x
+  f(10)
+
+fun on_diag(n :: Integer) :: Posn:
+  Posn(n, n)
+
+on_diag(1).x
+
+val known_posn: on_diag(2)
+known_posn.x
+
+// contracts and dot providers
+
+import:
+ racket/base open:
+   only: atan
+
+annotation.macro 'AlsoPosn: 'Posn
+Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
+
+bind.macro '(AlsoPosn ($x, $y) $tail ......):
+  values('(Posn($x, $y)), tail)
+                       
+annotation.macro 'Vector:
+  annotation_ct.pack_predicate('(fun (x): x is_a Posn),
+                               '(($(dot_ct.provider_key), vector_dot_provider)))
+
+
+dot.macro '(vector_dot_provider $left $dot $right):
+  match right
+  | 'angle: '(vector_angle($left))
+  | 'magnitude: '(vector_magnitude($left))
+
+fun vector_angle(Posn(x, y)): atan(y, x)
+fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
+
+let vec :: Vector: Posn(3, 4)
+vec.angle
+vec.magnitude
+
+def AlsoPosn(also_x, also_y): Posn(10, 20)
+also_x & "," & also_y
+
+expr.macro '(or_zero $p $tail ......):
+  values(static_info_ct.wrap('($p || Posn(0,0)),
+                             '(($(dot_ct.provider_key),
+                                vector_dot_provider))),
+         tail)
+  
+or_zero(Posn(3, 4)).magnitude
+
+fun zero_vec(): Posn(0, 0)
+static_info.macro 'zero_vec: '(($(expr_ct.call_result_key),
+                                $(static_info_ct.pack('(($(dot_ct.provider_key),
+                                                         vector_dot_provider))))))
+zero_vec().magnitude
+
+begin:
+  let p1 :: Posn.of(Integer, Posn): Posn(1, Posn(3, 4))
+  // RHS influences info for LHS:
+  let Posn(px, py): p1
+  py.y
+
+// indexables
+
+val nums: [1, 2, 3]
+val yes_nums :: List: nums
+val yep_nums :: List.of(Integer): nums
+
+nums[1]
+
+val nums_a: Array(1, 2, 3)
+val yes_nums_a :: Array: nums_a
+val yep_nums_a :: Array.of(Integer): nums_a
+
+nums_a[1]
+nums_a[2] := 30
+nums_a[2]
+
+val map: Map(symbol(x), "hello", symbol(y), "goodbye")
+val yes_map :: Map : map
+val yup_map :: Map.of(Symbol, String) : map
+
+map
+map[symbol(y)]
+
+val also_map: Map(1, "one", 2, "two")
+also_map[2]
+
+val also_also_map: {1: "one", 2: "two"}
+also_also_map[2]
+
+val key_map: {symbol(a): "ay", symbol(b): "bee"}
+key_map[symbol(a)]
+
+val mixed_map: {symbol(a): 1, "b": 2}
+mixed_map[symbol(a)] + mixed_map["b"]
+
+val mut_map: make_map(1, "mone")
+mut_map[1]
+mut_map[2] := "mtwo"
+mut_map[2]
+
+val a_set: {1, 3, 5, 7, 9}
+if a_set[1] && !a_set[2]
+| "ok"
+| 1/0
+
+def [x, ys, ...]: nums
+ys
+
+def Array(ax, ay, az): nums_a
+az
+
+def local_map: Map(symbol(alice), Posn(4, 5),
+                   symbol(bob), Posn(7, 9))
+
+fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
+  val p: neighborhood[who]
+  p.x & ", " & p.y
+
+locale(symbol(alice), local_map)
+
+def {symbol(bob): bob_loc}: local_map
+bob_loc
+
+def Map(symbol(alice), alice_loc2, symbol(bob), bob_loc2): local_map
+[alice_loc2, bob_loc2]
+
+def [ps :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
+ps[0].x
+
+fun
+| is_sorted([]): #true
+| is_sorted([head]): #true
+| is_sorted([head, next, tail, ...]):
+   head <= next && is_sorted([next, tail, ...])
+
+is_sorted([1, 2, 30, 4, 5])
+
+
+fun
+| got_milk([]): #false
+| got_milk([head, tail, ...]):
+   head == "milk" || got_milk(tail)
+
+got_milk([])
+got_milk(["apple", "milk", "banana"])
+got_milk(["apple", "coffee", "banana"])
+
+List(1, 2, [3, 4], ...)
+
+val nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)): Posn(1, Posn(3, 4))
+nested_p.y.x
+
+// rest arguments
+
+fun f_rest(x, ys :: Integer, ...):
+  ys
+
+f_rest(10, 11, 12, 13)
+
+fun
+| g_rest(): "no"
+| g_rest(x :: Integer): "simple"
+| g_rest(x :: Integer, ys :: Integer, ...):
+   ys
+| g_rest(x): x
+
+g_rest()
+g_rest(1) == "simple"
+g_rest(1, 2, 3)
+g_rest("hello") == "hello"
+
+fun
+| posns_y(ps :: Posn, ...):
+    ps[1].y
+| posns_y(x):
+    x
+     
+posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+posns_y(10)
+
+// `matching` contracts
+
+fun get_pt_x(pt :: matching(Posn(_, _))):
+  pt.x
+
+get_pt_x(Posn(1, 2))
+
+fun get_pts_x(pts :: matching([Posn(_, _), ...])):
+  pts[0].x
+
+get_pts_x([Posn(1, 2)])
+
+fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
+  pt.x.x
+
+annotation.macro '(ListOf ($contract ...) $tail ......):
+  values('(matching([_ :: ($contract ...), $(' ...)])),
+         tail)
+
+fun get_pts_x2(pts -: ListOf(Posn)):
+  pts[0].x
+
+get_pts_x2([Posn(5, 7)])
+
+// definition-sequence macros
+defn.sequence_macro '(: reverse_defns; $defn1 ...; $defn2 ...; $tail; ......):
+  values('(: $defn2 ...; $defn1 ... ), '(: $tail; ......))
+
+reverse_defns
+def seq_x: seq_y+1
+def seq_y: 10
+
+seq_x
+
+// mixin infix and prefix with multiple matching cases
+
+def
+| '(weirdly coconut):
+    ~stronger_than: +
+    '"donut"
+| '(weirdly):
+    '"banana"
+| '($a weirdly $b + $c):
+    '($a + $b - $c)
+| '($a weirdly $b):
+    '($a + $b)
+
+weirdly
+weirdly coconut
+weirdly & "none"
+1 weirdly 5
+1 weirdly 5 + 7
+
+// shubbery-friendly @-expressions
+
+'(@x)
+'(@f{text})
+'(@f{text}{another text})
+'(@f[x, y]{This is plain text.})
+'(@f[x, y])
+'(@{text})
+'(@[x, y]{text})
+'(@« library.f »[x, y]{Text with @escape[].})
+'(@(library.f)[x, y]{Text with @« escape ».})
+'(@explain{Multi-line text
+            has newlines as separate
+            and leading whitespace
+           stripped})
+'(@explain{There are also
+            @// line comments and
+            other things.})
+'(@explain{Here is @//{a block comment
+                       that spans lines
+                       and}
+           stuff afterward.})
+
+// checking some static-info propagation cases
+
+dot.macro '(myint_dot_provider $left $dot $right):
+  match right
+  | 'is_zero: '($left .= 0)
+  | 'add: '(fun (v -: MyInt) -: MyInt: $left + v)
+
+annotation.macro 'MyInt:
+  annotation_ct.pack_predicate('(fun (x): x is_a Integer),
+                               '(($(dot_ct.provider_key), myint_dot_provider)))
+
+val (one -: MyInt): 1
+
+one.add(4).is_zero
+
+((one.add(4)) -: MyInt).is_zero
+
+val two: 2 :: MyInt
+two.is_zero
+
+expr.rule '(I($n)): '($n -: MyInt)
+val three: (I(3))
+three.is_zero
+
+operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
+  x.add(y)
+
+(-2 my_plus 2).is_zero
