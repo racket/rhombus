@@ -1,21 +1,15 @@
-This repository is for brainstorming and discussion for the Rhombus
-project, which is about the design of a new language that is based on
-Racket. “Rhombus” is the project name and a placeholder name for
-a language name to be chosen later.
+This repository is the iterative-design phase of the Rhombus project,
+which is about the design of a new language that is based on Racket.
+“Rhombus” is the project name and a placeholder name for a language
+name to be chosen later.
+
+This repository also serves as a package to implement the current
+Rhombus prototype. Installing the package makes `#lang rhombus` work
+and builds documentation for the prototype.
 
 # Resources
 
-* [State of Rhombus](https://docs.google.com/document/d/10GTdmxo6Uty_-SQY8hrz5unCwtNi_YIsuI5yghmZ6hU)
-
-* Active proposals:
-    - [Shrubbery notation](https://github.com/mflatt/rhombus-brainstorming/blob/shrubbery/shrubbery/0000-shrubbery.md)
-      [(discussion)](https://github.com/racket/rhombus-brainstorming/pull/122)
-    - [Enforestation](https://github.com/mflatt/rhombus-brainstorming/blob/enforestation/enforestation/0000-enforestation.md)
-      [(discussion)](https://github.com/racket/rhombus-brainstorming/pull/162)
-    - [Rhombus protoype](https://github.com/mflatt/rhombus-brainstorming/blob/rhombus/rhombus/0000-rhombus.md)
-      [(discussion)](https://github.com/racket/rhombus-brainstorming/pull/163)
-      and
-      [examples](https://github.com/samdphillips/rhombus-examples)
+* [State of Rhombus](resources/state-of-rhombus.md)
 
 * [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
 
