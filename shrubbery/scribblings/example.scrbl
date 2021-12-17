@@ -18,7 +18,7 @@ terminology, but that's enough to get a sense of the examples.
       cond
       | n == 0: 0
       | n == 1: 1
-      | else: fib(n-1) + fib(n-2)
+      | ~else: fib(n-1) + fib(n-2)
 
     def print_sexp(v):
       match v
