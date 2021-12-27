@@ -160,6 +160,11 @@
                           (:: "." non-delims))]
   [non-delims (:or alphabetic numeric "_")]
 
+  [bad-chars (:* (:- any-char
+                     alphabetic numeric
+                     symbolic punctuation
+                     whitespace))]
+
   ;; making whitespace end at newlines is for interactive parsing
   ;; where we end at a blank line
   [whitespace-segment (:or (:+ (:- whitespace "\n"))
@@ -492,7 +497,7 @@
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
    [(eof) (ret-eof start-pos end-pos)]
-   [(:or bad-str bad-keyword bad-hash bad-comment)
+   [(:or bad-str bad-keyword bad-hash bad-comment bad-chars)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
