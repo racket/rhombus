@@ -5,7 +5,7 @@
 
 @title{Notation}
 
-This provides is a summary of
+This is a summary of
 @seclink[~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"]{Shrubbery notation}
 as used for Rhombus.
 
