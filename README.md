@@ -23,9 +23,9 @@ and builds documentation for the prototype.
 
 **Anyone can participate in Rhombus design discussions.** The Racket team's
 unofficial motto is _anything we can do, you can do:_ programmers should feel
-empowered to participate in the creation of the languages they use. Discussions
-in pull requests and issues are open to all, and a wide variety of perspectives
-is especially beneficial.
+empowered to participate in the creation of the languages they use. Discussions,
+pull requests, and issues are open to all, and a wide variety of perspectives is
+especially beneficial.
 
 # Using this GitHub Repository
 
