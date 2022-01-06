@@ -179,7 +179,7 @@ classes, generics, and structure type properties. There’s a lot of
 room to leverage shrubbery notation here, especially if we were to
 build some sort of [dot transformer protocol](https://github.com/racket/rhombus-brainstorming/issues/151) for macros to use.
 
-##Other ideas
+## Other ideas
 
 * Concurrency and parallelism. Can we do better than Racket here?
 
