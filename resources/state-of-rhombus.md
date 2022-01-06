@@ -1,4 +1,4 @@
-State of Rhombus - DRAFT
+State of Rhombus
 
 Jack Firth, October 2021
 
