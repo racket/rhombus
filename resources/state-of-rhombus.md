@@ -169,7 +169,7 @@ community almost universally agrees needs improvement.
 
 General purpose. Volunteers: none yet. Relevant GitHub issues:
 [#57](https://github.com/racket/rhombus-brainstorming/issues/57),
-[#76](https://github.com/racket/rhombus-brainstorming/issues/176,
+[#76](https://github.com/racket/rhombus-brainstorming/issues/176),
 [#151](https://github.com/racket/rhombus-brainstorming/issues/151),
 [#152](https://github.com/racket/rhombus-brainstorming/issues/152).
 
