@@ -25,7 +25,7 @@
   (define-syntax-class :field
     #:datum-literals (group op)
     #:literals (mutable)
-    (pattern (group (~optional mutable
+    (pattern (group (~optional (~and mutable (~var mutable))
                                #:defaults ([mutable #'#f]))
                     name:identifier
                     (~optional c::inline-annotation))
@@ -72,8 +72,9 @@
                                                               [i (in-naturals)])
                                                      i)]
                       [(mutable-field ...) mutable-fields]
-                      [(mutable-field-index ...) (for/list ([field (in-list mutable-fields)]
-                                                            [i (in-naturals)])
+                      [(mutable-field-index ...) (for/list ([mutable (syntax->list #'(field.mutable ...))]
+                                                            [i (in-naturals)]
+                                                            #:when (syntax-e mutable))
                                                    i)])
           (list
            #`(define-values (class:name name name? name-field ... set-name-field! ...)
@@ -85,9 +86,9 @@
                                                #,(build-guard-expr fields
                                                                    (syntax->list #'(field.predicate ...))))])
                  (values class:name name name?
-                         (make-struct-field-accessor name-ref field-index 'field.name)
+                         (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
                          ...
-                         (make-struct-field-accessor name-set! mutable-field-index 'mutable-field)
+                         (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
                          ...)))
            #'(define-binding-syntax name
                (binding-transformer

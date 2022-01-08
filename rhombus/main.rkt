@@ -68,6 +68,7 @@
        (raise-syntax-error #f "ill-formed body" stx))
      #`(#%module-begin
         (module configure-runtime racket/base (require rhombus/runtime-config))
+        (#%declare #:realm rhombus)
         (rhombus-forwarding-sequence
          (rhombus-top . content)))]))
 

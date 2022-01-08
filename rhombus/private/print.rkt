@@ -102,7 +102,14 @@
          (display " " op))
        (write-shrubbery s op)]
       [(procedure? v)
-       (write v op)]
+       (define name (object-name v))
+       (cond
+         [name
+          (display "#<function:" op)
+          (display name op)
+          (display ">" op)]
+         [else
+          (display "#<function>") op])]
       [(symbol? v)
        (cond
          [(display?)
