@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     shrubbery/print)
          "binding.rkt"
          "parse.rkt")
 
@@ -9,7 +10,8 @@
 (define-syntax (literal-infoer stx)
   (syntax-parse stx
     [(_ static-infos datum)
-     (binding-info #'literal
+     (binding-info (shrubbery-syntax->string #'datum)
+                   #'literal
                    #'static-infos
                    #'()
                    #'literal-matcher

@@ -90,10 +90,11 @@
                          ...
                          (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
                          ...)))
-           #'(define-binding-syntax name
+           #`(define-binding-syntax name
                (binding-transformer
                 #'name
-                (make-composite-binding-transformer (quote-syntax name?)
+                (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                                    (quote-syntax name?)
                                                     #:static-infos (quote-syntax ((#%dot-provider name-instance)))
                                                     (list (quote-syntax name-field) ...)
                                                     #:accessor->info? #t

@@ -104,7 +104,8 @@
                 [tail tail])
     (define tmp-ids (generate-temporaries #'(key ...)))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer #'(lambda (v) #t)
+      ((make-composite-binding-transformer "Map"
+                                           #'(lambda (v) #t)
                                            (for/list ([tmp-id (in-list tmp-ids)])
                                              #`(lambda (v) #,tmp-id))
                                            (for/list ([arg (in-list tmp-ids)])
@@ -125,7 +126,8 @@
     [(_ static-infos (keys tmp-ids composite-infoer-id composite-data))
      #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
      #:with composite-info::binding-info #'composite-impl.info
-     (binding-info #'composite-info.name-id
+     (binding-info #'composite-info.annotation-str
+                   #'composite-info.name-id
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
                    #'map-matcher

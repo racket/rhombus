@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     enforest/syntax-local)
+                     enforest/syntax-local
+                     "annotation-string.rkt")
          "binding.rkt"
          "expression.rkt")
 
@@ -23,7 +24,8 @@
 (define-syntax (mutable-info stx)
   (syntax-parse stx
     [(_ static-infos id)
-     (binding-info #'id
+     (binding-info annotation-any-string
+                   #'id
                    #'() ; mutable => don't claim input's static info
                    #'((id))
                    #'mutable-identifier-succeed

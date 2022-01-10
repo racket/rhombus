@@ -29,7 +29,7 @@
 (define-binding-syntax cons  
   (binding-transformer
    #'cons
-   (make-composite-binding-transformer #'pair? (list #'car #'cdr) (list #'() #'()))))
+   (make-composite-binding-transformer "cons" #'pair? (list #'car #'cdr) (list #'() #'()))))
 
 (define-syntax List
   (make-expression+binding-prefix-operator
@@ -67,7 +67,8 @@
 ;; suitable `parens` or `brackets` form
 (define-for-syntax (parse-list-binding stx)
   (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f])
-    ((make-composite-binding-transformer pred
+    ((make-composite-binding-transformer "List"
+                                         pred
                                          #:steppers (if (null? args)
                                                         null
                                                         (cons #'values

@@ -5,6 +5,7 @@
          pack-group*
          unpack-group*
          unpack-single-term-group
+         convert-single-term-group
          pack-block*
          unpack-block*)
 
@@ -40,14 +41,17 @@
             (raise-argument-error '... "list?" r))]))))
 
 (define (unpack-single-term-group r)
+  (or (convert-single-term-group r)
+      r))
+
+(define (convert-single-term-group r)
   (cond
     [(group-syntax? r)
      (define l (syntax->list r))
-     (if (= 2 (length l))
-         (cadr l)
-         r)]
+     (and (= 2 (length l))
+          (cadr l))]
     [else r]))
-
+  
 (define (pack-group* stx depth)
   (pack-list* stx depth))
 

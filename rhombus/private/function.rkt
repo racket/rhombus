@@ -428,8 +428,8 @@
                          #,(loop (cdr new-arg-ids))))
                      (#,try-next))]))))])))
 
-(define (argument-binding-failure who val binding-str)
-  (raise-binding-failure who "argument" val binding-str))
+(define (argument-binding-failure who val annotation-str)
+  (raise-binding-failure who "argument" val annotation-str))
 
 (define (cases-failure who rest-args . base-args)
   (define args (append base-args rest-args))

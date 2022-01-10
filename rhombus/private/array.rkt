@@ -43,7 +43,8 @@
         (define pred #`(lambda (v)
                          (and (vector? v)
                               (= (vector-length v) #,len))))
-        ((make-composite-binding-transformer pred
+        ((make-composite-binding-transformer "Array"
+                                             pred
                                              (for/list ([arg (in-list args)]
                                                         [i (in-naturals)])
                                                #`(lambda (v) (vector-ref v #,i)))

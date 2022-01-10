@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "annotation-string.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -94,7 +95,8 @@
 (define-syntax (else-infoer stx)
   (syntax-parse stx
     [(_ static-infos (ok? bind-id))
-     (binding-info #'bind-id
+     (binding-info annotation-any-string
+                   #'bind-id
                    #'static-infos
                    #'()
                    #'else-matcher

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     "annotation-string.rkt")
          "parse.rkt"
          "binding.rkt"
          "static-info.rkt"
@@ -14,7 +15,8 @@
 (provide (for-syntax make-composite-binding-transformer
                      make-rest-match))
 
-(define-for-syntax (make-composite-binding-transformer predicate     ; predicate for the composite value
+(define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor, used for contract
+                                                       predicate     ; predicate for the composite value
                                                        accessors     ; one accessor per component
                                                        static-infoss ; one set of static info per component
                                                        #:steppers [steppers #f] ; a sequence of `cdr`s for lists
@@ -42,7 +44,8 @@
        (values
         (binding-form
          #'composite-infoer
-         #`(#,predicate
+         #`(#,constructor-str
+            #,predicate
             #,composite-static-infos
             #,steppers
             #,accessors
@@ -60,11 +63,11 @@
 
 (define-syntax (composite-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (predicate (composite-static-info ...)
-                                steppers accessors ((static-info ...) ...)
-                                (infoer-id ...) (data ...)
-                                accessor->info? ref-result-info?
-                                rest-data))
+    [(_ static-infos (constructor-str predicate (composite-static-info ...)
+                                      steppers accessors ((static-info ...) ...)
+                                      (infoer-id ...) (data ...)
+                                      accessor->info? ref-result-info?
+                                      rest-data))
      #:with (arg-static-infos ...) (for/list ([accessor (in-list (syntax->list #'accessors))])
                                      (or (and (syntax-e #'accessor->info?)
                                               (static-info-lookup #'static-infos accessor))
@@ -111,7 +114,8 @@
                                                  . #,composite-static-infos))]
                                         [else composite-static-infos])])
          composite-static-infos))
-     (binding-info #'composite
+     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)))
+                   #'composite
                    all-composite-static-infos
                    #`((a-info.bind-id a-info.bind-static-info ...) ... ... #,@rest-bind-infos)
                    #'composite-matcher
@@ -235,3 +239,15 @@
              (for/list ([val (in-list vals)]
                         [rest-vals (in-list rest-valss)])
                (cons val rest-vals))]))))]))
+
+(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs)
+  (annotation-string-from-pattern
+   (string-append
+    (syntax-e constructor-str) "("
+    (apply string-append
+           (for/list ([a-str (in-list arg-annotation-strs)]
+                      [i (in-naturals)])
+             (string-append
+              (if (zero? i) "" ", ")
+              (annotation-string-to-pattern (syntax-e a-str)))))
+    ")")))

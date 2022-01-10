@@ -6,8 +6,10 @@
                      enforest/property
                      enforest/proc-name
                      enforest/syntax-local
-                     "introducer.rkt")
-         "static-info.rkt")
+                     "introducer.rkt"
+                     "annotation-string.rkt")
+         "static-info.rkt"
+         "realm.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -62,7 +64,8 @@
   ;; To unpack a binding infoer result:
   (define-syntax-class :binding-info
     #:datum-literals (parens group)
-    (pattern (name-id:identifier
+    (pattern (annotation-str:string
+              name-id:identifier
               (~and static-infos ((:identifier _) ...))
               (~and bind-infos ((bind-id:identifier (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
@@ -81,8 +84,9 @@
                             data)))
 
   ;; puts pieces together into a `:binding-info`
-  (define (binding-info name-id static-infos bind-infos matcher-id binder-id data)
-    (datum->syntax #f (list name-id
+  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id binder-id data)
+    (datum->syntax #f (list annotation-str
+                            name-id
                             static-infos
                             bind-infos
                             matcher-id
@@ -112,7 +116,8 @@
 (define-syntax (identifier-info stx)
   (syntax-parse stx
     [(_ static-infos id)
-     (binding-info #'id
+     (binding-info annotation-any-string
+                   #'id
                    #'static-infos
                    #'((id . static-infos))
                    #'identifier-succeed
@@ -135,11 +140,20 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-binding-space #'name) rhs))]))
 
-(define (raise-binding-failure who what val binding-str)
-  (error who
-         (string-append "~a does not match binding pattern\n"
-                        "  argument: ~v\n"
-                        "  binding: ~a")
-         what
-         val
-         binding-str))
+(define (raise-binding-failure who what val annotation-str)
+  (raise
+   (exn:fail:contract
+    (error-message->adjusted-string
+     who
+     rhombus-realm
+     (format (string-append "~a does not satisfy annotation\n"
+                            "  ~a: ~v\n"
+                            "  annotation: ~a")
+             what
+             what
+             val
+             (error-contract->adjusted-string
+              annotation-str
+              rhombus-realm))
+     rhombus-realm)
+    (current-continuation-marks))))

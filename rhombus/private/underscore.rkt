@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse
+                     "annotation-string.rkt")
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt")
@@ -31,7 +32,8 @@
 (define-syntax (ignored-info stx)
   (syntax-parse stx
     [(_ static-infos _)
-     (binding-info #'ignored
+     (binding-info annotation-any-string
+                   #'ignored
                    #'static-infos
                    #'()
                    #'always-succeed

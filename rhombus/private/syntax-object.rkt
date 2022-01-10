@@ -4,7 +4,9 @@
          syntax/parse
          racket/syntax-srcloc
          shrubbery/property
-         "expression.rkt")
+         "expression.rkt"
+         "syntax-list.rkt"
+         "realm.rkt")
 
 (provide literal_syntax
          literal_syntax_term
@@ -43,7 +45,15 @@
   (datum->syntax #f v))
 
 (define (unwrap_syntax v)
-  (syntax-e v))
+  (cond
+    [(not (syntax? v))
+     (raise-argument-error* 'unwrap_syntax rhombus-realm "Syntax" v)]
+    [(convert-single-term-group v)
+     => (lambda (v) (syntax-e v))]
+    [else
+     (raise-arguments-error 'unwrap_syntax
+                            "cannot unwrap a multi-term group syntax object"
+                            "syntax object" v)]))
 
 (define (relocate_syntax stx ctx-stx-in)
   (unless (syntax? stx) (raise-argument-error 'relocate_syntax "syntax?" stx))

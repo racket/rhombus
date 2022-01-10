@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
+                     shrubbery/print
                      "operator-parse.rkt"
                      "srcloc.rkt")
          syntax/parse
@@ -365,7 +366,8 @@
     (with-syntax ([(tmp-id ...) (generate-temporaries #'(id ...))])
       (binding-form
        #'syntax-infoer
-       #`(#,pattern
+       #`(#,(shrubbery-syntax->string e)
+          #,pattern
           (tmp-id ...)
           (id ...)
           (id-ref ...))))))
@@ -402,8 +404,9 @@
 
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (pattern tmp-ids (id ...) id-refs))
-     (binding-info #'syntax
+    [(_ static-infos (annotation-str pattern tmp-ids (id ...) id-refs))
+     (binding-info #'annotation-str
+                   #'syntax
                    #'()
                    #'((id) ...)
                    #'syntax-matcher

@@ -16,13 +16,13 @@
     [(_ who try-next failure rest body)
      (syntax-parse #'rest
        [#f #'(let () body)]
-       [(rest-getter-id rest-pat rest-id rest-info)
+       [(rest-getter-id rest-pat rest-id rest-info::binding-info)
         #`(let ([rest-getter-id
                  #,(make-rest-match #'rest-id #'values #'rest-info
                                     #`(lambda (arg)
                                         (static-if try-next
                                                    #f
-                                                   (failure 'who arg '#,(shrubbery-syntax->string #'rest-pat)))))])
+                                                   (failure 'who arg 'rest-info.annotation-str))))])
             (if (static-if try-next
                            rest-getter-id
                            #t)
@@ -52,7 +52,7 @@
                                    (nested-bindings who try-next failure rest . tail)))
                          (static-if try-next
                                     (try-next)
-                                    (failure 'who arg-id '#,(shrubbery-syntax->string #'arg-pat)))))]))
+                                    (failure 'who arg-id 'arg.annotation-str))))]))
 
 (define-syntax (if-block stx)
   (syntax-parse stx

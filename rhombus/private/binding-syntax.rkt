@@ -69,7 +69,8 @@
     [((~datum parsed) b::binding-info)
      #:with (unpacked-static-infos ...) (map (lambda (v) (unpack-static-infos v))
                                              (syntax->list #'((b.bind-static-info ...) ...)))
-     #`(parens (group b.name-id)
+     #`(parens (group b.annotation-str)
+               (group b.name-id)
                (group #,(unpack-static-infos #'b.static-infos))
                (group #,(pack-tail #`((parens (group b.bind-id) (group unpacked-static-infos)) ...)))
                (group chain-to-matcher)
@@ -93,7 +94,8 @@
 (define-for-syntax (pack-info stx)
   (syntax-parse stx
     #:datum-literals (parens group)
-    [(parens (group name-id:identifier)
+    [(parens (group name-str:string)
+             (group name-id:identifier)
              (group static-infos)
              (group bind-ids)
              (group matcher-id:identifier)
@@ -102,7 +104,8 @@
      #:with ((parens (group bind-id) (group bind-static-infos)) ...) (unpack-tail #'bind-ids 'binding.pack)
      #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos v 'binding.pack))
                                                 (syntax->list #'(bind-static-infos ...)))
-     (binding-info #'name-id
+     (binding-info #'name-str
+                   #'name-id
                    (pack-static-infos #'static-infos 'binding.pack)
                    #'((bind-id . packed-bind-static-infos) ...)
                    #'matcher-id

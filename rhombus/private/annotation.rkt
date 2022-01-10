@@ -13,7 +13,8 @@
                      "name-path-op.rkt"
                      "tail.rkt"
                      "misuse.rkt"
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "annotation-string.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -33,6 +34,7 @@
          String
          Symbol
          Keyword
+         Syntax
          Void
 
          (for-space rhombus/annotation #%tuple))
@@ -200,7 +202,8 @@
         (values
          (binding-form
           #'annotation-infoer
-          #`(#,(and checked? #'c-parsed.predicate)
+          #`(#,(shrubbery-syntax->string #'t)
+             #,(and checked? #'c-parsed.predicate)
              c-parsed.static-infos
              left.infoer-id
              left.data))
@@ -228,11 +231,12 @@
 
 (define-syntax (annotation-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (predicate (static-info ...) left-infoer-id left-data))
+    [(_ static-infos (annotation-str predicate (static-info ...) left-infoer-id left-data))
      #:with left-impl::binding-impl #'(left-infoer-id (static-info ... . static-infos) left-data)
      #:with left::binding-info #'left-impl.info
      (if (syntax-e #'predicate)
-         (binding-info #'left.name-id
+         (binding-info (annotation-string-and (syntax-e #'left.annotation-str) (syntax-e #'annotation-str))
+                       #'left.name-id
                        #'left.static-infos
                        #'left.bind-infos
                        #'check-predicate-matcher
@@ -264,6 +268,7 @@
 (define-syntax String (identifier-annotation #'String #'string? #'()))
 (define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
 (define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
+(define-syntax Syntax (identifier-annotation #'Syntax #'syntax? #'()))
 (define-syntax Void (identifier-annotation #'Void #'void? #'()))
 
 (define-syntax (define-annotation-syntax stx)

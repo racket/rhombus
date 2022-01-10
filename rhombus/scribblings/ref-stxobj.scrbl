@@ -4,6 +4,14 @@
 @title{Syntax Objects}
 
 @doc[
+  annotation.macro 'Syntax
+]{
+
+  Matches syntax objects.
+
+}
+
+@doc[
   expr.macro '(' $form)
 ]{
 
