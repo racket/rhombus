@@ -1,13 +1,12 @@
 # Rhombus Plan
 
-
-[[NOTE: "Rhombus" is the new name for a design project formerly known 
-as "Racket2", but "Rhombus" IS NOT THE FINAL NAME OF THE NEW LANGUAGE. 
-
-"Rhombus" is the name of the project that will develop a language, 
-and "Rhombus" is a temporary stand-in for a language name to be 
-determined later. Phase 3 of the plan includes the mandatory step of 
-picking a new language name.]] 
+> NOTE: "Rhombus" is the new name for a design project formerly known 
+> as "Racket2", but "Rhombus" **is not the final name of the new language**. 
+>
+> "Rhombus" is the name of the project that will develop a language, 
+> and "Rhombus" is a temporary stand-in for a language name to be 
+> determined later. Phase 3 of the plan includes the mandatory step of 
+> picking a new language name.
 
 Rhombus is about building on the good parts of Racket and advancing the 
 frontier of Racket-style language-oriented programming. A significant 
@@ -53,10 +52,10 @@ implementations:
 - The existing ecosystem will continue to function as always. 
 
 - Existing `#lang racket` programs will continue to run, just as in 
-the 6.x and 7.x series of releases. 
+the 6.x, 7.x, and 8.x series of releases. 
 
 - The team will release updated versions, occasionally making modest 
-incompatibilities with explicit transition paths as needed --- all 
+incompatibilities with explicit transition paths as needed—all 
 as usual. 
 
 This does not mean that the language and its implementation will evolve 
@@ -70,12 +69,8 @@ Phase 1: Brainstorming (months)
 GOAL AND OUTPUT: A design sketch and collection of prototype 
 implementations that reflect key ideas and design constraints. 
 
-PROCESS: This is the current phase --- a discussion of ideas and 
-potential directions at 
-
-https://github.com/racket/rhombus-brainstorming 
-[formerly "racket2-rfcs"] 
-
+PROCESS: This phase is a discussion of ideas and  potential directions at
+[https://github.com/racket/rhombus-brainstorming](https://github.com/racket/rhombus-brainstorming).
 There will be some implementation in this phase to try things out, but 
 at first only for exploration purposes. 
 
@@ -128,10 +123,11 @@ and exposing how well different ideas fit together at scale. The design
 will evolve in response to the implementation effort, but it should 
 eventually converge. 
 
-The design and implementation will take place in publicly visible 
-repositories and discussion forums. The process will use an RFC-style 
-mechanism, with documents that pin down the design and with specified 
-comment and conclusion timelines. 
+The design and implementation will take place at
+[https://github.com/racket/rhombus-proyotyping](https://github.com/racket/rhombus-proyotyping)
+(which is the same repo as brainstorming, but renamed for this phase).
+The process will use an RFC-style mechanism, with documents that pin
+down the design and with specified comment and conclusion timelines.
 
 The project leader will delegate RFC production and conclusion to 
 groups of contributors that are identified by participation in the 
@@ -161,15 +157,15 @@ existing code and documentation (e.g., in the Racket main distribution)
 to make sure it works and to continue sorting out any mismatches 
 between the new language and `#lang racket` at an even larger scale. 
 
-A language name --- as opposed to a temporary project name --- must be 
+A language name—as opposed to a temporary project name—must be 
 picked at this point. By delaying the choice of name until we know what 
 the language is, we avoid confusion and misinformation due to 
 historical properties of Rhombus-in-development that end up not being 
 true about the completed language. 
 
-CONCLUSION: The decision of whether this conversion succeeds --- 
+CONCLUSION: The decision of whether this conversion succeeds—
 including which things really should be converted or not and when 
-progress is sufficient to consider the next step --- is up to Racket 
+progress is sufficient to consider the next step—is up to Racket 
 project leadership. 
 
 Failure is not yet ruled out. If the Racket project leadership never 
@@ -223,13 +219,7 @@ Put differently, Racket will become a component of the overall new
 distribution. 
 
 
-- Jay, Matthew, Matthias, Robby, and Sam 
-  
-***
-
 # Edit history
-  
-From: Matthew Flatt <Unknown>
-Date: Wednesday, October 2, 2019 at 8:27:50 PM UTC+1
-Subject: Rhombus project plan
-To: Racket-Users List <Unknown>
+
+Originally [posted on the Racket mailing list](https://groups.google.com/d/msg/racket-users/-x_M5wIhtWk/V47eL30HCgAJ)
+from Racket project leadership on 2019/10/02.
