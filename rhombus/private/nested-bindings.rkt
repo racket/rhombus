@@ -19,10 +19,10 @@
        [(rest-getter-id rest-pat rest-id rest-info)
         #`(let ([rest-getter-id
                  #,(make-rest-match #'rest-id #'values #'rest-info
-                                    #'(lambda (arg)
+                                    #`(lambda (arg)
                                         (static-if try-next
                                                    #f
-                                                   (failure 'who arg 'rest-pat))))])
+                                                   (failure 'who arg '#,(shrubbery-syntax->string #'rest-pat)))))])
             (if (static-if try-next
                            rest-getter-id
                            #t)
