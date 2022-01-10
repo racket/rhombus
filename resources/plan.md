@@ -124,7 +124,7 @@ will evolve in response to the implementation effort, but it should
 eventually converge. 
 
 The design and implementation will take place at
-[https://github.com/racket/rhombus-proyotyping](https://github.com/racket/rhombus-proyotyping)
+[https://github.com/racket/rhombus-proyotype](https://github.com/racket/rhombus-proyotype)
 (which is the same repo as brainstorming, but renamed for this phase).
 The process will use an RFC-style mechanism, with documents that pin
 down the design and with specified comment and conclusion timelines.

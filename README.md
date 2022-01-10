@@ -11,7 +11,7 @@ and builds documentation for the prototype.
 
 * [State of Rhombus](resources/state-of-rhombus.md)
 
-* [Project Plan](resources/plan.md)
+* [Project plan](resources/plan.md)
 
 * [General discussion](https://github.com/racket/rhombus-brainstorming/discussions)
 
