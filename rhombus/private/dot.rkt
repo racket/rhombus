@@ -7,7 +7,8 @@
          "definition.rkt"
          "expression.rkt"
          "static-info.rkt"
-         "dot-provider-key.rkt")
+         "dot-provider-key.rkt"
+         "realm.rkt")
 
 (provide |.|
          use_static_dot
@@ -104,9 +105,10 @@
 (define (dot-lookup-by-name v field)
   (define ht (field-name->accessor-ref v #f))
   (define (fail)
-    (raise-arguments-error field
-                           "no such field"
-                           "in value" v))
+    (raise-arguments-error* field
+                            rhombus-realm
+                            "no such field"
+                            "in value" v))
   (cond
     [(not ht) (fail)]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]

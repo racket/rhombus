@@ -14,13 +14,15 @@
                      "tail.rkt"
                      "misuse.rkt"
                      "introducer.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "realm.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
          "static-info.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "realm.rkt")
 
 (provide ::
          -:
@@ -79,9 +81,10 @@
                  (let ([l (syntax->list stx)])
                    (and l
                         (= (length l) 2))))
-      (raise-result-error (proc-name proc)
-                          "annotation-syntax?"
-                          stx))
+      (raise-result-error* (proc-name proc)
+                           rhombus-realm
+                           "Annotation_Syntax"
+                           stx))
     stx)
 
   (define-enforest
@@ -111,10 +114,12 @@
              #:with c::annotation #'(group ctc ...)
              #:with c-parsed::annotation-form #'c.parsed
              #:attr predicate #'c-parsed.predicate
+             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
              #:attr static-infos #'c-parsed.static-infos)
     (pattern (~seq (op -:) ctc ...)
              #:with c::annotation #'(group ctc ...)
              #:with c-parsed::annotation-form #'c.parsed
+             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
              #:attr predicate #'#f
              #:attr static-infos #'c-parsed.static-infos))
 
@@ -278,12 +283,21 @@
          rhs)]))
 
 (define (raise-annotation-failure val ctc)
-  (error '::
-         (string-append "value does not match annotation\n"
-                        "  argument: ~v\n"
-                        "  annotation: ~a")
-         val
-         ctc))
+  (raise
+   (exn:fail:contract
+    (error-message->adjusted-string
+     '::
+     rhombus-realm
+     (format
+      (string-append "value does not match annotation\n"
+                     "  argument: ~v\n"
+                     "  annotation: ~a")
+      val
+      (error-contract->adjusted-string
+       ctc
+       rhombus-realm))
+     rhombus-realm)
+    (current-continuation-marks))))
 
 (define-syntax matching
   (annotation-prefix-operator

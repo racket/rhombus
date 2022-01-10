@@ -4,7 +4,8 @@
          "expression.rkt"
          "parse.rkt"
          (only-in "underscore.rkt"
-                  [_ rhombus-_]))
+                  [_ rhombus-_])
+         "error.rkt")
 
 (provide (rename-out [rhombus-if if]
                      [rhombus-cond cond]))
@@ -60,7 +61,7 @@
              [(rhombus-expression (group pred ...))
               (rhombus-body-at tag rhs ...)]
              ...
-             [else (cond-fallthrough #'form-id)])
+             [else (cond-fallthrough 'form-id)])
          #'tail)]
        [(form-id (block) . tail)
         (values
@@ -68,4 +69,4 @@
          #'tail)]))))
 
 (define (cond-fallthrough who)
-  (error who "no matching case"))
+  (raise-contract-error who "no matching case"))

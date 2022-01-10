@@ -10,7 +10,8 @@
          "static-info.rkt"
          (only-in "assign.rkt"
                   :=)
-         (submod "set.rkt" for-ref))
+         (submod "set.rkt" for-ref)
+         "realm.rkt")
 
 (provide ++)
 
@@ -51,7 +52,7 @@
     [(hash? map) (hash-ref map index)]
     [(set? map) (hash-ref (set-ht map) index #f)]
     [else
-     (raise-argument-error 'map-ref "map?" map)]))
+     (raise-argument-error* 'Map.ref rhombus-realm "Map" map)]))
 
 (define (map-set! map index val)
   (cond
@@ -61,7 +62,7 @@
                                                           (hash-set! (set-ht map) index #t)
                                                           (hash-remove! (set-ht map) index))]
     [else
-     (raise-argument-error 'map-set! "mutable-map?" map)]))
+     (raise-argument-error* 'Map.assign rhombus-realm "Mutable_Map" map)]))
 
 (define-syntax ++
   (expression-infix-operator
@@ -80,29 +81,29 @@
 
 (define (map-append map1 map2)
   (cond
-    [(vector? map1) (raise-arguments-error '++
-                                           "cannot extend a plain array"
-                                           "array" map1
-                                           "other value" map2)]
+    [(vector? map1) (raise-arguments-error* '++ rhombus-realm
+                                            "cannot extend a plain array"
+                                            "array" map1
+                                            "other value" map2)]
     [(list? map1) (cond
                     [(list? map2) (append map1 map2)]
                     [(vector? map2) (append map1 (vector->list map2))]
-                    [else (raise-arguments-error '++
-                                                 "cannot append a list and other value"
-                                                 "list" map1
-                                                 "other value" map2)])]
+                    [else (raise-arguments-error* '++ rhombus-realm
+                                                  "cannot append a list and other value"
+                                                  "list" map1
+                                                  "other value" map2)])]
     [(hash? map1) (cond
                     [(hash? map2) (for/fold ([ht map1]) ([(k v) (in-hash map2)])
                                     (hash-set ht k v))]
-                    [else (raise-arguments-error '++
-                                                 "cannot append a hash map and other value"
-                                                 "hash map" map1
-                                                 "other value" map2)])]
+                    [else (raise-arguments-error* '++ rhombus-realm
+                                                  "cannot append a hash map and other value"
+                                                  "hash map" map1
+                                                  "other value" map2)])]
     [(set? map1) (cond
                    [(set? map2) (set (for/fold ([ht (set-ht map1)]) ([k (in-hash-keys (set-ht map2))])
                                        (hash-set ht k #t)))]
-                   [else (raise-arguments-error '++
-                                                "cannot append a set and other value"
-                                                "set" map1
-                                                "other value" map2)])]
-    [else (raise-argument-error '++ "set?" map1)]))
+                   [else (raise-arguments-error* '++ rhombus-realm
+                                                 "cannot append a set and other value"
+                                                 "set" map1
+                                                 "other value" map2)])]
+    [else (raise-argument-error* '++ rhombus-realm "or(List, Array, Map, Set)" map1)]))

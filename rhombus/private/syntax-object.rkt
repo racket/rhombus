@@ -51,12 +51,12 @@
     [(convert-single-term-group v)
      => (lambda (v) (syntax-e v))]
     [else
-     (raise-arguments-error 'unwrap_syntax
-                            "cannot unwrap a multi-term group syntax object"
-                            "syntax object" v)]))
+     (raise-arguments-error* 'unwrap_syntax rhombus-realm
+                             "cannot unwrap a multi-term group syntax object"
+                             "syntax object" v)]))
 
 (define (relocate_syntax stx ctx-stx-in)
-  (unless (syntax? stx) (raise-argument-error 'relocate_syntax "syntax?" stx))
+  (unless (syntax? stx) (raise-argument-error* 'relocate_syntax rhombus-realm "Syntax" stx))
   (define ctx-stx (relevant-source-syntax ctx-stx-in))
   (syntax-parse stx
     #:datum-literals (group block alts parens brackets braces op)
@@ -69,7 +69,7 @@
 
 (define (relocate_span_syntax stx ctx-stxes-in
                               #:keep_raw_interior [keep-raw-interior? #f])
-  (unless (syntax? stx) (raise-argument-error 'relocate_span_syntax "syntax?" stx))
+  (unless (syntax? stx) (raise-argument-error* 'relocate_span_syntax rhombus-realm "Syntax" stx))
   (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))
   (let loop ([ctx-stxes (cdr ctx-stxes)]

@@ -10,7 +10,8 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "name-path-op.rkt"
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "realm.rkt")
          "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
          "declaration.rkt"
@@ -54,7 +55,7 @@
   (define in-import-space (make-interned-syntax-introducer/add 'rhombus/import))
 
   (define (check-import-result form proc)
-    (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+    (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
     form)
 
   (define (make-identifier-import id)

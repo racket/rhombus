@@ -7,7 +7,8 @@
                      enforest/proc-name
                      enforest/name-root
                      "srcloc.rkt"
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     "realm.rkt")
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
@@ -41,7 +42,7 @@
   (define (check-module-path-result form proc)
     (unless (and (syntax? form)
                  (module-path? (syntax->datum form)))
-      (raise-result-error (proc-name proc) "module-path-syntax?" form))
+      (raise-result-error* (proc-name proc) rhombus-realm "Module_Path_Syntax" form))
     form)
 
   (define (make-identifier-module-path id)

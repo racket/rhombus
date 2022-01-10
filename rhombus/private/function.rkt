@@ -20,7 +20,8 @@
                   [... rhombus...])
          (submod "annotation.rkt" for-class)
          (only-in "equal.rkt"
-                  [= rhombus=]))
+                  [= rhombus=])
+         "error.rkt")
 
 (provide fun)
 
@@ -433,12 +434,14 @@
 
 (define (cases-failure who rest-args . base-args)
   (define args (append base-args rest-args))
-  (apply error who
-         (apply string-append "no matching case for arguments\n"
-                "  arguments...:"
-                (for/list ([arg (in-list args)])
-                  "\n   ~e"))
-         args))
+  (apply
+   raise-contract-error
+   who
+   (apply string-append "no matching case for arguments\n"
+          "  arguments...:"
+          (for/list ([arg (in-list args)])
+            "\n   ~e"))
+   args))
 
 (define-syntax (add-annotation-check stx)
   (syntax-parse stx
@@ -452,10 +455,11 @@
        [else #'e])]))
 
 (define (result-failure who val)
-  (error who
-         (string-append "result does not match annotation\n"
-                        "  result: ~v")
-         val))
+  (raise-contract-error
+   who
+   (string-append "result does not match annotation\n"
+                  "  result: ~v")
+   val))
 
 (begin-for-syntax
   (define-syntax-class :kw-expression

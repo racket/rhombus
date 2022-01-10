@@ -1,4 +1,5 @@
 #lang racket/base
+(require "realm.rkt")
 
 (provide pack-list*
          unpack-list*
@@ -22,15 +23,17 @@
      (cond
        [(eqv? depth 0)
         (when (or (null? r) (pair? r))
-          (raise-arguments-error '|$| "cannot coerce list to syntax"
+          (raise-arguments-error* '|$| rhombus-realm
+                                  "cannot coerce list to syntax"
                                  "list" r))
         (cond
           [(and qs (group-syntax? r))
            (define l (syntax->list r))
            (if (= 2 (length l))
                (cadr l)
-               (raise-arguments-error '|$| "multi-term group syntax not allowed in term context"
-                                      "group syntax" r))]
+               (raise-arguments-error* '|$| rhombus-realm
+                                       "multi-term group syntax not allowed in term context"
+                                       "group syntax" r))]
           [else r])]
        [else
         (if (list? r)
@@ -38,7 +41,7 @@
              qs
              (for/list ([r (in-list r)])
                (unpack-list* r (sub1 depth))))
-            (raise-argument-error '... "list?" r))]))))
+            (raise-argument-error* '... rhombus-realm "List" r))]))))
 
 (define (unpack-single-term-group r)
   (or (convert-single-term-group r)
@@ -70,7 +73,7 @@
              qs
              (for/list ([r (in-list r)])
                (unpack-group* r (sub1 depth))))
-            (raise-argument-error '... "list?" r))]))))
+            (raise-argument-error* '... rhombus-realm "List" r))]))))
 
 (define (group-syntax? r)
   (and (syntax? r)
@@ -96,7 +99,7 @@
              qs
              (for/list ([r (in-list r)])
                (unpack-block* r (sub1 depth))))
-            (raise-argument-error '... "list?" r))]))))
+            (raise-argument-error* '... rhombus-realm "List" r))]))))
 
 (define (block-syntax? r)
   (and (syntax? r)

@@ -9,7 +9,8 @@
                      "introducer.rkt"
                      "annotation-string.rkt")
          "static-info.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "error.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -141,19 +142,14 @@
        (define-syntax #,(in-binding-space #'name) rhs))]))
 
 (define (raise-binding-failure who what val annotation-str)
-  (raise
-   (exn:fail:contract
-    (error-message->adjusted-string
-     who
-     rhombus-realm
-     (format (string-append "~a does not satisfy annotation\n"
-                            "  ~a: ~v\n"
-                            "  annotation: ~a")
-             what
-             what
-             val
-             (error-contract->adjusted-string
-              annotation-str
-              rhombus-realm))
-     rhombus-realm)
-    (current-continuation-marks))))
+  (raise-contract-error
+   who
+   (string-append "~a does not satisfy annotation\n"
+                  "  ~a: ~v\n"
+                  "  annotation: ~a")
+   what
+   what
+   val
+   (error-contract->adjusted-string
+    annotation-str
+    rhombus-realm)))

@@ -12,7 +12,8 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "composite.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "realm.rkt")
 
 (provide Map
          (for-space rhombus/binding Map)
@@ -35,10 +36,10 @@
       (cond
         [(null? args) ht]
         [(null? (cdr args))
-         (raise-arguments-error 'Map
-                                (string-append "key does not have a value"
-                                               " (i.e., an odd number of arguments were provided)")
-                                "key" (car args))]
+         (raise-arguments-error* 'Map rhombus-realm
+                                 (string-append "key does not have a value"
+                                                " (i.e., an odd number of arguments were provided)")
+                                 "key" (car args))]
         [else (loop (hash-set ht (car args) (cadr args)) (cddr args))]))))
 
 (define-for-syntax map-static-info
