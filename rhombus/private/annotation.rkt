@@ -167,10 +167,10 @@
                                     (syntax-parse c-parsed
                                       [c::annotation-form #'c.static-infos])))
           (values (annotation-form #`(lambda (v)
-                                     (and (#,predicate-stx v)
-                                          #,(predicate-maker #'v c-predicates)))
-                                 #`(#,@(info-maker c-static-infoss)
-                                    . #,static-infos))
+                                       (and (#,predicate-stx v)
+                                            #,(predicate-maker #'v c-predicates)))
+                                   #`(#,@(info-maker c-static-infoss)
+                                      . #,static-infos))
                   #'tail)]
          [(_ . tail)
           (values (annotation-form predicate-stx

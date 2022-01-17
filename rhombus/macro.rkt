@@ -10,6 +10,7 @@
         "private/definition-syntax.rkt"
         "private/declaration-syntax.rkt"
         "private/annotation-syntax.rkt"
+        "private/folder-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt"
         "private/import-syntax.rkt"

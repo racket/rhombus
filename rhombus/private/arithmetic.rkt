@@ -24,6 +24,8 @@
          \|\|
 
          ==
+         !=
+
          ===)
 
 (define-infix rhombus+ +
@@ -70,4 +72,7 @@
     #:associate 'none))
 
 (define-eql-infix == equal?)
+(define-eql-infix != not-equal?)
 (define-eql-infix === eq?)
+
+(define (not-equal? a b) (not (equal? a b)))

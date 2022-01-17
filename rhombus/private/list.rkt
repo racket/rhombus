@@ -8,6 +8,7 @@
          "expression+binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
+         "folder.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
@@ -20,7 +21,8 @@
 
          List
          (for-space rhombus/annotation List)
-         (for-space rhombus/static-info List))
+         (for-space rhombus/static-info List)
+         (for-space rhombus/folder List))
 
 (module+ for-binding
   (provide (for-syntax parse-list-binding
@@ -52,7 +54,8 @@
         (parse-list-binding stx)]))))
 
 (define-annotation-syntax List
-  (annotation-constructor #'List #'list? #'((#%map-ref list-ref))
+  (annotation-constructor #'List #'list? #'((#%map-ref list-ref)
+                                            (#%sequence-constructor in-list))
                           1
                           (lambda (arg-id predicate-stxs)
                             #`(for/and ([e (in-list #,arg-id)])
@@ -60,9 +63,27 @@
                           (lambda (static-infoss)
                             #`((#%ref-result #,(car static-infoss))))))
 
-(define-static-info-syntax List
-  (#%call-result ((#%map-ref list-ref))))
+(define-folder-syntax List
+  (folder-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_)
+        #`[reverse
+           ([accum null])
+           ((lambda (v) (cons v accum)))
+           #,list-static-infos]]))))
 
+(define-static-info-syntax List
+  (#%call-result ((#%map-ref list-ref)
+                  (#%sequence-constructor in-list))))
+
+(define-for-syntax list-static-infos
+  #'((#%map-ref list-ref)
+     (#%sequence-constructor in-list)))
+
+(define-for-syntax (wrap-list-static-info expr)
+  (wrap-static-info* expr list-static-infos))
+  
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
 (define-for-syntax (parse-list-binding stx)
@@ -106,11 +127,13 @@
     #:datum-literals (group op)
     #:literals (rhombus...)
     [(form-id (tag arg ... rest-arg (group (op rhombus...))) . tail)
-     (values (syntax/loc #'tag
-               (list* (rhombus-expression arg) ... (rhombus-expression rest-arg)))
+     (values (wrap-list-static-info
+              (syntax/loc #'tag
+                (list* (rhombus-expression arg) ... (rhombus-expression rest-arg))))
              #'tail)]
     [(form-id (tag arg ...) . tail)
-     (values (syntax/loc #'tag
-               (list (rhombus-expression arg) ...))
+     (values (wrap-list-static-info
+              (syntax/loc #'tag
+                (list (rhombus-expression arg) ...)))
              #'tail)]))
 

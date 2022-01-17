@@ -371,6 +371,7 @@
                   [(impmod) 'rhombus/import]
                   [(ann) 'rhombus/annotation]
                   [(stxclass) 'rhombus/syntax-class]
+                  [(folder) 'rhombus/folder]
                   [else #f]))
   (if space
       ((make-interned-syntax-introducer space) stx 'add)

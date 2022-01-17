@@ -57,6 +57,15 @@ operator.
 
 }
 
+@doc[
+  folder.macro 'Map
+]{
+
+ A @tech{folder} used with @rhombus[for], expects two results from a
+ @rhombus[for] body, and accumulates them into a map using the first
+ result as a key and the second result as a value.
+
+}
 
 @doc[
   fun make_map(key :: Any, value:: Any, ...) :: Map

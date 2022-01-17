@@ -12,7 +12,8 @@
                     fun
                     val
                     def
-                    match))
+                    match
+                    for))
 
 (define-syntax (define-spacer stx)
   (syntax-parse stx
@@ -159,5 +160,19 @@
                                          (g-tag #,@(map binding-spacer (syntax->list #'(form ...)))
                                                 b))]
                                      [_ b])))))]
+                        [_ tail]))
+     (values head new-tail))))
+
+(define-spacer for
+  (Spacer
+   (lambda (head tail escape)
+     (define new-tail (syntax-parse tail
+                        #:datum-literals (parens group block)
+                        [(parens (group folder ... (~and bl (block . _))))
+                         #`(parens
+                            (group
+                             #,(for/list ([folder (in-list (syntax->list #'(folder ...)))])
+                                 (term-identifiers-syntax-property folder 'typeset-space-name 'folder))
+                             bl))]
                         [_ tail]))
      (values head new-tail))))

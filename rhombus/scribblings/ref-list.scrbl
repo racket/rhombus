@@ -61,6 +61,15 @@ with the @rhombus[++] operator to append lists.
 }
 
 @doc[
+  folder.macro 'List
+]{
+
+ A @tech{folder} used with @rhombus[for], accumulates each result of a
+ @rhombus[for] body into a result list.
+
+}
+
+@doc[
   bind.macro '(...)
 ]{
 

@@ -180,7 +180,8 @@ expr.macro
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
           || kw === keyword(~ann)
-          || kw === keyword(~stxclass))
+          || kw === keyword(~stxclass)
+          || kw === keyword(~folder))
     | values('(#{typeset-rhombus}(~space: keyword($kw), $(escape('($forms ...))))),
              main_tail)
     | raise_syntax_error("invalid space", kw)

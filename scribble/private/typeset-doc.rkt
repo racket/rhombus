@@ -12,11 +12,13 @@
                   in-annotation-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
                   in-syntax-class-space)
+         (only-in (submod rhombus/private/folder for-class)
+                  in-folder-space)
          (only-in rhombus
                   def val fun operator :: |'| |.| $
                   [= rhombus-=])
          (only-in rhombus/macro
-                  decl defn expr imp annotation bind
+                  decl defn expr imp annotation bind folder
                   [syntax rhombus-syntax])
          (only-in "rhombus.rhm"
                   rhombusblock
@@ -183,15 +185,15 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def val fun operator defn expr decl bind imp annotation |.|)
+    #:literals (def fun expr bind |.|)
     #:datum-literals (op macro rule)
     (pattern (~seq (~or expr bind) (op |.|) macro))
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind imp annotation |.|)
+    #:literals (def defn expr decl bind imp annotation folder |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annotation bind) (op |.|) macro))
+    (pattern (~seq (~or defn decl expr annotation bind folder) (op |.|) macro))
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq (~or imp) (op |.|) modifier))
     (pattern (~seq def)))
@@ -210,7 +212,7 @@
 
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar rhombus-syntax $)
+    #:literals (def val fun operator :: defn |.| |'| grammar rhombus-syntax $)
     #:datum-literals (parens group op modifier macro rule class)
     [(group (~or def fun) id:identifier-target (parens . _) . _) #'id.name]
     [(group (~or def val) id:identifier-target . _) #'id.name]
@@ -229,7 +231,7 @@
 
 (define-for-syntax (extract-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn expr decl bind imp annotation |.| |'| grammar)
+    #:literals (def val fun operator :: |.| |'| grammar)
     #:datum-literals (parens group op)
     [(group (~or def fun) _:identifier-target (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
@@ -336,7 +338,7 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def val fun expr defn decl imp rhombus-syntax bind annotation operator |.| |'| |$| grammar)
+    #:literals (def val fun rhombus-syntax operator |.| |'| |$| grammar)
     #:datum-literals (parens group op)
     [(group (~and tag (~or def val fun)) id:identifier-target e ...)
      (rb #:at stx
@@ -407,32 +409,35 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (imp annotation rhombus-syntax)
+    #:literals (imp annotation folder rhombus-syntax)
     #:datum-literals (parens group op)
     [(group imp . _) in-import-space]
     [(group annotation . _) in-annotation-space]
+    [(group folder . _) in-folder-space]
     [(group rhombus-syntax . _) in-syntax-class-space]
     [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (imp annotation bind rhombus-syntax)
+    #:literals (imp annotation folder bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group imp . _) 'impmod]
     [(group annotation . _) 'ann]
+    [(group folder . _) 'folder]
     [(group bind . _) 'bind]
     [(group rhombus-syntax . _) 'stxclass]
     [_ #f]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr imp annotation bind grammar operator rhombus-syntax |'|)
+    #:literals (defn decl expr imp annotation folder bind grammar operator rhombus-syntax |'|)
     #:datum-literals (parens group op)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
     [(group imp . _) "import modifier"]
     [(group annotation . _) "annotation"]
+    [(group folder . _) "folder"]
     [(group bind . _) "binding operator"]
     [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]

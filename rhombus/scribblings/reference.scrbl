@@ -15,6 +15,7 @@
 
 @include_section["ref-cond.scrbl"]
 @include_section["ref-match.scrbl"]
+@include_section["ref-for.scrbl"]
 @include_section["ref-begin.scrbl"]
 
 @include_section["ref-boolean.scrbl"]

@@ -19,7 +19,7 @@
                    ...)
 ]{
 
- Tries matching theresult of @rhombus[target_expr] against each
+ Tries matching the result of @rhombus[target_expr] against each
  @rhombus[binding] in sequence, and as soon as one matches, returns the
  result of the corresponding @rhombus[result_body] block. The keyword
  @rhombus[~else] can be used as a synonym for @rhombus[_, ~bind] (which matches

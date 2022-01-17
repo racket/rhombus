@@ -2,9 +2,14 @@
 
 import:
   scribble/rhombus as scribble
+  scribble/rhombus/manual
 
 export:
   aside
+  demo
 
 def aside(content):
   scribble.nested(~style: symbol(inset), scribble.italic(content))
+
+def '(demo ($form, ...)):
+  '(manual.examples(~label: #false, $form, ...))

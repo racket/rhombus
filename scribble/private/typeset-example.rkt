@@ -11,6 +11,7 @@
          (only-in scribble/manual
                   hspace
                   racketresultfont
+                  racketoutput
                   racketerror)
          (only-in scribble/core
                   table
@@ -98,33 +99,42 @@
               (define expr (cadr rb+expr))
               (cons
                plain-rb
-               (let ([v (with-handlers ([exn:fail? (lambda (exn)
-                                                     (define msg (format-exception exn eval))
-                                                     (if (eq? mode 'error)
-                                                         msg
-                                                         (raise-arguments-error
-                                                          'examples
-                                                          "error during example"
-                                                          "example" expr
-                                                          "message" msg)))])
-                          (cond
-                            [(eq? mode 'error) (begin
-                                                 (eval expr)
-                                                 'oops)]
-                            [else (eval expr)]))])
-                 (cond
-                   [(eq? mode 'error)
-                    (if (string? v)
-                        (format-lines v racketerror)
-                        (raise-arguments-error
-                         'examples
-                         "example did not error"
-                         "example" expr))]
-                   [(void? v) null]
-                   [else
-                    (define o (open-output-string))
-                    (call-in-sandbox-context eval (lambda () (print v o)))
-                    (format-lines (get-output-string o) racketresultfont)])))]))))))))
+               (let ([vs (with-handlers ([exn:fail? (lambda (exn)
+                                                      (define msg (format-exception exn eval))
+                                                      (if (eq? mode 'error)
+                                                          msg
+                                                          (raise-arguments-error
+                                                           'examples
+                                                           "error during example"
+                                                           "example" expr
+                                                           "message" msg)))])
+                           (cond
+                             [(eq? mode 'error) (begin
+                                                  (eval expr)
+                                                  '(oops))]
+                             [else (call-with-values
+                                    (lambda () (eval expr))
+                                    list)]))])
+                 (append
+                  (format-lines (get-output eval) racketoutput)
+                  (cond
+                    [(eq? mode 'error)
+                     (if (string? vs)
+                         (format-lines vs racketerror)
+                         (raise-arguments-error
+                          'examples
+                          "example did not error"
+                          "example" expr))]
+                    [else
+                     (apply
+                      append
+                      (for/list ([v (in-list vs)])
+                        (cond
+                          [(void? v) null]
+                          [else
+                           (define o (open-output-string))
+                           (call-in-sandbox-context eval (lambda () (print v o)))
+                           (format-lines (get-output-string o) racketresultfont)])))]))))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]
@@ -132,7 +142,7 @@
 
 (define (format-lines str format-line)
   (for/list ([line-str (in-list (string-split str "\n"))])
-    (paragraph plain (racketresultfont line-str))))
+    (paragraph plain (format-line line-str))))
 
 (define (format-exception exn eval)
   (define o (open-output-string))

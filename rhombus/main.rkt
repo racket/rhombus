@@ -40,7 +40,9 @@
         "private/values.rkt"
         "private/print.rkt"
         "private/syntax-object.rkt"
-        "private/syntax-class.rkt")
+        "private/syntax-class.rkt"
+        "private/for.rkt"
+        "private/range.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

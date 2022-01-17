@@ -43,6 +43,10 @@
       [(or (string? v)
            (bytes? v)
            (exact-integer? v))
+       (cond
+         [(display?) (display v op)]
+         [else (write v op)])]
+      [(exact-integer? v)
        (write v op)]
       [(boolean? v)
        (display (if v "#true" "#false") op)]

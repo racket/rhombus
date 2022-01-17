@@ -13,12 +13,14 @@
          "call-result-key.rkt"
          "composite.rkt"
          "parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "folder.rkt")
 
 (provide Map
          (for-space rhombus/binding Map)
          (for-space rhombus/annotation Map)
          (for-space rhombus/static-info Map)
+         (for-space rhombus/folder Map)
 
          make_map
          (for-space rhombus/static-info make_map))
@@ -45,7 +47,8 @@
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
      (#%map-set! hash-set!)
-     (#%map-append hash-append)))
+     (#%map-append hash-append)
+     (#%sequence-constructor in-hash)))
 
 (define-annotation-syntax Map
   (annotation-constructor #'Map #'hash? map-static-info
@@ -58,7 +61,22 @@
                             #`((#%ref-result #,(cadr static-infoss))))))
 
 (define-static-info-syntax Map
-  (#%call-result ((#%map-ref hash-ref))))
+  (#%call-result ((#%map-ref hash-ref)
+                  (#%sequence-constructor in-hash))))
+
+(define-folder-syntax Map
+  (folder-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_)
+        #`[begin
+           ([ht #hash()])
+           (add-to-map ht)
+           #,map-static-info]]))))
+
+(define-syntax-rule (add-to-map ht e)
+  (let-values ([(k v) e])
+    (hash-set ht k v)))
 
 (define make_map
   (lambda args
@@ -66,7 +84,8 @@
 
 (define-static-info-syntax make_map
   (#%call-result ((#%map-ref hash-ref)
-                  (#%map-set! hash-set!))))
+                  (#%map-set! hash-set!)
+                  (#%sequence-constructor in-hash))))
 
 (define-binding-syntax Map
   (binding-prefix-operator

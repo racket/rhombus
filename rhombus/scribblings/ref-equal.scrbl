@@ -53,6 +53,18 @@
 
 }
 
+@doc[
+  operator ((v1 :: Any) != (v1 :: Any)) :: Boolean
+]{
+
+ Equvalent to @rhombus[!(v1 == v2)].
+
+@examples[
+  "apple" != "apple"
+]
+
+}
+
 
 @doc[
   expr.macro '(=)

@@ -28,7 +28,8 @@
 
 (define-static-info-syntax Array
   (#%call-result ((#%map-ref vector-ref)
-                  (#%map-set! vector-set!))))
+                  (#%map-set! vector-set!)
+                  (#%sequence-constructor in-vector))))
 
 (define-binding-syntax Array
   (binding-prefix-operator

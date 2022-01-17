@@ -17,6 +17,7 @@
 @include_section["list.scrbl"]
 @include_section["map.scrbl"]
 @include_section["set.scrbl"]
+@include_section["for.scrbl"]
 @include_section["syntax.scrbl"]
 @include_section["expr-macro.scrbl"]
 @include_section["defn-macro.scrbl"]

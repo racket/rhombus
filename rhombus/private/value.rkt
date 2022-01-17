@@ -2,8 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      shrubbery/print
-                     shrubbery/property
-                     "infer-name.rkt")
+                     "infer-name.rkt"
+                     "tag.rkt")
          "definition.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -32,7 +32,7 @@
                                    #'(g ...) #'rhs
                                    wrap-definition)]
         [(form-id any ... (~and rhs (block body ...)))
-         #:with g-tag (syntax-raw-property (datum->syntax #f 'group) "")
+         #:with g-tag group-tag
          (build-value-definitions #'form-id
                                   #'(g-tag any ...)
                                   #'rhs
