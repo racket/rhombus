@@ -1,7 +1,9 @@
 #lang racket/base
 (require racket/class)
 
-(provide classify-position
+(provide current-classify-range
+         classify-position
+         get-token-range
          line-start
          line-orig-start
          line-delta
@@ -15,12 +17,33 @@
          skip-whitespace
          skip-hash-lang)
 
+;; Classify everything before the limit as whitespace:
+(define current-classify-range (make-parameter '(0 . end)))
+
 (define (classify-position t s)
-  (define attribs (send t classify-position* s))
+  (define limit (current-classify-range))
+  (define attribs (if (or (s . < . (car limit))
+                          (and (not (eq? (cdr limit) 'end))
+                               (s . > . (cdr limit))))
+                      #f
+                      (send t classify-position* s)))
   (if (symbol? attribs)
       attribs
-      (or (hash-ref attribs 'rhombus-type #f)
-          (hash-ref attribs 'type #f))))
+      (or (and attribs
+               (or (hash-ref attribs 'rhombus-type #f)
+                   (hash-ref attribs 'type #f)))
+          'whitespace)))
+
+(define (get-token-range t pos)
+  (define limit (current-classify-range))
+  (cond
+    [(pos . < . (car limit))
+     (values 0 (car limit))]
+    [(and (not (eq? (cdr limit) 'end))
+          (pos . > . (cdr limit)))
+     (values (cdr limit) (max (cdr limit) (send t last-position)))]
+    [else
+     (send t get-token-range pos)]))
 
 (define (line-start t pos)
   (send t paragraph-start-position (send t position-paragraph pos #t)))
@@ -34,7 +57,7 @@
       [else
        (case (classify-position t (sub1 pos))
          [(whitespace comment)
-          (define-values (s e) (send t get-token-range (sub1 pos)))
+          (define-values (s e) (get-token-range t (sub1 pos)))
           (loop s start)]
          [(continue-operator)
           ;; since we've only skipped comments and whitespace, this
@@ -50,12 +73,12 @@
       [else
        (case (classify-position t (sub1 pos))
          [(whitespace comment)
-          (define-values (s e) (send t get-token-range (sub1 pos)))
+          (define-values (s e) (get-token-range t (sub1 pos)))
           (loop s)]
          [(continue-operator)
           ;; since we've only skipped comments and whitespace, this
           ;; continue operator applies
-          (define-values (s e) (send t get-token-range (sub1 pos)))
+          (define-values (s e) (get-token-range t (sub1 pos)))
           (define c-start (line-start t s))
           (define more-delta (line-delta t c-start #:unless-empty? unless-empty?))
           (and more-delta
@@ -78,7 +101,7 @@
                [(comment continue-operator) or-ws-like?]
                [else #f])
              (let ()
-               (define-values (s e) (send t get-token-range pos))
+               (define-values (s e) (get-token-range t pos))
                (loop e))))))
 
 ;; find the current indentation of the block that starts at or before `pos`,
@@ -92,7 +115,7 @@
       [(pos-start . < . at-start)
        candidate]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment continue-operator)
@@ -126,7 +149,7 @@
 (define (block-not-disallowed-empty? t init-pos init-at-start)
   (or (zero? init-pos)
       (let loop ([pos (sub1 init-pos)] [at-start init-at-start])
-        (define-values (s e) (send t get-token-range pos))
+        (define-values (s e) (get-token-range t pos))
         (define category (classify-position t s))
         (case category
           [(whitespace comment semicolon-operator) (or (zero? s) (loop (sub1 s) at-start))]
@@ -171,7 +194,7 @@
 ;; of the current expression, which might be the end of a block
 ;; that starts at `s`
 (define (end-of-current t s-in #:stop-at-comma? [stop-at-comma? #f])
-  (define-values (s e) (send t get-token-range s-in))
+  (define-values (s e) (get-token-range t s-in))
   (define category (classify-position t s))
   (case category
     [(#f) s]
@@ -197,7 +220,7 @@
     (cond
       [(= pos end-pos) end-pos]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment continue-operator)
@@ -237,7 +260,7 @@
     (cond
       [(= pos 0) (and (not need-opener?) (or last-pos 0))]
       [else
-       (define-values (s e) (send t get-token-range (sub1 pos)))
+       (define-values (s e) (get-token-range t (sub1 pos)))
        (define category (classify-position t s))
        (case category
          [(whitespace comment)
@@ -293,7 +316,7 @@
        (cond
          [(= pos 0) 0]
          [else
-          (define-values (s e) (send t get-token-range (sub1 pos)))
+          (define-values (s e) (get-token-range t (sub1 pos)))
           (define category (classify-position t s))
           (case category
             [(whitespace comment continue-operator) (loop s last-pos)]
@@ -327,11 +350,11 @@
                          #:stay-on-line [stay-on-line #f])
   (define end-pos (send t last-position))
   (cond
-    [(= pos -1) (send t get-token-range 0)]
-    [(pos . >= . end-pos) (send t get-token-range (sub1 end-pos))]
+    [(= pos -1) (get-token-range t 0)]
+    [(pos . >= . end-pos) (get-token-range t (sub1 end-pos))]
     [else
      (let loop ([pos pos] [stay-on-line stay-on-line])
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (define (continue #:ok-to-change-line? [ok-to-change-line? #f])
          (define start (and stay-on-line (line-start t (if (positive? dir) e s))))
@@ -340,8 +363,8 @@
                  (not ok-to-change-line?)
                  (not (eqv? start stay-on-line)))
             (if (dir . < . 0)
-                (send t get-token-range e)
-                (send t get-token-range (sub1 s)))]
+                (get-token-range t e)
+                (get-token-range t (sub1 s)))]
            [else
             (if (dir . < . 0)
                 (if (zero? s)
@@ -366,11 +389,11 @@
   (case category
     [(other)
      ;; keep skiping past non-comment whitespace
-     (define-values (s e) (send t get-token-range pos))
+     (define-values (s e) (get-token-range t pos))
      (let loop ([pos e])
        (case (classify-position t pos)
          [(whitespace)
-          (define-values (s e) (send t get-token-range pos))
+          (define-values (s e) (get-token-range t pos))
           (loop e)]
          [else pos]))]
     [else pos]))

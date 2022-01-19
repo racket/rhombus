@@ -25,47 +25,53 @@
 (define (shrubbery-indentation t pos
                                #:multi? [multi? #f]
                                #:always? [always? multi?])
-  (define start (line-start t pos))
-  (define current-tab (get-current-tab t start))
-  (cond
-    ;; If `always?` is #f, we got here by the Return key;
-    ;; don't indent when just inserting new lines
-    [(and (not always?)
-          (or (zero? pos) ; shouldn't happen in a real editor!
-              (= (line-start t (sub1 pos)) (sub1 pos))))
-     current-tab]
-    [else
-     ;; tabbing only makes sense if the target line is not a continuation
-     ;; or if it continues an empty line
-     (define delta (or (line-delta t start #:unless-empty? #t) 0))
-     (cond
-       [(eqv? delta 0)
-        (define (like-enclosing #:as-bar? [as-bar? #f]
-                                #:as-operator? [as-operator? #f]
-                                #:also-zero? [also-zero? #f])
-          (indent-like-enclosing-group t start current-tab
-                                       #:multi? multi?
-                                       #:as-bar? as-bar?
-                                       #:as-operator? as-operator?
-                                       #:also-zero? also-zero?))
-        (case (classify-position t (+ start current-tab))
-          [(closer)
-           (indent-like-parenthesis t start current-tab)]
-          [(bar-operator)
-           (like-enclosing #:as-bar? #t)]
-          [(group-comment)
-           (like-enclosing #:as-bar? (bar-after-group-comment? t (+ start current-tab) start)
-                           #:also-zero? #t)]
-          [(operator)
-           (like-enclosing #:as-operator? #t)]
-          [(at-content)
-           ;; no indenting in `@` context
-           current-tab]
-          [else
-           (like-enclosing)])]
-       [else
-        ;; don't change indentation for a continuation line
-        current-tab])]))
+  (parameterize ([current-classify-range (or (for/or ([r (in-list (send t get-regions))])
+                                               (and (pos . >= . (car r))
+                                                    (or (eq? (cadr r) 'end)
+                                                        (pos . <= . (cadr r)))
+                                                    (cons (car r) (cadr r))))
+                                             '(0 0))])
+    (define start (line-start t pos))
+    (define current-tab (get-current-tab t start))
+    (cond
+      ;; If `always?` is #f, we got here by the Return key;
+      ;; don't indent when just inserting new lines
+      [(and (not always?)
+            (or (zero? pos) ; shouldn't happen in a real editor!
+                (= (line-start t (sub1 pos)) (sub1 pos))))
+       current-tab]
+      [else
+       ;; tabbing only makes sense if the target line is not a continuation
+       ;; or if it continues an empty line
+       (define delta (or (line-delta t start #:unless-empty? #t) 0))
+       (cond
+         [(eqv? delta 0)
+          (define (like-enclosing #:as-bar? [as-bar? #f]
+                                  #:as-operator? [as-operator? #f]
+                                  #:also-zero? [also-zero? #f])
+            (indent-like-enclosing-group t start current-tab
+                                         #:multi? multi?
+                                         #:as-bar? as-bar?
+                                         #:as-operator? as-operator?
+                                         #:also-zero? also-zero?))
+          (case (classify-position t (+ start current-tab))
+            [(closer)
+             (indent-like-parenthesis t start current-tab)]
+            [(bar-operator)
+             (like-enclosing #:as-bar? #t)]
+            [(group-comment)
+             (like-enclosing #:as-bar? (bar-after-group-comment? t (+ start current-tab) start)
+                             #:also-zero? #t)]
+            [(operator)
+             (like-enclosing #:as-operator? #t)]
+            [(at-content)
+             ;; no indenting in `@` context
+             current-tab]
+            [else
+             (like-enclosing)])]
+         [else
+          ;; don't change indentation for a continuation line
+          current-tab])])))
 
 (define (shrubbery-range-indentation t s e)
   (define s-line (send t position-paragraph s))
@@ -183,7 +189,7 @@
      (car tabs)]))
 
 (define (indent-like-parenthesis t start current-tab)
-  (define-values (s e) (send t get-token-range (+ start current-tab)))
+  (define-values (s e) (get-token-range t (+ start current-tab)))
   (define o-s (send t backward-match e 0))
   (define (own-line? t pos #:direction dir)
     (define para (send t position-paragraph pos))
@@ -281,7 +287,7 @@
       [(eqv? limit -1) null]
       [(negative? pos) (maybe-list candidate plus-one-more?)]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (let ([c (classify-position t s)])
                           (if (and (eq? c 'group-comment)
                                    as-bar?)
@@ -442,7 +448,7 @@
     (cond
       [(negative? pos) (values #f limit-pos)]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment)
@@ -478,7 +484,7 @@
   (define start (line-start t pos))
   (cond
     [(eqv? start at-start)
-     (define-values (s e) (send t get-token-range pos))
+     (define-values (s e) (get-token-range t pos))
      (define category (classify-position t s))
      (case category
        [(bar-operator) #t]
@@ -498,9 +504,9 @@
 (define (get-inside-start t pos)
   (let loop ([pos pos] [last-pos #f])
     (cond
-      [(pos . <= . 0) 0]
+      [(pos . <= . 0) (or last-pos 0)]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment continue-operator)
@@ -514,7 +520,7 @@
          [else (loop (sub1 s) s)])])))
 
 (define (skip-block-operator t pos)
-  (define-values (s e) (send t get-token-range pos))
+  (define-values (s e) (get-token-range t pos))
   (define category (classify-position t s))
   (case category
     [(whitespace comment continue-operator)
@@ -527,7 +533,7 @@
     (cond
       [(= pos (send t last-position)) #f]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment) (loop e)]
@@ -539,7 +545,7 @@
     (cond
       [(= pos (send t last-position)) #f]
       [else
-       (define-values (s e) (send t get-token-range pos))
+       (define-values (s e) (get-token-range t pos))
        (define category (classify-position t s))
        (case category
          [(whitespace comment) (loop e)]

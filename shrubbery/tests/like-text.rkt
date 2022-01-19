@@ -234,4 +234,8 @@
                  (loop (sub1 s) s)]
                 [else end-pos]))])]
         [else
-         (error 'skip-whitespace "bad direction: ~e" dir)]))))
+         (error 'skip-whitespace "bad direction: ~e" dir)]))
+
+
+    (define/public (get-regions)
+      '((0 end)))))
