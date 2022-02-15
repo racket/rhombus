@@ -62,8 +62,10 @@
                                'remove)
           #`(begin
               #,@(reverse accum)
-              #,(syntax/loc exp-form
-                  (def (new-id ...) rhs))
+              #,(datum->syntax exp-form
+                               (syntax-e #'(def (new-id ...) rhs))
+                               exp-form
+                               exp-form)
               (sequence #:need-end-expr orig base-ctx add-ctx remove-ctx . forms))]
          [_ #`(begin
                 #,@(reverse accum)

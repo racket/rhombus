@@ -69,4 +69,4 @@
    id
    (lambda (in out)
      (define forms (checker (proc (in stx)) proc))
-     (out (datum->syntax #f forms)))))
+     (datum->syntax #f (out forms)))))
