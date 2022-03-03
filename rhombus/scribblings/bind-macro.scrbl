@@ -12,7 +12,7 @@ as a prefix operator to constrain a pattern to number inputs:
 
 @(rhombusblock:
     import:
-      rhombus/macro: no_prefix
+      rhombus/macro: open
 
     bind.rule '($ $n):
       ~parsed_right
@@ -37,7 +37,7 @@ annotations.
 @(rhombusblock:
     use_static_dot
 
-    annotation.macro 'PosnList: 'List.of(Posn)
+    annotation.macro 'PosnList: '(List.of(Posn))
 
     fun nth_x(ps -: PosnList, n):
       ps[n].x

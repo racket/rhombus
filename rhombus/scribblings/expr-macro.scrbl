@@ -21,7 +21,7 @@ wraps as a zero-argument function
 
 @(rhombusblock:
     import:
-      rhombus/macro: no_prefix
+      rhombus/macro: open
 
     expr.rule '(thunk: $body):
       '(fun (): $body)
