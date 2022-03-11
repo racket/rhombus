@@ -12,9 +12,9 @@
 @title{Definition Macros}
 
 @doc[
-  defn.macro '(defn.macro '($identifier_or_operator $pattern ...):
-                 body
-                 ...),
+  defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
+                 $body
+                 ...»',
   grammar identifier_or_operator:
     $identifier
     $operator,
@@ -30,9 +30,9 @@
 
 @examples[
   ~eval: macro_eval,
-  defn.macro '(enum:
-                 $ids
-                 ...):
+  defn.macro 'enum:
+                $ids
+                ...':
     // temporary list library:
     fun | length([]): 0
         | length([a, as, ...]): 1+length(as)
@@ -41,9 +41,8 @@
     fun iota(n): iota_accum(n, [])
     // useful example part is here:
     val ns: iota(length(ids))
-    '(:
-        val $ids: $ns
-        ...),
+    'val $ids: $ns
+     ...',
   enum:
     a
     b
@@ -54,12 +53,11 @@
 }
 
 @doc[
-  defn.macro '(defn.sequence_macro
-                 '(: $identifier_or_operator $pattern ...
-                       $pattern
-                       ...):
-                   body
-                   ...),
+  defn.macro '«defn.sequence_macro '$identifier_or_operator $pattern ...
+                                      $pattern
+                                      ...':
+                 $body
+                 ...»',
   grammar identifier_or_operator:
     $identifier
     $operator,
@@ -75,12 +73,12 @@
 
 @examples[
   ~eval: macro_eval,
-  defn.sequence_macro '(: reverse_defns
-                          $defn1
-                          $defn2
-                          $tail
-                          ......):
-    values('(: $defn2; $defn1), '(: $tail; ......)),
+  defn.sequence_macro 'reverse_defns
+                       $defn1
+                       $defn2
+                       $tail
+                       ......':
+    values('$defn2; $defn1', '$tail; ......'),
   :
     reverse_defns
     def seq_x: seq_y+1

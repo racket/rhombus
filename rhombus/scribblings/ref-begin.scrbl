@@ -4,9 +4,9 @@
 @title{Begin}
 
 @doc[
-  decl.macro '(begin:
-                 $body
-                 ...)
+  decl.macro 'begin:
+                $body
+                ...'
 ]{
 
  Returns the result of the @rhombus[body] block, which may include local

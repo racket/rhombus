@@ -11,7 +11,7 @@
                      enforest/operator
                      "srcloc.rkt"
                      "name-path-op.rkt"
-                     "tail.rkt"
+                     "pack.rkt"
                      "misuse.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"

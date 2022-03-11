@@ -22,7 +22,8 @@ structure of a shrubbery-notation document, where literal fragments like
                  @nonterm{atom},
                  balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
                       bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
-                      bseq(@litchar["{"], kleenestar(@nonterm{group}), @litchar["}"]))],
+                      bseq(@litchar["{"], kleenestar(@nonterm{group}), @litchar["}"]),
+                      bseq(@litchar["'"], kleenestar(@nonterm{group}), @litchar["'"]))],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},
@@ -45,12 +46,12 @@ an alt-block is in a group, but the group is constrained to have a
 single block, so a layer is collapsed in the abstract structure.
 The fact that an alt-block was created with @litchar{|} is tagged in the
 abstract structure, much in the same way that specific @opener_closer
-pairs @litchar{()}, @litchar{[]}, and @litchar{{}} tag the terms that
-they create.
+pairs @litchar{()}, @litchar{[]}, @litchar{{}}, and @litchar{''} tag
+the terms that they create.
 
 Although an @opener_closer pair contains a sequence of groups, that
 content is not a block, since it is not created via @litchar{:} or
-@litchar{|}. Simialrly, a document overall is a sequence of groups but
+@litchar{|}. Similarly, a document overall is a sequence of groups but
 not a block.
 
 @section{Grouping by Lines}
@@ -69,12 +70,15 @@ when this document says “the previous line” or “the next line.”
 @section{Grouping by Opener--Closer Pairs}
 
 An @opener_closer pair @litchar{(} and @litchar{)}, @litchar{[} and
-@litchar{]}, or @litchar["{"] and @litchar["}"] forms a @tech{term} that
-can span lines and ecloses nested groups. Within the @opener_closer
-pair, @litchar{,} separates groups. Groups can be on separate lines at
-the same indentation, but groups on separate lines still must be
-separated by @litchar{,}. Parsing retains whether a subgroup is formed
-by @litchar{()}, @litchar{[]}, or @litchar{{}}.
+@litchar{]}, @litchar["{"] and @litchar["}"], or @litchar{'} and
+@litchar{'} (those two are the same character) forms a @tech{term} that
+can span lines and encloses nested groups. Within most @opener_closer
+pairs, @litchar{,} separates groups, but @litchar{;} separates group
+with a @litchar{'} pair. Groups can be on separate lines at the same
+indentation, but groups on separate lines still must be separated by
+@litchar{,} in @litchar{()}, @litchar{[]}, or @litchar{{}}. Parsing
+retains whether a subgroup is formed by @litchar{()}, @litchar{[]},
+@litchar{{}}, or @litchar{''}.
 
 @(rhombusblock:
     group 1
@@ -84,8 +88,8 @@ by @litchar{()}, @litchar{[]}, or @litchar{{}}.
       group 2 - subgroup III - subsubgroup B,
       {group 2 - subgroup III - subsubgroup C, subsubsubgroup α,
        group 2 - subgroup III - subsubgroup C, subsubsubgroup β})]
-    (group 3 - subgroup I,  group 3 - subgroup II,
-     group 3 - subgroup III)
+    'group 3 - subgroup I;  group 3 - subgroup II
+     group 3 - subgroup III'
   )
 
 The following three forms are not allowed, because they are missing a
@@ -125,6 +129,21 @@ on its own line.
     )
 )
 
+Using @litchar{'} as both an @opener and @closer prevents simple nesting
+of those forms. There is no problem if a @litchar{(}, @litchar{[}, or
+@litchar["{"], appears between one @litchar{'} as an opener and another
+@litchar{'} as an opener; otherwise, two consecutive @litchar{'}s
+intended as openers would instead be parsed as an opener and a closer.
+To disambiguate, @litchar{«} can be used immediately after immediately
+after an opener @litchar{'}, and then @litchar{»} must be used just before the
+closing @litchar{'}. The @litchar{«} and @litchar{»} are @emph{not}
+preserved in the parsed representation.
+
+@(rhombusblock:
+   'a ('nested') b'
+   '«a 'nested' b»'
+)
+
 @section{Blocking with @litchar{:} and Indentation}
 
 A sequence of groups has a particular indentation that is determined by
@@ -153,7 +172,6 @@ Also, a new line is not required after @litchar{:}, but then it's as if the
 @litchar{:} is followed by a newline plus spaces that reach the same column as
 the @litchar{:}. All four of the following groups are the same, each with one
 block that has two nested groups:
-
 
 @(rhombusblock:
     hello:
@@ -369,7 +387,10 @@ disable the use of line and column information for parsing between
 @litchar{:} or immediately after @litchar{|}, in which case a
 @litchar{»} indicates the end of the block that starts after the
 @litchar{:} or @litchar{|}. Within the block, an explicit @litchar{;}
-must be used to separate groups.
+must be used to separate groups. A @litchar{«} can also be used
+immediately after @litchar{'} and then @litchar{»} is used just before
+the closing @litchar{'}, but that is a different kind of @litchar{«}
+@litchar{»} that is specific to supporting nested @litchar{'} pairs.
 
 A sequence of groups, either at the top level or within a block, can be
 written without line and column sensitivity as @litchar{;} followed

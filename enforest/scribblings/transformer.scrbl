@@ -51,8 +51,8 @@ consumes no additional terms after the operator. For example, a postfix
     | factorial(0): 1
     | factorial(n): n*factorial(n-1)
          
-    expr.macro '($a ! $tail ...):
-      values('(factorial($a)), tail)
+    expr.macro '$a ! $tail ...':
+      values('factorial($a)', tail)
 
     10! + 1 // = 3628801
   )

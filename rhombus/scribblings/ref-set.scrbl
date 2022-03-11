@@ -33,8 +33,8 @@ to be inluded in the set.
 }
 
 @doc[
-  annotation.macro 'Set,
-  annotation.macro '(Set.of($annotation)),
+  annotation.macro 'Set',
+  annotation.macro 'Set.of($annotation)',
 ]{
 
  Matches any set in the form without @rhombus[of]. The @rhombus[of]

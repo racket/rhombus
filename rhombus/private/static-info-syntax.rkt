@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/name-parse
-                     "tail.rkt"
+                     "pack.rkt"
                      "static-info-pack.rkt")
          "definition.rkt"
          "name-root.rkt"
@@ -29,9 +29,8 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (op block)
-        #:literals (|'|)
-        [(_ (op |'|) name::name ((~and body-tag block) body ...))
+        #:datum-literals (block quotes)
+        [(_ (quotes (group name::name)) ((~and body-tag block) body ...))
          #`((define-syntax #,(in-static-info-space #'name.name)
               (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 
@@ -41,11 +40,11 @@
   (static-info (syntax->list (pack stx))))
 
 (define-for-syntax (pack v)
-  (pack-static-infos v 'static_info_ct.pack))
+  (pack-static-infos (unpack-term v 'static_info_ct.pack) 'static_info_ct.pack))
 
 (define-for-syntax (unpack v)
   (unpack-static-infos v))
 
 (define-for-syntax (wrap form info)
-  #`(parsed #,(wrap-static-info* (wrap-expression form)
-                                 (pack info))))
+  (pack-term #`(parsed #,(wrap-static-info* (wrap-expression form)
+                                            (pack info)))))

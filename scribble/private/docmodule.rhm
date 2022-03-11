@@ -18,20 +18,20 @@ export:
 for_meta:
   fun translate_mod(mod):
     match mod
-    | '($(a $: Id)): a
-    | '($a / $b ...):
+    | '$(a $: Id)': a
+    | '$a / $b ...':
         base.#{string->symbol}(unwrap_syntax(a)
                                  & "/"
-                                 & unwrap_syntax(translate_mod('($b ...))))
-    | '(lib($str)):
+                                 & unwrap_syntax(translate_mod('$b ...')))
+    | 'lib($str)':
         [symbol(lib), str]
 
-decl.macro '(docmodule ($mod ...)):
-  '(: $(parsed(['defmodule,
-                keyword(#{#:require-form}),
-                unparsed('(fun (mod): @rhombus[import: $$(mod)])),
-                translate_mod('($mod ...))])))
+decl.macro 'docmodule ($mod ...)':
+  '$(parsed(['defmodule',
+             keyword(#{#:require-form}),
+             unparsed('fun (mod): @rhombus[import: $$(mod)]'),
+             translate_mod('$mod ...')]))'
 
-expr.macro '(rhombusmodname ($mod ...) $tail ......):
-  values(parsed(['racketmodname, translate_mod('($mod ...))]),
+expr.macro 'rhombusmodname ($mod ...) $tail ......':
+  values(parsed(['racketmodname', translate_mod('$mod ...')]),
          tail)

@@ -23,24 +23,21 @@ wraps as a zero-argument function
     import:
       rhombus/macro: open
 
-    expr.rule '(thunk: $body):
-      '(fun (): $body)
+    expr.rule 'thunk: $body':
+      'fun (): $body'
 
     thunk: 1 + "oops"  // prints a function
     (thunk: 1 + 3)()   // prints 4
   )
 
-The @rhombus[expr.rule] form expects a @rhombus['] and then either
-parentheses or an identifier or operator to create a pattern that
-matches a sequence of terms. With parentheses after @rhombus['], either
-the first or second term within the pattern is an @emph{unescaped} identifier
-or operator to be defined; conceptually, it’s unescaped because the
-macro matches a sequence of terms that use that identifier or operator
-literally. If the first term in the pattern is an unescaped identifier
-or operator, a prefix macro is defined; otherwise, the second term must
-be unescaped, and an infix macro is defined. If the part after
-@rhombus['] is just an identifier or parentheses, then it’s shorthand
-for a prefix macro that consumes none of the tail.
+The @rhombus[expr.rule] form expects @rhombus[''] to create a pattern
+that matches a sequence of terms. Either the first or second term within
+the pattern is an @emph{unescaped} identifier or operator to be defined;
+conceptually, it’s unescaped because the macro matches a sequence of
+terms that use that identifier or operator literally. If the first term
+in the pattern is an unescaped identifier or operator, a prefix macro is
+defined; otherwise, the second term must be unescaped, and an infix
+macro is defined.
 
 The @rhombus[expr.rule] form must be imported from
 @rhombus[rhombus/macro], but @rhombus[def] behaves like
@@ -50,8 +47,8 @@ The @rhombus[expr.rule] form must be imported from
 @(rhombusblock:
     // no import needed
 
-    def '(thunk: $body):
-      '(fun (): $body)
+    def 'thunk: $body':
+      'fun (): $body'
 
     (thunk: 1 + 3)()   // prints 4
   )
@@ -62,8 +59,8 @@ might be defined (shadowing the normal @rhombus[!] for ``not'') like
 this:
 
 @(rhombusblock:
-    def '($a !):
-      '(factorial($a))
+    def '$a !':
+      'factorial($a)'
 
     fun
     | factorial(0): 1
@@ -75,12 +72,12 @@ this:
 The @rhombus[expr.rule] or @rhombus[def] form is a shorthand for a more
 general @rhombus[expr.macro] macro form. With @rhombus[expr.macro], the
 macro implementation after @rhombus[:] is compile-time code. Importing
-@rhombus[rhombus/macro] imports all of the same bindings as
+@rhombusmodname[rhombus/macro] imports all of the same bindings as
 @rhombus[rhombus] into the compile-time phase, in addition to making
 forms like @rhombus[expr.macro] available. Normally,
-@rhombus[rhombus/macro] should be imported without a prefix, otherwise a
+@rhombusmodname[rhombus/macro] should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time
-code—even for things like @rhombus[values] and @rhombus[']. In addition,
+code—even for things like @rhombus[values] and @rhombus['']. In addition,
 a macro defined with @rhombus[expr.macro] receives all remaining terms
 in the enclosing group as input, and it must return two values: the
 expanded expression and the remaining terms that have not been consumed.
@@ -88,8 +85,8 @@ expanded expression and the remaining terms that have not been consumed.
 For example, the @rhombus[!] macro can be equivalently written like this:
 
 @(rhombusblock:
-    expr.macro '($a ! $tail ......):
-      values('(factorial($a)), '(tail ......))
+    expr.macro '$a ! $tail ......':
+      values('factorial($a)', 'tail ......')
   )
 
 Since an @rhombus[expr.macro] implementation can use arbitrary
@@ -101,15 +98,15 @@ Rhombus expression, as opposed to an unparsed shrubbery. Currently,
 there’s no way for a transformer to inspect a parsed Rhombus expression
 (except by escaping to Racket). When the parsed expression is injected
 back into an unparsed shrubbery, as happens in
-@rhombus['(factorial($a))], it will later simply parse as itself.
+@rhombus['factorial($a)'], it will later simply parse as itself.
 
 The @rhombus[!] macro matches an unconsumed tail with @rhombus[......]
 instead of @rhombus[...]. Using @rhombus[...] would implement the same
 transformation, but less efficiently:
 
 @(rhombusblock:
-    expr.macro '($a ! $tail ...):
-      values('(factorial($a)), '(tail ...))
+    expr.macro '$a ! $tail ...':
+      values('factorial($a)', 'tail ...')
 
     // changing to 2000 `!`s or so makes parsing take noticeably long:
     0 ! ! ! ! ! ! ! ! ! ! ! !
@@ -121,8 +118,8 @@ can be written as just @rhombus[tail]. That’s convenenient, although not
 inherently more efficient:
 
 @(rhombusblock:
-    expr.macro '($a ! $tail ......):
-      values('(factorial($a)), tail)
+    expr.macro '$a ! $tail ......':
+      values('factorial($a)', tail)
   )
 
 The @rhombus[......] operator cannot be used at the end of the input
@@ -143,9 +140,9 @@ macros provide control over evaluator order. For example, this
 side before it’s left-hand side:
 
 @(rhombusblock:
-    def '($a +<= $b): 
+    def '$a +<= $b':
       ~parsed_right
-      '($b + $a)
+      '$b + $a'
 
     1 +<= 2                       // prints 3
     // (1+"oops") +<= (2+"ouch")  // would complain about "ouch", not "oops"

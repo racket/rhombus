@@ -11,5 +11,5 @@ export:
 def aside(content):
   scribble.nested(~style: symbol(inset), scribble.italic(content))
 
-def '(demo ($form, ...)):
-  '(manual.examples(~label: #false, $form, ...))
+def 'demo ($form, ...)':
+  'manual.examples(~label: #false, $form, ...)'

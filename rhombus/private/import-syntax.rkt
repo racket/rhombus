@@ -4,7 +4,7 @@
                      syntax/boundmap
                      enforest/proc-name
                      "srcloc.rkt"
-                     "tail.rkt")
+                     "pack.rkt")
          "name-root.rkt"
          (submod "import.rkt" for-meta)
          "syntax.rkt"

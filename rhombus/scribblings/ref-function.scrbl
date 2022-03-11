@@ -4,24 +4,24 @@
 @title{Functions}
 
 @doc[
-  defn.macro '(fun $identifier($kwopt_binding, ...) $maybe_result_annotation:
-                 $body
-                 ...),
-  defn.macro '(fun
-               | $identifier($binding, ...) $maybe_result_annotation:
-                   $body
-                   ...
-               | ...),
+  defn.macro 'fun $identifier($kwopt_binding, ...) $maybe_result_annotation:
+                $body
+                ...',
+  defn.macro 'fun
+              | $identifier($binding, ...) $maybe_result_annotation:
+                  $body
+                  ...
+              | ...',
 
-  expr.macro '(fun ($kwopt_binding, ...) $maybe_result_annotation:
-                 $body
-                 ...),
+  expr.macro 'fun ($kwopt_binding, ...) $maybe_result_annotation:
+                $body
+                ...',
 
-  expr.macro '(fun
-               | ($arg_binding, ...) $maybe_result_annotation:
-                   $body
-                   ...
-               | ...),
+  expr.macro 'fun
+              | ($arg_binding, ...) $maybe_result_annotation:
+                  $body
+                  ...
+              | ...',
   
   grammar kwopt_binding:
     $binding
@@ -109,19 +109,19 @@
 }
 
 @doc[
-  defn.macro '(operator ($opname $arg_binding) $maybe_result_annotation:
-                 $body
-                 ...),
-  defn.macro '(operator ($arg_binding $opname $arg_binding) $maybe_result_annotation:
-                 $body
-                 ...),
-  defn.macro '(operator
-               | ($opname $arg_binding) $maybe_result_annotation:
-                   $body
-                   ...
-               | ($arg_binding $opname $arg_binding) $maybe_result_annotation:
-                   $body
-                   ...),
+  defn.macro 'operator ($opname $arg_binding) $maybe_result_annotation:
+                $body
+                ...',
+  defn.macro 'operator ($arg_binding $opname $arg_binding) $maybe_result_annotation:
+                $body
+                ...',
+  defn.macro 'operator
+              | ($opname $arg_binding) $maybe_result_annotation:
+                  $body
+                  ...
+              | ($arg_binding $opname $arg_binding) $maybe_result_annotation:
+                  $body
+                  ...',
 ]{
 
  Binds @rhombus[opname] as an operator, either prefix or infix. The

@@ -4,14 +4,14 @@
 @title{Iteration}
 
 @doc[
-  decl.macro '(for:
-                 $clause_or_body
-                 ...
-                 $body),
-  decl.macro '(for $folder:
-                 $clause_or_body
-                 ...
-                 $body),
+  decl.macro 'for:
+                $clause_or_body
+                ...
+                $body',
+  decl.macro 'for $folder:
+                $clause_or_body
+                ...
+                $body',
   grammar clause_or_body:
     ~each $binding:
       $body
@@ -121,8 +121,8 @@
 
 
 @doc[
-  expr.macro '($n_expr .. $m_expr),
-  expr.macro '($n_expr ..)
+  expr.macro '$n_expr .. $m_expr',
+  expr.macro '$n_expr ..'
 ]{
 
  If @rhombus[n_expr] produces an integer @rhombus[n, ~var] and

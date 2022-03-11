@@ -16,6 +16,7 @@
 (provide #%body
          #%literal
          #%tuple
+         ;; #%quote is provided by "quasiquote.rkt"
          #%call
          #%array
          #%ref

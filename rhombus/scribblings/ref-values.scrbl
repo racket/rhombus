@@ -17,7 +17,7 @@
 }
 
 @doc[
-  bind.macro '(values($binding, ...))
+  bind.macro 'values($binding, ...)'
 ]{
 
  Matches multiple result values corresponding to the number of
@@ -27,7 +27,7 @@
 }
 
 @doc[
-  folder.macro '(values($identifier = $expr, ...))
+  folder.macro 'values($identifier = $expr, ...)'
 ]{
 
  A @tech{folder} used with @rhombus[for], expects as many results from a

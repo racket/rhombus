@@ -112,10 +112,13 @@
 (define parens-tag (syntax-raw-property (datum->syntax #f 'parens) '()))
 (define brackets-tag (syntax-raw-property (datum->syntax #f 'brackets) '()))
 
+(define within-parens-str "within parentheses, brackets, or braces")
+
 ;; ----------------------------------------
 
 ;; In the parsed representation of a shrubbery, source locations are
-;; not associated with sequences tagged `group` or `top`. For terms
+;; not associated with sequences tagged `group` or `top` (but they may
+;; have 'raw-prefix and/or 'raw-tail, as described below). For terms
 ;; tagged with `parens`, `braces`, `block`, `alts`, and `op`, the same
 ;; source location is associated with the tag and the parentheses that
 ;; group the tag with its members, and that location spans the content
@@ -267,7 +270,7 @@
                 (fail t (format "misplaced comma~a"
                                 (if (group-state-paren-immed? sg)
                                     ""
-                                    " (not immediately within parentheses, brackets, or braces)"))))
+                                    (string-append " (not immediately " within-parens-str ")")))))
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))
                          (group-state-count? sg)))
@@ -309,8 +312,7 @@
                                                             #:raw splice-raw)))
                  (when (group-state-paren-immed? sg)
                    (unless (= 1 (length gs))
-                     (fail t (format "multi-group splice not allowed (~a)"
-                                     "immediately within parentheses, brackets, or braces"))))
+                     (fail t (format "multi-group splice not allowed (immediately ~a)" within-parens-str))))
                  (define-values (more-gs more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)
                    (parse-groups close-l (struct-copy group-state sg
                                                       [comma-time? (group-state-paren-immed? sg)]
@@ -328,8 +330,7 @@
                 
                 [else
                  (when (group-state-paren-immed? sg)
-                   (fail t (format "misplaced semicolon (~a)"
-                                   "immediately within parentheses, brackets, or braces")))
+                   (fail t (format "misplaced semicolon (immediately ~a)" within-parens-str)))
                  (parse-groups rest-l (struct-copy group-state sg
                                                    [check-column? (next-line?* rest-l last-line)]
                                                    [column (or (group-state-column sg) column)]
@@ -341,8 +342,7 @@
                                                    [raw raw]))])])]
           [else
            (when (group-state-comma-time? sg)
-             (fail t (format "missing comma before new group (~a)"
-                             "within parentheses, brackets, or braces")))
+             (fail t (format "missing comma before new group (~a)" within-parens-str)))
            (case (and (not (eq? (group-state-block-mode sg) 'start))
                       (token-name t))
              [(bar-operator)
@@ -620,26 +620,37 @@
            (parse-alts-block t l)]
           [(opener)
            (check-block-mode)
-           (define-values (closer tag)
+           (define-values (closer tag paren-immed?)
              (case (token-e t)
-               [("(") (values ")" 'parens)]
-               [("{") (values "}" 'braces)]
-               [("[") (values "]" 'brackets)]
+               [("(") (values ")" 'parens #t)]
+               [("{") (values "}" 'braces #t)]
+               [("[") (values "]" 'brackets #t)]
+               [("'") (values "'" 'quotes #f)]
                [("«") (if (state-at-mode s)
-                          (values "»" 'at)
+                          (values "»" 'at #t)
                           (fail t "misplaced `«`"))]
                [else (error "unknown opener" t)]))
            (define pre-raw (state-raw s))
-           (define-values (group-commenting next-l last-line delta raw)
+           (define-values (group-commenting next-l0 last-line0 delta0 raw0)
              (next-of/commenting (cdr l) line (state-delta s) null (state-count? s)))
+           (define-values (next-l last-line delta raw use-closer quote-nested?)
+             (cond
+               [(and (eq? tag 'quotes) (pair? next-l0) (not group-commenting)
+                     (eq? 'opener (token-name (car next-l0)))
+                     (equal? "«" (token-e (car next-l0))))
+                (define-values (next-l last-line delta raw)
+                  (next-of (cdr next-l0) last-line0 delta0 (cons (car next-l0) raw0) (state-count? s)))
+                (values next-l last-line delta raw "»" #t)]
+               [else
+                (values next-l0 last-line0 delta0 raw0 closer #f)]))
            (define sub-column
              (if (pair? next-l)
                  (column+ (token-column (car next-l)) (cont-delta-column (state-delta s)))
                  (column-next (column+ (token-column t) (cont-delta-column (state-delta s))))))
-           (define-values (gs rest-l close-line close-delta end-t never-tail-commenting group-tail-raw)
+           (define-values (gs rest-l0 close-line0 close-delta0 end-t0 never-tail-commenting group-tail-raw0)
              (parse-groups next-l (make-group-state #:count? (state-count? s)
-                                                    #:closer (make-closer-expected closer t)
-                                                    #:paren-immed? #t
+                                                    #:closer (make-closer-expected use-closer t)
+                                                    #:paren-immed? paren-immed?
                                                     #:block-mode (if (eq? tag 'at) 'no 'start)
                                                     #:column sub-column
                                                     #:last-line last-line
@@ -647,6 +658,20 @@
                                                     #:commenting group-commenting
                                                     #:raw raw
                                                     #:sequence-mode (if (eq? tag 'at) 'one 'any))))
+           (define-values (rest-l close-line close-delta end-t group-tail-raw)
+             (cond
+               [quote-nested?
+                (define-values (next-l last-line delta raw)
+                  (next-of rest-l0 close-line0 close-delta0 group-tail-raw0 (state-count? s)))
+                (cond
+                  [(and (pair? next-l)
+                        (eq? 'closer (token-name (car next-l)))
+                        (equal? "'" (token-e (car next-l))))
+                   (values (cdr next-l) last-line delta (car next-l) (cons (car next-l) raw))]
+                  [else
+                   (fail end-t0 (format "expected closing \"'\" after closing \"»\""))
+                   (values next-l last-line delta end-t0 raw)])]
+               [else (values rest-l0 close-line0 close-delta0 end-t0 group-tail-raw0)]))
            (define-values (suffix-raw suffix-l suffix-line suffix-delta)
              (get-suffix-comments rest-l close-line close-delta))
            (define-values (at-adjust new-at-mode at-l at-line at-delta)
@@ -709,13 +734,13 @@
               (case (token-name next-t)
                 [(opener)
                  (case (token-e next-t)
-                   [("(" "«")
+                   [("(" "«" "'")
                     (parse-group (cdr l) (struct-copy state s
                                                       [raw (cons t (state-raw s))]
                                                       [at-mode 'initial]))]
                    [("[")
                     (keep (state-delta s) #:at-mode 'no-initial #:suffix? #f)]
-                   [else (error "unexpected" (token-name next-t))])]
+                   [else (error "unexpected" (token-name next-t)  (token-e next-t))])]
                 [(identifier number literal operator opener)
                  (parse-group (cdr l) (struct-copy state s
                                                    [raw (cons t (state-raw s))]

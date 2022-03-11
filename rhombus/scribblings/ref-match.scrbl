@@ -4,19 +4,19 @@
 @title{Matching}
 
 @doc[
-  decl.macro '(match $target_expr
-               | $binding:
-                   $result_body
-                   ...
-               | ...),
-  decl.macro '(match $target_expr
-               | $binding:
-                   $result_body
-                   ...
-               | ...
-               | ~else:
-                   $result_body
-                   ...)
+  decl.macro 'match $target_expr
+              | $binding:
+                  $result_body
+                  ...
+              | ...',
+  decl.macro 'match $target_expr
+              | $binding:
+                  $result_body
+                  ...
+              | ...
+              | ~else:
+                  $result_body
+                  ...'
 ]{
 
  Tries matching the result of @rhombus[target_expr] against each
@@ -49,7 +49,7 @@
 }
 
 @doc[
-  bind.macro '_
+  bind.macro '_'
 ]{
 
  Matches any value without binding any identifiers.

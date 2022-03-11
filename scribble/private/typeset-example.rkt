@@ -41,6 +41,7 @@
                      [t-block (syntax-raw-property
                                (datum->syntax #f 'block
                                               (syntax-parse form
+                                                [(_ (a . _) . _) #'a]
                                                 [(_ a . _) #'a]))
                                "")])
          #'(rhombus-expression (group rhombusblock

@@ -43,7 +43,7 @@ These characters are used for shrubbery structure and are
 mostly not available for use in operators:
 
 @verbatim[~indent: 2]|{
-( ) [ ] { }   ; ,   : |   « »  \   " ~  # @
+( ) [ ] { } '   ; ,   : |   « »  \   " ~  # @
 }|
 
 The @litchar{:} and @litchar{|} characters can be used as part of an
@@ -219,9 +219,9 @@ would put @rhombus[x + zero] insinde the definition of @rhombus[zero]:
 Parentheses @litchar{(} ... @litchar{)}, square brackets @litchar{[} ...
 @litchar{]}, and curly braces @litchar|{{}| ... @litchar|{}}| combine a
 sequence of groups. A comma @litchar{,} can be used to separate groups
-on one line between the opener and closer. Furthermore, a `,` is
-_required_ to separate groups, even if they’re not on the same line. You
-can’t have extra `,`s, except after the last group.
+on one line between the opener and closer. Furthermore, a @litchar{,} is
+@emph{required} to separate groups, even if they’re not on the same line. You
+can’t have extra @litchar{,}s, except after the last group.
 
 @(rhombusblock:
     f(1, 2,
@@ -245,3 +245,20 @@ Indentation still works for creating blocks within @litchar{(} ... @litchar{)},
 There are some subtleties related to the ``precedence'' of @litchar{:},
 @litchar{|}, @litchar{;}, and @litchar{,}, but they’re likely to work as
 you expect in a given example.
+
+Single-quote marks @litchar{'} ... @litchar{'} are used for quoting
+code, as in macros. Quotes work like @litchar{(} ... @litchar{)}, except
+that the content is more like a top-level or block sequence, and
+@litchar{;} is used as a group separator (optional when groups are on
+separate lines).
+
+@(rhombusblock:
+    def 'thunk: $body':
+      'fun (): $body'
+  )
+
+Nested quoting sometimes requires the use of @litchar{'} @litchar{«} ...
+@litchar{»} @litchar{'} so that the nested opening quote is not parsed
+as a close quote. This counts as a different use of @litchar{«} and
+@litchar{»} than with @litchar{:} or @litchar{|}, and it doesn't
+disable indentation for the quoted code.

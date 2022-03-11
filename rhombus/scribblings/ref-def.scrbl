@@ -4,9 +4,9 @@
 @title{Definitions}
 
 @doc[
-  defn.macro '(val $binding:
-                 $body
-                 ...)
+  defn.macro 'val $binding:
+                $body
+                ...'
 ]{
 
  Binds the identifiers of @rhombus[binding] to the value of the
@@ -47,9 +47,9 @@
 
 
 @doc[
-  defn.macro '(let $binding:
-                 $body
-                 ...)
+  defn.macro 'let $binding:
+                $body
+                ...'
 ]{
 
  Like @rhombus[val], but for bindings that become visible only after the
@@ -69,24 +69,23 @@
 
 
 @doc[
-  defn.macro '(def $binding:
+  defn.macro 'def $binding:
+                $body
+                ...',
+  defn.macro 'def $identifier ($kwopt_binding, ...) $maybe_result_annotation:
+                $body
+                ...',
+  defn.macro 'def
+              | $identifier ($binding, ...) $maybe_result_annotation:
+                  $body
+                  ...
+              | ...',
+  defn.macro '«def '$expr_pattern':
                  $body
-                 ...),
-  defn.macro '(def $identifier ($kwopt_binding, ...) $maybe_result_annotation:
-                 $body
-                 ...),
-  defn.macro '(def
-               | $identifier ($binding, ...) $maybe_result_annotation:
-                   $body
-                   ...
-               | ...),
-  defn.macro '(def ' $expr_pattern:
-                 $body
-                 ...),
+                 ...»',
   grammar expr_pattern:
-    $identifier
-    ($identifier_or_operator $pattern ...)
-    ($ $identifier $identifier_or_operator $pattern ...),
+    $identifier_or_operator
+    $ $identifier $identifier_or_operator $pattern ...,
   grammar identifier_or_operator:
     $identifier
     $operator

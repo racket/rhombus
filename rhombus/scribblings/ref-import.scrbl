@@ -4,9 +4,9 @@
 @title{Import}
 
 @doc[
-  decl.macro '(import:
-                 $import_clause
-                 ...),
+  decl.macro 'import:
+                $import_clause
+                ...',
 
   grammar import_clause:
     $module_path
@@ -103,7 +103,7 @@
 }
 
 @doc[
-  imp.modifier '(as $identifier)
+  imp.modifier 'as $identifier'
 ]{
 
  Modifies an @rhombus[import] clause to bind the prefix
@@ -113,7 +113,7 @@
 }
 
 @doc[
-  imp.modifier '(open)
+  imp.modifier 'open'
 ]{
 
  Modifies an @rhombus[import] clause so that no prefix (normally based on the
@@ -122,9 +122,9 @@
 }
 
 @doc[
-  imp.modifier '(expose:
-                   $identifier ...
-                   ...)
+  imp.modifier 'expose:
+                  $identifier ...
+                  ...'
 ]{
 
  Modifies an @rhombus[import] clause so that the listed
@@ -134,9 +134,9 @@
 }
 
 @doc[
-  imp.modifier '(rename:
-                   $identifier as $local_identifier
-                   ...)
+  imp.modifier 'rename:
+                  $identifier as $local_identifier
+                  ...'
 ]{
 
  Modifies an @rhombus[import] clause so that @rhombus[local_identifier]
@@ -147,9 +147,9 @@
 }
 
 @doc[
-  imp.modifier '(only:
-                   $identifier ...
-                   ...)
+  imp.modifier 'only:
+                  $identifier ...
+                  ...'
 ]{
 
  Modifies an @rhombus[import] clause so that only the listed
@@ -158,9 +158,9 @@
 }
 
 @doc[
-  imp.modifier '(except:
-                   $identifier ...
-                   ...)
+  imp.modifier 'except:
+                  $identifier ...
+                  ...'
 ]{
 
  Modifies an @rhombus[import] clause so that the listed
@@ -169,8 +169,8 @@
 }
 
 @doc[
-  imp.modifier '(for_meta),
-  imp.modifier '(for_meta phase)
+  imp.modifier 'for_meta',
+  imp.modifier 'for_meta phase'
 ]{
 
  Modifies an @rhombus[import] clause so that the imports are shifted by
@@ -179,7 +179,7 @@
 }
 
 @doc[
-  imp.modifier '(for_label)
+  imp.modifier 'for_label'
 ]{
 
  Modifies an @rhombus[import] clause so that only the imports that would

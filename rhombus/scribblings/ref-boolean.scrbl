@@ -4,7 +4,7 @@
 @title{Booleans}
 
 @doc[
-  annotation.macro 'Boolean
+  annotation.macro 'Boolean'
 ]{
 
   Matches @rhombus[#true] or @rhombus[#false]
@@ -12,7 +12,7 @@
 }
 
 @doc[
-  expr.macro '($expr || $expr),
+  expr.macro '$expr || $expr'
 ]{
 
  Produces the value of the first @rhombus[expr] if it is
@@ -25,7 +25,7 @@
 }
 
 @doc[
-  expr.macro '($expr && $expr),
+  expr.macro '$expr && $expr'
 ]{
 
  Produces @rhombus[#false] if the the value of the first @rhombus[expr]

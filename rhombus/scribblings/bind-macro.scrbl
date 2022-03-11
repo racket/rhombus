@@ -14,9 +14,9 @@ as a prefix operator to constrain a pattern to number inputs:
     import:
       rhombus/macro: open
 
-    bind.rule '($ $n):
+    bind.rule '$ $n':
       ~parsed_right
-      '($n :: Number)
+      '$n :: Number'
 
     val $salary: 100.0
 
@@ -37,7 +37,7 @@ annotations.
 @(rhombusblock:
     use_static_dot
 
-    annotation.macro 'PosnList: '(List.of(Posn))
+    annotation.rule 'PosnList': 'List.of(Posn)'
 
     fun nth_x(ps -: PosnList, n):
       ps[n].x

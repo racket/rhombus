@@ -71,13 +71,13 @@ new operators can be defined in a function-like way, like this:
 Alternatively, operators can be defined in a more general, macro-like
 way. For example, defining @rhombus[->] as an alias for @rhombus[.]
 requires a macro, since the right-hand side of @rhombus[.] is not an
-expression. Using @rhombus['] for ``quote'' and @rhombus[$] for ``unquote,''
+expression. Using @rhombus[''] for ``quote'' and @rhombus[$] for ``unquote,''
 the @rhombus[->] operator might be implemented in a pattern-matching
 macro as
 
 @(rhombusblock:
-    expr.macro '($x -> $y $tail ...):
-      values('($x . $y), tail)
+    expr.macro '$x -> $y $tail ...':
+      values('$x . $y', tail)
 
     home->x + 1 // same as home.x + 1
 )
@@ -93,8 +93,8 @@ binding positions. Here's a definition that extends the @rhombus[<>]
 operator to make it work in binding positions:
 
 @(rhombusblock:
-    bind.macro '($x <> $y $tail ...):
-      values('(Posn($x, $y)), tail)
+    bind.macro '$x <> $y $tail ...':
+      values('Posn($x, $y)', tail)
 
     // uses <> both for argument binding and result expression:
     fun flip(x <> y):

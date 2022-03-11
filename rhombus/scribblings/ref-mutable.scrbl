@@ -4,7 +4,7 @@
 @title{Mutable Variables and Assignment}
 
 @doc[
-  bind.macro '(mutable $identifier)
+  bind.macro 'mutable $identifier'
 ]{
 
  Binds @rhombus[identifier] so that its vaue can be changed using
@@ -17,7 +17,7 @@
 }
 
 @doc[
-  expr.macro '($identifier := $expr)
+  expr.macro '$identifier := $expr'
 ]{
 
  Changes the value of @rhombus[identifier] to the result of

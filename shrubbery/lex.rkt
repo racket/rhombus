@@ -114,7 +114,7 @@
   [identifier (:: (:or alphabetic "_")
                   (:* (:or alphabetic numeric "_")))]
   [opchar (:or (:- symbolic (:or "~"))
-               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\""
+               (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
                                     "(" ")" "[" "]" "{" "}" "«" "»")))]
   [operator (:- (:or opchar
                      (:: (:* opchar) (:- opchar "+" "-" "." "/"))
@@ -275,9 +275,10 @@
            (cons next (loop))
            (loop))])))
 
-(struct s-exp-mode (depth status) #:prefab)
+(struct s-exp-mode (depth status in-quotes) #:prefab)
 (struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
 (struct in-escaped (shrubbery-status at-status) #:prefab)
+(struct in-quotes (status openers) #:prefab)
 
 ;; A pending-backup mode causes a non-zero `backup` count for one or
 ;; more future tokens; for example, when parsing `@|{`, there's a peek
@@ -299,7 +300,8 @@
     [(pending-backup-mode? status) (struct-copy pending-backup-mode status
                                                 [status (out-of-s-exp-mode
                                                          (pending-backup-mode-status status))])]
-    [(s-exp-mode? status) (s-exp-mode-status status)]
+    [(s-exp-mode? status) (or (s-exp-mode-in-quotes status)
+                              'continuing)]
     [(in-at? status) (struct-copy in-at status
                                   [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status))]
                                   [openers (let ([openers (in-at-openers status)])
@@ -313,7 +315,7 @@
 (define (lex-nested-status? status)
   (if (pending-backup-mode? status)
       (lex-nested-status? (pending-backup-mode-status status))
-      (not (or (not status) (symbol? status)))))
+      (not (or (not status) (symbol? status) (in-quotes? status)))))
 
 (define (lex-dont-stop-status? status)
   ;; anything involving a peek has a pending backup
@@ -338,17 +340,19 @@
                        [(and (zero? depth)
                              (eqv? #\} (peek-char in)))
                         ;; go out of S-expression mode by using shrubbery lexer again
-                        (shrubbery-lexer/status in)]
+                        (adjust-for-quotes shrubbery-lexer/status in (out-of-s-exp-mode status))]
                        [else
                         (define-values (tok type paren start end backup s-exp-status action)
                           (racket-lexer*/status in pos (s-exp-mode-status status)))
-                        (values tok type paren start end backup (case action
-                                                                  [(open)
-                                                                   (s-exp-mode (add1 depth) s-exp-status)]
-                                                                  [(close)
-                                                                   (s-exp-mode (sub1 depth) s-exp-status)]
-                                                                  [else
-                                                                   (s-exp-mode depth s-exp-status)])
+                        (values tok type paren start end backup
+                                (let ([in-quotes (s-exp-mode-in-quotes status)])
+                                  (case action
+                                    [(open)
+                                     (s-exp-mode (add1 depth) s-exp-status in-quotes)]
+                                    [(close)
+                                     (s-exp-mode (sub1 depth) s-exp-status in-quotes)]
+                                    [else
+                                     (s-exp-mode depth s-exp-status in-quotes)]))
                                 0)])]
                     [(in-at? status)
                      ;; within an `@` sequence
@@ -365,12 +369,14 @@
                      (values t type paren start end backup (struct-copy in-escaped status
                                                                         [shrubbery-status sub-status])
                              pending-backup)]
-                    [(eq? status 'continuing)
+                    [(or (eq? status 'continuing)
+                         (and (in-quotes? status)
+                              (in-quotes-status status)))
                      ;; normal mode, after a form
-                     (shrubbery-lexer-continuing/status in)]
+                     (adjust-for-quotes shrubbery-lexer-continuing/status in status)]
                     [else
                      ;; normal mode, at start or after an operator or whitespace
-                     (shrubbery-lexer/status in)]))])
+                     (adjust-for-quotes shrubbery-lexer/status in status)]))])
     (cond
       [(and (token? tok)
             (eq? (token-name tok) 'at-content)
@@ -453,8 +459,11 @@
     (ret 'opener lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'initial)]
    [(:or ")" "]" "}" "»")
     (ret 'closer lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'continuing)]
+   ["'"
+    ;; called rewrites to 'opener or 'closer and picks a parentheses representation
+    (ret 'squote lexeme 'parenthesis '? start-pos end-pos 'initial)]
    ["#{"
-    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0 #f))]
+    (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0 #f #f))]
    [":"
     (ret 'block-operator lexeme 'block-operator #f start-pos end-pos 'initial)]
    ["|"
@@ -506,6 +515,50 @@
 
 (define shrubbery-lexer/status (make-lexer/status number bad-number))
 (define shrubbery-lexer-continuing/status (make-lexer/status number/continuing bad-number/continuing))
+
+;; converts 'squote to 'opener or 'closer and wrap status with `in-quotes`
+(define (adjust-for-quotes shrubbery-lexer/status in old-status)
+  (let-values ([(tok type paren start end backup status pending-backup) (shrubbery-lexer/status in)])
+    (cond
+      [(eq? (token-name tok) 'squote)
+       (define (finish name status)
+         (let ([tok (struct-copy token tok [name name])]
+               [type (hash-set type 'rhombus-type name)]
+               [paren (if (eq? name 'opener) '|'(| '|)'|)])
+           (values tok type paren start end backup status pending-backup)))
+       (cond
+         [(in-quotes? old-status)
+          (define openers (in-quotes-openers old-status))
+          (cond
+            [(null? openers)
+             (finish 'closer status)]
+            [(eq? 'squote (car openers))
+             (finish 'closer (struct-copy in-quotes old-status
+                                          [openers (cdr openers)]
+                                          [status 'continuing]))]
+            [else
+             (finish 'opener (struct-copy in-quotes old-status
+                                          [openers (cons 'squote openers)]
+                                          [status 'initial]))])]
+         [else
+          (finish 'opener (in-quotes 'initial '()))])]
+      [(in-quotes? old-status)
+       (cond
+         [(s-exp-mode? status)
+          (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
+            (values tok type paren start end backup (struct-copy s-exp-mode status [in-quotes old-status]) pending-backup))]
+         [(in-at? status)
+          (let ([old-status (struct-copy in-quotes old-status [status 'continuing])])
+            (values tok type paren start end backup (struct-copy in-at status [shrubbery-status old-status]) pending-backup))]
+         [else
+          (let ([status (in-quotes status (case (token-name tok)
+                                            [(opener) (cons 'opener (in-quotes-openers old-status))]
+                                            [(closer) (let ([p (in-quotes-openers old-status)])
+                                                        (if (pair? p) (cdr p) '()))]
+                                            [else (in-quotes-openers old-status)]))])
+            (values tok type paren start end backup status pending-backup))])]
+      [else
+       (values tok type paren start end backup status pending-backup)])))
 
 ;; after reading `@`, we enter an at-exp state machine for whether
 ;; we're in the initial part, within `[]`, or within `{}`; we have to
@@ -1004,6 +1057,7 @@
                [("[") "]"]
                [("{") "}"]
                [("«") "»"]
+               [("'") "'"]
                [else #f])))
 
 (define (consume-only-whitespace-line? in)

@@ -57,11 +57,13 @@ The following tokens are used for grouping, in addition to line breaks
 and indentation:
 
 @verbatim[~indent: 2]{
-( ) [ ] { }  ; ,   : |   « »  \
+( ) [ ] { } '  ; ,   : |   « »  \
 }
 
 Parentheses, square brackets, and curly braces are used to delimit
-groups in the obvious way. A @litchar{;} or @litchar{,} acts as a group
+groups in the obvious way. A @litchar{'} is used in a parenthesis-like
+way, too, and it's intended for quoting shrubbery terms.
+A @litchar{;} or @litchar{,} acts as a group
 separator, even within a single line. A @litchar{:} or @litchar{|}
 treats remaining item on the same line like a new indented line, which
 forms a block of nested groups. A guillemot pair @litchar{«} and @litchar{»} can be

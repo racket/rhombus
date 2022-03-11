@@ -33,7 +33,7 @@ operator.
 }
 
 @doc[
-  bind.macro '(Map($key_expr, $binding, ...))
+  bind.macro 'Map($key_expr, $binding, ...)'
 ]{
 
  Matches a map the keys computed by @rhombus[key_expr] to values that
@@ -47,8 +47,8 @@ operator.
 }
 
 @doc[
-  annotation.macro 'Map,
-  annotation.macro '(Map.of($key_annotation, $value_annotation)),
+  annotation.macro 'Map',
+  annotation.macro 'Map.of($key_annotation, $value_annotation)',
 ]{
 
  Matches any map in the form without @rhombus[of]. The @rhombus[of]
@@ -58,7 +58,7 @@ operator.
 }
 
 @doc[
-  folder.macro 'Map
+  folder.macro 'Map'
 ]{
 
  A @tech{folder} used with @rhombus[for], expects two results from a

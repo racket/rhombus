@@ -1,12 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "tail.rkt")
+                     "pack.rkt")
          "name-root.rkt"
          (for-syntax "name-root.rkt")
          (submod "dot.rkt" for-dot-provider)
          "syntax.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "wrap-expression.rkt")
 
 (provide dot
          (for-syntax dot_ct))
@@ -29,4 +30,4 @@
   (dot-provider
    (lambda (left dot right)
      (define e (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot))
-     #`(rhombus-expression (group #,e)))))
+     (wrap-expression e))))

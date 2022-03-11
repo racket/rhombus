@@ -14,7 +14,8 @@
          Id_Op
          Keyw
          Group
-         Block)
+         Block
+         Multi)
 
 (module+ for-macro
   (provide syntax))
@@ -37,6 +38,7 @@
 (define-syntax Id_Op (rhombus-syntax-class 'term #':operator-or-identifier))
 (define-syntax Keyw (rhombus-syntax-class 'term #'keyword))
 (define-syntax Group (rhombus-syntax-class 'group #f))
+(define-syntax Multi (rhombus-syntax-class 'multi #f))
 (define-syntax Block (rhombus-syntax-class 'block #f))
 
 (define-simple-name-root syntax

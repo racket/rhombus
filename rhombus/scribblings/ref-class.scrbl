@@ -5,7 +5,7 @@
 
 @doc[
   ~literal: ::,
-  defn.macro '(class $identifier($field, ...)),
+  defn.macro 'class $identifier($field, ...)',
   
   grammar field:
     $identifier

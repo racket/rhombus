@@ -9,18 +9,17 @@ export:
   make_rhombus_eval
   close_eval
 
-expr.macro '(examples $parens $tail ......):
+expr.macro 'examples $parens $tail ......':
   ~op_stx: me
   match parens
-  | '($_, ...):
-      values(parsed(['#{typeset-examples}, parens]),
+  | '($_)':
+      values(parsed(['#{typeset-examples}', parens]),
              tail)
   | ~else:
-      raise_syntax_error("expected forms", '($me $parens))
+      raise_syntax_error("expected forms", '$me $parens')
 
 fun make_rhombus_eval():
   #{make-rhombus-eval}()
 
 fun close_eval(e):
   #{close-eval}(e)
-  

@@ -4,7 +4,7 @@
 @title{Numbers}
 
 @doc[
-  annotation.macro 'Number
+  annotation.macro 'Number'
 ]{
 
   Matches any number.
@@ -12,7 +12,7 @@
 }
 
 @doc[
-  annotation.macro 'Integer
+  annotation.macro 'Integer'
 ]{
 
   Matches exact integers.

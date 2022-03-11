@@ -36,6 +36,7 @@
   (unless (equal? orig-parsed armor-parsed)
     (out "original" orig-parsed pretty-write)
     (out "armored" armor-parsed pretty-write)
+    (out "armored-text" armored pretty-write)
     (error "parse of armored is different"))
 
   (when unarmor?
@@ -54,3 +55,4 @@
 (check 2 input2 expected2 #:unarmor? #f) ; unarmor not right yet for continuing
 (check 3 input3 expected3)
 (check 4 input4 expected4)
+(check 7 input7 expected7)

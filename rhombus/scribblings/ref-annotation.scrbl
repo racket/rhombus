@@ -17,7 +17,7 @@
 }
 
 @doc[
-  bind.rule '($binding :: $annotation)
+  bind.rule '$binding :: $annotation'
 ]{
 
  Binds the same as @rhombus[binding], but first checks that the value to
@@ -30,7 +30,7 @@
 }
 
 @doc[
-  annotation.macro 'Any
+  annotation.macro 'Any'
 ]{
 
   Matches any value.
@@ -53,7 +53,7 @@
 }
 
 @doc[
-  bind.rule '($binding -: $annotation)
+  bind.rule '$binding -: $annotation'
 ]{
 
  Associates static information to @rhombus[binding] the same as
@@ -68,7 +68,7 @@
 
 
 @doc[
-  expr.rule '($expr is_a $annotation)
+  expr.rule '$expr is_a $annotation'
 ]{
 
  Produces @rhombus[#true] if the value of @rhombus[expr]

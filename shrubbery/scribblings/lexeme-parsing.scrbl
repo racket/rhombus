@@ -6,7 +6,7 @@
 The tokens used for grouping and indentation are distinct lexemes:
 
 @verbatim[~indent: 2]|{
-( ) [ ] { }   ; ,   : |   « »  \
+( ) [ ] { } '   ; ,   : |   « »  \
 }|
 
 Other lexemes are described by the grammar in the table below, where an
@@ -104,7 +104,8 @@ the table below sketches the shape of @litchar["@"] forms.
                                               @litchar{+}, @litchar{-}, @litchar{.}, @litchar{/}}, ""],
     empty_line,
     [no_lex, @nonterm{special}, bis, @elem{@italic{one of} @litchar{(}, @litchar{)}, @litchar{[},
-                                           @litchar{]}, @litchar["{"], @litchar["}"], @litchar{«}, @litchar{»}}, ""],
+                                           @litchar{]}, @litchar["{"], @litchar["}"], @litchar{'},
+                                           @litchar{«}, @litchar{»}}, ""],
     ["", "", bor, @elem{@italic{one of} @litchar{"}, @litchar{;}, @litchar{,}, @litchar{~}, @litchar{#},
                         @litchar{\}, @litchar{_}, @litchar["@"]}, ""],
     empty_line,

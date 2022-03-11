@@ -4,7 +4,7 @@
 @title{Strings}
 
 @doc[
-  annotation.macro 'String
+  annotation.macro 'String'
 ]{
 
   Matches strings.

@@ -16,6 +16,14 @@ shrubbery notation where parentheses can be added around any expression
 expression may need to be shifted right to preserve relative
 indentation, depending on how parentheses are added).
 
+The inclusion of @litchar{'} as a parenthesis-like form reflects how
+shrubbery notation is intended as a vehicle for metaprogramming contexts
+where quoting program terms is common. Using the same character as the
+opener and closer creates some hassle for certain nesting cases, but
+those are relatively rare. Meanwhile, the use of @litchar{'} to mean a
+form of quoting should be familiar to programmers, although there is a
+risk that @litchar{'}s will be misunderstood as string quoting.
+
 The inclusion of @litchar{|} in shrubbery notation reflects the fact
 that conditional forms (such a @litchar{if}, @litchar{cond}, and
 @litchar{match}) are important and common. A distinct, pleasant, and

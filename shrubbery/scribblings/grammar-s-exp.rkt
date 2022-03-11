@@ -14,7 +14,8 @@
              @racket[(op @#,nonterm{symbol})]
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
-             @racket[(braces @#,nonterm{group} ...)])
+             @racket[(braces @#,nonterm{group} ...)]
+             @racket[(quotes @#,nonterm{group} ...)])
        (list @nonterm{tail-term}
              @nonterm{term}
              @nonterm{block}

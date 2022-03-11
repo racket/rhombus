@@ -3,11 +3,12 @@
                      syntax/parse
                      enforest/transformer-result
                      enforest/proc-name
-                     "tail.rkt"
+                     "pack.rkt"
                      "static-info-pack.rkt")
          "definition.rkt"
          (submod "annotation.rkt" for-class)
          "syntax.rkt"
+         "wrap-expression.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")
          "parse.rkt")
@@ -16,11 +17,19 @@
          (for-syntax annotation_ct))
 
 (define-simple-name-root annotation
+  rule
   macro)
 
 (begin-for-syntax
   (define-simple-name-root annotation_ct
     pack_predicate))
+
+(define-syntax rule
+  (make-operator-definition-transformer 'rule
+                                        in-annotation-space
+                                        #'make-annotation-prefix-operator
+                                        #'make-annotation-infix-operator
+                                        #'annotation-prefix+infix-operator))
 
 (define-syntax macro
   (make-operator-definition-transformer 'macro
@@ -37,7 +46,7 @@
 (define-for-syntax (parse-annotation-macro-result form proc)
   (unless (syntax? form)
     (raise-result-error (proc-name proc) "syntax?" form))
-  (syntax-parse #`(group #,form)
+  (syntax-parse (unpack-group form proc)
     [c::annotation #'c.parsed]))
 
 (define-for-syntax (make-annotation-infix-operator name prec protocol proc assc)
@@ -66,5 +75,6 @@
                                proc))))
   
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
-  #`(parsed #,(annotation-form #`(rhombus-expression (group #,predicate))
-                               (pack-static-infos static-infos 'annotation.pack_predicate))))
+  #`(parsed #,(annotation-form (wrap-expression predicate)
+                               (pack-static-infos (unpack-term static-infos 'annotation.pack_predicate)
+                                                  'annotation.pack_predicate))))

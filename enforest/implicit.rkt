@@ -11,6 +11,7 @@
 (define tuple-implicit-name   '#%tuple)       ; parentheses not after an expression
 (define array-implicit-name   '#%array)       ; square brackets not after an expression
 (define set-implicit-name     '#%set)         ; curly braces not after an expression
+(define quote-implicit-name   '#%quote)       ; quotes
 (define block-implicit-name   '#%block)       ; colon
 (define alts-implicit-name    '#%alts)        ; vertical bars
 (define literal-implicit-name '#%literal)     ; numbers, strings, etc.
@@ -33,6 +34,8 @@
      (values array-implicit-name #'tag)]
     [((~and tag (~datum braces)) . _)
      (values set-implicit-name #'tag)]
+    [((~and tag (~datum quotes)) . _)
+     (values quote-implicit-name #'tag)]
     [((~and tag (~datum block)) . _)
      (values block-implicit-name #'tag)]
     [((~and tag (~datum alts)) . _)

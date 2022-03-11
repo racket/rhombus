@@ -202,7 +202,7 @@
                     (loop next-pos e #t
                           (make-parse-state (list (make-group (+ (- next-pos line)
                                                                  (line-delta t line))
-                                                              #:add-semi? #f
+                                                              #:add-semi? (equal? (send t get-text s (add1 s)) "'")
                                                               #:close? #f
                                                               #:in-at? (eq? use-category 'at-opener)))
                                             #:skip? (or (eq? use-category 'at-opener)

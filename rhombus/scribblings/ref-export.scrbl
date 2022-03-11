@@ -4,11 +4,11 @@
 @title{Export}
 
 @doc[
-  decl.macro '(export:
-                 $export_item ... :
-                   $export_modifier
-                   ...
-                 ...),
+  decl.macro 'export:
+                $export_item ... :
+                  $export_modifier
+                  ...
+                ...',
   
   grammar export_item:
     $identifier_or_operator

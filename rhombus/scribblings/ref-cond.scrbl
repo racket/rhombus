@@ -4,11 +4,11 @@
 @title{Conditionals}
 
 @doc[
-  decl.macro '(if $test_expr
-               | $then_body
-                 ...
-               | $else_body
-                 ...)
+  decl.macro 'if $test_expr
+              | $then_body
+                ...
+              | $else_body
+                ...'
 ]{
 
  If @rhombus[test_expr] produces a true value (which is value other than
@@ -28,19 +28,19 @@
 }
 
 @doc[
-  decl.macro '(cond
-               | $clause_test_expr:
-                   $clause_result_body
-                   ...
-               | ...),
-  decl.macro '(cond
-               | $clause_test_expr:
-                   $clause_result_body
-                   ...
-               | ...
-               | ~else:
-                   $clause_result_body
-                   ...)
+  decl.macro 'cond
+              | $clause_test_expr:
+                  $clause_result_body
+                  ...
+              | ...',
+  decl.macro 'cond
+              | $clause_test_expr:
+                  $clause_result_body
+                  ...
+              | ...
+              | ~else:
+                  $clause_result_body
+                  ...'
 ]{
 
  Tries the @rhombus[clause_test_expr]s in sequence, and as soon as one

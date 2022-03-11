@@ -3,7 +3,7 @@
                      syntax/parse
                      enforest/transformer-result
                      "srcloc.rkt"
-                     "tail.rkt")
+                     "pack.rkt")
          "name-root.rkt"
          "syntax.rkt"
          "expression.rkt"

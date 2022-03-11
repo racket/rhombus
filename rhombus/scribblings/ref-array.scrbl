@@ -25,7 +25,7 @@ update the array.
 }
 
 @doc[
-  bind.macro '(Array($binding, ...))
+  bind.macro 'Array($binding, ...)'
 ]{
 
  Matches an array with as many elements as @rhombus[binding]s, where
@@ -39,8 +39,8 @@ update the array.
 }
 
 @doc[
-  annotation.macro 'Array,
-  annotation.macro '(Array.of($annotation)),
+  annotation.macro 'Array',
+  annotation.macro 'Array.of($annotation)',
 ]{
 
  Matches any array in the form without @rhombus[of]. The @rhombus[of]

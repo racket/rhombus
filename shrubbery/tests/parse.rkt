@@ -81,6 +81,7 @@
 (check 4 input4 expected4)
 (check 5 input5 expected5)
 (check 6 input6 expected6)
+(check 7 input7 expected7)
 
 (check-fail "x:" #rx"empty block")
 (check-fail "x:\ny" #rx"empty block")

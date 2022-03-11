@@ -12,16 +12,15 @@
 @title{Expression Macros}
 
 @doc[
-  defn.macro '(expr.rule $rule_pattern:
-                 ' $template),
-  defn.macro '(expr.rule
-               | $rule_pattern:
-                   ' $template
-               | ...),
+  defn.macro '«expr.rule $rule_pattern:
+                 '$template'»',
+  defn.macro '«expr.rule
+                | $rule_pattern:
+                    '$template'
+                | ...»',
   grammar rule_pattern:
-    ' $identifier
-    '($identifier_or_operator $pattern ...)
-    '($ $term_pattern $identifier_or_operator $pattern ...),
+    '$identifier_or_operator $pattern ...'
+    '$ $term_pattern $identifier_or_operator $pattern ...',
   grammar identifier_or_operator:
     $identifier
     $operator,
@@ -36,28 +35,25 @@
  @rhombus[rule_pattern] is matched to a portion of its enclosing group,
  and need not extend to the end of the group to match.
 
- Each @rhombus[rule_pattern] starts with @rhombus['] followed by either
- an identifier or by parentheses. An identifier by itself is defined as a
- ``nofix'' macro, which is the same as a prefix operator that consumes no
- arguments. With parentheses after @rhombus['], either the first term is
- an identifier or operator to be defined as a prefix macro, or a single
- @rhombus[$, ~bind] escape is followed by the identifier or operator to
- be defined as an infix macro.
+ Each @rhombus[rule_pattern] starts with @rhombus['']. Within
+ @rhombus[''], either the first term is an identifier or operator to be
+ defined as a prefix macro, or a single @rhombus[$, ~bind] escape is
+ followed by the identifier or operator to be defined as an infix macro.
 
  Using @litchar{|} alternatives, a single definition can have any number
  of prefix and infix variants (presumably) distinguished by patterns that
  are tried in order.
 
  The body after each @rhombus[rule_pattern] must be an immediate
- @rhombus['] template, and any @rhombus[$] escape within the template can
+ @rhombus[''] template, and any @rhombus[$] escape within the template can
  only refer to an input pattern variable. More general compile-time
  expressions are not allowed, and @rhombus[expr.macro] must be used
  instead.
 
 @examples[
   ~eval: macro_eval,
-  expr.rule '(thunk: $body):
-    '(fun (): $body),
+  expr.rule 'thunk: $body':
+    'fun (): $body',
   thunk: "ok",
   (thunk: "ok")()
 ]
@@ -66,14 +62,14 @@
 
 
 @doc[
-  defn.macro '(expr.macro $rule_pattern:
-                 $body
-                 ...),
-  defn.macro '(expr.macro
-               | $rule_pattern:
-                   $body
-                   ...
-               | ...),
+  defn.macro 'expr.macro $rule_pattern:
+                $body
+                ...',
+  defn.macro 'expr.macro
+              | $rule_pattern:
+                  $body
+                  ...
+              | ...',
 ]{
 
  Like @rhombus[expr.rule], but

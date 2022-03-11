@@ -107,7 +107,7 @@ seven parts:
 
  @item{An identifier that is used as a name for the input value, at least
    to the degree that the input value uses an inferred name. For
-   example, @rhombus[proc] as a binding form should cause its rand-hand value
+   example, @rhombus[proc] as a binding form should cause its right-hand value
    to use the inferred name @rhombus[proc], if it can make any use of an
    inferred name.},
 
@@ -125,7 +125,7 @@ seven parts:
    static information.},
 
  @item{A list of invdidual names that are bound by the overall binding,
-   plus ``upward'' [static information](static-info.md) for each name.
+   plus ``upward'' static information for each name.
    For example, @rhombus[Posn(x, y)] as a binding pattern binds @rhombus[x] and @rhombus[y].
    The final transformer function described in the third bullet above
    is responsible for actually binding each name and associating
@@ -156,13 +156,13 @@ Here's a use of the low-level protocol to implement a @rhombus[fruit] pattern,
 which matches only things that are fruits according to @rhombus[is_fruit]:
 
 @(rhombusblock:
-    bind.macro '(fruit($id) $tail ......):
+    bind.macro 'fruit($id) $tail ......':
       values(bind_ct.pack('(fruit_infoer,
                             // remember the id:
-                            $id)),
+                            $id)'),
              tail)
 
-    bind.infoer '(fruit_infoer($static_info, $id)):
+    bind.infoer 'fruit_infoer($static_info, $id)':
       '("matching(fruit(_))",
         $id,
         // no overall static info:
@@ -172,19 +172,15 @@ which matches only things that are fruits according to @rhombus[is_fruit]:
         fruit_matcher,
         fruit_binder,
         // binder needs id:
-        $id)
+        $id)'
 
-    bind.matcher '(fruit_matcher($arg, $id, $IF, $success, $failure)):
-      '(:
-          $IF is_fruit($arg)
-          | $success
-          | $failure
-      )
-
-    bind.binder '(fruit_binder($arg, $id)):
-      '(:
-          def $id: $arg
-      )
+    bind.matcher 'fruit_matcher($arg, $id, $IF, $success, $failure)':
+      '$IF is_fruit($arg)
+       | $success
+       | $failure'
+      
+    bind.binder 'fruit_binder($arg, $id)':
+      'def $id: $arg'
 
     fun is_fruit(v):
       v == "apple" || v == "banana"
@@ -220,16 +216,16 @@ form. A builder must be used in tail position, and it's
 @rhombus[success] position is a tail position.
 
 @(rhombusblock:
-    bind.macro '($a <&> $b):
+    bind.macro '$a <&> $b':
       ~parsed_right
       bind_ct.pack('(anding_infoer,
-                     ($a, $b)))
+                     ($a, $b))')
 
-    bind.infoer '(anding_infoer($in_id, ($a, $b))):
-      val a_info: bind_ct.get_info(a, '())
-      val b_info: bind_ct.get_info(b, '())
-      val '($a_ann, $a_name, ($a_val_info ...), ($a_bind ...), $_, $_, $_): bind_ct.unpack_info(a_info)
-      val '($b_ann, $b_name, ($b_val_info ...), ($b_bind ...), $_, $_, $_): bind_ct.unpack_info(b_info)
+    bind.infoer 'anding_infoer($in_id, ($a, $b))':
+      val a_info: bind_ct.get_info(a, '()')
+      val b_info: bind_ct.get_info(b, '()')
+      val '($a_ann, $a_name, ($a_val_info ...), ($a_bind ...), $_, $_, $_)': bind_ct.unpack_info(a_info)
+      val '($b_ann, $b_name, ($b_val_info ...), ($b_bind ...), $_, $_, $_)': bind_ct.unpack_info(b_info)
       val ann: "and(" & unwrap_syntax(a_ann) & ", " & unwrap_syntax(b_ann) & ")"
       '($ann,
         $a_name,
@@ -237,25 +233,21 @@ form. A builder must be used in tail position, and it's
         ($a_bind ... $b_bind ...),
         anding_matcher,
         anding_binder,
-        ($a_info, $b_info))
+        ($a_info, $b_info))'
 
-    bind.matcher '(anding_matcher($in_id, ($a_info, $b_info),
-                                  $IF, $success, $failure)):
-      val '($_, $_, $_, $_, $a_matcher, $_, $a_data): bind_ct.unpack_info(a_info)
-      val '($_, $_, $_, $_, $b_matcher, $_, $b_data): bind_ct.unpack_info(b_info)
-      '(:
-          $a_matcher($in_id, $a_data, $IF,
-                     $b_matcher($in_id, $b_data, $IF, $success, $failure),
-                     $failure)
-      )
+    bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
+                                 $IF, $success, $failure)':
+      val '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_ct.unpack_info(a_info)
+      val '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_ct.unpack_info(b_info)
+      '$a_matcher($in_id, $a_data, $IF,
+                  $b_matcher($in_id, $b_data, $IF, $success, $failure),
+                  $failure)'
 
-    bind.binder '(anding_binder($in_id, ($a_info, $b_info))):
-      val '($_, $_, $_, $_, $_, $a_binder, $a_data): bind_ct.unpack_info(a_info)
-      val '($_, $_, $_, $_, $_, $b_binder, $b_data): bind_ct.unpack_info(b_info)
-      '(:
-          $a_binder($in_id, $a_data)
-          $b_binder($in_id, $b_data)
-      )
+    bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
+      val '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_ct.unpack_info(a_info)
+      val '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_ct.unpack_info(b_info)
+      '$a_binder($in_id, $a_data)
+       $b_binder($in_id, $b_data)'
 
     val one <&> 1: 1
     one  // prints 1

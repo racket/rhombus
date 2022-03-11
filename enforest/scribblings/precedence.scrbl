@@ -27,7 +27,7 @@ supports precedence declarations through a @rhombus[~weaker_than] keyword:
 
 @(rhombusblock:
     operator (x <> y):
-      ~weaker_than': * / + -
+      ~weaker_than: * / + -
       Posn(x, y)
 
     1 <> 2 * 3 // same as Posn(1, 6)

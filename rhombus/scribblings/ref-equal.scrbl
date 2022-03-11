@@ -67,7 +67,7 @@
 
 
 @doc[
-  expr.macro '(=)
+  expr.macro '='
 ]{
 
  The @rhombus[=] operator is not bound as an expression or binding

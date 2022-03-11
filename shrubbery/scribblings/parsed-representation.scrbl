@@ -28,6 +28,9 @@ The parse of a shrubbery can be represented by an S-expression:
  @item{An element created by @litchar{{}} is represented by @litchar{'braces} consed
    onto a group-sequence list.},
 
+ @item{An element created by @litchar{''} is represented by @litchar{'quotes} consed
+   onto a group-sequence list.},
+
  @item{A block is represented as either @litchar{'block} or @litchar{'alts} consed onto a
    group-sequence list. The representation uses @litchar{'alts} if the content
    of the block is a squence of groups started with @litchar{|}, and it's
@@ -60,7 +63,8 @@ Here's the same grammar, but expressed using Rhombus constructors:
                  @rhombus[[symbol(op), $$(@nonterm{symbol})]],
                  @rhombus[[symbol(parens), $$(@nonterm{group}), ...]],
                  @rhombus[[symbol(brackets), $$(@nonterm{group}), ...]],
-                 @rhombus[[symbol(braces), $$(@nonterm{group}), ...]]],
+                 @rhombus[[symbol(braces), $$(@nonterm{group}), ...]],
+                 @rhombus[[symbol(quotes), $$(@nonterm{group}), ...]]],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},

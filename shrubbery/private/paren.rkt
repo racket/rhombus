@@ -7,6 +7,7 @@
   '((|(| |)|)
     (|[| |]|)
     (|{| |}|)
+    (|'(| |)'|)
     (« »)))
 
 (define shrubbery-quote-matches
