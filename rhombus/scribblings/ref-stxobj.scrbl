@@ -64,7 +64,7 @@ corresponding portion of a candidate syntax object. Ellipses, etc.
 
 @doc[
   bind.macro '$ $identifier',
-  bind.macro '$ ($identifier $: $syntax_class)',
+  bind.macro '$ ($identifier :: $syntax_class)',
 ]{
 
  Only allowed within a @rhombus['', ~bind] binding pattern, escapes so that
@@ -73,16 +73,6 @@ corresponding portion of a candidate syntax object. Ellipses, etc.
 
  The @rhombus[syntax_class] can be @rhombus[Term, ~stxclass], @rhombus[Id, ~stxclass],
  or @rhombus[Group, ~stxclass], among others.
-
-}
-
-@doc[
-  expr.macro '$identifier $: $syntax_class'
-]{
-
- Only allowed with @rhombus[$] within a template, matches and binds
- @rhombus[identifier] only if the canditate syntax-object portion matches
- @rhombus[syntax_class].
 
 }
 

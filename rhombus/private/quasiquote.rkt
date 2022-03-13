@@ -16,6 +16,8 @@
          (submod "syntax-class.rkt" for-quasiquote)
          (only-in "underscore.rkt"
                   [_ rhombus-_])
+         (only-in "annotation.rkt"
+                  ::)
          ;; because `expr.macro` uses the result of `convert-pattern`
          ;; as a compile-time pattern, for example:
          (for-syntax "pack.rkt"
@@ -148,12 +150,12 @@
   (define (handle-escape $-id e in-e pack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group)
-      #:literals (rhombus-_ $:)
+      #:literals (rhombus-_ ::)
       [rhombus-_ (values #'_ null)]
       [_:identifier
        #:with (tag . _) in-e
        (values e (list #`[#,e (#,pack* (syntax #,e) 0)]))]
-      [(parens (group id:identifier (op $:) stx-class:identifier))
+      [(parens (group id:identifier (op ::) stx-class:identifier))
        (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
        (define (compat pack*)
          (define sc (rhombus-syntax-class-class rsc))

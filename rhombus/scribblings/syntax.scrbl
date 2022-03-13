@@ -138,13 +138,13 @@ group is interchangeable with a single-term syntax object:
   )
 
 To match a single term in a group context, annotate the pattern variable
-with the @rhombus[Term, ~stxclass] syntax class using the @rhombus[$:] operator.
+with the @rhombus[Term, ~stxclass] syntax class using the @rhombus[::] operator.
 
 @(rhombusblock:
-    val '$(x $: Term)': '1'
+    val '$(x :: Term)': '1'
     x  // prints a shrubbery: 1
 
-    // val '$(x $: Term)': '1 + 2' // would be an run-time error
+    // val '$(x :: Term)': '1 + 2' // would be an run-time error
   )
 
 If a @rhombus[$] escape is not only alone within its group, but the

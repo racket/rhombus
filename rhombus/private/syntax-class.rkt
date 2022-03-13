@@ -7,8 +7,7 @@
          "name-root.rkt"
          "definition.rkt")
 
-(provide $:
-         Term
+(provide Term
          Id
          Op
          Id_Op
@@ -31,7 +30,6 @@
 
   (struct rhombus-syntax-class (kind class)))
 
-(define-syntax $: "only in patterns")
 (define-syntax Term (rhombus-syntax-class 'term #f))
 (define-syntax Id (rhombus-syntax-class 'term #'identifier))
 (define-syntax Op (rhombus-syntax-class 'term #':operator))

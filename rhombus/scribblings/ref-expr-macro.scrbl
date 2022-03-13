@@ -26,7 +26,7 @@
     $operator,
   grammar term_pattern:
     $term_identifier
-    ($term_identifier $: $syntax_class)
+    ($term_identifier :: $syntax_class)
 ]{
 
  Defines @rhombus[identifier] or @rhombus[operator] as a pattern-based
