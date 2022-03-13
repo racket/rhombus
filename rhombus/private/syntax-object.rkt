@@ -10,6 +10,7 @@
          "realm.rkt")
 
 (provide literal_syntax
+         literal_group_syntax
          to_syntax
          to_alts_syntax
          unwrap_syntax
@@ -28,6 +29,17 @@
        [(_ (~and ((~or parens quotes) . _) gs) . tail)
         (values #`(quote-syntax #,(pack-multi #'gs)) #'tail)]))))
 
+(define-syntax literal_group_syntax
+  (expression-transformer
+   #'literal_syntax
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (parens quotes group)
+       [(_ ((~or parens quotes)) . tail)
+        (values #`(quote-syntax #,(pack-multi '(any))) #'tail)]
+       [(_ ((~or parens quotes) g) . tail)
+        (values #'(quote-syntax g) #'tail)]))))
+
 ;; ----------------------------------------
 
 (define (relevant-source-syntax ctx-stx-in)
@@ -45,15 +57,17 @@
   (datum->syntax #f v))
 
 (define (to_alts_syntax blocks)
-  (unless (andmap (lambda (block)
-                    (and (syntax? block)
-                         (syntax-parse block
-                           #:datum-literals (block)
-                           [(block . _) #t]
-                           [else #f])))
-                  blocks)
-    (raise-argument-error* 'unwrap_syntax rhombus-realm "List.of(BlockSyntax)" blocks))
-  (datum->syntax #f (cons 'alts blocks)))
+  (let ([blocks (map (lambda (block)
+                       (and (syntax? block)
+                            (let ([block (repack-as-term block)])
+                              (syntax-parse block
+                                #:datum-literals (block)
+                                [(block . _) block]
+                                [else #f]))))
+                     blocks)])
+    (unless (andmap values blocks)
+      (raise-argument-error* 'unwrap_syntax rhombus-realm "List.of(BlockSyntax)" blocks))
+    (datum->syntax #f (cons 'alts blocks))))
 
 (define (unwrap_syntax v)
   (cond
@@ -66,7 +80,11 @@
   (unless (syntax? stx) (raise-argument-error* 'relocate_syntax rhombus-realm "Syntax" stx))
   (unless (syntax? ctx-stx-in) (raise-argument-error* 'relocate_syntax rhombus-realm "Syntax" ctx-stx-in))
   (define ctx-stx (relevant-source-syntax ctx-stx-in))
+  #;(log-error "?? ~s" (syntax->datum stx))
+  #;(log-error " : ~s" (syntax->datum ctx-stx-in))
+  #;(log-error " = ~s" (syntax->datum ctx-stx))
   (define (relocate stx)
+    #;(log-error " ! ~s" (syntax->datum stx))
     (datum->syntax stx (syntax-e stx) ctx-stx ctx-stx))
   (let loop ([stx stx])
     (syntax-parse stx
@@ -74,8 +92,7 @@
       [((~and head (~or group block alts parens brackets braces quotes)) . rest)
        (datum->syntax #f (cons (relocate #'head) #'rest))]
       [((~and m multi) (g t))
-       #:when (and (syntax-property #'m 'from-pack)
-                   (syntax-property #'g 'from-pack))
+       #:when (syntax-property #'g 'from-pack)
        (loop #'t)]
       [((~and m multi) (g . rest))
        (datum->syntax #f (list #'m (cons (relocate #'g) #'rest)))]

@@ -74,6 +74,6 @@ with the @rhombus[++] operator to append lists.
 ]{
 
  Used within binding patterns such as @rhombus[List, ~bind] or
- @rhombus['', ~bind] to indicate repetation.
+ @rhombus['', ~bind] to indicate repetition.
 }
 

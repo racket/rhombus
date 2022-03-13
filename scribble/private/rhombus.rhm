@@ -31,91 +31,58 @@ for_meta:
     | '$head $esc $_ ......':
         relocate_span_syntax('#false', [head, esc])
 
-  def literal(stxs):
+  def group_context(g):
+    relocate_syntax('#false', g)
+
+  def literal_term(stxs):
     'literal_syntax($stxs)'
 
-  def literal_rebuilt(heads, tails):
-    match heads
-    | 'literal_syntax($head ...)':
-        match tails
-        | 'literal_syntax($tail ......)':
-            'literal_syntax($head ... $tail ......)'
+  def literal_group(stxs):
+    'literal_group_syntax($stxs)'
 
-  def literal_rebuilt_nested(tss, gs, stxs):
-    def new_gs: map2(fun (ts, orig_g):
-                       match ts
-                       | 'literal_syntax($g)':
-                           relocate_syntax(g, orig_g),
-                     tss,
-                     gs)
-    def new:
-      match stxs
-      | '($_, ...)': '($new_gs, ...)'
-      | '[$_, ...]': '[$new_gs, ...]'
-      | '{$_, ...}': '{$new_gs, ...}'
-      | '«'$_; ...'»': '«'$new_gs; ...'»'
-      | ': $_; ...': ': $new_gs; ...'
-    literal('$(relocate_syntax(new, head_context(stxs)))')
-
-  def literal_rebuilt_alts(e_bs, bs, stxs):
-    def new_bs: map2(fun (e_bs, orig_b):
-                       match e_bs
-                       | 'literal_syntax($b)':
-                           relocate_syntax(b, orig_b),
-                     e_bs,
-                     bs)
-    def new: to_alts_syntax(new_bs)
-    literal('$(relocate_syntax(new, head_context(stxs)))')
-
-  def is_literal(stx):
+  def is_literal_term(stx):
     match stx
     | 'literal_syntax $_': #true
     | ~else: #false
 
-  def build_relocate_group(ts, g):
-    if is_literal(ts)
-    | match ts
-      | 'literal_syntax($new_g)':
-          'literal_syntax($(relocate_syntax(new_g, g)))'
-    | 'relocate_group($ts, literal_syntax($(relocate_syntax('#false', g))))'
-
-  def build_relocate_block(e_b, b):
-    if is_literal(e_b)
-    | match e_b
-      | 'literal_syntax($new_b)':
-          'literal_syntax($(relocate_syntax(new_b, b)))'
-    | 'relocate_syntax($e_b, literal_syntax($(relocate_syntax('#false', b))))'
+  def is_literal_group(stx):
+    match stx
+    | 'literal_group_syntax $_': #true
+    | ~else: #false
 
   def nested(gs, builder, stxs):
-    val tss: map(escape, gs)
-    if andmap(is_literal, tss)
-    | literal_rebuilt_nested(tss, gs, stxs)
-    | val new_gs: map2(build_relocate_group, tss, gs)
-      '$builder([$new_gs, ...], literal_syntax($(head_context(stxs))))'
+    val new_gs: map(escape_group, gs)
+    if andmap(is_literal_group, new_gs)
+    | literal_term(stxs)
+    | '$builder([$new_gs, ...], literal_syntax($(head_context(stxs))))'
 
   def nested_alts(bs, stxs):
-    val e_bs: map(escape_one, bs)
-    if andmap(is_literal, e_bs)
-    | literal_rebuilt_alts(e_bs, bs, stxs)
-    | val new_bs: map2(build_relocate_block, e_bs, bs)
-      'alts_syntax([$new_bs, ...], literal_syntax($(head_context(stxs))))'
+    val new_bs: map(escape_term, bs)
+    if andmap(is_literal_term, new_bs)
+    | literal_term(stxs)
+    | 'alts_syntax([$new_bs, ...], literal_syntax($(head_context(stxs))))'
 
-  def escape(stxs):
+  def escape_group(g):
+    val new_g: escape_tail(g)
+    if is_literal_group(new_g)
+    | literal_group(g)
+    | 'relocate_syntax($new_g, literal_syntax($(group_context(g))))'
+
+  def escape_tail(stxs):
     match stxs
     | '$$($expr ...) $tail ......':
-        'sequence_cons_syntax(elem($expr ...), $(escape(tail)),
+        'sequence_cons_syntax(elem($expr ...), $(escape_tail(tail)),
                               literal_syntax($(head_escape_context(stxs))))'
     | '$head $tail ......':
         val values(a_head, a_tail): adjust_spaces(head, tail)
-        val new_head: escape_one('$a_head')
-        val new_tail: escape('$a_tail ......')
-        if is_literal(new_head)  && is_literal(new_tail)
-        | literal_rebuilt(new_head, new_tail)
-        | 'sequence_append_syntax($new_head, $new_tail,
-                                  literal_syntax($(head_context(stxs))))'
-    | ~else: literal(stxs)
+        val new_head: escape_term('$a_head')
+        val new_tail: escape_tail('$a_tail ......')
+        if is_literal_term(new_head) && is_literal_group(new_tail)
+        | literal_group(stxs)
+        | 'sequence_append_syntax($new_head, $new_tail)'
+    | ~else: literal_group(stxs)
 
-  def escape_one(stxs):
+  def escape_term(stxs):
     match stxs
     | '($gs, ...)':
         nested(gs, 'parens_syntax', stxs)
@@ -135,8 +102,8 @@ for_meta:
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
                                 literal_syntax($(head_context(stxs))))'
-        | ~else: literal(stxs)
-    | ~else: literal(stxs)
+        | ~else: literal_term(stxs)
+    | ~else: literal_term(stxs)
 
   def adjust_spaces(head, tail):
     match '$head'
@@ -153,12 +120,12 @@ fun sequence_cons_syntax(a, d, context):
   match d
   | '$e ......': '$a_r $e ......'
 
-fun sequence_append_syntax(d1, d2, context):
+fun sequence_append_syntax(d1, d2):
   match d1
   | '$e1 ...':
       match d2
       | '$e2 ......':
-          relocate_syntax('$e1 ... $e2 ......', context)
+          '$e1 ... $e2 ......'
       
 fun parens_syntax(ts, context):
   match ts
@@ -183,20 +150,16 @@ fun quotes_syntax(ts, context):
 fun alts_syntax(ts, context):
   relocate_syntax(to_alts_syntax(ts), context)
 
-fun relocate_group(ts, context):
-  match ts
-  | '$g': relocate_syntax(g, context)
-
 fun relocate_expansion(e, context):
   relocate_syntax(to_syntax(e), context)
 
 // ----------------------------------------
 
 expr.macro
-| 'rhombus ($forms ...) $main_tail ......':
-    values('#{typeset-rhombus}($(escape('$forms ...')))',
+| 'rhombus ($(forms :: Group)) $main_tail ......':
+    values('#{typeset-rhombus}($(escape_group(forms)))',
            main_tail)
-| 'rhombus ($forms ..., $(kw_stx :: Keyw)) $main_tail ......':
+| 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ......':
     val kw: unwrap_syntax(kw_stx)
     if (kw === keyword(~var)
           || kw === keyword(~bind)
@@ -204,7 +167,7 @@ expr.macro
           || kw === keyword(~ann)
           || kw === keyword(~stxclass)
           || kw === keyword(~folder))
-    | values('#{typeset-rhombus}(~space: keyword($kw), $(escape('$forms ...')))',
+    | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
              main_tail)
     | raise_syntax_error("invalid space", kw)
 
@@ -213,7 +176,7 @@ expr.macro 'rhombusblock $tail ...':
   fun finish(option, fin_tail):
     match '$fin_tail ...'
     | ': $_':
-        values('#{typeset-rhombusblock}($option, ..., $(escape('$fin_tail ...')))', '')
+        values('#{typeset-rhombusblock}($option, ..., $(escape_term('$fin_tail ...')))', '')
     | ~else: raise_syntax_error("expected a block", '$me $tail ...')
   fun check_options(options):
     match '($options, ...)'

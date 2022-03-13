@@ -146,6 +146,7 @@
     (syntax-parse stx
       #:datum-literals (muti group block)
       [(multi (group (~and b (block . _)))) #'b]
+      [(group (~and b (block . _))) #'b]
       [(block . _) stx]
       [else (error 'typeset-rhombusblock "not a block term: ~e" stx)]))
   (define stx-ranges (make-hasheq))
