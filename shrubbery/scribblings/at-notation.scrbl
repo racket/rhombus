@@ -5,7 +5,7 @@
 An @litchar["@"] form of the shape
 
 @verbatim[~indent: 2]|{
- @«|@italic{command} ...»[@|italic{arg}, ...]{ |@italic{body} }...
+ @«|@italic{command} ...»[|@italic{arg}, ...]{ |@italic{body} }...
 }|
 
 is parsed into the same representation as
