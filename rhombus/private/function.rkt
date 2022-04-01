@@ -449,9 +449,9 @@
      (cond
        [(syntax-e #'pred)
         #`(let ([result e])
-            (if (pred e)
-                e
-                (result-failure 'name e)))]
+            (if (pred result)
+                result
+                (result-failure 'name result)))]
        [else #'e])]))
 
 (define (result-failure who val)
