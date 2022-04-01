@@ -9,6 +9,9 @@
          "static-info.rkt"
          "dot-provider-key.rkt"
          "realm.rkt"
+         "racket-class.rkt"
+         "parens.rkt"
+         "parse.rkt"
          "racket-class.rkt")
 
 (provide |.|
@@ -58,8 +61,13 @@
                                   #'dot.name
                                   #f
                                   (list form1))
-              (values #`(dot-lookup-by-name #,form1 'field)
-                      #'tail)))
+              (syntax-parse #'tail
+                [((p::parens e ...) . tail)
+                 (values #`(dot-lookup-by-name #,form1 'field #t (rhombus-expression e) ...)
+                         #'tail)]
+                [tail
+                 (values #`(dot-lookup-by-name #,form1 'field #f)
+                         #'tail)])))
         (syntax-parse form1
           [dp::dot-provider
            (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
@@ -103,16 +111,19 @@
                                  (values name
                                          (make-struct-field-accessor gen-acc i name))))))
 
-(define (dot-lookup-by-name v field)
-  (define ht (field-name->accessor-ref v #f))
+(define (dot-lookup-by-name subj field fun? . args)
+  (define ht (field-name->accessor-ref subj #f))
   (define (fail)
     (raise-arguments-error* field
                             rhombus-realm
                             "no such field"
-                            "in value" v))
+                            "in value" subj))
   (cond
-    [(object? v) (object-dot-lookup v field fail)]
+    [(object? subj) (object-dot-lookup subj field fun? args fail)]
     [(not ht) (fail)]
-    [(hash-ref ht field #f) => (lambda (acc) (acc v))]
+    [(hash-ref ht field #f)
+     => (lambda (acc)
+          (define val (acc subj))
+          (if fun? (apply val args) val))]
     [else (fail)]))
 
