@@ -289,14 +289,16 @@ Glossary
 In the proposed scheme, at a high level, there are three sets of interest, ``K``, ``K+`` and ``T``, and there are functions that map between them. The following terms name different aspects of the scheme.
 
 * **The set of all types, T**: This is the set of all types either defined or definable in a language. The elements of this set are *types* rather than values.
-* **Key type**: A built-in type provided by the language. The set of key types will be denoted ``K``.
-* **Extended key types**: The set of key types augmented with user-defined types that have defined key functions. We will denote this set by ``K+``.
-* **Extent of a type**: For a type ``t ∈ T``, the "extent" of the type is the set of all values that are instances of that type. We will denote this ``ε(t)``.
-* **Key function**: A unary, single-valued function ``χ`` mapping a value of any type to a value in ``ε(K+)``, i.e. ``χ : ε(T) → ε(K+)``. Key functions either (1) extend the equality predicate to new types, or (2) specialize the equality predicate to a coarser definition.
-* **Key chain, ρ**: The sequence of key functions mapping any type to ``K``, i.e. ``χ₁, χ₂, ..., χn`` such that ``χn . ... . χ₁ : T → K``. The members or "links" of a key chain are *types*, for instance, a key chain may look something like (Teacher, Person, Vector). But for convenience, we will also use the term to refer to the corresponding structure on individual values. When considered as a composed function, we will signify the key chain by ``ρ``, so that ``ρ : T → K``.
+* **Key type**: A built-in type provided by the language, which is in the domain of the primitive equality predicate ``=``. The set of key types will be denoted ``K``. The elements of this set are *types* rather than values.
+* **Extended key types**: The set of key types augmented with user-defined types that have defined key functions. We will denote this set by ``K+`` and it is a superset of ``K``.
+* **The set of all values, V**: This is the set of all values that could be constructed in the language.
+* **Extent of a type**: For a type ``t ∈ T``, the "extent" of the type is the set of all values that are instances of that type. We will denote this ``ε(t)``. For convenience, we may also denote the extent of a set of types using the same notation, and for instance, ``ε(T) = V``. That is, the extent of the set of all types is the set of all values (of any type).
+* **Type of a value**: For a value ``v``, we will denote its type as ``τ(v)``. ``τ(v) ∈ T``.
+* **Key function, χ**: A unary, single-valued function ``χ`` mapping a value of any type to a value in ``ε(K+)``, i.e. ``χ : ε(T) → ε(K+)``. Key functions either (1) extend the equality predicate to new types, or (2) specialize the equality predicate to a coarser definition.
+* **Key chain, ρ**: The sequence of key functions mapping a value in ``ε(K+)`` to a value in ``ε(K)``, i.e. ``χ₁, χ₂, ..., χn`` such that the composed function ``ρ = χn . ... . χ₁ : ε(T) → ε(K)``. In some cases it may be useful to think about the members or "links" of a key chain as *types*, so that for instance, a key chain may look something like (Teacher, Person, Vector). For convenience, we will also use the term to refer to the corresponding structure on individual values.
 * **Immediate representative**: A value ``r ∈ ε(K+)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under a key function. We say that ``r`` is the immediate representative of ``v``.
 * **Ground value**: Any value ``v ∈ ε(K)``, i.e. an instance of a key type.
-* **Ground representative**: A ground value ``r ∈ ε(K)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under its key chain, i.e. ``ρ(v) = r``. We say that ``r`` is the ground representative of ``v``.
+* **Ground representative**: A ground value ``k ∈ ε(K)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under its key chain, i.e. ``ρ(v) = k``. We say that ``k`` is the ground representative of ``v``.
 
 Prior Art
 ---------
