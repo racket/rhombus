@@ -174,26 +174,28 @@ Hashing Scheme
 Requirements
 ````````````
 
-Given an equality relation ``=``, a hash function ``h`` should be such that:
+Given an equality relation ``=``, a hash function ``h`` should satisfy:
 
 ``a = b ⇒ h(a) = h(b)``
 
 Conversely, ``not(h(a) = h(b)) ⇒ not(a = b)``
 
-Additionally, desirable qualities of the hashing scheme include uniformity, efficiency, and more – e.g. see `Hash function <https://en.wikipedia.org/wiki/Hash_function>`__.
+Additional desirable qualities of the hashing scheme include *uniformity* (resulting hash values should occur equally often across all inputs), *efficiency* (in space and time), *diffusion* (differential changes in the input should result in unpredictable changes in the output) and more – e.g. see `Hash function <https://en.wikipedia.org/wiki/Hash_function>`__.
 
-Keychain-based Scheme
-`````````````````````
+Extending Built-in Hashing to User-Defined Types
+````````````````````````````````````````````````
 
-While equality comparisons are type-specific, an optimal hashing scheme would possess uniformity across types.
+While equality comparisons are done in a type-specific way, an optimal hashing scheme would possess uniformity across types.
 
-A naive scheme would be to define the hash of a value to be identical to that of its ground representative. With this approach, only ground values (i.e. instances of key types) would have unique hash values – for a value of any other type, its hash would coincide with that of a ground value by definition. This is still a valid hash function (since equal values have equal hashes), but it may lead to performance issues in dictionaries or sets containing keys of multiple types.
+A naive scheme would be to define the hash of a value to be identical to that of its ground representative. With this approach, only ground values (i.e. instances of key types) would have hash values that obey all of the properties encoded into the design of the hash function – for a value of any other type, its hash would coincide with that of a ground value by definition. This is still a valid hash function (since equal values have equal hashes), but it may lead to "clustering" (i.e. loss of uniformity) in the computed hash values, which could cause performance issues in dictionaries or sets containing keys of multiple types whose hashes may coincide in this manner.
 
-Another approach is to accumulate a type-specific "discriminant" at each link in the key chain with which to augment the hash computed on the ground value. Since the path taken through type space represented by the key chain uniquely identifies a type, and the chosen representative uniquely identifies a value within that type, this path together with the ground representative could be used to generate a hash value with global uniformity.
+It would be better if we could find a way to extend the domain of the built-in hashing scheme to include the user-defined types in a way that preserves global uniformity and other desirable properties.
 
-Indeed, the ground representative and the links in the key chain when taken together (e.g. in a tuple) constitute a unique representative in the language for the original value – a globally unique or lossless identifier (TODO: maybe only the source type together with the ground representative are needed – not sure if the keychain adds any additional uniqueness). Therefore, the properties of this global hash function (such as uniformity and efficiency) reduce to those of the hash function on key types, since the implementation itself is a simple facade on the primitive hashing scheme. For instance, double-hashing and any other techniques would not need to be extended beyond the key types.
+Towards this goal, we observe that for a given value ``v``, assuming we have a type identifier that uniquely identifies its type, and as the chosen ground representative uniquely identifies a value within that type, the pair of these values constitutes a unique representative in the language for ``v`` – a globally unique or lossless identifier.
 
-Hashes for immutable values do not change and are therefore amenable to memoization. Consequently, for values that have already been compared for equality at least once (with any value, not necessarily the other participant in the present comparison), computing the representative would be a constant time operation. See `Performance`_ for more.
+So one way in which we could extend the built-in hash function ``H`` to a new value ``v`` not in its domain, is to construct the pair made up of the type of the value (which we could signify by ``τ(v)``) + its ground representative (``ρ(v)``), and then define the hash of ``v`` to be the hash of this synthesized value, i.e. ``H(v) := H((τ(v), ρ(v)))`` (a kind of "macro," as it extends the built-in scheme to new values by defining it in terms of old values). This value can now be computed using the built-in hashing scheme, as the pair so constructed is a ground value (assuming, of course, that pairs are a key type).
+
+With this approach, the properties of this extended hash function ``H'`` (such as uniformity, efficiency, and diffusion) reduce to those of the built-in hash function ``H`` on key types, since the implementation itself is a simple facade on the primitive hashing scheme. And in particular, double-hashing and any other techniques employed in ``H`` would not need to be extended beyond the key types.
 
 Ad Hoc Extension of Equality
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -291,10 +293,10 @@ In the proposed scheme, at a high level, there are three sets of interest, ``K``
 * **Extended key types**: The set of key types augmented with user-defined types that have defined key functions. We will denote this set by ``K+``.
 * **Extent of a type**: For a type ``t ∈ T``, the "extent" of the type is the set of all values that are instances of that type. We will denote this ``ε(t)``.
 * **Key function**: A unary, single-valued function ``χ`` mapping a value of any type to a value in ``ε(K+)``, i.e. ``χ : ε(T) → ε(K+)``. Key functions either (1) extend the equality predicate to new types, or (2) specialize the equality predicate to a coarser definition.
-* **Key chain**: The sequence of key functions mapping any type to ``K``, i.e. ``χ₁, χ₂, ..., χn`` such that ``χn . ... . χ₁ : T → K``. The members or "links" of a key chain are *types*, for instance, a key chain may look something like (Teacher, Person, Vector). But for convenience, we will also use the term to refer to the corresponding structure on individual values.
+* **Key chain, ρ**: The sequence of key functions mapping any type to ``K``, i.e. ``χ₁, χ₂, ..., χn`` such that ``χn . ... . χ₁ : T → K``. The members or "links" of a key chain are *types*, for instance, a key chain may look something like (Teacher, Person, Vector). But for convenience, we will also use the term to refer to the corresponding structure on individual values. When considered as a composed function, we will signify the key chain by ``ρ``, so that ``ρ : T → K``.
 * **Immediate representative**: A value ``r ∈ ε(K+)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under a key function. We say that ``r`` is the immediate representative of ``v``.
 * **Ground value**: Any value ``v ∈ ε(K)``, i.e. an instance of a key type.
-* **Ground representative**: A ground value ``r ∈ ε(K)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under its key chain. We say that ``r`` is the ground representative of ``v``.
+* **Ground representative**: A ground value ``r ∈ ε(K)`` that is the result of mapping an arbitrary value ``v ∈ ε(T)`` under its key chain, i.e. ``ρ(v) = r``. We say that ``r`` is the ground representative of ``v``.
 
 Prior Art
 ---------
