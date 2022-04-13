@@ -1,11 +1,11 @@
 #lang racket/base
 
-(provide extended-key-types)
+(provide bm)
 
-(require "types.rkt")
+(require "../types.rkt")
 
 (define (load =)
   (= 1 1))
 
-(define extended-key-types
+(define bm
   (benchmark "Extended key types" load))

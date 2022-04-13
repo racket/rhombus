@@ -1,11 +1,11 @@
 #lang racket/base
 
-(provide adhoc-comparison)
+(provide bm)
 
-(require "types.rkt")
+(require "../types.rkt")
 
 (define (load =)
   (= 1 1))
 
-(define adhoc-comparison
+(define bm
   (benchmark "Ad hoc comparison" load))

@@ -4,9 +4,8 @@
          (all-from-out "benchmarks/types.rkt"))
 
 (require "benchmarks/types.rkt"
-         "benchmarks/key-types.rkt"
-         "benchmarks/extended-key-types.rkt"
-         "benchmarks/adhoc-comparison.rkt")
+         (prefix-in comparison: "benchmarks/comparison.rkt")
+         (prefix-in hashing: "benchmarks/hashing.rkt"))
 
 (define benchmarks
-  (list key-types extended-key-types adhoc-comparison))
+  (append comparison:benchmarks hashing:benchmarks))

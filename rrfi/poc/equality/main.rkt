@@ -1,3 +1,4 @@
+#!/usr/bin/env racket
 #lang racket
 
 (require (prefix-in b:
@@ -18,7 +19,6 @@
 
 (define (run-benchmark b =)
   (measure (benchmark-load b) =))
-
 
 (module+ main
   (displayln "Running benchmarks...")
