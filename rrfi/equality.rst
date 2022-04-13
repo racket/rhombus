@@ -34,7 +34,7 @@ In contrast, the present proposal implicitly preserves guarantees of the essenti
 Completeness
 ~~~~~~~~~~~~
 
-The proposal makes (but does not necessarily rely on) the claim that any notion of equality that could be expressed using a binary comparator can be expressed using a unary "key" function, so that no expressiveness is lost.
+The proposal makes the claim that any notion of equality that could be expressed using a binary comparator can be expressed using a unary "key" function with a sufficiently diverse set of built-in "key" types, so that no expressiveness is lost.
 
 Maintainability
 ~~~~~~~~~~~~~~~
@@ -69,15 +69,15 @@ We'll look at each of these in turn.
 Diversity of Primitive Key Types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The foundational intuition of the approach proposed here comes from a standard mathematical `result on equivalence relations <https://encyclopediaofmath.org/wiki/Kernel_of_a_function>`__, that every equivalence relation on a set has a corresponding function that expresses it. More precisely:
+The foundational intuition of the approach proposed here comes from a standard mathematical `result on equivalence relations <https://encyclopediaofmath.org/wiki/Kernel_of_a_function>`__, that any equivalence relation on a set can be modeled by a function mapping values to another set on which a primitive notion of equivalence is defined. More precisely:
 
-*For any equivalence relation == on a set E and a primitive notion of equivalence =, there exists a set M and a function f : E → M such that x == y is logically equivalent to f(x) = f(y).*
+*For any equivalence relation == on a set E, there exists a set M and a function f : E → M such that, assuming a primitive notion of equivalence = on M, x == y is logically equivalent to f(x) = f(y).*
 
 This is an abstract mathematical result that doesn't really tell us what the nature of the set ``M`` might be, or how the function ``f`` could be constructed[1], or the conditions under which an arbitrary set ``M'`` could serve as ``M`` here.
 
-In programming languages, we can make this a little more tangible by observing that notions of equality partition along type boundaries. That is, values of the same type need not be equal, but values of disjoint types are implicitly unequal. In a sense, types recognized by the language are a manifestation of the primordial notion of equivalence on the set ``M`` that we seek to reveal.
+In programming languages, we can make this a little more tangible by observing that notions of equality partition along type boundaries. That is, values of the same type need not be equal, but values of disjoint types are implicitly unequal. In a sense, types recognized by the language are a manifestation of the primitive notion of equivalence on the set ``M`` that we seek to reveal.
 
-This gives rise to a more concrete conception of the set ``M`` and the relation ``=`` -– that ``M`` is composed of values that fall into different types, where each type has its own notion of equality. We call these types over ``M`` "key types," and observe that the equivalence relation ``=`` defined across the entire set ``M`` is composed from the equality relations over individual key types. A function ``f`` maps types on ``E`` to types on ``M``, and is called a "key function."
+This gives rise to a more concrete conception of the set ``M`` and the relation ``=`` – that ``M`` is composed of values that fall into different types, where each type has its own notion of equality. We call these types over ``M`` "key types," and observe that the equivalence relation ``=`` defined across the entire set ``M`` is composed from the equality relations over individual key types. A function ``f`` maps values in ``E`` (containing any value constructible in the programming language) to values in ``M`` that are instances of key types, and is called a "key function."
 
 For example, a key function could map a user-defined Event type with attributes "place" and "time" to a representative vector containing the place and time values, so that two events are considered equal if they have the same place and time, by virtue of the existing (primitive) notion of vector equality (presuming that vectors are a key type).
 
@@ -129,7 +129,7 @@ A generic interface specifying a key function would resemble:
   (define-generics comparable
     (key comparable))
 
-That is, users would need to implement a single unary method, ``key``. By doing so, they gain all of the machinery of hashing and recursive comparisons for free, by virtue of delegating to an existing solution among the key types. Since the key never changes for an instance, it would be amenable to optimization via memoization.
+That is, users would need to implement a single unary method, ``key``. By doing so, they gain all of the machinery of hashing and recursive comparisons for free, by virtue of delegating to an existing solution among the key types.
 
 The existing ``gen:equal+hash`` interface is reproduced below, for comparison.
 
@@ -193,7 +193,7 @@ It would be better if we could find a way to extend the domain of the built-in h
 
 Towards this goal, we observe that for a given value ``v``, assuming we have a type identifier that uniquely identifies its type, and as the chosen ground representative uniquely identifies a value within that type, the pair of these values constitutes a unique representative in the language for ``v`` – a globally unique or lossless identifier.
 
-So one way in which we could extend the built-in hash function ``H`` to a new value ``v`` not in its domain, is to construct the pair made up of the type of the value (which we could signify by ``τ(v)``) + its ground representative (``ρ(v)``), and then define the hash of ``v`` to be the hash of this synthesized value, i.e. ``H(v) := H((τ(v), ρ(v)))`` (a kind of "macro," as it extends the built-in scheme to new values by defining it in terms of old values). This value can now be computed using the built-in hashing scheme, as the pair so constructed is a ground value (assuming, of course, that pairs are a key type).
+So one way in which we could extend the built-in hash function ``H`` to a new value ``v`` not in its domain, is to construct the pair made up of the type of the value (which we could signify by ``τ(v)``) + its ground representative (``ρ(v)``), and then define the hash of ``v`` to be the hash of this synthesized value, i.e. ``H'(v) = H((τ(v), ρ(v)))`` (a kind of "macro," as it extends the built-in scheme to new values by defining it in terms of old values). This value can now be computed using the built-in hash function ``H``, as the pair so constructed is a ground value (assuming, of course, that pairs are a key type).
 
 With this approach, the properties of this extended hash function ``H'`` (such as uniformity, efficiency, and diffusion) reduce to those of the built-in hash function ``H`` on key types, since the implementation itself is a simple facade on the primitive hashing scheme. And in particular, double-hashing and any other techniques employed in ``H`` would not need to be extended beyond the key types.
 
@@ -204,9 +204,11 @@ While the key types may always be extended to new user-defined types, often (and
 
 Such definitions of equality could either be temporary extensions of the key types to encapsulate instances of new types that do not have a definition of equality (i.e. where ``gen:comparable`` isn't implemented), or simply a specialization of the equality relation to a coarser version of itself (e.g. comparing strings in a case-insensitive way, for which the key function ``string-upcase`` or ``string-downcase`` may be used).
 
-One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. ``egal?``) that delegates to each of these in a disjoint way. But in practice we may desire a *different* definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on *other* types (for instance, comparing two strings by their *length*). It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
+One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. ``egal?``) that delegates to each of these in a disjoint way. But in practice we may desire a *different* definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on *other* types (for instance, comparing two strings by their *length*)[1]. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
 
 The way to customize the definition of equality in such cases is the same as usual, i.e. a key function – any unary, single-valued function mapping to a key type. The practical implications are that all APIs provided built-in by the language or even those authored by third parties should support a key argument if their user-facing purpose leverages a notion of equality.
+
+[1] Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion RRFI on "Primitive Equality Predicates."
 
 Is It Feasible?
 ---------------
@@ -230,7 +232,7 @@ Computing the Ground Representative
 
 1. *Memoization* -- As ground representatives and hashes don't change (for immutable values), both of these may be cached after being computed once. Doing so makes this scheme equivalent in performance to the built-in equality predicate and hashing scheme (after the initial computation).
 
-Note that memoization is not an option with a binary comparator instead of a key function. With comparators, memoizing the results of equality comparisons for ``n`` values would need ``n!`` cached results before equality comparison on the set is always constant time. In contrast, with key functions, ``n`` cached values would suffice to compute representatives in constant time, following by ``k!`` cached values on the set of key types K to ensure contant time comparisons as well – where K is a smaller set than the set of all types T and also allows reuse of the same memoized value across many different types (since, for example, a ``teacher`` type and a ``student`` type may both map to the same ground vector if these types happen to have the same field names). Although it seems likely that memoization on binary comparisons is not feasible in either case.
+Note that memoization is not an option with a binary comparator instead of a key function. With comparators, memoizing the results of equality comparisons for ``n`` values would need ``C(n,2)`` (choosing pairs of elements) cached results before equality comparison on the set is always constant time. In contrast, with key functions, ``n`` cached values would suffice to compute representatives in constant time, followed by ``C(k,2)`` cached values on the set of key types K to ensure contant time comparisons as well – where K is a smaller set than the set of all types T and also allows reuse of the same memoized value across many different types (since, for example, a ``teacher`` type and a ``student`` type may both map to the same ground vector if these types happen to have the same field names). Although, it seems likely that memoization on binary comparisons is not feasible in either case.
 
 A `weak hashtable <https://docs.racket-lang.org/reference/eval-model.html#%28tech._weak._reference%29>`__ could probably be used for the purposes of memoization.
 
@@ -353,6 +355,8 @@ In designing for, or gauging, the performance of equality comparison on arbitrar
 4. The values are of different types
 
 With the ad hoc key function and the input size multipliers, this is a 16-row grid, which could either (1) have 3 columns containing average case, best case, and worst case algorithmic performance, or (2) have benchmark results, or (3) both.
+
+The same analysis may be done for hash computation, as well.
 
 Appendix C: Regarding the Completeness of the System
 ----------------------------------------------------
