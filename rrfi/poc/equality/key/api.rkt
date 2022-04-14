@@ -4,16 +4,29 @@
          hash-code
          ground-representative)
 
-(require "interface.rkt")
+(require "interface.rkt"
+         "util.rkt"
+         memoize)
 
 (define (= a b)
-  (equal? (key a) (key b)))
+  (and (eq? (hash-code a) (hash-code b))
+       (equal? (ground-representative a)
+               (ground-representative b))))
 
-(define (hash-code v)
-  ;; TODO: equal-hash-code(ground representative + unique type identifier)
-  (equal-hash-code v))
+(define/memo (hash-code v)
+  (equal-hash-code
+   (if (struct? v)
+       (cons (type-tag v)
+             (ground-representative v))
+       v)))
 
-(define (ground-representative v)
-  ;; TODO: self-compose key until it reaches a key type
-  ;; TODO: memoize
-  (key v))
+(define/memo (~ground-representative v)
+  (let ([result (key v)])
+    (if (equal? v result)
+        result
+        (ground-representative result))))
+
+(define ground-representative
+  ~ground-representative
+  ;; (make-memoizer ~ground-representative)
+  )

@@ -3,8 +3,6 @@
 (provide =
          hash-code)
 
-(require "interface.rkt")
-
 (define (= a b)
   (equal? a b))
 
