@@ -3,7 +3,7 @@
 (provide (struct-out person))
 
 (require racket/generic
-         "../../key/interface.rkt")
+         "../key/interface.rkt")
 
 (struct person (name age)
   #:transparent

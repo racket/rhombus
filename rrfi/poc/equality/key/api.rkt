@@ -20,13 +20,8 @@
              (ground-representative v))
        v)))
 
-(define/memo (~ground-representative v)
+(define/memo (ground-representative v)
   (let ([result (key v)])
     (if (equal? v result)
         result
         (ground-representative result))))
-
-(define ground-representative
-  ~ground-representative
-  ;; (make-memoizer ~ground-representative)
-  )

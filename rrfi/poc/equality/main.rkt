@@ -1,28 +1,17 @@
 #!/usr/bin/env racket
 #lang racket
 
-(require (prefix-in b:
-                    "base/interface.rkt")
-         (prefix-in b:
-                    "base/api.rkt")
-         (prefix-in k:
-                    "key/interface.rkt")
-         (prefix-in k:
-                    "key/api.rkt")
-         "benchmarks.rkt"
+(require (prefix-in c: "comparison.rkt")
+         (prefix-in h: "hashing.rkt")
          "util.rkt")
 
-(define (measure fn . args)
-  (second
-   (values->list
-    (time-apply fn args))))
-
-(define (run-benchmark b =)
-  (measure (benchmark-load b) =))
+(struct benchmark (name load)
+  #:transparent)
 
 (module+ main
   (displayln "Running benchmarks...")
+  (define benchmarks (list (benchmark "Comparison" c:run)
+                           (benchmark "Hashing" h:run)))
   (for ([b benchmarks])
     (displayln (~a (benchmark-name b)))
-    (displayln (~a "Base: " (run-benchmark b b:=) " ms"))
-    (displayln (~a "Key: " (run-benchmark b k:=) " ms"))))
+    (display-results ((benchmark-load b)))))
