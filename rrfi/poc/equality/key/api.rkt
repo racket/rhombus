@@ -9,7 +9,7 @@
          memoize)
 
 (define (= a b)
-  (and (eq? (hash-code a) (hash-code b))
+  (and (eq? (hash-code a) (hash-code b)) ; can use eq? since fixnums are interned
        (equal? (ground-representative a)
                (ground-representative b))))
 
@@ -21,7 +21,7 @@
        v)))
 
 (define/memo (ground-representative v)
-  (let ([result (key v)])
+  (let ([result (full-key v)])
     (if (equal? v result)
         result
         (ground-representative result))))
