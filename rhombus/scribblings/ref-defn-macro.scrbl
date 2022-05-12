@@ -31,7 +31,7 @@
 @examples[
   ~eval: macro_eval,
   defn.macro 'enum:
-                $ids
+                $(ids :: Group)
                 ...':
     // temporary list library:
     fun | length([]): 0
@@ -77,8 +77,8 @@
                        $defn1
                        $defn2
                        $tail
-                       ......':
-    values('$defn2; $defn1', '$tail; ......'),
+                       ...':
+    values('$defn2; $defn1', '$tail; ...'),
   :
     reverse_defns
     def seq_x: seq_y+1

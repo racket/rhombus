@@ -194,7 +194,7 @@
     #:literals (def defn expr decl bind imp annotation folder |.|)
     #:datum-literals (op modifier macro rule)
     (pattern (~seq (~or defn decl expr annotation bind folder) (op |.|) macro))
-    (pattern (~seq (~or expr bind) (op |.|) rule))
+    (pattern (~seq (~or expr bind annotation) (op |.|) rule))
     (pattern (~seq (~or imp) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-target
@@ -213,7 +213,7 @@
 (define-for-syntax (extract-defined stx)
   (syntax-parse stx
     #:literals (def val fun operator :: defn |.| grammar rhombus-syntax $)
-    #:datum-literals (parens group op modifier macro rule class quotes)
+    #:datum-literals (parens group op modifier class quotes)
     [(group (~or def fun) id:identifier-target (parens . _) . _) #'id.name]
     [(group (~or def val) id:identifier-target . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]

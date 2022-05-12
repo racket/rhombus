@@ -23,12 +23,12 @@ for_meta:
 
   def head_context(stxs):
     match stxs
-    | '$head $_ ......':
+    | '$head $_ ...':
         relocate_syntax('#false', head)
 
   def head_escape_context(stxs):
     match stxs
-    | '$head $esc $_ ......':
+    | '$head $esc $_ ...':
         relocate_span_syntax('#false', [head, esc])
 
   def group_context(g):
@@ -70,13 +70,13 @@ for_meta:
 
   def escape_tail(stxs):
     match stxs
-    | '$$($expr ...) $tail ......':
+    | '$$($expr ...) $tail ...':
         'sequence_cons_syntax(elem($expr ...), $(escape_tail(tail)),
                               literal_syntax($(head_escape_context(stxs))))'
-    | '$head $tail ......':
+    | '$head $tail ...':
         val values(a_head, a_tail): adjust_spaces(head, tail)
         val new_head: escape_term('$a_head')
-        val new_tail: escape_tail('$a_tail ......')
+        val new_tail: escape_tail('$a_tail ...')
         if is_literal_term(new_head) && is_literal_group(new_tail)
         | literal_group(stxs)
         | 'sequence_append_syntax($new_head, $new_tail)'
@@ -84,15 +84,15 @@ for_meta:
 
   def escape_term(stxs):
     match stxs
-    | '($gs, ...)':
+    | '($(gs :: Group), ...)':
         nested(gs, 'parens_syntax', stxs)
-    | '[$gs, ...]':
+    | '[$(gs :: Group), ...]':
         nested(gs, 'brackets_syntax', stxs)
-    | '{$gs, ...}':
+    | '{$(gs :: Group), ...}':
         nested(gs, 'braces_syntax', stxs)
-    | '«'$gs; ...'»':
+    | '«'$(gs :: Group); ...'»':
         nested(gs, 'quotes_syntax', stxs)
-    | ': $gs; ...':
+    | ': $(gs :: Group); ...':
         nested(gs, 'block_syntax', stxs)
     | '| $(bs :: Block) | ...':
         nested_alts(bs, stxs)
@@ -118,14 +118,14 @@ for_meta:
 fun sequence_cons_syntax(a, d, context):
   let a_r: relocate_syntax(to_syntax(a), context);
   match d
-  | '$e ......': '$a_r $e ......'
+  | '$e ...': '$a_r $e ...'
 
 fun sequence_append_syntax(d1, d2):
   match d1
   | '$e1 ...':
       match d2
-      | '$e2 ......':
-          '$e1 ... $e2 ......'
+      | '$e2 ...':
+          '$e1 ... $e2 ...'
       
 fun parens_syntax(ts, context):
   match ts
@@ -156,10 +156,10 @@ fun relocate_expansion(e, context):
 // ----------------------------------------
 
 expr.macro
-| 'rhombus ($(forms :: Group)) $main_tail ......':
+| 'rhombus ($(forms :: Group)) $main_tail ...':
     values('#{typeset-rhombus}($(escape_group(forms)))',
            main_tail)
-| 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ......':
+| 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
     val kw: unwrap_syntax(kw_stx)
     if (kw === keyword(~var)
           || kw === keyword(~bind)

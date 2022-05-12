@@ -36,7 +36,7 @@
      (syntax-parse stx
        #:datum-literals (parens quotes group)
        [(_ ((~or parens quotes)) . tail)
-        (values #`(quote-syntax #,(pack-multi '(any))) #'tail)]
+        (values #`(quote-syntax #,(pack-multi '())) #'tail)]
        [(_ ((~or parens quotes) g) . tail)
         (values #'(quote-syntax g) #'tail)]))))
 

@@ -30,7 +30,7 @@
 }
 
 @doc[
-  annotation.macro 'Any'
+  annotation.rule 'Any'
 ]{
 
   Matches any value.

@@ -9,7 +9,7 @@ export:
   make_rhombus_eval
   close_eval
 
-expr.macro 'examples $parens $tail ......':
+expr.macro 'examples $parens $tail ...':
   ~op_stx: me
   match parens
   | '($_)':

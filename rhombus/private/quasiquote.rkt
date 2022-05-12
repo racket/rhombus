@@ -26,8 +26,7 @@
 (provide #%quote
          syntax_term
          $
-         (rename-out [rhombus... ...])
-         ......)
+         (rename-out [rhombus... ...]))
 
 (module+ convert
   (provide (for-syntax convert-pattern
@@ -39,19 +38,22 @@
     (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))
     (pattern ((~datum block) ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))))
   (define-splicing-syntax-class tail-repetition
-    #:literals ($ ......)
+    #:literals ($ rhombus...)
     #:datum-literals (op)
-    (pattern (~seq (op $) e (op (~and name ......))))
+    (pattern (~seq (op $) e (op (~and name rhombus...)))))
+  (define-splicing-syntax-class block-tail-repetition
+    #:literals ($ rhombus...)
+    #:datum-literals (op)
     (pattern (~seq ((~datum group) (op $) e)
-                   ((~datum group) (op (~and name ......)))))
-    (pattern (~seq ((~datum block) ((~datum group) (op $) e))
-                   ((~datum block) ((~datum group) (op (~and name ......))))))))
+                   ((~datum group) (op (~and name rhombus...)))))))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
-                                   deepen-escape handle-tail-escape
+                                   deepen-escape
+                                   handle-tail-escape handle-block-tail-escape
                                    handle-maybe-empty-sole-group
                                    handle-maybe-empty-alts handle-maybe-empty-group
+                                   #:tail-any-escape? [tail-any-escape? #f]
                                    #:as-tail? [as-tail? #f])
   (let convert ([e e] [empty-ok? #f] [depth 0] [as-tail? as-tail?])
     (syntax-parse e
@@ -113,6 +115,18 @@
                  (values (quasisyntax/loc e (#,(make-datum #'tag) . #,ps))
                          idrs
                          can-be-empty?)]))]
+           [(op:tail-repetition)
+            #:when (and (zero? depth)
+                        (or tail-any-escape?
+                            (identifier? #'op.e)))
+            (define-values (id new-idrs) (handle-tail-escape #'op.name #'op.e e))
+            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
+           [(op:block-tail-repetition)
+            #:when (and (zero? depth)
+                        (or tail-any-escape?
+                            (identifier? #'op.e)))
+            (define-values (id new-idrs) (handle-block-tail-escape #'op.name #'op.e e))
+            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
            [(op:list-repetition . gs)
             #:when (zero? depth)
             (unless pend-idrs
@@ -122,14 +136,6 @@
             (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
                                     (deepen-escape idr)))
             (loop #'gs #f (append new-pend-idrs idrs) (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
-           [(op:tail-repetition . gs)
-            #:when (zero? depth)
-            (unless (null? (syntax-e #'gs))
-              (raise-syntax-error #f
-                                  "misplaced tail repetition"
-                                  #'op.name))
-            (define-values (id new-idrs) (handle-tail-escape #'op.name #'op.e e))
-            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
            [(((~datum op) (~and (~literal $) $-id)) esc . n-gs)
             (cond
               [(zero? depth)
@@ -219,7 +225,7 @@
                     (handle-escape/match-head $-id e in-e #'pack-group* #'Group 'group))
                   ;; handle-multi-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-multi* #'Multi 'multi))
+                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'Multi 'multi))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
@@ -227,13 +233,12 @@
                        #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
-                    (if (identifier? e)
-                        (values e (list #`[#,e (pack-tail* (syntax #,e) 0)]))
-                        (raise-syntax-error #f
-                                            (format "expected an identifier for use with ~a"
-                                                    (syntax-e name))
-                                            in-e
-                                            e)))
+                    (if (free-identifier=? e #'rhombus-_)
+                        (values #'_ null)
+                        (values e (list #`[#,e (pack-tail* (syntax #,e) 0)]))))
+                  ;; handle-block-tail-escape:
+                  (lambda (name e in-e)
+                    (values e (list #`[#,e (pack-multi* (syntax #,e) 0)])))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
@@ -266,6 +271,7 @@
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression])
   (define-values (template idrs can-be-empty?)
     (convert-syntax e
+                    #:tail-any-escape? #t
                     ;; make-datum
                     (lambda (d) d)
                     ;; make-literal
@@ -298,6 +304,10 @@
                     (lambda (name e in-e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-tail* '#,name (#,rhombus-expression (group #,e)) 0)])))
+                    ;; handle-block-tail-escape:
+                    (lambda (name e in-e)
+                      (define id (car (generate-temporaries (list e))))
+                      (values id (list #`[#,id (unpack-multi* '#,name (#,rhombus-expression (group #,e)) 0)])))
                     ;; handle-maybe-empty-sole-group
                     (lambda (tag template idrs)
                       ;; if `template` generates `(group)`, then instead of `(tag (group))`,
@@ -338,8 +348,8 @@
 (define-for-syntax (call-with-quoted-expression stx single-k multi-k literal-k)
   (syntax-parse stx
     #:datum-literals (quotes group op)
-    #:literals (rhombus... $ ......)
-    [(_ (quotes (group (~and special (op (~or rhombus... $ ......))))) . tail)
+    #:literals (rhombus... $)
+    [(_ (quotes (group (~and special (op (~or rhombus... $))))) . tail)
      (values (literal-k #'special)
              #'tail)]
     [(_ (quotes (group t)) . tail)
@@ -457,12 +467,3 @@
                             "misuse outside of a pattern"
                             #'op.name)]))))
 
-(define-syntax ......
-  (expression-transformer
-   #'......
-   (lambda (stx)
-     (syntax-parse stx
-       [(op::operator . tail)
-        (raise-syntax-error #f
-                            "misuse outside of a pattern"
-                            #'op.name)]))))

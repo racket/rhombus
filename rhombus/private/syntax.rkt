@@ -161,7 +161,7 @@
     (define (macro-clause self-id left-ids tail-pattern rhs)
       (define-values (pattern idrs can-be-empty?)
         (if (eq? kind 'rule)
-            (convert-pattern #`(multi (group #,@tail-pattern (op $) tail (op ......))))
+            (convert-pattern #`(multi (group #,@tail-pattern (op $) tail (op rhombus...))))
             (convert-pattern #`(multi (group . #,tail-pattern)) #:as-tail? #t)))
       (with-syntax ([((id id-ref) ...) idrs]
                     [(left-id ...) left-ids])

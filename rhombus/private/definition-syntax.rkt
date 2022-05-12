@@ -48,28 +48,6 @@
    (lambda (stx tail)
      (define-values (defns new-tail)
        (syntax-parse stx
-         [(head . h-tail) (proc (pack-tail #'h-tail) (pack-multi (cons 'fake tail)) #'head)]))
+         [(head . h-tail) (proc (pack-tail #'h-tail) (pack-multi tail) #'head)]))
      (values (unpack-definitions defns proc)
              (unpack-multi new-tail proc)))))
-
-#;
-(begin-for-syntax
-  (define block-with-raw (syntax-property
-                          (syntax-property (datum->syntax #f 'block) 'raw "{ ")
-                          'raw-tail " }"))
-  (define parens-with-raw (syntax-property
-                           (syntax-property (datum->syntax #f 'parens) 'raw "(")
-                           'raw-tail ")"))
-  (define group-with-raw (syntax-property (datum->syntax #f 'group) 'raw '()))
-
-  (define (pack-block-tail tail)
-    #`(#,parens-with-raw (#,group-with-raw (#,block-with-raw . #,tail))))
-
-  (define (unpack-block-tail packed-tail proc)
-    (syntax-parse packed-tail
-      #:datum-literals (block group parens)
-      [(parens (group (block . tail))) #'tail]
-      [else
-       (raise-result-error (if (symbol? proc) proc (proc-name proc))
-                           "rhombus-syntax-block?"
-                           packed-tail)])))

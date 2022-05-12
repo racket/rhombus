@@ -111,16 +111,6 @@ corresponding portion of a candidate syntax object. Ellipses, etc.
 
 
 @doc[
-  bind.macro '......'
-]{
-
- Used within @rhombus['', ~bind] binding patterns to indicate tail
- repetition.
-
-}
-
-
-@doc[
   expr.macro '«literal_syntax '$term ...; ...'»',
   expr.macro 'literal_syntax ($term ..., ...)'
 ]{

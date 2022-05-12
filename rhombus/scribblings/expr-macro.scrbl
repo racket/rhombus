@@ -21,7 +21,7 @@ wraps as a zero-argument function
 
 @(rhombusblock:
     import:
-      rhombus/macro: open
+      rhombus/macro open
 
     expr.rule 'thunk: $body':
       'fun (): $body'
@@ -40,7 +40,7 @@ defined; otherwise, the second term must be unescaped, and an infix
 macro is defined.
 
 The @rhombus[expr.rule] form must be imported from
-@rhombus[rhombus/macro], but @rhombus[def] behaves like
+@rhombusmodname[rhombus/macro], but @rhombus[def] behaves like
 @rhombus[expr.rule] when the part before @rhombus[:] is valid for
 @rhombus[expr.rule]:
 
@@ -85,8 +85,8 @@ expanded expression and the remaining terms that have not been consumed.
 For example, the @rhombus[!] macro can be equivalently written like this:
 
 @(rhombusblock:
-    expr.macro '$a ! $tail ......':
-      values('factorial($a)', 'tail ......')
+    expr.macro '$a ! $tail ...':
+      values('factorial($a)', '$tail ...')
   )
 
 Since an @rhombus[expr.macro] implementation can use arbitrary
@@ -100,35 +100,37 @@ there’s no way for a transformer to inspect a parsed Rhombus expression
 back into an unparsed shrubbery, as happens in
 @rhombus['factorial($a)'], it will later simply parse as itself.
 
-The @rhombus[!] macro matches an unconsumed tail with @rhombus[......]
-instead of @rhombus[...]. Using @rhombus[...] would implement the same
-transformation, but less efficiently:
+The @rhombus[!] macro matches an unconsumed tail with @rhombus[$tail ...],
+and since @rhombus[..., ~bind] is at the end of a sequence in
+the pattern, @rhombus[tail] is bound to a group syntax object instead
+of a list of term syntax objects. And since the result is formed with
+the template @rhombus['$tail ...'] with @rhombus[..., ~bind] again at
+the end of the template, the group syntax object is used directly as
+the result. The macro’s second result could have been written as
+@rhombus[tail], which is convenient but not inherently more
+efficient:
 
 @(rhombusblock:
     expr.macro '$a ! $tail ...':
-      values('factorial($a)', 'tail ...')
-
-    // changing to 2000 `!`s or so makes parsing take noticeably long:
-    0 ! ! ! ! ! ! ! ! ! ! ! !
-  )
-
-Since @rhombus[......] after @rhombus[tail] in a pattern binds
-@rhombus[tail] to a parenthesized sequence, the macro’s second result
-can be written as just @rhombus[tail]. That’s convenenient, although not
-inherently more efficient:
-
-@(rhombusblock:
-    expr.macro '$a ! $tail ......':
       values('factorial($a)', tail)
   )
 
-The @rhombus[......] operator cannot be used at the end of the input
-group for a rule macro, because there’s implicitly a
-@rhombus[$tail ......] at the end of every rule-macro pattern. If you
-try replacing @rhombus[...] in the @rhombus[thunk] implementation with
-@rhombus[......], it will work, but that’s because the @rhombus[......]
-in that case is under a block created by @rhombus[:], and not in the
-enclosing input group.
+Changing the @rhombus[tail] pattern to @rhombus[(tail :: Term)] would
+disable the special treatment of @rhombus[..., ~bind] at the end of a
+sequence and reify the tail as a list---so don't do this:
+
+@(rhombusblock:
+    expr.macro '$a ! $(tail :: Term) ...':
+      values('factorial($a)', '$tail ...')
+
+    // changing to 2000 `!`s or so makes parsing take noticeably long:
+    0 ! ! ! ! ! ! ! ! ! ! ! !
+)
+
+Note also that the @rhombus[..., ~bind] operator is not treated
+specially at the end of the pattern of a rule macro, because there’s
+implicitly a @rhombus[$tail ..., ~bind] added to the end of every
+rule-macro pattern.
 
 Whether pattern-based or not, an infix-operator macro’s left-hand input
 is parsed. A prefix or infix macro’s right-hand input is not parsed by

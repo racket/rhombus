@@ -33,6 +33,7 @@
          pack-group
          unpack-group
          pack-multi
+         pack-tagged-multi
          unpack-multi
          
          pack-term*
@@ -40,6 +41,7 @@
          pack-group*
          unpack-group*
          pack-multi*
+         pack-tagged-multi*
          pack-block*
          unpack-multi*
          pack-tail*
@@ -94,7 +96,8 @@
         [(= 2 (length l)) (cdr (syntax-e (cadr l)))]
         [else (raise-error who "multi-group syntax not allowed in group context" r)])]
      [(group-syntax? r) (cdr (syntax-e r))]
-     [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+     [(list? r) (map (lambda (t) (unpack-term t who)) r)]
+     [(pair? r) (cannot-coerce-pair who r)]
      [else (list r)])))
 
 ;; `stx` is a single term
@@ -138,8 +141,12 @@
     [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
     [else #`(#,group-blank #,r)]))
 
-;; `r` is a term like `(parens ....)` or `(block ....)`
+;; `r` is a sequence of groups
 (define (pack-multi r)
+  (datum->syntax #f (cons multi-blank r)))
+
+;; `r` is a term like `(parens ....)` or `(block ....)`
+(define (pack-tagged-multi r)
   (datum->syntax #f (cons multi-blank (stx-cdr r))))
 
 ;; `r` can be any of the allowed representations (multi-group, single-group, or single-term),
@@ -162,26 +169,40 @@
     [else (for/list ([t (in-list (syntax->list stx))])
             (pack* t (sub1 depth) wrap))]))
 
-(define (unpack* qs r depth unwrap)
+(define (unpack* qs r depth mode unwrap)
   (datum->syntax
-   qs
+   (if (syntax? qs) qs #f)
    (let unpack* ([r r] [depth depth])
      (cond
        [(eqv? depth 0)
         (unwrap r)]
        [else
-        (if (list? r)
-            (datum->syntax
-             qs
-             (for/list ([r (in-list r)])
-               (unpack* r (sub1 depth))))
-            (raise-argument-error* '... rhombus-realm "List" r))]))))
+        (let ([r (cond
+                   [(group-syntax? r) (cdr (syntax->list r))]
+                   [(multi-syntax? r)
+                    (define l (syntax->list r))
+                    (cond
+                      [(and (eq? mode 'group) (= depth 1))
+                       (cdr l)]
+                      [else
+                       (cond
+                         [(null? (cdr l)) '()]
+                         [(= 2 (length l)) (cdr (syntax->list (cadr l)))]
+                         [else r])])]
+                   [else r])])
+          (if (list? r)
+              (datum->syntax
+               (if (syntax? qs) qs #f)
+               (for/list ([r (in-list r)])
+                 (unpack* r (sub1 depth))))
+              (raise-argument-error* '... rhombus-realm "List" r)))]))))
 
 (define (pack-term* stx depth)
   (pack* stx depth pack-term))
                      
 (define (unpack-term* qs r depth)
   (unpack* qs r depth
+           'term
            (lambda (r) (unpack-term r (syntax-e qs)))))
 
 ;; Packs to a `group` form
@@ -192,20 +213,28 @@
 ;; is asymmetric to `pack-group*`
 (define (unpack-group* qs r depth)
   (unpack* qs r depth
+           'group
            (lambda (r)
              (unpack-group r (syntax-e qs)))))
 
-;; Packs to a `multi` form, because that's the useful result from matching
+;; Packs to a `multi` form
 (define (pack-multi* stxes depth)
   (pack* stxes depth pack-multi))
+
+;; Packs to a `multi` form, because that's the useful result from matching
+(define (pack-tagged-multi* stxes depth)
+  (pack* stxes depth pack-tagged-multi))
 
 ;; Unpacks to a list of groups, which is symmetric to `pack-multi*`
 (define (unpack-multi* qs r depth)
   (unpack* qs r depth
+           'multi
            (lambda (r)
-             (unpack-multi r qs))))
+             (if (list? r)
+                 (map (lambda (r) (unpack-group r qs)) r)
+                 (unpack-multi r qs)))))
 
-;; Like `pack-multi*, but preserves `block` insteda of converting to `multi`:
+;; Like `pack-multi*, but preserves `block` instead of converting to `multi`:
 (define (pack-block* stxes depth)
   (pack* stxes depth (lambda (r) r)))
 
@@ -233,6 +262,11 @@
   (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm
                           "cannot coerce list to syntax"
                           "list" r))
+
+(define (cannot-coerce-pair who r)
+  (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm
+                          "cannot coerce pair to syntax"
+                          "pair" r))
 
 (define (raise-error who msg r)
   (if (procedure? who)
