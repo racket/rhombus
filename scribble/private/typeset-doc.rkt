@@ -47,7 +47,7 @@
                   id-to-target-maker
                   with-exporting-libraries)
          (only-in scribble/manual-struct
-                  thing-index-desc*)
+                  exported-index-desc*)
          (only-in scribble/private/manual-vars
                   add-background-label))
 
@@ -168,7 +168,7 @@
                        (list (datum-intern-literal str))
                        (list ref-content)
                        (with-exporting-libraries
-                         (lambda (libs) (thing-index-desc* name libs kind))))
+                         (lambda (libs) (exported-index-desc* name libs (list kind)))))
                       tag
                       ref-content)))]
     [else content]))
