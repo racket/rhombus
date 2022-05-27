@@ -6,7 +6,7 @@
   '(["base" #:version "8.4.0.8"]
     "syntax-color-lib"
     "parser-tools-lib"
-    ["scribble-lib" #:version "1.43"]
+    ["scribble-lib" #:version "1.46"]
     "sandbox-lib"))
 
 (define build-deps

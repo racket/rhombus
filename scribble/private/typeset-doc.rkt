@@ -47,7 +47,7 @@
                   id-to-target-maker
                   with-exporting-libraries)
          (only-in scribble/manual-struct
-                  thing-index-desc)
+                  thing-index-desc*)
          (only-in scribble/private/manual-vars
                   add-background-label))
 
@@ -80,34 +80,38 @@
                                                  "identifier to document has no for-label binding"
                                                  s-def-id)))
                          def-name))
-     (define def-id-as-defs (for/fold ([rev-as-defs '()] [seen #hash()] #:result (reverse rev-as-defs))
-                                      ([def-name (in-list def-names)]
-                                       [introducer (in-list introducers)]
-                                       [space-name (in-list space-names)])
-                              (cond
-                                [(not def-name)
-                                 (values (cons #f rev-as-defs)
-                                         seen)]
-                                [else
-                                 (define def-id (if (identifier? def-name)
-                                                    def-name
-                                                    (car (syntax-e def-name))))
-                                 (define str-id (if (identifier? def-name)
-                                                    #f
-                                                    (cadr (syntax->list def-name))))
-                                 (define sym-path (if str-id
-                                                      (syntax-e str-id)
-                                                      null))
-                                 (define seen-key (cons (syntax-e def-id) sym-path))
-                                 (values
-                                  (cons #`(#,(if (hash-ref seen seen-key #f)
-                                                 #'make-redef-id
-                                                 #'make-def-id)
-                                           (quote-syntax #,(introducer def-id))
-                                           (quote-syntax #,str-id)
-                                           (quote #,space-name))
-                                        rev-as-defs)
-                                  (hash-set seen seen-key #t))])))
+     (define kind-strs (map extract-kind-str forms))
+     (define def-id-as-defs
+       (for/fold ([rev-as-defs '()] [seen #hash()] #:result (reverse rev-as-defs))
+                 ([def-name (in-list def-names)]
+                  [kind-str (in-list kind-strs)]
+                  [introducer (in-list introducers)]
+                  [space-name (in-list space-names)])
+         (cond
+           [(not def-name)
+            (values (cons #f rev-as-defs)
+                    seen)]
+           [else
+            (define def-id (if (identifier? def-name)
+                               def-name
+                               (car (syntax-e def-name))))
+            (define str-id (if (identifier? def-name)
+                               #f
+                               (cadr (syntax->list def-name))))
+            (define sym-path (if str-id
+                                 (syntax-e str-id)
+                                 null))
+            (define seen-key (cons (syntax-e def-id) sym-path))
+            (values
+             (cons #`(#,(if (hash-ref seen seen-key #f)
+                            #'make-redef-id
+                            #'make-def-id)
+                      (quote-syntax #,(introducer def-id))
+                      (quote-syntax #,str-id)
+                      (quote #,space-name)
+                      (quote #,kind-str))
+                   rev-as-defs)
+             (hash-set seen seen-key #t))])))
      (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)])
                         (extract-metavariables form vars)))
      (define vars (for/fold ([vars all-vars]) ([id (in-list (syntax->list #'(~? (literal-id ... ...) ())))])
@@ -115,7 +119,6 @@
      (define typesets (for/list ([form (in-list forms)]
                                  [def-id-as-def (in-list def-id-as-defs)])
                         (extract-typeset form def-id-as-def)))
-     (define kind-strs (map extract-kind-str forms))
      (with-syntax ([(typeset ...) typesets]
                    [(kind-str ...) kind-strs])
        #`(let-syntax (#,@(for/list ([id (in-hash-values vars)])
@@ -137,7 +140,7 @@
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id str-id space)
+(define (make-def-id id str-id space kind)
   (define str-id-e (syntax-e str-id))
   (define str (shrubbery-syntax->string (if str-id-e
                                             str-id
@@ -165,12 +168,12 @@
                        (list (datum-intern-literal str))
                        (list ref-content)
                        (with-exporting-libraries
-                         (lambda (libs) (thing-index-desc name libs))))
+                         (lambda (libs) (thing-index-desc* name libs kind))))
                       tag
                       ref-content)))]
     [else content]))
 
-(define (make-redef-id id str-id space)
+(define (make-redef-id id str-id space kind)
   (define str-id-e (syntax-e str-id))
   (racketidfont
    (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
