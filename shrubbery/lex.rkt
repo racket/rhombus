@@ -964,14 +964,16 @@
                  #:text-mode? [text-mode? #f]
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
-                 #:interactive? [interactive? #f])
+                 #:interactive? [interactive? #f]
+                 #:consume-eof? [consume-eof? #f])
   (define status (if text-mode?
                      (make-in-text-status)
                      'initial))
   (parameterize ([current-lexer-source source])
-    (let loop ([status status] [depth 0] [blanks 0] [multi? #f])
+    (let loop ([status status] [depth 0] [blanks 0] [nonempty? #f] [multi? #f])
       (cond
-        [(eof-object? (peek-char in))
+        [(and (not consume-eof?)
+              (eof-object? (peek-char in)))
          ;; don't consume an EOF
          '()]
         [else
@@ -986,18 +988,17 @@
            [(EOF) '()]
            [(fail) (fail tok "read error")]
            [(whitespace)
-            (define a (wrap tok))
             (define newline? (let* ([s (syntax-e (token-value tok))]
                                     [len (string-length s)])
                                (and (positive? len)
                                     (eqv? #\newline (string-ref s (sub1 len))))))
             (cond
-              [(and interactive? newline? (zero? depth)
+              [(and interactive? newline? (zero? depth) nonempty?
                     (blanks . >= . (if multi? 1 0))
                     (not (lex-nested-status? status)))
                (list (wrap tok))]
               [else (cons (wrap tok)
-                          (loop new-status depth (+ blanks (if newline? 1 0)) multi?))])]
+                          (loop new-status depth (+ blanks (if newline? 1 0)) nonempty? multi?))])]
            [else
             (define a (case name
                         [(s-exp)
@@ -1011,6 +1012,9 @@
                               [(closer) (sub1 depth)]
                               [else depth])
                             0
+                            (case name
+                              [(comment) nonempty?]
+                              [else #t])
                             (case name
                               [(block-operator semicolon-operator)
                                (or multi?

@@ -154,7 +154,7 @@
   (unless (null? rest-l)
     (error "had leftover items" rest-l))
   (cond
-    [(and interactive? (null? gs)) eof]
+    [(and interactive? (null? gs) (null? l)) eof]
     [else
      (define top (lists->syntax (cons top-tag (bars-insert-alts gs))))
      (add-raw-tail top tail-raw)]))
@@ -1523,14 +1523,12 @@
   (define l (lex-all in fail
                      #:source source
                      #:interactive? interactive?
-                     #:text-mode? text-mode?))
+                     #:text-mode? text-mode?
+                     #:consume-eof? #t))
   (check-line-counting l)
   (define v (if text-mode?
                 (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
                 (parse-top-groups l #:interactive? interactive?)))
-  (when (and interactive? (eof-object? v))
-    ;; consume the EOF
-    (read-char in))
   v)
   
 (module+ main
