@@ -10,8 +10,8 @@
   #:stronger-than (===))
 
 (define (append-as-strings a b)
-  (string-append (to-string a)
-                 (to-string b)))
+  (string-append-immutable (to-string a)
+                           (to-string b)))
 
 (define (to-string a)
   (cond

@@ -71,8 +71,8 @@
     #:stronger-than (\|\| &&)
     #:associate 'none))
 
-(define-eql-infix == equal?)
-(define-eql-infix != not-equal?)
+(define-eql-infix == equal-always?)
+(define-eql-infix != not-equal-always?)
 (define-eql-infix === eq?)
 
-(define (not-equal? a b) (not (equal? a b)))
+(define (not-equal-always? a b) (not (equal-always? a b)))

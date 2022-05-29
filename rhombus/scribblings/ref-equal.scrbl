@@ -9,7 +9,9 @@
 
  Reports whether @rhombus[v1] and @rhombus[v2] are equal, which includes
  recursively comparing elements of compound data structures. Two numbers
- are @rhombus[==] only if they are both exact or both inexact.
+ are @rhombus[==] only if they are both exact or both inexact. Two mutable
+ values are @rhombus[==] only if they the same object (i.e., mutating one
+ has the same effect as mutating the other).
 
 @examples[
   "apple" == "apple",
