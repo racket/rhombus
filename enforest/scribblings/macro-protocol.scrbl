@@ -1,5 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm": no_prefix)
+@(import: "common.rhm": open)
 
 @title{Macro protocol}
 
@@ -27,8 +27,8 @@ shrubbery layer of patterning matching. For example, in the earlier
 example implementing the @rhombus[->] macro infix operator,
 
 @(rhombusblock:
-    expr.macro '($x -> $y $tail ...):
-      values('($x . $y), tail)
+    expr.macro '($x -> $y $tail ...)':
+      values('($x . $y)', tail)
   )
 
 the macro transformer receives an syntax-object representing the
