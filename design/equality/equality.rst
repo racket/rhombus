@@ -1,5 +1,5 @@
-RRFI [Draft]: Two-level Universal Scheme for the Extension of Equality
-======================================================================
+Two-level Universal Scheme for the Extension of Equality
+========================================================
 
 .. sectnum::
 
@@ -208,7 +208,7 @@ One way to think about this is that each key type represents a definition of equ
 
 The way to customize the definition of equality in such cases is the same as usual, i.e. a key function – any unary, single-valued function mapping to a key type. The practical implications are that all APIs provided built-in by the language or even those authored by third parties should support a key argument if their user-facing purpose leverages a notion of equality.
 
-[1] Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion RRFI on "Primitive Equality Predicates."
+[1] Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion document on "Primitive Equality Predicates."
 
 Is It Feasible?
 ---------------

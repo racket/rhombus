@@ -1,5 +1,5 @@
-RRFI [Draft]: Primitive Equality Predicates
-===========================================
+Primitive Equality Predicates
+=============================
 
 .. sectnum::
 
@@ -115,7 +115,7 @@ Contributors
 References
 ----------
 
-`RRFI [Draft]: Equality and Order Relations Interface <https://github.com/countvajhula/rhombus-prototype/blob/master/rrfi/equality.rst>`_ -- The companion to the present proposal, this proposes a "two-level" scheme that can be used to safely extend and customize the predicates described in the present document.
+`Two-level Universal Scheme for the Extension of Equality <https://github.com/racket/rhombus-prototype/blob/master/design/equality-extension.rst>`_ -- The companion to the present proposal, this proposes a "two-level" scheme that can be used to safely extend and customize the predicates described in the present document.
 
 Rhombus Discussion: `What do we do about equality? <https://github.com/racket/rhombus-prototype/issues/16>`_
 
