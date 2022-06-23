@@ -117,6 +117,8 @@ References
 
 `Two-level Universal Scheme for the Extension of Equality <https://github.com/racket/rhombus-prototype/blob/master/design/equality-extension.rst>`_ -- The companion to the present proposal, this proposes a "two-level" scheme that can be used to safely extend and customize the predicates described in the present document.
 
+`Add equal-always? with gen:equal-mode+hash <https://github.com/racket/racket/pull/4236>`_ -- a PR to add the `equal-always?` predicate to Racket.
+
 Rhombus Discussion: `What do we do about equality? <https://github.com/racket/rhombus-prototype/issues/16>`_
 
 Rhombus Discussion: `Generic order relations <https://github.com/racket/rhombus-prototype/issues/214>`_
