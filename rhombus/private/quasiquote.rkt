@@ -17,11 +17,7 @@
          (only-in "underscore.rkt"
                   [_ rhombus-_])
          (only-in "annotation.rkt"
-                  ::)
-         ;; because `expr.macro` uses the result of `convert-pattern`
-         ;; as a compile-time pattern, for example:
-         (for-syntax "pack.rkt"
-                     "empty-group.rkt"))
+                  ::))
 
 (provide #%quote
          syntax_term
