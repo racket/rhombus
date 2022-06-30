@@ -8,7 +8,6 @@
                      "syntax-rhs.rkt"
                      (for-syntax racket/base
                                  syntax/parse))
-         "syntax-rhs.rkt"
          "parse.rkt"
          "definition.rkt"
          "function.rkt"
@@ -161,9 +160,7 @@
               op-name::operator-or-identifier
               . tail-pattern)
        #:when (free-identifier=? #'$-id #'$
-                                 (if (eq? kind 'rule)
-                                     (syntax-local-phase-level)
-                                     (add1 (syntax-local-phase-level)))
+                                 (add1 (syntax-local-phase-level))
                                  (syntax-local-phase-level))
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
@@ -212,18 +209,18 @@
     [(_ name . _) #'name]))
 
 ;; single-case macro definition:
-(define-for-syntax (parse-operator-definition kind g rhs in-space rhs-k)
+(define-for-syntax (parse-operator-definition kind g rhs in-space compiletime-id)
   (define p ((parse-one-macro-definition kind) g rhs))
   (define op (pre-parsed-name p))
-  #`(define-syntax #,(in-space op) #,(rhs-k p)))
+  #`(define-syntax #,(in-space op) (#,compiletime-id #,p)))
 
 ;; multi-case macro definition:
-(define-for-syntax (parse-operator-definitions kind stx gs rhss in-space rhs-k)
+(define-for-syntax (parse-operator-definitions kind stx gs rhss in-space compiletime-id)
   (define ps (map (parse-one-macro-definition kind)
                   gs rhss))
   (check-consistent stx (map pre-parsed-name ps) "operator")
   #`(define-syntax #,(in-space (pre-parsed-name (car ps)))
-      #,(rhs-k ps)))
+      (#,compiletime-id #,stx #,@ps)))
 
 ;; An operator definition transformer involves a phase-0 binding for
 ;; the definition form, and a phase-1 binding for the transformer for
@@ -237,40 +234,20 @@
         #'make-prefix-id
         #'make-infix-id
         #'prefix+infix-id)
-     (define rule? (eq? (syntax-e #'protocol) 'rule))
-     (define def-defn
-     #`(define-syntax id
-         (make-operator-definition-transformer-runtime 'protocol
-                                                       in-space-expr
-                                                       #,(if rule?
-                                                             #'(lambda (pre-parsed)
-                                                                 (parse-operator-definition-rhs pre-parsed
-                                                                                                #'make-prefix-id
-                                                                                                #'make-infix-id))
-                                                             #'(lambda (pre-parsed)
-                                                                 #`(compiletime-id #,pre-parsed)))
-                                                       #,(if rule?
-                                                             #'(lambda (pre-parseds)
-                                                                 (parse-operator-definitions-rhs pre-parseds
-                                                                                                 #'make-prefix-id
-                                                                                                 #'make-infix-id))
-                                                             (with-syntax ([orig-stx stx])
-                                                               #'(lambda (pre-parseds)
-                                                                   #`(compiletime-id orig-stx #,@pre-parseds)))))))
-     (if rule?
-         def-defn
-         #`(begin
-             #,def-defn
-             (begin-for-syntax
-               (define-syntax compiletime-id
-                 (make-operator-definition-transformer-compiletime #'make-prefix-id
-                                                                   #'make-infix-id
-                                                                   #'prefix+infix-id)))))]))
+     #`(begin
+         (define-syntax id
+           (make-operator-definition-transformer-runtime 'protocol
+                                                         in-space-expr
+                                                         #'compiletime-id))
+         (begin-for-syntax
+           (define-syntax compiletime-id
+             (make-operator-definition-transformer-compiletime #'make-prefix-id
+                                                               #'make-infix-id
+                                                               #'prefix+infix-id))))]))
 
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
                                                                  in-space
-                                                                 rhs-k
-                                                                 rhss-k)
+                                                                 compiletime-id)
   (definition-transformer
     (lambda (stx)
       (define (template->macro protocol) (if (eq? protocol 'template) 'macro protocol))
@@ -285,14 +262,14 @@
                                            (syntax->list #'(q.g ...))
                                            (syntax->list #'(rhs ...))
                                            in-space
-                                           rhss-k))]
+                                           compiletime-id))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (block body ...)))
          (list (parse-operator-definition (template->macro protocol)
                                           #'q.g
                                           #'rhs
                                           in-space
-                                          rhs-k))]))))
+                                          compiletime-id))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-operator-definition-transformer-compiletime make-prefix-id

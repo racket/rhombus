@@ -1,14 +1,20 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     shrubbery/print)
+                     shrubbery/print
+                     (only-in "private/quasiquote.rkt"
+                              [... rhombus...]
+                              $))
          racket/interaction-info
          "private/bounce.rkt"
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")
 
 (provide (rename-out [rhombus-module-begin #%module-begin])
-         #%top-interaction)
+         #%top-interaction
+         (for-syntax
+          (rename-out [rhombus... ...])
+          $))
 
 (bounce "private/implicit.rkt"
         "private/underscore.rkt"
