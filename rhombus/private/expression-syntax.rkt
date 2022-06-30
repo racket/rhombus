@@ -27,19 +27,19 @@
   (define-simple-name-root expr_ct
     call_result_key))
 
-(define-syntax macro
-  (make-operator-definition-transformer 'macro
-                                        (lambda (x) x)
-                                        #'make-expression-prefix-operator
-                                        #'make-expression-infix-operator
-                                        #'expression-prefix+infix-operator))
+(define-operator-definition-transformer macro
+  'macro
+  (lambda (x) x)
+  #'make-expression-prefix-operator
+  #'make-expression-infix-operator
+  #'expression-prefix+infix-operator)
 
-(define-syntax rule
-  (make-operator-definition-transformer 'rule
-                                        (lambda (x) x)
-                                        #'make-expression-prefix-operator
-                                        #'make-expression-infix-operator
-                                        #'expression-prefix+infix-operator))
+(define-operator-definition-transformer rule
+  'rule
+  (lambda (x) x)
+  #'make-expression-prefix-operator
+  #'make-expression-infix-operator
+  #'expression-prefix+infix-operator)
 
 (define-for-syntax (make-expression-infix-operator name prec protocol proc assc)
   (expression-infix-operator

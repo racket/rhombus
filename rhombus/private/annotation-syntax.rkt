@@ -24,19 +24,19 @@
   (define-simple-name-root annotation_ct
     pack_predicate))
 
-(define-syntax rule
-  (make-operator-definition-transformer 'rule
-                                        in-annotation-space
-                                        #'make-annotation-prefix-operator
-                                        #'make-annotation-infix-operator
-                                        #'annotation-prefix+infix-operator))
+(define-operator-definition-transformer rule
+  'rule
+  in-annotation-space
+  #'make-annotation-prefix-operator
+  #'make-annotation-infix-operator
+  #'annotation-prefix+infix-operator)
 
-(define-syntax macro
-  (make-operator-definition-transformer 'macro
-                                        in-annotation-space
-                                        #'make-annotation-prefix-operator
-                                        #'make-annotation-infix-operator
-                                        #'annotation-prefix+infix-operator))
+(define-operator-definition-transformer macro
+  'macro
+  in-annotation-space
+  #'make-annotation-prefix-operator
+  #'make-annotation-infix-operator
+  #'annotation-prefix+infix-operator)
 
 (begin-for-syntax
   (struct annotation-prefix+infix-operator (prefix infix)

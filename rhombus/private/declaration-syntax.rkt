@@ -16,9 +16,9 @@
 (define-simple-name-root decl
   macro)
 
-(define-syntax macro
-  (make-identifier-syntax-definition-transformer (lambda (x) x)
-                                                 #'make-declaration-transformer))
+(define-identifier-syntax-definition-transformer macro
+  (lambda (x) x)
+  #'make-declaration-transformer)
 
 (define-for-syntax (make-declaration-transformer proc)
   (declaration-transformer

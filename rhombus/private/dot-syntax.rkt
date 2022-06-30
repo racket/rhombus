@@ -21,10 +21,9 @@
 
 (define-for-syntax provider_key #'#%dot-provider)
 
-(define-syntax macro
-  (make-identifier-syntax-definition-transformer
-   (lambda (x) x)
-   #'make-dot-provider-transformer))
+(define-identifier-syntax-definition-transformer macro
+  (lambda (x) x)
+  #'make-dot-provider-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)
   (dot-provider

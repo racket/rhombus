@@ -15,9 +15,9 @@
 (define-simple-name-root imp
   modifier)
 
-(define-syntax modifier
-  (make-identifier-syntax-definition-transformer (lambda (x) x)
-                                                 #'make-import-modifier))
+(define-identifier-syntax-definition-transformer modifier
+  (lambda (x) x)
+  #'make-import-modifier)
 
 (define-for-syntax (make-import-modifier proc)
   (import-modifier

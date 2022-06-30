@@ -13,6 +13,7 @@
          (for-syntax "parse.rkt")
          (submod "value.rkt" for-define)
          "syntax.rkt"
+         "syntax-rhs.rkt"
          (submod "expression-syntax.rkt" for-define))
 
 (provide (rename-out [rhombus-define def]))
@@ -75,9 +76,11 @@
                                       (syntax->list #'(q.g ...))
                                       (syntax->list #'(rhs ...))
                                       in-expression-space
-                                      #'make-expression-prefix-operator
-                                      #'make-expression-infix-operator
-                                      #'expression-prefix+infix-operator)))]
+                                      (lambda (ps)
+                                        (parse-operator-definitions-rhs stx ps
+                                                                        #'make-expression-prefix-operator
+                                                                        #'make-expression-infix-operator
+                                                                        #'expression-prefix+infix-operator)))))]
        [(form-id q::operator-syntax-quote
                  (~and rhs (block body ...)))
         (list
@@ -86,8 +89,10 @@
                                      #'q.g
                                      #'rhs
                                      in-expression-space
-                                     #'make-expression-prefix-operator
-                                     #'make-expression-infix-operator)))]
+                                     (lambda (p)
+                                       (parse-operator-definition-rhs p
+                                                                      #'make-expression-prefix-operator
+                                                                      #'make-expression-infix-operator)))))]
        [(form-id any ...+ (~and rhs (block body ...)))
         (build-value-definitions #'form-id #'(group any ...) #'rhs
                                  wrap-definition)]))))

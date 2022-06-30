@@ -39,19 +39,19 @@
     unpack_info
     get_info))
 
-(define-syntax macro
-  (make-operator-definition-transformer 'macro
-                                        in-binding-space
-                                        #'make-binding-prefix-operator
-                                        #'make-binding-infix-operator
-                                        #'prefix+infix))
+(define-operator-definition-transformer macro
+  'macro
+  in-binding-space
+  #'make-binding-prefix-operator
+  #'make-binding-infix-operator
+  #'prefix+infix)
 
-(define-syntax rule
-  (make-operator-definition-transformer 'rule
-                                        in-binding-space
-                                        #'make-binding-prefix-operator
-                                        #'make-binding-infix-operator
-                                        #'prefix+infix))
+(define-operator-definition-transformer rule
+  'rule
+  in-binding-space
+  #'make-binding-prefix-operator
+  #'make-binding-infix-operator
+  #'prefix+infix)
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)
