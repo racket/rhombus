@@ -15,12 +15,12 @@ function applications and data constructors.
 
 # Motivation
 
-Associating keywords their associated argument values via
+Associating keywords with their argument values via
 a map data structure is better than having them in separate
 lists whose values are only associated by index across the
 lists. 
 On the other side, passing dictionaries into function
-applications is much more convenient that making sure the
+applications is much more convenient than making sure the
 two lists maintain their parallel and sorted order as they
 go through potential mergers, additions, or removals.
 A sorted map data structure can maintain the sorted order
@@ -161,10 +161,10 @@ f_expr(& l_expr, ~& m_expr)
 ```
 
 Applies the function produced by `f_expr` with the
-content of the list produced by `a_expr` as the positional
-arguments and the dictionary produced by `b_expr` as the
+content of the list produced by `l_expr` as the positional
+arguments and the dictionary produced by `m_expr` as the
 keyword arguments.
-Similar to using `(keyword-apply/dict f_expr b_expr a_expr)` in Racket.
+Similar to using `(keyword-apply/dict f_expr m_expr l_expr)` in Racket.
 
 The `& expr` and the `~& expr` can appear in either
 order with respect to each other, but they must come last
@@ -192,6 +192,8 @@ Examples:
 10
 > add(& [1, 2, 3, 4])
 10
+> add(1, 2, & [3, 4])
+10
 > fun transform(Posn(x, y),
                 ~scale: factor = 1,
                 ~dx: dx = 0,
@@ -203,6 +205,8 @@ Posn(1, 2)
 Posn(8, 2)
 > transform(Posn(1, 2), ~& {keyword(~dx): 7, keyword(~scale): 2})
 Posn(9, 4)
+> transform(Posn(1, 2), ~scale: 2, ~& {keyword(~dx): 7, keyword(~dy): 11})
+Posn(9, 15)
 ```
 
 ## Data Constructors
@@ -404,7 +408,7 @@ Racket's [`syntax`](https://docs.racket-lang.org/reference/stx-patterns.html#%28
 [unresolved]: #unresolved-questions
 
 Ellipses bring up many unresolved questions.
-If those are out of scope for the design rest arguments and
+If those are out of scope for the design of rest arguments and
 keyword arguments, `...` ellipses can be omitted for now,
 and rest arguments can still be expressed with `&`.
 Then once ellipses are figured out they could be added in
@@ -426,7 +430,7 @@ marker in patterns such as `[]` and `{}`: if those can
 match mutable versions of their respective data structures,
 should those patterns support `&`, or should they fail to
 match or even error on the attempt?
-Or should they copy the data an risk quadradic waste?
+Or should they copy the data and risk quadradic waste?
 Or should they create slices that implement aliasing?
 If so how do the slices behave on mutation of each data
 structure, in both directions?
