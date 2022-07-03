@@ -247,6 +247,34 @@ Using an identifier with ellipsis-depth 1 or more in a
 context not under at least that number of ellipses is a
 syntax error.
 
+## Type Annotations
+
+When rest arguments written with `& rst` have type
+annotations `& rst -: type`, the type applies to the list
+value, not to the elements.
+
+When keyword rest arguments with `~& kwrst` have type
+annotations `~& kwrst -: type`, the type applies to the map
+value, not to the value elements.
+
+```
+> fun p(& l -: List):
+    l
+> fun k(~& m -: Map):
+    m
+> fun n(& l -: List, ~& m -: Map):
+    [l, m]
+```
+
+However, when an identifier under ellipses has a type
+annotation `(x -: type) ...`, the type applies to each
+element under iteration, not to the list as a whole.
+
+```
+> fun el((x -: Number) ...):
+    [[x, x] ...]
+```
+
 # Reference-level explanation
 
 ## Functions
@@ -355,6 +383,10 @@ Examples:
 > [x + y, ...]
 [31, 42, 53]
 ```
+
+Type annotations under ellipses also apply to each element
+under iteration, similarly to syntax classes under ellipses
+in Racket's `syntax/parse`.
 
 # Drawbacks and Alternatives
 [drawbacks]: #drawbacks
