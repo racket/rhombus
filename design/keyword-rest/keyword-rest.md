@@ -300,7 +300,8 @@ kwrst_binding = & binding
               | ~& binding
               | binding ...
 
-maybe_result_annotation = : annotation
+maybe_result_annotation = :: annotation
+                        | -: annotation
                         | ϵ
 ```
 
