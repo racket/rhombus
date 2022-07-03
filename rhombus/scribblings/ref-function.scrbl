@@ -30,7 +30,8 @@
     $keyword: $binding $$(@tt{=}) $default_expr,
   
   grammar maybe_result_annotation:
-    :: $annotation
+    : :: $annotation
+    -: $annotation
     $$("ϵ")
 ]{
 
