@@ -414,6 +414,25 @@ structures at all, vs. have them create copies every time,
 risking quadratic waste sneaking in, vs. have them create
 slices that implement aliasing.
 
+The `&` operator has been used for appending strings.
+To resolve this conflict in favor of rest arguments, `++`
+could append strings instead, but this comes with the
+drawback that `++` shouldn't coerce other values to
+strings, while a dedicated string operator like `&` could
+do that more reasonably.
+Alternatively to resolve this conflict in favor of strings,
+the rest marker could be replaced with something else.
+Racket uses `.` for rest arguments, but Rhombus's use of
+`.` for fields and methods is more important.
+Python uses `*` for rest arguments, but it might be
+confusing to overload this with multiplication.
+Alternatively rest arguments could be expressed with `...`
+ellipses alone, but that would basically make it mandatory
+to bring in all the complexities of ellipsis-depth for
+every rest argument. And `...` ellipses don't express the
+"rest" idea for non-list-like data structures like maps
+either.
+
 # Prior art
 [prior-art]: #prior-art
 
@@ -467,3 +486,13 @@ Or should they copy the data and risk quadradic waste?
 Or should they create slices that implement aliasing?
 If so how do the slices behave on mutation of each data
 structure, in both directions?
+
+What to do about the conflict with using `&` to append
+strings? 
+Should `++` be used for that instead?
+What about the coercing use cases of `&` to interpolate
+non-string values?
+I personally wouldn't want `++` to do string coercion, so
+should there be a short unary operator for those use cases
+instead?
+If so, what should that look like?
