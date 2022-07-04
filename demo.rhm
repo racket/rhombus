@@ -518,10 +518,14 @@ nested_p.y.x
 
 // rest arguments
 
-fun f_rest(x, y :: Integer, ...):
+fun f_rest(x, & ys :: List):
+  ys
+
+fun f_elrest(x, y :: Integer, ...):
   [y, ...]
 
 f_rest(10, 11, 12, 13)
+f_elrest(10, 11, 12, 13)
 
 fun
 | g_rest(): "no"

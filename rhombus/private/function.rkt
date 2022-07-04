@@ -20,6 +20,8 @@
          (only-in "ellipsis.rkt"
                   [... rhombus...])
          "repetition.rkt"
+         "rest-marker.rkt"
+         (only-in "list.rkt" List)
          (submod "annotation.rkt" for-class)
          (only-in "equal.rkt"
                   [= rhombus=])
@@ -45,7 +47,9 @@
     (pattern form
              #:when (syntax-parse #'form
                       #:datum-literals (group op)
+                      #:literals (& ~&)
                       [(group (op (~literal rhombus...))) #f]
+                      [(group (op (~or & ~&)) . _) #f]
                       [_ #t])
              #:with arg::binding #'form
              #:with parsed #'arg.parsed))
@@ -112,10 +116,18 @@
              #:attr predicate #'#f))
 
   (define-splicing-syntax-class :maybe-arg-rest
+    #:attributes [arg parsed]
     #:datum-literals (group op)
-    #:literals (rhombus...)
-    (pattern (~seq arg::non-...-binding (group (op rhombus...)))
-             #:with parsed #'arg.parsed)
+    #:literals (& ~& rhombus...)
+    (pattern (~seq (group (op &) a ...))
+      #:with arg::non-...-binding #'(group a ...)
+      #:with parsed #'arg.parsed)
+    (pattern (~seq (group (op ~&) a ...))
+      #:with arg::non-...-binding #'(group a ...)
+      #:with parsed #'arg.parsed)
+    (pattern (~seq e (~and ooo (group (op rhombus...))))
+      #:with (::maybe-arg-rest)
+      #'((group (op &) List (parens e ooo))))
     (pattern (~seq)
              #:attr arg #'#f
              #:attr parsed #'#f)))
@@ -215,23 +227,13 @@
       (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))]
                     [(arg ...) args]
                     [rhs rhs]
-                    [(maybe-rest-tmp maybe-match-rest
-                                     (maybe-bind-rest-seq ...)
-                                     (maybe-bind-rest ...))
+                    [(maybe-rest-tmp maybe-match-rest)
                      (if (syntax-e rest-arg)
                          (with-syntax-parse ([rest::binding-form rest-parsed]
                                              [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
-                                             [rest-info::binding-info #'rest-impl.info]
-                                             [(rest-tmp-id ...) (generate-temporaries #'(rest-info.bind-id ...))])
-                           #`(rest-tmp
-                              (rest-getter #,rest-arg rest-tmp rest-info)
-                              ((define-values (rest-tmp-id ...) (rest-getter)))
-                              ((define-syntax rest-info.bind-id
-                                 (make-repetition (quote-syntax rest-info.bind-id)
-                                                  (quote-syntax rest-tmp-id)
-                                                  (quote-syntax (rest-info.bind-static-info ...))))
-                               ...)))
-                         #'(() #f () ()))])
+                                             [rest-info::binding-info #'rest-impl.info])
+                           #`(rest-tmp (rest-tmp rest-info #,rest-arg #f)))
+                         #'(() #f))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
                        (for/list ([kw (in-list (syntax->list kws))]
                                   [tmp-id (in-list (syntax->list #'(tmp-id ...)))]
@@ -261,10 +263,6 @@
                 ...
                 maybe-match-rest
                 (begin
-                  ;; `arg-info.binder-id` and `arg-info.bind-id` are used in
-                  ;; `nested-bindings` because `try-next` above is `#f`
-                  maybe-bind-rest-seq ...
-                  maybe-bind-rest ...
                   (add-annotation-check
                    #,function-name #,pred
                    (rhombus-body-expression rhs))))))))))
@@ -319,14 +317,10 @@
                                                   (define rest-parsed (fcase-rest-arg-parsed fc))
                                                   (with-syntax-parse ([rest::binding-form rest-parsed]
                                                                       [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
-                                                                      [rest-info::binding-info #'rest-impl.info]
-                                                                      [(rest-tmp-id ...) (generate-temporaries #'(rest-info.bind-id ...))])
-                                                    #`((rest-getter #,(fcase-rest-arg fc) rest-tmp rest-info)
-                                                       ((define-values (rest-tmp-id ...) (rest-getter)))
-                                                       ((define-syntax rest-info.bind-id
-                                                          (make-repetition (quote-syntax rest-info.bind-id)
-                                                                           (quote-syntax rest-tmp-id)
-                                                                           (quote-syntax (rest-info.bind-static-info ...))))
+                                                                      [rest-info::binding-info #'rest-impl.info])
+                                                    #`((rest-tmp rest-info #,(fcase-rest-arg fc) #f)
+                                                       ((rest-info.binder-id rest-tmp rest-info.data))
+                                                       ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
                                                         ...)))]
                                                  [else
                                                   #'(#f () ())])])

@@ -14,7 +14,8 @@
 ;; hardwired to lists.
 
 (provide (for-syntax make-composite-binding-transformer
-                     make-rest-match))
+                     make-rest-match
+                     make-arg-getter))
 
 (define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor or map list, used for contract
                                                        predicate     ; predicate for the composite value
@@ -188,6 +189,22 @@
                   ...)]))]))
 
 ;; ------------------------------------------------------------
+
+;; make a "getter" expression for an argument, used for "rest-getter"
+;; without assuming ellipses
+(define-for-syntax (make-arg-getter c-arg-id accessor arg-info fail)
+  (syntax-parse arg-info
+    [arg::binding-info
+     #`(let ([arg-id (let ([arg.name-id (#,accessor #,c-arg-id)])
+                       arg.name-id)])
+         (arg.matcher-id
+          arg-id
+          arg.data
+          if/blocked
+          (lambda ()
+            (arg.binder-id arg-id arg.data)
+            (values arg.bind-id ...))
+          (#,fail arg-id)))]))
 
 ;; a match result for a "rest" match is a function that gets
 ;; lists of results; the binder step for each element is delayed
