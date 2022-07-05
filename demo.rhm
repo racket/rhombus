@@ -12,7 +12,7 @@ use_static_dot
 
 #false || !(#false || #false)
       
-"hello" & " " & "world"
+"hello" ++ " " ++ "world"
 
 // define and call a function
 
@@ -179,7 +179,7 @@ prefix_plus 7 9
 
 expr.rule 'just_five': '"five"'
 
-just_five & " is the result"
+just_five ++ " is the result"
 
 // another way to write that
 
@@ -581,7 +581,7 @@ def
 
 weirdly
 weirdly coconut
-weirdly & "none"
+weirdly ++ "none"
 1 weirdly 5
 1 weirdly 5 + 7
 
