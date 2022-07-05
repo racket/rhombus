@@ -51,16 +51,18 @@
     [(list? map) (list-ref map index)]
     [(hash? map) (hash-ref map index)]
     [(set? map) (hash-ref (set-ht map) index #f)]
+    [(string? map) (string-ref map index)]
     [else
      (raise-argument-error* 'Map.ref rhombus-realm "Map" map)]))
 
 (define (map-set! map index val)
   (cond
-    [(vector? map) (vector-set! map index val)]
+    [(and (vector? map) (not (immutable? map))) (vector-set! map index val)]
     [(and (hash? map) (not (immutable? map))) (hash-set! map index val)]
     [(and (set? map) (not (immutable? (set-ht map)))) (if val
                                                           (hash-set! (set-ht map) index #t)
                                                           (hash-remove! (set-ht map) index))]
+    [(and (string? map) (not (immutable? map))) (string-set! map index val)]
     [else
      (raise-argument-error* 'Map.assign rhombus-realm "Mutable_Map" map)]))
 
@@ -106,4 +108,10 @@
                                                  "cannot append a set and other value"
                                                  "set" map1
                                                  "other value" map2)])]
-    [else (raise-argument-error* '++ rhombus-realm "or(List, Array, Map, Set)" map1)]))
+    [(string? map1) (cond
+                      [(string? map2) (string-append-immutable map1 map2)]
+                      [else (raise-arguments-error* '++ rhombus-realm
+                                                    "cannot append a string and other value"
+                                                    "string" map1
+                                                    "other value" map2)])]
+    [else (raise-argument-error* '++ rhombus-realm "or(List, Array, Map, Set, String)" map1)]))

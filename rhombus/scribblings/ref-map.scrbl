@@ -89,14 +89,15 @@ operator.
   operator ((v1 :: Map) ++ (v2 :: Map)) :: Map,
   operator ((v1 :: Set) ++ (v2 :: Set)) :: Set,
   operator ((v1 :: List) ++ (v2 :: List)) :: List,
+  operator ((v1 :: String) ++ (v2 :: String)) :: String,
 ]{
 
- Appends @rhombus[v1] and @rhombus[v2] to create a new map, set, or
- list. In the case of maps, mappings for keys in @rhombus[v2] replace
+ Appends @rhombus[v1] and @rhombus[v2] to create a new map, set, list, or
+ string. In the case of maps, mappings for keys in @rhombus[v2] replace
  ones that exist already in @rhombus[v1]. In the case of sets, the new
- set has all of the elements of @rhombus[v1] and @rhombus[v2]. In the case
- of lists, the elements of @rhombus[v1] appear first in the result list
- followed by the elements of @rhombus[v2].
+ set has all of the elements of @rhombus[v1] and @rhombus[v2].
+ In the case of lists and strings, the elements of @rhombus[v1] appear
+ first in the result followed by the elements of @rhombus[v2].
 
  The combination
  @rhombus[$$(@rhombus(map_expr, ~var)) ++ {$$(@rhombus(key_expr, ~var)): $$(@rhombus(value_expr, ~var))}]
@@ -109,7 +110,8 @@ operator.
   m ++ {"x": 0},
   m,
   {1, 2, 3} ++ {"four", "five"},
-  [1, 2, 3] ++ [4, 5]
+  [1, 2, 3] ++ [4, 5],
+  "hello" ++ " " ++ "world"
 ]
 
 }
