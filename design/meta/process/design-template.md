@@ -50,4 +50,3 @@ References
 ----------
 
 Codd, E.F (1970). "A Relational Model of Data for Large Shared Data Banks"
-Codd, "A Relational Model of Data for Large Shared Data Banks", https://link/to/source
