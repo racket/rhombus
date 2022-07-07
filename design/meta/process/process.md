@@ -1,32 +1,66 @@
-Rhombus Design Recording Guidelines
-===================================
+Rhombus Design Process Guidelines
+=================================
 
-Innovation in the Rhombus project occurs through communication in many different channels -- realtime as well as asychronous, persistent as well as ephemeral. Ideally, discussion is posted at [https://github.com/racket/rhombus-prototype](https://github.com/racket/rhombus-prototype) (as described in the [README](https://github.com/racket/rhombus-prototype/blob/master/README.md)), but requiring all discussion to be there is not realistic goal. Even if all discussion were centralized, making potential contributors hunt through channels and reconstruct discussion threads to understand a design creates a substantial obstacle to contribution. To help everyone keep track of a design, including people who may be new to an ongoing discussion, Rhombus will employ the practice of creating and maintaining *edited* discussion summaries for each aspect of the language, along with minimal process to aid openness and efficiency.
+This document describes the design process used to streamline innovation in the Rhombus project. The process is oriented around design documents and accompanying prototypes.
+
+Rationale
+---------
+
+Innovation in the Rhombus project occurs through communication in many different channels -- realtime as well as asychronous, persistent as well as ephemeral. Ideally, discussion is posted at [https://github.com/racket/rhombus-prototype](https://github.com/racket/rhombus-prototype) (as described in the [README](https://github.com/racket/rhombus-prototype/blob/master/README.md)), but requiring all discussion to be there is not a realistic goal. Even if all discussion were centralized, making potential contributors hunt through channels and reconstruct discussion threads to understand a design creates a substantial obstacle to contribution. To help everyone keep track of a design, including people who may be new to an ongoing discussion, Rhombus employs the practice of creating and maintaining *edited design documents* for each aspect of the language. These documents reflect and inform *accompanying prototypes*. Rhombus also institutes minimal process to aid openness and efficiency.
 
 The Process
 -----------
 
-For a nontrivial addition to the language, work likely starts out as an informal discussion or a contributor's worked-out idea. Ideally, an initial design should be implemented in a prototype as soon as possible, because having an implementation aids communication and discussion. Some ideas may be worked out enough to merit a design document in advance of the implementation. Either way, a design document and any associated implementation can be posted to [https://racket/rhombus-prototype](https://racket/rhombus-prototype) as a pull request. (Note that more speculative ideas or options can be suitable for posting as an [issue](https://github.com/racket/rhombus-prototype/issues).)
+### Overview
+
+For a nontrivial addition to the language, work likely starts out as an informal discussion or a contributor's worked-out idea. Ideally, an initial design should be implemented in a prototype as soon as possible, because having an implementation aids communication and discussion. Some ideas may be worked out enough to merit a design document in advance of the implementation. Either way, a design document and any associated implementation is posted to the Rhombus repo as a pull request. Work on the design proceeds in connection with this pull request, guided by the initial contributor or another designated editor, until it is eventually merged.
+
+Note that more speculative ideas or options may be suitable for posting as [issues](https://github.com/racket/rhombus-prototype/issues) instead of, or as a precursor to, following the design process documented here.
+
+And on the other end of the spectrum, for small additions to Rhombus, following the design process is not necessary, in favor of simply creating a pull request with the necessary changes to the Rhombus implementation and documentation.
+
+### The Editor
 
 Every design has an editor. Often, the de facto editor is the person that has been leading discussions or championing a particular proposal. In cases where it is less obvious who the editor should be, someone may volunteer, or the group may nominate someone. The only outcome from this stage of the process is *agreement* on who the editor is.
 
-The editor forks the `rhombus-prototype` repo and creates a new document at the path `design/topic/filename.ext` -- using Markdown format or Scribble (rendered to HTML or Markdown). Initially, the design document is maintained *on the editor's fork* until it is ready to merge. That is, any edits to the design document must be made either by the editor or as pull requests against the editor's fork.
+The editor is typically interested and knowledgeable about the topic, and their role is to shepherd the proposal through to its conclusion in collaboration with other project members. Contributors often take on the role of editor when they have a vision for that particular component of the language, and are interested in delivering on that vision with the help of other project members. Being an editor is a creative role, but it equally entails the responsibility to synthesize ongoing discussions into the design document and the prototype as needed.
+
+If at any stage of the process the editor is unable to fulfill their role, they may choose to abdicate their responsibility to another project member, which can be decided by discussion in any convenient, even private, channel. But any change of editor *must be announced to the group* in a canonical channel.
+
+### Working on the Design
+
+The editor first forks the `rhombus-prototype` repo, creates a new document at the path `design/topic/filename.ext`, and posts it to [the Rhombus repo](https://github.com/racket/rhombus-prototype) as a pull request.
+
+Initially, the design document and any prototypes are maintained *on the editor's fork* until they are ready to be merged. That is, any modifications to the design must be made either by the editor or as pull requests against the editor's fork.
 
 Once a design document and its prototype have evolved to the point that they seem likely components of the Rhombus design, the pull request can be merged into the *Rhombus repo's main branch*. Discussion proceeds in this second phase as in the first. The switch from being a pull request (with recommended changes as part of the request) to a merged change (with recommended changes perhaps as new pull requests) simply reflects that different tools seem better suited to the earlier phase versus a later phase.
-
-An editor may at any time abdicate their responsibility to another project member, which can be decided by discussion in any convenient, even private, channel. But any change of editor *must be announced to the group* in a canonical channel.
 
 The Design Document
 -------------------
 
-The purpose of the document is to propose a particular way of doing things. In its discussion summary, a design document should showcase different ways of accomplishing the design's aims as have been discussed, and the summary should relate them to the consensus choices that are reflected in the design document. An editor is expected to both participate in dicussion and also synthesize and organize the record of discussion. Some alternative designs may be worth mentioning as part of a design's description, but as much as possible the disucssion summary as an appendix should be a complete and accurate reflection of the discussion.
+### Purpose
 
-At the point where a design becomes wholly integrated into the Rhombus documentation, the original design document may become redundant except for the discussion summary. A redundant design description can be removed (replaced with a reference to documentation sections), but the discusssion summary should be preserved and maintained in perpetuity.
+The purpose of the document in the early stages is to propose and develop alternatives accomplishing the aims of the design, while making recommendations from these alternatives. In later stages, as these alternatives become more well-specified and the recommendations are accepted, the document naturally serves as a record of the design process and as rationale for the accepted design. The editor should ensure that the finished product reflects its role for posterity -- that is, if necessary, the verbiage should be modified from "Option B is recommended due to X and Y" to "Option B was accepted due to X and Y."
+
+### Content
+
+At the outset, the document should summarize the proposed (or accepted) design. The rest of the document should showcase different ways of accomplishing the design's aims as have been discussed, and relate them to the consensus choices that are reflected in the accepted or proposed design, motivating why those choices are warranted or were made. The document must synthesize and organize the record of discussion in these terms.
+
+At the point where a design becomes wholly integrated into the Rhombus documentation, the original design document need no longer be maintained, but it should be preserved in perpetuity as a record of the design process and the decisions that were made.
+
+### Format
+
+The design document should use Markdown or Scribble format. In either case, a link to a rendered HTML version or instructions to render it to HTML locally could optionally be included in the PR description, for the reader's convenience.
+
+The Prototype
+-------------
+
+In the early stages of the process, the design may use a `poc` subfolder in the `design/<topic>/` folder in the Rhombus repo to implement standalone proofs-of-concept, including full prototypes that implement the design. In later stages of the process when there is broad agreement on the general direction of the proposal, the prototype could take the form of changes to the Rhombus implementation and documentation to incorporate the design into the language.
 
 Supporting Materials
 --------------------
 
-The pull request for an implementation may include changes to the Rhombus implementation and documentation. For additional code and material, the design may have a corresponding subfolder in the `design` folder in the Rhombus repo. For example, supporting material in the subfolder may include data gathered in the service of claims made in the design document, such as surveys, studies, or analyses.
+The `design/<topic>` folder may also include additional supporting material such as data gathered in the service of claims made in the design document, surveys, studies, or analyses of any kind.
 
 Attribution
 -----------
