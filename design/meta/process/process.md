@@ -28,15 +28,15 @@ Note also that more speculative ideas or options may be suitable for posting as 
 
 Every design has an editor. Often, the de facto editor is the person that has been leading discussions or championing a particular proposal. In cases where it is less obvious who the editor should be, someone may volunteer, or the group may nominate someone. The only outcome from this stage of the process is *agreement* on who the editor is.
 
-The editor is typically interested and knowledgeable about the topic, and their role is to shepherd the proposal through to its conclusion in collaboration with other project members. Contributors often take on the role of editor when they have a vision for that particular component of the language, and are interested in delivering on that vision with the help of other project members. Being an editor is a creative role, but it equally entails the responsibility to synthesize ongoing discussions into the design document and the prototype as needed.
+The editor is typically interested and knowledgeable about the topic, and their role is to shepherd the proposal through to its conclusion in collaboration with other project members. Contributors often take on the role of editor when they have a vision for that particular component of the language, and are interested in delivering on that vision with the help of other project members. Being an editor is a creative and a guiding role, but it equally entails the responsibility to synthesize ongoing discussions into the design document and the prototype as needed. This ensures that the document is informed by multiple perspectives and that the available alternatives are effectively developed through collaboration.
 
 If at any stage of the process the editor is unable to fulfill their role, they may choose to abdicate their responsibility to another project member, which can be decided by discussion in any convenient, even private, channel. But any change of editor *must be announced to the group* in a canonical channel.
 
 ### Working on the Design
 
-The editor first forks the `rhombus-prototype` repo, creates a new document at the path `design/topic/filename.ext`, and posts it to [the Rhombus repo](https://github.com/racket/rhombus-prototype) as a pull request.
+The editor first forks the [`rhombus-prototype` repository](https://github.com/racket/rhombus-prototype), starts a branch to track the new design, creates a new document at the path `design/topic/filename.ext` on this branch, and then starts a draft pull request to add it back to the main repository. This pull request should be started as early as possible, even though the document may only be an early draft or placeholder, as it lays the foundation for open collaboration on the design.
 
-Initially, the design document and any prototypes are maintained *on the editor's fork* until they are ready to be merged. That is, any modifications to the design must be made either by the editor or as pull requests against the editor's fork.
+Initially, the design document and any prototypes are maintained *on the editor's fork* until they are ready to be merged. That is, any modifications to the design must be made either by the editor or as pull requests against the editor's fork. Contributors may also perform reviews of the working design in the form of comments on the upstream pull request.
 
 Once a design document and its prototype have evolved to the point that they seem likely components of the Rhombus design, the upstream pull request can be merged into the *Rhombus repo's main branch*. Discussion proceeds in this second phase as in the first. The switch from being a pull request (with recommended changes as part of the request) to a merged change (with recommended changes perhaps as new pull requests) simply reflects that different tools seem better suited to the earlier phase versus a later phase.
 
@@ -70,12 +70,11 @@ The `design/<topic>` folder may also include additional supporting material such
 Attribution
 -----------
 
-The design document should include a contributors section naming anyone who made any kind of contribution to the design. Prior to the PR being merged into the main repo, the contributions to the proposal could be enumerated by component, with the contributors to each of those components listed. This stage should ideally be done in dialogue with other contributors to ensure fair recognition.
+The design document should include a "Contributors" section naming anyone who made any kind of contribution to the design. Prior to the PR being merged into the main repo, the contributions to the proposal should be enumerated by component, with the contributors to each of those components listed. This stage should ideally be done in dialogue with other contributors to ensure fair recognition.
 
-Appendix: Communication Channels
---------------------------------
+Appendix: Group Communication Channels
+--------------------------------------
 
-* GitHub Issues / Discussions / Pull Requests
-* Discourse
-* Discord
-* Email
+* [The Rhombus Repository](https://github.com/racket/rhombus-prototype) (e.g. discussions, issues, and pull requests)
+* [The Racket Discourse](https://racket.discourse.group/)
+* [Racket Discord](https://discord.gg/6Zq8sH5)
