@@ -9,6 +9,9 @@ and builds documentation for the prototype.
 
 # Resources
 
+* [Prototype documentation](https://plt.cs.northwestern.edu/pkg-build/doc/rhombus/index.html)
+  as rendered by the snapshot package build
+
 * [State of Rhombus](resources/state-of-rhombus.md)
 
 * [Project plan](resources/plan.md)
