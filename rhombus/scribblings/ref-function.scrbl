@@ -93,9 +93,9 @@
 
 @examples[
   fun | hello(name):
-          "Hello, " & name
+          @str{Hello, @name}
       | hello(first, last):
-          hello(first & " " & last),
+          hello(@str{@first @last}),
   hello("World"),
   hello("Inigo", "Montoya"),
 ]

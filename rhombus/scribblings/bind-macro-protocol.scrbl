@@ -226,7 +226,7 @@ form. A builder must be used in tail position, and it's
       val b_info: bind_ct.get_info(b, '()')
       val '($a_ann, $a_name, ($a_val_info ...), ($a_bind ...), $_, $_, $_)': bind_ct.unpack_info(a_info)
       val '($b_ann, $b_name, ($b_val_info ...), ($b_bind ...), $_, $_, $_)': bind_ct.unpack_info(b_info)
-      val ann: "and(" & unwrap_syntax(a_ann) & ", " & unwrap_syntax(b_ann) & ")"
+      val ann: @str{and(@unwrap_syntax[a_ann], @unwrap_syntax[b_ann])}
       '($ann,
         $a_name,
         ($a_val_info ... $b_val_info ...),

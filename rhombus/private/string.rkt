@@ -1,17 +1,12 @@
 #lang racket/base
 (require racket/symbol
          racket/keyword
-         "define-operator.rkt"
          (prefix-in rhombus: "print.rkt"))
 
-(provide &)
+(provide str)
 
-(define-infix & append-as-strings
-  #:stronger-than (===))
-
-(define (append-as-strings a b)
-  (string-append-immutable (to-string a)
-                           (to-string b)))
+(define (str lst)
+  (apply string-append-immutable (map to-string lst)))
 
 (define (to-string a)
   (cond
