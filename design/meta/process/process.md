@@ -70,7 +70,7 @@ The `design/<topic>` folder may also include additional supporting material such
 Attribution
 -----------
 
-The design document should include a "Contributors" section naming anyone who made any kind of contribution to the design. Prior to the PR being merged into the main repo, the contributions to the proposal should be enumerated by component, with the contributors to each of those components listed. This stage should ideally be done in dialogue with other contributors to ensure fair recognition.
+The design document should include a "Contributors" section naming anyone who made any kind of contribution to the design. Prior to the PR being merged into the main repo, the contributions to the proposal should be enumerated by component, with the contributors to each of those components listed. This stage should be done in dialogue with other contributors to ensure fair recognition.
 
 Appendix: Group Communication Channels
 --------------------------------------
