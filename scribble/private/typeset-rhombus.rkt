@@ -166,6 +166,8 @@
                                                                           [else #f])))
                                             (syntax-case block-stx ()
                                               [(b . _) (syntax-column #'b)])
+                                            (syntax-case block-stx ()
+                                              [(b . _) (syntax-raw-property #'b)])
                                             stx-ranges))
   (define position-stxes (for/fold ([ht #hasheqv()]) ([(k v) (in-hash stx-ranges)])
                            (hash-set ht (car v) (cons k (hash-ref ht (car v) '())))))
@@ -307,7 +309,7 @@
 (define tt-comma (element tt-style ", "))
 (define tt-semicolon (element tt-style "; "))
 
-(define (block-string->content-string str col stx-ranges)
+(define (block-string->content-string str col raw-str stx-ranges)
   ;; strip `:` from the beginning, add spaces
   ;; corresponding to `col`, then strip any blank newlines
   (define (shift-stxes! after delta)
@@ -324,7 +326,10 @@
             (shift-stxes! 0 delta)
             (values (substring str delta (cdadr m))
                     (+ (or col 0) 2)))]
-      [(regexp-match? #rx"^[:\n]" str)
+      [(regexp-match? (if (equal? raw-str "")
+                          #rx"^\n"
+                          #rx"^[:\n]")
+                      str)
        (shift-stxes! 0 1)
        (values (substring str 1) (+ (or col 0) 1))]
       [else
