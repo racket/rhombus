@@ -50,7 +50,8 @@
         "private/syntax-class-syntax.rkt"
         "private/begin-for-meta.rkt"
         "private/for.rkt"
-        "private/range.rkt")
+        "private/range.rkt"
+        "private/syntax-class-syntax.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

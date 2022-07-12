@@ -9,11 +9,7 @@
          "definition.rkt"
          "name-root.rkt")
 
-(provide
- (rename-out [class stx_class]))
-
-(module+ for-macro
-  (provide syntax))
+(provide syntax)
 
 (define-simple-name-root syntax
   class)

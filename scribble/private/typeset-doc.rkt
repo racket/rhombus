@@ -16,10 +16,10 @@
                   in-folder-space)
          (only-in rhombus
                   def val fun operator :: |.| $
-                  [= rhombus-=])
-         (only-in rhombus/macro
-                  decl defn expr imp annotation bind folder
+                  [= rhombus-=]
                   [syntax rhombus-syntax])
+         (only-in rhombus/macro
+                  decl defn expr imp annotation bind folder)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
