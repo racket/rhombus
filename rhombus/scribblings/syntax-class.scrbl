@@ -5,78 +5,80 @@
 
 @title[~tag: "syntax-classes"]{Syntax Classes}
 
-In a Rhombus syntax form, pattern variables escaped with @rhombus[$] and 
-surrounded by parenthesescan be annotated with a syntax class name using 
-@rhombus[::] to specify the kind of syntax the pattern variable can match on. 
-Rhombus has several built-in syntax classes such as @rhombus[Term], 
-@rhombus[Group], and @rhombus[Multi].
+As shown in @secref["syntax"], a variable can be bound in a syntax
+pattern via @rhombus[$], parentheses, @rhombus[::], and a
+@deftech{syntax class} name to specify the kind of syntax the pattern
+variable can match. The syntax classes @rhombus[Term, ~stxclass],
+@rhombus[Group, ~stxclass], and @rhombus[Multi, ~stxclass] are built in,
+among others.
 
 @(rhombusblock:
     val '$(x :: Term)': '1'
 )
 
-Rhombus also supports user-defined syntax classes that can annotate pattern 
-variables in the same way. Custom syntax classes are useful for defining 
-resusable patterns that can vary. To define a syntax class, use the 
-@rhombus[stx_class] special form with a block that contains the form 
-@rhombus[pattern] followed by alternatives. 
+Rhombus also supports user-defined syntax classes via
+@rhombus[syntax.class]. Use the @rhombus[syntax.class] form with a block
+that contains @rhombus[pattern] with pattern alternatives:
 
 @(rhombusblock:
-    stx_class Arithmetic:
-        pattern
-        | '$x + $y'
-        | '$x - $y'
+    syntax.class Arithmetic:
+     pattern
+     | '$x + $y'
+     | '$x - $y'
 )
 
-Or, use a shorthand syntax that omits the use of @rhombus[pattern].
+Equivalently, use a shorthand syntax that omits the use of
+@rhombus[pattern] an inlines alternatives into the immediate
+@rhombus[syntax.class] form:
 
 @(rhombusblock:
-    stx_class Arithmetic
+    syntax.class Arithmetic
     | '$x + $y'
     | '$x - $y'
 )
 
-To use a syntax class definion for a macro, place it inside a 
+Defining a syntax class in this way makes it available for use in syntax
+patterns, such as in @rhombus[match]. The syntax class must be defined
+at the same phase as the referencing pattern. To define a syntax class
+for use in a macro definition, place it inside a
 @rhombus[begin_for_meta] block.
 
 @(rhombusblock:
     begin_for_meta:
-        stx_class Arithmetic
-        | '$x + $y'
-        | '$x - $y'
+      syntax.class Arithmetic
+      | '$x + $y'
+      | '$x - $y'
 )
 
-The patterns of a syntax class are defined with quasiquoted syntax objects (@rhombus[''])
-and can include any literal syntax. Once defined, a custom syntax 
-class can be used to annotate a pattern variable that will match on the shape 
-of one of the specified pattern alternatives.
+Once defined, a syntax class can be used to annotate a pattern variable
+that matches any of pattern alternatives specified in the syntax class.
 
 @(rhombusblock:
     expr.macro 'add_one_to_expr $(expr :: Arithmetic)':
-        values('$expr ... + 1', '')
-    
+      values('$expr ... + 1', '')
+
     add_one_to_expr 1 + 1 // expands to: 1 + 1 + 1
     add_one_to_expr 1 - 2 // expands to: 1 - 2 + 1
     add_one_to_expr 2 > 3 // error, "expected Arithmetic"
 )
 
-The @rhombus[$]-escaped variables in a syntax class's patterns will bind to 
-matched syntax as attributes of the class. They can be accessed from a pattern 
-variable using dot-notation. 
+The @rhombus[$]-escaped variables in a syntax class's patterns bind to
+matched syntax objects as attributes of the class. They can be accessed
+from a pattern variable using dot notation.
 
 @(rhombusblock:
     expr.macro 'right_operand $(expr :: Arithmetic)':
-        values(expr.y, '')
-    
+      values(expr.y, '')
+
     right_operand 2 + 3 // expands to: 3
     right_operand 8 - 4 // expands to: 4
 )
 
-Attributes of a syntax class must appear in every pattern alternative in order 
-to be referred to with dot-notation.
+An attribute is accessible only when it appears in every pattern
+alternative of a syntax class.
 
 @(rhombusblock:
-    stx_class Arithmetic
+    syntax.class Arithmetic
     | '$x + $y + $z'
     | '$x - $y'
 

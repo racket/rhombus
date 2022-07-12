@@ -700,9 +700,9 @@ for:
   ~each (key, val): {3: "c", 4: "d"}
   displayln(key & " -> " & val)
 
-// stx_class
+// syntax.class
 
-stx_class Arithmetic
+syntax.class Arithmetic
 | '$x + $y'
 | '$x - $y'
 
@@ -710,7 +710,7 @@ val '$(exp :: Arithmetic)': '1 + 2'
 exp.x
 
 begin_for_meta:
-  stx_class Arithmetic2:
+  syntax.class Arithmetic2:
     pattern
     | '$x * $y'
     | '$x / $y'
