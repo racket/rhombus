@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: 
+    "common.rhm" open 
+    "macro.rhm")
 
 @title{Syntax Objects}
 
@@ -132,4 +134,86 @@ corresponding portion of a candidate syntax object. Ellipses, etc.
   literal_syntax '$ $ $'
 ]}
 
+While many syntax classes available for use are built into the language, rhombus 
+also supports user-defined syntax classes with @rhombus[stx_class]. 
 
+@doc[
+  defn.macro '«stx_class $name:
+                pattern
+                | '$expr_pattern'
+                | ...»',
+  defn.macro '«stx_class $name
+               | '$expr_pattern'
+               |...»'
+]{
+
+Syntax classes can be defined with the use of @rhombus[stx_class] followed by 
+an identifier and a block containing the form @rhombus[patterns] followed by
+alternatives. They can also be defined with a shorthand syntax where the 
+alternatives come right after the identifier. 
+
+In each alternative, there should be a syntax pattern. 
+These will define the patterns that will be matched on when the syntax class is 
+used to annotate a pattern variable in another syntax pattern. 
+
+Any pattern variables included in these syntax pattern alternatives will be 
+available as attributes of the syntax class using dot-notation. For an attribute
+to be accessible, it must be pressent in every alternate syntax pattern in the 
+syntax class definition.
+
+@examples[
+  stx_class Arithmetic
+  | '$x + $y'
+  | '$x - $y',
+  stx_class Labeled:
+    pattern
+    | '~foo $n'
+    | '~bar $n',
+  val '$(exp :: Arithmetic)': '1 + 2',
+  exp.x,
+  val '$(l :: Labeled)': '~bar 5',
+  l.n
+]}
+
+To use a syntax class inside a macro definion, put the definition inside a 
+@rhombus[begin_for_meta] block. Any and all defintions inside a 
+@rhombus[begin_for_meta] block will be defined for use inside macros. 
+
+@doc[
+  defn.macro 'begin_for_meta:
+                $body
+                ...'
+]{
+
+@examples[
+  ~eval: macro.make_for_meta_eval(),
+  begin_for_meta:
+    stx_class Arithmetic
+    | '$x + $y'
+    | '$x - $y',
+  expr.macro 'right_operand $(exp :: Arithmetic)':
+    values(exp.y, ''),
+  right_operand 1 + 2
+]
+
+Pattern variables annotated with a syntax class can be used on their own 
+to generate the syntax they are bound to or inside templates where they 
+are escaped with a @rhombus[$]. To use an attribute on a pattern variable 
+inside a template, the form must be a @rhombus[$] escape followed by 
+parentheses that have the pattern variable identifier, a dot, and then the 
+attribute identifier. To use the entire syntax that was matched, escape the 
+identifier with @rhombus[$] and follow it with @rhombus[...]. 
+
+@examples[
+  ~eval: macro.make_for_meta_eval(),
+  begin_for_meta:
+    stx_class Arithmetic
+    | '$x + $y'
+    | '$x - $y',
+  expr.macro 'doubled_operands $(e :: Arithmetic)':
+    values('$(e.x) * 2 + $(e.y) * 2', ''),
+  doubled_operands 3 + 5,
+  expr.macro 'add_one_to_expression $(e :: Arithmetic)':
+    values('$e ... + 1', ''),
+  add_one_to_expression 2 + 2
+]}

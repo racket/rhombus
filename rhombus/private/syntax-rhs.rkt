@@ -27,11 +27,12 @@
   (define kind (syntax-parse pre-parsed
                  [(_ _ _ kind . _) (syntax-e #'kind)]))
   (define (macro-clause self-id left-ids tail-pattern rhs)
-    (define-values (pattern idrs can-be-empty?)
+    (define-values (pattern idrs sidrs can-be-empty?)
       (if (eq? kind 'rule)
           (convert-pattern #`(multi (group #,@tail-pattern (op $) tail (op rhombus...))))
           (convert-pattern #`(multi (group . #,tail-pattern)) #:as-tail? #t)))
     (with-syntax ([((id id-ref) ...) idrs]
+                  [((sid sid-ref) ...) sidrs]
                   [(left-id ...) left-ids])
       (define body
         (if (eq? kind 'rule)
@@ -40,7 +41,8 @@
             #`(rhombus-body-expression #,rhs)))
       #`[#,pattern
          (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
-           #,body)]))
+           (let-syntax ([sid sid-ref] ...)
+             #,body))]))
   (define (convert-rule-template block ids)
     (syntax-parse block
       #:datum-literals (block group quotes op)
@@ -218,15 +220,17 @@
     [(pre-parsed id
                  tail-pattern
                  rhs)
-     (define-values (pattern idrs can-be-empty?) (convert-pattern #`(multi (group . tail-pattern)) #:as-tail? #t))
-     (with-syntax ([((p-id id-ref) ...) idrs])
+     (define-values (pattern idrs sidrs can-be-empty?) (convert-pattern #`(multi (group . tail-pattern)) #:as-tail? #t))
+     (with-syntax ([((p-id id-ref) ...) idrs]
+                   [((s-id sid-ref) ...) sidrs] )
        #`(#,make-transformer-id
           (let ([id (lambda (tail #,@tail-ids #,self-id)
                       (syntax-parse (respan-empty #,self-id tail)
                         [#,pattern
                          (let ([p-id id-ref] ...)
-                           #,(wrap-for-tail
-                              #`(rhombus-body-expression rhs)))]))])
+                           (let-syntax ([s-id sid-ref] ...)
+                             #,(wrap-for-tail
+                                #`(rhombus-body-expression rhs))))]))])
             id)))]))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
@@ -237,10 +241,12 @@
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
                                     (lambda (body)
-                                      (define-values (pattern idrs can-be-empty?)
+                                      (define-values (pattern idrs sidrs can-be-empty?)
                                         (convert-pattern #`(multi . #,gs-stx)))
-                                      (with-syntax ([((p-id id-ref) ...) idrs])
+                                      (with-syntax ([((p-id id-ref) ...) idrs]
+                                                    [((s-id sid-ref) ...) sidrs])
                                         #`(syntax-parse tail-id
                                             [#,pattern
                                              (let ([p-id id-ref] ...)
-                                               #,body)])))))
+                                               (let-syntax ([s-id sid-ref] ...)
+                                                 #,body))])))))
