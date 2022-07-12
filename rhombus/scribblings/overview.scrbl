@@ -23,3 +23,4 @@
 @include_section["defn-macro.scrbl"]
 @include_section["bind-macro.scrbl"]
 @include_section["annotation-vs-bind.scrbl"]
+@include_section["syntax-class.scrbl"]

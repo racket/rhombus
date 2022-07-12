@@ -700,3 +700,28 @@ for:
   ~each (key, val): {3: "c", 4: "d"}
   displayln(key & " -> " & val)
 
+// stx_class
+
+stx_class Arithmetic
+| '$x + $y'
+| '$x - $y'
+
+val '$(exp :: Arithmetic)': '1 + 2'
+exp.x
+
+begin_for_meta:
+  stx_class Arithmetic2:
+    pattern
+    | '$x * $y'
+    | '$x / $y'
+
+expr.macro 'add_one_to_expr $(exp :: Arithmetic2) $tail ...':
+  values('$exp ... + 1', '$tail ...')
+
+add_one_to_expr 2 * 3
+
+expr.macro 'right_operand $(exp :: Arithmetic2)':
+  values(exp.y, '')
+
+right_operand 3 * 2
+right_operand 4 / 5
