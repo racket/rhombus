@@ -1,7 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     racket/list
                      racket/set)
          syntax/parse
          (submod "quasiquote.rkt" convert)
@@ -9,14 +8,14 @@
          "definition.rkt"
          "name-root.rkt")
 
-(provide syntax)
+(provide (rename-out [rhombus-syntax syntax]))
 
-(define-simple-name-root syntax
+(define-simple-name-root rhombus-syntax
   class)
 
 (define-for-syntax (generate-pattern-and-attributes stx)
   (syntax-parse stx
-    #:datum-literals (alts group quotes)
+    #:datum-literals (alts group quotes block)
     [(block (group (quotes in-quotes)))
      (define-values (p idrs sidrs can-be-empty?)
        (convert-pattern #:splice? #t
@@ -24,7 +23,23 @@
      (with-syntax ([((attr ...) ...)
                     (map (lambda (binding) (cons '#:attr binding)) idrs)])
        (values #`(pattern #,p attr ... ...)
-               (map (lambda (binding) (syntax-e (car (syntax->list binding)))) idrs)))]))
+               (map (lambda (binding) (syntax-e (car (syntax->list binding)))) idrs)))]
+    [(block (group (quotes in-quotes)
+                   (block groups ...)))
+     (define-values (p idrs sidrs can-be-empty?)
+       (convert-pattern #:splice? #t
+                        #'in-quotes))
+     (define explicit-attrs
+       (for/list ([g (in-list (syntax->list #'(groups ...)))])
+         (syntax-parse g
+           #:datum-literals (group block attr)
+           [(group attr id (block in-block ...))
+            #`[id (quote-syntax in-block ...)]])))
+     (define all-attrs (append idrs explicit-attrs))
+     (with-syntax ([((attr ...) ...)
+                    (map (lambda (binding) (cons '#:attr binding)) all-attrs)])
+       (values #`(pattern #,p attr ... ...)
+               (map (lambda (binding) (syntax-e (car (syntax->list binding)))) all-attrs)))]))
 
 (define-for-syntax (generate-syntax-class class-name alts)
   (let-values ([(patterns attributes)
