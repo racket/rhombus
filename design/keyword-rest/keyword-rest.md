@@ -419,7 +419,10 @@ To resolve this conflict in favor of rest arguments, `++`
 could append strings instead, but this comes with the
 drawback that `++` shouldn't coerce other values to
 strings, while a dedicated string operator like `&` could
-do that more reasonably.
+do that more reasonably. Another way of coercing other
+values to strings for string interpolation could be a
+function intended to be used with `@` at-expressions, like
+`@str{(@(p.x), @(p.y))}`.
 Alternatively to resolve this conflict in favor of strings,
 the rest marker could be replaced with something else.
 Racket uses `.` for rest arguments, but Rhombus's use of
@@ -496,3 +499,5 @@ I personally wouldn't want `++` to do string coercion, so
 should there be a short unary operator for those use cases
 instead?
 If so, what should that look like?
+Or a function intended to be used with `@` at-expressions,
+like `@str{(@(p.x), @(p.y))}`.
