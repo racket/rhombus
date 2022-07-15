@@ -10,7 +10,7 @@ The tokens used for grouping and indentation are distinct lexemes:
 }|
 
 Other lexemes are described by the grammar in the table below, where an
-asterisk in the left column indicates the productions that correspond to
+star in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
 Numbers are supported directly in in simple forms---decimal integers,
@@ -23,21 +23,23 @@ floating-point values use a @litchar{#} notation: @litchar{#inf},
 Boolean literals are Racket-style @litchar{#true} and @litchar{#false}.
 The void value is @litchar{#void}.
 
-Identifiers are formed from Unicode alphanumeric characters plus @litchar{_},
-where the initial character must not be a numeric character. An
+Identifiers are formed from Unicode alphanumeric characters plus @litchar{_}
+and emoji sequences, where the initial character must not be a numeric character
+(unless that numeric character starts an emoji sequence, as in @litchar{1}
+followed by U+FE0F and U+20E3). An
 identifier prefixed with @litchar{~} forms a keyword, analogous to prefixing an
 identifier with @litchar{#:} in Racket.
 
 Operators are formed from Unicode symbolic and punctuation characters
 other than the ones listed above as distinct lexemes (plus a few more,
-like @litchar{"} and @litchar{'}), but @litchar{|} or @litchar{:} is
+like @litchar{"}, @litchar{'}, and single-character emoji sequences), but @litchar{|} or @litchar{:} is
 also allowed in an operator name as long as it is not by itself. A
 multi-character operator cannot end in @litchar{+}, @litchar{-}, or
 @litchar{.} to avoid ambiguity in cases like @litchar{1+-2} (which is
 @litchar{1} plus @litchar{-2}, not @litchar{1} and @litchar{2} combined
 with a @litchar{+-} operator), unless the operator contains only
 @litchar{+}, @litchar{-}, or @litchar{.} (so @litchar{++}, @litchar{--},
-and @litchar{...} are allowed). Also, multi-character operator cannot
+and @litchar{...} are allowed). Also, a multi-character operator cannot
 end with @litchar{/} or contain @litchar{//} or @litchar{/*}, because
 that can create ambiguities with comments.
 
@@ -83,10 +85,11 @@ the table below sketches the shape of @litchar["@"] forms.
   [
     [is_lex, @nonterm{identifier}, bis, bseq(@nonterm{alpha}, kleenestar(@nonterm{alphanum})), ""],
     empty_line,
-    [no_lex, @nonterm{alpha}, bis, @elem{@italic{an alphabetic Unicode character or} @litchar{_}}, ""],
+    [no_lex, @nonterm{alpha}, bis, @elem{@italic{alphabetic Unicode character or} @litchar{_}}, ""],
+    ["", "", bor, @elem{@italic{Unicode emoji sequence}}, ""],
     empty_line,
     [no_lex, @nonterm{alphanum}, bis, @nonterm{alpha}, ""],
-    ["", "", bor, @italic{a numeric Unicode character}, ""],
+    ["", "", bor, @italic{numeric Unicode character}, ""],
     empty_line,
     [is_lex, @nonterm{keyword}, bis, bseq(@litchar{~}, @nonterm{alpha}), ""],
     empty_line,
@@ -96,8 +99,8 @@ the table below sketches the shape of @litchar["@"] forms.
     ["", "", bor, kleeneplus(@litchar{+}), @elem{@italic{... or containing} @litchar{/*}}],
     ["", "", bor, kleeneplus(@litchar{-}), ""],
     empty_line,
-    [no_lex, @nonterm{opchar}, bis, @elem{@italic{a symbolic Unicode character not in} @nonterm{special}}, ""],
-    ["", "", bor, @elem{@italic{a punctuation Unicode character not in} @nonterm{special}}, ""],
+    [no_lex, @nonterm{opchar}, bis, @elem{@italic{symbolic Unicode character not in} @nonterm{special}}, ""],
+    ["", "", bor, @elem{@italic{punctuation Unicode character not in} @nonterm{special}}, ""],
     ["", "", bor, @elem{@italic{one} @litchar{:} @litchar{|}}, ""],
     empty_line,
     [no_lex, @nonterm{tailopchar}, bis, @elem{@italic{anything in} @nonterm{opchar} @italic{except}
@@ -108,6 +111,7 @@ the table below sketches the shape of @litchar["@"] forms.
                                            @litchar{«}, @litchar{»}}, ""],
     ["", "", bor, @elem{@italic{one of} @litchar{"}, @litchar{;}, @litchar{,}, @litchar{~}, @litchar{#},
                         @litchar{\}, @litchar{_}, @litchar["@"]}, ""],
+    ["", "", bor, @elem{@italic{single-character Unicode emoji sequence}}, ""],
     empty_line,
     [is_lex, @nonterm{number}, bis, @nonterm{integer}, ""],
     ["", "", bor, @nonterm{float}, ""],

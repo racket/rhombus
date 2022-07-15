@@ -3,7 +3,8 @@
          (for-syntax racket/base)
          (prefix-in : parser-tools/lex-sre)
          "private/property.rkt"
-         "private/peek-port.rkt")
+         "private/peek-port.rkt"
+         "private/emoji.rkt")
 
 (provide lex/status
          lex-all
@@ -111,9 +112,9 @@
   
   [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline) (:: #\\ #\newline)))]
   
-  [identifier (:: (:or alphabetic "_")
-                  (:* (:or alphabetic numeric "_")))]
-  [opchar (:or (:- symbolic (:or "~"))
+  [identifier (:: (:or alphabetic "_" emoji)
+                  (:* (:or alphabetic numeric "_" emoji)))]
+  [opchar (:or (:- symbolic (:or "~") one-char-emoji)
                (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
                                     "(" ")" "[" "]" "{" "}" "«" "»")))]
   [operator (:- (:or opchar
@@ -163,7 +164,8 @@
   [bad-chars (:* (:- any-char
                      alphabetic numeric
                      symbolic punctuation
-                     whitespace))]
+                     whitespace
+                     one-char-emoji))]
 
   ;; making whitespace end at newlines is for interactive parsing
   ;; where we end at a blank line
