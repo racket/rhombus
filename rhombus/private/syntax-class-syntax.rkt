@@ -37,11 +37,15 @@
                  ([g (in-list (syntax->list #'(groups ...)))])
          (syntax-parse g
            #:datum-literals (group block)
-           [(group #:attr id (block in-block ...))
-            (with-syntax ([(other ...) (reverse other-forms)])
+           [(group #:attr attr-id (block in-block ...))
+            (with-syntax ([(other ...) (reverse other-forms)]
+                          [((id id-ref) ...) (append idrs attrs)])
               (values
                other-forms
-               (cons #`[id (rhombus-body other ... in-block ...)] attrs)))]
+               (cons
+                #`[attr-id (let ([id id-ref] ...)
+                             (rhombus-body-at attr-id other ... in-block ...))]
+                attrs)))]
            [other
             (values (cons #'other other-forms) attrs)])))
      (define all-attrs (append idrs explicit-attrs))
