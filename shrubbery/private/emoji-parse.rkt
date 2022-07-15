@@ -90,3 +90,6 @@
                                        #:when (hash-ref v #f #f))
                               (string (integer->char i))))]
      [emoji ,generated])))
+
+(module test racket/base)
+

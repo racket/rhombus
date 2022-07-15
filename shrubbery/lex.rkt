@@ -114,11 +114,11 @@
   
   [identifier (:: (:or alphabetic "_" emoji)
                   (:* (:or alphabetic numeric "_" emoji)))]
-  [opchar (:or (:- symbolic (:or "~") one-char-emoji)
+  [opchar (:or (:- symbolic one-char-emoji)
                (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
                                     "(" ")" "[" "]" "{" "}" "«" "»")))]
-  [operator (:- (:or opchar
-                     (:: (:* opchar) (:- opchar "+" "-" "." "/"))
+  [operator (:- (:or (:- opchar "~")
+                     (:: (:+ opchar) (:- opchar "+" "-" "." "/"))
                      (:+ ".")
                      (:+ "+")
                      (:+ "-"))
