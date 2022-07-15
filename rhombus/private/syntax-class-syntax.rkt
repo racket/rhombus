@@ -41,7 +41,7 @@
             (with-syntax ([(other ...) (reverse other-forms)])
               (values
                other-forms
-               (cons #`[id (quote-syntax (rhombus-body other ... in-block ...))] attrs)))]
+               (cons #`[id (rhombus-body other ... in-block ...)] attrs)))]
            [other
             (values (cons #'other other-forms) attrs)])))
      (define all-attrs (append idrs explicit-attrs))
