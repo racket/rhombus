@@ -6,7 +6,8 @@
          (submod "quasiquote.rkt" convert)
          (submod "syntax-class.rkt" for-syntax-class-syntax)
          "definition.rkt"
-         "name-root.rkt")
+         "name-root.rkt"
+         "parse.rkt")
 
 (provide (rename-out [rhombus-syntax syntax]))
 
@@ -30,11 +31,19 @@
        (convert-pattern #:splice? #t
                         #'in-quotes))
      (define explicit-attrs
-       (for/list ([g (in-list (syntax->list #'(groups ...)))])
+       (for/fold ([other-forms null]
+                  [attrs null]
+                  #:result (reverse attrs))
+                 ([g (in-list (syntax->list #'(groups ...)))])
          (syntax-parse g
-           #:datum-literals (group block attr)
-           [(group attr id (block in-block ...))
-            #`[id (quote-syntax in-block ...)]])))
+           #:datum-literals (group block)
+           [(group #:attr id (block in-block ...))
+            (with-syntax ([(other ...) (reverse other-forms)])
+              (values
+               other-forms
+               (cons #`[id (quote-syntax (rhombus-body other ... in-block ...))] attrs)))]
+           [other
+            (values (cons #'other other-forms) attrs)])))
      (define all-attrs (append idrs explicit-attrs))
      (with-syntax ([((attr ...) ...)
                     (map (lambda (binding) (cons '#:attr binding)) all-attrs)])
