@@ -51,6 +51,8 @@ The purpose of the document in the early stages is to propose and develop altern
 
 At the outset, the document should summarize the proposed (or accepted) design. The rest of the document should showcase different ways of accomplishing the design's aims as have been discussed, and relate them to the consensus choices that are reflected in the accepted or proposed design, motivating why those choices are warranted or were made. The document must synthesize and organize the record of discussion in these terms.
 
+The style of the document is left to the discretion of the editor as long as it meets the goals outlined here. For convenience, two sample templates are included with the present document to give an idea of what the document should accomplish. The first of these presents the design in terms of its various components, and the options within those components are discussed at length, with recommendations made from amongst those options. The second presents a series of alternative, complete, designs, with a recommendation made from these alternatives. Either style may be more appropriate depending on the type of design being discussed (for instance, the former may be more appropriate when the design ostensibly has well-defined components that would be common to all alternatives, while the latter may be more appropriate when the alternative designs have distinct components), and once again, this is left to the discretion of the editor.
+
 At the point where a design becomes wholly integrated into the Rhombus documentation, the original design document need no longer be maintained, but it should be preserved in perpetuity as a record of the design process and the decisions that were made.
 
 ### Format
