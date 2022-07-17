@@ -20,7 +20,7 @@ The Process
 
 For a nontrivial addition to the language, work likely starts out as an informal discussion or a contributor's worked-out idea. Ideally, an initial design should be implemented in a prototype as soon as possible, because having an implementation aids communication and discussion. Some ideas may be worked out enough to merit a design document in advance of the implementation. Either way, a design document and any associated implementation is posted to the Rhombus repo as a pull request. Work on the design proceeds in connection with this pull request, guided by the initial contributor or another designated editor, until it is eventually merged.
 
-For small additions to Rhombus, following the design process is not required, in favor of simply creating a pull request with the necessary changes to the Rhombus implementation and documentation.
+For minor changes to Rhombus, following the design process is not required, in favor of simply creating a pull request with the necessary changes to the Rhombus implementation and documentation.
 
 Note also that more speculative ideas or options may be suitable for posting as [issues](https://github.com/racket/rhombus-prototype/issues) instead of, or as a precursor to, following the design process documented here.
 
@@ -53,11 +53,13 @@ At the outset, the document should summarize the proposed (or accepted) design. 
 
 The style of the document is left to the discretion of the editor as long as it meets the goals outlined here. For convenience, two sample templates are included with the present document to give an idea of what the document should accomplish. The first of these presents the design in terms of its various components, and the options within those components are discussed at length, with recommendations made from amongst those options. The second presents a series of alternative, complete, designs, with a recommendation made from these alternatives. Either style may be more appropriate depending on the type of design being discussed (for instance, the former may be more appropriate when the design ostensibly has well-defined components that would be common to all alternatives, while the latter may be more appropriate when the alternative designs have distinct components), and once again, this is left to the discretion of the editor.
 
-At the point where a design becomes wholly integrated into the Rhombus documentation, the original design document need no longer be maintained, but it should be preserved in perpetuity as a record of the design process and the decisions that were made.
-
 ### Format
 
 The design document should use Markdown or Scribble format. In either case, a link to a rendered HTML version or instructions to render it to HTML locally could optionally be included in the PR description, for the reader's convenience.
+
+### Maintenance
+
+At the point where a design becomes wholly integrated into the Rhombus documentation, the original design document need no longer be maintained, but it should be preserved in perpetuity as a record of the design process and the decisions that were made.
 
 The Prototype
 -------------
