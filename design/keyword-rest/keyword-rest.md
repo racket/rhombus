@@ -368,6 +368,32 @@ maybe_rst_binding = & binding
                   | ϵ
 ```
 
+Where there would be ambiguity with data structures sharing
+syntax, such as with `{}` braces for maps and `{}` braces
+for sets, cases like `{& rst}` are resolved the same way as
+the empty case.
+For example, if empty `{}` braces produce a map and not a
+set, then `{& rst}` also produces a map and not a set.
+
+And so sets written with this notation would need one or
+more elements
+
+```
+									expression
+{expr, ...+, maybe_rst_expr}
+
+maybe_rst_expr = & expr
+               | expr ...
+               | ϵ
+
+									binding
+{binding, ...+, maybe_rst_binding}
+
+maybe_rst_binding = & binding
+                  | binding ...
+                  | ϵ
+```
+
 ## Ellipses
 
 Expressions under ellipses are evaluated under iteration
