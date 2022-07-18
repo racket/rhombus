@@ -38,14 +38,14 @@ itself remains quoted.
 
 Like @rhombus[$], @rhombus[...] is treated specially within a @rhombus['']-quoted term (except,
 like @rhombus[$], when it’s the only thing in the term). When @rhombus[...] immediately
-follows a term that includes at least one @rhombus[$], the value of the
-expression after that @rhombus[$] must produce a list of syntax objects. Then,
+follows a term that includes at least one @rhombus[$], the
+form after that @rhombus[$] must refer to a repetition. Then,
 instead of the parenthesized group in place of @rhombus[$], the term before
-@rhombus[...] is replicated as many times as the list has items, and each of
+@rhombus[...] is replicated as many times as the repetition has items, and each of
 those items is used in one replication.
 
 @(rhombusblock:
-    def seq: ['1', '2', '3']
+    def [seq, ...]: ['1', '2', '3']
 
     '(hi $seq) ...' // prints a shrubbery: (hi 1) (hi 2) (hi 3)
   )
@@ -58,7 +58,7 @@ multi-group syntax object with zero groups. Attempting to generate a group
 with no terms within a larger sequence with multiple groups is an error.
 
 @(rhombusblock:
-    def seq: []
+    def [seq, ...]: []
 
     '(hi $seq) ...'           // prints an empty shrubbery
     // 'x; (hi $seq) ...; y'  // would be a run-time error
@@ -71,7 +71,7 @@ group before the @litchar{,}, which effectively replicates that group with its
 separating comma:
 
 @(rhombusblock:
-    def seq: ['1', '2', '3']
+    def [seq, ...]: ['1', '2', '3']
 
     '(hi $seq, ...)' // prints a shrubbery: (hi 1, hi 2, hi 3)
   )
@@ -80,7 +80,7 @@ Along the same lines, @rhombus[...] just after a @litchar{|} can replicate a pre
 @litchar{|} block:
 
 @(rhombusblock:
-    def seq: ['1', '2', '3']
+    def [seq, ...]: ['1', '2', '3']
 
     'cond | $seq | ...' // prints a shrubbery: cond |« 1  » |« 2  » |« 3 »
   )
@@ -170,51 +170,20 @@ to match a single group instead of a multi-group sequence.
 
 Meanwhile, @rhombus[..., ~bind] works the way you would expect in a
 pattern, matching any @rhombus[..., ~bind]-replicated pattern variables
-to form a list of matches:
+to form a repetition of matches:
 
 @(rhombusblock:
     val '$x + $y ... + 0': '1 + 2 + 3 + 0'
 
-    x  // prints a shrubbery: 1
-    y  // prints a list: ['2', '+', '3']
+    x         // prints a shrubbery: 1
+    [y, ...]  // prints a list: ['2', '+', '3']
+    '$y ...'  // prints a shrubbery: 2 + 3
   )
 
-When a @rhombus[..., ~bind] appears at the end of a sequence and is
-preceded by an @rhombus[$]-escaped variable, then instead of binding
-the variable to a list, the variable is bound to a single syntax
-object for the entire matched tail---either a group or a sequence of
-groups, depending on the context.
-
-@(rhombusblock:
-    val '$x + $y ...': '1 + 2 + 3'
-
-    x  // prints a shrubbery: 1
-    y  // prints a shrubbery: 2 + 3
-  )
-
-The rule for @rhombus[..., ~bind] at the end of a sequence is relevant
-for macros that match tail sequences that otherwise do not need to be
-inspected, and where converting the sequence to list and back could
-trigger quadratic-time expansion; an example will be provided in
-@secref["expr-macro"].
-
-To that end, in a template, when @rhombus[..., ~bind] appears at the
-end of a sequence preceded by an escape, then the escape can either
-produce a list or a syntax object. When the escape produces a list,
-then @rhombus[..., ~bind] works the same as in other positions. When
-the escape produces a syntax object is spliced in place as-is when it
-has a compatible shape (i.e., a group for @rhombus[..., ~bind] at the
-end of a group, or a multi-group sequence for a @rhombus[..., ~bind]
-as a group repetition).
-
-@(rhombusblock:
-    val y: '1 + 2'
-
-    '0 + $y ...'  // prints a shrubbery: 0 + 1 + 2
-  )
-
-@aside{A tail @rhombus[..., ~bind] is similar to using @litchar{.} in
- S-expression patterns and templates. The expansion-cost difference is
- all the more important in the Rhombus expansion protocol, which must
- thread potentially long sequences into and out of macro
+@aside{A tail pattern @rhombus[$$(@rhombus[$])$$(@rhombus[id, ~var]) $$(@rhombus[..., ~bind])] combined with a tail
+ template @rhombus[$$(@rhombus[$])$$(@rhombus[id, ~var]) ...] is similar to using @litchar{.} in
+ S-expression patterns and templates, where it allows sharing between the
+ input and output syntax objects. That sharing and an associated expansion-cost difference
+ is all the more important in the Rhombus expansion protocol, which
+ must thread potentially long sequences into and out of macro
  transformers.}

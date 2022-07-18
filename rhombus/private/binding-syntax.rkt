@@ -15,8 +15,7 @@
          "syntax.rkt"
          "binding.rkt"
          (for-syntax
-          (rename-in "quasiquote.rkt"
-                     [... rhombus...])
+          "quasiquote.rkt"
           (submod "quasiquote.rkt" convert))
          "parse.rkt"
          ;; for `matcher` and `binder`:
@@ -62,13 +61,13 @@
     #:property prop:binding-infix-operator (lambda (self) (prefix+infix-infix self))))
 
 (define-for-syntax (unpack stx)
-  (syntax-parse (unpack-term stx 'bind_ct.unpack)
+  (syntax-parse (unpack-term stx 'bind_ct.unpack #f)
     [((~datum parsed) b::binding-form)
      (pack-term #'(parens (group chain-to-infoer)
                           (group (parsed (b.infoer-id b.data)))))]))
 
 (define-for-syntax (unpack_info stx)
-  (syntax-parse (unpack-term stx 'bind_ct.unpack_info)
+  (syntax-parse (unpack-term stx 'bind_ct.unpack_info #f)
     [((~datum parsed) b::binding-info)
      #:with (unpacked-static-infos ...) (map (lambda (v) (unpack-static-infos v))
                                              (syntax->list #'((b.bind-static-info ...) ...)))
@@ -82,7 +81,7 @@
                 (group (parsed (b.matcher-id b.binder-id b.data)))))]))
 
 (define-for-syntax (pack stx)
-  (syntax-parse (unpack-term stx 'bind_ct.pack)
+  (syntax-parse (unpack-term stx 'bind_ct.pack #f)
     #:datum-literals (parens group)
     [(parens (group infoer-id:identifier)
              (group data))
@@ -93,7 +92,7 @@
                            stx)]))
 
 (define-for-syntax (pack-info stx)
-  (syntax-parse (unpack-term stx 'bind_ct.pack_info)
+  (syntax-parse (unpack-term stx 'bind_ct.pack_info #f)
     #:datum-literals (parens group)
     [(parens (group name-str:string)
              (group name-id:identifier)
@@ -120,10 +119,10 @@
   (pack-term #`(parsed #,(pack-info stx))))
 
 (define-for-syntax (get_info stx unpacked-static-infos)
-  (syntax-parse (unpack-term stx 'bind_ct.get_info)
+  (syntax-parse (unpack-term stx 'bind_ct.get_info #f)
     #:datum-literals (parsed group)
     [(parsed b::binding-form)
-     (define static-infos (pack-static-infos (unpack-term unpacked-static-infos 'bind_ct.get_info)
+     (define static-infos (pack-static-infos (unpack-term unpacked-static-infos 'bind_ct.get_info #f)
                                              'bind_ct.get_info))
      (syntax-parse #`(b.infoer-id #,static-infos b.data)
        [impl::binding-impl #'(parsed impl.info)])]
@@ -317,14 +316,14 @@
                            (rhombus-body-at block-tag body ...))))])])))])])))
 
 (define-for-syntax (unwrap-block stx)
-  #`(rhombus-body-sequence #,@(unpack-multi stx 'bin.binder)))
+  #`(rhombus-body-sequence #,@(unpack-multi stx 'bin.binder #f)))
 
 (define-for-syntax (wrap-parsed stx)
   #`(parsed #,stx))
 
 (define-for-syntax (extract-binding form proc)
   (syntax-parse (if (syntax? form)
-                    (unpack-group form proc)
+                    (unpack-group form proc #f)
                     #'#f)
     [b::binding #'b.parsed]
     [_ (raise-result-error (proc-name proc) "binding?" form)]))
@@ -339,7 +338,7 @@
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (extract-binding form proc)
-                                   (unpack-tail new-tail proc)
+                                   (unpack-tail new-tail proc #f)
                                    proc))
        (lambda (form1 form2 stx)
          (extract-binding (proc (wrap-parsed form1) (wrap-parsed form2) stx)
@@ -356,7 +355,7 @@
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (extract-binding form proc)
-                                   (unpack-tail new-tail proc)
+                                   (unpack-tail new-tail proc #f)
                                    proc))
        (lambda (form stx)
          (extract-binding (proc (wrap-parsed form) stx)

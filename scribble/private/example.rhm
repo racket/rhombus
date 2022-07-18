@@ -14,7 +14,7 @@ expr.macro 'examples $parens $tail ...':
   match parens
   | '($_)':
       values(parsed(['#{typeset-examples}', parens]),
-             tail)
+             '$tail ...')
   | ~else:
       raise_syntax_error("expected forms", '$me $parens')
 

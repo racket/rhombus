@@ -12,19 +12,22 @@
          "binding.rkt"
          "expression+binding.rkt"
          "pack.rkt"
+         (for-syntax "pack.rkt") ;; ?? 
          "empty-group.rkt"
          "syntax-class.rkt"
          "operator-parse.rkt"
          (submod "syntax-class.rkt" for-quasiquote)
          (only-in "underscore.rkt"
                   [_ rhombus-_])
+         (only-in "ellipsis.rkt"
+                  [... rhombus...])
+         "repetition.rkt"
          (only-in "annotation.rkt"
                   ::))
 
 (provide #%quote
          syntax_term
-         $
-         (rename-out [rhombus... ...]))
+         $)
 
 (module+ convert
   (provide (for-syntax convert-pattern
@@ -45,35 +48,37 @@
     (pattern (~seq ((~datum group) (op $) e)
                    ((~datum group) (op (~and name rhombus...)))))))
 
-(define-for-syntax (make-pattern-variable-syntax temp-id attributes)
-  (expression-prefix-operator
-   #'pattern-var
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (op)
-       [(var-id (op |.|) attr)
-        (values
-         (hash-ref
-          attributes
-          (syntax->datum #'attr)
-          (lambda ()
-            (raise-syntax-error #f
-                                (format
-                                 (string-append "attribute not found\n"
-                                                "  pattern: ~a\n"
-                                                "  attribute: ~a")
-                                 (syntax-e #'var-id)
-                                 (syntax-e #'attr))
-                                stx)))
-         #'())]
-       [(var-id)
-        (values temp-id #'())]))))
+(define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth attributes)
+  (cond
+    [(eq? depth 0) (make-rename-transformer temp-id)]
+    [else (make-repetition
+           name-id
+           #`(#,unpack* #'$ #,temp-id #,depth)
+           #'()
+           #:depth depth
+           #:expr-handler (lambda (stx fail)
+                            (syntax-parse stx
+                              #:datum-literals (op)
+                              [(var-id (op |.|) attr)
+                               (values
+                                (hash-ref
+                                 attributes
+                                 (syntax->datum #'attr)
+                                 (lambda ()
+                                   (raise-syntax-error #f
+                                                       (format
+                                                        (string-append "attribute not found\n"
+                                                                       "  pattern: ~a\n"
+                                                                       "  attribute: ~a")
+                                                        (syntax-e #'var-id)
+                                                        (syntax-e #'attr))
+                                                       stx)))
+                                #'())]
+                              [(var-id) (fail)])))]))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
-                                   deepen-escape
+                                   deepen-escape deepen-syntax-escape
                                    handle-tail-escape handle-block-tail-escape
                                    handle-maybe-empty-sole-group
                                    handle-maybe-empty-alts handle-maybe-empty-group
@@ -95,7 +100,7 @@
         (group (op (~and (~literal $) $-id)) esc))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
-       #:do [(define-values (p new-idrs new-sidrs) (handle-multi-escape  #'$-id #'esc e))]
+       #:do [(define-values (p new-idrs new-sidrs) (handle-multi-escape #'$-id #'esc e))]
        #:when p
        (values p new-idrs new-sidrs #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
@@ -112,18 +117,22 @@
       [((~and tag (~or parens brackets braces quotes multi block alts group))
         g ...)
        ;; Note: this is where `depth` would be incremented, when `tag` is `quotes`, if we wanted that
-       (let loop ([gs #'(g ...)] [pend-idrs #f] [idrs '()] [sidrs '()] [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
+       (let loop ([gs #'(g ...)] [pend-idrs #f] [pend-sidrs #f] [idrs '()] [sidrs '()] [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
          (define (simple gs a-depth)
            (syntax-parse gs
              [(g . gs)
               (define-values (p new-ids new-sidrs nested-can-be-empty?) (convert #'g #f a-depth #f))
-              (loop #'gs new-ids (append (or pend-idrs '()) idrs) (append new-sidrs sidrs) (cons p ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
+              (loop #'gs new-ids new-sidrs
+                    (append (or pend-idrs '()) idrs) (append (or pend-sidrs '()) sidrs)
+                    (cons p ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
          (define (simple2 gs a-depth)
            (syntax-parse gs
              [(g0 g1 . gs)
               (define-values (p0 new-ids0 new-sids0 nested-can-be-empty?0) (convert #'g0 #f a-depth #f))
               (define-values (p1 new-ids1 new-sids1 nested-can-be-empty?1) (convert #'g1 #f a-depth #f))
-              (loop #'gs (append new-ids0 new-ids1) (append (or pend-idrs '()) idrs) (append new-sids0 new-sids1 sidrs) (list* p1 p0 ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
+              (loop #'gs (append new-ids0 new-ids1) (append new-sids0 new-sids1)
+                    (append (or pend-idrs '()) idrs) (append (or pend-sidrs '()) sidrs)
+                    (list* p1 p0 ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
          (syntax-parse gs
            [()
             (let ([ps (let ([ps (reverse ps)])
@@ -131,6 +140,7 @@
                             (append ps tail)
                             ps))]
                   [idrs (append (or pend-idrs '()) idrs)]
+                  [sidrs (append (or pend-sidrs '()) sidrs)]
                   [can-be-empty? (and can-be-empty? (not pend-idrs))])
               (cond
                 [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
@@ -150,13 +160,17 @@
                         (or tail-any-escape?
                             (identifier? #'op.e)))
             (define-values (id new-idrs new-sidrs) (handle-tail-escape #'op.name #'op.e e))
-            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) (append new-sidrs sidrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
+            (loop #'() #f #f
+                  (append new-idrs (or pend-idrs '()) idrs) (append new-sidrs (or pend-sidrs '()) sidrs)
+                  ps (and can-be-empty? (not pend-idrs)) id depth)]
            [(op:block-tail-repetition)
             #:when (and (zero? depth)
                         (or tail-any-escape?
                             (identifier? #'op.e)))
             (define-values (id new-idrs new-sidrs) (handle-block-tail-escape #'op.name #'op.e e))
-            (loop #'() #f (append new-idrs (or pend-idrs '()) idrs) (append new-sidrs sidrs) ps (and can-be-empty? (not pend-idrs)) id depth)]
+            (loop #'() #f #f
+                  (append new-idrs (or pend-idrs '()) idrs) (append new-sidrs (or pend-sidrs '()) sidrs)
+                  ps (and can-be-empty? (not pend-idrs)) id depth)]
            [(op:list-repetition . gs)
             #:when (zero? depth)
             (unless pend-idrs
@@ -165,12 +179,18 @@
                                   #'op.name))
             (define new-pend-idrs (for/list ([idr (in-list pend-idrs)])
                                     (deepen-escape idr)))
-            (loop #'gs #f (append new-pend-idrs idrs) sidrs (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
+            (define new-pend-sidrs (for/list ([sidr (in-list pend-sidrs)])
+                                     (deepen-syntax-escape sidr)))
+            (loop #'gs #f #f
+                  (append new-pend-idrs idrs) (append new-pend-sidrs sidrs)
+                  (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
            [(((~datum op) (~and (~literal $) $-id)) esc . n-gs)
             (cond
               [(zero? depth)
                (define-values (pat new-idrs new-sidrs) (handle-escape #'$-id #'esc e))
-               (loop #'n-gs new-idrs (append (or pend-idrs '()) idrs) (append new-sidrs sidrs) (cons pat ps) (and can-be-empty? (not pend-idrs)) #f depth)]
+               (loop #'n-gs new-idrs new-sidrs
+                     (append (or pend-idrs '()) idrs) (append (or pend-sidrs '()) sidrs)
+                     (cons pat ps) (and can-be-empty? (not pend-idrs)) #f depth)]
               [else
                (simple2 gs (sub1 depth))])]
            [(g . _)
@@ -183,18 +203,26 @@
        (values e null null #f)])))
 
 (define-for-syntax (convert-pattern e #:as-tail? [as-tail? #f] #:splice? [splice? #f])
-  (define (handle-escape $-id e in-e pack* context-syntax-class kind)
+  (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group)
       #:literals (rhombus-_ ::)
       [rhombus-_ (values #'_ null null)]
       [_:identifier
        #:with (tag . _) in-e
-       (let ([temp (car (generate-temporaries #'(#,e)))])
-         (values temp (list #`[#,e (#,pack* (syntax #,temp) 0)]) null))]
+       (let* ([temps (generate-temporaries (list e e))]
+              [temp1 (car temps)]
+              [temp2 (cadr temps)])
+         (values temp1
+                 (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
+                 (list #`[#,e (make-pattern-variable-syntax (quote-syntax e)
+                                                            (quote-syntax #,temp2)
+                                                            (quote-syntax #,unpack*)
+                                                            0
+                                                            (hasheq))])))]
       [(parens (group id:identifier (op ::) stx-class:identifier))
        (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
-       (define (compat pack*)
+       (define (compat pack* unpack*)
          (define sc (rhombus-syntax-class-class rsc))
          (define temp-id (car (generate-temporaries (list #'id))))
          (define-values (attribute-bindings attribute-mappings)
@@ -211,9 +239,12 @@
                      #'id)
                  (cons #`[#,temp-id (#,pack* (syntax id) #,pack-depth)] attribute-bindings)
                  (list #`[id (make-pattern-variable-syntax
+                              (quote-syntax id)
                               (quote-syntax #,temp-id)
-                              (hash #,@(apply append (for/list ([b (in-list attribute-mappings)])
-                                                       (list #`(quote #,(car b)) #`(quote-syntax #,(cdr b)))))))])))
+                              (quote-syntax #,unpack*)
+                              #,pack-depth
+                              (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
+                                                         (list #`(quote #,(car b)) #`(quote-syntax #,(cdr b)))))))])))
        (define (incompat)
          (raise-syntax-error #f
                              "unknown syntax class or incompatible with this context"
@@ -229,26 +260,26 @@
           (cond
             [(not (eq? kind 'term))
              (values #f #f #f)]
-            [else (compat pack*)])]
+            [else (compat pack* unpack*)])]
          [(eq? (rhombus-syntax-class-kind rsc) 'group)
           (cond
             [(eq? kind 'term) (incompat)]
             [(not (eq? kind 'group)) (values #f #f #f)]
-            [else (compat pack*)])]
+            [else (compat pack* unpack*)])]
          [(eq? (rhombus-syntax-class-kind rsc) 'multi)
           (cond
-            [(eq? kind 'multi) (compat pack*)]
+            [(eq? kind 'multi) (compat pack* unpack*)]
             [else (incompat)])]
          [(eq? (rhombus-syntax-class-kind rsc) 'block)
           (cond
             [(and (eq? kind 'multi) (syntax-parse in-e
                                       [(head . _) (memq (syntax-e #'head) '(block alts))]))
-             (compat #'pack-block*)]
+             (compat #'pack-block* #'unpack-multi-as-term*)]
             [else (incompat)])]
          [else
           (error "unrecognized kind" kind)])]))
-  (define (handle-escape/match-head $-id e in-e pack* context-syntax-class kind)
-    (define-values (p idrs sidrs) (handle-escape $-id e in-e pack* context-syntax-class kind))
+  (define (handle-escape/match-head $-id e in-e pack* unpack* context-syntax-class kind)
+    (define-values (p idrs sidrs) (handle-escape $-id e in-e pack* unpack* context-syntax-class kind))
     (if p
         (values (syntax-parse in-e
                   [(tag . _) #`(~and ((~datum tag) . _) #,p)])
@@ -266,26 +297,45 @@
                     #`(~literal #,d))
                   ;; handle-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape $-id e in-e #'pack-term* #'Term 'term))
+                    (handle-escape $-id e in-e #'pack-term* #'unpack-term* #'Term 'term))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-group* #'Group 'group))
+                    (handle-escape/match-head $-id e in-e #'pack-group* #'unpack-group* #'Group 'group))
                   ;; handle-multi-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'Multi 'multi))
+                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'unpack-multi-as-term* #'Multi 'multi))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
                       [(id (pack (_ stx) depth))
                        #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
+                  ;; deepen-syntax-escape
+                  (lambda (sidr)
+                    (syntax-parse sidr
+                      [(id (make-pattern-variable-syntax self-id temp-id unpack* depth ht))
+                       #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) ht))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
                     (if (free-identifier=? e #'rhombus-_)
                         (values #'_ null null)
-                        (values e (list #`[#,e (pack-tail* (syntax #,e) 0)]) null)))
+                        (let ([temp-id (car (generate-temporaries (list e)))])
+                          (values e
+                                  (list #`[#,temp-id (pack-tail* (syntax #,e) 0)])
+                                  (list #`[#,e (make-pattern-variable-syntax (quote-syntax #,e)
+                                                                             (quote-syntax #,temp-id)
+                                                                             (quote-syntax unpack-tail-list*)
+                                                                             1
+                                                                             (hasheq))])))))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
-                    (values e (list #`[#,e (pack-multi* (syntax #,e) 0)]) null))
+                    (let ([temp-id (car (generate-temporaries (list e)))])
+                      (values e
+                              (list #`[#,temp-id (pack-multi-tail* (syntax #,e) 0)])
+                              (list #`[#,e (make-pattern-variable-syntax (quote-syntax #,e)
+                                                                         (quote-syntax #,temp-id)
+                                                                         (quote-syntax unpack-multi-tail-list*)
+                                                                         1
+                                                                         (hasheq))]))))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
@@ -314,7 +364,6 @@
                     ;; because that won't be an input
                     (values #`((~datum #,tag) . #,ps) idrs sidrs #t))))
 
-
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression])
@@ -330,34 +379,38 @@
                       ; TODO fix how check-escape works
                       #;(check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-term* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)]) null))
+                      (values id (list #`[#,id (unpack-rep-term* (quote-syntax #,$-id) #,e 0)]) null))
                     ;; handle-group-escape:
                     (lambda ($-id e in-e)
                       #;(check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-group* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)]) null))
+                      (values id (list #`[#,id (unpack-rep-group* (quote-syntax #,$-id) #,e 0)]) null))
                     ;; handle-multi-escape:
                     (lambda ($-id e in-e)
                       #;(check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (with-syntax ([(tag . _) in-e])
-                        (values #`(tag . #,id) (list #`[#,id (unpack-multi* (quote-syntax #,$-id) (#,rhombus-expression (group #,e)) 0)]) null)))
+                        (values #`(tag . #,id) (list #`[#,id (unpack-rep-multi* (quote-syntax #,$-id) #,e 0)]) null)))
                     ;; deepen-escape
                     (lambda (idr)
                       (syntax-parse idr
-                        #:literals (unpack-term* unpack-group* unpack-multi* unpack-tail*)
-                        [(id-pat ((~and unpack (~or unpack-term* unpack-group* unpack-multi* unpack-tail*)) q e depth))
+                        #:literals (unpack-rep-term* unpack-rep-group* unpack-rep-multi* unpack-rep-tail* unpack-rep-multi-tail*)
+                        [(id-pat ((~and unpack (~or unpack-rep-term* unpack-rep-group* unpack-rep-multi* unpack-rep-tail* unpack-rep-multi-tail*))
+                                  q e depth))
                          #`[(id-pat (... ...)) (unpack q e #,(add1 (syntax-e #'depth)))]]
                         [(id-pat (converter depth (qs t) . args))
                          #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
+                    ;; deepen-syntax-escape
+                    (lambda (sidr)
+                      (error "should have no sidrs for template"))
                     ;; handle-tail-escape:
                     (lambda (name e in-e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-tail* '#,name (#,rhombus-expression (group #,e)) 0)]) null))
+                      (values id (list #`[#,id (unpack-rep-tail* (quote-syntax #,name) #,e 0)]) null))
                     ;; handle-block-tail-escape:
                     (lambda (name e in-e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (unpack-multi* '#,name (#,rhombus-expression (group #,e)) 0)]) null))
+                      (values id (list #`[#,id (unpack-rep-multi-tail* (quote-syntax #,name) #,e 0)]) null))
                     ;; handle-maybe-empty-sole-group
                     (lambda (tag template idrs sidrs)
                       ;; if `template` generates `(group)`, then instead of `(tag (group))`,
@@ -397,6 +450,53 @@
                          #`(with-syntax ([id-pat e])
                              #,body)]))]))
   (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
+
+(define-syntax-rule (unpack-rep-term* $-name e depth)
+  (get-repetition $-name e depth unpack-term*))
+(define-syntax-rule (unpack-rep-group* $-name e depth)
+  (get-repetition $-name e depth unpack-group*))
+(define-syntax-rule (unpack-rep-multi* $-name e depth)
+  (get-repetition $-name e depth unpack-multi*))
+
+(define-syntax (get-repetition stx)
+  (syntax-parse stx
+    [(_ $-name e 0 unpack*) #'(unpack* $-name (rhombus-expression (group e)) 0)]
+    [(_ $-name e depth unpack*)
+     (define base-e (repetition-as-list #'rhombus... #'(group e) (syntax-e #'depth)))
+     (define unpack*-id #'unpack*)
+     ;; strip away redundant unpack as an optimization
+     (define opt-e
+       (let loop ([e base-e])
+         (syntax-parse e
+           #:literals (begin quote-syntax)
+           [(begin (quote-syntax . _) e) (loop #'e)]
+           [(unpack*:id _ e d)
+            #:when (free-identifier=? #'unpack* unpack*-id)
+            #'e]
+           [_ e])))
+     #`(unpack* $-name #,opt-e depth)]))
+
+(define-syntax-rule (unpack-rep-tail* $-name e depth)
+  (get-tail-repetition $-name e depth unpack-tail-list* unpack-tail* unpack-list-tail*))
+(define-syntax-rule (unpack-rep-multi-tail* $-name e depth)
+  (get-tail-repetition $-name e depth unpack-multi-tail-list* unpack-multi-tail* unpack-multi-list-tail*))
+
+(define-syntax (get-tail-repetition stx)
+  (syntax-parse stx
+    [(_ $-name e depth replaceable-unpack* replacement-unpack* generic-unpack*)
+     (define base-e (repetition-as-list #'rhombus... #'(group e) (+ 1 (syntax-e #'depth))))
+     ;; replace redundant unpack with alternative; this is not just an
+     ;; optimization, but a change to the time complexity of using the
+     ;; tail in a template by avoiding conversion to a list and back
+     (let loop ([e base-e])
+       (syntax-parse e
+         #:literals (begin quote-syntax)
+         [(begin (quote-syntax . _) e) (loop #'e)]
+         [(unpack* $-name e d)
+          #:when (free-identifier=? #'unpack* #'replaceable-unpack*)
+          #`(replacement-unpack* $-name e depth)]
+         [_
+          #`(generic-unpack* $-name #,e depth)]))]))
 
 (define-for-syntax (call-with-quoted-expression stx single-k multi-k literal-k)
   (syntax-parse stx
@@ -476,7 +576,7 @@
      (binding-info #'annotation-str
                    #'syntax
                    #'()
-                   #'((id) ...)
+                   #'((id) ... (sid) ...)
                    #'syntax-matcher
                    #'syntax-binder
                    #'(pattern repack tmp-ids (id ...) id-refs (sid ...) sid-refs))]))
@@ -513,14 +613,3 @@
         (raise-syntax-error #f
                             "misuse outside of a pattern or template"
                             #'op)]))))
-
-(define-syntax rhombus...
-  (expression-transformer
-   #'rhombus...
-   (lambda (stx)
-     (syntax-parse stx
-       [(op::operator . tail)
-        (raise-syntax-error #f
-                            "misuse outside of a pattern"
-                            #'op.name)]))))
-

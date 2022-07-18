@@ -6,7 +6,7 @@
 @title[~tag: "set"]{Sets}
 
 When @litchar["{"]...@litchar["}"] is used with elements that do not
-have @rhombus[:], then @litchar["{"]...@rhombus["}"] creates a set. (If
+have @rhombus[:], then @litchar["{"]...@litchar["}"] creates a set. (If
 a set-element expression uses @rhombus[:], then it will need to be in
 parentheses to avoid being parsed as a key–value pair.) A set can serve
 as a map, where the set's elements act as keys and each key's value is

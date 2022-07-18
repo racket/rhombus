@@ -4,6 +4,7 @@
                      "annotation-string.rkt")
          "parse.rkt"
          "binding.rkt"
+         "repetition.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
          (submod "annotation.rkt" for-class))
@@ -77,20 +78,17 @@
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
-     (define-values (new-rest-data rest-static-infos rest-bind-infos rest-name-id)
+     (define-values (new-rest-data rest-static-infos rest-name-id)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'() #'rest)]
+         [#f (values #'#f #'() #'rest)]
          [(rest-accessor rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
-          (values #`(rest-tmp-id rest-accessor rest-info)
+          (values #`(rest-tmp-id rest-accessor rest-info
+                                 #,(or (static-info-lookup #'static-infos #'#%ref-result)
+                                       '()))
                   #'rest-info.static-infos
-                  (syntax-parse #'rest-info.bind-infos
-                    [((bind-id bind-static-info ...) ...)
-                     #:with ref-static-infos (or (static-info-lookup #'static-infos #'#%ref-result)
-                                                 '())
-                     #'((bind-id (#%ref-result (bind-static-info ... . ref-static-infos))) ...)])
                   #'rest-info.name-id)]))
 
      (define all-composite-static-infos
@@ -117,7 +115,7 @@
      (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)))
                    #'composite
                    all-composite-static-infos
-                   #`((a-info.bind-id a-info.bind-static-info ...) ... ... #,@rest-bind-infos)
+                   #`((a-info.bind-id a-info.bind-static-info ...) ... ...)
                    #'composite-matcher
                    #'composite-binder
                    #`(predicate steppers accessors #,(generate-temporaries #'(a-info.name-id ...))
@@ -143,7 +141,7 @@
                  [(null? name-ids)
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
-                    [(rest-tmp-id rest-accessor rest-info)
+                    [(rest-tmp-id rest-accessor rest-info down-static-infos)
                      #`(begin
                          (define rest-tmp-id #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
                          (IF rest-tmp-id
@@ -178,9 +176,15 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-info)
+              [(rest-tmp-id rest-accessor rest-info down-static-infos)
                #:with rest::binding-info #'rest-info
-               #'((define-values (rest.bind-id ...) (rest-tmp-id)))]))]))
+               #:with (rest-seq-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))
+               #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
+                  (define-syntax rest.bind-id
+                    (make-repetition (quote-syntax rest.bind-id)
+                                     (quote-syntax rest-seq-tmp-id)
+                                     (quote-syntax (rest.bind-static-info ... . down-static-infos))))
+                  ...)]))]))
 
 ;; ------------------------------------------------------------
 

@@ -31,17 +31,17 @@
 @examples[
   ~eval: macro_eval,
   defn.macro 'enum:
-                $(ids :: Group)
+                $(id :: Group)
                 ...':
     // temporary list library:
     fun | length([]): 0
-        | length([a, as, ...]): 1+length(as)
+        | length([a, a1, ...]): 1+length([a1, ...])
     fun | iota_accum(0, acc): acc
         | iota_accum(n, acc): iota_accum(n-1, cons(n, acc))
     fun iota(n): iota_accum(n, [])
     // useful example part is here:
-    val ns: iota(length(ids))
-    'val $ids: $ns
+    val [n, ...]: iota(length([id, ...]))
+    'val $id: $n
      ...',
   enum:
     a

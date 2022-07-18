@@ -3,7 +3,7 @@
     "common.rhm" open 
     "macro.rhm")
 
-@(def list(xs, ...): xs)
+@(def list(x, ...): [x, ...])
 
 @title{Syntax Classes}
 

@@ -40,7 +40,7 @@ which case it accepts keys alternating with values:
   »)
 
 Curly braces @litchar["{"]...@litchar["}"] can be used as a shorthand
-for writing @rhombus[Map(...)]. Within curly braces, the key and value
+for writing @rhombus[Map($$(@elem{...}))]. Within curly braces, the key and value
 are joined by @rhombus[:]. (If a key expression needs to use @rhombus[:]
 itself, the expression will have to be in parentheses.)
 

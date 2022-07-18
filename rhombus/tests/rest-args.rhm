@@ -1,0 +1,39 @@
+#lang rhombus
+import:
+  "check.rhm" open
+
+fun
+| add(): 0
+| add(x): x
+| add(x, y, ...): x + add(y, ...)
+
+check:
+  add(1, 2, 3)
+  6
+
+val [n :: Integer, ...]: [10, 20, 30]
+check:
+  add(1, n, ...)
+  61
+
+check:
+  add(1, List.repet([10, 20, 30]), ...)
+  61
+
+check:
+  ~print
+  match '(1 10) (2 3 4 10) (5 6 10)'
+  | '($a ... 10) ...': [[a, ...], ...]
+  [['1'], ['2', '3', '4'], ['5', '6']]
+
+check:
+  ~print
+  val [s, ...]: ["a", "b", "c"]
+  '(hi $s) ...'
+  '(hi "a") (hi "b") (hi "c")'
+  
+check:
+  ~print
+  '(hi $(List.repet(["a", "b", "c"]))) ...'
+  '(hi "a") (hi "b") (hi "c")'
+                  

@@ -16,8 +16,9 @@
          "ref-result-key.rkt"
          "static-info.rkt"
          "annotation.rkt"
-         (only-in "quasiquote.rkt"
+         (only-in "ellipsis.rkt"
                   [... rhombus...])
+         "repetition.rkt"
          (submod "annotation.rkt" for-class)
          (only-in "equal.rkt"
                   [= rhombus=])
@@ -211,16 +212,20 @@
                     [(arg ...) args]
                     [rhs rhs]
                     [(maybe-rest-tmp maybe-match-rest
-                                     (maybe-bind-rest ...)
-                                     (maybe-bind-rest-static-info ...))
+                                     (maybe-bind-rest-seq ...)
+                                     (maybe-bind-rest ...))
                      (if (syntax-e rest-arg)
                          (with-syntax-parse ([rest::binding-form rest-parsed]
                                              [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
-                                             [rest-info::binding-info #'rest-impl.info])
+                                             [rest-info::binding-info #'rest-impl.info]
+                                             [(rest-tmp-id ...) (generate-temporaries #'(rest-info.bind-id ...))])
                            #`(rest-tmp
                               (rest-getter #,rest-arg rest-tmp rest-info)
-                              ((define-values (rest-info.bind-id ...) (rest-getter)))
-                              ((define-static-info-syntax/maybe rest-info.bind-id (#%ref-result (rest-info.bind-static-info ...)))
+                              ((define-values (rest-tmp-id ...) (rest-getter)))
+                              ((define-syntax rest-info.bind-id
+                                 (make-repetition (quote-syntax rest-info.bind-id)
+                                                  (quote-syntax rest-tmp-id)
+                                                  (quote-syntax (rest-info.bind-static-info ...))))
                                ...)))
                          #'(() #f () ()))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
@@ -254,8 +259,8 @@
                 (begin
                   ;; `arg-info.binder-id` and `arg-info.bind-id` are used in
                   ;; `nested-bindings` because `try-next` above is `#f`
+                  maybe-bind-rest-seq ...
                   maybe-bind-rest ...
-                  maybe-bind-rest-static-info ...
                   (add-annotation-check
                    #,function-name #,pred
                    (rhombus-body-expression rhs))))))))))
@@ -304,16 +309,20 @@
                                               [(this-arg-id ...) this-args]
                                               [pred (fcase-pred fc)]
                                               [rhs (fcase-rhs fc)]
-                                              [(maybe-match-rest (maybe-bind-rest ...) (maybe-bind-rest-static-info ...))
+                                              [(maybe-match-rest (maybe-bind-rest-seq ...) (maybe-bind-rest ...))
                                                (cond
                                                  [(syntax-e (fcase-rest-arg fc))
                                                   (define rest-parsed (fcase-rest-arg-parsed fc))
                                                   (with-syntax-parse ([rest::binding-form rest-parsed]
                                                                       [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
-                                                                      [rest-info::binding-info #'rest-impl.info])
+                                                                      [rest-info::binding-info #'rest-impl.info]
+                                                                      [(rest-tmp-id ...) (generate-temporaries #'(rest-info.bind-id ...))])
                                                     #`((rest-getter #,(fcase-rest-arg fc) rest-tmp rest-info)
-                                                       ((define-values (rest-info.bind-id ...) (rest-getter)))
-                                                       ((define-static-info-syntax/maybe rest-info.bind-id (#%ref-result (rest-info.bind-static-info ...)))
+                                                       ((define-values (rest-tmp-id ...) (rest-getter)))
+                                                       ((define-syntax rest-info.bind-id
+                                                          (make-repetition (quote-syntax rest-info.bind-id)
+                                                                           (quote-syntax rest-tmp-id)
+                                                                           (quote-syntax (rest-info.bind-static-info ...))))
                                                         ...)))]
                                                  [else
                                                   #'(#f () ())])])
@@ -332,8 +341,8 @@
                                           (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
                                           ...)
                                         ...
+                                        maybe-bind-rest-seq ...
                                         maybe-bind-rest ...
-                                        maybe-bind-rest-static-info ...
                                         (add-annotation-check
                                          #,function-name
                                          pred
@@ -474,17 +483,34 @@
 (define-for-syntax (parse-function-call rator-in stxes)
   (define rator (rhombus-local-expand rator-in))
   (syntax-parse stxes
-    [(_ (head::parens rand::kw-expression ...) . tail)
-     #:with ((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
-                                            [parsed (in-list (syntax->list #'(rand.parsed ...)))])
-                                   (if (syntax-e kw)
-                                       (list kw parsed)
-                                       (list parsed)))
-     (define e (datum->syntax (quote-syntax here)
-                              (cons rator #'(arg-form ... ...))
-                              (span-srcloc rator #'head)
-                              #'head))
-     (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
-                                     #'()))
-     (values (wrap-static-info* e result-static-infos)
-             #'tail)]))
+    #:datum-literals (group op)
+    [(_ (head::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
+     (generate-call rator #'head #'(rand ...) #'rep #'dots #'tail)]
+    [(_ (head::parens rand ...) . tail)
+     (generate-call rator #'head #'(rand ...) #f #f #'tail)]))
+
+(define-for-syntax (generate-call rator head rands reps dots tail)
+  (with-syntax-parse ([(rand::kw-expression ...) rands])
+    (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
+                                                         [parsed (in-list (syntax->list #'(rand.parsed ...)))])
+                                                (if (syntax-e kw)
+                                                    (list kw parsed)
+                                                    (list parsed)))])
+      (define e
+        (cond
+          [reps
+           (define rest-args (repetition-as-list dots reps 1))
+           (datum->syntax (quote-syntax here)
+                          (append (list #'apply rator)
+                                  (syntax->list #'(arg-form ... ...))
+                                  (list rest-args))
+                          (span-srcloc rator head)
+                          head)]
+          [else (datum->syntax (quote-syntax here)
+                               (cons rator #'(arg-form ... ...))
+                               (span-srcloc rator head)
+                               head)]))
+      (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
+                                      #'()))
+      (values (wrap-static-info* e result-static-infos)
+              tail))))

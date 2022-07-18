@@ -13,13 +13,13 @@ export:
 
 for_meta:
   def | map(proc, []): []
-      | map(proc, [a, as, ...]): cons(proc(a), map(proc, as))
+      | map(proc, [a, a1, ...]): cons(proc(a), map(proc, [a1, ...]))
 
   def | andmap(proc, []): #true
-      | andmap(proc, [a, as, ...]): proc(a) && andmap(proc, as)
+      | andmap(proc, [a, a1, ...]): proc(a) && andmap(proc, [a1, ...])
 
   def | map2(proc, [], []): []
-      | map2(proc, [a, as, ...], [b, bs, ...]): cons(proc(a, b), map2(proc, as, bs))
+      | map2(proc, [a, a1, ...], [b, b1, ...]): cons(proc(a, b), map2(proc, [a1, ...], [b1, ...]))
 
   def head_context(stxs):
     match stxs
@@ -51,16 +51,16 @@ for_meta:
     | ~else: #false
 
   def nested(gs, builder, stxs):
-    val new_gs: map(escape_group, gs)
-    if andmap(is_literal_group, new_gs)
+    val [new_g, ...]: map(escape_group, gs)
+    if andmap(is_literal_group, [new_g, ...])
     | literal_term(stxs)
-    | '$builder([$new_gs, ...], literal_syntax($(head_context(stxs))))'
+    | '$builder([$new_g, ...], literal_syntax($(head_context(stxs))))'
 
   def nested_alts(bs, stxs):
-    val new_bs: map(escape_term, bs)
-    if andmap(is_literal_term, new_bs)
+    val [new_b, ...]: map(escape_term, bs)
+    if andmap(is_literal_term, [new_b, ...])
     | literal_term(stxs)
-    | 'alts_syntax([$new_bs, ...], literal_syntax($(head_context(stxs))))'
+    | 'alts_syntax([$new_b, ...], literal_syntax($(head_context(stxs))))'
 
   def escape_group(g):
     val new_g: escape_tail(g)
@@ -71,12 +71,12 @@ for_meta:
   def escape_tail(stxs):
     match stxs
     | '$$($expr ...) $tail ...':
-        'sequence_cons_syntax(elem($expr ...), $(escape_tail(tail)),
+        'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
                               literal_syntax($(head_escape_context(stxs))))'
     | '$head $tail ...':
-        val values(a_head, a_tail): adjust_spaces(head, tail)
-        val new_head: escape_term('$a_head')
-        val new_tail: escape_tail('$a_tail ...')
+        val values(a_head, a_tail): adjust_spaces(head, '$tail ...')
+        val new_head: escape_term(a_head)
+        val new_tail: escape_tail(a_tail)
         if is_literal_term(new_head) && is_literal_group(new_tail)
         | literal_group(stxs)
         | 'sequence_append_syntax($new_head, $new_tail)'
@@ -84,18 +84,18 @@ for_meta:
 
   def escape_term(stxs):
     match stxs
-    | '($(gs :: Group), ...)':
-        nested(gs, 'parens_syntax', stxs)
-    | '[$(gs :: Group), ...]':
-        nested(gs, 'brackets_syntax', stxs)
-    | '{$(gs :: Group), ...}':
-        nested(gs, 'braces_syntax', stxs)
-    | '«'$(gs :: Group); ...'»':
-        nested(gs, 'quotes_syntax', stxs)
-    | ': $(gs :: Group); ...':
-        nested(gs, 'block_syntax', stxs)
-    | '| $(bs :: Block) | ...':
-        nested_alts(bs, stxs)
+    | '($(g :: Group), ...)':
+        nested([g, ...], 'parens_syntax', stxs)
+    | '[$(g :: Group), ...]':
+        nested([g, ...], 'brackets_syntax', stxs)
+    | '{$(g :: Group), ...}':
+        nested([g, ...], 'braces_syntax', stxs)
+    | '«'$(g:: Group); ...'»':
+        nested([g, ...], 'quotes_syntax', stxs)
+    | ': $(g :: Group); ...':
+        nested([g, ...], 'block_syntax', stxs)
+    | '| $(b :: Block) | ...':
+        nested_alts([b, ...], stxs)
     | '$(id :: Id_Op)':
         val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
         match mv
@@ -158,7 +158,7 @@ fun relocate_expansion(e, context):
 expr.macro
 | 'rhombus ($(forms :: Group)) $main_tail ...':
     values('#{typeset-rhombus}($(escape_group(forms)))',
-           main_tail)
+           '$main_tail ...')
 | 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
     val kw: unwrap_syntax(kw_stx)
     if (kw === keyword(~var)
@@ -168,25 +168,26 @@ expr.macro
           || kw === keyword(~stxclass)
           || kw === keyword(~folder))
     | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
-             main_tail)
+             '$main_tail ...')
     | raise_syntax_error("invalid space", kw)
 
 expr.macro 'rhombusblock $tail ...':
   ~op_stx: me
-  fun finish(option, fin_tail):
-    match '$fin_tail ...'
+  fun finish(options, fin_tail):
+    match fin_tail
     | ': $_':
-        values('#{typeset-rhombusblock}($option, ..., $(escape_term('$fin_tail ...')))', '')
+        val [opt, ...]: options
+        values('#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))', '')
     | ~else: raise_syntax_error("expected a block", '$me $tail ...')
   fun check_options(options):
-    match '($options, ...)'
-    | '()': #true
-    | '(~inset: $on, $more, ...)': check_options(more)
-    | '(~indent: $amt, $more, ...)': check_options(more)
-    | '(~prompt: $prompt, $more, ...)': check_options(more)
-    | '($opt, $_, ...)': raise_syntax_error("invalid option", opt)
+    match options
+    | []: #true
+    | ['~inset: $on', more, ...]: check_options([more, ...])
+    | ['~indent: $amt', more, ...]: check_options([more, ...])
+    | ['~prompt: $prompt', more, ...]: check_options([more, ...])
+    | ['$opt', _, ...]: raise_syntax_error("invalid option", opt)
   match '$tail ...'
-  | '($options, ...) $new_tail ...':
-      check_options(options)
-      finish(options, new_tail)
-  | ~else: finish([], tail)
+  | '($option, ...) $new_tail ...':
+      check_options([option, ...])
+      finish([option, ...], '$new_tail ...')
+  | ~else: finish([], '$tail ...')

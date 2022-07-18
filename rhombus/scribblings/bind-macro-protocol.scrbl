@@ -156,11 +156,11 @@ Here's a use of the low-level protocol to implement a @rhombus[fruit] pattern,
 which matches only things that are fruits according to @rhombus[is_fruit]:
 
 @(rhombusblock:
-    bind.macro 'fruit($id) $tail ......':
+    bind.macro 'fruit($id) $tail ...':
       values(bind_ct.pack('(fruit_infoer,
                             // remember the id:
                             $id)'),
-             tail)
+             '$tail ...')
 
     bind.infoer 'fruit_infoer($static_info, $id)':
       '("matching(fruit(_))",

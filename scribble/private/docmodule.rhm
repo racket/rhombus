@@ -34,4 +34,4 @@ decl.macro 'docmodule ($mod ...)':
 
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
   values(parsed(['racketmodname', translate_mod('$mod ...')]),
-         tail)
+         '$tail ...')

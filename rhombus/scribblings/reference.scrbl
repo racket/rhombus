@@ -13,6 +13,8 @@
 @include_section["ref-class.scrbl"]
 @include_section["ref-mutable.scrbl"]
 
+@include_section["ref-repetition.scrbl"]
+
 @include_section["ref-cond.scrbl"]
 @include_section["ref-match.scrbl"]
 @include_section["ref-for.scrbl"]

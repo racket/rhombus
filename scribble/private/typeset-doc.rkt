@@ -98,7 +98,8 @@
                                  (define sym-path (if str-id
                                                       (syntax-e str-id)
                                                       null))
-                                 (define seen-key (cons (syntax-e def-id) sym-path))
+                                 (define seen-key (cons (cons (syntax-e def-id) sym-path)
+                                                        space-name))
                                  (values
                                   (cons #`(#,(if (hash-ref seen seen-key #f)
                                                  #'make-redef-id

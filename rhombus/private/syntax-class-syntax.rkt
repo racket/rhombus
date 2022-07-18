@@ -16,6 +16,13 @@
 (define-simple-name-root rhombus-syntax
   class)
 
+;; should this be in "definition.rkt"?
+(define-syntax parsed-defn
+  (definition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        [(_ (_ d)) #'(d)]))))
+
 (define-for-syntax (generate-pattern-and-attributes stx)
   (syntax-parse stx
     #:datum-literals (alts group quotes block)
@@ -24,9 +31,18 @@
        (convert-pattern #:splice? #t
                         #'in-quotes))
      (with-syntax ([((attr ...) ...)
-                    (map (lambda (binding) (cons '#:attr binding)) idrs)])
-       (values #`(pattern #,p attr ... ...)
-               (map (lambda (binding) (syntax-e (car (syntax->list binding)))) idrs)))]
+                    (map (lambda (binding)
+                           (syntax-parse binding
+                             [[id . _] #'(#:attr id id)]))
+                         (append idrs sidrs))]
+                   [([val-id val-rhs] ...) idrs]
+                   [([stx-id stx-rhs] ...) sidrs])
+       (values #`(pattern #,p
+                          #:do [(define val-id val-rhs) ...]
+                          #:do [(define-syntax stx-id stx-rhs) ...]
+                          attr ... ...)
+               (map (lambda (binding) (syntax-e (car (syntax->list binding))))
+                    (append idrs sidrs))))]
     [(block (group (quotes in-quotes)
                    (block groups ...)))
      (define-values (p idrs sidrs can-be-empty?)
@@ -48,13 +64,25 @@
              (cons #'attr-id attrs))]
            [other
             (values (cons #'other body-forms) attrs)])))
-     (define all-attrs (append idrs (map (lambda (attr) #`[#,attr #,attr]) explicit-attrs)))
+     (define all-attrs (append idrs
+                               sidrs
+                               (map (lambda (attr) #`[#,attr #,attr])
+                                    explicit-attrs)))
      (with-syntax ([((attr ...) ...)
-                    (map (lambda (binding) (cons '#:attr binding)) all-attrs)]
+                    (map (lambda (binding)
+                           (syntax-parse binding
+                             [[id . _] #'(#:attr id id)]))
+                         all-attrs)]
                    [(body-form ...) pattern-body]
-                   [((id id-ref) ...) idrs])
-       (values #`(pattern #,p #:do [(define-values #,explicit-attrs (let ([id id-ref] ...) (rhombus-body body-form ...)))] attr ... ...)
-               (map (lambda (binding) (syntax-e (car (syntax->list binding)))) all-attrs)))]))
+                   [([val-id val-rhs] ...) idrs]
+                   [([stx-id stx-rhs] ...) sidrs])
+       (values #`(pattern #,p #:do [(rhombus-body-sequence
+                                     (group parsed-defn (parsed (define val-id val-rhs))) ...
+                                     (group parsed-defn (parsed (define-syntax stx-id stx-rhs))) ...
+                                     body-form ...)]
+                          attr ... ...)
+               (map (lambda (binding) (syntax-e (car (syntax->list binding))))
+                    all-attrs)))]))
 
 (define-for-syntax (generate-syntax-class class-name alts)
   (let-values ([(patterns attributes)

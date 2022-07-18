@@ -74,7 +74,7 @@
     [(not (syntax? v))
      (raise-argument-error* 'unwrap_syntax rhombus-realm "Syntax" v)]
     [else
-     (syntax-e (unpack-term v 'unwrap_syntax))]))
+     (syntax-e (unpack-term v 'unwrap_syntax #f))]))
 
 (define (relocate_syntax stx ctx-stx-in)
   (unless (syntax? stx) (raise-argument-error* 'relocate_syntax rhombus-realm "Syntax" stx))

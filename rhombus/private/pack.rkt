@@ -18,23 +18,26 @@
 
 ;; "Tail" below refers to the argument to a macro for the rest of the
 ;; enclosing sequence. We represent it using `multi` on the Rhombus
-;; side, but it's just a list on the Racket side, which means adding
-;; both `group` and them `multi` to get from here to there. On the way
-;; back, we coerce from any of the three possible shapes, containing
-;; `multi` to a single group.
+;; side, but it's just a syntax list on the Racket side, which means
+;; adding both `group` and them `multi` to get from here to there. On
+;; the way back, we coerce from any of the three possible shapes,
+;; containing `multi` to a single group.
 
 ;; When we "unpack" here, group unpacking is asymmetric and is really
 ;; just about coercsions, mot about removing a `group` wrapper.
 
-(provide pack-tail
-         unpack-tail
-         pack-term
+(provide pack-term
          unpack-term
          pack-group
          unpack-group
          pack-multi
          pack-tagged-multi
          unpack-multi
+
+         pack-tail
+         unpack-tail
+         pack-multi-tail
+         unpack-multi-tail
          
          pack-term*
          unpack-term*
@@ -44,8 +47,17 @@
          pack-tagged-multi*
          pack-block*
          unpack-multi*
+         unpack-multi-as-term*
+
          pack-tail*
          unpack-tail*
+         pack-multi-tail*
+         unpack-multi-tail*
+
+         unpack-tail-list*
+         unpack-multi-tail-list*
+         unpack-list-tail*
+         unpack-multi-list-tail*
 
          repack-as-term
          repack-as-multi)
@@ -65,7 +77,69 @@
 
 ;; ----------------------------------------
 
-;; assumes that `tail` is a syntax list, and wraps it with `multi`;
+;; `stx` is a single term
+(define (pack-term stx) stx)
+
+;; result is always a syntax object
+(define (unpack-term form who at-stx)
+  (define (fail)
+    (and who
+         (raise-error who "multi-term syntax not allowed in term context" form)))
+  (let loop ([r form])
+    (cond
+      [(multi-syntax? r)
+       (define l (syntax->list r))
+       (if (= 2 (length l))
+           (loop (cadr l))
+           (fail))]
+      [(group-syntax? r)
+       (define l (syntax->list r))
+       (if (= 2 (length l))
+           (cadr l)
+           (fail))]
+      [(list? r) (and who (cannot-coerce-list who r))]
+      [else (datum->syntax at-stx r)])))
+
+;; "Packs" to a `group` form, but `r` starts with `group` already
+(define (pack-group r) r)
+
+;; "Unpacks" to a `(group term ...)` form, as opposed to just `(term
+;; ...)`, which makes it symmetric with `pack-group` and preserves
+;; properties on the `group` tag. So, unpacking here is really about
+;; coercing from different representations, as opposed to changing a
+;; `group` representation. The result is always a syntax object.
+(define (unpack-group r who at-stx)
+  (cond
+    [(multi-syntax? r)
+     (define l (syntax->list r))
+     (cond
+       [(= 2 (length l)) (cadr l)]
+       [else (raise-error who "multi-group syntax not allowed in group context" r)])]
+    [(group-syntax? r) r]
+    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+    [else (datum->syntax at-stx (list group-blank r))]))
+
+;; `r` is a sequence of groups
+(define (pack-multi r)
+  (datum->syntax #f (cons multi-blank r)))
+
+;; `r` is a term like `(parens ....)` or `(block ....)`, and
+;; the `parens` or `block` part gets changed to `multi`
+(define (pack-tagged-multi r)
+  (datum->syntax #f (cons multi-blank (stx-cdr r))))
+
+;; `r` can be any of the allowed representations (multi-group,
+;; single-group, or single-term), and the result is a list of group
+;; syntax objects (symmetric to `pack-multi`); the result is always a
+;; plain list of syntax objects
+(define (unpack-multi r who at-stx)
+  (cond
+    [(multi-syntax? r) (cdr (syntax->list r))]
+    [(group-syntax? r) (list r)]
+    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+    [else (list (datum->syntax at-stx (list group-blank r)))]))
+
+;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
 ;; an empty list turns into `multi` with no groups
 (define (pack-tail tail #:after [after #f])
   (if (stx-null? tail)
@@ -83,9 +157,9 @@
         [else (datum->syntax #f (list multi-blank))])
       (datum->syntax #f (list multi-blank (cons group-blank tail)))))
 
-;; assumes that `packed-tail` represents a shrubbery,
-;; and unpacks by removing `multi` ... `group` wrapper
-(define (unpack-tail r who)
+;; unpacks by removing `multi` and/or `group` wrapper to arrive at a
+;; sequence of terms; the result is a list-shaped syntax object
+(define (unpack-tail r who at-stx)
   (datum->syntax
    #f
    (cond
@@ -96,72 +170,31 @@
         [(= 2 (length l)) (cdr (syntax-e (cadr l)))]
         [else (raise-error who "multi-group syntax not allowed in group context" r)])]
      [(group-syntax? r) (cdr (syntax-e r))]
-     [(list? r) (map (lambda (t) (unpack-term t who)) r)]
      [(pair? r) (cannot-coerce-pair who r)]
-     [else (list r)])))
+     [else (list (datum->syntax at-stx r))])))
 
-;; `stx` is a single term
-(define (pack-term stx) stx)
+;; similar to `pack-tail` but for a list of groups, so no
+;; special case for empty is needed
+(define (pack-multi-tail tail)
+  (datum->syntax #f (cons multi-blank tail)))
 
-(define (unpack-term form who)
-  (define (fail)
-    (and who
-         (raise-error who "multi-term syntax not allowed in term context" form)))
-  (let loop ([r form])
-    (cond
-      [(multi-syntax? r)
-       (define l (syntax->list r))
-       (if (= 2 (length l))
-           (loop (cadr l))
-           (fail))]
-      [(group-syntax? r)
-       (define l (syntax->list r))
-       (if (= 2 (length l))
-           (cadr l)
-           (fail))]
-      [(list? r) (and who (cannot-coerce-list who r))]
-      [else r])))
-
-;; "Packs" to a `group` form, but `r` starts with `group` already
-(define (pack-group r) r)
-
-;; "Unpacks" to a `(group term ...)` form, as opposed to just `(term
-;; ...)`, which makes is symmetric with `pack-group` and preserves
-;; properties on the `group` tag. So, unpacking here is really about
-;; coercing from different representations, as opposed to changing a
-;; `group` representation.
-(define (unpack-group r who)
-  (cond
-    [(multi-syntax? r)
-     (define l (syntax->list r))
-     (cond
-       [(= 2 (length l)) (syntax-e (cadr l))]
-       [else (raise-error who "multi-group syntax not allowed in group context" r)])]
-    [(group-syntax? r) r]
-    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
-    [else #`(#,group-blank #,r)]))
-
-;; `r` is a sequence of groups
-(define (pack-multi r)
-  (datum->syntax #f (cons multi-blank r)))
-
-;; `r` is a term like `(parens ....)` or `(block ....)`
-(define (pack-tagged-multi r)
-  (datum->syntax #f (cons multi-blank (stx-cdr r))))
-
-;; `r` can be any of the allowed representations (multi-group, single-group, or single-term),
-;; and the result is a list of group syntax objects (symmetric to `pack-multi`)
-(define (unpack-multi r who)
-  (cond
-    [(multi-syntax? r) (cdr (syntax->list r))]
-    [(group-syntax? r) (list r)]
-    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
-    [else (list (list group-blank r))]))
+;; produces a sequence of groups
+(define (unpack-multi-tail r who at-stx)
+  (datum->syntax
+   #f
+   (cond
+     [(multi-syntax? r) (cdr (syntax-e r))]
+     [(group-syntax? r) (list r)]
+     [(pair? r) (cannot-coerce-pair who r)]
+     [else (list (datum->syntax at-stx r))])))
 
 ;; ----------------------------------------
 
 ;; The `pack*` and `unpack*` variants deal with repetition
-;; `depth` layers deep as needed for patterns and templates
+;; `depth` layers deep as needed for patterns and templates;
+;; we can assume that the lists and nesting have a suitable
+;; shape, because they come from `syntax-parse` or from a
+;; repetition binding
 
 (define (pack* stx depth wrap)
   (cond
@@ -169,41 +202,18 @@
     [else (for/list ([t (in-list (syntax->list stx))])
             (pack* t (sub1 depth) wrap))]))
 
-(define (unpack* qs r depth mode unwrap)
-  (datum->syntax
-   (if (syntax? qs) qs #f)
-   (let unpack* ([r r] [depth depth])
-     (cond
-       [(eqv? depth 0)
-        (unwrap r)]
-       [else
-        (let ([r (cond
-                   [(group-syntax? r) (cdr (syntax->list r))]
-                   [(multi-syntax? r)
-                    (define l (syntax->list r))
-                    (cond
-                      [(and (eq? mode 'group) (= depth 1))
-                       (cdr l)]
-                      [else
-                       (cond
-                         [(null? (cdr l)) '()]
-                         [(= 2 (length l)) (cdr (syntax->list (cadr l)))]
-                         [else r])])]
-                   [else r])])
-          (if (list? r)
-              (datum->syntax
-               (if (syntax? qs) qs #f)
-               (for/list ([r (in-list r)])
-                 (unpack* r (sub1 depth))))
-              (raise-argument-error* '... rhombus-realm "List" r)))]))))
+(define (unpack* qs r depth unpack)
+  (let unpack* ([r r] [depth depth])
+    (cond
+      [(eqv? depth 0) (unpack r (syntax-e qs) qs)]
+      [else (for/list ([r (in-list r)])
+              (unpack* r (sub1 depth)))])))
 
 (define (pack-term* stx depth)
   (pack* stx depth pack-term))
-                     
+
 (define (unpack-term* qs r depth)
-  (unpack* qs r depth
-           'term
-           (lambda (r) (unpack-term r (syntax-e qs)))))
+  (unpack* qs r depth unpack-term))
 
 ;; Packs to a `group` form
 (define (pack-group* stx depth)
@@ -212,10 +222,7 @@
 ;; "Unpacks" to a `group` form, which is really more about coercsions and
 ;; is asymmetric to `pack-group*`
 (define (unpack-group* qs r depth)
-  (unpack* qs r depth
-           'group
-           (lambda (r)
-             (unpack-group r (syntax-e qs)))))
+  (unpack* qs r depth unpack-group))
 
 ;; Packs to a `multi` form
 (define (pack-multi* stxes depth)
@@ -225,14 +232,23 @@
 (define (pack-tagged-multi* stxes depth)
   (pack* stxes depth pack-tagged-multi))
 
-;; Unpacks to a list of groups, which is symmetric to `pack-multi*`
+;; Unpacks a multi to a `multi` form instead of a 
 (define (unpack-multi* qs r depth)
-  (unpack* qs r depth
-           'multi
-           (lambda (r)
-             (if (list? r)
-                 (map (lambda (r) (unpack-group r qs)) r)
-                 (unpack-multi r qs)))))
+  (unpack* qs r depth unpack-multi))
+
+;; Unpacks a multi to a `multi` form instead of a 
+(define (unpack-multi-as-term* qs r depth)
+  (unpack* qs r depth (lambda (r name qs)
+                        (datum->syntax qs (cons multi-blank (unpack-multi r name qs))))))
+
+(define (unpack-element* qs r depth)
+  (unpack* qs r depth (lambda (r name qs) r)))
+
+;; An extra layer of unpacking to convert to a list
+(define (unpack-multi-group* qs r depth)
+  (cond
+    [(= depth 0) r]
+    [else (unpack-multi-as-term* qs r (sub1 depth))]))
 
 ;; Like `pack-multi*, but preserves `block` instead of converting to `multi`:
 (define (pack-block* stxes depth)
@@ -242,8 +258,33 @@
   (pack* stxes depth pack-tail))
 
 (define (unpack-tail* qs r depth)
-  (pack* r depth (lambda (r)
-                   (unpack-tail r (if (symbol? qs) qs (syntax-e qs))))))
+  (unpack* qs r depth unpack-tail))
+
+(define (pack-multi-tail* stxes depth)
+  (pack* stxes depth pack-multi-tail))
+
+(define (unpack-multi-tail* qs r depth)
+  (unpack* qs r depth unpack-multi-tail))
+
+;; similar to `unpack-tail*`, but converts each tail syntax
+;; list to a plain list, and expects `depth` to be off by 1
+(define (unpack-tail-list* qs r depth)
+  (unpack* qs r (sub1 depth) (lambda (r name qs)
+                               (syntax->list (unpack-tail r (syntax-e qs) qs)))))
+
+;; similar to `unpack-multi-tail*`, but converts each multi-tail syntax
+;; list to a plain list, and expects `depth` to be off by 1
+(define (unpack-multi-tail-list* qs r depth)
+  (unpack* qs r (sub1 depth) (lambda (r name qs)
+                               (syntax->list (unpack-multi-tail r (syntax-e qs) qs)))))
+
+;; similar to `unpack-tail*`, but each leaf is a plain list of terms
+(define (unpack-list-tail* qs r depth)
+  (unpack-term* qs r (add1 depth)))
+
+;; similar to `unpack-multi-tail*`, but each leaf is a plain list of groups
+(define (unpack-multi-list-tail* qs r depth)
+  (unpack-group* qs r (add1 depth)))
 
 ;; normalize for multi-term pattern matching:
 (define (repack-as-multi r)
@@ -254,7 +295,7 @@
 
 ;; normalize for single-term pattern matching:
 (define (repack-as-term r)
-  (or (unpack-term r #f)
+  (or (unpack-term r #f #f)
       ;; can't match a term pattern:
       #'(group)))
 

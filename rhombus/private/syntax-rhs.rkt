@@ -5,8 +5,9 @@
                      "srcloc.rkt"
                      "parse.rkt")
          (submod "quasiquote.rkt" convert)
-         (rename-in "quasiquote.rkt"
-                    [... rhombus...])
+         "quasiquote.rkt"
+         (only-in "ellipsis.rkt"
+                  [... rhombus...])
          "parse.rkt"
          "srcloc.rkt")
 
@@ -37,7 +38,8 @@
       (define body
         (if (eq? kind 'rule)
             (let ([ids (cons self-id (append left-ids (syntax->list #'(id ...))))])
-              #`(values #,(convert-rule-template rhs ids) tail))
+              #`(values #,(convert-rule-template rhs ids)
+                        #,(convert-template #`(multi (group (op $) tail (op rhombus...))))))
             #`(rhombus-body-expression #,rhs)))
       #`[#,pattern
          (let ([id id-ref] ... [#,self-id self] [left-id left] ...)

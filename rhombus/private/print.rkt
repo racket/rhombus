@@ -10,7 +10,8 @@
          println
          displayln
          (rename-out
-          [current-output-port current_output_port]))
+          [current-output-port current_output_port]
+          [current-error-port current_error_port]))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))

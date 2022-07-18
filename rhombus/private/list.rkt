@@ -12,8 +12,9 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
-         (only-in "quasiquote.rkt"
+         (only-in "ellipsis.rkt"
                   [... rhombus...])
+         "repetition.rkt"
          "parse.rkt")
 
 (provide cons
@@ -22,11 +23,13 @@
          List
          (for-space rhombus/annotation List)
          (for-space rhombus/static-info List)
-         (for-space rhombus/folder List))
+         (for-space rhombus/folder List)
+         (for-space rhombus/repetition List))
 
 (module+ for-binding
   (provide (for-syntax parse-list-binding
-                       parse-list-expression)))
+                       parse-list-expression
+                       parse-list-repetition)))
 
 (define-binding-syntax cons  
   (binding-transformer
@@ -72,6 +75,26 @@
            ([accum null])
            ((lambda (v) (cons v accum)))
            #,list-static-infos]]))))
+
+(define-repetition-syntax List
+  (repetition-transformer
+   #'List
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (op |.| parens group repet)
+       [(form-id (op |.|) repet (parens g) . tail)
+        (define name (string->symbol (format "~a.repet" (syntax-e #'form-id))))
+        (values (make-repetition-info name
+                                      #`(check-repetition-list '#,name (rhombus-expression g))
+                                      1
+                                      0
+                                      #'())
+                #'tail)]))))
+
+(define (check-repetition-list who v)
+  (unless (list? v)
+    (raise-argument-error who "List" v))
+  v)
 
 (define-static-info-syntax List
   (#%call-result ((#%map-ref list-ref)
@@ -121,15 +144,20 @@
                            (= (length v) #,len))))
      (generate-binding #'form-id pred args #'tail)]))
 
-
 (define-for-syntax (parse-list-expression stx)
   (syntax-parse stx
     #:datum-literals (group op)
     #:literals (rhombus...)
-    [(form-id (tag arg ... rest-arg (group (op rhombus...))) . tail)
+    [(form-id (tag arg ... rest-arg (group (op (~and ellipses rhombus...)))) . tail)
      (values (wrap-list-static-info
-              (syntax/loc #'tag
-                (list* (rhombus-expression arg) ... (rhombus-expression rest-arg))))
+              (cond
+                [(null? (syntax->list #'(arg ...)))
+                 ;; special case to expose static info on rest elements
+                 (quasisyntax/loc #'tag
+                   #,(repetition-as-list #'ellipses #'rest-arg 1))]
+                [else
+                 (quasisyntax/loc #'tag
+                   (list* (rhombus-expression arg) ... #,(repetition-as-list #'ellipses #'rest-arg 1)))]))
              #'tail)]
     [(form-id (tag arg ...) . tail)
      (values (wrap-list-static-info
@@ -137,3 +165,15 @@
                 (list (rhombus-expression arg) ...)))
              #'tail)]))
 
+(define-for-syntax (parse-list-repetition stx)
+  (syntax-parse stx
+    #:datum-literals (group op)
+    #:literals (rhombus...)
+    [(form-id (tag rep::repetition (group (op (~and ellipses rhombus...)))) . tail)
+     #:with rep-info::repetition-info #'rep.parsed
+     (values (make-repetition-info #'rep-info.name
+                                   #'rep-info.seq-id
+                                   #'rep-info.bind-depth
+                                   (+ (syntax-e #'rep-info.use-depth) 1)
+                                   #'rep-info.element-static-infos)
+             #'tail)]))

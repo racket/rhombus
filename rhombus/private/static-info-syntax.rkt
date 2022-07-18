@@ -40,7 +40,7 @@
   (static-info (syntax->list (pack stx))))
 
 (define-for-syntax (pack v)
-  (pack-static-infos (unpack-term v 'static_info_ct.pack) 'static_info_ct.pack))
+  (pack-static-infos (unpack-term v 'static_info_ct.pack #f) 'static_info_ct.pack))
 
 (define-for-syntax (unpack v)
   (unpack-static-infos v))

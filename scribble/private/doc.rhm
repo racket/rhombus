@@ -12,6 +12,6 @@ expr.macro 'doc $parens $tail ...':
   match parens
   | '($_ ..., ..., [$_ ..., ...])':
       values(parsed(['#{typeset-doc}', me, parens]),
-             tail)
+             '$tail ...')
   | ~else:
       raise_syntax_error("expected forms and documentation content", '$me $parens')

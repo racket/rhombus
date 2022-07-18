@@ -50,8 +50,11 @@ for use in a macro definition, place it inside a
       | '$x - $y'
 )
 
-Once defined, a syntax class can be used to annotate a pattern variable
-that matches any of pattern alternatives specified in the syntax class.
+Once defined, a syntax class can be used to annotate a pattern
+variable that matches any of pattern alternatives specified in the
+syntax class. Generally, a syntax class can make a sequence of terms,
+so a pattern variable annotated with a syntax class is bound to a
+@tech{repetition} for use with @rhombus[...].
 
 @(rhombusblock:
     expr.macro 'add_one_to_expr $(expr :: Arithmetic)':

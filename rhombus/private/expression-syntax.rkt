@@ -55,7 +55,7 @@
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
-                                   (unpack-tail new-tail proc)
+                                   (unpack-tail new-tail proc #f)
                                    proc)))
    assc))
 
@@ -73,7 +73,7 @@
          (define-values (form new-tail) (syntax-parse tail
                                           [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
-                                   (unpack-tail new-tail proc)
+                                   (unpack-tail new-tail proc #f)
                                    proc)))))
 
 (define-for-syntax call_result_key #'#%call-result)

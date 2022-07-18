@@ -100,24 +100,10 @@ there’s no way for a transformer to inspect a parsed Rhombus expression
 back into an unparsed shrubbery, as happens in
 @rhombus['factorial($a)'], it will later simply parse as itself.
 
-The @rhombus[!] macro matches an unconsumed tail with @rhombus[$tail ...],
-and since @rhombus[..., ~bind] is at the end of a sequence in
-the pattern, @rhombus[tail] is bound to a group syntax object instead
-of a list of term syntax objects. And since the result is formed with
-the template @rhombus['$tail ...'] with @rhombus[..., ~bind] again at
-the end of the template, the group syntax object is used directly as
-the result. The macro’s second result could have been written as
-@rhombus[tail], which is convenient but not inherently more
-efficient:
-
-@(rhombusblock:
-    expr.macro '$a ! $tail ...':
-      values('factorial($a)', tail)
-  )
-
 Changing the @rhombus[tail] pattern to @rhombus[(tail :: Term)] would
 disable the special treatment of @rhombus[..., ~bind] at the end of a
-sequence and reify the tail as a list---so don't do this:
+pattern and template sequence and reify the tail as a fresh list---so
+don't do this:
 
 @(rhombusblock:
     expr.macro '$a ! $(tail :: Term) ...':
@@ -127,10 +113,10 @@ sequence and reify the tail as a list---so don't do this:
     0 ! ! ! ! ! ! ! ! ! ! ! !
 )
 
-Note also that the @rhombus[..., ~bind] operator is not treated
-specially at the end of the pattern of a rule macro, because there’s
-implicitly a @rhombus[$tail ..., ~bind] added to the end of every
-rule-macro pattern.
+Note that the @rhombus[..., ~bind] operator is not treated specially
+at the end of the pattern of a rule macro, because there’s implicitly
+a @rhombus[$tail ..., ~bind] added to the end of every rule-macro
+pattern.
 
 Whether pattern-based or not, an infix-operator macro’s left-hand input
 is parsed. A prefix or infix macro’s right-hand input is not parsed by

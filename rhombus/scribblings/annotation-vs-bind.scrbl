@@ -27,12 +27,12 @@ specialization, but the @rhombus[Map] binding pattern can.
   )
 
 As another example, here’s how a @rhombus[ListOf] annotation constructor
-could be implemented if @rhombus[List.of] did not exists already:
+could be implemented if @rhombus[List.of] did not exist already:
 
 @(rhombusblock:
-    annotation.macro 'ListOf ($annotation ...) $tail ......':
+    annotation.macro 'ListOf ($annotation ...) $tail ...':
       values('matching([_ :: ($annotation ...), $('...')])',
-             tail)
+             '$tail ...')
   )
 
 At a lower level, the bridge between binding patterns and annotations is

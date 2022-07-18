@@ -30,7 +30,7 @@
      (unpack-definitions defns proc))))
 
 (define-for-syntax (unpack-definitions form proc)
-  (syntax-parse (unpack-multi form proc)
+  (syntax-parse (unpack-multi form proc #f)
     [(g ...)
      #`((rhombus-definition g)
         ...)]
@@ -49,4 +49,4 @@
        (syntax-parse stx
          [(head . h-tail) (proc (pack-tail #'h-tail) (pack-multi tail) #'head)]))
      (values (unpack-definitions defns proc)
-             (unpack-multi new-tail proc)))))
+             (unpack-multi new-tail proc #f)))))

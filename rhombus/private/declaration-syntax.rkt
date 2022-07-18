@@ -28,7 +28,7 @@
         (unpack-declarations (proc (pack-tail #'tail) #'head) proc)]))))
 
 (define-for-syntax (unpack-declarations form proc)
-  (syntax-parse (unpack-multi form proc)
+  (syntax-parse (unpack-multi form proc #f)
     #:datum-literals (parens block group)
     [((group d ...) ...)
      #`((rhombus-top (group d ...))

@@ -8,12 +8,26 @@ Immutable maps can be constructed using the syntax
 which creates a map from the values of the @rhombus[key_expr, ~var]s to
 the corresponding values of the @rhombus[value_expr, ~var]s. Note
 that using @litchar{,} in place of @litchar{:} creates a set with
-separate values, instead of a key--value mapping.
+separate values, instead of a key--value mapping. More precisely, a
+use of curly braces with no preceding expression is parsed as an
+implicit use of the @rhombus[#{#%set}] form.
 
 To access a mapping, use square brackets after a map expression with an
 expression for the key within square brackets. Mutable maps can be
 updated with a combination of square brackets and the @rhombus[:=]
-operator.
+operator. These uses of square brackets are implemented by
+@rhombus[#{#%ref}].
+
+@doc[
+  expr.macro '#{#%set} {$key_expr: $val_expr, ...}',
+  expr.macro '#{#%set} {$elem_expr, ...}',
+]{
+
+ Constructs either a map or a set, depending on whether
+ @rhombus[key_expr] and @rhombus[val_expr] are provided or
+ @rhombus[elem_expr] is provided.
+
+}
 
 @doc[
   fun Map(key :: Any, value:: Any, ...) :: Map

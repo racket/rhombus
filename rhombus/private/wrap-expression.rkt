@@ -12,4 +12,4 @@
     [(multi (group (parsed e))) #'e] ; shortcut
     [(group (parsed e)) #'e]         ; shortcut
     [(parsed e) #'e]                 ; shortcut
-    [_ #`(rhombus-expression #,(unpack-group form 'expression))]))
+    [_ #`(rhombus-expression #,(unpack-group form 'expression #f))]))

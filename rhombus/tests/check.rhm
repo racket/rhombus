@@ -1,0 +1,53 @@
+#lang rhombus
+import:
+  rhombus/macro open
+  "call-capture-exn.rkt" open
+
+export:
+ check
+
+begin_for_meta:
+  syntax.class check_mode
+  | '~print'
+  | '~equal'
+  | '~exn'
+  
+expr.macro
+| 'check:
+     $(mode :: check_mode)
+     $result1
+     ...
+     $result2':
+    values('check_same(fun ():
+                         $result1
+                         ...,
+                       $result2,
+                       ~mode: keyword($mode ...))',
+           '')
+| 'check:
+     $result1
+     ...
+     $result2':
+    values('check:
+              ~equal
+              $result1
+              ...
+              $result2',
+           '')
+           
+fun check_same(thunk, expected, ~mode: mode):
+  val values(got, exn_msg): call_capturing_exn(thunk)
+  val ok:
+    match mode
+    | keyword(~print):
+        !exn_msg && (("" & got) == ("" & expected))
+    | keyword(~equal):
+        !exn_msg && (got == expected)
+    | keyword(~exn):
+        exn_msg && does_contain(expected, exn_msg)
+  if ok
+  | #void
+  | display("failed\n"
+              & "  expected: " & (if mode == keyword(~exn) | "exception " | "") & expected & "\n"
+              & "  got: " & (if exn_msg | "exception " | "") & (if exn_msg | exn_msg | got) &  "\n",
+            current_error_port())

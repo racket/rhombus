@@ -25,8 +25,8 @@ Note that @rhombus[annotation.rule] defines only an annotation. To make
 and so on:
 
 @(rhombusblock:
-    bind.macro 'AlsoPosn ($x, $y) $tail ......':
-      values('Posn($x, $y)', tail)
+    bind.macro 'AlsoPosn ($x, $y) $tail ...':
+      values('Posn($x, $y)', '$tail ...')
 
     def AlsoPosn(x, y): Posn(1, 2)
     x  // prints 1
@@ -98,12 +98,12 @@ A macro can explicitly associate static information with an expression
 by using @rhombus[static_info_ct.wrap]:
 
 @(rhombusblock:
-    expr.macro 'or_zero $p $tail ......':
+    expr.macro 'or_zero $p $tail ...':
       val expansion: '$p || Posn(0,0)'
       values(static_info_ct.wrap(expansion,
                                  '(($(dot_ct.provider_key),
                                     vector_dot_provider))'),
-             tail)
+             '$tail ...')
   
     or_zero(Posn(3, 4)).magnitude // prints 5
     or_zero(#false).magnitude     // prints 0

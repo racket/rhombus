@@ -46,7 +46,7 @@
 (define-for-syntax (parse-annotation-macro-result form proc)
   (unless (syntax? form)
     (raise-result-error (proc-name proc) "syntax?" form))
-  (syntax-parse (unpack-group form proc)
+  (syntax-parse (unpack-group form proc #f)
     [c::annotation #'c.parsed]))
 
 (define-for-syntax (make-annotation-infix-operator name prec protocol proc assc)
@@ -58,7 +58,7 @@
      (define-values (form new-tail) (syntax-parse tail
                                       [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
      (check-transformer-result (parse-annotation-macro-result form proc)
-                               (unpack-tail new-tail proc)
+                               (unpack-tail new-tail proc #f)
                                proc))
    assc))
 
@@ -71,10 +71,10 @@
      (define-values (form new-tail) (syntax-parse tail
                                       [(head . tail) (proc (pack-tail #'tail) #'head)]))
      (check-transformer-result (parse-annotation-macro-result form proc)
-                               (unpack-tail new-tail proc)
+                               (unpack-tail new-tail proc #f)
                                proc))))
   
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
   #`(parsed #,(annotation-form (wrap-expression predicate)
-                               (pack-static-infos (unpack-term static-infos 'annotation.pack_predicate)
+                               (pack-static-infos (unpack-term static-infos 'annotation.pack_predicate #f)
                                                   'annotation.pack_predicate))))

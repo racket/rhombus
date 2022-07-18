@@ -9,7 +9,7 @@ This is a summary of
 @seclink[~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"]{Shrubbery notation}
 as used for Rhombus.
 
-@aside{If you install @tt{https://github.com/mflatt/shrubbery-rhombus-0.git},
+@aside{If you install @tt{https://github.com/racket/rhombus-prototype.git},
   then you can use @litchar{#lang shrubbery} (not @litchar{#lang rhombus}
   for this part) to see how example shrubberies parse into an
   S-expression representation. Unfortunately, it needs a development

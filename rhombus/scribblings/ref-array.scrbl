@@ -3,10 +3,25 @@
 
 @title{Arrays}
 
-An array works with map-referencing square brackets to access a list
-element by position (in constant time), and it works with square
-brackets in combination with the assignment operator @rhombus[:=] to
-update the array.
+An expression followed by a square-bracketed sequence of expressions
+is parsed as an implicit use of the @rhombus[#{#%ref}] form, which is
+normally bound to implement an array reference or assignment, as well
+as other operations.
+
+@doc[
+  expr.macro '#{#%ref} $expr[$at_expr]',
+  expr.macro '#{#%ref} $expr[$at_expr] := $rhs_expr',
+]{
+
+Without @rhombus[:=], accesses the element of the map, array, list, or
+string produced by @rhombus[expr] at the index or key produced by
+@rhombus[at_expr].
+
+With @rhombus[:=], a mutable array, map, or set element is assigned to
+the value produced by @rhombus[rhs_expr], and the expression result is
+@rhombus[#void].
+
+}
 
 @doc[
   fun Array(v :: Any, ...) :: Array
