@@ -36,16 +36,22 @@
  accessed from @rhombus[id, ~var] using
  @list[@rhombus[id, ~var], @rhombus[.], @rhombus[attr_id, ~var]]. To use an attribute
  within a template, parentheses are needed around the variable name,
- @rhombus[.], and attribue name to group them together if the variable
+ @rhombus[.], and attribute name to group them together if the variable
  name is preceded by a @rhombus[$] escape:
  @rhombus[$($$(@list[@rhombus[id, ~var], @rhombus[.], @rhombus[attr_id, ~var]]))].
 
  A variable bound with a syntax class (within a syntax pattern) can be
  used without dot notation. In that case, the result is a sequence of
  syntax objects corresponding to the entire match of a
- @rhombus[syntax_pattern], as opposed to an indvidual attributes within
+ @rhombus[syntax_pattern], as opposed to an individual attributes within
  the match. Use @rhombus[...] after a @rhombus[$]-escaped reference to
  the variable in a syntax template.
+
+Custom attributes of a syntax class can be defined in a block following a 
+pattern alternative with the form @rhombus[~attr id: attribute]. Inside the 
+block after a pattern alternatives, any definition form is valid but only the 
+variables defined with @rhombus[~attr] are exported as attributes of the syntax 
+class.
 
 @examples[
   ~eval: macro.make_for_meta_eval(),
@@ -58,5 +64,24 @@
   doubled_operands 3 + 5,
   expr.macro 'add_one_to_expression $(e :: Arithmetic)':
     values('$e ... + 1', ''),
-  add_one_to_expression 2 + 2
+  add_one_to_expression 2 + 2,
+  begin_for_meta:
+    syntax.class NTerms
+    | '~one $a':
+        ~attr b:
+          '0'
+        ~attr average:
+          '$(unwrap_syntax(a) / 2)'
+    | '~two $a $b':
+        def sum:
+          unwrap_syntax(a) + unwrap_syntax(b)
+        ~attr average:
+          '$(sum / 2)',
+  expr.macro 'second_term $(e :: NTerms)':
+    values(e.b, ''),
+  second_term ~two 1 2,
+  second_term ~one 3,
+  expr.macro 'average $(e :: NTerms)':
+    values(e.average, ''),
+  average ~two 24 42
 ]}
