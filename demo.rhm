@@ -725,3 +725,31 @@ expr.macro 'right_operand $(exp :: Arithmetic2)':
 
 right_operand 3 * 2
 right_operand 4 / 5
+
+syntax.class NTerms
+| '~one $a':
+    ~attr b:
+      '0'
+    ~attr c:
+      '0'
+    def sum:
+      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+    ~attr average:
+      '$(sum / 2)'
+| '~two $a $b':
+    ~attr c:
+      '0'
+    def sum:
+      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+    ~attr average:
+      '$(sum / 2)'
+| '~three $a $b $c':
+    def sum:
+      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+    ~attr average:
+      '$(sum / 2)'
+
+val '$(two_terms :: NTerms)': '~two 24 42'
+two_terms.a
+two_terms.c
+two_terms.average
