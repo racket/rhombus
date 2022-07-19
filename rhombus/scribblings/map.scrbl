@@ -90,7 +90,7 @@ for keys and one for values:
 @(rhombusblock:
     fun locale(who, neighborhood -: Map.of(String, Posn)):
       val p: neighborhood[who]
-      p.x & ", " & p.y
+      p.x +& ", " +& p.y
 
     locale("alice", neighborhood)  // prints "4, 5"
   )

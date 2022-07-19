@@ -21,8 +21,8 @@ for_meta:
     | '$(a :: Id)': a
     | '$a / $b ...':
         base.#{string->symbol}(unwrap_syntax(a)
-                                 & "/"
-                                 & unwrap_syntax(translate_mod('$b ...')))
+                                 +& "/"
+                                 +& unwrap_syntax(translate_mod('$b ...')))
     | 'lib($str)':
         [symbol(lib), str]
 

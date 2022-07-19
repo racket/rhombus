@@ -47,7 +47,7 @@ fun check_same(thunk, expected, ~mode: mode):
   val ok:
     match mode
     | keyword(~print):
-        !exn_msg && (("" & got) == ("" & expected))
+        !exn_msg && (("" +& got) == ("" +& expected))
     | keyword(~equal):
         !exn_msg && (got == expected)
     | keyword(~exn):
@@ -57,8 +57,8 @@ fun check_same(thunk, expected, ~mode: mode):
   if ok
   | #void
   | display("failed\n"
-              & "  expected: " & (if mode == keyword(~exn) | "exception " | "") & expected & "\n"
-              & "  got: " & (if exn_msg | "exception " | "") & (if exn_msg | exn_msg | got) &  "\n",
+              +& "  expected: " +& (if mode == keyword(~exn) | "exception " | "") +& expected +& "\n"
+              +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | got) +&  "\n",
             current_error_port())
 
 fun eval_test(stx):

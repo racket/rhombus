@@ -13,7 +13,7 @@
 }
 
 @doc[
-  operator (v1 & v2) :: String
+  operator (v1 +& v2) :: String
 ]{
 
  Coerces @rhombus[v1] and @rhombus[v2] to a string, then appends the strings.
@@ -23,9 +23,9 @@
  character content.
 
 @examples[
-  "hello" & "world",
-  "it goes to " & 11,
-  "the list " & [1, 2, 3] & " has " & 3 & " elements"
+  "hello" +& "world",
+  "it goes to " +& 11,
+  "the list " +& [1, 2, 3] +& " has " +& 3 +& " elements"
 ]
 
 }

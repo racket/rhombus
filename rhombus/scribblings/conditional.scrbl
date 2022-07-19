@@ -99,9 +99,9 @@ case with the right number of arguments.
 @(rhombusblock:
     fun
     | hello(name):
-        "Hello, " & name    // & coerces to strings and concatenates
+        "Hello, " +& name    // +& coerces to strings and concatenates
     | hello(first, last):
-        hello(first & " " & last)
+        hello(first +& " " +& last)
 
     hello("World")             // prints "Hello, World"
     hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
