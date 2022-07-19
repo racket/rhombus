@@ -216,7 +216,7 @@ bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
   | '($a_ann, $a_id, $a_info, ($a_bind_info ...), $a_matcher, $a_binder, $a_data)':
       match bind_ct.unpack_info(b)
       | '($b_ann, $b_id, $b_info, ($b_bind_info ...), $b_matcher, $b_binder, $b_data)':
-          '($("matching((_ :: " & unwrap_syntax(a_ann) & ") <> (_ :: " & unwrap_syntax(b_ann) & "))"),
+          '($("matching((_ :: " +& unwrap_syntax(a_ann) +& ") <> (_ :: " +& unwrap_syntax(b_ann) +& "))"),
             pair,
             (),
             ($a_bind_info ... $b_bind_info ...),
@@ -342,7 +342,7 @@ fun
 | add_two(x) :: Number:
     x + 2.0
 | add_two(x, y) :: String:
-    x & " and " & y
+    x +& " and " +& y
 
 add_two(7) .= 9.0
 add_two(6, 7) == "6 and 7"
@@ -390,7 +390,7 @@ vec.angle
 vec.magnitude
 
 def AlsoPosn(also_x, also_y): Posn(10, 20)
-also_x & "," & also_y
+also_x +& "," +& also_y
 
 expr.macro 'or_zero $p $tail ...':
   values(static_info_ct.wrap('$p || Posn(0,0)',
@@ -470,7 +470,7 @@ def local_map: Map(symbol(alice), Posn(4, 5),
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
   val p: neighborhood[who]
-  p.x & ", " & p.y
+  p.x +& ", " +& p.y
 
 locale(symbol(alice), local_map)
 
@@ -648,7 +648,7 @@ fun enumerate(l :: List):
   for:
     ~each v: l
     ~and  i: 0..
-    displayln(i & ". " & v)
+    displayln(i +& ". " +& v)
 
 enumerate(["a", "b", "c"])
 
@@ -698,11 +698,11 @@ point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
 
 for:
   ~each values(key, val): {1: "a", 2: "b"}
-  displayln(key & " -> " & val)
+  displayln(key +& " -> " +& val)
 
 for:
   ~each (key, val): {3: "c", 4: "d"}
-  displayln(key & " -> " & val)
+  displayln(key +& " -> " +& val)
 
 // syntax.class
 

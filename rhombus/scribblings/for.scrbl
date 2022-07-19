@@ -31,7 +31,7 @@ all elements are used for the second @rhombus[~each] clause, and so on.
   for:
     ~each friend: ["Alice", "Bob", "Carol"]
     ~each say: ["Hello", "Goodbye"]
-    displayln(say & ", " & friend & "!")
+    displayln(say +& ", " +& friend +& "!")
 ]
 
 An advantage of having @rhombus[~each] clauses in the body of
@@ -42,9 +42,9 @@ languages, is that definitions or expressions can be written among
 @demo[
   for:
     ~each friend: ["Alice", "Bob", "Carol"]
-    val dear_friend: "dear " & friend
+    val dear_friend: "dear " +& friend
     ~each say: ["Hello", "Goodbye"]
-    displayln(say & ", " & dear_friend & "!")
+    displayln(say +& ", " +& dear_friend +& "!")
 ]
 
 To draw elements from sequences in parallel, use @rhombus[~and]
@@ -54,7 +54,7 @@ instead of @rhombus[~each] for every additional sequence.
   for:
     ~each friend: ["Alice", "Bob", "Carol"]
     ~and  index: 1..4
-    displayln(index & ". " & friend)
+    displayln(index +& ". " +& friend)
 ]
 
 In this latest example, the sequence for @rhombus[index] could be
@@ -72,7 +72,7 @@ body.
 @demo[
   for List:
     ~each i: 1..4
-    "number " & i,
+    "number " +& i,
   for List:
     ~each i: [1, 2]
     ~each j: ["a", "b", "c"]

@@ -1416,7 +1416,7 @@ x something | a
                   q
             | c
               z
-              & b
+              +& b
 
 x | indentize
     y
@@ -1570,7 +1570,7 @@ INPUT
      something
      (alts
       (block (group a) (group y (block (group w (block (group q))))))
-      (block (group c) (group z) (group (op &) b))))
+      (block (group c) (group z) (group (op +&) b))))
     (group
      x
      (alts

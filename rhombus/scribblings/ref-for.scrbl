@@ -86,7 +86,7 @@
   for:
     ~each v: ["a", "b", "c"]
     ~and  i: 0..
-    displayln(i & ". " & v),
+    displayln(i +& ". " +& v),
   fun grid(m, n):
     for List:
       ~each i: 0..m
@@ -114,7 +114,7 @@
   grid2(2, 3),
   for Map:
     ~each i: 0..3
-    values(i, i & "!")
+    values(i, i +& "!")
 ]
 
 }

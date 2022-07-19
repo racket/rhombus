@@ -125,9 +125,9 @@ normally bound to implement function calls.
 
 @examples[
   fun | hello(name):
-          "Hello, " & name
+          "Hello, " +& name
       | hello(first, last):
-          hello(first & " " & last),
+          hello(first +& " " +& last),
   hello("World"),
   hello("Inigo", "Montoya"),
 ]
