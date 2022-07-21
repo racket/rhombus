@@ -40,6 +40,12 @@ Option B is a tradeoff worth making, since it also has benefits K and L. It may 
 
 ...
 
+Prior art
+---------
+
+Bachman, C. W. "Software for Random Access Processing"
+McGee, W. C. "Generalized File Processing"
+
 Contributors
 ------------
 

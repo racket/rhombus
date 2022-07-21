@@ -1,84 +1,65 @@
-- Feature Name: (fill me in with a unique ident, my_awesome_feature)
+A Relational Model of Data
+==========================
 
-# Summary
+Motivation
+----------
 
-Brief (e.g. one paragraph) explanation of the feature.
+Future users of large data banks must be protected from having to know how the data is organized in the machine.
 
-# Motivation
+Summary
+-------
 
-Why are we doing this?
-What use cases does it support?
-What is the expected outcome?
+A model based on n-ary relations, a normal form for data base relations, and the concept of a universal data sublanguage are introduced.
 
-# Design Options
+Design Options
+--------------
 
-## Option A
+### Option A
 
-Explain the proposal as if it was already included in the
-language and you were teaching it to another programmer.
-That generally means:
+In this approach, the design consists of component 1, component 2, and component 3, which interact in such-and-such manner.
 
-- Introducing new named concepts.
-- Explaining the feature largely in terms of examples.
-- Explaining how programmers should *think* about the feature.
+#### Component 1
 
-### Component 1
+Component 1 works in the following way.
 
-Introduce each component's behavior on its own if possible.
+#### Component 2
 
-### Component 2
+Component 2 fits into the picture in this way.
 
-When a component must interact with other components, show
-examples with simple cases of the other components first,
-before combining them in more complex ways.
+#### Evaluation
 
-## Option B
+This option entails the following tradeoffs.
 
-When an option changes multiple components, explain all of
-the components, without relying on too much knowledge of
-other options.
+### Option B
 
-### Component 1
+In this approach, the design consists of component 1 and component 2, which interact in such-and-such manner.
 
-Write it so that a reader could skip over previous options
-and read this one without getting lost.
+...
 
-### Component 2
+### Option C
 
-When components interact, show examples with components
-within this option, not other options.
+This is just like Option B, except that Component 2 is modified in the following way.
 
-## Option C
+...
 
-When an option changes only a single component of a
-previous option, it's only necessary to explain that
-component and how it interacts with the other components in
-the option it's a modification of.
+Recommendation
+--------------
 
-### Component 2
+Option B is a tradeoff worth making, since it also has benefits K and L. It may also be possible to leverage a certain aspect of Option A to mitigate the loss of P that option B entails.
 
-When this component interacts with others, include more
-examples showing its behavior with other components at the
-end.
+Prior art
+---------
 
-# Preferences and Tradeoffs
+Bachman, C. W. "Software for Random Access Processing"
+McGee, W. C. "Generalized File Processing"
 
-Explain your own recommendation between the options.
-You may also include other relevant people's preferences here.
-Include explanations of the tradeoffs between them.
+Contributors
+------------
 
-# Prior art
+* Alyssa P. Hacker
+* Eva Lu Ator
 
-Discuss prior art, both the good and the bad, in relation to this proposal.
-A few examples of what this can include are:
+References
+----------
 
-- Does this feature exist in other programming languages and what experience have their community had?
-- Papers: Are there published papers, books, great blog posts, etc that discuss this? Be _specific_!
-
-
-# Drawbacks and Unresolved questions
-
-- Why should we *not* do this? Could we do something else instead?
-- What parts of the design do you expect to resolve through the PR and discussion process before this gets merged?
-- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
-- What related issues do you consider out of scope for this feature that could be addressed in the future independently of the solution that comes out of this design?
+Codd, E.F (1970). "A Relational Model of Data for Large Shared Data Banks"
