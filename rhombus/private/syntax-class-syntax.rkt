@@ -7,7 +7,8 @@
          (submod "syntax-class.rkt" for-syntax-class-syntax)
          "definition.rkt"
          "name-root.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "value.rkt" val))
 
 (provide (rename-out [rhombus-syntax syntax]))
 
@@ -31,23 +32,28 @@
        (convert-pattern #:splice? #t
                         #'in-quotes))
      (define explicit-attrs
-       (for/fold ([other-forms null]
+       (for/fold ([body-forms null]
                   [attrs null]
-                  #:result (reverse attrs))
+                  #:result
+                  (map (lambda (attr-id)
+                         (with-syntax ([(body-form ...) (reverse body-forms)]
+                                       [((id id-ref) ...) idrs])
+                           #`[#,attr-id (let ([id id-ref] ...)
+                                          (rhombus-body-at #,attr-id body-form ... (group #,attr-id)))]))
+                       (reverse attrs)))
                  ([g (in-list (syntax->list #'(groups ...)))])
          (syntax-parse g
            #:datum-literals (group block)
            [(group #:attr attr-id (block in-block ...))
-            (with-syntax ([(other ...) (reverse other-forms)]
-                          [((id id-ref) ...) (append idrs attrs)])
-              (values
-               other-forms
-               (cons
-                #`[attr-id (let ([id id-ref] ...)
-                             (rhombus-body-at attr-id other ... in-block ...))]
-                attrs)))]
+            (values
+             (cons
+              #'(group val attr-id (block in-block ...))
+              body-forms)
+             (cons
+              #`attr-id
+              attrs))]
            [other
-            (values (cons #'other other-forms) attrs)])))
+            (values (cons #'other body-forms) attrs)])))
      (define all-attrs (append idrs explicit-attrs))
      (with-syntax ([((attr ...) ...)
                     (map (lambda (binding) (cons '#:attr binding)) all-attrs)])
