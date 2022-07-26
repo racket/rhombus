@@ -1,65 +1,77 @@
-A Relational Model of Data
+Feature Name
 ==========================
-
-Motivation
-----------
-
-Future users of large data banks must be protected from having to know how the data is organized in the machine.
 
 Summary
 -------
 
-A model based on n-ary relations, a normal form for data base relations, and the concept of a universal data sublanguage are introduced.
+Brief (e.g. one paragraph) explanation of the feature.
+
+Motivation
+----------
+
+Why are we doing this?
+What use cases does it support?
+What is the expected outcome?
 
 Design Options
 --------------
 
 ### Option A
 
-In this approach, the design consists of component 1, component 2, and component 3, which interact in such-and-such manner.
+Explain the proposal as if it was already included in the
+language and you were teaching it to another programmer.
+That generally means:
+
+- Introducing new named concepts.
+- Explaining the feature largely in terms of examples.
+- Explaining how programmers should *think* about the feature.
 
 #### Component 1
 
-Component 1 works in the following way.
+Introduce each component's behavior on its own if possible.
 
 #### Component 2
 
-Component 2 fits into the picture in this way.
+When a component interacts with other components, show
+examples with simple cases of the other components first,
+before combining them in more complex ways.
 
-#### Evaluation
-
-This option entails the following tradeoffs.
+...
 
 ### Option B
 
-In this approach, the design consists of component 1 and component 2, which interact in such-and-such manner.
+Explain the components that differ from other options.
+
+#### Component 2
+
+When this component interacts with others, include more
+examples showing its behavior with other components at the
+end.
 
 ...
 
-### Option C
-
-This is just like Option B, except that Component 2 is modified in the following way.
-
-...
-
-Recommendation
+Evaluation and Tradeoffs
 --------------
 
-Option B is a tradeoff worth making, since it also has benefits K and L. It may also be possible to leverage a certain aspect of Option A to mitigate the loss of P that option B entails.
+Explain the tradeoffs between the various options.
 
-Prior art
+Prior art and References
 ---------
 
-Bachman, C. W. "Software for Random Access Processing"
-McGee, W. C. "Generalized File Processing"
+Discuss prior art, both the good and the bad, in relation to this proposal.
+A few examples of what this can include are:
+- Does this feature exist in other programming languages and what experience have their community had?
+- Papers: Are there published papers, books, great blog posts, etc that discuss this? Be _specific_!
+
+Drawbacks and Unresolved questions
+----------------------------------
+
+- Why should we *not* do this? Could we do something else instead?
+- What parts of the design do you expect to resolve through the PR and discussion process before this gets merged?
+- What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
+- What related issues do you consider out of scope for this feature that could be addressed in the future independently of the solution that comes out of this design?
 
 Contributors
 ------------
 
-* Alyssa P. Hacker
-* Eva Lu Ator
-
-References
-----------
-
-Codd, E.F (1970). "A Relational Model of Data for Large Shared Data Banks"
+List people who've contributed to this design.
