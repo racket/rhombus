@@ -10,17 +10,23 @@
 @doc[
   defn.macro '«syntax.class $name:
                 pattern
-                | $syntax_pattern
+                | $clause
                 | ...»',
   defn.macro '«syntax.class $name
-               | $syntax_pattern
-               | ...»'
+               | $clause
+               | ...»',
+  grammar clause:
+    $syntax_pattern
+    $syntax_pattern: $pattern_body; ...,
+  grammar pattern_body:
+    $body
+    ~attr $identifier: $body; ...
 ]{
 
  Defines a syntax class that can be used in syntax patterns with
  @rhombus[::]. The @rhombus[pattern] subform is optional in the sense
  that pattern alternatives can be inlined directly in the
- @rhombus[syntax.class] form (but the @rhombus[patttern] subform makes
+ @rhombus[syntax.class] form (but the @rhombus[pattern] subform makes
  room for additional subforms in the future).
 
  When a variable @rhombus[id, ~var] is bound through a
@@ -48,10 +54,12 @@
  the variable in a syntax template.
 
 Custom attributes of a syntax class can be defined in a block following a 
-pattern alternative with the form @rhombus[~attr id: attribute]. Inside the 
-block after a pattern alternatives, any definition form is valid but only the 
-variables defined with @rhombus[~attr] are exported as attributes of the syntax 
-class.
+pattern alternative. Inside this block, any code is valid including local 
+definitions. Pattern variables mentioned in the original syntax pattern
+will be bound and available for use in the scope of this block. The 
+@rhombus[~attr id: body] form can be used inside a pattern body to define a 
+custom attribute. Identifiers bound to values with @rhombus[~attr] will be 
+available for use locally and also exported as an attribute of the syntax class. 
 
 @examples[
   ~eval: macro.make_for_meta_eval(),
