@@ -98,7 +98,7 @@
                   (generate-pattern-and-attributes alt-stx))])
     (list
      #`(define-splicing-syntax-class #,class-name
-         #:description #,(if description #`(rhombus-body #,description) #f)
+         #:description #,(if description #`(rhombus-body #,@description) #f)
          #:datum-literals (block group quotes)
          #,@patterns)
      #`(define-syntax #,(in-syntax-class-space class-name)
@@ -142,7 +142,7 @@
         ;; Specify patterns with "pattern"
         [(form-id class-name
                   (block
-                   (~optional (group description (block class-desc)))
+                   (~optional (group description (block class-desc ...)))
                    (group pattern (alts alt ...))))
          (generate-syntax-class stx #'class-name (syntax->list #'(alt ...)) (attribute class-desc))]
         [_

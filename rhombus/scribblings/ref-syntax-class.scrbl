@@ -18,7 +18,7 @@
                | $clause
                | ...»',
   grammar maybe_description:
-    description: $body
+    description: $body; ...
     $$("ϵ"),
   grammar clause:
     $syntax_pattern
@@ -37,12 +37,15 @@
  @rhombus[::]. The @rhombus[pattern] subform is optional in the sense
  that pattern alternatives can be inlined directly in the
  @rhombus[syntax.class] form (but the @rhombus[pattern] subform makes
- room for additional subforms in the future). The optional
- @rhombus[description] subform can be used before @rhombus[pattern] to define
- the description of the syntax class. This description is used to produce 
- clearer error messages when a term is rejected by the syntax class. 
- It takes a block with an expression that may evaluate to a string or 
- @rhombus[#false].
+ room for additional subforms in the future). 
+
+ The optional @rhombus[description] subform can be used before @rhombus[pattern] 
+ to define the description of the syntax class. This description is used to 
+ produce clearer error messages when a term is rejected by the syntax class. 
+ It takes a block whose result must evaluate to a string or 
+ @rhombus[#false]. (Setting a description to @rhombus[#false] is equivalent
+ to not specifying a description at all and will mean the error message is not
+ customized.)
 
  When a variable @rhombus[id, ~var] is bound through a
  @seclink["stxobj"]{syntax pattern} with
