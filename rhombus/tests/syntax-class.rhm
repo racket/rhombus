@@ -24,7 +24,7 @@ check:
   | '$x + $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp
-  "annot use repetition binding as an expression"
+  "cannot use repetition binding as an expression"
 
 begin:
   syntax.class Arithmetic
