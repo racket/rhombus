@@ -2,6 +2,56 @@
 import:
   "check.rhm" open
 
+use_static
+
+// ---------------------------
+// Positional Rest with &
+
+fun prlist(& xs :: List): xs
+
+check:
+  prlist(1, 2, 3)
+  [1, 2, 3]
+
+fun
+| altprlist(& xs :: List): xs
+
+check:
+  altprlist(4, 5, 6)
+  [4, 5, 6]
+
+/*
+fun
+| addition(): 0
+| addition(x): x
+| addition(x, & y): x + addition(& y)
+
+check:
+  addition(1, 2, 3)
+  6
+
+check:
+  addition(1, & [10, 20, 30])
+  61
+*/
+
+// ---------------------------
+// Repetition Rest with ...
+
+def rrlist(x, ...):
+  [x, ...]
+
+check:
+  rrlist(1, 2, 3)
+  [1, 2, 3]
+
+fun
+| altrrlist(y, ...): [y, ...]
+
+check:
+  altrrlist(4, 5, 6)
+  [4, 5, 6]
+
 fun
 | add(): 0
 | add(x): x
@@ -36,4 +86,32 @@ check:
   ~print
   '(hi $(List.repet(["a", "b", "c"]))) ...'
   '(hi "a") (hi "b") (hi "c")'
-                  
+
+class Posn(x, y)
+
+def List(p :: Posn, ...) : [Posn(1, 2), Posn(3, 4)]
+check:
+  [p, ...][0].x
+  1
+
+fun posns_y1(& rst):
+  def List(p :: Posn, ...) : rst
+  [p, ...][1].y
+
+check:
+  posns_y1(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4
+
+fun posns_y2(& List(p :: Posn, ...)):
+  [p, ...][1].y
+     
+check:
+  posns_y2(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4
+
+fun posns_y(p :: Posn, ...):
+  [p, ...][1].y
+     
+check:
+  posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4
