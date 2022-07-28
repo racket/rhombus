@@ -98,3 +98,20 @@ begin:
     match 'a 1'
     | '$(f :: Foo)': f.x
     '1'
+
+// check that syntax class description appears in match error
+begin:
+  check:
+    ~eval_exn
+    import:
+      rhombus/macro open
+    begin_for_meta:
+      syntax.class Arithmetic:
+        description: "an expression with addition or subtraction"
+        pattern
+        | '$x + $y'
+        | '$x - $y'
+    expr.macro 'right_operand $(e :: Arithmetic)':
+      values(e.y, '')
+    right_operand 1 +
+    "expression with addition or subtraction"
