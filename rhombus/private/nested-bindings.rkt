@@ -13,8 +13,8 @@
 
 (define-syntax (nested-bindings stx)
   (syntax-parse stx
-    [(_ who try-next failure {~optional #f} body) #'(let () body)]
-    [(_ who try-next failure (arg-id arg::binding-info arg-pat arg-default) . tail)
+    [(_ who try-next failure #f ... body) #'(let () body)]
+    [(_ who try-next failure #f ... (arg-id arg::binding-info arg-pat arg-default) . tail)
      #:with arg-rhs (if (syntax-e #'arg-default)
                         #'(if (eq? arg-id unsafe-undefined)
                               (let ([arg-info.name-id (rhombus-expression arg-default)])

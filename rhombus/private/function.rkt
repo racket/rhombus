@@ -26,6 +26,7 @@
          (only-in "equal.rkt"
                   [= rhombus=])
          "dotted-sequence-parse.rkt"
+         "lambda-kwrest.rkt"
          "error.rkt")
 
 (provide fun)
@@ -116,21 +117,27 @@
              #:attr predicate #'#f))
 
   (define-splicing-syntax-class :maybe-arg-rest
-    #:attributes [arg parsed]
+    #:attributes [arg parsed kwarg kwparsed]
     #:datum-literals (group op)
     #:literals (& ~& rhombus...)
     (pattern (~seq (group (op &) a ...))
       #:with arg::non-...-binding #'(group a ...)
-      #:with parsed #'arg.parsed)
+      #:with parsed #'arg.parsed
+      #:attr kwarg #'#f
+      #:attr kwparsed #'#f)
     (pattern (~seq (group (op ~&) a ...))
-      #:with arg::non-...-binding #'(group a ...)
-      #:with parsed #'arg.parsed)
+      #:with kwarg::non-...-binding #'(group a ...)
+      #:with kwparsed #'kwarg.parsed
+      #:attr arg #'#f
+      #:attr parsed #'#f)
     (pattern (~seq e (~and ooo (group (op rhombus...))))
       #:with (::maybe-arg-rest)
       #'((group (op &) List (parens e ooo))))
     (pattern (~seq)
-             #:attr arg #'#f
-             #:attr parsed #'#f)))
+      #:attr arg #'#f
+      #:attr parsed #'#f
+      #:attr kwarg #'#f
+      #:attr kwparsed #'#f)))
 
 (define-syntax fun
   (make-expression+definition-transformer
@@ -148,6 +155,7 @@
           (build-case-function #'form-id
                                #'((arg ...) ...) #'((arg.parsed ...) ...)
                                #'(rest.arg ...) #'(rest.parsed ...)
+                               #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                #'(ret.predicate ...)
                                #'(rhs ...)
                                #'form-id #'alts-tag)
@@ -159,6 +167,7 @@
            (build-function #'form-id
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
+                           #'rest.kwarg #'rest.kwparsed
                            #'ret.predicate
                            #'rhs
                            #'form-id #'parens-tag))
@@ -186,6 +195,7 @@
                #,(build-case-function #'form-id
                                       #'((arg ...) ...) #'((arg.parsed ...) ...)
                                       #'(rest.arg ...) #'(rest.parsed ...)
+                                      #'(rest.kwarg ...) #'(rest.kwparsed ...)
                                       #'(ret.predicate ...)
                                       #'(rhs ...)
                                       #'form-id #'alts-tag))))]
@@ -200,6 +210,7 @@
                #,(build-function #'form-id
                                  #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                  #'rest.arg #'rest.parsed
+                                 #'rest.kwarg #'rest.kwparsed
                                  #'ret.predicate
                                  #'rhs
                                  #'form-id #'parens-tag))))]
@@ -213,11 +224,12 @@
 
 (begin-for-syntax
 
-  (struct fcase (args arg-parseds rest-arg rest-arg-parsed pred rhs))
+  (struct fcase (args arg-parseds rest-arg rest-arg-parsed kwrest-arg kwrest-arg-parsed pred rhs))
 
   (define (build-function function-name
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
+                          kwrest-arg kwrest-parsed
                           pred
                           rhs
                           start end)
@@ -227,12 +239,19 @@
       (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))]
                     [(arg ...) args]
                     [rhs rhs]
-                    [(maybe-rest-tmp maybe-match-rest)
+                    [((maybe-rest-tmp ...) maybe-match-rest)
                      (if (syntax-e rest-arg)
                          (with-syntax-parse ([rest::binding-form rest-parsed]
                                              [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
                                              [rest-info::binding-info #'rest-impl.info])
-                           #`(rest-tmp (rest-tmp rest-info #,rest-arg #f)))
+                           #`((#:rest rest-tmp) (rest-tmp rest-info #,rest-arg #f)))
+                         #'(() #f))]
+                    [((maybe-kwrest-tmp ...) maybe-match-kwrest)
+                     (if (syntax-e kwrest-arg)
+                         (with-syntax-parse ([kwrest::binding-form kwrest-parsed]
+                                             [kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)]
+                                             [kwrest-info::binding-info #'kwrest-impl.info])
+                           #`((#:kwrest kwrest-tmp) (kwrest-tmp kwrest-info #,kwrest-arg #f)))
                          #'(() #f))])
         (with-syntax ([(((arg-form ...) arg-default) ...)
                        (for/list ([kw (in-list (syntax->list kws))]
@@ -254,7 +273,8 @@
                             (list (list kw arg+default) default)]))])
           (relocate
            (span-srcloc start end)
-           #`(lambda (arg-form ... ... . maybe-rest-tmp)
+           #`(lambda/kwrest (arg-form ... ...)
+               maybe-rest-tmp ... maybe-kwrest-tmp ...
                (nested-bindings
                 #,function-name
                 #f ; try-next
@@ -262,6 +282,7 @@
                 (tmp-id arg-info arg arg-default)
                 ...
                 maybe-match-rest
+                maybe-match-kwrest
                 (begin
                   (add-annotation-check
                    #,function-name #,pred
@@ -270,6 +291,7 @@
   (define (build-case-function function-name
                                argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
+                               kwrest-args-stx kwrest-parseds-stx
                                preds-stx
                                rhss-stx
                                start end)
@@ -277,9 +299,13 @@
     (define arg-parsedss (map syntax->list (syntax->list arg-parsedss-stx)))
     (define rest-args (syntax->list rest-args-stx))
     (define rest-parseds (syntax->list rest-parseds-stx))
+    (define kwrest-args (syntax->list kwrest-args-stx))
+    (define kwrest-parseds (syntax->list kwrest-parseds-stx))
     (define preds (syntax->list preds-stx))
     (define rhss (syntax->list rhss-stx))
-    (define n+sames (group-by-counts (map fcase argss arg-parsedss rest-args rest-parseds preds rhss)))
+    (define n+sames
+      (group-by-counts
+       (map fcase argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds preds rhss)))
     (relocate
      (span-srcloc start end)
      #`(case-lambda

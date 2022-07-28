@@ -34,6 +34,15 @@ check:
   61
 
 // ---------------------------
+// Keyword Rest with ~&
+
+fun krmap(~& m): m
+
+check:
+  krmap(~a: 1, ~b: 2)
+  {keyword(~a): 1, keyword(~b): 2}
+
+// ---------------------------
 // Repetition Rest with ...
 
 def rrlist(x, ...):
