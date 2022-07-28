@@ -482,12 +482,15 @@
   (define rator (rhombus-local-expand rator-in))
   (syntax-parse stxes
     #:datum-literals (group op)
+    #:literals (&)
+    [(_ (head::parens rand ... (group (op &) rst ...)) . tail)
+     (generate-call rator #'head #'(rand ...) #'(group rst ...) #f #'tail)]
     [(_ (head::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
      (generate-call rator #'head #'(rand ...) #'rep #'dots #'tail)]
     [(_ (head::parens rand ...) . tail)
      (generate-call rator #'head #'(rand ...) #f #f #'tail)]))
 
-(define-for-syntax (generate-call rator head rands reps dots tail)
+(define-for-syntax (generate-call rator head rands rsts dots tail)
   (with-syntax-parse ([(rand::kw-expression ...) rands])
     (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                                          [parsed (in-list (syntax->list #'(rand.parsed ...)))])
@@ -496,8 +499,11 @@
                                                     (list parsed)))])
       (define e
         (cond
-          [reps
-           (define rest-args (repetition-as-list dots reps 1))
+          [rsts
+           (define rest-args
+             (if dots
+                 (repetition-as-list dots rsts 1)
+                 (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)))
            (datum->syntax (quote-syntax here)
                           (append (list #'apply rator)
                                   (syntax->list #'(arg-form ... ...))
