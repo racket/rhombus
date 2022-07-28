@@ -27,7 +27,7 @@
         ;; Note: discarding group properties in this case
         (values #'(quote-syntax term) #'tail)]
        [(_ (~and ((~or parens quotes) . _) gs) . tail)
-        (values #`(quote-syntax #,(pack-multi #'gs)) #'tail)]))))
+        (values #`(quote-syntax #,(pack-tagged-multi #'gs)) #'tail)]))))
 
 (define-syntax literal_group_syntax
   (expression-transformer

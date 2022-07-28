@@ -53,7 +53,9 @@
         "private/begin-for-meta.rkt"
         "private/for.rkt"
         "private/range.rkt"
-        "private/syntax-class-syntax.rkt")
+        "private/syntax-class-syntax.rkt"
+        "private/parameterize.rkt"
+        "private/eval.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

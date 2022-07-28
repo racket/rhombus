@@ -11,6 +11,7 @@ begin_for_meta:
   | '~print'
   | '~equal'
   | '~exn'
+  | '~eval_exn'
   
 expr.macro
 | 'check:
@@ -18,9 +19,15 @@ expr.macro
      $result1
      ...
      $result2':
-    values('check_same(fun ():
-                         $result1
-                         ...,
+    values('check_same($(match '$mode ...'
+                         | '~eval_exn':
+                            'fun():
+                               eval_test(literal_syntax '$result1
+                                                         ...')'
+                         | ~else:
+                            'fun ():
+                              $result1
+                              ...'),
                        $result2,
                        ~mode: keyword($mode ...))',
            '')
@@ -45,9 +52,15 @@ fun check_same(thunk, expected, ~mode: mode):
         !exn_msg && (got == expected)
     | keyword(~exn):
         exn_msg && does_contain(expected, exn_msg)
+    | keyword(~eval_exn):
+        exn_msg && does_contain(expected, exn_msg)
   if ok
   | #void
   | display("failed\n"
               & "  expected: " & (if mode == keyword(~exn) | "exception " | "") & expected & "\n"
               & "  got: " & (if exn_msg | "exception " | "") & (if exn_msg | exn_msg | got) &  "\n",
             current_error_port())
+
+fun eval_test(stx):
+  parameterize {current_namespace: make_rhombus_namespace()}:
+    eval(stx)

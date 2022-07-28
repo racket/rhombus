@@ -19,6 +19,7 @@
 @include_section["ref-match.scrbl"]
 @include_section["ref-for.scrbl"]
 @include_section["ref-begin.scrbl"]
+@include_section["ref-parameter.scrbl"]
 
 @include_section["ref-boolean.scrbl"]
 @include_section["ref-number.scrbl"]
@@ -39,4 +40,6 @@
 @include_section["ref-begin-meta.scrbl"]
 
 @include_section["ref-io.scrbl"]
+
+@include_section["ref-eval.scrbl"]
 
