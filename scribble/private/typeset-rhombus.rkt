@@ -309,7 +309,8 @@
 (define tt-comma (element tt-style ", "))
 (define tt-semicolon (element tt-style "; "))
 
-(define (block-string->content-string str col raw-str stx-ranges)
+(define (block-string->content-string str/crlf col raw-str stx-ranges)
+  (define str (regexp-replace* #rx"\r\n" str/crlf "\n"))
   ;; strip `:` from the beginning, add spaces
   ;; corresponding to `col`, then strip any blank newlines
   (define (shift-stxes! after delta)

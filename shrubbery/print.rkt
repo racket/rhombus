@@ -19,6 +19,7 @@
     [(or use-raw?
          (and (syntax? s) (all-raw-available? s)))
      (define o (open-output-string))
+     (port-count-lines! o)
      (syntax-to-raw s
                     #:output o
                     #:max-length max-length
@@ -98,9 +99,12 @@
                         (syntax-raw-prefix-property g)))
        (when output
          (to-output pre output max-length))
+       (define (file-location-position p)
+         (define-values (line col pos) (port-next-location p))
+         (- pos 1))
        (define start-pos (and register-stx-range
                               output
-                              (file-position output)))
+                              (file-location-position output)))
        (define r
          (cond
            [(render-stx-hook g output)
@@ -110,7 +114,7 @@
        (when output
          (to-output r output max-length))
        (when start-pos
-         (register-stx-range g start-pos (file-position output)))
+         (register-stx-range g start-pos (file-location-position output)))
        (define raw (and (not output)
                         (if (and pre r)
                             (cons pre r)
