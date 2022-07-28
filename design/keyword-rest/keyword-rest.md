@@ -1,9 +1,8 @@
-- Feature Name: Keyword Rest
-- Start Date: 2022-07-02
-- RFC PR: (leave this empty)
-- Feature Commit(s): (leave this empty)
+Keyword Rest
+==========================
 
-# Summary
+Summary
+-------
 
 A keyword rest parameter for function definitions and
 lambdas to receive all keyword arguments in a dictionary,
@@ -13,7 +12,8 @@ For completeness this also includes normal positional rest
 parameters, as well as normal rest argument passing in
 function applications and data constructors.
 
-# Motivation
+Motivation
+----------
 
 Associating keywords with their argument values via
 a map data structure is better than having them in separate
@@ -26,17 +26,26 @@ go through potential mergers, additions, or removals.
 A sorted map data structure can maintain the sorted order
 through those operations.
 
-# Guide-level explanation
+Design Options
+--------------
+
+### Option A: Rests with `&` and `~&`, Repetitions with `...`, Strings with `+&`
 
 Positional rest arguments are marked with `&`, while
 keyword rest arguments are marked with `~&`. Both of these
-are normal positions with ellipsis-depth 0.
+are normal positions with no repetition-depth.
 
 Syntactic sugar `x ...` can be used at the end of function
 parameters, function applications, and data constructors as
-the equivalent of `& [x ...]` to give `x` ellipsis-depth 1.
+the equivalent of `& [x ...]` to give `x` repetition-depth
+1.
 
-## Functions
+Strings can be appended with the `++` operator or the `+&`
+operator, which both produce immutable strings. The `+&`
+operator coerces arguments to strings if they're not
+strings already.
+
+#### Functions
 
 Positional rest parameters are declared with `&`, while
 keyword rest parameters are declared with `~&`.
@@ -127,7 +136,7 @@ Examples:
 [[1, 2], {keyword(~dx): 7, keyword(~scale): 2}]
 ```
 
-## Function Applications
+#### Function Applications
 
 A function application expression with `&` of the form
 
@@ -209,7 +218,7 @@ Posn(9, 4)
 Posn(9, 15)
 ```
 
-## Data Constructors
+#### Data Constructors
 
 The rest marker `&` can also be used in data constructors
 such as `[]` for lists and `{}` for maps.
@@ -223,11 +232,27 @@ Examples:
 {"a": 1, "b": 2, "c": 3, "d", 4}
 ```
 
-## Ellipses
+Where there would be ambiguity with data structures sharing
+syntax, such as with `{}` braces for maps and `{}` braces
+for sets, cases like `{& rst}` are resolved the same way as
+the empty case.
+For example, if empty `{}` braces produce a map and not a
+set, then `{& rst}` also produces a map and not a set.
+
+And so sets written with this notation would need one or
+more elements.
+
+```
+> {1, 2, & {3, 4}}
+{1, 2, 3, 4}
+```
+
+#### Ellipses
 
 Syntactic sugar `x ...` can be used at the end of function
 parameters, function applications, and data constructors as
-the equivalent of `& [x ...]` to give `x` ellipsis-depth 1.
+the equivalent of `& [x ...]` to give `x` repetition-depth
+1.
 
 Examples:
 
@@ -243,41 +268,13 @@ Examples:
 [["", ""], ["a", "a"], ["b", "b"], ["c", "c"], ["d", "d"]]
 ```
 
-Using an identifier with ellipsis-depth 1 or more in a
-context not under at least that number of ellipses is a
+Using an identifier with repetition-depth 1 or more in a
+context not under at least that repetition-depth is a
 syntax error.
 
-## Type Annotations
-
-When rest arguments written with `& rst` have type
-annotations `& rst -: type`, the type applies to the list
-value, not to the elements.
-
-When keyword rest arguments with `~& kwrst` have type
-annotations `~& kwrst -: type`, the type applies to the map
-value, not to the value elements.
-
-```
-> fun p(& l -: List):
-    l
-> fun k(~& m -: Map):
-    m
-> fun n(& l -: List, ~& m -: Map):
-    [l, m]
-```
-
-However, when an identifier under ellipses has a type
-annotation `(x -: type) ...`, the type applies to each
-element under iteration, not to the list as a whole.
-
-```
-> fun el((x -: Number) ...):
-    [[x, x] ...]
-```
-
-# Reference-level explanation
-
-## Functions
+Functions definitions may use either `&` for a no
+repetition-depth rest argument, or `...` for
+repetition-depth 1.
 
 ```
 									definition
@@ -305,11 +302,8 @@ maybe_result_annotation = :: annotation
                         | ϵ
 ```
 
-Binds `identifier` as a function, or when `identifier` is
-not supplied, serves as an expression that produces a
-function value.
-
-## Function Applications
+Likewise function applications may use either `&` for no repetition-depth or
+`...` for repetition-depth 1.
 
 ```
 									expression
@@ -323,10 +317,8 @@ kwrst_arg = & expr
           | expr ...
 ```
 
-## Data Constructors
-
-List expressions may use either `&` for ellipsis-depth 0 or
-`...` for ellipsis-depth 1
+Likewise list constructors may use either `&` for no repetition-depth or
+`...` for repetition-depth 1.
 
 ```
 									expression
@@ -335,11 +327,7 @@ List expressions may use either `&` for ellipsis-depth 0 or
 maybe_rst_expr = & expr
                | expr ...
                | ϵ
-```
 
-List bindings are similar in depth 0 `&` and depth 1 `...`
-
-```
 									binding
 [binding, ..., maybe_rst_binding]
 
@@ -348,122 +336,79 @@ maybe_rst_binding = & binding
                   | ϵ
 ```
 
-Map expressions allow `&` but not `...`
+#### Type Annotations
+
+When rest arguments written with `& rst` have type
+annotations `& rst -: type`, the type applies to the list
+value, not to the elements.
+
+When keyword rest arguments with `~& kwrst` have type
+annotations `~& kwrst -: type`, the type applies to the map
+value, not to the value elements.
 
 ```
-									expression
-{expr: expr, ..., maybe_rst_expr}
-
-maybe_rst_expr = & expr
-               | ϵ
+> fun p(& l -: List):
+    l
+> fun k(~& m -: Map):
+    m
+> fun n(& l -: List, ~& m -: Map):
+    [l, m]
 ```
 
-Map bindings are similar in allowing `&` but not `...`
+However, when an identifier under ellipses has a type
+annotation `(x -: type) ...`, the type applies to each
+element under iteration, not to the list as a whole.
 
 ```
-									binding
-{binding: binding, ..., maybe_rst_binding}
-
-maybe_rst_binding = & binding
-                  | ϵ
+> fun el((x -: Number) ...):
+    [[x, x] ...]
 ```
 
-Where there would be ambiguity with data structures sharing
-syntax, such as with `{}` braces for maps and `{}` braces
-for sets, cases like `{& rst}` are resolved the same way as
-the empty case.
-For example, if empty `{}` braces produce a map and not a
-set, then `{& rst}` also produces a map and not a set.
+### Option B: Rests with `+&` and `~&`, Repetitions with `...`, Strings with `&`
 
-And so sets written with this notation would need one or
-more elements
+Positional rest arguments are marked with `+&`, while
+keyword rest arguments are marked with `~&`. Both of these
+are normal positions with no repetition-depth.
 
-```
-									expression
-{expr, ...+, maybe_rst_expr}
+Syntactic sugar `x ...` can be used at the end of function
+parameters, function applications, and data constructors as
+the equivalent of `+& [x ...]` to give `x` repetition-depth
+1.
 
-maybe_rst_expr = & expr
-               | expr ...
-               | ϵ
+Strings can be appended with the `++` operator or the `&`
+operator, which both produce immutable strings. The `&`
+operator coerces arguments to strings if they're not
+strings already.
 
-									binding
-{binding, ...+, maybe_rst_binding}
+The semantics are the same as option A, just with the
+syntax of `&` and `+&` switched.
 
-maybe_rst_binding = & binding
-                  | binding ...
-                  | ϵ
-```
-
-## Ellipses
-
-Expressions under ellipses are evaluated under iteration
-similarly to template metafunction calls under ellipses in
-Racket's `syntax` form.
-
-Examples:
-
-```
-> val [x ...]: [1, 2, 3]
-> [x + 1, ...]
-[2, 3, 4]
-> val [y ...]: [30, 40, 50]
-> [x + y, ...]
-[31, 42, 53]
-```
-
-Type annotations under ellipses also apply to each element
-under iteration, similarly to syntax classes under ellipses
-in Racket's `syntax/parse`.
-
-# Drawbacks and Alternatives
-[drawbacks]: #drawbacks
-
-The behavior of ellipses might be considered confusing for
-"arbitrary" expressions, moreso than it would be for a
-restricted subset of template syntax.
-Iteration by ellipses according to ellipsis-depth might
-also be hard to implement, harder for arbitrary expressions
-than a restricted subset.
-
-A potential alternative is to restrict the
-bindings/expressions under ellipses to be simpler, for
-example only allowing identifiers of the proper
-ellipsis-depth there.
-
-The use of the `&` rest marker in data constructors and
-bindings make sense for most immutable/functional data
-structures, but they make less sense for mutable data.
-
-Some potential alternative here are to have the patterns not
-support matching on the mutable versions of these data
-structures at all, vs. have them create copies every time,
-risking quadratic waste sneaking in, vs. have them create
-slices that implement aliasing.
+Tradeoffs and Alternatives
+--------------
 
 The `&` operator has been used for appending strings.
-To resolve this conflict in favor of rest arguments, `++`
-could append strings instead, but this comes with the
-drawback that `++` shouldn't coerce other values to
-strings, while a dedicated string operator like `&` could
-do that more reasonably. Another way of coercing other
+Option A resolves this in favor of rest arguments, while
+option B resolves this in favor of strings.
+Another way of coercing other
 values to strings for string interpolation could be a
 function intended to be used with `@` at-expressions, like
 `@str{(@(p.x), @(p.y))}`.
 Alternatively to resolve this conflict in favor of strings,
-the rest marker could be replaced with something else.
+the rest marker could be replaced with something else other
+than `+&`.
 Racket uses `.` for rest arguments, but Rhombus's use of
 `.` for fields and methods is more important.
 Python uses `*` for rest arguments, but it might be
 confusing to overload this with multiplication.
-Alternatively rest arguments could be expressed with `...`
-ellipses alone, but that would basically make it mandatory
-to bring in all the complexities of ellipsis-depth for
-every rest argument. And `...` ellipses don't express the
-"rest" idea for non-list-like data structures like maps
-either.
+Alternatively positional rest arguments could be expressed
+with `...` ellipses alone, but that would basically make it
+mandatory to bring in all the complexities of
+repetition-depth for every positional rest argument.
+And `...` ellipses don't express the "rest" idea for
+non-list-like data structures like maps either.
 
-# Prior art
-[prior-art]: #prior-art
+Prior art and References
+---------
 
 Racket's function [`keyword-apply/dict`](https://docs.racket-lang.org/reference/dicts.html#%28def._%28%28lib._racket%2Fdict..rkt%29._keyword-apply%2Fdict%29%29).
 
@@ -485,16 +430,10 @@ Clojure [functions with `& next-param`](https://clojuredocs.org/clojure.core/fn)
 
 Racket's [`syntax`](https://docs.racket-lang.org/reference/stx-patterns.html#%28form._%28%28lib._racket%2Fprivate%2Fstxcase-scheme..rkt%29._syntax%29%29) templates, [`...`](https://docs.racket-lang.org/reference/stx-patterns.html#%28form._%28%28lib._racket%2Fprivate%2Fstxcase-scheme..rkt%29._......%29%29) ellipses, [`syntax/parse`](https://docs.racket-lang.org/syntax/stxparse.html), and [`define-template-metafunction`](https://docs.racket-lang.org/syntax/Experimental.html#%28form._%28%28lib._syntax%2Fparse%2Fexperimental%2Ftemplate..rkt%29._define-template-metafunction%29%29).
 
-# Unresolved questions
-[unresolved]: #unresolved-questions
+Rhombus's [Ellipses and Repetitions](https://github.com/racket/rhombus-prototype/blob/master/design/sequence/repetition.md).
 
-Ellipses bring up many unresolved questions.
-If those are out of scope for the design of rest arguments and
-keyword arguments, `...` ellipses can be omitted for now,
-and rest arguments can still be expressed with `&`.
-Then once ellipses are figured out they could be added in
-the future with syntactic sugar translating `x ...` into
-`& [x ...]`.
+Drawbacks and Unresolved questions
+----------------------------------
 
 There are also unresolved questions for the behavior of the
 `&` rest marker in the `{}` map constructor.
@@ -506,24 +445,20 @@ dictionaries, multidicts, or even all bisequences?
 Should "association lists" as mere lists of pairs be
 included in those interfaces?
 
-More unresolved questions on the behavior of the `&` rest
-marker in patterns such as `[]` and `{}`: if those can
-match mutable versions of their respective data structures,
-should those patterns support `&`, or should they fail to
-match or even error on the attempt?
+The use of the `&` rest marker in data constructors and
+bindings makes sense for most immutable/functional data
+structures, but the behavior is less obvious for mutable
+data.
+If the constructors used as patterns can match mutable
+versions of their respective data structures, should those
+patterns support `&`, or should they fail to match or even
+error on the attempt?
 Or should they copy the data and risk quadradic waste?
 Or should they create slices that implement aliasing?
 If so how do the slices behave on mutation of each data
 structure, in both directions?
 
 What to do about the conflict with using `&` to append
-strings? 
-Should `++` be used for that instead?
-What about the coercing use cases of `&` to interpolate
-non-string values?
-I personally wouldn't want `++` to do string coercion, so
-should there be a short unary operator for those use cases
-instead?
-If so, what should that look like?
-Or a function intended to be used with `@` at-expressions,
-like `@str{(@(p.x), @(p.y))}`.
+strings? Move the coercing-string-append operator out of
+the way to `+&` like option A? Or change the rest marker
+to `+&` like option B, or something else entirely?
