@@ -59,6 +59,8 @@
          unpack-list-tail*
          unpack-multi-list-tail*
 
+         unpack-element*
+
          repack-as-term
          repack-as-multi)
 

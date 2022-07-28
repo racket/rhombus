@@ -28,7 +28,7 @@
   (define kind (syntax-parse pre-parsed
                  [(_ _ _ kind . _) (syntax-e #'kind)]))
   (define (macro-clause self-id left-ids tail-pattern rhs)
-    (define-values (pattern idrs sidrs can-be-empty?)
+    (define-values (pattern idrs sidrs vars can-be-empty?)
       (if (eq? kind 'rule)
           (convert-pattern #`(multi (group #,@tail-pattern (op $) tail (op rhombus...))))
           (convert-pattern #`(multi (group . #,tail-pattern)) #:as-tail? #t)))
@@ -222,7 +222,7 @@
     [(pre-parsed id
                  tail-pattern
                  rhs)
-     (define-values (pattern idrs sidrs can-be-empty?) (convert-pattern #`(multi (group . tail-pattern)) #:as-tail? #t))
+     (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(multi (group . tail-pattern)) #:as-tail? #t))
      (with-syntax ([((p-id id-ref) ...) idrs]
                    [((s-id sid-ref) ...) sidrs] )
        #`(#,make-transformer-id
@@ -243,7 +243,7 @@
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
                                     (lambda (body)
-                                      (define-values (pattern idrs sidrs can-be-empty?)
+                                      (define-values (pattern idrs sidrs vars can-be-empty?)
                                         (convert-pattern #`(multi . #,gs-stx)))
                                       (with-syntax ([((p-id id-ref) ...) idrs]
                                                     [((s-id sid-ref) ...) sidrs])

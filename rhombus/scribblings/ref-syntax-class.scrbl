@@ -3,6 +3,7 @@
     "common.rhm" open 
     "macro.rhm")
 
+@(val dots: @rhombus[..., ~bind])
 @(def list(x, ...): [x, ...])
 
 @title{Syntax Classes}
@@ -20,7 +21,12 @@
     $syntax_pattern: $pattern_body; ...,
   grammar pattern_body:
     $body
-    ~attr $identifier: $body; ...
+    ~attr $identifier_maybe_rep: $body; ...,
+  grammar identifier_maybe_rep:
+    $identifier
+    [$identifier_maybe_rep, $ellipsis],
+  grammar ellipsis:
+    $$(dots)
 ]{
 
  Defines a syntax class that can be used in syntax patterns with
@@ -34,7 +40,7 @@
  @rhombus[$($$(@rhombus[id, ~var]) :: $$(@rhombus[stx_class_id, ~var]))],
  it matches a syntax object that matches any of the
  @rhombus[syntax_pattern]s in the definition of
- @rhombus[stx_class_id ,~var], the @rhombus[syntax_pattern]s are tried
+ @rhombus[stx_class_id ,~var], where the @rhombus[syntax_pattern]s are tried
  first to last. A pattern variable that is included in all of the
  @rhombus[syntax_pattern]s is an attribute of the syntax class, which is
  accessed from a binding @rhombus[id, ~var] using dot notation. For
@@ -53,13 +59,17 @@
  the match. Use @rhombus[...] after a @rhombus[$]-escaped reference to
  the variable in a syntax template.
 
-Custom attributes of a syntax class can be defined in a block following a 
-pattern alternative. Inside this block, any code is valid including local 
-definitions. Pattern variables mentioned in the original syntax pattern
-will be bound and available for use in the scope of this block. The 
-@rhombus[~attr id: body] form can be used inside a pattern body to define a 
-custom attribute. Identifiers bound to values with @rhombus[~attr] will be 
-available for use locally and also exported as an attribute of the syntax class. 
+Within a @rhombus[clause], custom attributes of a syntax class can be
+defined within a @rhombus[pattern_body], which is a mixture of
+expressions, definitions, and @rhombus[~attr] forms. An
+@rhombus[~attr] form is a definition, but it also creates a custom
+attribute named by an @rhombus[identifier] and at a repetition depth
+determined by surrounding @(dots). The value of the right-hand side
+@rhombus[body] sequence must be nested lists corresponding to the
+repetition depth, with syntax objects as the most nested value (so,
+just a syntax object for repetition depth 0 when not @(dots) are used
+on the left-hand side). Variables bound by the pattern are available
+for use in @rhombus[pattern_body].
 
 @examples[
   ~eval: macro.make_for_meta_eval(),

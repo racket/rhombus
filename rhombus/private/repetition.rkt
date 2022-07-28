@@ -93,7 +93,8 @@
 
   (define (make-repetition name seq-id element-static-infos
                            #:depth [depth 1]
-                           #:expr-handler [expr-handler (lambda (stx fail) (fail))])
+                           #:expr-handler [expr-handler (lambda (stx fail) (fail))]
+                           #:repet-handler [repet-handler (lambda (stx next) (next))])
     (make-expression+repetition-prefix-operator
      name '((default . stronger)) 'macro
      (lambda (stx)
@@ -104,14 +105,15 @@
                                                   "cannot use repetition binding as an expression"
                                                   #'self)]))))
      (lambda (stx)
-       (syntax-parse stx
-         [(id . tail)
-          (values (make-repetition-info name
-                                        seq-id
-                                        depth
-                                        #'0
-                                        element-static-infos)
-                  #'tail)]))))
+       (repet-handler stx (lambda ()
+                            (syntax-parse stx
+                              [(id . tail)
+                               (values (make-repetition-info name
+                                                             seq-id
+                                                             depth
+                                                             #'0
+                                                             element-static-infos)
+                                       #'tail)]))))))
 
   (define (repetition-transformer name proc)
     (repetition-prefix-operator name '((default . stronger)) 'macro proc))

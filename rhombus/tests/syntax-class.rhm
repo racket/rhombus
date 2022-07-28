@@ -1,0 +1,92 @@
+#lang rhombus
+import:
+  "check.rhm" open
+
+begin:
+  syntax.class Arithmetic
+  | '$x + $y'
+
+  check:
+    ~print
+    match '1+2'
+    | '$(exp :: Arithmetic)': exp.x
+    '1'
+
+  check:
+    ~print
+    match '1+2'
+    | '$(exp :: Arithmetic)': exp.y
+    '2'
+
+begin:
+  syntax.class Arithmetic
+  | '$x + $y'
+  | '$x - $y'
+
+  check:
+    ~print
+    match '1+2'
+    | '$(exp :: Arithmetic)': exp.x
+    '1'
+
+  check:
+    ~print
+    match '1-2'
+    | '$(exp :: Arithmetic)': exp.y
+    '2'
+
+begin:
+  syntax.class Arithmetic
+  | '$x + $y':
+      ~attr sum: to_syntax(unwrap_syntax(x) + unwrap_syntax(y))
+      ~attr [num, ...]: [x, y]
+
+  check:
+    ~print
+    match '1+2'
+    | '$(exp :: Arithmetic)': exp.sum
+    '3'
+
+  check:
+    ~print
+    match '1+2'
+    | '$(exp :: Arithmetic)': [exp.num, ...]
+    ['1', '2']
+
+begin:
+  syntax.class Foo
+  | 'a ($x, ...) z'
+
+  check:
+    ~print
+    match 'a (1, 2, 3) z'
+    | '$(f :: Foo)': [f.x, ...]
+    ['1', '2', '3']
+
+  check:
+    ~print
+    match '[a (1, 2, 3) z, a () z, a ("x", "y") z]'
+    | '[$(f :: Foo), ...]': [[f.x, ...], ...]
+    [['1', '2', '3'], [], ['"x"', '"y"']]
+
+begin:
+  syntax.class Foo
+  | 'a $x ...'
+
+  check:
+    ~print
+    match 'a (1, 2, 3) z'
+    | '$(f :: Foo)': [f.x, ...]
+    ['(1, 2, 3)', 'z']
+
+// check that right-hand side of pattern
+// is in a more nested scope than pattern variables
+begin:
+  syntax.class Foo
+  | 'a $x':
+      val x: "whatever"
+  check:
+    ~print
+    match 'a 1'
+    | '$(f :: Foo)': f.x
+    '1'

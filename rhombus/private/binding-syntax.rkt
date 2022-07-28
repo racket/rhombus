@@ -152,8 +152,8 @@
                                   (parens info-pattern
                                           data-pattern)))
                    ((~and block-tag block) body ...))
-          (define-values (converted-info-pattern info-idrs info-sidrs info-can-be-empty?) (convert-pattern #'info-pattern))
-          (define-values (converted-data-pattern data-idrs data-sidrs data-can-be-empty?) (convert-pattern #'data-pattern))
+          (define-values (converted-info-pattern info-idrs info-sidrs info-vars info-can-be-empty?) (convert-pattern #'info-pattern))
+          (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((info-id info-id-ref) ...) info-idrs]
                         [((info-sid info-sid-ref) ...) info-sidrs]
                         [((data-id data-id-ref) ...) data-idrs]
@@ -198,7 +198,7 @@
                                           (group (op $) success-id:identifier)
                                           (group (op $) fail-id:identifier))))
                    ((~and block-tag block) body ...))
-          (define-values (converted-pattern idrs sidrs can-be-empty?) (convert-pattern #'data-pattern))
+          (define-values (converted-pattern idrs sidrs vars can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((id id-ref) ...) idrs]
                         [((sid sid-ref) ...) sidrs])
             #`(lambda (stx)
@@ -301,7 +301,7 @@
                                   (parens (group (op $) arg-id:identifier)
                                           data-pattern)))
                    ((~and block-tag block) body ...))
-          (define-values (converted-data-pattern data-idrs data-sidrs data-can-be-empty?) (convert-pattern #'data-pattern))
+          (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((data-id data-id-ref) ...) data-idrs]
                         [((data-sid data-sid-ref) ...) data-sidrs])
             #`(lambda (stx)

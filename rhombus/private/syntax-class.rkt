@@ -17,12 +17,10 @@
          Multi)
 
 (module+ for-quasiquote
-  (provide (for-syntax in-syntax-class-space
-                       rhombus-syntax-class?
-                       rhombus-syntax-class-kind
-                       rhombus-syntax-class-class
-                       rhombus-syntax-class-attributes
-                       rhombus-syntax-class-built-in?)))
+  (begin-for-syntax
+    (provide in-syntax-class-space
+             (struct-out rhombus-syntax-class)
+             (struct-out syntax-class-attribute))))
                        
 (module+ for-syntax-class-syntax
   (provide (for-syntax rhombus-syntax-class in-syntax-class-space)))
@@ -30,7 +28,9 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/syntax-class))
 
-  (struct rhombus-syntax-class (kind class attributes built-in?)))  
+  (struct rhombus-syntax-class (kind class attributes built-in?))
+
+  (struct syntax-class-attribute (id depth)))
 
 (define-syntax Term (rhombus-syntax-class 'term #f null #t))
 (define-syntax Id (rhombus-syntax-class 'term #'identifier null #t))
