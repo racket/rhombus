@@ -10,12 +10,16 @@
 
 @doc[
   defn.macro '«syntax.class $name:
+                $maybe_description
                 pattern
                 | $clause
                 | ...»',
   defn.macro '«syntax.class $name
                | $clause
                | ...»',
+  grammar maybe_description:
+    description: $body
+    $$("ϵ"),
   grammar clause:
     $syntax_pattern
     $syntax_pattern: $pattern_body; ...,
@@ -33,7 +37,12 @@
  @rhombus[::]. The @rhombus[pattern] subform is optional in the sense
  that pattern alternatives can be inlined directly in the
  @rhombus[syntax.class] form (but the @rhombus[pattern] subform makes
- room for additional subforms in the future).
+ room for additional subforms in the future). The optional
+ @rhombus[description] subform can be used before @rhombus[pattern] to define
+ the description of the syntax class. This description is used to produce 
+ clearer error messages when a term is rejected by the syntax class. 
+ It takes a block with an expression that may evaluate to a string or 
+ @rhombus[#false].
 
  When a variable @rhombus[id, ~var] is bound through a
  @seclink["stxobj"]{syntax pattern} with

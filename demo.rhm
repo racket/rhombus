@@ -715,6 +715,7 @@ exp.x
 
 begin_for_meta:
   syntax.class Arithmetic2:
+    description: "multiplication or division forms"
     pattern
     | '$x * $y'
     | '$x / $y'
