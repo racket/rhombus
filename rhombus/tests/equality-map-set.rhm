@@ -1,0 +1,104 @@
+#lang rhombus
+import:
+  "check.rhm" open
+  racket/base open:
+    only: mcons
+
+check:
+  "apple" == "apple"
+  #true
+
+check:
+  [1, 2, 3] == 1
+  #false
+
+check:
+  [1, "apple", {"alice": 97}] == [1, "apple", {"alice": 97}]
+  #true
+
+check:
+  1 == 1.0
+  #false
+
+check:
+  "yes" == "yes"
+  #true
+
+check:
+  "yes" == "no"
+  #false
+
+check:
+  6 * 7 == 42
+  #true
+
+check:
+  expt(2, 100) == expt(2, 100)
+  #true
+
+check:
+  2 == 2.0
+  #false
+
+check:
+  [1, 2] == [1, 2]
+  #true
+
+check:
+  begin:
+    val v: mcons(1, 2)
+    v == v
+  #true
+
+check:
+  mcons(1, 2) == mcons(1, 2)
+  #false
+
+check:
+  {[1, 2]: 3}[[1, 2]]
+  3
+
+check:
+  ~exn
+  {mcons(1, 2): 3}[mcons(1, 2)]
+  "hash-ref: no value found for key"
+
+begin:
+  val a: mcons(1, 2)
+  val b: mcons(1, 2)
+  val m: {a: "a", b: "b"}
+  check:
+    m[a]
+    "a"
+  check:
+    m[b]
+    "b"
+
+check:
+  {[1, 2]}[[1, 2]]
+  #true
+
+check:
+  {mcons(1, 2)}[mcons(1, 2)]
+  #false
+
+check:
+  begin:
+    val v: mcons(1, 2)
+    {v}[v]
+  #true
+
+begin:
+  val a: mcons(1, 2)
+  val b: mcons(1, 2)
+  val c: mcons(1, 2)
+  val s: {a, b}
+  check:
+    s[a]
+    #true
+  check:
+    s[b]
+    #true
+  check:
+    s[c]
+    #false
