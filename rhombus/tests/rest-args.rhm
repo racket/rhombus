@@ -1,6 +1,8 @@
 #lang rhombus
 import:
   "check.rhm" open
+  racket/math open:
+    only: sqr
 
 use_static
 
@@ -48,6 +50,21 @@ fun
 check:
   altkrmap(~a: 1, ~b: 2)
   {keyword(~a): 1, keyword(~b): 2}
+
+fun kinetic_energy(~m: m, ~v: v): (1/2) * m * sqr(v)
+
+check:
+  kinetic_energy(~m: 2, ~v: 3)
+  9
+check:
+  kinetic_energy(~& {keyword(~m): 4, keyword(~v): 5})
+  50
+check:
+  kinetic_energy(~m: 6, ~& {keyword(~v): 7})
+  147
+check:
+  kinetic_energy(~v: 2, ~& {keyword(~m): 1})
+  2
 
 // ---------------------------
 // Repetition Rest with ...

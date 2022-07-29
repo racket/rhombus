@@ -6,6 +6,7 @@
                      "with-syntax.rkt"
                      "tag.rkt")
          racket/unsafe/undefined
+         (only-in racket/dict keyword-apply/dict)
          "parens.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -531,15 +532,33 @@
   (define rator (rhombus-local-expand rator-in))
   (syntax-parse stxes
     #:datum-literals (group op)
-    #:literals (&)
+    #:literals (& ~& rhombus...)
+    [(_ (head::parens rand ...
+                      {~alt {~once (group (op &) rst ...)}
+                            {~once (group (op ~&) kwrst ...)}}
+                      ...)
+        . tail)
+     (generate-call rator #'head #'(rand ...) #'(group rst ...) #f
+                    #'(group kwrst ...)
+                    #'tail)]
+    [(_ (head::parens rand ...
+                      {~alt {~once {~seq rep (group (op (~and dots rhombus...)))}}
+                            {~once (group (op ~&) kwrst ...)}}
+                      ...)
+        . tail)
+     (generate-call rator #'head #'(rand ...) #'rep #'dots
+                    #'(group kwrst ...)
+                    #'tail)]
     [(_ (head::parens rand ... (group (op &) rst ...)) . tail)
-     (generate-call rator #'head #'(rand ...) #'(group rst ...) #f #'tail)]
+     (generate-call rator #'head #'(rand ...) #'(group rst ...) #f #f #'tail)]
     [(_ (head::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
-     (generate-call rator #'head #'(rand ...) #'rep #'dots #'tail)]
+     (generate-call rator #'head #'(rand ...) #'rep #'dots #f #'tail)]
+    [(_ (head::parens rand ... (group (op ~&) kwrst ...)) . tail)
+     (generate-call rator #'head #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
     [(_ (head::parens rand ...) . tail)
-     (generate-call rator #'head #'(rand ...) #f #f #'tail)]))
+     (generate-call rator #'head #'(rand ...) #f #f #f #'tail)]))
 
-(define-for-syntax (generate-call rator head rands rsts dots tail)
+(define-for-syntax (generate-call rator head rands rsts dots kwrsts tail)
   (with-syntax-parse ([(rand::kw-expression ...) rands])
     (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                                          [parsed (in-list (syntax->list #'(rand.parsed ...)))])
@@ -548,11 +567,26 @@
                                                     (list parsed)))])
       (define e
         (cond
+          [kwrsts
+           (define kwrest-args
+             (with-syntax-parse ([kwrst::expression kwrsts]) #'kwrst.parsed))
+           (define rest-args
+             (cond
+               [dots (repetition-as-list dots rsts 1)]
+               [rsts (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]
+               [else #''()]))
+           (datum->syntax (quote-syntax here)
+                          (append (list #'keyword-apply/dict rator)
+                                  (list kwrest-args)
+                                  (syntax->list #'(arg-form ... ...))
+                                  (list rest-args))
+                          (span-srcloc rator head)
+                          head)]
           [rsts
            (define rest-args
-             (if dots
-                 (repetition-as-list dots rsts 1)
-                 (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)))
+             (cond 
+               [dots (repetition-as-list dots rsts 1)]
+               [else (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]))
            (datum->syntax (quote-syntax here)
                           (append (list #'apply rator)
                                   (syntax->list #'(arg-form ... ...))
