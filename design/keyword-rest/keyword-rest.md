@@ -412,7 +412,7 @@ Prior art and References
 
 Racket's function [`keyword-apply/dict`](https://docs.racket-lang.org/reference/dicts.html#%28def._%28%28lib._racket%2Fdict..rkt%29._keyword-apply%2Fdict%29%29).
 
-Alex Knauth's Racket package [`kw-utils`](https://pkgs.racket-lang.org/package/kw-utils), module [`kw-utils/kw-hash-lambda`](https://docs.racket-lang.org/kw-utils/kw-hash_scrbl.html).
+Alex Knauth's Racket package [`kw-utils`](https://pkgs.racket-lang.org/package/kw-utils), module [`kw-utils/kw-hash-lambda`](https://docs.racket-lang.org/kw-utils/Keywords_in_Hash_Tables.html).
 
 Jack Firth's Racket package [`arguments`](https://pkgs.racket-lang.org/package/arguments), module [`arguments`](https://docs.racket-lang.org/arguments/index.html).
 
