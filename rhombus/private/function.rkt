@@ -308,24 +308,31 @@
        (map fcase argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds preds rhss)))
     (relocate
      (span-srcloc start end)
-     #`(case-lambda
+     #`(case-lambda/kwrest
          #,@(for/list ([n+same (in-list n+sames)])
               (define n (car n+same))
               (define same (cdr n+same))
+              (define kwrest? (and (ormap fcase-kwrest-arg same) #t))
               (with-syntax ([(try-next arg-id ...) (generate-temporaries
                                                     (cons 'try-next
                                                           (fcase-args (find-matching-case n same))))]
-                            [maybe-rest-tmp (if (negative? n)
-                                                #'rest-tmp
-                                                #'())]
+                            [(maybe-rest-tmp ...) (if (negative? n)
+                                                      #'(#:rest rest-tmp)
+                                                      #'())]
                             [maybe-rest-tmp-use (if (negative? n)
                                                     #'rest-tmp
-                                                    #'null)])
-                #`[(arg-id ... . maybe-rest-tmp)
+                                                    #'null)]
+                            [(maybe-kwrest-tmp ...) (if kwrest?
+                                                      #'(#:kwrest kwrest-tmp)
+                                                      #'())]
+                            [maybe-kwrest-tmp-use (if kwrest?
+                                                      #'kwrest-tmp
+                                                      #''#hashalw())])
+                #`[(arg-id ...) maybe-rest-tmp ... maybe-kwrest-tmp ...
                    #,(let loop ([same same])
                        (cond
                          [(null? same)
-                          #`(cases-failure '#,function-name maybe-rest-tmp-use arg-id ...)]
+                          #`(cases-failure '#,function-name maybe-rest-tmp-use maybe-kwrest-tmp-use arg-id ...)]
                          [else
                           (define fc (car same))
                           (define-values (this-args wrap-adapted-arguments)
@@ -349,6 +356,19 @@
                                                        ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
                                                         ...)))]
                                                  [else
+                                                  #'(#f () ())])]
+                                              [(maybe-match-kwrest (maybe-bind-kwrest-seq ...) (maybe-bind-kwrest ...))
+                                               (cond
+                                                 [(syntax-e (fcase-kwrest-arg fc))
+                                                  (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
+                                                  (with-syntax-parse ([kwrest::binding-form kwrest-parsed]
+                                                                      [kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)]
+                                                                      [kwrest-info::binding-info #'kwrest-impl.info])
+                                                    #`((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f)
+                                                       ((kwrest-info.binder-id kwrest-tmp kwrest-info.data))
+                                                       ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
+                                                        ...)))]
+                                                 [else
                                                   #'(#f () ())])])
                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
                                 #,(wrap-adapted-arguments
@@ -359,6 +379,7 @@
                                       (this-arg-id arg-info arg #f)
                                       ...
                                       maybe-match-rest
+                                      maybe-match-kwrest
                                       (begin
                                         (arg-info.binder-id this-arg-id arg-info.data) ...
                                         (begin
@@ -367,6 +388,8 @@
                                         ...
                                         maybe-bind-rest-seq ...
                                         maybe-bind-rest ...
+                                        maybe-bind-kwrest-seq ...
+                                        maybe-bind-kwrest ...
                                         (add-annotation-check
                                          #,function-name
                                          pred
@@ -465,7 +488,7 @@
 (define (argument-binding-failure who val annotation-str)
   (raise-binding-failure who "argument" val annotation-str))
 
-(define (cases-failure who rest-args . base-args)
+(define (cases-failure who rest-args kwrest-args . base-args)
   (define args (append base-args rest-args))
   (apply
    raise-contract-error

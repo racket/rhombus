@@ -42,6 +42,13 @@ check:
   krmap(~a: 1, ~b: 2)
   {keyword(~a): 1, keyword(~b): 2}
 
+fun
+| altkrmap(~& m): m
+
+check:
+  altkrmap(~a: 1, ~b: 2)
+  {keyword(~a): 1, keyword(~b): 2}
+
 // ---------------------------
 // Repetition Rest with ...
 
