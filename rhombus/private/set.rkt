@@ -36,7 +36,7 @@
       (hash-remove! (set-ht s) v)))
 
 (define (Set . vals)
-  (define base-ht (hash))
+  (define base-ht (hashalw))
   (set (for/fold ([ht base-ht]) ([val (in-list vals)])
          (hash-set ht val #t))))
 
@@ -58,7 +58,7 @@
   (#%call-result ((#%map-ref set-ref))))
 
 (define (make_set . vals)
-  (define ht (make-hash))
+  (define ht (make-hashalw))
   (for ([v (in-list vals)])
     (hash-set! ht v #t))
   (set ht))

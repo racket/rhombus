@@ -33,7 +33,7 @@
 
 (define Map
   (lambda args
-    (define ht (hash))
+    (define ht (hashalw))
     (let loop ([ht ht] [args args])
       (cond
         [(null? args) ht]
@@ -70,7 +70,7 @@
      (syntax-parse stx
        [(_)
         #`[begin
-           ([ht #hash()])
+           ([ht #hashalw()])
            (add-to-map ht)
            #,map-static-info]]))))
 
