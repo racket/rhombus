@@ -39,6 +39,12 @@ check:
   [1, 2, & [3, 4]]
   [1, 2, 3, 4]
 
+begin:
+  val [a, b, & rst] : [1, 2, 3, 4]
+  check: a; 1
+  check: b; 2
+  check: rst; [3, 4]
+
 // ---------------------------
 // Keyword Rest with ~&
 

@@ -25,7 +25,8 @@
                                                        #:static-infos [composite-static-infos #'()] ; for the composite value
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:ref-result-info? [ref-result-info? #f]
-                                                       #:rest-accessor [rest-accessor #f]) ; for a list "rest"
+                                                       #:rest-accessor [rest-accessor #f] ; for a list "rest"
+                                                       #:rest-repetition? [rest-repetition? #t])
   (lambda (tail [rest-arg #f])
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -57,6 +58,7 @@
             #,accessor->info? #,ref-result-info?
             #,(and rest-arg
                    #`(#,rest-accessor
+                      #,rest-repetition?
                       rest-a-parsed.infoer-id ...
                       rest-a-parsed.data ...))))
         #'new-tail)])))
@@ -82,11 +84,11 @@
      (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str)
        (syntax-parse #'rest-data
          [#f (values #'#f #'() #'rest #f)]
-         [(rest-accessor rest-infoer-id rest-a-data)
+         [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
-          (values #`(rest-tmp-id rest-accessor rest-info
+          (values #`(rest-tmp-id rest-accessor rest-repetition? rest-info
                                  #,(or (static-info-lookup #'static-infos #'#%ref-result)
                                        '()))
                   #'rest-info.static-infos
@@ -143,9 +145,12 @@
                  [(null? name-ids)
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
-                    [(rest-tmp-id rest-accessor rest-info down-static-infos)
+                    [(rest-tmp-id rest-accessor rest-repetition? rest-info down-static-infos)
                      #`(begin
-                         (define rest-tmp-id #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
+                         (define rest-tmp-id
+                           #,(if (syntax-e #'rest-repetition?)
+                                 (make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))
+                                 (make-arg-getter c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))))
                          (IF rest-tmp-id
                              success-expr
                              fail-expr))])]
@@ -178,15 +183,19 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-info down-static-infos)
+              [(rest-tmp-id rest-accessor rest-repetition? rest-info down-static-infos)
                #:with rest::binding-info #'rest-info
                #:with (rest-seq-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))
-               #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
-                  (define-syntax rest.bind-id
-                    (make-repetition (quote-syntax rest.bind-id)
-                                     (quote-syntax rest-seq-tmp-id)
-                                     (quote-syntax (rest.bind-static-info ... . down-static-infos))))
-                  ...)]))]))
+               (if (syntax-e #'rest-repetition?)
+                   #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
+                      (define-syntax rest.bind-id
+                        (make-repetition (quote-syntax rest.bind-id)
+                                         (quote-syntax rest-seq-tmp-id)
+                                         (quote-syntax (rest.bind-static-info ... . down-static-infos))))
+                      ...)
+                   #'((define-values (rest.bind-id ...) (rest-tmp-id))
+                      (define-static-info-syntax/maybe rest.bind-id rest.bind-static-info ...)
+                      ...))]))]))
 
 ;; ------------------------------------------------------------
 
