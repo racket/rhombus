@@ -387,8 +387,9 @@ Tradeoffs and Alternatives
 --------------
 
 The `&` operator has been used for appending strings.
-Option A resolves this in favor of rest arguments, while
-option B resolves this in favor of strings.
+Option A resolves this in favor of rest arguments with
+strings using `+&`, while option B resolves this in favor
+of strings by using `+&` for the rest marker instead.
 Another way of coercing other
 values to strings for string interpolation could be a
 function intended to be used with `@` at-expressions, like
@@ -457,8 +458,3 @@ Or should they copy the data and risk quadradic waste?
 Or should they create slices that implement aliasing?
 If so how do the slices behave on mutation of each data
 structure, in both directions?
-
-What to do about the conflict with using `&` to append
-strings? Move the coercing-string-append operator out of
-the way to `+&` like option A? Or change the rest marker
-to `+&` like option B, or something else entirely?
