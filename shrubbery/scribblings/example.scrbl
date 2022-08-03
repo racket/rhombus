@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 
-@title[~tag: "example"]{Examples}
+@title(~tag: "example"){Examples}
 
 Here are some example shrubberies. Each line either uses old indentation
 to continue a nesting level that was started on a previous line, starts
@@ -50,13 +50,13 @@ Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of
 @litchar{char-symbolic?}, roughly. No spaces are needed between
 operators and non-operators, so @litchar{1+2} and @litchar{1 + 2} mean
-the same thing. Comments are C-style. See @secref["lexeme-parsing"]
+the same thing. Comments are C-style. See @secref("lexeme-parsing")
 for more information.
 
 The following tokens are used for grouping, in addition to line breaks
 and indentation:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 ( ) [ ] { } '  ; ,   : |   « »  \
 }
 

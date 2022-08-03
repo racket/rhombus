@@ -3,78 +3,78 @@
 
 @title{Equality}
 
-@doc[
+@doc(
   operator ((v1 :: Any) == (v1 :: Any)) :: Boolean
-]{
+){
 
- Reports whether @rhombus[v1] and @rhombus[v2] are equal, which includes
+ Reports whether @rhombus(v1) and @rhombus(v2) are equal, which includes
  recursively comparing elements of compound data structures. Two numbers
- are @rhombus[==] only if they are both exact or both inexact. Two mutable
- values are @rhombus[==] only if they the same object (i.e., mutating one
+ are @rhombus(==) only if they are both exact or both inexact. Two mutable
+ values are @rhombus(==) only if they the same object (i.e., mutating one
  has the same effect as mutating the other).
 
-@examples[
+@examples(
   "apple" == "apple",
   [1, 2, 3] == 1,
   [1, "apple", {"alice": 97}] == [1, "apple", {"alice": 97}],
   1 == 1.0
-]
+)
 
 }
 
-@doc[
+@doc(
   operator ((v1 :: Any) === (v1 :: Any)) :: Boolean
-]{
+){
 
- Reports whether @rhombus[v1] and @rhombus[v2] are the same object.
- Being the @emph{same} is weakly defined, but only @rhombus[==] values
+ Reports whether @rhombus(v1) and @rhombus(v2) are the same object.
+ Being the @emph{same} is weakly defined, but only @rhombus(==) values
  can possibly be the same object, and mutable values are the same only if
  modifying one has the same effect as modifying the other. Interned
- values like symbols are @rhombus[===] when they are @rhombus[==].
+ values like symbols are @rhombus(===) when they are @rhombus(==).
 
-@examples[
+@examples(
   symbol(apple) === symbol(apple),
   symbol(apple) === symbol(banana),
-]
+)
 
 }
 
-@doc[
+@doc(
   operator ((x :: Number) .= (y :: Number)) :: Boolean
-]{
+){
 
- Reports whether @rhombus[x] and @rhombus[y] are numerically equal,
+ Reports whether @rhombus(x) and @rhombus(y) are numerically equal,
  where inexact numbers are effectively coerced to exact for comparisions
  to exact numbers.
 
-@examples[
+@examples(
   1 .= 1,
   1 .= 2,
   1.0 .= 1
-]
+)
 
 }
 
-@doc[
+@doc(
   operator ((v1 :: Any) != (v1 :: Any)) :: Boolean
-]{
+){
 
- Equvalent to @rhombus[!(v1 == v2)].
+ Equvalent to @rhombus(!(v1 == v2)).
 
-@examples[
+@examples(
   "apple" != "apple"
-]
+)
 
 }
 
 
-@doc[
+@doc(
   expr.macro '='
-]{
+){
 
- The @rhombus[=] operator is not bound as an expression or binding
+ The @rhombus(=) operator is not bound as an expression or binding
  operator. It is used as a syntactic delimiter by various forms, such as
- in @rhombus[fun] when specifying the default value for an optional
+ in @rhombus(fun) when specifying the default value for an optional
  argument.
 
 }

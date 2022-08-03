@@ -675,7 +675,7 @@
            (define-values (suffix-raw suffix-l suffix-line suffix-delta)
              (get-suffix-comments rest-l close-line close-delta))
            (define-values (at-adjust new-at-mode at-l at-line at-delta)
-             (continue-at (state-at-mode s) (equal? closer "]") suffix-l suffix-line suffix-delta (state-count? s)))
+             (continue-at (state-at-mode s) (equal? closer ")") suffix-l suffix-line suffix-delta (state-count? s)))
            (define-values (g rest-rest-l end-line end-delta tail-commenting tail-raw)
              (parse-group at-l (struct-copy state s
                                             [line at-line]
@@ -734,12 +734,10 @@
               (case (token-name next-t)
                 [(opener)
                  (case (token-e next-t)
-                   [("(" "«" "'")
+                   [("(" "[" "«" "'")
                     (parse-group (cdr l) (struct-copy state s
                                                       [raw (cons t (state-raw s))]
                                                       [at-mode 'initial]))]
-                   [("[")
-                    (keep (state-delta s) #:at-mode 'no-initial #:suffix? #f)]
                    [else (error "unexpected" (token-name next-t)  (token-e next-t))])]
                 [(identifier number literal operator opener)
                  (parse-group (cdr l) (struct-copy state s
@@ -901,7 +899,7 @@
       (and (syntax? e)
            (eq? sym (syntax-e e)))))
 
-;; Look for `{` (as 'at-opener) next or a `[` that might be followed
+;; Look for `{` (as 'at-opener) next or a `(` that might be followed
 ;; by a `{`, and prepare to convert by rearranging info a splice
 ;; followed by parentheses
 (define (continue-at at-mode after-bracket? l line delta count?)
@@ -914,24 +912,24 @@
   (cond
     [(not at-mode)
      (values (lambda (g) g) #f l line delta)]
-    [(and (not after-bracket?)
+    [(and (or (not after-bracket?)
+              (eq? at-mode 'initial))
           (pair? l)
           (eq? 'opener (token-name (car l)))
-          (equal? "[" (token-e (car l))))
+          (equal? "(" (token-e (car l))))
      (values (lambda (g)
                (define a (cadr g))
                (define tag (car a))
                (cond
-                 [(tag? 'brackets tag)
+                 [(tag? 'parens tag)
                   (at-call (car g)
-                           (cons (datum->syntax tag 'parens tag tag)
-                                 (cdr a))
+                           a
                            (cddr g))]
                  [(eq? at-mode 'no-initial)
                   (add-raw-to-prefix* #f (syntax-to-raw (car g))
                                       (cdr g))]
                  [else g]))
-             at-mode l line delta)]
+             'post-initial l line delta)]
     [(and (pair? l)
           (eq? 'at-opener (token-name (car l))))
      ;; process a `{`...`}` body, handling escapes and then trimming whitespace
@@ -950,7 +948,8 @@
              (loop (cddr l) (cons c accum-args))]
             [else
              (values (lambda (g) (cond
-                                   [(not after-bracket?)
+                                   [(or (not after-bracket?)
+                                        (eq? at-mode 'initial))
                                     (at-call (car g)
                                              (cons parens-tag (reverse (cons c accum-args)))
                                              (cdr g))]

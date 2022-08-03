@@ -5,12 +5,12 @@
 
 @title{More Function Arguments}
 
-In the same way that @rhombus[..., ~bind] can be used in a list
-binding pattern to create a repetition, @rhombus[..., ~bind] can be
+In the same way that @rhombus(..., ~bind) can be used in a list
+binding pattern to create a repetition, @rhombus(..., ~bind) can be
 used after the last argument in a function declaration to bind
-repetitions. And just like @rhombus[...] can be used at the end of a
+repetitions. And just like @rhombus(...) can be used at the end of a
 list expression to add the repetition's element to the end of the
-list, @rhombus[...] can be used at the end of a function-call
+list, @rhombus(...) can be used at the end of a function-call
 expression to use the repetition's elements as the last arguments to
 the function.
 

@@ -26,19 +26,19 @@ breaks and indentation to impart grouping information, as in Python.
 Shrubbery notation explores a point in the design space where the
 notation is
 
-@itemlist[
+@itemlist(
 
  @item{line- and indentation-sensitive, and},
  
  @item{intended to constrain grouping but not reflect every detail of
   grouping.}
 
-]
+)
 
 Deferring complete grouping to another parser relieves a burden on
 reader-level notation. At the same time, line- and indentation-sensitive
 rules constrain parsing to ensure that line breaks and indentation in
 the source are not misleading.
 
-@include_section["rationale.scrbl"]
-@include_section["prior-art.scrbl"]
+@include_section("rationale.scrbl")
+@include_section("prior-art.scrbl")

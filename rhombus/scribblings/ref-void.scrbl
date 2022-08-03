@@ -3,10 +3,10 @@
 
 @title{Void}
 
-@doc[
+@doc(
   annotation.macro 'Void'
-]{
+){
 
-  Matches @rhombus[#void].
+  Matches @rhombus(#void).
 
 }

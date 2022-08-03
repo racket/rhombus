@@ -3,13 +3,13 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title[~tag: "syntax-classes"]{Syntax Classes}
+@title(~tag: "syntax-classes"){Syntax Classes}
 
-As shown in @secref["syntax"], a variable can be bound in a syntax
-pattern via @rhombus[$], parentheses, @rhombus[::], and a
+As shown in @secref("syntax"), a variable can be bound in a syntax
+pattern via @rhombus($), parentheses, @rhombus(::), and a
 @deftech{syntax class} name to specify the kind of syntax the pattern
-variable can match. The syntax classes @rhombus[Term, ~stxclass],
-@rhombus[Group, ~stxclass], and @rhombus[Multi, ~stxclass] are built in,
+variable can match. The syntax classes @rhombus(Term, ~stxclass),
+@rhombus(Group, ~stxclass), and @rhombus(Multi, ~stxclass) are built in,
 among others.
 
 @(rhombusblock:
@@ -17,8 +17,8 @@ among others.
 )
 
 Rhombus also supports user-defined syntax classes via
-@rhombus[syntax.class]. Use the @rhombus[syntax.class] form with a block
-that contains @rhombus[pattern] with pattern alternatives:
+@rhombus(syntax.class). Use the @rhombus(syntax.class) form with a block
+that contains @rhombus(pattern) with pattern alternatives:
 
 @(rhombusblock:
     syntax.class Arithmetic:
@@ -28,8 +28,8 @@ that contains @rhombus[pattern] with pattern alternatives:
 )
 
 Equivalently, use a shorthand syntax that omits the use of
-@rhombus[pattern] an inlines alternatives into the immediate
-@rhombus[syntax.class] form:
+@rhombus(pattern) an inlines alternatives into the immediate
+@rhombus(syntax.class) form:
 
 @(rhombusblock:
     syntax.class Arithmetic
@@ -38,10 +38,10 @@ Equivalently, use a shorthand syntax that omits the use of
 )
 
 Defining a syntax class in this way makes it available for use in syntax
-patterns, such as in @rhombus[match]. The syntax class must be defined
+patterns, such as in @rhombus(match). The syntax class must be defined
 at the same phase as the referencing pattern. To define a syntax class
 for use in a macro definition, place it inside a
-@rhombus[begin_for_meta] block.
+@rhombus(begin_for_meta) block.
 
 @(rhombusblock:
     begin_for_meta:
@@ -54,7 +54,7 @@ Once defined, a syntax class can be used to annotate a pattern
 variable that matches any of pattern alternatives specified in the
 syntax class. Generally, a syntax class can make a sequence of terms,
 so a pattern variable annotated with a syntax class is bound to a
-@tech{repetition} for use with @rhombus[...].
+@tech{repetition} for use with @rhombus(...).
 
 @(rhombusblock:
     expr.macro 'add_one_to_expr $(expr :: Arithmetic)':
@@ -65,7 +65,7 @@ so a pattern variable annotated with a syntax class is bound to a
     add_one_to_expr 2 > 3 // error, "expected Arithmetic"
 )
 
-The @rhombus[$]-escaped variables in a syntax class's patterns bind to
+The @rhombus($)-escaped variables in a syntax class's patterns bind to
 matched syntax objects as attributes of the class. They can be accessed
 from a pattern variable using dot notation.
 

@@ -4,7 +4,7 @@
 
 The lexeme-level syntax is chosen to be familiar to programmers
 generally. The sequence @litchar{1+2} is one plus two, not a strangely
-spelled identifier. Tokens like @litchar{(}, @litchar{,}, @litchar["{"]
+spelled identifier. Tokens like @litchar{(}, @litchar{,}, @litchar("{")
 and @litchar{;} are used in familiar ways. Shrubbery notation provides
 enough grouping structure that code navigation and transformation should
 be useful and straightforward in an editor.
@@ -84,13 +84,13 @@ operators, but the rule for continuing a group between @litchar{(} and
 @litchar{)} or @litchar{[} and @litchar{]} currently depends on
 distinguishing operators from non-operators.
 
-For @litchar["@"], the choice of treating @litchar|{@f[arg]{text}}| as
+For @litchar("@"), the choice of treating @litchar|{@f(arg){text}}| as
 @litchar{f(arg, ["text"])} instead of @litchar{f(arg, "text")} reflects
-experience with S-expression @litchar["@"] notation. Although it seems
+experience with S-expression @litchar("@") notation. Although it seems
 convenient that, say @litchar|{@bold{x}}| is treated as @litchar{(bold "x")},
 the consequence is that a function like @litchar{bold} might be
 implemented at first to take a single argument; later, a use like
 @litchar|{@bold{Hello @name}}| breaks, because two arguments are
 provided. Making explicit the list that's inherent in body parsing
 should help reduce such mistakes (or bad design choices) for functions
-that are meant to be used with @litchar["@"] notation.
+that are meant to be used with @litchar("@") notation.

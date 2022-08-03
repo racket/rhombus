@@ -8,12 +8,12 @@ different kinds of expansion contexts. The specific set of contexts
 depends on the language, and not the Rhombus expander, but here are some
 possible contexts:
 
-@itemlist[
+@itemlist(
   @item{declarations (in a module's immediate body or at the top level)},
   @item{definitions},
   @item{expressions},
-  @item{bindings (like @rhombus[match] patterns, but everywhere)}
-]
+  @item{bindings (like @rhombus(match) patterns, but everywhere)}
+)
 
 In Racket's expander, a few core contexts are reflected by
 @racket_syntax_local_context, but the Racket expander has only one kind
@@ -28,7 +28,7 @@ kinds of compile-time values for different contexts are recognized,
 but they are expected to be implemented through structure-type
 properties. A compile-time value can then implement multiple kinds of
 transformers to create a mapping that is works in multiple contexts.
-For example, the example @rhombus[<>] operator is useful in both expression
+For example, the example @rhombus(<>) operator is useful in both expression
 and binding contexts, with a suitable meaning in each context.
 
 Different contexts may also consult different mapping spaces in the
@@ -36,14 +36,14 @@ sense of @racket_provide_for_space. Contexts like declarations,
 definitions, and expressions are likely to use the default space, while
 binding, require, and provide contexts might use their own spaces. For
 example, in the prototype language supplied with this proposal,
-@rhombus[operator] and @rhombus[bind.macro] can both bind @rhombus[<>]
+@rhombus(operator) and @rhombus(bind.macro) can both bind @rhombus(<>)
 because the former binds in the default space and the latter in the
 binding space. The Rhombus expander itself is, again, parameterized over
 the way that mapping spaces are used.
 
 The relevant syntactic category for a shrubbery is determined by its
 surrounding forms, and not inherent to the shrubbery. For example,
-@rhombus[Posn(x, y)] or @rhombus[x <> y] in the example mean one thing
+@rhombus(Posn(x, y)) or @rhombus(x <> y) in the example mean one thing
 as an expression and another as a binding. Exactly where the contexts
 reside in a module depends on a specific Rhombus language that is built
 on the Rhombus expander. Meanwhile, a full Rhombus language can have

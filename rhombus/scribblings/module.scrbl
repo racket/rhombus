@@ -17,9 +17,9 @@ module, then its value gets printed out.
     "Hello, world!"  // prints "Hello, world!", including the quotes
   )
 
-The ways to define names in a module include @rhombus[val] and @rhombus[fun].
-The @rhombus[val] form defines an immutable variable, and it expects an
-identifier to define followed by a block. The @rhombus[fun] form defines
+The ways to define names in a module include @rhombus(val) and @rhombus(fun).
+The @rhombus(val) form defines an immutable variable, and it expects an
+identifier to define followed by a block. The @rhombus(fun) form defines
 a function when it see an identifier, parentheses, and then a block.
 
 @(rhombusblock:
@@ -35,7 +35,7 @@ a function when it see an identifier, parentheses, and then a block.
 
 @aside{If you have installed the @pkg{shrubbery-rhombus-0} package, then
  the interactions window in DrRacket will work to call
- @rhombus[fahrenheit_to_celsius]. In interactions, a single input line is
+ @rhombus(fahrenheit_to_celsius). In interactions, a single input line is
  accepted as complete as long as it's openers and closers are balanced,
  and as long as it doesn't contain @litchar{:} or @litchar{;} outside of
  an opener--closer pair. A blank line terminates multi-line input. For
@@ -44,10 +44,10 @@ a function when it see an identifier, parentheses, and then a block.
  its own line.}
 
 A Rhombus module can export definitions to other modules using
-@rhombus[export], and it can import other modules using
-@rhombus[import]. The @litchar{#lang rhombus} line is a kind of
-@rhombus[import] already, so normally more @rhombus[import]s are written
-at the top of a module, and then @rhombus[export]s, and then the
+@rhombus(export), and it can import other modules using
+@rhombus(import). The @litchar{#lang rhombus} line is a kind of
+@rhombus(import) already, so normally more @rhombus(import)s are written
+at the top of a module, and then @rhombus(export)s, and then the
 definitions.
 
 @(rhombusblock:
@@ -76,8 +76,8 @@ definitions.
 Unlike Racket, imported bindings must accessed using a prefix name and
 then @litchar{.}, at least by default. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
-that’s why the import of @rhombus["f2c.rhm"] leads to the @rhombus[f2c] prefix. To
-supply an explicit prefix, use the @rhombus[as, ~impmod] modifier:
+that’s why the import of @rhombus("f2c.rhm") leads to the @rhombus(f2c) prefix. To
+supply an explicit prefix, use the @rhombus(as, ~impmod) modifier:
 
 @(rhombusblock:
     import:
@@ -85,7 +85,7 @@ supply an explicit prefix, use the @rhombus[as, ~impmod] modifier:
 
     convert.fahrenheit_to_celsius(convert.fahrenheit_freezing))
 
-Use the @rhombus[open, ~impmod] modifier to import without a prefix, but
+Use the @rhombus(open, ~impmod) modifier to import without a prefix, but
 this kind of ``namespace dumping'' is considered bad style in most
 cases:
 
@@ -107,10 +107,10 @@ prefix:
     )
 
 @aside{The use of @litchar{.} with an import name as a hierarchical reference is not
-the same as the @rhombus[.] operator described in the next section. We stick with @litchar{/}
+the same as the @rhombus(.) operator described in the next section. We stick with @litchar{/}
 for module paths to avoid overloading @litchar{.} further.}
 
-There’s a lot more to the syntax or @rhombus[import] and
-@rhombus[export] for renaming, re-exporting, and so on. See the
-documentation of @rhombus[import] and @rhombus[export] for more
+There’s a lot more to the syntax or @rhombus(import) and
+@rhombus(export) for renaming, re-exporting, and so on. See the
+documentation of @rhombus(import) and @rhombus(export) for more
 information.

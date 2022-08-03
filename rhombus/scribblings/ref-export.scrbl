@@ -3,7 +3,7 @@
 
 @title{Export}
 
-@doc[
+@doc(
   decl.macro 'export:
                 $export_item ... :
                   $export_modifier
@@ -19,7 +19,7 @@
   grammar identifier_or_operator:
     $identifier
     $operator,
-]{
+){
 
  Exports from the enclosing module.
 

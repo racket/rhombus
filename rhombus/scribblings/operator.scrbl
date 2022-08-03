@@ -3,9 +3,9 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title[~tag: "operator"]{Operators}
+@title(~tag: "operator"){Operators}
 
-The @rhombus[operator] form defines a prefix or infix operator for
+The @rhombus(operator) form defines a prefix or infix operator for
 expressions, similar to a function definition:
 
 @(rhombusblock:
@@ -30,7 +30,7 @@ an identifier:
     10 mod 3  // prints 1
   )
 
-The @rhombus[operator] form must be followed by parentheses and then a
+The @rhombus(operator) form must be followed by parentheses and then a
 block. Inside the parentheses, there must be exactly two or three terms,
 and the next-to-last term must be an operator or identifier to define.
 The arguments can be described by binding patterns, but in that case,
@@ -60,8 +60,8 @@ arguments:
   )
 
 Operator precedence is declared in relationship to other operators when
-the operator is defined. With no precedence defined, @rhombus[<>] cannot
-appear near an arithmetic operator like @rhombus[*]:
+the operator is defined. With no precedence defined, @rhombus(<>) cannot
+appear near an arithmetic operator like @rhombus(*):
 
 @(rhombusblock:
     // 1 <> 2 * 3  // would be a syntax error
@@ -69,19 +69,19 @@ appear near an arithmetic operator like @rhombus[*]:
   )
 
 The initially defined operators mostly have the usual precedence:
-@rhombus[*] and @rhombus[/] are stronger than @rhombus[+] and
-@rhombus[-], while @rhombus[+] and @rhombus[-] have the same predence
-and are left-associative. The @rhombus[*] and @rhombus[/] operator have
-the same precedence as long as @rhombus[*] appears only to the left of
-@rhombus[/],
+@rhombus(*) and @rhombus(/) are stronger than @rhombus(+) and
+@rhombus(-), while @rhombus(+) and @rhombus(-) have the same predence
+and are left-associative. The @rhombus(*) and @rhombus(/) operator have
+the same precedence as long as @rhombus(*) appears only to the left of
+@rhombus(/),
 
-A precedence declaration in @rhombus[operator] takes the form of keyword
+A precedence declaration in @rhombus(operator) takes the form of keyword
 blocks at the start of the operator’s body. The possible keyword options
-for prefix operators are @rhombus[~weaker_than],
-@rhombus[~stronger_than], @rhombus[~same_as], or
-@rhombus[~same_as_on_left]. For infix operators, those options apply, as
-well as @rhombus[~same_as_on_right] and @rhombus[~associativity].
-Operators listed with keywords like @rhombus[~weaker_than] can be
+for prefix operators are @rhombus(~weaker_than),
+@rhombus(~stronger_than), @rhombus(~same_as), or
+@rhombus(~same_as_on_left). For infix operators, those options apply, as
+well as @rhombus(~same_as_on_right) and @rhombus(~associativity).
+Operators listed with keywords like @rhombus(~weaker_than) can be
 grouped on lines however is convenient.
 
 @(rhombusblock:
@@ -95,8 +95,8 @@ grouped on lines however is convenient.
     1 <> 2 <> 3 // prints Posn(1, Posn(2, 3))
   )
 
-Use the keyword @rhombus[~other] in @rhombus[~weaker_than],
-@rhombus[~stronger_than], or @rhombus[~same_as] to declare a precedence
+Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
+@rhombus(~stronger_than), or @rhombus(~same_as) to declare a precedence
 relationship for operators not otherwise mentioned.
 
 An operator can be exported the same as identifiers:
@@ -107,7 +107,7 @@ An operator can be exported the same as identifiers:
   )
 
 On the import side, to refer to an operator that has a prefix, put the
-operator after @rhombus[.] in parentheses:
+operator after @rhombus(.) in parentheses:
 
 @(rhombusblock:
     import:
@@ -118,9 +118,9 @@ operator after @rhombus[.] in parentheses:
 
 If the point of an operator is terseness, an import prefix may defeat
 the point. Using a library that supplies operators may be one reason to
-import with a leading @rhombus[=] to avoid a prefix on the imports. To
+import with a leading @rhombus(=) to avoid a prefix on the imports. To
 selectively make an operator accessible without it import’s prefix, use
-the @rhombus[expose] import modifier:
+the @rhombus(expose) import modifier:
 
 @(rhombusblock:
     import:

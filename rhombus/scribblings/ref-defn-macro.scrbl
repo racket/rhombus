@@ -11,24 +11,24 @@
 
 @title{Definition Macros}
 
-@doc[
+@doc(
   defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
                  $body
                  ...»',
   grammar identifier_or_operator:
     $identifier
     $operator,
-]{
+){
 
- Defines @rhombus[identifier] or @rhombus[operator] as a macro that can
- be used in a definition context, where the compile-time @rhombus[body]
+ Defines @rhombus(identifier) or @rhombus(operator) as a macro that can
+ be used in a definition context, where the compile-time @rhombus(body)
  block returns the expansion result. The macro pattern is matched to an
  entire group in a definition context.
 
  The expansion result must be a parenthesized block, and the groups of
  the block are inlined in place of the definition-macro use.
 
-@examples[
+@examples(
   ~eval: macro_eval,
   defn.macro 'enum:
                 $(id :: Group)
@@ -48,11 +48,11 @@
     b
     c,
   b
-]
+)
 
 }
 
-@doc[
+@doc(
   defn.macro '«defn.sequence_macro '$identifier_or_operator $pattern ...
                                       $pattern
                                       ...':
@@ -61,9 +61,9 @@
   grammar identifier_or_operator:
     $identifier
     $operator,
-]{
+){
 
- Similar to @rhombus[defn.macro], but defines a macro for a definition
+ Similar to @rhombus(defn.macro), but defines a macro for a definition
  context that is matched against all of the remiaining groups in the
  context, so the pattern is a block pattern.
 
@@ -71,7 +71,7 @@
  splice in place of the sequence-macro use, and a parenthesized block of
  groups that represent the tail of the definition context that was not consumed.
 
-@examples[
+@examples(
   ~eval: macro_eval,
   defn.sequence_macro 'reverse_defns
                        $defn1
@@ -84,7 +84,7 @@
     def seq_x: seq_y+1
     def seq_y: 10
     seq_x
-]
+)
 }
 
-@«macro.close_eval»[macro_eval]
+@«macro.close_eval»(macro_eval)

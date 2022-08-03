@@ -595,12 +595,12 @@
     (values start-pos end-pos eof?))
   (case in-mode
     ;; 'initial mode is right after `@` without immediate `{`, and we
-    ;; may transition from 'initial mode to 'brackets mode at `[`
-    [(initial brackets)
+    ;; may transition from 'initial mode to 'args mode at `(`
+    [(initial args)
      ;; recur to parse in shrubbery mode:
      (define-values (t type paren start end backup sub-status pending-backup)
        (recur (in-at-shrubbery-status status)))
-     ;; to keep the term and possibly exit 'initial or 'brackets mode:
+     ;; to keep the term and possibly exit 'initial or 'args mode:
      (define (ok status)
        (define-values (next-status pending-backup)
          (cond
@@ -615,9 +615,9 @@
               [else
                (values
                 (cond
-                  [(and (not (eq? in-mode 'brackets))
-                        (eqv? #\[ (peek-char in)))
-                   (in-at 'brackets (in-at-comment? status) #t #f sub-status '())]
+                  [(and (not (eq? in-mode 'args))
+                        (eqv? #\( (peek-char in)))
+                   (in-at 'args (in-at-comment? status) #t #f sub-status '())]
                   [(in-escaped? sub-status)
                    (in-escaped-at-status sub-status)]
                   [else sub-status])

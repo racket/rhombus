@@ -7,7 +7,7 @@ informed by Python.
 
 Sampling notation's rules relating indentation, lines, @litchar{;}, and
 @litchar{:} are originally based on the
-@hyperlink["https://github.com/tonyg/racket-something"]{#lang something}
+@hyperlink("https://github.com/tonyg/racket-something"){#lang something}
 reader, which also targets an underlying expander that
 further groups tokens. Shrubbery notation evolved away from using
 @litchar{{}} for blocks, however, because @litchar{:} was nearly always
@@ -17,7 +17,7 @@ be used. Freeing @litchar{{}} from use for blocks, meanwhile, allows its
 use for set and map notations.
 
 Shrubbery notation is also based on
-@hyperlink["https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/lexpr/0004-lexpr.md"]{Lexprs},
+@hyperlink("https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/lexpr/0004-lexpr.md"){Lexprs},
 particularly its use of @litchar{|}. Lexprs uses mandatory @litchar{:} and @litchar{|} tokens
 as a prefix for indentation, and it absorbs an additional line after
 an indented section to allow further chaining of the group. Although
@@ -27,7 +27,7 @@ in the case of @litchar{if}, in favor of @litchar{|} notation like other
 conditionals).
 
 Shrubbery notation is in some sense a follow-up to
-@hyperlink["https://github.com/mflatt/racket2-rfcs/blob/sapling/sapling/0005-sapling.md"]{sapling notation}.
+@hyperlink("https://github.com/mflatt/racket2-rfcs/blob/sapling/sapling/0005-sapling.md"){sapling notation}.
 The primary difference is that shrubbery notation is
 indentation-sensitive, while sapling notation is
 indentation-insensitive. Indentation sensitivity and block conventions

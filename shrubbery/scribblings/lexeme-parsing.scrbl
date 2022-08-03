@@ -1,11 +1,11 @@
 #lang scribble/rhombus/manual
 @(import: "grammar.rhm" open)
 
-@title[~tag: "lexeme-parsing"]{Lexeme Parsing}
+@title(~tag: "lexeme-parsing"){Lexeme Parsing}
 
 The tokens used for grouping and indentation are distinct lexemes:
 
-@verbatim[~indent: 2]|{
+@verbatim(~indent: 2)|{
 ( ) [ ] { } '   ; ,   : |   « »  \
 }|
 
@@ -15,7 +15,7 @@ star in the left column indicates the productions that correspond to
 
 Numbers are supported directly in in simple forms---decimal integers,
 decimal floating point, and hexadecimal integers---in all cases allowing
-@litchar{_}s between digits. A @litchar["#{"]...@litchar["}"] escape
+@litchar{_}s between digits. A @litchar("#{")...@litchar("}") escape
 provides access to the full Racket S-expression number grammar. Special
 floating-point values use a @litchar{#} notation: @litchar{#inf},
 @litchar{#neginf}, and @litchar{#nan}.
@@ -59,29 +59,29 @@ multi-character operator cannot appear @emph{after} a number. The
 @litchar{+} and @litchar{-} characters as a number prefix versus an
 operator are also subject to a special rule: they are parsed as
 operators when immediately preceded by an alphanumeric character,
-@litchar{_}, @litchar{.}, @litchar{)}, @litchar{]}, or @litchar["}"]
+@litchar{_}, @litchar{.}, @litchar{)}, @litchar{]}, or @litchar("}")
 with no whitespace in between. For example, @litchar{1+2} is
 @litchar{1} plus @litchar{2}, but @litchar{1 +2} is @litchar{1}
 followed by the number @litchar{+2}.
 
-When a @litchar["#{"]...@litchar["}"] escape describes an identifier
+When a @litchar("#{")...@litchar("}") escape describes an identifier
 S-expression, it is an identifier in the same sense as a
 shrubbery-notation identifier. the same holds for numbers, booleans,
-strings, byte strings, and keywords. A @litchar["#{"]...@litchar["}"]
+strings, byte strings, and keywords. A @litchar("#{")...@litchar("}")
 escape must _not_ describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
 ill-formed representations.
 
-A @litchar["@"] starts an at-expression form similar to the notaton
+A @litchar("@") starts an at-expression form similar to the notaton
 supported by @litchar{#lang at-exp} (which oriented toward S-expressions
-and readtable-based). @Secref["at-notation"] explains in more detail, but
-the table below sketches the shape of @litchar["@"] forms.
+and readtable-based). @Secref("at-notation") explains in more detail, but
+the table below sketches the shape of @litchar("@") forms.
 
-@(def is_lex: @elem{★@hspace[1]})
+@(def is_lex: @elem{★@hspace(1)})
 @(def no_lex: "")
-@(def empty_line: ["", @hspace[1], "", "", ""])
+@(def empty_line: ["", @hspace(1), "", "", ""])
 
-@tabular[
+@tabular(
   [
     [is_lex, @nonterm{identifier}, bis, bseq(@nonterm{alpha}, kleenestar(@nonterm{alphanum})), ""],
     empty_line,
@@ -107,10 +107,10 @@ the table below sketches the shape of @litchar["@"] forms.
                                               @litchar{+}, @litchar{-}, @litchar{.}, @litchar{/}}, ""],
     empty_line,
     [no_lex, @nonterm{special}, bis, @elem{@italic{one of} @litchar{(}, @litchar{)}, @litchar{[},
-                                           @litchar{]}, @litchar["{"], @litchar["}"], @litchar{'},
+                                           @litchar{]}, @litchar("{"), @litchar("}"), @litchar{'},
                                            @litchar{«}, @litchar{»}}, ""],
     ["", "", bor, @elem{@italic{one of} @litchar{"}, @litchar{;}, @litchar{,}, @litchar{#},
-                        @litchar{\}, @litchar{_}, @litchar["@"]}, ""],
+                        @litchar{\}, @litchar{_}, @litchar("@")}, ""],
     ["", "", bor, @elem{@italic{single-character Unicode emoji sequence}}, ""],
     empty_line,
     [is_lex, @nonterm{number}, bis, @nonterm{integer}, ""],
@@ -175,7 +175,7 @@ the table below sketches the shape of @litchar["@"] forms.
     empty_line,
     [no_lex, @nonterm{bytestrelem}, bis, @italic{like Racket, but no literal newline}, ""],
     empty_line,
-    [is_lex, @nonterm{sexpression}, bis, bseq(@litchar["#{"], @nonterm{racket}, @litchar["}"]), ""],
+    [is_lex, @nonterm{sexpression}, bis, bseq(@litchar("#{"), @nonterm{racket}, @litchar("}")), ""],
     empty_line,
     [no_lex, @nonterm{racket}, bis, @italic{any non-pair Racket S-expression}, ""],
     empty_line,
@@ -184,10 +184,11 @@ the table below sketches the shape of @litchar["@"] forms.
     empty_line,
     [no_lex, @nonterm{nonnlchar}, bis, @italic{any character other than newline}, ""],
     empty_line,
-    [is_lex, @nonterm{atexpression}, bis, bseq(@litchar["@"],
-                                               boptional(@nonterm{command}),
+    [is_lex, @nonterm{atexpression}, bis, bseq(@litchar("@"),
+                                               @nonterm{command},
                                                boptional(@nonterm{arguments}),
                                                boptional(@nonterm{body})), "no space between parts"],
+    ["", "", bor, bseq(@litchar("@"), @nonterm{body}), "no space between parts"],
     empty_line,
     [no_lex, @nonterm{command}, bis, @nonterm{identifier}, ""],
     ["", "", bor, @nonterm{keyword}, ""],
@@ -198,20 +199,21 @@ the table below sketches the shape of @litchar["@"] forms.
     ["", "", bor, @nonterm{bytestring}, ""],
     ["", "", bor, @nonterm{racket}, ""],
     ["", "", bor, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}), ""],
+    ["", "", bor, bseq(@litchar{[}, @kleenestar(@nonterm{group}), @litchar{]}), ""],
     ["", "", bor, bseq(@litchar{«}, @nonterm{group}, @litchar{»}), ""],
     empty_line,
-    [no_lex, @nonterm{arguments}, bis, bseq(@litchar{[}, @kleenestar(@nonterm{group}), @litchar{]}),
+    [no_lex, @nonterm{arguments}, bis, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}),
      @italic{usual @litchar{,}-separated}],
     empty_line,
-    [no_lex, @nonterm{body}, bis, bseq(@litchar["{"], @nonterm{text}, @litchar["}"]),
+    [no_lex, @nonterm{body}, bis, bseq(@litchar("{"), @nonterm{text}, @litchar("}")),
      @elem{@italic{escapes in} @nonterm{text}}],
     ["", "", bor, bseq(@nonterm{atopen}, @nonterm{text}, @nonterm{atclose}),
      @elem{@nonterm{atclose} @italic{match} @nonterm{atopen}}],
     empty_line,
-    [no_lex, @nonterm{atopen}, bis, bseq(@litchar{|}, kleenestar(@nonterm{asciisym}), @litchar["{"]), ""],
+    [no_lex, @nonterm{atopen}, bis, bseq(@litchar{|}, kleenestar(@nonterm{asciisym}), @litchar("{")), ""],
     empty_line,
-    [no_lex, @nonterm{atclose}, bis, bseq(@litchar["}"], kleenestar(@nonterm{asciisym}), @litchar{|}),
+    [no_lex, @nonterm{atclose}, bis, bseq(@litchar("}"), kleenestar(@nonterm{asciisym}), @litchar{|}),
      @italic{flips paren-line}],
     
   ]
-]
+)

@@ -5,17 +5,17 @@
 
 @title{For-Meta Sequences}
 
-@doc[
+@doc(
   defn.macro 'begin_for_meta:
                 $body
                 ...'
-]{
+){
 
- The same as the @rhombus[body] sequence, but shifted to one phase
- greater. Defintions inside a @rhombus[begin_for_meta] block can be
+ The same as the @rhombus(body) sequence, but shifted to one phase
+ greater. Defintions inside a @rhombus(begin_for_meta) block can be
  referenced in macro implements, for example.
 
-@examples[
+@examples(
   ~eval: macro.make_for_meta_eval(),
   begin_for_meta:
     syntax.class Arithmetic
@@ -24,4 +24,6 @@
   expr.macro 'right_operand $(exp :: Arithmetic)':
     values(exp.y, ''),
   right_operand 1 + 2
-]}
+)
+
+}

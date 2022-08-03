@@ -13,4 +13,4 @@ export:
 def shrubbery_doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"]
 def rhombus_doc: [symbol(lib), "rhombus/scribblings/rhombus.scrbl"]
 
-def Rhombus: @seclink[~doc: rhombus_doc, "top"]{Rhombus}
+def Rhombus: @seclink(~doc: rhombus_doc, "top"){Rhombus}

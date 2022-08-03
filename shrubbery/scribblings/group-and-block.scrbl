@@ -5,7 +5,7 @@
 @(def closer: @emph{closer})
 @(def opener_closer: @elem{@opener--@italic{closer}})
 
-@title[~tag: "group-and-block"]{Groups and Blocks}
+@title(~tag: "group-and-block"){Groups and Blocks}
 
 The heart of shrubbery notation is its set of rules for organizing
 @deftech{terms} into @deftech{groups}, @deftech{blocks}, and
@@ -13,7 +13,7 @@ The heart of shrubbery notation is its set of rules for organizing
 structure of a shrubbery-notation document, where literal fragments like
 @litchar{(} serve merely as tags:
 
-@nested[~style: symbol(inset),
+@nested(~style: symbol(inset),
         bnf.BNF([@nonterm{document},
                  kleenestar(@nonterm{group})],
                 [@nonterm{group},
@@ -22,8 +22,8 @@ structure of a shrubbery-notation document, where literal fragments like
                  @nonterm{atom},
                  balt(bseq(@litchar{(}, kleenestar(@nonterm{group}), @litchar{)}),
                       bseq(@litchar{[}, kleenestar(@nonterm{group}), @litchar{]}),
-                      bseq(@litchar["{"], kleenestar(@nonterm{group}), @litchar["}"]),
-                      bseq(@litchar["'"], kleenestar(@nonterm{group}), @litchar["'"]))],
+                      bseq(@litchar("{"), kleenestar(@nonterm{group}), @litchar("}")),
+                      bseq(@litchar("'"), kleenestar(@nonterm{group}), @litchar("'")))],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},
@@ -31,11 +31,11 @@ structure of a shrubbery-notation document, where literal fragments like
                 [@nonterm{block},
                  bseq(@litchar{:}, kleenestar(@nonterm{group}))],
                 [@nonterm{alt-block},
-                 bseq(@litchar["|"], kleenestar(@nonterm{block}))])]
+                 bseq(@litchar("|"), kleenestar(@nonterm{block}))]))
 
 A document is a sequence of groups, each of which is a non-empty
 sequence of terms. Terms include @deftech{atoms}, which are either
-individual @seclink["lexeme-parsing"]{lexeme tokens}, @opener_closer
+individual @seclink("lexeme-parsing"){lexeme tokens}, @opener_closer
 pairs that contain groups, or blocks as created with @litchar{:} or
 @litchar{|}---but a block as a term is constrained to appear only at the
 end of a group.
@@ -70,7 +70,7 @@ when this document says “the previous line” or “the next line.”
 @section{Grouping by Opener--Closer Pairs}
 
 An @opener_closer pair @litchar{(} and @litchar{)}, @litchar{[} and
-@litchar{]}, @litchar["{"] and @litchar["}"], or @litchar{'} and
+@litchar{]}, @litchar("{") and @litchar("}"), or @litchar{'} and
 @litchar{'} (those two are the same character) forms a @tech{term} that
 can span lines and encloses nested groups. Within most @opener_closer
 pairs, @litchar{,} separates groups, but @litchar{;} separates group
@@ -95,7 +95,7 @@ retains whether a subgroup is formed by @litchar{()}, @litchar{[]},
 The following three forms are not allowed, because they are missing a
 @litchar{,} between two groups:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 // Not allowed
 (1
  2)
@@ -108,7 +108,7 @@ The following three forms are not allowed, because they are missing a
 A @litchar{,} is disallowed if it would create an empty group, except
 that a trailing @litchar{,} is allowed.
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 // Not allowed
 (, 1)
 (1,, 2)
@@ -131,7 +131,7 @@ on its own line.
 
 Using @litchar{'} as both an @opener and @closer prevents simple nesting
 of those forms. There is no problem if a @litchar{(}, @litchar{[}, or
-@litchar["{"], appears between one @litchar{'} as an opener and another
+@litchar("{"), appears between one @litchar{'} as an opener and another
 @litchar{'} as an opener; otherwise, two consecutive @litchar{'}s
 intended as openers would instead be parsed as an opener and a closer.
 To disambiguate, @litchar{«} can be used immediately after immediately
@@ -150,7 +150,7 @@ A sequence of groups has a particular indentation that is determined by
 the first group in the sequence. Subsequent groups in a sequence must
 start with the same indentation as the first group.
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 group 1
 group 2
 // error, because the group is indented incorrectly:
@@ -202,9 +202,9 @@ any indentation; it doesn't have to be indented to the right of the
 
 A block that is started with @litchar{:} normally cannot be empty
 (unless explicit-grouping @litchar{«} and @litchar{»} are used as
-described in @secref["guillemot"]), so the following is ill-formed:
+described in @secref("guillemot")), so the following is ill-formed:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 bad_empty:  // empty block disallowed
 }
 
@@ -219,7 +219,7 @@ single element @litchar{untagged}, the second top-level group has just a
 block with zero groups, and the third has a group with one parenthesized
 sequence of groups where the middle one has an empty block:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
     : untagged
 
     :
@@ -227,7 +227,7 @@ sequence of groups where the middle one has an empty block:
     (1, :, 2)
 }
 
-@section[~tag: "continuing-op"]{Continuing with Indentation and an Operator}
+@section(~tag: "continuing-op"){Continuing with Indentation and an Operator}
 
 When a newly indented line starts with an operator and when the
 preceding line does @emph{not} end with @litchar{:}, then the indented line
@@ -249,7 +249,7 @@ A block is always at the end of its immediately containing group. One
 consequence is that an operator-starting line cannot continue a group
 that already has a block:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 hello: world
   + 3 // bad indentation
 }
@@ -267,7 +267,7 @@ with a block that has a @litchar{+ 3} group:
       + 3
   )
 
-@section[~tag: "alt-block"]{Blocking with @litchar{|}}
+@section(~tag: "alt-block"){Blocking with @litchar{|}}
 
 A @litchar{|} is implicitly shifted half a column right (so, implicitly
 nested), and it is implicitly followed by a @litchar{:} that
@@ -332,7 +332,7 @@ of groups. Standard indentation uses no additional space of
 indentation before @litchar{|} relative to its enclosing block's group.
 
 
-@section[~tag: "semicolon"]{Separating Groups with @litchar{;} and @litchar{,}}
+@section(~tag: "semicolon"){Separating Groups with @litchar{;} and @litchar{,}}
 
 A @litchar{;} separates two groups on the same line. A @litchar{;} is
 allowed in any context—except between groups immediately within,
@@ -379,7 +379,7 @@ group is a block that contains a single group:
      universe)
   )
 
-@section[~tag: "guillemot"]{Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
+@section(~tag: "guillemot"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
 
 A block can be delimited explicitly with @litchar{«} and @litchar{»} to
 disable the use of line and column information for parsing between
@@ -534,13 +534,13 @@ To stay consistent with blocks expressed through line breaks and
 indentation, a block with @litchar{«} and @litchar{»} must still appear at the end of
 its enclosing group.
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 // not allowed, because a block must end a group
 inside:« fruit » more
 }
 
 
-@section[~tag: "continuing-backslash"]{Continuing a Line with @litchar{\}}
+@section(~tag: "continuing-backslash"){Continuing a Line with @litchar{\}}
 
 As a last resort, @litchar{\} can be used at the end of a line (optionally
 followed by whitespace and coments on the line) to continue the next
@@ -580,7 +580,7 @@ it continues.
            list)
 )
 
-@section[~tag: "group-comment"]{Group Comments with @litchar{#//}}
+@section(~tag: "group-comment"){Group Comments with @litchar{#//}}
 
 A @litchar{#//} comments out a group or @litchar{|} alternative. To comment out a
 group, @litchar{#//} must appear either on its own line before a group or at
@@ -591,7 +591,7 @@ on its own line before the alternative or just before a @litchar{|} that does
 The interaction between @litchar{#//} and indentation depends on how it is
 used:
 
-@itemlist[
+@itemlist(
 
  @item{When @litchar{#//} appears completely on its own line (possibly with
    whitespace and non-group comments), then its indentation does not
@@ -614,7 +614,7 @@ used:
    @litchar{#//} is not allowed to start a line for commenting out a @litchar{|}
    alternative on the same line.}
 
-]
+)
 
 A @litchar{#//} is not allowed without a group or alternative afterward to
 comment out. Multiple @litchar{#//}s do not nest (i.e., two @litchar{#//}s in a row is
@@ -673,4 +673,4 @@ The following three groups all parse the same:
   )
 
 
-@include_section["at-notation.scrbl"]
+@include_section("at-notation.scrbl")

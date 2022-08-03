@@ -9,21 +9,21 @@ is, an operator can declare that its precedence is stronger than certain
 other operators, weaker than certain other operators, the same as
 certain other operators (implicitly including the operator itself), and
 the same as certain other operators when in a specific order (e.g.,
-@rhombus[*] is not allowed to the right of @rhombus[/]). An infix
+@rhombus(*) is not allowed to the right of @rhombus(/)). An infix
 operator's associativity is relevant only for operators at the same
 precedence (including the operator itself), as either left-associative,
 right-associative, or non-associative.
 
-Our example @rhombus[<>] definition did not specify any precedence
-relationships, so it cannot be used next to @rhombus[*]:
+Our example @rhombus(<>) definition did not specify any precedence
+relationships, so it cannot be used next to @rhombus(*):
 
 @(rhombusblock:
     1 <> 2 * 3 // not allowed
   )
 
-In this example, enforestation would report that @rhombus[<>] and
-@rhombus[*] are unrelated, so parentheses are needed somewhere. @Rhombus
-supports precedence declarations through a @rhombus[~weaker_than] keyword:
+In this example, enforestation would report that @rhombus(<>) and
+@rhombus(*) are unrelated, so parentheses are needed somewhere. @Rhombus
+supports precedence declarations through a @rhombus(~weaker_than) keyword:
 
 @(rhombusblock:
     operator (x <> y):

@@ -3,80 +3,80 @@
 
 @title{Annotations}
 
-@doc[
+@doc(
   operator (expr :: annotation) :: annotation
-]{
+){
 
- Checks that the value of @rhombus[expr] satisifies
- @rhombus[annotation], and returns the value if so.
+ Checks that the value of @rhombus(expr) satisifies
+ @rhombus(annotation), and returns the value if so.
 
-@examples[
+@examples(
   [1, 2, 3] :: List
-]
+)
 
 }
 
-@doc[
+@doc(
   bind.rule '$binding :: $annotation'
-]{
+){
 
- Binds the same as @rhombus[binding], but first checks that the value to
- be bound satisfies @rhombus[annotation].
+ Binds the same as @rhombus(binding), but first checks that the value to
+ be bound satisfies @rhombus(annotation).
 
-@examples[
+@examples(
   val x :: List: [1, 2, 3]
-]
+)
 
 }
 
-@doc[
+@doc(
   annotation.rule 'Any'
-]{
+){
 
   Matches any value.
 
 }
 
-@doc[
+@doc(
   operator (arg -: annotation) :: annotation
-]{
+){
 
  Associates static information to the overall expression the same as
- @rhombus[::], but performs no run-time check on the value of
- @rhombus[expr].
+ @rhombus(::), but performs no run-time check on the value of
+ @rhombus(expr).
 
-@examples[
+@examples(
   [1, 2, 3] -: List,
   "oops" -: List
-]
+)
 
 }
 
-@doc[
+@doc(
   bind.rule '$binding -: $annotation'
-]{
+){
 
- Associates static information to @rhombus[binding] the same as
- @rhombus[::, ~bind], but performs no run-time check.
+ Associates static information to @rhombus(binding) the same as
+ @rhombus(::, ~bind), but performs no run-time check.
 
-@examples[
+@examples(
   val x -: List: [1, 2, 3],
   val x -: List: "oops"
-]
+)
 
 }
 
 
-@doc[
+@doc(
   expr.rule '$expr is_a $annotation'
-]{
+){
 
- Produces @rhombus[#true] if the value of @rhombus[expr]
- satisfies @rhombus[annotation], @rhombus[#false] otherwise.
+ Produces @rhombus(#true) if the value of @rhombus(expr)
+ satisfies @rhombus(annotation), @rhombus(#false) otherwise.
 
-@examples[
+@examples(
   [1, 2, 3] is_a List,
   "oops" is_a List
-]
+)
 
 }

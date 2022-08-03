@@ -8,17 +8,17 @@
 
 Shrubbery notation is a set of text-level convention that build toward a
 full programming language, such as
-@seclink[~doc: [symbol(lib), "rhombus/scribblings/rhombus.scrbl"], "top"]{Rhombus}.
+@seclink(~doc: [symbol(lib), "rhombus/scribblings/rhombus.scrbl"], "top"){Rhombus}.
 The notation is line- and indentation-sensitive, and it is intended to partially group
 input, but leave further parsing to another layer, especially
-@seclink[~doc: [symbol(lib), "enforest/scribblings/enforest.scrbl"], "top"]{enforestation}.
+@seclink(~doc: [symbol(lib), "enforest/scribblings/enforest.scrbl"], "top"){enforestation}.
 The parsed form of a shrubbery imposes grouping to ensure that further
 parsing is consistent with the shrubbery's lines and indentation.
 
-@table_of_contents[]
+@table_of_contents()
 
-@include_section["example.scrbl"]
-@include_section["group-and-block.scrbl"]
-@include_section["lexeme-parsing.scrbl"]
-@include_section["parsed-representation.scrbl"]
-@include_section["meta.scrbl"]
+@include_section("example.scrbl")
+@include_section("group-and-block.scrbl")
+@include_section("lexeme-parsing.scrbl")
+@include_section("parsed-representation.scrbl")
+@include_section("meta.scrbl")

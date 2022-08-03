@@ -7,12 +7,12 @@ A language implemented with the Rhombus expander may have another
 dimension of name resolution that is orthogonal to different mapping
 spaces. For example, a language include a hierarchical naming strategy
 to reach a binding through sequence of identifiers separated by
-@rhombus[.], and hierarchical references might be used to reach mappings
+@rhombus(.), and hierarchical references might be used to reach mappings
 for expressions, bindings, or more. In the initial example in this
-proposal @rhombus[weather.currently_raining] is that kind of access, as
-is @rhombus[expr.macro] and @rhombus[bind.macro].
+proposal @rhombus(weather.currently_raining) is that kind of access, as
+is @rhombus(expr.macro) and @rhombus(bind.macro).
 
-The example language overloads @rhombus[.] for hierarchical namespace
+The example language overloads @rhombus(.) for hierarchical namespace
 use as well as field access, but the Rhombus expander minimizes any
 assumptions about the form of hierarchical names. A hierarchical
 reference must start with an identifier or operator that is mapped in

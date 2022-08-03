@@ -3,31 +3,31 @@
 
 @title{Mutable Variables and Assignment}
 
-@doc[
+@doc(
   bind.macro 'mutable $identifier'
-]{
+){
 
- Binds @rhombus[identifier] so that its vaue can be changed using
- @rhombus[:=].
+ Binds @rhombus(identifier) so that its vaue can be changed using
+ @rhombus(:=).
 
- No static information is associated with @rhombus[identifier], even if
+ No static information is associated with @rhombus(identifier), even if
  a surrounding binding pattern would otherwise associate static
  information with it.
 
 }
 
-@doc[
+@doc(
   expr.macro '$identifier := $expr'
-]{
+){
 
- Changes the value of @rhombus[identifier] to the result of
- @rhombus[expr]. The @rhombus[identifier] must be bound with
- @rhombus[mutable, ~bind].
+ Changes the value of @rhombus(identifier) to the result of
+ @rhombus(expr). The @rhombus(identifier) must be bound with
+ @rhombus(mutable, ~bind).
 
-@examples[
+@examples(
   val mutable count: 0,
   count := count + 1,
   count
-]
+)
 
 }

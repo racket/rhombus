@@ -1618,7 +1618,7 @@ INPUT
 (define input3
 #<<INPUT
 @(a, b)
-@(a, b)[0]
+@(a, b)(0)
 
 @[7]
 @{9}
@@ -1627,18 +1627,18 @@ then @[7]{8}
 then @{8}
 
 @apple{one}{two}
-@banana[0]{three}{four}{five}
+@banana(0){three}{four}{five}
 @coconut{six} {seven}
 
 @none{}
-@«5»[3]{yohoo @9[a, b, c]{
+@«5»(3){yohoo @9(a, b, c){
                this is plain text
                inside braces}
         0
         }
 
-@«bracketed»["apple"]
-@«{bracketed}»["apple"]
+@«bracketed»("apple")
+@«{bracketed}»("apple")
 
 @«1 2 3»: 5
 @«1 2 3»{data}: 5
@@ -1656,10 +1656,10 @@ then @{8}
   5 @// line comment
   6}
 
-@itemlist[@item{x
+@itemlist(@item{x
                 y},
           @item{z
-                w}]
+                w})
 
 @(in #{s-exp} mode)
 @{also in @(#{s-exp}) mode}
@@ -1672,10 +1672,10 @@ INPUT
   '(top
     (group (parens (group a) (group b)))
     (group (parens (group a) (group b)) (parens (group 0)))
-    (group (parens (group 7)))
+    (group (brackets (group 7)))
     (group (parens (group (brackets (group "9")))))
-    (group (parens (group 7) (group (brackets (group "8, 10 ") (group "more")))))
-    (group then (parens (group 7) (group (brackets (group "8")))))
+    (group (brackets (group 7)) (parens (group (brackets (group "8, 10 ") (group "more")))))
+    (group then (brackets (group 7)) (parens (group (brackets (group "8")))))
     (group then (parens (group (brackets (group "8")))))
     (group apple (parens (group (brackets (group "one")))
                          (group (brackets (group "two")))))

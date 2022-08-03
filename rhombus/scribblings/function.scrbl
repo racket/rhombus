@@ -5,7 +5,7 @@
 
 @title{Function Expressions}
 
-The @rhombus[fun] form works in an expression position as λ. Just like
+The @rhombus(fun) form works in an expression position as λ. Just like
 @tt{function} in JavaScript, the expression variant omits a function
 name.
 
@@ -18,5 +18,5 @@ name.
   )
 
 Naturally, keyword and optional arguments (as described in the
-@seclink["keyword-arg"]{next section}) work with @rhombus[fun]
+@seclink("keyword-arg"){next section}) work with @rhombus(fun)
 expressions, too.

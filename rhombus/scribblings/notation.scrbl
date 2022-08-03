@@ -6,7 +6,7 @@
 @title{Notation}
 
 This is a summary of
-@seclink[~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"]{Shrubbery notation}
+@seclink(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}
 as used for Rhombus.
 
 @aside{If you install @tt{https://github.com/racket/rhombus-prototype.git},
@@ -14,7 +14,7 @@ as used for Rhombus.
   for this part) to see how example shrubberies parse into an
   S-expression representation. Unfortunately, it needs a development
   version of Racket right now, so you may need to install a
-  @hyperlink["https://snapshot.racket-lang.org/"]{snapshot build}.}
+  @hyperlink("https://snapshot.racket-lang.org/"){snapshot build}.}
 
 Numbers are decimal, either integer or floating-point, or they’re
 hexadecimal integers written with @litchar{0x}:
@@ -42,7 +42,7 @@ character that is not numeric.
 These characters are used for shrubbery structure and are
 mostly not available for use in operators:
 
-@verbatim[~indent: 2]|{
+@verbatim(~indent: 2)|{
 ( ) [ ] { } '   ; ,   : |   « »  \   " ~  # @
 }|
 
@@ -103,8 +103,8 @@ ends @litchar{|} (much less commonly), or that starts @litchar{|}. You
 can think of a more-indented @litchar{|} as being preceded implicitly by
 a @litchar{:} at the end of the previous line. A @litchar{|} counts as
 being indented by half a column, so the @litchar{|}s below are indented
-even when they are written right under @rhombus[if], @rhombus[match], or
-@rhombus[cond]:
+even when they are written right under @rhombus(if), @rhombus(match), or
+@rhombus(cond):
 
 @(rhombusblock:
     begin:
@@ -211,7 +211,7 @@ required to delimit a block using @litchar{«} just after @litchar{:} or
 parentheses work just as well, but the `match` example above illustrates
 a rare case where @litchar{«} and @litchar{»} would be needed to fit on
 a single line. Without @litchar{«} and @litchar{»}, the following form
-would put @rhombus[x + zero] insinde the definition of @rhombus[zero]:
+would put @rhombus(x + zero) insinde the definition of @rhombus(zero):
 
 @(rhombusblock:
     match x | 0: def zero:« x »; x + zero | n: n + 1)

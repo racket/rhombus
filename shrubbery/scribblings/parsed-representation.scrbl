@@ -7,7 +7,7 @@
 
 The parse of a shrubbery can be represented by an S-expression:
 
-@itemlist[
+@itemlist(
 
  @item{Each group is represented as a list that starts @litchar{'group}, and
    the rest of the list are the elements of the group.},
@@ -39,7 +39,7 @@ The parse of a shrubbery can be represented by an S-expression:
  @item{A block created to follow @litchar{|} appears immediately in an @litchar{'alts}
    list.}
 
-]
+)
 
 Note that a block can only appear immediately in a @litchar{'group} or @litchar{'alts}
 list, and only at the end within a @litchar{'group} list. Note also that there is no possibility of confusion between
@@ -49,33 +49,33 @@ always appear as non-initial items in a @litchar{'group} list.
 
 Overall, the grammar of S-expression representations is as follows:
 
-@nested[~style: symbol(inset), shrubbery_s_expression_grammar]
+@nested(~style: symbol(inset), shrubbery_s_expression_grammar)
 
 Here's the same grammar, but expressed using Rhombus constructors:
 
-@nested[~style: symbol(inset),
+@nested(~style: symbol(inset),
         bnf.BNF([@nonterm{parsed},
-                 @rhombus[[symbol(top), $$(@nonterm{group}), ...]]],
+                 @rhombus([symbol(top), $$(@nonterm{group}), ...])],
                 [@nonterm{group},
-                 @rhombus[[symbol(group), $$(@nonterm{term}), ..., $$(@nonterm{tail-term})]]],
+                 @rhombus([symbol(group), $$(@nonterm{term}), ..., $$(@nonterm{tail-term})])],
                 [@nonterm{term},
                  @nonterm{atom},
-                 @rhombus[[symbol(op), $$(@nonterm{symbol})]],
-                 @rhombus[[symbol(parens), $$(@nonterm{group}), ...]],
-                 @rhombus[[symbol(brackets), $$(@nonterm{group}), ...]],
-                 @rhombus[[symbol(braces), $$(@nonterm{group}), ...]],
-                 @rhombus[[symbol(quotes), $$(@nonterm{group}), ...]]],
+                 @rhombus([symbol(op), $$(@nonterm{symbol})]),
+                 @rhombus([symbol(parens), $$(@nonterm{group}), ...]),
+                 @rhombus([symbol(brackets), $$(@nonterm{group}), ...]),
+                 @rhombus([symbol(braces), $$(@nonterm{group}), ...]),
+                 @rhombus([symbol(quotes), $$(@nonterm{group}), ...])],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},
-                 @rhombus[[symbol(alts), $$(@nonterm{block}), ...]]],
+                 @rhombus([symbol(alts), $$(@nonterm{block}), ...])],
                 [@nonterm{block},
-                 @rhombus[[symbol(block), $$(@nonterm{group}), ...]]])]
+                 @rhombus([symbol(block), $$(@nonterm{group}), ...])]))
 
 Here are some example shrubberies with their S-expression parsed
 representations:
 
-@verbatim[~indent: 2]{
+@verbatim(~indent: 2){
 def pi: 3.14
 
 (group de pi (block (group 3.14)))

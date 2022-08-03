@@ -35,26 +35,26 @@ to support:
     | should_take_cab(#false): #false
   )
 
-The intent here is that @rhombus[val] and @rhombus[fun] are
+The intent here is that @rhombus(val) and @rhombus(fun) are
 macro-implemented and recognize various forms of definitions, including
 simple binding, functions, and functions that have pattern-matching
-cases. The @rhombus[val] and @rhombus[function] forms are not meant to
-know about @rhombus[::] specifically; the @rhombus[::] is meant to be a
+cases. The @rhombus(val) and @rhombus(function) forms are not meant to
+know about @rhombus(::) specifically; the @rhombus(::) is meant to be a
 binding operator that checks whether the value flowing to the binding
 satisfies a predicate, and it may also associate compile-time
-information to a binding, such as the information that @rhombus[p] is a
-@rhombus[Posn] instance. The name @rhombus[Posn] works in an expression
+information to a binding, such as the information that @rhombus(p) is a
+@rhombus(Posn) instance. The name @rhombus(Posn) works in an expression
 to construct a position value, while in a binding position,
-@rhombus[Posn] works to construct a pattern-matching binding (again,
-without @rhombus[val] or @rhombus[fun] knowing anything specific about
-@rhombus[Posn]). Meanwhile, @rhombus[.], @rhombus[-], @rhombus[+],
-@rhombus[*], @rhombus[<], and @rhombus[||] are the obvious operators
-with the usual precedence. Unlike the other operators, the @rhombus[.]
+@rhombus(Posn) works to construct a pattern-matching binding (again,
+without @rhombus(val) or @rhombus(fun) knowing anything specific about
+@rhombus(Posn)). Meanwhile, @rhombus(.), @rhombus(-), @rhombus(+),
+@rhombus(*), @rhombus(<), and @rhombus(||) are the obvious operators
+with the usual precedence. Unlike the other operators, the @rhombus(.)
 operator's right-hand side is not an expression; it must always be an
-identifier. The @rhombus[weather.currently_raining] form looks like a
-use of the @rhombus[.] operator, but it's meant here to be a use of the
-namer @rhombus[weather] that is bound by @rhombus[import] and recognizes
-@rhombus[.] to access the imported @rhombus[currently_raining] binding,
+identifier. The @rhombus(weather.currently_raining) form looks like a
+use of the @rhombus(.) operator, but it's meant here to be a use of the
+namer @rhombus(weather) that is bound by @rhombus(import) and recognizes
+@rhombus(.) to access the imported @rhombus(currently_raining) binding,
 which might be a macro instead of a variable that is bound to a
 function.
 
@@ -69,10 +69,10 @@ new operators can be defined in a function-like way, like this:
   )
 
 Alternatively, operators can be defined in a more general, macro-like
-way. For example, defining @rhombus[->] as an alias for @rhombus[.]
-requires a macro, since the right-hand side of @rhombus[.] is not an
-expression. Using @rhombus[''] for ``quote'' and @rhombus[$] for ``unquote,''
-the @rhombus[->] operator might be implemented in a pattern-matching
+way. For example, defining @rhombus(->) as an alias for @rhombus(.)
+requires a macro, since the right-hand side of @rhombus(.) is not an
+expression. Using @rhombus('') for ``quote'' and @rhombus($) for ``unquote,''
+the @rhombus(->) operator might be implemented in a pattern-matching
 macro as
 
 @(rhombusblock:
@@ -82,14 +82,14 @@ macro as
     home->x + 1 // same as home.x + 1
 )
 
-The intent here is that @rhombus[expr.macro] (the @rhombus[.] there is
-like using an import, accessing the @rhombus[macro] form within an
-@rhombus[expr] group of bindings) allows a macro to consume as many
+The intent here is that @rhombus(expr.macro) (the @rhombus(.) there is
+like using an import, accessing the @rhombus(macro) form within an
+@rhombus(expr) group of bindings) allows a macro to consume as many
 terms after the operator as it wants, and the macro must return two
 values: a quoted expression for the expansion plus leftover terms for
-further expression parsing (i.e., @rhombus[tail] in the example use will
-hold @rhombus[+ 1]). Macros can work for other contexts, too, such as
-binding positions. Here's a definition that extends the @rhombus[<>]
+further expression parsing (i.e., @rhombus(tail) in the example use will
+hold @rhombus(+ 1)). Macros can work for other contexts, too, such as
+binding positions. Here's a definition that extends the @rhombus(<>)
 operator to make it work in binding positions:
 
 @(rhombusblock:
@@ -117,8 +117,8 @@ keyword arguments, for example) is likely a better choice of
 interoperability with Racket modules. The enforestation and expansion
 process here are defined in terms of the S-expression form of parsed
 shrubbery notation (really, syntax-object form, so it can include scopes
-to determine a mapping for identifiers and operators). The @rhombus[<>]
-and @rhombus[->] examples above use operator- and macro-definition forms
+to determine a mapping for identifiers and operators). The @rhombus(<>)
+and @rhombus(->) examples above use operator- and macro-definition forms
 in terms of shrubbery notation, but this proposal focused on the
 lower-level mechanisms that allow such shrubbery-native forms to be
 implemented.

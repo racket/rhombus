@@ -3,27 +3,27 @@
 
 @title{Input and Output}
 
-@doc[
+@doc(
   fun print(v, out = current_output_port()) :: Void
-]{
+){
 
- Prints @rhombus[v] to @rhombus[out].
+ Prints @rhombus(v) to @rhombus(out).
 
 }
 
-@doc[
+@doc(
   fun println(v, out = current_output_port()) :: Void
-]{
+){
 
- Prints @rhombus[v] to @rhombus[out], then prints a newline.
+ Prints @rhombus(v) to @rhombus(out), then prints a newline.
 
 }
 
-@doc[
+@doc(
   fun display(v, out = current_output_port()) :: Void
-]{
+){
 
- Displays @rhombus[v] to @rhombus[out].
+ Displays @rhombus(v) to @rhombus(out).
 
  Strings, symbols, and keywords display as their character content. A
  byte string displays as its raw byte content. Any other kind of value
@@ -31,19 +31,19 @@
 
 }
 
-@doc[
+@doc(
   fun displayln(v, out = current_output_port()) :: Void
-]{
+){
 
- Displays @rhombus[v] to @rhombus[out] like @rhombus[display], then
+ Displays @rhombus(v) to @rhombus(out) like @rhombus(display), then
  prints a newline.
 
 }
 
-@doc[
+@doc(
   fun current_output_port(),
   fun current_output_port(out),
-]{
+){
 
  A parameter for the current output port.
 

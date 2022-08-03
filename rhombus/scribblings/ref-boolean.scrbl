@@ -3,52 +3,52 @@
 
 @title{Booleans}
 
-@doc[
+@doc(
   annotation.macro 'Boolean'
-]{
+){
 
-  Matches @rhombus[#true] or @rhombus[#false]
+  Matches @rhombus(#true) or @rhombus(#false)
 
 }
 
-@doc[
+@doc(
   expr.macro '$expr || $expr'
-]{
+){
 
- Produces the value of the first @rhombus[expr] if it is
- non-@rhombus[#false], otherwise produces the value(s) of the second
- @rhombus[expr].
+ Produces the value of the first @rhombus(expr) if it is
+ non-@rhombus(#false), otherwise produces the value(s) of the second
+ @rhombus(expr).
 
- The second @rhombus[expr] is evaluated in tail position with respect to
- the @rhombus[||] form.
+ The second @rhombus(expr) is evaluated in tail position with respect to
+ the @rhombus(||) form.
 
 }
 
-@doc[
+@doc(
   expr.macro '$expr && $expr'
-]{
+){
 
- Produces @rhombus[#false] if the the value of the first @rhombus[expr]
- is @rhombus[#false], otherwise produces the value(s) of the second
- @rhombus[expr].
+ Produces @rhombus(#false) if the the value of the first @rhombus(expr)
+ is @rhombus(#false), otherwise produces the value(s) of the second
+ @rhombus(expr).
 
- The second @rhombus[expr] is evaluated in tail position with respect to
- the @rhombus[&&] form.
+ The second @rhombus(expr) is evaluated in tail position with respect to
+ the @rhombus(&&) form.
 
 }
 
-@doc[
+@doc(
   operator (! v):: Boolean
-]{
+){
 
- Returns @rhombus[#true] if @rhombus[v] is @rhombus[#false],
- @rhombus[#false] otherwise.
+ Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),
+ @rhombus(#false) otherwise.
 
 
-@examples[
+@examples(
   !#false,
   !#true,
   !"false"
-]
+)
 
 }
