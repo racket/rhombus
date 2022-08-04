@@ -76,6 +76,44 @@ check:
   kinetic_energy(~v: 2, ~& {keyword(~m): 1})
   2
 
+fun
+| kws_provided(): #false
+| kws_provided(~& _): #true
+
+check:
+  kws_provided()
+  #false
+check:
+  kws_provided(~a: 1, ~b: 2)
+  #true
+
+fun
+// TODO: make sure it works when this case is put last too
+// For now, this case must be first because map patterns
+// allow extra keys in the value that aren't in the pattern
+| krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c}):
+    sqr(a) + sqr(b) == sqr(c)
+| krpythag(~& {keyword(~a): a, keyword(~b): b}): sqrt(sqr(a) + (sqr(b)))
+| krpythag(~& {keyword(~a): a, keyword(~c): c}): sqrt(sqr(c) - (sqr(a)))
+| krpythag(~& {keyword(~b): b, keyword(~c): c}): sqrt(sqr(c) - (sqr(b)))
+
+check: krpythag(~a: 3, ~b: 4); 5
+check: krpythag(~c: 5, ~a: 3); 4
+check: krpythag(~c: 5, ~b: 4); 3
+check: krpythag(~a: 3, ~b: 4, ~c: 5); #true
+check: krpythag(~a: 3, ~b: 4, ~c: 6); #false    
+
+// TODO: add single-argument keyword support for `|` alt
+// functions so that they don't have to be put through `~&`
+// keyword rest like `krpythag` above
+/*
+fun
+| pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
+| pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
+| pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
+| pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
+*/
+
 // ---------------------------
 // Repetition Rest with ...
 

@@ -337,7 +337,9 @@
                          [else
                           (define fc (car same))
                           (define-values (this-args wrap-adapted-arguments)
-                            (adapt-arguments-for-count fc n #'(arg-id ...) #'rest-tmp #'try-next))
+                            (adapt-arguments-for-count fc n #'(arg-id ...) #'rest-tmp
+                                                       (and kwrest? #'kwrest-tmp)
+                                                       #'try-next))
                           (with-syntax-parse ([(arg ...) (fcase-args fc)]
                                               [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
                                               [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
@@ -454,13 +456,25 @@
   ;; when a clause that expects n' (or more) arguments is merged
   ;; with a clause that expects n or more arguments (so n <= n'), then
   ;; the rest argument needs to be unpacked to extra arguments
-  (define (adapt-arguments-for-count fc n arg-ids-stx rest-tmp try-next)
+  (define (adapt-arguments-for-count fc n arg-ids-stx rest-tmp kwrest-tmp try-next)
     (define base-f-n (length (fcase-args fc)))
     (define f-n (if (syntax-e (fcase-rest-arg fc))
                     (- (add1 base-f-n))
                     base-f-n))
+    (define adapt-kwrest
+      (cond
+        [(and (not kwrest-tmp) (not (syntax-e (fcase-kwrest-arg fc))))
+         values]
+        [(and kwrest-tmp (syntax-e (fcase-kwrest-arg fc)))
+         values]
+        [else
+         (unless kwrest-tmp (error "assert failed in wrap-adapted"))
+         (lambda (body)
+           #`(if (hash-empty? #,kwrest-tmp)
+                 (let () #,body)
+                 (#,try-next)))]))
     (cond
-      [(eqv? n f-n) (values arg-ids-stx values)]
+      [(eqv? n f-n) (values arg-ids-stx adapt-kwrest)]
       [else
        (unless (negative? n) (error "assert failed in wrap-adapted"))
        (define base-n (- (add1 n)))
@@ -474,10 +488,10 @@
             (cond
               [(null? new-arg-ids)
                (if (negative? f-n)
-                   body
+                   (adapt-kwrest body)
                    #`(if (null? #,rest-tmp)
                          (let ()
-                           #,body)
+                           #,(adapt-kwrest body))
                          (#,try-next)))]
               [else
                #`(if (pair? #,rest-tmp)
