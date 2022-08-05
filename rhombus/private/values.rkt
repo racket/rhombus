@@ -2,14 +2,14 @@
 (require (for-syntax racket/base
                      syntax/parse)
          "binding.rkt"
-         "folder.rkt"
+         "reducer.rkt"
          "parse.rkt"
          (rename-in "equal.rkt"
                     [= rhombus=]))
 
 (provide values
          (for-space rhombus/binding values)
-         (for-space rhombus/folder values))
+         (for-space rhombus/reducer values))
 
 (define-binding-syntax values
   (binding-prefix-operator
@@ -24,8 +24,8 @@
                                            " pattern by forms that specifically recognize it")
                             #'head)]))))
 
-(define-folder-syntax values
-  (folder-transformer
+(define-reducer-syntax values
+  (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (rhombus=)

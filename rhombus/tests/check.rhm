@@ -28,7 +28,7 @@ expr.macro
                             'fun ():
                               $result1
                               ...'),
-                       $result2,
+                       fun(): $result2,
                        ~mode: keyword($mode ...))',
            '')
 | 'check:
@@ -41,9 +41,10 @@ expr.macro
               ...
               $result2',
            '')
-           
-fun check_same(thunk, expected, ~mode: mode):
+
+fun check_same(thunk, expected_thunk, ~mode: mode):
   val values(got, exn_msg): call_capturing_exn(thunk)
+  val expected: call_capturing_values(expected_thunk)
   val ok:
     match mode
     | keyword(~print):
@@ -51,14 +52,17 @@ fun check_same(thunk, expected, ~mode: mode):
     | keyword(~equal):
         !exn_msg && (got == expected)
     | keyword(~exn):
-        exn_msg && does_contain(expected, exn_msg)
+        exn_msg && does_contain(expected[0], exn_msg)
     | keyword(~eval_exn):
-        exn_msg && does_contain(expected, exn_msg)
+        exn_msg && does_contain(expected[0], exn_msg)        
   if ok
   | #void
-  | display("failed\n"
-              +& "  expected: " +& (if mode == keyword(~exn) | "exception " | "") +& expected +& "\n"
-              +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | got) +&  "\n",
+  | fun
+    | values_str([v]): v
+    | values_str(lst): "values " +& lst
+    display("failed\n"
+              +& "  expected: " +& (if mode == keyword(~exn) | "exception " | "") +& values_str(expected) +& "\n"
+              +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got)) +&  "\n",
             current_error_port())
 
 fun eval_test(stx):

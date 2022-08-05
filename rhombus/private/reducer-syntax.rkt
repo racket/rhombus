@@ -1,12 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse)
-         "folder.rkt"
+         "reducer.rkt"
          "name-root.rkt")
 
-(provide folder)
+(provide reducer)
 
-(define-simple-name-root folder
+(define-simple-name-root reducer
   macro)
 
 (define-syntax macro

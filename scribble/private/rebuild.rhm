@@ -1,0 +1,42 @@
+#lang rhombus
+import:
+  rhombus/macro open
+
+export:
+  parens_syntax
+  brackets_syntax
+  braces_syntax
+  block_syntax
+  quotes_syntax
+  alts_syntax
+  sequence_append_syntax
+
+fun parens_syntax(ts, context):
+  match ts
+  | ['$t', ...]: relocate_syntax('($t, ...)', context)
+
+fun brackets_syntax(ts, context):
+  match ts
+  | ['$t', ...]: relocate_syntax('[$t, ...]', context)
+
+fun braces_syntax(ts, context):
+  match ts
+  | ['$t', ...]: relocate_syntax('{$t, ...}', context)
+
+fun block_syntax(ts, context):
+  match ts
+  | ['$t', ...]: relocate_syntax(': $t; ...', context)
+
+fun quotes_syntax(ts, context):
+  match ts
+  | ['$t', ...]: relocate_syntax('«'$t; ...'»', context)
+
+fun alts_syntax(ts, context):
+  relocate_syntax(to_alts_syntax(ts), context)
+
+fun sequence_append_syntax(d1, d2):
+  match d1
+  | '$e1 ...':
+      match d2
+      | '$e2 ...':
+          '$e1 ... $e2 ...'

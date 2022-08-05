@@ -14,13 +14,13 @@
          "composite.rkt"
          "parse.rkt"
          "realm.rkt"
-         "folder.rkt")
+         "reducer.rkt")
 
 (provide Map
          (for-space rhombus/binding Map)
          (for-space rhombus/annotation Map)
          (for-space rhombus/static-info Map)
-         (for-space rhombus/folder Map)
+         (for-space rhombus/reducer Map)
 
          make_map
          (for-space rhombus/static-info make_map))
@@ -64,8 +64,8 @@
   (#%call-result ((#%map-ref hash-ref)
                   (#%sequence-constructor in-hash))))
 
-(define-folder-syntax Map
-  (folder-transformer
+(define-reducer-syntax Map
+  (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_)

@@ -12,14 +12,16 @@
                   in-annotation-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
                   in-syntax-class-space)
-         (only-in (submod rhombus/private/folder for-class)
-                  in-folder-space)
+         (only-in (submod rhombus/private/reducer for-class)
+                  in-reducer-space)
+         (only-in (submod rhombus/private/for-clause for-class)
+                  in-for-clause-space)
          (only-in rhombus
                   def val fun operator :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/macro
-                  decl defn expr imp annotation bind folder)
+                  decl defn expr imp annotation bind reducer for_clause)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
@@ -192,9 +194,9 @@
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind imp annotation folder |.|)
+    #:literals (def defn expr decl bind imp annotation reducer for_clause |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annotation bind folder) (op |.|) macro))
+    (pattern (~seq (~or defn decl expr annotation bind reducer for_clause) (op |.|) macro))
     (pattern (~seq (~or expr bind annotation) (op |.|) rule))
     (pattern (~seq (~or imp) (op |.|) modifier))
     (pattern (~seq def)))
@@ -410,35 +412,38 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (imp annotation folder rhombus-syntax)
+    #:literals (imp annotation reducer for_clause rhombus-syntax)
     #:datum-literals (parens group op)
     [(group imp . _) in-import-space]
     [(group annotation . _) in-annotation-space]
-    [(group folder . _) in-folder-space]
+    [(group reducer . _) in-reducer-space]
+    [(group for_clause . _) in-for-clause-space]
     [(group rhombus-syntax . _) in-syntax-class-space]
     [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (imp annotation folder bind rhombus-syntax)
+    #:literals (imp annotation reducer for_clause bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group imp . _) 'impmod]
     [(group annotation . _) 'ann]
-    [(group folder . _) 'folder]
+    [(group reducer . _) 'reducer]
+    [(group for_clause . _) 'for_clause]
     [(group bind . _) 'bind]
     [(group rhombus-syntax . _) 'stxclass]
     [_ #f]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr imp annotation folder bind grammar operator rhombus-syntax)
+    #:literals (defn decl expr imp annotation reducer for_clause bind grammar operator rhombus-syntax)
     #:datum-literals (parens group op quotes)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
     [(group imp . _) "import modifier"]
     [(group annotation . _) "annotation"]
-    [(group folder . _) "folder"]
+    [(group reducer . _) "reducer"]
+    [(group for_clause . _) "for clause"]
     [(group bind . _) "binding operator"]
     [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]

@@ -1,13 +1,17 @@
 #lang racket
 
 (provide call_capturing_exn
+         call_capturing_values
          does_contain)
 
 (define (call_capturing_exn thunk)
   (with-handlers ([exn:fail?
                    (lambda (exn)
                      (values #f (exn-message exn)))])
-    (values (thunk) #f)))
+    (values (call-with-values thunk list) #f)))
+
+(define (call_capturing_values thunk)
+  (call-with-values thunk list))
 
 (define (does_contain str in-str)
   (or (equal? str "")

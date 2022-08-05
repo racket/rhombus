@@ -8,7 +8,9 @@
          "error.rkt")
 
 (provide (rename-out [rhombus-if if]
-                     [rhombus-cond cond]))
+                     [rhombus-cond cond]
+                     [rhombus-when when]
+                     [rhombus-unless unless]))
 
 (define-syntax rhombus-if
   (expression-transformer
@@ -70,3 +72,32 @@
 
 (define (cond-fallthrough who)
   (raise-contract-error who "no matching case"))
+
+(define-syntax rhombus-when
+  (expression-transformer
+   #'rhombus-when
+   (lambda (stx)
+     (parse-when stx #'when))))
+
+(define-syntax rhombus-unless
+  (expression-transformer
+   #'rhombus-unless
+   (lambda (stx)
+     (parse-when stx #'unless))))
+
+(define-for-syntax (parse-when stx racket-form-id)
+  (syntax-parse stx
+    #:datum-literals (alts)
+    [(form-id test ... (alts alt ...)
+              . tail)
+     (syntax-parse #'(alt ...)
+       #:datum-literals (block)
+       [(((~and tag-thn block) thn ...))
+        (values
+         #`(#,racket-form-id (rhombus-expression (group test ...))
+            (rhombus-body-at tag-thn thn ...))
+         #'tail)]
+       [_
+        (raise-syntax-error #f
+                            "expected a single alternative"
+                            stx)])]))

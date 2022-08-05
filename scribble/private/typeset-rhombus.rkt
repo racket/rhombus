@@ -380,7 +380,8 @@
                   [(impmod) 'rhombus/import]
                   [(ann) 'rhombus/annotation]
                   [(stxclass) 'rhombus/syntax-class]
-                  [(folder) 'rhombus/folder]
+                  [(reducer) 'rhombus/reducer]
+                  [(for_clause) 'rhombus/for-clause]
                   [else #f]))
   (if space
       ((make-interned-syntax-introducer space) stx 'add)

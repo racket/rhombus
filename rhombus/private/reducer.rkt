@@ -9,43 +9,43 @@
                      "realm.rkt")
          "name-root-ref.rkt")
 
-(provide define-folder-syntax)
+(provide define-reducer-syntax)
 
 (module+ for-class
-  (provide (for-syntax in-folder-space)))
+  (provide (for-syntax in-reducer-space)))
 
 (begin-for-syntax
-  (provide (property-out folder-transformer)
-           :folder
-           :folder-form)
+  (provide (property-out reducer-transformer)
+           :reducer
+           :reducer-form)
 
-  (property folder-transformer transformer)
+  (property reducer-transformer transformer)
 
-  (define-syntax-class :folder-form
+  (define-syntax-class :reducer-form
     (pattern [wrapper
               ([id:identifier init-expr] ...)
               body-wrapper
               static-infos]
              #:attr binds #'([id init-expr] ...)))
 
-  (define (check-folder-result form proc)
+  (define (check-reducer-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
-      [_::folder-form form]
-      [_ (raise-result-error (proc-name proc) rhombus-realm "Folder_Syntax" form)]))
+      [_::reducer-form form]
+      [_ (raise-result-error (proc-name proc) rhombus-realm "Reducer_Syntax" form)]))
 
-  (define in-folder-space (make-interned-syntax-introducer/add 'rhombus/folder))
+  (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
   
   (define-transform
-    #:syntax-class :folder
-    #:desc "folder"
-    #:in-space in-folder-space
+    #:syntax-class :reducer
+    #:desc "reducer"
+    #:in-space in-reducer-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
-    #:transformer-ref folder-transformer-ref
-    #:check-result check-folder-result))
+    #:transformer-ref reducer-transformer-ref
+    #:check-result check-reducer-result))
 
-(define-syntax (define-folder-syntax stx)
+(define-syntax (define-reducer-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
-     #`(define-syntax #,(in-folder-space #'id)
+     #`(define-syntax #,(in-reducer-space #'id)
          rhs)]))

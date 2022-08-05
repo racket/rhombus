@@ -8,7 +8,7 @@
          "expression+binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
-         "folder.rkt"
+         "reducer.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
@@ -23,7 +23,7 @@
          List
          (for-space rhombus/annotation List)
          (for-space rhombus/static-info List)
-         (for-space rhombus/folder List)
+         (for-space rhombus/reducer List)
          (for-space rhombus/repetition List))
 
 (module+ for-binding
@@ -66,8 +66,8 @@
                           (lambda (static-infoss)
                             #`((#%ref-result #,(car static-infoss))))))
 
-(define-folder-syntax List
-  (folder-transformer
+(define-reducer-syntax List
+  (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_)
