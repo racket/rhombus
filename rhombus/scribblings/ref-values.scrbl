@@ -27,10 +27,10 @@
 }
 
 @doc(
-  folder.macro 'values($identifier = $expr, ...)'
+  reducer.macro 'values($identifier = $expr, ...)'
 ){
 
- A @tech{folder} used with @rhombus(for), expects as many results from a
+ A @tech{reducer} used with @rhombus(for), expects as many results from a
  @rhombus(for) body as @rhombus(identifier)s. For the first iteration of
  the @rhombus(for) body, each @rhombus(identifier)'s value is the result
  of the corresponding @rhombus(expr). The results of a @rhombus(for) body

@@ -76,10 +76,10 @@ to append lists.
 }
 
 @doc(
-  folder.macro 'List'
+  reducer.macro 'List'
 ){
 
- A @tech{folder} used with @rhombus(for), accumulates each result of a
+ A @tech{reducer} used with @rhombus(for), accumulates each result of a
  @rhombus(for) body into a result list.
 
 }

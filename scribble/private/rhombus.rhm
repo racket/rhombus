@@ -2,8 +2,10 @@
 import:
   rhombus/macro open
   "typeset-rhombus.rkt" open
+  "rebuild.rhm" open
   for_meta:
     "typeset_meta.rhm"
+    "rebuild.rhm" open
   scribble/base as scribble:
     expose: elem
 
@@ -50,22 +52,26 @@ for_meta:
     | 'literal_group_syntax $_': #true
     | ~else: #false
 
-  def nested(gs, builder, stxs):
+  def extract_literal(stx):
+    match stx
+    | '$_($stxs)': stxs
+
+  def nested(gs, builder, builder_stx, stxs):
     val [new_g, ...]: map(escape_group, gs)
     if andmap(is_literal_group, [new_g, ...])
-    | literal_term(stxs)
-    | '$builder([$new_g, ...], literal_syntax($(head_context(stxs))))'
+    | literal_term(builder(map(extract_literal, [new_g, ...]), head_context(stxs)))
+    | '$builder_stx([$new_g, ...], literal_syntax($(head_context(stxs))))'
 
   def nested_alts(bs, stxs):
     val [new_b, ...]: map(escape_term, bs)
     if andmap(is_literal_term, [new_b, ...])
-    | literal_term(stxs)
+    | literal_term(alts_syntax(map(extract_literal, [new_b, ...]), head_context(stxs)))
     | 'alts_syntax([$new_b, ...], literal_syntax($(head_context(stxs))))'
 
   def escape_group(g):
     val new_g: escape_tail(g)
     if is_literal_group(new_g)
-    | literal_group(g)
+    | literal_group(relocate_syntax(extract_literal(new_g), group_context(g)))
     | 'relocate_syntax($new_g, literal_syntax($(group_context(g))))'
 
   def escape_tail(stxs):
@@ -78,22 +84,22 @@ for_meta:
         val new_head: escape_term(a_head)
         val new_tail: escape_tail(a_tail)
         if is_literal_term(new_head) && is_literal_group(new_tail)
-        | literal_group(stxs)
+        | literal_group(sequence_append_syntax(extract_literal(new_head), extract_literal(new_tail)))
         | 'sequence_append_syntax($new_head, $new_tail)'
     | ~else: literal_group(stxs)
 
   def escape_term(stxs):
     match stxs
     | '($(g :: Group), ...)':
-        nested([g, ...], 'parens_syntax', stxs)
+        nested([g, ...], parens_syntax, 'parens_syntax', stxs)
     | '[$(g :: Group), ...]':
-        nested([g, ...], 'brackets_syntax', stxs)
+        nested([g, ...], brackets_syntax, 'brackets_syntax', stxs)
     | '{$(g :: Group), ...}':
-        nested([g, ...], 'braces_syntax', stxs)
+        nested([g, ...], braces_syntax, 'braces_syntax', stxs)
     | '«'$(g:: Group); ...'»':
-        nested([g, ...], 'quotes_syntax', stxs)
+        nested([g, ...], quotes_syntax, 'quotes_syntax', stxs)
     | ': $(g :: Group); ...':
-        nested([g, ...], 'block_syntax', stxs)
+        nested([g, ...], block_syntax, 'block_syntax', stxs)
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
     | '$(id :: Id_Op)':
@@ -120,36 +126,6 @@ fun sequence_cons_syntax(a, d, context):
   match d
   | '$e ...': '$a_r $e ...'
 
-fun sequence_append_syntax(d1, d2):
-  match d1
-  | '$e1 ...':
-      match d2
-      | '$e2 ...':
-          '$e1 ... $e2 ...'
-      
-fun parens_syntax(ts, context):
-  match ts
-  | ['$t', ...]: relocate_syntax('($t, ...)', context)
-
-fun brackets_syntax(ts, context):
-  match ts
-  | ['$t', ...]: relocate_syntax('[$t, ...]', context)
-
-fun braces_syntax(ts, context):
-  match ts
-  | ['$t', ...]: relocate_syntax('{$t, ...}', context)
-
-fun block_syntax(ts, context):
-  match ts
-  | ['$t', ...]: relocate_syntax(': $t; ...', context)
-
-fun quotes_syntax(ts, context):
-  match ts
-  | ['$t', ...]: relocate_syntax('«'$t; ...'»', context)
-
-fun alts_syntax(ts, context):
-  relocate_syntax(to_alts_syntax(ts), context)
-
 fun relocate_expansion(e, context):
   relocate_syntax(to_syntax(e), context)
 
@@ -166,7 +142,8 @@ expr.macro
           || kw === keyword(~impmod)
           || kw === keyword(~ann)
           || kw === keyword(~stxclass)
-          || kw === keyword(~folder))
+          || kw === keyword(~reducer)
+          || kw === keyword(~for_clause))
     | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
              '$main_tail ...')
     | raise_syntax_error("invalid space", kw)

@@ -646,8 +646,9 @@ operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
 
 fun enumerate(l :: List):
   for:
-    ~each v: l
-    ~and  i: 0..
+    ~each:
+      v: l
+      i: 0..
     displayln(i +& ". " +& v)
 
 enumerate(["a", "b", "c"])
@@ -668,10 +669,11 @@ fun sum(l :: List):
 sum([2, 3, 4])
 
 fun f17(l):
-  for List:
+  for:
     ~each i: (l :: List)
     ~each j: 10..10+3
     [i, j]
+    ~into List
 
 f17([1, 2, 3])
 
@@ -689,10 +691,11 @@ fun grid2(m, n):
 grid2(2, 3)
 
 fun point_xs(l -: List.of(List.of(Posn))):
-  for List:
+  for:
     ~each ll: l
     ~each p: ll
     p.x
+    ~into List
 
 point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
 

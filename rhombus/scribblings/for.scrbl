@@ -5,7 +5,7 @@
 
 @title(~tag: "for"){Iteration}
 
-Rhombus support a proper implementation of tail-call handling (i.e.,
+Rhombus supports a proper implementation of tail-call handling (i.e.,
 tail calls do not extend the continuation), so looping can be written as
 a recursive function. Nevertheless, a looping construct is convenient
 and useful for writing many kinds of iterations.
@@ -47,13 +47,14 @@ languages, is that definitions or expressions can be written among
     displayln(say +& ", " +& dear_friend +& "!")
 )
 
-To draw elements from sequences in parallel, use @rhombus(~and)
-instead of @rhombus(~each) for every additional sequence.
+To draw elements from sequences in parallel, use a block of bindings
+immediately after @rhombus(~form).
 
 @demo(
   for:
-    ~each friend: ["Alice", "Bob", "Carol"]
-    ~and  index: 1..4
+    ~each:
+      friend: ["Alice", "Bob", "Carol"]
+      index: 1..4
     displayln(index +& ". " +& friend)
 )
 
@@ -64,8 +65,8 @@ an infinite sequence of integers, and when @rhombus(for) iterates over
 sequences in parallel, it stops when the shortest sequence stops.
 
 The @rhombus(for) form acts as a comprehension form when a
-@deftech{folder} is specified before the @rhombus(for) body block.
-@rhombus(List, ~folder) serves as a folder to generate a list,
+@deftech{reducer} is specified before the @rhombus(for) body block.
+@rhombus(List, ~reducer) serves as a reducer to generate a list,
 accumulating the values produced by each iteration of the @rhombus(for)
 body.
 
@@ -79,18 +80,29 @@ body.
     [i, j]
 )
 
-@rhombus(Map, ~folder) works as a folder where the body of the
+If you prefer, you can put the reducer at the end of a @rhombus(for)
+body with @rhombus(~into).
+
+@demo(
+  for:
+    ~each i: 1..4
+    "number " +& i
+    ~into List
+)
+
+@rhombus(Map, ~reducer) works as a reducer where the body of the
 @rhombus(for) form must produce two values for each iteration: a key and
 a value.
 
 @demo(
   for Map:
-    ~each friend: ["alice", "bob", "carol"]
-    ~and  index: 1..
+    ~each:
+      friend: ["alice", "bob", "carol"]
+      index: 1..
     values(index, friend)
 )
 
-The @rhombus(values, ~folder) folder implements the general case, where
+The @rhombus(values, ~reducer) reducer implements the general case, where
 @rhombus(values) is followed by a parenthesized sequence of identifiers
 with initial values, the @rhombus(for) body can refer to those
 identifiers to get values from the previous iteration (or the initial

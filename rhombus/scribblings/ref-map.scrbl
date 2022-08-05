@@ -72,10 +72,10 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  folder.macro 'Map'
+  reducer.macro 'Map'
 ){
 
- A @tech{folder} used with @rhombus(for), expects two results from a
+ A @tech{reducer} used with @rhombus(for), expects two results from a
  @rhombus(for) body, and accumulates them into a map using the first
  result as a key and the second result as a value.
 

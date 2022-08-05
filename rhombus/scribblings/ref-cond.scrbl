@@ -53,3 +53,40 @@
  @rhombus(~else) clause, a run-time exception is raised.
 
 }
+
+@doc(
+  decl.macro 'when $test_expr
+              | $body
+                ...'
+){
+
+ If @rhombus(test_expr) produces a true value (which is value other than
+ @rhombus(#false)), returns the result of the @rhombus(body) clause,
+ otherwise returns @rhombus(#void).
+
+@examples(
+  when #true
+  | displayln("yes"),
+  when #false
+  | displayln("no")
+)
+
+}
+
+@doc(
+  decl.macro 'unless $test_expr
+              | $body
+                ...'
+){
+
+ If @rhombus(test_expr) produces @rhombus(#false), returns the result
+ of the @rhombus(body) clause, otherwise returns @rhombus(#void).
+
+@examples(
+  unless #true
+  | displayln("yes"),
+  unless #false
+  | displayln("no")
+)
+
+}
