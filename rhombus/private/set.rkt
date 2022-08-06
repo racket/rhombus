@@ -25,7 +25,14 @@
 (module+ for-info
   (provide (for-syntax set-static-info)))
 
-(struct set (ht))
+(struct set (ht)
+  #:methods gen:equal+hash
+  [(define (equal-proc self other rec)
+     (rec (set-ht self) (set-ht other)))
+   (define (hash-proc self rec)
+     (+ (eq-hash-code struct:set) (rec (set-ht self))))
+   (define (hash2-proc self rec)
+     (+ (eq-hash-code struct:set) (rec (set-ht self))))])
 
 (define (set-member? s v)
   (hash-ref (set-ht s) v #f))

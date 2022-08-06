@@ -102,3 +102,21 @@ begin:
   check:
     s[c]
     #false
+
+// empty map, not empty set
+check: {}; Map()
+check: {} == Set(); #false
+check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
+begin:
+  val a: mcons(1, 2)
+  val b: mcons(1, 2)
+  check: {a: 1, b: 2}; {b: 2, a: 1}
+  check: {a: 1} == {b: 1}; #false
+
+check: Set(); Set()
+check: {"a", "b"}; Set("a", "b")
+begin:
+  val a: mcons(1, 2)
+  val b: mcons(1, 2)
+  check: {a, b}; {b, a}
+  check: {a} == {b}; #false
