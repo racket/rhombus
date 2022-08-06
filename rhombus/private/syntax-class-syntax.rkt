@@ -117,8 +117,9 @@
      (define ht
        (for/fold ([ht0 ht0]) ([attributes (in-list (cdr attributess))])
          (for/fold ([ht #hasheq()]) ([name+depth (in-list attributes)])
-           (when (hash-ref ht0 (car name+depth))
-             (hash-set ht (car name+depth) (cdr name+depth))))))
+           (if (hash-ref ht0 (car name+depth) #f)
+               (hash-set ht (car name+depth) (cdr name+depth))
+               ht))))
      ;; check consistent depths
      (for* ([attributes (in-list attributess)]
             [name+depth (in-list attributes)])

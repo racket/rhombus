@@ -115,3 +115,29 @@ begin:
       values(e.y, '')
     right_operand 1 +
     "expression with addition or subtraction"
+
+begin:
+  syntax.class Foo
+  | '$x + $y'
+  | '$x + $y + $z'
+  check:
+    ~print
+    match '1 + 2'
+    | '$(f :: Foo)': [f.x, f.y]
+    ['1', '2']
+  check:
+    ~print
+    match '10 + 20 + 30'
+    | '$(f :: Foo)': [f.x, f.y]
+    ['10', '20']
+
+check:
+  ~eval_exn
+  import:
+    rhombus/macro open
+  syntax.class Foo
+  | '$x + $y'
+  | '$x + $y + $z'
+  match '10 + 20 + 30'
+  | '$(f :: Foo)': f.z
+  "attribute not found"
