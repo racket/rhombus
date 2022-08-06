@@ -126,13 +126,21 @@
      (syntax-parse stx
        #:datum-literals (braces)
        [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape args) (parse-setmap-content #'content
-                                                          #:shape 'map
-                                                          #:who (syntax-e #'form-id)))
-        (values (wrap-static-info*
-                 (quasisyntax/loc stx
-                   (Map-build #,@args))
-                 map-static-info)
+        (define-values (shape args maybe-rest)
+          (parse-setmap-content #'content
+                                #:shape 'map
+                                #:who (syntax-e #'form-id)))
+        (define without-rest
+          (wrap-static-info*
+           (quasisyntax/loc stx
+             (Map-build #,@args))
+           map-static-info))
+        (values (if maybe-rest
+                    (wrap-static-info*
+                     (quasisyntax/loc stx
+                       (hash-append #,without-rest #,maybe-rest))
+                     map-static-info)
+                    without-rest)
                 #'tail)]
        [(_ . tail) (values #'Map #'tail)]))))
 
@@ -195,9 +203,14 @@
      (syntax-parse stx
        #:datum-literals (braces)
        [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape args) (parse-setmap-content #'content
-                                                          #:shape 'map
-                                                          #:who (syntax-e #'form-id)))
+        (define-values (shape args maybe-rest)
+          (parse-setmap-content #'content
+                                #:shape 'map
+                                #:who (syntax-e #'form-id)))
+        (when maybe-rest
+          (raise-syntax-error (syntax-e #'form-id)
+                              "& rest is not supported on mutable maps"
+                              #'content))
         (values (wrap-static-info*
                  (quasisyntax/loc stx
                    (hash-copy (Map-build #,@args)))
@@ -320,3 +333,6 @@
 (define (hash-append/proc map1 map2)
   (for/fold ([ht map1]) ([(k v) (in-hash map2)])
     (hash-set ht k v)))
+
+(module+ append
+  (provide hash-append hash-append/proc))

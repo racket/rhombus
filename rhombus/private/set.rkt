@@ -125,13 +125,21 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape args) (parse-setmap-content #'content
-                                                          #:shape 'set
-                                                          #:who (syntax-e #'form-id)))
-        (values (wrap-static-info*
-                 (quasisyntax/loc stx
-                   (Set-build #,@args))
-                 set-static-info)
+        (define-values (shape args maybe-rest)
+          (parse-setmap-content #'content
+                                #:shape 'set
+                                #:who (syntax-e #'form-id)))
+        (define without-rest
+          (wrap-static-info*
+           (quasisyntax/loc stx
+             (Set-build #,@args))
+           set-static-info))
+        (values (if maybe-rest
+                    (wrap-static-info*
+                     (quasisyntax/loc stx
+                       (set-append #,without-rest #,maybe-rest))
+                     set-static-info)
+                    without-rest)
                 #'tail)]
        [(_ . tail) (values #'Set #'tail)]))))
 
@@ -169,9 +177,14 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape args) (parse-setmap-content #'content
-                                                          #:shape 'set
-                                                          #:who (syntax-e #'form-id)))
+        (define-values (shape args maybe-rest)
+          (parse-setmap-content #'content
+                                #:shape 'set
+                                #:who (syntax-e #'form-id)))
+        (when maybe-rest
+          (raise-syntax-error (syntax-e #'form-id)
+                              "& rest is not supported on mutable sets"
+                              #'content))
         (values (wrap-static-info*
                  (quasisyntax/loc stx
                    (MutableSet #,@args))
@@ -200,3 +213,6 @@
 (define (set-append/proc set1 set2)
   (set (for/fold ([ht (set-ht set1)]) ([k (in-hash-keys (set-ht set2))])
          (hash-set ht k #t))))
+
+(module+ append
+  (provide set-append set-append/proc))
