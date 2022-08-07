@@ -1,6 +1,6 @@
 #lang racket/base
 
-(provide lambda/kwrest case-lambda/kwrest)
+(provide lambda/kwrest case-lambda/kwrest hash-remove*)
 
 (require (only-in racket/list drop)
          (only-in racket/set subset?)
