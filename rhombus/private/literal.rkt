@@ -21,7 +21,7 @@
 (define-syntax (literal-matcher stx)
   (syntax-parse stx
     [(_ arg-id datum IF success fail)
-     #'(IF (equal? arg-id (quote datum))
+     #'(IF (equal-always? arg-id (quote datum))
            success
            fail)]))
 
