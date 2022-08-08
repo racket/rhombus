@@ -10,7 +10,8 @@
                      "annotation-string.rkt")
          "static-info.rkt"
          "realm.rkt"
-         "error.rkt")
+         "error.rkt"
+         "name-root-ref.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -110,13 +111,11 @@
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/binding))
 
-  ;; conservative: can return #true when unknown
-  (define (might-be-binding? v)
-    (or (binding-prefix-operator? v) (portal-syntax? v)))
-
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id) might-be-binding?)))))
+             #:when (not (syntax-local-value* (in-binding-space #'id)
+                                              (lambda (v)
+                                                (name-root-ref-root v binding-prefix-operator?)))))))
 
 (define-syntax (identifier-info stx)
   (syntax-parse stx
