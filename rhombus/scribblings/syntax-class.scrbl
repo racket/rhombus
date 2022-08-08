@@ -18,17 +18,17 @@ among others.
 
 Rhombus also supports user-defined syntax classes via
 @rhombus(syntax.class). Use the @rhombus(syntax.class) form with a block
-that contains @rhombus(pattern) with pattern alternatives:
+that contains @rhombus(~pattern) with pattern alternatives:
 
 @(rhombusblock:
     syntax.class Arithmetic:
-     pattern
+     ~pattern
      | '$x + $y'
      | '$x - $y'
 )
 
 Equivalently, use a shorthand syntax that omits the use of
-@rhombus(pattern) an inlines alternatives into the immediate
+@rhombus(~pattern) and inlines alternatives into the immediate
 @rhombus(syntax.class) form:
 
 @(rhombusblock:

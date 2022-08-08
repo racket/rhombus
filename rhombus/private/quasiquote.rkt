@@ -69,8 +69,24 @@
                            (syntax-e attr-id))
                           stx))
     attr)
+  (define expr-handler
+    (lambda (stx fail)
+      (syntax-parse stx
+        #:datum-literals (op |.|)
+        [(var-id (op |.|) attr-id . tail)
+         (define attr (lookup-attribute stx #'var-id #'attr-id #f))
+         (values (syntax-class-attribute-id attr) #'tail)]
+        [_ (fail)])))
   (cond
-    [(eq? depth 0) (make-rename-transformer temp-id)]
+    [(eq? depth 0) (if (eq? 0 (hash-count attributes))
+                       (make-rename-transformer temp-id)
+                       (expression-transformer
+                        name-id
+                        (lambda (stx)
+                          (expr-handler stx
+                                        (lambda ()
+                                          (syntax-parse stx
+                                            [(_ . tail) (values temp-id #'tail)]))))))]
     [else (make-repetition
            name-id
            #`(#,unpack* #'$ #,temp-id #,depth)
@@ -89,13 +105,7 @@
                                                               #'())
                                         #'tail)]
                                [_ (next)]))
-           #:expr-handler (lambda (stx fail)
-                            (syntax-parse stx
-                              #:datum-literals (op |.|)
-                              [(var-id (op |.|) attr-id . tail)
-                               (define attr (lookup-attribute stx #'var-id #'attr-id #f))
-                               (values (syntax-class-attribute-id attr) #'tail)]
-                              [(var-id) (fail)])))]))
+           #:expr-handler expr-handler)]))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
@@ -105,13 +115,14 @@
                                    handle-maybe-empty-alts handle-maybe-empty-group
                                    #:tail-any-escape? [tail-any-escape? #f]
                                    #:as-tail? [as-tail? #f]
-                                   #:splice? [splice? #f])
+                                   #:splice? [splice? #f]
+                                   #:splice-pattern [splice-pattern #f])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
       [(group
         (op (~and (~literal $) $-id)) esc)
-       #:when (and (zero? depth) (not as-tail?))
+       #:when (and (zero? depth) (not as-tail?) (not splice?))
        ;; Special case: a group whose content is an escape; the escape
        ;; defaults to "group" mode instead of "term" mode
        #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-group-escape #'$-id #'esc e))]
@@ -121,11 +132,12 @@
         (group (op (~and (~literal $) $-id)) esc))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
-       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc e))]
+       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc e splice?))]
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
         (~and g (group . _)))
+       #:when (not splice?)
        ;; Special case: for a single group with (), [], {}, '', or block, if the group
        ;; can be empty, allow a match/construction with zero groups
        (define-values (p new-idrs new-sidrs new-vars can-be-empty?) (convert #'g #t depth as-tail? #f))
@@ -181,7 +193,9 @@
                 [else
                  (values
                   (if splice?
-                      (quasisyntax/loc e (~seq . #,ps))
+                      (if splice-pattern
+                          (splice-pattern ps)
+                          (quasisyntax/loc e (~seq . #,ps)))
                       (quasisyntax/loc e (#,(make-datum #'tag) . #,ps)))
                   idrs
                   sidrs
@@ -246,7 +260,10 @@
       [_
        (values e null null null #f)])))
 
-(define-for-syntax (convert-pattern e #:as-tail? [as-tail? #f] #:splice? [splice? #f])
+(define-for-syntax (convert-pattern e
+                                    #:as-tail? [as-tail? #f]
+                                    #:splice? [splice? #f]
+                                    #:splice-pattern [splice-pattern #f])
   (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group)
@@ -286,7 +303,7 @@
                                                      (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
                                      #,depth)]
                      (cons name (cons temp-attr depth)))))
-         (define pack-depth (if (rhombus-syntax-class-built-in? rsc) 0 1))
+         (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
          (values (if sc
                      #`(~var #,temp0-id #,sc)
                      temp0-id)
@@ -303,7 +320,7 @@
                  (list (pattern-variable #'id temp-id pack-depth unpack*))))
        (define (incompat)
          (raise-syntax-error #f
-                             "unknown syntax class or incompatible with this context"
+                             "syntax class incompatible with this context"
                              in-e
                              #'stx-class))
        (cond
@@ -334,11 +351,13 @@
             [else (incompat)])]
          [else
           (error "unrecognized kind" kind)])]))
-  (define (handle-escape/match-head $-id e in-e pack* unpack* context-syntax-class kind)
+  (define (handle-escape/match-head $-id e in-e pack* unpack* context-syntax-class kind splice?)
     (define-values (p idrs sidrs vars) (handle-escape $-id e in-e pack* unpack* context-syntax-class kind))
     (if p
-        (values (syntax-parse in-e
-                  [(tag . _) #`(~and ((~datum tag) . _) #,p)])
+        (values (if splice? ;; splicing `multi` means match any head
+                    p
+                    (syntax-parse in-e
+                      [(tag . _) #`(~and ((~datum tag) . _) #,p)]))
                 idrs
                 sidrs
                 vars)
@@ -346,6 +365,7 @@
   (convert-syntax e
                   #:as-tail? as-tail?
                   #:splice? splice?
+                  #:splice-pattern splice-pattern
                   ;; make-datum
                   (lambda (d)
                     #`(~datum #,d))
@@ -357,10 +377,10 @@
                     (handle-escape $-id e in-e #'pack-term* #'unpack-term* #'Term 'term))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-group* #'unpack-group* #'Group 'group))
+                    (handle-escape/match-head $-id e in-e #'pack-group* #'unpack-group* #'Group 'group #f))
                   ;; handle-multi-escape:
-                  (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'unpack-multi-as-term* #'Multi 'multi))
+                  (lambda ($-id e in-e splice?)
+                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'unpack-multi-as-term* #'Multi 'multi splice?))
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
@@ -449,7 +469,7 @@
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-rep-group* (quote-syntax #,$-id) #,e 0)]) null null))
                     ;; handle-multi-escape:
-                    (lambda ($-id e in-e)
+                    (lambda ($-id e in-e splice?)
                       #;(check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (with-syntax ([(tag . _) in-e])

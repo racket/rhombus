@@ -82,7 +82,8 @@
 ;; `stx` is a single term
 (define (pack-term stx) stx)
 
-;; result is always a syntax object
+;; Unpacking is mostly about coercing from different representations.
+;; The result is always a syntax object.
 (define (unpack-term form who at-stx)
   (define (fail)
     (and who

@@ -107,8 +107,8 @@ begin:
       rhombus/macro open
     begin_for_meta:
       syntax.class Arithmetic:
-        description: "an expression with addition or subtraction"
-        pattern
+        ~description: "an expression with addition or subtraction"
+        ~pattern
         | '$x + $y'
         | '$x - $y'
     expr.macro 'right_operand $(e :: Arithmetic)':
@@ -141,3 +141,145 @@ check:
   match '10 + 20 + 30'
   | '$(f :: Foo)': f.z
   "attribute not found"
+
+begin:
+  syntax.class Foo:
+    ~sequence
+    ~pattern
+    | '$x + $y'
+  check:
+    ~print
+    match '0 + 1 + 2'
+    | '0 + $(f :: Foo)': [f.x, f.y]
+    ['1', '2']
+
+begin:
+  syntax.class Foo:
+    ~term
+    ~pattern
+    | '($x + $y)'
+  check:
+    ~print
+    match '0 + (1 + 2)'
+    | '0 + $(f :: Foo)': [f.x, f.y]
+    ['1', '2']
+
+check:
+  ~eval_exn
+  syntax.class Foo:
+    ~term
+    ~pattern
+    | '$x + $y'
+  "not a single-term pattern"
+
+begin:
+  syntax.class Foo:
+    ~group
+    ~pattern
+    | '$x + $y'
+  check:
+    ~print
+    match '(1 + 2)'
+    | '($(f :: Foo))': [f.x, f.y]
+    ['1', '2']
+
+begin:
+  syntax.class Foo:
+    ~group
+    ~pattern
+    | '$g'
+  check:
+    ~print
+    match '(1 + 2)'
+    | '($(f :: Foo))': f.g
+    '1 + 2'
+
+begin:
+  check:
+    ~eval_exn
+    syntax.class Foo:
+      ~group
+      ~pattern
+      | '$x + $y'
+    match '0 + 1 + 2'
+    | '0 + $(f :: Foo)': [f.x, f.y]
+    "syntax class incompatible with this context"
+
+begin:
+  syntax.class Foo:
+    ~multi
+    ~pattern
+    | '$x + $y
+       $z - $w'
+  check:
+    ~print
+    match ': 1 + 2
+             3 - 4'
+    | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
+    ['1', '2', '3', '4', '1 + 2; 3 - 4']
+  check:
+    ~print
+    match '(1 + 2,
+            3 - 4)'
+    | '($(f :: Foo))': [f.x, f.y, f.z, f.w, f]
+    ['1', '2', '3', '4', '1 + 2; 3 - 4']
+
+begin:
+  syntax.class Foo:
+    ~block
+    ~pattern
+    | ': $x + $y
+         $z - $w'
+  check:
+    ~print
+    match ': 1 + 2
+             3 - 4'
+    | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
+    ['1', '2', '3', '4', ': 1 + 2; 3 - 4']
+
+check:
+  ~eval_exn
+  syntax.class Foo:
+    ~block
+    ~pattern
+    | '($x + $y,
+        $z - $w)'
+  "not a block pattern"
+
+begin:
+  syntax.class Foo:
+    ~multi
+    ~pattern
+    | '($x, $y)'
+  check:
+    ~print
+    match '((1 + 2, 3 - 4))'
+    | '($(f :: Foo))': f
+    '(1 + 2, 3 - 4)'
+  check:
+    match '(1 + 2, 3 - 4)'
+    | '($(f :: Foo))': f
+    | ~else: "no"
+    "no"
+  check:
+    ~print
+    match '(1 + 2, 3 - 4)'
+    | '$(f :: Foo)': f
+    | ~else: "no"
+    '(1 + 2, 3 - 4)'
+
+begin:
+  syntax.class Foo:
+    ~multi
+    ~pattern
+    | '$x'
+  check:
+    ~print
+    match '(1 + 2, 3 - 4)'
+    | '($(f :: Foo))': f
+    '1 + 2; 3 - 4'
+  check:
+    ~print
+    match ': 1 + 2; 3 - 4; 5 / 6'
+    | ': $(f :: Foo)': f
+    '1 + 2; 3 - 4; 5 / 6'

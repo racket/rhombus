@@ -35,10 +35,47 @@
              #:attr id #'a.id
              #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
-(define-for-syntax (generate-pattern-and-attributes stx)
-  (define (generate in-quotes body)
+(define-for-syntax (generate-pattern-and-attributes orig-stx stx kind splicing?)
+  (define (generate pat body)
+    (define in-quotes
+      (cond
+        [(eq? kind 'multi)
+         (syntax-parse pat
+           [(_ g ...) #'(multi g ...)])]
+        [(eq? kind 'block)
+         (syntax-parse pat
+           #:datum-literals (block)
+           [(_ (~and g (group (block . _)))) #'g]
+           [_ (raise-syntax-error #f
+                                  "not a block pattern"
+                                  orig-stx
+                                  pat)])]
+        [else
+         (syntax-parse pat
+           [(_ g) #'g]
+           [(_) (raise-syntax-error #f
+                                    "no groups in pattern"
+                                    orig-stx
+                                    pat)]
+           [_ (raise-syntax-error #f
+                                  "multiple groups in pattern"
+                                  orig-stx
+                                  pat)])]))
     (define-values (p idrs sidrs vars can-be-empty?)
-      (convert-pattern #:splice? #t
+      (convert-pattern #:splice? (not (eq? kind 'group))
+                       #:splice-pattern (and (not (eq? kind 'group))
+                                             (not splicing?)
+                                             (lambda (ps)
+                                               (cond
+                                                 [(eq? kind 'multi)
+                                                  #`(_ #,@ps)]
+                                                 [(= 1 (length ps))
+                                                  (car ps)]
+                                                 [else
+                                                  (raise-syntax-error #f
+                                                                      "not a single-term pattern"
+                                                                      orig-stx
+                                                                      pat)])))
                        in-quotes))
     (define-values (pattern-body explicit-attrs)
       (for/fold ([body-forms null]
@@ -84,25 +121,33 @@
                    all-attrs))))
   (syntax-parse stx
     #:datum-literals (alts group quotes block)
-    [(block (group (quotes in-quotes)))
-     (generate #'in-quotes #'())]
-    [(block (group (quotes in-quotes)
+    [(block (group (~and pat (quotes . _))))
+     (generate #'pat #'())]
+    [(block (group (~and pat (quotes . _))
                    (block body ...)))
-     (generate #'in-quotes #'(body ...))]))
+     (generate #'pat #'(body ...))]))
 
-(define-for-syntax (generate-syntax-class stx class-name alts description)
-  (let-values ([(patterns attributes)
-                (for/lists (patterns attributess
-                                     #:result (values patterns (intersect-attributes stx attributess)))
-                           ([alt-stx (in-list alts)])
-                  (generate-pattern-and-attributes alt-stx))])
-    (list
-     #`(define-splicing-syntax-class #,class-name
-         #:description #,(if description #`(rhombus-body #,@description) #f)
-         #:datum-literals (block group quotes)
-         #,@patterns)
-     #`(define-syntax #,(in-syntax-class-space class-name)
-         (rhombus-syntax-class 'term #'#,class-name '#,attributes #f)))))
+(define-for-syntax (generate-syntax-class stx class-name kind-kw-stx alts description)
+  (define-values (kind splicing?)
+    (let ([kind (string->symbol (keyword->string (syntax-e kind-kw-stx)))])
+      (cond
+        [(eq? kind 'sequence) (values 'term #t)]
+        [else (values kind #f)])))
+  (define-values (patterns attributes)
+    (for/lists (patterns attributess
+                         #:result (values patterns (intersect-attributes stx attributess)))
+        ([alt-stx (in-list alts)])
+      (generate-pattern-and-attributes stx alt-stx kind splicing?)))
+  (define define-class (if splicing?
+                           #'define-splicing-syntax-class
+                           #'define-syntax-class))
+  (list
+   #`(#,define-class #,class-name
+      #:description #,(if description #`(rhombus-body #,@description) #f)
+      #:datum-literals (block group quotes)
+      #,@patterns)
+   #`(define-syntax #,(in-syntax-class-space class-name)
+       (rhombus-syntax-class '#,kind #'#,class-name '#,attributes #,splicing?))))
 
 (define-for-syntax (intersect-attributes stx attributess)
   (cond
@@ -136,15 +181,22 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (alts group quotes block pattern description)
+        #:datum-literals (alts group quotes block)
         ;; Classname and patterns shorthand
         [(form-id class-name (alts alt ...))
-         (generate-syntax-class stx #'class-name (syntax->list #'(alt ...)) #f)]
+         (generate-syntax-class stx #'class-name #'#:sequence (syntax->list #'(alt ...)) #f)]
         ;; Specify patterns with "pattern"
         [(form-id class-name
                   (block
-                   (~optional (group description (block class-desc ...)))
-                   (group pattern (alts alt ...))))
-         (generate-syntax-class stx #'class-name (syntax->list #'(alt ...)) (attribute class-desc))]
+                   (~alt (~optional (group #:description (block class-desc ...)))
+                         (~optional (group (~and kind-kw (~or* #:term
+                                                               #:sequence
+                                                               #:group
+                                                               #:multi
+                                                               #:block)))
+                                    #:defaults ([kind-kw #'#:sequence])))
+                   ...
+                   (group #:pattern (alts alt ...))))
+         (generate-syntax-class stx #'class-name #'kind-kw (syntax->list #'(alt ...)) (attribute class-desc))]
         [_
          (raise-syntax-error #f "expected alternatives" stx)]))))
