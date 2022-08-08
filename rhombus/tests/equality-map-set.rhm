@@ -106,12 +106,24 @@ begin:
 // empty map, not empty set
 check: {}; Map()
 check: {} == Set(); #false
+check: Map.empty; {}
 check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
 begin:
   val a: mcons(1, 2)
   val b: mcons(1, 2)
   check: {a: 1, b: 2}; {b: 2, a: 1}
   check: {a: 1} == {b: 1}; #false
+check:
+  match {}
+  | Map.empty: "Map.empty"
+  | _: #false
+  "Map.empty"
+check:
+  match {"a": 1}
+  | Map.empty: "Map.empty"
+  | {}: "{}"
+  | _: #false
+  "{}"
 
 check: Set(); Set()
 check: {"a", "b"}; Set("a", "b")
