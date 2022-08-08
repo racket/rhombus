@@ -55,6 +55,7 @@
     #:in-space in-export-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref export-prefix-operator-ref
     #:infix-operator-ref export-infix-operator-ref
     #:check-result check-export-result
@@ -75,6 +76,7 @@
     #:in-space in-export-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-export-modifier-ref transform-in req))
 
   (define (apply-modifiers mods e-parsed)

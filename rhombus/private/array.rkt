@@ -16,15 +16,15 @@
 
 (define Array vector)
 
-(define-annotation-syntax Array
-  (annotation-constructor #'Array #'vector? #'((#%map-ref vector-ref)
-                                               (#%map-set! vector-set!))
-                          1
-                          (lambda (arg-id predicate-stxs)
-                            #`(for/and ([e (in-vector #,arg-id)])
-                                (#,(car predicate-stxs) e)))
-                          (lambda (static-infoss)
-                            #`((#%ref-result #,(car static-infoss))))))
+(define-annotation-constructor Array
+  () #'vector? #'((#%map-ref vector-ref)
+                  (#%map-set! vector-set!))
+  1
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([e (in-vector #,arg-id)])
+        (#,(car predicate-stxs) e)))
+  (lambda (static-infoss)
+    #`((#%ref-result #,(car static-infoss)))))
 
 (define-static-info-syntax Array
   (#%call-result ((#%map-ref vector-ref)

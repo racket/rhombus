@@ -50,6 +50,7 @@
     #:desc "declaration"
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref declaration-transformer-ref
     #:check-result check-declaration-result)
 
@@ -60,6 +61,7 @@
     #:desc "definition"
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
 
@@ -71,6 +73,7 @@
     #:desc "definition sequence"
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref definition-sequence-transformer-ref
     #:check-result check-definition-result)
 
@@ -84,6 +87,7 @@
     #:in-space in-expression-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
     #:check-result check-expression-result
@@ -100,6 +104,7 @@
     #:in-space in-binding-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
     #:check-result check-binding-result

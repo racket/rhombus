@@ -109,7 +109,7 @@ function’s argument can use a binding pattern that indicates a list of
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
   )
 
-An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of)
+An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~ann)
 annotation constructor. It expects an annotation that every element of
 the list must satisfy:
 

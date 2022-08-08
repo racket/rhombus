@@ -10,7 +10,8 @@
          name-root-proc)
 
 (module+ for-parse
-  (provide apply-name-root))
+  (provide apply-name-root
+           name-root-ref-root))
 
 (property name-root (proc))
   
@@ -26,3 +27,6 @@
                       (eq? 'op (syntax-e (car (syntax-e target))))))
        (raise-result-error (proc-name proc) "identifier-or-operator?" target))
      (check-transformer-result (out target) (out tail) proc))))
+
+(define (name-root-ref-root v ref)
+  (ref v))

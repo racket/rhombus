@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      (prefix-in typeset-meta: "typeset_meta.rhm")
-                     shrubbery/property)
+                     shrubbery/property
+                     "add-space.rkt")
          "typeset-help.rkt"
          shrubbery/print
          racket/list
@@ -70,8 +71,9 @@
      (define space-names (for/list ([form (in-list forms)])
                            (extract-space-name form)))
      (define def-names (for/list ([form (in-list forms)]
+                                  [space-name (in-list space-names)]
                                   [introducer (in-list introducers)])
-                         (define def-name (extract-defined form))
+                         (define def-name (extract-defined form space-name))
                          (when def-name
                            (define def-id (if (identifier? def-name)
                                               def-name
@@ -111,13 +113,15 @@
                                            (quote #,space-name))
                                         rev-as-defs)
                                   (hash-set seen seen-key #t))])))
-     (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)])
-                        (extract-metavariables form vars)))
+     (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)]
+                                                    [space-name (in-list space-names)])
+                        (extract-metavariables form vars space-name)))
      (define vars (for/fold ([vars all-vars]) ([id (in-list (syntax->list #'(~? (literal-id ... ...) ())))])
                     (hash-remove vars (syntax-e id))))
      (define typesets (for/list ([form (in-list forms)]
-                                 [def-id-as-def (in-list def-id-as-defs)])
-                        (extract-typeset form def-id-as-def)))
+                                 [def-id-as-def (in-list def-id-as-defs)]
+                                 [space-name (in-list space-names)])
+                        (extract-typeset form def-id-as-def space-name)))
      (define kind-strs (map extract-kind-str forms))
      (with-syntax ([(typeset ...) typesets]
                    [(kind-str ...) kind-strs])
@@ -200,58 +204,58 @@
     (pattern (~seq (~or expr bind annotation) (op |.|) rule))
     (pattern (~seq (~or imp) (op |.|) modifier))
     (pattern (~seq def)))
-  (define-splicing-syntax-class identifier-target
+  (define-splicing-syntax-class (identifier-target space-name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (op (~and dot |.|)) field:identifier)
-             #:do [(define target (resolve-name-ref #'root #'field))]
+             #:do [(define target (resolve-name-ref (add-space #'root space-name) #'field))]
              #:when target
              #:attr name (datum->syntax #f (list #'root target)))
     (pattern (~seq name:identifier)))
-  (define-splicing-syntax-class target
+  (define-splicing-syntax-class (target space-name)
     #:datum-literals (op)
-    (pattern (~seq t:identifier-target)
+    (pattern (~seq (~var t (identifier-target space-name)))
              #:attr name #'t.name)
     (pattern (~seq (op name)))))
 
-(define-for-syntax (extract-defined stx)
+(define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
     #:literals (def val fun operator :: defn |.| grammar rhombus-syntax $)
     #:datum-literals (parens group op modifier class quotes)
-    [(group (~or def fun) id:identifier-target (parens . _) . _) #'id.name]
-    [(group (~or def val) id:identifier-target . _) #'id.name]
+    [(group (~or def fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
+    [(group (~or def val) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
     [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
-    [(group _:operator-macro-head (quotes (group (op $) _:identifier id:target . _))) #'id.name]
-    [(group _:operator-macro-head (quotes (group id:target . _))) #'id.name]
-    [(group _:identifier-macro-head (quotes (group id:identifier-target . _))) #'id.name]
-    [(group _:identifier-macro-head (quotes id:identifier-target)) #'id.name]
-    [(group (~or rhombus-syntax) (op |.|) class id:identifier-target) #'id.name]
+    [(group _:operator-macro-head (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
+    [(group _:operator-macro-head (quotes (group (~var id (target space-name)) . _))) #'id.name]
+    [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
+    [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name)))) #'id.name]
+    [(group (~or rhombus-syntax) (op |.|) class (~var id (identifier-target space-name))) #'id.name]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
 
 (define-for-syntax (add-metavariable vars id)
   (hash-set vars (syntax-e id) (or (hash-ref vars (syntax-e id) #f) id)))
 
-(define-for-syntax (extract-metavariables stx vars)
+(define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
     #:literals (def val fun operator :: |.| grammar)
     #:datum-literals (parens group op quotes)
-    [(group (~or def fun) _:identifier-target (parens g ...) . _)
+    [(group (~or def fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
-    [(group (~or def val) _:identifier-target . _) vars]
+    [(group (~or def val) (~var id (identifier-target space-name)) . _) vars]
     [(group (~or operator) (parens (group (op id) arg)) . _)
      (extract-binding-metavariables #'(group arg) vars)]
     [(group (~or operator) (parens (group arg0 (op id) arg1)) . _)
      (define vars0 (extract-binding-metavariables #'(group arg0) vars))
      (extract-binding-metavariables #'(group arg1) vars0)]
-    [(group _:operator-macro-head (quotes (group (op $) t0:identifier _:target t ...)))
+    [(group _:operator-macro-head (quotes (group (op $) t0:identifier (~var id (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group (op $) t0 t ...) vars)]
-    [(group _:operator-macro-head (quotes (group _:target t ...)))
+    [(group _:operator-macro-head (quotes (group (~var id (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [(group _:identifier-macro-head (quotes (group _:identifier-target t ...)))
+    [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [(group _:identifier-macro-head (quotes _:identifier-target))
+    [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
      vars]
     [(group grammar id b)
      (extract-pattern-metavariables #'(group b) (add-metavariable vars #'id))]
@@ -308,7 +312,7 @@
                   #f)]
          [_ (values vars #f)]))]))
 
-(define-for-syntax (extract-typeset stx def-id-as-def)
+(define-for-syntax (extract-typeset stx def-id-as-def space-name)
   (define (rb form
               #:at [at-form form]
               #:pattern? [pattern? #f]
@@ -343,7 +347,7 @@
   (syntax-parse stx
     #:literals (def val fun rhombus-syntax operator |.| |$| grammar)
     #:datum-literals (parens group op quotes)
-    [(group (~and tag (~or def val fun)) id:identifier-target e ...)
+    [(group (~and tag (~or def val fun)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)
@@ -352,19 +356,19 @@
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) arg0 (op id) arg1)) e ...)
      (rb #:at stx
          #`(group tag (p-tag (g-tag arg0 #,@(subst #'id) arg1)) e ...))]
-    [(group _:operator-macro-head (quotes (~and g (group (~and $0 (op $)) e0:identifier id:target e ...))))
+    [(group _:operator-macro-head (quotes (~and g (group (~and $0 (op $)) e0:identifier (~var id (target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
          #`(group $0 e0 #,@(subst #'id.name) e ...))]
-    [(group _:operator-macro-head (quotes (~and g (group id:target e ...))))
+    [(group _:operator-macro-head (quotes (~and g (group (~var id (target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
          #`(group #,@(subst #'id.name) e ...))]
-    [(group _:identifier-macro-head (quotes (~and g (group id:identifier-target e ...))))
+    [(group _:identifier-macro-head (quotes (~and g (group (~var id (identifier-target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t
          #`(group #,@(subst #'id.name) e ...))]
-    [(group _:identifier-macro-head (quotes id:identifier-target))
+    [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
      #`(paragraph plain #,def-id-as-def)]
     [(group rhombus-syntax . _)
      #`(paragraph plain #,def-id-as-def)]

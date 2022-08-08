@@ -15,6 +15,7 @@
          (only-in "ellipsis.rkt"
                   [... rhombus...])
          "repetition.rkt"
+         "name-root.rkt"
          "parse.rkt")
 
 (provide cons
@@ -56,15 +57,16 @@
        [(form-id ((~and tag (~datum parens)) arg ...) . tail)
         (parse-list-binding stx)]))))
 
-(define-annotation-syntax List
-  (annotation-constructor #'List #'list? #'((#%map-ref list-ref)
-                                            (#%sequence-constructor in-list))
-                          1
-                          (lambda (arg-id predicate-stxs)
-                            #`(for/and ([e (in-list #,arg-id)])
-                                (#,(car predicate-stxs) e)))
-                          (lambda (static-infoss)
-                            #`((#%ref-result #,(car static-infoss))))))
+(define-annotation-constructor List
+  ()
+  #'list? #'((#%map-ref list-ref)
+             (#%sequence-constructor in-list))
+  1
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([e (in-list #,arg-id)])
+        (#,(car predicate-stxs) e)))
+  (lambda (static-infoss)
+    #`((#%ref-result #,(car static-infoss)))))
 
 (define-reducer-syntax List
   (reducer-transformer
@@ -76,14 +78,19 @@
            ((lambda (v) (cons v accum)))
            #,list-static-infos]]))))
 
-(define-repetition-syntax List
+(define-name-root List
+  #:space rhombus/repetition
+  #:fields
+  (repet))
+
+(define-syntax repet
   (repetition-transformer
    #'List
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (op |.| parens group repet)
-       [(form-id (op |.|) repet (parens g) . tail)
-        (define name (string->symbol (format "~a.repet" (syntax-e #'form-id))))
+       [(form-id (parens g) . tail)
+        (define name (syntax-e #'form-id))
         (values (make-repetition-info name
                                       #`(check-repetition-list '#,name (rhombus-expression g))
                                       1

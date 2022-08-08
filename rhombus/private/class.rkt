@@ -105,14 +105,13 @@
                                                     (list (quote-syntax name-field) ...)
                                                     #:accessor->info? #t
                                                     (list (quote-syntax field.static-infos) ...))))
-           #'(define-annotation-syntax name
-               (let ([accessors (list (quote-syntax name-field) ...)])
-                 (annotation-constructor (quote-syntax name)
-                                         (quote-syntax name?)
-                                         (quote-syntax ((#%dot-provider name-instance)))
-                                         cnt
-                                         (make-class-instance-predicate accessors)
-                                         (make-class-instance-static-infos accessors))))
+           #'(define-annotation-constructor name
+               ([accessors (list (quote-syntax name-field) ...)])
+               (quote-syntax name?)
+               (quote-syntax ((#%dot-provider name-instance)))
+               cnt
+               (make-class-instance-predicate accessors)
+               (make-class-instance-static-infos accessors))
            #'(define-class-desc-syntax name
                (class-desc (quote-syntax name)
                            (list (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))

@@ -15,7 +15,8 @@
                   plain
                   nested-flow)
          (submod scribble/racket id-element)
-         (for-template "typeset-help.rkt"))
+         (for-template "typeset-help.rkt")
+         "add-space.rkt")
 
 (provide typeset-rhombus
          typeset-rhombusblock)
@@ -374,19 +375,6 @@
        (not (symbol? v))
        (content? v)))
 
-(define (add-space stx space-name)
-  (define space (case space-name
-                  [(bind) 'rhombus/binding]
-                  [(impmod) 'rhombus/import]
-                  [(ann) 'rhombus/annotation]
-                  [(stxclass) 'rhombus/syntax-class]
-                  [(reducer) 'rhombus/reducer]
-                  [(for_clause) 'rhombus/for-clause]
-                  [else #f]))
-  (if space
-      ((make-interned-syntax-introducer space) stx 'add)
-      stx))
-
 (define (id-space-name id [default-name #f])
   (or (syntax-property id 'typeset-space-name) default-name))
 
@@ -401,7 +389,7 @@
                  (eq? (syntax-e (cadr op)) '|.|)))
           (pair? (cddr elems))
           (identifier? (caddr elems)))
-     (define target (resolve-name-ref (car elems) (caddr elems)))
+     (define target (resolve-name-ref (add-space (car elems) space-name) (caddr elems)))
      (cond
        [target
         (define id (car elems))

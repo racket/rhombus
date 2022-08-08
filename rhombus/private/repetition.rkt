@@ -86,6 +86,7 @@
     #:in-space in-repetition-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref repetition-prefix-operator-ref
     #:infix-operator-ref repetition-infix-operator-ref
     #:check-result check-repetition-result

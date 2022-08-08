@@ -10,6 +10,7 @@
 
 (provide (for-space rhombus/scribble/typeset
                     ::
+                    -:
                     |'|
                     fun
                     val
@@ -41,7 +42,7 @@
                                     (cadr (syntax->list escape)))]
         [_ #f])))
 
-(define-spacer ::
+(define-for-syntax annote-spacer
   (spacer
    (lambda (head tail escape)
      (values head
@@ -52,6 +53,9 @@
                 #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
                    . more)]
                [_ tail])))))
+
+(define-spacer :: annote-spacer)
+(define-spacer -: annote-spacer)
 
 (define-spacer |'|
   (spacer

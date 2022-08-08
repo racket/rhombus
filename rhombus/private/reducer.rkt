@@ -41,6 +41,7 @@
     #:in-space in-reducer-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref reducer-transformer-ref
     #:check-result check-reducer-result))
 

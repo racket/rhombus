@@ -88,6 +88,19 @@ types and one macro:
       match has an @racket[parsed] attribute representing the enforestation
       result.}
 
+  @item{@racket[#:relative-precedence]: an optional name to bind as a
+      function that compares the precedence of two operators. The
+      function takes four arguments: @racket['infix] or
+      @racket['prefix] for the left operator's mode, the left
+      operator's identifier, @racket['infix] or @racket['prefix] for
+      the right operator's mode, and the right operator's identifier.
+      The result is either @racket['stronger] (left takes precedence),
+      @racket['weaker] (right takes precedence), or an error results:
+      @racket[#f] (no relation), @racket['inconsistent-prec],
+      @racket['inconsistent-assoc], @racket['same] (error because no
+      associativity), @racket['same-on-left] (error because on right),
+      @racket['unbound] (one of the operators is not bound).}
+
    @item{@racket[#:prefix-more-syntax-class] and @racket[#:infix-more-syntax-class]:
       names of syntax classes (defaulting to fresh names) that match
       an operator name followed by a sequence of terms and steps an
@@ -102,10 +115,6 @@ types and one macro:
       and adds a space scope if the enforesting context uses a space.
       The default is @racket[values].}
 
-    @item{@racket[#:name-path-op]: an operator name that is recognized after a
-      name-root identifier for hierarhical name references. The
-      default is @racket['|.|].}
-
     @item{@racket[#:prefix-operator-ref] and @racket[#:infix-operator-ref]: functions
       that take a compile-time value and extract an instance of
       @racket[prefix-operator] or @racket[infix-operator], respectively, if the
@@ -113,6 +122,25 @@ types and one macro:
       otherwise. Normally, these functions use structure-property
       accessors. The defaults are @racket[prefix-operator-ref] and
       @racket[infix-oerator-ref].}
+
+    @item{@racket[#:name-path-op]: an operator name that is recognized after a
+      name-root identifier for hierarhical name references. The
+      default is @racket['|.|].}
+
+    @item{@racket[#:name-root-ref]: a function that takes a
+      compile-time value and extracts an instance of
+      @racket[name-root], used only on the compile-time value of an
+      identifier that is followed by the @racket[#:name-path-op]
+      operator.}
+
+    @item{@racket[#:name-root-ref-root]: a function that takes a
+      compile-time value and extracts another compile-time value, used
+      before the @racket[#:prefix-operator-ref] and
+      @racket[#:infix-operator-ref] procedures, but not before the
+      @racket[#:name-root-ref] procedure; the intent is that this
+      function might convert something that would produce a name-root
+      value into something that can instead produce an infix or prefix
+      operator.}
 
     @item{@racket[#:check-result]: a function that takes the result of an
       operator and checks whether the result is suitable for the
@@ -186,15 +214,18 @@ and macro:
     @item{@racket[#:desc]: string used in error reporting to refer to a form. The
       default is @racket["form"].}
 
-    @item{@racket[#:name-path-op]: an operator name that is recognized after a
-      name-root identifier for hierarhical name references. The
-      default is @racket['|.|].}
-
     @item{@racket[#:transformer-ref]: function that takes a compile-time value
       and extract an instance of @racket[transformer], if the value has one
       suitable for the context, returning @racket[#f] otherwise. Normally,
       these functions use structure-property accessors. The default is
       @racket[transformer-ref].}
+
+    @item{@racket[#:name-path-op]: an operator name that is recognized after a
+      name-root identifier for hierarhical name references. The
+      default is @racket['|.|].}
+
+    @item{@racket[#:name-root-ref] and @racket[#:name-root-ref-root]:
+      analogous to @racket[define-enforest].}
 
     @item{@racket[#:check-result]: a function that takes the result of an
       transformer and checks whether the result is suitable for the

@@ -20,6 +20,8 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
+         "name-root.rkt"
+         "name-root-ref.rkt"
          "static-info.rkt"
          "parse.rkt"
          "realm.rkt")
@@ -47,7 +49,6 @@
              (property-out annotation-infix-operator)
 
              identifier-annotation
-             annotation-constructor
              
              in-annotation-space
 
@@ -59,7 +60,8 @@
 
              annotation-form))
   
-  (provide define-annotation-syntax))
+  (provide define-annotation-syntax
+           define-annotation-constructor))
 
 (begin-for-syntax
   (property annotation-prefix-operator prefix-operator
@@ -95,6 +97,8 @@
     #:operator-desc "annotation operator"
     #:in-space in-annotation-space
     #:name-path-op name-path-op
+    #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref annotation-prefix-operator-ref
     #:infix-operator-ref annotation-infix-operator-ref
     #:check-result check-annotation-result
@@ -139,43 +143,70 @@
        (values packed (syntax-parse stx
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
-
+  
   (define (annotation-constructor name predicate-stx static-infos
                                   sub-n predicate-maker info-maker)
-    (annotation-prefix-operator
-     name
-     '((default . stronger))
-     'macro
-     (lambda (stx)
-       (syntax-parse stx
-         #:datum-literals (op |.| parens of)
-         [(form-id (op |.|) of ((~and tag parens) g ...) . tail)
-          (define gs (syntax->list #'(g ...)))
-          (unless (= (length gs) sub-n)
-            (raise-syntax-error #f
-                                "wrong number of subannotations in parentheses"
-                                #'form-id
-                                #f
-                                (list #'tag)))
-          (define c-parseds (for/list ([g (in-list gs)])
-                              (syntax-parse g
-                                [c::annotation #'c.parsed])))
-          (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
-                                 (syntax-parse c-parsed
-                                   [c::annotation-form #'c.predicate])))
-          (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
-                                    (syntax-parse c-parsed
-                                      [c::annotation-form #'c.static-infos])))
-          (values (annotation-form #`(lambda (v)
-                                       (and (#,predicate-stx v)
-                                            #,(predicate-maker #'v c-predicates)))
-                                   #`(#,@(info-maker c-static-infoss)
-                                      . #,static-infos))
-                  #'tail)]
-         [(_ . tail)
-          (values (annotation-form predicate-stx
-                                 static-infos)
-                  #'tail)])))))
+    (values
+     ;; root
+     (annotation-prefix-operator
+      name
+      '((default . stronger))
+      'macro
+      (lambda (stx)
+        (syntax-parse stx
+          [(_ . tail)
+           (values (annotation-form predicate-stx
+                                    static-infos)
+                   #'tail)])))
+     ;; `of`:
+     (annotation-prefix-operator
+      #'of
+      '((default . stronger))
+      'macro
+      (lambda (stx)
+        (syntax-parse stx
+          #:datum-literals (op |.| parens of)
+          [(form-id ((~and tag parens) g ...) . tail)
+           (define gs (syntax->list #'(g ...)))
+           (unless (= (length gs) sub-n)
+             (raise-syntax-error #f
+                                 "wrong number of subannotations in parentheses"
+                                 #'form-id
+                                 #f
+                                 (list #'tag)))
+           (define c-parseds (for/list ([g (in-list gs)])
+                               (syntax-parse g
+                                 [c::annotation #'c.parsed])))
+           (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
+                                  (syntax-parse c-parsed
+                                    [c::annotation-form #'c.predicate])))
+           (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
+                                     (syntax-parse c-parsed
+                                       [c::annotation-form #'c.static-infos])))
+           (values (annotation-form #`(lambda (v)
+                                        (and (#,predicate-stx v)
+                                             #,(predicate-maker #'v c-predicates)))
+                                    #`(#,@(info-maker c-static-infoss)
+                                       . #,static-infos))
+                   #'tail)]))))))
+
+(define-syntax (define-annotation-constructor stx)
+  (syntax-parse stx
+    [(_ name
+        binds
+        predicate-stx static-infos
+        sub-n predicate-maker info-maker)
+     #'(begin
+         (begin-for-syntax
+           (define-values (root-proc of-proc)
+             (let binds
+                 (annotation-constructor #'name predicate-stx static-infos
+                                         sub-n predicate-maker info-maker))))
+         (define-name-root name
+           #:space rhombus/annotation
+           #:fields (of)
+           #:root root-proc)
+         (define-syntax of of-proc))]))
 
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator

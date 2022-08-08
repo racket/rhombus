@@ -52,14 +52,15 @@
      (#%map-set! set-member!)
      (#%map-append set-append)))
 
-(define-annotation-syntax Set
-  (annotation-constructor #'Set #'set? set-static-info
-                          1
-                          (lambda (arg-id predicate-stxs)
-                            #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
-                                (#,(car predicate-stxs) v)))
-                          (lambda (static-infoss)
-                            #`())))
+(define-annotation-constructor Set
+  ()
+  #'set? set-static-info
+  1
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
+        (#,(car predicate-stxs) v)))
+  (lambda (static-infoss)
+    #`()))
 
 (define-static-info-syntax Set
   (#%call-result ((#%map-ref set-ref))))

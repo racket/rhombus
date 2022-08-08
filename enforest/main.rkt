@@ -95,6 +95,8 @@
                          #:defaults ([name-path-op #'name-path-op]))
               (~optional (~seq #:name-root-ref name-root-ref)
                          #:defaults ([name-root-ref #'name-root-ref]))
+              (~optional (~seq #:name-root-ref-root name-root-ref-root)
+                         #:defaults ([name-root-ref-root #'name-root-ref-root]))
               (~optional (~seq #:prefix-operator-ref prefix-operator-ref)
                          #:defaults ([prefix-operator-ref #'prefix-operator-ref]))
               (~optional (~seq #:infix-operator-ref infix-operator-ref)
@@ -137,7 +139,7 @@
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space
                                                    name-path-op prefix-operator-ref infix-operator-ref
-                                                   name-root-ref
+                                                   name-root-ref name-root-ref-root
                                                    check-result
                                                    make-identifier-form
                                                    make-operator-form
@@ -168,7 +170,7 @@
 (define (make-enforest-step form-kind-str operator-kind-str
                             in-space
                             name-path-op prefix-operator-ref infix-operator-ref
-                            name-root-ref
+                            name-root-ref name-root-ref-root
                             check-result
                             make-identifier-form
                             make-operator-form
@@ -191,8 +193,11 @@
            (define v (syntax-local-value* head-id
                                           (lambda (v) (or (and name-path?
                                                                (name-root-ref v))
-                                                          (prefix-operator-ref v)
-                                                          (infix-operator-ref v)))))
+                                                          (name-root-ref-root
+                                                           v
+                                                           (lambda (v)
+                                                             (or (prefix-operator-ref v)
+                                                                 (infix-operator-ref v))))))))
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))
@@ -248,8 +253,11 @@
            (define v (syntax-local-value* head-id
                                           (lambda (v) (or (and name-path?
                                                                (name-root-ref v))
-                                                          (infix-operator-ref v)
-                                                          (prefix-operator-ref v)))))
+                                                          (name-root-ref-root
+                                                           v
+                                                           (lambda (v)
+                                                             (or (infix-operator-ref v)
+                                                                 (prefix-operator-ref v))))))))
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))

@@ -72,6 +72,7 @@
     #:in-space in-import-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref import-prefix-operator-ref
     #:infix-operator-ref import-infix-operator-ref
     #:check-result check-import-result
@@ -92,6 +93,7 @@
     #:in-space in-import-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
   (define (extract-module-path-and-prefixes r)

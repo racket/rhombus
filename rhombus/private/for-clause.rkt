@@ -37,6 +37,7 @@
     #:in-space in-for-clause-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
+    #:name-root-ref-root name-root-ref-root
     #:transformer-ref for-clause-transformer-ref
     #:check-result check-for-clause-result))
 

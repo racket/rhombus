@@ -6,6 +6,7 @@
          "private/transform.rkt"
          "hier-name-parse.rkt"
          "name-root.rkt"
+         (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
          "private/check.rkt")
 
@@ -37,6 +38,8 @@
                          #:defaults ([name-path-op #'name-path-op]))
               (~optional (~seq #:name-root-ref name-root-ref)
                          #:defaults ([name-root-ref #'name-root-ref]))
+              (~optional (~seq #:name-root-ref-root name-root-ref-root)
+                         #:defaults ([name-root-ref-root #'name-root-ref-root]))
               (~optional (~seq #:transformer-ref transformer-ref)
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
@@ -51,7 +54,8 @@
                     #:attr id head-id
                     #:attr tail #'hname.tail))
          (define (apply-transformer head-id head-tail tail-tail)
-           (define t (syntax-local-value* (in-space head-id) transformer-ref))
+           (define t (syntax-local-value* (in-space head-id) (lambda (v)
+                                                               (name-root-ref-root v transformer-ref))))
            (apply-sequence-transformer t head-id
                                        (datum->syntax #f (cons head-id head-tail))
                                        tail-tail

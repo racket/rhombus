@@ -34,7 +34,7 @@
          (values new-shape new-args)))
      (wrap-static-info*
       (quasisyntax/loc stx
-        (#,(if (eq? shape 'set) #'Set #'Map)
+        (#,(if (eq? shape 'set) #'Set #'plain-Map)
          #,@(reverse rev-args)))
       (if (eq? shape 'set)
           set-static-info

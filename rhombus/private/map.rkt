@@ -14,7 +14,8 @@
          "composite.rkt"
          "parse.rkt"
          "realm.rkt"
-         "reducer.rkt")
+         "reducer.rkt"
+         "name-root.rkt")
 
 (provide Map
          (for-space rhombus/binding Map)
@@ -29,20 +30,35 @@
   (provide (for-syntax parse-map-binding)))
 
 (module+ for-info
-  (provide (for-syntax map-static-info)))
+  (provide (for-syntax map-static-info)
+           plain-Map))
 
-(define Map
-  (lambda args
-    (define ht (hashalw))
-    (let loop ([ht ht] [args args])
-      (cond
-        [(null? args) ht]
-        [(null? (cdr args))
-         (raise-arguments-error* 'Map rhombus-realm
-                                 (string-append "key does not have a value"
-                                                " (i.e., an odd number of arguments were provided)")
-                                 "key" (car args))]
-        [else (loop (hash-set ht (car args) (cadr args)) (cddr args))]))))
+(define plain-Map
+  (let ([Map
+         (lambda args
+           (define ht (hashalw))
+           (let loop ([ht ht] [args args])
+             (cond
+               [(null? args) ht]
+               [(null? (cdr args))
+                (raise-arguments-error* 'Map rhombus-realm
+                                        (string-append "key does not have a value"
+                                                       " (i.e., an odd number of arguments were provided)")
+                                        "key" (car args))]
+               [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))])
+    Map))
+
+(define empty-map #hash())
+
+(define-name-root Map
+  #:fields
+  ([empty empty-map])
+  #:root
+  (expression-transformer
+   #'Map
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ . tail) (values #'plain-Map #'tail)]))))
 
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
@@ -50,15 +66,16 @@
      (#%map-append hash-append)
      (#%sequence-constructor in-hash)))
 
-(define-annotation-syntax Map
-  (annotation-constructor #'Map #'hash? map-static-info
-                          2
-                          (lambda (arg-id predicate-stxs)
-                            #`(for/and ([(k v) (in-hash #,arg-id)])
-                                (and (#,(car predicate-stxs) k)
-                                     (#,(cadr predicate-stxs) v))))
-                          (lambda (static-infoss)
-                            #`((#%ref-result #,(cadr static-infoss))))))
+(define-annotation-constructor Map
+  ()
+  #'hash? map-static-info
+  2
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([(k v) (in-hash #,arg-id)])
+        (and (#,(car predicate-stxs) k)
+             (#,(cadr predicate-stxs) v))))
+  (lambda (static-infoss)
+    #`((#%ref-result #,(cadr static-infoss)))))
 
 (define-static-info-syntax Map
   (#%call-result ((#%map-ref hash-ref)
@@ -80,7 +97,7 @@
 
 (define make_map
   (lambda args
-    (hash-copy (apply Map args))))
+    (hash-copy (apply plain-Map args))))
 
 (define-static-info-syntax make_map
   (#%call-result ((#%map-ref hash-ref)
