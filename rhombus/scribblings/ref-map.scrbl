@@ -129,3 +129,31 @@ operator. These uses of square brackets are implemented by
 )
 
 }
+
+@doc(
+  bind.macro 'Map.empty',
+  expr.macro 'Map.empty'
+){
+
+ An empty map. Differs from @rhombus({}) and @rhombus(Map())
+ because while those as binding forms match any maps
+ including ones with extra keys, @rhombus(Map.empty, ~bind) as a
+ binding only matches empty maps, with no keys.
+
+@examples(
+  Map.empty,
+  match {}
+  | Map.empty: "empty map"
+  | _: #false,
+  match {"x": 1, "y": 2}
+  | Map.empty: "empty map"
+  | _: #false,
+  match {"x": 1, "y": 2}
+  | {}: "curly braces allow extra"
+  | _: #false,
+  match {"x": 1, "y": 2}
+  | Map(): "Map binding allows extra"
+  | _: #false,
+)
+
+}

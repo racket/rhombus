@@ -5,8 +5,10 @@
                      "srcloc.rkt"
                      "with-syntax.rkt")
          "expression.rkt"
+         "expression+binding.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
+         "literal.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
          "map-ref-set-key.rkt"
@@ -48,7 +50,21 @@
                [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))])
     Map))
 
-(define empty-map #hash())
+(define-syntax empty-map
+  (make-expression+binding-prefix-operator
+   #'empty-map
+   '((default . stronger))
+   'macro
+   ;; expression
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id . tail)
+        (values #'#hashalw() #'tail)]))
+   ;; binding
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id . tail)
+        (values (binding-form #'literal-infoer #'#hashalw()) #'tail)]))))
 
 (define-name-root Map
   #:fields
@@ -104,7 +120,10 @@
                   (#%map-set! hash-set!)
                   (#%sequence-constructor in-hash))))
 
-(define-binding-syntax Map
+(define-name-root Map
+  #:space rhombus/binding
+  #:fields ([empty empty-map])
+  #:root
   (binding-prefix-operator
    #'Map
    '((default . stronger))
