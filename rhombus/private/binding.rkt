@@ -110,9 +110,13 @@
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/binding))
 
+  ;; conservative: can return #true when unknown
+  (define (might-be-binding? v)
+    (or (binding-prefix-operator? v) (portal-syntax? v)))
+
   (define-syntax-class :non-binding-identifier
     (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id) binding-prefix-operator?)))))
+             #:when (not (syntax-local-value* (in-binding-space #'id) might-be-binding?)))))
 
 (define-syntax (identifier-info stx)
   (syntax-parse stx
