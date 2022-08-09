@@ -123,11 +123,28 @@ check:
   | _: #false
   "Map.empty"
 check:
+  match Map.make()
+  | Map.empty: "Map.empty"
+  | _: #false
+  "Map.empty"
+check:
   match {"a": 1}
   | Map.empty: "Map.empty"
   | {}: "{}"
   | _: #false
   "{}"
+
+check: Set.empty; Set()
+check:
+  match Set()
+  | Set.empty: "Set.empty"
+  | _: #false
+  "Set.empty"
+check:
+  match Set.make()
+  | Set.empty: "Set.empty"
+  | _: #false
+  "Set.empty"
 
 def local_map: Map(symbol(alice), Posn(4, 5),
                    symbol(bob), Posn(7, 9))

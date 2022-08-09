@@ -47,20 +47,37 @@ to be included in the set. These uses of square brackets are implemented by
 
 
 @doc(
-  fun make_set(value:: Any, ...) :: Map
+  fun Set.make(value:: Any, ...) :: Map
 ){
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
  that can be updated using @rhombus(:=).
 
 @examples(
-  val m: make_set("x", 1, "y", 2),
+  val m: Set.make("x", 1, "y", 2),
   m,
   m["x"],
   m["x"] := #false,
   m,
   m["x"] := #true,
   m
+)
+
+}
+
+@doc(
+  bind.macro 'Set.empty',
+  expr.macro 'Set.empty'
+){
+
+ An empty set, where the @rhombus(Set.empty, ~bind) binding matches
+ only an empty set (mutable or immutable).
+
+@examples(
+  Set.empty,
+  match Set()
+  | Set.empty: "empty set"
+  | _: #false
 )
 
 }

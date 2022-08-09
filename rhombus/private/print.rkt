@@ -93,12 +93,16 @@
          #f)
        (display "}" op)]
       [(set? v)
-       (display "{" op)
-       (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
-         (unless first? (display ", " op))
-         (print v)
-         #f)
-       (display "}" op)]
+       (cond
+         [(eqv? 0 (hash-count (set-ht v)))
+          (display "Set()" op)]
+         [else
+          (display "{" op)
+          (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
+            (unless first? (display ", " op))
+            (print v)
+            #f)
+          (display "}" op)])]
       [(syntax? v)
        (define s (syntax->datum v))
        (define maybe-nested? (let loop ([s s ])

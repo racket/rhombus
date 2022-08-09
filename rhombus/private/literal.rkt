@@ -5,7 +5,9 @@
          "binding.rkt"
          "parse.rkt")
 
-(provide literal-infoer)
+(provide literal-infoer
+         ;; useful for other binding patterns:
+         literal-bind-nothing)
 
 (define-syntax (literal-infoer stx)
   (syntax-parse stx
@@ -29,4 +31,3 @@
   (syntax-parse stx
     [(_ arg-id datum)
      #'(begin)]))
-

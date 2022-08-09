@@ -3,7 +3,8 @@
                      syntax/parse
                      enforest/property
                      enforest/syntax-local)
-         "expression.rkt")
+         "expression.rkt"
+         "name-root-ref.rkt")
 
 ;; Represent static information in either of two ways:
 ;;
@@ -47,7 +48,9 @@
   (define-syntax-class (:static-info key-id)
     #:literals (begin quote-syntax)
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* (in-static-info-space #'id) static-info-ref))
+             #:do [(define v (syntax-local-value* (in-static-info-space #'id)
+                                                  (lambda (v)
+                                                    (name-root-ref-root v static-info-ref))))
                    (define val (and v
                                     (for/or ([form (in-list (static-info-stxs v))])
                                       (syntax-parse form
@@ -72,7 +75,9 @@
     (syntax-parse e
       #:literals (begin quote-syntax)
       [id:identifier
-       (define v (syntax-local-value* (in-static-info-space #'id) static-info-ref))
+       (define v (syntax-local-value* (in-static-info-space #'id)
+                                      (lambda (v)
+                                        (name-root-ref-root v static-info-ref))))
        (if v
            (static-info-stxs v)
            null)]

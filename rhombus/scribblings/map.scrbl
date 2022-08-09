@@ -102,12 +102,12 @@ fast indexing operator. For example, @rhombus(buckets[0]) above
 statically resolves to the use of array lookup, instead of going through
 a generic function for maps at run time.
 
-The @rhombus(make_map) function works similarly to the @rhombus(Map)
+The @rhombus(Map.make) function works similarly to the @rhombus(Map)
 constructor, but it creates a mutable map. A mutable map can be updated
 using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 
 @(rhombusblock:
-    val locations: make_map("alice", Posn(4, 5),
+    val locations: Map.make("alice", Posn(4, 5),
                             "bob", Posn(7, 9))
     locations["alice"] := Posn(40, 50)
     locations["alice"]  // prints Posn(40, 50)

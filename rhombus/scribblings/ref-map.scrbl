@@ -25,7 +25,8 @@ operator. These uses of square brackets are implemented by
 
  Constructs either a map or a set, depending on whether
  @rhombus(key_expr) and @rhombus(val_expr) are provided or
- @rhombus(elem_expr) is provided.
+ @rhombus(elem_expr) is provided. If no elements are provided, the
+ result is an empty map (not an empty set).
 
 }
 
@@ -50,8 +51,9 @@ operator. These uses of square brackets are implemented by
   bind.macro 'Map($key_expr, $binding, ...)'
 ){
 
- Matches a map the keys computed by @rhombus(key_expr) to values that
- match the corresponding @rhombus(binding)s.
+ Matches a map of the keys computed by @rhombus(key_expr) to values
+ that match the corresponding @rhombus(binding)s. The matched map may
+ have additional keys and values.
 
 @examples(
   val Map("x", x, "y", y): {"x": 1, "y": 2},
@@ -82,14 +84,14 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  fun make_map(key :: Any, value:: Any, ...) :: Map
+  fun Map.make(key :: Any, value:: Any, ...) :: Map
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
  that can be updated using @rhombus(=).
 
 @examples(
-  val m: make_map("x", 1, "y", 2),
+  val m: Map.make("x", 1, "y", 2),
   m,
   m["x"],
   m["x"] := 0,
@@ -135,10 +137,10 @@ operator. These uses of square brackets are implemented by
   expr.macro 'Map.empty'
 ){
 
- An empty map. Differs from @rhombus({}) and @rhombus(Map())
- because while those as binding forms match any maps
- including ones with extra keys, @rhombus(Map.empty, ~bind) as a
- binding only matches empty maps, with no keys.
+ An empty map. The @rhombus(Map.empty, ~bind) binding form differs
+ from from @rhombus({}) or @rhombus(Map()), because @rhombus(Map.empty, ~bind)
+ matches only an empty map (possibly mutable), while @rhombus({}) or @rhombus(Map())
+ matches any map.
 
 @examples(
   Map.empty,

@@ -23,10 +23,7 @@
          (for-space rhombus/binding Map)
          (for-space rhombus/annotation Map)
          (for-space rhombus/static-info Map)
-         (for-space rhombus/reducer Map)
-
-         make_map
-         (for-space rhombus/static-info make_map))
+         (for-space rhombus/reducer Map))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))
@@ -64,11 +61,30 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
-        (values (binding-form #'literal-infoer #'#hashalw()) #'tail)]))))
+        (values (binding-form #'empty-map-infoer #'#hashalw()) #'tail)]))))
+
+(define-syntax (empty-map-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos datum)
+     (binding-info "Map.empty"
+                   #'empty-map
+                   #'static-infos
+                   #'()
+                   #'empty-map-matcher
+                   #'literal-bind-nothing
+                   #'datum)]))
+
+(define-syntax (empty-map-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id datum IF success fail)
+     #'(IF (and (hash? arg-id) (eqv? 0 (hash-count arg-id)))
+           success
+           fail)]))
 
 (define-name-root Map
   #:fields
-  ([empty empty-map])
+  ([empty empty-map]
+   [make make-map])
   #:root
   (expression-transformer
    #'Map
@@ -111,11 +127,11 @@
   (let-values ([(k v) e])
     (hash-set ht k v)))
 
-(define make_map
+(define make-map
   (lambda args
     (hash-copy (apply plain-Map args))))
 
-(define-static-info-syntax make_map
+(define-static-info-syntax make-map
   (#%call-result ((#%map-ref hash-ref)
                   (#%map-set! hash-set!)
                   (#%sequence-constructor in-hash))))
@@ -219,10 +235,10 @@
   (syntax-parse stx
     [(_ map1 map2)
      (syntax-parse (unwrap-static-infos #'map2)
-       #:literals (Map)
-       [(Map k:keyword v)
+       #:literals (plain-Map)
+       [(plain-Map k:keyword v)
         #'(hash-set map1 'k v)]
-       [(Map k v)
+       [(plain-Map k v)
         #'(hash-set map1 k v)]
        [_
         #'(hash-append/proc map1 map2)])]))
