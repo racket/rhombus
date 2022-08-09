@@ -102,14 +102,14 @@ check:
   #true
 
 fun
-// TODO: make sure it works when this case is put last too
-// For now, this case must be first because map patterns
-// allow extra keys in the value that aren't in the pattern
-| krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c}):
+| krpythag(~& {keyword(~a): a, keyword(~b): b, & Map.empty}):
+    sqrt(sqr(a) + (sqr(b)))
+| krpythag(~& {keyword(~a): a, keyword(~c): c, & Map.empty}):
+    sqrt(sqr(c) - (sqr(a)))
+| krpythag(~& {keyword(~b): b, keyword(~c): c, & Map.empty}):
+    sqrt(sqr(c) - (sqr(b)))
+| krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c, & Map.empty}):
     sqr(a) + sqr(b) == sqr(c)
-| krpythag(~& {keyword(~a): a, keyword(~b): b}): sqrt(sqr(a) + (sqr(b)))
-| krpythag(~& {keyword(~a): a, keyword(~c): c}): sqrt(sqr(c) - (sqr(a)))
-| krpythag(~& {keyword(~b): b, keyword(~c): c}): sqrt(sqr(c) - (sqr(b)))
 
 check: krpythag(~a: 3, ~b: 4); 5
 check: krpythag(~c: 5, ~a: 3); 4
