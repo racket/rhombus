@@ -22,6 +22,9 @@
 
 (provide define-expression-syntax)
 
+(module+ for-top-expand
+  (provide (for-syntax check-unbound-identifier-early!)))
+
 (begin-for-syntax
   (property expression-prefix-operator prefix-operator)
   (property expression-infix-operator infix-operator)
@@ -29,7 +32,20 @@
   (define (expression-transformer name proc)
     (expression-prefix-operator name '((default . stronger)) 'macro proc))
 
+  (define early-unbound? #f)
+  (define (check-unbound-identifier-early!)
+    (set! early-unbound? #t))
+
   (define (make-identifier-expression id)
+    (when early-unbound?
+      (unless (identifier-binding id)
+        ;; within a module, report unbound identifiers early;
+        ;; otherwise, enforestation may continue and assume an
+        ;; expression where some other kind of form was intended,
+        ;; leading to confusing error messages; the trade-off is
+        ;; that we don't compile some things that could (would?)
+        ;; end up reporting a use before definition
+        (raise-syntax-error #f "unbound identifier" id)))
     id)
 
   (define (check-expression-result form proc)

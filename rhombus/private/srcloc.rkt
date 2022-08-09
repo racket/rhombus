@@ -1,7 +1,9 @@
 #lang racket/base
-(require shrubbery/srcloc)
+(require shrubbery/srcloc
+         shrubbery/property)
 
 (provide syntax-srcloc
+         no-srcloc
          span-srcloc
          relocate
          respan-empty
@@ -19,8 +21,14 @@
             (and s e sp
                  (max 0 (+ (- e s) sp))))))
 
+(define (no-srcloc stx)
+  (datum->syntax #f
+                 (syntax-e stx)
+                 #f
+                 #f))
+
 (define (relocate srcloc stx)
-  (datum->syntax stx (syntax-e stx) srcloc stx))
+  (datum->syntax stx (syntax-e stx) srcloc (if (syntax? srcloc) srcloc stx)))
 
 ;; If the tail is empty, give it a source location
 ;; that matches the end of `op-stx`

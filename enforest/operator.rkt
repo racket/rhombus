@@ -133,10 +133,13 @@
     (raise-syntax-error #f
                         (format (string-append
                                  "misplaced ~a;\n"
-                                 " no infix operator is between this ~a and the previous one,\n"
-                                 " and `~a` is not bound as an implicit prefix ~a")
+                                 " no infix operator is between this ~a and the previous one"
+                                 #;
+                                 ",\n and `~a` is not bound as an implicit prefix ~a")
                                 form-kind form-kind
+                                #;
                                 alone-name
+                                #;
                                 operator-kind)
                         adj-form))
   (values op op-stx))
@@ -152,10 +155,13 @@
                             (string-append
                              "unbound or misplaced ~a;\n"
                              " the identifier is not bound as a macro,"
-                             " no infix operator appears afterward,\n"
-                             " and `~a` is not bound as an implicit infix ~a")
+                             " and no infix operator appears afterward"
+                             #;
+                             ",\n and `~a` is not bound as an implicit infix ~a")
                             form-kind
+                            #;
                             adjacent-name
+                            #;
                             operator-kind)
                            prev-form)]
       [(not stop-on-unbound?)
@@ -163,10 +169,13 @@
                            (format
                             (string-append
                              "misplaced ~a;\n"
-                             " no infix operator is between this ~a and the previous one,\n"
-                             " and `~a` is not bound as an implicit infix ~a")
+                             " no infix operator is between this ~a and the previous one"
+                             #;
+                             ",\n and `~a` is not bound as an implicit infix ~a")
                             form-kind form-kind
+                            #;
                             adjacent-name
+                            #;
                             operator-kind)
                            adj-form)]))
   (values op op-stx))

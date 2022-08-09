@@ -3,13 +3,15 @@
                      syntax/parse
                      (prefix-in enforest: enforest/name-root)
                      enforest/syntax-local
+                     shrubbery/property
                      "srcloc.rkt"))
 
 ;; convert a hierachical layer implemented as portal syntax to a name-root
 
 (provide (for-syntax name-root-ref
                      name-root-ref-root
-                     portal-syntax->lookup))
+                     portal-syntax->lookup
+                     replace-head-dotted-name))
 
 (define-for-syntax (name-root-ref v)
   (define (make get)
@@ -18,9 +20,9 @@
        (syntax-parse stxes
          #:datum-literals (op parens |.|)
          [(form-id (op |.|) field:identifier . tail)
-          (values (relocate #'field (get #'form-id "identifier" #'field)) #'tail)]
-         [(form-id (op |.|) (parens (group (~and target (op field))))  . tail)
-          (values (relocate #'target #`(op #,(get #'form-id "operator" #'field))) #'tail)]
+          (values (relocate-field #'form-id #'field (get #'form-id "identifier" #'field)) #'tail)]
+         [(form-id (op |.|) (parens (group (~and target (op field)))) . tail)
+          (values (relocate-field #'form-id #'target #`(op #,(get #'form-id "operator" #'field))) #'tail)]
          [(form-id (op (~and dot |.|)) . tail)
           (raise-syntax-error #f
                               "expected an identifier or parentheses after dot"
@@ -82,3 +84,28 @@
                                                   (syntax-e who-stx))
                                           name)))))]
     [_ #f]))
+
+(define-for-syntax (relocate-field root-id field-id new-field-id)
+  (syntax-property (datum->syntax new-field-id
+                                  (syntax-e new-field-id)
+                                  (span-srcloc root-id field-id)
+                                  field-id)
+                   'rhombus-dotted-name
+                   (string->symbol
+                    (format "~a.~a"
+                            (or (syntax-property root-id 'syntax-error-name)
+                                (syntax-e root-id))
+                            (syntax-e field-id)))))
+
+(define-for-syntax (replace-head-dotted-name stx)
+  (define head (car (syntax-e stx)))
+  (define name (syntax-property head 'rhombus-dotted-name))
+  (cond
+    [name
+     (datum->syntax stx
+                    (cons (syntax-raw-property (datum->syntax head name head head)
+                                               (symbol->string name))
+                          (cdr (syntax-e stx)))
+                    stx
+                    stx)]
+    [else stx]))

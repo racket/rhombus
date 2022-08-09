@@ -37,7 +37,7 @@
                   [(left-id ...) left-ids])
       (define body
         (if (eq? kind 'rule)
-            (let ([ids (cons self-id (append left-ids (syntax->list #'(id ...))))])
+            (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ...))))])
               #`(values #,(convert-rule-template rhs ids)
                         #,(convert-template #`(multi (group (op $) tail (op rhombus...))))))
             #`(rhombus-body-expression #,rhs)))
@@ -52,11 +52,18 @@
        (convert-template #'(multi template)
                          #:rhombus-expression #'rhombus-expression
                          #:check-escape (lambda (e)
-                                          (unless (and (identifier? e)
-                                                       (for/or ([id (in-list ids)])
-                                                         (free-identifier=? e id)))
+                                          (unless (or (and (identifier? e)
+                                                           (for/or ([id (in-list ids)])
+                                                             (free-identifier=? e id)))
+                                                      (syntax-parse e
+                                                        #:datum-literals (group parens quotes op)
+                                                        [(parens (group (quotes (group (op _))))) #t]
+                                                        [(quotes (group (op _))) #t]
+                                                        [else #f]))
                                             (raise-syntax-error 'template
-                                                                "expected an identifier bound by the pattern"
+                                                                (string-append
+                                                                 "expected an identifier bound by the pattern\n"
+                                                                 " or a literal-operator syntax object")
                                                                 e))))]
       [(block (group e)) (raise-syntax-error 'template "invalid result template" #'e)]))
   (define (extract-pattern-id tail-pattern)

@@ -83,3 +83,8 @@
             [else (values msg msg-realm)]))
         (values new-who new-who-realm new-msg new-msg-realm))]
      [else #f])))
+
+;; for syntax errors in the REPL
+(error-syntax->string-handler
+ (lambda (s len)
+   (shrubbery-syntax->string s #:max-length len)))

@@ -9,6 +9,8 @@
 
 @(val macro_eval: macro.make_macro_eval())
 
+@(val dollar: @rhombus($))
+
 @title{Expression Macros}
 
 @doc(
@@ -23,17 +25,20 @@
     '$ $term_pattern $identifier_or_operator $pattern ...',
   grammar identifier_or_operator:
     $identifier
-    $operator,
+    $operator
+    $$(dollar)('$$(dollar)'),
   grammar term_pattern:
     $term_identifier
-    ($term_identifier :: $syntax_class)
+    ($term_identifier :: $syntax_class),
 ){
 
  Defines @rhombus(identifier) or @rhombus(operator) as a pattern-based
  macro whose expansion is described by a @rhombus(template) that can
  refer to pattern variables bound in the @rhombus(rule_pattern). A
- @rhombus(rule_pattern) is matched to a portion of its enclosing group,
- and need not extend to the end of the group to match.
+ @rhombus(rule_pattern) is matched to a portion of its enclosing
+ group, and need not extend to the end of the group to match. A
+ defined @rhombus(operator) cannot be @rhombus($), but the form
+ @rhombus($('$')) can be used to define @rhombus($).
 
  Each @rhombus(rule_pattern) starts with @rhombus(''). Within
  @rhombus(''), either the first term is an identifier or operator to be
@@ -45,10 +50,12 @@
  are tried in order.
 
  The body after each @rhombus(rule_pattern) must be an immediate
- @rhombus('') template, and any @rhombus($) escape within the template can
- only refer to an input pattern variable. More general compile-time
- expressions are not allowed, and @rhombus(expr.macro) must be used
- instead.
+ @rhombus('') template, and any @rhombus($) escape within the template
+ can only refer to an input pattern variable or a literal syntax
+ object, optionally parenthesized, for an operator (e.g.,
+ @rhombus($('$')) to generate a literal @rhombus($)). More general
+ compile-time expressions are not allowed; use @rhombus(expr.macro),
+ instead, to enable compile-time expressions.
 
 @examples(
   ~eval: macro_eval,

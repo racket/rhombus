@@ -41,7 +41,9 @@
          Syntax
          Void
 
-         (for-space rhombus/annotation #%tuple))
+         (for-space rhombus/annotation
+                    #%tuple
+                    #%literal))
 
 (module+ for-class
   (begin-for-syntax
@@ -164,7 +166,7 @@
       '((default . stronger))
       'macro
       (lambda (stx)
-        (syntax-parse stx
+        (syntax-parse (replace-head-dotted-name stx)
           #:datum-literals (op |.| parens of)
           [(form-id ((~and tag parens) g ...) . tail)
            (define gs (syntax->list #'(g ...)))
@@ -372,3 +374,15 @@
             [else
              (syntax-parse (car args)
                [c::annotation (values #'c.parsed #'tail)])]))]))))
+
+(define-annotation-syntax #%literal
+  (annotation-prefix-operator
+   #'%literal
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ . tail)
+        (raise-syntax-error #f
+                            "literal not allowed as an annotation"
+                            #'tail)]))))

@@ -194,7 +194,7 @@ also_prefix_plus 7 9
 
 // define a binding operator
 
-bind.rule '$ $n':
+bind.rule '$('$') $n':
   ~parsed_right
   '$n :: Integer'
 

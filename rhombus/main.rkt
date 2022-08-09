@@ -10,7 +10,8 @@
          "private/builtin-dot.rkt"
          "private/bounce.rkt"
          "private/parse.rkt"
-         "private/forwarding-sequence.rkt")
+         "private/forwarding-sequence.rkt"
+         (submod "private/expression.rkt" for-top-expand))
 
 (provide (rename-out [rhombus-module-begin #%module-begin])
          #%top-interaction
@@ -78,6 +79,7 @@
   (error-syntax->string-handler
    (lambda (s len)
      (shrubbery-syntax->string s #:max-length len)))
+  (check-unbound-identifier-early!)
   (syntax-parse stx
     [(_ (top . content))
      (unless (eq? 'top (syntax-e #'top))

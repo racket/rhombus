@@ -43,11 +43,11 @@
   (define-splicing-syntax-class tail-repetition
     #:literals ($ rhombus...)
     #:datum-literals (op)
-    (pattern (~seq (op $) e (op (~and name rhombus...)))))
+    (pattern (~seq (op $) e:identifier (op (~and name rhombus...)))))
   (define-splicing-syntax-class block-tail-repetition
     #:literals ($ rhombus...)
     #:datum-literals (op)
-    (pattern (~seq ((~datum group) (op $) e)
+    (pattern (~seq ((~datum group) (op $) e:identifier)
                    ((~datum group) (op (~and name rhombus...))))))
 
   (struct pattern-variable (id val-id depth unpack*-id)))
@@ -266,7 +266,7 @@
                                     #:splice-pattern [splice-pattern #f])
   (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
     (syntax-parse e
-      #:datum-literals (parens op group)
+      #:datum-literals (parens op group quotes)
       #:literals (rhombus-_ ::)
       [rhombus-_ (values #'_ null null null)]
       [_:identifier
@@ -350,7 +350,14 @@
              (compat #'pack-block* #'unpack-multi-as-term*)]
             [else (incompat)])]
          [else
-          (error "unrecognized kind" kind)])]))
+          (error "unrecognized kind" kind)])]
+      [(quotes (group (op name))) (if (eq? kind 'term)
+                                      (values #'((~datum op) (~datum name)) null null null)
+                                      (values #f #f #f #f))]
+      [(parens (group (quotes (group (op name))))) (if (eq? kind 'term)
+                                                       (values #'((~datum op) (~datum name)) null null null)
+                                                       (values #f #f #f #f))]
+      [_ (raise-syntax-error #f "invalid pattern escape" e)]))
   (define (handle-escape/match-head $-id e in-e pack* unpack* context-syntax-class kind splice?)
     (define-values (p idrs sidrs vars) (handle-escape $-id e in-e pack* unpack* context-syntax-class kind))
     (if p
@@ -459,18 +466,17 @@
                     (lambda (d) d)
                     ;; handle-escape:
                     (lambda ($-id e in-e)
-                      ; TODO fix how check-escape works
-                      #;(check-escape e)
+                      (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-rep-term* (quote-syntax #,$-id) #,e 0)]) null null))
                     ;; handle-group-escape:
                     (lambda ($-id e in-e)
-                      #;(check-escape e)
+                      (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (values id (list #`[#,id (unpack-rep-group* (quote-syntax #,$-id) #,e 0)]) null null))
                     ;; handle-multi-escape:
                     (lambda ($-id e in-e splice?)
-                      #;(check-escape e)
+                      (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (with-syntax ([(tag . _) in-e])
                         (values #`(tag . #,id) (list #`[#,id (unpack-rep-multi* (quote-syntax #,$-id) #,e 0)]) null null)))

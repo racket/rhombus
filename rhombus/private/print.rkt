@@ -2,7 +2,8 @@
 (require racket/symbol
          racket/keyword
          shrubbery/write
-         (submod "set.rkt" for-ref))
+         (submod "set.rkt" for-ref)
+         "adjust-name.rkt")
 
 (provide (rename-out
           [rhombus-print print]
@@ -121,7 +122,7 @@
           (write-shrubbery s op)])
        (display (if maybe-nested? "»'" "'") op)]
       [(procedure? v)
-       (define name (object-name v))
+       (define name (adjust-procedure-name (object-name v) (procedure-realm v)))
        (cond
          [name
           (display "#<function:" op)

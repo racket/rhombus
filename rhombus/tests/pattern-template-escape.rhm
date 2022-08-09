@@ -1,0 +1,95 @@
+#lang rhombus
+import:
+  "check.rhm" open
+  rhombus/macro open
+
+// Try patterns and templates that involve literal
+// `$` operators, including defining `$`
+
+check:
+  ~print
+  '$'
+  '$'
+
+check:
+  ~print
+  '$('$')'
+  '$'
+
+check:
+  ~print
+  '$('...')'
+  '...'
+
+check:
+  ~print
+  match '$('$') 1 + 2'
+  | '$x 1 + 2': x
+  '$'
+
+check:
+  ~print
+  match '$('$') 1 + 2'
+  | '$('$') $x + 2': x
+  '1'
+
+check:
+  ~print
+  match '($('$')) 10 + 2'
+  | '($'$') $x + 2': x
+  '10'
+
+check:
+  ~print
+  match ': $('$')'
+  | ': $('$')': "block"
+  "block"
+
+check:
+  ~print
+  match '($('$'))'
+  | '($'$')': "ok"
+  "ok"
+
+check:
+  ~print
+  match '($('...'))'
+  | '($'...')': "dots"
+  "dots"
+
+check:
+  ~print
+  match '$('...') $('...') $('...')'
+  | '$('...') ...': "dotss"
+  "dotss"
+
+check:
+  // special syntax to define `$` as a prefix operator
+  expr.rule '$('$') $x': '1 + $x'
+  $10
+  11
+
+check:
+  // special syntax to `$` as an infix operator
+  expr.rule '$x $('$') $y': '[$x, $y]'
+  1 $ 2
+  [1, 2]
+
+check:
+  ~eval_exn
+  expr.rule '$1 + $2': '0'
+  "expected operator-macro pattern"
+
+check:
+  ~eval_exn
+  expr.rule '$x $ $x': '0'
+  "expected operator-macro pattern"
+
+check:
+  ~print
+  //  macro that acts as a template form
+  expr.rule '$x =+= $y': '('$('$')$x + $('$')$y')'
+  val a: '3'
+  val b: '4'
+  a =+= b
+  '3 + 4'

@@ -11,6 +11,7 @@
          "parse.rkt"
          "definition.rkt"
          "function.rkt"
+         "name-root-ref.rkt"
          (only-in "quasiquote.rkt" $)
          ;; because we generate compile-time code:
          (for-syntax "parse.rkt"))
@@ -136,10 +137,21 @@
     self-options
     parsed-right-options)
 
-  (define-splicing-syntax-class :operator-syntax-quote
+  (define-splicing-syntax-class :operator-or-identifier-or-$
+    #:description "operator-macro pattern"
     #:datum-literals (op parens group quotes)
-    (pattern (quotes (~and g (group (op $) _ _::operator-or-identifier . _))))
-    (pattern (quotes (~and g (group ::operator-or-identifier . _)))))
+    #:literals ($)
+    (pattern (~seq op-name::operator-or-identifier)
+             #:when (not (free-identifier=? #'op-name.name #'$))
+             #:attr name #'op-name.name)
+    (pattern (~seq (op $) (parens (group (quotes (group (op (~and name $)))))))))
+
+  (define-splicing-syntax-class :operator-syntax-quote
+    #:description "operator-macro pattern"
+    #:datum-literals (op parens group quotes)
+    #:literals ($)
+    (pattern (quotes (~and g (group (op $) _:identifier _::operator-or-identifier-or-$ . _))))
+    (pattern (quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -154,10 +166,11 @@
 (define-for-syntax (parse-one-macro-definition kind)
   (lambda (g rhs)
     (syntax-parse g
-      #:datum-literals (group op)
+      #:datum-literals (group op parens quotes)
+      #:literals ($)
       ;; infix protocol
       [(group (op $-id) left:identifier
-              op-name::operator-or-identifier
+              op-name::operator-or-identifier-or-$
               . tail-pattern)
        #:when (free-identifier=? #'$-id #'$
                                  (add1 (syntax-local-phase-level))
@@ -176,7 +189,7 @@
                          left
                          (tag rhs ...)])])]
       ;; prefix protocol
-      [(group op-name::operator-or-identifier
+      [(group op-name::operator-or-identifier-or-$
               . tail-pattern)
        (syntax-parse rhs
          [((~and tag block) opt::macro-prefix-operator-options rhs ...)
@@ -190,8 +203,9 @@
                         [tail-pattern
                          opt.self-id
                          (tag rhs ...)])])]
-      ;; nofix protocol
-      [op-name::operator-or-identifier
+      ;; nofix protocol - no longer supported
+      #;
+      [op-name::operator-or-identifier-or-$
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
           #`(pre-parsed op-name.name
@@ -251,7 +265,7 @@
   (definition-transformer
     (lambda (stx)
       (define (template->macro protocol) (if (eq? protocol 'template) 'macro protocol))
-      (syntax-parse stx
+      (syntax-parse (replace-head-dotted-name stx)
         #:datum-literals (parens group block alts op)
         [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                       (~and rhs (block body ...))))

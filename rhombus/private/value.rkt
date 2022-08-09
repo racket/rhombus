@@ -3,7 +3,8 @@
                      syntax/parse
                      shrubbery/print
                      "infer-name.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "srcloc.rkt")
          "definition.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -34,7 +35,7 @@
         [(form-id any ... (~and rhs (block body ...)))
          #:with g-tag group-tag
          (build-value-definitions #'form-id
-                                  #'(g-tag any ...)
+                                  (no-srcloc #'(g-tag any ...))
                                   #'rhs
                                   wrap-definition)]))))
 
