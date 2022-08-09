@@ -27,7 +27,7 @@ set. The @rhombus(++) operator effectively unions sets.
     friends["david"]      // prints #false
   )
 
-@rhombus(Set.of) and @rhombus(Set.make) work as you'd expect. When
+@rhombus(Set.of) and @rhombus(MutableSet) work as you'd expect. When
 @litchar{[}...@litchar{]} with @rhombus(:=) is used to modify a mutable
 set, the ``key'' is removed from the set if the assigned value is
 @rhombus(#false), otherwise the ``key'' is added to the set.

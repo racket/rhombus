@@ -7,6 +7,7 @@
                      (only-in "private/quasiquote.rkt"
                               $))
          racket/interaction-info
+         "private/builtin-dot.rkt"
          "private/bounce.rkt"
          "private/parse.rkt"
          "private/forwarding-sequence.rkt")

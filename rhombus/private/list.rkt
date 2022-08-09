@@ -16,6 +16,7 @@
                   [... rhombus...])
          "repetition.rkt"
          "name-root.rkt"
+         (submod "dot.rkt" for-dot-provider)
          "parse.rkt")
 
 (provide cons
@@ -23,7 +24,6 @@
 
          List
          (for-space rhombus/annotation List)
-         (for-space rhombus/static-info List)
          (for-space rhombus/reducer List)
          (for-space rhombus/repetition List))
 
@@ -32,12 +32,21 @@
                        parse-list-expression
                        parse-list-repetition)))
 
+(module+ for-builtin
+  (provide list-method-table))
+
+(define list-method-table
+  (hash 'length length))
+
 (define-binding-syntax cons  
   (binding-transformer
    #'cons
    (make-composite-binding-transformer "cons" #'pair? (list #'car #'cdr) (list #'() #'()))))
 
-(define-syntax List
+(define-name-root List
+  #:fields
+  (length)
+  #:root
   (make-expression+binding-prefix-operator
    #'List
    '((default . stronger))
@@ -57,16 +66,27 @@
        [(form-id ((~and tag (~datum parens)) arg ...) . tail)
         (parse-list-binding stx)]))))
 
+(define-for-syntax list-static-infos
+  #'((#%map-ref list-ref)
+     (#%sequence-constructor in-list)
+     (#%dot-provider list-instance)))
+
 (define-annotation-constructor List
   ()
-  #'list? #'((#%map-ref list-ref)
-             (#%sequence-constructor in-list))
+  #'list? list-static-infos
   1
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-list #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
     #`((#%ref-result #,(car static-infoss)))))
+
+(define-syntax list-instance
+  (dot-provider
+   (lambda (lhs dot-stx field-stx)
+     (case (syntax-e field-stx)
+       [(length) #`(length #,lhs)]
+       [else #f]))))
 
 (define-reducer-syntax List
   (reducer-transformer
@@ -103,13 +123,8 @@
     (raise-argument-error who "List" v))
   v)
 
-(define-static-info-syntax List
-  (#%call-result ((#%map-ref list-ref)
-                  (#%sequence-constructor in-list))))
-
-(define-for-syntax list-static-infos
-  #'((#%map-ref list-ref)
-     (#%sequence-constructor in-list)))
+(define-static-info-syntax list
+  (#%call-result #,list-static-infos))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))

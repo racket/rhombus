@@ -8,6 +8,7 @@
          "expression+binding.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "dot.rkt" for-dot-provider)
          "literal.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
@@ -22,8 +23,10 @@
 (provide Map
          (for-space rhombus/binding Map)
          (for-space rhombus/annotation Map)
-         (for-space rhombus/static-info Map)
-         (for-space rhombus/reducer Map))
+         (for-space rhombus/reducer Map)
+
+         MutableMap
+         (for-space rhombus/static-info MutableMap))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))
@@ -31,6 +34,12 @@
 (module+ for-info
   (provide (for-syntax map-static-info)
            plain-Map))
+
+(module+ for-builtin
+  (provide map-method-table))
+
+(define map-method-table
+  (hash 'count hash-count))
 
 (define plain-Map
   (let ([Map
@@ -84,7 +93,7 @@
 (define-name-root Map
   #:fields
   ([empty empty-map]
-   [make make-map])
+   [count hash-count])
   #:root
   (expression-transformer
    #'Map
@@ -94,9 +103,13 @@
 
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
-     (#%map-set! hash-set!)
      (#%map-append hash-append)
-     (#%sequence-constructor in-hash)))
+     (#%sequence-constructor in-hash)
+     (#%dot-provider hash-instance)))
+
+(define-for-syntax mutable-map-static-info
+  #`((#%map-set! hash-set!)
+     . #,map-static-info))
 
 (define-annotation-constructor Map
   ()
@@ -109,9 +122,15 @@
   (lambda (static-infoss)
     #`((#%ref-result #,(cadr static-infoss)))))
 
-(define-static-info-syntax Map
-  (#%call-result ((#%map-ref hash-ref)
-                  (#%sequence-constructor in-hash))))
+(define-syntax hash-instance
+  (dot-provider
+   (lambda (lhs dot-stx field-stx)
+     (case (syntax-e field-stx)
+       [(count) #`(hash-count #,lhs)]
+       [else #f]))))
+
+(define-static-info-syntax plain-Map
+  (#%call-result #,map-static-info))
 
 (define-reducer-syntax Map
   (reducer-transformer
@@ -127,14 +146,12 @@
   (let-values ([(k v) e])
     (hash-set ht k v)))
 
-(define make-map
+(define MutableMap
   (lambda args
     (hash-copy (apply plain-Map args))))
 
-(define-static-info-syntax make-map
-  (#%call-result ((#%map-ref hash-ref)
-                  (#%map-set! hash-set!)
-                  (#%sequence-constructor in-hash))))
+(define-static-info-syntax MutableMap
+  (#%call-result #,mutable-map-static-info))
 
 (define-name-root Map
   #:space rhombus/binding

@@ -52,9 +52,9 @@ fun check_same(thunk, expected_thunk, ~mode: mode):
     | keyword(~equal):
         !exn_msg && (got == expected)
     | keyword(~exn):
-        exn_msg && does_contain(expected[0], exn_msg)
+        exn_msg && does_contain_each(expected, exn_msg)
     | keyword(~eval_exn):
-        exn_msg && does_contain(expected[0], exn_msg)        
+        exn_msg && does_contain_each(expected, exn_msg)
   if ok
   | #void
   | fun

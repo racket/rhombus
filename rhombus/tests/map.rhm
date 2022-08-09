@@ -1,0 +1,52 @@
+#lang rhombus
+import: "check.rhm" open
+
+fun dynamic(v): v
+
+check:
+  Map.count({"a": 1, "b": 2})
+  2
+
+check:
+  ~exn
+  Map.count({1, 2, 3})
+  values("contract violation", "expected: Map")
+
+begin:
+  use_static_dot
+  check:
+    {"a": 1, "b": 2}.count
+    2
+  check:
+    {"a": 1, "b": 2}["a"]
+    1
+  check:
+    Map("a", 1, "b", 2).count
+    2
+  check:
+    MutableMap("a", 1, "b", 2).count
+    2
+  check:
+    val map: {"a": 1, "b": 2}
+    map.count
+    2
+  check:
+    val map :: Map: dynamic({"a": 1, "b": 2})
+    map.count
+    2
+  check:
+    val map -: Map: dynamic({"a": 1, "b": 2})
+    map.count
+    2
+  check:
+    val map :: Map.of(String, Integer): dynamic({"a": 1, "b": 2})
+    map.count
+    2
+
+begin:
+  check:
+    dynamic({"a": 1, "b": 2}).count
+    2
+  check:
+    dynamic({"a": 1, "b": 2})["a"]
+    1

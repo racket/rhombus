@@ -25,6 +25,9 @@
            #%dot-provider
            prop:field-name->accessor))
 
+(module+ for-builtin
+  (provide set-builtin->accessor-ref!))
+
 (begin-for-syntax
   (property dot-provider (handler))
 
@@ -102,8 +105,13 @@
                                  (values name
                                          (make-struct-field-accessor gen-acc i name))))))
 
+;; To tie a loop with built-in data structures:
+(define builtin->accessor-ref (lambda (v) #f))
+(define (set-builtin->accessor-ref! proc) (set! builtin->accessor-ref proc))
+
 (define (dot-lookup-by-name v field)
-  (define ht (field-name->accessor-ref v #f))
+  (define ht (or (field-name->accessor-ref v #f)
+                 (builtin->accessor-ref v)))
   (define (fail)
     (raise-arguments-error* field
                             rhombus-realm
@@ -113,5 +121,3 @@
     [(not ht) (fail)]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
     [else (fail)]))
-
-   

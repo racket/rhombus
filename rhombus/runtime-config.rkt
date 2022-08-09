@@ -48,6 +48,9 @@
                        (case c
                          [(number?) "Number"]
                          [(string?) "String"]
+                         [(list?) "List"]
+                         [(hash?) "Map"]
+                         [(vector?) "Array"]
                          [else (format "~s" c)])))
                    'rhombus/primitive)]
           [else (values str realm)]))]

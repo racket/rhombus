@@ -447,7 +447,7 @@ key_map[symbol(a)]
 val mixed_map: {symbol(a): 1, "b": 2}
 mixed_map[symbol(a)] + mixed_map["b"]
 
-val mut_map: Map.make(1, "mone")
+val mut_map: MutableMap(1, "mone")
 mut_map[1]
 mut_map[2] := "mtwo"
 mut_map[2]

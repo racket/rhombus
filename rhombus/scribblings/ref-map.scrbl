@@ -18,6 +18,9 @@ updated with a combination of square brackets and the @rhombus(:=)
 operator. These uses of square brackets are implemented by
 @rhombus(#{#%ref}).
 
+The @rhombus(.) operator can be used on a list expression with
+@rhombus(count) to call @rhombus(Map.count).
+
 @doc(
   expr.macro '#{#%set} {$key_expr: $val_expr, ...}',
   expr.macro '#{#%set} {$elem_expr, ...}',
@@ -84,14 +87,14 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  fun Map.make(key :: Any, value:: Any, ...) :: Map
+  fun MutableMap(key :: Any, value:: Any, ...) :: Map
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
  that can be updated using @rhombus(=).
 
 @examples(
-  val m: Map.make("x", 1, "y", 2),
+  val m: MutableMap("x", 1, "y", 2),
   m,
   m["x"],
   m["x"] := 0,
@@ -157,5 +160,19 @@ operator. These uses of square brackets are implemented by
   | Map(): "Map binding allows extra"
   | _: #false,
 )
+
+}
+
+@doc(
+  fun Map.count(map :: Map) :: Integer,
+){
+
+ Returns the number of key--value mappings in @rhombus(map).
+
+@examples(
+  Map.count({"a": 1, "b": 2}),
+  Map.count({}),
+  {"a": 1, "b": 2}.count
+  )
 
 }

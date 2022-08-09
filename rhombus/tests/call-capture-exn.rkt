@@ -2,7 +2,7 @@
 
 (provide call_capturing_exn
          call_capturing_values
-         does_contain)
+         does_contain_each)
 
 (define (call_capturing_exn thunk)
   (with-handlers ([exn:fail?
@@ -12,6 +12,10 @@
 
 (define (call_capturing_values thunk)
   (call-with-values thunk list))
+
+(define (does_contain_each strs in-str)
+  (for/and ([str (in-list strs)])
+    (does_contain str in-str)))
 
 (define (does_contain str in-str)
   (or (equal? str "")

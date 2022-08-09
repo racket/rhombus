@@ -129,3 +129,12 @@ elements:
 
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
   )
+
+Operations on lists include functions like @rhombus(List.length), and
+some of those operations can be applied using @rhombus(.) directly on
+an expression that produces a list.
+
+@(rhombusblock:
+   List.length(["a", "b", "c"])  // prints 3
+   ["a", "b", "c"].length        // prints 3
+  )

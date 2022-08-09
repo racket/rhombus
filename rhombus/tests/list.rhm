@@ -1,0 +1,53 @@
+#lang rhombus
+import: "check.rhm" open
+
+fun dynamic(v): v
+
+check:
+  List.length([1, 2, 3])
+  3
+
+check:
+  ~exn
+  List.length({1, 2, 3})
+  values("contract violation", "expected: List")
+
+begin:
+  use_static_dot
+  check:
+    [1, 2, 3].length
+    3
+  check:
+    [1, 2, 3][0]
+    1
+  check:
+    List(1, 2, 3).length
+    3
+  check:
+    val lst: [1, 2, 3]
+    lst.length
+    3
+  check:
+    val lst :: List: dynamic([1, 2, 3])
+    lst.length
+    3
+  check:
+    val lst -: List: dynamic([1, 2, 3])
+    lst.length
+    3
+  check:
+    val lst :: List.of(Integer): dynamic([1, 2, 3])
+    lst.length
+    3
+  check:
+    val [v, ...]: dynamic([1, 2, 3])
+    [v, ...].length
+    3
+
+begin:
+  check:
+    dynamic([1, 2, 3]).length
+    3
+  check:
+    dynamic([1, 2, 3])[0]
+    1

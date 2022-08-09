@@ -103,7 +103,7 @@
   (syntax-parse stx
     [(_ id:identifier rhs ...)
      #`(define-syntax #,(in-static-info-space #'id)
-         (static-info (list (quote-syntax rhs) ...)))]))
+         (static-info (list (quasisyntax rhs) ...)))]))
 
 (define-syntax (define-static-info-syntax/maybe stx)
   (syntax-parse stx

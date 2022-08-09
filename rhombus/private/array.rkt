@@ -2,23 +2,45 @@
 (require (for-syntax racket/base
                      syntax/parse
                      syntax/stx)
+         "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
-         "composite.rkt")
+         "composite.rkt"
+         "name-root.rkt")
 
 (provide Array
          (for-space rhombus/binding Array)
-         (for-space rhombus/annotation Array)
-         (for-space rhombus/static-info Array))
+         (for-space rhombus/annotation Array))
 
-(define Array vector)
+(module+ for-builtin
+  (provide array-method-table))
+
+(define array-method-table
+  (hash 'length vector-length))
+
+(define-for-syntax array-static-infos
+  #'((#%map-ref vector-ref)
+     (#%map-set! vector-set!)
+     (#%sequence-constructor in-vector)
+     (#%dot-provider array-instance)))
+
+(define-name-root Array
+  #:fields
+  ([make make-vector]
+   [length vector-length])
+  #:root
+  (expression-transformer
+   #'Array
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ . tail) (values #'vector #'tail)]))))
 
 (define-annotation-constructor Array
-  () #'vector? #'((#%map-ref vector-ref)
-                  (#%map-set! vector-set!))
+  () #'vector? array-static-infos
   1
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-vector #,arg-id)])
@@ -26,10 +48,15 @@
   (lambda (static-infoss)
     #`((#%ref-result #,(car static-infoss)))))
 
-(define-static-info-syntax Array
-  (#%call-result ((#%map-ref vector-ref)
-                  (#%map-set! vector-set!)
-                  (#%sequence-constructor in-vector))))
+(define-static-info-syntax vector
+  (#%call-result #,array-static-infos))
+
+(define-syntax array-instance
+  (dot-provider
+   (lambda (lhs dot-stx field-stx)
+     (case (syntax-e field-stx)
+       [(length) #`(vector-length #,lhs)]
+       [else #f]))))
 
 (define-binding-syntax Array
   (binding-prefix-operator

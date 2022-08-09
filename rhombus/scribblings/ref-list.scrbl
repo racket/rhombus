@@ -18,6 +18,9 @@ element by position (in time proportional to the position) via
 @rhombus(#{#%ref}). A list also works with the @rhombus(++) operator
 to append lists.
 
+The @rhombus(.) operator can be used on a list expression with
+@rhombus(length) to call @rhombus(List.length).
+
 @doc(
   fun List(v :: Any, ...) :: List,
   fun List(v :: Any, ..., repetition, dots) :: List,
@@ -82,4 +85,17 @@ to append lists.
  A @tech{reducer} used with @rhombus(for), accumulates each result of a
  @rhombus(for) body into a result list.
 
+}
+
+@doc(
+  fun List.length(lst :: List) :: Integer,
+){
+
+ Returns the number of items in @rhombus(lst).
+
+@examples(
+  List.length([1, 4, 8]),
+  List.length([]),
+  [1, 4, 8].length
+  )
 }

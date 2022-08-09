@@ -8,6 +8,9 @@ is parsed as an implicit use of the @rhombus(#{#%ref}) form, which is
 normally bound to implement an array reference or assignment, as well
 as other operations.
 
+The @rhombus(.) operator can be used on a array expression with
+@rhombus(length) to call @rhombus(Array.length).
+
 @doc(
   expr.macro '#{#%ref} $expr[$at_expr]',
   expr.macro '#{#%ref} $expr[$at_expr] := $rhs_expr',
@@ -60,5 +63,18 @@ the value produced by @rhombus(rhs_expr), and the expression result is
 
  Matches any array in the form without @rhombus(of). The @rhombus(of)
  variant matches an array whose elements satisfy @rhombus(annotation).
+
+}
+
+@doc(
+  fun Array.make(length :: Integer, val = 0) :: Array
+){
+
+  Creates a fresh array with @rhombus(length) slots, where each slot
+  is initialized to @rhombus(val).
+
+@examples(
+  Array.make(3, "x")
+)
 
 }

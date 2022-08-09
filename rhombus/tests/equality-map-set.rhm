@@ -123,7 +123,7 @@ check:
   | _: #false
   "Map.empty"
 check:
-  match Map.make()
+  match MutableMap()
   | Map.empty: "Map.empty"
   | _: #false
   "Map.empty"
@@ -141,7 +141,7 @@ check:
   | _: #false
   "Set.empty"
 check:
-  match Set.make()
+  match MutableSet()
   | Set.empty: "Set.empty"
   | _: #false
   "Set.empty"

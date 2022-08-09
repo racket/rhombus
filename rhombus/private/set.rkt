@@ -6,21 +6,29 @@
          "binding.rkt"
          "expression+binding.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "dot.rkt" for-dot-provider)
          "name-root.rkt"
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "parse.rkt"
-         "literal.rkt")
+         "literal.rkt"
+         "realm.rkt")
 
 (provide Set
          (for-space rhombus/annotation Set)
-         (for-space rhombus/static-info Set))
+
+         MutableSet
+         (for-space rhombus/static-info MutableSet))
 
 (module+ for-ref
   (provide set?
            set-ht
            set))
+
+(module+ for-builtin
+  (provide set?
+           set-method-table))
 
 (module+ for-info
   (provide (for-syntax set-static-info)
@@ -33,6 +41,13 @@
         (lambda (self hash-code mode)
           (hash-code (set-ht self)))))
 
+(define set-method-table
+  (hash 'count (let ([count (lambda (s)
+                              (unless (set? s)
+                                (raise-argument-error* 'Set.count rhombus-realm "Set" s))
+                              (hash-count (set-ht s)))])
+                 count)))
+
 (define (set-member? s v)
   (hash-ref (set-ht s) v #f))
 
@@ -40,6 +55,16 @@
   (if in?
       (hash-set! (set-ht s) v #t)
       (hash-remove! (set-ht s) v)))
+
+(define (set-count s)
+  (hash-count (set-ht s)))
+
+(define-syntax set-instance
+  (dot-provider
+   (lambda (lhs dot-stx field-stx)
+     (case (syntax-e field-stx)
+       [(count) #`(set-count #,lhs)]
+       [else #f]))))
 
 (define plain-Set
   (let ([Set (lambda vals
@@ -85,7 +110,7 @@
 (define-name-root Set
   #:fields
   ([empty empty-set]
-   [make make-set])
+   [count set-count])
   #:root
   (expression-transformer
    #'Set
@@ -95,8 +120,12 @@
 
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)
-     (#%map-set! set-member!)
-     (#%map-append set-append)))
+     (#%map-append set-append)
+     (#%dot-provider set-instance)))
+
+(define-for-syntax mutable-set-static-info
+  #`((#%map-set! set-member!)
+     . #,set-static-info))
 
 (define-annotation-constructor Set
   ()
@@ -108,18 +137,17 @@
   (lambda (static-infoss)
     #`()))
 
-(define-static-info-syntax Set
-  (#%call-result ((#%map-ref set-ref))))
+(define-static-info-syntax plain-Set
+  (#%call-result #,set-static-info))
 
-(define (make-set . vals)
+(define (MutableSet . vals)
   (define ht (make-hashalw))
   (for ([v (in-list vals)])
     (hash-set! ht v #t))
   (set ht))
 
-(define-static-info-syntax make-set
-  (#%call-result ((#%map-ref set-member?)
-                  (#%map-set! set-member!))))
+(define-static-info-syntax MutableSet
+  (#%call-result #,mutable-set-static-info))
 
 (define (set-ref s v)
   (hash-ref (set-ht s) v #f))

@@ -26,7 +26,7 @@
     [(_ ((~and head brackets) index) (op :=) . rhs+tail)
      #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
-                                 #'map-set!))
+                             #'map-set!))
      (define e (datum->syntax (quote-syntax here)
                               (list map-set!-id map #'(rhombus-expression index) #'rhs.parsed)
                               (span-srcloc map #'head)
@@ -35,7 +35,7 @@
              #'rhs.tail)]
     [(_ ((~and head brackets) index) . tail)
      (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
-                                #'map-ref))
+                            #'map-ref))
      (define e (datum->syntax (quote-syntax here)
                               (list map-ref-id map #'(rhombus-expression index))
                               (span-srcloc map #'head)
