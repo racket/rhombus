@@ -35,9 +35,9 @@ Positional rest arguments are marked with `&`, while
 keyword rest arguments are marked with `~&`. Both of these
 are normal positions with no repetition-depth.
 
-Syntactic sugar `x ...` can be used at the end of function
+Syntactic sugar `x, ...` can be used at the end of function
 parameters, function applications, and data constructors as
-the equivalent of `& [x ...]` to give `x` repetition-depth
+the equivalent of `& [x, ...]` to give `x` repetition-depth
 1.
 
 Strings can be appended with the `++` operator or the `+&`
@@ -249,22 +249,22 @@ more elements.
 
 #### Ellipses
 
-Syntactic sugar `x ...` can be used at the end of function
+Syntactic sugar `x, ...` can be used at the end of function
 parameters, function applications, and data constructors as
-the equivalent of `& [x ...]` to give `x` repetition-depth
+the equivalent of `& [x, ...]` to give `x` repetition-depth
 1.
 
 Examples:
 
 ```
-> fun el(x ...):
-    [[x, x] ...]
+> fun el(x, ...):
+    [[x, x], ...]
 > el(1, 2, 3)
 [[1, 1], [2, 2], [3, 3]]
-> val [a ...] = ["a", "b", "c"]
-> [a ...]
+> val [a, ...] = ["a", "b", "c"]
+> [a, ...]
 ["a", "b", "c"]
-> el("", a ...)
+> el("", a, ...)
 [["", ""], ["a", "a"], ["b", "b"], ["c", "c"], ["d", "d"]]
 ```
 
@@ -295,7 +295,7 @@ kwopt_binding = binding
 
 kwrst_binding = & binding
               | ~& binding
-              | binding ...
+              | binding, ...
 
 maybe_result_annotation = :: annotation
                         | -: annotation
@@ -314,7 +314,7 @@ arg = expr
 
 kwrst_arg = & expr
           | ~& expr
-          | expr ...
+          | expr, ...
 ```
 
 Likewise list constructors may use either `&` for no repetition-depth or
@@ -332,7 +332,7 @@ maybe_rst_expr = & expr
 [binding, ..., maybe_rst_binding]
 
 maybe_rst_binding = & binding
-                  | binding ...
+                  | binding, ...
                   | ϵ
 ```
 
@@ -356,12 +356,12 @@ value, not to the value elements.
 ```
 
 However, when an identifier under ellipses has a type
-annotation `(x -: type) ...`, the type applies to each
+annotation `(x -: type), ...`, the type applies to each
 element under iteration, not to the list as a whole.
 
 ```
-> fun el((x -: Number) ...):
-    [[x, x] ...]
+> fun el((x -: Number), ...):
+    [[x, x], ...]
 ```
 
 ### Option B: Rests with `+&` and `~&`, Repetitions with `...`, Strings with `&`
@@ -370,9 +370,9 @@ Positional rest arguments are marked with `+&`, while
 keyword rest arguments are marked with `~&`. Both of these
 are normal positions with no repetition-depth.
 
-Syntactic sugar `x ...` can be used at the end of function
+Syntactic sugar `x, ...` can be used at the end of function
 parameters, function applications, and data constructors as
-the equivalent of `+& [x ...]` to give `x` repetition-depth
+the equivalent of `+& [x, ...]` to give `x` repetition-depth
 1.
 
 Strings can be appended with the `++` operator or the `&`
