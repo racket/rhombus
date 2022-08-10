@@ -14,7 +14,8 @@
          "parse.rkt"
          "literal.rkt"
          "realm.rkt"
-         "setmap-parse.rkt")
+         "setmap-parse.rkt"
+         "parens.rkt")
 
 (provide (rename-out [Set-expr Set])
          (for-space rhombus/annotation Set)
@@ -121,8 +122,7 @@
    #'Set
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (braces)
-       [(form-id (~and content (braces . _)) . tail)
+       [(form-id (~and content (_::braces . _)) . tail)
         (define-values (shape args) (parse-setmap-content #'content
                                                           #:shape 'set
                                                           #:who (syntax-e #'form-id)))
@@ -166,8 +166,7 @@
    #'Set
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (braces)
-       [(form-id (~and content (braces . _)) . tail)
+       [(form-id (~and content (_::braces . _)) . tail)
         (define-values (shape args) (parse-setmap-content #'content
                                                           #:shape 'set
                                                           #:who (syntax-e #'form-id)))

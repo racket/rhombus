@@ -3,7 +3,9 @@
          (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt"
-                     "with-syntax.rkt")
+                     "with-syntax.rkt"
+                     "tag.rkt"
+                     shrubbery/print)
          "expression.rkt"
          "expression+binding.rkt"
          "binding.rkt"
@@ -19,7 +21,8 @@
          "realm.rkt"
          "reducer.rkt"
          "name-root.rkt"
-         "setmap-parse.rkt")
+         "setmap-parse.rkt"
+         "parens.rkt")
 
 (provide (rename-out [Map-expr Map])
          (for-space rhombus/binding Map)
@@ -207,10 +210,9 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (braces parens)
-       [(form-id (~and content (braces . _)) . tail)
-        (parse-map-binding stx "braces")]
-       [(form-id (parens arg ...) . tail)
+       [(form-id (~and content (_::braces . _)) . tail)
+        (parse-map-binding (syntax-e #'form-id) stx "braces")]
+       [(form-id (_::parens arg ...) . tail)
         (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
           (cond
             [(null? args) (generate-map-binding (reverse keys) (reverse vals) #'tail)]
@@ -224,16 +226,15 @@
                                       stx
                                       (car args))])]))]))))
 
-(define-for-syntax (parse-map-binding stx opener+closer)
+(define-for-syntax (parse-map-binding who stx opener+closer)
   (syntax-parse stx
     #:datum-literals (parens block group op)
     [(form-id (_ (group key-e ... (block (group val ...))) ...) . tail)
-     (generate-map-binding #'((group key-e ...) ...) #'((group val ...) ...) #'tail)]
+     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...) #'tail)]
     [(form-id wrong . tail)
-     (raise-syntax-error #f
+     (raise-syntax-error who
                          (format "bad key-value combination within ~a" opener+closer)
-                         (relocate (span-srcloc #'form-id #'wrong)
-                                   #'(form-id wrong)))]))
+                         #'wrong)]))
 
 (define-for-syntax (generate-map-binding keys vals tail)
   (with-syntax ([(key ...) keys]
@@ -241,7 +242,7 @@
                 [tail tail])
     (define tmp-ids (generate-temporaries #'(key ...)))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer "Map"
+      ((make-composite-binding-transformer (cons "Map" (map shrubbery-syntax->string keys))
                                            #'(lambda (v) #t)
                                            (for/list ([tmp-id (in-list tmp-ids)])
                                              #`(lambda (v) #,tmp-id))

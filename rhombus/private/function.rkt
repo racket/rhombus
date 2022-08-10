@@ -125,7 +125,7 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group block alts)
-        [(form-id ((~and alts-tag alts)
+        [(form-id (alts-tag::alts
                    (block (group (_::parens arg::non-...-binding ... rest::maybe-arg-rest) ret::ret-annotation
                                  (~and rhs (_::block body ...))))
                    ...+)
@@ -156,7 +156,7 @@
      (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group block alts parens)
-        [(form-id ((~and alts-tag alts)
+        [(form-id (alts-tag::alts
                    (block (group name:identifier (_::parens arg::non-...-binding ... rest::maybe-arg-rest)
                                  ret::ret-annotation
                                  (~and rhs (_::block body ...))))
@@ -188,8 +188,8 @@
                                  #'rhs
                                  #'form-id #'parens-tag))))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
-        [(_ (~or (parens _ ...)
-                 (alts (block (group (parens _ ...) . _)) ...+))
+        [(_ (~or (_::parens _ ...)
+                 (_::alts (block (group (parens _ ...) . _)) ...+))
             . _)
          (syntax-parse #`(group . #,stx)
            [e::expression

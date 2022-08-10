@@ -16,7 +16,7 @@
 (provide (for-syntax make-composite-binding-transformer
                      make-rest-match))
 
-(define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor, used for contract
+(define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor or map list, used for contract
                                                        predicate     ; predicate for the composite value
                                                        accessors     ; one accessor per component
                                                        static-infoss ; one set of static info per component
@@ -78,9 +78,9 @@
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
-     (define-values (new-rest-data rest-static-infos rest-name-id)
+     (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'rest)]
+         [#f (values #'#f #'() #'rest #f)]
          [(rest-accessor rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
@@ -89,7 +89,8 @@
                                  #,(or (static-info-lookup #'static-infos #'#%ref-result)
                                        '()))
                   #'rest-info.static-infos
-                  #'rest-info.name-id)]))
+                  #'rest-info.name-id
+                  #'rest-info.annotation-str)]))
 
      (define all-composite-static-infos
        (let* ([composite-static-infos #'(composite-static-info ... . static-infos)]
@@ -112,7 +113,7 @@
                                                  . #,composite-static-infos))]
                                         [else composite-static-infos])])
          composite-static-infos))
-     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)))
+     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str)
                    #'composite
                    all-composite-static-infos
                    #`((a-info.bind-id a-info.bind-static-info ...) ... ...)
@@ -244,14 +245,25 @@
                         [rest-vals (in-list rest-valss)])
                (cons val rest-vals))]))))]))
 
-(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs)
+(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str)
+  (define c-str (syntax-e constructor-str))
   (annotation-string-from-pattern
    (string-append
-    (syntax-e constructor-str) "("
+    (if (pair? c-str) (syntax-e (car c-str)) c-str)
+    (if (pair? c-str) "{" "(")
     (apply string-append
            (for/list ([a-str (in-list arg-annotation-strs)]
+                      [key-str (in-list (if (pair? c-str)
+                                            (cdr c-str)
+                                            arg-annotation-strs))]
                       [i (in-naturals)])
              (string-append
               (if (zero? i) "" ", ")
+              (if (pair? c-str)
+                  (string-append (syntax-e key-str) ": ")
+                  "")
               (annotation-string-to-pattern (syntax-e a-str)))))
-    ")")))
+    (if rest-annotation-str
+        (string-append ", " (syntax-e rest-annotation-str) ", ...")
+        "")
+    (if (pair? c-str) "}" ")"))))

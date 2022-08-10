@@ -151,4 +151,4 @@
                 #'tail)]))
    ;; binding
    (lambda (stxes)
-     (parse-map-binding stxes "braces"))))
+     (parse-map-binding 'braces stxes "braces"))))

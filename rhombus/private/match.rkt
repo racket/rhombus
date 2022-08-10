@@ -7,7 +7,8 @@
          "binding.rkt"
          "parse.rkt"
          (submod "function.rkt" for-build)
-         "realm.rkt")
+         "realm.rkt"
+         "parens.rkt")
 
 (provide match)
 
@@ -26,7 +27,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
-       [(form-id in ...+ ((~and alts-tag alts)
+       [(form-id in ...+ (alts-tag::alts
                           clause::pattern-clause
                           ...
                           (block (group #:else
@@ -45,7 +46,7 @@
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ...+ ((~and alts-tag alts)
+       [(form-id in ...+ (alts-tag::alts
                           (block (group bind ...
                                         (~and rhs (block . _))))
                           ...)
@@ -64,12 +65,12 @@
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ...+ ((~and block-tag block)) . tail)
+       [(form-id in ...+ (block-tag::block) . tail)
         (values
          #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
             (rhombus-expression (group in ...)))
          #'tail)]
-       [(form-id in ...+ (alts clause ...) . tail)
+       [(form-id in ...+ (_::alts clause ...) . tail)
         (for ([c (in-list (syntax->list #'(clause ...)))])
           (syntax-parse c
             [(c::pattern-clause ...) (void)]

@@ -6,7 +6,9 @@
                      "infer-name.rkt"
                      (for-syntax racket/base
                                  syntax/parse)
-                     "syntax-rhs.rkt")
+                     "syntax-rhs.rkt"
+                     "srcloc.rkt"
+                     "tag.rkt")
          "definition.rkt"
          "binding.rkt"
          "expression.rkt"
@@ -89,7 +91,7 @@
                                      in-expression-space
                                      #'rule-rhs)))]
        [(form-id any ...+ (~and rhs (block body ...)))
-        (build-value-definitions #'form-id #'(group any ...) #'rhs
+        (build-value-definitions #'form-id (no-srcloc #`(#,group-tag any ...)) #'rhs
                                  wrap-definition)]))))
 
 (define-syntax rhombus-define
