@@ -11,11 +11,12 @@ Simple pattern-based expression macros can be written using
 using the @rhombusmodname(rhombus/macro) module (usually with no prefix).
 
 The @rhombusmodname(rhombus/macro) module provides bindings like
-@rhombus(expr.macro), and it also re-exports all of
-@rhombusmodname(rhombus) @rhombus(for_meta) for use in compile-time
-expressions.
+@rhombus(defn.macro), @rhombus(expr.macro), @rhombus(expr.rule), and
+it also re-exports all of @rhombusmodname(rhombus) @rhombus(for_meta)
+for use in compile-time expressions.
 
 @local_table_of_contents()
 
-@include_section("ref-expr-macro.scrbl")
 @include_section("ref-defn-macro.scrbl")
+@include_section("ref-expr-macro.scrbl")
+@include_section("ref-bind-macro.scrbl")

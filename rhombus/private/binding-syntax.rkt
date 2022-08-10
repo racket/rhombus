@@ -101,7 +101,7 @@
              (group matcher-id:identifier)
              (group binder-id:identifier)
              (group data))
-     #:with (parens (group (parens (group bind-id) (group bind-static-infos)) ...)) #'bind-ids
+     #:with (parens (group (parens (group bind-id) (group bind-static-infos))) ...) #'bind-ids
      #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos v 'bind_ct.pack))
                                                 (syntax->list #'(bind-static-infos ...)))
      (binding-info #'name-str

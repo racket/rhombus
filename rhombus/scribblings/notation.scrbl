@@ -29,8 +29,8 @@ hexadecimal integers written with @litchar{0x}:
     6.022e23
     0xf00ba7ba2)
 
-Identifiers are Unicode alphanumeric and @litchar{_} with an initial
-character that is not numeric.
+Identifiers use Unicode alphanumeric characters, @litchar{_}, and
+emoji sequences, with an initial character that is not numeric.
 
 @(rhombusblock:
     pi
@@ -43,12 +43,12 @@ These characters are used for shrubbery structure and are
 mostly not available for use in operators:
 
 @verbatim(~indent: 2)|{
-( ) [ ] { } '   ; ,   : |   « »  \   " ~  # @
+( ) [ ] { } '   ; ,   : |   « »  \   "  # @
 }|
 
 The @litchar{:} and @litchar{|} characters can be used as part of an
-operator, and any other Unicode punctuation or symbol character is fair
-game for an operator:
+operator, and any other Unicode punctuation or symbol character (but
+not an emoji) is fair game for an operator:
 
 @(rhombusblock:
     +
@@ -62,7 +62,8 @@ an operator that ends in @litchar{+}, @litchar{-}, or @litchar{.} must
 consist only of that character. So, @litchar{++} and @litchar{...} are
 operators, but @litchar{!+} is not. Similar problems happen with
 comments, so an operator cannot contain @litchar{//} or @litchar{/*} or
-have multiple characters and end in @litchar{/}.
+have multiple characters and end in @litchar{/}. A @litchar{~} cannot be
+used by itself as an operator.
 
 Keywords are like identifiers, but prefixed with @litchar{~} and no space:
 

@@ -71,7 +71,8 @@ corresponding portion of a candidate syntax object. Ellipses, etc.
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes so that
  @rhombus(identifier) is bound to the corresponding portion of the syntax
- object that matches the @rhombus('', ~bind) form.
+ object that matches the @rhombus('', ~bind) form. If @rhombus(identifier)
+ is @rhombus(_), then no identifier is bond to matching syntax.
 
  The @rhombus(syntax_class) can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass),
  or @rhombus(Group, ~stxclass), among other built-in classes, or it can be a class defined

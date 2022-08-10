@@ -213,13 +213,13 @@ bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
   val a: bind_ct.get_info(a_in, '()')
   val b: bind_ct.get_info(b_in, '()')
   match bind_ct.unpack_info(a)
-  | '($a_ann, $a_id, $a_info, ($a_bind_info ...), $a_matcher, $a_binder, $a_data)':
+  | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
       match bind_ct.unpack_info(b)
-      | '($b_ann, $b_id, $b_info, ($b_bind_info ...), $b_matcher, $b_binder, $b_data)':
+      | '($b_ann, $b_id, $b_info, ($b_bind_info, ...), $b_matcher, $b_binder, $b_data)':
           '($("matching((_ :: " +& unwrap_syntax(a_ann) +& ") <> (_ :: " +& unwrap_syntax(b_ann) +& "))"),
             pair,
             (),
-            ($a_bind_info ... $b_bind_info ...),
+            ($a_bind_info, ..., $b_bind_info, ...),
             build_reverse_cons_match,
             build_reverse_cons_bind,
             ($a, $b, a_part, b_part))'

@@ -24,6 +24,8 @@
 @include_section("ref-boolean.scrbl")
 @include_section("ref-number.scrbl")
 @include_section("ref-string.scrbl")
+@include_section("ref-keyword.scrbl")
+@include_section("ref-symbol.scrbl")
 @include_section("ref-list.scrbl")
 @include_section("ref-array.scrbl")
 @include_section("ref-map.scrbl")

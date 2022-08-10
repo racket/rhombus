@@ -30,7 +30,7 @@ A binding form using the low-level protocol has three parts:
   above). These definitions happen only after the match is successful, if
   at all, and the bindings are visible only after the matching part of the
   expansion. Also, these bindings are the ones that are affected by
-  @rhombus(forward). The generated definitions do not need to attach
+  @rhombus(let). The generated definitions do not need to attach
   static information reported by the first bullet's function; that
   information will be attached by the definition form that drives the
   expansion of binding forms.}
@@ -156,6 +156,8 @@ Here's a use of the low-level protocol to implement a @rhombus(fruit) pattern,
 which matches only things that are fruits according to @rhombus(is_fruit):
 
 @(rhombusblock:
+    import: rhombus/macro open
+
     bind.macro 'fruit($id) $tail ...':
       values(bind_ct.pack('(fruit_infoer,
                             // remember the id:
@@ -199,12 +201,13 @@ binding forms, instead. A @rhombus(bind.macro) transformer with
 arguments, and the infoer function can use @rhombus(bind_ct.get_info) on
 a parsed binding form to call its internal infoer function. The result
 is packed static information, which can be unpacked into a tuple syntax
-object with @rhombus(bin_ct.unpack_info). Normally,
+object with @rhombus(bind_ct.unpack_info). Normally,
 @rhombus(bind_ct.get_info) should be called only once to avoid
 exponential work with nested bindings, but @rhombus(bind_ct.unpack_info)
 can used any number of times.
 
-As an example, here's an infix @rhombus(<&>) operator that takes two
+As an example, here's an infix @rhombus(<&>) operator that is similar
+to @rhombus(&&, ~bind). It takes two
 bindings and makes sure a value can be matched to both. The binding
 forms on either size of @rhombus(<&>) can bind variables. The
 @rhombus(<&>) builder is responsible for binding the input name that
@@ -221,16 +224,18 @@ form. A builder must be used in tail position, and it's
       bind_ct.pack('(anding_infoer,
                      ($a, $b))')
 
-    bind.infoer 'anding_infoer($in_id, ($a, $b))':
-      val a_info: bind_ct.get_info(a, '()')
-      val b_info: bind_ct.get_info(b, '()')
-      val '($a_ann, $a_name, ($a_val_info ...), ($a_bind ...), $_, $_, $_)': bind_ct.unpack_info(a_info)
-      val '($b_ann, $b_name, ($b_val_info ...), ($b_bind ...), $_, $_, $_)': bind_ct.unpack_info(b_info)
+    bind.infoer 'anding_infoer($static_info, ($a, $b))':
+      val a_info: bind_ct.get_info(a, static_info)
+      val b_info: bind_ct.get_info(b, static_info)
+      val '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
+        bind_ct.unpack_info(a_info)
+      val '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
+        bind_ct.unpack_info(b_info)
       val ann: "and(" +& unwrap_syntax(a_ann) +& ", " +& unwrap_syntax(b_ann) +& ")"
       '($ann,
         $a_name,
-        ($a_val_info ... $b_val_info ...),
-        ($a_bind ... $b_bind ...),
+        ($a_s_info, ..., $b_s_info, ...),
+        ($a_var_info, ..., $b_var_info, ...),
         anding_matcher,
         anding_binder,
         ($a_info, $b_info))'
@@ -252,6 +257,8 @@ form. A builder must be used in tail position, and it's
     val one <&> 1: 1
     one  // prints 1
     // value two <&> 1: 2 // would fail, since 2 does not match 1
+
+    class Posn(x, y)
 
     val Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
     x  // prints 0
