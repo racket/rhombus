@@ -12,7 +12,7 @@
 (define-syntax (literal-infoer stx)
   (syntax-parse stx
     [(_ static-infos datum)
-     (binding-info (shrubbery-syntax->string #'datum)
+     (binding-info (format "matching(~a)" (shrubbery-syntax->string #'datum))
                    #'literal
                    #'static-infos
                    #'()

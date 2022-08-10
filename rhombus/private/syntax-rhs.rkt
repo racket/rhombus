@@ -9,7 +9,9 @@
          (only-in "ellipsis.rkt"
                   [... rhombus...])
          "parse.rkt"
-         "srcloc.rkt")
+         "srcloc.rkt"
+         "binding.rkt"
+         "op-literal.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -69,8 +71,7 @@
   (define (extract-pattern-id tail-pattern)
     (syntax-parse tail-pattern
       #:datum-literals (op)
-      #:literals ($)
-      [((op $) id:identifier) #'id]))
+      [((op (~var _ (:$ in-binding-space))) id:identifier) #'id]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix nofix)
     ;; infix protocol

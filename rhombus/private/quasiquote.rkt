@@ -21,7 +21,9 @@
                   [_ rhombus-_])
          (only-in "ellipsis.rkt"
                   [... rhombus...])
+         "dollar.rkt"
          "repetition.rkt"
+         "op-literal.rkt"
          (only-in "annotation.rkt"
                   ::))
 
@@ -36,19 +38,17 @@
              (struct-out pattern-variable))))
 
 (begin-for-syntax
-  (define-syntax-class list-repetition
-    (pattern ((~datum op) (~and name (~literal rhombus...))))
-    (pattern ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))
-    (pattern ((~datum block) ((~datum group) ((~datum op) (~and name (~literal rhombus...)))))))
-  (define-splicing-syntax-class tail-repetition
-    #:literals ($ rhombus...)
+  (define-syntax-class (list-repetition in-space)
+    (pattern ((~datum op) (~var name (:... in-space))))
+    (pattern ((~datum group) ((~datum op) (~var name (:... in-space)))))
+    (pattern ((~datum block) ((~datum group) ((~datum op) (~var name (:... in-space)))))))
+  (define-splicing-syntax-class (tail-repetition in-space)
     #:datum-literals (op)
-    (pattern (~seq (op $) e:identifier (op (~and name rhombus...)))))
-  (define-splicing-syntax-class block-tail-repetition
-    #:literals ($ rhombus...)
+    (pattern (~seq (op (~var _ (:$ in-space))) e:identifier (op (~var name (:... in-space))))))
+  (define-splicing-syntax-class (block-tail-repetition in-space)
     #:datum-literals (op)
-    (pattern (~seq ((~datum group) (op $) e:identifier)
-                   ((~datum group) (op (~and name rhombus...))))))
+    (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) e:identifier)
+                   ((~datum group) (op (~var name (:... in-space)))))))
 
   (struct pattern-variable (id val-id depth unpack*-id)))
 
@@ -113,6 +113,7 @@
                                    handle-tail-escape handle-block-tail-escape
                                    handle-maybe-empty-sole-group
                                    handle-maybe-empty-alts handle-maybe-empty-group
+                                   #:in-space in-space
                                    #:tail-any-escape? [tail-any-escape? #f]
                                    #:as-tail? [as-tail? #f]
                                    #:splice? [splice? #f]
@@ -121,7 +122,7 @@
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
       [(group
-        (op (~and (~literal $) $-id)) esc)
+        (op (~var $-id (:$ in-space))) esc)
        #:when (and (zero? depth) (not as-tail?) (not splice?))
        ;; Special case: a group whose content is an escape; the escape
        ;; defaults to "group" mode instead of "term" mode
@@ -129,7 +130,7 @@
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
-        (group (op (~and (~literal $) $-id)) esc))
+        (group (op (~var $-id (:$ in-space))) esc))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
        #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc e splice?))]
@@ -201,7 +202,7 @@
                   sidrs
                   vars
                   can-be-empty?)]))]
-           [(op:tail-repetition)
+           [((~var op (tail-repetition in-space)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
                             (identifier? #'op.e))
@@ -212,7 +213,7 @@
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps (and can-be-empty? (not pend-idrs)) id depth)]
-           [(op:block-tail-repetition)
+           [((~var op (block-tail-repetition in-space)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
                             (identifier? #'op.e)))
@@ -222,7 +223,7 @@
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps (and can-be-empty? (not pend-idrs)) id depth)]
-           [(op:list-repetition . gs)
+           [((~var op (list-repetition in-space)) . gs)
             #:when (zero? depth)
             (unless pend-idrs
               (raise-syntax-error #f
@@ -240,7 +241,7 @@
                   (append new-pend-sidrs sidrs)
                   (append new-pend-vars vars)
                   (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
-           [(((~datum op) (~and (~literal $) $-id)) esc . n-gs)
+           [(((~datum op) (~var $-id (:$ in-space))) esc . n-gs)
             (cond
               [(zero? depth)
                (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id #'esc e))
@@ -267,8 +268,8 @@
   (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group quotes)
-      #:literals (rhombus-_ ::)
-      [rhombus-_ (values #'_ null null null)]
+      [(~var _ (:_ in-binding-space))
+       (values #'_ null null null)]
       [_:identifier
        #:with (tag . _) in-e
        (let* ([temps (generate-temporaries (list e e))]
@@ -282,7 +283,8 @@
                                                             0
                                                             (hasheq))])
                  (list (pattern-variable e temp2 0 unpack*))))]
-      [(parens (group id:identifier (op ::) stx-class:identifier))
+      [(parens (group id:identifier (op colons) stx-class:identifier))
+       #:when (free-identifier=? #':: (in-binding-space #'colons))
        (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
        (define (compat pack* unpack*)
          (define sc (rhombus-syntax-class-class rsc))
@@ -370,6 +372,7 @@
                 vars)
         (values #f #f #f #f)))
   (convert-syntax e
+                  #:in-space in-binding-space
                   #:as-tail? as-tail?
                   #:splice? splice?
                   #:splice-pattern splice-pattern
@@ -400,18 +403,20 @@
                        #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) ht))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
-                    (if (free-identifier=? e #'rhombus-_)
-                        (values #'_ null null null)
-                        (let ([temp0-id (car (generate-temporaries (list e)))]
-                              [temp-id (car (generate-temporaries (list e)))])
-                          (values temp0-id
-                                  (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
-                                  (list #`[#,e (make-pattern-variable-syntax (quote-syntax #,e)
-                                                                             (quote-syntax #,temp-id)
-                                                                             (quote-syntax unpack-tail-list*)
-                                                                             1
-                                                                             (hasheq))])
-                                  (list (pattern-variable e temp-id 1 (quote-syntax unpack-tail-list*)))))))
+                    (syntax-parse e
+                      [(~var _ (:_ in-binding-space))
+                       (values #'_ null null null)]
+                      [_
+                       (let ([temp0-id (car (generate-temporaries (list e)))]
+                             [temp-id (car (generate-temporaries (list e)))])
+                         (values temp0-id
+                                 (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
+                                 (list #`[#,e (make-pattern-variable-syntax (quote-syntax #,e)
+                                                                            (quote-syntax #,temp-id)
+                                                                            (quote-syntax unpack-tail-list*)
+                                                                            1
+                                                                            (hasheq))])
+                                 (list (pattern-variable e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
                     (let ([temp0-id (car (generate-temporaries (list e)))]
@@ -459,6 +464,7 @@
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression])
   (define-values (template idrs sidrs vars can-be-empty?)
     (convert-syntax e
+                    #:in-space in-expression-space
                     #:tail-any-escape? #t
                     ;; make-datum
                     (lambda (d) d)
@@ -590,11 +596,10 @@
          [_
           #`(generic-unpack* $-name #,e depth)]))]))
 
-(define-for-syntax (call-with-quoted-expression stx single-k multi-k literal-k)
+(define-for-syntax (call-with-quoted-expression stx in-space single-k multi-k literal-k)
   (syntax-parse stx
     #:datum-literals (quotes group op)
-    #:literals (rhombus... $)
-    [(_ (quotes (group (~and special (op (~or rhombus... $))))) . tail)
+    [(_ (quotes (group (~and special (op (~or (~var _ (:... in-space)) (~var _ (:$ in-space))))))) . tail)
      (values (literal-k #'special)
              #'tail)]
     [(_ (quotes (group t)) . tail)
@@ -627,11 +632,13 @@
    'macro
    (lambda (stx)
      (call-with-quoted-expression stx
+                                  in-expression-space
                                   convert-template
                                   convert-template
                                   (lambda (e) #`(quote-syntax #,e))))
    (lambda (stx)
      (call-with-quoted-expression stx
+                                  in-binding-space
                                   (convert-pattern/generate-match #'repack-as-term)
                                   (convert-pattern/generate-match #'repack-as-multi)
                                   (lambda (e) (binding-form
@@ -693,15 +700,3 @@
      #'(begin
          (define id tmp-id) ...
          (define-syntax sid sid-ref) ...)]))
-
-(define-syntax $
-  (expression-prefix-operator
-   (quote-syntax $)
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(op . _)
-        (raise-syntax-error #f
-                            "misuse outside of a pattern or template"
-                            #'op)]))))

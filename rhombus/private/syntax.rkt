@@ -12,9 +12,11 @@
          "definition.rkt"
          "function.rkt"
          "name-root-ref.rkt"
-         (only-in "quasiquote.rkt" $)
+         "dollar.rkt"
          ;; because we generate compile-time code:
-         (for-syntax "parse.rkt"))
+         (for-syntax "parse.rkt")
+         "op-literal.rkt"
+         "binding.rkt")
 
 (provide define-operator-definition-transformer
          define-identifier-syntax-definition-transformer
@@ -70,7 +72,7 @@
 
   (define-syntax-class :operator-definition-group
     #:datum-literals (op group)
-    (pattern (group (op $) _ _::operator-or-identifier . _))
+    (pattern (group (op _) _ _::operator-or-identifier . _))
     (pattern (group ::operator-or-identifier . _)))
 
   (define-syntax-class-mixin operator-options
@@ -137,20 +139,24 @@
     self-options
     parsed-right-options)
 
+  (define-syntax-class :$+1
+    (pattern $-id
+             #:when (free-identifier=? #'$ (in-binding-space #'$-id)
+                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
+
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:description "operator-macro pattern"
     #:datum-literals (op parens group quotes)
-    #:literals ($)
     (pattern (~seq op-name::operator-or-identifier)
-             #:when (not (free-identifier=? #'op-name.name #'$))
+             #:when (not (free-identifier=? (in-binding-space #'op-name.name) #'$
+                                            (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
              #:attr name #'op-name.name)
-    (pattern (~seq (op $) (parens (group (quotes (group (op (~and name $)))))))))
+    (pattern (~seq (op _::$+1) (parens (group (quotes (group (op (~and name $)))))))))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
     #:datum-literals (op parens group quotes)
-    #:literals ($)
-    (pattern (quotes (~and g (group (op $) _:identifier _::operator-or-identifier-or-$ . _))))
+    (pattern (quotes (~and g (group (op _::$+1) _:identifier _::operator-or-identifier-or-$ . _))))
     (pattern (quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
@@ -167,14 +173,10 @@
   (lambda (g rhs)
     (syntax-parse g
       #:datum-literals (group op parens quotes)
-      #:literals ($)
       ;; infix protocol
-      [(group (op $-id) left:identifier
+      [(group (op _::$+1) left:identifier
               op-name::operator-or-identifier-or-$
               . tail-pattern)
-       #:when (free-identifier=? #'$-id #'$
-                                 (add1 (syntax-local-phase-level))
-                                 (syntax-local-phase-level))
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
           #`(pre-parsed op-name.name

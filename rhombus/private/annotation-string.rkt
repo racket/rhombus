@@ -3,7 +3,8 @@
 (provide annotation-any-string
          annotation-string-from-pattern
          annotation-string-to-pattern
-         annotation-string-and)
+         annotation-string-and
+         annotation-string-or)
 
 (define annotation-any-string "Any")
 
@@ -23,3 +24,10 @@
     [(equal? b annotation-any-string) a]
     [else
      (string-append "and(" a ", " b ")")]))
+
+(define (annotation-string-or a b)
+  (cond
+    [(equal? a annotation-any-string) a]
+    [(equal? b annotation-any-string) b]
+    [else
+     (string-append "or(" a ", " b ")")]))

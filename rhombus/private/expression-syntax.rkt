@@ -13,6 +13,7 @@
          (for-syntax "name-root.rkt"))
 
 (provide expr
+         expr_only
          (for-syntax expr_ct))
 
 (module+ for-define
@@ -22,6 +23,11 @@
 (define-simple-name-root expr
   macro
   rule)
+
+(define-name-root expr_only
+  #:fields
+  ([macro macro-only]
+   [rule rule-only]))
 
 (begin-for-syntax
   (define-simple-name-root expr_ct
@@ -37,6 +43,20 @@
 (define-operator-definition-transformer rule
   'rule
   (lambda (x) x)
+  #'make-expression-prefix-operator
+  #'make-expression-infix-operator
+  #'expression-prefix+infix-operator)
+
+(define-operator-definition-transformer macro-only
+  'macro
+  in-expression-space
+  #'make-expression-prefix-operator
+  #'make-expression-infix-operator
+  #'expression-prefix+infix-operator)
+
+(define-operator-definition-transformer rule-only
+  'rule
+  in-expression-space
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
   #'expression-prefix+infix-operator)

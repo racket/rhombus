@@ -146,6 +146,34 @@
                         [(_ . tail) #'tail]
                         [_ 'does-not-happen])))))
   
+  (define (parse-annotation-of stx predicate-stx static-infos
+                               sub-n predicate-maker info-maker)
+    (syntax-parse stx
+      #:datum-literals (parens)
+      [(form-id ((~and tag parens) g ...) . tail)
+       (define gs (syntax->list #'(g ...)))
+       (unless (= (length gs) sub-n)
+         (raise-syntax-error #f
+                             "wrong number of subannotations in parentheses"
+                             #'form-id
+                             #f
+                             (list #'tag)))
+       (define c-parseds (for/list ([g (in-list gs)])
+                           (syntax-parse g
+                             [c::annotation #'c.parsed])))
+       (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
+                              (syntax-parse c-parsed
+                                [c::annotation-form #'c.predicate])))
+       (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
+                                 (syntax-parse c-parsed
+                                   [c::annotation-form #'c.static-infos])))
+       (values (annotation-form #`(lambda (v)
+                                    (and (#,predicate-stx v)
+                                         #,(predicate-maker #'v c-predicates)))
+                                #`(#,@(info-maker c-static-infoss)
+                                   . #,static-infos))
+               #'tail)]))
+     
   (define (annotation-constructor name predicate-stx static-infos
                                   sub-n predicate-maker info-maker)
     (values
@@ -162,35 +190,37 @@
                    #'tail)])))
      ;; `of`:
      (annotation-prefix-operator
-      #'of
+      name
       '((default . stronger))
       'macro
       (lambda (stx)
-        (syntax-parse (replace-head-dotted-name stx)
+        (parse-annotation-of (replace-head-dotted-name stx)
+                             predicate-stx static-infos
+                             sub-n predicate-maker info-maker)))))
+
+  (define (annotation-of-constructor name predicate-stx static-infos
+                                     sub-n predicate-maker info-maker)
+    (annotation-prefix-operator
+      name
+      '((default . stronger))
+      'macro
+      (lambda (stx)
+        (syntax-parse stx
           #:datum-literals (op |.| parens of)
-          [(form-id ((~and tag parens) g ...) . tail)
-           (define gs (syntax->list #'(g ...)))
-           (unless (= (length gs) sub-n)
-             (raise-syntax-error #f
-                                 "wrong number of subannotations in parentheses"
-                                 #'form-id
-                                 #f
-                                 (list #'tag)))
-           (define c-parseds (for/list ([g (in-list gs)])
-                               (syntax-parse g
-                                 [c::annotation #'c.parsed])))
-           (define c-predicates (for/list ([c-parsed (in-list c-parseds)])
-                                  (syntax-parse c-parsed
-                                    [c::annotation-form #'c.predicate])))
-           (define c-static-infoss (for/list ([c-parsed (in-list c-parseds)])
-                                     (syntax-parse c-parsed
-                                       [c::annotation-form #'c.static-infos])))
-           (values (annotation-form #`(lambda (v)
-                                        (and (#,predicate-stx v)
-                                             #,(predicate-maker #'v c-predicates)))
-                                    #`(#,@(info-maker c-static-infoss)
-                                       . #,static-infos))
-                   #'tail)]))))))
+          [(form-id (op |.|) (~and of-id of) . tail)
+           (parse-annotation-of #`(of-id . tail)
+                                predicate-stx static-infos
+                                sub-n predicate-maker info-maker)]
+          [(form-id (op |.|) other:identifier . tail)
+           (raise-syntax-error #f
+                               "field not provided by annotation"
+                               #'form-id
+                               #'other)]
+          [(_ . tail)
+           ;; we don't get here when used specifically as `of`
+           (values (annotation-form predicate-stx
+                                    static-infos)
+                   #'tail)])))))
 
 (define-syntax (define-annotation-constructor stx)
   (syntax-parse stx
@@ -198,17 +228,25 @@
         binds
         predicate-stx static-infos
         sub-n predicate-maker info-maker)
-     #'(begin
-         (begin-for-syntax
-           (define-values (root-proc of-proc)
-             (let binds
-                 (annotation-constructor #'name predicate-stx static-infos
-                                         sub-n predicate-maker info-maker))))
-         (define-name-root name
-           #:space rhombus/annotation
-           #:fields (of)
-           #:root root-proc)
-         (define-syntax of of-proc))]))
+     (cond
+       [(eq? (syntax-local-context) 'module)
+        #'(begin
+            (begin-for-syntax
+              (define-values (root-proc of-proc)
+                (let binds
+                    (annotation-constructor #'name predicate-stx static-infos
+                                            sub-n predicate-maker info-maker))))
+            (define-name-root name
+              #:space rhombus/annotation
+              #:fields (of)
+              #:root root-proc)
+            (define-syntax of of-proc))]
+       [else
+        ;; internal definition context cannot bind portal syntax
+        #`(define-syntax #,(in-annotation-space #'name)
+            (let binds
+                (annotation-of-constructor #'name predicate-stx static-infos
+                                           sub-n predicate-maker info-maker)))])]))
 
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator

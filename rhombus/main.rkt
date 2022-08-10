@@ -57,6 +57,7 @@
         "private/range.rkt"
         "private/syntax-class-syntax.rkt"
         "private/parameterize.rkt"
+        "private/boolean-pattern.rkt"
         "private/eval.rkt")
 
 (module reader syntax/module-reader

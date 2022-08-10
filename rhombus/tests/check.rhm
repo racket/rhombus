@@ -11,8 +11,9 @@ begin_for_meta:
   | '~print'
   | '~equal'
   | '~exn'
+  | '~eval_print'
   | '~eval_exn'
-  
+
 expr.macro
 | 'check:
      $(mode :: check_mode)
@@ -20,7 +21,7 @@ expr.macro
      ...
      $result2':
     values('check_same($(match '$mode ...'
-                         | '~eval_exn':
+                         | '~eval_exn' || '~eval_print':
                             'fun():
                                eval_test(literal_syntax '$result1
                                                          ...')'
@@ -47,13 +48,12 @@ fun check_same(thunk, expected_thunk, ~mode: mode):
   val expected: call_capturing_values(expected_thunk)
   val ok:
     match mode
-    | keyword(~print):
+    | keyword(~print) || keyword(~eval_print):
         !exn_msg && (("" +& got) == ("" +& expected))
     | keyword(~equal):
         !exn_msg && (got == expected)
-    | keyword(~exn):
+    | keyword(~exn) || keyword(~eval_exn):
         exn_msg && does_contain_each(expected, exn_msg)
-    | keyword(~eval_exn):
         exn_msg && does_contain_each(expected, exn_msg)
   if ok
   | #void

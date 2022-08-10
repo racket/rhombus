@@ -1,0 +1,44 @@
+#lang rhombus
+import:
+  "check.rhm" open
+
+fun dynamic(v): v
+
+check:
+  use_static_dot
+  let x && [y] : [10]
+  [[x, y], x.length]
+  [[[10], 10], 1]
+
+check:
+  // static info flows from lhs to rhs
+  use_static_dot
+  class Posn(x, y)
+  val Posn(x, y) && z : dynamic(Posn(1, 2))
+  z.x
+  1
+
+check:
+  ~eval_exn
+  // static info doens't go right to left
+  use_static_dot
+  fun dynamic(v): v
+  class Posn(x, y)
+  val z && Posn(x, y) : dynamic(Posn(1, 2))
+  z.x
+  "strict operator not supported"
+
+begin:
+  fun try(v):
+    match v
+    | [x] || [a, b, c]: "lists"
+    | ~else: "other"
+  check:
+    try([1])
+    "lists"
+  check:
+    try([1, 2, 3])
+    "lists"
+  check:
+    try([])
+    "other"

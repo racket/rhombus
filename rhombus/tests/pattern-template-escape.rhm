@@ -93,3 +93,21 @@ check:
   val b: '4'
   a =+= b
   '3 + 4'
+
+check:
+  ~print
+  // phase-0 binding of `$` does not affect `expr.rule` use
+  operator ($ b): b
+  expr.rule '$x + $y': '[$x, $y]'
+  (1+2)
+  [1, 2]
+
+check:
+  ~eval_print
+  import: rhombus/macro open
+  // phase-1 binding of `$` makes `expr.rule` bind `$`
+  begin_for_meta:  
+    operator ($ b): b
+  expr.rule '$x + $y': '[$x, $y]'
+  (1+2)
+  3
