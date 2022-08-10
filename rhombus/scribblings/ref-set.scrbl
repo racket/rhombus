@@ -22,18 +22,20 @@ The @rhombus(.) operator can be used on a list expression with
 @rhombus(count) to call @rhombus(Set.count).
 
 @doc(
+  expr.macro 'Set{$value_expr, ...}',
   fun Set(value:: Any, ...) :: Map
 ){
 
  Constructs an immutable set containing given values, equivalent to
- using @rhombus({value, ...}).
+ using @rhombus({value_expr, ...}).
 
 @examples(
-  val s: Set("x", 1, "y", 2),
+  val s: Set{"x", 1, "y", 2},
   s,
   s["x"],
   s[1],
-  s[42]
+  s[42],
+  Set("x", 1, "y", 2)
 )
 
 }
@@ -50,6 +52,7 @@ The @rhombus(.) operator can be used on a list expression with
 
 
 @doc(
+  expr.macro 'MutableSet{$value_expr, ...}',
   fun MutableSet(value:: Any, ...) :: Set
 ){
 
@@ -57,7 +60,7 @@ The @rhombus(.) operator can be used on a list expression with
  that can be updated using @rhombus(:=).
 
 @examples(
-  val m: MutableSet("x", 1, "y", 2),
+  val m: MutableSet{"x", 1, "y", 2},
   m,
   m["x"],
   m["x"] := #false,

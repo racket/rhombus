@@ -29,11 +29,11 @@ The @rhombus(Map) constructor creates an immutable mapping of arbitrary
 keys to values. The term @deftech{map} is meant to be generic, and
 @rhombus(Map) as a constructor just uses a default implementation of
 maps. The @rhombus(Map) constructor can be used like a function, in
-which case it accepts keys alternating with values:
+which case it accepts keys paired with values in two-item lists:
 
 @(rhombusblock:«
-    val neighborhood: Map("alice", Posn(4, 5),
-                          "bob", Posn(7, 9))
+    val neighborhood: Map(["alice", Posn(4, 5)],
+                          ["bob", Posn(7, 9)])
 
     neighborhood["alice"]     // prints Posn(4, 5)
     // neighborhood["clara"]  // would be a run-time error
@@ -49,6 +49,10 @@ itself, the expression will have to be in parentheses.)
                        "bob": Posn(7, 9)}
     neighborhood["alice"]       // prints Posn(4, 5)
   )
+
+You can also put @rhombus{Map} in from of
+@litchar("{")...@litchar("}"), but that makes more sense with map
+constructors other than the @rhombus{Map} default.
 
 To functionally extend a map, use the @rhombus(++) append operator:
 
@@ -102,13 +106,13 @@ fast indexing operator. For example, @rhombus(buckets[0]) above
 statically resolves to the use of array lookup, instead of going through
 a generic function for maps at run time.
 
-The @rhombus(MutableMap) function works similarly to the @rhombus(Map)
+The @rhombus(MutableMap) constructor works similarly to the @rhombus(Map)
 constructor, but it creates a mutable map. A mutable map can be updated
 using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 
 @(rhombusblock:
-    val locations: MutableMap("alice", Posn(4, 5),
-                              "bob", Posn(7, 9))
+    val locations: MutableMap{"alice": Posn(4, 5),
+                              "bob": Posn(7, 9)}
     locations["alice"] := Posn(40, 50)
     locations["alice"]  // prints Posn(40, 50)
   )

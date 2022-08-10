@@ -4,6 +4,10 @@ import: "check.rhm" open
 fun dynamic(v): v
 
 check:
+  {"a": 1, keyword(~b): 2}
+  Map(["a", 1], [keyword(~b), 2])
+
+check:
   Map.count({"a": 1, "b": 2})
   2
 
@@ -21,10 +25,16 @@ begin:
     {"a": 1, "b": 2}["a"]
     1
   check:
-    Map("a", 1, "b", 2).count
+    Map{"a": 1, "b": 2}.count
     2
   check:
-    MutableMap("a", 1, "b", 2).count
+    Map(["a", 1], ["b", 2]).count
+    2
+  check:
+    MutableMap{"a": 1, "b": 2}.count
+    2
+  check:
+    MutableMap(["a", 1], ["b", 2]).count
     2
   check:
     val map: {"a": 1, "b": 2}

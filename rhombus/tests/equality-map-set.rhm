@@ -146,8 +146,8 @@ check:
   | _: #false
   "Set.empty"
 
-def local_map: Map(symbol(alice), Posn(4, 5),
-                   symbol(bob), Posn(7, 9))
+def local_map: Map{symbol(alice): Posn(4, 5),
+                   symbol(bob): Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
   val p: neighborhood[who]
@@ -162,7 +162,7 @@ check:
   bob_loc
   Posn(7, 9)
 
-def Map(symbol(alice), alice_loc2, symbol(bob), bob_loc2): local_map
+def Map{symbol(alice): alice_loc2, symbol(bob): bob_loc2}: local_map
 check:
   [alice_loc2, bob_loc2]
   [Posn(4, 5), Posn(7, 9)]

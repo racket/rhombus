@@ -13,12 +13,14 @@
          "call-result-key.rkt"
          "parse.rkt"
          "literal.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "setmap-parse.rkt")
 
-(provide Set
+(provide (rename-out [Set-expr Set])
          (for-space rhombus/annotation Set)
+         (for-space rhombus/static-info Set)
 
-         MutableSet
+         (rename-out [MutableSet-expr MutableSet])
          (for-space rhombus/static-info MutableSet))
 
 (module+ for-ref
@@ -32,7 +34,7 @@
 
 (module+ for-info
   (provide (for-syntax set-static-info)
-           plain-Set))
+           Set-build))
 
 (struct set (ht)
   #:property prop:equal+hash
@@ -66,12 +68,15 @@
        [(count) #`(set-count #,lhs)]
        [else #f]))))
 
-(define plain-Set
-  (let ([Set (lambda vals
-               (define base-ht (hashalw))
-               (set (for/fold ([ht base-ht]) ([val (in-list vals)])
-                      (hash-set ht val #t))))])
-    Set))
+(define-syntax (Set-build stx)
+  (syntax-parse stx
+    [(_ elem ...)
+     #`(set (hashalw (~@ elem #t) ...))]))
+
+(define (Set . vals)
+  (define base-ht (hashalw))
+  (set (for/fold ([ht base-ht]) ([val (in-list vals)])
+         (hash-set ht val #t))))
 
 (define-syntax empty-set
   (make-expression+binding-prefix-operator
@@ -107,7 +112,7 @@
            success
            fail)]))
 
-(define-name-root Set
+(define-name-root Set-expr
   #:fields
   ([empty empty-set]
    [count set-count])
@@ -116,7 +121,17 @@
    #'Set
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values #'plain-Set #'tail)]))))
+       #:datum-literals (braces)
+       [(form-id (~and content (braces . _)) . tail)
+        (define-values (shape args) (parse-setmap-content #'content
+                                                          #:shape 'set
+                                                          #:who (syntax-e #'form-id)))
+        (values (wrap-static-info*
+                 (quasisyntax/loc stx
+                   (Set-build #,@args))
+                 set-static-info)
+                #'tail)]
+       [(_ . tail) (values #'Set #'tail)]))))
 
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)
@@ -137,7 +152,7 @@
   (lambda (static-infoss)
     #`()))
 
-(define-static-info-syntax plain-Set
+(define-static-info-syntax Set
   (#%call-result #,set-static-info))
 
 (define (MutableSet . vals)
@@ -145,6 +160,23 @@
   (for ([v (in-list vals)])
     (hash-set! ht v #t))
   (set ht))
+
+(define-syntax MutableSet-expr
+  (expression-transformer
+   #'Set
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (braces)
+       [(form-id (~and content (braces . _)) . tail)
+        (define-values (shape args) (parse-setmap-content #'content
+                                                          #:shape 'set
+                                                          #:who (syntax-e #'form-id)))
+        (values (wrap-static-info*
+                 (quasisyntax/loc stx
+                   (MutableSet #,@args))
+                 mutable-set-static-info)
+                #'tail)]
+       [(_ . tail) (values #'MutableSet #'tail)]))))
 
 (define-static-info-syntax MutableSet
   (#%call-result #,mutable-set-static-info))
@@ -158,8 +190,8 @@
     #:literals (Set)
     [(_ set1 set2)
      (syntax-parse (unwrap-static-infos #'set2)
-       #:literals (plain-Set)
-       [(plain-Set v)
+       #:literals (Set-build)
+       [(Set-build v)
         #'(set (hash-set (set-ht set1) v #t))]
        [_
         #'(set-append/proc set1 set2)])]))

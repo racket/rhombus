@@ -96,7 +96,7 @@
       [(set? v)
        (cond
          [(eqv? 0 (hash-count (set-ht v)))
-          (display "Set()" op)]
+          (display "Set{}" op)]
          [else
           (display "{" op)
           (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])

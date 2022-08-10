@@ -18,14 +18,16 @@
          "parse.rkt"
          "realm.rkt"
          "reducer.rkt"
-         "name-root.rkt")
+         "name-root.rkt"
+         "setmap-parse.rkt")
 
-(provide Map
+(provide (rename-out [Map-expr Map])
          (for-space rhombus/binding Map)
          (for-space rhombus/annotation Map)
          (for-space rhombus/reducer Map)
+         (for-space rhombus/static-info Map)
 
-         MutableMap
+         (rename-out [MutableMap-expr MutableMap])
          (for-space rhombus/static-info MutableMap))
 
 (module+ for-binding
@@ -33,7 +35,7 @@
 
 (module+ for-info
   (provide (for-syntax map-static-info)
-           plain-Map))
+           Map-build))
 
 (module+ for-builtin
   (provide map-method-table))
@@ -41,20 +43,35 @@
 (define map-method-table
   (hash 'count hash-count))
 
-(define plain-Map
-  (let ([Map
-         (lambda args
-           (define ht (hashalw))
-           (let loop ([ht ht] [args args])
-             (cond
-               [(null? args) ht]
-               [(null? (cdr args))
-                (raise-arguments-error* 'Map rhombus-realm
-                                        (string-append "key does not have a value"
-                                                       " (i.e., an odd number of arguments were provided)")
-                                        "key" (car args))]
-               [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))])
-    Map))
+(define Map-build hashalw) ; inlined version of `Map.from_interleaved`
+
+(define (Map.from_interleaved . args)
+  (define ht (hashalw))
+  (let loop ([ht ht] [args args])
+    (cond
+      [(null? args) ht]
+      [(null? (cdr args))
+       (raise-arguments-error* 'Map rhombus-realm
+                               (string-append "key does not have a value"
+                                              " (i.e., an odd number of arguments were provided)")
+                               "key" (car args))]
+      [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))
+
+(define (Map . args)
+  (build-map 'Map args))
+
+(define (build-map who args)
+  (define ht (hashalw))
+  (let loop ([ht ht] [args args])
+    (cond
+      [(null? args) ht]
+      [else
+       (define arg (car args))
+       (cond
+         [(and (pair? arg) (pair? (cdr arg)) (null? (cddr arg)))
+          (loop (hash-set ht (car arg) (cadr arg)) (cdr args))]
+         [else
+          (raise-argument-error* who rhombus-realm "[_, _]" arg)])])))
 
 (define-syntax empty-map
   (make-expression+binding-prefix-operator
@@ -90,7 +107,7 @@
            success
            fail)]))
 
-(define-name-root Map
+(define-name-root Map-expr
   #:fields
   ([empty empty-map]
    [count hash-count])
@@ -99,7 +116,17 @@
    #'Map
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values #'plain-Map #'tail)]))))
+       #:datum-literals (braces)
+       [(form-id (~and content (braces . _)) . tail)
+        (define-values (shape args) (parse-setmap-content #'content
+                                                          #:shape 'map
+                                                          #:who (syntax-e #'form-id)))
+        (values (wrap-static-info*
+                 (quasisyntax/loc stx
+                   (Map-build #,@args))
+                 map-static-info)
+                #'tail)]
+       [(_ . tail) (values #'Map #'tail)]))))
 
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
@@ -129,7 +156,7 @@
        [(count) #`(hash-count #,lhs)]
        [else #f]))))
 
-(define-static-info-syntax plain-Map
+(define-static-info-syntax Map
   (#%call-result #,map-static-info))
 
 (define-reducer-syntax Map
@@ -148,7 +175,24 @@
 
 (define MutableMap
   (lambda args
-    (hash-copy (apply plain-Map args))))
+    (hash-copy (build-map 'MutableMap args))))
+
+(define-syntax MutableMap-expr
+  (expression-transformer
+   #'MutableMap
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (braces)
+       [(form-id (~and content (braces . _)) . tail)
+        (define-values (shape args) (parse-setmap-content #'content
+                                                          #:shape 'map
+                                                          #:who (syntax-e #'form-id)))
+        (values (wrap-static-info*
+                 (quasisyntax/loc stx
+                   (hash-copy (Map-build #,@args)))
+                 mutable-map-static-info)
+                #'tail)]
+       [(_ . tail) (values #'MutableMap #'tail)]))))
 
 (define-static-info-syntax MutableMap
   (#%call-result #,mutable-map-static-info))
@@ -163,18 +207,22 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens)
+       #:datum-literals (braces parens)
+       [(form-id (~and content (braces . _)) . tail)
+        (parse-map-binding stx "braces")]
        [(form-id (parens arg ...) . tail)
         (let loop ([args (syntax->list #'(arg ...))] [keys '()] [vals '()])
           (cond
             [(null? args) (generate-map-binding (reverse keys) (reverse vals) #'tail)]
-            [(null? (cdr args))
-             (raise-syntax-error #f
-                                 (string-append "key expression does not have a value expression"
-                                                " (i.e., an odd number of forms were provided)")
-                                 stx
-                                 (car args))]
-            [else (loop (cddr args) (cons (car args) keys) (cons (cadr args) vals))]))]))))
+            [else
+             (syntax-parse (car args)
+               #:datum-literals (group brackets)
+               [(group (brackets key val))
+                (loop (cdr args) (cons #'key keys) (cons #'val vals))]
+               [_ (raise-syntax-error #f
+                                      "expected [<key-expr>, <value-binding>]"
+                                      stx
+                                      (car args))])]))]))))
 
 (define-for-syntax (parse-map-binding stx opener+closer)
   (syntax-parse stx
@@ -252,10 +300,10 @@
   (syntax-parse stx
     [(_ map1 map2)
      (syntax-parse (unwrap-static-infos #'map2)
-       #:literals (plain-Map)
-       [(plain-Map k:keyword v)
+       #:literals (Map-build)
+       [(Map-build k:keyword v)
         #'(hash-set map1 'k v)]
-       [(plain-Map k v)
+       [(Map-build k v)
         #'(hash-set map1 k v)]
        [_
         #'(hash-append/proc map1 map2)])]))

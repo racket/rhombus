@@ -27,6 +27,13 @@ set. The @rhombus(++) operator effectively unions sets.
     friends["david"]      // prints #false
   )
 
+Using @rhombus{Set} explicitly before @litchar("{")...@litchar("}")
+disables the special treatment of @rhombus(:) to indicate a map, and
+each element within @litchar("{")...@litchar("}") is simply an
+expression. The @rhombus{Set} constructor can also be used like a
+function with @litchar("(")...@litchar(")") instead of
+@litchar("{")...@litchar("}").
+
 @rhombus(Set.of) and @rhombus(MutableSet) work as you'd expect. When
 @litchar{[}...@litchar{]} with @rhombus(:=) is used to modify a mutable
 set, the ``key'' is removed from the set if the assigned value is

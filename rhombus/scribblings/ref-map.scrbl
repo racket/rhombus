@@ -34,24 +34,25 @@ The @rhombus(.) operator can be used on a list expression with
 }
 
 @doc(
-  fun Map(key :: Any, value:: Any, ...) :: Map
+  expr.macro 'Map{$key_expr: $value_expr, ...}',
+  fun Map([key :: Any, value:: Any], ...) :: Map
 ){
 
  Constructs an immutable map containing given keys mapped to the given
- values, equivalent to using @rhombus({key: value, ...}). The number of
- arguments to @rhombus(Map) must be even with keys and values
- interleaved.
+ values, equivalent to using @rhombus({key_expr: value_expr, ...}).
 
 @examples(
-  val m: Map("x", 1, "y", 2),
+  val m: Map{"x": 1, "y": 2},
   m,
-  m["x"]
+  m["x"],
+  Map(["x", 1], ["y", 2])
 )
 
 }
 
 @doc(
-  bind.macro 'Map($key_expr, $binding, ...)'
+  bind.macro 'Map{$key_expr: $binding, ...}',
+  bind.macro 'Map([$key_expr, $binding], ...)'
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
@@ -59,7 +60,7 @@ The @rhombus(.) operator can be used on a list expression with
  have additional keys and values.
 
 @examples(
-  val Map("x", x, "y", y): {"x": 1, "y": 2},
+  val Map{"x": x, "y": y}: {"x": 1, "y": 2},
   y
 )
 
@@ -87,6 +88,7 @@ The @rhombus(.) operator can be used on a list expression with
 }
 
 @doc(
+  expr.macro 'MutableMap{key: value, ...}',
   fun MutableMap(key :: Any, value:: Any, ...) :: Map
 ){
 
@@ -94,7 +96,7 @@ The @rhombus(.) operator can be used on a list expression with
  that can be updated using @rhombus(=).
 
 @examples(
-  val m: MutableMap("x", 1, "y", 2),
+  val m: MutableMap{"x": 1, "y": 2},
   m,
   m["x"],
   m["x"] := 0,

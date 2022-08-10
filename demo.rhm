@@ -428,14 +428,14 @@ nums_a[1]
 nums_a[2] := 30
 nums_a[2]
 
-val map: Map(symbol(x), "hello", symbol(y), "goodbye")
+val map: Map{symbol(x): "hello", symbol(y): "goodbye"}
 val yes_map :: Map : map
 val yup_map :: Map.of(Symbol, String) : map
 
 map
 map[symbol(y)]
 
-val also_map: Map(1, "one", 2, "two")
+val also_map: Map([1, "one"], [2, "two"])
 also_map[2]
 
 val also_also_map: {1: "one", 2: "two"}
@@ -447,7 +447,7 @@ key_map[symbol(a)]
 val mixed_map: {symbol(a): 1, "b": 2}
 mixed_map[symbol(a)] + mixed_map["b"]
 
-val mut_map: MutableMap(1, "mone")
+val mut_map: MutableMap([1, "mone"])
 mut_map[1]
 mut_map[2] := "mtwo"
 mut_map[2]
@@ -465,8 +465,8 @@ def [x, y, ...]: nums
 def Array(ax, ay, az): nums_a
 az
 
-def local_map: Map(symbol(alice), Posn(4, 5),
-                   symbol(bob), Posn(7, 9))
+def local_map: Map{symbol(alice): Posn(4, 5),
+                   symbol(bob): Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
   val p: neighborhood[who]
@@ -477,8 +477,11 @@ locale(symbol(alice), local_map)
 def {symbol(bob): bob_loc}: local_map
 bob_loc
 
-def Map(symbol(alice), alice_loc2, symbol(bob), bob_loc2): local_map
+def Map{symbol(alice): alice_loc2, symbol(bob): bob_loc2}: local_map
 [alice_loc2, bob_loc2]
+
+def Map([symbol(alice), also_alice_loc2], [symbol(bob), also_bob_loc2]): local_map
+[also_alice_loc2, also_bob_loc2]
 
 def [p :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
 [p, ...][0].x
