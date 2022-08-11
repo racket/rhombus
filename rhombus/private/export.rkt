@@ -23,6 +23,7 @@
 
          (for-space rhombus/export
                     rename
+                    as
                     except
                     for_meta
                     for_label
@@ -31,6 +32,10 @@
                     all_in
                     |.|
                     #%juxtapose))
+
+(module+ for-meta
+  (provide (for-syntax export-modifier
+                       in-export-space)))
 
 (begin-for-syntax
   (property export-prefix-operator prefix-operator)
@@ -78,6 +83,16 @@
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-export-modifier-ref transform-in req))
+
+  (define-syntax-class :modified-export
+    #:datum-literals (group block)
+    (pattern (group mod-id:identifier mod-arg ... (block exp ...))
+             #:when (syntax-local-value* (in-export-space #'mod-id) export-modifier-ref)
+             #:with (e::modified-export ...) #'(exp ...)
+             #:with (~var ex (:export-modifier #'(combine-out e.parsed ...))) #'(group mod-id mod-arg ...)
+             #:attr parsed #'ex.parsed)
+    (pattern e0::export
+             #:attr parsed #'e0.parsed))
 
   (define (apply-modifiers mods e-parsed)
     (cond
@@ -134,7 +149,7 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block e::export ...))
+       [(_ (block e::modified-export ...))
         #`((provide e.parsed ...))]))))
 
 (define-syntax (define-export-syntax stx)
@@ -144,12 +159,29 @@
        (define-syntax #,(in-export-space #'name) rhs))]))
 
 (begin-for-syntax
+  (define-syntax-class :as-id
+    #:description "`as`"
+    (pattern as-id:identifier
+             #:when (free-identifier=? (in-export-space #'as) (in-export-space #'as-id))))
+
   (define-syntax-class :renaming
     #:datum-literals (group)
     (pattern (group . (~var int (:hier-name-seq values name-path-op name-root-ref)))
-             #:with (#:to ext::name) #'int.tail
+             #:with (_::as-id ext::name) #'int.tail
              #:attr int-name #'int.name
              #:attr ext-name #'ext.name)))
+
+(define-export-syntax as
+  (export-prefix-operator
+   #'rename
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(self . _)
+        (raise-syntax-error #f
+                            "allowed only in `rename`"
+                            #'self)]))))
 
 (define-export-syntax rename
   (export-prefix-operator

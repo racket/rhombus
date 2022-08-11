@@ -6,20 +6,21 @@
                      "srcloc.rkt"
                      "pack.rkt")
          "name-root.rkt"
-         (submod "import.rkt" for-meta)
+         (submod "export.rkt" for-meta)
          "syntax.rkt"
          "parse.rkt")
 
-(provide impo)
+(provide expo)
 
-(define-simple-name-root impo
+(define-simple-name-root expo
+  macro
   modifier)
 
 (define-identifier-syntax-definition-transformer modifier
   (lambda (x) x)
-  #'make-import-modifier)
+  #'make-export-modifier)
 
 (define-for-syntax (make-import-modifier proc)
-  (import-modifier
+  (export-modifier
    (lambda (req stx)
      (error "TBD"))))

@@ -140,6 +140,7 @@ expr.macro
     if (kw === keyword(~var)
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
+          || kw === keyword(~expmod)
           || kw === keyword(~ann)
           || kw === keyword(~stxclass)
           || kw === keyword(~reducer)

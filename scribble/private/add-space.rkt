@@ -6,6 +6,7 @@
   (define space (case space-name
                   [(bind) 'rhombus/binding]
                   [(impmod) 'rhombus/import]
+                  [(expmod) 'rhombus/export]
                   [(ann) 'rhombus/annotation]
                   [(stxclass) 'rhombus/syntax-class]
                   [(reducer) 'rhombus/reducer]

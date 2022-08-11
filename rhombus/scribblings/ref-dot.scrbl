@@ -22,3 +22,12 @@
  only when the access can be resolved statically.
 
 }
+
+@doc(
+  defn.macro 'use_dynamic_dot'
+){
+
+ (Re-)defines @rhombus(.) to its default mode, which allows either
+ static or dynamic resolution of a component access.
+
+}

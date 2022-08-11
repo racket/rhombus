@@ -9,6 +9,8 @@
          racket/list
          (only-in (submod rhombus/private/import for-meta)
                   in-import-space)
+         (only-in (submod rhombus/private/export for-meta)
+                  in-export-space)
          (only-in (submod rhombus/private/annotation for-class)
                   in-annotation-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
@@ -22,7 +24,7 @@
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/macro
-                  decl defn expr imp annotation bind reducer for_clause)
+                  decl defn expr impo expo annotation bind reducer for_clause)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
@@ -62,10 +64,11 @@
     #:datum-literals (parens group brackets block)
     [(_ context
         (parens (~optional (group #:literal (block (group literal-id ...) ...)))
-                (group form ...) ...
+                ((~and group-tag group) form ...) ...
                 (group
                  (brackets content-group ...))))
-     (define forms (syntax->list #'((group form ...) ...)))
+     (define forms (map (lambda (stx) (datum->syntax #f (syntax-e stx)))
+                        (syntax->list #'((group-tag form ...) ...))))
      (define introducers (for/list ([form (in-list forms)])
                            (extract-introducer form)))
      (define space-names (for/list ([form (in-list forms)])
@@ -192,17 +195,17 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def fun expr bind |.|)
+    #:literals (def fun expr impo expo bind |.|)
     #:datum-literals (op macro rule)
-    (pattern (~seq (~or expr bind) (op |.|) macro))
+    (pattern (~seq (~or expr bind expo impo) (op |.|) macro))
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind imp annotation reducer for_clause |.|)
+    #:literals (def defn expr decl bind impo expo annotation reducer for_clause |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annotation bind reducer for_clause) (op |.|) macro))
+    (pattern (~seq (~or defn decl expr annotation bind reducer expo for_clause) (op |.|) macro))
     (pattern (~seq (~or expr bind annotation) (op |.|) rule))
-    (pattern (~seq (~or imp) (op |.|) modifier))
+    (pattern (~seq (~or impo expo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class (identifier-target space-name)
     #:datum-literals (|.| op)
@@ -416,9 +419,10 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (imp annotation reducer for_clause rhombus-syntax)
+    #:literals (impo expo annotation reducer for_clause rhombus-syntax)
     #:datum-literals (parens group op)
-    [(group imp . _) in-import-space]
+    [(group impo . _) in-import-space]
+    [(group expo . _) in-export-space]
     [(group annotation . _) in-annotation-space]
     [(group reducer . _) in-reducer-space]
     [(group for_clause . _) in-for-clause-space]
@@ -427,9 +431,10 @@
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (imp annotation reducer for_clause bind rhombus-syntax)
+    #:literals (impo expo annotation reducer for_clause bind rhombus-syntax)
     #:datum-literals (parens group op)
-    [(group imp . _) 'impmod]
+    [(group impo . _) 'impmod]
+    [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
     [(group annotation . _) 'ann]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
@@ -439,12 +444,14 @@
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr imp annotation reducer for_clause bind grammar operator rhombus-syntax)
-    #:datum-literals (parens group op quotes)
+    #:literals (defn decl expr impo expo annotation reducer for_clause bind grammar operator rhombus-syntax)
+    #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
-    [(group imp . _) "import modifier"]
+    [(group impo . _) "import modifier"]
+    [(group expo _ modifier . _) "export modifier"]
+    [(group expo _ macro . _) "export"]
     [(group annotation . _) "annotation"]
     [(group reducer . _) "reducer"]
     [(group for_clause . _) "for clause"]
