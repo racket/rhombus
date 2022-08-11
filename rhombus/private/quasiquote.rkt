@@ -27,7 +27,7 @@
          (only-in "annotation.rkt"
                   ::))
 
-(provide #%quote
+(provide #%quotes
          syntax_term
          $)
 
@@ -511,7 +511,7 @@
                       ;; if `template` generates `(group)`, then instead of `(tag (group))`,
                       ;; produce `(tag)`
                       (define id (car (generate-temporaries '(group))))
-                      (values #`(#,tag #,id (... ...))
+                      (values (no-srcloc #`(#,tag #,id (... ...)))
                               (cons #`[(#,id (... ...))
                                        (convert-empty-group 0 (#,(quote-syntax quasisyntax) #,template))]
                                     idrs)
@@ -625,9 +625,9 @@
           (sid ...)
           (sid-ref ...))))))
 
-(define-syntax #%quote
+(define-syntax #%quotes
   (make-expression+binding-prefix-operator
-   #'#%quote
+   #'#%quotes
    '((default . stronger))
    'macro
    (lambda (stx)

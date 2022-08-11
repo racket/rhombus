@@ -15,13 +15,13 @@ Here are all of the implicit forms:
  @item{@rhombus(#{#%literal}) --- used for anything other than an
        identifier, keyword, operator, or compound form},
 
- @item{@rhombus(#{#%tuple}) --- used for @rhombus(())},
+ @item{@rhombus(#{#%parens}) --- used for @rhombus(())},
 
- @item{@rhombus(#{#%array}) --- used for @rhombus([])},
+ @item{@rhombus(#{#%brackets}) --- used for @rhombus([])},
  
- @item{@rhombus(#{#%set}) --- used for @rhombus({})},
+ @item{@rhombus(#{#%braces}) --- used for @rhombus({})},
 
- @item{@rhombus(#{#%quote}) --- used for @rhombus('')},
+ @item{@rhombus(#{#%quotes}) --- used for @rhombus('')},
 
  @item{@rhombus(#{#%call}) --- used as an infix form when a parsed form
        is followed immediately by a @rhombus(()) term},
@@ -75,9 +75,9 @@ Here are all of the implicit forms:
 }
 
 @doc(
-  expr.macro '#{#%tuple} ($expr)',
-  bind.macro '#{#%tuple} ($binding)',
-  annotation.macro '#{#%tuple} ($annotation)'
+  expr.macro '#{#%parens} ($expr)',
+  bind.macro '#{#%parens} ($binding)',
+  annotation.macro '#{#%parens} ($annotation)'
 ){
 
  Produces the same value as @rhombus(expr), same binding as
@@ -86,7 +86,7 @@ Here are all of the implicit forms:
 
 @examples(
  (1+2),
- #{#%tuple} (1+2),
+ #{#%parens} (1+2),
  val (x): 1+2,
  x
 )

@@ -8,13 +8,13 @@
          juxtapose-implicit-name)
 
 ;; implicit prefix operator names:
-(define tuple-implicit-name   '#%tuple)       ; parentheses not after an expression
-(define array-implicit-name   '#%array)       ; square brackets not after an expression
-(define set-implicit-name     '#%set)         ; curly braces not after an expression
-(define quote-implicit-name   '#%quote)       ; quotes
-(define block-implicit-name   '#%block)       ; colon
-(define alts-implicit-name    '#%alts)        ; vertical bars
-(define literal-implicit-name '#%literal)     ; numbers, strings, etc.
+(define parens-implicit-name   '#%parens)      ; parentheses not after an expression
+(define brackets-implicit-name '#%brackets)    ; square brackets not after an expression
+(define braces-implicit-name   '#%braces)      ; curly braces not after an expression
+(define quotes-implicit-name   '#%quotes)      ; quotes
+(define block-implicit-name    '#%block)       ; colon
+(define alts-implicit-name     '#%alts)        ; vertical bars
+(define literal-implicit-name  '#%literal)     ; numbers, strings, etc.
 
 ;; implicit infix operator names:
 (define call-implicit-name      '#%call)      ; parentheses adjacent to preceding expression
@@ -29,13 +29,13 @@
 (define (select-prefix-implicit head)
   (syntax-parse head
     [((~and tag (~datum parens)) . _)
-     (values tuple-implicit-name #'tag)]
+     (values parens-implicit-name #'tag)]
     [((~and tag (~datum brackets)) . _)
-     (values array-implicit-name #'tag)]
+     (values brackets-implicit-name #'tag)]
     [((~and tag (~datum braces)) . _)
-     (values set-implicit-name #'tag)]
+     (values braces-implicit-name #'tag)]
     [((~and tag (~datum quotes)) . _)
-     (values quote-implicit-name #'tag)]
+     (values quotes-implicit-name #'tag)]
     [((~and tag (~datum block)) . _)
      (values block-implicit-name #'tag)]
     [((~and tag (~datum alts)) . _)

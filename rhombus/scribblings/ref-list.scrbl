@@ -10,7 +10,7 @@ Lists can be constructed using the syntax
 @rhombus([$$(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the
-@rhombus(#{#%array}) form, which (despite its name) is normally bound to
+@rhombus(#{#%brackets}) form, which (despite its name) is normally bound to
 construct a list.
 
 A list works with map-referencing square brackets to access a list
@@ -24,8 +24,8 @@ The @rhombus(.) operator can be used on a list expression with
 @doc(
   fun List(v :: Any, ...) :: List,
   fun List(v :: Any, ..., repetition, dots) :: List,
-  expr.macro '#{#%array} [$v_expr]',
-  expr.macro '#{#%array} [$v_expr, $repetition, dots]',
+  expr.macro '#{#%brackets} [$v_expr]',
+  expr.macro '#{#%brackets} [$v_expr, $repetition, dots]',
 
   grammar dots:
     $$(dots_expr)
@@ -38,14 +38,14 @@ The @rhombus(.) operator can be used on a list expression with
  @tech{repetition} position, and all elements of the repetition are
  included in order at the end of the list.
 
- @see_implicit(@rhombus(#{#%array}), @rhombus([]), "expression")
+ @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
 
 @examples(
   val lst: List(1, 2, 3),
   lst,
   lst[0],
   lst ++ [4, 5],
-  #{#%array} [1, 2, 3]
+  #{#%brackets} [1, 2, 3]
 )
 
 }
@@ -53,8 +53,8 @@ The @rhombus(.) operator can be used on a list expression with
 @doc(
   bind.macro 'List($binding, ...)',
   bind.macro 'List($binding, ..., $dots)',
-  bind.macro '#{#%array} [$binding, ...]',
-  bind.macro '#{#%array} [$binding, ..., $dots]',
+  bind.macro '#{#%brackets} [$binding, ...]',
+  bind.macro '#{#%brackets} [$binding, ..., $dots]',
   grammar dots:
     $$(dots)
 ){
@@ -64,7 +64,7 @@ The @rhombus(.) operator can be used on a list expression with
  @rhombus(binding)s before the last one, and then them last one is
  matched against the rest of the list.
 
- @see_implicit(@rhombus(#{#%array}, ~bind), @rhombus([]), "binding")
+ @see_implicit(@rhombus(#{#%brackets}, ~bind), @rhombus([]), "binding")
 
 @examples(
   val List(1, x, y): [1, 2, 3],

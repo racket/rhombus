@@ -17,12 +17,12 @@
 
 (provide #%body
          #%literal
-         #%tuple
-         ;; #%quote is provided by "quasiquote.rkt"
+         #%parens
+         ;; `#%quotes` provided by "quasiquote.rkt"
          #%call
-         #%array
+         #%brackets
          #%ref
-         #%set)
+         #%braces)
 
 (define-syntax #%body
   (expression-prefix-operator
@@ -59,9 +59,9 @@
                       "misplaced keyword"
                       datum))
 
-(define-syntax #%tuple
+(define-syntax #%parens
   (make-expression+binding+repetition-prefix-operator
-   #'#%tuple
+   #'#%parens
    '((default . stronger))
    'macro
    ;; expression
@@ -115,9 +115,9 @@
      (parse-function-call rator stxes))
    'left))
 
-(define-syntax #%array
+(define-syntax #%brackets
   (make-expression+binding+repetition-prefix-operator
-   #'#%array
+   #'#%brackets
    '((default . stronger))
    'macro
    ;; expression
@@ -146,9 +146,9 @@
      (parse-map-ref-or-set array stxes))
    'left))
 
-(define-syntax #%set
+(define-syntax #%braces
   (make-expression+binding-prefix-operator
-   #'#%set
+   #'#%braces
    '((default . stronger))
    'macro
    ;; expression

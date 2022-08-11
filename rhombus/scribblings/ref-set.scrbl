@@ -7,7 +7,7 @@ Immutable sets can be constructed using the syntax
 @rhombus({$$(@rhombus(val_expr, ~var)), ...}),
 which creates a set containing the values of the @rhombus(value_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
-parsed as an implicit use of the @rhombus(#{#%set}) form.
+parsed as an implicit use of the @rhombus(#{#%braces}) form.
 
 To check for membership in a set, use square brackets after a map
 expression with an expression for a value, and the result is a boolean
@@ -27,7 +27,7 @@ The @rhombus(.) operator can be used on a list expression with
 ){
 
  Constructs an immutable set containing given values, equivalent to
- using @rhombus({value_expr, ...}).
+ using @rhombus({value_expr, ...}) to form a set.
 
 @examples(
   val s: Set{"x", 1, "y", 2},

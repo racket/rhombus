@@ -226,7 +226,7 @@
     [((~datum block) g ...) #`(rhombus-body g ...)]))
 
 ;; Forces enforestation through `rhombus-expression`; note that
-;; `#%tuple` eagerly enforests its content, so this effectively
+;; `#%parens` eagerly enforests its content, so this effectively
 ;; goes eagerly through parentheses
 (define-for-syntax (rhombus-local-expand stx)
   (syntax-parse stx

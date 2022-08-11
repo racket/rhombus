@@ -10,7 +10,7 @@ the corresponding values of the @rhombus(value_expr, ~var)s. Note
 that using @litchar{,} in place of @litchar{:} creates a set with
 separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
-implicit use of the @rhombus(#{#%set}) form.
+implicit use of the @rhombus(#{#%braces}) form.
 
 To access a mapping, use square brackets after a map expression with an
 expression for the key within square brackets. Mutable maps can be
@@ -22,8 +22,8 @@ The @rhombus(.) operator can be used on a list expression with
 @rhombus(count) to call @rhombus(Map.count).
 
 @doc(
-  expr.macro '#{#%set} {$key_expr: $val_expr, ...}',
-  expr.macro '#{#%set} {$elem_expr, ...}',
+  expr.macro '#{#%braces} {$key_expr: $val_expr, ...}',
+  expr.macro '#{#%braces} {$elem_expr, ...}',
 ){
 
  Constructs either a map or a set, depending on whether
@@ -31,13 +31,13 @@ The @rhombus(.) operator can be used on a list expression with
  @rhombus(elem_expr) is provided. If no elements are provided, the
  result is an empty map (not an empty set).
 
- @see_implicit(@rhombus(#{#%set}), @rhombus({}), "expression")
+ @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
 @examples(
   {1, 2, 3},
   {"a": 1, "b": 2},
-  #{#%set} {1, 2, 3},
-  #{#%set} {"a": 1, "b": 2}
+  #{#%braces} {1, 2, 3},
+  #{#%braces} {"a": 1, "b": 2}
 )
 
 }
@@ -83,12 +83,15 @@ The @rhombus(.) operator can be used on a list expression with
 
 @doc(
   bind.macro 'Map{$key_expr: $binding, ...}',
-  bind.macro 'Map([$key_expr, $binding], ...)'
+  bind.macro 'Map([$key_expr, $binding], ...)',
+  bind.macro '#{#%braces} {$key_expr: $binding, ...}',
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
  that match the corresponding @rhombus(binding)s. The matched map may
  have additional keys and values.
+
+ @see_implicit(@rhombus(#{#%braces}, ~bind), @rhombus({}), "binding") 
 
 @examples(
   val Map{"x": x, "y": y}: {"x": 1, "y": 2},

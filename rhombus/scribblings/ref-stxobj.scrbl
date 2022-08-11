@@ -6,11 +6,11 @@
 @title(~tag: "stxobj"){Syntax Objects}
 
 An quoted sequence of terms using @rhombus('') is parsed as an
-implicit use of the @rhombus(#{#%quote}) form, which is normally bound
+implicit use of the @rhombus(#{#%quotes}) form, which is normally bound
 to create a syntax object.
 
 @doc(
-  expr.macro '«#{#%quote} '$term ...; ...'»'
+  expr.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
  Constructs a syntax object. When a single @rhombus(term) is present,
@@ -19,7 +19,7 @@ to create a syntax object.
  the result is a group syntax object. The general case is a
  multi-group syntax object.
 
- @see_implicit(@rhombus(#{#%quote}), @rhombus(''), "expression")
+ @see_implicit(@rhombus(#{#%quotes}), @rhombus(''), "expression")
 
 @examples(
   '1',
@@ -44,7 +44,7 @@ to create a syntax object.
 }
 
 @doc(
-  bind.macro '«#{#%quote} '$term ...; ...'»'
+  bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
  Matches a syntax object consistent with @rhombus(term,~var)s. A
@@ -52,7 +52,7 @@ to create a syntax object.
  is matched against the corresponding portion of a candidate syntax
  object. Ellipses, etc.
 
- @see_implicit(@rhombus(#{#%quote}, ~bind), @rhombus(''), "binding")
+ @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
 
 @examples(
   match '1 + 2'

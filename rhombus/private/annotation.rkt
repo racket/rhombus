@@ -42,7 +42,7 @@
          Void
 
          (for-space rhombus/annotation
-                    #%tuple
+                    #%parens
                     #%literal))
 
 (module+ for-class
@@ -395,9 +395,9 @@
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
 
-(define-annotation-syntax #%tuple
+(define-annotation-syntax #%parens
   (annotation-prefix-operator
-   #'%tuple
+   #'%parens
    '((default . stronger))
    'macro
    (lambda (stxes)
