@@ -98,9 +98,9 @@ seven parts:
 
  @item{A string that is used for reporting a failed match. The string is
   used as an annotation, and it should omit information that is local to
-  the binding. For example, when @rhombus(cons(x, y)) is used as a binding
+  the binding. For example, when @rhombus(List.cons(x, y)) is used as a binding
   pattern, a suitable annotation string might be
-  @rhombus("matching(cons(_, _))") to phrase the binding constraint as an
+  @rhombus("matching(List.cons(_, _))") to phrase the binding constraint as an
   annotation and omit local variable names being bound (which should not
   be reported to the caller of a function, for example, when an argument
   value in a call of the function fails to match).},

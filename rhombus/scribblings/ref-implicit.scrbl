@@ -56,13 +56,18 @@ Here are all of the implicit forms:
 
 @doc(
   expr.macro '#{#%literal} $literal',
-  bind.macro '#{#%literal} $literal'
+  bind.macro '#{#%literal} $literal',
+  annotation.macro '#{#%literal} $literal'
 ){
 
- Produces the value @rhombus(literal) or matches values that are
- @rhombus(==) to @rhombus(literal). A @rhombus(literal) is any
- individual term other than an identifier, keyword, operator,
- parenthesized term, bracketed term, quoted term, or braced term.
+ Produces the value @rhombus(literal) as an expression or matches
+ values that are @rhombus(==) to @rhombus(literal) as a binding; the
+ annotation form reports an error that a literal is not allowed as an
+ annotation.
+
+ A @rhombus(literal) is any individual term other than an identifier,
+ keyword, operator, parenthesized term, bracketed term, quoted term,
+ or braced term.
 
 @examples(
  7,

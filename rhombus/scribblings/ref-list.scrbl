@@ -97,6 +97,35 @@ The @rhombus(.) operator can be used on a list expression with
 }
 
 @doc(
+  fun List.cons(elem :: Any, lst :: List) :: List,
+){
+
+ Creates a list like @rhombus(lst), but with @rhombus(elem) added to
+ the front.
+
+@examples(
+  List.cons(1, [2, 3])
+)
+
+}
+
+@doc(
+  bind.macro 'List.cons($elem_binding, $list_binding)'
+){
+
+ Matches a non-empty list where @rhombus(elem_binding) matches the
+ first element of the list and @rhombus(list_binding) matches the
+ rest of the list.
+
+@examples(
+  val List.cons(x, y): [1, 2, 3],
+  x,
+  y
+)
+
+}
+
+@doc(
   fun List.length(lst :: List) :: Integer,
 ){
 

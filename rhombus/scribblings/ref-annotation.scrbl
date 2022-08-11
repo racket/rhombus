@@ -80,3 +80,19 @@
 )
 
 }
+
+@doc(
+  annotation.rule 'matching($binding)'
+){
+
+ Converts @rhombus(binding) into an annotation. Variables bound in
+ @rhombus($binding) are not made visible, but the annotation
+ corresponds to the set of values for which @rhombus(binding) would
+ match.
+
+@examples(
+  val x :: matching([_, 10]): [9, 10],
+  ~error val y :: matching([_, 10]): [9, 11]
+)
+
+}

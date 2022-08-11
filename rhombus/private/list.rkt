@@ -19,10 +19,7 @@
          (submod "dot.rkt" for-dot-provider)
          "parse.rkt")
 
-(provide cons
-         (for-space rhombus/binding cons)
-
-         List
+(provide List
          (for-space rhombus/annotation List)
          (for-space rhombus/reducer List)
          (for-space rhombus/repetition List))
@@ -45,7 +42,8 @@
 
 (define-name-root List
   #:fields
-  (length)
+  (length
+   cons)
   #:root
   (make-expression+binding-prefix-operator
    #'List

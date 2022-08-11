@@ -15,13 +15,13 @@ export:
 
 for_meta:
   def | map(proc, []): []
-      | map(proc, [a, a1, ...]): cons(proc(a), map(proc, [a1, ...]))
+      | map(proc, [a, a1, ...]): List.cons(proc(a), map(proc, [a1, ...]))
 
   def | andmap(proc, []): #true
       | andmap(proc, [a, a1, ...]): proc(a) && andmap(proc, [a1, ...])
 
   def | map2(proc, [], []): []
-      | map2(proc, [a, a1, ...], [b, b1, ...]): cons(proc(a, b), map2(proc, [a1, ...], [b1, ...]))
+      | map2(proc, [a, a1, ...], [b, b1, ...]): List.cons(proc(a, b), map2(proc, [a1, ...], [b1, ...]))
 
   def head_context(stxs):
     match stxs

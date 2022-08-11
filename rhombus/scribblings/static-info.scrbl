@@ -15,7 +15,7 @@ name after @rhombus(.) resolves to an field accessor. See the
 @secref("annotation") for an overview of static information and its
 role.
 
-@section{Representing static information}
+@section{Representing Static Information}
 
 Static information for an expression or binding is represented in
 key–value form. When static information is associated with a binding, it
@@ -243,19 +243,11 @@ in the case that there's a single element binding pattern followed by
 @rhombus(...), while @rhombus(Array) and @rhombus(Map) as pattern
 constructors cannot use ``downward'' information.
 
-The @rhombus(::) binding form and the @rhombus(matching) annotation form
+The @rhombus(::, ~bind) binding form and the @rhombus(matching, ~ann) annotation form
 allow static information to flow both ``downward'' and ``upward''
 through both annotations and binding patterns.
 
 @section{Binding Patterns and Static Information}
 
 See @secref("bind-macro-protocol") for information on how binding macros
-receive and produce static information. A Turnstile-like set of forms
-should be built on top of that low-level API.
-
-@section{Annotations and Static Information}
-
-See (the low-level annotation API)(annotation-macros.md) for information on
-how annotation macros receive and produce static information. A
-Turnstile-like sets of forms should be built on top of that low-level
-API, too.
+receive and produce static information.

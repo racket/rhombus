@@ -13,7 +13,7 @@
 
  The same as the @rhombus(body) sequence, but shifted to one phase
  greater. Defintions inside a @rhombus(begin_for_meta) block can be
- referenced in macro implements, for example.
+ referenced in macro implementations, for example.
 
 @examples(
   ~eval: macro.make_for_meta_eval(),

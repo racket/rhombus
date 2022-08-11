@@ -7,7 +7,7 @@ begin:
   check:
     for:
       ~each i: 0..2
-      accum := cons(i, accum)
+      accum := List.cons(i, accum)
     accum
     [1, 0]
 

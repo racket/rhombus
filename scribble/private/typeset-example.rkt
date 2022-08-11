@@ -5,6 +5,7 @@
          racket/string
          rhombus/parse
          racket/sandbox
+         syntax/strip-context
          (only-in scribble/example
                   make-base-eval
                   close-eval)
@@ -49,21 +50,22 @@
                                               (group #:indent (block (group (parsed 2))))
                                               (group #:inset (block (group (parsed #f)))))
                                       (t-block t-form)))))
-     (with-syntax ([(t-form ...)
+     (with-syntax ([((t-form e-form) ...)
                     (for/list ([form (in-list (syntax->list #'((group form ...) ...)))])
                       (syntax-parse form
                         #:datum-literals (group)
-                        [(group #:blank) #'(quote #:blank)]
-                        [(group #:error form ...) #`(list (quote #:error)
-                                                          #,(rb #'(group form ...)))]
-                        [_ (rb form)]))])
+                        [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed (void))))]
+                        [((~and tag group) #:error form ...) #`((list (quote #:error)
+                                                                      #,(rb #'(tag form ...)))
+                                                                (tag form ...))]
+                        [_ #`(#,(rb form) #,form)]))])
        #'(examples
           #:eval (rhombus-expression eval-expr)
           #:label (rhombus-expression label-expr)
           #:hidden? (rhombus-expression hidden-expr)
           (list
            (list t-form
-                 '(top (group form ...)))
+                 (quote-syntax (top e-form)))
            ...)))]))
 
 (define (make-rhombus-eval)
@@ -111,10 +113,10 @@
                                                            "message" msg)))])
                            (cond
                              [(eq? mode 'error) (begin
-                                                  (eval expr)
+                                                  (eval (strip-context expr))
                                                   '(oops))]
                              [else (call-with-values
-                                    (lambda () (eval expr))
+                                    (lambda () (eval (strip-context expr)))
                                     list)]))])
                  (append
                   (format-lines (get-output eval) racketoutput)
@@ -143,7 +145,15 @@
 
 (define (format-lines str format-line)
   (for/list ([line-str (in-list (string-split str "\n"))])
-    (paragraph plain (format-line line-str))))
+    (define indent (let loop ([i 0])
+                     (cond
+                       [(i . >= . (string-length line-str)) i]
+                       [(char=? #\space (string-ref line-str i)) (loop (+ i 1))]
+                       [else i])))
+    (paragraph plain
+               (list
+                 (if (= indent 0) "" (hspace indent))
+                 (format-line (substring line-str indent))))))
 
 (define (format-exception exn eval)
   (define o (open-output-string))

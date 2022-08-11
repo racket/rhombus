@@ -37,9 +37,9 @@ seven(12, 10, ~plus: 8)
 
 // pattern-matching on a function argument
 
-def f(cons(x :: Integer, y)): cons(x + 1, y)
+def f(List.cons(x :: Integer, y)): List.cons(x + 1, y)
 
-f(cons(22, #false))
+f(List.cons(22, #false))
 
 // classes (as records/structures)
 
@@ -68,7 +68,7 @@ def (ma, mb, mc):
   values("1", "2", "3")
 mb
   
-val cons(ca, cb): cons(1, 2)
+val List.cons(ca, cb): List.cons(1, 2)
 ca
 
 def
@@ -83,7 +83,7 @@ size(Posn(8, 6))
 size(1, 2)
 
 def Posn(px, py) -: Posn: Posn(1, 2)
-cons(px, py)
+List.cons(px, py)
 
 def identity: fun (x): x
 identity(1 + (fun (x): x) (99) )
@@ -140,8 +140,8 @@ operator
 
 // match
 
-match cons(7, 8)
-| cons(a, b):
+match List.cons(7, 8)
+| List.cons(a, b):
     b
 | x:
     x
@@ -150,7 +150,7 @@ match cons(7, 8)
 
 match '(z + y, {[10, 11, 12]})'
 | '(x $a)': a
-| '($a + y, {[$n, ...]})': cons(a, [n, ...])
+| '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
 
 cond
 | #true: 17
@@ -233,7 +233,7 @@ bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
           '// check for pair an extract reversed pieces
            val (is_match, $a_part_id, $b_part_id):
              match $in_id
-             | cons($b_id, $a_id):
+             | List.cons($b_id, $a_id):
                  values(#true, $a_id, $b_id)
              | ~else:
                  values(#false, #false, #false)
@@ -260,7 +260,7 @@ bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
            $b_binder($b_part_id, $b_data)'
 
 // an expression operator that's consistent with the pattern
-expr.rule '$a <> $b': ~parsed_right; 'cons($b, $a)'
+expr.rule '$a <> $b': ~parsed_right; 'List.cons($b, $a)'
 
 def rx <> (ry :: Integer) : "2" <> 1
 rx
