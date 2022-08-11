@@ -5,14 +5,21 @@
 
 @title(~tag: "stxobj"){Syntax Objects}
 
-Syntax objects can be constructed using the expression syntax
-@rhombus('$$(@rhombus(term, ~var)) ...; ...'), which creates
-a syntax object quoting the @rhombus(term, ~var)s. When a single
-@rhombus(term, ~var) is present, the result is a single-term syntax
-object. When a single @rhombus($$(@rhombus(term, ~var)) ...)
-group is present with multiple @rhombus(term,~var)s, the result is
-a group syntax object. The general case is a multi-group syntax
-object.
+An quoted sequence of terms using @rhombus('') is parsed as an
+implicit use of the @rhombus(#{#%quote}) form, which is normally bound
+to create a syntax object.
+
+@doc(
+  expr.macro '«#{#%quote} '$term ...; ...'»'
+){
+
+ Constructs a syntax object. When a single @rhombus(term) is present,
+ the result is a single-term syntax object. When a single
+ @rhombus(term ...) group is present with multiple @rhombus(term)s,
+ the result is a group syntax object. The general case is a
+ multi-group syntax object.
+
+ @see_implicit(@rhombus(#{#%quote}), @rhombus(''), "expression")
 
 @examples(
   '1',
@@ -22,11 +29,11 @@ object.
    3 + 4',
 )
 
-A @rhombus($) as a @rhombus(term,~var) escapes a following expression
-whose value replaces the @rhombus($) term and expression. The value is
-normally a syntax objects, but other kinds of values are coerced to a
-syntax object. Nested @rhombus('') forms are allowed around @rhombus($)
-and do @emph{not} change whether the @rhombus($) escapes.
+ A @rhombus($) as a @rhombus(term,~var) escapes a following expression
+ whose value replaces the @rhombus($) term and expression. The value
+ is normally a syntax objects, but other kinds of values are coerced
+ to a syntax object. Nested @rhombus('') forms are allowed around
+ @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
 
 @examples(
   'x $(if #true | 'y' | 'why') z',
@@ -34,17 +41,24 @@ and do @emph{not} change whether the @rhombus($) escapes.
   '« x '$(1 + 2)' z »'
 )
 
-As a binding form,
-@rhombus('$$(@rhombus(term, ~var)) ...; ...') matches a syntax
-object consistent with @rhombus(term,~var)s. A @rhombus($, ~bind) within
-@rhombus(form) escapes to an binding that is matched against the
-corresponding portion of a candidate syntax object. Ellipses, etc.
+}
+
+@doc(
+  bind.macro '«#{#%quote} '$term ...; ...'»'
+){
+
+ Matches a syntax object consistent with @rhombus(term,~var)s. A
+ @rhombus($, ~bind) within @rhombus(form) escapes to an binding that
+ is matched against the corresponding portion of a candidate syntax
+ object. Ellipses, etc.
+
+ @see_implicit(@rhombus(#{#%quote}, ~bind), @rhombus(''), "binding")
 
 @examples(
   match '1 + 2'
   | '$n + $m': [n, m]
 )
-
+}
 
 @doc(
   annotation.macro 'Syntax'

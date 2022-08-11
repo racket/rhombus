@@ -31,6 +31,37 @@ The @rhombus(.) operator can be used on a list expression with
  @rhombus(elem_expr) is provided. If no elements are provided, the
  result is an empty map (not an empty set).
 
+ @see_implicit(@rhombus(#{#%set}), @rhombus({}), "expression")
+
+@examples(
+  {1, 2, 3},
+  {"a": 1, "b": 2},
+  #{#%set} {1, 2, 3},
+  #{#%set} {"a": 1, "b": 2}
+)
+
+}
+
+@doc(
+  expr.macro '$expr #{#%ref} [$at_expr]',
+  expr.macro '$expr #{#%ref} [$at_expr] := $rhs_expr',
+){
+
+ Without @rhombus(:=), accesses the element of the map, array, list, or
+ string produced by @rhombus(expr) at the index or key produced by
+ @rhombus(at_expr).
+
+ With @rhombus(:=), a mutable array, map, or set element is assigned to
+ the value produced by @rhombus(rhs_expr), and the expression result is
+ @rhombus(#void).
+
+ @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression", ~is_infix: #true)
+
+@examples(
+  {"a": 1, "b": 2}["a"],
+  {"a": 1, "b": 2} #{#%ref} ["a"]
+)
+
 }
 
 @doc(

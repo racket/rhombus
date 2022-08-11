@@ -2,6 +2,7 @@
 
 import:
   rhombus/macro open
+  scribble/rhombus as scribble
   for_label:
     rhombus open
     rhombus/macro open
@@ -12,3 +13,11 @@ export:
     for_label
   all_from(rhombus/macro):
     for_label
+  see_implicit
+
+fun see_implicit(what, when, context, ~is_infix = #false):
+ @(scribble.elem){The @what form is implicitly used when @when is
+                  used in @(if is_infix | @(scribble.elem){after another @context} | "")
+                  a@(if context == "expression" | "n" | "")
+                  @context position.
+                  See also @(scribble.secref)("implicit").}

@@ -12,7 +12,8 @@
          (submod "list.rkt" for-binding)
          "setmap.rkt"
          (submod "map.rkt" for-binding)
-         "literal.rkt")
+         "literal.rkt"
+         "parens.rkt")
 
 (provide #%body
          #%literal
@@ -121,13 +122,20 @@
    'macro
    ;; expression
    (lambda (stxes)
+     (check-brackets stxes)
      (parse-list-expression stxes))
    ;; binding
    (lambda (stxes)
+     (check-brackets stxes)
      (parse-list-binding stxes))
    ;; repetition
    (lambda (stxes)
+     (check-brackets stxes)
      (parse-list-repetition stxes))))
+
+(define-for-syntax (check-brackets stxes)
+  (syntax-parse stxes
+    [(_ (_::brackets . _) . _) (void)]))
 
 (define-syntax #%ref
   (expression-infix-operator

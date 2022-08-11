@@ -12,21 +12,6 @@ The @rhombus(.) operator can be used on a array expression with
 @rhombus(length) to call @rhombus(Array.length).
 
 @doc(
-  expr.macro '#{#%ref} $expr[$at_expr]',
-  expr.macro '#{#%ref} $expr[$at_expr] := $rhs_expr',
-){
-
-Without @rhombus(:=), accesses the element of the map, array, list, or
-string produced by @rhombus(expr) at the index or key produced by
-@rhombus(at_expr).
-
-With @rhombus(:=), a mutable array, map, or set element is assigned to
-the value produced by @rhombus(rhs_expr), and the expression result is
-@rhombus(#void).
-
-}
-
-@doc(
   fun Array(v :: Any, ...) :: Array
 ){
 

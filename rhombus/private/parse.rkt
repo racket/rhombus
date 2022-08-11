@@ -136,7 +136,7 @@
           (syntax-parse #'form
             [e::declaration #'(begin . e.parsed)]
             [e::definition #'(begin . e.parsed)]
-            [e::expression #'(#%expression e.parsed)]))
+            [e::expression (syntax/loc #'e.parsed (#%expression e.parsed))]))
         (syntax-parse #'forms
           [() parsed]
           [_ #`(begin #,parsed (top . forms))])]))))

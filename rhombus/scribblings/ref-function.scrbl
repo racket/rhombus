@@ -11,7 +11,7 @@ parsed as an implicit use of the @rhombus(#{#%call}) form, which is
 normally bound to implement function calls.
 
 @doc(
-  expr.macro '#{#%call} $fun_expr ($arg, ..., $maybe_rest)',
+  expr.macro '$fun_expr #{#%call} ($arg, ..., $maybe_rest)',
 
   grammar arg:
     $arg_expr
@@ -28,6 +28,13 @@ normally bound to implement function calls.
   the then the elements of the preceding @tech{repetition} are used as
   additional by-position arguments, in order after the
   @rhombus(arg_expr) arguments.
+
+ @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
+
+@examples(
+  List.length([1, 2, 3]),
+  List.length #{#%call} ([1, 2, 3])
+)
 
 }
 

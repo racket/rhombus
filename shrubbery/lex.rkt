@@ -1047,12 +1047,13 @@
                                                1)))
          (fail bad "expected only whitespace or `}` after S-expression")])))
   (define result
-    (syntax->token (if (identifier? v) 'identifier 'literal)
-                   (syntax-raw-property v
-                                        (format "#{~s}" (syntax->datum v)))
-                   (let ([loc (token-srcloc open-tok)])
+    (let ([new-loc (let ([loc (token-srcloc open-tok)])
                      (struct-copy srcloc loc
-                                  [span (- end-pos (srcloc-position loc))]))))
+                                  [span (- end-pos (srcloc-position loc))]))])
+      (syntax->token (if (identifier? v) 'identifier 'literal)
+                     (syntax-raw-property (datum->syntax v (syntax-e v) new-loc v)
+                                          (format "#{~s}" (syntax->datum v)))
+                     new-loc)))
   (when (pair? (syntax-e v))
     (fail result "S-expression in `#{` and `}` must not be a pair"))
   result)
