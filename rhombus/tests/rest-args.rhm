@@ -81,6 +81,15 @@ begin:
   check: b; 2
   check: rst; {"c": 3, "d": 4}
 
+// Match & rest on mutable maps produces an immutable copy
+begin:
+  val m : MutableMap{"a": 1, "b": 2}
+  val r : match m
+          | {"a": a, & rst}: rst
+          | _: #false
+  m["b"] := 3
+  check: r; {"b": 2}
+
 // ---------------------------
 // Keyword Rest with ~&
 

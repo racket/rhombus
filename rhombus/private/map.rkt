@@ -322,7 +322,7 @@
                (cond
                  [(and (null? keys) (syntax-e #'rest-tmp))
                   #`(begin
-                      (define rest-tmp (hash-remove* arg-id (list #,@key-tmps)))
+                      (define rest-tmp (hash-remove*/copy arg-id (list #,@key-tmps)))
                       (composite-matcher-id 'map composite-data IF success failure))]
                  [(null? keys)
                   #`(composite-matcher-id 'map composite-data IF success failure)]
@@ -334,7 +334,11 @@
                           #,(loop (cdr keys) (cdr key-tmp-ids) (cdr val-tmp-ids))
                           failure))]))
            failure)]))
-  
+
+;; hash-remove*/copy : (Hashof K V) (Listof K) -> (ImmutableHashof K V)
+(define (hash-remove*/copy h ks)
+  (hash-remove* (if (immutable? h) h (hash-map/copy h values #:kind 'immutable)) ks))
+
 (define-syntax (map-binder stx)
   (syntax-parse stx
     [(_ arg-id (keys tmp-ids rest-tmp composite-matcher-id composite-binder-id composite-data))
