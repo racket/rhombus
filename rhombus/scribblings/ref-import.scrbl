@@ -4,7 +4,7 @@
 @title{Import}
 
 @doc(
-  decl.macro 'import:
+  defn.macro 'import:
                 $import_clause
                 ...',
 
@@ -33,7 +33,9 @@
 
 ){
 
- Imports into the enclosing module.
+ Imports into the enclosing module or block. When used within a block,
+ @rhombus(import) binds only for subsequent forms within the block,
+ analogous to @rhombus(let).
 
  The @rhombus(import_clause) variant @rhombus(module_path) or
  @rhombus(module_path: modifier; ...) are the canonical forms. The other
@@ -170,7 +172,7 @@
 
 @doc(
   impo.modifier 'for_meta',
-  impo.modifier 'for_meta phase'
+  impo.modifier 'for_meta $phase'
 ){
 
  Modifies an @rhombus(import) clause so that the imports are shifted by

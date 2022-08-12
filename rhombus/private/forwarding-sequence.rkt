@@ -42,7 +42,7 @@
                                             #'begin-for-syntax)
                                       #f))
        (syntax-parse exp-form
-         #:literals (begin define-values define-syntaxes rhombus-forward)
+         #:literals (begin define-values define-syntaxes rhombus-forward #%require)
          [(rhombus-forward . sub-forms)
           (define introducer (make-syntax-introducer #t))
           #`(begin
@@ -67,6 +67,15 @@
                                exp-form
                                exp-form)
               (sequence #:need-end-expr orig base-ctx add-ctx remove-ctx . forms))]
+         [(#%require req ...)
+          #:when (syntax-e #'orig) ; kind of a hack: it's #f in a module
+          ;; lift `require` out to module level
+          (define scopes
+            (for/fold ([scopes (datum->syntax #f 'scopes)]) ([req (in-list (cdr (syntax->list exp-form)))])
+              (syntax-local-lift-require (syntax-local-introduce req) scopes)))
+          (define introduce (make-syntax-delta-introducer scopes (datum->syntax #f 'scopes)))
+          #`(begin
+              (sequence #:saw-non-defn #f base-ctx add-ctx #,(introduce #'remove-ctx) . #,(introduce #'forms)))]
          [_ #`(begin
                 #,@(reverse accum)
                 #,exp-form

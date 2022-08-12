@@ -14,7 +14,7 @@
                      "realm.rkt")
          "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
-         "declaration.rkt"
+         "definition.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
          "lower-require.rkt"
@@ -106,7 +106,7 @@
         [((~literal lib) _) (done)]
         [((~literal rename-in) mp . _) (extract #'mp accum)]
         [((~literal only-in) mp . _) (extract #'mp accum)]
-        [((~literal except<-in) mp . _) (extract #'mp accum)]
+        [((~literal except-in) mp . _) (extract #'mp accum)]
         [((~literal expose-in) mp . _) (extract #'mp accum)]
         [((~literal rhombus-prefix-in) mp name) (extract #'mp (cons r accum))]
         [((~literal for-meta) _ mp) (extract #'mp accum)]
@@ -172,7 +172,7 @@
              #:attr mod #'(group mod-id mod-arg ...))))
 
 (define-syntax import
-  (declaration-transformer
+  (definition-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ (block r ...))
