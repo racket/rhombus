@@ -64,7 +64,7 @@
     [(_ e)
      #`(let ()
          (rhombus-forwarding-sequence
-          #:need-end-expr #,stx
+          #:block #:need-end-expr #,stx
           e))]))
 
 (define-syntax (static-if stx)

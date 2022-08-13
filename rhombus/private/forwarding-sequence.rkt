@@ -11,23 +11,22 @@
 
 (define-syntax (rhombus-forwarding-sequence stx)
   (syntax-parse stx
-    [(_ #:need-end-expr orig . tail)
-     #'(sequence #:need-end-expr orig base-ctx add-ctx remove-ctx . tail)]
-    [(_ . tail)
-     #'(sequence #f #f base-ctx add-ctx remove-ctx . tail)]))
+    [(_ ctx mode orig . tail)
+     (define intro (make-syntax-introducer #t))
+     #`(sequence ctx mode orig base-ctx add-ctx #,(intro #'remove-ctx) . tail)]))
 
 (define-syntax (sequence stx)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
-      [(_ mode orig base-ctx add-ctx remove-ctx)
+      [(_ ctx mode orig base-ctx add-ctx remove-ctx)
        (when (and (eq? (syntax-e #'mode) '#:need-end-expr)
                   (syntax-e #'orig))
          (raise-syntax-error #f "block does not end with an expression" #'orig))
        #`(begin #,@(reverse accum))]
-      [(_ mode orig base-ctx add-ctx remove-ctx (~and form ((~literal quote) v)) . forms)
-       (loop #'(_ mode orig base-ctx add-ctx remove-ctx . forms)
+      [(_ ctx mode orig base-ctx add-ctx remove-ctx (~and form ((~literal quote) v)) . forms)
+       (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx . forms)
              (cons #'form accum))]
-      [(_ mode orig base-ctx add-ctx remove-ctx form . forms)
+      [(_ ctx mode orig base-ctx add-ctx remove-ctx form . forms)
        (define exp-form (local-expand #'form
                                       (syntax-local-context)
                                       (list #'rhombus-forward
@@ -47,10 +46,10 @@
           (define introducer (make-syntax-introducer #t))
           #`(begin
               #,@(reverse accum)
-              (sequence #f #f base-ctx #,(introducer #'add-ctx) base-ctx . sub-forms)
-              (sequence mode orig base-ctx add-ctx #,(introducer #'remove-ctx) . #,(introducer #'forms)))]
+              (sequence ctx #f #f base-ctx #,(introducer #'add-ctx) base-ctx . sub-forms)
+              (sequence ctx mode orig base-ctx add-ctx #,(introducer #'remove-ctx) . #,(introducer #'forms)))]
          [(begin form ...)
-          (define seq #`(sequence mode orig base-ctx add-ctx remove-ctx form ... . forms))
+          (define seq #`(sequence ctx mode orig base-ctx add-ctx remove-ctx form ... . forms))
           (if (null? accum)
               seq
               #`(begin #,@(reverse accum) #,seq))]
@@ -66,20 +65,17 @@
                                (syntax-e #'(def (new-id ...) rhs))
                                exp-form
                                exp-form)
-              (sequence #:need-end-expr orig base-ctx add-ctx remove-ctx . forms))]
+              (sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx . forms))]
          [(#%require req ...)
-          #:when (syntax-e #'orig) ; kind of a hack: it's #f in a module
+          #:when (eq? (syntax-e #'ctx) '#:block)
           ;; lift `require` out to module level
-          (define scopes
-            (for/fold ([scopes (datum->syntax #f 'scopes)]) ([req (in-list (cdr (syntax->list exp-form)))])
-              (syntax-local-lift-require (syntax-local-introduce req) scopes)))
-          (define introduce (make-syntax-delta-introducer scopes (datum->syntax #f 'scopes)))
-          #`(begin
-              (sequence #:saw-non-defn #f base-ctx add-ctx #,(introduce #'remove-ctx) . #,(introduce #'forms)))]
+          (for ([req (in-list (cdr (syntax->list exp-form)))])
+            (syntax-local-lift-require (syntax-local-introduce req) #'use #f))
+          #`(sequence ctx mode orig base-ctx add-ctx remove-ctx . forms)]
          [_ #`(begin
                 #,@(reverse accum)
                 #,exp-form
-                (sequence #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))])])))
+                (sequence ctx #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))])])))
 
 (define-syntax (rhombus-forward stx)
   (raise-syntax-error #f

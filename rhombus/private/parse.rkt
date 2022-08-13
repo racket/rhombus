@@ -159,7 +159,7 @@
     [(_ . tail)
      #`(let ()
          (rhombus-forwarding-sequence
-          #:need-end-expr #,stx
+          #:block #:need-end-expr #,stx
           (rhombus-body-sequence . tail)))]))
 
 ;; Similar to `rhombus-body`, but goes through `#%body`:

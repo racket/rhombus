@@ -88,6 +88,7 @@
         (module configure-runtime racket/base (require rhombus/runtime-config))
         (#%declare #:realm rhombus)
         (rhombus-forwarding-sequence
+         #:module #f #f
          (rhombus-top . content)))]))
 
 ;; splices content of any block as its own top-level group:

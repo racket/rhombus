@@ -3,7 +3,7 @@
 (define collection 'multi)
 
 (define deps
-  '(["base" #:version "8.5.0.3"]
+  '(["base" #:version "8.6.0.4"]
     "syntax-color-lib"
     "parser-tools-lib"
     ["scribble-lib" #:version "1.43"]

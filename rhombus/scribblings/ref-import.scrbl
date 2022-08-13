@@ -33,9 +33,7 @@
 
 ){
 
- Imports into the enclosing module or block. When used within a block,
- @rhombus(import) binds only for subsequent forms within the block,
- analogous to @rhombus(let).
+ Imports into the enclosing module or block.
 
  The @rhombus(import_clause) variant @rhombus(module_path) or
  @rhombus(module_path: modifier; ...) are the canonical forms. The other

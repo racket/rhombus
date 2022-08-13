@@ -69,6 +69,7 @@
         #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
         (rhombus-forwarding-sequence
+         #:module #f #f
          (scribble-rhombus-top g-unwrapped ...)))]))
 
 ;; Includes shortcut for string literals:
