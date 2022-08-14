@@ -11,7 +11,8 @@
 (provide (for-syntax name-root-ref
                      name-root-ref-root
                      portal-syntax->lookup
-                     replace-head-dotted-name))
+                     replace-head-dotted-name
+                     import-root-ref))
 
 (define-for-syntax (name-root-ref v)
   (define (make get)
@@ -49,7 +50,7 @@
 
 (define-for-syntax (portal-syntax->lookup portal-stx make)
   (syntax-parse portal-stx
-    [([(~datum import) _] pre-ctx-s ctx-s)
+    [([(~datum import) _ _] pre-ctx-s ctx-s)
      (define pre-ctx #'pre-ctx-s)
      (define ctx #'ctx-s)
      (make (lambda (who-stx what name)
@@ -69,7 +70,7 @@
                                        name)]
                   [else #f])]
                [else #f])))]
-    [((~datum map) [key val] ...)
+    [((~datum map) _ [key val] ...)
      (define keys (syntax->list #'(key ...)))
      (define vals (syntax->list #'(val ...)))
      (make (lambda (who-stx what name)
@@ -109,3 +110,17 @@
                     stx
                     stx)]
     [else stx]))
+
+;; Gets information on a name ref that can be used with `import`
+(define-for-syntax (import-root-ref v)
+  (and
+   (portal-syntax? v)
+   (portal-syntax->import (portal-syntax-content v))))
+
+(define-for-syntax (portal-syntax->import portal-stx)
+  (syntax-parse portal-stx
+    [([(~datum import) _ parsed-r] _ _)
+     #'(parsed parsed-r)]
+    [((~datum map) _ [key val] ...)
+     portal-stx]
+    [_ #f]))

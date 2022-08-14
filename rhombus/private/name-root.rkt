@@ -40,4 +40,4 @@
                                    [(_:identifier _:identifier) c]))
      #'(begin
          root-def ...
-         (#%require (portal space-id (map norm-content ... root-spec ...))))]))
+         (#%require (portal space-id (map id norm-content ... root-spec ...))))]))

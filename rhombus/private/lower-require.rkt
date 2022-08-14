@@ -193,7 +193,7 @@
                                    ((make-interned-syntax-introducer space) prefix-id)
                                    prefix-id))
            #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
-                       (portal #,s-prefix-id ([import #,core-r]
+                       (portal #,s-prefix-id ([import #,core-r #,r]
                                               #,s-prefix-id
                                               #,(prefix-intro s-prefix-id)))))
          null))))
