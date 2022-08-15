@@ -6,23 +6,25 @@
 ;; Convert a subset of `racket` require clauses to `#%require` clauses,
 ;; including the use of `portal` for a prefixed import
 
-(provide (for-syntax lower-require-clause))
+(provide (for-syntax lower-require-clause)
+         expose-in
+         import-dotted)
+
+(define-syntax expose-in #f)
+(define-syntax import-dotted #f)
 
 (begin-for-syntax
-  (define (lower-require-clause r prefix-id)
+  (define (lower-require-clause r mod-path prefix-id)
     (define (expose v) (vector v))
     (define (expose? v) (vector? v))
     (define (expose-id v) (vector-ref v 0))
     (define-values (r-phase+spaces core-r lower-r phase-shift renames revnames only-mentioned?)
       (let extract ([r r])
         (define (root)
-          (define phase+spaces (map car (syntax-local-module-exports (syntax->datum r))))
-          (values phase+spaces r r 0 #hasheq() #hasheq() #f))
+          (define phase+spaces (map car (syntax-local-module-exports (syntax->datum mod-path))))
+          (values phase+spaces mod-path mod-path 0 #hasheq() #hasheq() #f))
         (syntax-parse r
-          [_:string (root)]
-          [_:identifier (root)]
-          [((~literal file) _) (root)]
-          [((~literal lib) _) (root)]
+          [#f (root)]
           [((~literal rename-in) mp [orig bind] ...)
            (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
            (define-values (new-renames new-revnames)
@@ -131,6 +133,17 @@
           [_ (raise-syntax-error 'import
                                  "don't know how to lower"
                                  r)])))
+    (define (strip-prefix r mp)
+      (let strip ([r r])
+        (syntax-parse r
+          #:literals (rename-in only-in except-in expose-in for-label)
+          [#f mp]
+          [((~and tag (~or rename-in only-in except-in expose-in for-label)) mp . rest)
+           #`(tag #,(strip #'mp) . rest)]
+          [((~and tag (~literal for-meta)) phase mp)
+           #`(tag phase #,(strip #'mp))]
+          [((~literal rhombus-prefix-in) mp name) (strip #'mp)]
+          [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
     (define (make-ins for-expose?)
       (cond
@@ -177,23 +190,40 @@
                                 (expose? v)))
             #`(rename #,lower-r #,(plain-id v) #,k)))]))
     (define prefix-intro (and prefix-id (make-syntax-introducer)))
-    (cons
-     (if prefix-id
-         #`(for-meta #,phase-shift
-                     #,@(map prefix-intro (make-ins #f))
-                     #,@(make-ins #t))
-         #`(for-meta #,phase-shift
-                     #,@(make-ins #f)))
-     (if prefix-id
-         (for/list ([phase+space (in-list r-phase+spaces)]
-                    #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
-           (define phase (phase+space-phase phase+space))
-           (define space (phase+space-space phase+space))
-           (define s-prefix-id (if space
-                                   ((make-interned-syntax-introducer space) prefix-id)
-                                   prefix-id))
-           #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
-                       (portal #,s-prefix-id ([import #,core-r #,r]
-                                              #,s-prefix-id
-                                              #,(prefix-intro s-prefix-id)))))
-         null))))
+    (define module? (not (list? (syntax-local-context))))
+    (define reqs+defss
+      (cons
+       (list
+        (if prefix-id
+            #`(for-meta #,phase-shift
+                        #,@(map prefix-intro (make-ins #f))
+                        #,@(make-ins #t))
+            #`(for-meta #,phase-shift
+                        #,@(make-ins #f))))
+       (if prefix-id
+           (for/list ([phase+space (in-list r-phase+spaces)]
+                      #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
+             (define phase (phase+space-phase phase+space))
+             (define space (phase+space-space phase+space))
+             (define s-prefix-id (if space
+                                     ((make-interned-syntax-introducer space) prefix-id)
+                                     prefix-id))
+             (define portal-id (if module?
+                                   s-prefix-id
+                                   (car (generate-temporaries (list s-prefix-id)))))
+             (cons
+              #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
+                          (portal #,portal-id ([import #,core-r #,(strip-prefix r mod-path)]
+                                               #,s-prefix-id
+                                               #,(prefix-intro s-prefix-id))))
+              (if module?
+                  null
+                  (list #`(define-syntax #,s-prefix-id (make-rename-transformer (quote-syntax #,portal-id)))))))
+           null)))
+    ;; in a local-binding context, use `define-syntax` instead of `#%require`
+    ;; for `s-prefix-id`, since a `#%require` will be lifted
+    (if module?
+        #`(#%require #,@(map car reqs+defss))
+        #`(begin
+            (#%require #,@(map car reqs+defss))
+            #,@(apply append (map cdr reqs+defss))))))

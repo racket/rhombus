@@ -11,13 +11,15 @@
 
 (define-syntax-rule (define-simple-name-root id content ...)
   ;; portal syntax with this shape is recognized by "name-root-ref.rkt"
-  (#%require (portal id (map [content content] ...))))
+  (#%require (portal id (map id [content content] ...))))
 
 (define-syntax (define-name-root stx)
   (syntax-parse stx
     [(_ id (~alt (~once (~seq #:fields (content ...)))
                  (~optional (~seq #:root root-rhs)
                             #:defaults ([root-rhs #'#f]))
+                 (~optional (~seq #:root-as-rename root-rename)
+                            #:defaults ([root-rename #'#f]))
                  (~optional (~seq #:space space)
                             #:defaults ([space #'#f])))
         ...)
@@ -31,9 +33,10 @@
      #:with (root-def ...) (if (syntax-e #'root-rhs)
                                #'[(define-syntax root-id root-rhs)]
                                #'[])
-     #:with (root-spec ...) (if (syntax-e #'root-rhs)
-                                #'([#f root-id])
-                                #'())
+     #:with (root-spec ...) (cond
+                              [(syntax-e #'root-rhs) #'([#f root-id])]
+                              [(syntax-e #'root-rename) #'([#f root-rename])]
+                              [else #'()])
      #:with (norm-content ...) (for/list ([c (in-list (syntax->list #'(content ...)))])
                                  (syntax-parse c
                                    [_:identifier #`[#,c #,c]]

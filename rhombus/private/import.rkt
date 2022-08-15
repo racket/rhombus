@@ -11,7 +11,8 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "import-invert.rkt")
          "name-root.rkt"
          "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
@@ -32,7 +33,8 @@
                     #%literal
                     (rename-out [rhombus/ /]
                                 [rhombus-file file]
-                                [rhombus-lib lib])
+                                [rhombus-lib lib]
+                                [rhombus. |.|])
                     as
                     open
                     expose
@@ -51,6 +53,11 @@
   (property import-prefix-operator prefix-operator)
   (property import-infix-operator infix-operator)
 
+  (struct import-prefix+infix-operator (prefix infix)
+    #:property prop:import-prefix-operator (lambda (self) (import-prefix+infix-operator-prefix self))
+    #:property prop:import-infix-operator (lambda (self) (import-prefix+infix-operator-infix self)))
+
+
   (property import-modifier transformer)
   (property import-modifier-block transformer)
 
@@ -61,19 +68,11 @@
     form)
 
   (define (make-identifier-import id)
-    (cond
-      [(syntax-local-value* id import-root-ref)
-       => (lambda (i)
-            (syntax-parse i
-              #:datum-literals (parsed map)
-              [(parsed parsed-r) #'parsed-r]
-              [(map . _) #`(import-root #,id #,i)]))]
-      [else
-       (unless (module-path? (syntax-e id))
-         (raise-syntax-error 'import
-                             "not a valid module path element, and not bound as a name root"
-                             id))
-       id]))
+    (unless (module-path? (syntax-e id))
+      (raise-syntax-error 'import
+                          "not a valid module path element, and not bound as a name root"
+                          id))
+    id)
 
   (define-enforest
     #:syntax-class :import
@@ -106,49 +105,41 @@
     #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
-  (define (extract-module-path-and-prefixes r)
+  (define (extract-prefixes r)
     (let extract ([r r] [accum null])
-      (define (done) (values r (reverse accum)))
       (syntax-parse r
-        [_:string (done)]
-        [_:identifier (done)]
-        [((~literal file) _) (done)]
-        [((~literal lib) _) (done)]
-        [((~literal import-root) . _) (done)]
-        [((~literal rename-in) mp . _) (extract #'mp accum)]
-        [((~literal only-in) mp . _) (extract #'mp accum)]
-        [((~literal except-in) mp . _) (extract #'mp accum)]
-        [((~literal expose-in) mp . _) (extract #'mp accum)]
-        [((~literal rhombus-prefix-in) mp name) (extract #'mp (cons r accum))]
-        [((~literal for-meta) _ mp) (extract #'mp accum)]
+        #:datum-literals (rename-in only-in except-in expose-in rhombus-prefix-in for-meta for-label)
+        [#f (reverse accum)]
+        [((~or rename-in only-in except-in expose-in for-label) mp . _) (extract #'mp accum)]
+        [(rhombus-prefix-in mp name) (extract #'mp (cons r accum))]
+        [(for-meta _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
 
-  (define (extract-module-path r)
-    (define-values (mp prefixes) (extract-module-path-and-prefixes r))
-    mp)
-
-  (define (extract-prefix r)
-    (define-values (mp prefixes) (extract-module-path-and-prefixes r))
+  (define (extract-prefix mp r)
+    (define prefixes (extract-prefixes r))
+    (define (extract-string-prefix mp)
+      (datum->syntax
+       mp
+       (string->symbol
+        (regexp-replace #rx"[.].*$"
+                        (regexp-replace #rx"^.*/" (syntax-e mp) "")
+                        ""))
+       mp))
     (cond
       [(null? prefixes)
        (syntax-parse mp
-         [_:string (datum->syntax
-                    mp
-                    (string->symbol
-                     (regexp-replace #rx"[.].*$"
-                                     (regexp-replace #rx"^.*/" (syntax-e mp) "")
-                                     ""))
-                    mp)]
+         [_:string (extract-string-prefix mp)]
          [_:identifier (datum->syntax
                         mp
                         (string->symbol (regexp-replace #rx"^.*/"
                                                         (symbol->string (syntax-e mp))
                                                         ""))
                         mp)]
-         [((~literal lib) str) (extract-prefix #'str)]
-         [((~literal import-root) id . _) (datum->syntax mp (syntax-e #'id) mp)]
+         [((~literal lib) str) (extract-string-prefix #'str)]
+         [((~literal import-root) id . _) #'id]
+         [((~literal import-dotted) _ id) #'id]
          [((~literal file) str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
                                   (datum->syntax
                                    mp
@@ -201,32 +192,69 @@
          ...
          (rhombus-import mods . more))]
     [(_ mods r::import . more)
-     (syntax-parse (extract-module-path #'r.parsed)
-       [((~literal import-root) id map)
-        #`(begin
-            (import-from-root id map r.parsed)
-            (rhombus-import mods . more))]
-       [_
-        (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
-                                          #'r.parsed))
-        (define prefix (extract-prefix r-parsed))
-        (define intro (if (syntax-e prefix)
-                          (make-syntax-introducer)
-                          values))
-        ;; The name-root expansion of import prefixes is handled by
-        ;; `name-root-ref`, which recognizes `(portal <id> (import ....))`
-        ;; forms generated by `lower-require-class`
-        #`(begin
-            (#%require #,@(lower-require-clause r-parsed
-                                                (and (syntax-e prefix)
-                                                     prefix)))
-            (rhombus-import mods . more))])]))
+     ;; apply modifiers, but then flip around to extract
+     ;; module path from the modifiers
+     (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
+                                       #'r.parsed))
+     (define-values (mod-path-stx r-stx) (import-invert r-parsed))
+     #`(begin
+         (rhombus-import-one #,mod-path-stx #,r-stx)
+         (rhombus-import mods . more))]))
+
+(define-syntax (rhombus-import-one stx)
+  (syntax-parse stx
+    [(_ ((~literal import-dotted) mod-path id) r)
+     #:with m-mod-path (syntax-local-introduce #'mod-path)
+     #:with m-id (syntax-local-introduce #'id)
+     #`(begin
+         (rhombus-import-one m-mod-path (rhombus-prefix-in #f #f))
+         (rhombus-import-dotted-one m-id id r))]
+    [(_ ((~literal import-root) id map) r)
+     #`(import-from-root id map r)]
+    [(_ mp r)
+     (define prefix (extract-prefix #'mp #'r))
+     (define intro (if (syntax-e prefix)
+                       (make-syntax-introducer)
+                       values))
+     ;; The name-root expansion of import prefixes is handled by
+     ;; `name-root-ref`, which recognizes `(portal <id> (import ....))`
+     ;; forms generated by `lower-require-clause`
+     (lower-require-clause #'r
+                           #'mp
+                           (and (syntax-e prefix)
+                                prefix))]))
+
+(define-syntax (rhombus-import-dotted-one stx)
+  (syntax-parse stx
+    [(_ lookup-id id r)
+     #`(rhombus-import-one #,(name-root-as-import stx #'lookup-id #'id #t) r)]))
+
+(define-for-syntax (name-root-as-import stx lookup-id id as-field?)
+  (cond
+    [(and (or (not as-field?)
+              (identifier-distinct-binding lookup-id id))
+          (syntax-local-value* lookup-id import-root-ref))
+     => (lambda (i)
+          (syntax-parse i
+            #:datum-literals (parsed map)
+            [(parsed parsed-r) (syntax-local-introduce (transform-in #'parsed-r))]
+            [(map . _) #`(import-root #,id #,i)]))]
+    [else
+     (if as-field?
+         (raise-syntax-error #f
+                             (string-append "not provided as a name root")
+                             id)
+         (raise-syntax-error #f
+                             (string-append "not bound as a name root")
+                             stx
+                             id))]))
+         
 
 (define-syntax (import-from-root stx)
   (syntax-parse stx
     #:datum-literals (map)
     [(_ id (map orig-id [key val] ...) r-parsed)
-     (define prefix (extract-prefix #'r-parsed))
+     (define prefix (extract-prefix #'id #'r-parsed))
      (define-values (ht expose-ht) (convert-require-from-root
                                     #'r-parsed
                                     (for/hasheq ([key (in-list (syntax->list #'(key ...)))]
@@ -235,10 +263,13 @@
                                       (values (syntax-e key) val))))
      #`(begin
          #,@(if (syntax-e prefix)
-                #`((define-name-root #,(datum->syntax #'id prefix #'id)
-                     #:fields
-                     #,(for/list ([(key val) (in-hash ht)])
-                         #`[#,key #,val])))
+                (with-syntax ([(root-id) (generate-temporaries #'(id))])
+                  #`((define-name-root root-id
+                       #:fields
+                       #,(for/list ([(key val) (in-hash ht)])
+                           #`[#,key #,val]))
+                     (define-syntax #,(datum->syntax #'id prefix #'id)
+                       (make-rename-transformer (quote-syntax root-id)))))
                 null)
          #,@(for/list ([key (in-hash-keys (if (syntax-e prefix) expose-ht ht))])
               (define val (hash-ref ht key))
@@ -285,6 +316,35 @@
 
 (define-import-syntax rhombus-lib
   (make-module-path-lib-operator import-prefix-operator))
+
+(define-import-syntax rhombus.
+  (import-prefix+infix-operator
+   (import-prefix-operator
+    #'rhombus.
+    '((default . weaker))
+    'macro
+    (lambda (stx)
+      (syntax-parse stx
+        [(_ id:identifier . tail)
+         (values (name-root-as-import stx #'id #'id #f)
+                 #'tail)]
+        [_
+         (raise-syntax-error #f
+                             "expected an identifier"
+                             stx)])))
+   (import-infix-operator
+    #'rhombus.
+    '((default . weaker))
+    'macro
+    ;; infix
+    (lambda (form1 stx)
+      (syntax-parse stx
+        [(_ id:identifier . tail)
+         (values #`(import-dotted #,form1 id)
+                 #'tail)]
+        [else
+         (raise-syntax-error #f "not ready, yet" stx)]))
+    'left)))
 
 (define-import-syntax as
   (import-modifier
