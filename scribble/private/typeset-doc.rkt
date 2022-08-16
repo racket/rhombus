@@ -143,7 +143,7 @@
             ...)))]))
 
 (define-for-syntax (make-ellipsis-transformer)
-  (typeset-meta:Transformer
+  (typeset-meta:make_Transformer
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
@@ -189,7 +189,7 @@
                                 space))))
 
 (define-for-syntax (make-meta-id-transformer id)
-  (typeset-meta:Transformer
+  (typeset-meta:make_Transformer
    (lambda (use-stx)
      #`(parsed (racketvarfont #,(symbol->string (syntax-e id)))))))
 

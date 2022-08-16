@@ -3,6 +3,7 @@
                      syntax/parse
                      "pack.rkt")
          syntax/parse
+         syntax/strip-context
          racket/syntax-srcloc
          shrubbery/property
          "expression.rkt"
@@ -14,6 +15,7 @@
          to_syntax
          to_alts_syntax
          unwrap_syntax
+         strip_syntax
          relocate_syntax
          relocate_span_syntax)
 
@@ -75,6 +77,13 @@
      (raise-argument-error* 'unwrap_syntax rhombus-realm "Syntax" v)]
     [else
      (syntax-e (unpack-term v 'unwrap_syntax #f))]))
+
+(define (strip_syntax v)
+  (cond
+    [(not (syntax? v))
+     (raise-argument-error* 'strip_syntax rhombus-realm "Syntax" v)]
+    [else
+     (strip-context v)]))
 
 (define (relocate_syntax stx ctx-stx-in)
   (unless (syntax? stx) (raise-argument-error* 'relocate_syntax rhombus-realm "Syntax" stx))

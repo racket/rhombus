@@ -1,0 +1,7 @@
+#lang rhombus
+
+import:
+  "example-a.rhm" as ex_a
+
+export:
+  ex_a

@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     racket/phase+space))
+                     racket/phase+space
+                     enforest/transformer))
 
 ;; Convert a subset of `racket` require clauses to `#%require` clauses,
 ;; including the use of `portal` for a prefixed import
@@ -19,14 +20,21 @@
     (define (expose? v) (vector? v))
     (define (expose-id v) (vector-ref v 0))
     (define-values (r-phase+spaces core-r lower-r phase-shift renames revnames only-mentioned?)
-      (let extract ([r r])
+      (let extract ([r r] [space '#:all])
         (define (root)
-          (define phase+spaces (map car (syntax-local-module-exports (syntax->datum mod-path))))
+          (define all-phase+spaces (map car (syntax-local-module-exports (syntax->datum mod-path))))
+          (define phase+spaces
+            (cond
+              [(eq? space '#:all) all-phase+spaces]
+              [else (for/list ([phase+space (in-list all-phase+spaces)]
+                               #:when (eq? space (phase+space-space phase+space)))
+                      phase+space)]))
           (values phase+spaces mod-path mod-path 0 #hasheq() #hasheq() #f))
         (syntax-parse r
+          #:datum-literals (rename-in only-in except-in expose-in for-meta for-label rhombus-prefix-in only-space-in)
           [#f (root)]
-          [((~literal rename-in) mp [orig bind] ...)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(rename-in mp [orig bind] ...)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define-values (new-renames new-revnames)
              (for/fold ([renames renames]
                         [revnames revnames])
@@ -52,8 +60,8 @@
                   (values (hash-set renames orig bind-s)
                           (hash-set revnames bind orig))])))
            (values phase+spaces core-p p shift new-renames new-revnames only-mentioned?)]
-          [((~literal only-in) mp id ...)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(only-in mp id ...)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define-values (new-renames new-revnames)
              (for/fold ([new-renames #hasheq()]
                         [new-revnames #hasheq()])
@@ -75,8 +83,8 @@
                   (values (hash-set new-renames id id-s)
                           (hash-set new-revnames id id))])))
            (values phase+spaces core-p p shift new-renames new-revnames #t)]
-          [((~literal except-in) mp id ...)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(except-in mp id ...)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define-values (new-renames new-revnames)
              (for/fold ([renames renames]
                         [revnames revnames])
@@ -100,8 +108,8 @@
                   (values (hash-set renames id #f)
                           (hash-set revnames id id))])))
            (values phase+spaces core-p p shift new-renames new-revnames only-mentioned?)]
-          [((~literal expose-in) mp id ...)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(expose-in mp id ...)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define-values (new-renames new-revnames)
              (for/fold ([renames renames]
                         [revnames revnames])
@@ -120,28 +128,34 @@
                  [else
                   (raise-syntax-error 'import "identifier to expose was previously excluded" id-s)])))
            (values phase+spaces core-p p shift new-renames new-revnames only-mentioned?)]
-          [((~literal for-meta) phase mp)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(for-meta phase mp)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define new-shift (and shift (syntax-e #'phase)
                                   (+ shift (syntax-e #'phase))))
            (values phase+spaces core-p p new-shift renames revnames only-mentioned?)]
-          [((~literal for-label) mp)
-           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp))
+          [(for-label mp)
+           (define-values (phase+spaces core-p p shift renames revnames only-mentioned?) (extract #'mp space))
            (define new-shift #f)
            (values phase+spaces core-p p new-shift renames revnames only-mentioned?)]
-          [((~literal rhombus-prefix-in) mp name) (extract #'mp)]
+          [(only-space-in new-space mp)
+           (unless (eq? space '#:all)
+             (raise-syntax-error 'import "duplicate or conflicting space" #'new-space))
+           (extract #'mp (syntax-e #'new-space))]
+          [(rhombus-prefix-in mp name) (extract #'mp space)]
           [_ (raise-syntax-error 'import
                                  "don't know how to lower"
                                  r)])))
     (define (strip-prefix r mp)
       (let strip ([r r])
         (syntax-parse r
-          #:literals (rename-in only-in except-in expose-in for-label)
+          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in)
           [#f mp]
           [((~and tag (~or rename-in only-in except-in expose-in for-label)) mp . rest)
            #`(tag #,(strip #'mp) . rest)]
-          [((~and tag (~literal for-meta)) phase mp)
+          [((~and tag for-meta) phase mp)
            #`(tag phase #,(strip #'mp))]
+          [((~and tag only-space-in) space mp)
+           #`(tag space #,(strip #'mp))]
           [((~literal rhombus-prefix-in) mp name) (strip #'mp)]
           [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
@@ -213,7 +227,9 @@
                                    (car (generate-temporaries (list s-prefix-id)))))
              (cons
               #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
-                          (portal #,portal-id ([import #,core-r #,(strip-prefix r mod-path)]
+                          (portal #,portal-id ([import #,core-r
+                                                       #,(strip-prefix r mod-path)
+                                                       #,(datum->syntax mod-path 'mod-ctx)]
                                                #,s-prefix-id
                                                #,(prefix-intro s-prefix-id))))
               (if module?

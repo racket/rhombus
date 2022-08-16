@@ -25,7 +25,7 @@
          rhs)]))
 
 (define-for-syntax (spacer proc)
-  (Spacer
+  (make_Spacer
    (lambda (head tail escape)
      (define-values (new-head new-unpacked-tail)
        (proc head (unpack-tail tail #f #f) escape))

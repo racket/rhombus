@@ -71,15 +71,25 @@
                                exp-form)
               (sequence ctx #:need-end-expr orig base-ctx add-ctx remove-ctx req-remove-ctx . forms))]
          [(#%require req ...)
-          #:when (eq? (syntax-e #'ctx) '#:block)
-          ;; lift `require` out to module level
-          (for ([req (in-list (cdr (syntax->list ((make-syntax-delta-introducer #'req-remove-ctx #'base-ctx)
-                                                  ((make-syntax-delta-introducer #'add-ctx #'base-ctx)
-                                                   exp-form
-                                                   'add)
-                                                  'remove))))])
-            (syntax-local-lift-require (syntax-local-introduce req) #'use #f))
-          #`(sequence ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms)]
+          (define intro (let ([sub (make-syntax-delta-introducer #'req-remove-ctx #'base-ctx)]
+                              [add (make-syntax-delta-introducer #'add-ctx #'base-ctx)])
+                          (lambda (stx)
+                            (sub (add stx 'add) 'remove))))
+          (define reqs
+            (for/list ([req (in-list (cdr (syntax->list exp-form)))])
+              (syntax-parse req
+                #:datum-literals (portal)
+                [((~and tag portal) id content) #`(tag #,(intro #'id) content)]
+                [_ (intro req)])))
+          (cond
+            [(eq? (syntax-e #'ctx) '#:block)
+             (for ([req (in-list reqs)])
+               (syntax-local-lift-require (syntax-local-introduce req) #'use #f))
+             #`(sequence ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms)]
+            [else
+             #`(begin
+                 (#%require #,@reqs)
+                 (sequence ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms))])]
          [_ #`(begin
                 #,@(reverse accum)
                 #,exp-form

@@ -1,0 +1,10 @@
+#lang rhombus
+
+export:
+  alpha
+  beta
+  rename:
+    List as ExList
+
+val alpha: "alpha"
+val beta: "beta"

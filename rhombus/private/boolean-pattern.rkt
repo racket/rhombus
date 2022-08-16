@@ -98,15 +98,16 @@
     [(_ arg-id (lhs::binding-info rhs::binding-info finish-id) IF success fail)
      #'(begin
          (define finish-id
-           (lhs.matcher-id arg-id lhs.data block-if
-                           (lambda ()
-                             (lhs.binder-id arg-id lhs.data)
-                             (void))
-                           (rhs.matcher-id arg-id rhs.data block-if
-                                           (lambda ()
-                                             (rhs.binder-id arg-id rhs.data)
-                                             (void))
-                                           #f)))
+           (let ()
+             (lhs.matcher-id arg-id lhs.data block-if
+                             (lambda ()
+                               (lhs.binder-id arg-id lhs.data)
+                               (void))
+                             (rhs.matcher-id arg-id rhs.data block-if
+                                             (lambda ()
+                                               (rhs.binder-id arg-id rhs.data)
+                                               (void))
+                                             #f))))
          (IF finish-id success fail))]))
 
 (define-syntax-rule (block-if a b c)

@@ -5,7 +5,9 @@ import:
 
 export:
   Transformer
+  make_Transformer
   Spacer
+  make_Spacer
   in_space
 
 class Transformer(proc)
@@ -13,3 +15,9 @@ class Spacer(proc)
 
 fun in_space(stx):
   base.#{make-interned-syntax-introducer}(symbol(#{rhombus/scribble/typeset}))(stx)
+
+fun make_Transformer(proc):
+  Transformer(proc)
+
+fun make_Spacer(proc):
+  Spacer(proc)

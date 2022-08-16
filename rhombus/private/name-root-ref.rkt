@@ -50,7 +50,8 @@
 
 (define-for-syntax (portal-syntax->lookup portal-stx make)
   (syntax-parse portal-stx
-    [([(~datum import) _ _] pre-ctx-s ctx-s)
+    #:datum-literals (import map)
+    [([import _ _ _] pre-ctx-s ctx-s)
      (define pre-ctx #'pre-ctx-s)
      (define ctx #'ctx-s)
      (make (lambda (who-stx what name)
@@ -70,7 +71,7 @@
                                        name)]
                   [else #f])]
                [else #f])))]
-    [((~datum map) _ [key val] ...)
+    [(map _ [key val] ...)
      (define keys (syntax->list #'(key ...)))
      (define vals (syntax->list #'(val ...)))
      (make (lambda (who-stx what name)
@@ -119,8 +120,13 @@
 
 (define-for-syntax (portal-syntax->import portal-stx)
   (syntax-parse portal-stx
-    [([(~datum import) _ parsed-r] _ _)
-     #'(parsed parsed-r)]
-    [((~datum map) _ [key val] ...)
+    #:datum-literals (map import)
+    [([import mod-path parsed-r mod-ctx] orig-s ctx-s)
+     #`(parsed #,(datum->syntax #'ctx-s (syntax-e #'mod-path)) #,((make-syntax-delta-introducer
+                                                                   #'mod-ctx
+                                                                   (syntax-local-introduce (datum->syntax #f 'empty)))
+                                                                  #'parsed-r
+                                                                  'remove))]
+    [(map _ [key val] ...)
      portal-stx]
     [_ #f]))

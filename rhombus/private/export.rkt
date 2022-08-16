@@ -29,7 +29,6 @@
                     for_label
                     names
                     all_from
-                    all_in
                     |.|
                     #%juxtapose))
 
@@ -115,34 +114,40 @@
                         (hash-keys
                          (for/hash ([p+s (in-list phase+spaces)])
                            (values (phase+space-phase p+s) #t)))))
-     (define id (syntax-parse stx [(_ id) #'id]))
-     (define (make-export phase space id)
-       (export id
-               (syntax-e id)
-               (phase+space phase space)
-               #f ; not protected
-               id))
      (apply
       append
-      (for/list ([phase (in-list phases)])
-        (define space+ids
-          (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
-                      [(intro) (in-value (make-interned-syntax-introducer sym))]
-                      [(space-id) (in-value (intro id))]
-                      #:when (and (identifier-binding space-id)
-                                  (not (free-identifier=? id space-id))))
-            (cons sym space-id)))
-        (append
-         (cond
-           [(identifier-binding id phase)
-            (list (make-export phase #f id))]
-           [(null? space+ids)
-            (raise-syntax-error 'export
-                                "identifier is not defined or imported"
-                                id)]
-           [else null])
-         (for/list ([space+id (in-list space+ids)])
-           (make-export phase (car space+id) (cdr space+id)))))))))
+      (for/list ([stx (in-list (cdr (syntax->list stx)))])
+        (define-values (id out-id)
+          (syntax-parse stx
+            [[id out-id] (values #'id #'out-id)]
+            [id (values #'id #'id)]))
+        (define (make-export phase space id)
+          (export id
+                  (syntax-e out-id)
+                  (phase+space phase space)
+                  #f ; not protected
+                  stx))
+        (apply
+         append
+         (for/list ([phase (in-list phases)])
+           (define space+ids
+             (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
+                         [(intro) (in-value (make-interned-syntax-introducer sym))]
+                         [(space-id) (in-value (intro id))]
+                         #:when (and (identifier-binding space-id)
+                                     (not (free-identifier=? id space-id))))
+               (cons sym space-id)))
+           (append
+            (cond
+              [(identifier-binding id phase)
+               (list (make-export phase #f id))]
+              [(null? space+ids)
+               (raise-syntax-error 'export
+                                   "identifier is not defined or imported"
+                                   id)]
+              [else null])
+            (for/list ([space+id (in-list space+ids)])
+              (make-export phase (car space+id) (cdr space+id)))))))))))
 
 (define-syntax export
   (declaration-transformer
@@ -193,7 +198,7 @@
        #:datum-literals (block)
        [(_ (block r::renaming ...)
            . tail)
-        (values #`(rename-out [r.int-name r.ext-name] ...)
+        (values #`(all-spaces-out [r.int-name r.ext-name] ...)
                 #'tail)]))))
 
 (define-export-syntax except
@@ -244,38 +249,34 @@
    (lambda (stx)
      (parameterize ([current-module-path-context 'export])
        (syntax-parse stx
-         #:datum-literals (parens group)
+         #:datum-literals (parens group op |.|)
+         [(_ (parens (group (op |.|) . (~var name (:hier-name-seq values name-path-op name-root-ref))))
+             . tail)
+          (values
+           (cond
+             [(syntax-local-value* #'name.name import-root-ref)
+              => (lambda (i)
+                   (define form
+                     (syntax-parse i
+                       #:datum-literals (parsed map)
+                       [(parsed mod-path parsed-r) #`(all-from-out #,(relocate #'name.name #'mod-path))]
+                       [(map _ [key val] ...) #`(rename-out #,@(for/list ([key (in-list (syntax->list #'(key ...)))]
+                                                                          [val (in-list (syntax->list #'(val ...)))]
+                                                                          #:when (syntax-e key))
+                                                                 #`[#,val #,key]))]))
+                   (unless (null? (syntax-e #'name.tail))
+                     (raise-syntax-error #f
+                                         "unexpected after `.`"
+                                         #'name-tail))
+                   form)]
+             [else
+              (raise-syntax-error #f
+                                  "not bound as a name root"
+                                  #'name.name)])
+           #'tail)]
          [(_ (parens mod-path::module-path)
              . tail)
           (values #`(all-from-out mod-path.parsed)
-                  #'tail)])))))
-
-(define-export-syntax all_in
-  (export-prefix-operator
-   #'all_from
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (parameterize ([current-module-path-context 'export])
-       (syntax-parse stx
-         #:datum-literals (parens group)
-         [(form-id (~and arg ((~and tag parens) (group id:identifier)))
-                   . tail)
-          (define v (syntax-local-value* #'id
-                                         (lambda (v)
-                                           (and
-                                            (portal-syntax? v)
-                                            (syntax-parse (portal-syntax-content v)
-                                              [([(~datum import) mod] pre-ctx-s ctx-s)
-                                               (datum->syntax #'ctx-s (syntax-e #'mod))]
-                                              [_ #f])))))
-          (unless v
-            (raise-syntax-error #f
-                                "not an import name"
-                                (datum->syntax #f
-                                               (list #'form-id #'arg)
-                                               (span-srcloc #'form-id #'tag))))
-          (values #`(all-from-out #,(relocate #'id v))
                   #'tail)])))))
 
 (define-export-syntax #%juxtapose

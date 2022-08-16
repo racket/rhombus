@@ -29,7 +29,7 @@
  Exports from the enclosing module.
 
  An @rhombus(export_item) can be an identifier, operator, other export
- form, such as @rhombus(all_from, ~expmod) or @rhombus(all_in, ~expmod).
+ form, such as @rhombus(all_from, ~expmod).
  It can also be a sequence @rhombus(export_item)s within a
  group, since @rhombus(#{#%juxtapose}, ~expmod) is defined as an
  export form.
@@ -49,15 +49,6 @@
  Exports all bindings imported from @rhombus(module_path), where
  @rhombus(module_path) appears syntactically the same via
  @rhombus(import) or as the module's language.
-
-}
-
-@doc(
-  expo.macro 'all_in($prefix)'
-){
-
- Exports all bindings that are under @rhombus(prefix), which is a
- hierarchical name root such as one bound by @rhombus(import).
 
 }
 

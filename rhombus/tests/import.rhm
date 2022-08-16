@@ -1,0 +1,92 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm") as ex_a
+  [ex_a.alpha, ex_a.beta]
+  ["alpha", "beta"]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm") as ex_a:
+            expose: beta
+  [ex_a.alpha, beta, ex_a.beta]
+  ["alpha", "beta", "beta"]
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm") as ex_a:
+            expose: beta
+  alpha
+  "unbound identifier"
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm").ExList
+  [ExList(1, 2), ExList.length([1, 2, 3])]
+  [[1, 2], 3]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm") open
+  [alpha, beta]
+  ["alpha", "beta"]
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm") open
+  ex_a.alpha
+  "unbound identifier"
+
+check:
+  ~eval
+  import:
+    lib("rhombus/tests/example-a.rhm") as ex_a
+    .ex_a expose: beta
+  [ex_a.alpha, beta]
+  ["alpha", "beta"]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-b.rhm") as ex_b
+  ex_b.ex_a.alpha
+  "alpha"
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-b.rhm") open
+  ex_a.alpha
+  "alpha"
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-b.rhm").ex_a
+  ex_a.alpha
+  "alpha"
+
+check:
+  ~eval
+  import: .List: 
+            rename: cons as kons
+  List.kons(1, 2)
+  List.cons(1, 2)
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm") open
+  import: .ExList: 
+            rename: cons as kons
+  [ExList.kons(1, 2),
+   List.cons(1, 2)]
+  [List.cons(1, 2), List.cons(1, 2)]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm") open
+  begin:
+    import: .ExList: 
+              rename: cons as kons
+    [ExList.kons(1, 2),
+     List.cons(1, 2)]
+  [List.cons(1, 2), List.cons(1, 2)]

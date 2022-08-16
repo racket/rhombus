@@ -126,6 +126,7 @@
      (syntax-parse stx
        #:datum-literals (parens group)
        [(form-id ((~and tag parens) (group str:string)) . tail)
+        (check #'str)
         (values (datum->syntax #'str
                                (list mp-form-id #'str)
                                (span-srcloc #'form-id #'tag)
