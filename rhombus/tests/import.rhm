@@ -24,8 +24,23 @@ check:
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").ExList
-  [ExList(1, 2), ExList.length([1, 2, 3])]
-  [[1, 2], 3]
+  [ExList(1, 2), ExList.length([1, 2, 3]),
+   for ExList:
+     ~each i: 10..12
+     i]
+  [[1, 2], 3, [10, 11]]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm").ExList open
+  length([1, 2, 3])
+  3
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm").ExList open
+  for ExList: "oops, no ExList"
+  "expected reducer"
 
 check:
   ~eval
@@ -90,3 +105,34 @@ check:
     [ExList.kons(1, 2),
      List.cons(1, 2)]
   [List.cons(1, 2), List.cons(1, 2)]
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm").alpha
+  alpha
+  "alpha"
+
+check:
+  ~eval
+  import: lib("rhombus/tests/example-a.rhm").alpha as a
+  a
+  "alpha"
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm").alpha open
+  alpha
+  "cannot open binding"
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm").alpha:
+           except: other
+  "does not get here"
+  "identifier to exclude is not included"
+
+check:
+  ~eval_exn
+  import: lib("rhombus/tests/example-a.rhm").alpha
+  beta
+  "unbound identifier"
