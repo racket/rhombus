@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     racket/phase+space))
+                     racket/phase+space
+                     "import-cover.rkt"))
 
 ;; Implements a subset of `racket` require to adjust a mapping of keys
 ;; to values for a name root used as an import
@@ -106,12 +107,5 @@
          (extract #'mp ht step)]
         [_ (raise-syntax-error 'import
                                "don't know how to convert"
-                               r)])))
-
-
-  (define (cover covered-ht sym step)
-    (hash-set covered-ht sym (hash-set (hash-ref covered-ht sym #hasheqv()) step #t)))
-
-  (define (covered? covered-ht sym step)
-    (hash-ref (hash-ref covered-ht sym #hasheqv()) step #f)))
+                               r)]))))
 
