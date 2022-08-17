@@ -48,7 +48,7 @@
 
  Exports all bindings imported from @rhombus(module_path), where
  @rhombus(module_path) appears syntactically the same via
- @rhombus(import) or as the module's language.
+ @rhombus(import), as the module's language, or as a nesting binding?
 
 }
 
@@ -116,6 +116,9 @@
  Modifies exports to apply at @rhombus(phase) more than the enclosing
  context's phase, where @rhombus(phase) defaults to @rhombus(1).
 
+ This modifier is valid only immediately within a modules, and not
+ within @rhombus(nest) forms.
+
 }
 
 @doc(
@@ -123,5 +126,8 @@
 ){
 
  Modifies exports to apply at the label phase.
+
+ This modifier is valid only immediately within a modules, and not
+ within @rhombus(nest) forms.
 
 }

@@ -25,7 +25,9 @@
     $collection_module_path
     $string
     lib($string)
-    file($string),
+    file($string)
+    . $identifier
+    $module_path . $identifier,
 
   grammar collection_module_path:
     $identifier
@@ -96,8 +98,19 @@
    @litchar{..} directory indicators are disallowed.},
 
  @item{@rhombus(file(string)): refers to a file through a
-   platform-specific path with no constraints on @rhombus(string).}
- 
+   platform-specific path with no constraints on @rhombus(string).},
+
+ @item{@rhombus(.identifier): refers to a nesting name
+  @rhombus(identifier), which might be predefined like @rhombus(List), or
+  might be bound by @rhombus(nest) or as a prefix with @rhombus(import).},
+
+ @item{@rhombus(module_path.identifier): a shorthand for importing only
+  @rhombus(identifier) from @rhombus(module_path) path and then importing
+  with @rhombus(.identifier). The last @rhombus(identifier) in a dotted
+  sequence is allowed to be an export that is not a nesting name, in which
+  case the dotted form is a shorthand for just importing
+  @rhombus(identifier) from @rhombus(module_path).}
+
 )
 
 }
@@ -176,6 +189,9 @@
  Modifies an @rhombus(import) clause so that the imports are shifted by
  @rhombus(phase) levels, where @rhombus(phase) defaults to @rhombus(1).
 
+ This modifier is valid only for module fies that refer to modules,
+ as opposed to @rhombus(nest) bindings.
+
 }
 
 @doc(
@@ -185,5 +201,8 @@
  Modifies an @rhombus(import) clause so that only the imports that would
  be at phase @rhombus(0) are imported, and they are imported instead to
  the label phase.
+
+ This modifier is valid only for module fies that refer to modules,
+ as opposed to @rhombus(nest) bindings.
 
 }
