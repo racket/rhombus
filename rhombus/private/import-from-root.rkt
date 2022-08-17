@@ -99,11 +99,11 @@
         [(for-meta phase mp)
          (if (eq? (syntax-e #'phase) 0)
              (extract #'mp ht step)
-             (raise-syntax-error 'import "cannot shift phase of name-root content" r))]
+             (raise-syntax-error 'import "cannot shift phase of nesting content" r))]
         [(for-label mp)
-         (raise-syntax-error 'import "cannot shift phase of name-root content" r)]
+         (raise-syntax-error 'import "cannot shift phase of nesting content" r)]
         [(rhombus-prefix-in mp name) (extract #'mp ht step)]
-        [(only-space-in space mp) ;; redundant for name roots
+        [(only-space-in space mp) ;; redundant for nestings
          (extract #'mp ht step)]
         [_ (raise-syntax-error 'import
                                "don't know how to convert"

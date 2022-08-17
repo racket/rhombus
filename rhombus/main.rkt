@@ -29,6 +29,7 @@
         "private/value.rkt"
         "private/import.rkt"
         "private/export.rkt"
+        "private/nest.rkt"
         "private/module-path.rkt"
         "private/operator.rkt"
         "private/annotation.rkt"

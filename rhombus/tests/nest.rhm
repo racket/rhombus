@@ -1,0 +1,49 @@
+#lang rhombus
+import: "check.rhm" open
+
+nest Home:
+  val x: "x"
+  class Posn(x, y)
+  export:
+    x
+    Posn
+    rename: List as XList
+
+check:
+  Home.x
+  "x"
+
+check:
+  use_static_dot
+  Home.Posn(1, 2).x
+  1
+
+check:
+  match Home.Posn(1, 2)
+  | Home.Posn(x, y):
+      x
+  1
+
+check:
+  match Home.XList(1, 2)
+  | Home.XList(x, y):
+      for Home.XList:
+        ~each i: x..3
+        i
+  [1, 2]
+
+check:
+  import: .Home open
+  match XList(1, 2)
+  | XList(x, y):
+      for XList:
+        ~each i: x..3
+        i
+  [1, 2]
+
+check:
+  import: .Home open
+  match Posn(1, 2)
+  | Posn(x, y):
+      x
+  1

@@ -17,6 +17,7 @@
                      "realm.rkt")
          "name-root-ref.rkt"
          "declaration.rkt"
+         "nestable-declaration.rkt"
          (submod "module-path.rkt" for-import-export))
 
 (provide export
@@ -150,7 +151,7 @@
               (make-export phase (car space+id) (cdr space+id)))))))))))
 
 (define-syntax export
-  (declaration-transformer
+  (nestable-declaration-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (block)

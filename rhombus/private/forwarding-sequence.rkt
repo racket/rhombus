@@ -2,7 +2,15 @@
 (require (for-syntax racket/base
                      syntax/parse))
 
+;; The `rhombus-forwarding-sequence` form handles definitions that are
+;; only visible to later terms (as created with Rhombus `let`, say,
+;; and exposed to here by a `rhombus-forward` wrapper). It also takes
+;; care of making nested `import` work through lifting. The
+;; `rhombus-nested-forwarding-sequence` form extends that to gather
+;; `export` information for a nested context.
+
 (provide rhombus-forwarding-sequence
+         rhombus-nested-forwarding-sequence
 
          ;; wrap `rhombus-forward` around a sequence of declarations
          ;; to make any bindings among the  declarations visible only
@@ -18,6 +26,13 @@
      #`(sequence ctx mode orig base-ctx add-ctx remove-ctx #,(intro #'req-remove-ctx)
                  . #,(intro #'tail))]))
 
+(define-syntax (rhombus-nested-forwarding-sequence stx)
+  (syntax-parse stx
+    [(_ final . tail)
+     (define intro (make-syntax-introducer #t))
+     #`(sequence [final] #f #f base-ctx add-ctx remove-ctx #,(intro #'req-remove-ctx)
+                 . #,(intro #'tail))]))
+
 (define-syntax (sequence stx)
   (let loop ([stx stx] [accum null])
     (syntax-parse stx
@@ -25,7 +40,13 @@
        (when (and (eq? (syntax-e #'mode) '#:need-end-expr)
                   (syntax-e #'orig))
          (raise-syntax-error #f "block does not end with an expression" #'orig))
-       #`(begin #,@(reverse accum))]
+       (define forms #`(begin #,@(reverse accum)))
+       (syntax-parse #'ctx
+         [[(final ...) bind ...]
+          #`(begin
+              #,forms
+              (final ... #,@(reverse (syntax->list #'(bind ...)))))]
+         [_ forms])]
       [(_ ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx (~and form ((~literal quote) v)) . forms)
        (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms)
              (cons #'form accum))]
@@ -38,13 +59,11 @@
                                             ;; etc.
                                             #'begin
                                             #'provide
-                                            #'require
                                             #'#%require
-                                            #'#%provide
                                             #'begin-for-syntax)
                                       #f))
        (syntax-parse exp-form
-         #:literals (begin define-values define-syntaxes rhombus-forward #%require)
+         #:literals (begin define-values define-syntaxes rhombus-forward #%require provide #%provide)
          [(rhombus-forward . sub-forms)
           (define introducer (make-syntax-introducer #t))
           #`(begin
@@ -90,6 +109,13 @@
              #`(begin
                  (#%require #,@reqs)
                  (sequence ctx mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms))])]
+         [(provide prov ...)
+          #:when (not (keyword? (syntax-e #'ctx)))
+          (syntax-parse #'ctx
+            [(head . tail)
+             #`(sequence (head prov ... . tail) mode orig base-ctx add-ctx remove-ctx req-remove-ctx . forms)])]
+         [(#%provide . _)
+          (raise-syntax-error #f "shouldn't happen" exp-form)]
          [_ #`(begin
                 #,@(reverse accum)
                 #,exp-form

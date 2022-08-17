@@ -9,6 +9,7 @@
          "binding.rkt"
          "parse.rkt"
          "reducer.rkt"
+         (submod "reducer.rkt" for-class)
          "for-clause.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"

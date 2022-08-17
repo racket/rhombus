@@ -20,7 +20,7 @@
          "definition.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "lower-require.rkt"
+         "import-lower-require.rkt"
          "import-from-root.rkt"
          (only-in "implicit.rkt"
                   #%literal)
@@ -71,7 +71,7 @@
   (define (make-identifier-import id)
     (unless (module-path? (syntax-e id))
       (raise-syntax-error 'import
-                          "not a valid module path element, and not bound as a name root"
+                          "not a valid module path element, and not bound as a nesting"
                           id))
     id)
 
@@ -273,8 +273,9 @@
            [(null? irs) null]
            [else
             (syntax-parse (car irs)
-              [(_ im)
-               (define-values (form new-covered-ht) (imports-from-root #'im #'r covered-ht (pair? (cdr irs))))
+              [(space im)
+               (define-values (form new-covered-ht) (imports-from-root #'im #'r covered-ht (pair? (cdr irs))
+                                                                       (eq? #f (syntax-e #'space))))
                (cons form
                      (loop (cdr irs) new-covered-ht))])])))
      #`(begin
@@ -288,15 +289,15 @@
                  (define prefix (extract-prefix #'mp #'r))
                  (cond
                    [(syntax-e prefix)
-                    (import-singleton #'id (if (syntax-e #'space)
-                                               ((make-interned-syntax-introducer/add (syntax-e #'space))
-                                                prefix)
-                                               prefix))]
+                    (define intro (if (syntax-e #'space)
+                                      (make-interned-syntax-introducer/add (syntax-e #'space))
+                                      (lambda (x) x)))
+                    (import-singleton #'id (intro prefix))]
                    [(or (pair? mods) (pair? hiers))
                     #'(begin)]
                    [else
                     (raise-syntax-error #f
-                                        "cannot open binding that is not a name root"
+                                        "cannot open binding that is not a nesting"
                                         #'id)])]))
          (k-form #,new-wrt . k-args))]
     [(_ wrt mp r k)
@@ -333,10 +334,10 @@
     [(null? space+maps)
      (if as-field?
          (raise-syntax-error #f
-                             (string-append "not provided as a name root")
+                             (string-append "not provided as a nesting")
                              id)
          (raise-syntax-error #f
-                             (string-append "not bound as a name root")
+                             (string-append "not bound as a nesting")
                              stx
                              id))]
     [else
@@ -357,7 +358,7 @@
          [_
           (loop (cdr irs) (cons ir rev-mods) rev-hiers rev-sings)])])))
 
-(define-for-syntax (imports-from-root im r-parsed covered-ht accum?)
+(define-for-syntax (imports-from-root im r-parsed covered-ht accum? open-all-spaces?)
   (syntax-parse im
     #:datum-literals (import-root map)
     [(import-root id (map orig-id [key val] ...))
@@ -386,10 +387,22 @@
                       (define-syntax #,(datum->syntax #'id (syntax-e prefix) #'id)
                         (make-rename-transformer (quote-syntax root-id)))))
                  null)
-          #,@(for/list ([key (in-hash-keys (if (syntax-e prefix) expose-ht ht))])
-               (define val (hash-ref ht key))
-               #`(define-syntax #,(datum->syntax #'id key #'id)
-                   (make-rename-transformer (quote-syntax #,val)))))
+          #,@(for/list ([space-sym (in-list (cond
+                                              [open-all-spaces?
+                                               (cons #f (syntax-local-module-interned-scope-symbols))]
+                                              [else (list #f)]))]
+                        #:do [(define intro (if space-sym
+                                                (make-interned-syntax-introducer space-sym)
+                                                (lambda (x mode) x)))]
+                        [key (in-hash-keys (if (syntax-e prefix) expose-ht ht))]
+                        #:do [(define val (hash-ref ht key))
+                              (define space-val (intro val 'add))]
+                        #:when (and (identifier-binding space-val)
+                                    (or (not open-all-spaces?)
+                                        (not space-sym)
+                                        (not (free-identifier=? space-val (intro val 'remove))))))
+               #`(define-syntax #,(intro (datum->syntax #'id key #'id) 'add)
+                   (make-rename-transformer (quote-syntax #,space-val)))))
       new-covered-ht)]))
 
 (define-for-syntax (import-singleton id as-id)
