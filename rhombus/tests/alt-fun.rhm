@@ -1,0 +1,138 @@
+#lang rhombus
+
+import:
+  "check.rhm" open
+
+begin:
+  fun
+  | f([]): 0
+  | f(a): 1
+  | f(): 2
+  check: f([]); 0
+  check: f([1]); 1
+  check: f(); 2
+
+begin:
+  fun
+  | f([]): 0
+  | f(): 2
+  check:
+    ~exn
+    f([1])
+    "fun: no matching case for arguments"
+
+begin:
+  fun f([] = [1]): 0
+  check:
+    ~exn
+    f()
+    // TODO: fix error message to be about pattern matching
+    "fun: argument does not satisfy annotation"
+
+begin:
+  fun f([] = [], & rst): rst
+  check:
+    ~exn
+    f("a")
+    // TODO: fix error message to be about pattern matching
+    "fun: argument does not satisfy annotation"
+
+begin:
+  /*
+  fun
+  | f([] = [1]): 0
+  | f(a): 1
+  | f(): 2
+  */
+  val f:
+    let c0: fun(): 0
+    let c1: fun(a): 1
+    let c2: fun(): 2
+    fun
+    | (tmp1):
+        match tmp1
+        | []: c0()
+        | _: c1(tmp1)
+    | ():
+        let tmp2: [1]
+        match tmp2
+        | []: c0()
+        | _: c2()
+  check: f([]); 0
+  check: f([1]); 1
+  check: f(); 2
+
+begin:
+  /*
+  fun
+  | f([] = []): 0
+  | f(a): 1
+  */
+  val f:
+    let c0: fun(): 0
+    let c1: fun(a): 1
+    let c2: fun(): 2
+    fun
+    | (tmp1):
+        match tmp1
+        | []: c0()
+        | _: c1(tmp1)
+    | ():
+        let tmp2: []
+        match tmp2
+        | []: c0()
+        | _: c2()
+  check: f([]); 0
+  check: f(); 0
+  check: f("a"); 1
+
+begin:
+  /*
+  fun
+  | ([] = [1], & rst): 0
+  | (a): 1
+  | (): 2
+  */
+  val f:
+    let c0: fun(rst): 0
+    let c1: fun(a): 1
+    let c2: fun(): 2
+    fun
+    | (tmp1, & rst):
+        match [tmp1, rst]
+        | [[], _]: c0(rst)
+        | [_, []]: c1(tmp1)
+    | ():
+        let tmp2: [1]
+        match tmp2
+        | []: c0([])
+        | _: c2()
+  check: f([]); 0
+  check: f([1]); 1
+  check: f(); 2
+  check: f([], [1]); 0
+
+begin:
+  /*
+  fun
+  | ([] = [], & rst): 0
+  | (a): 1
+  */
+  val f:
+    let c0: fun(rst): 0
+    let c1: fun(a): 1
+    let c2: fun(): 2
+    fun
+    | (tmp1, & rst):
+        match [tmp1, rst]
+        | [[], _]: c0(rst)
+        | [_, []]: c1(tmp1)
+    | ():
+        let tmp2: []
+        match tmp2
+        | []: c0([])
+        | _: c2()
+  check: f([]); 0
+  check: f([1]); 1
+  check: f(); 0
+  check: f([], [1]); 0
