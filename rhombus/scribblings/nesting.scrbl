@@ -23,7 +23,7 @@ nesting name, and @rhombus(export) provide forms within the
 nested name with @rhombus(.).
 
 @(rhombusblock:
-   nest Math:
+   nest math:
      export:
        tau
        Complex
@@ -31,9 +31,9 @@ nested name with @rhombus(.).
      val tau: 2 * pi
      class Complex(real, imag)
 
-   Math.tau                   // prints 6.28
-   // Math.pi                 // would be an error
-   Math.Complex(0, Math.tau)  // prints Complex(0, 6.28)
+   math.tau                   // prints 6.28
+   // math.pi                 // would be an error
+   math.Complex(0, math.tau)  // prints Complex(0, 6.28)
 )
 
 A name defined with @rhombus(nest) can be used with @rhombus(import),
@@ -44,11 +44,11 @@ generally, such as a block created with @rhombus(begin) or
 
 @(rhombusblock:
    begin:
-     import: .Math open
+     import: .math open
      Complex(0, tau)  // prints Complex(0, 6.28)
 
    val also_pi:
-     import: .Math open
+     import: .math open
      tau / 2
    also_pi            // prints 3.14
   )
@@ -57,19 +57,19 @@ Naturally, nested names can be nested further, either by exporting an
 existing nested name or by nesting @rhombus(nest) forms.
 
 @(rhombusblock:
-   nest Subject:
+   nest subject:
      export:
-       Math
-       English
-     nest English:
+       math
+       english
+     nest english:
        val greeting: "Hello"
 
-   Subject.English.greeting  // prints "Hello"
-   Subject.Math.tau          // prints 6.28
+   subject.english.greeting  // prints "Hello"
+   subject.math.tau          // prints 6.28
 
    begin:
-     import: .Subject open
-     Math.tau                // prints 6.28
+     import: .subject open
+     math.tau                // prints 6.28
              
    )
 

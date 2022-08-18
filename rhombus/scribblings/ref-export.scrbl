@@ -34,11 +34,15 @@
  group, since @rhombus(#{#%juxtapose}, ~expmod) is defined as an
  export form.
 
- Similar to @rhombus(import), a @rhombus(export_item) can be modified
+ Similar to @rhombus(import), an @rhombus(export_item) can be modified
  either through a subsequent block containing @rhombus(modifier)s or
  by a preceding @rhombus(modifier) with the @rhombus(export_item)s in
  a block. The latter order works only if the @rhombus(modifier) itself
  does not need a block.
+
+ An @rhombus(identifier) or @rhombus(operator) export can be a dotted
+ name, such as @rhombus(List.length). The last component of the name
+ is used as the export name.
 
 }
 

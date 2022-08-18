@@ -21,13 +21,13 @@
  @rhombus(identifier) also wth with @rhombus(import).
 
 @examples(
-  nest Math:
+  nest math:
     export: pi tau
     val pi: 3.14
     val tau: 6.28,
-  Math.pi,
+  math.pi,
   begin:
-    import: .Math open
+    import: .math open
     [pi, tau]
 )
 

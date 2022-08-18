@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "introducer.rkt")
-         "nestable-declaration.rkt"
+         "definition.rkt"
          "forwarding-sequence.rkt"
          "parse.rkt"
          "name-root.rkt")
@@ -10,7 +10,7 @@
 (provide nest)
 
 (define-syntax nest
-  (nestable-declaration-transformer
+  (definition-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
