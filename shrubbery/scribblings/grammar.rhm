@@ -10,7 +10,7 @@ import:
 
 export:
   bnf
-  bseq balt boptional nonterm bseq kleenestar kleeneplus boptional
+  bseq balt boptional nonterm kleenestar kleeneplus boptional
   bis bor
 
 def bis: @elem{@hspace(1)::=@hspace(1)}

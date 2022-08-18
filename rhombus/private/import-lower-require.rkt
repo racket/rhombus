@@ -267,7 +267,7 @@
                      #:when v
                      #:when (and (or (not for-expose?)
                                      (expose? v))
-                                 (hash-ref syms k #f)))
+                                 (hash-ref syms (syntax-e (plain-id v)) #f)))
             #`(rename #,mod-path #,(plain-id v) #,k)))]))
     (define prefix-intro (and prefix-id (make-syntax-introducer)))
     (define module? (not (list? (syntax-local-context))))
