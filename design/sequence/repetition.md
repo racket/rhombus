@@ -246,7 +246,7 @@ Contributors
 * Sid Kasivajhula
 * Alex Knauth
 * Sorawee Porncharoenwase
-* San Tobin-Hochstadt
+* Sam Tobin-Hochstadt
 
 References
 ----------
