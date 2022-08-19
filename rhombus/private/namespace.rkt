@@ -7,9 +7,9 @@
          "parse.rkt"
          "name-root.rkt")
 
-(provide nest)
+(provide namespace)
 
-(define-syntax nest
+(define-syntax namespace
   (definition-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -56,11 +56,11 @@
               (hash-set ht ext-sym int-id)]))]
         [(all-from-out mod-path)
          (raise-syntax-error #f
-                             "module re-export not supported in a nested context"
+                             "module re-export not supported in a namespace context"
                              #'mod-path)]
         [((~or for-meta for-label) . _)
          (raise-syntax-error #f
-                             "not allowed in a nested context"
+                             "not allowed in a namespace context"
                              ex)]
         [_
          (raise-syntax-error #f

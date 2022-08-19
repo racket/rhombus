@@ -7,7 +7,7 @@
 @local_table_of_contents()
 
 @include_section("ref-def.scrbl")
-@include_section("ref-nest.scrbl")
+@include_section("ref-namespace.scrbl")
 @include_section("ref-import.scrbl")
 @include_section("ref-export.scrbl")
 @include_section("ref-function.scrbl")

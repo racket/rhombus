@@ -77,11 +77,13 @@ check:
 
 check:
   ~eval_exn
+  import: rhombus/macro open
   expr.rule '$1 + $2': '0'
   "expected operator-macro pattern"
 
 check:
   ~eval_exn
+  import: rhombus/macro open
   expr.rule '$x $ $x': '0'
   "expected operator-macro pattern"
 

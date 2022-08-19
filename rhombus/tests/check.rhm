@@ -67,5 +67,5 @@ fun check_same(thunk, expected_thunk, ~mode: mode):
             current_error_port())
 
 fun eval_test(stx):
-  parameterize {current_namespace: make_rhombus_namespace()}:
+  parameterize {current_toplevel: make_rhombus_toplevel()}:
     eval(strip_syntax(stx))

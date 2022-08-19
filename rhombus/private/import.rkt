@@ -71,7 +71,7 @@
   (define (make-identifier-import id)
     (unless (module-path? (syntax-e id))
       (raise-syntax-error 'import
-                          "not a valid module path element, and not bound as a nesting"
+                          "not a valid module path element, and not bound as a namespace"
                           id))
     id)
 
@@ -297,7 +297,7 @@
                     #'(begin)]
                    [else
                     (raise-syntax-error #f
-                                        "cannot open binding that is not a nesting"
+                                        "cannot open binding that is not a namespace"
                                         #'id)])]))
          (k-form #,new-wrt . k-args))]
     [(_ wrt mp r k)
@@ -334,10 +334,10 @@
     [(null? space+maps)
      (if as-field?
          (raise-syntax-error #f
-                             (string-append "not provided as a nesting")
+                             (string-append "not provided as a namespace")
                              id)
          (raise-syntax-error #f
-                             (string-append "not bound as a nesting")
+                             (string-append "not bound as a namespace")
                              stx
                              id))]
     [else

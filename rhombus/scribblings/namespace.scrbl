@@ -3,12 +3,12 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title{Nested Definitions}
+@title(~tag: "namespaces-overview"){Namespaces}
 
-A module import as @rhombus(convert.fahrenheit_to_celsius) or class
+A dotted module import as @rhombus(convert.fahrenheit_to_celsius) or class
 field accessors as @rhombus(Posn.x) and @rhombus(Posn.y) demonstrate
-some hierarchical names. Some other hierarchical names are provided by
-@rhombusmodname(rhombus), such as @rhombus(List.length) and
+the use of hierarchical names. Other hierarchical names provided by
+@rhombusmodname(rhombus) include @rhombus(List.length) and
 @rhombus(List.cons) via @rhombus(List) (where lists will discussed more
 in @secref("list")):
 
@@ -16,14 +16,14 @@ in @secref("list")):
     List.length(["a", "b", "c"])  // prints 3
   )
 
-Use the @rhombus(nest) form to create a nesting level without creating a
-sepaarte module. The identifier after @rhombus(nest) is bound as a
-nesting name, and @rhombus(export) provide forms within the
-@rhombus(nest) body determine the bindings that can be accessed from the
-nested name with @rhombus(.).
+Use the @rhombus(namespace) form to create a namespace without creating a
+sepaarte module. The identifier after @rhombus(namespace) is bound as a
+namespace, and @rhombus(export) provide forms within the
+@rhombus(namespace) body determine the bindings that can be accessed from the
+name with @rhombus(.).
 
 @(rhombusblock:
-   nest math:
+   namespace math:
      export:
        tau
        Complex
@@ -36,9 +36,9 @@ nested name with @rhombus(.).
    math.Complex(0, math.tau)  // prints Complex(0, 6.28)
 )
 
-A name defined with @rhombus(nest) can be used with @rhombus(import),
+A name defined with @rhombus(namespace) can be used with @rhombus(import),
 but the name must be prefixed with @rhombus(.) to distinguish it from a
-module path Also, @rhombus(import) can be used in nested blocks
+module path. Also, @rhombus(import) can be used in nested blocks
 generally, such as a block created with @rhombus(begin) or
 @rhombus(val):
 
@@ -53,15 +53,15 @@ generally, such as a block created with @rhombus(begin) or
    also_pi            // prints 3.14
   )
 
-Naturally, nested names can be nested further, either by exporting an
-existing nested name or by nesting @rhombus(nest) forms.
+Naturally, namespaces can be nested further, either by exporting an
+existing namespace or by nesting @rhombus(namespace) forms.
 
 @(rhombusblock:
-   nest subject:
+   namespace subject:
      export:
        math
        english
-     nest english:
+     namespace english:
        val greeting: "Hello"
 
    subject.english.greeting  // prints "Hello"

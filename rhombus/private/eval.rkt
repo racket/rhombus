@@ -2,12 +2,12 @@
 (require "parse.rkt"
          "pack.rkt")
 
-(provide make_rhombus_namespace
-         make_rhombus_empty_namespace
+(provide make_rhombus_toplevel
+         make_rhombus_empty_toplevel
          (rename-out [rhombus-eval eval]
-                     [current-namespace current_namespace]))
+                     [current-namespace current_toplevel]))
 
-(define (make_rhombus_empty_namespace)
+(define (make_rhombus_empty_toplevel)
   (define this-ns (variable-reference->empty-namespace (#%variable-reference)))
   (define ns (make-base-empty-namespace))
   (namespace-attach-module this-ns
@@ -15,8 +15,8 @@
                            ns)
   ns)
 
-(define (make_rhombus_namespace)
-  (define ns (make_rhombus_empty_namespace))
+(define (make_rhombus_toplevel)
+  (define ns (make_rhombus_empty_toplevel))
   (parameterize ([current-namespace ns])
     (namespace-require 'rhombus))
   ns)

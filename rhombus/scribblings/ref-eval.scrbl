@@ -8,33 +8,33 @@
 ){
 
   Evaluates a term, group, or multi-group sequence @rhombus(seq) in the
-  current namespace.
+  current toplevel.
 
 }
 
 
 @doc(
-  fun make_rhombus_namespace() :: Namespace
+  fun make_rhombus_toplevel() :: Toplevel
 ){
 
- Creates a fresh namespace with @rhombusmodname(rhombus) imported.
+ Creates a fresh toplevel with @rhombusmodname(rhombus) imported.
 
 }
 
 @doc(
-  fun make_rhombus_empty_namespace() :: Namespace
+  fun make_rhombus_empty_toplevel() :: Toplevel
 ){
 
- Creates a fresh namespace with the @rhombusmodname(rhombus) module
+ Creates a fresh toplevel with the @rhombusmodname(rhombus) module
  attached, but not imported.
 
 }
 
 @doc(
-  fun current_namespace() :: Namespace,
-  fun current_namespace(ns :: Namespace) :: #!void
+  fun current_toplevel() :: Toplevel,
+  fun current_toplevel(ns :: Toplevel) :: #!void
 ){
 
- A @tech{parameter} for the current namespace.
+ A @tech{parameter} for the current toplevel.
 
 }
