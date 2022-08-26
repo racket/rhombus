@@ -5,14 +5,18 @@
 
 @doc(
   ~literal: ::,
-  defn.macro 'class $identifier($field, ...)',
-  
+  defn.macro 'class $identifier_path($field, ...)',
+
+  grammar identifier_path:
+    $identifier
+    $identifier_path . $identifier,
+
   grammar field:
     $identifier
     $identifier :: $annotation
 ){
 
- Binds @rhombus(identifier) as a class name, which serves several roles:
+ Binds @rhombus(identifier_path) as a class name, which serves several roles:
 
 @itemlist(
 
@@ -25,11 +29,13 @@
    supplied @rhombus(field)s and matches an instance of the class where the
    fields match the corresponding patterns;},
 
- @item{a dot povider to access accessor functions @rhombus(identifier.field)},
+ @item{a dot povider to access accessor functions @rhombus(identifier_path.field)},
 
- @item{an annotation constructor @rhombus(identifier.of), which takes as
+ @item{an annotation constructor @rhombus(identifier_path.of), which takes as
    many annotation arguments as supplied @rhombus(field)s.}
 
 )
+
+ See @secref("namespaces") for information on @rhombus(identifier_path).
 
 }

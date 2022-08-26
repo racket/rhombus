@@ -39,11 +39,11 @@ normally bound to implement function calls.
 }
 
 @doc(
-  defn.macro 'fun $identifier($kwopt_binding, ..., $maybe_rest) $maybe_result_annotation:
+  defn.macro 'fun $identifier_path($kwopt_binding, ..., $maybe_rest) $maybe_result_annotation:
                 $body
                 ...',
   defn.macro 'fun
-              | $identifier($binding, ..., $maybe_rest) $maybe_result_annotation:
+              | $identifier_path($binding, ..., $maybe_rest) $maybe_result_annotation:
                   $body
                   ...
               | ...',
@@ -57,7 +57,11 @@ normally bound to implement function calls.
                   $body
                   ...
               | ...',
-  
+
+  grammar identifier_path:
+    $identifier
+    $identifier_path . $identifier,
+
   grammar kwopt_binding:
     $binding
     $keyword: $binding
@@ -74,13 +78,19 @@ normally bound to implement function calls.
     $$("ϵ")
 ){
 
- Binds @rhombus(identifier) as a function, or when @rhombus(identifier)
- is not supplied, serves as an expression that produces a function value.
+ Binds @rhombus(identifier_path) as a function, or when
+ @rhombus(identifier_path) is not supplied, serves as an expression that
+ produces a function value.
+
+ See @secref("namespaces") for information on @rhombus(identifier_path).
 
 @examples(
   fun f(x):
     x+1,
   f(0),
+  fun List.number_of_items(l):
+    List.length(l),
+  List.number_of_items(["a", "b", "c"])
 )
 
 @examples(
@@ -165,26 +175,40 @@ repetition for all additional arguments, instead of a single argument.
 }
 
 @doc(
-  defn.macro 'operator ($opname $binding) $maybe_result_annotation:
+  defn.macro 'operator ($operator_path $binding) $maybe_result_annotation:
                 $body
                 ...',
-  defn.macro 'operator ($binding $opname $binding) $maybe_result_annotation:
+  defn.macro 'operator ($binding $operator_path $binding) $maybe_result_annotation:
                 $body
                 ...',
   defn.macro 'operator
-              | ($opname $binding) $maybe_result_annotation:
+              | ($operator_path $binding) $maybe_result_annotation:
                   $body
                   ...
-              | ($binding $opname $binding) $maybe_result_annotation:
+              | ($binding $operator_path $binding) $maybe_result_annotation:
                   $body
                   ...',
+
 ){
 
- Binds @rhombus(opname) as an operator, either prefix or infix. The
- @rhombus(maybe_result_annotation) parts are the same as in
+ Binds @rhombus(operator_path) as an operator, either prefix or infix.
+ The @rhombus(maybe_result_annotation) parts are the same as in
  @rhombus(fun) definitions.
 
  When an operator definition includes both a prefix and infix variant
  with @litchar{|}, the variants can be in either order.
 
+ See @secref("namespaces") for information on @rhombus(operator_path).
+
+@examples(
+  operator (x ^^^ y):
+    x +& y +& x,
+  "a" ^^^ "b",
+  operator (x List.(^^^) y):
+    x ++ y ++ x,
+  begin:
+    import: .List open
+    [1, 2] ^^^ [3]
+)
+  
 }

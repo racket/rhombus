@@ -26,19 +26,22 @@
   grammar identifier_or_operator:
     $identifier
     $operator
-    $$(dollar)('$$(dollar)'),
+    $$(dollar)('$$(dollar)')
+    ($identifier_path)
+    ($operator_path),
   grammar term_pattern:
     $term_identifier
     ($term_identifier :: $syntax_class),
 ){
 
- Defines @rhombus(identifier) or @rhombus(operator) as a pattern-based
+ Defines @rhombus(identifier), @rhombus(operator), @rhombus($),
+ @rhombus(identifier_path), or @rhombus(operator_path) as a pattern-based
  macro whose expansion is described by a @rhombus(template) that can
  refer to pattern variables bound in the @rhombus(rule_pattern). A
- @rhombus(rule_pattern) is matched to a portion of its enclosing
- group, and need not extend to the end of the group to match. A
- defined @rhombus(operator) cannot be @rhombus($), but the form
- @rhombus($('$')) can be used to define @rhombus($).
+ @rhombus(rule_pattern) is matched to a portion of its enclosing group,
+ and need not extend to the end of the group to match. A defined
+ @rhombus(operator) cannot be @rhombus($), but the form @rhombus($('$'))
+ can be used to define @rhombus($).
 
  Each @rhombus(rule_pattern) starts with @rhombus(''). Within
  @rhombus(''), either the first term is an identifier or operator to be
@@ -56,6 +59,9 @@
  @rhombus($('$')) to generate a literal @rhombus($)). More general
  compile-time expressions are not allowed; use @rhombus(expr.macro),
  instead, to enable compile-time expressions.
+
+ See @secref("namespaces") for information on @rhombus(identifier_path)
+ and @rhombus(operator_path).
 
 @examples(
   ~eval: macro_eval,

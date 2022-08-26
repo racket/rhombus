@@ -1,0 +1,6 @@
+#lang rhombus
+
+export:
+  List
+
+val List.b: "b"

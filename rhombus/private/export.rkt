@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      racket/provide-transform
                      racket/phase+space
+                     racket/symbol
                      syntax/parse
                      enforest
                      enforest/operator
@@ -122,33 +123,60 @@
           (syntax-parse stx
             [[id out-id] (values #'id #'out-id)]
             [id (values #'id #'id)]))
-        (define (make-export phase space id)
+        (define (make-export phase space id [as-sym (syntax-e out-id)])
           (export id
-                  (syntax-e out-id)
+                  as-sym
                   (phase+space phase space)
                   #f ; not protected
                   stx))
+        (define (adjust-prefix sym prefix)
+          (if (eq? (syntax-e id) (syntax-e out-id))
+              sym
+              (string->symbol (string-append
+                               (symbol->immutable-string (syntax-e out-id))
+                               "."
+                               (substring (symbol->immutable-string sym) (string-length prefix))))))
         (apply
          append
          (for/list ([phase (in-list phases)])
            (define space+ids
-             (for*/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
-                         [(intro) (in-value (make-interned-syntax-introducer sym))]
+             (for*/list ([sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                         [(intro) (in-value (if sym
+                                                (make-interned-syntax-introducer sym)
+                                                (lambda (x) x)))]
                          [(space-id) (in-value (intro id))]
                          #:when (and (identifier-binding space-id)
-                                     (not (free-identifier=? id space-id))))
+                                     (or (not sym)
+                                         (not (free-identifier=? id space-id)))))
                (cons sym space-id)))
-           (append
-            (cond
-              [(identifier-binding id phase)
-               (list (make-export phase #f id))]
-              [(null? space+ids)
-               (raise-syntax-error 'export
-                                   "identifier is not defined or imported"
-                                   id)]
-              [else null])
+           (when (null? space+ids)
+             (raise-syntax-error 'export
+                                 "identifier is not defined or imported"
+                                 id))
+           (apply
+            append
             (for/list ([space+id (in-list space+ids)])
-              (make-export phase (car space+id) (cdr space+id)))))))))))
+              (define space (car space+id))
+              (define int-id (cdr space+id))
+              (append
+               (list (make-export phase space int-id))
+               (cond
+                 [(extensible-name-root? (list int-id))
+                  ;; also export any extensions
+                  (define prefix (format "~a." (symbol->string (syntax-e int-id))))
+                  (define intro (if space
+                                    (make-interned-syntax-introducer space)
+                                    (lambda (x) x)))
+                  (for/list ([sym (in-list (syntax-bound-symbols (intro int-id)))]
+                             #:do [(define str (symbol->immutable-string sym))]
+                             #:when (and (> (string-length str) (string-length prefix))
+                                         (string=? prefix (substring str 0 (string-length prefix))))
+                             #:when (or (not space)
+                                        (identifier-distinct-binding (datum->syntax (intro int-id) sym)
+                                                                     (datum->syntax int-id sym)
+                                                                     phase)))
+                    (make-export phase space (datum->syntax int-id sym int-id) (adjust-prefix sym prefix)))]
+                 [else null])))))))))))
 
 (define-syntax export
   (nestable-declaration-transformer

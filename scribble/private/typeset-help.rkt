@@ -33,7 +33,7 @@
 
 (define-for-syntax (resolve-name-ref root field)
   (define p (identifier-binding-portal-syntax root #f))
-  (define lookup (and p (portal-syntax->lookup p values)))
+  (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
   (define dest (and lookup (lookup #f "identifier" field)))
   (and dest
        (let ([raw (format "~a.~a"

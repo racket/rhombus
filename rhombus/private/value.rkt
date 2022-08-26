@@ -12,6 +12,7 @@
          "annotation.rkt"
          "call-result-key.rkt"
          "static-info.rkt"
+         "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt")
 
 (provide val

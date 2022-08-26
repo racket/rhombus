@@ -6,12 +6,15 @@
                      enforest/property
                      enforest/proc-name
                      enforest/syntax-local
+                     enforest/hier-name-parse
                      "introducer.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "name-path-op.rkt")
          "static-info.rkt"
          "realm.rkt"
          "error.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "dotted-sequence-parse.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -31,7 +34,7 @@
            binding-info
 
            in-binding-space
-           :non-binding-identifier))
+           :non-binding-dotted-identifier))
 
 (provide define-binding-syntax
          raise-binding-failure)
@@ -111,11 +114,17 @@
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/binding))
 
-  (define-syntax-class :non-binding-identifier
-    (pattern id:identifier
-             #:when (not (syntax-local-value* (in-binding-space #'id)
-                                              (lambda (v)
-                                                (name-root-ref-root v binding-prefix-operator?)))))))
+  (define-syntax-class :non-binding-dotted-identifier
+    #:datum-literals (op |.|)
+    (pattern (~and all ((~seq head-id:identifier (op |.|)) ... tail-id:identifier))
+             #:when (not (syntax-parse #'all
+                           [(~var id (:hier-name-seq in-binding-space name-path-op name-root-ref))
+                            (syntax-local-value* (in-binding-space #'id.name)
+                                                 (lambda (v)
+                                                   (name-root-ref-root v binding-prefix-operator?)))]
+                           [_ #f]))
+             #:do [(define name (build-dot-identifier #'(head-id ...) #'tail-id #'all))]
+             #:attr name name)))
 
 (define-syntax (identifier-info stx)
   (syntax-parse stx

@@ -5,19 +5,19 @@
                      "import-cover.rkt"))
 
 ;; Implements a subset of `racket` require to adjust a mapping of keys
-;; to values for a name root used as an import
+;; to values for a namespace used as an import
 
-(provide (for-syntax convert-require-from-root))
+(provide (for-syntax convert-require-from-namespace))
 
 (begin-for-syntax
-  (define (convert-require-from-root r ht covered-ht accum?)
+  (define (convert-require-from-namespace r ht covered-ht accum?)
     (let extract ([r r] [ht ht] [step 0])
-      (define (root) (values ht #hasheq() covered-ht))
+      (define (root) (values ht #hasheq() covered-ht #t))
       (syntax-parse r
         #:datum-literals (rename-in only-in except-in expose-in for-meta for-label rhombus-prefix-in only-space-in)
         [#f (root)]
         [(rename-in mp [orig bind] ...)
-         (define-values (new-ht new-expose-ht covered-ht) (extract #'mp ht (add1 step)))
+         (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (define renames
            (for/fold ([renames #hasheq()])
                      ([orig-s (in-list (syntax->list #'(orig ...)))]
@@ -38,15 +38,16 @@
                      ([(orig bind) (in-hash renames)])
              (values (hash-remove ht orig)
                      (hash-remove expose-ht orig))))
-         (for/fold ([ht pruned-ht] [expose-ht pruned-expose-ht] [covered-ht covered-ht])
+         (for/fold ([ht pruned-ht] [expose-ht pruned-expose-ht] [covered-ht covered-ht] [as-is? #f])
                    ([(orig bind) (in-hash renames)])
            (values (hash-set ht bind (hash-ref new-ht orig))
                    (if (hash-ref new-expose-ht orig #f)
                        (hash-set expose-ht bind #t)
                        expose-ht)
-                   (cover covered-ht orig step)))]
+                   (cover covered-ht orig step)
+                   #f))]
         [(only-in mp id ...)
-         (define-values (new-ht new-expose-ht covered-ht) (extract #'mp ht (add1 step)))
+         (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (for/fold ([ht #hasheq()]
                     [expose-ht #hasheq()]
                     [covered-ht covered-ht])
@@ -59,28 +60,31 @@
                            (if (hash-ref new-expose-ht id #f)
                                (hash-set expose-ht id #t)
                                expose-ht)
-                           (cover covered-ht id step)))]
+                           (cover covered-ht id step)
+                           #f))]
              [(or accum? (covered? covered-ht id step))
-              (values ht expose-ht covered-ht)]
+              (values ht expose-ht covered-ht #f)]
              [else
               (raise-syntax-error 'import "identifier is not included" id-s)]))]
         [(except-in mp id ...)
-         (define-values (new-ht new-expose-ht covered-ht) (extract #'mp ht (add1 step)))
+         (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (for/fold ([ht new-ht]
                     [expose-ht new-expose-ht]
-                    [covered-ht covered-ht])
+                    [covered-ht covered-ht]
+                    [as-is? #f])
                    ([id-s (in-list (syntax->list #'(id ...)))])
            (define id (syntax-e id-s))
            (cond
              [(hash-ref new-ht id #f) (values (hash-remove ht id)
                                               (hash-remove expose-ht id)
-                                              (cover covered-ht id step))]
+                                              (cover covered-ht id step)
+                                              #f)]
              [(or accum? (covered? covered-ht id step))
-              (values ht expose-ht covered-ht)]
+              (values ht expose-ht covered-ht #f)]
              [else
               (raise-syntax-error 'import "identifier to exclude is not included" id-s)]))]
         [(expose-in mp id ...)
-         (define-values (new-ht new-expose-ht covered-ht) (extract #'mp ht (add1 step)))
+         (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (define-values (exposed-expose-ht exposed-covered-ht)
            (for/fold ([expose-ht new-expose-ht]
                       [covered-ht covered-ht])
@@ -95,7 +99,7 @@
                         covered-ht)]
                [else
                 (raise-syntax-error 'import "identifier to expose is not included" id-s)])))
-         (values new-ht exposed-expose-ht exposed-covered-ht)]
+         (values new-ht exposed-expose-ht exposed-covered-ht #f)]
         [(for-meta phase mp)
          (if (eq? (syntax-e #'phase) 0)
              (extract #'mp ht step)
@@ -108,4 +112,3 @@
         [_ (raise-syntax-error 'import
                                "don't know how to convert"
                                r)]))))
-

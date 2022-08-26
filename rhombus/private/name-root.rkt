@@ -21,7 +21,9 @@
                  (~optional (~seq #:root-as-rename root-rename)
                             #:defaults ([root-rename #'#f]))
                  (~optional (~seq #:space space)
-                            #:defaults ([space #'#f])))
+                            #:defaults ([space #'#f]))
+                 (~optional (~seq #:orig-id orig-id)
+                            #:defaults ([orig-id #'#f])))
         ...)
      #:do [(define in-space
              (let ([space (syntax-e #'space)])
@@ -41,6 +43,9 @@
                                  (syntax-parse c
                                    [_:identifier #`[#,c #,c]]
                                    [(_:identifier _:identifier) c]))
+     #:with the-orig-id (if (syntax-e #'orig-id)
+                            #'orig-id
+                            #'id)
      #'(begin
          root-def ...
-         (#%require (portal space-id (map id norm-content ... root-spec ...))))]))
+         (#%require (portal space-id (map the-orig-id norm-content ... root-spec ...))))]))

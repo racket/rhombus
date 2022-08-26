@@ -15,18 +15,26 @@
   defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
                  $body
                  ...»',
+
   grammar identifier_or_operator:
     $identifier
-    $operator,
+    $operator
+    ($identifier_path)    
+    ($operator_path),
+
 ){
 
- Defines @rhombus(identifier) or @rhombus(operator) as a macro that can
- be used in a definition context, where the compile-time @rhombus(body)
- block returns the expansion result. The macro pattern is matched to an
- entire group in a definition context.
+ Defines @rhombus(identifier), @rhombus(operator),
+ @rhombus(identifier_path), or @rhombus(operator_path) as a macro that
+ can be used in a definition context, where the compile-time
+ @rhombus(body) block returns the expansion result. The macro pattern is
+ matched to an entire group in a definition context.
 
  The expansion result must be a parenthesized block, and the groups of
  the block are inlined in place of the definition-macro use.
+
+ See @secref("namespaces") for information about
+ @rhombus(identifier_path) and @rhombus(operator_path).
 
 @examples(
   ~eval: macro_eval,
@@ -60,7 +68,9 @@
                  ...»',
   grammar identifier_or_operator:
     $identifier
-    $operator,
+    $operator
+    ($identifier_path)    
+    ($operator_path),
 ){
 
  Similar to @rhombus(defn.macro), but defines a macro for a definition
@@ -70,6 +80,9 @@
  The macro result is two values: a parenthesized block of groups to
  splice in place of the sequence-macro use, and a parenthesized block of
  groups that represent the tail of the definition context that was not consumed.
+
+ See @secref("namespaces") for information about
+ @rhombus(identifier_path) and @rhombus(operator_path).
 
 @examples(
   ~eval: macro_eval,

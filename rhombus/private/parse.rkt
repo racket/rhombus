@@ -107,6 +107,12 @@
     #:make-identifier-form make-identifier-expression
     #:relative-precedence expression-relative-precedence)
 
+  (define name-root-binding-ref
+    (make-name-root-ref in-binding-space
+                        (lambda (v)
+                          (or (binding-prefix-operator-ref v)
+                              (binding-infix-operator-ref v)))))
+
   ;; Form in a binding context:
   (define-enforest
     #:syntax-class :binding
@@ -116,7 +122,7 @@
     #:operator-desc "binding operator"
     #:in-space in-binding-space
     #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
+    #:name-root-ref name-root-binding-ref
     #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref

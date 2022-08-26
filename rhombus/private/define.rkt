@@ -18,6 +18,7 @@
          (for-syntax "parse.rkt")
          (submod "value.rkt" for-define)
          "syntax.rkt"
+         "dotted-sequence-parse.rkt"
          (submod "expression-syntax.rkt" for-define))
 
 (provide (rename-out [rhombus-define def]))
@@ -37,11 +38,12 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group id:identifier (parens arg::non-...-binding ... rest::maybe-arg-rest)
+       [(form-id ((~and alts-tag alts) (block (group id-seq::dotted-identifier-sequence (parens arg::non-...-binding ... rest::maybe-arg-rest)
                                                      ret::ret-annotation
                                                      (~and rhs (block body ...))))
                                        ...+))
-        (define ids (syntax->list #'(id ...)))
+        #:with (id::dotted-identifier ...) #'(id-seq ...)
+        (define ids (syntax->list #'(id.name ...)))
         (define the-id (car ids))
         (check-consistent stx ids "name")
         (list
@@ -53,14 +55,15 @@
                                      #'(ret.predicate ...)
                                      #'(rhs ...)
                                      #'form-id #'alts-tag))))]
-       [(form-id id::non-binding-identifier ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
+       [(form-id id-seq::dotted-identifier-sequence ((~and parens-tag parens) arg::kw-opt-binding ... rest::maybe-arg-rest)
                  ret::ret-annotation
                  (~and rhs (block body ...)))
+        #:with id::non-binding-dotted-identifier #'id-seq
         #:with (arg-id ...) (generate-temporaries #'(arg ...))
         (list
          (wrap-definition
-          #`(define id
-              #,(build-function #'id
+          #`(define id.name
+              #,(build-function #'id.name
                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                 #'rest.arg #'rest.parsed
                                 #'ret.predicate

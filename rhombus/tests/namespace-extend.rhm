@@ -1,0 +1,154 @@
+#lang rhombus
+import:
+  "check.rhm" open
+  rhombus/macro open
+
+namespace root:
+  namespace trunk:
+    val name: "trunk"
+    export: name
+  val name: "root"
+  val trunk.side: "left"
+  export: trunk name
+
+check:
+  root.name
+  "root"
+
+check:
+  root.trunk.name
+  "trunk"
+
+check:
+  root.trunk.side
+  "left"
+
+check:
+  namespace root.trunk.branch:
+    val name: "branch"
+    export: name
+  root.trunk.branch.name
+  "branch"
+
+fun root.f(x):
+  "root" ++ x
+fun root.trunk.f(x):
+  "trunk" ++ x
+
+check:
+  root.f(" hi")
+  "root hi"
+
+check:
+  root.trunk.f(" hi")
+  "trunk hi"
+
+val root.ten: 10
+val root.trunk.seven: 7
+
+check:
+  root.ten
+  10
+
+check:
+  root.trunk.seven
+  7
+
+class root.Posn(x, y)
+
+check:
+  namespace inner
+  operator ((x :: Integer) inner.(+) (y :: Integer)):
+    ~weaker_than: *
+    [x, y]
+  1 inner.(+) 2*8
+  [1, 16]
+
+check:
+  use_static_dot
+  root.Posn(1, 2).x
+  1
+
+check:
+  match root.Posn(1, 2)
+  | root.Posn(x, y): [y, x]
+  [2, 1]
+
+expr.rule '$left (root.(^^^)) $right':
+  '[[$left, $right]]'
+
+check:
+  1 root.(^^^) 2
+  [[1, 2]]
+
+check:
+  val root.name: "ROOT"
+  root.name
+  "ROOT"
+
+check:
+  val root.trunk.name: "TRUNK"
+  [root.name, root.trunk.name]
+  ["root", "TRUNK"]
+
+check:
+  fun root.f(x): "ROOT" ++ x
+  root.f(" hi")
+  "ROOT hi"
+
+namespace route:
+  export: trunc
+  namespace trunc
+  val trunc.name: "trunc"
+
+check:
+  route.trunc.name
+  "trunc"
+
+check:
+  import: .root open
+  trunk.name
+  "trunk"
+
+check:
+  import: .root.trunk
+  trunk.name
+  "trunk"
+
+check:
+  import: .root.trunk
+  trunk.side
+  "left"
+
+check:
+  namespace math
+  namespace ext1:
+    val math.e: 2.71
+    export: math
+  namespace ext2:
+    val math.d: "d"
+    export: math
+  [ext1.math.e, ext2.math.d]
+  [2.71, "d"]
+
+check:
+  import: .root open
+  f(" hello")
+  "root hello"
+
+check:
+  import: .root open
+  trunk.f(" hi")
+  "trunk hi"
+
+check:
+  import: .root open
+  trunk.side
+  "left"
+
+check:
+  import: 
+    lib("rhombus/tests/example-extend-a.rhm") open
+    lib("rhombus/tests/example-extend-b.rhm") open
+  List(List.a, List.b, ExList.a)
+  ["a", "b", "a"]

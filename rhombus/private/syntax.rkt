@@ -16,7 +16,8 @@
          ;; because we generate compile-time code:
          (for-syntax "parse.rkt")
          "op-literal.rkt"
-         "binding.rkt")
+         "binding.rkt"
+         "dotted-sequence-parse.rkt")
 
 (provide define-operator-definition-transformer
          define-identifier-syntax-definition-transformer
@@ -69,11 +70,6 @@
     (for ([same (in-list same-on-rights)])
       (add! same 'same-on-right))
     (datum->syntax #f prec))
-
-  (define-syntax-class :operator-definition-group
-    #:datum-literals (op group)
-    (pattern (group (op _) _ _::operator-or-identifier . _))
-    (pattern (group ::operator-or-identifier . _)))
 
   (define-syntax-class-mixin operator-options
     #:datum-literals (op block group
@@ -151,6 +147,9 @@
              #:when (not (free-identifier=? (in-binding-space #'op-name.name) #'$
                                             (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
              #:attr name #'op-name.name)
+    (pattern (~seq (parens (group seq::dotted-operator-or-identifier-sequence)))
+             #:with id::dotted-operator-or-identifier #'seq
+             #:attr name #'id.name)
     (pattern (~seq (op _::$+1) (parens (group (quotes (group (op (~and name $)))))))))
 
   (define-splicing-syntax-class :operator-syntax-quote

@@ -63,6 +63,7 @@ existing namespace or by nesting @rhombus(namespace) forms.
        english
      namespace english:
        val greeting: "Hello"
+       export: greeting
 
    subject.english.greeting  // prints "Hello"
    subject.math.tau          // prints 6.28
@@ -73,7 +74,7 @@ existing namespace or by nesting @rhombus(namespace) forms.
              
    )
 
-A @rhombus(.) can be used in n @rhombus(import) form as a shorthand to
+A @rhombus(.) can be used in an @rhombus(import) form as a shorthand to
 reach a nested binding without making intemediate bindings visible.
 
 @(rhombusblock:
@@ -81,3 +82,24 @@ reach a nested binding without making intemediate bindings visible.
      import: rhombus.List open
      length(["a", "b", "c"])  // prints 3
   )
+
+An existing namespace can be extended by using a dotted name in a
+definition, such as defining @rhombus(math.e) in a context where
+@rhombus(math) is a namespace. The extension does not mutate the
+namespace; it merely extends the bindings that are available in the
+scope of the extending definition.
+
+@(rhombusblock:
+   begin:
+     val math.e: 2.71
+     math.e    // prints 2.17
+
+   // math.e   // would be an error outside the `begin`
+ )
+
+When a namespace is exported, any extensions of the namespace visible
+at the export site are also exported. Multiple extensions of a
+namespace can be imported into a context as long as the extensions do
+not conflict, which is partly a result of the rule that the same name
+can be imported into a context multiple times as long as the binding
+is always the same.

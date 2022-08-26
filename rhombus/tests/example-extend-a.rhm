@@ -1,0 +1,7 @@
+#lang rhombus
+
+export:
+  List
+  rename: List as ExList
+
+val List.a: "a"

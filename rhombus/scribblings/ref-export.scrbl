@@ -9,6 +9,7 @@
                 ...',
   
   grammar export_clause:
+    apple
     $export_item
     $export_item:
       $modifier

@@ -3,7 +3,8 @@
                      syntax/parse
                      "srcloc.rkt"
                      "consistent.rkt"
-                     "with-syntax.rkt")
+                     "with-syntax.rkt"
+                     "tag.rkt")
          racket/unsafe/undefined
          "parens.rkt"
          "expression.rkt"
@@ -22,6 +23,7 @@
          (submod "annotation.rkt" for-class)
          (only-in "equal.rkt"
                   [= rhombus=])
+         "dotted-sequence-parse.rkt"
          "error.rkt")
 
 (provide fun)
@@ -95,13 +97,13 @@
   (define-splicing-syntax-class :ret-annotation
     #:datum-literals (block group op)
     #:literals (:: -:)
-    (pattern (~seq (op ::) ctc::not-block ...)
-             #:with c::annotation #'(group ctc ...)
+    (pattern (~seq (op ::) ctc0::not-block ctc::not-block ...)
+             #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
              #:with c-parsed::annotation-form #'c.parsed
              #:attr static-infos #'c-parsed.static-infos
              #:attr predicate #'c-parsed.predicate)
-    (pattern (~seq (op -:) ctc::not-block ...)
-             #:with c::annotation #'(group ctc ...)
+    (pattern (~seq (op -:) ctc0::not-block ctc::not-block ...)
+             #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
              #:with c-parsed::annotation-form #'c.parsed
              #:attr static-infos #'c-parsed.static-infos
              #:attr predicate #'#f)
@@ -157,11 +159,12 @@
       (syntax-parse stx
         #:datum-literals (group block alts parens)
         [(form-id (alts-tag::alts
-                   (block (group name:identifier (_::parens arg::non-...-binding ... rest::maybe-arg-rest)
+                   (block (group name-seq::dotted-identifier-sequence (_::parens arg::non-...-binding ... rest::maybe-arg-rest)
                                  ret::ret-annotation
                                  (~and rhs (_::block body ...))))
                    ...+))
-         (define names (syntax->list #'(name ...)))
+         #:with (name::dotted-identifier ...) #'(name-seq ...)
+         (define names (syntax->list #'(name.name ...)))
          (define the-name (car names))
          (check-consistent stx names "name")
          (maybe-add-function-result-definition
@@ -174,13 +177,14 @@
                                       #'(ret.predicate ...)
                                       #'(rhs ...)
                                       #'form-id #'alts-tag))))]
-        [(form-id name:identifier (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
+        [(form-id name-seq::dotted-identifier-sequence (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
                   ret::ret-annotation
                   (~and rhs (_::block body ...)))
+         #:with name::dotted-identifier #'name-seq
          (maybe-add-function-result-definition
-          #'name (list #'ret.static-infos)
+          #'name.name (list #'ret.static-infos)
           (list
-           #`(define name
+           #`(define name.name
                #,(build-function #'form-id
                                  #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                  #'rest.arg #'rest.parsed

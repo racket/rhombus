@@ -98,3 +98,30 @@
 }
 
 
+@doc(
+  bind.macro '$identifier_path . $identifier',
+ 
+  grammar identifier_path:
+    $identifier
+    $identifier_path . $identifier
+){
+
+ The @rhombus(., ~bind) operator works somewhat like a binding operator
+ that works only with identifiers, and it specifies a namespace-prefixed
+ identifier to bin as an extension of an already-defined namespace. More
+ precisely, @litchar{.} to join identifiers in a binding position is
+ recognized literally as an operator, along the same lines as @litchar{.}
+ used to reference a binding within a namespace or import.
+
+ See @secref("namespaces") for more information about extending
+ namespaces.
+
+@examples(
+  namespace math:
+    export: pi
+    val pi: 3.14,
+  val math.tau: 2 * math.pi,
+  math.tau
+)
+
+}

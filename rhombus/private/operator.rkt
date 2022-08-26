@@ -5,6 +5,7 @@
                      "consistent.rkt"
                      "srcloc.rkt")
          "expression.rkt"
+         "dotted-sequence-parse.rkt"
          "parse.rkt"
          "syntax.rkt"
          "definition.rkt"
@@ -20,10 +21,11 @@
 (begin-for-syntax
   
   (define-splicing-syntax-class :prefix-case
-    (pattern (~seq (parens (~and g (group op-name::operator-or-identifier arg)))
+    (pattern (~seq (parens (~and g (group op-name-seq::dotted-operator-or-identifier-sequence arg)))
                    ret::ret-annotation
                    ((~and tag block) options::prefix-operator-options
                                      body ...))
+             #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:attr name #'op-name.name
              #:attr prec #'options.prec
              #:attr rhs #'(tag body ...)
@@ -31,10 +33,11 @@
              #:attr ret-static-infos #'ret.static-infos))
 
   (define-splicing-syntax-class :infix-case
-    (pattern (~seq (parens (~and g (group left op-name::operator-or-identifier right)))
+    (pattern (~seq (parens (~and g (group left op-name-seq::dotted-operator-or-identifier-sequence right)))
                    ret::ret-annotation
                    ((~and tag block) options::infix-operator-options
                                      body ...))
+             #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:attr name #'op-name.name
              #:attr prec #'options.prec
              #:attr assc #'options.assc

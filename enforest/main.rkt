@@ -261,7 +261,7 @@
            (cond
              [(name-root? v)
               (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step init-form (cons head tail) current-op current-op-stx stop-on-unbound?)]
+              (enforest-step init-form (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?)]
              [(infix-operator? v)
               (dispatch-infix-operator v #'tail stxes head-id)]
              [(prefix-operator? v)
