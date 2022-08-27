@@ -14,7 +14,8 @@
                      "name-path-op.rkt"
                      "introducer.rkt"
                      "realm.rkt"
-                     "import-invert.rkt")
+                     "import-invert.rkt"
+                     "tag.rkt")
          "name-root.rkt"
          "name-root-ref.rkt"
          (submod "module-path.rkt" for-import-export)
@@ -185,7 +186,9 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ (block r ...))
-        #'((rhombus-import () r ...))]))))
+        #'((rhombus-import () r ...))]
+       [(_ r ...)
+        #`((rhombus-import () (#,group-tag r ...)))]))))
 
 (define-syntax (rhombus-import stx)
   ;; handle one import group at a time, so it can import

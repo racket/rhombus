@@ -7,7 +7,9 @@
   decl.macro 'export:
                 $export_clause
                 ...',
-  
+
+  decl.macro 'export $export_clause',
+
   grammar export_clause:
     apple
     $export_item
@@ -27,8 +29,11 @@
     $operator,
 ){
 
- Exports from the enclosing module.
-
+ Exports from the enclosing module. An @rhombus(export) form with a
+ single immediate @rhombus(export_clause) is shorthand for an
+ @rhombus(export) form that has a block containing the single
+ @rhombus(export_clause).
+ 
  An @rhombus(export_item) can be an identifier, operator, other export
  form, such as @rhombus(all_from, ~expmod).
  It can also be a sequence @rhombus(export_item)s within a

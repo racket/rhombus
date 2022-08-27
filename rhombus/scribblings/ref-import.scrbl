@@ -8,6 +8,8 @@
                 $import_clause
                 ...',
 
+  defn.macro 'import $import_clause',
+
   grammar import_clause:
     $module_path
     $module_path:
@@ -35,7 +37,10 @@
 
 ){
 
- Imports into the enclosing module or block.
+ Imports into the enclosing module or block. An @rhombus(import) form
+ with a single immediate @rhombus(import_clause) is a shorthand for an
+ @rhombus(import) form that has a block containing the single
+ @rhombus(import_clause).
 
  The @rhombus(import_clause) variant @rhombus(module_path) or
  @rhombus(module_path: modifier; ...) are the canonical forms. The other

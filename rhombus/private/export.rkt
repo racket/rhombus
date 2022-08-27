@@ -15,7 +15,8 @@
                      "name-path-op.rkt"
                      "srcloc.rkt"
                      "introducer.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "tag.rkt")
          "name-root-ref.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
@@ -184,7 +185,10 @@
      (syntax-parse stx
        #:datum-literals (block)
        [(_ (block e::modified-export ...))
-        #`((provide e.parsed ...))]))))
+        #`((provide e.parsed ...))]
+       [(_ term ...)
+        #:with e::modified-export #`(#,group-tag term ...)
+        #`((provide e.parsed))]))))
 
 (define-syntax (define-export-syntax stx)
   (syntax-parse stx
