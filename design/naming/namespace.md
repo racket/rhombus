@@ -129,8 +129,6 @@ import: example/stuff.subject.math
 Namespace Extension
 -------------------
 
-> Note: not implemented, yet, but it seems like this could work.
-
 As an alternative putting definitions in the body of a `namespace`
 form, a namespace can be extended by using a dotted name with
 a definition form like `val`:
@@ -160,12 +158,12 @@ begin:
 ```
 
 An extended namespace can be exported from a module or namespace. When
-an extended namespace is imported, then the non-extended part of the
-namespace counts as the same binding as the original namespace, so
-importing an extended namespace does not conflict. Along those lines,
-two different extensions of a namespace can be imported into the same
-context to combine the extensions, as long as the extensions do not
-conflict.
+an extended namespace is imported, then any extensions visible at the
+export are also exported. The non-extended part of the namespace
+counts as the same binding as the original namespace, so importing an
+extended namespace does not conflict. Along those lines, two different
+extensions of a namespace can be imported into the same context to
+combine the extensions, as long as the extensions do not conflict.
 
 
 Mutual Dependencies
