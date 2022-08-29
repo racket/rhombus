@@ -108,7 +108,7 @@ namespace subject:
   export:
     math
     english
-  nest english:
+  namespace english:
     export: greeting
     val greeting: "Hello"
 
@@ -288,7 +288,7 @@ Rationale
 ---------
 
  * On `namespace`: The original implementation used `nest`, because
-   Racet already uses the word “namespace” differently. We switched to
+   Racket already uses the word “namespace” differently. We switched to
    `namespace` and generally the meaning of “namespace” here, because
    we're able to change terminology for Rhombus, and because
    `namespace` is consistent with C++, C#, and other languages.
