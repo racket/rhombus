@@ -2,10 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse))
 
-(provide (for-syntax raise_syntax_error))
+(provide (for-syntax Syntax.error))
 
 (begin-for-syntax
-  (define raise_syntax_error
+  (define Syntax.error
     (case-lambda
       [(form) (raise-syntax-error (name-of form) "bad syntax" (unwrap form))]
       [(msg form) (raise-syntax-error (name-of form) msg (unwrap form))]

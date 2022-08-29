@@ -2,10 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse))
 
-(provide (for-syntax syntax_meta_value))
+(provide (for-syntax Syntax.meta_value))
 
 (begin-for-syntax
-  (define syntax_meta_value
+  (define Syntax.meta_value
     (case-lambda
       [(id/op)
        (define id (extract-operator id/op))

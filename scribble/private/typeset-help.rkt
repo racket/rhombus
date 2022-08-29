@@ -35,14 +35,25 @@
   (define p (identifier-binding-portal-syntax root #f))
   (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
   (define dest (and lookup (lookup #f "identifier" field)))
-  (and dest
-       (let ([raw (format "~a.~a"
-                          (syntax-e root)
-                          (syntax-e field))])
-         (define loc-stx
-           (append-consecutive-syntax-objects
-            'loc-stx
-            (append-consecutive-syntax-objects 'loc-stx root #'dot)
-            field))
-         (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
-                              raw))))
+  (define raw (format "~a.~a"
+                      (syntax-e root)
+                      (syntax-e field)))
+  (cond
+    [dest
+     (define loc-stx
+       (append-consecutive-syntax-objects
+        'loc-stx
+        (append-consecutive-syntax-objects 'loc-stx root #'dot)
+        field))
+     (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
+                          raw)]
+    [else
+     (define id (datum->syntax root (string->symbol raw)))
+     (and (identifier-binding id #f)
+          (syntax-raw-property
+           (datum->syntax id (syntax-e id)
+                          (append-consecutive-syntax-objects
+                           'loc-stx
+                           (append-consecutive-syntax-objects 'loc-stx root #'dot)
+                           field))
+           raw))]))

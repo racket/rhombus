@@ -3,7 +3,7 @@
     "grammar.rhm" open
     "grammar-s-exp.rkt" open)
 
-@title{Parsed Representation}
+@title(~tag: "parsed-rep"){Parsed Representation}
 
 The parse of a shrubbery can be represented by an S-expression:
 

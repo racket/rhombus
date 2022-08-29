@@ -14,4 +14,4 @@ expr.macro 'doc $parens $tail ...':
       values(parsed(['#{typeset-doc}', me, parens]),
              '$tail ...')
   | ~else:
-      raise_syntax_error("expected forms and documentation content", '$me $parens')
+      Syntax.error("expected forms and documentation content", '$me $parens')

@@ -20,3 +20,4 @@ for use in compile-time expressions.
 @include_section("ref-defn-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
+@include_section("ref-stxobj-macro.scrbl")

@@ -26,59 +26,59 @@ for_meta:
   def head_context(stxs):
     match stxs
     | '$head $_ ...':
-        relocate_syntax('#false', head)
+        Syntax.relocate('#false', head)
 
   def head_escape_context(stxs):
     match stxs
     | '$head $esc $_ ...':
-        relocate_span_syntax('#false', [head, esc])
+        Syntax.relocate_span('#false', [head, esc])
 
   def group_context(g):
-    relocate_syntax('#false', g)
+    Syntax.relocate('#false', g)
 
   def literal_term(stxs):
-    'literal_syntax($stxs)'
+    'Syntax.literal($stxs)'
 
   def literal_group(stxs):
-    'literal_group_syntax($stxs)'
+    'Syntax.literal_group($stxs)'
 
   def is_literal_term(stx):
     match stx
-    | 'literal_syntax $_': #true
+    | 'Syntax.literal $_': #true
     | ~else: #false
 
   def is_literal_group(stx):
     match stx
-    | 'literal_group_syntax $_': #true
+    | 'Syntax.literal_group $_': #true
     | ~else: #false
 
   def extract_literal(stx):
     match stx
-    | '$_($stxs)': stxs
+    | '$_ $_ $_($stxs)': stxs
 
   def nested(gs, builder, builder_stx, stxs):
     val [new_g, ...]: map(escape_group, gs)
     if andmap(is_literal_group, [new_g, ...])
     | literal_term(builder(map(extract_literal, [new_g, ...]), head_context(stxs)))
-    | '$builder_stx([$new_g, ...], literal_syntax($(head_context(stxs))))'
+    | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
 
   def nested_alts(bs, stxs):
     val [new_b, ...]: map(escape_term, bs)
     if andmap(is_literal_term, [new_b, ...])
     | literal_term(alts_syntax(map(extract_literal, [new_b, ...]), head_context(stxs)))
-    | 'alts_syntax([$new_b, ...], literal_syntax($(head_context(stxs))))'
+    | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
 
   def escape_group(g):
     val new_g: escape_tail(g)
     if is_literal_group(new_g)
-    | literal_group(relocate_syntax(extract_literal(new_g), group_context(g)))
-    | 'relocate_syntax($new_g, literal_syntax($(group_context(g))))'
+    | literal_group(Syntax.relocate(extract_literal(new_g), group_context(g)))
+    | 'Syntax.relocate($new_g, Syntax.literal($(group_context(g))))'
 
   def escape_tail(stxs):
     match stxs
     | '$$($expr ...) $tail ...':
         'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
-                              literal_syntax($(head_escape_context(stxs))))'
+                              Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
         val values(a_head, a_tail): adjust_spaces(head, '$tail ...')
         val new_head: escape_term(a_head)
@@ -103,18 +103,18 @@ for_meta:
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
     | '$(id :: Id_Op)':
-        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        val mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
-                                literal_syntax($(head_context(stxs))))'
+                                Syntax.literal($(head_context(stxs))))'
         | ~else: literal_term(stxs)
     | ~else: literal_term(stxs)
 
   def adjust_spaces(head, tail):
     match '$head'
     | '$(id :: Id_Op)':
-        val mv: syntax_meta_value(typeset_meta.in_space(id), #false)
+        val mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Spacer(proc):
             proc(head, tail, '$$')                
@@ -122,12 +122,12 @@ for_meta:
     | ~else: values(head, tail)
 
 fun sequence_cons_syntax(a, d, context):
-  let a_r: relocate_syntax(to_syntax(a), context);
+  let a_r: Syntax.relocate(Syntax.make(a), context);
   match d
   | '$e ...': '$a_r $e ...'
 
 fun relocate_expansion(e, context):
-  relocate_syntax(to_syntax(e), context)
+  Syntax.relocate(Syntax.make(e), context)
 
 // ----------------------------------------
 
@@ -136,7 +136,7 @@ expr.macro
     values('#{typeset-rhombus}($(escape_group(forms)))',
            '$main_tail ...')
 | 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
-    val kw: unwrap_syntax(kw_stx)
+    val kw: Syntax.unwrap(kw_stx)
     if (kw === keyword(~var)
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
@@ -147,7 +147,7 @@ expr.macro
           || kw === keyword(~for_clause))
     | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
              '$main_tail ...')
-    | raise_syntax_error("invalid space", kw)
+    | Syntax.error("invalid space", kw)
 
 expr.macro 'rhombusblock $tail ...':
   ~op_stx: me
@@ -156,14 +156,14 @@ expr.macro 'rhombusblock $tail ...':
     | ': $_':
         val [opt, ...]: options
         values('#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))', '')
-    | ~else: raise_syntax_error("expected a block", '$me $tail ...')
+    | ~else: Syntax.error("expected a block", '$me $tail ...')
   fun check_options(options):
     match options
     | []: #true
     | ['~inset: $on', more, ...]: check_options([more, ...])
     | ['~indent: $amt', more, ...]: check_options([more, ...])
     | ['~prompt: $prompt', more, ...]: check_options([more, ...])
-    | ['$opt', _, ...]: raise_syntax_error("invalid option", opt)
+    | ['$opt', _, ...]: Syntax.error("invalid option", opt)
   match '$tail ...'
   | '($option, ...) $new_tail ...':
       check_options([option, ...])

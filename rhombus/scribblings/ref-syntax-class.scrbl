@@ -128,10 +128,10 @@
         ~attr b:
           '0'
         ~attr average:
-          '$(unwrap_syntax(a) / 2)'
+          '$(Syntax.unwrap(a) / 2)'
     | '~two $a $b':
         def sum:
-          unwrap_syntax(a) + unwrap_syntax(b)
+          Syntax.unwrap(a) + Syntax.unwrap(b)
         ~attr average:
           '$(sum / 2)',
   expr.macro 'second_term $(e :: NTerms)':

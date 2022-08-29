@@ -216,7 +216,7 @@ bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
   | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
       match bind_ct.unpack_info(b)
       | '($b_ann, $b_id, $b_info, ($b_bind_info, ...), $b_matcher, $b_binder, $b_data)':
-          '($("matching((_ :: " +& unwrap_syntax(a_ann) +& ") <> (_ :: " +& unwrap_syntax(b_ann) +& "))"),
+          '($("matching((_ :: " +& Syntax.unwrap(a_ann) +& ") <> (_ :: " +& Syntax.unwrap(b_ann) +& "))"),
             pair,
             (),
             ($a_bind_info, ..., $b_bind_info, ...),
@@ -280,7 +280,7 @@ defn.macro 'define_and_use $e ...':
   match '$e ...'
   | '$name: $rhs ...':
       'def $name: $rhs ...
-       literal_syntax($name)'
+       Syntax.literal($name)'
 
 define_and_use nine: 1+8
 nine
@@ -744,19 +744,19 @@ syntax.class NTerms
     ~attr c:
       '0'
     def sum:
-      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
     ~attr average:
       '$(sum / 2)'
 | '~two $a $b':
     ~attr c:
       '0'
     def sum:
-      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
     ~attr average:
       '$(sum / 2)'
 | '~three $a $b $c':
     def sum:
-      unwrap_syntax(a) + unwrap_syntax(b) + unwrap_syntax(c)
+      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
     ~attr average:
       '$(sum / 2)'
 

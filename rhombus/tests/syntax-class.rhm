@@ -46,7 +46,7 @@ begin:
 begin:
   syntax.class Arithmetic
   | '$x + $y':
-      ~attr sum: to_syntax(unwrap_syntax(x) + unwrap_syntax(y))
+      ~attr sum: Syntax.make(Syntax.unwrap(x) + Syntax.unwrap(y))
       ~attr [num, ...]: [x, y]
 
   check:

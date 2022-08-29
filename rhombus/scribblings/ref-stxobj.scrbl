@@ -5,9 +5,36 @@
 
 @title(~tag: "stxobj"){Syntax Objects}
 
+A @deftech{syntax object} encapsulates a shrubbery term, group, or
+ multi-group sequence with binding scopes and other metadata on
+ individual terms, and metadata potentially on individual groups. See
+ @secref(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top")
+ for information on shrubbery notation, and specifically
+ @secref(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
+ for information on representing shrubbery terms as
+ Rhombus values. The @rhombus(Syntax.make) function takes such a value
+ and wraps it as a syntax object, so that it can accumulate binding
+ scopes or hold other metadata.
+
 An quoted sequence of terms using @rhombus('') is parsed as an
-implicit use of the @rhombus(#{#%quotes}) form, which is normally bound
-to create a syntax object.
+ implicit use of the @rhombus(#{#%quotes}) form, which is normally
+ bound to create a syntax object. For example, @rhombus('1.000')
+ is a syntax object that wraps the number @rhombus(1.0).
+
+Metadata for a syntax object can include a source location and the raw
+ source text for a term, such as @rhombus("1.000") for a @rhombus(1.0)
+ that was written originally as @litchar{1.000}. Raw-source metadata
+ is used when printing a syntax error for a syntax object. Besides the
+ main text of a term, metadata can include a prefix string and/or
+ suffix string, which is used when printing a sequence of terms to
+ reflect the original layout. A group syntax object internally starts
+ with a @tt{group} tag that normally contains only prefix and suffix
+ text, leaving the group elements to supply their own text forms.
+ Finally, a syntax object can contain a tail string or and/or a tail
+ suffix; those normally appear only on a tag at the start of a syntax
+ object that represents a pair of parentheses, brackets, braces or
+ quotes, where the tail string corresponds to the closer, and the tail
+ suffix corresponds to text after the closer.
 
 @doc(
   expr.macro '«#{#%quotes} '$term ...; ...'»'
@@ -129,23 +156,193 @@ to create a syntax object.
 
 
 @doc(
-  expr.macro '«literal_syntax '$term ...; ...'»',
-  expr.macro 'literal_syntax ($term ..., ...)'
+  expr.macro '«Syntax.literal '$term ...; ...'»',
+  expr.macro 'Syntax.literal ($term ..., ...)'
 ){
 
  Similar to a plain @rhombus('') form, but @rhombus($) escapes or
- @rhombus(...) and @rhombus(......) repetition forms are not recognizes
- in the @rhombus(term)s, so that the @rhombus(term)s are all treated as
- literal terms to be quoted.
+ @rhombus(...) and @rhombus(......) repetition forms are not
+ recognizes in the @rhombus(term)s, so that the @rhombus(term)s are
+ all treated as literal terms to be quoted.
 
  There's no difference in result between using @rhombus('') or
  @rhombus(()) after @rhombus(literal_syntax)---only a difference in
  notation used to describe the syntax object, such as using @litchar{;}
  versus @litchar{,} to separate groups.
 
+ Metadata, such as raw source text, is preserved for the
+ @rhombus(term) sequence, but not any metadat that might be on the
+ group as a whole when the @rhombus(term)s form a single group.
+
 @examples(
-  literal_syntax 'x',
-  literal_syntax (x),
-  literal_syntax '1 ... 2',
-  literal_syntax '$ $ $'
+  Syntax.literal 'x',
+  Syntax.literal (x),
+  Syntax.literal '1 ... 2',
+  Syntax.literal '$ $ $'
 )}
+
+@doc(
+  expr.macro '«Syntax.literal_group '$term ...'»',
+  expr.macro 'Syntax.literal_group ($term ...)'
+){
+
+ Similar to a plain @rhombus('') form that has multiple terms in one
+ group, but like @rhombus(Syntax.literal) in that there are no
+ escapes. Unlike @rhombus(Syntax.literal), the @rhombus(term)s must
+ form a single group, and the result is always a group syntax object.
+
+ Metadata, such as raw source text, is preserved for the
+ @rhombus(term) sequence, but not any metadata that might be on the
+ group as a whole when the @rhombus(term)s form a single group.
+
+}
+
+@doc(
+  fun Syntax.make(term) :: Syntax
+){
+
+ Converts an ``unwrapped'' representation of a shrubbery @emph{term}
+ into a syntax object. The unwrapped representation may include
+ subforms that are already wrapped as syntax objects (including
+ @rhombus(term) itself), a long as a syntax object that can be used as
+ a term or group is used within a position that represents a term or
+ group, respectively, and those syntax objects left as-is within the
+ result.
+
+@examples(
+  Syntax.make(1.0),
+  Syntax.make([symbol(parens), '1.0', '2', '"c"']),
+  Syntax.make([symbol(alts), ': result1', ': result2']),
+  ~error Syntax.make(['1.0', '2', '"c"']),
+)
+
+}
+
+@doc(
+  fun Syntax.make_group(terms :: List) :: Syntax
+){
+
+ Converts a nonempty list of terms, each convertible by @rhombus(Syntax.make),
+ into a group syntax object.
+
+@examples(
+  Syntax.make_group([1.0, 2, "c"]),
+  Syntax.make_group(['if', 'test', [symbol(alts), ': result1', ': result2']]),
+  ~error Syntax.make_group(['1 2']),
+)
+
+}
+
+@doc(
+  fun Syntax.make_sequence(groups :: List) :: Syntax
+){
+
+ Converts a list of groups, each convertible by
+ @rhombus(Syntax.make_group), into a multi-group syntax object.
+
+@examples(
+  Syntax.make_sequence(['1 2 3', 'a b']),
+)
+
+}
+
+@doc(
+  fun Syntax.unwrap(stx :: Syntax)
+){
+
+ Unwraps a single-term syntax object by one layer. The result is a
+ list of syntax objects in the case of an operator, parentheses,
+ brackets, braces, block, or alternatives, where the first element of
+ the list reflects the specific shape.
+
+@examples(
+  Syntax.unwrap('1.0'),
+  Syntax.unwrap('(a, "b", ~c)'),
+  Syntax.unwrap(': b; c'),
+  Syntax.unwrap('| a | b'),
+  ~error Syntax.unwrap('1 2 3'),
+)
+
+}
+
+@doc(
+  fun Syntax.unwrap_group(stx :: Syntax) :: List.of(Syntax)
+){
+
+ Unwraps a multi-term, single-group syntax object by one layer. The
+ result is a list of term syntax objects.
+
+ Following the usual coercion conventions, a term syntax object for
+ @rhombus(stx) is acceptable as a group syntax object.
+
+@examples(
+  Syntax.unwrap_group('1.0'),
+  Syntax.unwrap_group('1 2 3'),
+  Syntax.unwrap_group('a: b; c'),
+  ~error Syntax.unwrap_group('1; 2; 3')
+)
+
+}
+
+@doc(
+  fun Syntax.unwrap_sequence(stx :: Syntax) :: List.of(Syntax)
+){
+
+ Unwraps a multi-group syntax object by one layer. The result is a
+ list of group syntax objects.
+
+ Following the usual coercion conventions, a term or group syntax
+ object for @rhombus(stx) is acceptable as a multi-group syntax
+ object.
+
+@examples(
+  Syntax.unwrap_sequence('1.0'),
+  Syntax.unwrap_sequence('1 2 3'),
+  Syntax.unwrap_sequence('1; 2; 3')
+)
+
+}
+
+@doc(
+  fun Syntax.strip(stx :: Syntax) :: Syntax
+){
+
+ Returns a syntax object that is the same as @rhombus(stx), except
+ that all binding scopes are removed.
+
+}
+
+@doc(
+  fun Syntax.relocate(stx :: Syntax, like_stx :: Syntax) :: Syntax
+){
+
+ Returns a syntax object like @rhombus(stx), except that the metadata
+ of @rhombus(like_stx) replaces metadata in @rhombus(stx).
+
+ The specific source of metadata from @rhombus(like_stx) depends on
+ its shape. If it is a single-term parenthesis, brackets, braces,
+ quotes, block or alternatives form, then metadata is taken from the
+ leading tag in the representation of the form. In the case of a
+ single-term operator, metadata is taken from the operator token, not
+ the @tt{op} tag. In the case of a group syntax object, metadata is
+ taken from the @tt{group} tag.
+
+ In the same way, metadata is applied to @rhombus(stx) based on its
+ shape. Transferring metadata thus makes the most sense when
+ @rhombus(stx) and @rhombus(like_stx) have the same shape.
+
+}
+
+
+@doc(
+  fun Syntax.relocate_span(stx :: Syntax,
+                           like_stxes :: List.of(Syntax)) :: Syntax
+){
+
+ Similar to @rhombus(Syntax.relocate), but that the metadata of syntax
+ objects in @rhombus(like_stxes) are merged to replace the metadata of
+ @rhombus(stx). Merging combines raw source text in sequence, and it
+ combines compatible source locations to describe a region containing
+ all of the locations.
+
+}

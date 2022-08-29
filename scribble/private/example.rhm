@@ -16,7 +16,7 @@ expr.macro 'examples $parens $tail ...':
       values(parsed(['#{typeset-examples}', parens]),
              '$tail ...')
   | ~else:
-      raise_syntax_error("expected forms", '$me $parens')
+      Syntax.error("expected forms", '$me $parens')
 
 fun make_rhombus_eval():
   #{make-rhombus-eval}()

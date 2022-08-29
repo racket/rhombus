@@ -24,7 +24,7 @@ expr.macro
     values('check_same($(match '$mode ...'
                          | '~eval' || '~eval_exn' || '~eval_print':
                             'fun():
-                               eval_test(literal_syntax '$result1
+                               eval_test(Syntax.literal '$result1
                                                          ...')'
                          | ~else:
                             'fun ():
@@ -68,4 +68,4 @@ fun check_same(thunk, expected_thunk, ~mode: mode):
 
 fun eval_test(stx):
   parameterize {current_toplevel: make_rhombus_toplevel()}:
-    eval(strip_syntax(stx))
+    eval(Syntax.strip(stx))

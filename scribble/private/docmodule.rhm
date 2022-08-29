@@ -20,9 +20,9 @@ for_meta:
     match mod
     | '$(a :: Id)': a
     | '$a / $b ...':
-        base.#{string->symbol}(unwrap_syntax(a)
+        base.#{string->symbol}(Syntax.unwrap(a)
                                  +& "/"
-                                 +& unwrap_syntax(translate_mod('$b ...')))
+                                 +& Syntax.unwrap(translate_mod('$b ...')))
     | 'lib($str)':
         [symbol(lib), str]
 

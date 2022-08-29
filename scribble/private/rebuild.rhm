@@ -13,26 +13,26 @@ export:
 
 fun parens_syntax(ts, context):
   match ts
-  | ['$t', ...]: relocate_syntax('($t, ...)', context)
+  | ['$t', ...]: Syntax.relocate('($t, ...)', context)
 
 fun brackets_syntax(ts, context):
   match ts
-  | ['$t', ...]: relocate_syntax('[$t, ...]', context)
+  | ['$t', ...]: Syntax.relocate('[$t, ...]', context)
 
 fun braces_syntax(ts, context):
   match ts
-  | ['$t', ...]: relocate_syntax('{$t, ...}', context)
+  | ['$t', ...]: Syntax.relocate('{$t, ...}', context)
 
 fun block_syntax(ts, context):
   match ts
-  | ['$t', ...]: relocate_syntax(': $t; ...', context)
+  | ['$t', ...]: Syntax.relocate(': $t; ...', context)
 
 fun quotes_syntax(ts, context):
   match ts
-  | ['$t', ...]: relocate_syntax('«'$t; ...'»', context)
+  | ['$t', ...]: Syntax.relocate('«'$t; ...'»', context)
 
 fun alts_syntax(ts, context):
-  relocate_syntax(to_alts_syntax(ts), context)
+  Syntax.relocate(Syntax.make(List.cons(symbol(alts), ts)), context)
 
 fun sequence_append_syntax(d1, d2):
   match d1
