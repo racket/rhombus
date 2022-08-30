@@ -15,38 +15,38 @@ check:
 begin:
   use_static_dot
   check:
-    [1, 2, 3].length
+    [1, 2, 3].length()
     3
   check:
     [1, 2, 3][0]
     1
   check:
-    List(1, 2, 3).length
+    List(1, 2, 3).length()
     3
   check:
     val lst: [1, 2, 3]
-    lst.length
+    lst.length()
     3
   check:
     val lst :: List: dynamic([1, 2, 3])
-    lst.length
+    lst.length()
     3
   check:
     val lst -: List: dynamic([1, 2, 3])
-    lst.length
+    lst.length()
     3
   check:
     val lst :: List.of(Integer): dynamic([1, 2, 3])
-    lst.length
+    lst.length()
     3
   check:
     val [v, ...]: dynamic([1, 2, 3])
-    [v, ...].length
+    [v, ...].length()
     3
 
 begin:
   check:
-    dynamic([1, 2, 3]).length
+    dynamic([1, 2, 3]).length()
     3
   check:
     dynamic([1, 2, 3])[0]

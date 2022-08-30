@@ -10,7 +10,8 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "composite.rkt"
-         "name-root.rkt")
+         "name-root.rkt"
+         "dot-parse.rkt")
 
 (provide Array
          (for-space rhombus/binding Array)
@@ -20,7 +21,7 @@
   (provide array-method-table))
 
 (define array-method-table
-  (hash 'length vector-length))
+  (hash 'length (method1 vector-length)))
 
 (define-for-syntax array-static-infos
   #'((#%map-ref vector-ref)
@@ -52,11 +53,12 @@
   (#%call-result #,array-static-infos))
 
 (define-syntax array-instance
-  (dot-provider
-   (lambda (lhs dot-stx field-stx)
-     (case (syntax-e field-stx)
-       [(length) #`(vector-length #,lhs)]
-       [else #f]))))
+  (dot-provider-strict
+   (dot-parse-dispatch
+    (lambda (field-sym ary 0ary nary fail-k)
+      (case field-sym
+        [(length) (0ary #'vector-length)]
+        [else #f])))))
 
 (define-binding-syntax Array
   (binding-prefix-operator

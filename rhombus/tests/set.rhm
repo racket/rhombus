@@ -4,50 +4,50 @@ import: "check.rhm" open
 fun dynamic(v): v
 
 check:
-  Set.count({10, 20})
+  Set.length({10, 20})
   2
 
 // FIXME
 #//
 check:
   ~exn
-  Set.count([1, 2, 3])
+  Set.length([1, 2, 3])
   values("contract violation", "expected: Set")
 
 begin:
   use_static_dot
   check:
-    {1, 2}.count
+    {1, 2}.length()
     2
   check:
     {"a", "b"}["a"]
     #true
   check:
-    Set("a", "b").count
+    Set("a", "b").length()
     2
   check:
-    MutableSet("a", "b").count
+    MutableSet("a", "b").length()
     2
   check:
     val set: {1, 2}
-    set.count
+    set.length()
     2
   check:
     val set :: Set: dynamic({"a", "b"})
-    set.count
+    set.length()
     2
   check:
     val set -: Set: dynamic({"a", "b"})
-    set.count
+    set.length()
     2
   check:
     val set :: Set.of(String): dynamic({"a", "b"})
-    set.count
+    set.length()
     2
 
 begin:
   check:
-    dynamic({"a", "b"}).count
+    dynamic({"a", "b"}).length()
     2
   check:
     dynamic({"a", "b"})["a"]

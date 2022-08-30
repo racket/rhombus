@@ -7,7 +7,7 @@ fun dynamic(v): v
 check:
   use_static_dot
   let x && [y] : [10]
-  [[x, y], x.length]
+  [[x, y], x.length()]
   [[[10], 10], 1]
 
 check:

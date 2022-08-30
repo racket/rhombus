@@ -18,8 +18,13 @@ updated with a combination of square brackets and the @rhombus(:=)
 operator. These uses of square brackets are implemented by
 @rhombus(#{#%ref}).
 
-The @rhombus(.) operator can be used on a list expression with
-@rhombus(count) to call @rhombus(Map.count).
+@dispatch_table(
+  "map",
+  @rhombus(Map),
+  [map.length(), Map.length(map)],
+  [map.keys(), Map.keys(map)],
+  [map.values(), Map.values(map)]
+)
 
 @doc(
   expr.macro '#{#%braces} {$key_expr: $val_expr, ...}',
@@ -200,15 +205,41 @@ The @rhombus(.) operator can be used on a list expression with
 }
 
 @doc(
-  fun Map.count(map :: Map) :: Integer,
+  fun Map.length(map :: Map) :: Integer,
 ){
 
  Returns the number of key--value mappings in @rhombus(map).
 
 @examples(
-  Map.count({"a": 1, "b": 2}),
-  Map.count({}),
-  {"a": 1, "b": 2}.count
-  )
+  Map.length({"a": 1, "b": 2}),
+  Map.length({}),
+  {"a": 1, "b": 2}.length()
+)
+
+}
+
+
+@doc(
+  fun Map.keys(map :: Map) :: List,
+){
+
+ Returns the keys of @rhombus(map) in a list.
+
+@examples(
+  Map.keys({"a": 1, "b": 2})
+)
+
+}
+
+
+@doc(
+  fun Map.values(map :: Map) :: List,
+){
+
+ Returns the values of @rhombus(map) in a list.
+
+@examples(
+  Map.values({"a": 1, "b": 2})
+)
 
 }

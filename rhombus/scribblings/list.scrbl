@@ -136,5 +136,5 @@ an expression that produces a list.
 
 @(rhombusblock:
    List.length(["a", "b", "c"])  // prints 3
-   ["a", "b", "c"].length        // prints 3
+   ["a", "b", "c"].length()      // prints 3
   )

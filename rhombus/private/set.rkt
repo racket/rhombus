@@ -15,6 +15,7 @@
          "literal.rkt"
          "realm.rkt"
          "setmap-parse.rkt"
+         "dot-parse.rkt"
          "parens.rkt")
 
 (provide (rename-out [Set-expr Set])
@@ -45,11 +46,11 @@
           (hash-code (set-ht self)))))
 
 (define set-method-table
-  (hash 'count (let ([count (lambda (s)
-                              (unless (set? s)
-                                (raise-argument-error* 'Set.count rhombus-realm "Set" s))
-                              (hash-count (set-ht s)))])
-                 count)))
+  (hash 'length (let ([length (lambda (s)
+                                (unless (set? s)
+                                  (raise-argument-error* 'Set.length rhombus-realm "Set" s))
+                                (hash-count (set-ht s)))])
+                  (method1 length))))
 
 (define (set-member? s v)
   (hash-ref (set-ht s) v #f))
@@ -63,11 +64,12 @@
   (hash-count (set-ht s)))
 
 (define-syntax set-instance
-  (dot-provider
-   (lambda (lhs dot-stx field-stx)
-     (case (syntax-e field-stx)
-       [(count) #`(set-count #,lhs)]
-       [else #f]))))
+  (dot-provider-strict
+   (dot-parse-dispatch
+    (lambda (field-sym ary 0ary nary fail-k)
+      (case field-sym
+        [(length) (0ary #'set-count)]
+        [else #f])))))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -116,7 +118,7 @@
 (define-name-root Set-expr
   #:fields
   ([empty empty-set]
-   [count set-count])
+   [length set-count])
   #:root
   (expression-transformer
    #'Set

@@ -8,8 +8,11 @@ is parsed as an implicit use of the @rhombus(#{#%ref}) form, which is
 normally bound to implement an array reference or assignment, as well
 as other operations.
 
-The @rhombus(.) operator can be used on a array expression with
-@rhombus(length) to call @rhombus(Array.length).
+@dispatch_table(
+  "array",
+  @rhombus(Array),
+  [arr.length(), Array.length(arr)]
+)
 
 @doc(
   fun Array(v :: Any, ...) :: Array
@@ -63,3 +66,16 @@ The @rhombus(.) operator can be used on a array expression with
 )
 
 }
+
+@doc(
+  fun Array.length(arr :: Array) :: Integer,
+){
+
+ Returns the length of @rhombus(arr).
+
+@examples(
+  Array.make(3, "x").length()
+)
+
+}
+

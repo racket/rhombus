@@ -17,7 +17,8 @@
          "repetition.rkt"
          "name-root.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "parse.rkt")
+         "parse.rkt"
+         "dot-parse.rkt")
 
 (provide List
          (for-space rhombus/annotation List)
@@ -33,7 +34,7 @@
   (provide list-method-table))
 
 (define list-method-table
-  (hash 'length length))
+  (hash 'length (method1 length)))
 
 (define-binding-syntax cons  
   (binding-transformer
@@ -80,11 +81,12 @@
     #`((#%ref-result #,(car static-infoss)))))
 
 (define-syntax list-instance
-  (dot-provider
-   (lambda (lhs dot-stx field-stx)
-     (case (syntax-e field-stx)
-       [(length) #`(length #,lhs)]
-       [else #f]))))
+  (dot-provider-strict
+   (dot-parse-dispatch
+    (lambda (field-sym ary 0ary nary fail-k)
+      (case field-sym
+        [(length) (0ary #'length)]
+        [else #f])))))
 
 (define-reducer-syntax List
   (reducer-transformer

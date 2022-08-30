@@ -15,38 +15,38 @@ check:
 begin:
   use_static_dot
   check:
-    Array(1, 2, 3).length
+    Array(1, 2, 3).length()
     3
   check:
     Array(1, 2, 3)[0]
     1
   check:
-    Array(1, 2, 3).length
+    Array(1, 2, 3).length()
     3
   check:
     val arr: Array(1, 2, 3)
-    arr.length
+    arr.length()
     3
   check:
     val arr :: Array: dynamic(Array(1, 2, 3))
-    arr.length
+    arr.length()
     3
   check:
     val arr -: Array: dynamic(Array(1, 2, 3))
-    arr.length
+    arr.length()
     3
   check:
     val arr :: Array.of(Integer): dynamic(Array(1, 2, 3))
-    arr.length
+    arr.length()
     3
   check:
     val [v, ...]: dynamic([1, 2, 3])
-    Array(v, ...).length
+    Array(v, ...).length()
     3
 
 begin:
   check:
-    dynamic(Array(1, 2, 3)).length
+    dynamic(Array(1, 2, 3)).length()
     3
   check:
     dynamic(Array(1, 2, 3))[0]

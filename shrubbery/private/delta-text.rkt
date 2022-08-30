@@ -69,6 +69,9 @@
            (cond
              [(r . <= . pre) r]
              [else (max pre (+ r delta))])))
+
+    (define/public (get-regions)
+      '((0 end)))
     
     (define/public (last-position)
       (shift-out (send next last-position)))

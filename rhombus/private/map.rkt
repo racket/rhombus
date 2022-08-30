@@ -22,6 +22,7 @@
          "reducer.rkt"
          "name-root.rkt"
          "setmap-parse.rkt"
+         "dot-parse.rkt"
          "parens.rkt")
 
 (provide (rename-out [Map-expr Map])
@@ -44,9 +45,9 @@
   (provide map-method-table))
 
 (define map-method-table
-  (hash 'count hash-count
-        'values hash-values
-        'keys hash-keys))
+  (hash 'length (method1 hash-count)
+        'values (method1 hash-values)
+        'keys (method1 hash-keys)))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
 
@@ -115,7 +116,9 @@
 (define-name-root Map-expr
   #:fields
   ([empty empty-map]
-   [count hash-count])
+   [length hash-count]
+   [keys hash-keys]
+   [values hash-values])
   #:root
   (expression-transformer
    #'Map
@@ -155,11 +158,14 @@
     #`((#%ref-result #,(cadr static-infoss)))))
 
 (define-syntax hash-instance
-  (dot-provider
-   (lambda (lhs dot-stx field-stx)
-     (case (syntax-e field-stx)
-       [(count) #`(hash-count #,lhs)]
-       [else #f]))))
+  (dot-provider-strict
+   (dot-parse-dispatch
+    (lambda (field-sym ary 0ary nary fail-k)
+      (case field-sym
+        [(length) (0ary #'hash-count)]
+        [(keys) (0ary #'hash-keys)]
+        [(values) (0ary #'hash-values)]
+        [else #f])))))
 
 (define-static-info-syntax Map
   (#%call-result #,map-static-info))

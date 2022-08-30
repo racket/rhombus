@@ -725,6 +725,8 @@
           [(at)
            (check-block-mode)
            (cond
+             [(state-at-mode s)
+              (done)]
              [(null? (cdr l))
               (fail t "missing term after `@`")
               (parse-group null s)]
@@ -902,7 +904,7 @@
 ;; Look for `{` (as 'at-opener) next or a `(` that might be followed
 ;; by a `{`, and prepare to convert by rearranging info a splice
 ;; followed by parentheses
-(define (continue-at at-mode after-bracket? l line delta count?)
+(define (continue-at at-mode after-paren? l line delta count?)
   (define (at-call rator parens g)
     (if (eq? at-mode 'no-initial)
         (cons (move-pre-raw rator
@@ -912,7 +914,7 @@
   (cond
     [(not at-mode)
      (values (lambda (g) g) #f l line delta)]
-    [(and (or (not after-bracket?)
+    [(and (or (not after-paren?)
               (eq? at-mode 'initial))
           (pair? l)
           (eq? 'opener (token-name (car l)))
@@ -947,28 +949,29 @@
              ;; more `{}` arguments
              (loop (cddr l) (cons c accum-args))]
             [else
-             (values (lambda (g) (cond
-                                   [(or (not after-bracket?)
-                                        (eq? at-mode 'initial))
-                                    (at-call (car g)
-                                             (cons parens-tag (reverse (cons c accum-args)))
-                                             (cdr g))]
-                                   [else
-                                    (define bracket (caar g))
-                                    (define new-g (cons (cons parens-tag
-                                                              (append
-                                                               (cdar g)
-                                                               (let ([args (reverse (cons c accum-args))])
-                                                                 (cons
-                                                                  (move-post-raw-to-prefix bracket (car args))
-                                                                  (cdr args)))))
-                                                        (cdr g)))
-                                    (move-pre-raw bracket
-                                                  (add-raw-to-prefix* #f (syntax-to-raw bracket)
-                                                                      new-g))]))
+             (values (lambda (g)
+                       (cond
+                         [(or (not after-paren?)
+                              (eq? at-mode 'initial))
+                          (at-call (car g)
+                                   (cons parens-tag (reverse (cons c accum-args)))
+                                   (cdr g))]
+                         [else
+                          (define bracket (caar g))
+                          (define new-g (cons (cons parens-tag
+                                                    (append
+                                                     (cdar g)
+                                                     (let ([args (reverse (cons c accum-args))])
+                                                       (cons
+                                                        (move-post-raw-to-prefix bracket (car args))
+                                                        (cdr args)))))
+                                              (cdr g)))
+                          (move-pre-raw bracket
+                                        (add-raw-to-prefix* #f (syntax-to-raw bracket)
+                                                            new-g))]))
                      'initial (if (null? l) null (cdr l)) line delta)]))))]
     [else
-     (values (lambda (g) g) #f l line delta)]))
+     (values (lambda (g) g) (and at-mode 'after) l line delta)]))
 
 (define (parse-text-sequence l line delta
                              done-k
@@ -1009,7 +1012,7 @@
       [(at at-comment)
        (define t (car l))
        (define comment? (eq? (token-name t) 'at-comment))
-       ;; `parse-group` work will be delimited by 'at-content or 'at-closer
+       ;; `parse-group` work will be delimited by 'at-content, 'at-closer, or another 'at
        (define-values (g rest-l group-end-line group-delta group-tail-commenting group-tail-raw)
          (parse-group (if comment?
                           (cons (token-rename t 'at) (cdr l))

@@ -3,11 +3,16 @@ import:
   rhombus/macro open
   scribble/rhombus open
   scribble/manual.racketvarfont
+  scribble/manual.racketfont
 
 export:
   dispatch_table
 
-expr.macro 'dispatch_table([$lhs, $rhs], ...)':
+expr.rule
+| 'maybe_rhombus()': '""'
+| 'maybe_rhombus($args)': 'rhombus($args)'
+
+expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)':
   fun extract_metavariables(term, ht):
     match term
     | '($g, ...)': for values(ht = ht):
@@ -33,24 +38,33 @@ expr.macro 'dispatch_table([$lhs, $rhs], ...)':
       match g
       | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
       | ~else: ht
-  val vars: extract_lhs_metavariables([rhs, ...],
-                                      extract_rhs_metavariables([lhs, ...],
-                                                                {}))
-  val [id, ...]: for List:
-                   ~each k: vars.values
-                   k
+  val vars: extract_rhs_metavariables(
+              [rhs, ...],
+              extract_metavariables(
+                '(($lhs_rest, ...), ...)',
+                extract_metavariables(
+                  [lhs, ...],
+                  {})))
+  val [id, ...]: vars.values()
+  val [name_str, ...]: for List:
+                         ~each name: [name, ...]
+                         "" +& name.unwrap()
   values('«begin:
              rhombus_meta '$id':
                '@racketvarfont("" +& symbol($id))'
              ...
-             @nested(
-               ~style: symbol(inset),
-               @tabular(
-                 ~sep: @elem{@hspace(1)=@hspace(1)},
-                 [
-                   [@rhombus($lhs), @rhombus($rhs)],
-                   ...
-                 ]
+             [
+               @elem{The @rhombus(.) operator can be used on a @($what) expression as
+                   equivalent to calling @($who) functions:},
+               @nested(
+                 ~style: symbol(inset),
+                 @tabular(
+                   ~sep: @elem{@hspace(1)is@hspace(1)},
+                   [
+                     [@elem{@rhombus($lhs)@racketfont{.@($name_str)}@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
+                     ...
+                   ]
+                 )
                )
-             )»',
+             ]»',
          '')

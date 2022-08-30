@@ -18,8 +18,11 @@ element by position (in time proportional to the position) via
 @rhombus(#{#%ref}). A list also works with the @rhombus(++) operator
 to append lists.
 
-The @rhombus(.) operator can be used on a list expression with
-@rhombus(length) to call @rhombus(List.length).
+@dispatch_table(
+  "list",
+  @rhombus(List),
+  [lst.length(), List.length(lst)]
+)
 
 @doc(
   fun List(v :: Any, ...) :: List,

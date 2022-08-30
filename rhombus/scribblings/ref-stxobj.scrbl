@@ -36,10 +36,9 @@ Metadata for a syntax object can include a source location and the raw
  quotes, where the tail string corresponds to the closer, and the tail
  suffix corresponds to text after the closer.
 
-The @rhombus(.) operator can be used on a syntax-object expression as
-equivalent to calling @rhombus(Syntax) functions:
-
 @dispatch_table(
+  "syntax-object",
+  @rhombus(Syntax),
   [stx.unwrap(), Syntax.unwrap(stx)],
   [stx.unwrap_group(), Syntax.unwrap_group(stx)],
   [stx.unwrap_sequence(), Syntax.unwrap_sequence(stx)],

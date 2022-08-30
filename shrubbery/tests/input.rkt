@@ -1664,6 +1664,9 @@ then @{8}
 @(in #{s-exp} mode)
 @{also in @(#{s-exp}) mode}
 
+@elem{@a()@b()}
+@elem{@a{}@b()}
+
 The end
 INPUT
   )
@@ -1734,6 +1737,20 @@ INPUT
         (group "also in ")
         (group (parens (group s-exp)))
         (group " mode")))))
+    (group
+     elem
+     (parens
+      (group
+       (brackets
+        (group a (parens))
+        (group b (parens))))))
+    (group
+     elem
+     (parens
+      (group
+       (brackets
+        (group a (parens (group (brackets))))
+        (group b (parens))))))
     (group The end)))
 
 (define input4
