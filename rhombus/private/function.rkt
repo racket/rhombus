@@ -240,13 +240,13 @@
       (with-syntax ([(tmp-id ...) (generate-temporaries #'(arg-info.name-id ...))]
                     [(arg ...) args]
                     [rhs rhs]
-                    [((maybe-rest-tmp ...) maybe-match-rest)
+                    [(maybe-rest-tmp (maybe-rest-tmp* ...) maybe-match-rest)
                      (if (syntax-e rest-arg)
                          (with-syntax-parse ([rest::binding-form rest-parsed]
                                              [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
                                              [rest-info::binding-info #'rest-impl.info])
-                           #`((#:rest rest-tmp) (rest-tmp rest-info #,rest-arg #f)))
-                         #'(() #f))]
+                           #`(rest-tmp (#:rest rest-tmp) (rest-tmp rest-info #,rest-arg #f)))
+                         #'(() () #f))]
                     [((maybe-kwrest-tmp ...) maybe-match-kwrest)
                      (if (syntax-e kwrest-arg)
                          (with-syntax-parse ([kwrest::binding-form kwrest-parsed]
@@ -272,22 +272,27 @@
                             (list (list arg+default) default)]
                            [else
                             (list (list kw arg+default) default)]))])
+          (define body
+            #`(nested-bindings
+               #,function-name
+               #f ; try-next
+               argument-binding-failure
+               (tmp-id arg-info arg arg-default)
+               ...
+               maybe-match-rest
+               maybe-match-kwrest
+               (begin
+                 (add-annotation-check
+                  #,function-name #,pred
+                  (rhombus-body-expression rhs)))))
           (relocate
            (span-srcloc start end)
-           #`(lambda/kwrest (arg-form ... ...)
-               maybe-rest-tmp ... maybe-kwrest-tmp ...
-               (nested-bindings
-                #,function-name
-                #f ; try-next
-                argument-binding-failure
-                (tmp-id arg-info arg arg-default)
-                ...
-                maybe-match-rest
-                maybe-match-kwrest
-                (begin
-                  (add-annotation-check
-                   #,function-name #,pred
-                   (rhombus-body-expression rhs))))))))))
+           (if (syntax-e kwrest-arg)
+               #`(lambda/kwrest (arg-form ... ...)
+                   maybe-rest-tmp* ... maybe-kwrest-tmp ...
+                   #,body)
+               #`(lambda (arg-form ... ... . maybe-rest-tmp)
+                   #,body)))))))
   
   (define (build-case-function function-name
                                argss-stx arg-parsedss-stx
