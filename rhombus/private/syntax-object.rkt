@@ -11,12 +11,23 @@
          "pack.rkt"
          "realm.rkt"
          "name-root.rkt"
-         "tag.rkt")
+         "tag.rkt"
+         (submod "dot.rkt" for-dot-provider))
 
 (provide Syntax
          (for-space rhombus/annotation Syntax))
 
-(define-annotation-syntax Syntax (identifier-annotation #'Syntax #'syntax? #'()))
+(module+ for-builtin
+  (provide syntax-method-table))
+
+(module+ for-quasiquote
+  (provide (for-syntax syntax-static-infos)))
+
+(define-for-syntax syntax-static-infos
+  #'((#%dot-provider syntax-instance)))
+
+(define-annotation-syntax Syntax
+  (identifier-annotation #'Syntax #'syntax? syntax-static-infos))
 
 (define-simple-name-root Syntax
   literal
@@ -228,6 +239,12 @@
       [_
        (relocate stx)])))
 
+(define relocate_method
+  (lambda (stx)
+    (let ([relocate (lambda (ctx-stx)
+                      (relocate stx ctx-stx))])
+      relocate)))
+
 (define (relocate_span stx ctx-stxes-in
                        #:keep_raw_interior [keep-raw-interior? #f])
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Syntax" stx))
@@ -297,3 +314,29 @@
                           (combine-raw
                            (or (syntax-raw-tail-suffix-property ctx) null)
                            (or (syntax-raw-suffix-property ctx) null))))])))
+
+(define relocate_span_method
+  (lambda (stx)
+    (let ([relocate_span (lambda (ctx-stxes)
+                      (relocate_span stx ctx-stxes))])
+      relocate_span)))
+
+(define syntax-method-table
+  (hash 'unwrap unwrap
+        'unwrap_group unwrap_group
+        'unwrap_sequence unwrap_sequence
+        'strip strip
+        'relocate relocate_method 
+        'relocate_span relocate_span_method))
+
+(define-syntax syntax-instance
+  (dot-provider
+   (lambda (lhs dot-stx field-stx)
+     (case (syntax-e field-stx)
+       [(unwrap) #`(unwrap #,lhs)]
+       [(unwrap_group) #`(unwrap_group #,lhs)]
+       [(unwrap_sequence) #`(unwrap_sequence #,lhs)]
+       [(strip) #`(strip #,lhs)]
+       [(relocate) #`(relocate_method #,lhs)]
+       [(relocate_span) #`(relocate_span_method #,lhs)]
+       [else #f]))))

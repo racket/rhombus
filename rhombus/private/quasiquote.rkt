@@ -24,6 +24,8 @@
          "dollar.rkt"
          "repetition.rkt"
          "op-literal.rkt"
+         "static-info.rkt"
+         (submod "syntax-object.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::))
 
@@ -547,7 +549,8 @@
                         [(id-pat e)
                          #`(with-syntax ([id-pat e])
                              #,body)]))]))
-  (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template)))
+  (wrap-static-info* (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template))
+                     syntax-static-infos))
 
 (define-syntax-rule (unpack-rep-term* $-name e depth)
   (get-repetition $-name e depth unpack-term*))

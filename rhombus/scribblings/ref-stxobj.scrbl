@@ -3,6 +3,10 @@
     "common.rhm" open 
     "macro.rhm")
 
+@(def stx: @rhombus(stx, ~var))
+@(def like_stx: @rhombus(like_stx, ~var))
+@(def like_stxes: @rhombus(like_stxes, ~var))
+
 @title(~tag: "stxobj"){Syntax Objects}
 
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
@@ -35,6 +39,22 @@ Metadata for a syntax object can include a source location and the raw
  object that represents a pair of parentheses, brackets, braces or
  quotes, where the tail string corresponds to the closer, and the tail
  suffix corresponds to text after the closer.
+
+The @rhombus(.) operator can be used on a syntax-object expression as
+equivalent to calling @rhombus(Syntax) functions:
+
+@nested(
+ ~style: symbol(inset),
+ @tabular(
+   ~sep: @elem{@hspace(1)=@hspace(1)},
+   [
+    [@rhombus($$(stx).unwrap), @rhombus(Syntax.unwrap($$(stx)))],
+    [@rhombus($$(stx).unwrap_group), @rhombus(Syntax.unwrap_group($$(stx)))],
+    [@rhombus($$(stx).unwrap_sequence), @rhombus(Syntax.unwrap_sequence($$(stx)))],
+    [@rhombus($$(stx).strip), @rhombus(Syntax.strip($$(stx)))],
+    [@rhombus($$(stx).relocate($$(like_stx))), @rhombus(Syntax.relocate($$(stx), $$(like_stx)))],
+    [@rhombus($$(stx).relocate_span($$(like_stxes))), @rhombus(Syntax.relocate_span($$(stx), $$(like_stxes)))],
+   ]))
 
 @doc(
   expr.macro '«#{#%quotes} '$term ...; ...'»'
