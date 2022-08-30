@@ -33,8 +33,8 @@
  values like symbols are @rhombus(===) when they are @rhombus(==).
 
 @examples(
-  symbol(apple) === symbol(apple),
-  symbol(apple) === symbol(banana),
+  symbol'apple' === symbol'apple',
+  symbol'apple' === symbol'banana',
 )
 
 }

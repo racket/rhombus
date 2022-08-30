@@ -17,16 +17,18 @@ equal by @rhombus(==) only when they are equal by @rhombus(===).
 }
 
 @doc(
+  expr.macro '«keyword'$a_keyword'»',
+  bind.macro '«keyword'$a_keyword'»',
   expr.macro 'keyword($a_keyword)',
   bind.macro 'keyword($a_keyword)'
 ){
 
  Produces or matches a keyword that is the same as
- @rhombus(a_keyword).
+ @rhombus(a_keyword). Parentheses and quotes are interchangeable.
 
 @examples(
-  keyword(~hello),
-  keyword(~hello) +& " there"
+  keyword'~hello',
+  keyword'~hello' +& " there"
 )
 
 }

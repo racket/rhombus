@@ -38,8 +38,8 @@ Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated as
 an actual argument or binding pattern by itself. The @rhombus(keyword)
 form turns a keyword into an expression that produces the keyword, as in
-@rhombus(keyword(~scale)). The @rhombus(symbol) form similarly turns an
-identifier into a symbol, as in @rhombus(symbol(x)).
+@rhombus(keyword'~scale'). The @rhombus(symbol) form similarly turns an
+identifier into a symbol, as in @rhombus(symbol'x').
 
 @aside{The keyword prefix and @rhombus(=) for default values are not
  binding operators. They are specific to the syntax of @rhombus(fun).}

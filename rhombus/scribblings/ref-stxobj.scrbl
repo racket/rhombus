@@ -222,8 +222,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @examples(
   Syntax.make(1.0),
-  Syntax.make([symbol(parens), '1.0', '2', '"c"']),
-  Syntax.make([symbol(alts), ': result1', ': result2']),
+  Syntax.make([symbol'parens', '1.0', '2', '"c"']),
+  Syntax.make([symbol'alts', ': result1', ': result2']),
   ~error Syntax.make(['1.0', '2', '"c"']),
 )
 
@@ -238,7 +238,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @examples(
   Syntax.make_group([1.0, 2, "c"]),
-  Syntax.make_group(['if', 'test', [symbol(alts), ': result1', ': result2']]),
+  Syntax.make_group(['if', 'test', [symbol'alts', ': result1', ': result2']]),
   ~error Syntax.make_group(['1 2']),
 )
 

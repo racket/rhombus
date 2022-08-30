@@ -137,7 +137,7 @@
                           [else
                            (define o (open-output-string))
                            (call-in-sandbox-context eval (lambda () (print v o)))
-                           (format-lines (get-output-string o) racketresultfont)])))]))))]))))))))
+                           (format-lines (get-output-string o) (lambda (s) (racketresultfont s #:decode? #f)))])))]))))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]

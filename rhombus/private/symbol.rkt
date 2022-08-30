@@ -15,14 +15,14 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
-       [(_ (parens (group id:identifier)) . tail)
+       #:datum-literals (parens quotes group)
+       [(_ ((~or parens quotes) (group id:identifier)) . tail)
         (values (syntax/loc stx (quote id))
                 #'tail)]))
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group)
-       [(_ (parens (group id:identifier)) . tail)
+       #:datum-literals (parens quotes group)
+       [(_ ((~or parens quotes) (group id:identifier)) . tail)
         (values (binding-form #'literal-infoer
                               #'id)
                 #'tail)]))))
