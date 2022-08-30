@@ -3,6 +3,7 @@
 import:
   rhombus/macro open
   scribble/rhombus as scribble
+  "dispatch_table.rhm" open
   for_label:
     rhombus open
     rhombus/macro open
@@ -13,6 +14,7 @@ export:
     for_label
   all_from(rhombus/macro):
     for_label
+  all_from("dispatch_table.rhm")
   see_implicit
 
 fun see_implicit(what, when, context, ~is_infix = #false):

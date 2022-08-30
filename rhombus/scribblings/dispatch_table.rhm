@@ -1,0 +1,56 @@
+#lang rhombus
+import:
+  rhombus/macro open
+  scribble/rhombus open
+  scribble/manual.racketvarfont
+
+export:
+  dispatch_table
+
+expr.macro 'dispatch_table([$lhs, $rhs], ...)':
+  fun extract_metavariables(term, ht):
+    match term
+    | '($g, ...)': for values(ht = ht):
+                     ~each g: [g, ...]
+                     extract_group_metavariables(g, ht)
+    | '$(x :: Id)':
+        ht ++ { Syntax.unwrap(x): x }
+    | ~else: ht
+  fun extract_group_metavariables(group, ht):
+    match group
+    | '$t ...': for values(ht = ht):
+                  ~each t: [t, ...]
+                  extract_metavariables(t, ht)
+  fun extract_lhs_metavariables(groups -: List, ht):
+    for values(ht = ht):
+      ~each g: groups
+      match g
+      | '$p . _': extract_metavariables(p, ht)
+      | ~else: ht
+  fun extract_rhs_metavariables(groups -: List, ht):
+    for values(ht = ht):
+      ~each g: groups
+      match g
+      | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
+      | ~else: ht
+  val vars: extract_lhs_metavariables([rhs, ...],
+                                      extract_rhs_metavariables([lhs, ...],
+                                                                {}))
+  val [id, ...]: for List:
+                   ~each k: vars.values
+                   k
+  values('«begin:
+             rhombus_meta '$id':
+               '@racketvarfont("" +& symbol($id))'
+             ...
+             @nested(
+               ~style: symbol(inset),
+               @tabular(
+                 ~sep: @elem{@hspace(1)=@hspace(1)},
+                 [
+                   [@rhombus($lhs), @rhombus($rhs)],
+                   ...
+                 ]
+               )
+             )»',
+         '')

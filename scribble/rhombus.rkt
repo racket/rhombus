@@ -10,6 +10,7 @@
                     [local-table-of-contents local_table_of_contents])
          scribble/private/manual-defaults
          "private/rhombus.rhm"
+         "private/rhombus_meta.rhm"
          "private/include.rkt")
 
 (provide (rename-out [module-begin #%module-begin])
@@ -20,6 +21,7 @@
          pkg
          include_section
          (all-from-out "private/rhombus.rhm"
+                       "private/rhombus_meta.rhm"
                        "private/include.rkt"))
 (define-syntax-rule (rhombus-out)
   (begin

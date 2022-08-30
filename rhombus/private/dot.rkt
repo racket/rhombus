@@ -17,6 +17,7 @@
 (module+ for-dot-provider
   (begin-for-syntax
     (provide (property-out dot-provider)
+             (property-out dot-provider-strict)
              
              in-dot-provider-space
 
@@ -30,6 +31,7 @@
 
 (begin-for-syntax
   (property dot-provider (handler))
+  (property dot-provider-strict dot-provider ())
 
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot-provider))
 
@@ -65,10 +67,15 @@
         (syntax-parse form1
           [dp::dot-provider
            (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
-           (define e ((dot-provider-handler p) form1 #'dot #'field))
-           (if e
-               (values e #'tail)
-               (generic))]
+           (if (dot-provider-strict? p)
+               ((dot-provider-handler p) form1 #'dot #'field
+                                         #'tail
+                                         strict?
+                                         values generic)
+               (let ([e ((dot-provider-handler p) form1 #'dot #'field)])
+                 (if e
+                     (values e #'tail)
+                     (generic))))]
           [_ (generic)])]
        [(dot::operator other . tail)
         (raise-syntax-error #f

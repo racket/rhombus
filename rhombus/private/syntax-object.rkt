@@ -12,6 +12,7 @@
          "realm.rkt"
          "name-root.rkt"
          "tag.rkt"
+         "dot-parse.rkt"
          (submod "dot.rkt" for-dot-provider))
 
 (provide Syntax
@@ -322,21 +323,22 @@
       relocate_span)))
 
 (define syntax-method-table
-  (hash 'unwrap unwrap
-        'unwrap_group unwrap_group
-        'unwrap_sequence unwrap_sequence
-        'strip strip
-        'relocate relocate_method 
+  (hash 'unwrap (method1 unwrap)
+        'unwrap_group (method1 unwrap_group)
+        'unwrap_sequence (method1 unwrap_sequence)
+        'strip (method1 strip)
+        'relocate relocate_method
         'relocate_span relocate_span_method))
 
 (define-syntax syntax-instance
-  (dot-provider
-   (lambda (lhs dot-stx field-stx)
-     (case (syntax-e field-stx)
-       [(unwrap) #`(unwrap #,lhs)]
-       [(unwrap_group) #`(unwrap_group #,lhs)]
-       [(unwrap_sequence) #`(unwrap_sequence #,lhs)]
-       [(strip) #`(strip #,lhs)]
-       [(relocate) #`(relocate_method #,lhs)]
-       [(relocate_span) #`(relocate_span_method #,lhs)]
-       [else #f]))))
+  (dot-provider-strict
+   (dot-parse-dispatch
+    (lambda (field-sym ary 0ary nary fail-k)
+      (case field-sym
+        [(unwrap) (0ary #'unwrap)]
+        [(unwrap_group) (0ary #'unwrap_group)]
+        [(unwrap_sequence) (0ary #'unwrap_sequence)]
+        [(strip) (0ary #'strip)]
+        [(relocate) (nary #'relocate_method 1 #'relocate)]
+        [(relocate_span) (nary #'relocate_span_method 1 #'relocate_span)]
+        [else (fail-k)])))))

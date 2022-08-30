@@ -44,7 +44,9 @@
   (provide map-method-table))
 
 (define map-method-table
-  (hash 'count hash-count))
+  (hash 'count hash-count
+        'values hash-values
+        'keys hash-keys))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
 
