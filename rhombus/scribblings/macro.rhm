@@ -15,7 +15,7 @@ fun make_macro_eval():
   @examples(
     ~eval: macro_eval,
     ~hidden: #true,
-    import: rhombus/macro open
+    import: rhombus/meta open
   )
   macro_eval
 
@@ -25,8 +25,6 @@ fun make_for_meta_eval():
     ~eval: meta_eval,
     ~hidden: #true,
     import: 
-      rhombus/macro open
-      for_meta:
-        rhombus open
+      rhombus/meta open
   )
   meta_eval

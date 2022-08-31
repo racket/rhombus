@@ -3,21 +3,23 @@
     "common.rhm" open 
     "macro.rhm")
 
-@title{For-Meta Sequences}
+@title{Meta Definitions and Expressions}
 
 @doc(
-  defn.macro 'begin_for_meta:
+  decl.macro 'meta:
                 $body
                 ...'
 ){
 
  The same as the @rhombus(body) sequence, but shifted to one phase
- greater. Defintions inside a @rhombus(begin_for_meta) block can be
+ greater. Defintions inside a @rhombus(meta) block can be
  referenced in macro implementations, for example.
+
+ See also the @rhombus(meta, ~impmod) import modifier.
 
 @examples(
   ~eval: macro.make_for_meta_eval(),
-  begin_for_meta:
+  meta:
     syntax.class Arithmetic
     | '$x + $y'
     | '$x - $y',

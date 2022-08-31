@@ -41,10 +41,10 @@ Defining a syntax class in this way makes it available for use in syntax
 patterns, such as in @rhombus(match). The syntax class must be defined
 at the same phase as the referencing pattern. To define a syntax class
 for use in a macro definition, place it inside a
-@rhombus(begin_for_meta) block.
+@rhombus(meta) block.
 
 @(rhombusblock:
-    begin_for_meta:
+    meta:
       syntax.class Arithmetic
       | '$x + $y'
       | '$x - $y'

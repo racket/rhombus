@@ -1,6 +1,5 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
-  rhombus/macro open
   scribble/rhombus open
   scribble/manual.racketvarfont
   scribble/manual.racketfont
@@ -50,7 +49,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
                          ~each name: [name, ...]
                          "" +& name.unwrap()
   values('«begin:
-             rhombus_meta '$id':
+             rhombus_typeset '$id':
                '@racketvarfont("" +& symbol($id))'
              ...
              [

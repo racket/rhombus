@@ -19,7 +19,8 @@
           (rename-out [rhombus... ...])
           $))
 
-(bounce "private/implicit.rkt"
+(bounce "private/default-stub.rkt"
+        "private/implicit.rkt"
         "private/underscore.rkt"
         "private/arithmetic.rkt"
         "private/string.rkt"
@@ -53,7 +54,6 @@
         "private/syntax-object.rkt"
         "private/syntax-class.rkt"
         "private/syntax-class-syntax.rkt"
-        "private/begin-for-meta.rkt"
         "private/for.rkt"
         "private/range.rkt"
         "private/parameterize.rkt"
@@ -64,14 +64,16 @@
   #:language 'rhombus
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
-  #:info (lambda (key default make-default)
-           (case key
-             [(drracket:default-extension) "rhm"]
-             [else (get-info-proc key default make-default)]))
+  #:info get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
            (only-in (submod shrubbery reader)
-                    get-info-proc)))
+                    [get-info-proc shrubbery:get-info-proc]))
+  (provide get-info-proc)
+  (define (get-info-proc key default make-default)
+    (case key
+      [(drracket:default-extension) "rhm"]
+      [else (shrubbery:get-info-proc key default make-default)])))
 
 (module configure-runtime racket/base
   (require rhombus/runtime-config))

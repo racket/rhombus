@@ -1,10 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     syntax/parse
                      syntax/stx
                      enforest/transformer
                      enforest/sequence
                      enforest/property
-                     enforest/proc-name))
+                     enforest/proc-name
+                     "introducer.rkt"))
 
 (begin-for-syntax
   (provide (property-out definition-transformer)

@@ -28,8 +28,8 @@
                     rename
                     as
                     except
-                    for_meta
-                    for_label
+                    meta
+                    meta_label
                     names
                     all_from
                     |.|
@@ -242,7 +242,7 @@
        [(_ (block e::export ...))
         #`(except-out #,ex e.parsed ...)]))))
      
-(define-export-syntax for_meta
+(define-export-syntax meta
   (export-modifier
    (lambda (ex stx)
      (syntax-parse stx
@@ -254,7 +254,7 @@
        [(form) 
         (datum->syntax ex (list (syntax/loc #'form for-meta) #'1 ex) ex)]))))
 
-(define-export-syntax for_label
+(define-export-syntax meta_label
   (export-modifier
    (lambda (ex stx)
      (syntax-parse stx

@@ -1,11 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "macro.rhm"
-    for_label:
-      rhombus/macro:
-        only: expr_ct
-        for_meta -1)
+    "macro.rhm")
 
 @(val macro_eval: macro.make_macro_eval())
 

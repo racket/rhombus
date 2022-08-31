@@ -44,8 +44,8 @@
                     rename
                     only
                     except
-                    for_meta
-                    for_label))
+                    meta
+                    meta_label))
 
 (module+ for-meta
   (provide (for-syntax import-modifier
@@ -666,7 +666,7 @@
                        (list* #'expose-in req #'(name.name ... ...))
                        req)]))))
 
-(define-import-syntax for_meta
+(define-import-syntax meta
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
@@ -678,7 +678,7 @@
        [(form) 
         (datum->syntax req (list (syntax/loc #'form for-meta) #'1 req) req)]))))
 
-(define-import-syntax for_label
+(define-import-syntax meta_label
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx

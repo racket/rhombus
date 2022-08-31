@@ -3,7 +3,7 @@
     "common.rhm" open 
     "macro.rhm")
 
-@title(~tag: "stxobj-macro"){Syntax Object Meta Functions}
+@title(~tag: "stxobj-macro"){Syntax Objects in Macros}
 
 @doc(
   fun Syntax.meta_value(id :: Syntax, fail = ....)

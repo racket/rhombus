@@ -112,7 +112,7 @@
 
 @examples(
   ~eval: macro.make_for_meta_eval(),
-  begin_for_meta:
+  meta:
     syntax.class Arithmetic
     | '$x + $y'
     | '$x - $y',
@@ -122,7 +122,7 @@
   expr.macro 'add_one_to_expression $(e :: Arithmetic)':
     values('$e ... + 1', ''),
   add_one_to_expression 2 + 2,
-  begin_for_meta:
+  meta:
     syntax.class NTerms
     | '~one $a':
         ~attr b:

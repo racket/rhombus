@@ -1,19 +1,18 @@
 #lang rhombus
 
 import:
-  rhombus/macro open
+  rhombus/meta open
   scribble/rhombus as scribble
   "dispatch_table.rhm" open
-  for_label:
+  meta_label:
     rhombus open
-    rhombus/macro open
+    rhombus/meta open
 
 export:
-  all_from(rhombus/macro)
-  all_from(rhombus):
-    for_label
-  all_from(rhombus/macro):
-    for_label
+  all_from(rhombus/meta)
+  meta_label:
+    all_from(rhombus)
+    all_from(rhombus/meta)
   all_from("dispatch_table.rhm")
   see_implicit
 

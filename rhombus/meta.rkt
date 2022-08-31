@@ -4,7 +4,7 @@
 (require (for-syntax "main.rkt"))
 (provide (for-syntax (all-from-out "main.rkt")))
 
-(bounce "private/for-meta.rkt"
+(bounce "private/meta.rkt"
         "private/expression-syntax.rkt"
         "private/binding-syntax.rkt"
         "private/definition-syntax.rkt"
@@ -19,6 +19,3 @@
         "private/syntax-error.rkt"
         "private/parsed.rkt"
         "private/syntax-meta-value.rkt")
-
-(require (only-in "private/import.rkt" for_meta))
-(provide (for-space rhombus/import for_meta))

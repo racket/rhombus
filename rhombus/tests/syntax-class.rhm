@@ -104,8 +104,8 @@ begin:
   check:
     ~eval_exn
     import:
-      rhombus/macro open
-    begin_for_meta:
+      rhombus/meta open
+    meta:
       syntax.class Arithmetic:
         ~description: "an expression with addition or subtraction"
         ~pattern
@@ -134,7 +134,7 @@ begin:
 check:
   ~eval_exn
   import:
-    rhombus/macro open
+    rhombus/meta open
   syntax.class Foo
   | '$x + $y'
   | '$x + $y + $z'

@@ -1,6 +1,4 @@
 #lang rhombus
-import:
-  rhombus/macro open
 
 export:
   parens_syntax

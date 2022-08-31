@@ -21,7 +21,7 @@ wraps as a zero-argument function
 
 @(rhombusblock:
     import:
-      rhombus/macro open
+      rhombus/meta open
 
     expr.rule 'thunk: $body':
       'fun (): $body'
@@ -40,7 +40,7 @@ defined; otherwise, the second term must be unescaped, and an infix
 macro is defined.
 
 The @rhombus(expr.rule) form must be imported from
-@rhombusmodname(rhombus/macro), but @rhombus(def) behaves like
+@rhombusmodname(rhombus/meta), but @rhombus(def) behaves like
 @rhombus(expr.rule) when the part before @rhombus(:) is valid for
 @rhombus(expr.rule):
 
@@ -72,10 +72,10 @@ this:
 The @rhombus(expr.rule) or @rhombus(def) form is a shorthand for a more
 general @rhombus(expr.macro) macro form. With @rhombus(expr.macro), the
 macro implementation after @rhombus(:) is compile-time code. Importing
-@rhombusmodname(rhombus/macro) imports all of the same bindings as
-@rhombus(rhombus) into the compile-time phase, in addition to making
+@rhombusmodname(rhombus/meta) imports all of the same bindings as
+@rhombusmodname(rhombus) into the compile-time phase, in addition to making
 forms like @rhombus(expr.macro) available. Normally,
-@rhombusmodname(rhombus/macro) should be imported without a prefix, otherwise a
+@rhombusmodname(rhombus/meta) should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time
 code—even for things like @rhombus(values) and @rhombus(''). In addition,
 a macro defined with @rhombus(expr.macro) receives all remaining terms

@@ -1,0 +1,13 @@
+#lang rhombus/and_meta
+import:
+  "rhombus.rhm" open
+  meta:
+    "typeset_meta.rhm"
+
+export:
+  rhombus_typeset
+
+defn.macro '«rhombus_typeset '$id':
+               $rhs»':
+  'meta.bridge $(typeset_meta.in_space(id)):
+     typeset_meta.make_Transformer(fun (stx): $rhs)'

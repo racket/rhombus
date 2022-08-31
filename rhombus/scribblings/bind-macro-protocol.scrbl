@@ -156,7 +156,7 @@ Here's a use of the low-level protocol to implement a @rhombus(fruit) pattern,
 which matches only things that are fruits according to @rhombus(is_fruit):
 
 @(rhombusblock:
-    import: rhombus/macro open
+    import: rhombus/meta open
 
     bind.macro 'fruit($id) $tail ...':
       values(bind_ct.pack('(fruit_infoer,

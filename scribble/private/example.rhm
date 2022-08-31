@@ -1,7 +1,6 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 import:
-  rhombus/macro open
   "typeset-example.rkt" open
 
 export:

@@ -51,6 +51,7 @@
   (define-transform
     #:syntax-class :declaration
     #:desc "declaration"
+    #:in-space in-expression-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root
@@ -61,6 +62,7 @@
   (define-transform
     #:syntax-class :nestable-declaration
     #:desc "nestable declaration"
+    #:in-space in-expression-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root
@@ -72,6 +74,7 @@
     #:syntax-class :definition
     #:predicate definition?
     #:desc "definition"
+    #:in-space in-expression-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root
@@ -84,6 +87,7 @@
     #:apply-transformer apply-definition-sequence-transformer
     #:predicate definition-sequence?
     #:desc "definition sequence"
+    #:in-space in-expression-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root

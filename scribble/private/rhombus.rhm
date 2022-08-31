@@ -1,9 +1,9 @@
 #lang rhombus
 import:
-  rhombus/macro open
+  rhombus/meta open
   "typeset-rhombus.rkt" open
   "rebuild.rhm" open
-  for_meta:
+  meta:
     "typeset_meta.rhm"
     "rebuild.rhm" open
   scribble/base as scribble:
@@ -13,7 +13,7 @@ export:
   rhombus
   rhombusblock
 
-for_meta:
+meta:
   def | map(proc, []): []
       | map(proc, [a, a1, ...]): List.cons(proc(a), map(proc, [a1, ...]))
 

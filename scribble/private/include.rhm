@@ -1,6 +1,6 @@
 #lang rhombus
 import:
-  rhombus/macro open
+  rhombus/meta open
   scribble/base expose: #{include-section}
 
 export:

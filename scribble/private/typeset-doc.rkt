@@ -23,7 +23,7 @@
                   def val fun operator :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
-         (only-in rhombus/macro
+         (only-in rhombus/meta
                   decl defn expr impo expo annotation bind reducer for_clause)
          (only-in "rhombus.rhm"
                   rhombusblock

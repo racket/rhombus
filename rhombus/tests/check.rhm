@@ -1,12 +1,11 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
-  rhombus/macro open
   "call-capture-exn.rkt" open
 
 export:
  check
 
-begin_for_meta:
+meta:
   syntax.class check_mode
   | '~print'
   | '~equal'

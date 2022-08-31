@@ -50,7 +50,7 @@
          (define-syntax-class form
            #:opaque
            #:description form-kind-str
-           (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref)))
+           (pattern ((~datum group) . (~var hname (:hier-name-seq in-space name-path-op name-root-ref)))
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) (lambda (v)
                                                                               (name-root-ref-root v transformer-ref))))]

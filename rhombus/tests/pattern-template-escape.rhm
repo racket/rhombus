@@ -1,7 +1,6 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
   "check.rhm" open
-  rhombus/macro open
 
 // Try patterns and templates that involve literal
 // `$` operators, including defining `$`
@@ -77,13 +76,13 @@ check:
 
 check:
   ~eval_exn
-  import: rhombus/macro open
+  import: rhombus/meta open
   expr.rule '$1 + $2': '0'
   "expected operator-macro pattern"
 
 check:
   ~eval_exn
-  import: rhombus/macro open
+  import: rhombus/meta open
   expr.rule '$x $ $x': '0'
   "expected operator-macro pattern"
 
@@ -106,9 +105,9 @@ check:
 
 check:
   ~eval_print
-  import: rhombus/macro open
+  import: rhombus/meta open
   // phase-1 binding of `$` makes `expr.rule` bind `$`
-  begin_for_meta:  
+  meta:  
     operator ($ b): b
   expr.rule '$x + $y': '[$x, $y]'
   (1+2)

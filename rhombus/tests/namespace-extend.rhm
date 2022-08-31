@@ -1,7 +1,6 @@
-#lang rhombus
+#lang rhombus/and_meta
 import:
   "check.rhm" open
-  rhombus/macro open
 
 namespace root:
   namespace trunk:

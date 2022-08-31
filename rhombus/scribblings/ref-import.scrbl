@@ -187,20 +187,20 @@
 }
 
 @doc(
-  impo.modifier 'for_meta',
-  impo.modifier 'for_meta $phase'
+  impo.modifier 'meta',
+  impo.modifier 'meta $phase'
 ){
 
  Modifies an @rhombus(import) clause so that the imports are shifted by
  @rhombus(phase) levels, where @rhombus(phase) defaults to @rhombus(1).
 
  This modifier is valid only for module fies that refer to modules,
- as opposed to @rhombus(nest) bindings.
+ as opposed to @rhombus(namespace) bindings.
 
 }
 
 @doc(
-  impo.modifier 'for_label'
+  impo.modifier 'meta_label'
 ){
 
  Modifies an @rhombus(import) clause so that only the imports that would
@@ -208,6 +208,6 @@
  the label phase.
 
  This modifier is valid only for module fies that refer to modules,
- as opposed to @rhombus(nest) bindings.
+ as opposed to @rhombus(namespace) bindings.
 
 }

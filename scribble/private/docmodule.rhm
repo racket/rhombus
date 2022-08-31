@@ -1,13 +1,12 @@
-#lang rhombus
+#lang rhombus/and_meta
 
 import:
-  rhombus/macro open
   scribble/manual expose:
     defmodule racketmodname
   "rhombus.rhm" open
-  for_meta:
+  meta:
     racket/base
-  for_label:
+  meta_label:
     rhombus expose:
       import
 
@@ -15,7 +14,7 @@ export:
   docmodule
   rhombusmodname
 
-for_meta:
+meta:
   fun translate_mod(mod):
     match mod
     | '$(a :: Id)': a
@@ -26,12 +25,21 @@ for_meta:
     | 'lib($str)':
         [symbol(lib), str]
 
-decl.macro 'docmodule ($mod ...)':
+  syntax.class Option:
+    ~term
+    ~pattern
+    | '~lang':
+        ~attr form: '~lang'
+    | '#{#:no-declare}':
+        ~attr form: '#{#:no-declare}'
+
+decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   '$(parsed(['defmodule',
              keyword(#{#:require-form}),
              unparsed('fun (mod): @rhombus(import: $$(mod))'),
-             translate_mod('$mod ...')]))'
-
+             translate_mod('$mod ...'),
+             option, ...]))'
+  
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
   values(parsed(['racketmodname', translate_mod('$mod ...')]),
          '$tail ...')

@@ -10,8 +10,8 @@
                     [local-table-of-contents local_table_of_contents])
          scribble/private/manual-defaults
          "private/rhombus.rhm"
-         "private/rhombus_meta.rhm"
-         "private/include.rkt")
+         "private/rhombus_typeset.rhm"
+         "private/include.rhm")
 
 (provide (rename-out [module-begin #%module-begin])
          (except-out (all-from-out scribble/base)
@@ -21,8 +21,8 @@
          pkg
          include_section
          (all-from-out "private/rhombus.rhm"
-                       "private/rhombus_meta.rhm"
-                       "private/include.rkt"))
+                       "private/rhombus_typeset.rhm"
+                       "private/include.rhm"))
 (define-syntax-rule (rhombus-out)
   (begin
     (require (except-in rhombus #%module-begin))

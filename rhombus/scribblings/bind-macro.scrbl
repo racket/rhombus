@@ -12,7 +12,7 @@ as a prefix operator to constrain a pattern to number inputs:
 
 @(rhombusblock:
     import:
-      rhombus/macro: open
+      rhombus/meta: open
 
     bind.rule '$ $n':
       ~parsed_right

@@ -119,25 +119,25 @@
 }
 
 @doc(
-  expo.modifier 'for_meta',
-  expo.modifier 'for_meta $phase'
+  expo.modifier 'meta',
+  expo.modifier 'meta $phase'
 ){
 
  Modifies exports to apply at @rhombus(phase) more than the enclosing
  context's phase, where @rhombus(phase) defaults to @rhombus(1).
 
  This modifier is valid only immediately within a modules, and not
- within @rhombus(nest) forms.
+ within @rhombus(namespace) forms.
 
 }
 
 @doc(
-  expo.modifier 'for_label'
+  expo.modifier 'meta_label'
 ){
 
  Modifies exports to apply at the label phase.
 
  This modifier is valid only immediately within a modules, and not
- within @rhombus(nest) forms.
+ within @rhombus(namespace) forms.
 
 }

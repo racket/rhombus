@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  rhombus/macro open
+  rhombus/meta open
 
 use_static_dot
 
@@ -719,7 +719,7 @@ syntax.class Arithmetic
 val '$(exp :: Arithmetic)': '1 + 2'
 exp.x
 
-begin_for_meta:
+meta:
   syntax.class Arithmetic2:
     ~description: "multiplication or division forms"
     ~pattern
