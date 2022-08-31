@@ -15,6 +15,7 @@
                      [(stxclass) 'rhombus/syntax-class]
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for-clause]
+                     [(#f) 'rhombus/expression]
                      [else #f]))
      (if space
          ((make-interned-syntax-introducer space) stx 'add)
