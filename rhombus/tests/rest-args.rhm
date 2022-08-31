@@ -148,16 +148,17 @@ check: krpythag(~c: 5, ~b: 4); 3
 check: krpythag(~a: 3, ~b: 4, ~c: 5); #true
 check: krpythag(~a: 3, ~b: 4, ~c: 6); #false    
 
-// TODO: add single-argument keyword support for `|` alt
-// functions so that they don't have to be put through `~&`
-// keyword rest like `krpythag` above
-/*
 fun
 | pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
 | pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
 | pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
 | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
-*/
+
+check: pythag(~a: 3, ~b: 4); 5
+check: pythag(~c: 5, ~a: 3); 4
+check: pythag(~c: 5, ~b: 4); 3
+check: pythag(~a: 3, ~b: 4, ~c: 5); #true
+check: pythag(~a: 3, ~b: 4, ~c: 6); #false    
 
 // ---------------------------
 // Repetition Rest with ...

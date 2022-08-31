@@ -20,7 +20,10 @@
                            (~and rhs (block . _))))))
 
   (define (falses l-stx)
-    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx))))))
+    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
+
+  (define (l1falses l-stx)
+    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx))))))
 
 (define-syntax match
   (expression-transformer
@@ -37,6 +40,7 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (values
          #`(#,(build-case-function #'match
+                                   (l1falses #'(b ...))
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'else-infoer
@@ -56,6 +60,7 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
         (values
          #`(#,(build-case-function #'match
+                                   (l1falses #'(b ...))
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'else-infoer

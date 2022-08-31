@@ -38,7 +38,7 @@
     (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
-       [(form-id ((~and alts-tag alts) (block (group id-seq::dotted-identifier-sequence (parens arg::non-...-binding ... rest::maybe-arg-rest)
+       [(form-id ((~and alts-tag alts) (block (group id-seq::dotted-identifier-sequence (parens arg::kw-binding ... rest::maybe-arg-rest)
                                                      ret::ret-annotation
                                                      (~and rhs (block body ...))))
                                        ...+))
@@ -50,6 +50,7 @@
          (wrap-definition
           #`(define #,the-id
               #,(build-case-function the-id
+                                     #'((arg.kw ...) ...)
                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
                                      #'(rest.arg ...) #'(rest.parsed ...)
                                      #'(rest.kwarg ...) #'(rest.kwparsed ...)
