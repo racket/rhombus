@@ -16,7 +16,7 @@ Here’s the classic @rhombus(def_five) macro:
 
 @(rhombusblock:
     import:
-      rhombus/meta: open
+      rhombus/meta open
 
     defn.macro 'def_five $id':
       'def $id: 5'

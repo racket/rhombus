@@ -6,6 +6,7 @@
                      rhombus/private/pack)
          (only-in rhombus
                   [= rhombus-=]
+                  [/ rhombus-/]
                   [values rhombus-values]))
 
 (provide (for-space rhombus/scribble/typeset
@@ -16,7 +17,8 @@
                     val
                     def
                     match
-                    for))
+                    for
+                    import))
 
 (define-syntax (define-spacer stx)
   (syntax-parse stx
@@ -190,3 +192,45 @@
      #`(group #:do #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
     [_
      body]))
+
+(define-spacer import
+  (spacer
+   (lambda (head tail escape)
+     (define new-tail (syntax-parse tail
+                        #:datum-literals (group block)
+                        [(((~and block-tag block) body ...))
+                         #`((block-tag
+                             #,@(map import-clause-spacer (syntax->list #'(body ...)))))]
+                        [(g)
+                         #`(#,(import-clause-spacer #'g))]
+                        [_
+                         tail]))
+     (values head new-tail))))
+
+(define-for-syntax (import-clause-spacer c)
+  (define (hide stx)
+    (term-identifiers-syntax-property stx 'typeset-space-name 'hide))
+  (define (as-mod stx)
+    (term-identifiers-syntax-property stx 'typeset-space-name 'impmod))
+  (syntax-parse c
+    #:datum-literals (group)
+    [((~and tag group) c ...)
+     #`(tag #,@(let loop ([cs #'(c ...)])
+                 (syntax-parse cs
+                   #:datum-literals (group op |.| open as)
+                   #:literals (rhombus-/)
+                   [(id:identifier) (list (hide #'id))]
+                   [(mp (~and mod open)) (list (hide #'mp) (as-mod #'mod))]
+                   [(mp (~and mod as) id:identifier) (list (hide #'mp) (as-mod #'mod) (hide #'id))]
+                   [(id:identifier (~and slash (op rhombus-/)) . cs)
+                    (list (hide #'id)
+                          (term-identifiers-syntax-property #'slash 'typeset-space-name 'impmod)
+                          (loop #'cs))]
+                   [(id:identifier (~and dot (op |.|)) . cs)
+                    (list (hide #'id)
+                          (hide #'dot)
+                          (loop #'cs))]
+                   [((~and dot (op |.|)) . cs)
+                    (list (hide #'dot)
+                          (loop #'cs))]
+                   [else cs])))]))

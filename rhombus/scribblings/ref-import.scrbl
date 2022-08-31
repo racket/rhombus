@@ -33,7 +33,7 @@
 
   grammar collection_module_path:
     $identifier
-    $identifier / $collection_module_path
+    $identifier $$(@rhombus(/, ~impmod)) $collection_module_path
 
 ){
 
@@ -82,7 +82,7 @@
  @itemlist(
 
  @item{@rhombus(collection_module_path): refers to an installed
-   collection library, where the @rhombus(/) operator acts as a path
+   collection library, where the @rhombus(/, ~impmod) operator acts as a path
    separator. Each @rhombus(identifier) in the path is constrained to
    contain only characters allowed in a @rhombus(string) module path, with
    the additional constraint that @litchar{.} is disallowed.},
@@ -117,6 +117,16 @@
   @rhombus(identifier) from @rhombus(module_path).}
 
 )
+
+}
+
+@doc(
+  impo.macro '$identifier / $collection_module_path'
+){
+
+  As an import-clause operator, combines @rhombus(identifier) and
+  @rhombus(collection_module_path) to build a longer collection-based
+  module path.
 
 }
 
