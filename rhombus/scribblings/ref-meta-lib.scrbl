@@ -5,7 +5,7 @@
 
 @docmodule(rhombus/meta)
 
-@docmodule(~lang, #{#:no-declare}, rhombus/and_meta)
+@docmodule(~lang, ~no_declare, rhombus/and_meta)
 
 Simple pattern-based expression macros can be written using
 @rhombus(def) without imorting any additional libraries besides

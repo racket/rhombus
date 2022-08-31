@@ -54,10 +54,12 @@
 
   (struct pattern-variable (id val-id depth unpack*-id)))
 
-(define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth attributes)
+(define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth splice? attributes)
   (define (lookup-attribute stx var-id attr-id want-repet?)
     (define attr (hash-ref attributes (syntax->datum attr-id) #f))
-    (unless (and attr (eq? want-repet? (not (eqv? 0 (syntax-class-attribute-depth attr)))))
+    (unless (and attr (eq? want-repet? (not (eqv? 0 (+ depth
+                                                       (if splice? -1 0)
+                                                       (syntax-class-attribute-depth attr))))))
       (raise-syntax-error #f
                           (format
                            (string-append (if attr
@@ -77,7 +79,8 @@
         #:datum-literals (op |.|)
         [(var-id (op |.|) attr-id . tail)
          (define attr (lookup-attribute stx #'var-id #'attr-id #f))
-         (values (syntax-class-attribute-id attr) #'tail)]
+         (values (syntax-class-attribute-id attr)
+                 #'tail)]
         [_ (fail)])))
   (cond
     [(eq? depth 0) (if (eq? 0 (hash-count attributes))
@@ -102,7 +105,7 @@
                                 (values (make-repetition-info (string->symbol
                                                                (format "~a.~a" (syntax-e #'var-id) (syntax-e #'attr-id)))
                                                               (syntax-class-attribute-id attr)
-                                                              (+ (syntax-class-attribute-depth attr) (- depth 1))
+                                                              (+ (syntax-class-attribute-depth attr) depth (if splice? -1 0))
                                                               #'0
                                                               #'())
                                         #'tail)]
@@ -283,6 +286,7 @@
                                                             (quote-syntax #,temp2)
                                                             (quote-syntax #,unpack*)
                                                             0
+                                                            #f
                                                             (hasheq))])
                  (list (pattern-variable e temp2 0 unpack*))))]
       [(parens (group id:identifier (op colons) stx-class:identifier))
@@ -317,6 +321,7 @@
                               (quote-syntax #,temp-id)
                               (quote-syntax #,unpack*)
                               #,pack-depth
+                              #,(rhombus-syntax-class-splicing? rsc)
                               (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
                                                          (list #`(quote #,(car b))
                                                                #`(syntax-class-attribute (quote-syntax #,(cadr b))
@@ -401,8 +406,8 @@
                   ;; deepen-syntax-escape
                   (lambda (sidr)
                     (syntax-parse sidr
-                      [(id (make-pattern-variable-syntax self-id temp-id unpack* depth ht))
-                       #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) ht))]))
+                      [(id (make-pattern-variable-syntax self-id temp-id unpack* depth splice? ht))
+                       #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) splice? ht))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
                     (syntax-parse e
@@ -417,6 +422,7 @@
                                                                             (quote-syntax #,temp-id)
                                                                             (quote-syntax unpack-tail-list*)
                                                                             1
+                                                                            #f
                                                                             (hasheq))])
                                  (list (pattern-variable e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
                   ;; handle-block-tail-escape:
@@ -429,6 +435,7 @@
                                                                          (quote-syntax #,temp-id)
                                                                          (quote-syntax unpack-multi-tail-list*)
                                                                          1
+                                                                         #f
                                                                          (hasheq))])
                               (list (pattern-variable e temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
                   ;; handle-maybe-empty-sole-group

@@ -283,3 +283,47 @@ begin:
     match ': 1 + 2; 3 - 4; 5 / 6'
     | ': $(f :: Foo)': f
     '1 + 2; 3 - 4; 5 / 6'
+
+check:
+  ~print
+  syntax.class Option:
+    ~term
+    ~pattern
+    | '~lang':
+        ~attr form: '~lang'
+  match '(~lang, ~lang)'
+  | '($(o :: Option), ...)': [o.form, ...]
+  ['~lang', '~lang']
+
+check:
+  ~print
+  syntax.class Option:
+    ~pattern
+    | '~lang':
+        ~attr form: '~lang'
+    | '~lang ~and':
+        ~attr form: '~and'
+  match '(~lang, ~lang ~and)'
+  | '($(o :: Option), ...)': [o.form, ...]
+  ['~lang', '~and']
+
+check:
+  ~eval_exn
+  syntax.class Option:
+    ~term
+    ~pattern
+    | '~lang':
+        ~attr form: '~lang'
+  match '(~lang, ~lang)'
+  | '($(o :: Option), ...)': [o.form]
+  "attribute is a repetition"
+
+check:
+  ~eval_exn
+  syntax.class Option:
+    ~pattern
+    | '~lang':
+        ~attr form: '~lang'
+  match '(~lang, ~lang)'
+  | '($(o :: Option), ...)': [o.form]
+  "attribute is a repetition"

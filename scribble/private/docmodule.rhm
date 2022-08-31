@@ -30,7 +30,7 @@ meta:
     ~pattern
     | '~lang':
         ~attr form: '~lang'
-    | '#{#:no-declare}':
+    | '~no_declare':
         ~attr form: '#{#:no-declare}'
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
@@ -38,7 +38,7 @@ decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
              keyword(#{#:require-form}),
              unparsed('fun (mod): @rhombus(import: $$(mod))'),
              translate_mod('$mod ...'),
-             option, ...]))'
+             option.form, ...]))'
   
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
   values(parsed(['racketmodname', translate_mod('$mod ...')]),
