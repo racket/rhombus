@@ -14,7 +14,7 @@ check:
   "x"
 
 check:
-  use_static_dot
+  use_static
   home.Posn(1, 2).x
   1
 

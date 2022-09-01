@@ -60,6 +60,8 @@ operator. These uses of square brackets are implemented by
  the value produced by @rhombus(rhs_expr), and the expression result is
  @rhombus(#void).
 
+ See also @rhombus(use_static).
+
  @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression", ~is_infix: #true)
 
 @examples(

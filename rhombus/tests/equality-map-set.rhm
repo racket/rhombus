@@ -4,7 +4,7 @@ import:
   racket/base open:
     only: mcons
 
-use_static_dot
+use_static
 
 class Posn(x, y)
 

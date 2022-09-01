@@ -2,17 +2,15 @@
 import:
   "check.rhm" open
 
-fun dynamic(v): v
-
 check:
-  use_static_dot
+  use_static
   let x && [y] : [10]
   [[x, y], x.length()]
   [[[10], 10], 1]
 
 check:
   // static info flows from lhs to rhs
-  use_static_dot
+  use_static
   class Posn(x, y)
   val Posn(x, y) && z : dynamic(Posn(1, 2))
   z.x
@@ -21,12 +19,11 @@ check:
 check:
   ~eval_exn
   // static info doens't go right to left
-  use_static_dot
-  fun dynamic(v): v
+  use_static
   class Posn(x, y)
   val z && Posn(x, y) : dynamic(Posn(1, 2))
   z.x
-  "strict operator not supported"
+  "static operator not supported"
 
 begin:
   fun try(v):

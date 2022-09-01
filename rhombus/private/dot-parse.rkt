@@ -7,7 +7,7 @@
          method1)
 
 (define-for-syntax (dot-parse-dispatch k)
-  (lambda (lhs dot-stx field-stx tail strict? success-k fail-k)
+  (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
     (define (ary n n-k no-k)
       (define (bad)
         (raise-syntax-error #f
@@ -22,11 +22,11 @@
             (success-k (apply n-k (syntax->list #'((rhombus-expression g) ...)))
                        #'new-tail)]
            [else
-            (if strict?
+            (if more-static?
                 (bad)
                 (values (no-k) tail))])]
         [_
-         (if strict?
+         (if more-static?
              (bad)
              (values (no-k) tail))]))
 

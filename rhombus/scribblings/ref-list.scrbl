@@ -6,7 +6,7 @@
 
 @title{Lists}
 
-Lists can be constructed using the syntax
+@deftech{Lists} can be constructed using the syntax
 @rhombus([$$(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the

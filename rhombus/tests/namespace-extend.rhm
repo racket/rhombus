@@ -64,7 +64,7 @@ check:
   [1, 16]
 
 check:
-  use_static_dot
+  use_static
   root.Posn(1, 2).x
   1
 

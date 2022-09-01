@@ -81,7 +81,7 @@
     #`((#%ref-result #,(car static-infoss)))))
 
 (define-syntax list-instance
-  (dot-provider-strict
+  (dot-provider-more-static
    (dot-parse-dispatch
     (lambda (field-sym ary 0ary nary fail-k)
       (case field-sym
@@ -145,7 +145,8 @@
                                          (for/list ([arg (in-list args)])
                                            #'())
                                          #:ref-result-info? #t
-                                         #:rest-accessor rest-selector)
+                                         #:rest-accessor rest-selector
+                                         #:static-infos list-static-infos)
      #`(#,form-id (parens . #,args) . #,tail)
      rest-arg))
   (syntax-parse stx

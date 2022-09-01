@@ -23,6 +23,7 @@
 @include_section("ref-parameter.scrbl")
 
 @include_section("ref-implicit.scrbl")
+@include_section("ref-dynamic-static.scrbl")
 
 @include_section("ref-boolean.scrbl")
 @include_section("ref-number.scrbl")

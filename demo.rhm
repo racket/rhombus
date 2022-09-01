@@ -3,7 +3,7 @@
 import:
   rhombus/meta open
 
-use_static_dot
+use_static
 
 // Some expressions
 
@@ -48,7 +48,7 @@ class Posn(x, y)
 def md(p -: Posn):
   p.x + p.y
 def md2(p):
-  use_dynamic_dot
+  use_dynamic
   p.x + p.y
 
 Posn.x(Posn(1, 4))
@@ -419,6 +419,11 @@ val yes_nums :: List: nums
 val yep_nums :: List.of(Integer): nums
 
 nums[1]
+
+begin:
+  use_dynamic
+  val also_nums: if #true | nums | #false
+  also_nums[1]
 
 val nums_a: Array(1, 2, 3)
 val yes_nums_a :: Array: nums_a

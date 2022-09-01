@@ -18,15 +18,19 @@
 (module+ for-ref
   (provide (for-syntax parse-map-ref-or-set)))
 
-(define-for-syntax (parse-map-ref-or-set map-in stxes)
+(define-for-syntax (parse-map-ref-or-set map-in stxes more-static?)
   (define map (rhombus-local-expand map-in))
+  (define who '|[]|)
+  (define not-static "specialization not statically known")
   (syntax-parse stxes
     #:datum-literals (brackets op)
     #:literals (:=)
     [(_ ((~and head brackets) index) (op :=) . rhs+tail)
      #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
-                             #'map-set!))
+                             (if more-static?
+                                 (raise-syntax-error who not-static map-in)
+                                 #'map-set!)))
      (define e (datum->syntax (quote-syntax here)
                               (list map-set!-id map #'(rhombus-expression index) #'rhs.parsed)
                               (span-srcloc map #'head)
@@ -35,7 +39,9 @@
              #'rhs.tail)]
     [(_ ((~and head brackets) index) . tail)
      (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
-                            #'map-ref))
+                            (if more-static?
+                                (raise-syntax-error who not-static map-in)
+                                #'map-ref)))
      (define e (datum->syntax (quote-syntax here)
                               (list map-ref-id map #'(rhombus-expression index))
                               (span-srcloc map #'head)

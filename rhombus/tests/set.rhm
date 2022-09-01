@@ -1,8 +1,6 @@
 #lang rhombus
 import: "check.rhm" open
 
-fun dynamic(v): v
-
 check:
   Set.length({10, 20})
   2
@@ -15,7 +13,7 @@ check:
   values("contract violation", "expected: Set")
 
 begin:
-  use_static_dot
+  use_static
   check:
     {1, 2}.length()
     2

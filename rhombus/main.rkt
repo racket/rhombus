@@ -25,6 +25,7 @@
         "private/arithmetic.rkt"
         "private/string.rkt"
         "private/dot.rkt"
+        "private/dynamic-static.rkt"
         "private/class.rkt"
         "private/define.rkt"
         "private/value.rkt"

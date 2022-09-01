@@ -331,7 +331,7 @@
         'relocate_span relocate_span_method))
 
 (define-syntax syntax-instance
-  (dot-provider-strict
+  (dot-provider-more-static
    (dot-parse-dispatch
     (lambda (field-sym ary 0ary nary fail-k)
       (case field-sym

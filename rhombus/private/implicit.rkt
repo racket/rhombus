@@ -24,6 +24,9 @@
          #%ref
          #%braces)
 
+(module+ for-dynamic-static
+  (provide (for-syntax make-#%ref)))
+
 (define-syntax #%body
   (expression-prefix-operator
    #'#%body
@@ -137,14 +140,17 @@
   (syntax-parse stxes
     [(_ (_::brackets . _) . _) (void)]))
 
-(define-syntax #%ref
+(define-for-syntax (make-#%ref more-static?)
   (expression-infix-operator
    #'#%ref
    '((default . stronger))
    'macro
    (lambda (array stxes)
-     (parse-map-ref-or-set array stxes))
+     (parse-map-ref-or-set array stxes more-static?))
    'left))
+
+(define-syntax #%ref
+  (make-#%ref #f))
 
 (define-syntax #%braces
   (make-expression+binding-prefix-operator

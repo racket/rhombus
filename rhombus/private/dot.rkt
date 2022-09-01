@@ -10,14 +10,12 @@
          "dot-provider-key.rkt"
          "realm.rkt")
 
-(provide |.|
-         use_static_dot
-         use_dynamic_dot)
+(provide |.|)
 
 (module+ for-dot-provider
   (begin-for-syntax
     (provide (property-out dot-provider)
-             (property-out dot-provider-strict)
+             (property-out dot-provider-more-static)
              
              in-dot-provider-space
 
@@ -29,9 +27,12 @@
 (module+ for-builtin
   (provide set-builtin->accessor-ref!))
 
+(module+ for-dynamic-static
+  (provide (for-syntax make-|.|)))
+
 (begin-for-syntax
   (property dot-provider (handler))
-  (property dot-provider-strict dot-provider ())
+  (property dot-provider-more-static dot-provider ())
 
   (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot-provider))
 
@@ -47,7 +48,7 @@
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
 
-(define-for-syntax (make-|.| strict?)
+(define-for-syntax (make-|.| more-static?)
   (expression-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
@@ -56,9 +57,9 @@
      (syntax-parse tail
        [(dot::operator field:identifier . tail)
         (define (generic)
-          (if strict?
+          (if more-static?
               (raise-syntax-error #f
-                                  "strict operator not supported for left-hand side"
+                                  "static operator not supported for left-hand side"
                                   #'dot.name
                                   #f
                                   (list form1))
@@ -67,10 +68,10 @@
         (syntax-parse form1
           [dp::dot-provider
            (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
-           (if (dot-provider-strict? p)
+           (if (dot-provider-more-static? p)
                ((dot-provider-handler p) form1 #'dot #'field
                                          #'tail
-                                         strict?
+                                         more-static?
                                          values generic)
                (let ([e ((dot-provider-handler p) form1 #'dot #'field)])
                  (if e
@@ -86,16 +87,6 @@
    'left))
 
 (define-syntax |.| (make-|.| #f))
-
-(define-syntaxes (use_static_dot use_dynamic_dot)
-  (let ([mk (lambda (strict?)
-              (definition-transformer
-                (lambda (stx)
-                  (syntax-parse stx
-                    [(form-id)
-                     #`((define-syntax #,(datum->syntax #'form-id '|.|) (make-|.| #,strict?)))]))))])
-    (values (mk #t)
-            (mk #f))))
 
 (define-syntax (define-dot-provider-syntax stx)
   (syntax-parse stx
