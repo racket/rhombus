@@ -11,7 +11,8 @@
          "parse.rkt"
          "srcloc.rkt"
          "binding.rkt"
-         "op-literal.rkt")
+         "op-literal.rkt"
+         "pack.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -32,8 +33,13 @@
   (define (macro-clause self-id left-ids tail-pattern rhs)
     (define-values (pattern idrs sidrs vars can-be-empty?)
       (if (eq? kind 'rule)
-          (convert-pattern #`(multi (group #,@tail-pattern (op $) tail (op rhombus...))))
-          (convert-pattern #`(multi (group . #,tail-pattern)) #:as-tail? #t)))
+          (convert-pattern #`(group (op $) _ #,@tail-pattern (op $) tail (op rhombus...))
+                           #:splice? #t
+                           #:splice-pattern values)
+          (convert-pattern #`(group (op $) _ . #,tail-pattern)
+                           #:as-tail? #t
+                           #:splice? #t
+                           #:splice-pattern values)))
     (with-syntax ([((id id-ref) ...) idrs]
                   [((sid sid-ref) ...) sidrs]
                   [(left-id ...) left-ids])
@@ -170,7 +176,7 @@
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
                   #`(lambda (#,@(if prefix? '() (list #'left)) tail self)
-                      (syntax-parse (respan-empty self tail)
+                      (syntax-parse (insert-multi-front-group self tail)
                         #,@(map parsed-impl ps))))])
        #,(parsed-name p))
      #,@(if prefix?
@@ -230,12 +236,15 @@
     [(pre-parsed id
                  tail-pattern
                  rhs)
-     (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(multi (group . tail-pattern)) #:as-tail? #t))
+     (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)
+                                                                             #:as-tail? #t
+                                                                             #:splice? #t
+                                                                             #:splice-pattern values))
      (with-syntax ([((p-id id-ref) ...) idrs]
                    [((s-id sid-ref) ...) sidrs] )
        #`(#,make-transformer-id
           (let ([id (lambda (tail #,@tail-ids #,self-id)
-                      (syntax-parse (respan-empty #,self-id tail)
+                      (syntax-parse (insert-multi-front-group #,self-id tail)
                         [#,pattern
                          (let ([p-id id-ref] ...)
                            (let-syntax ([s-id sid-ref] ...)

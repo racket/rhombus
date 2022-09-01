@@ -62,7 +62,9 @@
          unpack-element*
 
          repack-as-term
-         repack-as-multi)
+         repack-as-multi
+
+         insert-multi-front-group)
 
 (define multi-blank (syntax-property (syntax-property (datum->syntax #f 'multi) 'raw "") 'from-pack #t))
 (define group-blank (syntax-property (syntax-property (datum->syntax #f 'group) 'raw "") 'from-pack #t))
@@ -301,6 +303,21 @@
   (or (unpack-term r #f #f)
       ;; can't match a term pattern:
       #'(group)))
+
+;; insert `term` at the front of the first group, and strip away
+;; `multi` and `group` wrappers for a splicing match; this improves
+;; error reporting when a match fails
+(define (insert-multi-front-group term r)
+  (cond
+    [(group-syntax? r) (cons term
+                             (cdr (syntax-e r)))]
+    [(multi-syntax? r) (let ([r (cdr (syntax-e r))])
+                         (if (stx-null? r)
+                             (list term)
+                             (if (stx-null? (stx-cdr r))
+                                 (insert-multi-front-group term (stx-car r))
+                                 (error "unexpected multi-group sequence for macro match"))))]
+    [else (list term r)]))
 
 (define (cannot-coerce-list who r)
   (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm

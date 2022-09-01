@@ -12,7 +12,6 @@
          "binding.rkt"
          "expression+binding.rkt"
          "pack.rkt"
-         (for-syntax "pack.rkt") ;; ?? 
          "empty-group.rkt"
          "syntax-class.rkt"
          "operator-parse.rkt"
@@ -25,6 +24,7 @@
          "repetition.rkt"
          "op-literal.rkt"
          "static-info.rkt"
+         (for-template "parens.rkt")
          (submod "syntax-object.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::))
@@ -270,6 +270,14 @@
                                     #:as-tail? [as-tail? #f]
                                     #:splice? [splice? #f]
                                     #:splice-pattern [splice-pattern #f])
+  (define (make-datum d)
+    (case (syntax-e d)
+      [(parens) #'_::parens]
+      [(block) #'_::block]
+      [(alts) #'_::alts]
+      [(braces) #'_::braces]
+      [(brackets) #'_::brackets]
+      [else #`(~datum #,d)]))
   (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
     (syntax-parse e
       #:datum-literals (parens op group quotes)
@@ -373,7 +381,7 @@
         (values (if splice? ;; splicing `multi` means match any head
                     p
                     (syntax-parse in-e
-                      [(tag . _) #`(~and ((~datum tag) . _) #,p)]))
+                      [(tag . _) #`(~and (#,(make-datum #'tag) . _) #,p)]))
                 idrs
                 sidrs
                 vars)
@@ -384,8 +392,7 @@
                   #:splice? splice?
                   #:splice-pattern splice-pattern
                   ;; make-datum
-                  (lambda (d)
-                    #`(~datum #,d))
+                  make-datum
                   ;; make-literal
                   (lambda (d)
                     #`(~literal #,d))
