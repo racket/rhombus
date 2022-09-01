@@ -1,17 +1,17 @@
 #lang racket/base
-(require "private/bounce.rkt")
+(require "../private/bounce.rkt")
 
-(bounce "main.rkt"
+(bounce "../static.rkt"
         "meta.rkt")
 
 (module reader syntax/module-reader
-  #:language 'rhombus/and_meta
+  #:language 'rhombus/static/and_meta
   #:read (lambda (in) (list (syntax->datum (parse-all in))))
   #:read-syntax (lambda (src in) (list (parse-all in #:source src)))
   #:info rhombus:get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           (prefix-in rhombus: (submod "main.rkt" reader))))
+           (prefix-in rhombus: (submod "../main.rkt" reader))))
 
 (module configure-runtime racket/base
   (require rhombus/runtime-config))

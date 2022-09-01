@@ -155,7 +155,7 @@
                  [else
                   (when (or only-mentioned?
                             (and (not accum?)
-                                 (not (or (hash-ref syms orig #f)
+                                 (not (or (hash-ref syms id #f)
                                           (covered? covered-ht orig step)))))
                     (raise-syntax-error 'import "identifier to exclude was not previously included" id-s))
                   (values (hash-set renames id #f)

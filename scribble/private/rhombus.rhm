@@ -1,6 +1,5 @@
-#lang rhombus
+#lang rhombus/static/and_meta
 import:
-  rhombus/meta open
   "typeset-rhombus.rkt" open
   "rebuild.rhm" open
   meta:

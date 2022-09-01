@@ -14,6 +14,8 @@
  operator can be specialized statically (e.g., to a @tech{list} or
  @tech{map} lookup), otherwise the lookup form is an error.
 
+ See also @secref("static-lib").
+
 
 @examples(
  class Posn(x, y),

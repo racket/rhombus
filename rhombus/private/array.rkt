@@ -82,3 +82,6 @@
                                                #'())
                                              #:ref-result-info? #t)
          stx)]))))
+
+(define-static-info-syntax make-vector
+  (#%call-result #,array-static-infos))

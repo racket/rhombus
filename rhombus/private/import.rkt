@@ -22,6 +22,7 @@
          "definition.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "parens.rkt"
          "import-lower-require.rkt"
          "import-from-namespace.rkt"
          (only-in "implicit.rkt"
@@ -621,8 +622,8 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
-       [(_ (block (group int::name _::as-id ext::name)
-                  ...))
+       [(_ (_::block (group int::name _::as-id ext::name)
+                     ...))
         (datum->syntax req
                        (list* #'rename-in req #'([int.name ext.name] ...))
                        req)]))))
@@ -632,7 +633,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group name::name ...) ...))
+       [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'only-in req #'(name.name ... ...))
                        req)]))))
@@ -642,7 +643,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group name::name ...) ...))
+       [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'except-in req #'(name.name ... ...))
                        req)]))))
@@ -662,7 +663,7 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (block (group name::name ...) ...))
+       [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'expose-in req #'(name.name ... ...))
                        req)]))))

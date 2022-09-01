@@ -203,7 +203,7 @@
                             if/blocked
                             (lambda ()
                               (rest.binder-id arg-id rest.data)
-                              (values rest.bind-id ...))
+                              (values (rhombus-expression (group rest.bind-id)) ...))
                             (#,fail arg-id))))]))
 
 (define-syntax-rule (if/blocked tst thn els)

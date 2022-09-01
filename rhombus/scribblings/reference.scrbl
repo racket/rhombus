@@ -46,3 +46,4 @@
 @include_section("ref-syntax-class.scrbl")
 
 @include_section("ref-meta-lib.scrbl")
+@include_section("ref-static-lib.scrbl")

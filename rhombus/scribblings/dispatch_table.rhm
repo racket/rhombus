@@ -1,4 +1,4 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 import:
   scribble/rhombus open
   scribble/manual.racketvarfont
@@ -37,13 +37,14 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
       match g
       | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
       | ~else: ht
-  val vars: extract_rhs_metavariables(
-              [rhs, ...],
-              extract_metavariables(
-                '(($lhs_rest, ...), ...)',
-                extract_metavariables(
-                  [lhs, ...],
-                  {})))
+  val vars -: Map:
+    extract_rhs_metavariables(
+      [rhs, ...],
+      extract_metavariables(
+        '(($lhs_rest, ...), ...)',
+        extract_metavariables(
+          [lhs, ...],
+          {})))
   val [id, ...]: vars.values()
   val [name_str, ...]: for List:
                          ~each name: [name, ...]

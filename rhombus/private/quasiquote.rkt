@@ -79,23 +79,29 @@
         #:datum-literals (op |.|)
         [(var-id (op |.|) attr-id . tail)
          (define attr (lookup-attribute stx #'var-id #'attr-id #f))
-         (values (syntax-class-attribute-id attr)
+         (values (wrap-static-info* (syntax-class-attribute-id attr)
+                                    syntax-static-infos)
                  #'tail)]
         [_ (fail)])))
+  (define id-handler
+    (lambda (stx)
+      (syntax-parse stx
+        [(_ . tail) (values (wrap-static-info* temp-id syntax-static-infos) #'tail)])))
   (cond
     [(eq? depth 0) (if (eq? 0 (hash-count attributes))
-                       (make-rename-transformer temp-id)
+                       (expression-transformer
+                        name-id
+                        id-handler)
                        (expression-transformer
                         name-id
                         (lambda (stx)
                           (expr-handler stx
                                         (lambda ()
-                                          (syntax-parse stx
-                                            [(_ . tail) (values temp-id #'tail)]))))))]
+                                          (id-handler stx))))))]
     [else (make-repetition
            name-id
            #`(#,unpack* #'$ #,temp-id #,depth)
-           #'()
+           syntax-static-infos
            #:depth depth
            #:repet-handler (lambda (stx next)
                              (syntax-parse stx
@@ -107,7 +113,7 @@
                                                               (syntax-class-attribute-id attr)
                                                               (+ (syntax-class-attribute-depth attr) depth (if splice? -1 0))
                                                               #'0
-                                                              #'())
+                                                              syntax-static-infos)
                                         #'tail)]
                                [_ (next)]))
            #:expr-handler expr-handler)]))

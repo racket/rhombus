@@ -6,8 +6,9 @@
 
 (define-syntax (bounce stx)
   (syntax-case stx ()
-    [(_ mod ...)
+    [(_  #:except (ex ...) mod ...)
      (with-syntax ([(mod ...) ((make-syntax-introducer) #'(mod ...))])
-       #'(begin (begin (require mod)
+       #'(begin (begin (require (except-in mod ex ...))
                        (provide (all-from-out mod)))
-                ...))]))
+                ...))]
+    [(_ mod ...) #'(bounce #:except () mod ...)]))
