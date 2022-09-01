@@ -1,5 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     (only-in racket/function normalize-arity)
+                     (only-in racket/set set-intersect set-union)
                      racket/syntax
                      syntax/parse
                      "srcloc.rkt"
@@ -329,13 +331,41 @@
     (define n+sames
       (group-by-counts
        (map fcase kwss argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds preds rhss)))
+    (define pos-arity
+      (normalize-arity
+       (for/list ([n+same (in-list n+sames)])
+         (define n (car n+same))
+         (cond
+           [(negative? n) (arity-at-least (- (add1 n)))]
+           [else n]))))
+    (define allowed-kws
+      (cond
+        [(ormap syntax-e kwrest-args) #f]
+        [else (sort (filter keyword? (apply set-union '() (syntax->datum kwss-stx))) keyword<?)]))
+    (define required-kws
+      (cond
+        [(pair? kwss)
+         (sort (filter keyword? (apply set-intersect (syntax->datum kwss-stx))) keyword<?)]
+        [else '()]))
+    (define kws? (not (null? allowed-kws)))
+    (define reduce-keyword-arity
+      (cond
+        [(null? allowed-kws) values]
+        [(and (null? required-kws) (not allowed-kws)) values]
+        [else
+         (lambda (stx)
+           #`(procedure-reduce-keyword-arity/infer-name
+              #,stx
+              #,(arity->syntax pos-arity)
+              '#,required-kws
+              '#,allowed-kws))]))
     (relocate
      (span-srcloc start end)
-     #`(case-lambda/kwrest
+     (reduce-keyword-arity
+      #`(case-lambda/kwrest
          #,@(for/list ([n+same (in-list n+sames)])
               (define n (car n+same))
               (define same (cdr n+same))
-              (define kwrest? (and (ormap fcase-kwrest-arg same) #t))
               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
                                                     (cons 'try-next
                                                           (fcase-pos fcase-args (find-matching-case n same))))]
@@ -345,10 +375,10 @@
                             [maybe-rest-tmp-use (if (negative? n)
                                                     #'rest-tmp
                                                     #'null)]
-                            [(maybe-kwrest-tmp ...) (if kwrest?
+                            [(maybe-kwrest-tmp ...) (if kws?
                                                       #'(#:kwrest kwrest-tmp)
                                                       #'())]
-                            [maybe-kwrest-tmp-use (if kwrest?
+                            [maybe-kwrest-tmp-use (if kws?
                                                       #'kwrest-tmp
                                                       #''#hashalw())])
                 #`[(pos-arg-id ...) maybe-rest-tmp ... maybe-kwrest-tmp ...
@@ -360,7 +390,7 @@
                           (define fc (car same))
                           (define-values (this-args wrap-adapted-arguments)
                             (adapt-arguments-for-count fc n #'(pos-arg-id ...) #'rest-tmp
-                                                       (and kwrest? #'kwrest-tmp)
+                                                       (and kws? #'kwrest-tmp)
                                                        #'try-next))
                           (with-syntax-parse ([(arg ...) (fcase-args fc)]
                                               [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
@@ -418,7 +448,7 @@
                                         (add-annotation-check
                                          #,function-name
                                          pred
-                                         (rhombus-body-expression rhs)))))))]))])))))
+                                         (rhombus-body-expression rhs)))))))]))]))))))
 
   (define (maybe-add-function-result-definition name static-infoss defns)
     (define (same-expression? a b)
@@ -506,7 +536,7 @@
                    (cons (car pos-arg-ids-rem) new-arg-ids-rev)
                    wrap)]
           [(not (syntax-e kw))
-           (unless (negative? n) (error "assert failed in wrap-adapted"))
+           (unless (negative? n) (error "assert failed in wrap-adapted: n"))
            (define tmp (generate-temporary arg))
            (values pos-arg-ids-rem
                    (cons tmp new-arg-ids-rev)
@@ -518,7 +548,7 @@
                                 #,body))
                             (#,try-next)))))]
           [else
-           (unless kwrest-tmp (error "assert failed in wrap-adapted"))
+           (unless kwrest-tmp (error "assert failed in wrap-adapted: kwrest-tmp 1"))
            (define tmp (generate-temporary arg))
            (values pos-arg-ids-rem
                    (cons tmp new-arg-ids-rev)
@@ -529,14 +559,14 @@
                               (let ([#,kwrest-tmp (hash-remove #,kwrest-tmp '#,kw)])
                                 #,body))
                             (#,try-next)))))])))
-    (unless (null? _empty) (error "assert failed in wrap-adapted"))
+    (unless (null? _empty) (error "assert failed in wrap-adapted: pos-arg-ids-rem"))
     ;; check empty positional rest if it exists in the n case but not the fcase
     (define wrap/rest
       (cond
         [(eqv? n f-n) wrap/single-args]
         [(negative? f-n) wrap/single-args]
         [else
-         (unless (negative? n) (error "assert failed in wrap-adapted"))
+         (unless (negative? n) (error "assert failed in wrap-adapted: n"))
          (lambda (body)
            (wrap/single-args
             #`(if (null? #,rest-tmp)
@@ -550,7 +580,7 @@
         [(and kwrest-tmp (syntax-e (fcase-kwrest-arg fc)))
          wrap/rest]
         [else
-         (unless kwrest-tmp (error "assert failed in wrap-adapted"))
+         (unless kwrest-tmp (error "assert failed in wrap-adapted: kwrest-tmp 2"))
          (lambda (body)
            (wrap/rest
             #`(if (hash-empty? #,kwrest-tmp)

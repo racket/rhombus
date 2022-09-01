@@ -2,6 +2,10 @@
 
 import:
   "check.rhm" open
+  racket/math.sqr
+  racket/base.#{object-name} as object_name
+  racket/base.#{procedure-arity} as procedure_arity
+  racket/base.#{procedure-keywords} as procedure_keywords
 
 begin:
   fun
@@ -136,3 +140,25 @@ begin:
   check: f([1]); 1
   check: f(); 0
   check: f([], [1]); 0
+
+// ---------------------------------------------------------
+// Alt Functions with Keywords
+
+fun
+| pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
+| pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
+| pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
+| pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
+
+check: pythag(~a: 3, ~b: 4); 5
+check: pythag(~c: 5, ~a: 3); 4
+check: pythag(~c: 5, ~b: 4); 3
+check: pythag(~a: 3, ~b: 4, ~c: 5); #true
+check: pythag(~a: 3, ~b: 4, ~c: 6); #false
+begin:
+  check: object_name(pythag); symbol(pythag)
+  check: procedure_arity(pythag); 0
+  val values(req_kws, all_kws): procedure_keywords(pythag)
+  check: req_kws; []
+  check: all_kws; [keyword(~a), keyword(~b), keyword(~c)]
+

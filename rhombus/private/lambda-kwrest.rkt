@@ -1,6 +1,8 @@
 #lang racket/base
 
-(provide lambda/kwrest case-lambda/kwrest hash-remove*)
+(provide lambda/kwrest case-lambda/kwrest hash-remove*
+         procedure-reduce-keyword-arity/infer-name
+         (for-syntax arity->syntax))
 
 (require (only-in racket/list drop)
          (only-in racket/set subset?)
@@ -247,6 +249,17 @@
                 kw-mand-arity
                 kw-allowed-arity)
                (make-keyword-hash-procedure kwhash-proc name)})])))
+
+(define-syntax procedure-reduce-keyword-arity/infer-name
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ f:expr pos-arity:expr req-kws:expr all-kws:expr)
+       #:with name:id (or (syntax-local-infer-name stx) #'proc)
+       #'(procedure-reduce-keyword-arity
+          (let ([name f]) name)
+          pos-arity
+          req-kws
+          all-kws)])))
 
 ;; ---------------------------------------------------------
 
