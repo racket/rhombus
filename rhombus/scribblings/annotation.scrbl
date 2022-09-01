@@ -65,16 +65,16 @@ or expression with @rhombus(-:) or @rhombus(::) might make the binding
 or expression a dot provider. See @secref("static-info") for more
 information on dot providers and other static information.
 
-The @rhombus(use_static_dot) definition form binds the @rhombus(.)
+The @rhombus(use_static) definition form binds the @rhombus(.)
 operator so that it works only in efficient mode with a dot provider. If
 the left-hand side of the @rhombus(.) is not a dot provider, then the
-@rhombus(.) defined by @rhombus(use_static_dot) reports a compile-time
-error. The @rhombus(use_dynamic_dot) form binds @rhombus(.) to the
+@rhombus(.) defined by @rhombus(use_static) reports a compile-time
+error. The @rhombus(use_dynamic) form binds @rhombus(.) to the
 default @rhombus(.), which allows dynamic field lookup if the left-hand
 side is not a dot provider.
 
 @(rhombusblock:
-    use_static_dot
+    use_static
 
     l1.p2.x  // prints 3
     // 1.x   // disallowed statically

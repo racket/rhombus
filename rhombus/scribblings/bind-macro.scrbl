@@ -35,7 +35,7 @@ The @rhombus(annotation.macro) form is similar to @rhombus(bind.macro), but for
 annotations. 
 
 @(rhombusblock:
-    use_static_dot
+    use_static
 
     annotation.rule 'PosnList': 'List.of(Posn)'
 
