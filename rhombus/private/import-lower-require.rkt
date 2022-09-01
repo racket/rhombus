@@ -176,12 +176,15 @@
                (define orig (hash-ref revnames id #f))
                (cond
                  [(not orig)
-                  (when only-mentioned?
+                  (when (or only-mentioned?
+                            (not (or accum?
+                                     (hash-ref syms id #f)
+                                     (covered? covered-ht id step))))
                     (raise-syntax-error 'import "identifier to expose was not previously included" id-s))
                   (values (hash-set renames id (expose id-s))
                           (hash-set revnames id id)
-                          (if (hash-ref syms orig #f)
-                              (cover covered-ht orig step)
+                          (if (hash-ref syms id #f)
+                              (cover covered-ht id step)
                               covered-ht))]
                  [(hash-ref renames orig #f)
                   (values (hash-set renames orig (expose id-s))

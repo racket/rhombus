@@ -224,13 +224,13 @@
                    [(mp (~and mod as) id:identifier) (list (hide #'mp) (as-mod #'mod) (hide #'id))]
                    [(id:identifier (~and slash (op rhombus-/)) . cs)
                     (list (hide #'id)
-                          (term-identifiers-syntax-property #'slash 'typeset-space-name 'impmod)
+                          (as-mod #'slash)
                           (loop #'cs))]
                    [(id:identifier (~and dot (op |.|)) . cs)
                     (list (hide #'id)
-                          (hide #'dot)
+                          (as-mod #'dot)
                           (loop #'cs))]
                    [((~and dot (op |.|)) . cs)
-                    (list (hide #'dot)
+                    (list (as-mod #'dot)
                           (loop #'cs))]
                    [else cs])))]))

@@ -10,7 +10,7 @@
 (provide (for-syntax convert-require-from-namespace))
 
 (begin-for-syntax
-  (define (convert-require-from-namespace r ht covered-ht accum?)
+  (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok?)
     (let extract ([r r] [ht ht] [step 0])
       (define (root) (values ht #hasheq() covered-ht #t))
       (syntax-parse r
@@ -101,11 +101,14 @@
                 (raise-syntax-error 'import "identifier to expose is not included" id-s)])))
          (values new-ht exposed-expose-ht exposed-covered-ht #f)]
         [(for-meta phase mp)
-         (if (eq? (syntax-e #'phase) 0)
+         (if (or phase-shift-ok?
+                 (eq? (syntax-e #'phase) 0))
              (extract #'mp ht step)
              (raise-syntax-error 'import "cannot shift phase of nesting content" r))]
         [(for-label mp)
-         (raise-syntax-error 'import "cannot shift phase of nesting content" r)]
+         (if phase-shift-ok?
+             (extract #'mp ht step)
+             (raise-syntax-error 'import "cannot shift phase of nesting content" r))]
         [(rhombus-prefix-in mp name) (extract #'mp ht step)]
         [(only-space-in space mp) ;; redundant for nestings
          (extract #'mp ht step)]

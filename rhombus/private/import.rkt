@@ -186,29 +186,29 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ (block r ...))
-        #'((rhombus-import () r ...))]
+        #`((rhombus-import #,stx () r ...))]
        [(_ r ...)
-        #`((rhombus-import () (#,group-tag r ...)))]))))
+        #`((rhombus-import #,stx () (#,group-tag r ...)))]))))
 
 (define-syntax (rhombus-import stx)
   ;; handle one import group at a time, so it can import
   ;; transformers that are used for later imports
   (syntax-parse stx
-    [(_ _) #'(begin)]
-    [(_ mods mi::modified-imports . more)
+    [(_ _ _) #'(begin)]
+    [(_ orig mods mi::modified-imports . more)
      #`(begin
-         (rhombus-import (mi.mod . mods) mi.imp)
+         (rhombus-import orig (mi.mod . mods) mi.imp)
          ...
-         (rhombus-import mods . more))]
-    [(_ mods r::import . more)
+         (rhombus-import orig mods . more))]
+    [(_ orig mods r::import . more)
      ;; apply modifiers, but then flip around to extract
      ;; module path from the modifiers
      (define r-parsed (apply-modifiers (reverse (syntax->list #'mods))
                                        #'r.parsed))
-     (define-values (mod-path-stx r-stx) (import-invert r-parsed))
+     (define-values (mod-path-stx r-stx) (import-invert r-parsed #'orig #'r))
      #`(begin
          (rhombus-import-one #hasheq() #f #,mod-path-stx #,r-stx (no-more wrt-placeholder dotted-placeholder))
-         (rhombus-import mods . more))]))
+         (rhombus-import orig mods . more))]))
 
 ;; Uses a continuation form to thread through the module path that
 ;; accessed-via-dots module paths are relative to and to thread
@@ -256,7 +256,7 @@
      ;; Meanwhile, report an error for any work on content that's
      ;; applied to a singleton import by itself:
      (unless (or (pair? mods) (pair? namesps))
-       (convert-require-from-namespace #'r #hasheq() #hasheq() #f))
+       (convert-require-from-namespace #'r #hasheq() #hasheq() #f #t))
      ;; module re-imports
      (define-values (mod-forms covered-ht)
        (let loop ([mods mods] [rev-mod-forms '()] [covered-ht #hasheq()])
@@ -416,7 +416,8 @@
           (for/fold ([ht ht]) ([k (in-hash-keys extension-ht)])
             (hash-set ht k 'extension)))
         covered-ht
-        accum?))
+        accum?
+        #f))
      (define (extension-shadows? key space-sym)
        (for/or ([id+space (in-list (hash-ref extension-ht key '()))])
          (define space (cdr id+space))

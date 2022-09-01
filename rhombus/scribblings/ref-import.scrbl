@@ -28,8 +28,8 @@
     $string
     lib($string)
     file($string)
-    . $identifier
-    $module_path . $identifier,
+    $$(@rhombus(., ~impmod)) $identifier
+    $module_path $$(@rhombus(., ~impmod)) $identifier,
 
   grammar collection_module_path:
     $identifier
@@ -62,7 +62,7 @@
  @item{@rhombus(modifier: import_clause; ....) is the same as the
    sequence of @rhombus(import_clause)s with @rhombus(modifier) add to the
    @emph{end} of each @rhombus(import_clause). This form is especialy handy
-   when @rhombus(modifier) is @rhombus(for_meta).}
+   when @rhombus(modifier) is @rhombus(meta).}
 
 )
 
@@ -105,14 +105,14 @@
  @item{@rhombus(file(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
 
- @item{@rhombus(.identifier): refers to a nesting name
+ @item{@rhombus($$(@rhombus(., ~impmod))identifier): refers to a namespace
   @rhombus(identifier), which might be predefined like @rhombus(List), or
-  might be bound by @rhombus(nest) or as a prefix with @rhombus(import).},
+  might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
- @item{@rhombus(module_path.identifier): a shorthand for importing only
+ @item{@rhombus(module_path$$(@rhombus(.,~impmod))identifier): a shorthand for importing only
   @rhombus(identifier) from @rhombus(module_path) path and then importing
   with @rhombus(.identifier). The last @rhombus(identifier) in a dotted
-  sequence is allowed to be an export that is not a nesting name, in which
+  sequence is allowed to be an export that is not a namespace, in which
   case the dotted form is a shorthand for just importing
   @rhombus(identifier) from @rhombus(module_path).}
 
@@ -127,6 +127,18 @@
   As an import-clause operator, combines @rhombus(identifier) and
   @rhombus(collection_module_path) to build a longer collection-based
   module path.
+
+}
+
+@doc(
+  impo.macro '. $identifier',
+  impo.macro '$collection_module_path . $identifier'
+){
+
+  As an import-clause operator, a prefix @rhombus(., ~impmod) refers
+  to an import prefix or a namespace @rhombus(identifier) in the enclosing
+  environment, and an infix @rhombus(., ~impmod) refers to an
+  @rhombus(identifier) provided by @rhombus(collection_module_path).
 
 }
 
@@ -204,8 +216,9 @@
  Modifies an @rhombus(import) clause so that the imports are shifted by
  @rhombus(phase) levels, where @rhombus(phase) defaults to @rhombus(1).
 
- This modifier is valid only for module fies that refer to modules,
- as opposed to @rhombus(namespace) bindings.
+ This modifier is valid only for module paths that refer to modules,
+ as opposed to @rhombus(namespace) bindings, and it is not currently
+ supported for module paths that use the @rhombus(., ~impmod) operator.
 
 }
 
@@ -218,6 +231,7 @@
  the label phase.
 
  This modifier is valid only for module fies that refer to modules,
- as opposed to @rhombus(namespace) bindings.
+ as opposed to @rhombus(namespace) bindings, and it is not currently
+ supported for module paths that use the @rhombus(., ~impmod) operator
 
 }
