@@ -15,6 +15,7 @@ export:
     all_from(rhombus/meta)
   all_from("dispatch_table.rhm")
   see_implicit
+  provided_meta
 
 fun see_implicit(what, when, context, ~is_infix = #false):
  @(scribble.elem){The @what form is implicitly used when @when is
@@ -22,3 +23,7 @@ fun see_implicit(what, when, context, ~is_infix = #false):
                   a@(if context == "expression" | "n" | "")
                   @context position.
                   See also @(scribble.secref)("implicit").}
+
+
+fun provided_meta():
+ @(scribble.elem){@(scribble.smaller){Provided as @(scribble.rhombus(meta, ~expmod)).}}

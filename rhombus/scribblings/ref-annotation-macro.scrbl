@@ -11,9 +11,11 @@
 
 @doc(
   defn.macro '«annotation.rule $rule_pattern:
+                 $option; ...
                  '$template'»',
   defn.macro '«annotation.rule
                 | $rule_pattern:
+                    $option; ...
                     '$template'
                 | ...»'
 ){
@@ -38,10 +40,12 @@
 
 @doc(
   defn.macro 'annotation.macro $rule_pattern:
+                $option; ...
                 $body
                 ...',
   defn.macro 'annotation.macro
               | $rule_pattern:
+                  $option; ...
                   $body
                   ...
               | ...',
@@ -51,5 +55,25 @@
  @rhombus(annotation.rule), instead of an expression.
  
 }
+
+@doc(
+  fun annotation_meta.pack_predicate(fun_stx:: Syntax,
+                                     statinfo_stx :: Syntax = '()') :: Syntax
+){
+
+ @provided_meta()
+
+ Packs an expression for a predicate with static information into an
+ annotation form as a syntax object. When the resulting annotation is
+ applied to a value, it checks the value using the predicate, and it
+ also associates the static information in @rhombus(statinfo_stx) with
+ the value. The given @rhombus(statinfo_stx) is in unpacked form
+ (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
+
+ See @secref("annotation-macro") for more explanation and for
+ examples.
+
+}
+
 
 @«macro.close_eval»(macro_eval)

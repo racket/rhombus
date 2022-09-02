@@ -20,11 +20,11 @@
          "parse.rkt"
          ;; for `matcher` and `binder`:
          (for-syntax "parse.rkt")
-         ;; for `bind_ct`:
+         ;; for `bind_meta`:
          (for-syntax "name-root.rkt"))
 
 (provide bind
-         (for-syntax bind_ct))
+         (for-syntax bind_meta))
 
 (define-simple-name-root bind
   macro
@@ -34,7 +34,7 @@
   binder)
 
 (begin-for-syntax
-  (define-simple-name-root bind_ct
+  (define-simple-name-root bind_meta
     pack
     pack_info
     unpack
@@ -61,13 +61,13 @@
     #:property prop:binding-infix-operator (lambda (self) (prefix+infix-infix self))))
 
 (define-for-syntax (unpack stx)
-  (syntax-parse (unpack-term stx 'bind_ct.unpack #f)
+  (syntax-parse (unpack-term stx 'bind_meta.unpack #f)
     [((~datum parsed) b::binding-form)
      (pack-term #'(parens (group chain-to-infoer)
                           (group (parsed (b.infoer-id b.data)))))]))
 
 (define-for-syntax (unpack_info stx)
-  (syntax-parse (unpack-term stx 'bind_ct.unpack_info #f)
+  (syntax-parse (unpack-term stx 'bind_meta.unpack_info #f)
     [((~datum parsed) b::binding-info)
      #:with (unpacked-static-infos ...) (map (lambda (v) (unpack-static-infos v))
                                              (syntax->list #'((b.bind-static-info ...) ...)))
@@ -81,18 +81,18 @@
                 (group (parsed (b.matcher-id b.binder-id b.data)))))]))
 
 (define-for-syntax (pack stx)
-  (syntax-parse (unpack-term stx 'bind_ct.pack #f)
+  (syntax-parse (unpack-term stx 'bind_meta.pack #f)
     #:datum-literals (parens group)
     [(parens (group infoer-id:identifier)
              (group data))
      (pack-term #`(parsed #,(binding-form #'infoer-id
                                           #'data)))]
-    [_ (raise-syntax-error 'bind_ct.pack
+    [_ (raise-syntax-error 'bind_meta.pack
                            "ill-formed unpacked binding"
                            stx)]))
 
 (define-for-syntax (pack-info stx)
-  (syntax-parse (unpack-term stx 'bind_ct.pack_info #f)
+  (syntax-parse (unpack-term stx 'bind_meta.pack_info #f)
     #:datum-literals (parens group)
     [(parens (group name-str:string)
              (group name-id:identifier)
@@ -102,16 +102,16 @@
              (group binder-id:identifier)
              (group data))
      #:with (parens (group (parens (group bind-id) (group bind-static-infos))) ...) #'bind-ids
-     #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos v 'bind_ct.pack))
+     #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos v 'bind_meta.pack))
                                                 (syntax->list #'(bind-static-infos ...)))
      (binding-info #'name-str
                    #'name-id
-                   (pack-static-infos #'static-infos 'bind_ct.pack)
+                   (pack-static-infos #'static-infos 'bind_meta.pack)
                    #'((bind-id . packed-bind-static-infos) ...)
                    #'matcher-id
                    #'binder-id
                    #'data)]
-    [_ (raise-syntax-error 'bind_ct.pack_info
+    [_ (raise-syntax-error 'bind_meta.pack_info
                            "ill-formed unpacked binding info"
                            stx)]))
 
@@ -119,15 +119,15 @@
   (pack-term #`(parsed #,(pack-info stx))))
 
 (define-for-syntax (get_info stx unpacked-static-infos)
-  (syntax-parse (unpack-term stx 'bind_ct.get_info #f)
+  (syntax-parse (unpack-term stx 'bind_meta.get_info #f)
     #:datum-literals (parsed group)
     [(parsed b::binding-form)
-     (define static-infos (pack-static-infos (unpack-term unpacked-static-infos 'bind_ct.get_info #f)
-                                             'bind_ct.get_info))
+     (define static-infos (pack-static-infos (unpack-term unpacked-static-infos 'bind_meta.get_info #f)
+                                             'bind_meta.get_info))
      (syntax-parse #`(b.infoer-id #,static-infos b.data)
        [impl::binding-impl #'(parsed impl.info)])]
     [else
-     (raise-argument-error 'bind_ct.get_info
+     (raise-argument-error 'bind_meta.get_info
                            "binding-form?"
                            stx)]))
 

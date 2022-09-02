@@ -17,7 +17,8 @@
          (for-syntax "parse.rkt")
          "op-literal.rkt"
          "binding.rkt"
-         "dotted-sequence-parse.rkt")
+         "dotted-sequence-parse.rkt"
+         "parens.rkt")
 
 (provide define-operator-definition-transformer
          define-identifier-syntax-definition-transformer
@@ -154,9 +155,9 @@
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
-    #:datum-literals (op parens group quotes)
-    (pattern (quotes (~and g (group (op _::$+1) _:identifier _::operator-or-identifier-or-$ . _))))
-    (pattern (quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
+    #:datum-literals (op parens group)
+    (pattern (_::quotes (~and g (group (op _::$+1) _:identifier _::operator-or-identifier-or-$ . _))))
+    (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
     #`(list #,@(for/list ([p (in-list (syntax->list prec))])
@@ -307,17 +308,17 @@
 
 (begin-for-syntax
   (define-syntax-class :identifier-syntax-quote
-    #:datum-literals (op quotes)
-    (pattern (quotes g::identifier-definition-group)))
+    #:datum-literals (op)
+    (pattern (_::quotes g::identifier-definition-group)))
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
     (pattern (group _:identifier . _)))
   
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
-    #:datum-literals (op block quotes group)
-    (pattern (quotes g::identifier-definition-group
-                     . gs))))
+    #:datum-literals (op block group)
+    (pattern (_::quotes g::identifier-definition-group
+                        . gs))))
 
 (define-for-syntax (parse-transformer-definition g rhs)
   (syntax-parse g

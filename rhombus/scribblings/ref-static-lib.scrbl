@@ -13,7 +13,7 @@
      val $dynamic_ref: @rhombus(#{#%ref})')
 @(def_dynamics dynamic_dot dynamic_ref)
 
-@title(~tag: "static-lib"){Static by Default}
+@title(~tag: "static-lib"){Rhombus Static by Default}
 
 @docmodule(~lang, rhombus/static)
 

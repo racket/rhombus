@@ -5,7 +5,7 @@
 
 @(def meta(s): italic(s))
 
-@title(~tag: "static-info"){Static information: Dot Providers and More}
+@title(~tag: "static-info"){Defining and Using Static Information}
 
 A binding or an expression can have associated @deftech{static
  information} that is used to enable, reject, or resolve certain
@@ -23,52 +23,50 @@ is propagated to each use of the bound variable, so we can refer to an
 expression @meta{E} that has static information without loss of
 generality.
 
-The prototype implementation of Rhombus currently uses five built-in
-static-information keys:
+Rhombus uses several built-in static-information keys:
 
 @itemlist(
 
-  @item{@rhombus(dot_ct.provider_key) --- names a compile-time function
+  @item{@rhombus(statinfo_meta.dot_provider_key) --- names a compile-time function
    that macro-expands any use of @rhombus(.) after @meta{E}. For example,
    assuming a @rhombus(class Posn(x, y)) declaration, @rhombus(p :: Posn)
-   associates @rhombus(dot_ct.provider_key) with uses of @rhombus(p) to
+   associates @rhombus(statinfo_meta.dot_provider_key) with uses of @rhombus(p) to
    expand @rhombus(p.x) and @rhombus(p.y) to field accesses. An expression
    is a @tech{dot provider} when it has static information mapped by
-   @rhombus(dot_ct.provider_key).},
+   @rhombus(statinfo_meta.dot_provider_key).},
 
-  @item{@rhombus(expr_ct.call_result_key) --- provides static information
+  @item{@rhombus(statinfo_meta.call_result_key) --- provides static information
    to be attached to a function-call expression where the function position
    is @meta{E}. (The arguments in the call do not matter.) For example,
-   @rhombus(class Posn(x, y)) associates @rhombus(expr_ct.call_result_key)
+   @rhombus(class Posn(x, y)) associates @rhombus(statinfo_meta.call_result_key)
    with @rhombus(Posn) itself, and the associated value is static
-   information with @rhombus(dot_ct.provider_key). So, @rhombus(Posn(1, 2))
-   gets @rhombus(dot_ct.provider_key) that makes @rhombus(Posn(1, 2).x)
+   information with @rhombus(statinfo_meta.dot_provider_key). So, @rhombus(Posn(1, 2))
+   gets @rhombus(statinfo_meta.dot_provider_key) that makes @rhombus(Posn(1, 2).x)
    select the @rhombus(1).},
 
-  @item{@rhombus(expr_ct.ref_result_key) --- provides static information to be
+  @item{@rhombus(statinfo_meta.ref_result_key) --- provides static information to be
    attached to a @litchar{[}...@litchar{]} map reference where E is to the left
    of the @litchar{[}...@litchar{]}. (The index expression inside @litchar{[}...@litchar{]} does
    not matter.) For example @rhombus(ps :: List.of(Posn)) associates
-   @rhombus(expr_ct.ref_result_key) to @rhombus(ps), where the associated value
-   includes is static information with @rhombus(dot_ct.provider_key). So,
+   @rhombus(statinfo_meta.ref_result_key) to @rhombus(ps), where the associated value
+   includes is static information with @rhombus(statinfo_meta.dot_provider_key). So,
    @rhombus(ps[i].x) is allowed an selects an @rhombus(x) field from the @rhombus(Posn)
    instance produced by @rhombus(ps[i]).},
 
-  @item{@rhombus(expr_ct.map_ref_key) and @rhombus(expr_ct.map_set_key) --- names a form to
-   use for a @litchar{[}...@litchar{]} map reference or assignment where E is to
+  @item{@rhombus(statinfo_meta.map_ref_key) and @rhombus(statinfo_meta.map_set_key) --- names a form to
+   use for a @litchar{[}...@litchar{]} map-like reference or assignment where E is to
    the left of the @litchar{[}...@litchar{]}. (The index expression inside
-   @litchar{[}...@litchar{]} does not matter.) For example @rhombus(p :: Array) associates
-   @rhombus(expr_ct.map_ref) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
-   referencing operation, and it associates @rhombus(expr_ct.map_ref) to
-   @rhombus(p) so that @rhombus(p[i] = n) uses an array-specific assignment operation.}
+   @litchar{[}...@litchar{]} does not matter.) For example, @rhombus(p :: Array) associates
+   @rhombus(statinfo_meta.map_ref_key) to @rhombus(p) so that @rhombus(p[i]) uses an array-specific
+   referencing operation, and it associates @rhombus(statinfo_meta.map_ref) to
+   @rhombus(p) so that @rhombus(p[i] = n) uses an array-specific assignment operation.},
+
+  @item{@rhombus(statinfo_meta.map_append_key) --- names a form to specialize the
+   @rhombus(++) operator for appending maps, lists, and similar values. For example,
+   @rhombus(p :: Array) associates @rhombus(statinfo_meta.map_append_key) to @rhombus(p)
+   so that @rhombus(p ++ q) uses an array-specific appending operation.}
 
 )
-
-In addition, a @rhombus(class) declaration generates a fresh key for each
-every field in the declared class. The value to be associated
-with the key is analogous to @rhombus(expr_ct.call_result_key) or
-@rhombus(expr_ct.ref_result_key), but for references to the field through @rhombus(.)
-or through an accessor function like @rhombus(Posn.x).
 
 Static information is associated to a binding through a binding
 operator/macro, and it can be associated to an expression through a
@@ -77,7 +75,7 @@ information to its parsed form (i.e., expansion). For example, the
 @rhombus(::) operator associates static information through an annotation. An
 annotation pairs a predicate with a set of static information to
 associate with any variable that is bound with the annotation. That's
-why a binding @rhombus(p :: Posn) makes every @rhombus(p) a dot provider: the annotation
+why a binding @rhombus(p :: Posn) makes every reference to @rhombus(p) a dot provider: the annotation
 @rhombus(Posn) indicates that every binding with the annotation gets a dot
 provider to access @rhombus(x) and @rhombus(y). When @rhombus(::) is used in an expression,
 then static information indicated by the annotation is similarly
@@ -97,81 +95,43 @@ formed a dot provider. The function might have an annotation on its
 argument that indicates a dot-provider constructor, but that's a
 feature of the formal argument, and not of an actual value.
 
-@section{Rules}
+@section(~tag: "static-info-rules"){Rules for Static Information}
 
-Exactly how static information is associated to expressions and bindings
-depends on the expression or binding form. So, it's not possible to
-write down exhaustive type-like rules for for Rhombus static information
-in the same way that it's not possible to write down a full grammar. But
-in the same way that syntactic forms can be defined with local grammars
-over a notion of expression, static-information uses cn be described
-locally over a notion of expressions and binding.
-
-Below is how some rules for basic built-in forms might be written. Read
-@rhombus(Γ) as ``the local environment mapping names to static
-information,'' and read @rhombus(τ) as ``static information.'' Read
-@rhombus(→) as a compile-time expansion.
-
-@verbatim(~indent: 2){
-    Γ ⊢ id : Γ(id)
-
-       Γ ⊢ e : τ
-      -----------
-      Γ ⊢ (e) : τ
-
-      Γ ⊢ e_1 : τ 
- τ(call_result) = τ_r
-----------------------
-   Γ ⊢ e_1(e_2) : τ_r
-
-      Γ ⊢ e_1 : τ 
-  τ(ref_result) = τ_r
- ---------------------
-   Γ ⊢ e_1[e_2] : τ_r
-
-      Γ ⊢ e_1 : τ
-   τ(dot_provider) = p
-    p(e_1, id) → e_2
-      Γ ⊢ e_2 : τ_r
-  --------------------
-    Γ ⊢ e_1.id : τ_r
-}
-
-More work will be needed on notation, but it should be just a matter
-of adapting type (and, for bindings, bidirectional-type) notation.
-Ideally, as in Turnstile, binding and expression forms could be
-implemented in something like this notation, in much the same way that
-macros are written in a by-example way that is inspired by grammar
-notation.
-
-@section{Rules for Predefined Forms}
+Exactly how static information is associated to expressions and
+bindings depends on the expression or binding form. So, it's not
+possible to write down exhaustive rules for for Rhombus static
+information (in the same way that it's not possible to write down a
+full grammar, since the grammar can be extended via macros). A binding
+or expression form's documentation should define what static
+information it associates with a name or expression.
 
 Here's a summary of the static-information behavior of classes:
 
 @itemlist(
 
-  @item{A class name bound by @rhombus(class) is a dot provider. It
+  @item{A class name bound by @rhombus(class) acts as a @tech{namespace}. It
    provides field-accessor functions, as in @rhombus(Posn.x).},
 
-  @item{As an annotation, a class name makes any binding or
-   expression using the annotation a dot provider. A class name
+  @item{As an annotation, a class name turns any binding or
+   expression using the annotation into a dot provider. A class name
    followed by @rhombus(.of) has the same effect; in addition, it associates
    any information implied by the argument annotations as static
    information for fields accessed from the binding or exression
-   through a dot. For example, assuming a `class Rect(top_left,
-   side)@rhombus( declaration, )r :: Rect.of(Posn, Integer)` causes
+   through a dot. For example, assuming a
+   @rhombus(class Rect(top_left, side)) declaration,
+   @rhombus(r :: Rect.of(Posn, Integer)) causes
    @rhombus(r.top_left) to have @rhombus(Posn) information, with means that
    @rhombus(r.top_left.x) works.},
 
   @item{When a class field has an annotation, then that annotation's
-   static information is associated with a field accessed through @rhombus(.).
+   static information is associated with a field accessed through the @rhombus(.) operator.
    In the @rhombus(Line) example, the @rhombus(p2) field of @rhombus(Line) has a @rhombus(Posn)
    annotation, so a @rhombus(l1 :: Line) binding means that @rhombus(l1.p2) is a dot
    provider to access @rhombus(x) and @rhombus(y).},
 
   @item{When a class field has an annotation, then that annotation's
    static information is associated as result information for a field
-   accessor accessed through @rhombus(.). For example, @rhombus(Line.p1) gets the
+   accessor accessed through the @rhombus(.) operator. For example, @rhombus(Line.p1) gets the
    @rhombus(Posn) annotation's static information as its call-result
    information, so @rhombus(Line.p1(e)) has that information, which means that
    @rhombus(Line.p1(e)) is a dot provider.},
@@ -236,7 +196,7 @@ list pattern, since each; for example @rhombus([p :: Posn, ...]) as a
 binding pattern causes @rhombus(p) to have static information that says
 its reference result as @rhombus(Posn)-annotation information. The
 @rhombus(List.of), @rhombus(Array.of), and @rhombus(Map.of) annotation
-forms in bindings propagate ``downward`` reference-result information to
+forms in bindings propagate ``downward'' reference-result information to
 nested annotations. ``Downward'' static information is used by
 @rhombus(List) or @litchar{[}...@litchar{]} pattern constructions only
 in the case that there's a single element binding pattern followed by
@@ -247,7 +207,7 @@ The @rhombus(::, ~bind) binding form and the @rhombus(matching, ~ann) annotation
 allow static information to flow both ``downward'' and ``upward''
 through both annotations and binding patterns.
 
-@section{Binding Patterns and Static Information}
+@section{Binding Static Information}
 
 See @secref("bind-macro-protocol") for information on how binding macros
 receive and produce static information.

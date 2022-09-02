@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title(~tag: "bind-macro-protocol"){Low-Level Binding Macros}
+@title(~tag: "bind-macro-protocol"){Binding Low-Level Protocol}
 
 A binding form using the low-level protocol has three parts:
 
@@ -85,7 +85,7 @@ transformer is represented as a syntax object with two parts:
 )
 
 These two pieces are assembled into a parenthesized-tuple syntax object,
-and then packed with the @rhombus(bind_ct.pack) function to turn it into
+and then packed with the @rhombus(bind_meta.pack) function to turn it into
 a valid binding expansion (to distinguish the result from a macro
 expansion in the sense of producing another binding form).
 
@@ -129,12 +129,7 @@ seven parts:
    For example, @rhombus(Posn(x, y)) as a binding pattern binds @rhombus(x) and @rhombus(y).
    The final transformer function described in the third bullet above
    is responsible for actually binding each name and associating
-   static information with it. One piece of static information helps
-   compose binding forms: the @rhombus(bind_ct.bind_input_key) key should be
-   mapped to @rhombus(#true) for each name whose value corresponds to the
-   binding input value, and the static information for such a name
-   should otherwise match the static information reported in the
-   second bullet above.},
+   static information with it.},
 
  @item{The name of a compile-time function that is bound with
    @rhombus(bind.matcher).},
@@ -159,9 +154,9 @@ which matches only things that are fruits according to @rhombus(is_fruit):
     import: rhombus/meta open
 
     bind.macro 'fruit($id) $tail ...':
-      values(bind_ct.pack('(fruit_infoer,
-                            // remember the id:
-                            $id)'),
+      values(bind_meta.pack('(fruit_infoer,
+                              // remember the id:
+                              $id)'),
              '$tail ...')
 
     bind.infoer 'fruit_infoer($static_info, $id)':
@@ -198,12 +193,12 @@ that its argument is an identifier, and its infoer discards static
 information. Binding forms normally need to accomodate other, nested
 binding forms, instead. A @rhombus(bind.macro) transformer with
 @rhombus(parsed_right) receives already-parsed sub-bindings as
-arguments, and the infoer function can use @rhombus(bind_ct.get_info) on
+arguments, and the infoer function can use @rhombus(bind_meta.get_info) on
 a parsed binding form to call its internal infoer function. The result
 is packed static information, which can be unpacked into a tuple syntax
-object with @rhombus(bind_ct.unpack_info). Normally,
-@rhombus(bind_ct.get_info) should be called only once to avoid
-exponential work with nested bindings, but @rhombus(bind_ct.unpack_info)
+object with @rhombus(bind_meta.unpack_info). Normally,
+@rhombus(bind_meta.get_info) should be called only once to avoid
+exponential work with nested bindings, but @rhombus(bind_meta.unpack_info)
 can used any number of times.
 
 As an example, here's an infix @rhombus(<&>) operator that is similar
@@ -221,16 +216,16 @@ form. A builder must be used in tail position, and it's
 @(rhombusblock:
     bind.macro '$a <&> $b':
       ~parsed_right
-      bind_ct.pack('(anding_infoer,
-                     ($a, $b))')
+      bind_meta.pack('(anding_infoer,
+                       ($a, $b))')
 
     bind.infoer 'anding_infoer($static_info, ($a, $b))':
-      val a_info: bind_ct.get_info(a, static_info)
-      val b_info: bind_ct.get_info(b, static_info)
+      val a_info: bind_meta.get_info(a, static_info)
+      val b_info: bind_meta.get_info(b, static_info)
       val '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
-        bind_ct.unpack_info(a_info)
+        bind_meta.unpack_info(a_info)
       val '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
-        bind_ct.unpack_info(b_info)
+        bind_meta.unpack_info(b_info)
       val ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
       '($ann,
         $a_name,
@@ -242,15 +237,15 @@ form. A builder must be used in tail position, and it's
 
     bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
                                  $IF, $success, $failure)':
-      val '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_ct.unpack_info(a_info)
-      val '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_ct.unpack_info(b_info)
+      val '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_meta.unpack_info(a_info)
+      val '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_meta.unpack_info(b_info)
       '$a_matcher($in_id, $a_data, $IF,
                   $b_matcher($in_id, $b_data, $IF, $success, $failure),
                   $failure)'
 
     bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
-      val '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_ct.unpack_info(a_info)
-      val '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_ct.unpack_info(b_info)
+      val '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
+      val '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
       '$a_binder($in_id, $a_data)
        $b_binder($in_id, $b_data)'
 

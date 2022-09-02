@@ -53,25 +53,26 @@ the @rhombus(.) operator can be chained for efficient access:
   )
 
 More generally, @rhombus(.) access is efficient when the left-hand side
-of @rhombus(.) is an expression that can act as a @deftech{dot
- provider}. A class name is a dot provider, and it provides access to
+of @rhombus(.) is an @rhombus(import) prefix, a @tech{namespace}, or
+an expression that can act as a @deftech{dot provider}. A class name
+acts as a namespace to provides access to
 field-accessor functions, as in @rhombus(Posn.x) (which doesn’t get a
 specific @rhombus(x), but produces a function that can be called on a
 @rhombus(Posn) instance to extract its @rhombus(x) field). An identifier
 that is bound using @rhombus(-:) or @rhombus(::) and a class name is
-also a dot provider, and it provides access to fields of a class
+a dot provider, and it provides access to fields of a class
 instance. More generally, an annotation that is associated to a binding
 or expression with @rhombus(-:) or @rhombus(::) might make the binding
 or expression a dot provider. See @secref("static-info") for more
 information on dot providers and other static information.
 
 The @rhombus(use_static) definition form binds the @rhombus(.)
-operator so that it works only in efficient mode with a dot provider. If
-the left-hand side of the @rhombus(.) is not a dot provider, then the
+operator so that it works only in efficient mode with an import, namespace,
+or dot provider. If the left-hand side of the @rhombus(.) is not one of those, then the
 @rhombus(.) defined by @rhombus(use_static) reports a compile-time
 error. The @rhombus(use_dynamic) form binds @rhombus(.) to the
 default @rhombus(.), which allows dynamic field lookup if the left-hand
-side is not a dot provider.
+side is not a dot provider, namespace, or import prefix.
 
 @(rhombusblock:
     use_static

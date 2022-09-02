@@ -29,12 +29,15 @@
    supplied @rhombus(field)s and matches an instance of the class where the
    fields match the corresponding patterns;},
 
- @item{a dot povider to access accessor functions @rhombus(identifier_path.field)},
+ @item{a dot povider to access accessor functions @rhombus(identifier_path.field);},
 
  @item{an annotation constructor @rhombus(identifier_path.of), which takes as
    many annotation arguments as supplied @rhombus(field)s.}
 
 )
+
+ See @secref("static-info-rules") for information about static
+ information associated with classes.
 
  See @secref("namespaces") for information on @rhombus(identifier_path).
 

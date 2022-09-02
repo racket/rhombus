@@ -206,15 +206,15 @@ apply_interest(7)
 // define <> as revese-cons pattern
 bind.macro '$a <> $b':
   ~parsed_right
-  bind_ct.pack('(build_reverse_cons_infoer,
-                 ($a, $b))')
+  bind_meta.pack('(build_reverse_cons_infoer,
+                   ($a, $b))')
 
 bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
-  val a: bind_ct.get_info(a_in, '()')
-  val b: bind_ct.get_info(b_in, '()')
-  match bind_ct.unpack_info(a)
+  val a: bind_meta.get_info(a_in, '()')
+  val b: bind_meta.get_info(b_in, '()')
+  match bind_meta.unpack_info(a)
   | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
-      match bind_ct.unpack_info(b)
+      match bind_meta.unpack_info(b)
       | '($b_ann, $b_id, $b_info, ($b_bind_info, ...), $b_matcher, $b_binder, $b_data)':
           '($("matching((_ :: " +& Syntax.unwrap(a_ann) +& ") <> (_ :: " +& Syntax.unwrap(b_ann) +& "))"),
             pair,
@@ -226,9 +226,9 @@ bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
 
 bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
                                        $IF, $success, $fail)':
-  match bind_ct.unpack_info(a)
+  match bind_meta.unpack_info(a)
   | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
-      match bind_ct.unpack_info(b)
+      match bind_meta.unpack_info(b)
       | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
           '// check for pair an extract reversed pieces
            val (is_match, $a_part_id, $b_part_id):
@@ -252,9 +252,9 @@ bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
           '
 
 bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
-  match bind_ct.unpack_info(a)
+  match bind_meta.unpack_info(a)
   | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
-      match bind_ct.unpack_info(b)
+      match bind_meta.unpack_info(b)
       | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
           '$a_binder($a_part_id, $a_data)
            $b_binder($b_part_id, $b_data)'
@@ -372,8 +372,8 @@ bind.macro 'AlsoPosn ($x, $y) $tail ...':
   values('Posn($x, $y)', '$tail ...')
 
 annotation.macro 'Vector':
-  values(annotation_ct.pack_predicate('fun (x): x is_a Posn',
-                                      '(($(dot_ct.provider_key), vector_dot_provider))'),
+  values(annotation_meta.pack_predicate('fun (x): x is_a Posn',
+                                        '(($(statinfo_meta.dot_provider_key), vector_dot_provider))'),
          '')
 
 
@@ -393,17 +393,17 @@ def AlsoPosn(also_x, also_y): Posn(10, 20)
 also_x +& "," +& also_y
 
 expr.macro 'or_zero $p $tail ...':
-  values(static_info_ct.wrap('$p || Posn(0,0)',
-                             '(($(dot_ct.provider_key),
-                                vector_dot_provider))'),
+  values(statinfo_meta.wrap('$p || Posn(0,0)',
+                            '(($(statinfo_meta.dot_provider_key),
+                               vector_dot_provider))'),
          '$tail ...')
   
 or_zero(Posn(3, 4)).magnitude
 
 fun zero_vec(): Posn(0, 0)
-static_info.macro 'zero_vec': '(($(expr_ct.call_result_key),
-                                 $(static_info_ct.pack('(($(dot_ct.provider_key),
-                                                          vector_dot_provider))'))))'
+statinfo.macro 'zero_vec': '(($(statinfo_meta.call_result_key),
+                              $(statinfo_meta.pack('(($(statinfo_meta.dot_provider_key),
+                                                      vector_dot_provider))'))))'
 zero_vec().magnitude
 
 begin:
@@ -628,8 +628,8 @@ dot.macro 'myint_dot_provider $left $dot $right':
   | 'add': 'fun (v -: MyInt) -: MyInt: $left + v'
 
 annotation.macro 'MyInt':
-  values(annotation_ct.pack_predicate('fun (x): x is_a Integer',
-                                      '(($(dot_ct.provider_key), myint_dot_provider))'),
+  values(annotation_meta.pack_predicate('fun (x): x is_a Integer',
+                                        '(($(statinfo_meta.dot_provider_key), myint_dot_provider))'),
          '')
 
 val (one -: MyInt): 1

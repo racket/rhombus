@@ -14,14 +14,14 @@
          "parse.rkt")
 
 (provide annotation
-         (for-syntax annotation_ct))
+         (for-syntax annotation_meta))
 
 (define-simple-name-root annotation
   rule
   macro)
 
 (begin-for-syntax
-  (define-simple-name-root annotation_ct
+  (define-simple-name-root annotation_meta
     pack_predicate))
 
 (define-operator-definition-transformer rule

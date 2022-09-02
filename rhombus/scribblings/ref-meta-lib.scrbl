@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title(~style: symbol(toc)){Meta and Macros}
+@title(~style: symbol(toc)){Rhombus Meta and Macros Reference}
 
 @docmodule(rhombus/meta)
 
@@ -30,4 +30,6 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-expr-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
 @include_section("ref-annotation-macro.scrbl")
+@include_section("ref-dot-provider.scrbl")
+@include_section("ref-static-info.scrbl")
 @include_section("ref-stxobj-meta.scrbl")

@@ -11,9 +11,11 @@
 
 @doc(
   defn.macro '«expr.rule $rule_pattern:
+                 $option; ...
                  '$template'»',
   defn.macro '«expr.rule
                 | $rule_pattern:
+                    $option; ...
                     '$template'
                 | ...»',
   grammar rule_pattern:
@@ -28,6 +30,19 @@
   grammar term_pattern:
     $term_identifier
     ($term_identifier :: $syntax_class),
+  grammar option:
+    ~stronger_than: $identifier_or_operator ...
+    ~weaker_than: $identifier_or_operator ...
+    ~same_as: $identifier_or_operator ...
+    ~same_on_left_as: $identifier_or_operator ...
+    ~same_on_right_as: $identifier_or_operator ...
+    ~associativity: $assoc
+    ~op_stx $identifier
+    ~parsed_right,
+  grammar assoc:
+    ~left
+    ~right
+    ~none
 ){
 
  Defines @rhombus(identifier), @rhombus(operator), @rhombus($),
@@ -56,6 +71,23 @@
  compile-time expressions are not allowed; use @rhombus(expr.macro),
  instead, to enable compile-time expressions.
 
+ Before the body of a @rhombus(rule_pattern), operator
+ @rhombus(option) keywords can appear. The options
+ @rhombus(~weaker_than), @rhombus(~stronger_than), @rhombus(~same_as),
+ @rhombus(~same_on_left_as), and @rhombus(~same_on_right_as) declare
+ an operator's precedence relative to other operators. The
+ @rhombus(~associativity) option is allowed only with a infix-operator
+ @rhombus(rule_pattern). The @rhombus(~op_stx) option binds an
+ identifier or operator for in a use of the macro (which cannot be
+ matched directly in the @rhombus(rule_pattern), since that position
+ is used for the name that @rhombus(expr.rule) binds). If the
+ @rhombus(~parsed_right) option is present, then the
+ @rhombus(rule_pattern) should match a single term after the macro
+ name, and it will match an already-parsed term after the macro name
+ in a use of the macro. In a defined with @litchar{|} alternatives,
+ most @rhombus(option)s are allowed only in the first case, but
+ @rhombus(~op_stx) is allowed in each case.
+
  See @secref("namespaces") for information on @rhombus(identifier_path)
  and @rhombus(operator_path).
 
@@ -72,10 +104,12 @@
 
 @doc(
   defn.macro 'expr.macro $rule_pattern:
+                $option; ...
                 $body
                 ...',
   defn.macro 'expr.macro
               | $rule_pattern:
+                  $option; ...
                   $body
                   ...
               | ...',
@@ -97,16 +131,5 @@
 )
 
 }
-
-@doc(
-  val expr_ct.call_result_key
-){
-
- Provided @rhombus(for_meta, ~impmod), a value that can be used to
- associate static information with an expression that describes the
- result value if the expression is used as a function to call.
-
-}
-
 
 @«macro.close_eval»(macro_eval)

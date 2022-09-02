@@ -8,13 +8,11 @@
          "syntax.rkt"
          "expression.rkt"
          "parse.rkt"
-         "call-result-key.rkt"
          "wrap-expression.rkt"
          (for-syntax "name-root.rkt"))
 
 (provide expr
-         expr_only
-         (for-syntax expr_ct))
+         expr_only)
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
@@ -28,10 +26,6 @@
   #:fields
   ([macro macro-only]
    [rule rule-only]))
-
-(begin-for-syntax
-  (define-simple-name-root expr_ct
-    call_result_key))
 
 (define-operator-definition-transformer macro
   'macro
@@ -95,5 +89,3 @@
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
-
-(define-for-syntax call_result_key #'#%call-result)

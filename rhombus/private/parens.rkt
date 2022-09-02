@@ -7,7 +7,8 @@
           :block
           :alts
           :braces
-          :brackets))
+          :brackets
+          :quotes))
 
 (begin-for-syntax
   (define-syntax-class :parens
@@ -29,4 +30,8 @@
   (define-syntax-class :brackets
     #:description "square brackets"
     #:opaque
-    (pattern (~datum brackets))))
+    (pattern (~datum brackets)))
+  (define-syntax-class :quotes
+    #:description "quotes"
+    #:opaque
+    (pattern (~datum quotes))))

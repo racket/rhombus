@@ -11,9 +11,11 @@
 
 @doc(
   defn.macro '«bind.rule $rule_pattern:
+                 $option; ...
                  '$template'»',
   defn.macro '«bind.rule
                 | $rule_pattern:
+                    $option; ...
                     '$template'
                 | ...»'
 ){
@@ -38,10 +40,12 @@
 
 @doc(
   defn.macro 'bind.macro $rule_pattern:
+                $option; ...
                 $body
                 ...',
   defn.macro 'bind.macro
               | $rule_pattern:
+                  $option; ...
                   $body
                   ...
               | ...',
@@ -49,15 +53,17 @@
 
  Like @rhombus(expr.macro), but the first result of the transformer
  can be a low-level binding description created with
- @rhombus(bind_ct.pack).
+ @rhombus(bind_meta.pack).
 
  See @secref("bind-macro-protocol") for examples.
  
 }
 
 @doc(
-  fun bind_ct.pack(stx :: Syntax) :: Syntax
+  fun bind_meta.pack(stx :: Syntax) :: Syntax
 ){
+
+ @provided_meta()
 
  Packs binding information that is represented by a syntax object with
  two parts: @rhombus(infoer_id, ~var) and @rhombus(data, ~var),
@@ -80,10 +86,12 @@
 }
 
 @doc(
-  fun bind_ct.unpack(stx :: Syntax) :: Syntax
+  fun bind_meta.unpack(stx :: Syntax) :: Syntax
 ){
 
- The inverse of @rhombus(bind_ct.pack), normally used only internally in
+ @provided_meta()
+
+ The inverse of @rhombus(bind_meta.pack), normally used only internally in
  the expander.
 
 }
@@ -98,8 +106,8 @@
  binding macro's implementation. The inforer is invoked with ``upward''
  static information provided by the context of a use of the binding form,
  plus the same data syntax object that was supplied as part of the
- argument to @rhombus(bind_ct.pack). The transformer's result is
- automatically unpacked via @rhombus(bind_ct.pack_info), so it should be
+ argument to @rhombus(bind_meta.pack). The transformer's result is
+ automatically unpacked via @rhombus(bind_meta.pack_info), so it should be
  a syntax object that is suitable to pack---which means that it encodes
  information about identifiers to be boound as well as furtyher
  ``continuations'' in the form of a matcher transformer defined with
@@ -112,8 +120,10 @@
 }
 
 @doc(
-  fun bind_ct.pack_info(stx :: Syntax) :: Syntax
+  fun bind_meta.pack_info(stx :: Syntax) :: Syntax
 ){
+
+ @provided_meta()
 
  Packs binding information that specific to a use of a binding form,
  which means that ``upward'' has been provided to an infoer, and the
@@ -169,18 +179,23 @@
 }
 
 @doc(
-  fun bind_ct.unpack_info(stx :: Syntax) :: Syntax
+  fun bind_meta.unpack_info(stx :: Syntax) :: Syntax
 ){
 
- The inverse of @rhombus(bind_ct.pack_info), which is useful for
+ @provided_meta()
+
+ The inverse of @rhombus(bind_meta.pack_info), which is useful for
  unpacking information about the expansion of nested binding forms
- as produced by @rhombus(bind_ct.get_info).
+ as produced by @rhombus(bind_meta.get_info).
 
 }
 
 @doc(
-  fun bind_ct.get_info(bind_stx :: Syntax, static_info :: Syntax) :: Syntax
+  fun bind_meta.get_info(bind_stx :: Syntax,
+                         static_info :: Syntax) :: Syntax
 ){
+
+ @provided_meta()
 
  Initiates the expansion of the binding form represented by
  @rhombus(bind_stx) in a context that supplies thet ``upward'' static
@@ -190,11 +205,11 @@
  following shape:
 
  @(rhombusblock:
-    '(($$(@rhombus(static_key, ~var)), $$(@rhombus(static_value, ~var))), ...)')
+    '(($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...)')
  
  The result is a syntax object that represents the initial expansion of
  the binding form as a packed syntax object, whose form is unspecified
- and intended to be opaque. Use @rhombus(bind_ct.unpack_info) to convert
+ and intended to be opaque. Use @rhombus(bind_meta.unpack_info) to convert
  the packed syntax object and expose information about the binding's
  expansion.
 
