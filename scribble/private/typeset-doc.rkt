@@ -5,6 +5,7 @@
                      shrubbery/property
                      "add-space.rkt")
          "typeset-help.rkt"
+         "defining-element.rkt"
          shrubbery/print
          racket/list
          (only-in (submod rhombus/private/import for-meta)
@@ -108,12 +109,14 @@
                                  (define seen-key (cons (cons (syntax-e def-id) sym-path)
                                                         space-name))
                                  (values
-                                  (cons #`(#,(if (hash-ref seen seen-key #f)
-                                                 #'make-redef-id
-                                                 #'make-def-id)
-                                           (quote-syntax #,(introducer def-id))
-                                           (quote-syntax #,str-id)
-                                           (quote #,space-name))
+                                  (cons #`(defining-element
+                                            #f
+                                            (#,(if (hash-ref seen seen-key #f)
+                                                   #'make-redef-id
+                                                   #'make-def-id)
+                                             (quote-syntax #,(introducer def-id))
+                                             (quote-syntax #,str-id)
+                                             (quote #,space-name)))
                                         rev-as-defs)
                                   (hash-set seen seen-key #t))])))
      (define all-vars (for/fold ([vars #hasheq()]) ([form (in-list forms)]

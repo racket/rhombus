@@ -14,10 +14,10 @@
                  $option; ...
                  '$template'»',
   defn.macro '«expr.rule
-                | $rule_pattern:
-                    $option; ...
-                    '$template'
-                | ...»',
+               | $rule_pattern:
+                   $option; ...
+                   '$template'
+               | ...»',
   grammar rule_pattern:
     '$identifier_or_operator $pattern ...'
     '$ $term_pattern $identifier_or_operator $pattern ...',

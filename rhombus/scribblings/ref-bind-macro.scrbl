@@ -14,10 +14,10 @@
                  $option; ...
                  '$template'»',
   defn.macro '«bind.rule
-                | $rule_pattern:
-                    $option; ...
-                    '$template'
-                | ...»'
+               | $rule_pattern:
+                   $option; ...
+                   '$template'
+               | ...»'
 ){
 
  Defines @rhombus(identifier) or @rhombus(operator) as a binding form,

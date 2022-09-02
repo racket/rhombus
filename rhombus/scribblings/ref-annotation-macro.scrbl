@@ -14,10 +14,10 @@
                  $option; ...
                  '$template'»',
   defn.macro '«annotation.rule
-                | $rule_pattern:
-                    $option; ...
-                    '$template'
-                | ...»'
+               | $rule_pattern:
+                   $option; ...
+                   '$template'
+               | ...»'
 ){
 
  Defines @rhombus(identifier) or @rhombus(operator) as an annotation form,

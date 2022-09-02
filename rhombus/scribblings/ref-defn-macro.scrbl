@@ -58,8 +58,8 @@
 
 @doc(
   defn.macro '«defn.sequence_macro '$identifier_or_operator $pattern ...
-                                      $pattern
-                                      ...':
+                                    $pattern
+                                    ...':
                  $body
                  ...»',
   grammar identifier_or_operator:
