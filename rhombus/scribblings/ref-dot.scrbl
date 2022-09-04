@@ -8,7 +8,7 @@
 ){
 
  Accesses a component of @rhombus(target), either statically or
- dyanamically. The access is static when @rhombus(target) is a
+ dynamically. The access is static when @rhombus(target) is a
  @tech{dot provider}.
 
  See also @rhombus(use_static).

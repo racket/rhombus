@@ -25,8 +25,8 @@
     $export,
 
   grammar identifier_or_operator:
-    $identifier
-    $operator,
+    $identifier_path
+    $operator_path,
 ){
 
  Exports from the enclosing module. An @rhombus(export) form with a
@@ -46,20 +46,29 @@
  a block. The latter order works only if the @rhombus(modifier) itself
  does not need a block.
 
- An @rhombus(identifier) or @rhombus(operator) export can be a dotted
- name, such as @rhombus(List.length). The last component of the name
- is used as the export name.
+ An @rhombus(identifier_path) or @rhombus(operator_path) export can be
+ an immediate identifier or oerator, or it can be dotted name, such as
+ @rhombus(List.length). The last component of a dotted name is used as
+ the export name. See @secref("namespaces") for information on
+ @rhombus(identifier_path) and @rhombus(operator_path).
 
 }
 
 @doc(
-  expo.macro 'all_from($module_path)'
+  expo.macro 'all_from($module_path)',
+  expo.macro 'all_from($$(@rhombus(., ~expmod)) $identifier_path)'
 ){
 
- Exports all bindings imported from @rhombus(module_path), where
- @rhombus(module_path) appears syntactically the same via
- @rhombus(import), as the module's language, or as a nesting binding?
+ With @rhombus(module_path), exports all bindings imported without a
+ prefix from @rhombus(module_path), where @rhombus(module_path)
+ appears syntactically the same via @rhombus(import) or as the
+ module's language.
 
+ With @rhombus($$(@rhombus(., ~expmod)) identifier_path), exports
+ the content of the specified @tech{namespace} or module import (i.e.,
+ the content that would be accessed with a prefix in the exporting
+ context). See @secref("namespaces") for information on
+ @rhombus(identifier_path).
 }
 
 @doc(
@@ -139,5 +148,17 @@
 
  This modifier is valid only immediately within a modules, and not
  within @rhombus(namespace) forms.
+
+}
+
+@doc(
+  expo.macro '$identifier_path . $identifier',
+  expo.macro '$identifier_path . ($operator)'
+){
+
+  In an export clause, @rhombus(., ~expmod) can be used only to form a
+  and @rhombus(identifier_path, ~var) or @rhombus(operator_path, ~var)
+  as described for @rhombus(export). It can also be used to form an
+  @rhombus(identifier_path, ~var) for @rhombus(all_from).
 
 }

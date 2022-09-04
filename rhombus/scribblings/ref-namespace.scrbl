@@ -29,7 +29,7 @@ as part of their grammar:
 
   grammar operator_path:
     $operator
-    $identifier_path . $operator,
+    $identifier_path . ($operator),
 
 ){}
 
