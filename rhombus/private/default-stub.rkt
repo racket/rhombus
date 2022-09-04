@@ -17,4 +17,5 @@
      meta
      meta_label
      names
-     all_from)
+     all_from
+     NonemptyList)

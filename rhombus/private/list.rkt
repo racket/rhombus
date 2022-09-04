@@ -18,12 +18,15 @@
          "name-root.rkt"
          (submod "dot.rkt" for-dot-provider)
          "parse.rkt"
-         "dot-parse.rkt")
+         "dot-parse.rkt"
+         "realm.rkt")
 
 (provide List
          (for-space rhombus/annotation List)
          (for-space rhombus/reducer List)
-         (for-space rhombus/repetition List))
+         (for-space rhombus/repetition List)
+
+         (for-space rhombus/annotation NonemptyList))
 
 (module+ for-binding
   (provide (for-syntax parse-list-binding
@@ -34,17 +37,38 @@
   (provide list-method-table))
 
 (define list-method-table
-  (hash 'length (method1 length)))
+  (hash 'length (method1 length)
+        'first car
+        'rest cdr))
 
-(define-binding-syntax cons  
+(define-for-syntax list-static-infos
+  #'((#%map-ref list-ref)
+     (#%sequence-constructor in-list)
+     (#%dot-provider list-instance)))
+
+(define-binding-syntax List.cons
   (binding-transformer
-   #'cons
-   (make-composite-binding-transformer "cons" #'pair? (list #'car #'cdr) (list #'() #'()))))
+   #'List.cons
+   (make-composite-binding-transformer "cons" #'list? (list #'car #'cdr) (list #'() list-static-infos))))
+
+(define (List.cons a d)
+  (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))
+  (cons a d))
+
+(define (first l)
+  (unless (list? l) (raise-argument-error* 'List.first rhombus-realm "List" l))
+  (car l))
+
+(define (rest l)
+  (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
+  (cdr l))
 
 (define-name-root List
   #:fields
   (length
-   cons)
+   [cons List.cons]
+   first
+   rest)
   #:root
   (make-expression+binding-prefix-operator
    #'List
@@ -65,11 +89,6 @@
        [(form-id ((~and tag (~datum parens)) arg ...) . tail)
         (parse-list-binding stx)]))))
 
-(define-for-syntax list-static-infos
-  #'((#%map-ref list-ref)
-     (#%sequence-constructor in-list)
-     (#%dot-provider list-instance)))
-
 (define-annotation-constructor List
   ()
   #'list? list-static-infos
@@ -80,12 +99,34 @@
   (lambda (static-infoss)
     #`((#%ref-result #,(car static-infoss)))))
 
+(define (nonempty-list? l)
+  (and (pair? l) (list? l)))
+
+(define-annotation-constructor NonemptyList
+  ()
+  #'nonempty-list? list-static-infos
+  1
+  (lambda (arg-id predicate-stxs)
+    #`(for/and ([e (in-list #,arg-id)])
+        (#,(car predicate-stxs) e)))
+  (lambda (static-infoss)
+    #`((#%ref-result #,(car static-infoss)))))
+
 (define-syntax list-instance
   (dot-provider-more-static
    (dot-parse-dispatch
-    (lambda (field-sym ary 0ary nary fail-k)
+    (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'length)]
+        [(first) (field (lambda (e)
+                          (wrap-static-info* #`(car #,e)
+                                             (or (syntax-local-static-info e #'#%ref-result)
+                                                 #'()))))]
+        [(rest) (field (lambda (e)
+                         (wrap-static-info* #`(cdr #,e)
+                                            (datum->syntax #f
+                                                           (or (extract-static-infos e)
+                                                               '())))))]
         [else #f])))))
 
 (define-reducer-syntax List

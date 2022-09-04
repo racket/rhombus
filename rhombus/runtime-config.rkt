@@ -51,6 +51,7 @@
                          [(list?) "List"]
                          [(hash?) "Map"]
                          [(vector?) "Array"]
+                         [(pair?) "Pair"]
                          [else (format "~s" c)])))
                    'rhombus/primitive)]
           [else (values str realm)]))]

@@ -10,6 +10,15 @@ check:
   List.length({1, 2, 3})
   values("contract violation", "expected: List")
 
+check:
+  [1] :: NonemptyList
+  [1]
+
+check:
+  ~exn
+  [] :: NonemptyList
+  "does not match annotation"
+
 begin:
   use_static
   check:
@@ -18,6 +27,12 @@ begin:
   check:
     [1, 2, 3][0]
     1
+  check:
+    [1, 2, 3].first
+    1
+  check:
+    [1, 2, 3].rest
+    [2, 3]
   check:
     List(1, 2, 3).length()
     3
@@ -41,11 +56,29 @@ begin:
     val [v, ...]: dynamic([1, 2, 3])
     [v, ...].length()
     3
+  check:
+    val lst :: List.of(List): dynamic([[1, 2, 3]])
+    lst.first.length()
+    3
+  check:
+    val lst :: List.of(Integer): dynamic([1, 2, 3])
+    lst.rest.length()
+    2
+  check:
+    val lst :: NonemptyList.of(List): dynamic([[1, 2, 3]])
+    lst.first.length()
+    3
 
 begin:
   check:
     dynamic([1, 2, 3]).length()
     3
+  check:
+    dynamic([1, 2, 3]).first
+    1
+  check:
+    dynamic([1, 2, 3]).rest
+    [2, 3]
   check:
     dynamic([1, 2, 3])[0]
     1

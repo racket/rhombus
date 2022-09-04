@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse)
-         "parse.rkt")
+         "parse.rkt"
+         "parens.rkt")
 
 (provide (for-syntax dot-parse-dispatch)
          method1)
@@ -14,8 +15,8 @@
                             (format "expected parentheses afterward with ~a arguments" n)
                             field-stx))
       (syntax-parse tail
-        #:datum-literals (parens)
-        [((parens g ...) . new-tail)
+        #:datum-literals ()
+        [((_::parens g ...) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (cond
            [(= (length gs) n)
@@ -42,7 +43,9 @@
            (lambda () #`(let ([#,direct-id (lambda () (#,id #,lhs))])
                           #,direct-id))))
 
-    (k (syntax-e field-stx) ary 0ary nary fail-k)))
+    (define (field mk) (values (mk lhs) tail))
+
+    (k (syntax-e field-stx) field ary 0ary nary fail-k)))
 
 (define (method1 proc)
   (lambda (v)

@@ -168,7 +168,7 @@
 (define (make_group v)
   (unless (and (pair? v)
                (list? v))
-    (raise-argument-error* 'Syntax.make_group rhombus-realm "NonEmptyList" v))
+    (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
   (datum->syntax #f (cons group-tag (let loop ([es v])
                                       (cond
                                         [(null? es) null]
@@ -333,7 +333,7 @@
 (define-syntax syntax-instance
   (dot-provider-more-static
    (dot-parse-dispatch
-    (lambda (field-sym ary 0ary nary fail-k)
+    (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(unwrap) (0ary #'unwrap)]
         [(unwrap_group) (0ary #'unwrap_group)]

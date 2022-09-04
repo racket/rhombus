@@ -4,6 +4,7 @@
 
 (provide syntax-srcloc
          no-srcloc
+         no-srcloc*
          span-srcloc
          relocate
          respan-empty
@@ -26,6 +27,9 @@
                  (syntax-e stx)
                  #f
                  #f))
+
+(define (no-srcloc* stx)
+  (map no-srcloc (syntax->list stx)))
 
 (define (relocate srcloc stx)
   (datum->syntax stx (syntax-e stx) srcloc (if (syntax? srcloc) srcloc stx)))

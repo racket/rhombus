@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt"
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "tag.rkt")
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
@@ -33,7 +34,7 @@
                           (block (group #:else
                                         (~and else-rhs (block . _)))))
                  . tail)
-        #:with (b::binding ...) #'((group clause.bind ...) ...)
+        #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (values
          #`(#,(build-case-function #'match
                                    #'((b) ... (ignored))
@@ -51,7 +52,7 @@
                                         (~and rhs (block . _))))
                           ...)
                  . tail)
-        #:with (b::binding ...) #'((group bind ...) ...)
+        #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
         (values
          #`(#,(build-case-function #'match
                                    #'((b) ... (unmatched))

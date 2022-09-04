@@ -21,7 +21,9 @@ to append lists.
 @dispatch_table(
   "list",
   @rhombus(List),
-  [lst.length(), List.length(lst)]
+  [lst.length(), List.length(lst)],
+  [lst.first, List.first(lst)],
+  [lst.rest, List.rest(lst)]
 )
 
 @doc(
@@ -91,6 +93,21 @@ to append lists.
 }
 
 @doc(
+  annotation.macro 'NonemptyList',
+  annotation.macro 'NonemptyList.of($annotation)',
+){
+
+ Like @rhombus(List, ~ann) as an annotation, but matches only non-empty
+ lists.
+
+@examples(
+  [1] :: NonemptyList,
+  ~error [] :: NonemptyList
+)
+
+}
+
+@doc(
   reducer.macro 'List'
 ){
 
@@ -124,6 +141,30 @@ to append lists.
   val List.cons(x, y): [1, 2, 3],
   x,
   y
+)
+
+}
+
+@doc(
+  fun List.first(lst :: NonemptyList),
+){
+
+ Returns the first element of @rhombus(lst).
+
+@examples(
+  List.first(["a", "b", "c"])
+)
+
+}
+
+@doc(
+  fun List.rest(lst :: NonemptyList) :: List,
+){
+
+ Returns a list like @rhombus(lst), but without its first element.
+
+@examples(
+  List.rest(["a", "b", "c"])
 )
 
 }

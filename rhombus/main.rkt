@@ -36,6 +36,7 @@
         "private/operator.rkt"
         "private/annotation.rkt"
         "private/list.rkt"
+        "private/pair.rkt"
         "private/array.rkt"
         "private/map.rkt"
         "private/set.rkt"

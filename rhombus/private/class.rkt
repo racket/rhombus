@@ -165,9 +165,9 @@
                 #`(#,pred (#,acc #,arg))))))
 
 (define-for-syntax (make-class-instance-static-infos accessors)
-  (lambda (statis-infoss)
+  (lambda (static-infoss)
     (for/list ([acc (in-list accessors)]
-               [static-infos (in-list statis-infoss)])
+               [static-infos (in-list static-infoss)])
       #`(#,acc #,static-infos))))
 
 ;; dot provider for a class instance used before a `.`

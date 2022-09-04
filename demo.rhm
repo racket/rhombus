@@ -39,7 +39,7 @@ seven(12, 10, ~plus: 8)
 
 def f(List.cons(x :: Integer, y)): List.cons(x + 1, y)
 
-f(List.cons(22, #false))
+f(List.cons(22, []))
 
 // classes (as records/structures)
 
@@ -68,7 +68,7 @@ def (ma, mb, mc):
   values("1", "2", "3")
 mb
   
-val List.cons(ca, cb): List.cons(1, 2)
+val List.cons(ca, cb): List.cons(1, [2])
 ca
 
 def
@@ -83,7 +83,7 @@ size(Posn(8, 6))
 size(1, 2)
 
 def Posn(px, py) -: Posn: Posn(1, 2)
-List.cons(px, py)
+List(px, py)
 
 def identity: fun (x): x
 identity(1 + (fun (x): x) (99) )
@@ -140,8 +140,8 @@ operator
 
 // match
 
-match List.cons(7, 8)
-| List.cons(a, b):
+match Pair.cons(7, 8)
+| Pair.cons(a, b):
     b
 | x:
     x
@@ -233,7 +233,7 @@ bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
           '// check for pair an extract reversed pieces
            val (is_match, $a_part_id, $b_part_id):
              match $in_id
-             | List.cons($b_id, $a_id):
+             | Pair.cons($b_id, $a_id):
                  values(#true, $a_id, $b_id)
              | ~else:
                  values(#false, #false, #false)
@@ -260,7 +260,7 @@ bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
            $b_binder($b_part_id, $b_data)'
 
 // an expression operator that's consistent with the pattern
-expr.rule '$a <> $b': ~parsed_right; 'List.cons($b, $a)'
+expr.rule '$a <> $b': ~parsed_right; 'Pair.cons($b, $a)'
 
 def rx <> (ry :: Integer) : "2" <> 1
 rx

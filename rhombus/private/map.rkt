@@ -160,7 +160,7 @@
 (define-syntax hash-instance
   (dot-provider-more-static
    (dot-parse-dispatch
-    (lambda (field-sym ary 0ary nary fail-k)
+    (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'hash-count)]
         [(keys) (0ary #'hash-keys)]

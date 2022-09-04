@@ -31,6 +31,7 @@
 @include_section("ref-keyword.scrbl")
 @include_section("ref-symbol.scrbl")
 @include_section("ref-list.scrbl")
+@include_section("ref-pair.scrbl")
 @include_section("ref-array.scrbl")
 @include_section("ref-map.scrbl")
 @include_section("ref-set.scrbl")
