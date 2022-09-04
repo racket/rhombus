@@ -136,3 +136,13 @@ check:
   import: lib("rhombus/tests/example-a.rhm").alpha
   beta
   "unbound identifier"
+
+check:
+  import:
+    racket/base as r:
+      rename:
+        cons as make_pair
+      only:
+        make_pair
+  r.make_pair
+  List.cons

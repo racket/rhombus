@@ -292,7 +292,8 @@
               [(space im)
                (define-values (form new-covered-ht) (imports-from-namespace #'im #'r covered-ht (pair? (cdr irs))
                                                                             (eq? #f (syntax-e #'space))
-                                                                            #'dotted))
+                                                                            #'dotted
+                                                                            (syntax-e #'space)))
                (cons form
                      (loop (cdr irs) new-covered-ht))])])))
      #`(begin
@@ -375,7 +376,7 @@
          [_
           (loop (cdr irs) (cons ir rev-mods) rev-namesps rev-sings)])])))
 
-(define-for-syntax (imports-from-namespace im r-parsed covered-ht accum? open-all-spaces? dotted-id)
+(define-for-syntax (imports-from-namespace im r-parsed covered-ht accum? open-all-spaces? dotted-id space-sym)
   (syntax-parse im
     #:datum-literals (import-root map)
     [(import-root id (map orig-id [key val] ...) lookup-id)

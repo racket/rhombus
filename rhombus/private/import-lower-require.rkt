@@ -242,7 +242,7 @@
             (for/list ([(k v) (in-hash renames)]
                        #:when (and (or (not for-expose?)
                                        (expose? v))
-                                   (hash-ref syms k #f)))
+                                   (hash-ref syms (syntax-e (plain-id v)) #f)))
               #`(rename #,mod-path #,(plain-id v) #,k))])]
         [(and for-expose?
               (or (zero? (hash-count renames))
@@ -291,19 +291,14 @@
              (define s-prefix-id (if space
                                      ((make-interned-syntax-introducer space) prefix-id)
                                      prefix-id))
-             (define portal-id (if module?
-                                   s-prefix-id
-                                   (car (generate-temporaries (list s-prefix-id)))))
-             (cons
+             (define portal-id s-prefix-id)
+             (list
               #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
                           (portal #,portal-id ([import #,mod-path
                                                        #,(strip-prefix r mod-path)
                                                        #,(datum->syntax mod-path 'mod-ctx)]
                                                #,s-prefix-id
-                                               #,(prefix-intro s-prefix-id))))
-              (if module?
-                  null
-                  (list #`(define-syntax #,s-prefix-id (make-rename-transformer (quote-syntax #,portal-id)))))))
+                                               #,(prefix-intro s-prefix-id))))))
            null)))
     ;; in a local-binding context, use `define-syntax` instead of `#%require`
     ;; for `s-prefix-id`, since a `#%require` will be lifted
