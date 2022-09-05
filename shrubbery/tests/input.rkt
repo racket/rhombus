@@ -1629,6 +1629,8 @@ then @{8}
 @apple{one}{two}
 @banana(0){three}{four}{five}
 @coconut{six} {seven}
+@donut+eight{nine}
+@and{@eggplant. ten{eleven}}
 
 @none{}
 @«5»(3){yohoo @9(a, b, c){
@@ -1688,6 +1690,11 @@ INPUT
                           (group (brackets (group "five")))))
     (group coconut (parens (group (brackets (group "six"))))
            (braces (group seven)))
+    (group donut (op +) eight (parens (group (brackets (group "nine")))))
+    (group and (parens (group (brackets
+                               (group eggplant)
+                               (group ". ten{eleven}")))))
+    
     (group none (parens (group (brackets))))
     (group
      5

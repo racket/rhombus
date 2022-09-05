@@ -594,9 +594,12 @@
     (define end-pos (next-location-as-pos in))
     (values start-pos end-pos eof?))
   (case in-mode
-    ;; 'initial mode is right after `@` without immediate `{`, and we
-    ;; may transition from 'initial mode to 'args mode at `(`
-    [(initial args)
+    ;; 'initial mode is right after `@` without immediate `{`, or after
+    ;;   an identifier--operator sequence right after `@`
+    ;; 'args is after 'initial where next is `(`;
+    ;; 'op-continue is after 'initial of identifier where next is an operator
+    ;;    then identifier, and the next step will be back to 'initial
+    [(initial args op-continue)
      ;; recur to parse in shrubbery mode:
      (define-values (t type paren start end backup sub-status pending-backup)
        (recur (in-at-shrubbery-status status)))
@@ -608,13 +611,21 @@
                  (null? (in-at-openers status)))
             ;; either `{`, `[`, or back to shrubbery mode
             (define-values (opener pending-backup) (peek-at-opener* in))
+            (define (still-in-at mode [opener #f])
+              (in-at mode (in-at-comment? status) #t opener sub-status '()))
             (cond
               [opener
-               (values (in-at 'open (in-at-comment? status) #t opener sub-status '())
+               (values (still-in-at 'open opener)
                        1)]
               [else
                (values
                 (cond
+                  [(and (eq? in-mode 'initial)
+                        (eq? (token-name t) 'identifier)
+                        (peek-operator+identifier? in))
+                   (still-in-at 'op-continue)]
+                  [(eq? in-mode 'op-continue)
+                   (still-in-at 'initial)]
                   [(and (not (eq? in-mode 'args))
                         (eqv? #\( (peek-char in)))
                    (in-at 'args (in-at-comment? status) #t #f sub-status '())]
@@ -894,7 +905,13 @@
 
 (define operator-lexer
   (lexer
-   [operator ((string-length lexeme) . > . 1)]
+   [operator (string-length lexeme)]
+   [(eof) #f]
+   [any-char #f]))
+
+(define identifier-lexer
+  (lexer
+   [identifier #t]
    [(eof) #f]
    [any-char #f]))
 
@@ -902,7 +919,7 @@
   (call-with-peeking-port
    input-port
    (lambda (p)
-     (operator-lexer p))))
+     ((operator-lexer p) . > . 1))))
 
 (define (maybe-consume-trailing-dot input-port lexeme end-pos)
   (define ch (peek-char input-port))
@@ -920,6 +937,14 @@
                                                 (and c (add1 c)))]))
         (values #t new-lexeme new-end-pos 1)])]
     [else (values #f lexeme end-pos 0)]))
+
+(define (peek-operator+identifier? input-port)
+  (call-with-peeking-port
+   input-port
+   (lambda (p)
+     ;; to intervening whitespace allowed
+     (and (operator-lexer p)
+          (identifier-lexer p)))))
 
 (struct token (name value))
 (struct located-token token (srcloc))

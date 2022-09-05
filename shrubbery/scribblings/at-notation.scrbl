@@ -21,7 +21,9 @@ a list of string literals and escapes, and multiple body texts can
 be provided in multiple @litchar("{")...@litchar("}")s.
 
 The command part usually does not have @litchar{«»}, and it is instead
-usually written as an identifier, operator, parenthesized, or bracketed term. The
+usually written as an identifier, operator, parenthesized, or bracketed term,
+or it is a sequence of identifier separated by operators and no spaces
+(e.g., @litchar{scribble.rhombus}). The
 argument and body parts, when present, always use @litchar{()} and @litchar{{}},
 respectively. Any of the three parts can be omitted, but
 a command must be present to include arguments, and at least one part must

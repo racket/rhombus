@@ -18,12 +18,12 @@ export:
   provided_meta
 
 fun see_implicit(what, when, context, ~is_infix = #false):
- @(scribble.elem){The @what form is implicitly used when @when is
-                  used in @(if is_infix | @(scribble.elem){after another @context} | "")
-                  a@(if context == "expression" | "n" | "")
-                  @context position.
-                  See also @(scribble.secref)("implicit").}
+ @scribble.elem{The @what form is implicitly used when @when is
+                used in @(if is_infix | @scribble.elem{after another @context} | "")
+                a@(if context == "expression" | "n" | "")
+                @context position.
+                See also @scribble.secref("implicit").}
 
 
 fun provided_meta():
- @(scribble.elem){@(scribble.smaller){Provided as @(scribble.rhombus(meta, ~expmod)).}}
+ @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expmod).}}

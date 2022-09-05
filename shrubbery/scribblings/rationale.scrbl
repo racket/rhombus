@@ -87,7 +87,7 @@ distinguishing operators from non-operators.
 For @litchar("@"), the choice of treating @litchar|{@f(arg){text}}| as
 @litchar{f(arg, ["text"])} instead of @litchar{f(arg, "text")} reflects
 experience with S-expression @litchar("@") notation. Although it seems
-convenient that, say @litchar|{@bold{x}}| is treated as @litchar{(bold "x")},
+convenient that, say, @litchar|{@bold{x}}| is treated as @litchar{(bold "x")},
 the consequence is that a function like @litchar{bold} might be
 implemented at first to take a single argument; later, a use like
 @litchar|{@bold{Hello @name}}| breaks, because two arguments are

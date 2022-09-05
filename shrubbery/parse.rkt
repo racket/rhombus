@@ -20,7 +20,7 @@
                can-empty?      ; in a context where a `:` can be empty?
                delta           ; a `cont-delta`, tracks `\` continuations
                raw             ; reversed whitespace (and comments) to be remembered
-               at-mode))       ; look for `@` continuation after term: #f, 'initial, or 'no-initial
+               at-mode))       ; `@` continuation after term: #f, 'initial, 'no-initial, 'post-initial, 'after, or list
 
 (define (make-state #:count? count?
                     #:line line
@@ -741,7 +741,24 @@
                                                       [raw (cons t (state-raw s))]
                                                       [at-mode 'initial]))]
                    [else (error "unexpected" (token-name next-t)  (token-e next-t))])]
-                [(identifier number literal operator opener)
+                [(identifier)
+                 ;; handle <identifier> <operator> ... <identifier> with no spaces in between
+                 (let loop ([l (cdr l)] [rev-prefix '()] [raw (cons t (state-raw s))])
+                   (cond
+                     [(and (pair? (cdr l))
+                           (pair? (cddr l))
+                           (eq? 'operator (token-name (cadr l)))
+                           (eq? 'identifier (token-name (caddr l))))
+                      (define id (record-raw (token-value (car l)) #f raw '()))
+                      (define dot (record-raw (token-value (cadr l)) #f '() '()))
+                      (loop (cddr l) (list* dot id rev-prefix) '())]
+                     [else
+                      (parse-group l (struct-copy state s
+                                                  [raw raw]
+                                                  [at-mode (if (null? rev-prefix)
+                                                               'initial
+                                                               rev-prefix)]))]))]
+                [(number literal operator opener)
                  (parse-group (cdr l) (struct-copy state s
                                                    [raw (cons t (state-raw s))]
                                                    [at-mode 'initial]))]
@@ -906,16 +923,21 @@
 ;; followed by parentheses
 (define (continue-at at-mode after-paren? l line delta count?)
   (define (at-call rator parens g)
-    (if (eq? at-mode 'no-initial)
-        (cons (move-pre-raw rator
-                            (add-raw-to-prefix #f (syntax-to-raw rator) parens))
-              g)
-        (list* rator parens g)))
+    (cond
+      [(eq? at-mode 'no-initial)
+       (cons (move-pre-raw rator
+                           (add-raw-to-prefix #f (syntax-to-raw rator) parens))
+             g)]
+      [(pair? at-mode)
+       (append (reverse (cons rator at-mode)) (cons parens g))]
+      [else
+       (list* rator parens g)]))
   (cond
     [(not at-mode)
      (values (lambda (g) g) #f l line delta)]
     [(and (or (not after-paren?)
-              (eq? at-mode 'initial))
+              (eq? at-mode 'initial)
+              (pair? at-mode))
           (pair? l)
           (eq? 'opener (token-name (car l)))
           (equal? "(" (token-e (car l))))
@@ -930,6 +952,8 @@
                  [(eq? at-mode 'no-initial)
                   (add-raw-to-prefix* #f (syntax-to-raw (car g))
                                       (cdr g))]
+                 [(pair? at-mode)
+                  (append (reverse at-mode) g)]
                  [else g]))
              'post-initial l line delta)]
     [(and (pair? l)
@@ -952,7 +976,8 @@
              (values (lambda (g)
                        (cond
                          [(or (not after-paren?)
-                              (eq? at-mode 'initial))
+                              (eq? at-mode 'initial)
+                              (pair? at-mode))
                           (at-call (car g)
                                    (cons parens-tag (reverse (cons c accum-args)))
                                    (cdr g))]
@@ -971,7 +996,11 @@
                                                             new-g))]))
                      'initial (if (null? l) null (cdr l)) line delta)]))))]
     [else
-     (values (lambda (g) g) (and at-mode 'after) l line delta)]))
+     (values (lambda (g)
+               (if (pair? at-mode)
+                   (append (reverse at-mode) g)
+                   g))
+             (and at-mode 'after) l line delta)]))
 
 (define (parse-text-sequence l line delta
                              done-k
