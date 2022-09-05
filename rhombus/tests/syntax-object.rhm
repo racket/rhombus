@@ -63,7 +63,7 @@ check:
 check:
   ~exn
   Syntax.make_group([])
-  "NonEmptyList"
+  "NonemptyList"
 
 check:
   ~print
