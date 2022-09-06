@@ -609,7 +609,7 @@
          (cond
            [(and (not (s-exp-mode? sub-status))
                  (null? (in-at-openers status)))
-            ;; either `{`, `(`, or back to shrubbery mode
+            ;; either `{`, `(`, `[`, or back to shrubbery mode
             (define-values (opener pending-backup) (if (eq? in-mode 'no-args)
                                                        (values #f 0)
                                                        (peek-at-opener* in)))
@@ -630,7 +630,12 @@
                    (still-in-at 'initial)]
                   [(and (not (eq? in-mode 'args))
                         (not (eq? in-mode 'no-args))
-                        (eqv? #\( (peek-char in)))
+                        ;; recognize `[]` like `()` args for
+                        ;; a kind of consistency with S-expression @,
+                        ;; but the parser will reject `[]`
+                        (let ([ch (peek-char in)])
+                          (or (eqv? #\( ch)
+                              (eqv? #\[ ch))))
                    (in-at 'args (in-at-comment? status) #t #f sub-status '())]
                   [(in-escaped? sub-status)
                    (in-escaped-at-status sub-status)]

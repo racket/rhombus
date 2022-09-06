@@ -789,7 +789,7 @@
                                                                                  #:stop-at-at? stop-at-next-at?)]))]
                       [else
                        (normal-opener)])]
-                   [("(" "[" "«" "'") (normal-opener)]
+                   [("[" "«" "'") (normal-opener)]
                    [else (error "unexpected" (token-name next-t)  (token-e next-t))])]
                 [(identifier)
                  ;; handle <identifier> <operator> ... <identifier> with no spaces in between
@@ -992,7 +992,11 @@
               (at-mode-initial? am))
           (pair? l)
           (eq? 'opener (token-name (car l)))
-          (equal? "(" (token-e (car l))))
+          (let ([s (token-e (car l))])
+            (or (string=? "(" s)
+                (string=? "[" s))))
+     (when (string=? "[" (token-e (car l)))
+       (fail (car l) "argument position for `@` cannot start `[`"))
      (values (lambda (g)
                (define a (cadr g))
                (define tag (car a))

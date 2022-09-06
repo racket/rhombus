@@ -43,6 +43,11 @@ looks like an argument tor body part, surround the command part with
  @litchar("@(«") @italic{command} ... @litchar("»)")
 }
 
+A @litchar("[") is not allowed in a position that could start the
+arguments part of a @litchar("@") escape. This prohibition is intended
+to support better error reporting when S-expression @litchar("@")
+syntax is misused among shrubbery notation.
+
 Compared to @rhombusmodname(#{at-exp}) notation, the main differences
 are @litchar{()} instead of @litchar{[]} for arguments, keeping each
 body in a separate list in the converted call, and allowing multiple
