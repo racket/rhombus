@@ -599,7 +599,7 @@
     ;; 'args is after 'initial where next is `(`;
     ;; 'op-continue is after 'initial of identifier where next is an operator
     ;;    then identifier, and the next step will be back to 'initial
-    [(initial args op-continue)
+    [(initial args no-args op-continue)
      ;; recur to parse in shrubbery mode:
      (define-values (t type paren start end backup sub-status pending-backup)
        (recur (in-at-shrubbery-status status)))
@@ -609,8 +609,10 @@
          (cond
            [(and (not (s-exp-mode? sub-status))
                  (null? (in-at-openers status)))
-            ;; either `{`, `[`, or back to shrubbery mode
-            (define-values (opener pending-backup) (peek-at-opener* in))
+            ;; either `{`, `(`, or back to shrubbery mode
+            (define-values (opener pending-backup) (if (eq? in-mode 'no-args)
+                                                       (values #f 0)
+                                                       (peek-at-opener* in)))
             (define (still-in-at mode [opener #f])
               (in-at mode (in-at-comment? status) #t opener sub-status '()))
             (cond
@@ -627,6 +629,7 @@
                   [(eq? in-mode 'op-continue)
                    (still-in-at 'initial)]
                   [(and (not (eq? in-mode 'args))
+                        (not (eq? in-mode 'no-args))
                         (eqv? #\( (peek-char in)))
                    (in-at 'args (in-at-comment? status) #t #f sub-status '())]
                   [(in-escaped? sub-status)
@@ -646,6 +649,12 @@
                                 [shrubbery-status sub-status])])
        (case (and (token? t) (token-name t))
          [(opener s-exp) (ok (struct-copy in-at status
+                                          [mode (if (and (eq? in-mode 'initial)
+                                                         (equal? (in-at-openers status) '("("))
+                                                         (eq? 'opener (token-name t))
+                                                         (equal? (token-e t) "«"))
+                                                    'no-args
+                                                    in-mode)]
                                           [openers (cons (if (eq? 's-exp (token-name t))
                                                              "{"
                                                              (token-e t))

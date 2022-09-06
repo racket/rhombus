@@ -20,7 +20,7 @@
                can-empty?      ; in a context where a `:` can be empty?
                delta           ; a `cont-delta`, tracks `\` continuations
                raw             ; reversed whitespace (and comments) to be remembered
-               at-mode))       ; `@` continuation after term: #f, 'initial, 'no-initial, 'post-initial, 'after, or list
+               at-mode))       ; `@` continuation after term: #f or `at-mode`
 
 (define (make-state #:count? count?
                     #:line line
@@ -30,6 +30,7 @@
                     #:bar-closes? [bar-closes? #f]
                     #:bar-closes-line [bar-closes-line #f]
                     #:block-mode [block-mode #f]
+                    #:at-mode [at-mode #f]
                     #:can-empty? [can-empty? #t]
                     #:delta delta
                     #:raw [raw null])
@@ -44,7 +45,24 @@
          can-empty?
          delta
          raw
-         #f))
+         at-mode))
+
+(struct at-mode (rev-prefix
+                 initial?
+                 splice?
+                 stop-at-at?
+                 stop-at-next-at?))
+
+(define (make-at-mode #:rev-prefix [rev-prefix '()]
+                      #:initial? [initial? #f]
+                      #:splice? [splice? #f]
+                      #:stop-at-at? [stop-at-at? #f]
+                      #:stop-at-next-at? [stop-at-next-at? #f])
+  (at-mode rev-prefix
+           initial?
+           splice?
+           stop-at-at?
+           stop-at-next-at?))
 
 ;; Parsing state for group sequences: top level, in opener-closer, or after `:`
 (struct group-state (count?         ; parsed based on lines and columns?
@@ -241,7 +259,9 @@
               (done)]
              [else
               (unless (equal? (closer-expected closer) (token-e t))
-                (fail t (format "expected ~s; closing at ~a" (closer-expected closer) (token-value t))))
+                (if (eof-object? (closer-expected closer))
+                    (fail t (format "unexpected closer `~a`" (token-e t)))
+                    (fail t (format "expected closer `~a`, found `~a`" (closer-expected closer) (token-e t)))))
               (define raw (cons t (group-state-raw sg)))
               (if (eof-object? (closer-expected closer))
                   ;; continue after extra closer:
@@ -423,7 +443,7 @@
               (when (and (pair? l)
                          (eq? 'none (group-state-sequence-mode sg))
                          (not commenting))
-                (fail t "second group not allowed within `@«` and `»`"))
+                (fail t "second group not allowed after `@` within `«` and `»`"))
               (define-values (g rest-l group-end-line group-delta group-tail-commenting group-tail-raw)
                 (parse-group l (make-state #:count? (group-state-count? sg)
                                            #:paren-immed? (group-state-paren-immed? sg)
@@ -485,7 +505,7 @@
          (fail t "no terms allowed after `»` within a group")))
      (define (check-nested-block-mode t)
        (when (eq? (state-block-mode s) 'no)
-         (fail t "blocks not allowed immediately within `@«` and `»`")))
+         (fail t "block not allowed after `@` immediately within `«` and `»`")))
      ;; Consume a token
      (define (keep delta
                    #:operator-column [operator-column (state-operator-column s)]
@@ -626,7 +646,8 @@
                [("{") (values "}" 'braces #t)]
                [("[") (values "]" 'brackets #t)]
                [("'") (values "'" 'quotes #f)]
-               [("«") (if (state-at-mode s)
+               [("«") (define am (state-at-mode s))
+                      (if (and am (at-mode-initial? am))
                           (values "»" 'at #t)
                           (fail t "misplaced `«`"))]
                [else (error "unknown opener" t)]))
@@ -671,7 +692,15 @@
                   [else
                    (fail end-t0 (format "expected closing \"'\" after closing \"»\""))
                    (values next-l last-line delta end-t0 raw)])]
-               [else (values rest-l0 close-line0 close-delta0 end-t0 group-tail-raw0)]))
+               [(and (state-at-mode s) (at-mode-splice? (state-at-mode s)))
+                (define post-t (if (pair? rest-l0) (car rest-l0) end-t0))
+                (define rest-rest-l (if (pair? rest-l0) (cdr rest-l0) rest-l0))
+                (unless (and (eq? 'closer (token-name post-t))
+                             (equal? ")" (token-e post-t)))
+                  (fail end-t0 "expected a closing `)` immediately after closing `»`"))
+                (values rest-rest-l close-line0 close-delta0 post-t (cons post-t group-tail-raw0))]
+               [else
+                (values rest-l0 close-line0 close-delta0 end-t0 group-tail-raw0)]))
            (define-values (suffix-raw suffix-l suffix-line suffix-delta)
              (get-suffix-comments rest-l close-line close-delta))
            (define-values (at-adjust new-at-mode at-l at-line at-delta)
@@ -724,8 +753,10 @@
               (parse-group (cdr l) s)])]
           [(at)
            (check-block-mode)
+           (define am (state-at-mode s))
            (cond
-             [(state-at-mode s)
+             [(and am
+                   (at-mode-stop-at-at? am))
               (done)]
              [(null? (cdr l))
               (fail t "missing term after `@`")
@@ -733,13 +764,32 @@
              [else
               (define next-t (cadr l))
               (check-same-line t next-t (state-count? s))
+              (define stop-at-next-at? (and am (at-mode-stop-at-next-at? am)))
               (case (token-name next-t)
                 [(opener)
+                 (define (normal-opener)
+                   (parse-group (cdr l) (struct-copy state s
+                                                     [raw (cons t (state-raw s))]
+                                                     [at-mode (make-at-mode #:initial? #t
+                                                                            #:stop-at-at? stop-at-next-at?)])))
                  (case (token-e next-t)
-                   [("(" "[" "«" "'")
-                    (parse-group (cdr l) (struct-copy state s
-                                                      [raw (cons t (state-raw s))]
-                                                      [at-mode 'initial]))]
+                   [("(")
+                    (cond
+                      [(and (pair? (cddr l))
+                            (let ([next-next-t (caddr l)])
+                              (and (eq? 'opener (token-name next-next-t))
+                                   (equal? "«" (token-e next-next-t)))))
+                       ;; A `@(« ... »)` escape does not support arguments, while its
+                       ;; content is spliced like `@« ... »`; we drop the `(` here,
+                       ;; and the `»` parser will consume the `)`
+                       (parse-group (cddr l) (struct-copy state s
+                                                          [raw (list* next-t t (state-raw s))]
+                                                          [at-mode (make-at-mode #:initial? #t
+                                                                                 #:splice? #t
+                                                                                 #:stop-at-at? stop-at-next-at?)]))]
+                      [else
+                       (normal-opener)])]
+                   [("(" "[" "«" "'") (normal-opener)]
                    [else (error "unexpected" (token-name next-t)  (token-e next-t))])]
                 [(identifier)
                  ;; handle <identifier> <operator> ... <identifier> with no spaces in between
@@ -755,15 +805,16 @@
                      [else
                       (parse-group l (struct-copy state s
                                                   [raw raw]
-                                                  [at-mode (if (null? rev-prefix)
-                                                               'initial
-                                                               rev-prefix)]))]))]
+                                                  [at-mode (make-at-mode #:initial? #t
+                                                                         #:rev-prefix rev-prefix
+                                                                         #:stop-at-at? stop-at-next-at?)]))]))]
                 [(number literal operator opener)
                  (parse-group (cdr l) (struct-copy state s
                                                    [raw (cons t (state-raw s))]
-                                                   [at-mode 'initial]))]
+                                                   [at-mode (make-at-mode #:initial? #t
+                                                                          #:stop-at-at? stop-at-next-at?)]))]
                 [(at-opener)
-                 (keep (state-delta s) #:at-mode 'no-initial #:suffix? #f)]
+                 (keep (state-delta s) #:at-mode (make-at-mode #:stop-at-at? stop-at-next-at?) #:suffix? #f)]
                 [(whitespace)
                  (fail next-t "whitespace is invalid after `@`")]
                 [else
@@ -921,23 +972,24 @@
 ;; Look for `{` (as 'at-opener) next or a `(` that might be followed
 ;; by a `{`, and prepare to convert by rearranging info a splice
 ;; followed by parentheses
-(define (continue-at at-mode after-paren? l line delta count?)
+(define (continue-at am after-paren? l line delta count?)
   (define (at-call rator parens g)
     (cond
-      [(eq? at-mode 'no-initial)
+      [(not (at-mode-initial? am))
        (cons (move-pre-raw rator
                            (add-raw-to-prefix #f (syntax-to-raw rator) parens))
              g)]
-      [(pair? at-mode)
-       (append (reverse (cons rator at-mode)) (cons parens g))]
+      [(pair? (at-mode-rev-prefix am))
+       (append (reverse (cons rator (at-mode-rev-prefix am))) (cons parens g))]
       [else
        (list* rator parens g)]))
+  (define (keep-stop-mode am)
+    (make-at-mode #:stop-at-at? (at-mode-stop-at-at? am)))
   (cond
-    [(not at-mode)
+    [(not am)
      (values (lambda (g) g) #f l line delta)]
     [(and (or (not after-paren?)
-              (eq? at-mode 'initial)
-              (pair? at-mode))
+              (at-mode-initial? am))
           (pair? l)
           (eq? 'opener (token-name (car l)))
           (equal? "(" (token-e (car l))))
@@ -949,13 +1001,14 @@
                   (at-call (car g)
                            a
                            (cddr g))]
-                 [(eq? at-mode 'no-initial)
+                 [(not (at-mode-initial? am))
                   (add-raw-to-prefix* #f (syntax-to-raw (car g))
                                       (cdr g))]
-                 [(pair? at-mode)
-                  (append (reverse at-mode) g)]
+                 [(pair? (at-mode-rev-prefix am))
+                  (append (at-mode-rev-prefix am) g)]
                  [else g]))
-             'post-initial l line delta)]
+             (keep-stop-mode am)
+             l line delta)]
     [(and (pair? l)
           (eq? 'at-opener (token-name (car l))))
      ;; process a `{`...`}` body, handling escapes and then trimming whitespace
@@ -976,7 +1029,7 @@
              (values (lambda (g)
                        (cond
                          [(or (not after-paren?)
-                              (eq? at-mode 'initial)
+                              (at-mode-initial? am)
                               (pair? at-mode))
                           (at-call (car g)
                                    (cons parens-tag (reverse (cons c accum-args)))
@@ -994,13 +1047,15 @@
                           (move-pre-raw bracket
                                         (add-raw-to-prefix* #f (syntax-to-raw bracket)
                                                             new-g))]))
-                     'initial (if (null? l) null (cdr l)) line delta)]))))]
+                     (keep-stop-mode am)
+                     (if (null? l) null (cdr l)) line delta)]))))]
     [else
      (values (lambda (g)
                (if (pair? at-mode)
                    (append (reverse at-mode) g)
                    g))
-             (and at-mode 'after) l line delta)]))
+             (keep-stop-mode am)
+             l line delta)]))
 
 (define (parse-text-sequence l line delta
                              done-k
@@ -1050,6 +1105,8 @@
                                   #:line (token-line t)
                                   #:column (token-column t)
                                   #:delta zero-delta
+                                  #:at-mode (make-at-mode #:initial? #t
+                                                          #:stop-at-next-at? #t)
                                   #:raw null)))
        (loop rest-l
              (cons (if comment?

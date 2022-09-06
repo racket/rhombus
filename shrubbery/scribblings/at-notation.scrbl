@@ -4,14 +4,14 @@
 
 An @litchar("@") form of the shape
 
-@verbatim(~indent: 2)|{
- @«|@italic{command} ...»(|@italic{arg}, ...){ |@italic{body} }...
-}|
+@verbatim(~indent: 2){
+ @litchar("@«") @italic{command} ... @litchar{»}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{body} @litchar("}")...
+}
 
 is parsed into the same representation as
 
 @verbatim(~indent: 2){
-    @italic{command} ...(@italic{arg}, ..., [@italic{parsed_body}, ...], ...)
+ @italic{command} ...@litchar{(}@italic{arg}@litchar{,} ...@litchar{,} @litchar{[}@italic{parsed_body}, ...@litchar{]}, ...@litchar{)}
 }
 
 That is, the command part is left at the front and spliced into its
@@ -20,25 +20,37 @@ parentheses to make them like arguments. Each body text is parsed into
 a list of string literals and escapes, and multiple body texts can
 be provided in multiple @litchar("{")...@litchar("}")s.
 
-The command part usually does not have @litchar{«»}, and it is instead
-usually written as an identifier, operator, parenthesized, or bracketed term,
-or it is a sequence of identifier separated by operators and no spaces
-(e.g., @litchar{scribble.rhombus}). The
-argument and body parts, when present, always use @litchar{()} and @litchar{{}},
-respectively. Any of the three parts can be omitted, but
-a command must be present to include arguments, and at least one part must
-be present. When
-multiple parts are present, they must have no space between them or
-the leading @litchar("@"). When the argument and body parts are both
-omitted, the command part is simply spliced into its context.
+When there's a single @italic{command} that is a identifier, operator,
+parenthesized term, bracketed term, or sequence of identifiers
+separated by operators with no spaces in between, the @litchar{«»} can
+be omitted a long as no space is before or after the command:
 
-The conversion to a call-like form, using @litchar{()} for arguments, keeping each body in a separate
-list, and allowing multiple body arguments are the main ways
-that shrubbery @litchar("@") notation differs from @litchar{#lang at-exp} notation. The
-other differences are the use of @litchar{«}...@litchar{»} instead of @litchar{|}...@litchar{|} for
-delimiting a command, and the use of @litchar("@//") instead of @litchar("@;") for
-comments. The details are otherwise meant to be the same, and the rest
-of this section is mostly a recap.
+@verbatim(~indent: 2){
+ @litchar("@")@italic{command}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{body} @litchar("}")...
+}
+
+The argument and body parts always use @litchar{()} and @litchar{{}},
+respectively. Any of the three parts can be omitted, but a command
+must be present to include arguments, and at least one part must be
+present. When multiple parts are present, they must have no space
+between them or the leading @litchar("@"). When the argument and body
+parts are both omitted, the command part is simply spliced into its
+context. For splicing with no arguments even when subsequent text
+looks like an argument tor body part, surround the command part with
+@litchar{(«} and @litchar{»)}:
+
+@verbatim(~indent: 2){
+ @litchar("@(«") @italic{command} ... @litchar("»)")
+}
+
+Compared to @rhombusmodname(#{at-exp}) notation, the main differences
+are @litchar{()} instead of @litchar{[]} for arguments, keeping each
+body in a separate list in the converted call, and allowing multiple
+body arguments. Other differences are the use of
+@litchar{(«}...@litchar{»)} instead of @litchar{|}...@litchar{|} for
+delimiting a command without arguments, and the use of @litchar("@//")
+instead of @litchar("@;") for comments. The details are otherwise
+meant to be the same, and the rest of this section is mostly a recap.
 
 A body part is treated as literal text, except where @litchar("@") is
 used in a body to escape. An unescaped @litchar("}") closes a body,
@@ -58,7 +70,7 @@ use a different opener and closer. The parsed form of the body breaks up
 the body text into lines and @litchar{"\n"} as separate string literals
 in the parsed list form, with each escape also being its own element in
 the list form. Parsed body text also has leading and trailing whitespace
-adjusted the same as with @litchar{#lang at-exp}.
+adjusted the same as with @rhombusmodname(#{at-exp}).
 
 After the @litchar("@") of an escape in body text, the escape has the
 same form as an at-notaton form that starts with @litchar("@") as a

@@ -129,6 +129,10 @@
 (check-fail "a(;«1» 2)" #rx"comma")
 (check-fail "a(;«1; 2», 2)" #rx"multi-group splice")
 
+(check-fail "@«1, 2»" #rx"second group not allowed")
+(check-fail "@(«1, 2»)" #rx"second group not allowed")
+(check-fail "@(«1 2» )" #rx"expected a closing `[)]` immediately after closing `»`")
+
 (check-fail "1x" #rx"read error")
 (check-fail "1x_y" #rx"read error")
 (check-fail "1.x" #rx"read error")

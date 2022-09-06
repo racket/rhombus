@@ -1669,6 +1669,15 @@ then @{8}
 @elem{@a()@b()}
 @elem{@a{}@b()}
 
+@(«alpha beta»)(gamma){delta}
+@(«alpha beta»){delta}
+@(«alpha beta»)
+
+@same x @group
+@same @group
+@same(1) x @group(2)
+@same(1) @group(2)
+
 The end
 INPUT
   )
@@ -1758,6 +1767,13 @@ INPUT
        (brackets
         (group a (parens (group (brackets))))
         (group b (parens))))))
+    (group alpha beta (parens (group gamma)) (braces (group delta)))
+    (group alpha beta (braces (group delta)))
+    (group alpha beta)
+    (group same x group)
+    (group same group)
+    (group same (parens (group 1)) x group (parens (group 2)))
+    (group same (parens (group 1)) group (parens (group 2)))
     (group The end)))
 
 (define input4
