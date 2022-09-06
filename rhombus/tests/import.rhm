@@ -84,17 +84,17 @@ check:
   ~eval
   import: .List: 
             rename: cons as kons
-  List.kons(1, 2)
-  List.cons(1, 2)
+  List.kons(1, [2])
+  List.cons(1, [2])
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
   import: .ExList: 
             rename: cons as kons
-  [ExList.kons(1, 2),
-   List.cons(1, 2)]
-  [List.cons(1, 2), List.cons(1, 2)]
+  [ExList.kons(1, [2]),
+   List.cons(1, [2])]
+  [List.cons(1, [2]), List.cons(1, [2])]
 
 check:
   ~eval
@@ -102,9 +102,9 @@ check:
   begin:
     import: .ExList: 
               rename: cons as kons
-    [ExList.kons(1, 2),
-     List.cons(1, 2)]
-  [List.cons(1, 2), List.cons(1, 2)]
+    [ExList.kons(1, [2]),
+     List.cons(1, [2])]
+  [List.cons(1, [2]), List.cons(1, [2])]
 
 check:
   ~eval
@@ -145,4 +145,4 @@ check:
       only:
         make_pair
   r.make_pair
-  List.cons
+  Pair.cons
