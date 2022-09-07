@@ -11,9 +11,7 @@
                   [(content start1) (discard-immediate-space content)]
                   [(content start2) (discard-immediate-newline content #f)])
       (let* ([min-col (get-min-column content)]
-             [content (if (eqv? min-col 0)
-                          content
-                          (trim-shared-column content min-col (pair? start2)))])
+             [content (trim-shared-column content min-col (pair? start2))])
         (let-values ([(content comments) (convert-content content group-tag)])
           (values (append start1 start2)
                   content
@@ -107,8 +105,9 @@
        (define n (+ (leading-space-count s) (or (syntax-column stx) 0)))
        (loop (cdr lst) (min n (or min-col n)) #f)]
       [else
-       (loop (cdr lst) min-col #f)])))
+       (loop (cdr lst) (or min-col 0) #f)])))
 
+;; also splits leading whitespace into its own element
 (define (trim-shared-column lst min-col start-nl?)
   (let loop ([lst lst] [saw-nl? start-nl?])
     (cond
@@ -126,13 +125,16 @@
        (define trimmed-s (if (eqv? n 0)
                              s
                              (substring s n)))
+       (define rest-trimmed (loop (cdr lst) #f))
        (define trimmed
-         (cons (list 'content
-                     (datum->syntax a
-                                    trimmed-s
-                                    a
-                                    a))
-               (loop (cdr lst) #f)))
+         (if (eqv? 0 (string-length trimmed-s))
+             rest-trimmed
+             (cons (list 'content
+                         (datum->syntax a
+                                        trimmed-s
+                                        a
+                                        a))
+                   rest-trimmed)))
        (if (eqv? add-back-n 0)
            trimmed
            (cons (list 'content
@@ -141,6 +143,8 @@
                                                            a)
                                             '()))
                  trimmed))]
+      [(eq? 'comment (caar lst))
+       (cons (car lst) (loop (cdr lst) saw-nl?))]
       [else (cons (car lst) (loop (cdr lst) #f))])))
 
 (define (convert-content lst group-tag)

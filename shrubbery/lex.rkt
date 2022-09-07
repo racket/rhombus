@@ -219,9 +219,14 @@
 (define (read-line-comment name lexeme input-port start-pos
                            #:status [status 'initial]
                            #:consume-newline? [consume-newline? #f]
+                           #:plus-leading-whitespace? [plus-leading-whitespace? #f]
                            #:pending-backup [pending-backup 0])
-  (let ([comment (apply string (append (string->list lexeme) (read-line/skip-over-specials input-port
-                                                                                           consume-newline?)))])
+  (let ([comment (apply string (append (string->list lexeme)
+                                       (read-line/skip-over-specials input-port
+                                                                     consume-newline?)
+                                       (if plus-leading-whitespace?
+                                           (read-leading-whitespace input-port)
+                                           '())))])
     (define-values (end-line end-col end-offset) (port-next-location input-port))
     (values (make-token name comment start-pos (position end-offset end-line end-col))
             'comment #f 
@@ -276,6 +281,17 @@
        (if (char? next)
            (cons next (loop))
            (loop))])))
+
+(define (read-leading-whitespace i)
+  (let loop ()
+    (define next (peek-char-or-special i))
+    (cond
+      [(and (char? next)
+            (char-whitespace? next))
+       (cons (read-char-or-special i)
+             (loop))]
+      [else
+       null])))
 
 (struct s-exp-mode (depth status in-quotes) #:prefab)
 (struct in-at (mode comment? closeable? opener shrubbery-status openers) #:prefab)
@@ -489,7 +505,7 @@
           (let ([status (in-at 'open #t #t opener 'initial '())])
             (ret 'at-comment lexeme 'comment (string->symbol lexeme) start-pos end-pos status #:pending-backup 1))
           ;; all characters up to an opener-deciding character are part of the comment, so pending-backup = 1
-          (read-line-comment 'at-comment lexeme input-port start-pos #:pending-backup 1)))]
+          (read-line-comment 'at-comment lexeme input-port start-pos #:pending-backup 1 #:plus-leading-whitespace? #t)))]
    ["@"
     (let-values ([(opener pending-backup) (peek-at-opener* input-port)])
       (define mode (if opener 'open 'initial))
@@ -755,6 +771,7 @@
                 (read-line-comment 'comment (string-append opener "@" slashes) in start-pos
                                    #:status (struct-copy in-at status [mode 'inside])
                                    #:consume-newline? #t
+                                   #:plus-leading-whitespace? #t
                                    #:pending-backup 1)]))]
        [else
         (define-values (next-opener pending-backup) (peek-at-opener* in))

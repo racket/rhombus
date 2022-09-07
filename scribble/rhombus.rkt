@@ -7,7 +7,8 @@
          (rename-in scribble/base
                     [verbatim base:verbatim]
                     [table-of-contents table_of_contents]
-                    [local-table-of-contents local_table_of_contents])
+                    [local-table-of-contents local_table_of_contents]
+                    [margin-note margin_note])
          scribble/private/manual-defaults
          "private/rhombus.rhm"
          "private/rhombus_typeset.rhm"

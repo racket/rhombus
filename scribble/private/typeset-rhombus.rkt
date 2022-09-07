@@ -1,6 +1,9 @@
 #lang racket/base
 (require shrubbery/print
          shrubbery/syntax-color
+         (only-in syntax-color/lexer-contract
+                  dont-stop?
+                  dont-stop-val)
          scribble/racket
          syntax/parse
          racket/list
@@ -183,7 +186,7 @@
                      [skip-ws init-col]    ; amount of leading space on this line to be skipped
                      [line-shape (make-line-shape)]) ; for generating compatible (e.g., bold) leading whitespace
       (define-values (lexeme attribs paren start+1 end+1 backup new-state)
-        (shrubbery-lexer in 0 state))
+        (shrubbery-lexer in 0 (strip-dont-stop state)))
       (cond
         [(eof-object? lexeme) null]
         [else
@@ -281,7 +284,7 @@
                               (if (= (cdar nl) end)
                                   ;; the newline is the whole token, so move to one next
                                   ;; token, which is the next line
-                                  (token-loop state end init-col line-shape)
+                                  (token-loop new-state end init-col line-shape)
                                   ;; there's more in the token after the newline
                                   (one-token-loop (add1 start) end init-col line-shape))))]
                      [else
@@ -475,3 +478,7 @@
       [else stx]))
   (replace-in-term block-stx))
 
+(define (strip-dont-stop state)
+  (if (dont-stop? state)
+      (dont-stop-val state)
+      state))

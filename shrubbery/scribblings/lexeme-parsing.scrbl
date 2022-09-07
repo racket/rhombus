@@ -72,10 +72,8 @@ escape must _not_ describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
 ill-formed representations.
 
-A @litchar("@") starts an at-expression form similar to the notaton
-supported by @litchar{#lang at-exp} (which oriented toward S-expressions
-and readtable-based). @Secref("at-notation") explains in more detail, but
-the table below sketches the shape of @litchar("@") forms.
+For more details on @litchar("@") parsing, see @secref("at-parsing"),
+but the table below describes the shape of @litchar("@") forms.
 
 @(def is_lex: @elem{★@hspace(1)})
 @(def no_lex: "")
@@ -181,14 +179,16 @@ the table below sketches the shape of @litchar("@") forms.
     empty_line,
     [is_lex, @nonterm{comment}, bis, bseq(@litchar{//}, kleenestar(@nonterm{nonnlchar})), ""],
     ["", "", bor, bseq(@litchar{/*}, kleenestar(@nonterm{anychar}), @litchar{*/}), "nesting allowed"],
+    ["", "", bor, bseq(@litchar("@//"), kleenestar(@nonterm{nonnlchar})), @elem{only within @nonterm{text}}],
+    ["", "", bor, bseq(@litchar("@//"), @nonterm{atopen}, kleenestar(@nonterm{anychar}), @nonterm{atopen}), @elem{only within @nonterm{text}}],
     empty_line,
     [no_lex, @nonterm{nonnlchar}, bis, @italic{any character other than newline}, ""],
     empty_line,
     [is_lex, @nonterm{atexpression}, bis, bseq(@litchar("@"),
                                                @nonterm{command},
                                                boptional(@nonterm{arguments}),
-                                               kleenestar(@nonterm{body})), "no space between parts"],
-    ["", "", bor, bseq(@litchar("@"), kleenestar(@nonterm{body})), "no space between parts"],
+                                               kleenestar(@nonterm{text})), "no space between parts"],
+    ["", "", bor, bseq(@litchar("@"), kleenestar(@nonterm{text})), "no space between parts"],
     ["", "", bor, bseq(@litchar("@"), @nonterm{splice}), "no space between parts"],
     empty_line,
     [no_lex, @nonterm{command}, bis, @bseq(@kleenestar(@nonterm{prefix}), @nonterm{identifier}), "no space between parts"],
@@ -210,15 +210,15 @@ the table below sketches the shape of @litchar("@") forms.
     [no_lex, @nonterm{arguments}, bis, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}),
      @italic{usual @litchar{,}-separated}],
     empty_line,
-    [no_lex, @nonterm{body}, bis, bseq(@litchar("{"), @nonterm{text}, @litchar("}")),
+    [no_lex, @nonterm{text}, bis, bseq(@nonterm{atopen}, @nonterm{text}, @nonterm{atclose}),
      @elem{@italic{escapes in} @nonterm{text}}],
-    ["", "", bor, bseq(@nonterm{atopen}, @nonterm{text}, @nonterm{atclose}),
-     @elem{@nonterm{atclose} @italic{match} @nonterm{atopen}}],
     empty_line,
-    [no_lex, @nonterm{atopen}, bis, bseq(@litchar{|}, kleenestar(@nonterm{asciisym}), @litchar("{")), ""],
+    [no_lex, @nonterm{atopen}, bis, @litchar("{"), ""],
+    ["", "", bor, bseq(@litchar{|}, kleenestar(@nonterm{asciisym}), @litchar("{")), ""],
     empty_line,
-    [no_lex, @nonterm{atclose}, bis, bseq(@litchar("}"), kleenestar(@nonterm{asciisym}), @litchar{|}),
-     @italic{flips paren-line}],
+    [no_lex, @nonterm{atclose}, bis, @litchar("}"), ""],
+    ["", "", bor, bseq(@litchar("}"), kleenestar(@nonterm{asciisym}), @litchar{|}),
+     @italic{flips opener chars}],
     
   ]
 )

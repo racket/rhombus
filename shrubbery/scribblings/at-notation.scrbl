@@ -2,96 +2,130 @@
 
 @title(~tag: "at-notation"){At-Notation Using @litchar("@")}
 
-An @litchar("@") form of the shape
+Groups and blocks provide a convenient general notation for structured
+forms, such as typical elements of programming language. Basic
+shrubbery elements less well suited for representing blocks of
+free-form text, however. String literals work well enough for simple
+text, but they're awkward for representing multi-line paragraphs and
+interpolated text formatting.
+
+To better support free-form text and escapes, shrubbery notation
+includes a text support that is based on @rhombusmodname(#{at-exp})
+notation for S-expressions. A @litchar("@") in shrubbery notation
+starts a term that normally includes @litchar("{") and @litchar("}"),
+where @litchar("@") changes the meaning of @litchar("{") and
+@litchar("}") to delimit free-form text instead of shrubbery groups.
+For example,
+
+@(rhombusblock:
+    @typeset{Write "hello" to C:\greet.txt.}
+)
+    
+is equivalent to
+
+@(rhombusblock:
+    typeset(["Write \"hello\" to C:\\greet.txt."])
+)
+
+Note that text in @litchar("{}") in this example did not need escapes
+for the literal quotes and backslashes. The conversion puts the
+literal string in a list, where the list has more elements in the case
+of multiline text or escapes.
+
+Overall, @litchar("@") notation has three key properties:
+
+@itemlist(
+
+ @item{Within text @litchar("{") and @litchar("}"), nearly all content
+       is literal, except that @litchar("@") can be used again to
+       escape. Longer paired delimiters, such as @litchar("|<<{") and
+       @litchar("}>>|"), imply a corresponding longer escape, such as
+       @litchar("|<<@"), so that text notation itself embeds easily
+       within another text context (as long as the outer context uses a
+       distinct escape).},
+
+ @item{Between @litchar("@") and the opening delimiter like
+       @litchar("{"), optional additional terms are parsed as a normal
+       shrubbery terms. Thus, a single @litchar("@") notation is
+       useful both for escaping to text in a shrubbery context, and
+       escaping back to a shrubbery notation in a text context.},
+
+ @item{Every @litchar("@") form can be translated to a shrubbery form
+       without @litchar("@"). This transformation is performed
+       automatically during shrubbery parsing, as opposed to leaving
+       the translation to a language that is built on shrubbery
+       notation.}
+
+)
+
+Each input of the form
 
 @verbatim(~indent: 2){
- @litchar("@«") @italic{command} ... @litchar{»}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{body} @litchar("}")...
+ @litchar("@")@italic{command}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{text} @litchar("}")...
 }
 
 is parsed into the same representation as
 
 @verbatim(~indent: 2){
- @italic{command} ...@litchar{(}@italic{arg}@litchar{,} ...@litchar{,} @litchar{[}@italic{parsed_body}, ...@litchar{]}, ...@litchar{)}
+ @italic{command}@litchar{(}@italic{arg}@litchar{,} ...@litchar{,} @litchar{[}@italic{converted_text}, ...@litchar{]}, ...@litchar{)}
 }
 
-That is, the command part is left at the front and spliced into its
-enclosing group, while the argument and body parts are wrapped with
-parentheses to make them like arguments. Each body text is parsed into
-a list of string literals and escapes, and multiple body texts can
-be provided in multiple @litchar("{")...@litchar("}")s.
+Each component of the original form---@italic{command}, parenthesized
+@italic{arg}s, and braced @italic{text}---is optional, as long as one
+component is present, and as long as @italic{command} is present
+before parenthesized @italic{arg}s. The @italic{command} and
+@italic{arg} components are in shrubbery notation, while @italic{text}
+is in text mode and converted to @italic{converted_text}. The
+@italic{converted_text} translation includes elements that are not
+string literals in places where @italic{text} has escapes. An
+@litchar("@") form can have multiple @litchar("{}") @italic{text}
+blocks, in which case the translation has multiple
+@italic{converted_list} list arguments.
 
-When there's a single @italic{command} that is a identifier, operator,
-parenthesized term, bracketed term, or sequence of identifiers
-separated by operators with no spaces in between, the @litchar{«»} can
-be omitted a long as no space is before or after the command:
+More examples:
 
-@verbatim(~indent: 2){
- @litchar("@")@italic{command}@litchar{(} @italic{arg} @litchar{,} ... @litchar{)}@litchar("{") @italic{body} @litchar("}")...
-}
+@(rhombusblock:
+    @typeset(~style: bold){Write "hello"}
+    typeset(~style: bold, ["Write \"hello\""])
 
-The argument and body parts always use @litchar{()} and @litchar{{}},
-respectively. Any of the three parts can be omitted, but a command
-must be present to include arguments, and at least one part must be
-present. When multiple parts are present, they must have no space
-between them or the leading @litchar("@"). When the argument and body
-parts are both omitted, the command part is simply spliced into its
-context. For splicing with no arguments even when subsequent text
-looks like an argument tor body part, surround the command part with
-@litchar{(«} and @litchar{»)}:
+    @typeset{Write @bold{"hello"}}
+    typeset(["Write ", bold(["\"hello\""])])
 
-@verbatim(~indent: 2){
- @litchar("@(«") @italic{command} ... @litchar("»)")
-}
+    @typeset{Write @url{https://example.com}{"hello"}}
+    typeset(["Write ", url(["https://example.com"], ["\"hello\""])])
 
-A @litchar("[") is not allowed in a position that could start the
-arguments part of a @litchar("@") escape. This prohibition is intended
-to support better error reporting when S-expression @litchar("@")
-syntax is misused among shrubbery notation.
+    @typeset{Write @get_link(home_page) out...}
+    typeset(["Write ", get_link(home_page), " out ..."])
 
-Compared to @rhombusmodname(#{at-exp}) notation, the main differences
-are @litchar{()} instead of @litchar{[]} for arguments, keeping each
-body in a separate list in the converted call, and allowing multiple
-body arguments. Other differences are the use of
-@litchar{(«}...@litchar{»)} instead of @litchar{|}...@litchar{|} for
-delimiting a command without arguments, and the use of @litchar("@//")
-instead of @litchar("@;") for comments. The details are otherwise
-meant to be the same, and the rest of this section is mostly a recap.
+    @typeset|{Example: @bold{"hello"}}|
+    typeset(["Example: @bold{\"hello\"}"])
+)
 
-A body part is treated as literal text, except where @litchar("@") is
-used in a body to escape. An unescaped @litchar("}") closes a body,
-except that an unescaped @litchar("{") must be balanced by an unescaped
-@litchar("}"), with both treated as part of the body text. Instead of
-@litchar("{"), a body-starting opener can be @litchar{|} plus
-@litchar("{") with any number of ASCII punctuation and symbol characters
-(other than @litchar("{")) in between; the corresponding closer is then
-the same sequence in reverse, except that some characters are flipped:
-@litchar("{") to @litchar("}"), @litchar{(} to @litchar{)}, @litchar{)}
-to @litchar{(}, @litchar{[} to @litchar{]}, @litchar{]} to @litchar{[},
-@litchar{<} to @litchar{>}, and @litchar{>} to @litchar{<}. With an
-@litchar{|}...@litchar("{") opener, an escape is formed by using the
-opener followed by @litchar("@"), while opener–closer pairs balance
-within the body text. When multiple body parts are provided, each can
-use a different opener and closer. The parsed form of the body breaks up
-the body text into lines and @litchar{"\n"} as separate string literals
-in the parsed list form, with each escape also being its own element in
-the list form. Parsed body text also has leading and trailing whitespace
-adjusted the same as with @rhombusmodname(#{at-exp}).
+Some additional @litchar("@") rules:
 
-After the @litchar("@") of an escape in body text, the escape has the
-same form as an at-notaton form that starts with @litchar("@") as a
-shubbery. That is, @litchar("@") forms are essentially the same whether
-starting in shrubbery mode or body-text mode.
+@itemlist(
 
-In body text, there are two additional comment forms that are not
-supported in shrubbery mode. A @litchar("@//{") starts a block comment
-that ends with @litchar("}"), and the comment form is not part of the
-body text. The @litchar("@//") comment form must be prefixed with an
-opener when its enclosing body is started with an opener that isn't just
-@litchar("{"), and the @litchar("{") after @litchar("@//") can more
-generally be an @litchar{|}...@litchar("{") opener with the
-corresponding closer. Opener–closer pairs must be balanced in the
-commented block, the same as in body text. A @litchar("@//") comment
-form (prefixed with an opener as needed to form an escape) that is not
-followed by @litchar("{") or an @litchar{|}...@litchar("{") opener
-comments out the rest of the line, including a comment-terminating
-newline.
+ @item{When multiple lines of text are within @litchar("{}"), then
+       leading indentation common to all lines is discarded.},
+
+ @item{While the @italic{command} component itself can be parenthesized, it
+       can also have the form
+       @rhombus($$(@litchar("«")) $$(@italic{command}) ... $$(@litchar{»})),
+       for a multi-part command component that is spliced into the translation
+       without surrounding parentheses.},
+
+ @item{A multi-part @italic{command} that is a sequence of
+       identifiers separated by operators (usually @litchar{.}) can be
+       written without grouping @litchar{«»}, as long as no space
+       appears between the identifiers and operators.},
+
+ @item{The form @rhombus($$(@litchar("@(«")) $$(@italic{command}) ... $$(@litchar{»)}))
+       splices as-is with no arguments, even if the subsequent text has
+       the shape of parenthesed @italic{arg}s or braced @italic{text}.},
+
+ @item{The @litchar("@//") comment form works both in normal shrubbery
+       mode and as a comment escape within text.}
+
+)
+
+See @secref("at-parsing") for complete details.

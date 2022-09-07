@@ -1735,7 +1735,7 @@ INPUT
        (brackets (group "  2") (group "\n") (group "1") (group "\n") (group "  ") (group "4") (group "\n") (group " ") (group "5  ")))))
     (group
      (parens
-      (group (brackets (group "4 ") (group "\n") (group "5 ") (group "  6")))))
+      (group (brackets (group "4 ") (group "\n") (group "5 ") (group "6")))))
     (group
      itemlist
      (parens
