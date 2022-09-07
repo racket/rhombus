@@ -1678,6 +1678,11 @@ then @{8}
 @same(1) x @group(2)
 @same(1) @group(2)
 
+tail @«in: content»
+tail @(«in: content»)
+tail @«| then | else»
+tail @(«| then | else»)
+
 The end
 INPUT
   )
@@ -1774,6 +1779,10 @@ INPUT
     (group same group)
     (group same (parens (group 1)) x group (parens (group 2)))
     (group same (parens (group 1)) group (parens (group 2)))
+    (group tail in (block (group content)))
+    (group tail in (block (group content)))
+    (group tail (alts (block (group then)) (block (group else))))
+    (group tail (alts (block (group then)) (block (group else))))
     (group The end)))
 
 (define input4

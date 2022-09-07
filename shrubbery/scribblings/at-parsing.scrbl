@@ -23,9 +23,10 @@ one of these forms:
 
       The allowed form of @italic{command} is described in
       @secref("lexeme-parsing") as @nonterm{command}, and it always
-      corresponds to a group. Each @italic{argument} is also a group,
-      with no additional constraints. The form of @italic{braced_text}
-      is described below.
+      corresponds to a group. A group that ends in a block is
+      disallowed. Each @italic{argument} is also a group, with no
+      additional constraints. The form of @italic{braced_text} is
+      described below.
 
       No space is allowed between @litchar("@") and @litchar{command},
       between @italic{command} and @litchar("("), between
@@ -40,7 +41,7 @@ one of these forms:
       better error reporting when S-expression @litchar("@") syntax is
       misused in a shrubbery context.)},
       
- @item{@bseq(@litchar("@"), @italic{command}, @italic{braced_text}, @elem{...})
+ @item{@bseq(@litchar("@"), @italic{command}, @italic{braced_text}, @italic{braced_text}, @elem{...})
 
       Converts to 
       @verbatim(~indent: 2){
@@ -50,7 +51,7 @@ one of these forms:
       The allowed forms of @italic{command} and @italic{braced_text}
       and the spacing rules are the same as for the first case of
       @litchar("@"), with no space allowed between @italic{command}
-      and the first @italic{braced_text}. Zero or more
+      and the first @italic{braced_text}. One or more
       @italic{braced_text}s are allowed.},
       
  @item{@bseq(@litchar("@"), @italic{braced_text}, @italic{braced_text}, @elem{...})
@@ -61,10 +62,24 @@ one of these forms:
       }
 
       The allowed forms of @italic{braced_text} and the spacing rules
-      are the same as other @litchar("@") cases, with no space allowed
+      are the same as preceding @litchar("@") cases, with no space allowed
       between @litchar("@") and the first @italic{braced_text}. One or
       more @italic{braced_text}s are allowed.},
       
+ @item{@bseq(@litchar("@"), @italic{command})
+
+      Converts to
+      @verbatim(~indent: 2){
+        @italic{command_splice}
+      }
+
+      The allowed forms of @italic{command} are the same as for the
+      preceding cases of @litchar("@"), except that @italic{command}
+      is allowed to be a group that ends in a block if the
+      @litchar("@") is at the end of the enclosing group. If
+      parentheses or a @italic{braced_text} follow @italic{command},
+      then one of the preceding @litchar("@") cases applies, instead.},
+
  @item{@bseq(@litchar("@(«"), @italic{command}, @litchar("»)"))
 
       Converts to 
@@ -72,10 +87,10 @@ one of these forms:
         @italic{command}
       }
 
-      where @italic{command} is allowed to be any group that does not
-      end in a block, and space is allowed between @litchar("@(«") and
-      @italic{command} or between @italic{command} and
-      @litchar("»)").},
+      where @italic{command} is allowed to be any group (but ending in
+      block only when @litchar("@") is at the end of the enclosing
+      group), and space is allowed between @litchar("@(«") and
+      @italic{command} or between @italic{command} and @litchar("»)").},
 
  @item{@bseq(@litchar("@//"), @italic{braced_text})
 
@@ -87,9 +102,10 @@ one of these forms:
 
        A line-comment form, but allowed only within a
        @italic{braced_text}, where @italic{line} does not contain
-       linefeed or carriage-return characters, and @italic{newline} is
-       a linefeed, carriage-return, or carriage-return and linefeed.
-       The comment also consumes leading whitespace on the next line.
+       newline characters, and @italic{newline} is a newline
+       character. (Return characters are @emph{not} treated as newline
+       characters.) The comment also consumes leading whitespace on
+       the next line.
 
        This form applies only when @italic{line} does not start with a
        @italic{braced_text} @italic{opener} as described below.}
@@ -154,7 +170,10 @@ and @italic{closer}:
  @item{The remaining content of @italic{braced_text} is split into
        lines, where escapes are treated as atomic elements of a line
        (i.e., within a line, even if the escape internally has
-       multiple lines of text). Each run of literal text between
+       multiple lines of text). Return characters are @emph{not}
+       treated as newlines, but note that a return--linefeed
+       sequence will act like linefeed, because the return is stripped
+       as trailing whitespace. Each run of literal text between
        escaped items is a single element within the line. When two
        escapes are adjacent with no literal text in between, the
        escaped elements are consecutive in the line, and not separated

@@ -133,6 +133,10 @@
 (check-fail "@(«1, 2»)" #rx"second group not allowed")
 (check-fail "@(«1 2» )" #rx"expected a closing `[)]` immediately after closing `»`")
 (check-fail "@x[1]{2}" #rx"cannot start `[[]`")
+(check-fail "@«1: 2»()" #rx"block not allowed")
+(check-fail "@«1: 2» x" #rx"block not allowed")
+(check-fail "@(«1: 2»)x" #rx"block not allowed")
+(check-fail "@«| 1» more" #rx"block not allowed")
 
 (check-fail "1x" #rx"read error")
 (check-fail "1x_y" #rx"read error")

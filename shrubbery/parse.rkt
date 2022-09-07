@@ -503,9 +503,6 @@
      (define (check-block-mode)
        (when (eq? (state-block-mode s) 'end)
          (fail t "no terms allowed after `»` within a group")))
-     (define (check-nested-block-mode t)
-       (when (eq? (state-block-mode s) 'no)
-         (fail t "block not allowed after `@` immediately within `«` and `»`")))
      ;; Consume a token
      (define (keep delta
                    #:operator-column [operator-column (state-operator-column s)]
@@ -542,7 +539,6 @@
           (done)]
          [else
           (check-block-mode)
-          (check-nested-block-mode t)
           (parse-block #f l
                        #:count? (state-count? s)
                        #:block-mode 'inside
@@ -583,7 +579,6 @@
                  (when (and (state-operator-column s)
                             (<= column (state-operator-column s)))
                    (fail use-t "wrong indentation"))
-                 (check-nested-block-mode use-t)
                  (parse-block #f use-l
                               #:count? (state-count? s)
                               #:block-mode 'inside
@@ -621,7 +616,6 @@
            (keep (state-delta s))]
           [(block-operator)
            (check-block-mode)
-           (check-nested-block-mode t)
            (parse-block t (cdr l)
                         #:count? (state-count? s)
                         #:line line
@@ -672,7 +666,7 @@
              (parse-groups next-l (make-group-state #:count? (state-count? s)
                                                     #:closer (make-closer-expected use-closer t)
                                                     #:paren-immed? paren-immed?
-                                                    #:block-mode (if (eq? tag 'at) 'no 'start)
+                                                    #:block-mode 'start
                                                     #:column sub-column
                                                     #:last-line last-line
                                                     #:delta delta
@@ -1005,6 +999,7 @@
                   (at-call (car g)
                            a
                            (cddr g))]
+                 ;; can these other cases happen?
                  [(not (at-mode-initial? am))
                   (add-raw-to-prefix* #f (syntax-to-raw (car g))
                                       (cdr g))]
@@ -1125,9 +1120,19 @@
   (define gs (car g))
   (define at (car gs))
   (unless (tag? 'at at) (error "expected at"))
-  (when (null? (cdr gs)) (fail t "empty group within `@«` and `»`"))
-  (unless (null? (cddr gs)) (error "extra groups in at"))
+  (when (null? (cdr gs)) (fail t "empty group after `@` within `«` and `»`"))
+  (unless (null? (cddr gs)) (error "extra groups in at (should be caught earlier)"))
   (define rest (cdr g))
+  (unless (null? rest)
+    (let loop ([gs (cdadr gs)])
+      (cond
+        [(null? gs) (void)]
+        [(null? (cdr gs))
+         (define term (car gs))
+         (define tag (and (pair? term) (syntax-e (car term))))
+         (when (or (eq? tag 'block) (eq? tag 'alts))
+           (fail t "block not allowed after mid-group `@` within `«` and `»`"))]
+        [else (loop (cdr gs))])))
   (values
    (move-pre-raw* at
                   (add-raw-to-prefix* #f (syntax-to-raw at)
@@ -1370,7 +1375,7 @@
   (and l (+ l n)))
 
 (define (next-block-mode mode)
-  (if (eq? mode 'no) 'no #f))
+  #f)
 
 ;; ----------------------------------------
 
