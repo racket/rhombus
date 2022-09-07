@@ -14,7 +14,7 @@ The parse of a shrubbery can be represented by an S-expression:
 
  @item{Atom elements are represented as “themselves” within a group,
    including identifers a symbols, except that an operator is
-   represented as a 2-list that is @litchar{'op} followed by the operator name
+   represented as a 2-element list that is @litchar{'op} followed by the operator name
    as a symbol.},
 
  @item{A group sequence is represented as a list of @litchar{'group} lists.},

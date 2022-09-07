@@ -67,22 +67,24 @@ whether there's a newline or the continue line immediately after
 can be turned into @litchar{\} to “harden” code for transfer via media
 (such as email) that might mangle consecutive spaces.
 
-Using @litchar{~} for keywords has a precedent in OCaml. Using
-@litchar{~} for keywords uses up a character that might otherwise be
-used for operators, but keywords seem useful enough to be worth this
-cost. The notion of keywords as distinct from identifiers has been
-liberating for Racket syntax (particularly since keywords can be kept
-disintinct from expressions more generally), and we expect similar
-benefits for having keywords in shrubbery notation.
+Using @litchar{~} for keywords has a precedent in OCaml. Reserving
+@litchar{~} for keywords exclusively would use up a character that
+might otherwise be used for operators, and so @litchar{~} is also
+allowed as in operator as long as it is combined with other operator
+characters. The notion of keywords as distinct from identifiers has
+been liberating for Racket syntax (particularly since keywords can be
+kept disintinct from expressions more generally), and we expect
+similar benefits for having keywords in shrubbery notation.
 
-The @litchar{#{....}} escape to S-expressions bridges between shrubbery
-notation and Racket identifiers. For example,
+The @litchar{#{....}} escape to S-expressions provides a bridge between
+shrubbery notation and Racket identifiers. For example,
 @litchar{#{exact-integer?}} is an identifier with @litchar{-} and
 @litchar{?} as part of the identifier. Shrubbery notation could be
 adapted to support Lisp-style identifiers by requiring more space around
 operators, but the rule for continuing a group between @litchar{(} and
-@litchar{)} or @litchar{[} and @litchar{]} currently depends on
-distinguishing operators from non-operators.
+@litchar{)}, @litchar{[} and @litchar{]}, or @litchar("{") and
+@litchar("}") currently depends on distinguishing operators from
+non-operators.
 
 For @litchar("@"), the choice of treating @litchar|{@f(arg){text}}| as
 @litchar{f(arg, ["text"])} instead of @litchar{f(arg, "text")} reflects

@@ -18,7 +18,7 @@ use for set and map notations.
 
 Shrubbery notation is also based on
 @hyperlink("https://github.com/jeapostrophe/racket2-rfcs/blob/lexpr/lexpr/0004-lexpr.md"){Lexprs},
-particularly its use of @litchar{|}. Lexprs uses mandatory @litchar{:} and @litchar{|} tokens
+particularly its use of @litchar{|}. Lexprs use mandatory @litchar{:} and @litchar{|} tokens
 as a prefix for indentation, and it absorbs an additional line after
 an indented section to allow further chaining of the group. Although
 @litchar{«»} can be used to form multiple subgroups within a shrubbery group,
