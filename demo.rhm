@@ -602,12 +602,12 @@ weirdly ++ "none"
 '@x'
 '@f{text}'
 '@f{text}{another text}'
-'@f[x, y]{This is plain text.}'
-'@f[x, y]'
+'@f(x, y){This is plain text.}'
+'@f(x, y)'
 '@{text}'
-'@[x, y]{text}'
-'@« library.f »[x, y]{Text with @escape[].}'
-'@(library.f)[x, y]{Text with @« escape ».}'
+'@(x, y){text}'
+'@« library.f »(x, y){Text with @escape().}'
+'@(library.f)(x, y){Text with @« escape ».}'
 '@explain{Multi-line text
            has newlines as separate
            and leading whitespace
