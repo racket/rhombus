@@ -605,7 +605,7 @@ weirdly ++ "none"
 '@f(x, y){This is plain text.}'
 '@f(x, y)'
 '@{text}'
-'@(x, y){text}'
+'@[x, y]{text}'
 '@« library.f »(x, y){Text with @escape().}'
 '@(library.f)(x, y){Text with @« escape ».}'
 '@explain{Multi-line text
