@@ -11,23 +11,35 @@ parsed as an implicit use of the @rhombus(#{#%call}) form, which is
 normally bound to implement function calls.
 
 @doc(
-  expr.macro '$fun_expr #{#%call} ($arg, ..., $maybe_rest)',
+  expr.macro '$fun_expr #{#%call} ($arg, ..., $rest, ...)',
 
   grammar arg:
     $arg_expr
     $keyword: $arg_expr,
 
-  grammar maybe_rest:
+  grammar rest:
+    & $list_expr
+    ~& $map_expr
     $repetition $$(@litchar{,}) $$(dots_expr)
-    $$("ϵ")
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
   argument, and each @rhombus(keyword: arg_expr) combination is a
-  by-keyword argument. If the argument sequence ends with @dots_expr,
-  the then the elements of the preceding @tech{repetition} are used as
-  additional by-position arguments, in order after the
-  @rhombus(arg_expr) arguments.
+  by-keyword argument.
+
+  If the @rhombus(rest) sequence contains @rhombus(& list_expr) or
+  @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the
+  elements of the list or repetition are used as additional
+  by-position arguments, in order after the @rhombus(arg_expr)
+  arguments.
+  Only one positional rest argument is allowed in the call.
+
+  If the @rhombus(rest) sequence contains @rhombus(~& map_expr), then
+  all the keys in @rhombus(map_expr) must be keywords, and they must
+  not overlap with the directly supplied @rhombus(keyword)s.
+  The keyword-value pairs are passed into the function as additional
+  keyword arguments.
+  Only one keyword rest argument is allowed in the call.
 
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 
@@ -39,21 +51,21 @@ normally bound to implement function calls.
 }
 
 @doc(
-  defn.macro 'fun $identifier_path($kwopt_binding, ..., $maybe_rest) $maybe_result_annotation:
+  defn.macro 'fun $identifier_path($kwopt_binding, ..., $rest, ...) $maybe_result_annotation:
                 $body
                 ...',
   defn.macro 'fun
-              | $identifier_path($binding, ..., $maybe_rest) $maybe_result_annotation:
+              | $identifier_path($binding, ..., $rest, ...) $maybe_result_annotation:
                   $body
                   ...
               | ...',
 
-  expr.macro 'fun ($kwopt_binding, ..., $maybe_rest) $maybe_result_annotation:
+  expr.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_result_annotation:
                 $body
                 ...',
 
   expr.macro 'fun
-              | ($binding, ..., $maybe_rest) $maybe_result_annotation:
+              | ($binding, ..., $rest, ...) $maybe_result_annotation:
                   $body
                   ...
               | ...',
@@ -73,9 +85,10 @@ normally bound to implement function calls.
     -: $annotation
     $$("ϵ"),
 
-  grammar maybe_rest:
-    $binding $$(@litchar{,}) $$(dots)
-    $$("ϵ")
+  grammar rest:
+    & $list_binding
+    ~& $map_binding
+    $repetition_binding $$(@litchar{,}) $$(dots)
 ){
 
  Binds @rhombus(identifier_path) as a function, or when
@@ -107,8 +120,8 @@ normally bound to implement function calls.
   curried_add(1)(2)
 )
 
- When @litchar{|} is not used, then arguments can have keywords and/or
- default values. Bindings for earlier arguments are visible in each
+ When @litchar{|} is not used, then arguments can have default values.
+ Bindings for earlier arguments are visible in each
  @rhombus(default_expr), but not bindings for later arguments;
  accordingly, matching actions are interleaved with binding effects (such
  as rejecting a non-matching argument) left-to-right, except that the
@@ -137,8 +150,8 @@ normally bound to implement function calls.
 
  When alternatives are specified with multiple @litchar{|} clauses, the
  alternatives are tried in order when the function is called. The
- alternatives can differ by number of arguments as well as annotations
- and binding patterns.
+ alternatives can differ by number of arguments as well as keywords,
+ annotations, and binding patterns.
 
 @examples(
   fun | hello(name):
@@ -156,10 +169,35 @@ normally bound to implement function calls.
   is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(rest) is specified as @rhombus(binding $$(@litchar{,}) $$(dots)),
-then the function alternative accepts any number of additional
-argument, and each variable in @rhombus(binding) is bound to a
-repetition for all additional arguments, instead of a single argument.
+When a @rhombus(rest) sequence contains @rhombus(& list_binding) or
+@rhombus(repetition_binding $$(@litchar{,}) $$(dots)), then the
+function or function alternative accepts any number of additional
+by-position arguments.
+For @rhombus(& list_binding), the additional arguments are collected
+into a list value, and that list value is bound to the
+@rhombus(list_binding).
+For @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), each
+variable in @rhombus(repetition_binding) is bound to a repetition that
+repeats access to that piece of each additional argument.
+Only one positional rest argument is allowed in the function
+alternative.
+
+When a @rhombus(rest) sequence contains @rhombus(~& map_binding), then
+the function or function alternative accepts any number of additional
+keyword arguments. The additional keywords and associated argument
+values are collected into a map value to be bound to
+@rhombus(map_binding).
+
+@examples(
+  ~label: #false,
+  fun
+  | is_sorted([]): #true
+  | is_sorted([head]): #true
+  | is_sorted([head, next, & tail]):
+      head <= next && is_sorted([next, & tail]),
+  is_sorted([1, 2, 3, 3, 5]),
+  is_sorted([1, 2, 9, 3, 5])
+)
 
 @examples(
   ~label: #false,
