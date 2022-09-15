@@ -26,11 +26,19 @@ to be included in the set. These uses of square brackets are implemented by
 
 @doc(
   expr.macro 'Set{$value_expr, ...}',
-  fun Set(value:: Any, ...) :: Map
+  expr.macro 'Set{$value_expr, ..., $rest}',
+  fun Set(value:: Any, ...) :: Set,
+
+  grammar rest:
+    & $set_expr
 ){
 
  Constructs an immutable set containing given values, equivalent to
  using @rhombus({value_expr, ...}) to form a set.
+
+ Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
+ while @rhombus({}) does not, since @rhombus({}) produces an empty map
+ instead.
 
 @examples(
   val s: Set{"x", 1, "y", 2},
@@ -61,6 +69,9 @@ to be included in the set. These uses of square brackets are implemented by
 
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
  that can be updated using @rhombus(:=).
+
+ Note that @rhombus(& rest) is not supported on mutable sets, only
+ immutable sets.
 
 @examples(
   val m: MutableSet{"x", 1, "y", 2},
