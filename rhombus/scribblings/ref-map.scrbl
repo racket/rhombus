@@ -28,13 +28,15 @@ operator. These uses of square brackets are implemented by
 
 @doc(
   expr.macro '#{#%braces} {$key_expr: $val_expr, ...}',
-  expr.macro '#{#%braces} {$elem_expr, ...}',
+  expr.macro '#{#%braces} {$key_expr: $val_expr, ..., & $map_expr}',
+  expr.macro '#{#%braces} {$elem_expr, ...+}',
+  expr.macro '#{#%braces} {$elem_expr, ...+, & $set_expr}',
 ){
 
  Constructs either a map or a set, depending on whether
  @rhombus(key_expr) and @rhombus(val_expr) are provided or
- @rhombus(elem_expr) is provided. If no elements are provided, the
- result is an empty map (not an empty set).
+ @rhombus(elem_expr) is provided. If no elements are provided
+ directly, the result is a map (not a set).
 
  @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
@@ -42,7 +44,9 @@ operator. These uses of square brackets are implemented by
   {1, 2, 3},
   {"a": 1, "b": 2},
   #{#%braces} {1, 2, 3},
-  #{#%braces} {"a": 1, "b": 2}
+  #{#%braces} {"a": 1, "b": 2},
+  {1, 2, & {3, 4}},
+  {"a": 1, "b": 2, & {"c": 3, "d": 4}}
 )
 
 }
@@ -73,36 +77,49 @@ operator. These uses of square brackets are implemented by
 
 @doc(
   expr.macro 'Map{$key_expr: $value_expr, ...}',
-  fun Map([key :: Any, value:: Any], ...) :: Map
+  expr.macro 'Map{$key_expr: $value_expr, ..., & $map_expr}',
+  fun Map([key :: Any, value :: Any], ...) :: Map
 ){
 
  Constructs an immutable map containing given keys mapped to the given
- values, equivalent to using @rhombus({key_expr: value_expr, ...}).
+ values, equivalent to using @rhombus({key_expr: value_expr, ...}) for
+ the form without @rhombus(&) rest, or equivalent to using
+ @rhombus({key_expr: value_expr, ..., & map_expr}) for the form with
+ @rhombus(&) rest.
 
 @examples(
   val m: Map{"x": 1, "y": 2},
   m,
   m["x"],
-  Map(["x", 1], ["y", 2])
+  Map(["x", 1], ["y", 2]),
+  Map{"a": 4, "b": 4, & m}
 )
 
 }
 
 @doc(
-  bind.macro 'Map{$key_expr: $binding, ...}',
-  bind.macro 'Map([$key_expr, $binding], ...)',
-  bind.macro '#{#%braces} {$key_expr: $binding, ...}',
+  bind.macro 'Map{$key_expr: $value_binding, ...}',
+  bind.macro 'Map{$key_expr: $value_binding, ..., & $map_binding}',
+  bind.macro 'Map([$key_expr, $value_binding], ...)',
+  bind.macro '#{#%braces} {$key_expr: $value_binding, ...}',
+  bind.macro '#{#%braces} {$key_expr: $value_binding, ..., & $map_binding}',
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
- that match the corresponding @rhombus(binding)s. The matched map may
- have additional keys and values.
+ that match the corresponding @rhombus(value_binding)s.
+ The matched map may have additional keys and values.
+ If @rhombus(& map_binding) is supplied, the rest of the map excluding
+ the given @rhombus(key_expr)s must match the @rhombus(map_binding).
 
  @see_implicit(@rhombus(#{#%braces}, ~bind), @rhombus({}), "binding") 
 
 @examples(
   val Map{"x": x, "y": y}: {"x": 1, "y": 2},
-  y
+  y,
+  val Map{"a": a}: {"a": 1, "b": 2, "c": 3},
+  a,
+  val Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3},
+  rst
 )
 
 }
@@ -135,6 +152,9 @@ operator. These uses of square brackets are implemented by
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
  that can be updated using @rhombus(=).
+
+ Note that @rhombus(&) rest is not supported on mutable maps, only
+ immutable maps.
 
 @examples(
   val m: MutableMap{"x": 1, "y": 2},
