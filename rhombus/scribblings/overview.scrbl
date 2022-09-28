@@ -11,7 +11,6 @@
 @include_section("namespace.scrbl")
 @include_section("annotation.scrbl")
 @include_section("function.scrbl")
-@include_section("keyword-argument.scrbl")
 @include_section("conditional.scrbl")
 @include_section("multiple-value.scrbl")
 @include_section("mutable-var.scrbl")

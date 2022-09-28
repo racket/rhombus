@@ -4,7 +4,7 @@
 @(val dots: @rhombus(..., ~bind))
 @(val dots_expr: @rhombus(...))
 
-@title{Functions}
+@title(~tag: "ref-function"){Functions}
 
 An expression followed by a parenthesized sequence of expressions is
 parsed as an implicit use of the @rhombus(#{#%call}) form, which is
