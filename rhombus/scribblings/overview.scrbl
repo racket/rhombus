@@ -6,6 +6,7 @@
 
 @include_section("notation.scrbl")
 @include_section("module.scrbl")
+@include_section("function-call.scrbl")
 @include_section("definition.scrbl")
 @include_section("namespace.scrbl")
 @include_section("annotation.scrbl")

@@ -9,6 +9,13 @@ use_static
 // ---------------------------
 // Positional Rest with &
 
+check: sqrt(& [25]); 5
+check: expt(& [2, 3]); 8
+check: List(& [5, 6, 7, 8]); [5, 6, 7, 8]
+check: sqrt(25, & []); 5
+check: expt(2, & [3]); 8
+check: List(5, 6, & [7, 8]); [5, 6, 7, 8]
+
 fun prlist(& xs :: List): xs
 
 check:
@@ -147,6 +154,10 @@ check: krpythag(~c: 5, ~a: 3); 4
 check: krpythag(~c: 5, ~b: 4); 3
 check: krpythag(~a: 3, ~b: 4, ~c: 5); #true
 check: krpythag(~a: 3, ~b: 4, ~c: 6); #false    
+check: krpythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
+check: krpythag(~a: 5, ~& {keyword'~b': 12}); 13
+check: krpythag(~a: 8, ~b: 15, ~& {}); 17
+check: krpythag(~b: 24, ~& {keyword'~a': 7}); 25
 
 fun
 | pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
@@ -158,10 +169,19 @@ check: pythag(~a: 3, ~b: 4); 5
 check: pythag(~c: 5, ~a: 3); 4
 check: pythag(~c: 5, ~b: 4); 3
 check: pythag(~a: 3, ~b: 4, ~c: 5); #true
-check: pythag(~a: 3, ~b: 4, ~c: 6); #false    
+check: pythag(~a: 3, ~b: 4, ~c: 6); #false
+check: pythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
+check: pythag(~a: 5, ~& {keyword'~b': 12}); 13
+check: pythag(~a: 8, ~b: 15, ~& {}); 17
+check: pythag(~b: 24, ~& {keyword'~a': 7}); 25
 
 // ---------------------------
 // Repetition Rest with ...
+
+begin:
+  val [x, ...]: [2, 3]
+  check: expt(x, ...); 8
+  check: List(x, ...); [2, 3]
 
 def rrlist(x, ...):
   [x, ...]
