@@ -6,7 +6,8 @@
          "../private/docmodule.rhm"
          "../private/example.rhm"
          (only-in "../private/typeset-doc.rkt"
-                  grammar)
+                  grammar
+                  specsubform)
          "../private/rhombus-spacer.rkt")
 
 (provide (all-from-out scribble/rhombus)
@@ -19,6 +20,7 @@
          docmodule
          rhombusmodname
          grammar
+         specsubform
          examples
          make_rhombus_eval
          close_eval
