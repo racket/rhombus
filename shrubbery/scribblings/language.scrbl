@@ -1,0 +1,274 @@
+#lang scribble/manual
+@(require (for-label racket/base
+                     racket/contract/base
+                     (only-in rhombus import)
+                     shrubbery/parse
+                     shrubbery/write
+                     shrubbery/print))
+
+@title[#:tag "language"]{Language and Parser API}
+
+@defmodulelang[shrubbery]
+
+The @racketmodname[shrubbery] meta-language is similar to the
+@racketmodname[s-exp] meta-language. It expects a module name after
+@racket[@#,hash-lang[] @#,racketmodname[shrubbery]] to serve as the
+language of a Racket @racket[module] form, while the body of the module
+after the @hash-lang[] line is parsed as shrubbery notation.
+
+Unlike @racketmodname[s-exp], @racketmodname[shrubbery] also works
+without another language listed on the @hash-lang[] line. In that case,
+running the module prints the S-expression form of the parsed shrubbery
+(see @secref["parsed-rep"]). For example,
+
+@codeblock{
+ #lang shrubbery
+ 1+2
+}
+
+prints @racketresult['(top (group 1 (op +) 2))]. But if @filepath{demo.rkt} contains
+
+@racketblock[  
+ @#,hash-lang[] @#,racketmodname[racket/base]
+ (require (for-syntax racket/base
+                      syntax/parse))
+ 
+ (provide (rename-out [module-begin #%module-begin])
+          + - * /)
+ 
+ (define-syntax (module-begin stx)
+   (syntax-parse stx
+     #:datum-literals (top group op)
+     [(_ (top (group n1:number (op o) n2:number)))
+      #'(#%module-begin (o 'n1 'n2))]))
+ ]
+
+then
+
+@codeblock{
+ #lang shrubbery "demo.rkt"
+ 1+2
+}
+
+prints the result @racketresult[3].
+
+A same-line module language for @racketmodname[shrubbery] is determined
+by using @racket[parse-all] in @racket['line] mode. As long as the
+resulting shrubbery is not empty, it is parsed in the same way that
+@racketmodname[rhombus] parses module names for @racket[import].
+
+@section{Parsing API}
+
+@defmodule[shrubbery/parse]
+
+@defproc[(parse-all [in input-port?]
+                    [#:source source any/c]
+                    [#:mode mode (or/c 'top 'interactive 'line 'text) 'top])
+         (or/c eof-object syntax?)]{
+
+ Parses shrubbery notation frmo @racket[in] and returns an S-expression
+ representation as descirbed in @secref["parsed-rep"] in syntax-object.
+
+ The result syntax objects has no scopes, but it had source-location
+ information and @seclink["raw-text"]{raw-text properties}.
+ Source-location information is never associated with the ``parentheses''
+ of the syntax object. Instead, location information and other properties
+ for a shrubbery @litchar{()}, @litchar{[]}, @litchar["{}"], or
+ @litchar{''} is associated with the @racket[parens],
+ @racket[brackets], @racket[brackets], or @racket[quotes] identifier.
+ Similarly, block and alternative source locations and properties are
+ record on a @racket[block] or @racket[alts] identifier. A
+ @racket[group] identifier in the representation has only
+ @seclink["raw-text"]{raw-text properties} for test before and after the
+ group elements. For an operator, source-location and property
+ information is associated to the operator identifier, and not the
+ wrapper @racket[op] identifier.
+
+ The default @racket['top] mode read @racket[in] until an end-of-file,
+ and it expects a sequence of groups that are indented consistent with
+ each other (i.e., all starting at the same column). The @racket['text]
+ mode is similar, but it starts in ``text'' mode, as if the entire input
+ is inside curly braces of an @litchar["@"] form (see
+ @secref["at-notation"]).
+
+ The @racket['interactive] and @racket['line] modes are similar. They
+ are suitable for a read-eval-print loop or reading the continuation of a
+ @racket[@#,hash-lang[] @#,racketmodname[shrubbery]] line, respectively.
+ In both modes, reading stops when a newline is encountered, unless an
+ opener remains to be closed or a @litchar{:} was encountered. If reading
+ continues due to a @litchar{:}, then it stops when a blank line is found
+ (where a line containing a comment does not count as blank). In
+ @racket['line] mode, the result may be empty, while
+ @racket['interactive] mode continues past a newline if the result would
+ be empty.
+
+}
+
+@section[#:tag "raw-text"]{Raw-Text Properties}
+
+@defmodule[shrubbery/property]
+
+A syntax object produced by @racket[parse] includes properties that
+allow the original shrubbery text to be reconstructed from the syntax
+objects. Furthermore, this raw-text information is distributed among
+syntax objects in a way that helps it stay preserved to a useful degree
+on subterms as they are rearranged by enforestation and macro expansion.
+The @racketmodname[shrubbery/property] exports identifiers bound to the
+property-key symbols, which can be helpful to avoid a typo in a quoted
+symbol.
+
+The property values are trees of strings: a string, an empty list, or a
+pair containing two trees. Raw test can be reconstructed through a
+preorder traversal of the tree.
+
+@defthing[syntax-raw-property 'raw]{
+
+ The @racket['raw] property records the original text of an atomic
+ term, such as a number, string, or identifier.
+
+ For example, the input @litchar{0x11} will be parsed as the number
+ @racket[17] with a @racket['raw] property value @racket["0x11"].
+
+ For an identifier such as @racket[parens] that represents groups within
+ an opener--closer pair, @racket['raw] text will be attached to the
+ identifier for the opener text, while @racket['raw-tail] will be
+ attached to the same identifier for the closer text.
+
+ For @racket[op] and @racket[group] wrapper identifiers, an empty
+ @racket['raw] property is associated with the identifier. An explicit
+ empty cooperates with inference in
+ @racket[property shrubbery-syntax->string] for whether raw-text
+ properties should be used.
+
+}
+
+@deftogether[(
+@defthing[syntax-raw-prefix-property 'raw-prefix]
+@defthing[syntax-raw-suffix-property 'raw-suffix]
+)]{
+
+ The @racket['raw-prefix] property records original text that is before
+ a term and not part of a preceding term, while @racket['raw-suffix]
+ reported original text after a term and before the next term. Such text
+ is eligible for either the @racket['raw-suffix] property of one term or
+ the @racket['raw-prefix] property of a following term;
+ @racket['raw-suffix] will be preferred, but @racket['raw-prefix] must be
+ used for text (such as whitespace and comments) before a leading term in
+ a group---although associated to the group, instead of the leading term.
+ Similarly, text after the last term in a group will be associated using
+ @racket['raw-prefix] on the group, instead of the last term in the
+ group.
+
+ For example, the input @litchar{ 1 +  2 // done} will be parsed into the
+ S-expression representation @racket['(top (group 1 (op +) 2))]. The
+ syntax object for @racket[group] will have a @racket['raw-prefix] value
+ equivalent to @racket[" "] and a @racket['raw-suffix] value equivalent to
+ @racket[" // done"], but possibily within a tree structure instead of a
+ single string. The syntax object for @racket[1] and will have a
+ @racket['raw-suffix] value equivalent to @racket[" "], while the syntax
+ object for @racket[+] and will have a @racket['raw-suffix] value
+ equivalent to @racket["  "] (i.e., two spaces).
+
+}
+
+@deftogether[(
+@defthing[syntax-raw-tail-property 'raw-tail]
+@defthing[syntax-raw-tail-suffix-property 'raw-tail-suffix]
+)]{
+
+ The @racket['raw-tail] and @racket['raw-tail-suffix] properties are
+ attached to an identifier like @racket[parens] that represents groups
+ within an opener--closer pair. The @racket['raw-tail] property holds
+ text for the closer, which belongs after the last contained group in the
+ @racket[parens] identifier's sequence. The @racket['raw-tail-suffix]
+ property is analogous to @racket['raw-suffix], but goes after the closer
+ that is recorded as @racket['raw-tail].
+
+ For example, the input @litchar{(1 + 2) * 4 //done} will be parsed into
+ the S-expression representation
+ @racket['(top (group (parens (group 1 (op +) 2)) (op *) 4))]. The syntax
+ object for the outer @racket[group] will have a @racket['raw-suffix]
+ value equivalent to @racket[" // done"]. The syntax object for
+ @racket[parens] will have a @racket['raw] value equivalent to
+ @racket["("], a @racket['raw-tail] value equivalent to @racket[")"], and
+ a @racket['raw-tail-suffix] value equivalent to @racket[" "]. The inner
+ @racket[group] syntax object will have no properties or ones with values
+ that are equivalent to empty strings.
+
+}
+
+@section{Writing Shrubbery Notation}
+
+@defmodule[shrubbery/write]
+
+@defproc[(write-shrubbery [v any/c]
+                          [port output-port? (current-output-port)])
+         void?]{
+
+ Prints @racket[v], which must be a valid S-expression representation of
+ a shrubbery (see @secref["parsed-rep"]). Reading the printed form back
+ in with @racket[parse-all] produces the same S-expression representation
+ as @racket[v].
+
+ Note that @racket[write-shrubbery] expects an S-expression, not a
+ syntax object, so it cannot use @seclink["raw-text"]{raw-text properties}.
+ See also @racket[shrubbery-syntax->string].
+
+}
+
+@section{Reconstructing Shrubbery Notation}
+
+@defmodule[shrubbery/print]
+
+@defproc[(shrubbery-syntax->string [s syntax?]
+                                   [#:use-raw? use-raw? any/c #f]
+                                   [#:max-length max-length (or/c #f exact-positive-integer?) #f]
+                                   [#:keep-suffix? keep-suffix? any/c #f]
+                                   [#:infer-starting-indentation? infer-starting-indentation? any/c #t]
+                                   [#:register-stx-range register-stx-range
+                                                         (syntax?
+                                                          exact-nonnegative-integer?
+                                                          exact-nonnegative-integer?
+                                                          . -> . any)
+                                                         void]
+                                   [#:render-stx-hook render-stx-hook
+                                                      (syntax? output-port? . -> . any/c)
+                                                      (lambda (stx output) #f)])
+         string?]{
+
+ Converts a syntax object for an S-expression representation to a string
+ form, potentially using @seclink["raw-text"]{raw-text properties}. By
+ default, raw-text reconstruction is used only if all atomic terms in
+ @racket[s] have a @racket['raw] property value, but raw-text mode can be
+ forced by providing @racket[use-raw?] as a true value. When
+ @racket[use-raw?] is true, each syntax object without a @racket['raw]
+ property is treated as if the property value is empty.
+
+ If @racket[max-length] is a number, the returned string will contain no
+ more than @racket[max-length] characters. Internally, conversion to a
+ string can take shortcuts once the first @racket[max-length] characters
+ have been determined.
+
+ When @racket[keep-suffix?] is true and raw-text mode is used to
+ generate the result string, then @racket['raw-prefix],
+ @racket['raw-suffix], and @racket['raw-tail-suffix] text on the
+ immediate syntax object are included in the result. Otherwise, prefixes
+ and suffixes are rendered only when they appear between @racket['raw]
+ text.
+
+ If @racket[infer-starting-indentation?] is true, then a consistent
+ amount of leading whitespace is removed frmo ech line of the result
+ string.
+
+ The @racket[register-stx-range] and @racket[render-stx-hook] arguments
+ provide a hook to record or replace rendering of a syntax object within
+ @racket[s]. The @racket[register-stx-range] procedure is called with
+ each syntax object in @racket[s] after printing, and the second and
+ third arguments report the starting and ending locations in the string
+ for the syntax object's printed form. The @racket[render-stx-hook]
+ procedure is called before printing each syntax object, and if it
+ returns a true value, then printing assumes that the syntax object has
+ alerady been rendered to the given output port (which is ultimately
+ delivered to a string), and it is not printed in the default way.
+
+}

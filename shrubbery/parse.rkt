@@ -1615,17 +1615,15 @@
 
 (define (parse-all in
                    #:source [source (object-name in)]
-                   #:interactive? [interactive? #f]
-                   #:text-mode? [text-mode? #f])
+                   #:mode [mode 'top]) ; 'top, 'text, 'interactive, or 'line
   (define l (lex-all in fail
                      #:source source
-                     #:interactive? interactive?
-                     #:text-mode? text-mode?
+                     #:mode mode
                      #:consume-eof? #t))
   (check-line-counting l)
-  (define v (if text-mode?
+  (define v (if (eq? mode 'text)
                 (parse-text-sequence l 0 zero-delta (lambda (c l line delta) (datum->syntax #f c)))
-                (parse-top-groups l #:interactive? interactive?)))
+                (parse-top-groups l #:interactive? (memq mode '(interactive line)))))
   v)
   
 (module+ main

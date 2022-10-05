@@ -1019,12 +1019,11 @@
 ;; Runs `lex/status` in a loop, but switches to `finish-s-exp`
 ;; for an S-expression escape:
 (define (lex-all in fail
-                 #:text-mode? [text-mode? #f]
+                 #:mode [mode 'top] ; 'top, 'text, 'interactive, or 'line
                  #:keep-type? [keep-type? #f]
                  #:source [source (object-name in)]
-                 #:interactive? [interactive? #f]
                  #:consume-eof? [consume-eof? #f])
-  (define status (if text-mode?
+  (define status (if (eq? mode 'text)
                      (make-in-text-status)
                      'initial))
   (parameterize ([current-lexer-source source])
@@ -1051,7 +1050,10 @@
                                (and (positive? len)
                                     (eqv? #\newline (string-ref s (sub1 len))))))
             (cond
-              [(and interactive? newline? (zero? depth) nonempty?
+              [(and (or (eq? mode 'interactive) (eq? mode 'line))
+                    newline?
+                    (zero? depth)
+                    (or nonempty? (eq? mode 'line))
                     (blanks . >= . (if multi? 1 0))
                     (not (lex-nested-status? status)))
                (list (wrap tok))]

@@ -43,9 +43,9 @@
            read-syntax-proc
            get-info-proc)
   (define (read-proc in)
-    (list (syntax->datum (parse-all in #:test-mode? #t))))
+    (list (syntax->datum (parse-all in #:mode 'text))))
   (define (read-syntax-proc src in)
-    (list (parse-all in #:text-mode? #t #:source src)))
+    (list (parse-all in #:mode 'text #:source src)))
   (define (get-info-proc key default make-default)
     (case key
       [(color-lexer)

@@ -24,7 +24,7 @@
          (let ([in (dup-input-port in)])
            (port-count-lines! in)
            in)))
-   (parse-all (ensure-count in) #:source src #:interactive? #t)))
+   (parse-all (ensure-count in) #:source src #:mode 'interactive)))
 
 (print-boolean-long-form #t)
 
