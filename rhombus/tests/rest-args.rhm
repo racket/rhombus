@@ -192,6 +192,13 @@ check: pythag(~a: 5, ~& {keyword'~b': 12}); 13
 check: pythag(~a: 8, ~b: 15, ~& {}); 17
 check: pythag(~b: 24, ~& {keyword'~a': 7}); 25
 
+fun anyargs(& l, ~& m):
+  [l, m]
+
+check:
+  anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
+  [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+
 // ---------------------------
 // Repetition Rest with ...
 

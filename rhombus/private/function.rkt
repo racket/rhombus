@@ -126,28 +126,35 @@
              #:attr static-infos #'()
              #:attr predicate #'#f))
 
-  (define-splicing-syntax-class :maybe-arg-rest
-    #:attributes [arg parsed kwarg kwparsed]
+  (define-splicing-syntax-class :pos-rest
+    #:attributes [arg parsed]
     #:datum-literals (group op)
-    #:literals (& ~& rhombus...)
+    #:literals (& rhombus...)
     (pattern (~seq (group (op &) a ...))
       #:with arg::non-...-binding #'(group a ...)
-      #:with parsed #'arg.parsed
-      #:attr kwarg #'#f
-      #:attr kwparsed #'#f)
+      #:with parsed #'arg.parsed)
+    (pattern (~seq e::non-...-binding (~and ooo (group (op rhombus...))))
+      #:with (::pos-rest)
+      #'((group (op &) List (parens e ooo)))))
+
+  (define-splicing-syntax-class :kwp-rest
+    #:attributes [kwarg kwparsed]
+    #:datum-literals (group op)
+    #:literals (~&)
     (pattern (~seq (group (op ~&) a ...))
       #:with kwarg::non-...-binding #'(group a ...)
       #:with kwparsed #'kwarg.parsed
       #:attr arg #'#f
-      #:attr parsed #'#f)
-    (pattern (~seq e (~and ooo (group (op rhombus...))))
-      #:with (::maybe-arg-rest)
-      #'((group (op &) List (parens e ooo))))
-    (pattern (~seq)
-      #:attr arg #'#f
-      #:attr parsed #'#f
-      #:attr kwarg #'#f
-      #:attr kwparsed #'#f)))
+      #:attr parsed #'#f))
+
+  (define-splicing-syntax-class :maybe-arg-rest
+    #:attributes [arg parsed kwarg kwparsed]
+    #:datum-literals (group op)
+    #:literals (& ~& rhombus...)
+    (pattern (~seq
+              (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
+                    (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
+              ...))))
 
 (define-syntax fun
   (make-expression+definition-transformer
