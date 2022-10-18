@@ -89,7 +89,7 @@
              (case (and (token? tok)
                         (token-name tok))
                [(comma-operator semicolon-operator)
-                (finish #f new-stack)]
+                (finish (if (null? stack) #f pending) new-stack)]
                [(closer)
                 (if (null? stack)
                     (finish #f new-stack)
@@ -107,20 +107,37 @@
              (finish #f (pending-comment-stack pending))]
             [else
              (finish pending new-stack)])]))
+     (define (ends-only-pending? pending new-stack)
+       ;; Duplicates some of `finish-plain`, peeking ahead for what the function
+       ;; will do with `pending` in the case that `tok` is a 'group-comment
+       (cond
+         [(memq (pending-comment-so-far pending) '(own-line in-line)) #f]
+         [else
+          (cond
+            [(or (eqv? line (comment-tracked-last-line status))
+                 (not-line-sensitive?)
+                 (pair? new-stack)
+                 (lex-nested-status? inner-status))
+             #f]
+            [(and (column . <= . (pending-comment-column pending))
+                  (not (not-line-sensitive?)))
+             #t]
+            [else #f])]))
      (define new-stack
        (case (and (token? tok) (token-name tok))
          [(opener at-opener s-exp) (cons (token-e tok) stack)]
          [(closer at-closer) (if (pair? stack) (cdr stack) '())]
          [else stack]))
      (cond
-       [(and (not pending)
-             (token? tok)
-             (eq? 'group-comment (token-name tok)))
+       [(and (token? tok)
+             (eq? 'group-comment (token-name tok))
+             (or (not pending)
+                 ;; does it end the current pending comment, while
+                 ;; also starting this new one?
+                 (ends-only-pending? pending new-stack)))
         (finish (pending-comment line
                                  column
                                  (if (or (not status)
-                                         (and pending
-                                              (not-line-sensitive?))
                                          (eq? line (comment-tracked-last-line status)))
                                      'own-line
                                      'in-line)
