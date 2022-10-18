@@ -3,6 +3,7 @@ import:
   "check.rhm" open
   racket/math open:
     only: sqr
+  math
 
 use_static
 
@@ -96,6 +97,22 @@ begin:
           | _: #false
   m["b"] := 3
   check: r; {"b": 2}
+
+begin:
+  fun avg(a, b):
+    (a + b) / 2
+  check: avg(1, 5); 3
+  check: avg(7, 9); 8
+  check: avg(-2, 4); 1
+
+begin:
+  fun avg(a, & bs):
+    (a + math.sum(bs)) / (1 + List.length(bs))
+  check: avg(1, 5); 3
+  check: avg(7, 9); 8
+  check: avg(-2, 4); 1
+  check: avg(1, 2, 5); 8/3
+  check: avg(-8, 5, 6, 7); 5/2
 
 // ---------------------------
 // Keyword Rest with ~&
