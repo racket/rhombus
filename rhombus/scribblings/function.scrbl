@@ -53,24 +53,6 @@ Naturally, keyword and optional arguments (as described in the
 @seclink("keyword-arg"){next section}) work with @rhombus(fun)
 expressions, too.
 
-@section{Rest parameters with @rhombus(&)}
-
-A function can be defined to take arbitrarily many arguments
-by declaring a @rhombus(&) rest parameter to collect them
-into a list.
-
-@examples(
-  ~label: #false,
-  import: math,
-  fun avg(a, & bs):
-    (a + math.sum(bs)) / (1 + List.length(bs)),
-  avg(1, 5),
-  avg(7, 9),
-  avg(-2, 4),
-  avg(1, 2, 5),
-  avg(-8, 5, 6, 7),
-)
-
 @section(~tag: "keyword-arg"){Keyword and Optional Arguments}
 
 A function argument can be made optional by using @rhombus(=) after the
