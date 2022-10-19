@@ -7,49 +7,26 @@
 
 @section{Simple function definitions}
 
-@doc(
-  defn.specsubform 'fun $id($param_id, ...):
-                      $body
-                      ...'
-){
-Defines @rhombus(id) as a function that takes the
-@rhombus(param_id)s as inputs and produces the result of the
-@rhombus(body) block as output.
+Simple function definitions with @rhombus(fun) have the
+function name, the parameters in parentheses, and the body
+after a colon.
 
 @examples(
+  ~label: #false,
   fun avg(a, b):
     (a + b) / 2,
   avg(1, 5),
   avg(7, 9),
   avg(-2, 4),
 )
-}
-
-Functions can be defined in namespaces as well, with an
-@rhombus(id_path) allowed in place of a simple @rhombus(id).
 
 Functions can also have @rhombus(::) and @rhombus(-:)
 annotations, on both the parameters and the return value.
 In general, the parameters can be bindings, which can
 express annotations and pattern matching.
 
-@doc(
-  defn.specsubform 'fun $id_path($param_binding, ...) $maybe_result_annotation:
-                      $body
-                      ...',
-
-  grammar maybe_result_annotation:
-    :: $annotation
-    -: $annotation
-    $$("ϵ"),
-){
-Defines @rhombus(id_path) as a function that applies
-bindings to its input values, which includes checking any
-parameter @rhombus(::) annotations that exist on its inputs,
-as well as checking the result @rhombus(::) annotation if it
-exists on its output.
-
 @examples(
+  ~label: #false,
   fun avg(a :: Number, b :: Number) :: Number:
     (a + b) / 2,
   avg(1, 5),
@@ -57,7 +34,6 @@ exists on its output.
   avg(-2, 4),
   ~error avg("not a number", "doesn't pass"),
 )
-}
 
 @section{Function Expressions}
 
@@ -65,13 +41,13 @@ The @rhombus(fun) form works in an expression position as λ. Just like
 @tt{function} in JavaScript, the expression variant omits a function
 name.
 
-@(rhombusblock:
-    val curried_add: fun (x):
-                       fun (y):
-                         x+y
-
-    curried_add(10)(20)  // prints 30
-  )
+@examples(
+  ~label: #false,
+  val curried_add: fun (x):
+                     fun (y):
+                       x+y,
+  curried_add(10)(20)
+)
 
 Naturally, keyword and optional arguments (as described in the
 @seclink("keyword-arg"){next section}) work with @rhombus(fun)
@@ -79,24 +55,12 @@ expressions, too.
 
 @section{Rest parameters with @rhombus(&)}
 
-@doc(
-  defn.specsubform 'fun $id_path($param_binding, ..., $maybe_rest) $maybe_result_annotation:
-                      $body
-                      ...',
-
-  grammar maybe_rest:
-    & $list_binding
-    $$("ϵ"),
-
-  grammar maybe_result_annotation:
-    :: $annotation
-    -: $annotation
-    $$("ϵ"),
-){
-Defines @rhombus(id_path) as a function that may take
-arbitrarily many arguments if @rhombus(&) rest is there.
+A function can be defined to take arbitrarily many arguments
+by declaring a @rhombus(&) rest parameter to collect them
+into a list.
 
 @examples(
+  ~label: #false,
   import: math,
   fun avg(a, & bs):
     (a + math.sum(bs)) / (1 + List.length(bs)),
@@ -106,7 +70,6 @@ arbitrarily many arguments if @rhombus(&) rest is there.
   avg(1, 2, 5),
   avg(-8, 5, 6, 7),
 )
-}
 
 @section(~tag: "keyword-arg"){Keyword and Optional Arguments}
 
