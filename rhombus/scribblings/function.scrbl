@@ -59,30 +59,32 @@ A function argument can be made optional by using @rhombus(=) after the
 argument’s pattern and providing a default-value expression after
 @rhombus(=):
 
-@(rhombusblock:
-    fun scale(Posn(x, y), factor = 1):
-      Posn(factor * x, factor * y)
-
-    scale(Posn(1, 2))     // prints Posn(1, 2)
-    scale(Posn(1, 2), 3)  // prints Posn(3, 6)
-  )
+@examples(
+  ~label: #false,
+  class Posn(x, y),
+  fun scale(Posn(x, y), factor = 1):
+    Posn(factor * x, factor * y),
+  scale(Posn(1, 2)),
+  scale(Posn(1, 2), 3),
+)
 
 By-keyword arguments are often useful for functions that have multiple
 optional arguments. A keyword argument is indicated by prefixing a
 formal or actual argument with a shrubbery keyword, which is written
 with a leading @litchar{~}, and then starting a block with @rhombus(:).
 
-@(rhombusblock:
-    fun transform(Posn(x, y),
-                  ~scale: factor = 1,
-                  ~dx: dx = 0,
-                  ~dy: dy = 0):
-      Posn(factor*x + dx, factor*y + dy)
-
-    transform(Posn(1, 2))          // prints Posn(1, 2)
-    transform(Posn(1, 2), ~dx: 7)  // prints Posn(8, 2)
-    transform(Posn(1, 2), ~dx: 7, ~scale: 2)  // prints Posn(9, 4)
-  )
+@examples(
+  ~label: #false,
+  class Posn(x, y),
+  fun transform(Posn(x, y),
+                ~scale: factor = 1,
+                ~dx: dx = 0,
+                ~dy: dy = 0):
+    Posn(factor*x + dx, factor*y + dy),
+  transform(Posn(1, 2)),
+  transform(Posn(1, 2), ~dx: 7),
+  transform(Posn(1, 2), ~dx: 7, ~scale: 2),
+)
 
 Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated as
@@ -100,11 +102,19 @@ only works for an argument that would otherwise be just an identifier
 and maybe a default value, because keywords don’t work as variable names
 in binding patterns.
 
-@(rhombusblock:
-    fun transform(Posn(x, y),
-                  ~scale: factor = 1,
-                  ~dx = 0,
-                  ~dy = 0):
-      Posn(factor*x + dx, factor*y + dy)
-  )
+@examples(
+  ~label: #false,
+  class Posn(x, y),
+  fun transform(Posn(x, y),
+                ~scale: factor = 1,
+                ~dx = 0,
+                ~dy = 0):
+    Posn(factor*x + dx, factor*y + dy),
+  transform(Posn(1, 2)),
+  transform(Posn(1, 2), ~dx: 7),
+  transform(Posn(1, 2), ~dx: 7, ~scale: 2),
+)
 
+For functions that can take arbitrarily many arguments, and
+functions with multiple cases, see
+@seclink("more-arguments"){More Function Arguments}.

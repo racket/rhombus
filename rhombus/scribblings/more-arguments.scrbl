@@ -102,3 +102,76 @@ to collect them into a map.
     m,
   anykws(~a: 1, ~b: 2),
 )
+
+The @rhombus(~&) keyword rest map only contains keywords
+that are @emph{not} declared explicitly as single keyword
+parameters.
+
+@examples(
+  ~label: #false,
+  fun a_and_more(~a: _, ~& more):
+    more,
+  a_and_more(~a: 1, ~b: 2, ~c: 3),
+)
+
+@section{Case function alternatives with @litchar{|}}
+
+A function with multiple cases can be defined using
+@litchar{|} alternatives.
+
+@examples(
+  ~label: #false,
+  fun
+  | distance(x, y): sqrt(x*x + y*y)
+  | distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1),
+  distance(3, 4),
+  distance(10, 5, 18, 20),
+)
+
+Case functions can use annotations and pattern matching to
+distinguish cases with the same number of arguments.
+
+@examples(
+  ~label: #false,
+  import: math,
+  class Posn(x, y),
+  fun map(f, l):
+    for List:
+      ~each e: l
+      f(e),
+  fun
+  | avg(a :: Number, & bs -: List.of(Number)):
+      (a + math.sum(bs)) / (1 + List.length(bs))
+  | avg(a :: Posn, & bs -: List.of(Posn)):
+      Posn(avg(a.x, & map(Posn.x, bs)),
+           avg(a.y, & map(Posn.y, bs))),
+  avg(1, 2, 5),
+  avg(-8, 5, 6, 7),
+  avg(Posn(1, 7), Posn(5, 9)),
+  avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)),
+)
+
+Function cases can take keyword arguments, rest arguments,
+and keyword rest arguments, but not optional arguments.
+
+@examples(
+  ~label: #false,
+  import: math,
+  fun
+  | rectangle_area(~width, ~height): width * height
+  | rectangle_area(~diagonal, ~aspect_ratio):
+      // height^2 * (aspect_ratio^2 + 1) = diagonal^2
+      // width * height = aspect_ratio * height^2
+      (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal,
+  fun
+  | circle_area(~radius): math.pi * radius * radius
+  | circle_area(~diameter): (1/2) * math.pi * diameter * diameter,
+  fun
+  | shape_area(~type: "rectangle", ~& props): rectangle_area(~& props)
+  | shape_area(~type: "circle", ~& props): circle_area(~& props),
+  shape_area(~type: "rectangle", ~width: 8.5, ~height: 11),
+  shape_area(~type: "rectangle", ~diagonal: 10, ~aspect_ratio: 4/3),
+  shape_area(~type: "rectangle", ~diagonal: 20.0, ~aspect_ratio: 16/9),
+  shape_area(~type: "circle", ~radius: 1),
+  shape_area(~type: "circle", ~diameter: 8.5),
+)

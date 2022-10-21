@@ -6,6 +6,14 @@ import:
   racket/base.#{object-name} as object_name
   racket/base.#{procedure-arity} as procedure_arity
   racket/base.#{procedure-keywords} as procedure_keywords
+  math
+
+class Posn(x, y)
+
+fun map(f, l):
+  for List:
+    ~each e: l
+    f(e)
 
 begin:
   fun
@@ -141,6 +149,25 @@ begin:
   check: f(); 0
   check: f([], [1]); 0
 
+fun
+| distance(x, y): sqrt(x*x + y*y)
+| distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1)
+
+check: distance(3, 4); 5
+check: distance(10, 5, 18, 20); 17
+
+fun
+| avg(a :: Number, & bs -: List.of(Number)):
+    (a + math.sum(bs)) / (1 + List.length(bs))
+| avg(a :: Posn, & bs -: List.of(Posn)):
+    Posn(avg(a.x, & map(Posn.x, bs)),
+         avg(a.y, & map(Posn.y, bs)))
+
+check: avg(1, 2, 5); 8/3
+check: avg(-8, 5, 6, 7); 5/2
+check: avg(Posn(1, 7), Posn(5, 9)); Posn(3, 8)
+check: avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)); Posn(1, 1)
+
 // ---------------------------------------------------------
 // Alt Functions with Keywords
 
@@ -161,4 +188,15 @@ begin:
   val values(req_kws, all_kws): procedure_keywords(pythag)
   check: req_kws; []
   check: all_kws; [keyword(~a), keyword(~b), keyword(~c)]
+
+fun
+| rectangle_area(~width, ~height): width * height
+| rectangle_area(~diagonal, ~aspect_ratio):
+    // height^2 * (aspect_ratio^2 + 1) = diagonal^2
+    // width * height = aspect_ratio * height^2
+    (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
+
+check: rectangle_area(~width: 8.5, ~height: 11); 93.5
+check: rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3); 48
+check: rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8); 120
 

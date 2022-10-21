@@ -199,6 +199,39 @@ check:
   anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
   [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
 
+fun anykws(~& m): m
+
+check: anykws(~a: 1, ~b: 2); {keyword'~a': 1, keyword'~b': 2}
+
+fun a_and_more(~a: _, ~& more): more
+
+check: a_and_more(~a: 1, ~b: 2, ~c: 3); {keyword'~b': 2, keyword'~c': 3}
+
+fun
+| rectangle_area(~width, ~height): width * height
+| rectangle_area(~diagonal, ~aspect_ratio):
+    // height^2 * (aspect_ratio^2 + 1) = diagonal^2
+    // width * height = aspect_ratio * height^2
+    (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
+
+fun
+| triangle_area(~base, ~height): (1/2) * base * height
+| triangle_area(~side1, ~side2, ~side3):
+    val s: (1/2) * (side1 + side2 + side3)
+    sqrt(s * (s - side1) * (s - side2) * (s - side3))
+
+fun
+| shape_area(~type: "rectangle", ~& props): rectangle_area(~& props)
+| shape_area(~type: "triangle", ~& props): triangle_area(~& props)
+
+check: shape_area(~type: "rectangle", ~width: 8.5, ~height: 11); 93.5
+check: shape_area(~type: "rectangle", ~diagonal: 10, ~aspect_ratio: 4/3); 48
+check: shape_area(~type: "rectangle", ~diagonal: 17, ~aspect_ratio: 15/8); 120
+check: shape_area(~type: "triangle", ~base: 4.25, ~height: 11); 23.375
+check: shape_area(~type: "triangle", ~side1: 5, ~side2: 5, ~side3: 6); 12
+check: shape_area(~type: "triangle", ~side1: 13, ~side2: 13, ~side3: 10); 60
+check: shape_area(~type: "triangle", ~side1: 17, ~side2: 17, ~side3: 16); 120
+
 // ---------------------------
 // Repetition Rest with ...
 

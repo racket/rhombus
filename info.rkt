@@ -11,7 +11,9 @@
 
 (define build-deps
   '("at-exp-lib"
+    "math-lib"
     "racket-doc"
+    "rackunit-lib"
     "scribble-doc"))
 
 (define version "0.1")
