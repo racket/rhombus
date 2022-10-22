@@ -1,6 +1,258 @@
 #lang rhombus
 import:
   "check.rhm" open
+  racket/math open:
+    only: sqr
+  math
+
+use_static
+
+// ---------------------------
+// Positional Rest with &
+
+check: sqrt(& [25]); 5
+check: expt(& [2, 3]); 8
+check: List(& [5, 6, 7, 8]); [5, 6, 7, 8]
+check: sqrt(25, & []); 5
+check: expt(2, & [3]); 8
+check: List(5, 6, & [7, 8]); [5, 6, 7, 8]
+
+fun prlist(& xs :: List): xs
+
+check:
+  prlist(1, 2, 3)
+  [1, 2, 3]
+
+fun
+| altprlist(& xs :: List): xs
+
+check:
+  altprlist(4, 5, 6)
+  [4, 5, 6]
+
+fun
+| addition(): 0
+| addition(x): x
+| addition(x, & y): x + addition(& y)
+
+check:
+  addition(1, 2, 3)
+  6
+
+check:
+  addition(1, & [10, 20, 30])
+  61
+
+check:
+  [1, 2, & [3, 4]]
+  [1, 2, 3, 4]
+
+begin:
+  val [a, b, & rst] : [1, 2, 3, 4]
+  check: a; 1
+  check: b; 2
+  check: rst; [3, 4]
+
+check:
+  {"a": 1, "b": 2, & {"c": 3, "d": 4}}
+  {"a": 1, "b": 2, "c": 3, "d": 4}
+
+check:
+  Map{"a": 1, "b": 2, & {"c": 3, "d": 4}}
+  {"a": 1, "b": 2, "c": 3, "d": 4}
+
+check:
+  Map(["a", 1], ["b", 2], & [["c", 3], ["d", 4]])
+  {"a": 1, "b": 2, "c": 3, "d": 4}
+
+check:
+  {"a", "b", & {"c", "d"}}
+  {"a", "b", "c", "d"}
+
+check:
+  Set{"a", "b", & {"c", "d"}}
+  {"a", "b", "c", "d"}
+
+check:
+  Set("a", "b", & ["c", "d"])
+  {"a", "b", "c", "d"}
+
+begin:
+  val {"a": a, "b": b, & rst} : {"a": 1, "b": 2, "c": 3, "d": 4}
+  check: a; 1
+  check: b; 2
+  check: rst; {"c": 3, "d": 4}
+
+begin:
+  val Map{"a": a, "b": b, & rst} : {"a": 1, "b": 2, "c": 3, "d": 4}
+  check: a; 1
+  check: b; 2
+  check: rst; {"c": 3, "d": 4}
+
+// Match & rest on mutable maps produces an immutable copy
+begin:
+  val m : MutableMap{"a": 1, "b": 2}
+  val r : match m
+          | {"a": a, & rst}: rst
+          | _: #false
+  m["b"] := 3
+  check: r; {"b": 2}
+
+begin:
+  fun avg(a, b):
+    (a + b) / 2
+  check: avg(1, 5); 3
+  check: avg(7, 9); 8
+  check: avg(-2, 4); 1
+
+begin:
+  fun avg(a, & bs):
+    (a + math.sum(bs)) / (1 + List.length(bs))
+  check: avg(1, 5); 3
+  check: avg(7, 9); 8
+  check: avg(-2, 4); 1
+  check: avg(1, 2, 5); 8/3
+  check: avg(-8, 5, 6, 7); 5/2
+
+// ---------------------------
+// Keyword Rest with ~&
+
+fun krmap(~& m): m
+
+check:
+  krmap(~a: 1, ~b: 2)
+  {keyword(~a): 1, keyword(~b): 2}
+
+fun
+| altkrmap(~& m): m
+
+check:
+  altkrmap(~a: 1, ~b: 2)
+  {keyword(~a): 1, keyword(~b): 2}
+
+fun kinetic_energy(~m: m, ~v: v): (1/2) * m * sqr(v)
+
+check:
+  kinetic_energy(~m: 2, ~v: 3)
+  9
+check:
+  kinetic_energy(~& {keyword(~m): 4, keyword(~v): 5})
+  50
+check:
+  kinetic_energy(~m: 6, ~& {keyword(~v): 7})
+  147
+check:
+  kinetic_energy(~v: 2, ~& {keyword(~m): 1})
+  2
+
+fun
+| kws_provided(): #false
+| kws_provided(~& _): #true
+
+check:
+  kws_provided()
+  #false
+check:
+  kws_provided(~a: 1, ~b: 2)
+  #true
+
+fun
+| krpythag(~& {keyword(~a): a, keyword(~b): b, & Map.empty}):
+    sqrt(sqr(a) + (sqr(b)))
+| krpythag(~& {keyword(~a): a, keyword(~c): c, & Map.empty}):
+    sqrt(sqr(c) - (sqr(a)))
+| krpythag(~& {keyword(~b): b, keyword(~c): c, & Map.empty}):
+    sqrt(sqr(c) - (sqr(b)))
+| krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c, & Map.empty}):
+    sqr(a) + sqr(b) == sqr(c)
+
+check: krpythag(~a: 3, ~b: 4); 5
+check: krpythag(~c: 5, ~a: 3); 4
+check: krpythag(~c: 5, ~b: 4); 3
+check: krpythag(~a: 3, ~b: 4, ~c: 5); #true
+check: krpythag(~a: 3, ~b: 4, ~c: 6); #false    
+check: krpythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
+check: krpythag(~a: 5, ~& {keyword'~b': 12}); 13
+check: krpythag(~a: 8, ~b: 15, ~& {}); 17
+check: krpythag(~b: 24, ~& {keyword'~a': 7}); 25
+
+fun
+| pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
+| pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
+| pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
+| pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
+
+check: pythag(~a: 3, ~b: 4); 5
+check: pythag(~c: 5, ~a: 3); 4
+check: pythag(~c: 5, ~b: 4); 3
+check: pythag(~a: 3, ~b: 4, ~c: 5); #true
+check: pythag(~a: 3, ~b: 4, ~c: 6); #false
+check: pythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
+check: pythag(~a: 5, ~& {keyword'~b': 12}); 13
+check: pythag(~a: 8, ~b: 15, ~& {}); 17
+check: pythag(~b: 24, ~& {keyword'~a': 7}); 25
+
+fun anyargs(& l, ~& m):
+  [l, m]
+
+check:
+  anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
+  [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+
+fun anykws(~& m): m
+
+check: anykws(~a: 1, ~b: 2); {keyword'~a': 1, keyword'~b': 2}
+
+fun a_and_more(~a: _, ~& more): more
+
+check: a_and_more(~a: 1, ~b: 2, ~c: 3); {keyword'~b': 2, keyword'~c': 3}
+
+fun
+| rectangle_area(~width, ~height): width * height
+| rectangle_area(~diagonal, ~aspect_ratio):
+    // height^2 * (aspect_ratio^2 + 1) = diagonal^2
+    // width * height = aspect_ratio * height^2
+    (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
+
+fun
+| triangle_area(~base, ~height): (1/2) * base * height
+| triangle_area(~side1, ~side2, ~side3):
+    val s: (1/2) * (side1 + side2 + side3)
+    sqrt(s * (s - side1) * (s - side2) * (s - side3))
+
+fun
+| shape_area(~type: "rectangle", ~& props): rectangle_area(~& props)
+| shape_area(~type: "triangle", ~& props): triangle_area(~& props)
+
+check: shape_area(~type: "rectangle", ~width: 8.5, ~height: 11); 93.5
+check: shape_area(~type: "rectangle", ~diagonal: 10, ~aspect_ratio: 4/3); 48
+check: shape_area(~type: "rectangle", ~diagonal: 17, ~aspect_ratio: 15/8); 120
+check: shape_area(~type: "triangle", ~base: 4.25, ~height: 11); 23.375
+check: shape_area(~type: "triangle", ~side1: 5, ~side2: 5, ~side3: 6); 12
+check: shape_area(~type: "triangle", ~side1: 13, ~side2: 13, ~side3: 10); 60
+check: shape_area(~type: "triangle", ~side1: 17, ~side2: 17, ~side3: 16); 120
+
+// ---------------------------
+// Repetition Rest with ...
+
+begin:
+  val [x, ...]: [2, 3]
+  check: expt(x, ...); 8
+  check: List(x, ...); [2, 3]
+
+def rrlist(x, ...):
+  [x, ...]
+
+check:
+  rrlist(1, 2, 3)
+  [1, 2, 3]
+
+fun
+| altrrlist(y, ...): [y, ...]
+
+check:
+  altrrlist(4, 5, 6)
+  [4, 5, 6]
 
 fun
 | add(): 0
@@ -36,4 +288,32 @@ check:
   ~print
   '(hi $(List.repet(["a", "b", "c"]))) ...'
   '(hi "a") (hi "b") (hi "c")'
-                  
+
+class Posn(x, y)
+
+def List(p :: Posn, ...) : [Posn(1, 2), Posn(3, 4)]
+check:
+  [p, ...][0].x
+  1
+
+fun posns_y1(& rst):
+  def List(p :: Posn, ...) : rst
+  [p, ...][1].y
+
+check:
+  posns_y1(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4
+
+fun posns_y2(& List(p :: Posn, ...)):
+  [p, ...][1].y
+     
+check:
+  posns_y2(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4
+
+fun posns_y(p :: Posn, ...):
+  [p, ...][1].y
+     
+check:
+  posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+  4

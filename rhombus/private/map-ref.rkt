@@ -5,12 +5,14 @@
                      "srcloc.rkt")
          "expression.rkt"
          "parse.rkt"
+         (submod "map.rkt" append)
          "map-ref-set-key.rkt"
          "ref-result-key.rkt"
          "static-info.rkt"
          (only-in "assign.rkt"
                   :=)
          (submod "set.rkt" for-ref)
+         (submod "set.rkt" append)
          "realm.rkt")
 
 (provide ++)
@@ -101,15 +103,13 @@
                                                   "list" map1
                                                   "other value" map2)])]
     [(hash? map1) (cond
-                    [(hash? map2) (for/fold ([ht map1]) ([(k v) (in-hash map2)])
-                                    (hash-set ht k v))]
+                    [(hash? map2) (hash-append/proc map1 map2)]
                     [else (raise-arguments-error* '++ rhombus-realm
                                                   "cannot append a hash map and other value"
                                                   "hash map" map1
                                                   "other value" map2)])]
     [(set? map1) (cond
-                   [(set? map2) (set (for/fold ([ht (set-ht map1)]) ([k (in-hash-keys (set-ht map2))])
-                                       (hash-set ht k #t)))]
+                   [(set? map2) (set-append/proc map1 map2)]
                    [else (raise-arguments-error* '++ rhombus-realm
                                                  "cannot append a set and other value"
                                                  "set" map1

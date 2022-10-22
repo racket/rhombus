@@ -112,6 +112,8 @@ check: {}; Map()
 check: {} == Set(); #false
 check: Map.empty; {}
 check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
+check: {"a": 1, "b": 2}; Map{"b": 2, "a": 1}
+check: {"a": 1, "b": 2}; Map(["b", 2], ["a", 1])
 begin:
   val a: mcons(1, 2)
   val b: mcons(1, 2)
@@ -168,7 +170,9 @@ check:
   [Posn(4, 5), Posn(7, 9)]
 
 check: Set(); Set()
-check: {"a", "b"}; Set("a", "b")
+check: {"a", "b"}; {"b", "a"}
+check: {"a", "b"}; Set{"b", "a"}
+check: {"a", "b"}; Set("b", "a")
 begin:
   val a: mcons(1, 2)
   val b: mcons(1, 2)

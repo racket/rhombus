@@ -28,16 +28,21 @@ to append lists.
 
 @doc(
   fun List(v :: Any, ...) :: List,
-  fun List(v :: Any, ..., repetition, dots) :: List,
-  expr.macro '#{#%brackets} [$v_expr]',
-  expr.macro '#{#%brackets} [$v_expr, $repetition, dots]',
+  fun List(v :: Any, ..., rest) :: List,
+  expr.macro '#{#%brackets} [$v_expr, ...]',
+  expr.macro '#{#%brackets} [$v_expr, ..., $rest]',
 
-  grammar dots:
-    $$(dots_expr)
+  grammar rest:
+    & $list_expr
+    $repetition $$(@litchar{,}) $$(dots_expr)
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of
  the @rhombus(v_expr)s expressions.
+
+ When @rhombus(& list_expr) appears at the end, all the elements of
+ the list produced by @rhombus(list_expr) are included in order at the
+ end of the list.
  
  When @dots_expr appears at the end, the preceding position is a
  @tech{repetition} position, and all elements of the repetition are
@@ -57,17 +62,18 @@ to append lists.
 
 @doc(
   bind.macro 'List($binding, ...)',
-  bind.macro 'List($binding, ..., $dots)',
+  bind.macro 'List($binding, ..., $rest)',
   bind.macro '#{#%brackets} [$binding, ...]',
-  bind.macro '#{#%brackets} [$binding, ..., $dots]',
-  grammar dots:
-    $$(dots)
+  bind.macro '#{#%brackets} [$binding, ..., $rest]',
+  grammar rest:
+    & $list_binding
+    $repetition_binding $$(@litchar{,}) $$(dots)
 ){
 
  Matches a list with as many elements as @rhombus(binding)s, or if
- @rhombus(dots) is included, at least as many elements as
- @rhombus(binding)s before the last one, and then them last one is
- matched against the rest of the list.
+ @rhombus(rest) is included, at least as many elements as
+ @rhombus(binding)s, where the @rhombus(rest) matches the rest of the
+ list.
 
  @see_implicit(@rhombus(#{#%brackets}, ~bind), @rhombus([]), "binding")
 
@@ -76,6 +82,8 @@ to append lists.
   y,
   val [1, also_x, also_y]: [1, 2, 3],
   also_y,
+  val List(1, & xs): [1, 2, 3],
+  xs,
   val List(1, x, ...): [1, 2, 3],
   [x, ...]
 )

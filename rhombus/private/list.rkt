@@ -14,6 +14,8 @@
          "ref-result-key.rkt"
          (only-in "ellipsis.rkt"
                   [... rhombus...])
+         (only-in "rest-marker.rkt"
+                  &)
          "repetition.rkt"
          "name-root.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -173,7 +175,8 @@
 ;; parses a list pattern that has already been checked for use with a
 ;; suitable `parens` or `brackets` form
 (define-for-syntax (parse-list-binding stx)
-  (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f])
+  (define (generate-binding form-id pred args tail [rest-arg #f] [rest-selector #f]
+                            [rest-repetition? #t])
     ((make-composite-binding-transformer "List"
                                          pred
                                          #:steppers (if (null? args)
@@ -187,19 +190,31 @@
                                            #'())
                                          #:ref-result-info? #t
                                          #:rest-accessor rest-selector
+                                         #:rest-repetition? rest-repetition?
                                          #:static-infos list-static-infos)
      #`(#,form-id (parens . #,args) . #,tail)
      rest-arg))
   (syntax-parse stx
     #:datum-literals (group op)
-    #:literals (rhombus...)
+    #:literals (& rhombus...)
+    [(form-id (_ arg ... (group (op &) rest-arg ...)) . tail)
+     (define args (syntax->list #'(arg ...)))
+     (define len (length args))
+     (define pred #`(lambda (v)
+                      (and (list? v)
+                           (>= (length v) #,len))))
+     (generate-binding #'form-id pred args #'tail #'(group rest-arg ...)
+                       (if (null? args) #'values #'cdr)
+                       #f)]
     [(form-id (_ arg ... rest-arg (group (op rhombus...))) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
                       (and (list? v)
                            (>= (length v) #,len))))
-     (generate-binding #'form-id pred args #'tail #'rest-arg (if (null? args) #'values #'cdr))]
+     (generate-binding #'form-id pred args #'tail #'rest-arg
+                       (if (null? args) #'values #'cdr)
+                       #t)]
     [(form-id (_ arg ...) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
@@ -211,17 +226,29 @@
 (define-for-syntax (parse-list-expression stx)
   (syntax-parse stx
     #:datum-literals (group op)
-    #:literals (rhombus...)
-    [(form-id (tag arg ... rest-arg (group (op (~and ellipses rhombus...)))) . tail)
+    #:literals (& rhombus...)
+    [(form-id (tag arg ... (group (op &) rest-arg ...)) . tail)
      (values (wrap-list-static-info
               (cond
                 [(null? (syntax->list #'(arg ...)))
                  ;; special case to expose static info on rest elements
                  (quasisyntax/loc #'tag
-                   #,(repetition-as-list #'ellipses #'rest-arg 1))]
+                   (rhombus-expression (group rest-arg ...)))]
                 [else
                  (quasisyntax/loc #'tag
-                   (list* (rhombus-expression arg) ... #,(repetition-as-list #'ellipses #'rest-arg 1)))]))
+                   (list* (rhombus-expression arg) ...
+                          (rhombus-expression (group rest-arg ...))))]))
+             #'tail)]
+    [(form-id (tag arg ... rep-arg (group (op (~and ellipses rhombus...)))) . tail)
+     (values (wrap-list-static-info
+              (cond
+                [(null? (syntax->list #'(arg ...)))
+                 ;; special case to expose static info on rest elements
+                 (quasisyntax/loc #'tag
+                   #,(repetition-as-list #'ellipses #'rep-arg 1))]
+                [else
+                 (quasisyntax/loc #'tag
+                   (list* (rhombus-expression arg) ... #,(repetition-as-list #'ellipses #'rep-arg 1)))]))
              #'tail)]
     [(form-id (tag arg ...) . tail)
      (values (wrap-list-static-info

@@ -14,7 +14,8 @@
 ;; hardwired to lists.
 
 (provide (for-syntax make-composite-binding-transformer
-                     make-rest-match))
+                     make-rest-match
+                     make-arg-getter))
 
 (define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor or map list, used for contract
                                                        predicate     ; predicate for the composite value
@@ -24,7 +25,8 @@
                                                        #:static-infos [composite-static-infos #'()] ; for the composite value
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:ref-result-info? [ref-result-info? #f]
-                                                       #:rest-accessor [rest-accessor #f]) ; for a list "rest"
+                                                       #:rest-accessor [rest-accessor #f] ; for a list "rest"
+                                                       #:rest-repetition? [rest-repetition? #t])
   (lambda (tail [rest-arg #f])
     (syntax-parse tail
       [(form-id ((~datum parens) a::binding ...) . new-tail)
@@ -56,6 +58,7 @@
             #,accessor->info? #,ref-result-info?
             #,(and rest-arg
                    #`(#,rest-accessor
+                      #,rest-repetition?
                       rest-a-parsed.infoer-id ...
                       rest-a-parsed.data ...))))
         #'new-tail)])))
@@ -81,11 +84,11 @@
      (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str)
        (syntax-parse #'rest-data
          [#f (values #'#f #'() #'rest #f)]
-         [(rest-accessor rest-infoer-id rest-a-data)
+         [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
           #:with (rest-tmp-id) (generate-temporaries #'(rest-info.name-id))
-          (values #`(rest-tmp-id rest-accessor rest-info
+          (values #`(rest-tmp-id rest-accessor rest-repetition? rest-info
                                  #,(or (static-info-lookup #'static-infos #'#%ref-result)
                                        '()))
                   #'rest-info.static-infos
@@ -142,9 +145,12 @@
                  [(null? name-ids)
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
-                    [(rest-tmp-id rest-accessor rest-info down-static-infos)
+                    [(rest-tmp-id rest-accessor rest-repetition? rest-info down-static-infos)
                      #`(begin
-                         (define rest-tmp-id #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
+                         (define rest-tmp-id
+                           #,(if (syntax-e #'rest-repetition?)
+                                 (make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))
+                                 (make-arg-getter c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))))
                          (IF rest-tmp-id
                              success-expr
                              fail-expr))])]
@@ -177,17 +183,37 @@
          ...
          #,@(syntax-parse #'rest-data
               [#f #'()]
-              [(rest-tmp-id rest-accessor rest-info down-static-infos)
+              [(rest-tmp-id rest-accessor rest-repetition? rest-info down-static-infos)
                #:with rest::binding-info #'rest-info
                #:with (rest-seq-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))
-               #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
-                  (define-syntax rest.bind-id
-                    (make-repetition (quote-syntax rest.bind-id)
-                                     (quote-syntax rest-seq-tmp-id)
-                                     (quote-syntax (rest.bind-static-info ... . down-static-infos))))
-                  ...)]))]))
+               (if (syntax-e #'rest-repetition?)
+                   #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
+                      (define-syntax rest.bind-id
+                        (make-repetition (quote-syntax rest.bind-id)
+                                         (quote-syntax rest-seq-tmp-id)
+                                         (quote-syntax (rest.bind-static-info ... . down-static-infos))))
+                      ...)
+                   #'((define-values (rest.bind-id ...) (rest-tmp-id))
+                      (define-static-info-syntax/maybe rest.bind-id rest.bind-static-info ...)
+                      ...))]))]))
 
 ;; ------------------------------------------------------------
+
+;; make a "getter" expression for an argument, used for "rest-getter"
+;; without assuming ellipses
+(define-for-syntax (make-arg-getter c-arg-id accessor arg-info fail)
+  (syntax-parse arg-info
+    [arg::binding-info
+     #`(let ([arg-id (let ([arg.name-id (#,accessor #,c-arg-id)])
+                       arg.name-id)])
+         (arg.matcher-id
+          arg-id
+          arg.data
+          if/blocked
+          (lambda ()
+            (arg.binder-id arg-id arg.data)
+            (values arg.bind-id ...))
+          (#,fail arg-id)))]))
 
 ;; a match result for a "rest" match is a function that gets
 ;; lists of results; the binder step for each element is delayed

@@ -58,7 +58,8 @@
                   add-background-label))
 
 (provide typeset-doc
-         grammar)
+         grammar
+         specsubform)
 
 (define-syntax (typeset-doc stx)
   (syntax-parse stx
@@ -210,6 +211,10 @@
     (pattern (~seq (~or expr bind annotation) (op |.|) rule))
     (pattern (~seq (~or impo expo) (op |.|) modifier))
     (pattern (~seq def)))
+  (define-splicing-syntax-class specsubform-head
+    #:literals (specsubform |.|)
+    (pattern (~seq _ (op |.|) specsubform))
+    (pattern specsubform))
   (define-splicing-syntax-class (identifier-target space-name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (op (~and dot |.|)) field:identifier)
@@ -236,6 +241,7 @@
     [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name)))) #'id.name]
     [(group (~or rhombus-syntax) (op |.|) class (~var id (identifier-target space-name))) #'id.name]
+    [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
 
@@ -244,7 +250,7 @@
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (def val fun operator :: |.| grammar)
+    #:literals (def val fun operator :: |.| grammar specsubform)
     #:datum-literals (parens group op quotes)
     [(group (~or def fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
@@ -263,6 +269,8 @@
      (extract-pattern-metavariables #'(group t ...) vars)]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
      vars]
+    [(group _:specsubform-head (quotes g))
+     (extract-pattern-metavariables #'g vars)]
     [(group grammar id b)
      (extract-pattern-metavariables #'(group b) (add-metavariable vars #'id))]
     [_ vars]))
@@ -378,6 +386,8 @@
      #`(paragraph plain #,def-id-as-def)]
     [(group rhombus-syntax . _)
      #`(paragraph plain #,def-id-as-def)]
+    [(group _:specsubform-head (quotes g))
+     (rb #:at #'g #:pattern? #t #'g)]
     [(group grammar id (block g ...))
      #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
                         #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
@@ -459,6 +469,8 @@
     [(group reducer . _) "reducer"]
     [(group for_clause . _) "for clause"]
     [(group bind . _) "binding operator"]
+    ;; after expr, bind, etc. so that expr.subspecform gets "expression" not #f
+    [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]
     [(group (~or def) (quotes . _) . _) "expression"]
@@ -486,6 +498,8 @@
                      (loop (cdr l) (cdr lbls))))]))))]))
 
 (define-syntax grammar "to be used in `doc`")
+
+(define-syntax specsubform "to be used in `doc`")
 
 (define (typeset-grammar id . prods)
   (define (p c) (paragraph plain c))

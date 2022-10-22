@@ -20,7 +20,10 @@
                            (~and rhs (block . _))))))
 
   (define (falses l-stx)
-    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx))))))
+    (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
+
+  (define (l1falses l-stx)
+    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx))))))
 
 (define-syntax match
   (expression-transformer
@@ -37,12 +40,14 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (values
          #`(#,(build-case-function #'match
+                                   (l1falses #'(b ...))
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'else-infoer
                                                          #'(#t ignored))))
-                                   (falses #'(b ...))
                                    (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...))
                                    #'(clause.rhs ... else-rhs)
                                    #'form-id #'alts-tag)
             (rhombus-expression (group in ...)))
@@ -55,12 +60,14 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
         (values
          #`(#,(build-case-function #'match
+                                   (l1falses #'(b ...))
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form
                                                          #'else-infoer
                                                          #'(#f unmatched))))
-                                   (falses #'(b ...))
                                    (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...)) (falses #'(b ...))
+                                   (falses #'(b ...))
                                    #`(rhs ... (parsed
                                                (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                    #'form-id #'alts-tag)
