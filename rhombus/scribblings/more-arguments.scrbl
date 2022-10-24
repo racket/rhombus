@@ -136,7 +136,7 @@ matching to distinguish calls with the same number of arguments.
 )
 
 A function definition or call can use both @rhombus(&) and @rhombus(~&)
-in either order at the end of an argument sequence. A @rhombus(~&) is
+in either order at the end of an argument sequence. A @rhombus(&) is
 not supported in combination with a @rhombus(...) repetition.
 
 @close_eval(args_eval)
