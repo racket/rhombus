@@ -136,7 +136,7 @@ even when they are written right under @rhombus(if), @rhombus(match), or
       ~else:
         wear_hat() )
 
-@aside{Even if you don’t normally use DrRacket, you should proabably try it
+@aside{Even if you don’t normally use DrRacket, you should probably try it
 while reading this proposal, since that’s where the syntax coloring
 and indentation support for `#lang shrubbery` and `#lang rhombus` are
 currently implemented. Syntax coloring uses the same lexer as the
