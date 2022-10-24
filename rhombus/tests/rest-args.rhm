@@ -317,3 +317,21 @@ fun posns_y(p :: Posn, ...):
 check:
   posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
   4
+
+// ---------------------------
+// Combinations of Positional and Keyword Rest
+
+// Positional rest can be either `&` rest or `...` repetition rest.
+// `~&` keyword rest is compatible with either kind of positional rest,
+// so `~&` and `...` are compatible even though `&` and `...` are not.
+// Positional and keyword rest can be in either order.
+fun anyargs_lm(& l, ~& m): [l, m]
+fun anyargs_ml(~& m, & l): [l, m]
+fun anyargs_rm(r, ..., ~& m): [[r, ...], m]
+fun anyargs_mr(~& m, r, ...): [[r, ...], m]
+
+for:
+  ~each anyargs: [anyargs_lm, anyargs_ml, anyargs_rm, anyargs_mr]
+  check:
+    anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
+    [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
