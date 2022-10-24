@@ -22,9 +22,9 @@
  fun (ps -: List.of(Posn)):
    use_static
    ps[0].x,
- ~error fun (ps):
-          use_static
-          ps[0].x
+ ~error: fun (ps):
+           use_static
+           ps[0].x
 )
 
 }
@@ -59,12 +59,12 @@
 
 @examples(
  class Posn(x, y),
- ~error fun (ps -: List.of(Posn)):
-          use_static
-          dynamic(ps)[0],
- ~error fun (ps -: List.of(Posn)):
-          use_static
-          dynamic(ps[0]).x,
+ ~error: fun (ps -: List.of(Posn)):
+           use_static
+           dynamic(ps)[0],
+ ~error: fun (ps -: List.of(Posn)):
+           use_static
+           dynamic(ps[0]).x,
  fun (ps -: List.of(Posn)):
    dynamic(dynamic(ps)[0]).x
 )

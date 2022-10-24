@@ -5,12 +5,13 @@
 
 @title(~tag: "conditional"){Conditionals and Pattern-Matching Dispatch}
 
-The @rhombus(&&) and @rhombus(||) operators are short-circuiting ``and'' and ''or'' forms.
-As in Racket, @rhombus(||) returns the first non-@rhombus(#false) value, and @rhombus(&&)
-returns the last non-@rhombus(#false) value. 
+The @rhombus(&&) and @rhombus(||) operators are short-circuiting ``and''
+and ''or'' forms. As in Racket, @rhombus(||) returns the first
+non-@rhombus(#false) value, and @rhombus(&&) returns the last
+non-@rhombus(#false) value.
 
-@(rhombusblock:
-    1 < 2 && "ok"  // prints "ok"
+@(demo:
+    1 < 2 && "ok"
   )
 
 Comparison operators and @rhombus(!) (for ``not'') have higher
@@ -27,7 +28,7 @@ The @rhombus(if) form expects a test expression followed by an
 alts-block with two @litchar{|}s. The first @litchar{|} holds the
 ``then'' branch, and the second @litchar{|} holds the ``else'' branch:
 
-@(rhombusblock:
+@(demo:
     if 1 == 2
     | "same"
     | "different"
@@ -41,14 +42,15 @@ block. Evaluating the @rhombus(cond) form dispatches to the block after
 first test that produces a non-@rhombus(#false) value. The
 @rhombus(~else) keyword can be used in place of a last test.
 
-@(rhombusblock:
-    fun fib(n):
-      cond
-      | n == 0: 1
-      | n == 1: 1
-      | ~else: fib(n-1) + fib(n-2)
-
-    fib(5) // prints 8
+@(demo:
+    ~defn:
+      fun fib(n):
+        cond
+        | n == 0: 1
+        | n == 1: 1
+        | ~else: fib(n-1) + fib(n-2)
+    ~repl:
+      fib(5)
   )
 
 If there’s no @rhombus(~else) case and no matching case, then
@@ -69,23 +71,25 @@ pattern accepts the expression’s value. Similar to @rhombus(cond),
 @rhombus(match) supports @rhombus(~else) in place of a final binding
 pattern, but using the binding operator @rhombus(_) is more common.
 
-@(rhombusblock:
-    fun fib(n):
-      match n
-      | 0: 1
-      | 1: 1
-      | _: fib(n-1) + fib(n-2)
+@(demo:
+    ~defn:
+      fun fib(n):
+        match n
+        | 0: 1
+        | 1: 1
+        | _: fib(n-1) + fib(n-2)
   )
 
 This kind of immediate pattern-matching dispatch on a function argument
 is common enough that @rhombus(fun) supports it directly, fusing the
 function declaration and the pattern match, like this:
 
-@(rhombusblock:
-    fun
-    | fib(0): 1
-    | fib(1): 1
-    | fib(n): fib(n-1) + fib(n-2)
+@(demo:
+    ~defn:
+      fun
+      | fib(0): 1
+      | fib(1): 1
+      | fib(n): fib(n-1) + fib(n-2)
   )
 
 There’s no @rhombus(~else) for this fused form, but @rhombus(_, ~bind) can be
@@ -96,13 +100,14 @@ functions cannot have optional or keyword arguments, but different cases
 can have different numbers of arguments, and a call will find a matching
 case with the right number of arguments.
 
-@(rhombusblock:
-    fun
-    | hello(name):
-        "Hello, " +& name    // +& coerces to strings and concatenates
-    | hello(first, last):
-        hello(first +& " " +& last)
-
-    hello("World")             // prints "Hello, World"
-    hello("Inigo", "Montoya")  // prints "Hello, Inigo Montoya"
+@(demo:
+    ~defn:
+      fun
+      | hello(name):
+          "Hello, " +& name    // +& coerces to strings and concatenates
+      | hello(first, last):
+          hello(first +& " " +& last)
+    ~repl:
+      hello("World")
+      hello("Inigo", "Montoya")
   )

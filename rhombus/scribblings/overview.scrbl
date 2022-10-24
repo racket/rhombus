@@ -6,7 +6,6 @@
 
 @include_section("notation.scrbl")
 @include_section("module.scrbl")
-@include_section("function-call.scrbl")
 @include_section("definition.scrbl")
 @include_section("namespace.scrbl")
 @include_section("annotation.scrbl")
@@ -18,8 +17,8 @@
 @include_section("list.scrbl")
 @include_section("map.scrbl")
 @include_section("set.scrbl")
-@include_section("more-arguments.scrbl")
 @include_section("for.scrbl")
+@include_section("more-arguments.scrbl")
 @include_section("syntax.scrbl")
 @include_section("expr-macro.scrbl")
 @include_section("defn-macro.scrbl")

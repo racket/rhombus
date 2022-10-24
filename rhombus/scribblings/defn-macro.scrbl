@@ -14,15 +14,16 @@ the macro is used.
 Here’s the classic @rhombus(def_five) macro:
 
 
-@(rhombusblock:
-    import:
-      rhombus/meta open
+@(demo:
+    ~defn:
+      import:
+        rhombus/meta open
 
-    defn.macro 'def_five $id':
-      'def $id: 5'
-
-    def_five v
-    v  // prints 5
+      defn.macro 'def_five $id':
+        'def $id: 5'
+    ~repl:
+      def_five v
+      v
   )
 
 Declarations macros are written with @rhombus(decl.macro), and the

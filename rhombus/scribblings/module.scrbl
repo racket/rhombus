@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title{Modules}
+@title(~tag: "Modules"){Modules, Variables, and Functions}
 
 A Rhombus module, which implements a program or a library, always
 starts @litchar{#lang rhombus}. If you write an expression at the top of a
@@ -17,10 +17,18 @@ module, then its value gets printed out.
     "Hello, world!"  // prints "Hello, world!", including the quotes
   )
 
-The ways to define names in a module include @rhombus(val) and @rhombus(fun).
-The @rhombus(val) form defines an immutable variable, and it expects an
-identifier to define followed by a block. The @rhombus(fun) form defines
-a function when it see an identifier, parentheses, and then a block.
+@aside{If you have installed the @pkg{rhombus-prototype} package, then
+ you can run Rhombus modules in DrRacket or by supplying the file path to
+ @exec{racket} on the command line.}
+
+The ways to define names in a module include @rhombus(val) and
+@rhombus(fun). The @rhombus(val) form defines an immutable variable, and
+it expects an identifier to define followed by a block. The
+@rhombus(fun) form defines a function when it see an identifier,
+parentheses around argument names, and then a block. Function calls has
+the usual shape: a function name (or, more generally, an expression that
+produces a function) followed by comma-separated arguments in
+parentheses.
 
 @(rhombusblock:
     #lang rhombus
@@ -33,8 +41,7 @@ a function when it see an identifier, parentheses, and then a block.
     fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
     )
 
-@aside{If you have installed the @pkg{shrubbery-rhombus-0} package, then
- the interactions window in DrRacket will work to call
+@aside{The interactions area in DrRacket will work to call
  @rhombus(fahrenheit_to_celsius). In interactions, a single input line is
  accepted as complete as long as it's openers and closers are balanced,
  and as long as it doesn't contain @litchar{:} or @litchar{;} outside of
@@ -42,6 +49,12 @@ a function when it see an identifier, parentheses, and then a block.
  multi-line input where the first line would otherwise parse as complete,
  add @litchar{:} or @litchar{;} at the front, either on the same line or
  its own line.}
+
+@aside(~italic: #false){To get a Rhombus read-eval-print loop on the
+ command line, use @exec{racket -I rhombus}. The rules for single-line
+ and multi-line input are the same as in DrRacket's interactions area.
+ Use can use the @litchar{,enter} command to load a module and evaluate
+ additional expressions in the context of that module's body.}
 
 A Rhombus module can export definitions to other modules using
 @rhombus(export), and it can import other modules using
@@ -114,3 +127,17 @@ There’s a lot more to the syntax or @rhombus(import) and
 @rhombus(export) for renaming, re-exporting, and so on. See the
 documentation of @rhombus(import) and @rhombus(export) for more
 information.
+
+For examples in the remainder of this overiew, we will mostly not write
+modules explicitly. Examples will sometimes show definitions, which
+meant as part of some implicit module, which interactive examples with
+are shown with a leading @litchar{> } prompt and the expected result.
+
+@(demo:
+    ~defn:
+      val fahrenheit_freezing: 32
+      fun fahrenheit_to_celsius(f):
+        (f - 32) * 5/9
+    ~repl:
+      fahrenheit_to_celsius(fahrenheit_freezing)
+  )

@@ -3,6 +3,8 @@
     "util.rhm" open
     "common.rhm" open)
 
+@(val set_eval: make_rhombus_eval())
+
 @title(~tag: "set"){Sets}
 
 When @litchar("{")...@litchar("}") is used with elements that do not
@@ -14,23 +16,25 @@ as a map, where the set's elements act as keys and each key's value is
 @rhombus(Map), but @rhombus(Set) accepts just values to include in the
 set. The @rhombus(++) operator effectively unions sets.
 
-@(rhombusblock:
-    val friends: {"alice", "bob", "carol"}
-
-    if friends["alice"] && friends["carol"]
-    | "I know both"
-    | "Who are they?"
-    // prints "I know both"
-
-    val new_friends: friends ++ {"david"}
-    new_friends["david"]  // prints #true
-    friends["david"]      // prints #false
+@(demo:
+    ~eval: set_eval
+    ~defn:
+      val friends: {"alice", "bob", "carol"}
+    ~repl:
+      if friends["alice"] && friends["carol"]
+      | "I know both"
+      | "Who are they?"
+    ~defn:
+      val new_friends: friends ++ {"david"}
+    ~repl:
+      new_friends["david"]
+      friends["david"]
   )
 
-Using @rhombus{Set} explicitly before @litchar("{")...@litchar("}")
+Using @rhombus(Set) explicitly before @litchar("{")...@litchar("}")
 disables the special treatment of @rhombus(:) to indicate a map, and
 each element within @litchar("{")...@litchar("}") is simply an
-expression. The @rhombus{Set} constructor can also be used like a
+expression. The @rhombus(Set) constructor can also be used like a
 function with @litchar("(")...@litchar(")") instead of
 @litchar("{")...@litchar("}").
 
@@ -38,3 +42,12 @@ function with @litchar("(")...@litchar(")") instead of
 @litchar{[}...@litchar{]} with @rhombus(:=) is used to modify a mutable
 set, the ``key'' is removed from the set if the assigned value is
 @rhombus(#false), otherwise the ``key'' is added to the set.
+
+Within a set construction using @litchar("{")...@litchar("}"), a
+@rhombus(&) form references the ``rest'' of the set analogous to the way
+@rhombus(&) works for list constructions.
+
+@(demo:
+    ~eval: set_eval
+    {"dennis", & friends}
+  )

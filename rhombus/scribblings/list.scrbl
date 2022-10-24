@@ -3,20 +3,40 @@
     "util.rhm" open
     "common.rhm" open)
 
+@(val list_eval: make_rhombus_eval())
+
+@examples(
+  ~eval: list_eval,
+  ~hidden: #true,
+  class Posn(x, y)
+)
+
 @title(~tag: "list"){Lists}
 
 A @litchar{[}...@litchar{]} form as an expression creates a list:
 
-@(rhombusblock:
-    [1, 2, 3]                // prints [1, 2, 3]
-    [0, "apple", Posn(1, 2)] // prints [0, "apple", Posn(1, 2)]
+@(demo:
+    ~eval: list_eval
+    [1, 2, 3]
+    [0, "apple", Posn(1, 2)]
+  )
+
+Operations on lists include functions like @rhombus(List.length), and
+some of those operations can be applied using @rhombus(.) directly on an
+expression that produces a list. The @rhombus(++) operator appends
+lists.
+
+@(demo:
+   List.length(["a", "b", "c"])
+   ["a", "b", "c"].length()
+   ["a", "b"] ++ ["c", "d", "e"]
   )
 
 You can also use the @rhombus(List) constructor, which takes any number of
 arguments:
 
-@(rhombusblock:
-    List(1, 2, 3)  // prints [1, 2, 3]
+@(demo:
+    List(1, 2, 3)
   )
 
 A list is a ``linked list,'' in the sense that getting the @math{n}th element
@@ -26,41 +46,44 @@ list is immutable.
 @rhombus(List, ~ann) works as an annotation with @rhombus(-:, ~bind) and
 @rhombus(::, ~bind):
 
-@(rhombusblock:
-    fun
-    | classify(_ :: List): "list"
-    | classify(_ :: Number): "number"
-    | classify(_): "other"
-
-    classify([1])  // prints "list"
-    classify(1)    // prints "number"
-    classify("1")  // prints "other"
+@(demo:
+    ~defn:
+      fun
+      | classify(_ :: List): "list"
+      | classify(_ :: Number): "number"
+      | classify(_): "other"
+    ~repl:
+      classify([1])
+      classify(1)
+      classify("1")
   )
 
 As pattern, @litchar{[}...@litchar{]} matches a list, and list elements
 can be matched with specific subpatterns. The @rhombus(List, ~bind) binding
 operator works the same in bindings, too.
 
-@(rhombusblock:
-    fun three_sorted([a, b, c]):
-      a <= b && b <= c
-
-    three_sorted([1, 2, 3]) // prints #true
-    three_sorted([1, 3, 2]) // prints #false
+@(demo:
+    ~defn:
+      fun are_three_sorted([a, b, c]):
+        a <= b && b <= c
+    ~repl:
+      are_three_sorted([1, 2, 3])
+      are_three_sorted([1, 3, 2])
   )
 
 The last element in a @litchar{[}...@litchar{]} binding pattern can be
 @rhombus(...), which means zero or more repetitions of the preceding
 pattern.
 
-@(rhombusblock:
-    fun
-    | starts_milk([]): #false
-    | starts_milk([head, tail, ...]): head == "milk"
-
-    starts_milk([])                             // prints #false
-    starts_milk(["milk", "apple", "banana"])    // prints #true
-    starts_milk(["apple", "coffee", "banana"])  // prints #false
+@(demo:
+    ~defn:
+      fun
+      | starts_milk([]): #false
+      | starts_milk([head, tail, ...]): head == "milk"
+    ~repl:
+      starts_milk([])
+      starts_milk(["milk", "apple", "banana"])
+      starts_milk(["apple", "coffee", "banana"])
   )
 
 Each variable in a pattern preceding @rhombus(...) is bound as a
@@ -72,15 +95,16 @@ opposed to binding) supports @rhombus(...) in place of a last element,
 in which case the preceding element form is treated as a repetition
 that supplies the tail of the new list.
 
-@(rhombusblock:
-    fun
-    | got_milk([]): #false
-    | got_milk([head, tail, ...]):
-       head == "milk" || got_milk([tail, ...])
-
-    got_milk([])                             // prints #false
-    got_milk(["apple", "milk", "banana"])    // prints #true
-    got_milk(["apple", "coffee", "banana"])  // prints #false
+@(demo:
+    ~defn:
+      fun
+      | got_milk([]): #false
+      | got_milk([head, tail, ...]):
+         head == "milk" || got_milk([tail, ...])
+    ~repl:
+      got_milk([])
+      got_milk(["apple", "milk", "banana"])
+      got_milk(["apple", "coffee", "banana"])
   )
 
 When @litchar{[}...@litchar{]} appears after an expression, then instead
@@ -88,11 +112,12 @@ of forming a list, it accesses an element of an @tech{map} value.
 Lists are maps that are indexed by natural numbers starting with
 @rhombus(0):
 
-@(rhombusblock:
-    val groceries: ["apple", "banana", "milk"]
-
-    groceries[0] // prints "apple"
-    groceries[2] // prints "milk"
+@(demo:
+    ~defn:
+      val groceries: ["apple", "banana", "milk"]
+    ~repl:
+      groceries[0]
+      groceries[2]
   )
 
 Indexing with @litchar{[}...@litchar{]} is sensitive to binding-based
@@ -102,20 +127,24 @@ function’s argument can use a binding pattern that indicates a list of
 @litchar{[}...@litchar{]} to efficiently access a field of a
 @rhombus(Posn) instance:
 
-@(rhombusblock:
-    fun nth_x([p -: Posn, ...], n):
-      [p, ...][n].x
-
-    nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
+@(demo:
+    ~eval: list_eval
+    ~defn:
+      fun nth_x([p -: Posn, ...], n):
+        [p, ...][n].x
+    ~repl:
+      nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
   )
 
 An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~ann)
 annotation constructor. It expects an annotation that every element of
 the list must satisfy:
 
-@(rhombusblock:
-    fun nth_x(ps -: List.of(Posn), n):
-      ps[n].x
+@(demo:
+    ~eval: list_eval
+    ~defn:
+      fun nth_x(ps -: List.of(Posn), n):
+        ps[n].x
   )
 
 The @rhombus(nth_x) function could have been written as follows, but
@@ -123,18 +152,26 @@ unlike the previous versions (where the relevant list existed as an
 argument), this one creates a new intermediate list of @rhombus(x)
 elements:
 
-@(rhombusblock:
-    fun nth_x([Posn(x, _), ...], n):
-      [x, ...][n]
-
-    nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1) // prints 3
+@(demo:
+    ~eval: list_eval
+    ~defn:
+      fun nth_x([Posn(x, _), ...], n):
+        [x, ...][n]
+    ~repl:
+      nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
   )
 
-Operations on lists include functions like @rhombus(List.length), and
-some of those operations can be applied using @rhombus(.) directly on
-an expression that produces a list.
+Instead of using @rhombus(...) at the end of @litchar{[}...@litchar{]}
+or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
+or reference a plain list value whose elements are the rest of the list.
 
-@(rhombusblock:
-   List.length(["a", "b", "c"])  // prints 3
-   ["a", "b", "c"].length()      // prints 3
+@(demo:
+    ~defn:
+      val [x, & others]: [1, 2, 3]
+    ~repl:
+      others
+      [0, & others ++ [100]]
+      ~error: [others, ...]
   )
+
+@close_eval(list_eval)

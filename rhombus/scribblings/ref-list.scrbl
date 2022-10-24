@@ -33,21 +33,21 @@ to append lists.
   expr.macro '#{#%brackets} [$v_expr, ..., $rest]',
 
   grammar rest:
-    & $list_expr
     $repetition $$(@litchar{,}) $$(dots_expr)
+    & $list_expr    
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of
  the @rhombus(v_expr)s expressions.
 
- When @rhombus(& list_expr) appears at the end, all the elements of
- the list produced by @rhombus(list_expr) are included in order at the
- end of the list.
- 
  When @dots_expr appears at the end, the preceding position is a
  @tech{repetition} position, and all elements of the repetition are
  included in order at the end of the list.
 
+ When @rhombus(& list_expr) appears at the end, all the elements of
+ the list produced by @rhombus(list_expr) are included in order at the
+ end of the list.
+ 
  @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
 
 @examples(
@@ -66,8 +66,8 @@ to append lists.
   bind.macro '#{#%brackets} [$binding, ...]',
   bind.macro '#{#%brackets} [$binding, ..., $rest]',
   grammar rest:
-    & $list_binding
     $repetition_binding $$(@litchar{,}) $$(dots)
+    & $list_binding
 ){
 
  Matches a list with as many elements as @rhombus(binding)s, or if
@@ -110,7 +110,7 @@ to append lists.
 
 @examples(
   [1] :: NonemptyList,
-  ~error [] :: NonemptyList
+  ~error: [] :: NonemptyList
 )
 
 }

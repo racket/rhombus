@@ -44,3 +44,42 @@ among the places that recognize @dots to use repetition
 positions.
 
 }
+
+@doc(
+  expr.macro '& list_expr',
+  bind.macro '& list_binding'
+){
+
+ The @rhombus(&) expression operator and binding operator can only be
+ used in places where its specifically recognized, normally either to
+ reference or bind the ``rest'' of a data structure. The @rhombus(List)
+ constructor, @rhombus(Map) constructor, @rhombus(fun) form, and the
+ @rhombus(#{#%call}) form are among the places that recognize
+ @rhombus(&).
+
+@examples(
+  val [a, b, &others]: [1, 2, 3, 4],
+  others,
+  [0, &others]
+)
+
+}
+
+@doc(
+  expr.macro '~& map_expr',
+  bind.macro '~& map_binding'
+){
+
+ The @rhombus(~&) expression operator and binding operator can only be
+ used in places where its specifically recognized, normally to bind the
+ ``rest'' of a map with keywords as keys. The @rhombus(fun) and
+ @rhombus(#{#%call}) forms are among the places that recognize
+ @rhombus(~&).
+
+@examples(
+  fun roster(~manager: who, ~&players):
+    players,
+  roster(~pitcher: "Dave", ~manager: "Phil", ~catcher: "Johnny")
+)
+
+}

@@ -23,7 +23,8 @@ operator. These uses of square brackets are implemented by
   @rhombus(Map),
   [map.length(), Map.length(map)],
   [map.keys(), Map.keys(map)],
-  [map.values(), Map.values(map)]
+  [map.values(), Map.values(map)],
+  [map.has_key(k), Map.has_key(map, k)]
 )
 
 @doc(
@@ -38,6 +39,15 @@ operator. These uses of square brackets are implemented by
  @rhombus(elem_expr) is provided. If no elements are provided
  directly, the result is a map (not a set).
 
+ When @rhombus(& map_expr) or @rhombus(& set_expr) appears at the end,
+ the map or set produced by @rhombus(map_expr) @rhombus(set_expr) is
+ included in the result map or set.
+
+ Mappings or elements are added to the result map or set left-to-right,
+ which means that a later @rhombus(key_expr) or @rhombus(elem_expr) may
+ replace one earlier in the sequence. This ordering applies to mappings
+ or elements added via @rhombus(&), too.
+ 
  @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
 @examples(
@@ -262,6 +272,21 @@ operator. These uses of square brackets are implemented by
 
 @examples(
   Map.values({"a": 1, "b": 2})
+)
+
+}
+
+
+@doc(
+  fun Map.has_key(map :: Map, key) :: Boolean,
+){
+
+ Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
+ @rhombus(map), @rhombus(#false) otherwise.
+
+@examples(
+  Map.has_key({"a": 1, "b": 2}, "a"),
+  Map.has_key({"a": 1, "b": 2}, "c")
 )
 
 }

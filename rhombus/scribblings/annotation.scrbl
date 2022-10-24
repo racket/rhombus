@@ -3,6 +3,16 @@
     "util.rhm" open
     "common.rhm" open)
 
+@(val ann_eval: make_rhombus_eval())
+
+@examples(
+  ~eval: ann_eval,
+  ~hidden: #true,
+  class Posn(x, y),
+  fun flip(p -: Posn): Posn(p.y, p.x),
+  def origin: Posn(0, 0)
+)
+
 @title(~tag: "annotation"){Annotations and the Dot Operator}
 
 Besides classes defined with @rhombus(class), a few predefined
@@ -20,12 +30,12 @@ right-hand annotation, otherwise a run-time exception is raised. The
 produces a boolean result indicating whether the result of the left-hand
 expression matches the annotation.
 
-@(rhombusblock:
-    (flip(origin) -: Posn).x  // prints 0
-    // (1 :: Posn)            // would be a run-time error
-
-    origin is_a Posn  // prints #true
-    1 is_a Posn       // prints #false
+@(demo:
+    ~eval: ann_eval
+    (flip(origin) -: Posn).x
+    ~error: (1 :: Posn)
+    origin is_a Posn
+    1 is_a Posn
   )
 
 When @rhombus(class) defines a new class, an annotation can be
@@ -33,23 +43,26 @@ associated with each field. When the annotation is written with
 @rhombus(::), then the annotation is checked when an instance is
 created.
 
-@(rhombusblock:
-    class Posn(x :: Integer, y :: Integer)
-
-    Posn(1, 2)       // prints Posn(1, 2)
-    // Posn(1, "2")  // would be a run-time error
+@(demo:
+    ~eval: ann_eval
+    ~defn:
+      class Posn(x :: Integer, y :: Integer)
+    ~repl:
+      Posn(1, 2)
+      ~error: Posn(1, "2")
   )
 
 Naturally, class annotations can be used as field annotations, and then
 the @rhombus(.) operator can be chained for efficient access:
 
-@(rhombusblock:
-    class Line(p1 -: Posn, p2 -: Posn)
-
-    def l1 :: Line:
-      Line(Posn(1, 2), Posn(3, 4))
-
-    l1.p2.x  // prints 3
+@(demo:
+    ~eval: ann_eval
+    ~defn:
+      class Line(p1 -: Posn, p2 -: Posn)
+      def l1 :: Line:
+        Line(Posn(1, 2), Posn(3, 4))
+    ~repl:
+      l1.p2.x
   )
 
 More generally, @rhombus(.) access is efficient when the left-hand side
@@ -74,13 +87,17 @@ error. The @rhombus(use_dynamic) form binds @rhombus(.) to the
 default @rhombus(.), which allows dynamic field lookup if the left-hand
 side is not a dot provider, namespace, or import prefix.
 
-@(rhombusblock:
-    use_static
-
-    l1.p2.x  // prints 3
-    // 1.x   // disallowed statically
+@(demo:
+    ~eval: ann_eval
+    ~defn:
+      use_static
+    ~repl:
+      l1.p2.x
+      ~error: (1).x
   )
 
 @aside{Using @rhombus(.) to reach an imported binding, as in
  @rhombus(f2c.fahrenheit_to_celsius), is a different kind of @rhombus(.)
  than the infix expression operator.}
+
+@close_eval(ann_eval)

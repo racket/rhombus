@@ -629,7 +629,8 @@
      (values (single-k #'t)
              #'tail)]
     [(_ ((~and tag quotes) . args) . tail)
-     (values (multi-k (datum->syntax #f (cons (syntax/loc #'tag multi) #'args)))
+     (values (multi-k (datum->syntax #f (cons (syntax-property (datum->syntax #f 'multi) 'raw "")
+                                              #'args)))
              #'tail)]))
 
 (define-for-syntax ((convert-pattern/generate-match repack-id) e)

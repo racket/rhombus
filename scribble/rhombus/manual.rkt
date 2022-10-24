@@ -15,7 +15,8 @@
          (rename-out [manual:deftech deftech]
                      [manual:tech tech]
                      [manual:math math]
-                     [manual:filepath filepath])
+                     [manual:filepath filepath]
+                     [manual:exec exec])
          doc
          docmodule
          rhombusmodname

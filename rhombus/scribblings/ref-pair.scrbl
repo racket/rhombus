@@ -45,7 +45,7 @@ to append lists.
 @examples(
   val Pair(x, y): Pair(1, 2),
   y,
-  ~error val Pair(sx :: String, sy :: String): Pair(1, 2),
+  ~error: val Pair(sx :: String, sy :: String): Pair(1, 2),
   val Pair(lx, ly): [1, 2],
   y
 )

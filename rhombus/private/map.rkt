@@ -50,7 +50,8 @@
 (define map-method-table
   (hash 'length (method1 hash-count)
         'values (method1 hash-values)
-        'keys (method1 hash-keys)))
+        'keys (method1 hash-keys)
+        'has_key (lambda (ht) (lambda (key) (hash-has-key? ht key)))))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
 
@@ -121,7 +122,8 @@
   ([empty empty-map]
    [length hash-count]
    [keys hash-keys]
-   [values hash-values])
+   [values hash-values]
+   [has_key hash-has-key?])
   #:root
   (expression-transformer
    #'Map
@@ -176,6 +178,7 @@
         [(length) (0ary #'hash-count)]
         [(keys) (0ary #'hash-keys)]
         [(values) (0ary #'hash-values)]
+        [(has_key) (0ary #'hash-has-key?)]
         [else #f])))))
 
 (define-static-info-syntax Map

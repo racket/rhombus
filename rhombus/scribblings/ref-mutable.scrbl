@@ -21,8 +21,8 @@
 ){
 
  Changes the value of @rhombus(identifier) to the result of
- @rhombus(expr). The @rhombus(identifier) must be bound with
- @rhombus(mutable, ~bind).
+ @rhombus(expr) and also returns the result of @rhombus(expr). The
+ @rhombus(identifier) must be bound with @rhombus(mutable, ~bind).
 
 @examples(
   val mutable count: 0,

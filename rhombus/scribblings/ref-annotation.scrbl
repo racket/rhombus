@@ -92,7 +92,7 @@
 
 @examples(
   val x :: matching([_, 10]): [9, 10],
-  ~error val y :: matching([_, 10]): [9, 11]
+  ~error: val y :: matching([_, 10]): [9, 11]
 )
 
 }

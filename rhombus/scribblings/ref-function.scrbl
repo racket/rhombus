@@ -10,37 +10,53 @@ An expression followed by a parenthesized sequence of expressions is
 parsed as an implicit use of the @rhombus(#{#%call}) form, which is
 normally bound to implement function calls.
 
+@dispatch_table(
+  "function",
+  @rhombus(Function),
+  [f.map(args, ...), Function.map(f, args, ...)]
+)
+
 @doc(
-  expr.macro '$fun_expr #{#%call} ($arg, ..., $rest, ...)',
+  annotation.macro 'Function'
+){
+
+ Matches any function.
+
+}
+
+
+@doc(
+  expr.macro '$fun_expr #{#%call} ($arg, ..., $maybe_rest)',
 
   grammar arg:
     $arg_expr
     $keyword: $arg_expr,
 
-  grammar rest:
+  grammar maybe_rest:
+    $repetition $$(@litchar{,}) $$(dots_expr)
     & $list_expr
     ~& $map_expr
-    $repetition $$(@litchar{,}) $$(dots_expr)
+    & $list_expr $$(@litchar{,}) ~& $map_expr
+    ~& $map_expr $$(@litchar{,}) & $list_expr
+    $$("ε")
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
   argument, and each @rhombus(keyword: arg_expr) combination is a
   by-keyword argument.
 
-  If the @rhombus(rest) sequence contains @rhombus(& list_expr) or
+  If the @rhombus(maybe_rest) sequence contains @rhombus(& list_expr) or
   @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the
   elements of the list or repetition are used as additional
   by-position arguments, in order after the @rhombus(arg_expr)
   arguments.
-  Only one positional rest argument is allowed in the call.
 
-  If the @rhombus(rest) sequence contains @rhombus(~& map_expr), then
+  If the @rhombus(maybe_rest) sequence contains @rhombus(~& map_expr), then
   all the keys in @rhombus(map_expr) must be keywords, and they must
   not overlap with the directly supplied @rhombus(keyword)s.
   The keyword-value pairs are passed into the function as additional
   keyword arguments.
-  Only one keyword rest argument is allowed in the call.
-
+  
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 
 @examples(
@@ -51,21 +67,21 @@ normally bound to implement function calls.
 }
 
 @doc(
-  defn.macro 'fun $identifier_path($kwopt_binding, ..., $rest, ...) $maybe_result_annotation:
+  defn.macro 'fun $identifier_path($kwopt_binding, ..., $maybe_rest) $maybe_res_ann:
                 $body
                 ...',
   defn.macro 'fun
-              | $identifier_path($binding, ..., $rest, ...) $maybe_result_annotation:
+              | $identifier_path($binding, ..., $maybe_rest) $maybe_res_ann:
                   $body
                   ...
               | ...',
 
-  expr.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_result_annotation:
+  expr.macro 'fun ($kwopt_binding, ..., $maybe_rest) $maybe_res_ann:
                 $body
                 ...',
 
   expr.macro 'fun
-              | ($binding, ..., $rest, ...) $maybe_result_annotation:
+              | ($binding, ..., $maybe_rest) $maybe_res_ann:
                   $body
                   ...
               | ...',
@@ -80,20 +96,31 @@ normally bound to implement function calls.
     $binding $$(@tt{=}) $default_expr
     $keyword: $binding $$(@tt{=}) $default_expr,
   
-  grammar maybe_result_annotation:
+  grammar maybe_res_ann:
     :: $annotation
     -: $annotation
     $$("ϵ"),
 
-  grammar rest:
+  grammar maybe_rest:
+    $repetition_binding $$(@litchar{,}) $$(dots)
     & $list_binding
     ~& $map_binding
-    $repetition_binding $$(@litchar{,}) $$(dots)
+    & $list_binding $$(@litchar{,}) ~& $map_binding
+    ~& $map_binding $$(@litchar{,}) & $list_binding
+    $$("ε")
+
 ){
 
  Binds @rhombus(identifier_path) as a function, or when
  @rhombus(identifier_path) is not supplied, serves as an expression that
  produces a function value.
+
+ In addition to any annotations that may be included in argument
+ bindings, when @rhombus(maybe_res_ann) is present, it provides an
+ annotation for the function's result. In the case of a checked
+ annotation using @rhombus(::), the function's body is @emph{not} in
+ tail position with respect to a call to the function, since a check
+ will be applied to the function's result.
 
  See @secref("namespaces") for information on @rhombus(identifier_path).
 
@@ -169,7 +196,7 @@ normally bound to implement function calls.
   is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(rest) sequence contains @rhombus(& list_binding) or
+When a @rhombus(maybe_rest) sequence contains @rhombus(& list_binding) or
 @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), then the
 function or function alternative accepts any number of additional
 by-position arguments.
@@ -179,10 +206,8 @@ into a list value, and that list value is bound to the
 For @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), each
 variable in @rhombus(repetition_binding) is bound to a repetition that
 repeats access to that piece of each additional argument.
-Only one positional rest argument is allowed in the function
-alternative.
 
-When a @rhombus(rest) sequence contains @rhombus(~& map_binding), then
+When a @rhombus(maybe_rest) sequence contains @rhombus(~& map_binding), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
 values are collected into a map value to be bound to
@@ -213,25 +238,25 @@ values are collected into a map value to be bound to
 }
 
 @doc(
-  defn.macro 'operator ($operator_path $binding) $maybe_result_annotation:
+  defn.macro 'operator ($operator_path $binding) $maybe_res_ann:
                 $body
                 ...',
-  defn.macro 'operator ($binding $operator_path $binding) $maybe_result_annotation:
+  defn.macro 'operator ($binding $operator_path $binding) $maybe_res_ann:
                 $body
                 ...',
   defn.macro 'operator
-              | ($operator_path $binding) $maybe_result_annotation:
+              | ($operator_path $binding) $maybe_res_ann:
                   $body
                   ...
-              | ($binding $operator_path $binding) $maybe_result_annotation:
+              | ($binding $operator_path $binding) $maybe_res_ann:
                   $body
                   ...',
 
 ){
 
  Binds @rhombus(operator_path) as an operator, either prefix or infix.
- The @rhombus(maybe_result_annotation) parts are the same as in
- @rhombus(fun) definitions.
+ The @rhombus(maybe_res_ann) parts are the same as in @rhombus(fun)
+ definitions.
 
  When an operator definition includes both a prefix and infix variant
  with @litchar{|}, the variants can be in either order.
@@ -249,4 +274,21 @@ values are collected into a map value to be bound to
     [1, 2] ^^^ [3]
 )
   
+}
+
+
+@doc(
+  fun Function.map(f :: Function, args :: List, ...) :: List,
+){
+
+ Applies @rhombus(f) to each element of each @rhombus(args), iterating
+ through the @rhombus(args) lists together, so @rhombus(f) must take as
+ many arguments as the number of given @rhombus(args) lists. The result
+ is a list of values, which is the result of each call to @rhombus(f) in
+ order.
+
+@examples(
+  Map.values({"a": 1, "b": 2})
+)
+
 }

@@ -7,20 +7,21 @@
 
 Macros can extend binding-position syntax, too, via @rhombus(bind.rule) and
 @rhombus(bind.macro). In the simplest case, a binding operator is implemented
-by expanding to other binding operators, like this definition of @rhombus($)
+by expanding to other binding operators, like this definition of @rhombus($$$)
 as a prefix operator to constrain a pattern to number inputs:
 
-@(rhombusblock:
-    import:
-      rhombus/meta open
+@(demo:
+    ~defn:
+      import:
+        rhombus/meta open
 
-    bind.rule '$ $n':
-      ~parsed_right
-      '$n :: Number'
+      bind.rule '$$$ $n':
+        ~parsed_right
+        '$n :: Number'
+    ~repl:
+      val $$$salary: 100.0
 
-    val $salary: 100.0
-
-    salary  // prints 100.0
+      salary
   )
 
 More expressive binding operators can use a lower-level protocol where a

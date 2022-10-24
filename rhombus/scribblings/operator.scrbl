@@ -3,31 +3,42 @@
     "util.rhm" open
     "common.rhm" open)
 
+@(val op_eval: make_rhombus_eval())
+
+@examples(
+  ~eval: op_eval,
+  ~hidden: #true,
+  class Posn(x, y)
+)
+
 @title(~tag: "operator"){Operators}
 
 The @rhombus(operator) form defines a prefix or infix operator for
 expressions, similar to a function definition:
 
-@(rhombusblock:
-    operator (x <> y):
-      Posn(x, y)
-
-    1 <> 2  // prints Posn(1, 2)
-
-    operator (<<>> x):
-      Posn(x, x)
-
-    <<>> 3  // prints Posn(3, 3)
+@(demo:
+    ~eval: op_eval
+    ~defn:
+      operator (x <> y):
+        Posn(x, y)
+    ~repl:
+      1 <> 2
+    ~defn:
+      operator (<<>> x):
+        Posn(x, x)
+    ~repl:
+      <<>> 3
   )
 
 An ``operator'' name does not have to be a shrubbery operator. It can be
 an identifier:
 
-@(rhombusblock:
-    operator (x mod y):
-      x - floor(x / y) * y
-
-    10 mod 3  // prints 1
+@(demo:
+    ~defn:
+      operator (x mod y):
+        x - floor(x / y) * y
+    ~repl:
+      10 mod 3
   )
 
 The @rhombus(operator) form must be followed by parentheses and then a
@@ -37,35 +48,40 @@ The arguments can be described by binding patterns, but in that case,
 they may need parentheses around the pattern to ensure that they form a
 single term in next to the operator being defined:
 
-@(rhombusblock:
-    operator ((x :: Integer) <> (y :: Integer)):
-      Posn(x, y)
-
-    // 1 <> "apple"  // would be a run-time error
+@(demo:
+    ~eval: op_eval
+    ~defn:
+      operator ((x :: Integer) <> (y :: Integer)):
+        Posn(x, y)
+    ~repl:
+      ~error: 1 <> "apple"
   )
 
 An operator can be defined for both infix and prefix behavior in much
 the same way that functions can be defined to accept one or two
 arguments:
 
-@(rhombusblock:
-    operator
-    | ((x :: Integer) <> (y :: Integer)):
-        Posn(x, y)
-    | (<> (x ::Integer)):
-        Posn(x, x)
-
-    1 <> 2  // prints Posn(1, 2)
-    <> 3    // prints Posn(3, 3)
+@(demo:
+    ~eval: op_eval
+    ~defn:
+      operator
+      | ((x :: Integer) <> (y :: Integer)):
+          Posn(x, y)
+      | (<> (x ::Integer)):
+          Posn(x, x)
+    ~repl:
+      1 <> 2
+      <> 3
   )
 
 Operator precedence is declared in relationship to other operators when
 the operator is defined. With no precedence defined, @rhombus(<>) cannot
 appear near an arithmetic operator like @rhombus(*):
 
-@(rhombusblock:
-    // 1 <> 2 * 3  // would be a syntax error
-    1 <> (2 * 3)   // prints Posn(1, 6)
+@(demo:
+    ~eval: op_eval
+    ~error: 1 <> 2 * 3
+    1 <> (2 * 3)
   )
 
 The initially defined operators mostly have the usual precedence:
@@ -84,15 +100,17 @@ well as @rhombus(~same_as_on_right) and @rhombus(~associativity).
 Operators listed with keywords like @rhombus(~weaker_than) can be
 grouped on lines however is convenient.
 
-@(rhombusblock:
-    operator (x <> y):
-      ~weaker_than: * / 
-                    + -
-      ~associativity: ~right
-      Posn(x, y)
-
-    1 <> 2 * 3  // prints Posn(1, 6)
-    1 <> 2 <> 3 // prints Posn(1, Posn(2, 3))
+@(demo:
+    ~eval: op_eval
+    ~defn:
+      operator (x <> y):
+        ~weaker_than: * / 
+                      + -
+        ~associativity: ~right
+        Posn(x, y)
+    ~repl:
+      1 <> 2 * 3
+      1 <> 2 <> 3
   )
 
 Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
@@ -129,3 +147,5 @@ the @rhombus(expose) import modifier:
 
     1 <> 2
   )
+
+@close_eval(op_eval)

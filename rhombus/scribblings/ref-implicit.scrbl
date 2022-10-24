@@ -74,7 +74,7 @@ Here are all of the implicit forms:
  #{#%literal} 7,
  fun only_sevens(7): "yes",
  only_sevens(7),
- ~error only_sevens(8),
+ ~error: only_sevens(8),
 )
  
 }

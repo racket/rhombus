@@ -31,8 +31,8 @@
   annotation.rule 'two_of($ann)':
     'matching(List(_ :: $ann, _ :: $ann))',
   [1, 2] :: two_of(Number),
-  ~error [1, 2, 3] :: two_of(Number),
-  ~error [1, "x"] :: two_of(Number)
+  ~error: [1, 2, 3] :: two_of(Number),
+  ~error: [1, "x"] :: two_of(Number)
 )
 
 }

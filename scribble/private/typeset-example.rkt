@@ -31,6 +31,8 @@
     #:datum-literals (parens group block)
     [(_ (parens (~or (~optional (group #:label (block label-expr))
                                 #:defaults ([label-expr #'(group (parsed "Examples:"))]))
+                     (~optional (group (~and no-prompt #:no_prompt))
+                                #:defaults ([no-prompt #'#f]))
                      (~optional (group #:eval (block eval-expr))
                                 #:defaults ([eval-expr #'(group (parsed (make-rhombus-eval)))]))
                      (~optional (group #:hidden (block hidden-expr))
@@ -44,10 +46,12 @@
                                               (syntax-parse form
                                                 [(_ (a . _) . _) #'a]
                                                 [(_ a . _) #'a]))
-                               "")])
+                               "")]
+                     [prompt (if (syntax-e #'no-prompt) "" "> ")]
+                     [prompt-indent (if (syntax-e #'no-prompt) 0 2)])
          #'(rhombus-expression (group rhombusblock
-                                      (parens (group #:prompt (block (group (parsed ">"))))
-                                              (group #:indent (block (group (parsed 2))))
+                                      (parens (group #:prompt (block (group (parsed prompt))))
+                                              (group #:indent (block (group (parsed prompt-indent))))
                                               (group #:inset (block (group (parsed #f)))))
                                       (t-block t-form)))))
      (with-syntax ([((t-form e-form) ...)
@@ -55,9 +59,10 @@
                       (syntax-parse form
                         #:datum-literals (group)
                         [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed (void))))]
-                        [((~and tag group) #:error form ...) #`((list (quote #:error)
-                                                                      #,(rb #'(tag form ...)))
-                                                                (tag form ...))]
+                        [(group #:error (block ((~and tag group) form ...)))
+                         #`((list (quote #:error)
+                                  #,(rb #'(tag form ...)))
+                            (tag form ...))]
                         [_ #`(#,(rb form) #,form)]))])
        #'(examples
           #:eval (rhombus-expression eval-expr)
@@ -72,6 +77,7 @@
   (define eval (make-base-eval #:lang 'rhombus
                                '(top)))
   (call-in-sandbox-context eval (lambda () (dynamic-require '(submod rhombus configure-runtime) #f)))
+  (call-in-sandbox-context eval (lambda () (error-print-source-location #f)))
   eval)
 
 (define (examples #:eval eval

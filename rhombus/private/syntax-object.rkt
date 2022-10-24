@@ -278,7 +278,7 @@
          (relocate stx ctx))]
       [(and (pair? (cdr ctx-stxes))
             (not keep-raw-interior?))
-       (loop (cdr ctx-stxes) pre raw suffix)]
+       (loop (cdr ctx-stxes) loc pre raw suffix)]
       [else
        (define empty-raw? (and (null? raw) (null? suffix)))
        (define ctx (car ctx-stxes))

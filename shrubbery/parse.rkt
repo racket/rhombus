@@ -1638,7 +1638,7 @@
   (define (parse-all* in)
     (unless one-line?
       (port-count-lines! in))
-    (define e (parse-all in #:text-mode? text-mode?))
+    (define e (parse-all in #:mode (if text-mode? 'text 'top)))
     (unless (eof-object? e)
       (cond
         [(or show-raw? show-property?)

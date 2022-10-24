@@ -8,33 +8,33 @@
 The @rhombus('') form produces a syntax object. The syntax object holds
 an unparsed shrubbery, not a parsed Rhombus expression.
 
-@(rhombusblock:
-    '1'          // prints a shrubbery: 1
-    'hello'      // prints a shrubbery: hello
-    '1 + 2'      // prints a shrubbery: 1 + 2
+@(demo:
+    '1'
+    'hello'
+    '1 + 2'
     'x:
-       y'       // prints a shrubbery: x:« y »
-    // '1' + 2  // would be a run-time error, since '1 is not a number
+       y'
+    ~error: '1' + 2
   )
 
 The @rhombus('') form is more precisely a quasiquoting operator. The
-@rhombus($) unquotes the immediate following terms. That is, the term
-after @rhombus($) is a Rhombus expression whose value replaces the
-@rhombus($) and its argument within the quoted form.
+@rhombus($) operator unquotes the immediately following term. That is,
+the term after @rhombus($) is a Rhombus expression whose value replaces
+the @rhombus($) and its argument within the quoted form.
 
-@(rhombusblock:
-    '1 + $(2 + 3)'  // prints a shrubbery: 1 + 5
+@(demo:
+    '1 + $(2 + 3)'
   )
 
 A @rhombus($) only unquotes when it is followed by a term, otherwise the @rhombus($)
 itself remains quoted.
 
-@(rhombusblock:
-    '1 + $('$') 2'  // prints a shrubbery: 1 + $ 2
+@(demo:
+    '1 + $('$') 2'
   )
 
-@aside{Nested @rhombus('') does not increase the quoting level like
- Racket quasiquote.}
+@aside{Nested @rhombus('') does not increase the quoting level, unlike
+ Racket quasiquotation.}
 
 Like @rhombus($), @rhombus(...) is treated specially within a @rhombus('')-quoted term (except,
 like @rhombus($), when it’s the only thing in the term). When @rhombus(...) immediately
@@ -44,10 +44,11 @@ instead of the parenthesized group in place of @rhombus($), the term before
 @rhombus(...) is replicated as many times as the repetition has items, and each of
 those items is used in one replication.
 
-@(rhombusblock:
-    def [seq, ...]: ['1', '2', '3']
-
-    '(hi $seq) ...' // prints a shrubbery: (hi 1) (hi 2) (hi 3)
+@(demo:
+    ~defn:
+      def [seq, ...]: ['1', '2', '3']
+    ~repl:
+      '(hi $seq) ...'
   )
 
 There’s a subtlety here: could @rhombus(seq) have zero elements? If so,
@@ -57,11 +58,11 @@ gap, a @rhombus($) replication to a group with zero terms generates a
 multi-group syntax object with zero groups. Attempting to generate a group
 with no terms within a larger sequence with multiple groups is an error.
 
-@(rhombusblock:
-    def [seq, ...]: []
-
-    '(hi $seq) ...'           // prints an empty shrubbery
-    // 'x; (hi $seq) ...; y'  // would be a run-time error
+@(demo:
+    ~repl:
+      def [seq, ...]: []
+      '(hi $seq) ...'
+      ~error: 'x; (hi $seq) ...; y'
   )
 
 When @rhombus(...) is the only term in a group, and when that group follows
@@ -70,19 +71,19 @@ putting @rhombus(...) after a @litchar{,} in parentheses means that it follows a
 group before the @litchar{,}, which effectively replicates that group with its
 separating comma:
 
-@(rhombusblock:
-    def [seq, ...]: ['1', '2', '3']
-
-    '(hi $seq, ...)' // prints a shrubbery: (hi 1, hi 2, hi 3)
+@(demo:
+    ~repl:
+      def [seq, ...]: ['1', '2', '3']
+      '(hi $seq, ...)'
   )
 
 Along the same lines, @rhombus(...) just after a @litchar{|} can replicate a preceding
 @litchar{|} block:
 
-@(rhombusblock:
-    def [seq, ...]: ['1', '2', '3']
-
-    'cond | $seq | ...' // prints a shrubbery: cond |« 1  » |« 2  » |« 3 »
+@(demo:
+    ~repl:
+      def [seq, ...]: ['1', '2', '3']
+      'cond | $seq | ...'
   )
 
 In other words, @rhombus(...) in various places within a quoted shrubbery
@@ -92,11 +93,11 @@ When @rhombus('') is used in a binding position, it constructs a pattern that
 matches syntax objects, and it binds variables that are escaped in the
 pattern with @rhombus($).
 
-@(rhombusblock:
-    val '$x + $y': '1 + (2 + 3)'
-
-    x  // prints a shrubbery: 1
-    y  // prints a shrubbery: (2 + 3)
+@(demo:
+    ~repl:
+      val '$x + $y': '1 + (2 + 3)'
+      x
+      y
   )
 
 A @rhombus($)-escaped variable in a @rhombus('') pattern matches one term if
@@ -106,45 +107,49 @@ yet parsed, so a variable will not be matched to a multi-term sequence
 that would be parsed as an expression. For example, a pattern variable
 @rhombus(y) by itself cannot be matched to a sequence @rhombus(2 + 3):
 
-@(rhombusblock:«
-    // val '$x + $y': '1 + 2 + 3'  // would be a run-time error
-  »)
+@(demo:
+    ~error: val '$x + $y': '1 + 2 + 3'
+  )
 
 If a @rhombus($) escape is alone within its group, however, the
 @rhombus($)-escaped variable stands for a match to an entire group.
 
-@(rhombusblock:
-    val '$x': '1 + 2 + 3'
-    x  // prints a shrubbery group: 1 + 2 + 3
-    )
+@(demo:
+    ~repl:
+      val '$x': '1 + 2 + 3'
+      x
+  )
 
 A group syntax object can be substituted into a template when the escape
 to substitute is similarly in its own group. Attempting to substitute a
 multi-term group in any other template context is an error.
 
-@(rhombusblock:
-    val '$x': '1 + 2 + 3'
-    '[$x]'     // prints a shrubbery: [1 + 2 + 3]
-    // '[0 + $x]'  // would be a run-time error
+@(demo:
+    ~repl:
+      val '$x': '1 + 2 + 3'
+      '[$x]'
+      ~error: '[0 + $x]'
   )
 
 At the same time, a group syntax object that has a single term in the
 group is interchangeable with a single-term syntax object:
 
-@(rhombusblock:
-    val '$y': '1'
-    '[$y]'      // prints a shrubbery: [1]
-    '[0 + $y]'  // prints a shrubbery: [0 + 1]
+@(demo:
+    ~repl:
+      val '$y': '1'
+      '[$y]'
+      '[0 + $y]'
   )
 
 To match a single term in a group context, annotate the pattern variable
 with the @rhombus(Term, ~stxclass) syntax class using the @rhombus(::) operator.
 
-@(rhombusblock:
-    val '$(x :: Term)': '1'
-    x  // prints a shrubbery: 1
-
-    // val '$(x :: Term)': '1 + 2' // would be an run-time error
+@(demo:
+    ~repl:
+      val '$(x :: Term)': '1'
+      x
+    ~repl:
+      ~error: val '$(x :: Term)': '1 + 2'
   )
 
 If a @rhombus($) escape is not only alone within its group, but the
@@ -156,10 +161,10 @@ multi-group syntax object. There is no contraint that the original and
 destination contexts have the same shape, so a match from a block-like
 context can be put into a brackets context, for example.
 
-@(rhombusblock:
+@(demo:
     val '$x': '1 + 2 + 3
                4 * 5 * 6'
-    '[$x]'     // prints a shrubbery: [1 + 2 + 3, 4 * 5 * 6]
+    '[$x]'
   )
 
 In the same way that a single-term syntax object can be used as a group
@@ -172,12 +177,13 @@ Meanwhile, @rhombus(..., ~bind) works the way you would expect in a
 pattern, matching any @rhombus(..., ~bind)-replicated pattern variables
 to form a repetition of matches:
 
-@(rhombusblock:
-    val '$x + $y ... + 0': '1 + 2 + 3 + 0'
-
-    x         // prints a shrubbery: 1
-    [y, ...]  // prints a list: ['2', '+', '3']
-    '$y ...'  // prints a shrubbery: 2 + 3
+@(demo:
+    ~defn:
+      val '$x + $y ... + 0': '1 + 2 + 3 + 0'
+    ~repl:
+      x
+      [y, ...]
+      '$y ...'
   )
 
 @aside{A tail pattern @rhombus($$(@rhombus($))$$(@rhombus(id, ~var)) $$(@rhombus(..., ~bind))) combined with a tail

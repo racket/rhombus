@@ -16,7 +16,7 @@
                      [rhombus>= >=]
                      [rhombus> >])
          .=
-         sqrt cos sin tan log exp expt
+         sqrt cos sin tan log exp expt acos asin atan
          floor ceiling round
 
          !

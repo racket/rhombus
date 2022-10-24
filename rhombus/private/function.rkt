@@ -17,6 +17,7 @@
          "expression+definition.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
+         "name-root.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "static-info.rkt"
@@ -31,9 +32,13 @@
                   [= rhombus=])
          "dotted-sequence-parse.rkt"
          "lambda-kwrest.rkt"
-         "error.rkt")
+         "error.rkt"
+         (submod "dot.rkt" for-dot-provider)
+         "dot-parse.rkt")
 
-(provide fun)
+(provide fun
+         Function
+         (for-space rhombus/annotation Function))
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -47,6 +52,32 @@
 
 (module+ for-call
   (provide (for-syntax parse-function-call)))
+
+(module+ for-builtin
+  (provide function-method-table))
+
+(define-name-root Function
+  #:fields
+  (map))
+
+(define function-method-table
+  (hash 'map (lambda (f) (lambda lists (apply map f lists)))))
+
+(define-for-syntax function-static-infos
+  #'((#%dot-provider function-instance)))
+
+(define-for-syntax (wrap-function-static-info expr)
+  (wrap-static-info* expr function-static-infos))
+
+(define-annotation-syntax Function (identifier-annotation #'Function #'procedure? #'()))
+
+(define-syntax function-instance
+  (dot-provider-more-static
+   (dot-parse-dispatch
+    (lambda (field-sym field ary 0ary nary fail-k)
+      (case field-sym
+        [(map) (nary -2 #'map)]
+        [else #f])))))
 
 (begin-for-syntax
   (define-syntax-class :non-...-binding
@@ -169,7 +200,7 @@
                    ...+)
                   . tail)
          (values
-          (build-case-function #'form-id
+          (build-case-function (get-local-name #'form-id)
                                #'((arg.kw ...) ...)
                                #'((arg ...) ...) #'((arg.parsed ...) ...)
                                #'(rest.arg ...) #'(rest.parsed ...)
@@ -182,7 +213,7 @@
                   (~and rhs (_::block body ...))
                   . tail)
          (define fun
-           (build-function #'form-id
+           (build-function (get-local-name #'form-id)
                            #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                            #'rest.arg #'rest.parsed
                            #'rest.kwarg #'rest.kwparsed
@@ -210,7 +241,7 @@
           the-name (syntax->list #'(ret.static-infos ...))
           (list
            #`(define #,the-name
-               #,(build-case-function #'form-id
+               #,(build-case-function the-name
                                       #'((arg.kw ...) ...)
                                       #'((arg ...) ...) #'((arg.parsed ...) ...)
                                       #'(rest.arg ...) #'(rest.parsed ...)
@@ -226,7 +257,7 @@
           #'name.name (list #'ret.static-infos)
           (list
            #`(define name.name
-               #,(build-function #'form-id
+               #,(build-function #'name.name
                                  #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                  #'rest.arg #'rest.parsed
                                  #'rest.kwarg #'rest.kwparsed
@@ -242,6 +273,8 @@
             (list #'e.parsed)])])))))
 
 (begin-for-syntax
+  (define (get-local-name who)
+    (or (syntax-local-name) who))
 
   (struct fcase (kws args arg-parseds rest-arg rest-arg-parsed kwrest-arg kwrest-arg-parsed pred rhs))
 
@@ -313,12 +346,13 @@
           (relocate
            (span-srcloc start end)
            (if (syntax-e kwrest-arg)
-               #`(lambda/kwrest (arg-form ... ...)
-                   maybe-rest-tmp* ... maybe-kwrest-tmp ...
-                   #,body)
+               #`(lambda/kwrest
+                  (arg-form ... ...)
+                  maybe-rest-tmp* ... maybe-kwrest-tmp ...
+                  #,body)
                #`(lambda (arg-form ... ... . maybe-rest-tmp)
                    #,body)))))))
-  
+
   (define (build-case-function function-name
                                kwss-stx argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
@@ -374,8 +408,8 @@
               (define n (car n+same))
               (define same (cdr n+same))
               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
-                                                    (cons 'try-next
-                                                          (fcase-pos fcase-args (find-matching-case n same))))]
+                                                        (cons 'try-next
+                                                              (fcase-pos fcase-args (find-matching-case n same))))]
                             [(maybe-rest-tmp ...) (if (negative? n)
                                                       #'(#:rest rest-tmp)
                                                       #'())]
@@ -383,12 +417,13 @@
                                                     #'rest-tmp
                                                     #'null)]
                             [(maybe-kwrest-tmp ...) (if kws?
-                                                      #'(#:kwrest kwrest-tmp)
-                                                      #'())]
+                                                        #'(#:kwrest kwrest-tmp)
+                                                        #'())]
                             [maybe-kwrest-tmp-use (if kws?
                                                       #'kwrest-tmp
                                                       #''#hashalw())])
-                #`[(pos-arg-id ...) maybe-rest-tmp ... maybe-kwrest-tmp ...
+                #`[(pos-arg-id ...)
+                   maybe-rest-tmp ... maybe-kwrest-tmp ...
                    #,(let loop ([same same])
                        (cond
                          [(null? same)

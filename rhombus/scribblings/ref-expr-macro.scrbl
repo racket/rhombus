@@ -37,7 +37,7 @@
     ~same_on_left_as: $identifier_or_operator ...
     ~same_on_right_as: $identifier_or_operator ...
     ~associativity: $assoc
-    ~op_stx $identifier
+    ~op_stx: $identifier
     ~parsed_right,
   grammar assoc:
     ~left
@@ -78,7 +78,7 @@
  an operator's precedence relative to other operators. The
  @rhombus(~associativity) option is allowed only with a infix-operator
  @rhombus(rule_pattern). The @rhombus(~op_stx) option binds an
- identifier or operator for in a use of the macro (which cannot be
+ identifier or operator for a use of the macro (which cannot be
  matched directly in the @rhombus(rule_pattern), since that position
  is used for the name that @rhombus(expr.rule) binds). If the
  @rhombus(~parsed_right) option is present, then the

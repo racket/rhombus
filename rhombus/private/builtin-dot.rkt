@@ -6,7 +6,8 @@
          (submod "list.rkt" for-builtin)
          (submod "array.rkt" for-builtin)
          (submod "syntax-object.rkt" for-builtin)
-         (submod "pair.rkt" for-builtin))
+         (submod "pair.rkt" for-builtin)
+         (submod "function.rkt" for-builtin))
 
 (set-builtin->accessor-ref!
  (lambda (v)
@@ -17,4 +18,5 @@
      [(vector? v) array-method-table]
      [(syntax? v) syntax-method-table]
      [(pair? v) pair-method-table]
+     [(procedure? v) function-method-table]
      [else #f])))

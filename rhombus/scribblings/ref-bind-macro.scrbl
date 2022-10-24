@@ -32,7 +32,7 @@
     '$id && [_ :: $ann, $('...')]',
   val many Integer as tickets: [1, 2, 3],
   tickets,
-  ~error val many String as names: "oops",
+  ~error: val many String as names: "oops",
 )
 
 }

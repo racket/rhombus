@@ -19,7 +19,9 @@
         [((_::parens g ...) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (cond
-           [(= (length gs) n)
+           [(if (n . < . 0)
+                (> (length gs) (- 1 n))
+                (= (length gs) n))
             (success-k (apply n-k (syntax->list #'((rhombus-expression g) ...)))
                        #'new-tail)]
            [else

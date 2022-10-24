@@ -98,7 +98,7 @@
   (define-syntax-class-mixin self-options
     #:datum-literals (op block group
                          opt_stx)
-    (~alt (~optional (group #:op_stx ~! (block (group self-id:identifier)))
+    (~alt (~optional (group #:op_stx ~! (_::block (group self-id:identifier)))
                      #:defaults ([self-id #'self]))))
 
   (define-syntax-class-mixin parsed-right-options
@@ -347,19 +347,19 @@
       (syntax-parse stx
         #:datum-literals (parens group block alts op)
         [(form-id q::identifier-syntax-quote
-                  (~and rhs (block
-                             (~optional (group #:op_stx (block (group self-id:identifier)))
+                  (~and rhs (tag::block
+                             (~optional (group #:op_stx (_::block (group self-id:identifier)))
                                         #:defaults ([self-id #'self]))
                              body ...)))
-         (define p (parse-transformer-definition #'q.g #'rhs))
+         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
          (list #`(define-syntax #,(in-space (pre-parsed-name p))
-                   (#,compiletime-id #,p)))]))))
+                   (#,compiletime-id #,p self-id)))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id)
     (lambda (stx)
       (syntax-parse stx
-        [(_ pre-parsed)
+        [(_ pre-parsed self-id)
          (parse-transformer-definition-rhs #'pre-parsed #'self-id
                                            make-transformer-id)]))))
 
@@ -382,19 +382,19 @@
      (syntax-parse stx
        #:datum-literals (parens group block alts op)
        [(form-id q::identifier-sequence-syntax-quote
-                 (~and rhs (block
-                            (~optional (group #:op_stx (block (group self-id:identifier)))
+                 (~and rhs (tag::block
+                            (~optional (group #:op_stx (_::block (group self-id:identifier)))
                                        #:defaults ([self-id #'self]))
                             body ...)))
-        (define p (parse-transformer-definition #'q.g #'rhs))
+        (define p (parse-transformer-definition #'q.g #'(tag body ...)))
         (list #`(define-syntax #,(in-space (pre-parsed-name p))
-                  (#,compiletime-id #,p q.gs)))]))))
+                  (#,compiletime-id #,p q.gs self-id)))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-sequence-transformer-compiletime make-transformer-id)
     (lambda (stx)
       (syntax-parse stx
-        [(_ pre-parsed gs)
+        [(_ pre-parsed gs self-id)
          (parse-transformer-definition-sequence-rhs #'pre-parsed #'self-id
                                                     make-transformer-id
                                                     #'gs)]))))

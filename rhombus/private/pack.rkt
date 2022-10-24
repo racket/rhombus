@@ -320,7 +320,11 @@
     [else (list term r)]))
 
 (define (cannot-coerce-list who r)
-  (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm
+  (raise-arguments-error* (cond
+                            [(syntax? who) (syntax-e who)]
+                            [(procedure? who) (proc-name who)]
+                            [else who])
+                          rhombus-realm
                           "cannot coerce list to syntax"
                           "list" r))
 

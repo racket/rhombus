@@ -31,23 +31,21 @@ begin:
   check:
     ~exn
     f([1])
-    "fun: no matching case for arguments"
+    "f: no matching case for arguments"
 
 begin:
   fun f([] = [1]): 0
   check:
     ~exn
     f()
-    // TODO: fix error message to be about pattern matching
-    "fun: argument does not satisfy annotation"
+    "f: argument does not satisfy annotation"
 
 begin:
   fun f([] = [], & rst): rst
   check:
     ~exn
     f("a")
-    // TODO: fix error message to be about pattern matching
-    "fun: argument does not satisfy annotation"
+    "f: argument does not satisfy annotation"
 
 begin:
   /*

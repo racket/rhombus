@@ -9,6 +9,7 @@
 
 @doc(
   defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
+                 $option; ...
                  $body
                  ...»',
 
@@ -17,7 +18,8 @@
     $operator
     ($identifier_path)    
     ($operator_path),
-
+  grammar option:
+    ~op_stx: $identifier
 ){
 
  Defines @rhombus(identifier), @rhombus(operator),
@@ -28,6 +30,13 @@
 
  The expansion result must be a parenthesized block, and the groups of
  the block are inlined in place of the definition-macro use.
+
+ The @rhombus(option)s in the macro body must be distinct; since there
+ is only one option currently, either the @rhombus(~op_stx) option is
+ present or not. The @rhombus(~op_stx) option, if present, binds an
+ identifier for a use of the macro (which cannot be matched directly in
+ the @rhombus(rule_pattern), since that position is used for the name
+ that @rhombus(expr.rule) binds).
 
  See @secref("namespaces") for information about
  @rhombus(identifier_path) and @rhombus(operator_path).
@@ -60,6 +69,7 @@
   defn.macro '«defn.sequence_macro '$identifier_or_operator $pattern ...
                                     $pattern
                                     ...':
+                 $option; ...
                  $body
                  ...»',
   grammar identifier_or_operator:
@@ -67,6 +77,8 @@
     $operator
     ($identifier_path)    
     ($operator_path),
+  grammar option:
+    ~op_stx: $identifier
 ){
 
  Similar to @rhombus(defn.macro), but defines a macro for a definition
