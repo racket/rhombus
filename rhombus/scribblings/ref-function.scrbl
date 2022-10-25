@@ -26,36 +26,36 @@ normally bound to implement function calls.
 
 
 @doc(
-  expr.macro '$fun_expr #{#%call} ($arg, ..., $maybe_rest)',
+  expr.macro '$fun_expr #{#%call} ($arg, ..., $rest, ...)',
 
   grammar arg:
     $arg_expr
     $keyword: $arg_expr,
 
-  grammar maybe_rest:
+  grammar rest:
     $repetition $$(@litchar{,}) $$(dots_expr)
     & $list_expr
     ~& $map_expr
-    & $list_expr $$(@litchar{,}) ~& $map_expr
-    ~& $map_expr $$(@litchar{,}) & $list_expr
-    $$("ε")
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
   argument, and each @rhombus(keyword: arg_expr) combination is a
   by-keyword argument.
 
-  If the @rhombus(maybe_rest) sequence contains @rhombus(& list_expr) or
+  If the @rhombus(rest) sequence contains @rhombus(& list_expr) or
   @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the
   elements of the list or repetition are used as additional
   by-position arguments, in order after the @rhombus(arg_expr)
-  arguments.
+  arguments. Only one by-position rest argument, either @rhombus(& list_expr) or 
+  @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), can appear
+  in a @rhombus(rest) sequence.
 
-  If the @rhombus(maybe_rest) sequence contains @rhombus(~& map_expr), then
+  If the @rhombus(rest) sequence contains @rhombus(~& map_expr), then
   all the keys in @rhombus(map_expr) must be keywords, and they must
   not overlap with the directly supplied @rhombus(keyword)s.
   The keyword-value pairs are passed into the function as additional
-  keyword arguments.
+  keyword arguments. Only one @rhombus(~& map_expr) can appear
+  in a @rhombus(rest) sequence.
   
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 
@@ -67,21 +67,21 @@ normally bound to implement function calls.
 }
 
 @doc(
-  defn.macro 'fun $identifier_path($kwopt_binding, ..., $maybe_rest) $maybe_res_ann:
+  defn.macro 'fun $identifier_path($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
                 $body
                 ...',
   defn.macro 'fun
-              | $identifier_path($binding, ..., $maybe_rest) $maybe_res_ann:
+              | $identifier_path($binding, ..., $rest, ...) $maybe_res_ann:
                   $body
                   ...
               | ...',
 
-  expr.macro 'fun ($kwopt_binding, ..., $maybe_rest) $maybe_res_ann:
+  expr.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
                 $body
                 ...',
 
   expr.macro 'fun
-              | ($binding, ..., $maybe_rest) $maybe_res_ann:
+              | ($binding, ..., $rest, ...) $maybe_res_ann:
                   $body
                   ...
               | ...',
@@ -101,13 +101,10 @@ normally bound to implement function calls.
     -: $annotation
     $$("ϵ"),
 
-  grammar maybe_rest:
+  grammar rest:
     $repetition_binding $$(@litchar{,}) $$(dots)
     & $list_binding
     ~& $map_binding
-    & $list_binding $$(@litchar{,}) ~& $map_binding
-    ~& $map_binding $$(@litchar{,}) & $list_binding
-    $$("ε")
 
 ){
 
@@ -196,7 +193,7 @@ normally bound to implement function calls.
   is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(maybe_rest) sequence contains @rhombus(& list_binding) or
+When a @rhombus(rest) sequence contains @rhombus(& list_binding) or
 @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), then the
 function or function alternative accepts any number of additional
 by-position arguments.
@@ -206,12 +203,16 @@ into a list value, and that list value is bound to the
 For @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), each
 variable in @rhombus(repetition_binding) is bound to a repetition that
 repeats access to that piece of each additional argument.
+Only one by-position rest binding, @rhombus(& list_binding) or
+@rhombus(repetition_binding $$(@litchar{,}) $$(dots_expr)), can appear
+in a @rhombus(rest) sequence.
 
-When a @rhombus(maybe_rest) sequence contains @rhombus(~& map_binding), then
+When a @rhombus(rest) sequence contains @rhombus(~& map_binding), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
 values are collected into a map value to be bound to
 @rhombus(map_binding).
+Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 @examples(
   ~label: #false,

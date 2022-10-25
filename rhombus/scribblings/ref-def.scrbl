@@ -72,11 +72,11 @@
   defn.macro 'def $binding:
                 $body
                 ...',
-  defn.macro 'def $identifier ($kwopt_binding, ...) $maybe_result_annotation:
+  defn.macro 'def $identifier ($kwopt_binding, ..., $rest, ...) $maybe_result_annotation:
                 $body
                 ...',
   defn.macro 'def
-              | $identifier ($binding, ...) $maybe_result_annotation:
+              | $identifier ($binding, ..., $rest, ...) $maybe_result_annotation:
                   $body
                   ...
               | ...',
