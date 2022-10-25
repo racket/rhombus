@@ -18,7 +18,8 @@ and @litchar{|} clauses, you can define a function that accepts a
 varying number of arguments. When using only those features, however,
 the allowed number of arguments is still a fixed set of small numbers.
 To define or call a function that accepts any number of arguments, use
-the @rhombus(...) repetition form or @rhombus(&) list-splicing form.
+the @rhombus(...) repetition form or @rhombus(&) list-splicing form after
+other arguments.
 
 For example, in the following definition of @rhombus(add), the argument
 @rhombus(x) is bound as a repetition, which allows any number of
@@ -34,17 +35,19 @@ arguments:
       add(1, 2, 3, 4)
     ~repl:
       val [n, ...]: [20, 30, 40]
-      add(10, n, ...)
+      add(10, n, ..., 50)
     ~repl:
       val ns: [20, 30, 40]
-      add(10, & ns)    
+      add(10, & ns, 50)
   )
 
 As illustrated in the calls to @rhombus(add), @rhombus(...) and
 @rhombus(&) work for function calls the same way that they work for
 constructors specifically. Elements of the repetition or list are
 spliced into the function call as separate arguments, as opposed to
-being passed as a list.
+being passed as a list. While only one of @rhombus(...) or @rhombus(&)
+can be used in a function definition, they can appear any number of
+times and in any order within a function call.
 
 A function doesn't have to accept an arbitrary number of arguments for
 @rhombus(...) or @rhombus(&) to work in a call to the function, as long
@@ -56,7 +59,7 @@ function expects.
   )
 
 The @rhombus(add) function could also be written with @rhombus(&) for
-its argument, like this:
+its argument instead of @rhombus(...), like this:
 
 @(demo:
     ~eval: args_eval
@@ -72,14 +75,6 @@ its argument, like this:
 Note that the annotation on @rhombus(x) as a repetition refers to an
 individual argument within the repetition, while the annotation on
 @rhombus(xs) refers to the whole list of arguments.
-
-In a function definition, either @rhombus(...) or @rhombus(&) can be
-used for arguments, but not both. Similarly, only @rhombus(...) or
-@rhombus(&) can be used in a function call.
-
-@aside{The limitation on calls is worth lifting, as well as the
- constraint that @rhombus(...) or @rhombus(&) appear at the end of the
- argument list in a call.}
 
 To create a function that works with any number of keyowrd arguments,
 use @rhombus(~&) to bind an argument that receives all additional
@@ -118,8 +113,16 @@ when chaining from one keyword-accepting function to another.
       shape_area(~type: "rectangle", ~width: 8.5, ~height: 11)
   )
 
+A function call can use @rhombus(~&) only once, but in any order compared
+to other arguments. A function definition can use @rhombus(~&) at most
+once, and only after all other arguments other than a @rhombus(&)
+argument or @rhombus(...) repetition argument. A @rhombus(~&) can appear
+in either order with a @rhombus(&) or @rhombus(...) argument.
+
 Functions can use @litchar{|} cases, annotations, and/or pattern
 matching to distinguish calls with the same number of arguments.
+Different cases use @rhombus(&), @rhombus(...), and @rhombus(~&)
+independently.
 
 @(demo:
     ~eval: args_eval
@@ -134,9 +137,5 @@ matching to distinguish calls with the same number of arguments.
       avg(1, 2, 6)
       avg(Posn(0, 0), Posn(1, 3), Posn(2, 0))
 )
-
-A function definition or call can use both @rhombus(&) and @rhombus(~&)
-in either order at the end of an argument sequence. A @rhombus(&) is
-not supported in combination with a @rhombus(...) repetition.
 
 @close_eval(args_eval)

@@ -10,6 +10,7 @@
          (submod "function.rkt" for-call)
          (submod "map-ref.rkt" for-ref)
          (submod "list.rkt" for-binding)
+         (submod "list.rkt" for-implicit)
          "setmap.rkt"
          (submod "map.rkt" for-binding)
          "literal.rkt"
@@ -166,3 +167,6 @@
    ;; binding
    (lambda (stxes)
      (parse-map-binding 'braces stxes "braces"))))
+
+(begin-for-syntax
+  (set-#%call-id! (quote-syntax #%call)))

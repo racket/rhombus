@@ -28,10 +28,14 @@ operator. These uses of square brackets are implemented by
 )
 
 @doc(
-  expr.macro '#{#%braces} {$key_expr: $val_expr, ...}',
-  expr.macro '#{#%braces} {$key_expr: $val_expr, ..., & $map_expr}',
-  expr.macro '#{#%braces} {$elem_expr, ...+}',
-  expr.macro '#{#%braces} {$elem_expr, ...+, & $set_expr}',
+  expr.macro '#{#%braces} {$key_val_or_splice, ...}',
+  grammar key_val_or_splice:
+    $key_expr: $val_expr
+    & $map_expr,
+  expr.macro '#{#%braces} {$expr_or_splice, ...+}',
+  grammar expr_or_splice:
+    $elem_expr
+    & $set_expr
 ){
 
  Constructs either a map or a set, depending on whether
@@ -39,14 +43,14 @@ operator. These uses of square brackets are implemented by
  @rhombus(elem_expr) is provided. If no elements are provided
  directly, the result is a map (not a set).
 
- When @rhombus(& map_expr) or @rhombus(& set_expr) appears at the end,
- the map or set produced by @rhombus(map_expr) @rhombus(set_expr) is
- included in the result map or set.
+ When @rhombus(& map_expr) or @rhombus(& set_expr) appears among the
+ content, the map or set produced by @rhombus(map_expr)
+ @rhombus(set_expr) is included in the result map or set.
 
  Mappings or elements are added to the result map or set left-to-right,
  which means that a later @rhombus(key_expr) or @rhombus(elem_expr) may
  replace one earlier in the sequence. This ordering applies to mappings
- or elements added via @rhombus(&), too.
+ or elements spliced via @rhombus(&), too.
  
  @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
@@ -86,16 +90,16 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  expr.macro 'Map{$key_expr: $value_expr, ...}',
-  expr.macro 'Map{$key_expr: $value_expr, ..., & $map_expr}',
+  expr.macro 'Map{$key_val_or_splice, ...}',
+  grammar key_val_or_splice:
+    $key_expr: $val_expr
+    @rhombus(&) $map_expr,
   fun Map([key :: Any, value :: Any], ...) :: Map
 ){
 
  Constructs an immutable map containing given keys mapped to the given
- values, equivalent to using @rhombus({key_expr: value_expr, ...}) for
- the form without @rhombus(&) rest, or equivalent to using
- @rhombus({key_expr: value_expr, ..., & map_expr}) for the form with
- @rhombus(&) rest.
+ values, equivalent to using @rhombus({key_val_or_splice, ...}) for the
+ @rhombus({}) form, or @rhombus({key: value, ...}) for the function form.
 
 @examples(
   val m: Map{"x": 1, "y": 2},

@@ -9,7 +9,6 @@
                      "with-syntax.rkt"
                      "tag.rkt")
          racket/unsafe/undefined
-         (only-in racket/dict keyword-apply/dict)
          "parens.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -27,6 +26,8 @@
          "repetition.rkt"
          "rest-marker.rkt"
          (only-in "list.rkt" List)
+         (only-in (submod "list.rkt" for-binding)
+                  parse-list-expression)
          (submod "annotation.rkt" for-class)
          (only-in "equal.rkt"
                   [= rhombus=])
@@ -678,18 +679,20 @@
   (syntax-parse stxes
     #:datum-literals (group op)
     #:literals (& ~& rhombus...)
+    [(_ (head::parens rand ...) . tail)
+     #:when (complex-argument-splice? #'(rand ...))
+     (values (complex-argument-splice-call rator-in #'head #'(rand ...))
+             #'tail)]
     [(_ (head::parens rand ...
-                      {~alt {~once (group (op &) rst ...)}
-                            {~once (group (op ~&) kwrst ...)}}
-                      ...)
+                      (group (op &) rst ...)
+                      (group (op ~&) kwrst ...))
         . tail)
      (generate-call rator #'head #'(rand ...) #'(group rst ...) #f
-                    #'(group kwrst ...)
+                    #'(group kwrst ...) #t
                     #'tail)]
     [(_ (head::parens rand ...
-                      {~alt {~once {~seq rep (group (op (~and dots rhombus...)))}}
-                            {~once (group (op ~&) kwrst ...)}}
-                      ...)
+                      rep (group (op (~and dots rhombus...)))
+                      (group (op ~&) kwrst ...))
         . tail)
      (generate-call rator #'head #'(rand ...) #'rep #'dots
                     #'(group kwrst ...)
@@ -721,10 +724,10 @@
                [rsts (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]
                [else #''()]))
            (datum->syntax (quote-syntax here)
-                          (append (list #'keyword-apply/dict rator)
-                                  (list kwrest-args)
-                                  (syntax->list #'(arg-form ... ...))
-                                  (list rest-args))
+                          (list (append (list #'keyword-apply/map rator)
+                                        (syntax->list #'(arg-form ... ...))
+                                        (list rest-args))
+                                kwrest-args)
                           (span-srcloc rator head)
                           head)]
           [rsts
@@ -746,3 +749,118 @@
                                       #'()))
       (values (wrap-static-info* e result-static-infos)
               tail))))
+
+(define-for-syntax (complex-argument-splice? gs-stx)
+  ;; multiple `&` or `...`, or not at the end before `~&`,
+  ;; or `~&` that's not at the very end?
+  (define (not-kw-splice-only? gs-stx)
+    (syntax-parse gs-stx
+      #:datum-literals (group op)
+      #:literals (~&)
+      [((group (op ~&) rand ...+)) #f]
+      [() #f]
+      [_ #t]))
+  (let loop ([gs-stx gs-stx] [saw-kw-splice? #f])
+    (syntax-parse gs-stx
+      #:datum-literals (group op)
+      #:literals (& ~& rhombus...)
+      [() #f]
+      [((group (op &) rand ...+) . gs)
+       (or (loop #'gs saw-kw-splice?) (not-kw-splice-only? #'gs))]
+      [(g0 (group (op rhombus...)) . gs)
+       (or (loop #'gs saw-kw-splice?) (not-kw-splice-only? #'gs))]
+      [((group (op (~and splice ~&)) rand ...+) . gs)
+       (when saw-kw-splice?
+         (raise-syntax-error '|function call|
+                             "duplicate keyword-rgument splice"
+                             #'splice))
+       (or (loop #'(g . gs) #t)  (pair? (syntax-e #'gs)))]
+      [(_ . gs) (loop #'gs saw-kw-splice?)])))
+
+(define-for-syntax (complex-argument-splice-call rator head gs-stx)
+  (define (gen-id) (car (generate-temporaries '(arg))))
+  (let loop ([gs-stx gs-stx]
+             [rev-args '()])
+    (syntax-parse gs-stx
+      #:datum-literals (group op)
+      #:literals (& ~& rhombus...)
+      [()
+       (define args (reverse rev-args))
+       #`(let #,(for/list ([arg (in-list args)])
+                  #`[#,(car arg) #,(caddr arg)])
+             #,(let ([lists? (for/or ([arg (in-list args)])
+                               (eq? 'list (cadr arg)))])
+                 (define-values (term ignored-tail)
+                   (generate-call rator head
+                                  (append
+                                   (if lists?
+                                       null
+                                       (for/list ([arg (in-list args)]
+                                                  #:when (eq? (cadr arg) 'arg))
+                                         #`(group (parsed #,(car arg)))))
+                                   (for/list ([arg (in-list args)]
+                                              #:when (eq? (cadr arg) 'kw))
+                                     #`(group #,(list-ref arg 3)
+                                              (block (group (parsed #,(car arg)))))))
+                                  (and lists?
+                                       #`(group
+                                          (parsed
+                                           (append
+                                            #,@(for/list ([arg (in-list args)]
+                                                          #:when (or (eq? (cadr arg) 'arg)
+                                                                     (eq? (cadr arg) 'list)))
+                                                 (cond
+                                                   [(eq? (cadr arg) 'arg)
+                                                    #`(list #,(car arg))]
+                                                   [else
+                                                    (car arg)]))))))
+                                  #f
+                                  (for/or ([arg (in-list args)]
+                                           #:when (eq? (cadr arg) 'kws))
+                                    #`(group (parsed #,(car arg))))
+                                  #'#f))
+                 term))]
+      [(((~and tag group) (op &) rand ...+) . gs)
+       (loop #'gs
+             (cons (list (gen-id) 'list #'(rhombus-expression (tag rand ...)) #f)
+                   rev-args))]
+      [(g0 (group (op (~and dots rhombus...))) . gs)
+       (loop #'gs
+             (cons (list (gen-id) 'list (repetition-as-list #'dots #'g0 1))
+                   rev-args))]
+      [(((~and tag group) (op ~&) rand ...+) . gs)
+       (loop #'gs
+             (cons (list (gen-id) 'kws #'(rhombus-expression (tag rand ...)))
+                   rev-args))]
+      [((group kw:keyword (tag::block body ...)) . gs)
+       (loop #'gs
+             (cons (list (gen-id) 'kw #'(rhombus-body-at tag body ...) #'kw)
+                   rev-args))]
+      [(g . gs)
+       (loop #'gs
+             (cons (list (gen-id) 'arg #'(rhombus-expression g))
+                   rev-args))])))
+  
+(define keyword-apply/map
+  (make-keyword-procedure
+   (lambda (kws kw-args proc . args+rest)
+     ;; currying makes it easier to preserve order when `~&` is last
+     (lambda (kw-ht)
+       (define all-kw-ht
+         (for/fold ([ht kw-ht]) ([kw (in-list kws)]
+                                 [arg (in-list kw-args)])
+           (when (hash-ref kw-ht kw #f)
+             (raise-mismatch-error
+              '|function call|
+              "keyword duplicated in spliced map and direct keyword arguments: "
+              kw))
+           (hash-set ht kw arg)))
+       (define all-kws (sort (append kws (hash-keys kw-ht)) keyword<?))
+       (keyword-apply proc
+                      all-kws
+                      (for/list ([kw (in-list all-kws)])
+                        (hash-ref all-kw-ht kw))
+                      (let loop ([args+rest args+rest])
+                        (cond
+                          [(null? (cdr args+rest)) (car args+rest)]
+                          [else (cons (car args+rest) (loop (cdr args+rest)))])))))))

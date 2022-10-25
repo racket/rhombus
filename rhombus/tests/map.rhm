@@ -58,3 +58,37 @@ begin:
   check:
     dynamic({"a": 1, "b": 2})["a"]
     1
+
+// See also tests in "rest-args.rhm"
+begin:
+  check:
+    {"a": 1, "b": 2, &{"c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {"a": 1, &{"b": 2, "c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {&{"b": 2, "c": 3}, "a": 1}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {&{"b": 2}, "a": 1, &{"c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {"c": "oops", "b": "oops", &{"b": 2}, "a": 1, &{"c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {"b": "oops", &{"b": 2}, "c": "oops", "a": 1, &{"c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    {&{"b": "oops"}, "c": "oops", "b": 2, "a": 1, &{"c": 3}}
+    {"a": 1, "b": 2, "c": 3}
+  check:
+    val mutable x: []
+    [{&(begin: x := [1, x]; {"b": 2}), (begin: x:= [2, x]; "a"): 1, &(begin: x:= [3, x]; {"c": 3})},
+     x]
+    [{"a": 1, "b": 2, "c": 3},
+     [3, [2, [1, []]]]]
+  check:
+    ~exn
+    {&"oops"}
+    "not a map"

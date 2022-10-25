@@ -26,13 +26,11 @@ normally bound to implement function calls.
 
 
 @doc(
-  expr.macro '$fun_expr #{#%call} ($arg, ..., $rest, ...)',
+  expr.macro '$fun_expr #{#%call} ($arg, ...)',
 
   grammar arg:
     $arg_expr
-    $keyword: $arg_expr,
-
-  grammar rest:
+    $keyword: $arg_expr
     $repetition $$(@litchar{,}) $$(dots_expr)
     & $list_expr
     ~& $map_expr
@@ -42,20 +40,17 @@ normally bound to implement function calls.
   argument, and each @rhombus(keyword: arg_expr) combination is a
   by-keyword argument.
 
-  If the @rhombus(rest) sequence contains @rhombus(& list_expr) or
+  If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
   @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the
-  elements of the list or repetition are used as additional
-  by-position arguments, in order after the @rhombus(arg_expr)
-  arguments. Only one by-position rest argument, either @rhombus(& list_expr) or 
-  @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), can appear
-  in a @rhombus(rest) sequence.
+  elements of the list or @tech{repetition} are spliced into the
+  call as separate by-position arguments.
 
-  If the @rhombus(rest) sequence contains @rhombus(~& map_expr), then
+  If the @rhombus(arg) sequence contains @rhombus(~& map_expr), then
   all the keys in @rhombus(map_expr) must be keywords, and they must
   not overlap with the directly supplied @rhombus(keyword)s.
   The keyword-value pairs are passed into the function as additional
   keyword arguments. Only one @rhombus(~& map_expr) can appear
-  in a @rhombus(rest) sequence.
+  in an @rhombus(arg) sequence.
   
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 

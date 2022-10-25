@@ -5,14 +5,14 @@
                      "srcloc.rkt")
          "expression.rkt"
          "parse.rkt"
-         (submod "map.rkt" append)
+         (submod "map.rkt" for-build)
          "map-ref-set-key.rkt"
          "ref-result-key.rkt"
          "static-info.rkt"
          (only-in "assign.rkt"
                   :=)
          (submod "set.rkt" for-ref)
-         (submod "set.rkt" append)
+         (submod "set.rkt" for-build)
          "realm.rkt")
 
 (provide ++)

@@ -44,8 +44,8 @@ set, the ``key'' is removed from the set if the assigned value is
 @rhombus(#false), otherwise the ``key'' is added to the set.
 
 Within a set construction using @litchar("{")...@litchar("}"), a
-@rhombus(&) form references the ``rest'' of the set analogous to the way
-@rhombus(&) works for list constructions.
+@rhombus(&) form splice a set into the constructed set, analogous to the
+way @rhombus(&) works for list constructions.
 
 @(demo:
     ~eval: set_eval

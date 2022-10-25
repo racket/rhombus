@@ -47,6 +47,12 @@
 (module+ for-builtin
   (provide map-method-table))
 
+(module+ for-build
+  (provide hash-append
+           hash-append/proc
+           hash-extend*
+           hash-assert))
+
 (define map-method-table
   (hash 'length (method1 hash-count)
         'values (method1 hash-values)
@@ -131,21 +137,15 @@
      (syntax-parse stx
        #:datum-literals (braces)
        [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape args maybe-rest)
-          (parse-setmap-content #'content
-                                #:shape 'map
-                                #:who (syntax-e #'form-id)))
-        (define without-rest
-          (wrap-static-info*
-           (quasisyntax/loc stx
-             (Map-build #,@args))
-           map-static-info))
-        (values (if maybe-rest
-                    (wrap-static-info*
-                     (quasisyntax/loc stx
-                       (hash-append #,without-rest #,maybe-rest))
-                     map-static-info)
-                    without-rest)
+        (define-values (shape argss) (parse-setmap-content #'content
+                                                           #:shape 'map
+                                                           #:who (syntax-e #'form-id)))
+        (values (build-setmap stx argss
+                              #'Map-build
+                              #'hash-extend*
+                              #'hash-append
+                              #'hash-assert
+                              map-static-info)
                 #'tail)]
        [(_ . tail) (values #'Map #'tail)]))))
 
@@ -209,17 +209,19 @@
      (syntax-parse stx
        #:datum-literals (braces)
        [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape args maybe-rest)
+        (define-values (shape argss)
           (parse-setmap-content #'content
                                 #:shape 'map
                                 #:who (syntax-e #'form-id)))
-        (when maybe-rest
+        (unless (or (null? argss)
+                    (and (pair? (car argss))
+                         (null? (cdr argss))))
           (raise-syntax-error (syntax-e #'form-id)
                               "& rest is not supported on mutable maps"
                               #'content))
         (values (wrap-static-info*
                  (quasisyntax/loc stx
-                   (hash-copy (Map-build #,@args)))
+                   (hash-copy (Map-build #,@(car argss))))
                  mutable-map-static-info)
                 #'tail)]
        [(_ . tail) (values #'MutableMap #'tail)]))))
@@ -365,5 +367,21 @@
   (for/fold ([ht map1]) ([(k v) (in-hash map2)])
     (hash-set ht k v)))
 
-(module+ append
-  (provide hash-append hash-append/proc))
+(define hash-extend*
+  (case-lambda
+    [(ht key val) (hash-set ht key val)]
+    [(ht . args) (hash-extend*/proc ht args)]))
+
+(define (hash-extend*/proc ht args)
+  (let loop ([ht ht] [args args])
+    (cond
+      [(null? args) ht]
+      [(null? (cdr args)) (error 'hash-extend* "argument count went wrong")]
+      [else (loop (hash-set ht (car args) (cadr args)) (cddr args))])))
+
+(define (hash-assert v)
+  (unless (hash? v)
+    (raise-arguments-error* 'Map rhombus-realm
+                            "not a map for splicing"
+                            "value" v))
+  v)

@@ -28,25 +28,19 @@ to append lists.
 
 @doc(
   fun List(v :: Any, ...) :: List,
-  fun List(v :: Any, ..., rest) :: List,
-  expr.macro '#{#%brackets} [$v_expr, ...]',
-  expr.macro '#{#%brackets} [$v_expr, ..., $rest]',
+  expr.macro '#{#%brackets} [$expr_or_splice, ...]',
 
-  grammar rest:
+  grammar expr_or_splice:
+    $expr
     $repetition $$(@litchar{,}) $$(dots_expr)
-    & $list_expr    
+    & $list_expr
 ){
 
- Constructs a list of the given @rhombus(v)s values or results of
- the @rhombus(v_expr)s expressions.
-
- When @dots_expr appears at the end, the preceding position is a
- @tech{repetition} position, and all elements of the repetition are
- included in order at the end of the list.
-
- When @rhombus(& list_expr) appears at the end, all the elements of
- the list produced by @rhombus(list_expr) are included in order at the
- end of the list.
+ Constructs a list of the given @rhombus(v)s values or results of the
+ @rhombus(expr_or_rest)s expressions. A @rhombus(&) or @dots_expr form
+ can appear within @rhombus([]) to splice a @tech{repetition} or existing list
+ into the constructed list, the same as in a function call (see
+ @rhombus(#{#%call})).
  
  @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
 
@@ -72,8 +66,8 @@ to append lists.
 
  Matches a list with as many elements as @rhombus(binding)s, or if
  @rhombus(rest) is included, at least as many elements as
- @rhombus(binding)s, where the @rhombus(rest) matches the rest of the
- list.
+ @rhombus(binding)s, where the @rhombus(rest) (if present) matches the
+ rest of the list.
 
  @see_implicit(@rhombus(#{#%brackets}, ~bind), @rhombus([]), "binding")
 

@@ -21,7 +21,8 @@
          (submod "dot.rkt" for-dot-provider)
          "parse.rkt"
          "dot-parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "parens.rkt")
 
 (provide List
          (for-space rhombus/annotation List)
@@ -37,6 +38,9 @@
 
 (module+ for-builtin
   (provide list-method-table))
+
+(module+ for-implicit
+  (provide (for-syntax set-#%call-id!)))
 
 (define list-method-table
   (hash 'length (method1 length)
@@ -76,12 +80,19 @@
    #'List
    '((default . stronger))
    'macro
-   ;; expression - special case for `...`
+   ;; expression - special cases optimize for `...` and `&`;
+   ;; letting it expand instead to `(apply list ....)` is not
+   ;; so bad, but but we can avoid a `list?` check in `apply`,
+   ;; and we can expose more static information this way
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens group op)
-       #:literals (rhombus...)
-       [(form-id (parens _ ... _ (group (op rhombus...))) . tail)
+       #:literals (rhombus... &)
+       [(form-id (tag::parens _ ... _ (group (op rhombus...))) . tail)
+        (free-identifier=? #%call-id (datum->syntax #'tag '#%call))
+        (parse-list-expression stx)]
+       [(form-id (tag::parens _ ... (group (op &) _ ...)) . tail)
+        (free-identifier=? #%call-id (datum->syntax #'tag '#%call))
         (parse-list-expression stx)]
        [(_ . tail)
         (values #'list #'tail)]))
@@ -227,6 +238,36 @@
   (syntax-parse stx
     #:datum-literals (group op)
     #:literals (& rhombus...)
+    [(form-id (tag arg ...) . tail)
+     #:when (complex-argument-splice? #'(arg ...))
+     ;; general case: multiple `...` or `&`, or at least one of those not at the end:
+     (let loop ([gs-stx #'(arg ...)] [accum-values '()] [accum-lists '()])
+       (define (build-list)
+         (with-syntax ([(arg ...) (reverse accum-values)])
+           #`(list arg ...)))
+       (syntax-parse gs-stx
+         #:datum-literals (group op)
+         #:literals (& rhombus...)
+         [()
+          (cond
+            [(null? accum-values)
+             (with-syntax ([(lst ...) (reverse accum-lists)])
+               (values (wrap-list-static-info
+                        (quasisyntax/loc #'tag
+                          (append lst ...)))
+                       #'tail))]
+            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
+         [((group (op &) rand ...+) . gs)
+          (cond
+            [(null? accum-values)
+             (loop #'gs '() (cons #'(assert-list (rhombus-expression (group rand ...))) accum-lists))]
+            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
+         [(rep-arg (group (op rhombus...)) . gs)
+          (cond
+            [(null? accum-values)
+             (loop #'gs '() (cons (repetition-as-list #'ellipses #'rep-arg 1) accum-lists))]
+            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
+         [(g . gs) (loop #'gs (cons #'(rhombus-expression g) accum-values) accum-lists)]))]
     [(form-id (tag arg ... (group (op &) rest-arg ...)) . tail)
      (values (wrap-list-static-info
               (cond
@@ -237,7 +278,7 @@
                 [else
                  (quasisyntax/loc #'tag
                    (list* (rhombus-expression arg) ...
-                          (rhombus-expression (group rest-arg ...))))]))
+                          (assert-list (rhombus-expression (group rest-arg ...)))))]))
              #'tail)]
     [(form-id (tag arg ... rep-arg (group (op (~and ellipses rhombus...)))) . tail)
      (values (wrap-list-static-info
@@ -268,3 +309,23 @@
                                    (+ (syntax-e #'rep-info.use-depth) 1)
                                    #'rep-info.element-static-infos)
              #'tail)]))
+
+(define-for-syntax (complex-argument-splice? gs-stx)
+  (syntax-parse gs-stx
+    #:datum-literals (group op)
+    #:literals (& rhombus...)
+    [() #f]
+    [((group (op &) rand ...+) g . _) #t]
+    [(g0 (group (op rhombus...)) g . _) #t]
+    [(_ . gs) (complex-argument-splice? #'gs)]))
+
+(define (assert-list v)
+  (unless (list? v)
+    (raise-arguments-error* 'List rhombus-realm
+                            "not a set for splicing"
+                           "value" v))
+  v)
+
+(begin-for-syntax
+  (define #%call-id #f)
+  (define (set-#%call-id! id) (set! #%call-id id)))

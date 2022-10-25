@@ -319,6 +319,69 @@ check:
   4
 
 // ---------------------------
+// Mixing `...` and `&` and not at end
+
+check:
+  add(1, 2, &[3, 4], 5)
+  15
+
+check:
+  val [x, ...]: [3, 4]
+  add(1, 2, x, ..., 5)
+  15
+
+check:
+  add(&[-1, 1], 2, &[3, 4], 5)
+  14
+
+check:
+  val [x, ...]: [3, 4]
+  add(&[-1, 1], 2, x, ..., 5)
+  14
+
+check:
+  val mutable s: 0
+  [add(&(begin: s := [1, s]; [-1, 1]),
+       (begin: s := [2, s]; 2),
+       &(begin: s := [3, s]; [3, 4]),
+       (begin: s := [4, s]; 5)),
+   s]
+  [14, [4, [3, [2, [1, 0]]]]]
+
+// ---------------------------
+// `~&` not at end
+
+check:
+  val mutable s: 0
+  [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { keyword'~height': 10 })),
+   s]
+  [5, [2, [1, 0]]]
+
+check:
+  val mutable s: 0
+  [triangle_area(~& (begin: s := [2, s]; { keyword'~height': 10 }), ~base: (begin: s := [1, s]; 1)), 
+   s]
+  [5, [1, [2, 0]]]
+
+check:
+  val mutable s: 0
+  [anyargs(~& (begin: s := [1, s]; { keyword'~height': 10 }),
+           & (begin: s := [2, s]; [9, 10, 11]),
+           ~base: (begin: s := [3, s]; 1),
+           (begin: s := [4, s]; 8)),
+   s]
+  [[[9, 10, 11, 8], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+
+check:
+  val mutable s: 0
+  [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
+           ~& (begin: s := [2, s]; { keyword'~height': 10 }),
+           ~base: (begin: s := [3, s]; 1),
+           List.repet(begin: s := [4, s]; [8, 88]), ...),
+   s]
+  [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+
+// ---------------------------
 // Combinations of Positional and Keyword Rest
 
 // Positional rest can be either `&` rest or `...` repetition rest.
@@ -335,3 +398,4 @@ for:
   check:
     anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
     [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+

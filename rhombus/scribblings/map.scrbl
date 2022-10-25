@@ -31,8 +31,9 @@ for assignment.
 
 @rhombus(Array) is also an annotation and a binding contructor,
 analogous to @rhombus(List), and @rhombus(Array.of) is an annotation
-constructor. The @rhombus(Array) binding and expression constructors do
-not support @rhombus(..., ~bind) or @rhombus(&, ~bind).
+constructor. The @rhombus(Array, ~bind) binding form does not support
+@rhombus(..., ~bind) or @rhombus(&, ~bind), but the @rhombus(Array)
+constructor supports @rhombus(..., ~bind) and @rhombus(&, ~bind).
 
 The @rhombus(Map) constructor creates an immutable mapping of arbitrary
 keys to values. The term @deftech{map} is meant to be generic, and
@@ -141,9 +142,11 @@ using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
       locations["alice"]
   )
 
-In a map @litchar("{")...@litchar("}") constructor or
-pattern, a @rhombus(&) form references or binds a map for the ``rest''
-of the map analogous to the way @rhombus(&) works for lists.
+In a map @litchar("{")...@litchar("}") pattern, a @rhombus(&) form binds
+to map for the ``rest'' of the map, analogous to the way @rhombus(&)
+binds with lists. In a map @litchar("{")...@litchar("}") expression,
+@rhombus(&) splices in the content of another map, similar to the way
+@rhombus(&) works for list construction.
 
 @(demo:
     ~eval: map_eval
@@ -151,7 +154,7 @@ of the map analogous to the way @rhombus(&) works for lists.
       val {"bob": bob_home, & others}: neighborhood
     ~repl:
       others
-      {"clara": Posn(8, 2), & others}
+      {& others, "clara": Posn(8, 2)}
   )
 
 @close_eval(map_eval)

@@ -50,3 +50,34 @@ begin:
   check:
     dynamic({"a", "b"})["a"]
     #true
+
+// See also tests in "rest-args.rhm"
+begin:
+  check:
+    {"a", "b", &{"c"}}
+    {"a", "b", "c"}
+  check:
+    {"a", &{"b", "c"}}
+    {"a", "b", "c"}
+  check:
+    {&{"b", "c"}, "a"}
+    {"a", "b", "c"}
+  check:
+    {&{"b"}, "a", &{"c"}}
+    {"a", "b", "c"}
+  check:
+    {"c", "b", &{"b"}, "a", &{"c"}}
+    {"a", "b", "c"}
+  check:
+    {"b", &{"b"}, "c", "a", &{"c"}}
+    {"a", "b", "c"}
+  check:
+    val mutable x: []
+    [{&(begin: x := [1, x]; {"b"}), (begin: x:= [2, x]; "a"), &(begin: x:= [3, x]; {"c"})},
+     x]
+    [{"a", "b", "c"},
+     [3, [2, [1, []]]]]
+  check:
+    ~exn
+    Set{&"oops"}
+    "not a set"

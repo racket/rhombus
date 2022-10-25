@@ -38,6 +38,12 @@
   (provide (for-syntax set-static-info)
            Set-build))
 
+(module+ for-build
+  (provide set-append
+           set-append/proc
+           set-extend*
+           set-assert))
+
 (struct set (ht)
   #:property prop:equal+hash
   (list (lambda (self other eql? mode)
@@ -125,21 +131,15 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape args maybe-rest)
-          (parse-setmap-content #'content
-                                #:shape 'set
-                                #:who (syntax-e #'form-id)))
-        (define without-rest
-          (wrap-static-info*
-           (quasisyntax/loc stx
-             (Set-build #,@args))
-           set-static-info))
-        (values (if maybe-rest
-                    (wrap-static-info*
-                     (quasisyntax/loc stx
-                       (set-append #,without-rest #,maybe-rest))
-                     set-static-info)
-                    without-rest)
+        (define-values (shape argss) (parse-setmap-content #'content
+                                                           #:shape 'set
+                                                           #:who (syntax-e #'form-id)))
+        (values (build-setmap stx argss
+                              #'Set-build
+                              #'set-extend*
+                              #'set-append
+                              #'set-assert
+                              set-static-info)
                 #'tail)]
        [(_ . tail) (values #'Set #'tail)]))))
 
@@ -177,17 +177,19 @@
    (lambda (stx)
      (syntax-parse stx
        [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape args maybe-rest)
+        (define-values (shape argss)
           (parse-setmap-content #'content
                                 #:shape 'set
                                 #:who (syntax-e #'form-id)))
-        (when maybe-rest
+        (unless (or (null? argss)
+                    (and (pair? (car argss))
+                         (null? (cdr argss))))
           (raise-syntax-error (syntax-e #'form-id)
                               "& rest is not supported on mutable sets"
                               #'content))
         (values (wrap-static-info*
                  (quasisyntax/loc stx
-                   (MutableSet #,@args))
+                   (MutableSet #,@(car argss)))
                  mutable-set-static-info)
                 #'tail)]
        [(_ . tail) (values #'MutableSet #'tail)]))))
@@ -214,5 +216,18 @@
   (set (for/fold ([ht (set-ht set1)]) ([k (in-hash-keys (set-ht set2))])
          (hash-set ht k #t))))
 
-(module+ append
-  (provide set-append set-append/proc))
+(define set-extend*
+  (case-lambda
+    [(set1 val) (set (hash-set (set-ht set1) val #t))]
+    [(set1 . vals) (set-extend*/proc set1 vals)]))
+
+(define (set-extend*/proc set1 vals)
+  (set (for/fold ([ht (set-ht set1)]) ([k (in-list vals)])
+         (hash-set ht k #t))))
+
+(define (set-assert v)
+  (unless (set? v)
+    (raise-arguments-error* 'Set rhombus-realm
+                            "not a set for splicing"
+                            "value" v))
+  v)

@@ -72,7 +72,7 @@ operator works the same in bindings, too.
   )
 
 The last element in a @litchar{[}...@litchar{]} binding pattern can be
-@rhombus(...), which means zero or more repetitions of the preceding
+@rhombus(..., ~bind), which means zero or more repetitions of the preceding
 pattern.
 
 @(demo:
@@ -86,14 +86,15 @@ pattern.
       starts_milk(["apple", "coffee", "banana"])
   )
 
-Each variable in a pattern preceding @rhombus(...) is bound as a
+Each variable in a pattern preceding @rhombus(..., ~bind) is bound as a
 @tech{repetition}, which cannot be used like a plain variable.
 Instead, a repetition variable must be used in an expression form that
 supports using repetitions, typically with before @rhombus(...). For
 example, a @litchar{[}...@litchar{]} or @rhombus(List) expression (as
-opposed to binding) supports @rhombus(...) in place of a last element,
+opposed to binding) supports @rhombus(...) in place of an element,
 in which case the preceding element form is treated as a repetition
-that supplies the tail of the new list.
+that supplies elements for the new list.
+
 
 @(demo:
     ~defn:
@@ -107,17 +108,45 @@ that supplies the tail of the new list.
       got_milk(["apple", "coffee", "banana"])
   )
 
+While @rhombus(..., ~bind) can only be used at the end of a list in a
+binding, @rhombus(...) can be used anywhere in an expression, and it can
+be used multiple times.
+
+@(demo:
+    ~eval: list_eval
+    ~defn:
+      val [groceries, ...]: ["apple", "banana", "milk"]
+    ~repl:
+      [groceries, ..., "cupcake"]
+      [groceries, ..., groceries, ...]
+  )
+
+Instead of using @rhombus(...) in @litchar{[}...@litchar{]}
+or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
+or reference a plain list value whose elements are the rest of the list.
+
+@(demo:
+    ~eval: list_eval
+    ~defn:
+      val [x, & others]: [groceries, ...]
+    ~repl:
+      others
+      ["broccoli", & others ++ ["cupcake"], x]
+      ~error: [others, ...]
+      [groceries, ..., & ["pencil", "eraser"]]
+  )
+
+
 When @litchar{[}...@litchar{]} appears after an expression, then instead
 of forming a list, it accesses an element of an @tech{map} value.
 Lists are maps that are indexed by natural numbers starting with
 @rhombus(0):
 
 @(demo:
-    ~defn:
-      val groceries: ["apple", "banana", "milk"]
+    ~eval: list_eval
     ~repl:
-      groceries[0]
-      groceries[2]
+      others[0]
+      others[1]
   )
 
 Indexing with @litchar{[}...@litchar{]} is sensitive to binding-based
@@ -159,19 +188,6 @@ elements:
         [x, ...][n]
     ~repl:
       nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
-  )
-
-Instead of using @rhombus(...) at the end of @litchar{[}...@litchar{]}
-or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
-or reference a plain list value whose elements are the rest of the list.
-
-@(demo:
-    ~defn:
-      val [x, & others]: [1, 2, 3]
-    ~repl:
-      others
-      [0, & others ++ [100]]
-      ~error: [others, ...]
   )
 
 @close_eval(list_eval)

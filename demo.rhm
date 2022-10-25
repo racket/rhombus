@@ -465,6 +465,15 @@ if a_set[1] && !a_set[2]
 def [x, y, ...]: nums
 [y, ...]
 
+[100, 1000, & nums]
+[& nums, 0, & nums]
+[y, ..., 0, y, ...]
+
+{& also_also_map, 100: "hundred"}
+{100: "hundred", & also_also_map, & map }
+
+{& a_set, 0}
+
 (fun(y, z): z)(y, ...)
 
 def Array(ax, ay, az): nums_a

@@ -25,16 +25,17 @@ to be included in the set. These uses of square brackets are implemented by
 )
 
 @doc(
-  expr.macro 'Set{$value_expr, ...}',
-  expr.macro 'Set{$value_expr, ..., $rest}',
+  expr.macro 'Set{$expr_or_splice, ...}',
   fun Set(value:: Any, ...) :: Set,
 
-  grammar rest:
-    & $set_expr
+  grammar expr_or_splice:
+    $expr
+    & $set_expr  
 ){
 
  Constructs an immutable set containing given values, equivalent to
- using @rhombus({value_expr, ...}) to form a set.
+ using @rhombus({expr_or_splice, ...}) to form a set (see
+ @rhombus(#{#%braces})).
 
  Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
  while @rhombus({}) does not, since @rhombus({}) produces an empty map
