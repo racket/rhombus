@@ -45,13 +45,13 @@ normally bound to implement function calls.
   elements of the list or @tech{repetition} are spliced into the
   call as separate by-position arguments.
 
-  If the @rhombus(arg) sequence contains @rhombus(~& map_expr), then
-  all the keys in @rhombus(map_expr) must be keywords, and they must
-  not overlap with the directly supplied @rhombus(keyword)s.
-  The keyword-value pairs are passed into the function as additional
-  keyword arguments. Only one @rhombus(~& map_expr) can appear
-  in an @rhombus(arg) sequence.
-  
+  If the @rhombus(arg) sequence contains @rhombus(~& map_expr), then all
+  the keys in the map produced by @rhombus(map_expr) must be keywords, and
+  they must not overlap with the directly supplied @rhombus(keyword)s or
+  keywords in maps from other @rhombus(~& map_expr) arguments. The
+  keyword-value pairs are passed into the function as additional keyword
+  arguments.
+
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 
 @examples(

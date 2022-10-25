@@ -35,7 +35,8 @@
          "lambda-kwrest.rkt"
          "error.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "dot-parse.rkt")
+         "dot-parse.rkt"
+         "realm.rkt")
 
 (provide fun
          Function
@@ -760,22 +761,18 @@
       [((group (op ~&) rand ...+)) #f]
       [() #f]
       [_ #t]))
-  (let loop ([gs-stx gs-stx] [saw-kw-splice? #f])
+  (let loop ([gs-stx gs-stx])
     (syntax-parse gs-stx
       #:datum-literals (group op)
       #:literals (& ~& rhombus...)
       [() #f]
       [((group (op &) rand ...+) . gs)
-       (or (loop #'gs saw-kw-splice?) (not-kw-splice-only? #'gs))]
+       (or (loop #'gs) (not-kw-splice-only? #'gs))]
       [(g0 (group (op rhombus...)) . gs)
-       (or (loop #'gs saw-kw-splice?) (not-kw-splice-only? #'gs))]
+       (or (loop #'gs) (not-kw-splice-only? #'gs))]
       [((group (op (~and splice ~&)) rand ...+) . gs)
-       (when saw-kw-splice?
-         (raise-syntax-error '|function call|
-                             "duplicate keyword-rgument splice"
-                             #'splice))
-       (or (loop #'(g . gs) #t)  (pair? (syntax-e #'gs)))]
-      [(_ . gs) (loop #'gs saw-kw-splice?)])))
+       (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
+      [(_ . gs) (loop #'gs)])))
 
 (define-for-syntax (complex-argument-splice-call rator head gs-stx)
   (define (gen-id) (car (generate-temporaries '(arg))))
@@ -815,9 +812,13 @@
                                                    [else
                                                     (car arg)]))))))
                                   #f
-                                  (for/or ([arg (in-list args)]
-                                           #:when (eq? (cadr arg) 'kws))
-                                    #`(group (parsed #,(car arg))))
+                                  (let ([kwss (for/list ([arg (in-list args)]
+                                                         #:when (eq? (cadr arg) 'kws))
+                                                (car arg))])
+                                    (cond
+                                      [(null? kwss) #f]
+                                      [(null? (cdr kwss)) #`(group (parsed #,(car kwss)))]
+                                      [else #`(group (parsed (merge-keyword-argument-maps #,@kwss)))]))
                                   #'#f))
                  term))]
       [(((~and tag group) (op &) rand ...+) . gs)
@@ -840,7 +841,9 @@
        (loop #'gs
              (cons (list (gen-id) 'arg #'(rhombus-expression g))
                    rev-args))])))
-  
+
+(define function-call-who '|function call|)
+
 (define keyword-apply/map
   (make-keyword-procedure
    (lambda (kws kw-args proc . args+rest)
@@ -850,10 +853,9 @@
          (for/fold ([ht kw-ht]) ([kw (in-list kws)]
                                  [arg (in-list kw-args)])
            (when (hash-ref kw-ht kw #f)
-             (raise-mismatch-error
-              '|function call|
-              "keyword duplicated in spliced map and direct keyword arguments: "
-              kw))
+             (raise-arguments-error* function-call-who rhombus-realm
+                                     "duplicate keyword in spliced map and direct keyword arguments"
+                                     "keyword" kw))
            (hash-set ht kw arg)))
        (define all-kws (sort (append kws (hash-keys kw-ht)) keyword<?))
        (keyword-apply proc
@@ -864,3 +866,19 @@
                         (cond
                           [(null? (cdr args+rest)) (car args+rest)]
                           [else (cons (car args+rest) (loop (cdr args+rest)))])))))))
+
+(define (merge-keyword-argument-maps ht . hts)
+  (define (check-hash ht)
+    (unless (hash? ht)
+      (raise-arguments-error* function-call-who rhombus-realm
+                              "not a map for keyword arguments"
+                              "given" ht)))
+  (check-hash ht)
+  (for/fold ([accum-ht ht]) ([ht (in-list hts)])
+    (check-hash ht)
+    (for/fold ([accum-ht accum-ht]) ([(kw arg) (in-hash ht)])
+      (when (hash-ref accum-ht kw #f)
+        (raise-arguments-error* function-call-who rhombus-realm
+                                "duplicate keyword in in keyword-argument maps"
+                                "keyword" kw))
+      (hash-set accum-ht kw arg))))

@@ -113,11 +113,12 @@ when chaining from one keyword-accepting function to another.
       shape_area(~type: "rectangle", ~width: 8.5, ~height: 11)
   )
 
-A function call can use @rhombus(~&) only once, but in any order compared
-to other arguments. A function definition can use @rhombus(~&) at most
-once, and only after all other arguments other than a @rhombus(&)
-argument or @rhombus(...) repetition argument. A @rhombus(~&) can appear
-in either order with a @rhombus(&) or @rhombus(...) argument.
+A function call can use @rhombus(~&) any number of times, and in any
+order compared to other arguments. A function definition can use
+@rhombus(~&) at most once, and only after all other arguments other than
+a @rhombus(&) argument or @rhombus(...) repetition argument. A
+@rhombus(~&) for a function definition can appear in either order with a
+@rhombus(&) or @rhombus(...) argument.
 
 Functions can use @litchar{|} cases, annotations, and/or pattern
 matching to distinguish calls with the same number of arguments.

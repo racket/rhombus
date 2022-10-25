@@ -381,6 +381,37 @@ check:
    s]
   [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
 
+check:
+  val mutable s: 0
+  [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
+           ~& (begin: s := [2, s]; { keyword'~height': 10 }),
+           ~base: (begin: s := [3, s]; 1),
+           ~& (begin: s := [4, s]; { keyword'~width': 20 }),
+           List.repet(begin: s := [5, s]; [8, 88]), ...),
+   s]
+  [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10, keyword'~width': 20}],
+   [5, [4, [3, [2, [1, 0]]]]]]
+
+check:
+  ~exn
+  anyargs(~x: 10, ~&{keyword'~x': 10})
+  "duplicate keyword"
+
+check:
+  ~exn
+  anyargs(~&{keyword'~x': 10}, ~x: 10)
+  "duplicate keyword"
+
+check:
+  ~exn
+  anyargs(~&{keyword'~x': 10}, ~&{keyword'~x': 10})
+  "duplicate keyword"
+
+check:
+  ~exn
+  anyargs(~&{keyword'~x': 10}, ~&{keyword'~y': 10}, ~&{keyword'~x': 10})
+  "duplicate keyword"
+
 // ---------------------------
 // Combinations of Positional and Keyword Rest
 
