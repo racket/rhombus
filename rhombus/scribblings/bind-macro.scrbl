@@ -32,13 +32,13 @@ After an expressive set of binding forms are implemented with the
 low-level interface, however, many others can be implemented though
 simple expansion.
 
-The @rhombus(annotation.macro) form is similar to @rhombus(bind.macro), but for
+The @rhombus(annot.macro) form is similar to @rhombus(bind.macro), but for
 annotations. 
 
 @(rhombusblock:
     use_static
 
-    annotation.rule 'PosnList': 'List.of(Posn)'
+    annot.rule 'PosnList': 'List.of(Posn)'
 
     fun nth_x(ps -: PosnList, n):
       ps[n].x

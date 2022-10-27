@@ -8,6 +8,7 @@ This is the experimental Rhombus prototype using
 @table_of_contents()
 
 @include_section("overview.scrbl")
+@include_section("class-overview.scrbl")
 @include_section("static-overview.scrbl")
 @include_section("reference.scrbl")
 @include_section("ref-meta-lib.scrbl")

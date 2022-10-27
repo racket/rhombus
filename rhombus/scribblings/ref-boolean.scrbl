@@ -4,7 +4,7 @@
 @title{Booleans}
 
 @doc(
-  annotation.macro 'Boolean'
+  annot.macro 'Boolean'
 ){
 
   Matches @rhombus(#true) or @rhombus(#false)
@@ -44,6 +44,22 @@
 }
 
 @doc(
+  annot.macro '$left_annot || $right_annot'
+){
+
+ Creates an annotation that accepts a value satisfying either
+ @rhombus(left_annot) or @rhombus(right_annot). The static information
+ implied by the annotation is the intersection of information for
+ @rhombus(left_annot) and @rhombus(right_annot).
+
+@examples(
+  1 is_a (String || Integer),
+  1 is_a (Boolean || Integer)
+)
+
+}
+
+@doc(
   expr.macro '$expr && $expr'
 ){
 
@@ -78,6 +94,26 @@
 )
 
 }
+
+
+@doc(
+  annot.macro '$left_annot && $right_annot'
+){
+
+ Creates an annotation that accepts a value satisfying both
+ @rhombus(left_annot) and @rhombus(right_annot). The static information
+ implied by the annotation is the union of information for
+ @rhombus(left_annot) and @rhombus(right_annot), where information
+ from @rhombus(right_annot) takes precedence in cases where both
+ supply values for the same static-information key.
+
+@examples(
+  1 is_a (String && Integer),
+  Pair.cons(1, "hello") is_a (Pair.of(Integer, Any) && Pair.of(Any, String))
+)
+
+}
+
 
 @doc(
   operator (! v):: Boolean

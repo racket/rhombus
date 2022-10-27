@@ -25,7 +25,8 @@
            syntax-local-static-info
            extract-static-infos
            unwrap-static-infos
-           static-info-lookup))
+           static-info-lookup
+           static-infos-intersect))
 
 (provide define-static-info-syntax
          define-static-info-syntax/maybe)
@@ -93,7 +94,9 @@
       [_ e]))
 
   (define (static-info-lookup static-infos find-key)
-    (for/or ([static-info (in-list (syntax->list static-infos))])
+    (for/or ([static-info (in-list (if (syntax? static-infos)
+                                       (syntax->list static-infos)
+                                       static-infos))])
       (syntax-parse static-info
         [(key val) (and (free-identifier=? #'key find-key)
                         #'val)]
@@ -109,3 +112,46 @@
   (syntax-parse stx
     [(_ id) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
+
+
+(define-for-syntax (static-infos-intersect as bs)
+  (let ([bs (syntax->list bs)])
+    (for/list ([a (in-list (syntax->list as))]
+               #:when (syntax-parse a
+                        [(a-key a-val)
+                         (for/or ([b (in-list bs)])
+                           (syntax-parse b
+                             [(b-key b-val)
+                              (and (free-identifier=? #'a-key #'b-key)
+                                   (equal-static-info-value? #'a-val #'b-val))]
+                             [_ #f]))]
+                        [_ #f]))
+      a)))
+
+(define-for-syntax (equal-static-info-value? a b)
+  (cond
+    [(identifier? a)
+     (and (identifier? b)
+          (free-identifier=? a b))]
+    [(identifier? b) #f]
+    [(syntax? a)
+     (equal-static-info-value? (syntax-e a) b)]
+    [(syntax? b)
+     (equal-static-info-value? a (syntax-e b))]
+    [(null? a) (null? b)]
+    [(pair? a)
+     (and (pair? b)
+          (and (equal-static-info-value? (car a) (car b))
+               (equal-static-info-value? (cdr a) (cdr b))))]
+    [(vector? a)
+     (and (vector? b)
+          (= (vector-length a) (vector-length b))
+          (for/and ([ae (in-vector a)]
+                    [be (in-vector b)])
+            (equal-static-info-value? (car ae) (car be))))]
+    [(box? a)
+     (and (box? b)
+          (equal-static-info-value? (unbox a) (unbox b)))]
+    [else (equal? a b)]))
+
+        

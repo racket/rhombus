@@ -29,6 +29,7 @@
         "private/dot.rkt"
         "private/dynamic-static.rkt"
         "private/class.rkt"
+        "private/interface.rkt"
         "private/define.rkt"
         "private/value.rkt"
         "private/import.rkt"
@@ -46,6 +47,7 @@
         "private/assign.rkt"
         "private/equal.rkt"
         "private/function.rkt"
+        "private/rule.rkt"
         "private/begin.rkt"
         "private/cond.rkt"
         "private/match.rkt"
@@ -63,7 +65,9 @@
         "private/range.rkt"
         "private/parameterize.rkt"
         "private/boolean-pattern.rkt"
-        "private/eval.rkt")
+        "private/boolean-annotation.rkt"
+        "private/eval.rkt"
+        "private/printer.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

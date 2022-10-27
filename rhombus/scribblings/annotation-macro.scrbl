@@ -21,19 +21,19 @@ macro can use lower-level machinery to explicitly produce static
 information or manipulate static information produced by subannotation
 forms.
 
-The @rhombus(annotation.rule) or @rhombus(annotation.macro) form
+The @rhombus(annot.rule) or @rhombus(annot.macro) form
 defines an annotation. In the simplest case, the expansion of an
 annotation can be another annotation:
 
 @(demo:
     ~eval: ann_eval
     ~defn:
-      annotation.rule 'AlsoPosn': 'Posn'
+      annot.rule 'AlsoPosn': 'Posn'
     ~repl:
       Posn(1, 2) :: AlsoPosn
   )
 
-Note that @rhombus(annotation.rule) defines only an annotation. To make
+Note that @rhombus(annot.rule) defines only an annotation. To make
 @rhombus(AlsoPosn) also a binding operator, you can use @rhombus(bind.rule):
 
 @(demo:
@@ -47,7 +47,7 @@ Note that @rhombus(annotation.rule) defines only an annotation. To make
   )
 
 To define an annotation with explicit control over the associated
-predicate, use @rhombus(annotation_meta.pack_predicate). This
+predicate, use @rhombus(annot_meta.pack_predicate). This
 implementation if @rhombus(IsPosn) creates a new predicate that uses
 @rhombus(is_a) with @rhombus(Posn), so it checks whether something is a
 @rhombus(Posn) instance, but it doesn't act as a @rhombus(Posn)-like
@@ -56,8 +56,8 @@ binding form or constructor:
 @(demo:
     ~eval: ann_eval
     ~defn:
-      annotation.macro 'IsPosn $tail ...':
-        values(annotation_meta.pack_predicate('fun (x): x is_a Posn'),
+      annot.macro 'IsPosn $tail ...':
+        values(annot_meta.pack_predicate('fun (x): x is_a Posn'),
                '$tail ...')
     ~repl:
       fun get_x(p :: IsPosn): Posn.x(p)
@@ -65,10 +65,10 @@ binding form or constructor:
       ~error: get_x(10)
   )
 
-The @rhombus(annotation_meta.pack_predicate) takes an optional second
+The @rhombus(annot_meta.pack_predicate) takes an optional second
 argument, which is static information to associate with uses of the
 annotation. Static information (the second argument to
-@rhombus(annotation_meta.pack_predicate)) is a a parenthesized sequence of
+@rhombus(annot_meta.pack_predicate)) is a a parenthesized sequence of
 parenthesized two-group elements, where the first group in each element
 is a key and the second element is a value.
 
@@ -82,10 +82,10 @@ refers to a @rhombus(vector_dot_provider) that we will define:
 @(demo:
     ~eval: ann_eval
     ~defn:
-      annotation.macro 'Vector $tail ...':
-        values(annotation_meta.pack_predicate('fun (x): x is_a Posn',
-                                              '(($(statinfo_meta.dot_provider_key),
-                                                 vector_dot_provider))'),
+      annot.macro 'Vector $tail ...':
+        values(annot_meta.pack_predicate('fun (x): x is_a Posn',
+                                         '(($(statinfo_meta.dot_provider_key),
+                                            vector_dot_provider))'),
                '$tail ...')
   )
 
@@ -154,7 +154,7 @@ so we use @rhombus(statinfo_meta.pack) to pack it from a syntax-object
 representation.
 
 @aside{The @rhombus(statinfo_meta.wrap) and
- @rhombus(annotation_meta.pack_predicate) functions automatically pack for
+ @rhombus(annot_meta.pack_predicate) functions automatically pack for
  you, because they expect a syntax object that represents static
  information. The overall right-hand side result for
  @rhombus(statinfo.macro) is similarly automatically packed.}

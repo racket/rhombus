@@ -12,6 +12,9 @@
 
 (provide namespace)
 
+(module+ for-exports
+  (provide (for-syntax parse-exports)))
+
 (define-syntax namespace
   (definition-transformer
    (lambda (stx)

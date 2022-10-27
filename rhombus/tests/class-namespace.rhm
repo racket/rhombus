@@ -1,0 +1,42 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+  
+check:
+  class Posn(x, y):
+    export: origin
+  val origin: Posn(0, 0)
+  val p: Posn.origin
+  [p.x, p.y]
+  [0, 0]
+
+check:
+  interface Pointable:
+    fun zero(): 0
+    export: zero
+  Pointable.zero()
+  0
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    val x: 10
+    export: x
+  "conflicts with field name"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    method dist(): x+y
+    val dist: 10
+    export: dist
+  "conflicts with method name"
+
+check:
+  ~eval_exn
+  interface Pointable:
+    method zero(): 0
+    val zero: 0
+    export: zero
+  "conflicts with method name"

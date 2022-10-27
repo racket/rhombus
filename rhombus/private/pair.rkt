@@ -58,6 +58,7 @@
   ()
   #'pair? pair-static-infos
   2
+  #f
   (lambda (arg-id predicate-stxs)
     #`(and (#,(car predicate-stxs) (car #,arg-id))
            (#,(cadr predicate-stxs) (cdr #,arg-id))))

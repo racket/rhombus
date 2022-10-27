@@ -5,7 +5,7 @@
 
 
 @doc(
-  annotation.macro 'String'
+  annot.macro 'String'
 ){
 
   Matches strings.

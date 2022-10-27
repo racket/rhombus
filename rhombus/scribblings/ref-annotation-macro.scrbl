@@ -10,10 +10,10 @@
 @title{Annotation Macros}
 
 @doc(
-  defn.macro '«annotation.rule $rule_pattern:
+  defn.macro '«annot.rule $rule_pattern:
                  $option; ...
                  '$template'»',
-  defn.macro '«annotation.rule
+  defn.macro '«annot.rule
                | $rule_pattern:
                    $option; ...
                    '$template'
@@ -28,7 +28,7 @@
 
 @examples(
   ~eval: macro_eval,
-  annotation.rule 'two_of($ann)':
+  annot.rule 'two_of($ann)':
     'matching(List(_ :: $ann, _ :: $ann))',
   [1, 2] :: two_of(Number),
   ~error: [1, 2, 3] :: two_of(Number),
@@ -39,11 +39,11 @@
 
 
 @doc(
-  defn.macro 'annotation.macro $rule_pattern:
+  defn.macro 'annot.macro $rule_pattern:
                 $option; ...
                 $body
                 ...',
-  defn.macro 'annotation.macro
+  defn.macro 'annot.macro
               | $rule_pattern:
                   $option; ...
                   $body
@@ -52,13 +52,13 @@
 ){
 
  Like @rhombus(expr.macro), but producing an annotation like
- @rhombus(annotation.rule), instead of an expression.
+ @rhombus(annot.rule), instead of an expression.
  
 }
 
 @doc(
-  fun annotation_meta.pack_predicate(fun_stx:: Syntax,
-                                     statinfo_stx :: Syntax = '()') :: Syntax
+  fun annot_meta.pack_predicate(fun_stx:: Syntax,
+                                statinfo_stx :: Syntax = '()') :: Syntax
 ){
 
  @provided_meta()

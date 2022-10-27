@@ -23,7 +23,7 @@
 (provide define-operator-definition-transformer
          define-identifier-syntax-definition-transformer
          define-identifier-syntax-definition-sequence-transformer
-         
+
          (for-syntax parse-operator-definition
                      parse-operator-definitions
                      :operator-syntax-quote
@@ -169,7 +169,7 @@
     #`'#,(string->symbol (keyword->string (syntax-e assc)))))
 
 ;; parse one case (possibly the only case) in a macro definition
-(define-for-syntax (parse-one-macro-definition kind)
+(define-for-syntax (parse-one-macro-definition kind allowed)
   (lambda (g rhs)
     (syntax-parse g
       #:datum-literals (group op parens quotes)
@@ -177,6 +177,10 @@
       [(group (op _::$+1) left:identifier
               op-name::operator-or-identifier-or-$
               . tail-pattern)
+       (unless (memq 'infix allowed)
+         (raise-syntax-error #f
+                             "infix pattern is not allowed"
+                             g))
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
           #`(pre-parsed op-name.name
@@ -193,6 +197,10 @@
       ;; prefix protocol
       [(group op-name::operator-or-identifier-or-$
               . tail-pattern)
+       (unless (memq 'prefix allowed)
+         (raise-syntax-error #f
+                             "prefix pattern is not allowed"
+                             g))
        (syntax-parse rhs
          [((~and tag block) opt::macro-prefix-operator-options rhs ...)
           #`(pre-parsed op-name.name
@@ -225,18 +233,24 @@
     [(_ name . _) #'name]))
 
 ;; single-case macro definition:
-(define-for-syntax (parse-operator-definition kind g rhs in-space compiletime-id)
-  (define p ((parse-one-macro-definition kind) g rhs))
+(define-for-syntax (parse-operator-definition kind g rhs in-space compiletime-id
+                                              #:allowed [allowed '(prefix infix)])
+  (define p ((parse-one-macro-definition kind allowed) g rhs))
   (define op (pre-parsed-name p))
-  #`(define-syntax #,(in-space op) (#,compiletime-id #,p)))
+  (if compiletime-id
+      #`(define-syntax #,(in-space op) (#,compiletime-id #,p))
+      p))
 
 ;; multi-case macro definition:
-(define-for-syntax (parse-operator-definitions kind stx gs rhss in-space compiletime-id)
-  (define ps (map (parse-one-macro-definition kind)
+(define-for-syntax (parse-operator-definitions kind stx gs rhss in-space compiletime-id
+                                               #:allowed [allowed '(prefix infix)])
+  (define ps (map (parse-one-macro-definition kind allowed)
                   gs rhss))
   (check-consistent stx (map pre-parsed-name ps) "operator")
-  #`(define-syntax #,(in-space (pre-parsed-name (car ps)))
-      (#,compiletime-id #,stx #,@ps)))
+  (if compiletime-id
+      #`(define-syntax #,(in-space (pre-parsed-name (car ps)))
+          (#,compiletime-id #,stx #,@ps))
+      ps))
 
 ;; An operator definition transformer involves a phase-0 binding for
 ;; the definition form, and a phase-1 binding for the transformer for

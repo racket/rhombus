@@ -19,7 +19,8 @@
          (submod "value.rkt" for-define)
          "syntax.rkt"
          "dotted-sequence-parse.rkt"
-         (submod "expression-syntax.rkt" for-define))
+         (submod "expression-syntax.rkt" for-define)
+         (only-in "entry-point.rkt" no-adjustments))
 
 (provide (rename-out [rhombus-define def]))
 
@@ -49,7 +50,8 @@
         (list
          (wrap-definition
           #`(define #,the-id
-              #,(build-case-function the-id
+              #,(build-case-function no-adjustments
+                                     the-id
                                      #'((arg.kw ...) ...)
                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
                                      #'(rest.arg ...) #'(rest.parsed ...)
@@ -65,7 +67,8 @@
         (list
          (wrap-definition
           #`(define id.name
-              #,(build-function #'id.name
+              #,(build-function no-adjustments
+                                #'id.name
                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                 #'rest.arg #'rest.parsed
                                 #'rest.kwarg #'rest.kwparsed

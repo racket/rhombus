@@ -13,15 +13,18 @@
          (for-syntax "name-root.rkt")
          "parse.rkt")
 
-(provide annotation
-         (for-syntax annotation_meta))
+(provide annot
+         (for-syntax annot_meta))
 
-(define-simple-name-root annotation
+(module+ for-class
+  (provide (for-syntax make-annotation-prefix-operator)))
+
+(define-simple-name-root annot
   rule
   macro)
 
 (begin-for-syntax
-  (define-simple-name-root annotation_meta
+  (define-simple-name-root annot_meta
     pack_predicate))
 
 (define-operator-definition-transformer rule
@@ -76,5 +79,5 @@
   
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
   #`(parsed #,(annotation-form (wrap-expression predicate)
-                               (pack-static-infos (unpack-term static-infos 'annotation.pack_predicate #f)
-                                                  'annotation.pack_predicate))))
+                               (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
+                                                  'annot.pack_predicate))))

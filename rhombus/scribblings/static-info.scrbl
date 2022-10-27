@@ -203,7 +203,7 @@ in the case that there's a single element binding pattern followed by
 @rhombus(...), while @rhombus(Array) and @rhombus(Map) as pattern
 constructors cannot use ``downward'' information.
 
-The @rhombus(::, ~bind) binding form and the @rhombus(matching, ~ann) annotation form
+The @rhombus(::, ~bind) binding form and the @rhombus(matching, ~annot) annotation form
 allow static information to flow both ``downward'' and ``upward''
 through both annotations and binding patterns.
 

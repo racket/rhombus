@@ -17,9 +17,9 @@
 
 Besides classes defined with @rhombus(class), a few predefined
 annotations work with the @rhombus(-:, ~bind) and @rhombus(::, ~bind)
-annotation operators, including @rhombus(Integer, ~ann) (meaning exact
-integer), @rhombus(Number, ~ann), @rhombus(String, ~ann),
-@rhombus(Keyword, ~ann), and @rhombus(Any, ~ann) (meaning any value).
+annotation operators, including @rhombus(Integer, ~annot) (meaning exact
+integer), @rhombus(Number, ~annot), @rhombus(String, ~annot),
+@rhombus(Keyword, ~annot), and @rhombus(Any, ~annot) (meaning any value).
 
 The @rhombus(-:) and @rhombus(::) operators also work in expression
 positions. In that case, the assertion or check is about the expression

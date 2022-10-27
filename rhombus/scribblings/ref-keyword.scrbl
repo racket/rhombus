@@ -9,7 +9,7 @@ produces a keyword value. Keywords are always interned, and they are
 equal by @rhombus(==) only when they are equal by @rhombus(===).
 
 @doc(
-  annotation.macro 'Keyword'
+  annot.macro 'Keyword'
 ){
 
   Matches keyword values.

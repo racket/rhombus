@@ -1,0 +1,157 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+
+begin:
+  class Posn(x, y):
+    property
+    | is_origin():
+        x == 0 && y == 0
+    | is_origin(at):
+        if (if at | is_origin() | !is_origin())
+        | #void
+        | "no!"
+    method is_at_origin():
+      is_origin()
+    method at_this_origin():
+      this.is_origin
+    final property is_origin_dont_ask_again():
+      is_origin()
+  check:
+    val p: Posn(1, 2)
+    [p.is_origin,
+     p.is_at_origin(),
+     p.at_this_origin(),
+     Posn.is_origin(p),
+     Posn.is_at_origin(p),
+     p.is_origin_dont_ask_again,
+     p.is_origin := "somewhere"]
+    [#false, #false, #false, #false, #false, #false,
+     "no!"]
+  check:
+    use_dynamic
+    [dynamic(Posn(0, 0)).is_origin,
+     dynamic(Posn(0, 0)).is_at_origin(),
+     begin:
+       val proc: Posn(0, 1).is_at_origin
+       proc(),
+     dynamic(Posn(0, 0)).is_origin_dont_ask_again]
+    [#true, #true, #false, #true]
+
+begin:
+  class Posn(x, y):
+    nonfinal
+    internal _Posn
+    property is_origin():
+      x == 0 && y == 0
+  class Posn3D(z):
+    extends Posn
+    override property is_origin():
+      z == 0 && super.is_origin()
+  check:
+    val p: Posn3D(0, 0, 0)
+    [p.is_origin,
+     begin:
+       use_dynamic
+       dynamic(p).is_origin,
+     (_Posn(1, 2)).is_origin]
+    [#true, #true, #false]
+    
+begin:
+  class Posn(x, y):
+    nonfinal
+    internal _Posn
+    abstract property is_origin()
+  class Posn3D(z):
+    extends Posn
+    override property is_origin(): #true
+  check:
+    Posn3D(0, 0, 0).is_origin
+    #true
+    
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    property is_origin(): #true
+  class Posn3D(z):
+    extends Posn
+    override is_origin(): #false
+  "cannot override superclass's property with a non-property method"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    abstract property is_origin()
+  class Posn3D(z):
+    extends Posn
+    override is_origin(): #false
+  "cannot override superclass's property with a non-property method"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    property is_origin(): #true
+  class Posn3D(z):
+    extends Posn
+    final override is_origin(): #false
+  "cannot override superclass's property with a non-property method"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    method is_origin(): #true
+  class Posn3D(z):
+    extends Posn
+    override property is_origin(): #false
+  "cannot override superclass's non-property method with a property"
+
+begin:
+  class Posn(x, y):
+    internal _Posn
+    private property is_origin():
+      x == 0 && y == 0
+    private method is_at_origin():
+      is_origin()
+  check:
+    val p: _Posn(0, 0)
+    [p.is_origin,
+     p.is_at_origin()]
+    [#true, #true]
+
+begin:
+  interface Pointy:
+    abstract property is_origin
+  class Posn(x, y):
+    implements Pointy
+    override property is_origin():
+      x == 0 && y == 0
+  check:
+    val p :: Pointy: Posn(0, 0)
+    [p.is_origin]
+    [#true]
+
+check:
+  ~eval_exn
+  interface Pointy:
+    abstract property is_origin
+  class Posn(x, y):
+    implements Pointy
+    override is_origin():
+      x == 0 && y == 0
+  "cannot override interface's property with a non-property method"
+
+check:
+  ~eval_exn
+  interface Pointy:
+    abstract is_origin
+  class Posn(x, y):
+    implements Pointy
+    override property is_origin():
+      x == 0 && y == 0
+  "cannot override interface's non-property method with a property"
+  

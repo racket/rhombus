@@ -163,6 +163,7 @@
   ()
   #'hash? map-static-info
   2
+  #f
   (lambda (arg-id predicate-stxs)
     #`(for/and ([(k v) (in-hash #,arg-id)])
         (and (#,(car predicate-stxs) k)

@@ -17,7 +17,7 @@ normally bound to implement function calls.
 )
 
 @doc(
-  annotation.macro 'Function'
+  annot.macro 'Function'
 ){
 
  Matches any function.
@@ -232,6 +232,34 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 )
 
 }
+
+
+@doc(
+  entry_point.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
+                       $bo≈dy
+                       ...',
+
+  entry_point.macro 'fun
+                     | ($binding, ..., $rest, ...) $maybe_res_ann:
+                         $body
+                         ...
+                     | ...'
+){
+
+ The @tech{entry point} form of @rhombus(fun, ~entry_point) is the same as the
+ expression form of @rhombus(fun).
+
+ A binding as an @deftech{entry point} allows a form to work and cooperate
+ with contexts such as @rhombus(constructor, ~class_clause) that
+ syntactically require a function. That is, an entry point is a syntactic
+ concept. Its corresponding run-time representation is normally a function,
+ but an entry point may need to be manipulated statically, such as adding
+ an extra argument to make it serve as a method.
+ Besides @rhombus(fun, ~entry_point), the @rhombus(rule, ~entry_point) form is
+ also bound as entry point.
+
+}
+
 
 @doc(
   defn.macro 'operator ($operator_path $binding) $maybe_res_ann:

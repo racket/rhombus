@@ -116,7 +116,7 @@
    '((default . stronger))
    'macro
    (lambda (rator stxes)
-     (parse-function-call rator stxes))
+     (parse-function-call rator '() stxes))
    'left))
 
 (define-syntax #%brackets

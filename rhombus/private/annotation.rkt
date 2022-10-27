@@ -15,7 +15,8 @@
                      "misuse.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "keyword-sort.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -35,6 +36,7 @@
          Boolean
          Integer
          Number
+         Real
          String
          Symbol
          Keyword
@@ -58,11 +60,16 @@
              :annotation
              :annotation-form
              :inline-annotation
+             :annotation-infix-op+form+tail
 
-             annotation-form))
+             annotation-form
+
+             parse-annotation-of))
   
   (provide define-annotation-syntax
-           define-annotation-constructor))
+           define-annotation-constructor
+
+           raise-annotation-failure))
 
 (begin-for-syntax
   (property annotation-prefix-operator prefix-operator
@@ -76,7 +83,7 @@
 
   (define (raise-not-a-annotation id)
     (raise-syntax-error #f
-                        "not bound as a annotation"
+                        "not bound as an annotation"
                         id))
 
   (define (check-annotation-result stx proc)
@@ -146,17 +153,16 @@
                         [_ 'does-not-happen])))))
   
   (define (parse-annotation-of stx predicate-stx static-infos
-                               sub-n predicate-maker info-maker)
+                               sub-n kws predicate-maker info-maker)
     (syntax-parse stx
       #:datum-literals (parens)
       [(form-id ((~and tag parens) g ...) . tail)
-       (define gs (syntax->list #'(g ...)))
-       (unless (= (length gs) sub-n)
+       (define unsorted-gs (syntax->list #'(g ...)))
+       (unless (= (length unsorted-gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
-                             #'form-id
-                             #f
-                             (list #'tag)))
+                             #'(form-id (tag g ...))))
+       (define gs (sort-with-respect-to-keywords kws unsorted-gs stx))
        (define c-parseds (for/list ([g (in-list gs)])
                            (syntax-parse g
                              [c::annotation #'c.parsed])))
@@ -174,7 +180,8 @@
                #'tail)]))
      
   (define (annotation-constructor name predicate-stx static-infos
-                                  sub-n predicate-maker info-maker)
+                                  sub-n kws predicate-maker info-maker
+                                  parse-annotation-of)
     (values
      ;; root
      (annotation-prefix-operator
@@ -195,10 +202,11 @@
       (lambda (stx)
         (parse-annotation-of (replace-head-dotted-name stx)
                              predicate-stx static-infos
-                             sub-n predicate-maker info-maker)))))
+                             sub-n kws predicate-maker info-maker)))))
 
   (define (annotation-of-constructor name predicate-stx static-infos
-                                     sub-n predicate-maker info-maker)
+                                     sub-n kws predicate-maker info-maker
+                                     parse-annotation-of)
     (annotation-prefix-operator
       name
       '((default . stronger))
@@ -209,7 +217,7 @@
           [(form-id (op |.|) (~and of-id of) . tail)
            (parse-annotation-of #`(of-id . tail)
                                 predicate-stx static-infos
-                                sub-n predicate-maker info-maker)]
+                                sub-n kws predicate-maker info-maker)]
           [(form-id (op |.|) other:identifier . tail)
            (raise-syntax-error #f
                                "field not provided by annotation"
@@ -226,7 +234,9 @@
     [(_ name
         binds
         predicate-stx static-infos
-        sub-n predicate-maker info-maker)
+        sub-n kws predicate-maker info-maker
+        (~optional (~seq #:parse-of parse-annotation-of-id)
+                   #:defaults ([parse-annotation-of-id #'parse-annotation-of])))
      (cond
        [(eq? (syntax-local-context) 'module)
         #'(begin
@@ -234,7 +244,8 @@
               (define-values (root-proc of-proc)
                 (let binds
                     (annotation-constructor #'name predicate-stx static-infos
-                                            sub-n predicate-maker info-maker))))
+                                            sub-n 'kws predicate-maker info-maker
+                                            parse-annotation-of-id))))
             (define-name-root name
               #:space rhombus/annotation
               #:fields (of)
@@ -245,7 +256,8 @@
         #`(define-syntax #,(in-annotation-space #'name)
             (let binds
                 (annotation-of-constructor #'name predicate-stx static-infos
-                                           sub-n predicate-maker info-maker)))])]))
+                                           sub-n 'kws predicate-maker info-maker
+                                           parse-annotation-of-id)))])]))
 
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator
@@ -264,7 +276,7 @@
               #`(let ([val #,form])
                   (if (c-parsed.predicate val)
                       val
-                      (raise-annotation-failure val '#,(shrubbery-syntax->string #'t))))
+                      (raise-::-annotation-failure val '#,(shrubbery-syntax->string #'t))))
               form)
           #'c-parsed.static-infos)
          #'t.tail)]))
@@ -340,6 +352,7 @@
 (define-syntax Boolean (identifier-annotation #'Boolean #'boolean? #'()))
 (define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-annotation #'Number #'number? #'()))
+(define-syntax Real (identifier-annotation #'Real #'real? #'()))
 (define-syntax String (identifier-annotation #'String #'string? #'()))
 (define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
 (define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
@@ -351,11 +364,14 @@
      #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
 
-(define (raise-annotation-failure val ctc)
+(define (raise-::-annotation-failure val ctc)
+  (raise-annotation-failure ':: val ctc))
+
+(define (raise-annotation-failure who val ctc)
   (raise
    (exn:fail:contract
     (error-message->adjusted-string
-     '::
+     who
      rhombus-realm
      (format
       (string-append "value does not match annotation\n"

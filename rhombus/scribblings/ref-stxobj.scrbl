@@ -99,7 +99,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  annotation.macro 'Syntax'
+  annot.macro 'Syntax'
 ){
 
   Matches syntax objects.

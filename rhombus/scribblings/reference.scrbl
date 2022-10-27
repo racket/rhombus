@@ -45,3 +45,4 @@
 @include_section("ref-eval.scrbl")
 @include_section("ref-stxobj.scrbl")
 @include_section("ref-syntax-class.scrbl")
+@include_section("ref-rule.scrbl")

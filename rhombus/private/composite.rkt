@@ -1,7 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "annotation-string.rkt")
+                     "annotation-string.rkt"
+                     "tag.rkt"
+                     "keyword-sort.rkt")
          "parse.rkt"
          "binding.rkt"
          "repetition.rkt"
@@ -21,15 +23,20 @@
                                                        predicate     ; predicate for the composite value
                                                        accessors     ; one accessor per component
                                                        static-infoss ; one set of static info per component
+                                                       #:keywords [keywords #f] ; #f or a list of keywords and #f
                                                        #:steppers [steppers #f] ; a sequence of `cdr`s for lists
                                                        #:static-infos [composite-static-infos #'()] ; for the composite value
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:ref-result-info? [ref-result-info? #f]
                                                        #:rest-accessor [rest-accessor #f] ; for a list "rest"
                                                        #:rest-repetition? [rest-repetition? #t])
-  (lambda (tail [rest-arg #f])
+  (lambda (tail [rest-arg #f] [stx-in #f])
     (syntax-parse tail
-      [(form-id ((~datum parens) a::binding ...) . new-tail)
+      [(form-id ((~and tag (~datum parens)) a_g ...) . new-tail)
+       #:do [(define stx (or stx-in
+                             (quasisyntax/loc #'form-id
+                               (#,group-tag form-id (tag a_g ...)))))]
+       #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a_g ...)) stx)
        #:with (a-parsed::binding-form ...) #'(a.parsed ...)
        ;; `rest-a` will have either 0 items or 1 item
        #:with (rest-a::binding ...) (if rest-arg (list rest-arg) null)
@@ -42,8 +49,7 @@
                                                     "  given: ~a")
                                      (length accessors)
                                      (length as))
-                             (syntax/loc #'form-id
-                               #'(group form-id (parens a ...)))))
+                             stx))
        (values
         (binding-form
          #'composite-infoer
@@ -61,7 +67,10 @@
                       #,rest-repetition?
                       rest-a-parsed.infoer-id ...
                       rest-a-parsed.data ...))))
-        #'new-tail)])))
+        #'new-tail)]
+      [_ (raise-syntax-error #f
+                             "bad syntax"
+                             (or stx-in tail))])))
 
 (require (for-syntax racket/pretty))
 

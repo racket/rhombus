@@ -9,6 +9,9 @@
                     &&
                     \|\|))
 
+(module+ for-class
+  (provide (for-syntax make-and-binding)))
+
 ;; ----------------------------------------
 ;; &&
 
@@ -27,6 +30,10 @@
                 #'rhs.tail)]))
    'left))
 
+(define-for-syntax (make-and-binding lhs rhs)
+  (binding-form #'and-infoer
+                #`(#,lhs #,rhs)))
+  
 (define-syntax (and-infoer stx)
   (syntax-parse stx
     [(_ static-infos (lhs-i::binding-form rhs-i::binding-form))

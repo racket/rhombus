@@ -61,7 +61,7 @@
                         [((~and tag group) #:blank) #'((quote #:blank) (tag (parsed (void))))]
                         [(group #:error (block ((~and tag group) form ...)))
                          #`((list (quote #:error)
-                                  #,(rb #'(tag form ...)))
+                                  #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
                             (tag form ...))]
                         [_ #`(#,(rb form) #,form)]))])
        #'(examples

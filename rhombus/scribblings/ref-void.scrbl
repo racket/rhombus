@@ -4,7 +4,7 @@
 @title{Void}
 
 @doc(
-  annotation.macro 'Void'
+  annot.macro 'Void'
 ){
 
   Matches @rhombus(#void).

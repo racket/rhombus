@@ -3,7 +3,8 @@
          racket/keyword
          shrubbery/write
          (submod "set.rkt" for-ref)
-         "adjust-name.rkt")
+         "adjust-name.rkt"
+         "printer-property.rkt")
 
 (provide (rename-out
           [rhombus-print print]
@@ -16,6 +17,12 @@
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
+
+(module+ for-class
+  (provide prop:print-field-shapes))
+
+(define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
+  (make-struct-type-property 'print-field-shapes))
 
 (define (rhombus-print v [op (current-output-port)])
   (do-print v op 'print))
@@ -54,13 +61,29 @@
        (display (if v "#true" "#false") op)]
       [(void? v)
        (display "#void" op)]
+      [(printer-ref v #f)
+       => (lambda (printer)
+            (printer v op mode))]
       [(struct? v)
        (define vec (struct->vector v))
        (write (object-name v) op)
        (display "(" op)
-       (for ([i (in-range 1 (vector-length vec))])
-         (unless (eqv? i 1) (display ", " op))
-         (print (vector-ref vec i)))
+       (cond
+         [(print-field-shapes-ref v #f)
+          => (lambda (shapes)
+               (void
+                (for/fold ([did? #f]) ([i (in-range 1 (vector-length vec))]
+                                       [s (in-list shapes)]
+                                       #:when s)
+                  (when did? (display ", " op))
+                  (when (keyword? s)
+                    (display (string-append "~" (keyword->immutable-string s) ": ") op))
+                  (print (vector-ref vec i))
+                  #t)))]
+         [else
+          (for ([i (in-range 1 (vector-length vec))])
+            (unless (eqv? i 1) (display ", " op))
+            (print (vector-ref vec i)))])
        (display ")" op)]
       [(list? v)
        (display "[" op)

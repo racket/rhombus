@@ -43,6 +43,7 @@
 (define-annotation-constructor Array
   () #'vector? array-static-infos
   1
+  (#f)
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-vector #,arg-id)])
         (#,(car predicate-stxs) e)))

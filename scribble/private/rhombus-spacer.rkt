@@ -18,7 +18,9 @@
                     def
                     match
                     for
-                    import))
+                    import
+                    class
+                    interface))
 
 (define-syntax (define-spacer stx)
   (syntax-parse stx
@@ -52,7 +54,7 @@
                #:datum-literals (group)
                [(a . more)
                 #:when (not (escape? #'a escape))
-                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
+                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'annot)
                    . more)]
                [_ tail])))))
 
@@ -86,17 +88,18 @@
    (lambda (head tail escape)
      (val-spacer head tail escape))))
 
+(define-for-syntax (arg-spacer stx)
+  (syntax-parse stx
+    #:datum-literals (group op)
+    #:literals (rhombus-=)
+    [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
+     #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
+                 (term-identifiers-syntax-property a 'typeset-space-name 'bind))
+            eq
+            e ...)]
+    [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
+
 (define-for-syntax (fun-spacer head tail escape)
-  (define (arg-spacer stx)
-    (syntax-parse stx
-      #:datum-literals (group op)
-      #:literals (rhombus-=)
-      [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
-       #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
-                   (term-identifiers-syntax-property a 'typeset-space-name 'bind))
-              eq
-              e ...)]
-      [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
   (define (post-spacer stx)
     (syntax-parse stx
       #:datum-literals (op)
@@ -188,8 +191,8 @@
 
 (define-for-syntax (for-body-spacer body)
   (syntax-parse body
-    [(group #:do id . args)
-     #`(group #:do #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
+    [(group (~and kw #:do) id . args)
+     #`(group kw #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
     [_
      body]))
 
@@ -234,3 +237,39 @@
                     (list (as-mod #'dot)
                           (loop #'cs))]
                    [else cs])))]))
+
+(define-spacer class
+  (spacer
+   (lambda (head tail escape)
+     (define new-tail (syntax-parse tail
+                        #:datum-literals (group block parens)
+                        [(name ((~and parens-tag parens) arg ...) ((~and block-tag block) body ...))
+                         #`(name (parens-tag #,@(map arg-spacer (syntax->list #'(arg ...))))
+                            (block-tag
+                             #,@(map (class-clause-spacer 'class_clause) (syntax->list #'(body ...)))))]
+                        [(name ((~and parens-tag parens) arg ...) ((~and block-tag block) body ...))
+                         #`(name (parens-tag #,@(map arg-spacer (syntax->list #'(arg ...)))))]
+                        [_
+                         tail]))
+     (values head new-tail))))
+
+(define-spacer interface
+  (spacer
+   (lambda (head tail escape)
+     (define new-tail (syntax-parse tail
+                        #:datum-literals (group block parens)
+                        [(name ((~and block-tag block) body ...))
+                         #`(name
+                            (block-tag
+                             #,@(map (class-clause-spacer 'intf_clause) (syntax->list #'(body ...)))))]
+                        [_
+                         tail]))
+     (values head new-tail))))
+
+(define-for-syntax ((class-clause-spacer space) stx)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [((~and group-tag group) form:identifier . rest)
+     #`(group-tag #,(term-identifiers-syntax-property #'form 'typeset-space-name space)
+                  . rest)]
+    [_ stx]))

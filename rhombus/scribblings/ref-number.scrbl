@@ -4,7 +4,7 @@
 @title{Numbers}
 
 @doc(
-  annotation.macro 'Number'
+  annot.macro 'Number'
 ){
 
   Matches any number.
@@ -12,10 +12,19 @@
 }
 
 @doc(
-  annotation.macro 'Integer'
+  annot.macro 'Integer'
 ){
 
   Matches exact integers.
+
+}
+
+@doc(
+  annot.macro 'Real'
+){
+
+ Matches real numbers (as opposed to imaginary numbers like the result
+ of @rhombus(sqrt(-1))).
 
 }
 
