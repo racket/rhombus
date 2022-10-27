@@ -118,7 +118,7 @@ identifiers.
     sum([2, 3, 4])
 )
 
-In the same way that a @rhombus(List, ~ann) annotation specializes
+In the same way that a @rhombus(List, ~annot) annotation specializes
 element access via @litchar{[}...@litchar{]}, it also specializes how
 @rhombus(~each) within @rhombus(for) iterates through a list. In the
 following example, @rhombus(ll) is annotated as a list of lists, so both

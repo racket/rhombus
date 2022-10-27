@@ -53,8 +53,8 @@ to be included in the set. These uses of square brackets are implemented by
 }
 
 @doc(
-  annotation.macro 'Set',
-  annotation.macro 'Set.of($annotation)',
+  annot.macro 'Set',
+  annot.macro 'Set.of($annotation)',
 ){
 
  Matches any set in the form without @rhombus(of). The @rhombus(of)

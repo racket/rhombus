@@ -139,8 +139,8 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  annotation.macro 'Map',
-  annotation.macro 'Map.of($key_annotation, $value_annotation)',
+  annot.macro 'Map',
+  annot.macro 'Map.of($key_annotation, $value_annotation)',
 ){
 
  Matches any map in the form without @rhombus(of). The @rhombus(of)

@@ -143,3 +143,33 @@ check:
   val p: dynamic(Posn3D(1, 2, 3))
   [p.x, p.y, p.z]
   [1, 2, 3]
+
+check:
+  import rhombus/meta open
+  class Posn(x, y):
+    nonfinal
+    internal _Posn
+    // external view flips `y` and `x`
+    constructor:
+      fun (y, x):
+        _Posn(x, y)
+    binding:
+      rule
+      | 'Posn($y, $x)':
+          '_Posn($x, $y)'
+      | 'Posn($v)':
+          '_Posn($v, 0)'
+    annotation:
+      rule
+      | 'Posn.of($x, $y)':
+          '_Posn.of($y, $x)'
+      | 'Posn': '_Posn'    
+  val p: Posn(0, 2)
+  val Posn(yy, xx): p
+  val Posn(a): p    
+  [p.y, p.x, yy, xx, a,
+   p is_a Posn,
+   Posn(1, "2") is_a Posn.of(Integer, String)]
+  [0, 2, 0, 2, 2,
+   #true,
+   #true]

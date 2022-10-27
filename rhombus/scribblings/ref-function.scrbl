@@ -17,7 +17,7 @@ normally bound to implement function calls.
 )
 
 @doc(
-  annotation.macro 'Function'
+  annot.macro 'Function'
 ){
 
  Matches any function.
@@ -246,10 +246,15 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
                   | ...'
 ){
 
- The callable form of @rhombus(fun, ~callable) is the same as the
- expression form of @rhombus(fun). This binding as a callable allows a
- @rhombus(fun, ~callable) form is to work and cooperate with contexts
- such as @rhombus(constructor, ~class_clause).
+ The @tech{callable} form of @rhombus(fun, ~callable) is the same as the
+ expression form of @rhombus(fun).
+
+ A binding as a @deftech{callable} allows a form to work and cooperate
+ with contexts such as @rhombus(constructor, ~class_clause) that
+ syntactically require a function. That is, callable is a syntactic
+ concept, and its corresponding run-time vale is simply a function.
+ Besides @rhombus(fun, ~callable), the @rhombus(rule, ~callable) form is
+ also bound as callable.
 
 }
 

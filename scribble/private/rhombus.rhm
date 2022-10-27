@@ -140,7 +140,7 @@ expr.macro
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
           || kw === keyword(~expmod)
-          || kw === keyword(~ann)
+          || kw === keyword(~annot)
           || kw === keyword(~stxclass)
           || kw === keyword(~reducer)
           || kw === keyword(~for_clause)

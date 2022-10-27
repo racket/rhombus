@@ -10,9 +10,10 @@
          "expression.rkt"
          "binding.rkt"
          (submod "binding-syntax.rkt" for-class)
-         (for-syntax "class-binder.rkt")
+         (for-syntax "class-transformer.rkt")
          "annotation.rkt"
          (submod "annotation.rkt" for-class)
+         (submod "annotation-syntax.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
          "composite.rkt"
@@ -31,13 +32,13 @@
 
 (provide (rename-out [rhombus-class class])
          extends
+         internal
          constructor
+         binding
+         annotation
          final
          nonfinal
          authentic)
-
-(module+ for-meta
-  (provide (for-space rhombus/class-clause bind)))
 
 (begin-for-syntax
   (struct class-desc (final? class:id constructor-id fields constructor-makers))
@@ -102,7 +103,24 @@
                                (raise-syntax-error #f "not a class name" stxes parent-name))))
         (define final? (hash-ref options 'final? (not super)))
         (define authentic? (hash-ref options 'authentic? #f))
-        (define constructor-id (hash-ref options 'constructor-id #f))
+        (define internal-id (hash-ref options 'internal #f))
+        (define (maybe-use-internal-id id clause-name)
+          (cond
+            [(syntax-e id) id]
+            [internal-id internal-id]
+            [else (raise-syntax-error #f
+                                      (format "no `internal` clause, and no maker name in `~a` clause"
+                                              clause-name)
+                                      stxes)]))
+        (define constructor-id (let ([id (hash-ref options 'constructor-id #f)])
+                                 (and id
+                                      (maybe-use-internal-id id 'constructor))))
+        (define binding-id (let ([b (hash-ref options 'binding #f)])
+                             (and b
+                                  (maybe-use-internal-id (car b) 'binding))))
+        (define annotation-id (let ([b (hash-ref options 'annotation #f)])
+                                (and b
+                                     (maybe-use-internal-id (car b) 'annotation))))
         (when super
           (when (class-desc-final? super)
             (raise-syntax-error #f
@@ -128,9 +146,12 @@
         (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                       [(class:name) (generate-temporaries #'(name))]
                       [(make-name) (generate-temporaries #'(name))]
-                      [(core-bind-name) (if (hash-ref options 'bind.instance #f)
+                      [(core-bind-name) (if (hash-ref options 'binding #f)
                                             (generate-temporaries #'(name))
                                             #'(name))]
+                      [(core-ann-name) (if (hash-ref options 'annotation #f)
+                                           (generate-temporaries #'(name))
+                                           #'(name))]
                       [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (intro
@@ -226,33 +247,45 @@
                                          (list (length (class-desc-fields super))))))]
                              [else #'(constructor-maker-name make-name)])))])
                  null)
-             (if (syntax-e #'core-bind-name)
-                 (list
-                  #`(define-binding-syntax core-bind-name
-                      (binding-transformer
-                       #'name
-                       (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
-                                                           (quote-syntax name?)
-                                                           #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                           (list (quote-syntax name-field) ...)
-                                                           #:accessor->info? #t
-                                                           (list (quote-syntax field.static-infos) ...)))))
-                 null)
+             (list
+              #`(define-binding-syntax core-bind-name
+                  (binding-transformer
+                   #'name
+                   (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                                       (quote-syntax name?)
+                                                       #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                                       (list (quote-syntax name-field) ...)
+                                                       #:accessor->info? #t
+                                                       (list (quote-syntax field.static-infos) ...)))))
              (cond
-               [(hash-ref options 'bind.instance #f)
+               [(hash-ref options 'binding #f)
                 => (lambda (bind)
+                     (define into (make-syntax-introducer))
                      (list
+                      #`(define-binding-syntax #,(intro binding-id) (make-rename-transformer
+                                                                     (quote-syntax #,(in-binding-space #'core-bind-name))))
                       #`(define-binding-syntax name
-                          (wrap-class-binder name core-bind-name #,(car bind) #,(cadr bind) make-binding-prefix-operator))))]
+                          (wrap-class-transformer name #,(intro (cadr bind)) make-binding-prefix-operator))))]
                [else null])
              (list
-              #'(define-annotation-constructor name
+              #'(define-annotation-constructor core-ann-name
                   ([accessors (list (quote-syntax name-field) ...)])
                   (quote-syntax name?)
                   (quote-syntax ((#%dot-provider name-instance)))
                   cnt
                   (make-class-instance-predicate accessors)
-                  (make-class-instance-static-infos accessors))
+                  (make-class-instance-static-infos accessors)))
+             (cond
+               [(hash-ref options 'annotation #f)
+                => (lambda (ann)
+                     (define into (make-syntax-introducer))
+                     (list
+                      #`(define-annotation-syntax #,(intro annotation-id) (make-rename-transformer
+                                                                           (quote-syntax #,(in-annotation-space #'core-ann-name))))
+                      #`(define-annotation-syntax name
+                          (wrap-class-transformer name #,(intro (cadr ann)) make-annotation-prefix-operator))))]
+               [else null])
+             (list
               #`(define-class-desc-syntax name
                   (class-desc #,final?
                               (quote-syntax class:name)
@@ -350,9 +383,6 @@
     [(_ id (_)) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
 
-;; If possible, push a check on the constructor result into a function,
-;; where it's likely to be optimized away for a constructor that ends by
-;; calling the primitive constructor
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
     [(_ name constructor-id predicate-id g)
@@ -430,6 +460,7 @@
 
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
+    #:context orig-stx
     [(clause::class-clause ...)
      (define clauses (apply append (map syntax->list (syntax->list #'(clause.parsed ...)))))
      (define (extract-rhs b)
@@ -446,21 +477,29 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends constructor final nonfinal authentic)
+              #:literals (extends constructor final nonfinal authentic binding annotation)
               [(extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "redundant superclass clause" orig-stx clause))
                (hash-set options 'extends #'id)]
+              [(internal id)
+               (when (hash-has-key? options 'internal)
+                 (raise-syntax-error #f "redundant internal-name clause" orig-stx clause))
+               (hash-set options 'internal #'id)]
               [(constructor id block)
                (when (hash-has-key? options 'constructor-id)
                  (raise-syntax-error #f "redundant constructor clause" orig-stx clause))
                (hash-set (hash-set options 'constructor-id #'id)
                          'constructor-rhs
                          (extract-rhs #'block))]
-              [(bind.instance core-name block)
-               (when (hash-has-key? options 'bind.instances)
-                 (raise-syntax-error #f "redundant binder clause" orig-stx clause))
-               (hash-set options 'bind.instance (list #'core-name (extract-rhs #'block)))]
+              [(binding core-name block)
+               (when (hash-has-key? options 'binding)
+                 (raise-syntax-error #f "redundant binding clause" orig-stx clause))
+               (hash-set options 'binding (list #'core-name (extract-rhs #'block)))]
+              [(annotation core-name block)
+               (when (hash-has-key? options 'annotation)
+                 (raise-syntax-error #f "redundant annotation clause" orig-stx clause))
+               (hash-set options 'annotation (list #'core-name (extract-rhs #'block)))]
               [(final)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "redundant finality clause" orig-stx clause))
@@ -486,6 +525,13 @@
         #:with () #'id.tail
         #'[(extends id.name)]]))))
 
+(define-syntax internal
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ name:identifier)
+        #'[(internal name)]]))))
+
 (define-syntax constructor
   (class-clause-transformer
    (lambda (stx)
@@ -494,22 +540,36 @@
        [(_ (_::parens (group make:identifier))
            (~and (_::block . _)
                  constructor-block))
-        #`[(constructor make constructor-block)]]))))
+        #`[(constructor make constructor-block)]]
+       [(_ (~and (_::block . _)
+                 constructor-block))
+        #`[(constructor #f constructor-block)]]))))
 
-(define-name-root bind
-  #:space rhombus/class-clause
-  #:fields
-  ([instance bind.instance]))
-
-(define-syntax bind.instance
+(define-syntax binding
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (_::parens (group core:identifier))
            (~and (_::block . _)
-                 binder-block))
-        #`[(bind.instance core binder-block)]]))))
+                 binding-block))
+        #`[(binding core binding-block)]]
+       [(_ (~and (_::block . _)
+                 binding-block))
+        #`[(binding #f binding-block)]]))))
+
+(define-syntax annotation
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (_::parens (group core:identifier))
+           (~and (_::block . _)
+                 annotation-block))
+        #`[(annotation core annotation-block)]]
+       [(_ (~and (_::block . _)
+                 annotation-block))
+        #`[(annotation #f annotation-block)]]))))
 
 (define-syntax nonfinal
   (class-clause-transformer

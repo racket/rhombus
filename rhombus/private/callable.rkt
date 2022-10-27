@@ -45,5 +45,9 @@
                         (define t (callable-transformer-ref v))
                         (and t (transformer
                                 (lambda (stx)
-                                  ((transformer-proc t) stx adjustments)))))
+                                  (define new-adjustments
+                                    (struct-copy callable-adjustments adjustments
+                                                 [prefix-arguments (map transform-in
+                                                                        (callable-adjustments-prefix-arguments adjustments))]))
+                                  ((transformer-proc t) stx new-adjustments)))))
     #:check-result check-callable-result))

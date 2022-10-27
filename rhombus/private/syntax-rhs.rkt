@@ -12,7 +12,8 @@
          "srcloc.rkt"
          "binding.rkt"
          "op-literal.rkt"
-         "pack.rkt")
+         "pack.rkt"
+         "callable.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -27,7 +28,7 @@
 
 ;; finish parsing one case (possibly the only case) in a macro definition,
 ;; now that we're in the right phase for the right-hand side of the definition
-(define-for-syntax (parse-one-macro-definition pre-parsed)
+(define-for-syntax (parse-one-macro-definition pre-parsed adjustments)
   (define kind (syntax-parse pre-parsed
                  [(_ _ _ kind . _) (syntax-e #'kind)]))
   (define (macro-clause self-id left-ids tail-pattern rhs)
@@ -101,11 +102,14 @@
              (cond
                [(syntax-e #'parsed-right?)
                 (define right-id (extract-pattern-id #'tail-pattern))
-                #`(lambda (left #,right-id self-id)
-                    #,(if (eq? kind 'rule)
-                          (convert-rule-template #'(tag rhs ...)
-                                                 (list #'left right-id #'self-id))
-                          #`(rhombus-body-expression (tag rhs ...))))]
+                (define extra-args (callable-adjustments-prefix-arguments adjustments))
+                #`(lambda (#,@extra-args left #,right-id self-id)
+                    #,(adjust-result
+                       adjustments
+                       (if (eq? kind 'rule)
+                           (convert-rule-template #'(tag rhs ...)
+                                                  (list #'left right-id #'self-id))
+                           #`(rhombus-body-expression (tag rhs ...)))))]
                [else
                 (macro-clause #'self-id (list #'left)
                               #'tail-pattern
@@ -130,11 +134,14 @@
              (cond
                [(syntax-e #'parsed-right?)
                 (define arg-id (extract-pattern-id #'tail-pattern))
-                #`(lambda (#,arg-id self-id)
-                    #,(if (eq? kind 'rule)
-                          (convert-rule-template #'(tag rhs ...)
-                                                 (list arg-id #'opt-self-id))
-                          #`(rhombus-body-expression (tag rhs ...))))]
+                (define extra-args (callable-adjustments-prefix-arguments adjustments))
+                #`(lambda (#,@extra-args #,arg-id self-id)
+                    #,(adjust-result
+                       adjustments
+                       (if (eq? kind 'rule)
+                           (convert-rule-template #'(tag rhs ...)
+                                                  (list arg-id #'opt-self-id))
+                           #`(rhombus-body-expression (tag rhs ...)))))]
                [else
                 (macro-clause #'self-id '()
                               #'tail-pattern
@@ -164,7 +171,7 @@
 
 ;; combine previously parsed cases (possibly the only case) in a macro
 ;; definition that are all either prefix or infix
-(define-for-syntax (build-cases ps prefix? make-id)
+(define-for-syntax (build-cases ps prefix? make-id adjustments)
   (define p (car ps))
   #`(#,make-id
      (quote-syntax #,(parsed-name p))
@@ -175,9 +182,12 @@
      (let ([#,(parsed-name p)
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
-                  #`(lambda (#,@(if prefix? '() (list #'left)) tail self)
-                      (syntax-parse (insert-multi-front-group self tail)
-                        #,@(map parsed-impl ps))))])
+                  (let ([extra-args (callable-adjustments-prefix-arguments adjustments)])
+                    #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self)
+                        #,(adjust-result
+                           adjustments
+                           #`(syntax-parse (insert-multi-front-group self tail)
+                               #,@(map parsed-impl ps))))))])
        #,(parsed-name p))
      #,@(if prefix?
             '()
@@ -185,17 +195,19 @@
 
 ;; single-case macro definition:
 (define-for-syntax (parse-operator-definition-rhs pre-parsed
-                                                  make-prefix-id make-infix-id)
-  (define p (parse-one-macro-definition pre-parsed))
+                                                  make-prefix-id make-infix-id
+                                                  #:adjustments [adjustments no-adjustments])
+  (define p (parse-one-macro-definition pre-parsed adjustments))
   (define op (parsed-name p))
   (define prefix? (eq? 'prefix (parsed-fixity p)))
   (define make-id (if prefix? make-prefix-id make-infix-id))
-  (build-cases (list p) prefix? make-id))
+  (build-cases (list p) prefix? make-id adjustments))
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions-rhs orig-stx pre-parseds
-                                                   make-prefix-id make-infix-id prefix+infix-id)
-  (define ps (map parse-one-macro-definition pre-parseds))
+                                                   make-prefix-id make-infix-id prefix+infix-id
+                                                   #:adjustments [adjustments no-adjustments])
+  (define ps (map (lambda (p) (parse-one-macro-definition p adjustments)) pre-parseds))
   (define prefixes (for/list ([p (in-list ps)] #:when (eq? 'prefix (parsed-fixity p))) p))
   (define infixes (for/list ([p (in-list ps)] #:when (eq? 'infix (parsed-fixity p))) p))
   (define (check-fixity-consistent what options ps)
@@ -219,11 +231,14 @@
   (check-fixity-consistent "prefix" "precedence" prefixes)
   (check-fixity-consistent "infix" "precedence and associativity" infixes)
   (cond
-    [(null? prefixes) (build-cases infixes #f make-infix-id)]
-    [(null? infixes) (build-cases prefixes #t make-prefix-id)]
+    [(null? prefixes) (build-cases infixes #f make-infix-id adjustments)]
+    [(null? infixes) (build-cases prefixes #t make-prefix-id adjustments)]
     [else #`(#,prefix+infix-id
-             #,(build-cases prefixes #t make-prefix-id)
-             #,(build-cases infixes #f make-infix-id))]))
+             #,(build-cases prefixes #t make-prefix-id adjustments)
+             #,(build-cases infixes #f make-infix-id adjustments))]))
+
+(define-for-syntax (adjust-result adjustments b)
+  ((callable-adjustments-wrap-body adjustments) b))
 
 ;; ----------------------------------------
 

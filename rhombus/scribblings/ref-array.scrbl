@@ -45,8 +45,8 @@ as other operations.
 }
 
 @doc(
-  annotation.macro 'Array',
-  annotation.macro 'Array.of($annotation)',
+  annot.macro 'Array',
+  annot.macro 'Array.of($annotation)',
 ){
 
  Matches any array in the form without @rhombus(of). The @rhombus(of)

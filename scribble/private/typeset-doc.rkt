@@ -29,7 +29,7 @@
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
-                  decl defn expr impo expo annotation bind reducer for_clause
+                  decl defn expr impo expo annot bind reducer for_clause
                   class_clause callable)
          (only-in "rhombus.rhm"
                   rhombusblock
@@ -210,10 +210,10 @@
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind impo expo annotation reducer for_clause class_clause callable |.|)
+    #:literals (def defn expr decl bind impo expo annot reducer for_clause class_clause callable |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annotation bind reducer expo for_clause class_clause callable) (op |.|) macro))
-    (pattern (~seq (~or expr bind annotation) (op |.|) rule))
+    (pattern (~seq (~or defn decl expr annot bind reducer expo for_clause class_clause callable) (op |.|) macro))
+    (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq (~or impo expo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class specsubform-head
@@ -437,11 +437,11 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo annotation reducer for_clause class_clause callable rhombus-syntax)
+    #:literals (impo expo annot reducer for_clause class_clause callable rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
-    [(group annotation . _) in-annotation-space]
+    [(group annot . _) in-annotation-space]
     [(group reducer . _) in-reducer-space]
     [(group for_clause . _) in-for-clause-space]
     [(group class_clause . _) in-class-clause-space]
@@ -451,11 +451,11 @@
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (impo expo annotation reducer for_clause class_clause callable bind rhombus-syntax)
+    #:literals (impo expo annot reducer for_clause class_clause callable bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
-    [(group annotation . _) 'ann]
+    [(group annot . _) 'ann]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
     [(group class_clause . _) 'class_clause]
@@ -466,7 +466,7 @@
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr impo expo annotation reducer for_clause class_clause callable bind grammar operator rhombus-syntax)
+    #:literals (defn decl expr impo expo annot reducer for_clause class_clause callable bind grammar operator rhombus-syntax)
     #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
@@ -474,7 +474,7 @@
     [(group impo . _) "import modifier"]
     [(group expo _ modifier . _) "export modifier"]
     [(group expo _ macro . _) "export"]
-    [(group annotation . _) "annotation"]
+    [(group annot . _) "annotation"]
     [(group reducer . _) "reducer"]
     [(group for_clause . _) "for clause"]
     [(group class_clause . _) "class clause"]

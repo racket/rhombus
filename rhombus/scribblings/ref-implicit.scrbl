@@ -57,7 +57,7 @@ Here are all of the implicit forms:
 @doc(
   expr.macro '#{#%literal} $literal',
   bind.macro '#{#%literal} $literal',
-  annotation.macro '#{#%literal} $literal'
+  annot.macro '#{#%literal} $literal'
 ){
 
  Produces the value @rhombus(literal) as an expression or matches
@@ -82,7 +82,7 @@ Here are all of the implicit forms:
 @doc(
   expr.macro '#{#%parens} ($expr)',
   bind.macro '#{#%parens} ($binding)',
-  annotation.macro '#{#%parens} ($annotation)'
+  annot.macro '#{#%parens} ($annotation)'
 ){
 
  Produces the same value as @rhombus(expr), same binding as

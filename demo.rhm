@@ -365,15 +365,15 @@ import:
  racket/base open:
    only: atan
 
-annotation.macro 'AlsoPosn': values('Posn', '')
+annot.macro 'AlsoPosn': values('Posn', '')
 Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
 
 bind.macro 'AlsoPosn ($x, $y) $tail ...':
   values('Posn($x, $y)', '$tail ...')
 
-annotation.macro 'Vector':
-  values(annotation_meta.pack_predicate('fun (x): x is_a Posn',
-                                        '(($(statinfo_meta.dot_provider_key), vector_dot_provider))'),
+annot.macro 'Vector':
+  values(annot_meta.pack_predicate('fun (x): x is_a Posn',
+                                   '(($(statinfo_meta.dot_provider_key), vector_dot_provider))'),
          '')
 
 
@@ -572,7 +572,7 @@ get_pts_x([Posn(1, 2)])
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-annotation.macro 'ListOf ($contract ...) $tail ...':
+annot.macro 'ListOf ($contract ...) $tail ...':
   values('matching([_ :: ($contract ...), $('...')])',
          '$tail ...')
 
@@ -640,9 +640,9 @@ dot.macro 'myint_dot_provider $left $dot $right':
   | 'is_zero': '$left .= 0'
   | 'add': 'fun (v -: MyInt) -: MyInt: $left + v'
 
-annotation.macro 'MyInt':
-  values(annotation_meta.pack_predicate('fun (x): x is_a Integer',
-                                        '(($(statinfo_meta.dot_provider_key), myint_dot_provider))'),
+annot.macro 'MyInt':
+  values(annot_meta.pack_predicate('fun (x): x is_a Integer',
+                                   '(($(statinfo_meta.dot_provider_key), myint_dot_provider))'),
          '')
 
 val (one -: MyInt): 1

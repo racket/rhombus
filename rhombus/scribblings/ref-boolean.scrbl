@@ -4,7 +4,7 @@
 @title{Booleans}
 
 @doc(
-  annotation.macro 'Boolean'
+  annot.macro 'Boolean'
 ){
 
   Matches @rhombus(#true) or @rhombus(#false)

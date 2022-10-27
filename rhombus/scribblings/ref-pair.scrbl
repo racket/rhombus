@@ -53,8 +53,8 @@ to append lists.
 }
 
 @doc(
-  annotation.macro 'Pair',
-  annotation.macro 'Pair.of($fst_annotation, $rst_annotation)',
+  annot.macro 'Pair',
+  annot.macro 'Pair.of($fst_annotation, $rst_annotation)',
 ){
 
  Matches any pair in the form without @rhombus(of). The @rhombus(of)

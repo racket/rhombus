@@ -85,8 +85,8 @@ to append lists.
 }
 
 @doc(
-  annotation.macro 'List',
-  annotation.macro 'List.of($annotation)',
+  annot.macro 'List',
+  annot.macro 'List.of($annotation)',
 ){
 
  Matches any list in the form without @rhombus(of). The @rhombus(of)
@@ -95,11 +95,11 @@ to append lists.
 }
 
 @doc(
-  annotation.macro 'NonemptyList',
-  annotation.macro 'NonemptyList.of($annotation)',
+  annot.macro 'NonemptyList',
+  annot.macro 'NonemptyList.of($annotation)',
 ){
 
- Like @rhombus(List, ~ann) as an annotation, but matches only non-empty
+ Like @rhombus(List, ~annot) as an annotation, but matches only non-empty
  lists.
 
 @examples(

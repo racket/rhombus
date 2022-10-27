@@ -11,7 +11,7 @@ they are equal by @rhombus(==) only when they are equal by
 @rhombus(===).
 
 @doc(
-  annotation.macro 'Symbol'
+  annot.macro 'Symbol'
 ){
 
   Matches symbols.

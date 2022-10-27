@@ -29,7 +29,7 @@ specialization, but the @rhombus(Map) binding pattern can.
 @(demo:
     ~eval: ann_eval
     ~defn:
-      annotation.rule 'PersonList': 
+      annot.rule 'PersonList': 
         'List.of(matching({"name": (_ :: String),
                            "location": (_ :: Posn)}))'
 
@@ -44,7 +44,7 @@ could be implemented if @rhombus(List.of) did not exist already:
 @(demo:
     ~eval: ann_eval
     ~defn:
-      annotation.macro 'ListOf ($annotation ...) $tail ...':
+      annot.macro 'ListOf ($annotation ...) $tail ...':
         values('matching([_ :: ($annotation ...), $('...')])',
                '$tail ...')
   )

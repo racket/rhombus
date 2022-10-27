@@ -30,7 +30,7 @@
 }
 
 @doc(
-  annotation.rule 'Any'
+  annot.rule 'Any'
 ){
 
   Matches any value.
@@ -82,7 +82,7 @@
 }
 
 @doc(
-  annotation.rule 'matching($binding)'
+  annot.rule 'matching($binding)'
 ){
 
  Converts @rhombus(binding) into an annotation. Variables bound in

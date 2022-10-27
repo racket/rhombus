@@ -13,7 +13,6 @@
         "private/reducer-syntax.rkt"
         "private/for-clause-syntax.rkt"
         "private/class-clause-syntax.rkt"
-        (submod "private/class.rkt" for-meta)
         "private/callable-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt"

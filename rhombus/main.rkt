@@ -46,6 +46,7 @@
         "private/assign.rkt"
         "private/equal.rkt"
         "private/function.rkt"
+        "private/rule.rkt"
         "private/begin.rkt"
         "private/cond.rkt"
         "private/match.rkt"

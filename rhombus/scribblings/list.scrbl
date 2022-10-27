@@ -43,7 +43,7 @@ A list is a ``linked list,'' in the sense that getting the @math{n}th element
 takes @math{O(n)} time, and adding to the front takes constant time. A
 list is immutable.
 
-@rhombus(List, ~ann) works as an annotation with @rhombus(-:, ~bind) and
+@rhombus(List, ~annot) works as an annotation with @rhombus(-:, ~bind) and
 @rhombus(::, ~bind):
 
 @(demo:
@@ -165,7 +165,7 @@ function’s argument can use a binding pattern that indicates a list of
       nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
   )
 
-An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~ann)
+An equivalent way to write @rhombus(nth_x) is with the @rhombus(List.of, ~annot)
 annotation constructor. It expects an annotation that every element of
 the list must satisfy:
 
