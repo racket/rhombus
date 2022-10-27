@@ -1,12 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse)
-         "callable.rkt"
+         "entry-point.rkt"
          "name-root.rkt")
 
-(provide callable)
+(provide entry_point)
 
-(define-simple-name-root callable
+(define-simple-name-root entry_point
   macro)
 
 (define-syntax macro

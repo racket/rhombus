@@ -6,29 +6,29 @@
 @title{Syntax Rules}
 
 @doc(
-  defn.macro '«rule $rule_pattern:
+  expr.macro '«rule $rule_pattern:
                  $option; ...
                  '$template'»',
-  defn.macro '«rule
+  expr.macro '«rule
                | $rule_pattern:
                    $option; ...
                    '$template'
                | ...»',
 
-  callable.macro '«rule $rule_pattern:
-                     $option; ...
-                     '$template'»',
-  callable.macro '«rule
-                   | $rule_pattern:
+  entry_point.macro '«rule $rule_pattern:
                        $option; ...
-                       '$template'
-                   | ...»'
+                       '$template'»',
+  entry_point.macro '«rule
+                      | $rule_pattern:
+                          $option; ...
+                          '$template'
+                      | ...»'
 ){
 
- An expression or @tech{callable} shorthand for a function that expects a
- syntax object and returns two syntax-object values. A
- @rhombus(rule_pattern) or @rhombus(template) in @rhombus(rule) is
- the same as in @rhombus(expr.rule) for a prefix operator, but the only
+ An expression or @tech{entry point} shorthand for a function that
+ expects a syntax object and returns two syntax-object values. A
+ @rhombus(rule_pattern) or @rhombus(template) in @rhombus(rule) is the
+ same as in @rhombus(expr.rule) for a prefix operator, but the only
  allowed @rhombus(option) is an @rhombus(~op_stx) form.
 
  For the purpose of matching a syntax object passed to the function

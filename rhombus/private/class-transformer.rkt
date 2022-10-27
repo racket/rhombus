@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse)
          "parse.rkt"
-         "callable.rkt"
+         "entry-point.rkt"
          "pack.rkt")
 
 (provide wrap-class-transformer)
@@ -10,7 +10,7 @@
 (define-syntax (wrap-class-transformer stx)
   (syntax-parse stx
     [(_ name g make-prefix-operator)
-     #:with (~var lam (:callable no-adjustments)) #'g
+     #:with (~var lam (:entry-point no-adjustments)) #'g
      #'(make-prefix-operator #'name
                              '((default . stronger))
                              'macro

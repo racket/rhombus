@@ -13,7 +13,7 @@
          "binding.rkt"
          "op-literal.rkt"
          "pack.rkt"
-         "callable.rkt")
+         "entry-point.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -102,7 +102,7 @@
              (cond
                [(syntax-e #'parsed-right?)
                 (define right-id (extract-pattern-id #'tail-pattern))
-                (define extra-args (callable-adjustments-prefix-arguments adjustments))
+                (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args left #,right-id self-id)
                     #,(adjust-result
                        adjustments
@@ -134,7 +134,7 @@
              (cond
                [(syntax-e #'parsed-right?)
                 (define arg-id (extract-pattern-id #'tail-pattern))
-                (define extra-args (callable-adjustments-prefix-arguments adjustments))
+                (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     #,(adjust-result
                        adjustments
@@ -182,7 +182,7 @@
      (let ([#,(parsed-name p)
             #,(if (parsed-parsed-right? p)
                   (parsed-impl p)
-                  (let ([extra-args (callable-adjustments-prefix-arguments adjustments)])
+                  (let ([extra-args (entry-point-adjustments-prefix-arguments adjustments)])
                     #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self)
                         #,(adjust-result
                            adjustments
@@ -238,7 +238,7 @@
              #,(build-cases infixes #f make-infix-id adjustments))]))
 
 (define-for-syntax (adjust-result adjustments b)
-  ((callable-adjustments-wrap-body adjustments) b))
+  ((entry-point-adjustments-wrap-body adjustments) b))
 
 ;; ----------------------------------------
 

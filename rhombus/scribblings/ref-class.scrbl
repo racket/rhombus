@@ -16,18 +16,18 @@
 
   grammar field:
     $identifier
-    $identifier :: $annotation,
+    $identifier :: $$(@rhombus(annotation, ~var)),
   
   class_clause.macro 'extends $identifier_path',
   class_clause.macro 'final',
   class_clause.macro 'nonfinal',
   class_clause.macro 'internal $identifier',
-  class_clause.macro 'constructor ($make_identifier): $callable',
-  class_clause.macro 'constructor: $callable',
-  class_clause.macro 'binding ($bind_identifier): $callable',
-  class_clause.macro 'binding: $callable',
-  class_clause.macro 'annotation ($annot_identifier): $callable',
-  class_clause.macro 'annotation: $callable',
+  class_clause.macro 'constructor ($make_identifier): $entry_point',
+  class_clause.macro 'constructor: $entry_point',
+  class_clause.macro 'binding ($bind_identifier): $entry_point',
+  class_clause.macro 'binding: $entry_point',
+  class_clause.macro 'annotation ($annot_identifier): $entry_point',
+  class_clause.macro 'annotation: $entry_point',
   class_clause.macro 'authentic',
 ){
 
@@ -74,17 +74,17 @@
  would be bound to the @rhombus(class) form's main
  @rhombus(identifier_path) if not replaced by clauses like
  @rhombus(constructor, ~class_clause) and
- @rhombus(binding, ~class_clause). In other words, the
+ @rhombus(binding, ~class_clause). In other words,
  @rhombus(identifier) accesses the primitive class representation,
- instead of the customized view. If the internal @rhombus(indentifier) is
+ instead of the customized view. If the internal @rhombus(identifier) is
  not exported, then that primitive view stays private to the scope of its
  definition.
 
  The @rhombus(class_clause) forms @rhombus(constructor, ~class_clause),
  @rhombus(binding, ~class_clause), and
- @rhombus(annotation, ~class_clause) replaces default meanings of the
+ @rhombus(annotation, ~class_clause) replace default meanings of the
  defined @rhombus(identifier_path) for an expression context, binding
- context, and annotation context, respextively. In each case, an
+ context, and annotation context, respectively. In each case, an
  identifier can be provided, such as @rhombus(make_identifier) or
  @rhombus(bind_identifier); within the clause, that identifier is bound
  to refer to the default implementation (roughly, in the case of
@@ -96,10 +96,11 @@
  
  When a @rhombus(class_clause) is a @rhombus(constructor, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) as a
- constructor function invokes the @tech{callable} (typically
- @rhombus(fun, ~callable)) in the block after @rhombus(constructor, ~class_clause).
- That function must return an instance of the new class, typically by
- calling @rhombus(make_identifier):
+ constructor function invokes the @tech{entry point} (typically a
+ @rhombus(fun, ~entry_point) form) in the block after
+ @rhombus(constructor, ~class_clause). That function must return an
+ instance of the new class, typically by calling
+ @rhombus(make_identifier):
 
 @itemlist(
 
@@ -121,16 +122,16 @@
  
  When a @rhombus(class_clause) is a @rhombus(binding, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) as a
- binding-pattern constructor invokes the @tech{callable} (typically
- @rhombus(rule, ~callable)) in the block after
+ binding-pattern constructor invokes the @tech{entry point} (typically
+ a @rhombus(rule, ~entry_point) form) in the block after
  @rhombus(binding, ~class_clause). The specificed
  @rhombus(bind_identifier) is bound so that it refers to the default
  binding-pattern constructor.
 
  When a @rhombus(class_clause) is a @rhombus(annotation, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) in a
- annotation invokes the @tech{callable} (typically
- @rhombus(rule, ~callable)) in the block after
+ annotation invokes the @tech{entry point} (typically
+ a @rhombus(rule, ~entry_point) form) in the block after
  @rhombus(annotation, ~class_clause). The specificed
  @rhombus(ann_identifier) is bound so that it refers to the default
  annotation binding.

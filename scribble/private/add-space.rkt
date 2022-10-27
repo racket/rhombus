@@ -16,7 +16,7 @@
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for-clause]
                      [(class_clause) 'rhombus/class-clause]
-                     [(callable) 'rhombus/callable]
+                     [(entry_point) 'rhombus/entry-point]
                      [(#f) 'rhombus/expression]
                      [else #f]))
      (if space

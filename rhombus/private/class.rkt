@@ -28,7 +28,7 @@
          "implicit.rkt"
          "error.rkt"
          "class-clause.rkt"
-         "callable.rkt")
+         "entry-point.rkt")
 
 (provide (rename-out [rhombus-class class])
          extends
@@ -386,7 +386,7 @@
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
     [(_ name constructor-id predicate-id g)
-     #:do [(define adjustments (callable-adjustments
+     #:do [(define adjustments (entry-point-adjustments
                                 '()
                                 (lambda (body)
                                   #`(let ([r #,body])
@@ -395,7 +395,7 @@
                                           #,(quasisyntax/loc #'g
                                               (raise-constructor-result-error 'name r)))))
                                 #f))]
-     #:with (~var lam (:callable adjustments)) #'g
+     #:with (~var lam (:entry-point adjustments)) #'g
      #'lam.parsed]))
 
 (define (raise-constructor-result-error who val)
@@ -468,7 +468,7 @@
          [(_::block g) #'g]
          [else
           (raise-syntax-error #f
-                              "expected a single callable in block body"
+                              "expected a single entry point in block body"
                               b)]))
      (let loop ([clauses clauses] [options #hasheq()])
        (cond

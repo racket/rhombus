@@ -11,7 +11,7 @@
          "definition.rkt"
          "static-info.rkt"
          (submod "function.rkt" for-build)
-         (only-in "callable.rkt" no-adjustments))
+         (only-in "entry-point.rkt" no-adjustments))
 
 ;; The `operator` form takes something that looks like a function-style
 ;; operator definition and generates a combination of a transformer and

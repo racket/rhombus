@@ -13,7 +13,7 @@
         "private/reducer-syntax.rkt"
         "private/for-clause-syntax.rkt"
         "private/class-clause-syntax.rkt"
-        "private/callable-syntax.rkt"
+        "private/entry-point-syntax.rkt"
         "private/static-info-syntax.rkt"
         "private/dot-syntax.rkt"
         "private/import-syntax.rkt"

@@ -3,7 +3,7 @@
                      syntax/parse)
          "syntax-rhs.rkt"
          "expression.rkt"
-         "callable.rkt"
+         "entry-point.rkt"
          "syntax.rkt"
          "pack.rkt"
          syntax/parse)
@@ -11,11 +11,11 @@
 (provide rule)
 
 (begin-for-syntax
-  (struct callable+expression-transformer (cbl exp)
-    #:property prop:callable-transformer (lambda (self) (callable+expression-transformer-cbl self))
-    #:property prop:expression-prefix-operator (lambda (self) (callable+expression-transformer-exp self)))
-  (define (make-callable+expression-transformer cbl exp)
-    (callable+expression-transformer cbl exp)))
+  (struct entry-point+expression-transformer (cbl exp)
+    #:property prop:entry-point-transformer (lambda (self) (entry-point+expression-transformer-cbl self))
+    #:property prop:expression-prefix-operator (lambda (self) (entry-point+expression-transformer-exp self)))
+  (define (make-entry-point+expression-transformer cbl exp)
+    (entry-point+expression-transformer cbl exp)))
 
 (define-for-syntax (parse-rule stx adjustments)
   (syntax-parse stx
@@ -50,8 +50,8 @@
       #:adjustments adjustments)]))
 
 (define-syntax rule
-  (make-callable+expression-transformer
-   (callable-transformer
+  (make-entry-point+expression-transformer
+   (entry-point-transformer
     (lambda (stx adjustments)
       (parse-rule stx adjustments)))
    (expression-transformer

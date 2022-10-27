@@ -13,7 +13,7 @@
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
-         "callable.rkt"
+         "entry-point.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
          "name-root.rkt"
@@ -189,16 +189,16 @@
                     (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
               ...)))
 
-  (struct callable+expression+definition-transformer (cbl exp def)
-    #:property prop:callable-transformer (lambda (self) (callable+expression+definition-transformer-cbl self))
-    #:property prop:expression-prefix-operator (lambda (self) (callable+expression+definition-transformer-exp self))
-    #:property prop:definition-transformer (lambda (self) (callable+expression+definition-transformer-def self)))
-  (define (make-callable+expression+definition-transformer cbl exp def)
-    (callable+expression+definition-transformer cbl exp def)))
+  (struct entry-point+expression+definition-transformer (cbl exp def)
+    #:property prop:entry-point-transformer (lambda (self) (entry-point+expression+definition-transformer-cbl self))
+    #:property prop:expression-prefix-operator (lambda (self) (entry-point+expression+definition-transformer-exp self))
+    #:property prop:definition-transformer (lambda (self) (entry-point+expression+definition-transformer-def self)))
+  (define (make-entry-point+expression+definition-transformer cbl exp def)
+    (entry-point+expression+definition-transformer cbl exp def)))
 
 (define-syntax fun
-  (make-callable+expression+definition-transformer
-   (callable-transformer
+  (make-entry-point+expression+definition-transformer
+   (entry-point-transformer
     (lambda (stx adjustments)
       (define-values (term tail) (parse-anonymous-function stx adjustments))
       (syntax-parse tail
@@ -356,7 +356,7 @@
                            [else
                             (list (list kw arg+default) default)]))])
           (define body
-            ((callable-adjustments-wrap-body adjustments)
+            ((entry-point-adjustments-wrap-body adjustments)
              #`(nested-bindings
                 #,function-name
                 #f ; try-next
@@ -370,7 +370,7 @@
                    #,function-name #,pred
                    (rhombus-body-expression rhs))))))
           (define (adjust-args args)
-            (append (callable-adjustments-prefix-arguments adjustments)
+            (append (entry-point-adjustments-prefix-arguments adjustments)
                     args))
           (relocate
            (span-srcloc start end)
@@ -438,7 +438,7 @@
               (define n (car n+same))
               (define same (cdr n+same))
               (with-syntax ([(try-next pos-arg-id ...) (append
-                                                        (callable-adjustments-prefix-arguments adjustments)
+                                                        (entry-point-adjustments-prefix-arguments adjustments)
                                                         (generate-temporaries
                                                          (cons 'try-next
                                                                (fcase-pos fcase-args (find-matching-case n same)))))]
@@ -520,7 +520,7 @@
                                         maybe-bind-kwrest-seq ...
                                         maybe-bind-kwrest ...
 
-                                        #,((callable-adjustments-wrap-body adjustments)
+                                        #,((entry-point-adjustments-wrap-body adjustments)
                                            #`(add-annotation-check
                                               #,function-name
                                               pred

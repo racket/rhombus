@@ -235,26 +235,28 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  callable.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
-                    $body
-                    ...',
+  entry_point.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
+                       $bo≈dy
+                       ...',
 
-  callable.macro 'fun
-                  | ($binding, ..., $rest, ...) $maybe_res_ann:
-                      $body
-                      ...
-                  | ...'
+  entry_point.macro 'fun
+                     | ($binding, ..., $rest, ...) $maybe_res_ann:
+                         $body
+                         ...
+                     | ...'
 ){
 
- The @tech{callable} form of @rhombus(fun, ~callable) is the same as the
+ The @tech{entry point} form of @rhombus(fun, ~entry_point) is the same as the
  expression form of @rhombus(fun).
 
- A binding as a @deftech{callable} allows a form to work and cooperate
+ A binding as an @deftech{entry point} allows a form to work and cooperate
  with contexts such as @rhombus(constructor, ~class_clause) that
- syntactically require a function. That is, callable is a syntactic
- concept, and its corresponding run-time vale is simply a function.
- Besides @rhombus(fun, ~callable), the @rhombus(rule, ~callable) form is
- also bound as callable.
+ syntactically require a function. That is, an entry point is a syntactic
+ concept. Its corresponding run-time representation is normally a function,
+ but an entry point may need to be manipulated statically, such as adding
+ an extra argument to make it serve as a method.
+ Besides @rhombus(fun, ~entry_point), the @rhombus(rule, ~entry_point) form is
+ also bound as entry point.
 
 }
 

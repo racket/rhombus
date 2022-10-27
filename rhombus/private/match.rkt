@@ -10,7 +10,7 @@
          (submod "function.rkt" for-build)
          "realm.rkt"
          "parens.rkt"
-         (only-in "callable.rkt" no-adjustments))
+         (only-in "entry-point.rkt" no-adjustments))
 
 (provide match)
 

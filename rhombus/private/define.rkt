@@ -20,7 +20,7 @@
          "syntax.rkt"
          "dotted-sequence-parse.rkt"
          (submod "expression-syntax.rkt" for-define)
-         (only-in "callable.rkt" no-adjustments))
+         (only-in "entry-point.rkt" no-adjustments))
 
 (provide (rename-out [rhombus-define def]))
 
