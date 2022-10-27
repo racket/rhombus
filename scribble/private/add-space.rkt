@@ -15,6 +15,8 @@
                      [(stxclass) 'rhombus/syntax-class]
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for-clause]
+                     [(class_clause) 'rhombus/class-clause]
+                     [(callable) 'rhombus/callable]
                      [(#f) 'rhombus/expression]
                      [else #f]))
      (if space

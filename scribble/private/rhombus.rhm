@@ -143,7 +143,9 @@ expr.macro
           || kw === keyword(~ann)
           || kw === keyword(~stxclass)
           || kw === keyword(~reducer)
-          || kw === keyword(~for_clause))
+          || kw === keyword(~for_clause)
+          || kw === keyword(~class_clause)
+          || kw === keyword(~callable))
     | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
              '$main_tail ...')
     | Syntax.error("invalid space", kw)

@@ -233,6 +233,27 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 }
 
+
+@doc(
+  callable.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
+                    $body
+                    ...',
+
+  callable.macro 'fun
+                  | ($binding, ..., $rest, ...) $maybe_res_ann:
+                      $body
+                      ...
+                  | ...'
+){
+
+ The callable form of @rhombus(fun, ~callable) is the same as the
+ expression form of @rhombus(fun). This binding as a callable allows a
+ @rhombus(fun, ~callable) form is to work and cooperate with contexts
+ such as @rhombus(constructor, ~class_clause).
+
+}
+
+
 @doc(
   defn.macro 'operator ($operator_path $binding) $maybe_res_ann:
                 $body

@@ -1,6 +1,8 @@
 #lang racket/base
 
-(provide lambda/kwrest case-lambda/kwrest hash-remove*
+(provide lambda/kwrest
+         case-lambda/kwrest
+         hash-remove*
          procedure-reduce-keyword-arity/infer-name
          (for-syntax arity->syntax))
 
@@ -131,40 +133,32 @@
        #:attr kw-mand-error
        (match (@ s.mand-kws)
          ['() #f]
-         [(list kw) #`(raise-arguments-error 'name
-                                             "required keyword argument not supplied"
-                                             "required keyword" '#,kw)]
-         [kws #`(raise-arguments-error 'name
-                                       "required keyword arguments not supplied"
-                                       "required keywords" '#,kws)])
+         [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
+         [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
        #:attr pos-arity-stx (arity->syntax (@ pos-arity))
        #:attr kw-mand-arity (and (pair? (@ s.mand-kws)) #`'#,(@ s.mand-kws))
        #:attr kw-allowed-arity (and (pair? (@ s.mand-kws)) #`'#,(@ allowed-kws))
        #:with {~var case-tmps (pos-arity-case-tmps (@ pos-arity))} #f
-       #'(let*
-             ([kwhash-proc
-               (lambda (kwhash {~? s.pos.param/tmp} ... . {~? r ()})
-                 (let*
-                     ([kwr (hash-remove* kwhash '({~? s.kwp.kw} ...))]
-                      {~? [s.pos.id s.pos.expr/tmp]
-                          {~? [s.kwp.id
-                               (hash-ref kwhash 's.kwp.kw
-                                 (λ ()
-                                   {~? s.kwp.default
-                                       (raise-arguments-error
-                                        'name
-                                        "required keyword argument not supplied"
-                                        "required keyword" 's.kwp.mand-kw)}))]}}
-                      ...)
-                   b
-                   ...))]
-              [name
-               (case-lambda
-                 [(case-tmps.s ... . {~? case-tmps.r ()})
-                  {~? kw-mand-error
-                      (apply kwhash-proc '#hashalw() case-tmps.s ...
-                             {~? case-tmps.r '()})}]
-                 ...)])
+       #'(let* ([kwhash-proc
+                 (lambda (kwhash {~? s.pos.param/tmp} ... . {~? r ()})
+                   (let*
+                       ([kwr (hash-remove* kwhash '({~? s.kwp.kw} ...))]
+                        {~? [s.pos.id s.pos.expr/tmp]
+                            {~? [s.kwp.id
+                                 (hash-ref kwhash 's.kwp.kw
+                                           (λ ()
+                                             {~? s.kwp.default
+                                                 (raise-required-keyword-not-supplied 'name 's.kwp.mand-kw)}))]}}
+                        ...)
+                     b
+                     ...))]
+                [name
+                 (case-lambda
+                   [(case-tmps.s ... . {~? case-tmps.r ()})
+                    {~? kw-mand-error
+                        (apply kwhash-proc '#hashalw() case-tmps.s ...
+                               {~? case-tmps.r '()})}]
+                   ...)])
            {~? (procedure-reduce-keyword-arity
                 (make-keyword-hash-procedure kwhash-proc name)
                 pos-arity-stx
@@ -193,56 +187,49 @@
        #:attr kw-mand-error
        (match mand-kws
          ['() #f]
-         [(list kw) #`(raise-arguments-error 'name
-                                             "required keyword argument not supplied"
-                                             "required keyword" '#,kw)]
-         [kws #`(raise-arguments-error 'name
-                                       "required keyword arguments not supplied"
-                                       "required keywords" '#,kws)])
+         [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
+         [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
        #:attr pos-arity-stx (arity->syntax pos-arity)
        #:attr kw-mand-arity (and reduce-kws? #`'#,mand-kws)
        #:attr kw-allowed-arity (and reduce-kws? #`'#,overall-kws)
        #:with {~var case-tmps (pos-arity-case-tmps pos-arity)} #f
-       #'(let*
-             ([kwhash-proc
-               (lambda (kwhash . lst)
-                 (define N (length lst))
-                 (cond
-                   [(and {~? (begin 'c.r (<= c.s.pos-mand-N-stx N))
-                             (<= c.s.pos-mand-N-stx N c.s.pos-all-N-stx)}
-                         (hash-has-keys? kwhash '({~? c.s.kwp.mand-kw} ...))
-                         {~? 'c.kwr
-                             (subset? (hash-keys kwhash) '({~? c.s.kwp.kw} ...))})
-                    (let*
-                        ({~? [c.r (drop lst (min N c.s.pos-all-N-stx))]}
-                         {~? [c.kwr (hash-remove* kwhash '({~? c.s.kwp.kw} ...))]}
-                         {~?
-                          [c.s.pos.opt-id (if (< c.s.pos-index-stx N)
-                                              (list-ref lst c.s.pos-index-stx)
-                                              c.s.pos.default)]
-                          {~?
-                           [c.s.pos.mand (list-ref lst c.s.pos-index-stx)]
+       #'(let* ([kwhash-proc
+                 (lambda (kwhash . lst)
+                   (define N (length lst))
+                   (cond
+                     [(and {~? (begin 'c.r (<= c.s.pos-mand-N-stx N))
+                               (<= c.s.pos-mand-N-stx N c.s.pos-all-N-stx)}
+                           (hash-has-keys? kwhash '({~? c.s.kwp.mand-kw} ...))
+                           {~? 'c.kwr
+                               (subset? (hash-keys kwhash) '({~? c.s.kwp.kw} ...))})
+                      (let*
+                          ({~? [c.r (drop lst (min N c.s.pos-all-N-stx))]}
+                           {~? [c.kwr (hash-remove* kwhash '({~? c.s.kwp.kw} ...))]}
                            {~?
-                            [c.s.kwp.id
-                             (hash-ref kwhash 'c.s.kwp.kw
-                               (λ ()
-                                 {~? c.s.kwp.default
-                                     (raise-arguments-error
-                                      'name
-                                      "required keyword argument not supplied"
-                                      "required keyword" 'c.s.kwp.mand-kw)}))]}}}
-                         ...)
-                      b
-                      ...)]
-                   ...
-                   [else (raise-arguments-error 'name "no case matches")]))]
-              [name
-               (case-lambda
-                 [(case-tmps.s ... . {~? case-tmps.r ()})
-                  {~? kw-mand-error
-                      (apply kwhash-proc '#hashalw() case-tmps.s ...
-                             {~? case-tmps.r '()})}]
-                 ...)])
+                            [c.s.pos.opt-id (if (< c.s.pos-index-stx N)
+                                                (list-ref lst c.s.pos-index-stx)
+                                                c.s.pos.default)]
+                            {~?
+                             [c.s.pos.mand (list-ref lst c.s.pos-index-stx)]
+                             {~?
+                              [c.s.kwp.id
+                               (hash-ref kwhash 'c.s.kwp.kw
+                                         (λ ()
+                                           {~? c.s.kwp.default
+                                               (raise-required-keyword-not-supplied 'name
+                                                                                    'c.s.kwp.mand-kw)}))]}}}
+                           ...)
+                        b
+                        ...)]
+                     ...
+                     [else (raise-no-case-matches 'name)]))]
+                [name
+                 (case-lambda
+                   [(case-tmps.s ... . {~? case-tmps.r ()})
+                    {~? kw-mand-error
+                        (apply kwhash-proc '#hashalw() case-tmps.s ...
+                               {~? case-tmps.r '()})}]
+                   ...)])
            {~? (procedure-reduce-keyword-arity
                 (make-keyword-hash-procedure kwhash-proc name)
                 pos-arity-stx
@@ -263,9 +250,23 @@
 
 ;; ---------------------------------------------------------
 
-(define (make-keyword-hash-procedure
-         kwhash-proc
-         [proc (lambda ps (apply kwhash-proc '#hashalw() ps))])
+(define (raise-required-keyword-not-supplied name kw)
+  (raise-arguments-error name
+                         "required keyword argument not supplied"
+                         "required keyword" kw))
+
+(define (raise-required-keywords-not-supplied name kws)
+  (raise-arguments-error name
+                         "required keyword arguments not supplied"
+                         "required keywords" kws))
+
+(define (raise-no-case-matches name)
+  (raise-arguments-error name "no case matches"))
+
+;; ---------------------------------------------------------
+
+(define (make-keyword-hash-procedure kwhash-proc
+                                     [proc (lambda ps (apply kwhash-proc '#hashalw() ps))])
   (make-keyword-procedure
    (lambda (ks vs . ps)
      (apply kwhash-proc (keyword-lists->hash ks vs) ps))

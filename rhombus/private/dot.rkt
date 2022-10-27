@@ -96,12 +96,12 @@
 
 (define-values (prop:field-name->accessor field-name->accessor? field-name->accessor-ref)
   (make-struct-type-property 'field-name->accessor
-                             (lambda (field-names info)
+                             (lambda (field-names+ht info)
+                               (define field-names (car field-names+ht))
                                (define gen-acc (list-ref info 3))
-                               (for/hasheq ([name (in-list field-names)]
-                                            [i (in-naturals)])
-                                 (values name
-                                         (make-struct-field-accessor gen-acc i name))))))
+                               (for/fold ([ht (cdr field-names+ht)]) ([name (in-list field-names)]
+                                                                      [i (in-naturals)])
+                                 (hash-set ht name (make-struct-field-accessor gen-acc i name))))))
 
 ;; To tie a loop with built-in data structures:
 (define builtin->accessor-ref (lambda (v) #f))

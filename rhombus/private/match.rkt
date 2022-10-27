@@ -9,7 +9,8 @@
          "parse.rkt"
          (submod "function.rkt" for-build)
          "realm.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (only-in "callable.rkt" no-adjustments))
 
 (provide match)
 
@@ -39,7 +40,8 @@
                  . tail)
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (values
-         #`(#,(build-case-function #'match
+         #`(#,(build-case-function no-adjustments
+                                   #'match
                                    (l1falses #'(b ...))
                                    #'((b) ... (ignored))
                                    #`((b.parsed) ... (#,(binding-form
@@ -59,7 +61,8 @@
                  . tail)
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
         (values
-         #`(#,(build-case-function #'match
+         #`(#,(build-case-function no-adjustments
+                                   #'match
                                    (l1falses #'(b ...))
                                    #'((b) ... (unmatched))
                                    #`((b.parsed) ... (#,(binding-form

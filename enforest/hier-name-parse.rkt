@@ -8,6 +8,7 @@
 
 (define-syntax-class (:hier-name-seq in-space name-path-op name-root-ref)
   #:datum-literals (op)
+  #:description "identifier or dotted identifier"
   (pattern (~and stxes (root::name (op sep) . _))
            #:when (eq? name-path-op (syntax-e #'sep))
            #:do [(define head-id (in-space #'root.name))

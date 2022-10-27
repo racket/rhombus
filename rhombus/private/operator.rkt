@@ -10,7 +10,8 @@
          "syntax.rkt"
          "definition.rkt"
          "static-info.rkt"
-         (submod "function.rkt" for-build))
+         (submod "function.rkt" for-build)
+         (only-in "callable.rkt" no-adjustments))
 
 ;; The `operator` form takes something that looks like a function-style
 ;; operator definition and generates a combination of a transformer and
@@ -73,7 +74,8 @@
   (define (build-prefix-function name arg rhs start end ret-predicate)
     (syntax-parse #`(group #,arg)
       [arg::binding
-       (build-function name
+       (build-function no-adjustments
+                       name
                        #'(#f) #'(arg) #'(arg.parsed) #'(#f)
                        #'#f #'#f
                        #'#f #'#f
@@ -86,7 +88,8 @@
       [left::binding
        (syntax-parse #`(group #,right)
          [right::binding
-          (build-function name
+          (build-function no-adjustments
+                          name
                           #'(#f #f) #'(left right) #'(left.parsed right.parsed) #'(#f #f)
                           #'#f #'#f
                           #'#f #'#f

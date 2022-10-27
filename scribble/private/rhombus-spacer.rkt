@@ -188,8 +188,8 @@
 
 (define-for-syntax (for-body-spacer body)
   (syntax-parse body
-    [(group #:do id . args)
-     #`(group #:do #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
+    [(group (~and kw #:do) id . args)
+     #`(group kw #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
     [_
      body]))
 

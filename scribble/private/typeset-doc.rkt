@@ -20,12 +20,17 @@
                   in-reducer-space)
          (only-in (submod rhombus/private/for-clause for-class)
                   in-for-clause-space)
+         (only-in (submod rhombus/private/class-clause for-class)
+                  in-class-clause-space)
+         (only-in (submod rhombus/private/callable for-class)
+                  in-callable-space)
          (only-in rhombus
                   def val fun operator :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
-                  decl defn expr impo expo annotation bind reducer for_clause)
+                  decl defn expr impo expo annotation bind reducer for_clause
+                  class_clause callable)
          (only-in "rhombus.rhm"
                   rhombusblock
                   [rhombus one-rhombus])
@@ -205,9 +210,9 @@
     (pattern (~seq (~or expr bind) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind impo expo annotation reducer for_clause |.|)
+    #:literals (def defn expr decl bind impo expo annotation reducer for_clause class_clause callable |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annotation bind reducer expo for_clause) (op |.|) macro))
+    (pattern (~seq (~or defn decl expr annotation bind reducer expo for_clause class_clause callable) (op |.|) macro))
     (pattern (~seq (~or expr bind annotation) (op |.|) rule))
     (pattern (~seq (~or impo expo) (op |.|) modifier))
     (pattern (~seq def)))
@@ -231,7 +236,7 @@
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
     #:literals (def val fun operator :: defn |.| grammar rhombus-syntax $)
-    #:datum-literals (parens group op modifier class quotes)
+    #:datum-literals (parens group op modifier class class_clause callable quotes)
     [(group (~or def fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
     [(group (~or def val) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
@@ -432,32 +437,36 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo annotation reducer for_clause rhombus-syntax)
+    #:literals (impo expo annotation reducer for_clause class_clause callable rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
     [(group annotation . _) in-annotation-space]
     [(group reducer . _) in-reducer-space]
     [(group for_clause . _) in-for-clause-space]
+    [(group class_clause . _) in-class-clause-space]
+    [(group callable . _) in-callable-space]
     [(group rhombus-syntax . _) in-syntax-class-space]
     [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (impo expo annotation reducer for_clause bind rhombus-syntax)
+    #:literals (impo expo annotation reducer for_clause class_clause callable bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
     [(group annotation . _) 'ann]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
+    [(group class_clause . _) 'class_clause]
+    [(group callable . _) 'callable]
     [(group bind . _) 'bind]
     [(group rhombus-syntax . _) 'stxclass]
     [_ #f]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr impo expo annotation reducer for_clause bind grammar operator rhombus-syntax)
+    #:literals (defn decl expr impo expo annotation reducer for_clause class_clause callable bind grammar operator rhombus-syntax)
     #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
@@ -468,6 +477,8 @@
     [(group annotation . _) "annotation"]
     [(group reducer . _) "reducer"]
     [(group for_clause . _) "for clause"]
+    [(group class_clause . _) "class clause"]
+    [(group callable . _) "callable"]
     [(group bind . _) "binding operator"]
     ;; after expr, bind, etc. so that expr.subspecform gets "expression" not #f
     [(group _:specsubform-head . _) #f]

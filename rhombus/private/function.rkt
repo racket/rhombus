@@ -13,7 +13,7 @@
          "expression.rkt"
          "binding.rkt"
          "definition.rkt"
-         "expression+definition.rkt"
+         "callable.rkt"
          "parse.rkt"
          "nested-bindings.rkt"
          "name-root.rkt"
@@ -187,45 +187,29 @@
     (pattern (~seq
               (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
                     (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
-              ...))))
+              ...)))
+
+  (struct callable+expression+definition-transformer (cbl exp def)
+    #:property prop:callable-transformer (lambda (self) (callable+expression+definition-transformer-cbl self))
+    #:property prop:expression-prefix-operator (lambda (self) (callable+expression+definition-transformer-exp self))
+    #:property prop:definition-transformer (lambda (self) (callable+expression+definition-transformer-def self)))
+  (define (make-callable+expression+definition-transformer cbl exp def)
+    (callable+expression+definition-transformer cbl exp def)))
 
 (define-syntax fun
-  (make-expression+definition-transformer
+  (make-callable+expression+definition-transformer
+   (callable-transformer
+    (lambda (stx adjustments)
+      (define-values (term tail) (parse-anonymous-function stx adjustments))
+      (syntax-parse tail
+        [() term]
+        [_ (raise-syntax-error #f
+                               "unexpected extra terms"
+                               tail)])))
    (expression-transformer
     #'fun
     (lambda (stx)
-      (syntax-parse stx
-        #:datum-literals (group block alts)
-        [(form-id (alts-tag::alts
-                   (block (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                                 (~and rhs (_::block body ...))))
-                   ...+)
-                  . tail)
-         (values
-          (build-case-function (get-local-name #'form-id)
-                               #'((arg.kw ...) ...)
-                               #'((arg ...) ...) #'((arg.parsed ...) ...)
-                               #'(rest.arg ...) #'(rest.parsed ...)
-                               #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                               #'(ret.predicate ...)
-                               #'(rhs ...)
-                               #'form-id #'alts-tag)
-          #'tail)]
-        [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                  (~and rhs (_::block body ...))
-                  . tail)
-         (define fun
-           (build-function (get-local-name #'form-id)
-                           #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
-                           #'rest.arg #'rest.parsed
-                           #'rest.kwarg #'rest.kwparsed
-                           #'ret.predicate
-                           #'rhs
-                           #'form-id #'parens-tag))
-         (values (if (pair? (syntax-e #'ret.static-infos))
-                     (wrap-static-info fun #'#%call-result #'ret.static-infos)
-                     fun)
-                 #'tail)])))
+      (parse-anonymous-function stx no-adjustments)))
    (definition-transformer
      (lambda (stx)
       (syntax-parse stx
@@ -243,7 +227,8 @@
           the-name (syntax->list #'(ret.static-infos ...))
           (list
            #`(define #,the-name
-               #,(build-case-function the-name
+               #,(build-case-function no-adjustments
+                                      the-name
                                       #'((arg.kw ...) ...)
                                       #'((arg ...) ...) #'((arg.parsed ...) ...)
                                       #'(rest.arg ...) #'(rest.parsed ...)
@@ -259,7 +244,8 @@
           #'name.name (list #'ret.static-infos)
           (list
            #`(define name.name
-               #,(build-function #'name.name
+               #,(build-function no-adjustments
+                                 #'name.name
                                  #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
                                  #'rest.arg #'rest.parsed
                                  #'rest.kwarg #'rest.kwparsed
@@ -274,6 +260,42 @@
            [e::expression
             (list #'e.parsed)])])))))
 
+(define-for-syntax (parse-anonymous-function stx adjustments)
+  (syntax-parse stx
+    #:datum-literals (group block alts)
+    [(form-id (alts-tag::alts
+               (block (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
+                             (~and rhs (_::block body ...))))
+               ...+)
+              . tail)
+     (values
+      (build-case-function adjustments
+                           (get-local-name #'form-id)
+                           #'((arg.kw ...) ...)
+                           #'((arg ...) ...) #'((arg.parsed ...) ...)
+                           #'(rest.arg ...) #'(rest.parsed ...)
+                           #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                           #'(ret.predicate ...)
+                           #'(rhs ...)
+                           #'form-id #'alts-tag)
+      #'tail)]
+    [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
+              (~and rhs (_::block body ...))
+              . tail)
+     (define fun
+       (build-function adjustments
+                       (get-local-name #'form-id)
+                       #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                       #'rest.arg #'rest.parsed
+                       #'rest.kwarg #'rest.kwparsed
+                       #'ret.predicate
+                       #'rhs
+                       #'form-id #'parens-tag))
+     (values (if (pair? (syntax-e #'ret.static-infos))
+                 (wrap-static-info fun #'#%call-result #'ret.static-infos)
+                 fun)
+             #'tail)]))
+
 (begin-for-syntax
   (define (get-local-name who)
     (or (syntax-local-name) who))
@@ -287,7 +309,8 @@
                #:when (not (syntax-e kw)))
       arg))
 
-  (define (build-function function-name
+  (define (build-function adjustments
+                          function-name
                           kws args arg-parseds defaults
                           rest-arg rest-parsed
                           kwrest-arg kwrest-parsed
@@ -333,29 +356,33 @@
                            [else
                             (list (list kw arg+default) default)]))])
           (define body
-            #`(nested-bindings
-               #,function-name
-               #f ; try-next
-               argument-binding-failure
-               (tmp-id arg-info arg arg-default)
-               ...
-               maybe-match-rest
-               maybe-match-kwrest
-               (begin
-                 (add-annotation-check
-                  #,function-name #,pred
-                  (rhombus-body-expression rhs)))))
+            ((callable-adjustments-wrap-body adjustments)
+             #`(nested-bindings
+                #,function-name
+                #f ; try-next
+                argument-binding-failure
+                (tmp-id arg-info arg arg-default)
+                ...
+                maybe-match-rest
+                maybe-match-kwrest
+                (begin
+                  (add-annotation-check
+                   #,function-name #,pred
+                   (rhombus-body-expression rhs))))))
+          (define (adjust-args args)
+            (append (callable-adjustments-prefix-arguments adjustments) args))
           (relocate
            (span-srcloc start end)
            (if (syntax-e kwrest-arg)
                #`(lambda/kwrest
-                  (arg-form ... ...)
+                  #,(adjust-args #'(arg-form ... ...))
                   maybe-rest-tmp* ... maybe-kwrest-tmp ...
                   #,body)
-               #`(lambda (arg-form ... ... . maybe-rest-tmp)
+               #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
                    #,body)))))))
 
-  (define (build-case-function function-name
+  (define (build-case-function adjustments
+                               function-name
                                kwss-stx argss-stx arg-parsedss-stx
                                rest-args-stx rest-parseds-stx
                                kwrest-args-stx kwrest-parseds-stx
@@ -409,9 +436,11 @@
          #,@(for/list ([n+same (in-list n+sames)])
               (define n (car n+same))
               (define same (cdr n+same))
-              (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
-                                                        (cons 'try-next
-                                                              (fcase-pos fcase-args (find-matching-case n same))))]
+              (with-syntax ([(try-next pos-arg-id ...) (append
+                                                        (callable-adjustments-prefix-arguments adjustments)
+                                                        (generate-temporaries
+                                                         (cons 'try-next
+                                                               (fcase-pos fcase-args (find-matching-case n same)))))]
                             [(maybe-rest-tmp ...) (if (negative? n)
                                                       #'(#:rest rest-tmp)
                                                       #'())]
@@ -489,10 +518,12 @@
                                         maybe-bind-rest ...
                                         maybe-bind-kwrest-seq ...
                                         maybe-bind-kwrest ...
-                                        (add-annotation-check
-                                         #,function-name
-                                         pred
-                                         (rhombus-body-expression rhs)))))))]))]))))))
+
+                                        #,((callable-adjustments-wrap-body adjustments)
+                                           #`(add-annotation-check
+                                              #,function-name
+                                              pred
+                                              (rhombus-body-expression rhs))))))))]))]))))))
 
   (define (maybe-add-function-result-definition name static-infoss defns)
     (define (same-expression? a b)
