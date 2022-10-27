@@ -4,6 +4,7 @@
                      (only-in racket/set set-intersect set-union)
                      racket/syntax
                      syntax/parse
+                     (only-in enforest/transformer transform-in)
                      "srcloc.rkt"
                      "consistent.rkt"
                      "with-syntax.rkt"
@@ -370,7 +371,8 @@
                    #,function-name #,pred
                    (rhombus-body-expression rhs))))))
           (define (adjust-args args)
-            (append (callable-adjustments-prefix-arguments adjustments) args))
+            (append (map transform-in (callable-adjustments-prefix-arguments adjustments))
+                    args))
           (relocate
            (span-srcloc start end)
            (if (syntax-e kwrest-arg)
@@ -437,7 +439,7 @@
               (define n (car n+same))
               (define same (cdr n+same))
               (with-syntax ([(try-next pos-arg-id ...) (append
-                                                        (callable-adjustments-prefix-arguments adjustments)
+                                                        (map transform-in (callable-adjustments-prefix-arguments adjustments))
                                                         (generate-temporaries
                                                          (cons 'try-next
                                                                (fcase-pos fcase-args (find-matching-case n same)))))]

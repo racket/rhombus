@@ -26,6 +26,9 @@
 (provide bind
          (for-syntax bind_meta))
 
+(module+ for-class
+  (provide (for-syntax make-binding-prefix-operator)))
+
 (define-simple-name-root bind
   macro
   rule

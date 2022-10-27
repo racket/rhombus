@@ -9,6 +9,8 @@
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
+         (submod "binding-syntax.rkt" for-class)
+         (for-syntax "class-binder.rkt")
          "annotation.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
@@ -33,6 +35,9 @@
          final
          nonfinal
          authentic)
+
+(module+ for-meta
+  (provide (for-space rhombus/class-clause bind)))
 
 (begin-for-syntax
   (struct class-desc (final? class:id constructor-id fields constructor-makers))
@@ -123,6 +128,9 @@
         (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                       [(class:name) (generate-temporaries #'(name))]
                       [(make-name) (generate-temporaries #'(name))]
+                      [(core-bind-name) (if (hash-ref options 'bind.instance #f)
+                                            (generate-temporaries #'(name))
+                                            #'(name))]
                       [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                       [(name-field ...) (for/list ([field (in-list fields)])
                                           (intro
@@ -198,7 +206,7 @@
                          (let-syntax ([#,constructor-id (make-rename-transformer (quote-syntax make-name))])
                            (let ([name (wrap-constructor
                                         name make-name name?
-                                        #,(hash-ref options 'constructor-block))])
+                                        #,(hash-ref options 'constructor-rhs))])
                              name))))]
                    [else
                     (list
@@ -206,7 +214,7 @@
                          (lambda (#,constructor-id)
                            (let ([name (wrap-constructor
                                         name make-name name?
-                                        #,(hash-ref options 'constructor-block))])
+                                        #,(hash-ref options 'constructor-rhs))])
                              name)))
                      #`(define constructor-name
                          #,(cond
@@ -218,16 +226,26 @@
                                          (list (length (class-desc-fields super))))))]
                              [else #'(constructor-maker-name make-name)])))])
                  null)
+             (if (syntax-e #'core-bind-name)
+                 (list
+                  #`(define-binding-syntax core-bind-name
+                      (binding-transformer
+                       #'name
+                       (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                                           (quote-syntax name?)
+                                                           #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                                           (list (quote-syntax name-field) ...)
+                                                           #:accessor->info? #t
+                                                           (list (quote-syntax field.static-infos) ...)))))
+                 null)
+             (cond
+               [(hash-ref options 'bind.instance #f)
+                => (lambda (bind)
+                     (list
+                      #`(define-binding-syntax name
+                          (wrap-class-binder name core-bind-name #,(car bind) #,(cadr bind) make-binding-prefix-operator))))]
+               [else null])
              (list
-              #`(define-binding-syntax name
-                  (binding-transformer
-                   #'name
-                   (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
-                                                       (quote-syntax name?)
-                                                       #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                       (list (quote-syntax name-field) ...)
-                                                       #:accessor->info? #t
-                                                       (list (quote-syntax field.static-infos) ...))))
               #'(define-annotation-constructor name
                   ([accessors (list (quote-syntax name-field) ...)])
                   (quote-syntax name?)
@@ -337,22 +355,18 @@
 ;; calling the primitive constructor
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
-    [(_ name constructor-id predicate-id (block-id::block g))
+    [(_ name constructor-id predicate-id g)
      #:do [(define adjustments (callable-adjustments
                                 '()
                                 (lambda (body)
                                   #`(let ([r #,body])
                                       (if (predicate-id r)
                                           r
-                                          #,(quasisyntax/loc #'block-id
+                                          #,(quasisyntax/loc #'g
                                               (raise-constructor-result-error 'name r)))))
                                 #f))]
      #:with (~var lam (:callable adjustments)) #'g
-     #'lam.parsed]
-    [(_ name constructor-id predicate-id b)
-     (raise-syntax-error #f
-                         "expected a single expression for a function as block body"
-                         #'b)]))
+     #'lam.parsed]))
 
 (define (raise-constructor-result-error who val)
   (raise-contract-error who
@@ -418,6 +432,13 @@
   (syntax-parse forms
     [(clause::class-clause ...)
      (define clauses (apply append (map syntax->list (syntax->list #'(clause.parsed ...)))))
+     (define (extract-rhs b)
+       (syntax-parse b
+         [(_::block g) #'g]
+         [else
+          (raise-syntax-error #f
+                              "expected a single callable in block body"
+                              b)]))
      (let loop ([clauses clauses] [options #hasheq()])
        (cond
          [(null? clauses) options]
@@ -434,8 +455,12 @@
                (when (hash-has-key? options 'constructor-id)
                  (raise-syntax-error #f "redundant constructor clause" orig-stx clause))
                (hash-set (hash-set options 'constructor-id #'id)
-                         'constructor-block
-                         #'block)]
+                         'constructor-rhs
+                         (extract-rhs #'block))]
+              [(bind.instance core-name block)
+               (when (hash-has-key? options 'bind.instances)
+                 (raise-syntax-error #f "redundant binder clause" orig-stx clause))
+               (hash-set options 'bind.instance (list #'core-name (extract-rhs #'block)))]
               [(final)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "redundant finality clause" orig-stx clause))
@@ -470,6 +495,21 @@
            (~and (_::block . _)
                  constructor-block))
         #`[(constructor make constructor-block)]]))))
+
+(define-name-root bind
+  #:space rhombus/class-clause
+  #:fields
+  ([instance bind.instance]))
+
+(define-syntax bind.instance
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (_::parens (group core:identifier))
+           (~and (_::block . _)
+                 binder-block))
+        #`[(bind.instance core binder-block)]]))))
 
 (define-syntax nonfinal
   (class-clause-transformer
