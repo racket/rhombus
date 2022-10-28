@@ -156,6 +156,7 @@
   ()
   #'set? set-static-info
   1
+  #f
   (lambda (arg-id predicate-stxs)
     #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
         (#,(car predicate-stxs) v)))

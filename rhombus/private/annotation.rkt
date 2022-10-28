@@ -15,7 +15,8 @@
                      "misuse.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     "keyword-sort.rkt")
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -146,11 +147,12 @@
                         [_ 'does-not-happen])))))
   
   (define (parse-annotation-of stx predicate-stx static-infos
-                               sub-n predicate-maker info-maker)
+                               sub-n kws predicate-maker info-maker)
     (syntax-parse stx
       #:datum-literals (parens)
       [(form-id ((~and tag parens) g ...) . tail)
-       (define gs (syntax->list #'(g ...)))
+       (define unsorted-gs (syntax->list #'(g ...)))
+       (define gs (sort-with-respect-to-keywords kws unsorted-gs stx))
        (unless (= (length gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
@@ -174,7 +176,7 @@
                #'tail)]))
      
   (define (annotation-constructor name predicate-stx static-infos
-                                  sub-n predicate-maker info-maker)
+                                  sub-n kws predicate-maker info-maker)
     (values
      ;; root
      (annotation-prefix-operator
@@ -195,10 +197,10 @@
       (lambda (stx)
         (parse-annotation-of (replace-head-dotted-name stx)
                              predicate-stx static-infos
-                             sub-n predicate-maker info-maker)))))
+                             sub-n kws predicate-maker info-maker)))))
 
   (define (annotation-of-constructor name predicate-stx static-infos
-                                     sub-n predicate-maker info-maker)
+                                     sub-n kws predicate-maker info-maker)
     (annotation-prefix-operator
       name
       '((default . stronger))
@@ -209,7 +211,7 @@
           [(form-id (op |.|) (~and of-id of) . tail)
            (parse-annotation-of #`(of-id . tail)
                                 predicate-stx static-infos
-                                sub-n predicate-maker info-maker)]
+                                sub-n kws predicate-maker info-maker)]
           [(form-id (op |.|) other:identifier . tail)
            (raise-syntax-error #f
                                "field not provided by annotation"
@@ -226,7 +228,7 @@
     [(_ name
         binds
         predicate-stx static-infos
-        sub-n predicate-maker info-maker)
+        sub-n kws predicate-maker info-maker)
      (cond
        [(eq? (syntax-local-context) 'module)
         #'(begin
@@ -234,7 +236,7 @@
               (define-values (root-proc of-proc)
                 (let binds
                     (annotation-constructor #'name predicate-stx static-infos
-                                            sub-n predicate-maker info-maker))))
+                                            sub-n 'kws predicate-maker info-maker))))
             (define-name-root name
               #:space rhombus/annotation
               #:fields (of)
@@ -245,7 +247,7 @@
         #`(define-syntax #,(in-annotation-space #'name)
             (let binds
                 (annotation-of-constructor #'name predicate-stx static-infos
-                                           sub-n predicate-maker info-maker)))])]))
+                                           sub-n 'kws predicate-maker info-maker)))])]))
 
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator

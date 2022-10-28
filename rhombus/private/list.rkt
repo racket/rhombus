@@ -106,6 +106,7 @@
   ()
   #'list? list-static-infos
   1
+  #f
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-list #,arg-id)])
         (#,(car predicate-stxs) e)))
@@ -119,6 +120,7 @@
   ()
   #'nonempty-list? list-static-infos
   1
+  #f
   (lambda (arg-id predicate-stxs)
     #`(for/and ([e (in-list #,arg-id)])
         (#,(car predicate-stxs) e)))

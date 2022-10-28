@@ -15,10 +15,17 @@
     $identifier_path . $identifier,
 
   grammar field_spec:
-    $identifier
-    $identifier :: $$(@rhombus(annotation, ~var))
-    $$(@rhombus(mutable, ~bind)) $identifier
-    $$(@rhombus(mutable, ~bind)) $identifier :: $$(@rhombus(annotation, ~var)),
+    $maybe_mutable $identifier $maybe_annotation
+    $keyword: $maybe_mutable $identifier $maybe_annotation
+    $keyword,
+
+  grammar maybe_mutable:
+    $$(@rhombus(mutable, ~bind))
+    ε,
+
+  grammar maybe_annotation:
+    :: $$(@rhombus(annotation, ~var))
+    ε,
 
   grammar class_clause_or_body:
     $class_clause
@@ -27,8 +34,7 @@
   class_clause.macro 'extends $identifier_path',
   class_clause.macro 'final',
   class_clause.macro 'nonfinal',
-  class_clause.macro 'field $field_spec: $body; ...',
-  class_clause.macro 'field $$(@rhombus(binding, ~var)): $body; ...',
+  class_clause.macro 'field $identifier $maybe_annotation: $body; ...',
   class_clause.macro 'internal $identifier',
   class_clause.macro 'constructor ($make_identifier): $entry_point',
   class_clause.macro 'constructor: $entry_point',
@@ -50,7 +56,7 @@
  @item{an annotation, which is satisfied by any instance of the class,
   and an annotation constructor @rhombus(identifier_path.of), which by
   default takes as many annotation arguments as supplied
-  @rhombus(field_specs)s in parentheses;},
+  @rhombus(field_spec)s in parentheses;},
 
  @item{a binding-pattern constructor, which by default takes as many
   patterns as the supplied @rhombus(field_spec)s in parentheses and
@@ -65,10 +71,18 @@
 
 )
 
+ A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
+ implies that the default constructor expects the corresponding argument
+ as a keyword argument instwad of a by-position argument. The default
+ annotation and binding pattern similarly expect a keyword-tagged subform
+ instead of a by-position form for the corresponding fields. The name of
+ the field for access with @rhombus(.) is the identifier, if present,
+ otherwise the name is the symbolic form of the keyword.
+
  If a block follows a @rhombus(class) form's @rhombus(field_spec) sequence,
  it contains a mixture of definitions, expressions, and class clauses. A
  @deftech{class clause} adjusts the class and bindings created by the
- @rhombus(class) form; it be one of the predefined class clause forms,
+ @rhombus(class) form; it be one of the predefined clause forms,
  or it can be a macro that ultimately expands to a predefined form.
  Definitions and expressions in a @rhombus(class) block are evaluated at
  the same time as the @rhombus(class) form is evaluated (not when an
@@ -89,18 +103,15 @@
  @rhombus(final, ~class_clause) or @rhombus(nonfinal, ~class_clause).
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
- then additional fields are added to the class based on the names of
- variable bound by @rhombus(binding, ~var) or @rhombus(identifier). The
- additional fields are not represented by arguments to the constructor.
- Instead, the @rhombus(body) block in @rhombus(field, ~class_clause)
- gives the added fields their initial values; that block is evaluated at
- the time the @rhombus(class) form is evaluated, not when an object is
- instantiated, and the same values are used for every instance of the
- class. When a @rhombus(field, ~class_clause) declaration follows the
- restricted shape of @rhombus(field_spec), then it can be mutable
- (possibly with an annotation), but a general @rhombus(binding, ~var)
- form for @rhombus(field, ~class_clause) is not allowed to start with
- @rhombus(mutable, ~bind).
+ then an additional field is added to the class, but the additional field
+ is not represented by an arguments to the constructor. Instead, the
+ @rhombus(body) block in @rhombus(field, ~class_clause) gives the added
+ field its initial value; that block is evaluated at the time the
+ @rhombus(class) form is evaluated, not when an object is instantiated,
+ and the same values are used for every instance of the class. All fields
+ added through a @rhombus(field, ~class_clause) clause are mutable. The
+ @rhombus(field, ~class_clause) can appear any number of times as a
+ @rhombus(class_clause).
 
  When a @rhombus(class_clause) is an @rhombus(internal, ~class_clause)
  form, then the clause's @rhombus(identifier) is bound to the default
@@ -177,10 +188,10 @@
  @rhombus(class_clause) can have @rhombus(authentic, ~class_clause).
  
  Each field name must be distinct from all other field names, whether
- from a @rhombus(field_spec)'s @rhombus(identifier) or from a
- @rhombus(field, ~class_clause)'s @rhombus(binding, ~var). If an
- @rhombus(extends) clause is present, then each field name must also be
- distinct from any field name in the superclass.
+ from a parenthesized @rhombus(field_spec) or from a
+ @rhombus(field, ~class_clause) clause. If an @rhombus(extends) clause is
+ present, then each field name must also be distinct from any field name
+ in the superclass.
 
  See @secref("static-info-rules") for information about static
  information associated with classes.
