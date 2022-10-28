@@ -7,7 +7,7 @@
   ~literal: :: extends,
   defn.macro 'class $identifier_path($field, ...)',
   defn.macro 'class $identifier_path($field, ...):
-                $class_clause
+                $class_clause_or_body
                 ...',
 
   grammar identifier_path:
@@ -17,7 +17,11 @@
   grammar field:
     $identifier
     $identifier :: $$(@rhombus(annotation, ~var)),
-  
+
+  grammar class_clause_or_body:
+    $class_clause
+    $body,
+
   class_clause.macro 'extends $identifier_path',
   class_clause.macro 'final',
   class_clause.macro 'nonfinal',
@@ -51,9 +55,15 @@
 
 )
 
- A @deftech{class clause} represented by @rhombus(class_clause) can be
- one of the predefined class clause forms, or a macro that ultimately
- expands to a predefined form.
+ If a block follows a @rhombus(class) form's @rhombus(field) sequence,
+ it contains a mixture of definitions, expressions, and class clauses. A
+ @deftech{class clause} adjusts the class and bindings created by the
+ @rhombus(class) form; it be one of the predefined class clause forms,
+ or it can be a macro that ultimately expands to a predefined form.
+ Definitions and expressions in a @rhombus(class) block are evaluated at
+ the same time as the @rhombus(class) form is evaluated (not when an
+ instance is created), and definitions are scoped to the block for
+ potential use by class clauses.
 
  When a @rhombus(class_clause) is an @rhombus(extends, ~class_clause)
  form, the new class is created as a subclass of the extended class. The
@@ -74,11 +84,11 @@
  would be bound to the @rhombus(class) form's main
  @rhombus(identifier_path) if not replaced by clauses like
  @rhombus(constructor, ~class_clause) and
- @rhombus(binding, ~class_clause). In other words,
- @rhombus(identifier) accesses the primitive class representation,
- instead of the customized view. If the internal @rhombus(identifier) is
- not exported, then that primitive view stays private to the scope of its
- definition.
+ @rhombus(binding, ~class_clause). In other words, @rhombus(identifier)
+ accesses the primitive class representation, instead of the customized
+ view. If the internal @rhombus(identifier) is not exported, then that
+ primitive view stays private to the scope of its definition. At most one
+ @rhombus(class_clause) can have @rhombus(internal, ~class_clause).
 
  The @rhombus(class_clause) forms @rhombus(constructor, ~class_clause),
  @rhombus(binding, ~class_clause), and

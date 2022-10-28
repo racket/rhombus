@@ -6,6 +6,7 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt")
+         "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -28,7 +29,8 @@
          "implicit.rkt"
          "error.rkt"
          "class-clause.rkt"
-         "entry-point.rkt")
+         "entry-point.rkt"
+         "equal.rkt")
 
 (provide (rename-out [rhombus-class class])
          extends
@@ -96,219 +98,283 @@
            options::options-block)
         #:with full-name::dotted-identifier #'name-seq
         #:with name #'full-name.name
-        (define options (parse-options stxes #'(options.form ...)))
-        (define parent-name (hash-ref options 'extends #f))
-        (define super (and parent-name
-                           (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
-                               (raise-syntax-error #f "not a class name" stxes parent-name))))
-        (define final? (hash-ref options 'final? (not super)))
-        (define authentic? (hash-ref options 'authentic? #f))
-        (define internal-id (hash-ref options 'internal #f))
-        (define (maybe-use-internal-id id clause-name)
-          (cond
-            [(syntax-e id) id]
-            [internal-id internal-id]
-            [else (raise-syntax-error #f
-                                      (format "no `internal` clause, and no maker name in `~a` clause"
-                                              clause-name)
-                                      stxes)]))
-        (define constructor-id (let ([id (hash-ref options 'constructor-id #f)])
-                                 (and id
-                                      (maybe-use-internal-id id 'constructor))))
-        (define binding-id (let ([b (hash-ref options 'binding #f)])
-                             (and b
-                                  (maybe-use-internal-id (car b) 'binding))))
-        (define annotation-id (let ([b (hash-ref options 'annotation #f)])
-                                (and b
-                                     (maybe-use-internal-id (car b) 'annotation))))
-        (when super
-          (when (class-desc-final? super)
-            (raise-syntax-error #f
-                                "superclass is final and cannot be extended"
-                                stxes
-                                parent-name))
-          (when (and (class-desc-constructor-makers super)
-                     (not constructor-id))
-            (raise-syntax-error #f
-                                "superclass does not use the default constructor, so a subclass needs `~constructor`"
-                                stxes
-                                parent-name)))
-        (define fields (syntax->list #'(field.name ...)))
-        (check-duplicate-field-names stxes fields super)
-        (define-values (immutable-fields mutable-fields)
-          (for/fold ([imm '()] [m '()] #:result (values (reverse imm) (reverse m)))
-                    ([field (in-list fields)]
-                     [mutable (syntax->list #'(field.mutable ...))])
-            (if (syntax-e mutable)
-                (values imm (cons field m))
-                (values (cons field imm) m))))
-        (define intro (make-syntax-introducer))
-        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
-                      [(class:name) (generate-temporaries #'(name))]
-                      [(make-name) (generate-temporaries #'(name))]
-                      [(core-bind-name) (if (hash-ref options 'binding #f)
-                                            (generate-temporaries #'(name))
-                                            #'(name))]
-                      [(core-ann-name) (if (hash-ref options 'annotation #f)
+        #:with orig-stx stxes
+        (define body #'(options.form ...))
+        (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
+                                        full-name name
+                                        (field.name ...)
+                                        (field.mutable ...)
+                                        (field.predicate ...)
+                                        (field.annotation-str ...)
+                                        (field.static-infos ...)])
+        (cond
+          [(null? (syntax-e body))
+           #`((class-finish #,finish-data))]
+          [else
+           #`((rhombus-mixed-forwarding-sequence (class-finish #,finish-data) rhombus-class
+                                                 (class-body-step . #,(syntax-local-introduce body))))])]))))
+
+(define-syntax class-body-step
+  (lambda (stx)
+    ;; parse the first form as a class clause, if possible, otherwise assume
+    ;; an expression or definition
+    (syntax-parse stx
+      [(_ form . rest)
+       #:with clause::class-clause (syntax-local-introduce #'form)
+       #:with (parsed ...) (syntax-local-introduce #'clause.parsed)
+       #`(begin
+           parsed
+           ...
+           (class-body-step . rest))]
+      [(_ form . rest)
+       #`(begin
+           (rhombus-definition form)
+           (class-body-step . rest))]
+      [(_) #'(begin)])))
+
+(define-syntax class-finish
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ [orig-stx base-stx scope-stx
+                    full-name name
+                    (field-name ...)
+                    (field-mutable ...)
+                    (field-predicate ...)
+                    (field-annotation-str ...)
+                    (field-static-infos ...)]
+          option ...)
+       (define stxes #'orig-stx)
+       (define options (parse-options #'orig-stx #'(option ...)))
+       (define parent-name (hash-ref options 'extends #f))
+       (define super (and parent-name
+                          (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
+                              (raise-syntax-error #f "not a class name" stxes parent-name))))
+       (define final? (hash-ref options 'final? (not super)))
+       (define authentic? (hash-ref options 'authentic? #f))
+       (define internal-id (hash-ref options 'internal #f))
+       (define expose (and internal-id
+                           (let ([intro (make-syntax-delta-introducer #'scope-stx #'base-stx)])
+                             (lambda (stx)
+                               (intro stx 'remove)))))
+       (define (maybe-use-internal-id id clause-name)
+         (cond
+           [(syntax-e id) id]
+           [internal-id internal-id]
+           [else (raise-syntax-error #f
+                                     (format "no `internal` clause, and no maker name in `~a` clause"
+                                             clause-name)
+                                     stxes)]))
+       (define constructor-id (let ([id (hash-ref options 'constructor-id #f)])
+                                (and id
+                                     (maybe-use-internal-id id 'constructor))))
+       (define binding-id (let ([b (hash-ref options 'binding #f)])
+                            (and b
+                                 (maybe-use-internal-id (car b) 'binding))))
+       (define annotation-id (let ([b (hash-ref options 'annotation #f)])
+                               (and b
+                                    (maybe-use-internal-id (car b) 'annotation))))
+       (when super
+         (when (class-desc-final? super)
+           (raise-syntax-error #f
+                               "superclass is final and cannot be extended"
+                               stxes
+                               parent-name))
+         (when (and (class-desc-constructor-makers super)
+                    (not constructor-id))
+           (raise-syntax-error #f
+                               "superclass does not use the default constructor, so a subclass needs `~constructor`"
+                               stxes
+                               parent-name)))
+       (define fields (syntax->list #'(field-name ...)))
+       (check-duplicate-field-names stxes fields super)
+       (define-values (immutable-fields mutable-fields)
+         (for/fold ([imm '()] [m '()] #:result (values (reverse imm) (reverse m)))
+                   ([field (in-list fields)]
+                    [mutable (syntax->list #'(field-mutable ...))])
+           (if (syntax-e mutable)
+               (values imm (cons field m))
+               (values (cons field imm) m))))
+       (define intro (make-syntax-introducer))
+       (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
+                     [(class:name) (generate-temporaries #'(name))]
+                     [(make-name) (generate-temporaries #'(name))]
+                     [(core-bind-name) (if (hash-ref options 'binding #f)
                                            (generate-temporaries #'(name))
                                            #'(name))]
-                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
-                      [(name-field ...) (for/list ([field (in-list fields)])
-                                          (intro
-                                           (datum->syntax field
-                                                          (string->symbol (format "~a.~a"
-                                                                                  (syntax-e #'name)
-                                                                                  (syntax-e field)))
-                                                          field)))]
-                      [(set-name-field! ...) (for/list ([field (in-list mutable-fields)])
-                                               (intro
-                                                (datum->syntax field
-                                                               (string->symbol (format "set-~a.~a!"
-                                                                                       (syntax-e #'name)
-                                                                                       (syntax-e field)))
-                                                               field)))]
-                      [cnt (length fields)]
-                      [(field-index ...) (for/list ([field (in-list fields)]
-                                                    [i (in-naturals)])
-                                           i)]
-                      [(immutable-field-index ...) (for/list ([field (in-list immutable-fields)]
-                                                              [i (in-naturals)])
-                                                     i)]
-                      [(mutable-field ...) mutable-fields]
-                      [(mutable-field-index ...) (for/list ([mutable (syntax->list #'(field.mutable ...))]
-                                                            [i (in-naturals)]
-                                                            #:when (syntax-e mutable))
-                                                   i)]
-                      [((super-field-name super-name-field super-field-static-infos) ...) (if super
-                                                                                              (class-desc-fields super)
-                                                                                              '())])
-          (with-syntax ([constructor-name (if constructor-id
-                                              (car (generate-temporaries #'(name)))
-                                              #'make-name)]
-                        [constructor-maker-name (and (or (not final?)
-                                                         super)
-                                                     constructor-id
-                                                     (car (generate-temporaries #'(maker))))])
-            (append
-             (list
-              #`(define-values (class:name make-name name? name-field ... set-name-field! ...)
-                  (let-values ([(class:name name name? name-ref name-set!)
-                                (make-struct-type 'name
-                                                  #,(and super
-                                                         (class-desc-class:id super))
-                                                  cnt 0 #f
-                                                  (list (cons prop:field-name->accessor
-                                                              (cons '(field.name ...)
-                                                                    (hasheq (~@ 'super-field-name super-name-field)
-                                                                            ...)))
-                                                        #,@(if final?
-                                                               (list #'(cons prop:sealed #t))
-                                                               '())
-                                                        #,@(if authentic?
-                                                               (list #'(cons prop:authentic #t))
-                                                               '()))
-                                                  #f #f
-                                                  '(immutable-field-index ...)
-                                                  #,(build-guard-expr fields
-                                                                      (syntax->list #'(field.predicate ...))
-                                                                      (map syntax-e
-                                                                           (syntax->list #'(field.annotation-str ...)))))])
-                    (values class:name name name?
-                            (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
-                            ...
-                            (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
-                            ...))))
-             (if constructor-id
-                 (cond
-                   [(and final?
-                         (not super))
-                    (list
-                     #`(define constructor-name
-                         (let-syntax ([#,constructor-id (make-rename-transformer (quote-syntax make-name))])
-                           (let ([name (wrap-constructor
-                                        name make-name name?
-                                        #,(hash-ref options 'constructor-rhs))])
-                             name))))]
-                   [else
-                    (list
-                     #`(define constructor-maker-name
-                         (lambda (#,constructor-id)
-                           (let ([name (wrap-constructor
-                                        name make-name name?
-                                        #,(hash-ref options 'constructor-rhs))])
-                             name)))
-                     #`(define constructor-name
-                         #,(cond
-                             [super
-                              (compose-constructor
-                               #'make-name
-                               #`([#,(length fields) constructor-maker-name]
-                                  #,@(or (class-desc-constructor-makers super)
-                                         (list (length (class-desc-fields super))))))]
-                             [else #'(constructor-maker-name make-name)])))])
-                 null)
-             (list
-              #`(define-binding-syntax core-bind-name
-                  (binding-transformer
-                   #'name
-                   (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
-                                                       (quote-syntax name?)
-                                                       #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                       (list (quote-syntax name-field) ...)
-                                                       #:accessor->info? #t
-                                                       (list (quote-syntax field.static-infos) ...)))))
-             (cond
-               [(hash-ref options 'binding #f)
-                => (lambda (bind)
-                     (define into (make-syntax-introducer))
+                     [(core-ann-name) (if (hash-ref options 'annotation #f)
+                                          (generate-temporaries #'(name))
+                                          #'(name))]
+                     [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
+                     [(name-field ...) (for/list ([field (in-list fields)])
+                                         (intro
+                                          (datum->syntax field
+                                                         (string->symbol (format "~a.~a"
+                                                                                 (syntax-e #'name)
+                                                                                 (syntax-e field)))
+                                                         field)))]
+                     [(set-name-field! ...) (for/list ([field (in-list mutable-fields)])
+                                              (intro
+                                               (datum->syntax field
+                                                              (string->symbol (format "set-~a.~a!"
+                                                                                      (syntax-e #'name)
+                                                                                      (syntax-e field)))
+                                                              field)))]
+                     [cnt (length fields)]
+                     [(field-index ...) (for/list ([field (in-list fields)]
+                                                   [i (in-naturals)])
+                                          i)]
+                     [(immutable-field-index ...) (for/list ([field (in-list immutable-fields)]
+                                                             [i (in-naturals)])
+                                                    i)]
+                     [(mutable-field ...) mutable-fields]
+                     [(mutable-field-index ...) (for/list ([mutable (syntax->list #'(field-mutable ...))]
+                                                           [i (in-naturals)]
+                                                           #:when (syntax-e mutable))
+                                                  i)]
+                     [((super-field-name super-name-field super-field-static-infos) ...) (if super
+                                                                                             (class-desc-fields super)
+                                                                                             '())])
+         (with-syntax ([constructor-name (if constructor-id
+                                             (car (generate-temporaries #'(name)))
+                                             #'make-name)]
+                       [constructor-maker-name (and (or (not final?)
+                                                        super)
+                                                    constructor-id
+                                                    (car (generate-temporaries #'(maker))))])
+           (define defns
+             (append
+              (list
+               #`(define-values (class:name make-name name? name-field ... set-name-field! ...)
+                   (let-values ([(class:name name name? name-ref name-set!)
+                                 (make-struct-type 'name
+                                                   #,(and super
+                                                          (class-desc-class:id super))
+                                                   cnt 0 #f
+                                                   (list (cons prop:field-name->accessor
+                                                               (cons '(field-name ...)
+                                                                     (hasheq (~@ 'super-field-name super-name-field)
+                                                                             ...)))
+                                                         #,@(if final?
+                                                                (list #'(cons prop:sealed #t))
+                                                                '())
+                                                         #,@(if authentic?
+                                                                (list #'(cons prop:authentic #t))
+                                                                '()))
+                                                   #f #f
+                                                   '(immutable-field-index ...)
+                                                   #,(build-guard-expr fields
+                                                                       (syntax->list #'(field-predicate ...))
+                                                                       (map syntax-e
+                                                                            (syntax->list #'(field-annotation-str ...)))))])
+                     (values class:name name name?
+                             (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
+                             ...
+                             (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
+                             ...))))
+              (if internal-id
+                  (list
+                   #`(define-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax make-name))))
+                  null)
+              (if constructor-id
+                  (cond
+                    [(and final?
+                          (not super))
                      (list
-                      #`(define-binding-syntax #,(intro binding-id) (make-rename-transformer
-                                                                     (quote-syntax #,(in-binding-space #'core-bind-name))))
-                      #`(define-binding-syntax name
-                          (wrap-class-transformer name #,(intro (cadr bind)) make-binding-prefix-operator))))]
-               [else null])
-             (list
-              #'(define-annotation-constructor core-ann-name
-                  ([accessors (list (quote-syntax name-field) ...)])
-                  (quote-syntax name?)
-                  (quote-syntax ((#%dot-provider name-instance)))
-                  cnt
-                  (make-class-instance-predicate accessors)
-                  (make-class-instance-static-infos accessors)))
-             (cond
-               [(hash-ref options 'annotation #f)
-                => (lambda (ann)
-                     (define into (make-syntax-introducer))
+                      #`(define constructor-name
+                          (let-syntax ([#,constructor-id (make-rename-transformer (quote-syntax make-name))])
+                            (let ([name (wrap-constructor
+                                         name make-name name?
+                                         #,(hash-ref options 'constructor-rhs))])
+                              name))))]
+                    [else
                      (list
-                      #`(define-annotation-syntax #,(intro annotation-id) (make-rename-transformer
-                                                                           (quote-syntax #,(in-annotation-space #'core-ann-name))))
-                      #`(define-annotation-syntax name
-                          (wrap-class-transformer name #,(intro (cadr ann)) make-annotation-prefix-operator))))]
-               [else null])
-             (list
-              #`(define-class-desc-syntax name
-                  (class-desc #,final?
-                              (quote-syntax class:name)
-                              (quote-syntax name)
-                              (list (list 'super-field-name (quote-syntax super-name-field) (quote-syntax super-field-static-infos))
-                                    ...
-                                    (list 'field.name (quote-syntax name-field) (quote-syntax field.static-infos))
-                                    ...)
-                              #,(and (syntax-e #'constructor-maker-name)
-                                     #`(quote-syntax ([#,(length fields) constructor-maker-name]
-                                                      #,@(or (and super
-                                                                  (or (class-desc-constructor-makers super)
-                                                                      (list (length (class-desc-fields super)))))
-                                                             '()))))))
-              #'(define-name-root name
-                  #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
-                  #:fields ([field.name name-field] ...))
-              #'(define-dot-provider-syntax name-instance
-                  (dot-provider (make-handle-class-instance-dot (quote-syntax name))))
-              #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance))))
-              #'(begin
-                  (define-static-info-syntax/maybe* name-field (#%call-result field.static-infos))
-                  ...)))))]))))
+                      #`(define constructor-maker-name
+                          (lambda (#,constructor-id)
+                            (let ([name (wrap-constructor
+                                         name make-name name?
+                                         #,(hash-ref options 'constructor-rhs))])
+                              name)))
+                      #`(define constructor-name
+                          #,(cond
+                              [super
+                               (compose-constructor
+                                #'make-name
+                                #`([#,(length fields) constructor-maker-name]
+                                   #,@(or (class-desc-constructor-makers super)
+                                          (list (length (class-desc-fields super))))))]
+                              [else #'(constructor-maker-name make-name)])))])
+                  null)
+              (list
+               #`(define-binding-syntax core-bind-name
+                   (binding-transformer
+                    #'name
+                    (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                                        (quote-syntax name?)
+                                                        #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                                        (list (quote-syntax name-field) ...)
+                                                        #:accessor->info? #t
+                                                        (list (quote-syntax field-static-infos) ...)))))
+              (if internal-id
+                  (list
+                   #`(define-binding-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax core-bind-name))))
+                  null)
+              (cond
+                [(hash-ref options 'binding #f)
+                 => (lambda (bind)
+                      (define into (make-syntax-introducer))
+                      (list
+                       #`(define-binding-syntax #,(intro binding-id) (make-rename-transformer
+                                                                      (quote-syntax #,(in-binding-space #'core-bind-name))))
+                       #`(define-binding-syntax name
+                           (wrap-class-transformer name #,(intro (cadr bind)) make-binding-prefix-operator))))]
+                [else null])
+              (list
+               #'(define-annotation-constructor core-ann-name
+                   ([accessors (list (quote-syntax name-field) ...)])
+                   (quote-syntax name?)
+                   (quote-syntax ((#%dot-provider name-instance)))
+                   cnt
+                   (make-class-instance-predicate accessors)
+                   (make-class-instance-static-infos accessors)))
+              (if internal-id
+                  (list
+                   #`(define-annotation-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax core-ann-name))))
+                  null)
+              (cond
+                [(hash-ref options 'annotation #f)
+                 => (lambda (ann)
+                      (define into (make-syntax-introducer))
+                      (list
+                       #`(define-annotation-syntax #,(intro annotation-id) (make-rename-transformer
+                                                                            (quote-syntax #,(in-annotation-space #'core-ann-name))))
+                       #`(define-annotation-syntax name
+                           (wrap-class-transformer name #,(intro (cadr ann)) make-annotation-prefix-operator))))]
+                [else null])
+              (list
+               #`(define-class-desc-syntax name
+                   (class-desc #,final?
+                               (quote-syntax class:name)
+                               (quote-syntax name)
+                               (list (list 'super-field-name (quote-syntax super-name-field) (quote-syntax super-field-static-infos))
+                                     ...
+                                     (list 'field-name (quote-syntax name-field) (quote-syntax field-static-infos))
+                                     ...)
+                               #,(and (syntax-e #'constructor-maker-name)
+                                      #`(quote-syntax ([#,(length fields) constructor-maker-name]
+                                                       #,@(or (and super
+                                                                   (or (class-desc-constructor-makers super)
+                                                                       (list (length (class-desc-fields super)))))
+                                                              '()))))))
+               #'(define-name-root name
+                   #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
+                   #:fields ([field-name name-field] ...))
+               #'(define-dot-provider-syntax name-instance
+                   (dot-provider (make-handle-class-instance-dot (quote-syntax name))))
+               #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance))))
+               #'(begin
+                   (define-static-info-syntax/maybe* name-field (#%call-result field-static-infos))
+                   ...))))
+           #`(begin . #,defns)))])))
 
 (define-for-syntax (class-expression-transformer id make-id)
   (expression-transformer
@@ -461,8 +527,8 @@
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
     #:context orig-stx
-    [(clause::class-clause ...)
-     (define clauses (apply append (map syntax->list (syntax->list #'(clause.parsed ...)))))
+    [((_ clause-parsed) ...)
+     (define clauses (syntax->list #'(clause-parsed ...)))
      (define (extract-rhs b)
        (syntax-parse b
          [(_::block g) #'g]
@@ -516,6 +582,9 @@
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
           (loop (cdr clauses) new-options)]))]))
 
+(define-for-syntax (wrap-class-clause parsed)
+  #`[(quote-syntax (rhombus-class #,parsed) #:local)]) ; `quote-syntax` + `rhombus-class` wrapper => clause
+
 (define-syntax extends
   (class-clause-transformer
    (lambda (stx)
@@ -523,14 +592,14 @@
        [(_ (~seq form ...))
         #:with (~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref)) #'(form ...)
         #:with () #'id.tail
-        #'[(extends id.name)]]))))
+        (wrap-class-clause #'(extends id.name))]))))
 
 (define-syntax internal
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ name:identifier)
-        #'[(internal name)]]))))
+        (wrap-class-clause #'(internal name))]))))
 
 (define-syntax constructor
   (class-clause-transformer
@@ -540,10 +609,10 @@
        [(_ (_::parens (group make:identifier))
            (~and (_::block . _)
                  constructor-block))
-        #`[(constructor make constructor-block)]]
+        (wrap-class-clause #`(constructor make constructor-block))]
        [(_ (~and (_::block . _)
                  constructor-block))
-        #`[(constructor #f constructor-block)]]))))
+        (wrap-class-clause #`(constructor #f constructor-block))]))))
 
 (define-syntax binding
   (class-clause-transformer
@@ -553,10 +622,10 @@
        [(_ (_::parens (group core:identifier))
            (~and (_::block . _)
                  binding-block))
-        #`[(binding core binding-block)]]
+        (wrap-class-clause #`(binding core binding-block))]
        [(_ (~and (_::block . _)
                  binding-block))
-        #`[(binding #f binding-block)]]))))
+        (wrap-class-clause #`(binding #f binding-block))]))))
 
 (define-syntax annotation
   (class-clause-transformer
@@ -566,25 +635,25 @@
        [(_ (_::parens (group core:identifier))
            (~and (_::block . _)
                  annotation-block))
-        #`[(annotation core annotation-block)]]
+        (wrap-class-clause #`(annotation core annotation-block))]
        [(_ (~and (_::block . _)
                  annotation-block))
-        #`[(annotation #f annotation-block)]]))))
+        (wrap-class-clause #`(annotation #f annotation-block))]))))
 
 (define-syntax nonfinal
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_) #`[(nonfinal)]]))))
+       [(_) (wrap-class-clause #`(nonfinal))]))))
 
 (define-syntax final
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_) #`[(final)]]))))
+       [(_) (wrap-class-clause #`(final))]))))
 
 (define-syntax authentic
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_) #`[(authentic)]]))))
+       [(_) (wrap-class-clause #`(authentic))]))))
