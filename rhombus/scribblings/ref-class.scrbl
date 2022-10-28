@@ -4,9 +4,9 @@
 @title{Classes}
 
 @doc(
-  ~literal: :: extends,
-  defn.macro 'class $identifier_path($field, ...)',
-  defn.macro 'class $identifier_path($field, ...):
+  ~literal: :: extends binding field,
+  defn.macro 'class $identifier_path($field_spec, ...)',
+  defn.macro 'class $identifier_path($field_spec, ...):
                 $class_clause_or_body
                 ...',
 
@@ -14,9 +14,11 @@
     $identifier
     $identifier_path . $identifier,
 
-  grammar field:
+  grammar field_spec:
     $identifier
-    $identifier :: $$(@rhombus(annotation, ~var)),
+    $identifier :: $$(@rhombus(annotation, ~var))
+    $$(@rhombus(mutable, ~bind)) $identifier
+    $$(@rhombus(mutable, ~bind)) $identifier :: $$(@rhombus(annotation, ~var)),
 
   grammar class_clause_or_body:
     $class_clause
@@ -25,6 +27,8 @@
   class_clause.macro 'extends $identifier_path',
   class_clause.macro 'final',
   class_clause.macro 'nonfinal',
+  class_clause.macro 'field $field_spec: $body; ...',
+  class_clause.macro 'field $$(@rhombus(binding, ~var)): $body; ...',
   class_clause.macro 'internal $identifier',
   class_clause.macro 'constructor ($make_identifier): $entry_point',
   class_clause.macro 'constructor: $entry_point',
@@ -39,23 +43,29 @@
 
 @itemlist(
 
- @item{a constructor function, which takes as many arguments as the
-   supplied @rhombus(field)s and returns an instance of the class;},
+ @item{a constructor function, which by default takes as many arguments
+  as the supplied @rhombus(field_spec)s in parentheses, and it returns an
+  instance of the class;},
 
- @item{an annotation, which is satisfied by any instance of the class;},
+ @item{an annotation, which is satisfied by any instance of the class,
+  and an annotation constructor @rhombus(identifier_path.of), which by
+  default takes as many annotation arguments as supplied
+  @rhombus(field_specs)s in parentheses;},
 
- @item{a binding-pattern constructor, which takes as many patterns as
-  the supplied @rhombus(field)s and matches an instance of the class where
-  the fields match the corresponding patterns;},
+ @item{a binding-pattern constructor, which by default takes as many
+  patterns as the supplied @rhombus(field_spec)s in parentheses and
+  matches an instance of the class where the fields match the
+  corresponding patterns;},
 
- @item{a dot povider to access accessor functions @rhombus(identifier_path.field);},
-
- @item{an annotation constructor @rhombus(identifier_path.of), which takes as
-   many annotation arguments as supplied @rhombus(field)s.}
+ @item{a dot povider to access accessor functions
+  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(field,~var))), which
+  by default includes a @rhombus(field,~var) for every field in the class,
+  whether listed as a @rhombus(field_spec) in parentheses or added by a
+  @rhombus(field, ~class_clause) clause.}
 
 )
 
- If a block follows a @rhombus(class) form's @rhombus(field) sequence,
+ If a block follows a @rhombus(class) form's @rhombus(field_spec) sequence,
  it contains a mixture of definitions, expressions, and class clauses. A
  @deftech{class clause} adjusts the class and bindings created by the
  @rhombus(class) form; it be one of the predefined class clause forms,
@@ -78,9 +88,23 @@
  is not final by default. At most one @rhombus(class_clause) can have
  @rhombus(final, ~class_clause) or @rhombus(nonfinal, ~class_clause).
 
+ When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
+ then additional fields are added to the class based on the names of
+ variable bound by @rhombus(binding, ~var) or @rhombus(identifier). The
+ additional fields are not represented by arguments to the constructor.
+ Instead, the @rhombus(body) block in @rhombus(field, ~class_clause)
+ gives the added fields their initial values; that block is evaluated at
+ the time the @rhombus(class) form is evaluated, not when an object is
+ instantiated, and the same values are used for every instance of the
+ class. When a @rhombus(field, ~class_clause) declaration follows the
+ restricted shape of @rhombus(field_spec), then it can be mutable
+ (possibly with an annotation), but a general @rhombus(binding, ~var)
+ form for @rhombus(field, ~class_clause) is not allowed to start with
+ @rhombus(mutable, ~bind).
+
  When a @rhombus(class_clause) is an @rhombus(internal, ~class_clause)
  form, then the clause's @rhombus(identifier) is bound to the default
- constructor, annotation, binding-pattern constructor, dot provider as
+ constructor, annotation, binding-pattern constructor, or dot provider as
  would be bound to the @rhombus(class) form's main
  @rhombus(identifier_path) if not replaced by clauses like
  @rhombus(constructor, ~class_clause) and
@@ -116,17 +140,19 @@
 
  @item{If the new class does not have a superclass, then
   @rhombus(make_identifier) is bound to a function that accepts as many
-  arguments as declared @rhombus(field)s, and it returns an instance of
-  the class. Note that this instance might be an instance of a subclass if
-  the new class is not @tech{final}.},
+  arguments as declared @rhombus(field_spec)s (nout counting
+  @rhombus(field, ~class_clause) clauses, if any), and it returns an
+  instance of the class. Note that this instance might be an instance of a
+  subclass if the new class is not @tech{final}.},
 
  @item{If the new class has a superclass, then @rhombus(make_identifier)
   is bound to a function that accepts the same arguments as the superclass
   constructor. Instead of returning an instance of the class, it returns a
-  function that accepts as many arguments as declared @rhombus(field)s in
-  the new subclass, and the result of that function is an instance of the
-  new class. Again, the result instance might be an instance of a subclass
-  if the new class is not @tech{final}.}
+  function that accepts as many arguments as declared
+  @rhombus(field_spec)s in the new subclass (again, not counting
+  @rhombus(field, ~class_clause) clauses), and the result of that function
+  is an instance of the new class. Again, the result instance might be an
+  instance of a subclass if the new class is not @tech{final}.}
 
 )
  
@@ -134,7 +160,7 @@
  form, then a use of new class's @rhombus(identifier_path) as a
  binding-pattern constructor invokes the @tech{entry point} (typically
  a @rhombus(rule, ~entry_point) form) in the block after
- @rhombus(binding, ~class_clause). The specificed
+ @rhombus(binding, ~class_clause). The specified
  @rhombus(bind_identifier) is bound so that it refers to the default
  binding-pattern constructor.
 
@@ -150,11 +176,11 @@
  then the new class cannot be chaperoned or impersonated. At most one
  @rhombus(class_clause) can have @rhombus(authentic, ~class_clause).
  
- Each @rhombus(field)'s @rhombus(identifier) name must distinct from
- each other @rhombus(field)'s @rhombus(identifier). If an
- @rhombus(extends) clause is present, then each @rhombus(field)'s
- @rhombus(identifier) name must also be distinct from any field name in
- the superclass.
+ Each field name must be distinct from all other field names, whether
+ from a @rhombus(field_spec)'s @rhombus(identifier) or from a
+ @rhombus(field, ~class_clause)'s @rhombus(binding, ~var). If an
+ @rhombus(extends) clause is present, then each field name must also be
+ distinct from any field name in the superclass.
 
  See @secref("static-info-rules") for information about static
  information associated with classes.

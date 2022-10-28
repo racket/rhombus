@@ -40,7 +40,8 @@
          annotation
          final
          nonfinal
-         authentic)
+         authentic
+         field)
 
 (begin-for-syntax
   (struct class-desc (final? class:id constructor-id fields constructor-makers))
@@ -137,11 +138,11 @@
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
                     full-name name
-                    (field-name ...)
+                    (constructor-field-name ...)
                     (field-mutable ...)
                     (field-predicate ...)
                     (field-annotation-str ...)
-                    (field-static-infos ...)]
+                    (constructor-field-static-infos ...)]
           option ...)
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...)))
@@ -185,12 +186,19 @@
                                "superclass does not use the default constructor, so a subclass needs `~constructor`"
                                stxes
                                parent-name)))
-       (define fields (syntax->list #'(field-name ...)))
+       (define constructor-fields (syntax->list #'(constructor-field-name ...)))
+       (define more-fieldss+rhss (reverse (hash-ref options 'fields '())))
+       (define extra-fields (apply append (map car more-fieldss+rhss)))
+       (define fields (append constructor-fields extra-fields))
+       (define mutables (append (syntax->list #'(field-mutable ...))
+                                (for*/list ([f (in-list more-fieldss+rhss)]
+                                            [id (in-list (list-ref f 0))])
+                                  (if (syntax-e (list-ref f 3)) #'t #'#f))))
        (check-duplicate-field-names stxes fields super)
        (define-values (immutable-fields mutable-fields)
          (for/fold ([imm '()] [m '()] #:result (values (reverse imm) (reverse m)))
                    ([field (in-list fields)]
-                    [mutable (syntax->list #'(field-mutable ...))])
+                    [mutable mutables])
            (if (syntax-e mutable)
                (values imm (cons field m))
                (values (cons field imm) m))))
@@ -227,10 +235,15 @@
                                                              [i (in-naturals)])
                                                     i)]
                      [(mutable-field ...) mutable-fields]
-                     [(mutable-field-index ...) (for/list ([mutable (syntax->list #'(field-mutable ...))]
+                     [(mutable-field-index ...) (for/list ([mutable mutables]
                                                            [i (in-naturals)]
                                                            #:when (syntax-e mutable))
                                                   i)]
+                     [(field-name ...) fields]
+                     [(field-static-infos ...) (append (syntax->list #'(constructor-field-static-infos ...))
+                                                       (for*/list ([f (in-list more-fieldss+rhss)]
+                                                                   [si (in-list (list-ref f 2))])
+                                                         si))]
                      [((super-field-name super-name-field super-field-static-infos) ...) (if super
                                                                                              (class-desc-fields super)
                                                                                              '())])
@@ -240,11 +253,14 @@
                        [constructor-maker-name (and (or (not final?)
                                                         super)
                                                     constructor-id
-                                                    (car (generate-temporaries #'(maker))))])
+                                                    (car (generate-temporaries #'(maker))))]
+                       [make-all-name (if (null? extra-fields)
+                                          #'make-name
+                                          (car (generate-temporaries #'(name))))])
            (define defns
              (append
               (list
-               #`(define-values (class:name make-name name? name-field ... set-name-field! ...)
+               #`(define-values (class:name make-all-name name? name-field ... set-name-field! ...)
                    (let-values ([(class:name name name? name-ref name-set!)
                                  (make-struct-type 'name
                                                    #,(and super
@@ -271,6 +287,12 @@
                              ...
                              (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
                              ...))))
+              (if (pair? extra-fields)
+                  (list
+                   #`(define make-name
+                       (lambda #,constructor-fields
+                         (make-all-name #,@constructor-fields #,@(apply append (map cadr more-fieldss+rhss))))))
+                  null)
               (if internal-id
                   (list
                    #`(define-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax make-name))))
@@ -578,6 +600,13 @@
                (when (hash-has-key? options 'authentic?)
                  (raise-syntax-error #f "redundant authenticity clause" orig-stx clause))
                (hash-set options 'authentic? #t)]
+              [(field ids rhs-ids static-infoss predicate annotation-str)
+               (hash-set options 'fields (cons (list (syntax->list #'ids)
+                                                     (syntax->list #'rhs-ids)
+                                                     (syntax->list #'static-infoss)
+                                                     #'predicate
+                                                     #'annotation-str)
+                                               (hash-ref options 'fields null)))]
               [_
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
           (loop (cdr clauses) new-options)]))]))
@@ -657,3 +686,64 @@
    (lambda (stx)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(authentic))]))))
+
+(define-syntax field
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (mutable ::)
+       [(form-id mutable bind ... (~and blk (_::block . _)))
+        (syntax-parse #'(bind ...)
+          [(id:identifier (~optional c::inline-annotation))
+           #:attr predicate (if (attribute c)
+                                #'c.predicate
+                                #'#f)
+           #:attr annotation-str (if (attribute c)
+                                     #'c.annotation-str
+                                     #'#f)
+           #:attr static-infos (if (attribute c)
+                                   #'c.static-infos
+                                   #'())
+           #`[(define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
+                               {~? (if (c.predicate f-info.name-id)
+                                       f-info.name-id
+                                       (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
+                                   f-info.name-id}))
+              #,@(wrap-class-clause #`(field (id)
+                                             (tmp-id)
+                                             (static-infos)
+                                             predicate
+                                             annotation-str))]]
+          [_
+           (raise-syntax-error #f
+                               "mutable field must have a a plain identifier or annotation pattern"
+                               stx)])]
+       [(form-id bind ... (~and blk (_::block . _)))
+        (syntax-parse #'(group bind ...)
+          [f::binding
+           #:with f-parsed::binding-form #'f.parsed
+           #:with (static-info ...) #'() ; FIXME
+           #:with f-impl::binding-impl #'(f-parsed.infoer-id (static-info ...) f-parsed.data)
+           #:with f-info::binding-info #'f-impl.info
+           #:with (tmp-id ...) (generate-temporaries #'(f-info.bind-id ...))
+           #`[(define-values (tmp-id ...)
+                (let ([val-id (let ([f-info.name-id (rhombus-body-at . blk)])
+                                f-info.name-id)])
+                  (f-info.matcher-id val-id f-info.data
+                                     if/blocked
+                                     (let ()
+                                       (f-info.binder-id val-id f-info.data)
+                                       (values (rhombus-expression (group f-info.bind-id)) ...))
+                                     (raise-binding-failure 'form-id "value" val-id 'f-info.annotation-str))))
+              #,@(wrap-class-clause #`(field (f-info.bind-id ...)
+                                             (tmp-id ...)
+                                             ((f-info.bind-static-info ...) ...)
+                                             #f
+                                             #f))]])]
+       [_
+        (raise-syntax-error #f
+                            "expected a binding followed by a block"
+                            stx)]))))
+
+(define-syntax-rule (if/blocked tst thn els)
+  (if tst (let () thn) els))
