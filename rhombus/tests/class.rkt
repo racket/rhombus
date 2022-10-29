@@ -389,3 +389,33 @@ check:
   class Posn3D(z = the_y):
     extends Posn
   "the_y: unbound identifier"
+
+check:
+  ~exn
+  class Posn(x :: Integer, y :: Integer)
+  Posn("x", 0)
+  "value does not match annotation"
+
+check:
+  ~exn
+  class Posn(mutable x :: Integer, y :: Integer)
+  Posn("x", 0)
+  "value does not match annotation"
+
+check:
+  class Posn(mutable x :: Integer, y :: Integer)
+  val p: Posn(2, 0)
+  [p.x, p.x := 5, p.x, p.y]
+  [2, 5, 5, 0]
+
+check:
+  class Posn(x :: Integer, mutable y :: Integer)
+  val p: Posn(2, 0)
+  [p.y, p.y := 5, p.y, p.x]
+  [0, 5, 5, 2]
+
+check:
+  ~exn
+  class Posn(mutable x :: Integer, y :: Integer)
+  Posn("x", 0).x := "oops"
+  "value does not match annotation"

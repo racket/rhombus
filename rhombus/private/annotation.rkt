@@ -63,7 +63,9 @@
              annotation-form))
   
   (provide define-annotation-syntax
-           define-annotation-constructor))
+           define-annotation-constructor
+
+           raise-annotation-failure))
 
 (begin-for-syntax
   (property annotation-prefix-operator prefix-operator
@@ -266,7 +268,7 @@
               #`(let ([val #,form])
                   (if (c-parsed.predicate val)
                       val
-                      (raise-annotation-failure val '#,(shrubbery-syntax->string #'t))))
+                      (raise-::-annotation-failure val '#,(shrubbery-syntax->string #'t))))
               form)
           #'c-parsed.static-infos)
          #'t.tail)]))
@@ -353,11 +355,14 @@
      #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
 
-(define (raise-annotation-failure val ctc)
+(define (raise-::-annotation-failure val ctc)
+  (raise-annotation-failure ':: val ctc))
+
+(define (raise-annotation-failure who val ctc)
   (raise
    (exn:fail:contract
     (error-message->adjusted-string
-     '::
+     who
      rhombus-realm
      (format
       (string-append "value does not match annotation\n"

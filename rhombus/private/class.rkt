@@ -50,15 +50,16 @@
   (struct class-desc (final?
                       class:id
                       constructor-id ; #f if no custom constructor
-                      fields ; (list (list id accessor-id static-infos constructor-mode) ...)
+                      fields ; (list (list id accessor-id mutator-id static-infos constructor-mode) ...)
                       constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                       defaults-id)) ; #f if no arguments with defaults
   (define (class-desc-ref v) (and (class-desc? v) v))
 
   (define (field-desc-name f) (car f))
   (define (field-desc-accessor-id f) (cadr f))
-  (define (field-desc-static-infos f) (list-ref f 2))
-  (define (field-desc-constructor-arg f) (list-ref f 3)) ; syntax of #f (by-position), keyword, or identifier (not in constructor)
+  (define (field-desc-mutator-id f) (list-ref f 2))
+  (define (field-desc-static-infos f) (list-ref f 3))
+  (define (field-desc-constructor-arg f) (list-ref f 4)) ; syntax of #f (by-position), keyword, or identifier (not in constructor)
 
   (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -151,7 +152,7 @@
 
   (define (check-duplicate-field-names stxes fields super)
     (let ([ht (for/hasheq ([field (in-list (if super (class-desc-fields super) '()))])
-                (values (car field) 'super))])
+                (values (field-desc-name field) 'super))])
       (for/fold ([ht ht]) ([field (in-list fields)])
         (define prev (hash-ref ht (syntax-e field) #f))
         (when prev
@@ -347,7 +348,7 @@
        (define-values (immutable-fields mutable-fields)
          (for/fold ([imm '()] [m '()] #:result (values (reverse imm) (reverse m)))
                    ([field (in-list fields)]
-                    [mutable mutables])
+                    [mutable (in-list mutables)])
            (if (syntax-e mutable)
                (values imm (cons field m))
                (values (cons field imm) m))))
@@ -360,6 +361,16 @@
                                                    (syntax-e #'name)
                                                    (syntax-e field)))
                            field))))
+       (define maybe-set-name-fields
+         (for/list ([field (in-list fields)]
+                    [mutable (in-list mutables)])
+           (and (syntax-e mutable)
+                (intro
+                 (datum->syntax field
+                                (string->symbol (format "set-~a.~a!"
+                                                        (syntax-e #'name)
+                                                        (syntax-e field)))
+                                field)))))
        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [(class:name) (generate-temporaries #'(name))]
                      [(make-name) (generate-temporaries #'(name))]
@@ -376,23 +387,28 @@
                      [(constructor-name-field ...) (for/list ([c (in-list constructor-fields)]
                                                               [n-f (in-list all-name-fields)])
                                                      n-f)]
-                     [(set-name-field! ...) (for/list ([field (in-list mutable-fields)])
-                                              (intro
-                                               (datum->syntax field
-                                                              (string->symbol (format "set-~a.~a!"
-                                                                                      (syntax-e #'name)
-                                                                                      (syntax-e field)))
-                                                              field)))]
+                     [(set-name-field! ...) (for/list ([id (in-list maybe-set-name-fields)]
+                                                       #:when id)
+                                              id)]
+                     [(maybe-set-name-field! ...) maybe-set-name-fields]
                      [cnt (length fields)]
                      [constructor-cnt (length constructor-fields)]
                      [(field-index ...) (for/list ([field (in-list fields)]
                                                    [i (in-naturals)])
                                           i)]
-                     [(immutable-field-index ...) (for/list ([field (in-list immutable-fields)]
-                                                             [i (in-naturals)])
+                     [(immutable-field-index ...) (for/list ([field (in-list fields)]
+                                                             [mutable (in-list mutables)]
+                                                             [i (in-naturals)]
+                                                             #:when (not (syntax-e mutable)))
                                                     i)]
                      [(mutable-field ...) mutable-fields]
-                     [(mutable-field-index ...) (for/list ([mutable mutables]
+                     [((mutable-field-predicate mutable-field-annotation-str) ...)
+                      (for/list ([pred (in-list (syntax->list #'(field-predicate ...)))]
+                                 [ann-str (in-list (syntax->list #'(field-annotation-str ...)))]
+                                 [mutable (in-list mutables)]
+                                 #:when (syntax-e mutable))
+                        (list pred ann-str))]
+                     [(mutable-field-index ...) (for/list ([mutable (in-list mutables)]
                                                            [i (in-naturals)]
                                                            #:when (syntax-e mutable))
                                                   i)]
@@ -407,9 +423,15 @@
                                                          kw))
                                                    (for/list ([f (in-list more-field-specs)])
                                                      (field-spec-arg-id f)))]
-                     [((super-field-name super-name-field super-field-static-infos super-field-argument) ...) (if super
-                                                                                                                  (class-desc-fields super)
-                                                                                                                  '())])
+                     [((super-field-name
+                        super-name-field
+                        super-maybe-set-name-field!
+                        super-field-static-infos
+                        super-field-argument)
+                       ...)
+                      (if super
+                          (class-desc-fields super)
+                          '())])
          (with-syntax ([constructor-name (if constructor-id
                                              (car (generate-temporaries #'(name)))
                                              #'make-name)]
@@ -448,7 +470,11 @@
                      (values class:name name name?
                              (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
                              ...
-                             (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
+                             (compose-annotation-check
+                              (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
+                              mutable-field
+                              mutable-field-predicate
+                              mutable-field-annotation-str)
                              ...))))
               (if (syntax-e #'name-defaults)
                   (list
@@ -588,10 +614,16 @@
                    (class-desc #,final?
                                (quote-syntax class:name)
                                (quote-syntax name)
-                               (list (list 'super-field-name (quote-syntax super-name-field) (quote-syntax super-field-static-infos)
+                               (list (list 'super-field-name
+                                           (quote-syntax super-name-field)
+                                           (quote-syntax super-make-set-name-field!)
+                                           (quote-syntax super-field-static-infos)
                                            (quote-syntax super-field-argument))
                                      ...
-                                     (list 'field-name (quote-syntax name-field) (quote-syntax field-static-infos)
+                                     (list 'field-name
+                                           (quote-syntax name-field)
+                                           (quote-syntax maybe-set-name-field!)
+                                           (quote-syntax field-static-infos)
                                            (quote-syntax field-argument))
                                      ...)
                                #,(cond
@@ -608,7 +640,7 @@
                    #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
                    #:fields ([field-name name-field] ...))
                #'(define-dot-provider-syntax name-instance
-                   (dot-provider (make-handle-class-instance-dot (quote-syntax name))))
+                   (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name))))
                #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance)))))
               (if internal-id
                   (list
@@ -638,10 +670,9 @@
                           [(not (syntax-e predicate)) field]
                           [else #`(if (#,predicate #,field)
                                       #,field
-                                      (raise-argument-error* who
-                                                             rhombus-realm
-                                                             '#,annotation-str
-                                                             #,field))]))))))
+                                      (raise-annotation-failure who
+                                                                #,field
+                                                                '#,annotation-str))]))))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)
@@ -656,31 +687,56 @@
       #`(#,acc #,static-infos))))
 
 ;; dot provider for a class instance used before a `.`
-(define-for-syntax ((make-handle-class-instance-dot name) form1 dot field-id)
+(define-for-syntax ((make-handle-class-instance-dot name) form1 dot field-id
+                                                          tail more-static?
+                                                          success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) class-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
-  (define accessor-id+static-infos
+  (define fld
     (for/or ([field+acc (in-list (class-desc-fields desc))])
-      (and (eq? (car field+acc) (syntax-e field-id))
-           (cdr field+acc))))
+      (and (eq? (field-desc-name field+acc) (syntax-e field-id))
+           field+acc)))
   (cond
-    [accessor-id+static-infos
-     (define accessor-id (car accessor-id+static-infos))
+    [fld
+     (define accessor-id (field-desc-accessor-id fld))
+     (define-values (op-id assign-rhs new-tail)
+       (syntax-parse tail
+         #:datum-literals (op)
+         #:literals (:=)
+         [((op :=) rhs ...)
+          #:when (syntax-e (field-desc-mutator-id fld))
+          (values (field-desc-mutator-id fld)
+                  #`(rhombus-expression (#,group-tag rhs ...))
+                  #'())]
+         [_
+          (values accessor-id
+                  #f
+                  tail)]))
      (define e (datum->syntax (quote-syntax here)
-                              (list (relocate field-id accessor-id) form1)
+                              (append (list (relocate field-id op-id) form1)
+                                      (if assign-rhs
+                                          (list field-id)
+                                          null))
                               (span-srcloc form1 field-id)
                               #'dot))
-
-     (define static-infos (cadr accessor-id+static-infos))
+     (define full-e
+       (cond
+         [assign-rhs
+          (success #`(let ([#,field-id #,assign-rhs])
+                       #,e
+                       #,field-id))]
+         [else e]))
+     
+     (define static-infos (field-desc-static-infos fld))
      (define more-static-infos (syntax-local-static-info form1 accessor-id))
      (define all-static-infos (if more-static-infos
                                   (datum->syntax #f
                                                  (append (syntax->list more-static-infos)
                                                          static-infos))
                                   static-infos))
-
-     (wrap-static-info* e all-static-infos)]
-    [else #f]))
+     (success (wrap-static-info* full-e all-static-infos)
+              new-tail)]
+    [else (failure)]))
 
 (define-syntax (define-class-desc-syntax stx)
   (syntax-parse stx
@@ -819,6 +875,18 @@
                                        allow-kws
                                        req-kws))
 
+(define-syntax (compose-annotation-check stx)
+  (syntax-parse stx
+    [(_ mutator who #f _) #'mutator]
+    [(_ mutator who predicate annotation-str)
+     #`(let ([m mutator])
+         (lambda (obj val)
+           (unless (predicate val)
+             (raise-annotation-failure 'who
+                                       val
+                                       'annotation-str))
+           (m obj val)))]))
+ 
 ;; ----------------------------------------
 
 (define-for-syntax (parse-options orig-stx forms)
