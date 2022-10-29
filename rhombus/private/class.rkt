@@ -44,8 +44,17 @@
          field)
 
 (begin-for-syntax
-  (struct class-desc (final? class:id constructor-id fields constructor-makers))
+  (struct class-desc (final?
+                      class:id
+                      constructor-id ; #f if no custom constructor
+                      fields ; (list (list id accessor-id static-infos constructor-mode) ...)
+                      constructor-makers)) ; (list constructor-maker ... maybe-default-constuctor-desc)
   (define (class-desc-ref v) (and (class-desc? v) v))
+
+  (define (field-desc-name f) (car f))
+  (define (field-desc-accessor-id f) (cadr f))
+  (define (field-desc-static-infos f) (list-ref f 2))
+  (define (field-desc-constructor-arg f) (list-ref f 3)) ; syntax of #f (by-position), keyword, or identifier (not in constructor)
 
   (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -215,16 +224,42 @@
                                parent-name)))
        (define constructor-fields (syntax->list #'(constructor-field-name ...)))
        (define more-field-specs (reverse (hash-ref options 'fields '())))
+       (define (field-spec-arg-id fs) (cadr fs))
+       (define (field-spec-static-infos fs) (list-ref fs 2))
+       (define (field-spec-mutable fs) (list-ref fs 3))
        (define extra-fields (map car more-field-specs))
        (define fields (append constructor-fields extra-fields))
        (define mutables (append (syntax->list #'(field-mutable ...))
                                 (for/list ([f (in-list more-field-specs)])
-                                  (if (syntax-e (list-ref f 3)) #'#t #'#f))))
+                                  (if (syntax-e (field-spec-mutable f)) #'#t #'#f))))
        (define keywords (syntax->list #'(field-keyword ...)))
+       (define super-constructor-fields
+         (if super
+             (for/list ([f (in-list (class-desc-fields super))]
+                        #:do [(define arg (field-desc-constructor-arg f))]
+                        #:unless (identifier? arg))
+               (field-desc-name f))
+             '()))
+       (define super-keywords
+         (if super
+             (for/list ([f (in-list (class-desc-fields super))]
+                        #:do [(define arg (field-desc-constructor-arg f))]
+                        #:unless (identifier? arg))
+               arg)
+             '()))
+       (define super-has-keywords? (for/or ([kw (in-list super-keywords)])
+                                     (syntax-e kw)))
+       (define super-has-extra? (and super
+                                     (for/or ([f (in-list (class-desc-fields super))])
+                                       (identifier? (field-desc-constructor-arg f)))))
        (define need-constructor-wrapper?
          (or (pair? extra-fields)
              (for/or ([kw (in-list keywords)])
-               (syntax-e kw))))
+               (syntax-e kw))
+             (and super-has-keywords?
+                  (or (not (class-desc-constructor-makers super))
+                      constructor-id))
+             super-has-extra?))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
        (check-duplicate-field-names stxes fields super)
        (define-values (immutable-fields mutable-fields)
@@ -280,10 +315,13 @@
                      [(field-name ...) fields]
                      [(field-static-infos ...) (append (syntax->list #'(constructor-field-static-infos ...))
                                                        (for/list ([f (in-list more-field-specs)])
-                                                         (list-ref f 2)))]
-                     [((super-field-name super-name-field super-field-static-infos) ...) (if super
-                                                                                             (class-desc-fields super)
-                                                                                             '())])
+                                                         (field-spec-static-infos f)))]
+                     [(field-argument ...) (append (syntax->list #'(field-keyword ...))
+                                                   (for/list ([f (in-list more-field-specs)])
+                                                     (field-spec-arg-id f)))]
+                     [((super-field-name super-name-field super-field-static-infos super-field-argument) ...) (if super
+                                                                                                                  (class-desc-fields super)
+                                                                                                                  '())])
          (with-syntax ([constructor-name (if constructor-id
                                              (car (generate-temporaries #'(name)))
                                              #'make-name)]
@@ -327,12 +365,17 @@
               (if need-constructor-wrapper?
                   (list
                    #`(define make-name
-                       (lambda #,(apply append (for/list ([f (in-list constructor-fields)]
-                                                          [kw (in-list keywords)])
-                                                 (if (syntax-e kw)
+                       (lambda #,(apply append (for/list ([f (in-list (append super-constructor-fields constructor-fields))]
+                                                          [kw (in-list (append super-keywords keywords))])
+                                                 (if (keyword? (syntax-e kw))
                                                      (list kw f)
                                                      (list f))))
-                         (make-all-name #,@constructor-fields #,@(map cadr more-field-specs)))))
+                         (make-all-name #,@(for/list ([f (in-list (if super (class-desc-fields super) null))])
+                                             (if (identifier? (field-desc-constructor-arg f))
+                                                 (field-desc-constructor-arg f)
+                                                 (field-desc-name f)))
+                                        #,@constructor-fields
+                                        #,@(map field-spec-arg-id more-field-specs)))))
                   null)
               (if internal-id
                   (list
@@ -345,26 +388,24 @@
                      (list
                       #`(define constructor-name
                           (let-syntax ([#,constructor-id (make-rename-transformer (quote-syntax make-name))])
-                            (let ([name (wrap-constructor
-                                         name make-name name?
-                                         #,(hash-ref options 'constructor-rhs))])
+                            (let ([name (wrap-constructor name name?
+                                                          #,(hash-ref options 'constructor-rhs))])
                               name))))]
                     [else
                      (list
                       #`(define constructor-maker-name
                           (lambda (#,constructor-id)
-                            (let ([name (wrap-constructor
-                                         name make-name name?
-                                         #,(hash-ref options 'constructor-rhs))])
+                            (let ([name (wrap-constructor name name?
+                                                          #,(hash-ref options 'constructor-rhs))])
                               name)))
                       #`(define constructor-name
                           #,(cond
                               [super
                                (compose-constructor
                                 #'make-name
-                                #`([#,(length fields) constructor-maker-name]
+                                #`([#,(encode-protocol keywords) constructor-maker-name]
                                    #,@(or (class-desc-constructor-makers super)
-                                          (list (length (class-desc-fields super))))))]
+                                          (list (list (encode-protocol super-keywords) #f)))))]
                               [else #'(constructor-maker-name make-name)])))])
                   null)
               (list
@@ -420,22 +461,31 @@
                    (class-desc #,final?
                                (quote-syntax class:name)
                                (quote-syntax name)
-                               (list (list 'super-field-name (quote-syntax super-name-field) (quote-syntax super-field-static-infos))
+                               (list (list 'super-field-name (quote-syntax super-name-field) (quote-syntax super-field-static-infos)
+                                           (quote-syntax super-field-argument))
                                      ...
-                                     (list 'field-name (quote-syntax name-field) (quote-syntax field-static-infos))
+                                     (list 'field-name (quote-syntax name-field) (quote-syntax field-static-infos)
+                                           (quote-syntax field-argument))
                                      ...)
-                               #,(and (syntax-e #'constructor-maker-name)
-                                      #`(quote-syntax ([#,(length fields) constructor-maker-name]
-                                                       #,@(or (and super
-                                                                   (or (class-desc-constructor-makers super)
-                                                                       (list (length (class-desc-fields super)))))
-                                                              '()))))))
+                               #,(cond
+                                   [(syntax-e #'constructor-maker-name)
+                                    #`(quote-syntax ([#,(encode-protocol keywords) constructor-maker-name]
+                                                     #,@(if super
+                                                            (or (class-desc-constructor-makers super)
+                                                                (list (list (encode-protocol super-keywords) #f)))
+                                                            '())))]
+                                   [else #'#f])))
                #'(define-name-root name
                    #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
                    #:fields ([field-name name-field] ...))
                #'(define-dot-provider-syntax name-instance
                    (dot-provider (make-handle-class-instance-dot (quote-syntax name))))
-               #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance))))
+               #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance)))))
+              (if internal-id
+                  (list
+                   #`(define-static-info-syntax #,(expose internal-id) (#%call-result ((#%dot-provider name-instance)))))
+                  '())
+              (list
                #'(begin
                    (define-static-info-syntax/maybe* name-field (#%call-result field-static-infos))
                    ...))))
@@ -516,7 +566,7 @@
 
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
-    [(_ name constructor-id predicate-id g)
+    [(_ name predicate-id g)
      #:do [(define adjustments (entry-point-adjustments
                                 '()
                                 (lambda (body)
@@ -543,41 +593,71 @@
           (cons #'(cons count id) (makers->pair-expressions #'rest))]
          [(count) #'count])))
 
+;; Beware that this function generates code that is quadratic in the
+;; length of `makers` (i.e., in the depth of subclassing with custom
+;; constructors)
 (define-for-syntax (compose-constructor real-make makers)
+  (define argss
+    (let loop ([makers makers])
+      (syntax-parse makers
+        [([proto _])
+         (list (generate-protocol-temporaries #'proto))]
+        [([proto _] . rest)
+         (define super-args (loop #'rest))
+         (cons (append (car super-args) (generate-protocol-temporaries #'proto))
+               super-args)])))
   (let loop ([makers makers]
+             [argss argss]
              [final-make real-make])
     (syntax-parse makers
-      [(count:exact-integer)
-       ;; represents some number of ancestors that use the default protocol;
-       ;; we don't expect to get here, though, since the last case below
-       #`(procedure-reduce-arity
-          #,final-make
-          count)]
-      [([count id])
+      [([proto id:identifier])
        ;; root ancestor has a custom protocol
        #`(id #,final-make)]
-      [([count id] . rest)
-       ;; look ahead by one so we can get the arity right:
+      [([_ #f])
+       ;; represents some number of ancestors that use the default protocol;
+       ;; we don't expect to get here, though, since the last case below
+       ;; looks ahead to cover this case
+       (error "should not get here")]
+      [([proto id] . rest)
+       ;; look ahead by one in `rest` so we can get the arity right
+       (define args (generate-protocol-temporaries #'proto))
+       (define ancestor-args (cadr argss))
        (syntax-parse #'rest
-         [(ancestor-count:exact-integer)
-          (define args (generate-temporaries (for/list ([i (syntax-e #'count)]) i)))
-          (define ancestor-args (generate-temporaries (for/list ([i (syntax-e #'ancestor-count)]) i)))
+         [([ancestor-proto #f])
           #`(id
              (lambda #,ancestor-args
                (lambda #,args
                  (#,final-make #,@ancestor-args #,@args))))]
-         [([_ ancestor-id] . _)
-          (define args (car (generate-temporaries '(args))))
+         [([ancestor-proto ancestor-id] . _)
           #`(id
              (make-keyword-procedure-like
               ancestor-id
               (lambda (kws kw-args . next-args)
                 (lambda #,args
                   (keyword-apply #,(loop #'rest
-                                         #`(lambda ancestor-args
-                                             (apply #,final-make (append ancestor-args #,args))))
+                                         (cdr argss)
+                                         #`(lambda #,ancestor-args
+                                             (#,final-make #,@ancestor-args #,@args)))
                                  kws kw-args
                                  next-args)))))])])))
+
+(define-for-syntax (encode-protocol keywords)
+  (if (for/and ([kw (in-list keywords)])
+        (not (syntax-e kw)))
+      (length keywords)
+      keywords))
+
+(define-for-syntax (generate-protocol-temporaries proto)
+  (syntax-parse proto
+    [count:exact-integer
+     (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
+    [(arg-desc ...)
+     (apply append
+            (for/list ([desc (syntax->list #'(arg-desc ...))])
+              (define id (car (generate-temporaries '(arg))))
+              (if (keyword? (syntax-e desc))
+                  (list desc id)
+                  (list id))))]))
 
 (define (make-keyword-procedure-like make-proc gen-proc)
   (define proc (make-proc void)) ; we know that `make-proc` immediately returns a procedure

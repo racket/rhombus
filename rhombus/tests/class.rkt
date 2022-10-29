@@ -24,10 +24,53 @@ check:
 check:
   ~eval_exn
   class Posn(x, y):
+    field x: 0
+  "duplicate field name"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
     nonfinal
   class Posn3D(x):
     extends Posn
   "field name already exists in superclass"
+
+check:
+  class Posn(~x, y)
+  val p: Posn(~x: 1, 2)
+  val p2: Posn(2, ~x: 1)
+  [p.x, p.y, p2.x, p2.y]
+  [1, 2, 1, 2]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+  val p: Posn3D(~x: 1, 2, 3)
+  val p2: Posn3D(2, 3, ~x: 1)
+  [p.x, p.y, p.z, p2.x, p2.y, p2.z]
+  [1, 2, 3, 1, 2, 3]
+
+check:
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(~z):
+    extends Posn
+  val p: Posn3D(1, 2, ~z: 3)
+  val p2: Posn3D(~z: 3, 1, 2)
+  [p.x, p.y, p.z, p2.x, p2.y, p2.z]
+  [1, 2, 3, 1, 2, 3]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(~z: zz):
+    extends Posn
+  val p: Posn3D(~x: 1, 2, ~z: 3)
+  val p2: Posn3D(~z: 3, 2, ~x: 1)
+  [p.x, p.y, p.zz, p2.x, p2.y, p2.zz]
+  [1, 2, 3, 1, 2, 3]
 
 check:
   class Posn(x, y):
@@ -173,3 +216,114 @@ check:
   [0, 2, 0, 2, 2,
    #true,
    #true]
+
+check:
+  class Posn(x, y):
+    nonfinal
+    field w: 0
+  class Posn3D(z):
+    extends Posn
+  val p1: Posn(10, 20)
+  val p: Posn3D(1, 2, 3)
+  [[p1.x, p1.y, p1.w],
+   [p.x, p.y, p.w, p.z]]
+  [[10, 20, 0],
+   [1, 2, 0, 3]]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+    field w: 0
+  class Posn3D(z):
+    extends Posn
+  val p1: Posn(20, ~x: -10)
+  val p: Posn3D(2, ~x: 1, 3)
+  [[p1.x, p1.y, p1.w],
+   [p.x, p.y, p.w, p.z]]
+  [[-10, 20, 0],
+   [1, 2, 0, 3]]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+    field w: 0
+    internal _Posn
+  class Posn3D(z):
+    extends Posn
+    internal _Posn3D
+  val p1: Posn(20, ~x: -10)
+  val p: Posn3D(2, ~x: 1, 3)
+  val ip1: _Posn(20, ~x: -10)
+  val ip: _Posn3D(2, ~x: 1, 3)
+  fun get(p1 :: Posn, p :: Posn3D):
+    [[p1.x, p1.y, p1.w],
+     [p.x, p.y, p.w, p.z]]
+  [get(p1, p), get(ip1, ip)]
+  [[[-10, 20, 0], [1, 2, 0, 3]],
+   [[-10, 20, 0], [1, 2, 0, 3]]]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    constructor (make):
+      fun(x, y, z):
+        make(~x: 1, y)(z)
+  val p2: Posn(~x: 1, 2)
+  val p3: Posn3D(1, 2, 3)
+  [[p2.x, p2.y], [p3.x, p3.y, p3.z]]
+  [[1, 2], [1, 2, 3]]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    constructor (make):
+      fun(x, y, z):
+        make(~x: 1, y)(z)
+  class Posn4D(~w):
+    extends Posn3D
+    constructor (make):
+      fun(x, y, z, w):
+        make(x, y, z)(~w: w)
+  val p2: Posn(~x: 1, 2)
+  val p3: Posn3D(1, 2, 3)
+  val p4: Posn4D(1, 2, 3, 4)
+  [[p2.x, p2.y],
+   [p3.x, p3.y, p3.z],
+   [p4.x, p4.y, p4.z, p4.w]]
+  [[1, 2],
+   [1, 2, 3],
+   [1, 2, 3, 4]]
+
+check:
+  class Posn(~x, y):
+    nonfinal
+    constructor (make):
+      fun(~ex: x, ~wy: y):
+        make(~x: 1, y)
+  class Posn3D(z):
+    extends Posn
+    constructor (make):
+      fun(x, ~y: y, z):
+        make(~ex: 1, ~wy: y)(z)
+    internal _Posn3D
+  class Posn4D(w):
+    extends Posn3D
+    constructor (make):
+      fun(x, y, z, w):
+        make(x, ~y: y, z)(w)
+  val p2: Posn(~ex: 1, ~wy: 2)
+  val p3: Posn3D(1, ~y: 2, 3)
+  val _p3: _Posn3D(~x: 1, 2, 3)
+  val p4: Posn4D(1, 2, 3, 4)
+  [[p2.x, p2.y],
+   [p3.x, p3.y, p3.z],
+   [_p3.x, _p3.y, _p3.z],
+   [p4.x, p4.y, p4.z, p4.w]]
+  [[1, 2],
+   [1, 2, 3],
+   [1, 2, 3],
+   [1, 2, 3, 4]]

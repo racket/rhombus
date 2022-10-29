@@ -133,12 +133,173 @@ obligated to return an instance of the class. When `make_identifier`
 or its result produces an instance of class, it will be an instance of
 a subclass if the constructor was call on behalf of the subclass.
 
+Examples
+--------
+
+Basic:
+
+```
+class Posn(x, y)
+
+Posn(1, 2)
+Posn(1, 2).x
+
+val p :: Posn: Posn(1, 2)
+p.x
+
+val Posn(x, y): Posn(1, 2)
+x
+```
+
+Keyword arguments:
+
+```
+class Posn(~x, ~y)
+
+val p :: Posn: Posn(~x: 1, ~y: 2)
+p.x
+
+val Posn(~y: _, ~x: x): Posn(~x: 1, ~y: 2)
+x
+```
+
+Keywords distinct from field names, annotations on fields:
+
+```
+class Posn(~ex: x :: Integer,
+           ~wy: y :: Integer)
+
+val p :: Posn: Posn(~ex: 1, ~wy: 2)
+p.x
+
+val Posn(~wy: _, ~ex: x): Posn(~ex: 1, ~wy: 2)
+x
+```
+
+Subclassing:
+
+```
+class Posn(x, y):
+  nonfinal
+
+class Posn3D(z):
+  extends Posn
+
+val p: Posn3D(1, 2, 3)
+p.x
+p.z
+```
+
+Custom constructor and binding:
+
+```
+import rhombus/meta open
+
+class Posn(x, y):
+  constructor (make):
+    fun (x = 0, y = 0):
+      make(x, y)
+  binding (bind):
+    rule | 'Posn()': 'bind(_, _)'
+         | 'Posn($(x :: Group))': 'bind($x, _)'
+         | 'Posn($x, $y)': 'bind($x, $y)'
+
+Posn()
+Posn(1)
+Posn(1, 2)
+
+val Posn(x): Posn(1, 2)
+x
+
+val Posn(_, y): Posn(1, 2)
+y
+```
+
+Using `internal`:
+
+```
+import rhombus/meta open
+
+class Posn(x, y):
+  internal _Posn
+  constructor:
+    fun (x = 0, y = 0):
+      _Posn(x, y)
+  binding:
+    rule | 'Posn()': '_Posn(_, _)'
+         | 'Posn($(x :: Group))': '_Posn($x, _)'
+         | 'Posn($x, $y)': '_Posn($x, $y)'
+```
+
+Subclassing with custom constructors:
+
+```
+class Posn(x, y):
+  nonfinal
+  constructor (make):
+    fun (x = 0, y = 0):
+      make(x, y)
+
+class Posn3D(z):
+  extends Posn
+  constructor (make):
+    fun (~x: x = 0, ~y: y = 0, ~z: z = 0):
+      make(x, y)(z)
+
+class Posn4D(w):
+  extends Posn3D
+  constructor (make):
+    fun (~x = 0, ~y = 0, ~z = 0, ~w = 0):
+      make(~z: z, ~y: y, ~x: x)(w)
+
+Posn4D()
+Posn4D(~x: 1, ~y: 2, ~w: 4)
+```
+
+Mixing keywords for default constructors with customized constructors:
+
+```
+  class Posn(~x, y):
+    nonfinal
+    constructor (make):
+      fun(~ex: x, ~wy: y):
+        make(~x: 1, y)
+
+  class Posn3D(z):
+    extends Posn
+    constructor (make):
+      fun(x, ~y: y, z):
+        make(~ex: 1, ~wy: y)(z)
+    internal _Posn3D
+
+  class Posn4D(w):
+    extends Posn3D
+    constructor (make):
+      fun(x, y, z, w):
+        make(x, ~y: y, z)(w)
+
+  Posn(~ex: 1, ~wy: 2)
+  Posn3D(1, ~y: 2, 3)
+  _Posn3D(~x: 1, 2, 3)
+  Posn4D(1, 2, 3, 4)
+```
+
+
+Helper definition within class:
+
+```
+class Posn0D():
+  val mutable singleton: #false
+  constructor (make):
+    fun ():
+      unless singleton | singleton := make()
+      singleton
+
+Posn0D() === Posn0D()
+```
+
 Open Issues
 -----------
-
-Since it's a common case, probably a `field_spec` should allow a
-keyword in place of an identifier with the meaning that the default
-constructor expects keyword arguments.
 
 An uncooperative custom constructor for a non-final class might return
 an instance of itself or some other subclass when called on behalf of
