@@ -73,13 +73,13 @@ An `extends` clause specifies a superclass. The superclass must be
 nonfinal.
 
 Each `field` clause adds additional mutable fields to the class, but
-the extra fields are not including in the default constructor, etc.
+the extra fields are not included in the default constructor, etc.
 
 The `constructor`, `binding` and `annotation` clause forms support
 customizing those aspects of the class. In each case, the form expects
-an identifier afterward that is bound to the representation's
-constructor, binding, or annotation that would otherwise apply without
-customization.
+an identifier afterward that is bound to the default constructor,
+binding, or annotation, or a curried version in the case of
+subclassing.
 
 If `internal` is present, then it binds the associated `identifier` to
 the representation in the same context as the `class` definition, and
