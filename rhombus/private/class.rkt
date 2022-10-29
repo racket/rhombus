@@ -5,7 +5,9 @@
                      enforest/hier-name-parse
                      "srcloc.rkt"
                      "name-path-op.rkt"
-                     "introducer.rkt")
+                     "introducer.rkt"
+                     "tag.rkt")
+         racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -30,7 +32,8 @@
          "error.rkt"
          "class-clause.rkt"
          "entry-point.rkt"
-         "equal.rkt")
+         (rename-in "equal.rkt"
+                    [= rhombus=]))
 
 (provide (rename-out [rhombus-class class])
          extends
@@ -48,7 +51,8 @@
                       class:id
                       constructor-id ; #f if no custom constructor
                       fields ; (list (list id accessor-id static-infos constructor-mode) ...)
-                      constructor-makers)) ; (list constructor-maker ... maybe-default-constuctor-desc)
+                      constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
+                      defaults-id)) ; #f if no arguments with defaults
   (define (class-desc-ref v) (and (class-desc? v) v))
 
   (define (field-desc-name f) (car f))
@@ -58,9 +62,32 @@
 
   (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
+  (define-syntax-class :not-equal
+    #:description "an annotation term"
+    #:datum-literals (op)
+    #:literals (rhombus=)
+    (pattern (~not (op rhombus=))))
+
   (define-syntax-class :id-field
-    #:datum-literals (group)
-    #:literals (mutable)
+    #:datum-literals (group op)
+    #:literals (mutable rhombus=)
+    (pattern (group (~optional (~and mutable (~var mutable))
+                               #:defaults ([mutable #'#f]))
+                    name:identifier
+                    ann::not-equal ...
+                    (op rhombus=)
+                    default-form ...+)
+             #:with ((~optional c::inline-annotation)) #'(ann ...)
+             #:attr predicate (if (attribute c)
+                                  #'c.predicate
+                                  #'#f)
+             #:attr annotation-str (if (attribute c)
+                                       #'c.annotation-str
+                                       #'#f)
+             #:attr static-infos (if (attribute c)
+                                     #'c.static-infos
+                                     #'())
+             #:attr default #`((rhombus-expression (#,group-tag default-form ...))))
     (pattern (group (~optional (~and mutable (~var mutable))
                                #:defaults ([mutable #'#f]))
                     name:identifier
@@ -73,17 +100,19 @@
                                        #'#f)
              #:attr static-infos (if (attribute c)
                                      #'c.static-infos
-                                     #'())))
+                                     #'())
+             #:attr default #'#f))
   
   (define-syntax-class :field
-    #:datum-literals (group)
-    #:literals (mutable)
+    #:datum-literals (group op)
+    #:literals (mutable rhombus=)
     (pattern idf::id-field
              #:attr predicate #'idf.predicate
              #:attr annotation-str #'idf.annotation-str
              #:attr static-infos #'idf.static-infos
              #:attr name #'idf.name
              #:attr keyword #'#f
+             #:attr default #'idf.default
              #:attr mutable #'idf.mutable)
     (pattern (group kw:keyword (::block idf::id-field))
              #:attr predicate #'idf.predicate
@@ -91,6 +120,7 @@
              #:attr static-infos #'idf.static-infos
              #:attr name #'idf.name
              #:attr keyword #'kw
+             #:attr default #'idf.default
              #:attr mutable #'idf.mutable)
     (pattern (group kw:keyword)
              #:attr predicate #'#f
@@ -98,6 +128,15 @@
              #:attr static-infos #'()
              #:attr name (datum->syntax #'kw (string->symbol (keyword->string (syntax-e #'kw))) #'kw #'kw)
              #:attr keyword #'kw
+             #:attr default #'#f
+             #:attr mutable #'#f)
+    (pattern (group kw:keyword (op rhombus=) default-form ...+)
+             #:attr predicate #'#f
+             #:attr annotation-str #'#f
+             #:attr static-infos #'()
+             #:attr name (datum->syntax #'kw (string->symbol (keyword->string (syntax-e #'kw))) #'kw #'kw)
+             #:attr keyword #'kw
+             #:attr default #`((rhombus-expression (#,group-tag default-form ...)))
              #:attr mutable #'#f))
 
   (define-syntax-class :not-parens
@@ -122,7 +161,25 @@
                                   "duplicate field name")
                               stxes
                               field))
-        (hash-set ht (syntax-e field) #t)))))
+        (hash-set ht (syntax-e field) #t))))
+
+  (define (check-field-defaults stxes super-has-defaults? constructor-fields defaults keywords)
+    (for/fold ([need-default? #f]) ([f (in-list constructor-fields)]
+                                    [df (in-list defaults)]
+                                    [kw (in-list keywords)])
+      (cond
+        [(syntax-e kw) need-default?]
+        [(syntax-e df) #t]
+        [need-default? (raise-syntax-error #f
+                                           "by-position field without default after by-position field with a default"
+                                           stxes
+                                           f)]
+        [super-has-defaults? (raise-syntax-error #f
+                                                 (string-append "field needs a default,"
+                                                                " because a superclass field has a default")
+                                                 stxes
+                                                 f)]
+        [else #f]))))
 
 (define-syntax rhombus-class
   (definition-transformer
@@ -139,6 +196,7 @@
                                         full-name name
                                         (field.name ...)
                                         (field.keyword ...)
+                                        (field.default ...)
                                         (field.mutable ...)
                                         (field.predicate ...)
                                         (field.annotation-str ...)
@@ -174,7 +232,8 @@
       [(_ [orig-stx base-stx scope-stx
                     full-name name
                     (constructor-field-name ...)
-                    (field-keyword ...)
+                    (field-keyword ...) ; #f or keyword
+                    (field-default ...) ; #f or (parsed)
                     (field-mutable ...)
                     (field-predicate ...)
                     (field-annotation-str ...)
@@ -233,6 +292,8 @@
                                 (for/list ([f (in-list more-field-specs)])
                                   (if (syntax-e (field-spec-mutable f)) #'#t #'#f))))
        (define keywords (syntax->list #'(field-keyword ...)))
+       (define defaults (syntax->list #'(field-default ...)))
+       (define has-defaults? (for/or ([df (in-list defaults)]) (syntax-e df)))
        (define super-constructor-fields
          (if super
              (for/list ([f (in-list (class-desc-fields super))]
@@ -245,10 +306,27 @@
              (for/list ([f (in-list (class-desc-fields super))]
                         #:do [(define arg (field-desc-constructor-arg f))]
                         #:unless (identifier? arg))
-               arg)
+               (if (box? (syntax-e arg))
+                   (unbox (syntax-e arg))
+                   arg))
+             '()))
+       (define super-defaults
+         (if super
+             (for/list ([f (in-list (class-desc-fields super))]
+                        #:do [(define arg (field-desc-constructor-arg f))]
+                        #:unless (identifier? arg))
+               (if (box? (syntax-e arg))
+                   #'(unsafe-undefined)
+                   #'#f))
              '()))
        (define super-has-keywords? (for/or ([kw (in-list super-keywords)])
                                      (syntax-e kw)))
+       (define super-has-defaults? (for/or ([df (in-list super-defaults)])
+                                     (syntax-e df)))
+       (define super-has-by-position-default? (for/or ([kw (in-list super-keywords)]
+                                                       [df (in-list super-defaults)])
+                                                (and (not (syntax-e kw))
+                                                     (syntax-e df))))
        (define super-has-extra? (and super
                                      (for/or ([f (in-list (class-desc-fields super))])
                                        (identifier? (field-desc-constructor-arg f)))))
@@ -256,12 +334,16 @@
          (or (pair? extra-fields)
              (for/or ([kw (in-list keywords)])
                (syntax-e kw))
-             (and super-has-keywords?
+             (for/or ([df (in-list defaults)])
+               (syntax-e df))
+             (and (or super-has-keywords?
+                      super-has-defaults?)
                   (or (not (class-desc-constructor-makers super))
                       constructor-id))
              super-has-extra?))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
        (check-duplicate-field-names stxes fields super)
+       (check-field-defaults stxes super-has-by-position-default? constructor-fields defaults keywords)
        (define-values (immutable-fields mutable-fields)
          (for/fold ([imm '()] [m '()] #:result (values (reverse imm) (reverse m)))
                    ([field (in-list fields)]
@@ -287,6 +369,8 @@
                      [(core-ann-name) (if (hash-ref options 'annotation #f)
                                           (generate-temporaries #'(name))
                                           #'(name))]
+                     [name-defaults (and (or super-has-defaults? (and has-defaults? (not final?)))
+                                         (car (generate-temporaries (list (format "~a-defaults" (syntax-e #'name))))))]
                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [(name-field ...) all-name-fields]
                      [(constructor-name-field ...) (for/list ([c (in-list constructor-fields)]
@@ -316,7 +400,11 @@
                      [(field-static-infos ...) (append (syntax->list #'(constructor-field-static-infos ...))
                                                        (for/list ([f (in-list more-field-specs)])
                                                          (field-spec-static-infos f)))]
-                     [(field-argument ...) (append (syntax->list #'(field-keyword ...))
+                     [(field-argument ...) (append (for/list ([kw (in-list keywords)]
+                                                              [df (in-list defaults)])
+                                                     (if (syntax-e df)
+                                                         (box kw)
+                                                         kw))
                                                    (for/list ([f (in-list more-field-specs)])
                                                      (field-spec-arg-id f)))]
                      [((super-field-name super-name-field super-field-static-infos super-field-argument) ...) (if super
@@ -362,20 +450,59 @@
                              ...
                              (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
                              ...))))
+              (if (syntax-e #'name-defaults)
+                  (list
+                   ;; default-value expressions should see only earlier fields
+                   ;; from `constructor-fields`, so use some temporary names
+                   ;; to make sure they can't be referenced
+                   (let ([super-tmps (generate-temporaries super-constructor-fields)]
+                         [tmps (generate-temporaries constructor-fields)])
+                     #`(define (name-defaults #,@(append super-tmps tmps))
+                         (let-values #,(cond
+                                         [super-has-defaults?
+                                          #`([#,super-tmps
+                                              (#,(class-desc-defaults-id super) . #,super-tmps)])]
+                                         [else '()])
+                           (let* #,(for/list ([f (in-list constructor-fields)]
+                                              [tmp (in-list tmps)]
+                                              [df (in-list defaults)])
+                                     (cond
+                                       [(syntax-e df)
+                                        #`[#,f (if (eq? #,tmp unsafe-undefined)
+                                                   (let ([#,f . #,df]) #,f)
+                                                   #,tmp)]]
+                                       [else
+                                        #`[#,f #,tmp]]))
+                             (values #,@super-tmps #,@constructor-fields))))))
+                  null)
               (if need-constructor-wrapper?
                   (list
                    #`(define make-name
                        (lambda #,(apply append (for/list ([f (in-list (append super-constructor-fields constructor-fields))]
-                                                          [kw (in-list (append super-keywords keywords))])
-                                                 (if (keyword? (syntax-e kw))
-                                                     (list kw f)
-                                                     (list f))))
-                         (make-all-name #,@(for/list ([f (in-list (if super (class-desc-fields super) null))])
-                                             (if (identifier? (field-desc-constructor-arg f))
-                                                 (field-desc-constructor-arg f)
-                                                 (field-desc-name f)))
-                                        #,@constructor-fields
-                                        #,@(map field-spec-arg-id more-field-specs)))))
+                                                          [kw (in-list (append super-keywords keywords))]
+                                                          [df (in-list (append super-defaults defaults))])
+                                                 (let ([arg (if (syntax-e df)
+                                                                (if final?
+                                                                    #`[#,f . #,df]
+                                                                    #`[#,f unsafe-undefined])
+                                                                f)])
+                                                   (if (keyword? (syntax-e kw))
+                                                       (list kw arg)
+                                                       (list arg)))))
+                         (let-values #,(cond
+                                         [(and super-has-defaults? (or final? (not has-defaults?)))
+                                          #`([#,super-constructor-fields
+                                              (#,(class-desc-defaults-id super) . #,super-constructor-fields)])]
+                                         [(and has-defaults? (not final?))
+                                          (define fields (append super-constructor-fields constructor-fields))
+                                          #`([#,fields (name-defaults . #,fields)])]
+                                         [else '()])
+                           (make-all-name #,@(for/list ([f (in-list (if super (class-desc-fields super) null))])
+                                               (if (identifier? (field-desc-constructor-arg f))
+                                                   (field-desc-constructor-arg f)
+                                                   (field-desc-name f)))
+                                          #,@constructor-fields
+                                          #,@(map field-spec-arg-id more-field-specs))))))
                   null)
               (if internal-id
                   (list
@@ -403,9 +530,9 @@
                               [super
                                (compose-constructor
                                 #'make-name
-                                #`([#,(encode-protocol keywords) constructor-maker-name]
+                                #`([#,(encode-protocol keywords defaults) constructor-maker-name]
                                    #,@(or (class-desc-constructor-makers super)
-                                          (list (list (encode-protocol super-keywords) #f)))))]
+                                          (list (list (encode-protocol super-keywords super-defaults) #f)))))]
                               [else #'(constructor-maker-name make-name)])))])
                   null)
               (list
@@ -469,12 +596,14 @@
                                      ...)
                                #,(cond
                                    [(syntax-e #'constructor-maker-name)
-                                    #`(quote-syntax ([#,(encode-protocol keywords) constructor-maker-name]
+                                    #`(quote-syntax ([#,(encode-protocol keywords defaults) constructor-maker-name]
                                                      #,@(if super
                                                             (or (class-desc-constructor-makers super)
-                                                                (list (list (encode-protocol super-keywords) #f)))
+                                                                (list (list (encode-protocol super-keywords super-defaults) #f)))
                                                             '())))]
-                                   [else #'#f])))
+                                   [else #'#f])
+                               #,(and (syntax-e #'name-defaults)
+                                      #'(quote-syntax name-defaults))))
                #'(define-name-root name
                    #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
                    #:fields ([field-name name-field] ...))
@@ -601,10 +730,10 @@
     (let loop ([makers makers])
       (syntax-parse makers
         [([proto _])
-         (list (generate-protocol-temporaries #'proto))]
+         (list (generate-protocol-formal-arguments #'proto))]
         [([proto _] . rest)
          (define super-args (loop #'rest))
-         (cons (append (car super-args) (generate-protocol-temporaries #'proto))
+         (cons (append (car super-args) (generate-protocol-formal-arguments #'proto))
                super-args)])))
   (let loop ([makers makers]
              [argss argss]
@@ -620,34 +749,46 @@
        (error "should not get here")]
       [([proto id] . rest)
        ;; look ahead by one in `rest` so we can get the arity right
-       (define args (generate-protocol-temporaries #'proto))
-       (define ancestor-args (cadr argss))
+       (define formal-args (generate-protocol-formal-arguments #'proto))
+       (define ancestor-formal-args (cadr argss))
+       (define args (protocol-formal->actual formal-args))
+       (define ancestor-args (protocol-formal->actual ancestor-formal-args))
        (syntax-parse #'rest
          [([ancestor-proto #f])
           #`(id
-             (lambda #,ancestor-args
+             (lambda #,ancestor-formal-args
                (lambda #,args
                  (#,final-make #,@ancestor-args #,@args))))]
          [([ancestor-proto ancestor-id] . _)
           #`(id
+             ;; The position after `constructor` is syntactically constrainted, but
+             ;; not so much that we can statically extract its signature. So, we
+             ;; dynamically adjust a generic wrapper to match the constructor's
+             ;; signature
              (make-keyword-procedure-like
               ancestor-id
               (lambda (kws kw-args . next-args)
-                (lambda #,args
+                (lambda #,formal-args
                   (keyword-apply #,(loop #'rest
                                          (cdr argss)
-                                         #`(lambda #,ancestor-args
+                                         #`(lambda #,ancestor-formal-args
                                              (#,final-make #,@ancestor-args #,@args)))
                                  kws kw-args
                                  next-args)))))])])))
 
-(define-for-syntax (encode-protocol keywords)
-  (if (for/and ([kw (in-list keywords)])
-        (not (syntax-e kw)))
+(define-for-syntax (encode-protocol keywords defaults)
+  (if (for/and ([kw (in-list keywords)]
+                [df (in-list defaults)])
+        (and (not (syntax-e kw))
+             (not (syntax-e df))))
       (length keywords)
-      keywords))
+      (for/list ([kw (in-list keywords)]
+                 [df (in-list defaults)])
+        (if (syntax-e df)
+            (box kw)
+            kw))))
 
-(define-for-syntax (generate-protocol-temporaries proto)
+(define-for-syntax (generate-protocol-formal-arguments proto)
   (syntax-parse proto
     [count:exact-integer
      (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
@@ -655,9 +796,20 @@
      (apply append
             (for/list ([desc (syntax->list #'(arg-desc ...))])
               (define id (car (generate-temporaries '(arg))))
-              (if (keyword? (syntax-e desc))
-                  (list desc id)
-                  (list id))))]))
+              (define arg (if (box? (syntax-e desc))
+                              #`[#,id unsafe-undefined]
+                              id))
+              (if (or (keyword? (syntax-e desc))
+                      (and (box? (syntax-e desc))
+                           (keyword? (syntax-e (unbox (syntax-e desc))))))
+                  (list desc arg)
+                  (list arg))))]))
+
+(define-for-syntax (protocol-formal->actual args)
+  (for/list ([arg (in-list args)])
+    (syntax-parse arg
+      [(id . _) #'id]
+      [_ arg])))
 
 (define (make-keyword-procedure-like make-proc gen-proc)
   (define proc (make-proc void)) ; we know that `make-proc` immediately returns a procedure

@@ -9,17 +9,18 @@ but it's called `class` because the intent is to provide a smoother
 path to something like Racket's `class` form. Some things we'd like to
 cover in a complete design:
 
- * A way to specialize the constructor, including a convenient way to
-   have keyword arguments for fields. The approach to constructor s
-   should be different than in Racket's `class`, where
-   constructor-argument handling and the inialization sequence is
-   intermingled with the rest of a class body, not to mention being
-   disconnected from Racket's more modern approach to keyword
-   arguments.
+ * Builtin support for keyword and optional fields.
 
- * Similarly, there should be a way to control the binding pattern,
-   annotation predicate, annotation constructor, and printer for a
-   class.
+ * A way to specialize the constructor beyond the built-in keyword and
+   optional-argument support. The approach to constructors should be
+   different than in Racket's `class`, where constructor-argument
+   handling and the inialization sequence is intermingled with the
+   rest of a class body, not to mention being disconnected from
+   Racket's more modern approach to keyword arguments.
+
+ * A way to control the binding pattern, annotation predicate,
+   annotation constructor, dot provider, printer, and equality
+   operator for a class.
 
  * Support for methods, including inheritance for implementation, but
    also something like properties, traits, or mixins for interface.
@@ -39,17 +40,20 @@ class identifier(field_spec, ...):
   class_clause_or_body
   ...
 
-field_spec := maybe_mutable identifier maybe_annotation
-            | keyword: maybe_mutable identifier maybe_annotation
-            | keyword
+field_spec := maybe_mutable identifier maybe_annot maybe_default
+            | keyword: maybe_mutable identifier maybe_annot maybe_default
+            | keyword maybe_default
 
 maybe_mutable := mutable | ε
-maybe_annotation := :: annotation | ε
+maybe_annot := :: annotation | ε
+maybe_default := = expr | ε
 ```
 
 Specifying a keyword for a field causes the constructor, binding
 pattern, and annotation to expect a keyword for the corresponding
-field instead of a by-position argument or subform.
+field instead of a by-position argument or subform. Specifying a
+default-value expression causes the corresponding argument in the
+constructor to be optional.<
 
 Predefined class-clause forms:
 
@@ -94,15 +98,16 @@ class, add methods, customize the constructor, and so on.
 
 Definitions and expressions that appear a `class` block are evaluated
 at *class* creation time (instead of *instance* creation time, like
-someone familiar with Racket's `class' might expect). Allowing
+someone familiar with Racket's `class` might expect). Allowing
 definitions here is necessary to support macro extensibility of
 `class` using macro-generating macros, which is a common Racket and
 Rhombus idiom. It's possible for a form within the block to be
-ambiguous, such as either a class clause or an expression. Potential
-ambiguity is resolved by ordering parses: each form in the block is
-first tried as a class clause, then as a definition, and finally as an
-expression (analogous to the way that definitions and then
-experessions are tried in a Rhombus module or body blocks generally).
+ambiguous as a class clause or a definition or expression. Potential
+ambiguity is resolved by ordering parse attempts: each form in the
+block is first tried as a class clause, then as a definition, and
+finally as an expression (analogous to the way that definitions and
+then experessions are tried in a Rhombus module or body blocks
+generally).
 
 The right-hand side of a `field` declaration is similarly evaluated
 once when the class is defined. The resulting constant is used to
@@ -142,10 +147,14 @@ Basic:
 class Posn(x, y)
 
 Posn(1, 2)
+
+val p: Posn(1, 2)
+p.x
+
 Posn(1, 2).x
 
-val p :: Posn: Posn(1, 2)
-p.x
+fun dist(p :: Posn):
+  return p.x + p.y
 
 val Posn(x, y): Posn(1, 2)
 x
@@ -156,11 +165,23 @@ Keyword arguments:
 ```
 class Posn(~x, ~y)
 
-val p :: Posn: Posn(~x: 1, ~y: 2)
+val p: Posn(~x: 1, ~y: 2)
 p.x
 
 val Posn(~y: _, ~x: x): Posn(~x: 1, ~y: 2)
 x
+```
+
+Default field values:
+
+```
+class Posn(x, y, dist = x+y)
+
+val p: Posn(2, 3)
+p.dist
+
+val p: Posn(2, 3, 17)
+p.dist
 ```
 
 Keywords distinct from field names, annotations on fields:
@@ -259,31 +280,43 @@ Posn4D(~x: 1, ~y: 2, ~w: 4)
 Mixing keywords for default constructors with customized constructors:
 
 ```
-  class Posn(~x, y):
-    nonfinal
-    constructor (make):
-      fun(~ex: x, ~wy: y):
-        make(~x: 1, y)
+class Posn(~x, y):
+  nonfinal
+  constructor (make):
+    fun (~ex: x, ~wy: y):
+      make(~x: 1, y)
 
-  class Posn3D(z):
-    extends Posn
-    constructor (make):
-      fun(x, ~y: y, z):
-        make(~ex: 1, ~wy: y)(z)
-    internal _Posn3D
+class Posn3D(z):
+  extends Posn
+  constructor (make):
+    fun (x, ~y: y, z):
+      make(~ex: 1, ~wy: y)(z)
+  internal _Posn3D
 
-  class Posn4D(w):
-    extends Posn3D
-    constructor (make):
-      fun(x, y, z, w):
-        make(x, ~y: y, z)(w)
+class Posn4D(w):
+  extends Posn3D
+  constructor (make):
+    fun (x, y, z, w):
+      make(x, ~y: y, z)(w)
 
-  Posn(~ex: 1, ~wy: 2)
-  Posn3D(1, ~y: 2, 3)
-  _Posn3D(~x: 1, 2, 3)
-  Posn4D(1, 2, 3, 4)
+Posn(~ex: 1, ~wy: 2)
+Posn3D(1, ~y: 2, 3)
+_Posn3D(~x: 1, 2, 3)
+Posn4D(1, 2, 3, 4)
 ```
 
+Mixing default-value forms and customized constructors:
+
+```
+class Posn(x, y, dist = x+y):
+  nonfinal
+  constructor (make):
+    fun | (x, y): make(x, y)
+        | (dist): make(dist, 0, dist)
+
+Posn(2, 3)
+Posn(5)
+```
 
 Helper definition within class:
 
@@ -305,15 +338,16 @@ An uncooperative custom constructor for a non-final class might return
 an instance of itself or some other subclass when called on behalf of
 the constructor for a different subclass.
 
-Other Discussion
-----------------
-
+Class clause macros should be able to receive information about the
+fields of the enclosing class. Moving `extends` out of the clas sbody
+would make it easier to expose to all clause forms, but a better
+approach may be to report the information accumulated so far, which
+might not include the superclass is `extends` is later in the body.
 
 Prior art
 ---------
 
 R6RS Records, especially constructor protocols.
-
 
 Contributors
 ------------
@@ -321,8 +355,5 @@ Contributors
 * Jack Firth
 * Matthew Flatt
 * Alex Knauth
+* Sam Phillips
 * Sorawee Porncharoenwase
-
-References
-----------
-

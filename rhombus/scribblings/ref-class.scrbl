@@ -15,16 +15,20 @@
     $identifier_path . $identifier,
 
   grammar field_spec:
-    $maybe_mutable $identifier $maybe_annotation
-    $keyword: $maybe_mutable $identifier $maybe_annotation
-    $keyword,
+    $maybe_mutable $identifier $maybe_annot $maybe_default
+    $keyword: $maybe_mutable $identifier $maybe_annot $maybe_default
+    $keyword $maybe_default,
 
   grammar maybe_mutable:
     $$(@rhombus(mutable, ~bind))
     ε,
 
-  grammar maybe_annotation:
+  grammar maybe_annot:
     :: $$(@rhombus(annotation, ~var))
+    ε,
+
+  grammar maybe_default:
+    = $default_expr
     ε,
 
   grammar class_clause_or_body:
@@ -78,6 +82,16 @@
  instead of a by-position form for the corresponding fields. The name of
  the field for access with @rhombus(.) is the identifier, if present,
  otherwise the name is the symbolic form of the keyword.
+
+ When a default-value expression is provided for a field after
+ @rhombus(=), then the default constructor evaluates the
+ @rhombus(default_expr) to obstain a value for the argument when it is
+ not supplied. If a by-position field has a default-value expression,
+ then all later by-position fields must have a default. If the class
+ extends a superclass that has a by-position argument with a default,
+ then all by-position arguments of the subclass must have a default. A
+ @rhombus(default_expr) can refer to earlier field names in the same
+ @rhombus(class) to produce a default value.
 
  If a block follows a @rhombus(class) form's @rhombus(field_spec) sequence,
  it contains a mixture of definitions, expressions, and class clauses. A

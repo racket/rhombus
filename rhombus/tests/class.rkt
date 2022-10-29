@@ -327,3 +327,65 @@ check:
    [1, 2, 3],
    [1, 2, 3],
    [1, 2, 3, 4]]
+
+check:
+  class Posn(x, y = 0)
+  val p: Posn(1)
+  [p.x, p.y]
+  [1, 0]
+
+check:
+  class Posn(x, y = x):
+    nonfinal
+  val p: Posn(1)
+  [p.x, p.y]
+  [1, 1]
+
+check:
+  class Posn(~x, y = x):
+    nonfinal
+  val p: Posn(~x: 1)
+  val p2: Posn(~x: -1, 2)
+  [p.x, p.y, p2.x, p2.y]
+  [1, 1, -1, 2]
+
+check:
+  class Posn3D(~x = 10, y, ~z: z = x+y)
+  val p: Posn3D(2)
+  val p2: Posn3D(2, ~z: 3)
+  val p3: Posn3D(2, ~x: 3)
+  val p4: Posn3D(~z: 0, 2, ~x: 3)
+  [[p.x, p.y, p.z],
+   [p2.x, p2.y, p2.z],
+   [p3.x, p3.y, p3.z],
+   [p4.x, p4.y, p4.z]]
+  [[10, 2, 12],
+   [10, 2, 3],
+   [3, 2, 5],
+   [3, 2, 0]]
+
+check:
+  ~eval_exn
+  class Posn(x = 0, y)
+  "without default after"
+
+check:
+  ~eval_exn
+  class Posn(x, y = 0):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+  "field needs a default"
+
+check:
+  ~eval_exn
+  class Posn(x, y = no_such_variable)
+  "no_such_variable: unbound identifier"
+
+check:
+  ~eval_exn
+  class Posn(the_x, the_y = 0):
+    nonfinal
+  class Posn3D(z = the_y):
+    extends Posn
+  "the_y: unbound identifier"
