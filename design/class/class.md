@@ -374,7 +374,7 @@ an instance of itself or some other subclass when called on behalf of
 the constructor for a different subclass.
 
 Class clause macros should be able to receive information about the
-fields of the enclosing class. Moving `extends` out of the clas sbody
+fields of the enclosing class. Moving `extends` out of the class body
 would make it easier to expose to all clause forms, but a better
 approach may be to report the information accumulated so far, which
 might not include the superclass is `extends` is later in the body.
