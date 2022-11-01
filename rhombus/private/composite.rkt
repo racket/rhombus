@@ -30,11 +30,12 @@
                                                        #:ref-result-info? [ref-result-info? #f]
                                                        #:rest-accessor [rest-accessor #f] ; for a list "rest"
                                                        #:rest-repetition? [rest-repetition? #t])
-  (lambda (tail [rest-arg #f])
+  (lambda (tail [rest-arg #f] [stx-in #f])
     (syntax-parse tail
       [(form-id ((~and tag (~datum parens)) a_g ...) . new-tail)
-       #:do [(define stx (quasisyntax/loc #'form-id
-                           (#,group-tag form-id (tag a_g ...))))]
+       #:do [(define stx (or stx-in
+                             (quasisyntax/loc #'form-id
+                               (#,group-tag form-id (tag a_g ...)))))]
        #:with (a::binding ...) (sort-with-respect-to-keywords keywords (syntax->list #'(a_g ...)) stx)
        #:with (a-parsed::binding-form ...) #'(a.parsed ...)
        ;; `rest-a` will have either 0 items or 1 item
@@ -66,7 +67,10 @@
                       #,rest-repetition?
                       rest-a-parsed.infoer-id ...
                       rest-a-parsed.data ...))))
-        #'new-tail)])))
+        #'new-tail)]
+      [_ (raise-syntax-error #f
+                             "bad syntax"
+                             (or stx-in tail))])))
 
 (require (for-syntax racket/pretty))
 

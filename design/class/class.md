@@ -120,7 +120,9 @@ The `entry_point` syntactic category includes `fun` with the same
 syntax as its expression form. It also includes a `rule` form for
 simple pattern-matching macro transformations, which is useful with
 `binding` and `anotation`. (When `constructor` is specified, then
-typically `binding` and `annotation` should also be specified.)
+typically `binding` and `annotation` should also be specified.) The
+`entry_point` for `binding` and `annotation` is a meta-time
+expression.
 
 A class is `final` unless `nonfinal` or `extends` is present (i.e., by
 default, classes do not have subclasses). A `nonfinal` clause is
@@ -137,6 +139,19 @@ constructor is not obligated to call `make_identifier`, but it is
 obligated to return an instance of the class. When `make_identifier`
 or its result produces an instance of class, it will be an instance of
 a subclass if the constructor was call on behalf of the subclass.
+
+Similarly, when a class extends a superclass that has a customized
+binding or annotation, then the class must also have a customized
+binding or annotation, respectively. A `bind_identifier` or
+`annot_identifier` in a subclass is “curried” in the sense that
+`bind_identifier` or `annot_identifier.of` expects two terms
+afterward: the first corresponds to a term to follow the superclass
+binding or annotation form, and the second is a parenthesized sequence
+of bindings or annotations correponding to the `field_spec`s of the
+subclass. Typically, the term for the superclass form expects
+parentheses, but it can have any shape; to work with a subclass
+customization, however, it will need a shape that is represented as a
+single term.
 
 Examples
 --------
@@ -275,6 +290,26 @@ class Posn4D(w):
 
 Posn4D()
 Posn4D(~x: 1, ~y: 2, ~w: 4)
+```
+
+Subclassing with custom binding:
+
+```
+import rhombus/meta open
+
+class Posn(x, y):
+  nonfinal
+  binding (bind):
+    rule 'Posn[[$x $y]]': 'bind($x, $y)'
+
+val Posn[[x y]]: Posn(1, 2)
+
+class Posn3D(z):
+  extends Posn
+  binding (bind):
+    rule 'Posn3D[([$x $y $z])]': 'bind[[$x $y]]($z)'
+
+val Posn3D[([x3 y3 z3])]: Posn3D(1, 2, 3)
 ```
 
 Mixing keywords for default constructors with customized constructors:

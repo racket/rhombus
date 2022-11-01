@@ -146,12 +146,15 @@
  context, and annotation context, respectively. In each case, an
  identifier can be provided, such as @rhombus(make_identifier) or
  @rhombus(bind_identifier); within the clause, that identifier is bound
- to refer to the default implementation (roughly, in the case of
- constructors). When an identifier like @rhombus(make_identifier) is not
- provided in a clause, then the @rhombus(class) form must include a
- @rhombus(internal, ~class_clause) clause, and the @rhombus(identifier)
- from @rhombus(internal, ~class_clause) is used (shadowing the binding
- for @rhombus(identifier) outside of the specific clause).
+ to refer to the default implementation, roughly. When an identifier like
+ @rhombus(make_identifier) is not provided in a clause, then the
+ @rhombus(class) form must include a @rhombus(internal, ~class_clause)
+ clause, and the @rhombus(identifier) from
+ @rhombus(internal, ~class_clause) is used (shadowing the binding for
+ @rhombus(identifier) outside of the specific clause). When a superclass
+ specified by @rhombus(extends, ~class_clause) has a custom constructor,
+ binding, or annotation form, then the new subclass must also specify a
+ custom constructor, binding, or annotation form.
  
  When a @rhombus(class_clause) is a @rhombus(constructor, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) as a
@@ -164,18 +167,15 @@
 @itemlist(
 
  @item{If the new class does not have a superclass, then
-  @rhombus(make_identifier) is bound to a function that accepts as many
-  arguments as declared @rhombus(field_spec)s (nout counting
-  @rhombus(field, ~class_clause) clauses, if any), and it returns an
-  instance of the class. Note that this instance might be an instance of a
-  subclass if the new class is not @tech{final}.},
+  @rhombus(make_identifier) is bound to the default constructor, which
+  returns an instance of the class. Note that this instance might be an
+  instance of a subclass if the new class is not @tech{final}.},
 
  @item{If the new class has a superclass, then @rhombus(make_identifier)
-  is bound to a function that accepts the same arguments as the superclass
-  constructor. Instead of returning an instance of the class, it returns a
-  function that accepts as many arguments as declared
-  @rhombus(field_spec)s in the new subclass (again, not counting
-  @rhombus(field, ~class_clause) clauses), and the result of that function
+  is bound to a curried function. The function accepts the same arguments
+  as the superclass constructor. Instead of returning an instance of the
+  class, it returns a function that accepts arguments as declared by
+  @rhombus(field_spec)s in the new subclass, and the result of that function
   is an instance of the new class. Again, the result instance might be an
   instance of a subclass if the new class is not @tech{final}.}
 
@@ -183,19 +183,36 @@
  
  When a @rhombus(class_clause) is a @rhombus(binding, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) as a
- binding-pattern constructor invokes the @tech{entry point} (typically
- a @rhombus(rule, ~entry_point) form) in the block after
- @rhombus(binding, ~class_clause). The specified
- @rhombus(bind_identifier) is bound so that it refers to the default
- binding-pattern constructor.
+ binding-pattern constructor invokes the @tech{entry point} (typically a
+ @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
+ meta-time expression. The specified @rhombus(bind_identifier) refers to
+ a default binding constructor in the case that the new class has no
+ superclass, or it is bound to a ``curried'' constructor that expects two
+ bindings terms (that are typically each parenthesized sequences): the
+ first term is combined with superclass's binding constructor, and the
+ second term must be a parenthesized sequence of bindings that correspond
+ to the fields declared by @rhombus(field_spec)s. Note that a binding
+ constructor is not required to expect parentheses, but it must expect a
+ single shrubbery term to work with this protocol for a subclass binding
+ constructor.
 
  When a @rhombus(class_clause) is a @rhombus(annotation, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path) in a
- annotation invokes the @tech{entry point} (typically
- a @rhombus(rule, ~entry_point) form) in the block after
- @rhombus(annotation, ~class_clause). The specificed
- @rhombus(ann_identifier) is bound so that it refers to the default
- annotation binding.
+ annotation invokes the @tech{entry point} (typically a
+ @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a
+ meta-time expression. The specificed @rhombus(ann_identifier) is bound
+ so that it refers to the default annotation binding, but when the new
+ class has a superclass, the annotation's @rhombus(of) form is
+ ``curried'' in the sense that it expects be followed by two terms (that
+ are typically each parenthesized sequences): one the first term is
+ combined with the superclass annotation's @rhombus(of) form, and the
+ second must be a parenthesized sequence of annotations corresponding to
+ the fields declared by @rhombus(field_spec)s. Note that an annotation
+ @rhombus(of) constructor is not required to expect parentheses, but it
+ must expect a single shrubbery term to work with this protocol for a
+ subclass annotation constructor.
 
  When a @rhombus(class_clause) is @rhombus(authentic, ~class_clause),
  then the new class cannot be chaperoned or impersonated. At most one

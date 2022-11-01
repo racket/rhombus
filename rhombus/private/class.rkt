@@ -3,10 +3,12 @@
                      syntax/parse
                      enforest/syntax-local
                      enforest/hier-name-parse
+                     (only-in enforest/operator operator-proc)
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "with-syntax.rkt")
          racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -32,6 +34,7 @@
          "error.rkt"
          "class-clause.rkt"
          "entry-point.rkt"
+         (submod "boolean-pattern.rkt" for-class)
          (rename-in "equal.rkt"
                     [= rhombus=]))
 
@@ -49,9 +52,13 @@
 (begin-for-syntax
   (struct class-desc (final?
                       class:id
-                      constructor-id ; #f if no custom constructor
+                      constructor-id
+                      binding-id
+                      annotation-id
                       fields ; (list (list id accessor-id mutator-id static-infos constructor-mode) ...)
                       constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
+                      custom-binding?
+                      custom-annotation?
                       defaults-id)) ; #f if no arguments with defaults
   (define (class-desc-ref v) (and (class-desc? v) v))
 
@@ -276,12 +283,15 @@
                                "superclass is final and cannot be extended"
                                stxes
                                parent-name))
-         (when (and (class-desc-constructor-makers super)
-                    (not constructor-id))
-           (raise-syntax-error #f
-                               "superclass does not use the default constructor, so a subclass needs `~constructor`"
-                               stxes
-                               parent-name)))
+         (define (check-consistent-custom p? id what)
+           (when (and p? (not id))
+             (raise-syntax-error #f
+                                 (format "superclass has a custom ~a, so a subclass needs a custom ~a" what what)
+                                 stxes
+                                 parent-name)))
+         (check-consistent-custom (class-desc-constructor-makers super) constructor-id "constructor")
+         (check-consistent-custom (class-desc-custom-binding? super) binding-id "binding")
+         (check-consistent-custom (class-desc-custom-annotation? super) annotation-id "annotation"))
        (define constructor-fields (syntax->list #'(constructor-field-name ...)))
        (define more-field-specs (reverse (hash-ref options 'fields '())))
        (define (field-spec-arg-id fs) (cadr fs))
@@ -431,7 +441,11 @@
                        ...)
                       (if super
                           (class-desc-fields super)
-                          '())])
+                          '())]
+                     [(super-field-keyword ...) super-keywords]
+                     [parse-name-of (and super
+                                         annotation-id
+                                         (car (generate-temporaries #'(name))))])
          (with-syntax ([constructor-name (if constructor-id
                                              (car (generate-temporaries #'(name)))
                                              #'make-name)]
@@ -565,13 +579,24 @@
                #`(define-binding-syntax core-bind-name
                    (binding-transformer
                     #'name
-                    (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
-                                                        (quote-syntax name?)
-                                                        #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                        (list (quote-syntax constructor-name-field) ...)
-                                                        #:keywords '(field-keyword ...)
-                                                        #:accessor->info? #t
-                                                        (list (quote-syntax constructor-field-static-infos) ...)))))
+                    #,(if (and super
+                               binding-id)
+                          #`(make-curried-binding-transformer (quote-syntax #,(class-desc-binding-id super))
+                                                              #,(symbol->string (syntax-e #'name))
+                                                              (quote-syntax name?)
+                                                              #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                                              (list (quote-syntax constructor-name-field) ...)
+                                                              #:keywords '(field-keyword ...)
+                                                              (list (quote-syntax constructor-field-static-infos) ...))
+                          #`(make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                                                (quote-syntax name?)
+                                                                #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                                                (list (quote-syntax super-name-field) ...
+                                                                      (quote-syntax name-field) ...)
+                                                                #:keywords '(super-field-keyword ... field-keyword ...)
+                                                                (list (quote-syntax super-field-static-infos) ...
+                                                                      (quote-syntax field-static-infos) ...)
+                                                                #:accessor->info? #t)))))
               (if internal-id
                   (list
                    #`(define-binding-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax core-bind-name))))
@@ -587,14 +612,29 @@
                            (wrap-class-transformer name #,(intro (cadr bind)) make-binding-prefix-operator))))]
                 [else null])
               (list
-               #'(define-annotation-constructor core-ann-name
-                   ([accessors (list (quote-syntax constructor-name-field) ...)])
+               #`(define-annotation-constructor core-ann-name
+                   ([accessors #,(if (syntax-e #'parse-name-of)
+                                     #'(list (quote-syntax constructor-name-field) ...)
+                                     #'(list (quote-syntax super-name-field) ...
+                                             (quote-syntax constructor-name-field) ...))]
+                    #,@(if (syntax-e #'parse-name-of)
+                           #`([parse-name-of
+                               (make-curried-annotation-of-tranformer (quote-syntax #,(class-desc-annotation-id super)))])
+                           null))
                    (quote-syntax name?)
                    (quote-syntax ((#%dot-provider name-instance)))
-                   constructor-cnt
-                   (field-keyword ...)
+                   #,(if (syntax-e #'parse-name-of)
+                         #'constructor-cnt
+                         #`(quote #,(+ (length constructor-fields)
+                                       (length super-constructor-fields))))
+                   #,(if (syntax-e #'parse-name-of)
+                         #'(field-keyword ...)
+                         #'(super-field-keyword ... field-keyword ...))
                    (make-class-instance-predicate accessors)
-                   (make-class-instance-static-infos accessors)))
+                   (make-class-instance-static-infos accessors)
+                   #:parse-of #,(if (syntax-e #'parse-name-of)
+                                    #'parse-name-of
+                                    #'parse-annotation-of)))
               (if internal-id
                   (list
                    #`(define-annotation-syntax #,(expose internal-id) (make-rename-transformer (quote-syntax core-ann-name))))
@@ -613,6 +653,8 @@
                #`(define-class-desc-syntax name
                    (class-desc #,final?
                                (quote-syntax class:name)
+                               (quote-syntax name)
+                               (quote-syntax name)
                                (quote-syntax name)
                                (list (list 'super-field-name
                                            (quote-syntax super-name-field)
@@ -634,6 +676,8 @@
                                                                 (list (list (encode-protocol super-keywords super-defaults) #f)))
                                                             '())))]
                                    [else #'#f])
+                               #,(and (hash-ref options 'binding #f) #t)
+                               #,(and (hash-ref options 'annotation #f) #t)
                                #,(and (syntax-e #'name-defaults)
                                       #'(quote-syntax name-defaults))))
                #'(define-name-root name
@@ -886,7 +930,49 @@
                                        val
                                        'annotation-str))
            (m obj val)))]))
- 
+
+(define-for-syntax (make-curried-binding-transformer super-binding-id
+                                                     constructor-str predicate accessors static-infoss
+                                                     #:static-infos static-infos
+                                                     #:keywords keywords)
+  (define t
+    (make-composite-binding-transformer constructor-str predicate accessors static-infoss
+                                        #:static-infos static-infos
+                                        #:keywords keywords
+                                        #:accessor->info? #t))
+  (cond
+    [super-binding-id
+     (define p-t (operator-proc
+                  (syntax-local-value* (in-binding-space super-binding-id) binding-prefix-operator-ref)))
+     (lambda (tail)
+       (syntax-parse tail
+         [(form-id p-term (tag::parens g ...) . new-tail)
+          (define stx (no-srcloc #'(form-id p-term (tag g ...))))
+          (define-values (p-binding p-tail) (p-t #'(form-id p-term)))
+          (define-values (binding c-tail) (t #'(form-id (tag g ...)) #f stx))
+          (values (make-and-binding p-binding binding)
+                  #'new-tail)]))]
+    [else t]))
+
+(define-for-syntax (make-curried-annotation-of-tranformer super-annotation-id)
+  (lambda (tail predicate-stx static-infos
+                sub-n kws predicate-maker info-maker)
+    (syntax-parse tail
+      [(form-id p-term (tag::parens g ...) . new-tail)
+       #:with p::annotation #`(#,group-tag #,super-annotation-id (op |.|) of p-term)
+       (define-values (ann c-tail) (parse-annotation-of #'(form-id (tag g ...))
+                                                        predicate-stx static-infos
+                                                        sub-n kws predicate-maker info-maker))
+       (with-syntax-parse ([p::annotation-form #'p.parsed]
+                           [c::annotation-form ann])
+         (values (annotation-form
+                  #`(let ([p? p.predicate]
+                          [c? c.predicate])
+                      (lambda (v) (and (p? v) (c? v))))
+                  (append (syntax->list #'p.static-infos)
+                          #'c.static-infos))
+                 #'new-tail))])))
+
 ;; ----------------------------------------
 
 (define-for-syntax (parse-options orig-stx forms)

@@ -60,7 +60,9 @@
              :annotation-form
              :inline-annotation
 
-             annotation-form))
+             annotation-form
+
+             parse-annotation-of))
   
   (provide define-annotation-syntax
            define-annotation-constructor
@@ -158,9 +160,7 @@
        (unless (= (length gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
-                             #'form-id
-                             #f
-                             (list #'tag)))
+                             #'(form-id (tag g ...))))
        (define c-parseds (for/list ([g (in-list gs)])
                            (syntax-parse g
                              [c::annotation #'c.parsed])))
@@ -178,7 +178,8 @@
                #'tail)]))
      
   (define (annotation-constructor name predicate-stx static-infos
-                                  sub-n kws predicate-maker info-maker)
+                                  sub-n kws predicate-maker info-maker
+                                  parse-annotation-of)
     (values
      ;; root
      (annotation-prefix-operator
@@ -202,7 +203,8 @@
                              sub-n kws predicate-maker info-maker)))))
 
   (define (annotation-of-constructor name predicate-stx static-infos
-                                     sub-n kws predicate-maker info-maker)
+                                     sub-n kws predicate-maker info-maker
+                                     parse-annotation-of)
     (annotation-prefix-operator
       name
       '((default . stronger))
@@ -230,7 +232,9 @@
     [(_ name
         binds
         predicate-stx static-infos
-        sub-n kws predicate-maker info-maker)
+        sub-n kws predicate-maker info-maker
+        (~optional (~seq #:parse-of parse-annotation-of-id)
+                   #:defaults ([parse-annotation-of-id #'parse-annotation-of])))
      (cond
        [(eq? (syntax-local-context) 'module)
         #'(begin
@@ -238,7 +242,8 @@
               (define-values (root-proc of-proc)
                 (let binds
                     (annotation-constructor #'name predicate-stx static-infos
-                                            sub-n 'kws predicate-maker info-maker))))
+                                            sub-n 'kws predicate-maker info-maker
+                                            parse-annotation-of-id))))
             (define-name-root name
               #:space rhombus/annotation
               #:fields (of)
@@ -249,7 +254,8 @@
         #`(define-syntax #,(in-annotation-space #'name)
             (let binds
                 (annotation-of-constructor #'name predicate-stx static-infos
-                                           sub-n 'kws predicate-maker info-maker)))])]))
+                                           sub-n 'kws predicate-maker info-maker
+                                           parse-annotation-of-id)))])]))
 
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator

@@ -419,3 +419,128 @@ check:
   class Posn(mutable x :: Integer, y :: Integer)
   Posn("x", 0).x := "oops"
   "value does not match annotation"
+
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+  class Posn4D(w):
+    extends Posn3D
+  val p: Posn4D(1, ~y: 2, 3, 6)
+  val Posn(a2, ~y: b2): p
+  val Posn3D(a3, ~y: b3, c3): p
+  val Posn4D(a4, ~y: b4, c4, d4): p
+  [[a2, b2],
+   [a3, b3, c3],
+   [a4, b4, c4, d4]]
+  [[1, 2],
+   [1, 2, 3],
+   [1, 2, 3, 6]]
+
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    binding (bind):
+      rule 'Posn3D($x, $y ..., $z)': 'bind($x, ~y: $y ...)($z)'
+  val p: Posn3D(1, ~y: 2, 3)
+  val Posn(a2, ~y: b2): p
+  val Posn3D(a3, b3, c3): p
+  [[a2, b2],
+   [a3, b3, c3]]
+  [[1, 2],
+   [1, 2, 3]]
+
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+    binding (bind):
+      rule 'Posn(X $x, Y $y)': 'bind($x, ~y: $y)'
+  class Posn3D(z):
+    extends Posn
+    binding (bind):
+      rule 'Posn3D[$x, $y ..., $z]': 'bind(X $x, Y $y ...)($z)'
+  class Posn4D(w):
+    extends Posn3D
+    binding (bind):
+      rule 'Posn4D($x, ~y: $y, $z, $w)': 'bind[$x, $y, $z]($w)'
+  val p: Posn4D(1, ~y: 2, 3, 6)
+  val Posn(X a2, Y b2): p
+  val Posn3D[a3, b3, c3]: p
+  val Posn4D(a4, ~y: b4, c4, d4): p
+  [[a2, b2],
+   [a3, b3, c3],
+   [a4, b4, c4, d4]]
+  [[1, 2],
+   [1, 2, 3],
+   [1, 2, 3, 6]]
+  
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+  class Posn4D(w):
+    extends Posn3D
+  val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+  p :: Posn
+  p :: Posn.of(Integer, ~y: String)
+  p :: Posn3D
+  p :: Posn3D.of(Integer, ~y: String, Symbol)
+  p :: Posn4D
+  p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
+  "ok plain annotation"
+  "ok plain annotation"
+
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    annotation (ann):
+      rule | 'Posn3D.of($x, $y ..., $z)': 'ann.of($x, ~y: $y ...)($z)'
+           | 'Posn3D': 'ann'                           
+  val p: Posn3D(1, ~y: "2", symbol'three')
+  p :: Posn
+  p :: Posn.of(Integer, ~y: String)
+  p :: Posn3D
+  p :: Posn3D.of(Integer, String, Symbol)
+  "ok plain+custom annotation"
+  "ok plain+custom annotation"
+
+check:
+  import rhombus/meta open
+  class Posn(x, ~y):
+    nonfinal
+    annotation (ann):
+      rule | 'Posn $dot of(X $x, Y $y)': 'ann.of($x, ~y: $y)'
+           | 'Posn': 'ann'
+  class Posn3D(z):
+    extends Posn
+    annotation (ann):
+      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'ann.of(X $x, Y $y ...)($z)'
+           | 'Posn3D': 'ann'
+  class Posn4D(w):
+    extends Posn3D
+    annotation (ann):
+      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'ann.of[$x, $y, $z]($w)'
+           | 'Posn4D': 'ann'
+  val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+  p :: Posn
+  p :: Posn.of(X Integer, Y String)
+  p :: Posn3D
+  p :: Posn3D.of[Integer, String, Symbol]
+  p :: Posn4D
+  p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
+  "ok plain+custom annotations"
+  "ok plain+custom annotations"
+  
+       
+       
