@@ -127,7 +127,7 @@ expression.
 A class is `final` unless `nonfinal` or `extends` is present (i.e., by
 default, classes do not have subclasses). A `nonfinal` clause is
 implied when `extends` is present and `final` is not present (i.e., by
-default, a subclass can have surther subclasses).
+default, a subclass can have further subclasses).
 
 When a class extends a superclass that has a customized constructor,
 then the class must also have a customized constuctor. In that case,
