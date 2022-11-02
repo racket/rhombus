@@ -9,7 +9,8 @@
          (submod "annotation.rkt" for-class)
          "parens.rkt"
          "name-root-ref.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (only-in "function.rkt" fun))
 
 (provide (for-syntax extract-internal-ids
                      parse-options
@@ -22,7 +23,10 @@
          final
          nonfinal
          authentic
-         field)
+         field
+         method
+         override
+         private)
 
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
@@ -72,7 +76,8 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends constructor final nonfinal authentic binding annotation)
+              #:literals (extends constructor final nonfinal authentic binding annotation
+                                  method private override)
               [(extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "redundant superclass clause" orig-stx clause))
@@ -114,6 +119,12 @@
                                                             #'predicate
                                                             #'annotation-str)
                                                (hash-ref options 'fields null)))]
+              [((~and tag (~or method override private final)) id rhs)
+               (hash-set options 'methods (cons (added-method #'id
+                                                              (car (generate-temporaries #'(id)))
+                                                              #'rhs
+                                                              (syntax-e #'tag))
+                                                (hash-ref options 'methods null)))]
               [_
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
           (loop (cdr clauses) new-options)]))]))
@@ -182,12 +193,6 @@
      (syntax-parse stx
        [(_) (wrap-class-clause #`(nonfinal))]))))
 
-(define-syntax final
-  (class-clause-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(_) (wrap-class-clause #`(final))]))))
-
 (define-syntax authentic
   (class-clause-transformer
    (lambda (stx)
@@ -232,3 +237,46 @@
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
+
+(begin-for-syntax
+  (define-splicing-syntax-class (:method mode)
+    #:description "method declaration"
+    #:attributes (form)
+    (pattern (~seq id:identifier (tag::parens arg ...) ret ...
+                   (~and rhs (_::block body ...)))
+             #:attr form (wrap-class-clause #`(#,mode id (block (group fun (tag arg ...) ret ... rhs)))))
+    (pattern (~seq id:identifier (~and rhs (_::block . _)))
+             #:attr form (wrap-class-clause #`(#,mode id rhs)))))
+
+(define-syntax final
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (override method)
+       [(_) (wrap-class-clause #`(final))]
+       [(_ (~var m (:method #'final))) #'m.form]
+       [(_ method (~var m (:method #'final))) #'m.form]
+       [(_ override (~var m (:method #'final-override))) #'m.form]
+       [(_ override method (~var m (:method #'final-override))) #'m.form]))))
+
+(define-syntax method
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (~var m (:method #'method))) #'m.form]))))
+
+(define-syntax override
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (method)
+       [(_ (~var m (:method #'override))) #'m.form]
+       [(_ method (~var m (:method #'override))) #'m.form]))))
+
+(define-syntax private
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (method)
+       [(_ (~var m (:method #'private))) #'m.form]
+       [(_ method (~var m (:method #'private))) #'m.form]))))

@@ -22,7 +22,8 @@
              wrap-dot-provider))
   (provide define-dot-provider-syntax
            #%dot-provider
-           prop:field-name->accessor))
+           prop:field-name->accessor
+           curry-method))
 
 (module+ for-builtin
   (provide set-builtin->accessor-ref!))
@@ -96,12 +97,16 @@
 
 (define-values (prop:field-name->accessor field-name->accessor? field-name->accessor-ref)
   (make-struct-type-property 'field-name->accessor
-                             (lambda (field-names+ht info)
-                               (define field-names (car field-names+ht))
+                             (lambda (field-names+ht+method-ht info)
+                               (define field-names (car field-names+ht+method-ht))
                                (define gen-acc (list-ref info 3))
-                               (for/fold ([ht (cdr field-names+ht)]) ([name (in-list field-names)]
-                                                                      [i (in-naturals)])
-                                 (hash-set ht name (make-struct-field-accessor gen-acc i name))))))
+                               (define field-ht
+                                 (for/fold ([ht (cadr field-names+ht+method-ht)]) ([name (in-list field-names)]
+                                                                                   [i (in-naturals)])
+                                   (hash-set ht name (make-struct-field-accessor gen-acc i name))))
+                               (for/fold ([ht field-ht]) ([(name proc) (in-hash (cddr field-names+ht+method-ht))])
+                                 (hash-set ht name (lambda (obj) (curry-method proc obj)))))))
+                               
 
 ;; To tie a loop with built-in data structures:
 (define builtin->accessor-ref (lambda (v) #f))
@@ -119,3 +124,20 @@
     [(not ht) (fail)]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
     [else (fail)]))
+
+(define (curry-method proc obj)
+  (define-values (req-kws allowed-kws) (procedure-keywords proc))
+  (cond
+    [(null? allowed-kws)
+     (procedure-reduce-arity-mask (lambda args
+                                    (apply proc obj args))
+                                  (arithmetic-shift (procedure-arity-mask proc) -1)
+                                  (object-name proc))]
+    [(null? allowed-kws)
+     (procedure-reduce-keyword-arity-mask (make-keyword-procedure
+                                           (lambda (kws kw-args . args)
+                                             (keyword-apply proc kws kw-args obj args)))
+                                          (arithmetic-shift (procedure-arity-mask proc) -1)
+                                          req-kws
+                                          allowed-kws
+                                          (object-name proc))]))

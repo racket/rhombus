@@ -22,6 +22,7 @@
          field-desc-constructor-arg
 
          (struct-out added-field)
+         (struct-out added-method)
          
          any-stx?
 
@@ -29,6 +30,7 @@
          :options-block
 
          check-duplicate-field-names
+         check-fields-methods-distinct
          check-consistent-subclass
          check-field-defaults)
 
@@ -39,7 +41,10 @@
                     constructor-id
                     binding-id
                     annotation-id
-                    fields ; (list (list id accessor-id mutator-id static-infos constructor-mode) ...)
+                    fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
+                    method-names  ; list of symbol or boxed symbol; plain symbol means final
+                    method-vtable ; syntax-object vector of accessor identifiers
+                    method-map    ; hash of name -> index or boxed index; the inverse of `method-names`
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
                     custom-annotation?
@@ -53,7 +58,11 @@
 (define (field-desc-static-infos f) (list-ref f 3))
 (define (field-desc-constructor-arg f) (list-ref f 4)) ; syntax of #f (by-position), keyword, or identifier (not in constructor)
 
+;; quoted as a list in a `class-desc` construction
+(define (method-desc-name f) (car f))
+
 (struct added-field (id arg-id static-infos predicate annotation-str))
+(struct added-method (id rhs-id rhs mode))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 
@@ -140,19 +149,36 @@
            #:attr (form 1) '())
   (pattern (~seq (_::block form ...))))
 
-(define (check-duplicate-field-names stxes fields super)
-  (let ([ht (for/hasheq ([field (in-list (if super (class-desc-fields super) '()))])
-              (values (field-desc-name field) 'super))])
-    (for/fold ([ht ht]) ([field (in-list fields)])
-      (define prev (hash-ref ht (syntax-e field) #f))
+(define (check-duplicate-names stxes what ids super-ids)
+  (let ([ht (for/hasheq ([id (in-list super-ids)])
+              (values id 'super))])
+    (for/fold ([ht ht]) ([id (in-list ids)])
+      (define prev (hash-ref ht (syntax-e id) #f))
       (when prev
         (raise-syntax-error #f
                             (if (eq? prev 'super)
-                                "field name already exists in superclass"
-                                "duplicate field name")
+                                (format "~a name already exists in superclass" what)
+                                (format "duplicate ~a name" what))
                             stxes
-                            field))
-      (hash-set ht (syntax-e field) #t))))
+                            id))
+      (hash-set ht (syntax-e id) id))))
+
+(define (check-duplicate-field-names stxes fields super)
+  (check-duplicate-names stxes "field" fields (map field-desc-name (if super (class-desc-fields super) '()))))
+
+(define (check-fields-methods-distinct stxes field-ht method-map method-names)
+  (for ([k (in-hash-keys field-ht)])
+    (define id-or-sym (let ([i (hash-ref method-map k #f)])
+                        (and i
+                             (hash-ref method-names (if (box? i) (unbox i) i)))))
+    (when id-or-sym
+      (define id (if (symbol? id-or-sym)
+                     (hash-ref field-ht k #f)
+                     id-or-sym))
+      (raise-syntax-error #f
+                          "identifier used as both a field name and method name"
+                          stxes
+                          id))))
 
 (define (check-consistent-subclass super options stxes parent-name)
   (when (class-desc-final? super)

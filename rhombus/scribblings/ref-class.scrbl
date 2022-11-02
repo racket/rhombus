@@ -35,18 +35,20 @@
     $class_clause
     $body,
 
-  class_clause.macro 'extends $identifier_path',
-  class_clause.macro 'final',
-  class_clause.macro 'nonfinal',
-  class_clause.macro 'field $identifier $maybe_annotation: $body; ...',
-  class_clause.macro 'internal $identifier',
-  class_clause.macro 'constructor ($make_identifier): $entry_point',
-  class_clause.macro 'constructor: $entry_point',
-  class_clause.macro 'binding ($bind_identifier): $entry_point',
-  class_clause.macro 'binding: $entry_point',
-  class_clause.macro 'annotation ($annot_identifier): $entry_point',
-  class_clause.macro 'annotation: $entry_point',
-  class_clause.macro 'authentic',
+  grammar class_clause:
+    $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    $$(@rhombus(method, ~class_clause)) $method_decl
+    $$(@rhombus(override, ~class_clause)) $method_decl
+    $$(@rhombus(final, ~class_clause)) $method_decl
+    $$(@rhombus(extends, ~class_clause)) $identifier_path
+    $$(@rhombus(final, ~class_clause))
+    $$(@rhombus(nonfinal, ~class_clause))
+    $$(@rhombus(internal, ~class_clause)) $identifier
+    $$(@rhombus(constructor, ~class_clause)) $constructor_decl
+    $$(@rhombus(binding, ~class_clause)) $binding_decl
+    $$(@rhombus(annotation, ~class_clause)) $annotation_decl
+    $other_class_clause
+
 ){
 
  Binds @rhombus(identifier_path) as a class name, which serves several roles:
@@ -74,6 +76,11 @@
   @rhombus(field, ~class_clause) clause.}
 
 )
+
+ Fields and methods of a class can be accessed from an object using
+ @rhombus(.). In static mode (see @rhombus(use_static), a method must be
+ called like a function; in dynamic mode, a method accessed from an
+ object closes over the object.
 
  A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
  implies that the default constructor expects the corresponding argument
@@ -103,6 +110,24 @@
  instance is created), and definitions are scoped to the block for
  potential use by class clauses.
 
+ When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
+ then an additional field is added to the class, but the additional field
+ is not represented by an arguments to the constructor. Instead, the
+ @rhombus(body) block in @rhombus(field, ~class_clause) gives the added
+ field its initial value; that block is evaluated at the time the
+ @rhombus(class) form is evaluated, not when an object is instantiated,
+ and the same values are used for every instance of the class. All fields
+ added through a @rhombus(field, ~class_clause) clause are mutable. The
+ @rhombus(field, ~class_clause) can appear any number of times as a
+ @rhombus(class_clause).
+
+ When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
+ form, @rhombus(override, ~class_clause) form, or method-shaped
+ @rhombus(final, ~class_clause) form, the clause declares a method for
+ the class. These clauses can appear any number of times as a
+ @rhombus(class_clause) to add or override any number of methods.
+ See @rhombus(method, ~class_clause) for more information on methods.
+ 
  When a @rhombus(class_clause) is an @rhombus(extends, ~class_clause)
  form, the new class is created as a subclass of the extended class. The
  extended class must not be @tech{final}. At most one
@@ -115,17 +140,6 @@
  class is final by default, unless it has a superclass, in which case it
  is not final by default. At most one @rhombus(class_clause) can have
  @rhombus(final, ~class_clause) or @rhombus(nonfinal, ~class_clause).
-
- When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
- then an additional field is added to the class, but the additional field
- is not represented by an arguments to the constructor. Instead, the
- @rhombus(body) block in @rhombus(field, ~class_clause) gives the added
- field its initial value; that block is evaluated at the time the
- @rhombus(class) form is evaluated, not when an object is instantiated,
- and the same values are used for every instance of the class. All fields
- added through a @rhombus(field, ~class_clause) clause are mutable. The
- @rhombus(field, ~class_clause) can appear any number of times as a
- @rhombus(class_clause).
 
  When a @rhombus(class_clause) is an @rhombus(internal, ~class_clause)
  form, then the clause's @rhombus(identifier) is bound to the default
@@ -144,85 +158,28 @@
  @rhombus(annotation, ~class_clause) replace default meanings of the
  defined @rhombus(identifier_path) for an expression context, binding
  context, and annotation context, respectively. In each case, an
- identifier can be provided, such as @rhombus(make_identifier) or
- @rhombus(bind_identifier); within the clause, that identifier is bound
+ identifier can be provided, such as @rhombus(make_identifier, ~var) or
+ @rhombus(bind_identifier, ~var); within the clause, that identifier is bound
  to refer to the default implementation, roughly. When an identifier like
- @rhombus(make_identifier) is not provided in a clause, then the
+ @rhombus(make_identifier, ~var) is not provided in a clause, then the
  @rhombus(class) form must include a @rhombus(internal, ~class_clause)
  clause, and the @rhombus(identifier) from
  @rhombus(internal, ~class_clause) is used (shadowing the binding for
  @rhombus(identifier) outside of the specific clause). When a superclass
  specified by @rhombus(extends, ~class_clause) has a custom constructor,
  binding, or annotation form, then the new subclass must also specify a
- custom constructor, binding, or annotation form.
+ custom constructor, binding, or annotation form. See
+ @rhombus(constructor, ~class_clause), @rhombus(binding, ~class_clause),
+ and @rhombus(annotation, ~class_clause) for more information on those
+ forms.
  
- When a @rhombus(class_clause) is a @rhombus(constructor, ~class_clause)
- form, then a use of new class's @rhombus(identifier_path) as a
- constructor function invokes the @tech{entry point} (typically a
- @rhombus(fun, ~entry_point) form) in the block after
- @rhombus(constructor, ~class_clause). That function must return an
- instance of the new class, typically by calling
- @rhombus(make_identifier):
-
-@itemlist(
-
- @item{If the new class does not have a superclass, then
-  @rhombus(make_identifier) is bound to the default constructor, which
-  returns an instance of the class. Note that this instance might be an
-  instance of a subclass if the new class is not @tech{final}.},
-
- @item{If the new class has a superclass, then @rhombus(make_identifier)
-  is bound to a curried function. The function accepts the same arguments
-  as the superclass constructor. Instead of returning an instance of the
-  class, it returns a function that accepts arguments as declared by
-  @rhombus(field_spec)s in the new subclass, and the result of that function
-  is an instance of the new class. Again, the result instance might be an
-  instance of a subclass if the new class is not @tech{final}.}
-
-)
- 
- When a @rhombus(class_clause) is a @rhombus(binding, ~class_clause)
- form, then a use of new class's @rhombus(identifier_path) as a
- binding-pattern constructor invokes the @tech{entry point} (typically a
- @rhombus(rule, ~entry_point) form) in the block after
- @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
- meta-time expression. The specified @rhombus(bind_identifier) refers to
- a default binding constructor in the case that the new class has no
- superclass, or it is bound to a ``curried'' constructor that expects two
- bindings terms (that are typically each parenthesized sequences): the
- first term is combined with superclass's binding constructor, and the
- second term must be a parenthesized sequence of bindings that correspond
- to the fields declared by @rhombus(field_spec)s. Note that a binding
- constructor is not required to expect parentheses, but it must expect a
- single shrubbery term to work with this protocol for a subclass binding
- constructor.
-
- When a @rhombus(class_clause) is a @rhombus(annotation, ~class_clause)
- form, then a use of new class's @rhombus(identifier_path) in a
- annotation invokes the @tech{entry point} (typically a
- @rhombus(rule, ~entry_point) form) in the block after
- @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a
- meta-time expression. The specificed @rhombus(ann_identifier) is bound
- so that it refers to the default annotation binding, but when the new
- class has a superclass, the annotation's @rhombus(of) form is
- ``curried'' in the sense that it expects be followed by two terms (that
- are typically each parenthesized sequences): one the first term is
- combined with the superclass annotation's @rhombus(of) form, and the
- second must be a parenthesized sequence of annotations corresponding to
- the fields declared by @rhombus(field_spec)s. Note that an annotation
- @rhombus(of) constructor is not required to expect parentheses, but it
- must expect a single shrubbery term to work with this protocol for a
- subclass annotation constructor.
-
- When a @rhombus(class_clause) is @rhombus(authentic, ~class_clause),
- then the new class cannot be chaperoned or impersonated. At most one
- @rhombus(class_clause) can have @rhombus(authentic, ~class_clause).
- 
- Each field name must be distinct from all other field names, whether
- from a parenthesized @rhombus(field_spec) or from a
- @rhombus(field, ~class_clause) clause. If an @rhombus(extends) clause is
- present, then each field name must also be distinct from any field name
- in the superclass.
+ Each field and method name must be distinct from all other field and
+ method names, whether from a parenthesized @rhombus(field_spec), from a
+ @rhombus(field, ~class_clause) clause, or from a method clause. If an
+ @rhombus(extends) clause is present, then each field name must also be
+ distinct from any field name in the superclass, except that a
+ @rhombus(override) clause must name a method that is already declared in
+ the superclass.
 
  See @secref("static-info-rules") for information about static
  information associated with classes.
@@ -254,5 +211,190 @@
         make(~width: s, ~height: s)(),
   Square(~side: 10)
 )
+
+}
+
+@doc(
+  class_clause.macro 'extends $identifier_path',
+){
+
+ A @tech{class clause} recognized by @rhombus(class) to define a class
+ that is a subclass of the one named by @rhombus(identifier_path).
+
+}
+
+@doc(  
+  class_clause.macro 'nonfinal',
+  class_clause.macro 'final',
+  class_clause.macro 'final $method_decl',
+  class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_decl',
+  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_decl',
+  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_decl',
+){
+
+ As a @tech{class clause} by itself, @rhombus(nonfinal, ~class_clause)
+ and @rhombus(final, ~class_clause) are recognized by @rhombus(class) to
+ determine whether the defined class is @tech{final}.
+
+ The @rhombus(final, ~class_clause) form can instead be followed by a
+ method declaration, where @rhombus(method_decl) is the same as for
+ @rhombus(method, ~class_clause). In that case the method is final, even
+ if the class if not. A final method cannot be overridden in subclaseses.
+ Using @rhombus(final, ~class_clause) with an immediate declaration is
+ the same as @rhombus(final, ~class_clause) followed by ,
+ @rhombus(method, ~class_clause). Including
+ @rhombus(override, ~class_clause) means that the method must be defined
+ in the superclass, while it must not be defined in the superclass if
+ @rhombus(override) is not used.
+
+}
+
+@doc(  
+  class_clause.macro 'field $identifier $maybe_annotation: $body; ...',
+){
+
+ A @tech{class clause} recognized by @rhombus(class) to add fields to
+ the class. See @rhombus(class) for more information.
+
+}
+
+@doc(
+  class_clause.macro 'method $method_decl',
+  class_clause.macro 'override $method_decl',
+  class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_decl',
+
+  grammar method_decl:
+    $identifier $fun_form
+    $identifier: $entry_point,
+  
+  grammar fun_form:
+    ($kwopt_binding, ..., $rest, ...) $maybe_res_ann: $body; ...
+    ($binding, ..., $rest, ...) $maybe_res_ann: $body; ...
+){
+
+ These @tech{class clauses} are recognized by @rhombus(class) to
+ declares methods, along with the method form of
+ @rhombus(final, ~class_clause). The combination
+ @rhombus(override, ~class_clause) followed by
+ @rhombus(method, ~class_clause) is the same as just
+ @rhombus(override, ~class_clause).
+
+ A @rhombus(method_decl) either has the same form as after a
+ @rhombus(fun) definition, or it is an @rhombus(identifier) followed by a
+ block containing an @tech{entry point}.
+
+ In the body of a method, the special expression form @rhombus(this)
+ refers to the object whose method was called. Fields and methods can be
+ accessed using @rhombus(this) and @rhombus(.), but they can also be used
+ directly. Using a field or method name directly is the same as using
+ @rhombus(this) and @rhombus(.) in static mode (which implies that a
+ direct refernce to a method name must be a call of the method). Field
+ and method names are bound outside the method arguments, so arguments
+ can shadow field and method names.
+
+}
+
+@doc(  
+  expr.macro 'this'
+){
+
+ The @rhombus(this) form can only be used with a method. See
+ @rhombus(method, ~class_clause) for more information.
+
+}
+
+@doc(  
+  class_clause.macro 'internal $identifier'
+){
+
+ A @tech{class clause} recognized by @rhombus(class) to bind
+ @rhombus(identifier) to the class's representation. See @rhombus(class)
+ for more information.
+
+}
+
+@doc(  
+  class_clause.macro 'constructor ($make_identifier): $entry_point',
+  class_clause.macro 'constructor: $entry_point',
+  class_clause.macro 'binding ($bind_identifier): $entry_point',
+  class_clause.macro 'binding: $entry_point',
+  class_clause.macro 'annotation ($annot_identifier): $entry_point',
+  class_clause.macro 'annotation: $entry_point',
+){
+
+ These @tech{class clauses} are recognized by @rhombus(class) to
+ replace the default constructor, binding form, or annotation form. See
+ @rhombus(class) for in formation about a default
+ @rhombus(make_identifier), @rhombus(bind_identifier), or
+ @rhombus(annot_identifier) based on an @rhombus(internal, ~class_clause)
+ form.
+ 
+ When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
+ form, then a use of new class's @rhombus(identifier_path, ~var) as a
+ constructor function invokes the @tech{entry point} (typically a
+ @rhombus(fun, ~entry_point) form) in the block after
+ @rhombus(constructor, ~class_clause). That function must return an
+ instance of the new class, typically by calling
+ @rhombus(make_identifier):
+
+@itemlist(
+
+ @item{If the new class does not have a superclass, then
+  @rhombus(make_identifier) is bound to the default constructor, which
+  returns an instance of the class. Note that this instance might be an
+  instance of a subclass if the new class is not @tech{final}.},
+
+ @item{If the new class has a superclass, then @rhombus(make_identifier)
+  is bound to a curried function. The function accepts the same arguments
+  as the superclass constructor. Instead of returning an instance of the
+  class, it returns a function that accepts arguments as declared by
+  @rhombus(field_spec, ~var)s in the new subclass, and the result of that function
+  is an instance of the new class. Again, the result instance might be an
+  instance of a subclass if the new class is not @tech{final}.}
+
+)
+ 
+ When a @rhombus(class) has a @rhombus(binding, ~class_clause)
+ form, then a use of new class's @rhombus(identifier_path, ~var) as a
+ binding-pattern constructor invokes the @tech{entry point} (typically a
+ @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
+ meta-time expression. The specified @rhombus(bind_identifier) refers to
+ a default binding constructor in the case that the new class has no
+ superclass, or it is bound to a ``curried'' constructor that expects two
+ bindings terms (that are typically each parenthesized sequences): the
+ first term is combined with superclass's binding constructor, and the
+ second term must be a parenthesized sequence of bindings that correspond
+ to the fields declared by @rhombus(field_spec, ~var)s. Note that a binding
+ constructor is not required to expect parentheses, but it must expect a
+ single shrubbery term to work with this protocol for a subclass binding
+ constructor.
+
+ When a @rhombus(class) has a @rhombus(annotation, ~class_clause)
+ form, then a use of new class's @rhombus(identifier_path, ~var) in a
+ annotation invokes the @tech{entry point} (typically a
+ @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a
+ meta-time expression. The specificed @rhombus(annot_identifier) is bound
+ so that it refers to the default annotation binding, but when the new
+ class has a superclass, the annotation's @rhombus(of) form is
+ ``curried'' in the sense that it expects be followed by two terms (that
+ are typically each parenthesized sequences): one the first term is
+ combined with the superclass annotation's @rhombus(of) form, and the
+ second must be a parenthesized sequence of annotations corresponding to
+ the fields declared by @rhombus(field_spec, ~var)s. Note that an annotation
+ @rhombus(of) constructor is not required to expect parentheses, but it
+ must expect a single shrubbery term to work with this protocol for a
+ subclass annotation constructor.
+
+}
+
+@doc(
+  class_clause.macro 'authentic'
+){
+
+ When a @rhombus(class_clause) is @rhombus(authentic, ~class_clause),
+ then the new class cannot be chaperoned or impersonated. At most one
+ @rhombus(class_clause) can have @rhombus(authentic, ~class_clause).
 
 }

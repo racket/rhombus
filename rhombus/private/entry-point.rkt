@@ -15,14 +15,10 @@
 (begin-for-syntax
   (provide (property-out entry-point-transformer)
            :entry-point
-           :entry-point-form
            (struct-out entry-point-adjustments)
            no-adjustments)
 
   (property entry-point-transformer transformer)
-
-  (define-syntax-class :entry-point-form
-    (pattern [parsed ...]))
 
   (define (check-entry-point-result form proc)
     (unless (syntax? form)

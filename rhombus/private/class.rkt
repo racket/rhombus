@@ -21,12 +21,14 @@
          "class-annotation.rkt"
          "class-dot.rkt"
          "class-static-info.rkt"
+         "class-method.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
          "error.rkt")
 
 (provide (rename-out [rhombus-class class])
+         this
          extends
          internal
          constructor
@@ -35,7 +37,10 @@
          final
          nonfinal
          authentic
-         field)
+         field
+         method
+         override
+         private)
 
 (define-syntax rhombus-class
   (definition-transformer
@@ -142,7 +147,7 @@
          (need-class-constructor-wrapper? extra-fields keywords defaults constructor-id
                                           super-has-keywords? super-has-defaults? super))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
-       (check-duplicate-field-names stxes fields super)
+       (define field-ht (check-duplicate-field-names stxes fields super))
        (check-field-defaults stxes super-has-by-position-default? constructor-fields defaults keywords)
        (define intro (make-syntax-introducer))
        (define all-name-fields
@@ -163,6 +168,15 @@
                                                         (syntax-e #'name)
                                                         (syntax-e field)))
                                 field)))))
+
+       (define added-methods (reverse (hash-ref options 'methods '())))
+       (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
+                       method-names    ; index -> symbol-or-identifier
+                       method-vtable)  ; index -> accessor-identifier
+         (build-method-map stxes added-methods super))
+
+       (check-fields-methods-distinct stxes field-ht method-map method-names)
+
        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [(class:name) (generate-temporaries #'(name))]
                      [(make-name) (generate-temporaries #'(name))]
@@ -201,7 +215,17 @@
                       (if super
                           (class-desc-fields super)
                           '())]
-                     [(super-field-keyword ...) super-keywords])
+                     [(super-field-keyword ...) super-keywords]
+                     [((method-name method-index/id) ...) (for/list ([i (in-range (hash-count method-map))])
+                                                            (define m-name (let ([n (hash-ref method-names i)])
+                                                                             (if (syntax? n)
+                                                                                 (syntax-e n)
+                                                                                 n)))
+                                                            (define id/boxed (hash-ref method-map m-name))
+                                                            (list (datum->syntax #'name m-name)
+                                                                  (if (box? id/boxed)
+                                                                      i
+                                                                      id/boxed)))])
          (with-syntax ([constructor-name (if constructor-id
                                              (car (generate-temporaries #'(name)))
                                              #'make-name)]
@@ -214,8 +238,16 @@
                                           #'make-name)])
            (define defns
              (append
+              (build-methods added-methods
+                             #'(name name-instance
+                                     [field-name ... super-field-name ...]
+                                     [name-field ... super-name-field ...]
+                                     [maybe-set-name-field! ... super-maybe-set-name-field! ...]
+                                     [method-name ...]
+                                     [method-index/id ...]))
               (build-class-struct super
                                   fields mutables final? authentic?
+                                  method-map method-names method-vtable
                                   #'(name class:name make-all-name name?
                                           [field-name ...]
                                           [name-field ...]
@@ -258,6 +290,7 @@
                                 keywords super-keywords
                                 defaults super-defaults
                                 final?
+                                method-map method-names method-vtable
                                 #'(name class:name constructor-maker-name name-defaults
                                         (list (list 'super-field-name
                                                     (quote-syntax super-name-field)
@@ -275,6 +308,7 @@
 
 (define-for-syntax (build-class-struct super
                                        fields mutables final? authentic?
+                                       method-map method-names method-vtable
                                        names)
   (with-syntax ([(name class:name make-all-name name?
                        [field-name ...]
@@ -305,7 +339,10 @@
                               [ann-str (in-list (syntax->list #'(field-annotation-str ...)))]
                               [mutable (in-list mutables)]
                               #:when (syntax-e mutable))
-                     (list pred ann-str))])
+                     (list pred ann-str))]
+                  [((method-name method-proc) ...) (for/list ([v (in-vector method-vtable)]
+                                                              [i (in-naturals)])
+                                                     (list (hash-ref method-names i) v))])
       (list
        #`(define-values (class:name make-all-name name? name-field ... set-name-field! ...)
            (let-values ([(class:name name name? name-ref name-set!)
@@ -313,15 +350,21 @@
                                            #,(and super (class-desc-class:id super))
                                            #,(length fields) 0 #f
                                            (list (cons prop:field-name->accessor
-                                                       (cons '(field-name ...)
-                                                             (hasheq (~@ 'super-field-name super-name-field)
-                                                                     ...)))
+                                                       (list* '(field-name ...)
+                                                              (hasheq (~@ 'super-field-name super-name-field)
+                                                                      ...)
+                                                              (hasheq (~@ 'method-name method-proc)
+                                                                      ...)))
                                                  #,@(if final?
                                                         (list #'(cons prop:sealed #t))
                                                         '())
                                                  #,@(if authentic?
                                                         (list #'(cons prop:authentic #t))
-                                                        '()))
+                                                        '())
+                                                 #,@(if (zero? (vector-length method-vtable))
+                                                        '()
+                                                        (list #`(cons prop:methods
+                                                                      (vector #,@(vector->list method-vtable))))))
                                            #f #f
                                            '(immutable-field-index ...)
                                            #,(build-guard-expr fields
@@ -348,6 +391,7 @@
                                      keywords super-keywords
                                      defaults super-defaults
                                      final?
+                                     method-map method-names method-vtable
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults
                        fields)
@@ -360,6 +404,13 @@
                      (quote-syntax name)
                      (quote-syntax name)
                      fields
+                     '#,(for/vector ([i (in-range (vector-length method-vtable))])
+                          (define name (hash-ref method-names i))
+                          (if (box? (hash-ref method-map (if (syntax? name) (syntax-e name) name)))
+                              (box name)
+                              name))
+                     (quote-syntax #,method-vtable)
+                     '#,method-map
                      #,(cond
                          [(syntax-e #'constructor-maker-name)
                           #`(quote-syntax ([#,(encode-protocol keywords defaults) constructor-maker-name]

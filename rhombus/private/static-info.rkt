@@ -93,7 +93,9 @@
       [_ e]))
 
   (define (static-info-lookup static-infos find-key)
-    (for/or ([static-info (in-list (syntax->list static-infos))])
+    (for/or ([static-info (in-list (if (syntax? static-infos)
+                                       (syntax->list static-infos)
+                                       static-infos))])
       (syntax-parse static-info
         [(key val) (and (free-identifier=? #'key find-key)
                         #'val)]

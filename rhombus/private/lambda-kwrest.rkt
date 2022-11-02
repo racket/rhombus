@@ -3,8 +3,8 @@
 (provide lambda/kwrest
          case-lambda/kwrest
          hash-remove*
-         procedure-reduce-keyword-arity/infer-name
-         (for-syntax arity->syntax))
+         procedure-reduce-keyword-arity-mask/infer-name
+         (for-syntax arity->mask-syntax))
 
 (require (only-in racket/list drop)
          (only-in racket/set subset?)
@@ -110,14 +110,13 @@
           [(arity-at-least n) (append (generate-temporaries (make-list n 's))
                                       (generate-temporary 'r))]))])
 
-  (define (arity->syntax a)
-    (match (normalize-arity a)
-      [(arity-at-least N) #`(arity-at-least '#,N)]
-      [(list (? exact-nonnegative-integer? a) ... (arity-at-least N))
-       (with-syntax ([(n ...) a])
-         #`(list 'n ... (arity-at-least '#,N)))]
-      [(list (? exact-nonnegative-integer? n) ...) #`'#,n]
-      [(? exact-nonnegative-integer? n) #`'#,n])))
+  (define (arity->mask-syntax a)
+    #`#,(let loop ([a (normalize-arity a)])
+          (cond
+            [(arity-at-least? a) (bitwise-xor -1 (sub1 (arithmetic-shift 1 (arity-at-least-value a))))]
+            [(exact-nonnegative-integer? a) (arithmetic-shift 1 a)]
+            [(pair? a) (bitwise-ior (loop (car a)) (loop (cdr a)))]
+            [(null? a) 0]))))
 
 ;; ---------------------------------------------------------
 
@@ -135,10 +134,11 @@
          ['() #f]
          [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
          [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
-       #:attr pos-arity-stx (arity->syntax (@ pos-arity))
+       #:attr pos-arity-mask-stx (arity->mask-syntax (@ pos-arity))
        #:attr kw-mand-arity (and (pair? (@ s.mand-kws)) #`'#,(@ s.mand-kws))
        #:attr kw-allowed-arity (and (pair? (@ s.mand-kws)) #`'#,(@ allowed-kws))
        #:with {~var case-tmps (pos-arity-case-tmps (@ pos-arity))} #f
+       
        #'(let* ([kwhash-proc
                  (lambda (kwhash {~? s.pos.param/tmp} ... . {~? r ()})
                    (let*
@@ -159,9 +159,9 @@
                         (apply kwhash-proc '#hashalw() case-tmps.s ...
                                {~? case-tmps.r '()})}]
                    ...)])
-           {~? (procedure-reduce-keyword-arity
+           {~? (procedure-reduce-keyword-arity-mask
                 (make-keyword-hash-procedure kwhash-proc name)
-                pos-arity-stx
+                pos-arity-mask-stx
                 kw-mand-arity
                 kw-allowed-arity)
                (make-keyword-hash-procedure kwhash-proc name)})])))
@@ -189,7 +189,7 @@
          ['() #f]
          [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
          [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
-       #:attr pos-arity-stx (arity->syntax pos-arity)
+       #:attr pos-arity-mask-stx (arity->mask-syntax pos-arity)
        #:attr kw-mand-arity (and reduce-kws? #`'#,mand-kws)
        #:attr kw-allowed-arity (and reduce-kws? #`'#,overall-kws)
        #:with {~var case-tmps (pos-arity-case-tmps pos-arity)} #f
@@ -230,21 +230,21 @@
                         (apply kwhash-proc '#hashalw() case-tmps.s ...
                                {~? case-tmps.r '()})}]
                    ...)])
-           {~? (procedure-reduce-keyword-arity
+           {~? (procedure-reduce-keyword-arity-mask
                 (make-keyword-hash-procedure kwhash-proc name)
-                pos-arity-stx
+                pos-arity-mask-stx
                 kw-mand-arity
                 kw-allowed-arity)
                (make-keyword-hash-procedure kwhash-proc name)})])))
 
-(define-syntax procedure-reduce-keyword-arity/infer-name
+(define-syntax procedure-reduce-keyword-arity-mask/infer-name
   (lambda (stx)
     (syntax-parse stx
-      [(_ f:expr pos-arity:expr req-kws:expr all-kws:expr)
+      [(_ f:expr pos-arity-mask:expr req-kws:expr all-kws:expr)
        #:with name:id (or (syntax-local-infer-name stx) #'proc)
-       #'(procedure-reduce-keyword-arity
+       #'(procedure-reduce-keyword-arity-mask
           (let ([name f]) name)
-          pos-arity
+          pos-arity-mask
           req-kws
           all-kws)])))
 
