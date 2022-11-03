@@ -58,22 +58,46 @@ constructor to be optional.<
 Predefined class-clause forms:
 
 ```
-class_clause := extends identifier
-             | final
-             | nonfinal
-             | field identifier maybe_annotation: body; ...
-             | constructor (make_identifier): entry_point
-             | binding (bind_identifier): entry_point
-             | annotation (annot_identifier): entry_point
-             | internal identifier
-             | authentic
+class_clause := extension_decl
+              | field_decl
+              | method_decl
+              | represent_decl
+              | authentic
+
+extension_decl := extends identifier
+                | final
+                | nonfinal
+
+field_decl := field identifier maybe_annotation: body; ...
+            | private field identifier maybe_annotation: body; ...
+
+method_decl := method method_spec
+             | override method_spec
+             | final method_spec
+             | private method_spec
+
+method_spec := id(arg, ..) maybe_annot : body
+             | id: entry_point
+
+represent_decl := constructor (make_identifier): entry_point
+                | binding (bind_identifier): entry_point
+                | annotation (annot_identifier): entry_point
+                | internal identifier
 ```
 
 An `extends` clause specifies a superclass. The superclass must be
-nonfinal.
+nonfinal. The `final` and `nonfinal` clauses can specify a finality
+other than the default.
 
 Each `field` clause adds additional mutable fields to the class, but
 the extra fields are not included in the default constructor, etc.
+A field can be declared as `private`, which means that it can only
+be accessed within methods of the class.
+
+Each `method`, `override`, method-shaped `final`, or method-shaped
+`final` private declaration adds a method to the class. A `method` can
+appear after `override`. An `override`, `method`, or both can appear
+after `final`. A `method` can appear after `private`.
 
 The `constructor`, `binding` and `annotation` clause forms support
 customizing those aspects of the class. In each case, the form expects
@@ -115,14 +139,39 @@ initialize the field in each instance. Since these fields must be
 mutable to be useful, the `mutable` keyword is not needed or allowed
 in a `field` clause.
 
-The `constructor` clause expects an immediate function in its block.
-The `entry_point` syntactic category includes `fun` with the same
-syntax as its expression form. It also includes a `rule` form for
-simple pattern-matching macro transformations, which is useful with
-`binding` and `anotation`. (When `constructor` is specified, then
-typically `binding` and `annotation` should also be specified.) The
-`entry_point` for `binding` and `annotation` is a meta-time
-expression.
+Clauses like `method` expect an immediate function. It can be written
+like `fun` (but with `method` or similar form name in place of `fun`),
+or it can be written as an identifier followed by a block that
+contains an `entry_point`. The `entry_point` syntactic category
+includes `fun` with the same syntax as its expression form. When a
+method is declared with `method` or `final` without `override`, then
+the a method with the same name must not be declared in the
+superclass, if any. When a method is declared with `override`, then it
+must be declared in the superclass.
+
+Within a method, `this` refers to the object that was used for the
+method call. A class's fields and methods can be access via `this`,
+but they also can be referenced directly, including public superclass
+field and method names. When a method argument has the same name as a
+field or method, then it shadows the field or method.
+
+Method and fields names must all be distinct, both within a class and
+taking into account superclass public fields and methods. A private
+field or method name is not visible outside of a class, so it is not
+required to be distinct from subclass fields and methods. All field
+and methods names can be accessed through an object with `.`, but
+private field and methods names can only be accessed statically. In
+static mode (i.e., when `use_static` is declared), then a method can
+only be used in a call form; when dynamic `.` is used to access a
+method, then it does not have to be a call, and the result of the `.`
+expression is a closure over the object.
+
+The `constructor` clause expects an immediate function in its block as
+an `entry_point`. Similarly, `binding` and `anotation` expect a
+meta-time `entry_point`; the `rule` form serves an `entry_point` for
+simple pattern-matching macro transformations. (When `constructor` is
+specified, then typically `binding` and `annotation` should also be
+specified.)
 
 A class is `final` unless `nonfinal` or `extends` is present (i.e., by
 default, classes do not have subclasses). A `nonfinal` clause is
@@ -173,6 +222,41 @@ fun dist(p :: Posn):
 
 val Posn(x, y): Posn(1, 2)
 x
+```
+
+Methods:
+
+```
+class Posn(x, y):
+  nonfinal
+  method mdist(): x + y
+  method is_close(): mdist() < 6
+
+class Posn3D(z):
+  extends Posn
+  override mdist(): x + y + z
+  method is_in_2D(): z == 0
+
+val p: Posn3D(1, 2, 3)
+p.mdist()
+p.is_in_2D()
+p.is_close()
+```
+
+Private fields:
+
+```
+class Posn(x, y):
+  private field c :: String: "red"
+  method color:
+    fun | (): c
+        | (s :: String): c := s
+        | (~like: p :: Posn): c := p.c
+                              
+val p: Posn(1, 2)
+p.color("blue")
+val p2: Posn(3, 4)
+p2.color(~like: p)
 ```
 
 Keyword arguments:

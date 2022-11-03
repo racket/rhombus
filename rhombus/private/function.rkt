@@ -435,11 +435,12 @@
        (map fcase kwss argss arg-parsedss rest-args rest-parseds kwrest-args kwrest-parseds preds rhss)))
     (define pos-arity
       (normalize-arity
-       (for/list ([n+same (in-list n+sames)])
-         (define n (car n+same))
-         (cond
-           [(negative? n) (arity-at-least (- (add1 n)))]
-           [else n]))))
+       (let ([adj (length (entry-point-adjustments-prefix-arguments adjustments))])
+         (for/list ([n+same (in-list n+sames)])
+           (define n (car n+same))
+           (cond
+             [(negative? n) (arity-at-least (+ (- (add1 n)) adj))]
+             [else (+ n adj)])))))
     (define allowed-kws
       (cond
         [(ormap syntax-e kwrest-args) #f]
@@ -473,11 +474,9 @@
           #,@(for/list ([n+same (in-list n+sames)])
                (define n (car n+same))
                (define same (cdr n+same))
-               (with-syntax ([(try-next pos-arg-id ...) (append
-                                                         (entry-point-adjustments-prefix-arguments adjustments)
-                                                         (generate-temporaries
-                                                          (cons 'try-next
-                                                                (fcase-pos fcase-args (find-matching-case n same)))))]
+               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
+                                                         (cons 'try-next
+                                                               (fcase-pos fcase-args (find-matching-case n same))))]
                              [(maybe-rest-tmp ...) (if (negative? n)
                                                        #'(#:rest rest-tmp)
                                                        #'())]
@@ -490,7 +489,7 @@
                              [maybe-kwrest-tmp-use (if kws?
                                                        #'kwrest-tmp
                                                        #''#hashalw())])
-                 #`[(pos-arg-id ...)
+                 #`[(#,@(entry-point-adjustments-prefix-arguments adjustments) pos-arg-id ...)
                     maybe-rest-tmp ... maybe-kwrest-tmp ...
                     #,(let loop ([same same])
                         (cond

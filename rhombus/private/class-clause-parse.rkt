@@ -6,6 +6,7 @@
                      "name-path-op.rkt"
                      "class-parse.rkt")
          "class-clause.rkt"
+         (only-in "binding.rkt" raise-binding-failure)
          (submod "annotation.rkt" for-class)
          "parens.rkt"
          "name-root-ref.rkt"
@@ -112,12 +113,13 @@
                (when (hash-has-key? options 'authentic?)
                  (raise-syntax-error #f "redundant authenticity clause" orig-stx clause))
                (hash-set options 'authentic? #t)]
-              [(field id rhs-id static-infos predicate annotation-str)
+              [(field id rhs-id static-infos predicate annotation-str mode)
                (hash-set options 'fields (cons (added-field #'id
                                                             #'rhs-id
                                                             #'static-infos
                                                             #'predicate
-                                                            #'annotation-str)
+                                                            #'annotation-str
+                                                            (syntax-e #'mode))
                                                (hash-ref options 'fields null)))]
               [((~and tag (~or method override private final)) id rhs)
                (hash-set options 'methods (cons (added-method #'id
@@ -199,41 +201,41 @@
      (syntax-parse stx
        [(_) (wrap-class-clause #`(authentic))]))))
 
+(begin-for-syntax
+  (define-splicing-syntax-class (:field mode)
+    #:description "field identifier with optional annotation"
+    #:attributes (form)
+    (pattern (~seq form-id bind ...
+                   (~and blk (_::block . _)))
+             #:with (id:identifier (~optional c::inline-annotation)) #'(bind ...)
+             #:attr predicate (if (attribute c)
+                                  #'c.predicate
+                                  #'#f)
+             #:attr annotation-str (if (attribute c)
+                                       #'c.annotation-str
+                                       #'#f)
+             #:attr static-infos (if (attribute c)
+                                     #'c.static-infos
+                                     #'())
+             #:attr form
+             #`[(define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
+                                 {~? (if (c.predicate f-info.name-id)
+                                         f-info.name-id
+                                         (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
+                                     f-info.name-id}))
+                #,@(wrap-class-clause #`(field id
+                                               tmp-id
+                                               static-infos
+                                               predicate
+                                               annotation-str
+                                               #,mode))])))
+
 (define-syntax field
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(form-id bind ...
-                 (~and blk (_::block . _)))
-        (syntax-parse #'(bind ...)
-          [(id:identifier (~optional c::inline-annotation))
-           #:attr predicate (if (attribute c)
-                                #'c.predicate
-                                #'#f)
-           #:attr annotation-str (if (attribute c)
-                                     #'c.annotation-str
-                                     #'#f)
-           #:attr static-infos (if (attribute c)
-                                   #'c.static-infos
-                                   #'())
-           #`[(define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
-                               {~? (if (c.predicate f-info.name-id)
-                                       f-info.name-id
-                                       (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
-                                   f-info.name-id}))
-              #,@(wrap-class-clause #`(field id
-                                             tmp-id
-                                             static-infos
-                                             predicate
-                                             annotation-str))]]
-          [_
-           (raise-syntax-error #f
-                               "field identifier with optional annotation"
-                               stx)])]
-       [_
-        (raise-syntax-error #f
-                            "expected a field specification followed by a block"
-                            stx)]))))
+       [((~var f (:field 'public)))
+        #'f.form]))))
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
@@ -254,10 +256,10 @@
      (syntax-parse stx
        #:literals (override method)
        [(_) (wrap-class-clause #`(final))]
-       [(_ (~var m (:method #'final))) #'m.form]
+       [(_ override method (~var m (:method #'final-override))) #'m.form]
        [(_ method (~var m (:method #'final))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]
-       [(_ override method (~var m (:method #'final-override))) #'m.form]))))
+       [(_ (~var m (:method #'final))) #'m.form]))))
 
 (define-syntax method
   (class-clause-transformer
@@ -270,13 +272,14 @@
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
-       [(_ (~var m (:method #'override))) #'m.form]
-       [(_ method (~var m (:method #'override))) #'m.form]))))
+       [(_ method (~var m (:method #'override))) #'m.form]
+       [(_ (~var m (:method #'override))) #'m.form]))))
 
 (define-syntax private
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
-       [(_ (~var m (:method #'private))) #'m.form]
-       [(_ method (~var m (:method #'private))) #'m.form]))))
+       [(_ method (~var m (:method #'private))) #'m.form]
+       [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
+       [(_ (~var m (:method #'private))) #'m.form]))))

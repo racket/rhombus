@@ -34,7 +34,7 @@
              (quote-syntax name)
              #,(if (and super
                         binding-id)
-                   #`(make-curried-binding-transformer (quote-syntax #,(class-desc-binding-id super))
+                   #`(make-curried-binding-transformer (quote-syntax #,(class-desc-id super))
                                                        #,(symbol->string (syntax-e #'name))
                                                        (quote-syntax name?)
                                                        #:static-infos (quote-syntax ((#%dot-provider name-instance)))

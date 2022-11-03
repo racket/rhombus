@@ -37,9 +37,11 @@
 
   grammar class_clause:
     $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
     $$(@rhombus(method, ~class_clause)) $method_decl
     $$(@rhombus(override, ~class_clause)) $method_decl
     $$(@rhombus(final, ~class_clause)) $method_decl
+    $$(@rhombus(private, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(final, ~class_clause))
     $$(@rhombus(nonfinal, ~class_clause))
@@ -78,9 +80,12 @@
 )
 
  Fields and methods of a class can be accessed from an object using
- @rhombus(.). In static mode (see @rhombus(use_static), a method must be
- called like a function; in dynamic mode, a method accessed from an
- object closes over the object.
+ @rhombus(.), but fields and methods declared as
+ @rhombus(private, ~class_clause) can only be accessed by @rhombus(.)
+ within methods of the class. In static mode (see @rhombus(use_static)),
+ a method must be called like a function; in dynamic mode, a method
+ accessed from an object closes over the object. Private fields and
+ methods can be accessed with @rhombus(.) only statically.
 
  A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
  implies that the default constructor expects the corresponding argument
@@ -119,14 +124,16 @@
  and the same values are used for every instance of the class. All fields
  added through a @rhombus(field, ~class_clause) clause are mutable. The
  @rhombus(field, ~class_clause) can appear any number of times as a
- @rhombus(class_clause).
+ @rhombus(class_clause), with or without a
+ @rhombus(private, ~class_clause) prefix.
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form, or method-shaped
- @rhombus(final, ~class_clause) form, the clause declares a method for
- the class. These clauses can appear any number of times as a
- @rhombus(class_clause) to add or override any number of methods.
- See @rhombus(method, ~class_clause) for more information on methods.
+ @rhombus(final, ~class_clause) or @rhombus(private, ~class_clause) form,
+ then the clause declares a method for the class. These clauses can appear any
+ number of times as a @rhombus(class_clause) to add or override any
+ number of methods. See @rhombus(method, ~class_clause) for more
+ information on methods.
  
  When a @rhombus(class_clause) is an @rhombus(extends, ~class_clause)
  form, the new class is created as a subclass of the extended class. The
@@ -179,7 +186,9 @@
  @rhombus(extends) clause is present, then each field name must also be
  distinct from any field name in the superclass, except that a
  @rhombus(override) clause must name a method that is already declared in
- the superclass.
+ the superclass. Private superclass fields and methods are not visible to
+ the subclass, so their names are not required to be distinct from
+ subclass field and method names.
 
  See @secref("static-info-rules") for information about static
  information associated with classes.
@@ -245,7 +254,7 @@
  @rhombus(method, ~class_clause). Including
  @rhombus(override, ~class_clause) means that the method must be defined
  in the superclass, while it must not be defined in the superclass if
- @rhombus(override) is not used.
+ @rhombus(override, ~class_clause) is not used.
 
 }
 
@@ -272,9 +281,9 @@
     ($binding, ..., $rest, ...) $maybe_res_ann: $body; ...
 ){
 
- These @tech{class clauses} are recognized by @rhombus(class) to
- declares methods, along with the method form of
- @rhombus(final, ~class_clause). The combination
+ These @tech{class clauses} are recognized by @rhombus(class) to declare
+ methods, along with the method forms of @rhombus(final, ~class_clause)
+ and @rhombus(private, ~class_clause). The combination
  @rhombus(override, ~class_clause) followed by
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
@@ -288,9 +297,27 @@
  accessed using @rhombus(this) and @rhombus(.), but they can also be used
  directly. Using a field or method name directly is the same as using
  @rhombus(this) and @rhombus(.) in static mode (which implies that a
- direct refernce to a method name must be a call of the method). Field
- and method names are bound outside the method arguments, so arguments
- can shadow field and method names.
+ direct reference to a method name must be a call of the method). An
+ argument that has the same name as a field or method shadow the field or
+ method.
+
+}
+
+@doc(
+  class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl',
+  class_clause.macro 'private $method_decl',
+  class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_decl',
+){
+
+ A @tech{class clause} that declares a private field or method. See
+ @rhombus(class) and @rhombus(method, ~class_clause) for more
+ information on field and method declarations. A
+ @rhombus(private, ~class_clause) without @rhombus(field, ~class_clause)
+ or @rhombus(method, ~class_clause) is equivalent to
+ @rhombus(private, ~class_clause) followed by @rhombus(method, ~class_clause).
+
+ Private fields can be accessed only statically, and only through the
+ enclosing class's annotation (not a subclass annotation).
 
 }
 

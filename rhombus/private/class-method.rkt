@@ -2,7 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse
                      racket/stxparam-exptime
-                     "class-parse.rkt")
+                     enforest/syntax-local
+                     "class-parse.rkt"
+                     "tag.rkt"
+                     "srcloc.rkt")
          racket/stxparam
          "expression.rkt"
          "parse.rkt"
@@ -11,11 +14,14 @@
          "dot-provider-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "assign.rkt"
          "parens.rkt"
          (submod "function.rkt" for-call))
 
 (provide (for-syntax build-method-map
-                     build-methods)
+                     build-methods
+
+                     get-private-table)
 
          this
 
@@ -46,10 +52,13 @@
                      '#()))
   (define vtable-ht (for/hasheqv ([i (in-range (vector-length vtable))])
                       (values i (vector-ref vtable i))))
-  (define-values (new-ht new-vtable-ht)
-    (for/fold ([ht ht] [vtable-ht vtable-ht]) ([added (in-list added-methods)])
+  (define-values (new-ht new-vtable-ht priv-ht here-ht)
+    (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
       (define id (added-method-id added))
+      (define new-here-ht (hash-set here-ht (syntax-e id) id))
       (cond
+        [(hash-ref here-ht (syntax-e id) #f)
+         (raise-syntax-error #f "duplicate method name" stx id)]
         [(hash-ref ht (syntax-e id) #f)
          => (lambda (pos+id)
               (define pos (car pos+id))
@@ -60,7 +69,9 @@
                  (values (if (eq? (added-method-mode added) 'final-override)
                              (hash-set ht (syntax-e id) (cons (unbox pos) id))
                              ht)
-                         (hash-set vtable-ht (unbox pos) (added-method-rhs-id added)))]
+                         (hash-set vtable-ht (unbox pos) (added-method-rhs-id added))
+                         priv-ht
+                         new-here-ht)]
                 [else
                  (raise-syntax-error #f "method is already in superclass" stx id)]))]
         [else
@@ -68,8 +79,10 @@
            [(memq (added-method-mode added) '(override final-override))
             (raise-syntax-error #f "method is not in superclass" stx id)]
            [(eq? (added-method-mode added) 'private)
-            ;; skip private methods in this pass
-            (values ht vtable-ht)]
+            (values ht
+                    vtable-ht
+                    (hash-set priv-ht (syntax-e id) (added-method-rhs-id added))
+                    new-here-ht)]
            [else
             (define pos (hash-count vtable-ht))
             (values (hash-set ht (syntax-e id)
@@ -77,16 +90,21 @@
                                         pos
                                         (box pos))
                                     id))
-                    (hash-set vtable-ht pos (added-method-rhs-id added)))])])))
+                    (hash-set vtable-ht pos (added-method-rhs-id added))
+                    priv-ht
+                    new-here-ht)])])))
   (values (for/hasheq ([(k pos+id) (in-hash new-ht)])
             (values k (car pos+id)))
           (for/hasheqv ([(s pos+id) (in-hash new-ht)])
             (define i (car pos+id))
             (values (if (box? i) (unbox i) i) (cdr pos+id)))
           (for/vector ([i (in-range (hash-count new-vtable-ht))])
-            (hash-ref new-vtable-ht i))))
+            (hash-ref new-vtable-ht i))
+          priv-ht
+          here-ht))
 
 (define-syntax-parameter this-id #f)
+(define-syntax-parameter private-tables #f)
 
 (define-syntax this
   (expression-transformer
@@ -108,11 +126,38 @@
                                "allowed only within methods"
                                #'head)])]))))
 
+(define-for-syntax (get-private-tables)
+  (let ([id (syntax-parameter-value #'private-tables)])
+    (if id
+        (syntax-local-value id)
+        '())))
+
+(define-for-syntax (get-private-table desc)
+  (define tables (get-private-tables))
+  (or (for/or ([t (in-list tables)])
+        (and (free-identifier=? (car t) (class-desc-id desc))
+             (cdr t)))
+      #hasheq()))
+
 (define-for-syntax (make-field-syntax id accessor-id maybe-mutator-id)
   (expression-transformer
    id
    (lambda (stx)
      (syntax-parse stx
+       #:datum-literals (op)
+       #:literals (:=)
+       [(head (op :=) rhs ...)
+        #:when (syntax-e maybe-mutator-id)
+        (syntax-parse (syntax-parameter-value #'this-id)
+          [(obj-id . _)
+           (values (no-srcloc
+                    #`(let ([#,id (rhombus-expression (#,group-tag rhs ...))])
+                        #,(datum->syntax #'here
+                                         (list maybe-mutator-id #'obj-id id)
+                                         #'head
+                                         #'head)
+                        #,id))
+                   #'())])]
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
@@ -147,7 +192,11 @@
                        [name-field ...]
                        [maybe-set-name-field! ...]
                        [method-name ...]
-                       [method-index/id ...])
+                       [method-index/id ...]
+                       [private-method-name ...]
+                       [private-method-id ...]
+                       [private-field-name ...]
+                       [private-field-desc ...])
                  names])
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))])
@@ -161,21 +210,35 @@
              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
                                                             (quote-syntax method-index/id)))
              ...
+             (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
+                                                                    (quote-syntax private-method-id)))
+             ...
+             (define-syntax new-private-tables (cons (cons (quote-syntax name)
+                                                           (hasheq (~@ 'private-method-name
+                                                                       (quote-syntax private-method-id))
+                                                                   ...
+                                                                   (~@ 'private-field-name
+                                                                       private-field-desc)
+                                                                   ...))
+                                                     (get-private-tables)))
              (values
               #,@(for/list ([added (in-list added-methods)])
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
-                                                                    name-instance)])
+                                                                    name-instance
+                                                                    new-private-tables)])
                        #,(added-method-id added))))))))))
 
 (define-syntax (method-block stx)
   (syntax-parse stx
     #:datum-literals (block)
     [(_ (block expr)
-        name-instance)
+        name-instance
+        private-tables-id)
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
                                    (lambda (stx)
-                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj . name-instance))])
+                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj . name-instance))]
+                                                             [private-tables (quote-syntax private-tables-id)])
                                          #,stx))
                                    #t)))
      #'expr

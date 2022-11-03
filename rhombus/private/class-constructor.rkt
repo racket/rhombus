@@ -71,10 +71,11 @@
                                  (define fields (append super-constructor-fields constructor-fields))
                                  #`([#,fields (name-defaults . #,fields)])]
                                 [else '()])
-                  (make-all-name #,@(for/list ([f (in-list (if super (class-desc-fields super) null))])
-                                      (if (identifier? (field-desc-constructor-arg f))
-                                          (field-desc-constructor-arg f)
-                                          (field-desc-name f)))
+                  (make-all-name #,@(or (and super (class-desc-all-fields super))
+                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
+                                          (if (identifier? (field-desc-constructor-arg f))
+                                              (field-desc-constructor-arg f)
+                                              (field-desc-name f))))
                                  #,@constructor-fields
                                  #,@(map added-field-arg-id added-fields))))))
          null)
@@ -121,8 +122,9 @@
            (or (not (class-desc-constructor-makers super))
                constructor-id))
       (and super
-           (for/or ([f (in-list (class-desc-fields super))])
-             (identifier? (field-desc-constructor-arg f))))))
+           (or (class-desc-all-fields super)
+               (for/or ([f (in-list (class-desc-fields super))])
+                 (identifier? (field-desc-constructor-arg f)))))))
 
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx

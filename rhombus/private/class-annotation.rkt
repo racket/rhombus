@@ -41,7 +41,7 @@
                                       (quote-syntax constructor-name-field) ...))]
              #,@(if (syntax-e #'parse-name-of)
                     #`([parse-name-of
-                        (make-curried-annotation-of-tranformer (quote-syntax #,(class-desc-annotation-id super)))])
+                        (make-curried-annotation-of-tranformer (quote-syntax #,(class-desc-id super)))])
                     null))
             (quote-syntax name?)
             (quote-syntax ((#%dot-provider name-instance)))

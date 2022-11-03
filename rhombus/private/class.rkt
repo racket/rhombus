@@ -93,9 +93,9 @@
       [(_ [orig-stx base-stx scope-stx
                     full-name name
                     (constructor-field-name ...)
-                    (field-keyword ...) ; #f or keyword
-                    (field-default ...) ; #f or (parsed)
-                    (field-mutable ...)
+                    (constructor-field-keyword ...) ; #f or keyword
+                    (constructor-field-default ...) ; #f or (parsed)
+                    (constructor-field-mutable ...)
                     (constructor-field-predicate ...)
                     (constructor-field-annotation-str ...)
                     (constructor-field-static-infos ...)]
@@ -118,12 +118,23 @@
        (define added-fields (reverse (hash-ref options 'fields '())))
        (define extra-fields (map added-field-id added-fields))
        (define fields (append constructor-fields extra-fields))
-       (define mutables (append (syntax->list #'(field-mutable ...))
+       (define mutables (append (syntax->list #'(constructor-field-mutable ...))
                                 (for/list ([f (in-list added-fields)])
                                   #'#t)))
-       (define keywords (syntax->list #'(field-keyword ...)))
-       (define defaults (syntax->list #'(field-default ...)))
-       (define has-defaults? (any-stx? defaults))
+       (define has-private-fields? (for/or ([a (in-list added-fields)])
+                                     (eq? 'private (added-field-mode a))))
+       (define (partition-fields l)
+         (for/fold ([pub '()] [priv '()] #:result (list (reverse pub) (reverse priv)))
+                   ([e (in-list (syntax->list l))]
+                    [a (append constructor-fields added-fields)])
+           (if (or (not (added-field? a))
+                   (eq? (added-field-mode a) 'public))
+               (values (cons e pub) priv)
+               (values pub (cons e priv)))))
+          
+       (define constructor-keywords (syntax->list #'(constructor-field-keyword ...)))
+       (define constructor-defaults (syntax->list #'(constructor-field-default ...)))
+       (define has-defaults? (any-stx? constructor-defaults))
        (define-values (super-constructor-fields super-keywords super-defaults)
          (for/lists (fs ls ds) ([f (in-list (if super
                                                 (class-desc-fields super)
@@ -144,11 +155,11 @@
                                                 (and (not (syntax-e kw))
                                                      (syntax-e df))))
        (define need-constructor-wrapper?
-         (need-class-constructor-wrapper? extra-fields keywords defaults constructor-id
+         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
                                           super-has-keywords? super-has-defaults? super))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
        (define field-ht (check-duplicate-field-names stxes fields super))
-       (check-field-defaults stxes super-has-by-position-default? constructor-fields defaults keywords)
+       (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
        (define intro (make-syntax-introducer))
        (define all-name-fields
          (for/list ([field (in-list fields)])
@@ -172,16 +183,21 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable)  ; index -> accessor-identifier
+                       method-vtable   ; index -> accessor-identifier
+                       method-private  ; symbol -> identifier
+                       method-decls)   ; symbol -> identifier, intended for checking distinct
          (build-method-map stxes added-methods super))
 
-       (check-fields-methods-distinct stxes field-ht method-map method-names)
+       (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
 
+       (define (temporary template)
+         ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
+    
        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
-                     [(class:name) (generate-temporaries #'(name))]
-                     [(make-name) (generate-temporaries #'(name))]
+                     [class:name (temporary "class:~a")]
+                     [make-name (temporary "make-~a")]
                      [name-defaults (and (or super-has-defaults? (and has-defaults? (not final?)))
-                                         (car (generate-temporaries (list (format "~a-defaults" (syntax-e #'name))))))]
+                                         (temporary "~a-defaults"))]
                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [(name-field ...) all-name-fields]
                      [(constructor-name-field ...) (for/list ([c (in-list constructor-fields)]
@@ -195,8 +211,8 @@
                      [(field-static-infos ...) (append (syntax->list #'(constructor-field-static-infos ...))
                                                        (for/list ([f (in-list added-fields)])
                                                          (added-field-static-infos f)))]
-                     [(field-argument ...) (append (for/list ([kw (in-list keywords)]
-                                                              [df (in-list defaults)])
+                     [(field-argument ...) (append (for/list ([kw (in-list constructor-keywords)]
+                                                              [df (in-list constructor-defaults)])
                                                      (if (syntax-e df)
                                                          (box kw)
                                                          kw))
@@ -225,17 +241,26 @@
                                                             (list (datum->syntax #'name m-name)
                                                                   (if (box? id/boxed)
                                                                       i
-                                                                      id/boxed)))])
+                                                                      id/boxed)))]
+                     [((private-method-name private-method-id) ...) (for/list ([m-name (in-list (sort (hash-keys method-private)
+                                                                                                      symbol<?))])
+                                                                      (list (datum->syntax #'name m-name)
+                                                                            (hash-ref method-private m-name)))])
          (with-syntax ([constructor-name (if constructor-id
-                                             (car (generate-temporaries #'(name)))
+                                             (temporary "~a-ctr")
                                              #'make-name)]
                        [constructor-maker-name (and (or (not final?)
                                                         super)
                                                     constructor-id
-                                                    (car (generate-temporaries #'(maker))))]
+                                                    (temporary "~a-maker"))]
                        [make-all-name (if need-constructor-wrapper?
-                                          (car (generate-temporaries #'(name)))
-                                          #'make-name)])
+                                          (temporary "~a-make")
+                                          #'make-name)]
+                       [((public-field-name ...) (private-field-name ...)) (partition-fields #'(field-name ...))]
+                       [((public-name-field ...) (private-name-field ...)) (partition-fields #'(name-field ...))]
+                       [((public-maybe-set-name-field! ...) (private-maybe-set-name-field! ...)) (partition-fields #'(maybe-set-name-field! ...))]
+                       [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
+                       [((public-field-argument ...) (private-field-argument ...)) (partition-fields #'(field-argument ...))])
            (define defns
              (append
               (build-methods added-methods
@@ -244,11 +269,21 @@
                                      [name-field ... super-name-field ...]
                                      [maybe-set-name-field! ... super-maybe-set-name-field! ...]
                                      [method-name ...]
-                                     [method-index/id ...]))
+                                     [method-index/id ...]
+                                     [private-method-name ...]
+                                     [private-method-id ...]
+                                     [private-field-name ...]
+                                     [(list 'private-field-name
+                                            (quote-syntax private-name-field)
+                                            (quote-syntax private-maybe-set-name-field!)
+                                            (quote-syntax private-field-static-infos)
+                                            (quote-syntax private-field-argument))
+                                      ...]))
               (build-class-struct super
                                   fields mutables final? authentic?
                                   method-map method-names method-vtable
                                   #'(name class:name make-all-name name?
+                                          [public-field-name ...]
                                           [field-name ...]
                                           [name-field ...]
                                           [set-name-field! ...]
@@ -258,8 +293,8 @@
                                           [super-name-field ...]))
               (build-class-constructor super constructor-id options
                                        constructor-fields super-constructor-fields added-fields
-                                       keywords super-keywords
-                                       defaults super-defaults
+                                       constructor-keywords super-keywords
+                                       constructor-defaults super-defaults
                                        need-constructor-wrapper?
                                        has-defaults? super-has-defaults?
                                        final?
@@ -272,24 +307,25 @@
                                         #'(name name-instance name?
                                                 [constructor-name-field ...] [super-name-field ...]
                                                 [constructor-field-static-infos ...] [super-field-static-infos ...]
-                                                [field-keyword ...] [super-field-keyword ...]))
+                                                [constructor-field-keyword ...] [super-field-keyword ...]))
               (build-class-annotation-form super annotation-id options
                                            constructor-fields super-constructor-fields
                                            exposed-internal-id intro
                                            #'(name name-instance name?
                                                    [constructor-name-field ...] [super-name-field ...]
-                                                   [field-keyword ...] [super-field-keyword ...]))
+                                                   [constructor-field-keyword ...] [super-field-keyword ...]))
               (build-class-dot-handling #'(name constructor-name name-instance
-                                                [field-name ...]
-                                                [name-field ...]))
+                                                [public-field-name ...]
+                                                [public-name-field ...]))
               (build-class-static-infos exposed-internal-id
                                         #'(name constructor-name name-instance
                                                 [name-field ...]
                                                 [field-static-infos ...]))
               (build-class-desc super options
-                                keywords super-keywords
-                                defaults super-defaults
-                                final?
+                                constructor-keywords super-keywords
+                                constructor-defaults super-defaults
+                                final? has-private-fields?
+                                parent-name
                                 method-map method-names method-vtable
                                 #'(name class:name constructor-maker-name name-defaults
                                         (list (list 'super-field-name
@@ -298,12 +334,13 @@
                                                     (quote-syntax super-field-static-infos)
                                                     (quote-syntax super-field-argument))
                                               ...
-                                              (list 'field-name
-                                                    (quote-syntax name-field)
-                                                    (quote-syntax maybe-set-name-field!)
-                                                    (quote-syntax field-static-infos)
-                                                    (quote-syntax field-argument))
-                                              ...)))))
+                                              (list 'public-field-name
+                                                    (quote-syntax public-name-field)
+                                                    (quote-syntax public-maybe-set-name-field!)
+                                                    (quote-syntax public-field-static-infos)
+                                                    (quote-syntax public-field-argument))
+                                              ...)
+                                        ([field-name field-argument] ...)))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -311,6 +348,7 @@
                                        method-map method-names method-vtable
                                        names)
   (with-syntax ([(name class:name make-all-name name?
+                       [public-field-name ...]
                        [field-name ...]
                        [name-field ...]
                        [set-name-field! ...]
@@ -350,7 +388,7 @@
                                            #,(and super (class-desc-class:id super))
                                            #,(length fields) 0 #f
                                            (list (cons prop:field-name->accessor
-                                                       (list* '(field-name ...)
+                                                       (list* '(public-field-name ...)
                                                               (hasheq (~@ 'super-field-name super-name-field)
                                                                       ...)
                                                               (hasheq (~@ 'method-name method-proc)
@@ -388,22 +426,35 @@
          rhs)]))
 
 (define-for-syntax (build-class-desc super options
-                                     keywords super-keywords
-                                     defaults super-defaults
-                                     final?
+                                     constructor-keywords super-keywords
+                                     constructor-defaults super-defaults
+                                     final? has-private-fields?
+                                     parent-name
                                      method-map method-names method-vtable
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults
-                       fields)
+                       fields
+                       ([field-name field-argument] ...))
                  names])
     (list
      #`(define-class-desc-syntax name
          (class-desc #,final?
+                     (quote-syntax name)
+                     #,(and parent-name #`(quote-syntax #,parent-name))
                      (quote-syntax class:name)
-                     (quote-syntax name)
-                     (quote-syntax name)
-                     (quote-syntax name)
                      fields
+                     #,(and (or has-private-fields?
+                                (and super (class-desc-all-fields super)))
+                            #`(list #,@(map (lambda (i)
+                                              (if (identifier? i) #`(quote-syntax #,i) #`(quote #,i)))
+                                            (append (if super
+                                                        (class-desc-all-fields super)
+                                                        '())
+                                                    (for/list ([name (in-list (syntax->list #'(field-name ...)))]
+                                                               [arg (in-list (syntax->list #'(field-argument ...)))])
+                                                      (if (identifier? arg)
+                                                          arg
+                                                          (syntax-e name)))))))
                      '#,(for/vector ([i (in-range (vector-length method-vtable))])
                           (define name (hash-ref method-names i))
                           (if (box? (hash-ref method-map (if (syntax? name) (syntax-e name) name)))
@@ -413,7 +464,7 @@
                      '#,method-map
                      #,(cond
                          [(syntax-e #'constructor-maker-name)
-                          #`(quote-syntax ([#,(encode-protocol keywords defaults) constructor-maker-name]
+                          #`(quote-syntax ([#,(encode-protocol constructor-keywords constructor-defaults) constructor-maker-name]
                                            #,@(if super
                                                   (or (class-desc-constructor-makers super)
                                                       (list (list (encode-protocol super-keywords super-defaults) #f)))

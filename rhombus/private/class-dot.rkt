@@ -42,82 +42,93 @@
                                                           success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) class-desc-ref))
   (unless desc (error "cannot find annotation binding for instance dot provider"))
+  (define (do-field fld)
+    (define accessor-id (field-desc-accessor-id fld))
+    (define-values (op-id assign-rhs new-tail)
+      (syntax-parse tail
+        #:datum-literals (op)
+        #:literals (:=)
+        [((op :=) rhs ...)
+         #:when (syntax-e (field-desc-mutator-id fld))
+         (values (field-desc-mutator-id fld)
+                 #`(rhombus-expression (#,group-tag rhs ...))
+                 #'())]
+        [_
+         (values accessor-id
+                 #f
+                 tail)]))
+    (define e (datum->syntax (quote-syntax here)
+                             (append (list (relocate field-id op-id) form1)
+                                     (if assign-rhs
+                                         (list field-id)
+                                         null))
+                             (span-srcloc form1 field-id)
+                             #'dot))
+    (define full-e
+      (cond
+        [assign-rhs #`(let ([#,field-id #,assign-rhs])
+                        #,e
+                        #,field-id)]
+        [else e]))
+    
+    (define static-infos (field-desc-static-infos fld))
+    (define more-static-infos (syntax-local-static-info form1 accessor-id))
+    (define all-static-infos (if more-static-infos
+                                 (datum->syntax #f
+                                                (append (syntax->list more-static-infos)
+                                                        static-infos))
+                                 static-infos))
+    (success (wrap-static-info* full-e all-static-infos)
+             new-tail))
+  (define (do-method pos/boxed/id)
+    (define-values (args new-tail tag)
+      (syntax-parse tail
+        #:datum-literals (op)
+        [((~and args (::parens arg ...)) . tail)
+         (values #'args #'tail #'tag)]
+        [_
+         (values #f tail #f)]))
+    (define pos/id
+      (cond
+        [(identifier? pos/boxed/id) pos/boxed/id]
+        [(box? pos/boxed/id) (unbox pos/boxed/id)] ; dynamic dispatch
+        [else (vector-ref (syntax-e (class-desc-method-vtable desc)) pos/boxed/id)]))
+    (cond
+      [args
+       (define obj-id #'obj)
+       (define rator
+         (cond
+           [(identifier? pos/id) pos/id]
+           [else #`(method-ref #,form1 #,pos/id)]))
+       (define-values (call-stx empty-tail)
+         (parse-function-call rator (list obj-id) #`(#,obj-id #,args)))
+       (success #`(let ([#,obj-id #,form1])
+                    #,call-stx)
+                new-tail)]
+      [else
+       (when more-static?
+         (raise-syntax-error #f
+                             "method must be called for static mode"
+                             (no-srcloc #`(#,form1 #,dot #,field-id))))
+       (cond
+         [(identifier? pos/id)
+          (success #`(curried #,pos/id #,form1) new-tail)]
+         [else
+          (success #`(method-curried-ref #,form1 #,pos/id) new-tail)])]))
   (cond
     [(for/or ([field+acc (in-list (class-desc-fields desc))])
       (and (eq? (field-desc-name field+acc) (syntax-e field-id))
            field+acc))
-     => (lambda (fld)
-          (define accessor-id (field-desc-accessor-id fld))
-          (define-values (op-id assign-rhs new-tail)
-            (syntax-parse tail
-              #:datum-literals (op)
-              #:literals (:=)
-              [((op :=) rhs ...)
-               #:when (syntax-e (field-desc-mutator-id fld))
-               (values (field-desc-mutator-id fld)
-                       #`(rhombus-expression (#,group-tag rhs ...))
-                       #'())]
-              [_
-               (values accessor-id
-                       #f
-                       tail)]))
-          (define e (datum->syntax (quote-syntax here)
-                                   (append (list (relocate field-id op-id) form1)
-                                           (if assign-rhs
-                                               (list field-id)
-                                               null))
-                                   (span-srcloc form1 field-id)
-                                   #'dot))
-          (define full-e
-            (cond
-              [assign-rhs
-               (success #`(let ([#,field-id #,assign-rhs])
-                            #,e
-                            #,field-id))]
-              [else e]))
-          
-          (define static-infos (field-desc-static-infos fld))
-          (define more-static-infos (syntax-local-static-info form1 accessor-id))
-          (define all-static-infos (if more-static-infos
-                                       (datum->syntax #f
-                                                      (append (syntax->list more-static-infos)
-                                                              static-infos))
-                                       static-infos))
-          (success (wrap-static-info* full-e all-static-infos)
-                   new-tail))]
+     => (lambda (fld) (do-field fld))]
     [(hash-ref (class-desc-method-map desc) (syntax-e field-id) #f)
-     => (lambda (pos/boxed)
-          (define-values (args new-tail tag)
-            (syntax-parse tail
-              #:datum-literals (op)
-              [((~and args (::parens arg ...)) . tail)
-               (values #'args #'tail #'tag)]
-              [_
-               (values #f tail #f)]))
-          (define pos/id
-            (if (box? pos/boxed)
-                (unbox pos/boxed)
-                (vector-ref (syntax-e (class-desc-method-vtable desc)) pos/boxed)))
-          (cond
-            [args
-             (define obj-id #'obj)
-             (define rator
-               (cond
-                 [(identifier? pos/id) pos/id]
-                 [else #`(method-ref #,form1 #,pos/id)]))
-             (define-values (call-stx empty-tail)
-               (parse-function-call rator (list obj-id) #`(#,obj-id #,args)))
-             (success #`(let ([#,obj-id #,form1])
-                          #,call-stx)
-                      new-tail)]
-            [else
-             (when more-static?
-               (raise-syntax-error #f
-                                   "method must be called for static mode"
-                                   (no-srcloc #`(#,form1 #,dot #,field-id))))
-             (cond
-               [(identifier? pos/id)
-                (success #`(curried #,pos/id #,form1) new-tail)]
-               [else
-                (success #`(method-curried-ref #,form1 #,pos/id) new-tail)])]))]
+     => (lambda (pos/boxed) (do-method pos/boxed))]
+    [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
+     => (lambda (id/fld)
+          (if (identifier? id/fld)
+              (do-method id/fld)
+              (do-field id/fld)))]
+    [more-static?
+     (raise-syntax-error #f
+                         "no such public field or method"
+                         field-id)]
     [else (failure)]))
