@@ -4,6 +4,7 @@
                      "class-parse.rkt")
          "entry-point.rkt"
          "error.rkt"
+         "realm.rkt"
          racket/unsafe/undefined)
 
 (provide (for-syntax build-class-constructor
@@ -15,13 +16,14 @@
                                             keywords super-keywords
                                             defaults super-defaults
                                             need-constructor-wrapper?
+                                            unimplemented-name
                                             has-defaults? super-has-defaults?
                                             final?
                                             exposed-internal-id
                                             names)
-  (with-syntax ([(make-name make-all-name constructor-name constructor-maker-name
-                            name?
-                            name-defaults)
+  (with-syntax ([(name make-name make-all-name constructor-name constructor-maker-name
+                       name?
+                       name-defaults)
                  names])
     (append
      (if (syntax-e #'name-defaults)
@@ -71,13 +73,15 @@
                                  (define fields (append super-constructor-fields constructor-fields))
                                  #`([#,fields (name-defaults . #,fields)])]
                                 [else '()])
-                  (make-all-name #,@(or (and super (class-desc-all-fields super))
-                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
-                                          (if (identifier? (field-desc-constructor-arg f))
-                                              (field-desc-constructor-arg f)
-                                              (field-desc-name f))))
-                                 #,@constructor-fields
-                                 #,@(map added-field-arg-id added-fields))))))
+                  #,(if unimplemented-name
+                        #`(raise-unimplemented-methods 'name)
+                        #`(make-all-name #,@(or (and super (class-desc-all-fields super))
+                                                (for/list ([f (in-list (if super (class-desc-fields super) null))])
+                                                  (if (identifier? (field-desc-constructor-arg f))
+                                                      (field-desc-constructor-arg f)
+                                                      (field-desc-name f))))
+                                         #,@constructor-fields
+                                         #,@(map added-field-arg-id added-fields)))))))
          null)
      (if exposed-internal-id
          (list
@@ -113,6 +117,7 @@
 
 (define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-id
                                                     super-has-keywords? super-has-defaults?
+                                                    unimplemented-name
                                                     super)
   (or (pair? extra-fields)
       (any-stx? keywords)
@@ -121,6 +126,7 @@
                super-has-defaults?)
            (or (not (class-desc-constructor-makers super))
                constructor-id))
+      unimplemented-name
       (and super
            (or (class-desc-all-fields super)
                (for/or ([f (in-list (class-desc-fields super))])
@@ -244,3 +250,5 @@
                                        allow-kws
                                        req-kws))
 
+(define (raise-unimplemented-methods name)
+  (raise-arguments-error* name rhombus-realm "cannot instantiate class with unimplemented methods"))

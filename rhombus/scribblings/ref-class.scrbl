@@ -42,6 +42,7 @@
     $$(@rhombus(override, ~class_clause)) $method_decl
     $$(@rhombus(final, ~class_clause)) $method_decl
     $$(@rhombus(private, ~class_clause)) $method_decl
+    $$(@rhombus(unimplemented, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(final, ~class_clause))
     $$(@rhombus(nonfinal, ~class_clause))
@@ -128,12 +129,13 @@
  @rhombus(private, ~class_clause) prefix.
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
- form, @rhombus(override, ~class_clause) form, or method-shaped
+ form, @rhombus(override, ~class_clause) form,
+ @rhombus(unimplemented, ~class_clause) form, or method-shaped
  @rhombus(final, ~class_clause) or @rhombus(private, ~class_clause) form,
- then the clause declares a method for the class. These clauses can appear any
- number of times as a @rhombus(class_clause) to add or override any
- number of methods. See @rhombus(method, ~class_clause) for more
- information on methods.
+ then the clause declares a method for the class. These clauses can
+ appear any number of times as a @rhombus(class_clause) to add or
+ override any number of methods. See @rhombus(method, ~class_clause) for
+ more information on methods.
  
  When a @rhombus(class_clause) is an @rhombus(extends, ~class_clause)
  form, the new class is created as a subclass of the extended class. The
@@ -318,6 +320,20 @@
 
  Private fields can be accessed only statically, and only through the
  enclosing class's annotation (not a subclass annotation).
+
+}
+
+@doc(
+  class_clause.macro 'unimplemented $identifier',
+  class_clause.macro 'unimplemented $$(@rhombus(method, ~class_clause)) $identifier',
+){
+
+ A @tech{class clause} that declares a method without an implementation.
+ When a class has an unimplemented method, the constructor for the class
+ raises an exception. The method must be overridden with a
+ @rhombus(override, ~class_clause) class in a subclass, and then the
+ subclass can be instantiated (as long as it has no other unimplemented
+ methods). A @tech{final} class cannot have an unimplemented method.
 
 }
 

@@ -32,6 +32,7 @@
          check-duplicate-field-names
          check-fields-methods-distinct
          check-consistent-subclass
+         check-consistent-unimmplemented
          check-field-defaults)
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
@@ -194,6 +195,13 @@
   (check-consistent-custom (class-desc-constructor-makers super) (hash-ref options 'constructor-id #f) "constructor")
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding #f) "binding")
   (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation #f) "annotation"))
+
+(define (check-consistent-unimmplemented stxes final? unimplemented-name)
+  (when (and final? unimplemented-name)
+    (raise-syntax-error #f
+                        "final class cannot have unimplemented method"
+                        stxes
+                        unimplemented-name)))
 
 (define (check-field-defaults stxes super-has-defaults? constructor-fields defaults keywords)
   (for/fold ([need-default? #f]) ([f (in-list constructor-fields)]

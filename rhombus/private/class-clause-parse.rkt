@@ -27,7 +27,8 @@
          field
          method
          override
-         private)
+         private
+         unimplemented)
 
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
@@ -78,7 +79,8 @@
           (define new-options
             (syntax-parse clause
               #:literals (extends constructor final nonfinal authentic binding annotation
-                                  method private override)
+                                  method private override unimplemented internal
+                                  final-override)
               [(extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "redundant superclass clause" orig-stx clause))
@@ -121,11 +123,17 @@
                                                             #'annotation-str
                                                             (syntax-e #'mode))
                                                (hash-ref options 'fields null)))]
-              [((~and tag (~or method override private final)) id rhs)
+              [((~and tag (~or method override private final final-override)) id rhs)
                (hash-set options 'methods (cons (added-method #'id
                                                               (car (generate-temporaries #'(id)))
                                                               #'rhs
                                                               (syntax-e #'tag))
+                                                (hash-ref options 'methods null)))]
+              [(unimplemented id)
+               (hash-set options 'methods (cons (added-method #'id
+                                                              (car (generate-temporaries #'(id)))
+                                                              #f
+                                                              'unimplemented)
                                                 (hash-ref options 'methods null)))]
               [_
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
@@ -260,6 +268,7 @@
        [(_ method (~var m (:method #'final))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]
        [(_ (~var m (:method #'final))) #'m.form]))))
+(define-syntax final-override 'placeholder)
 
 (define-syntax method
   (class-clause-transformer
@@ -283,3 +292,12 @@
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method #'private))) #'m.form]))))
+
+(define-syntax unimplemented
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (method)
+       [(_ method name:identifier) (wrap-class-clause #'(unimplemented name))]
+       [(_ name:identifier) (wrap-class-clause #'(unimplemented name))]))))
+

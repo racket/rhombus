@@ -101,7 +101,10 @@
           (for/vector ([i (in-range (hash-count new-vtable-ht))])
             (hash-ref new-vtable-ht i))
           priv-ht
-          here-ht))
+          here-ht
+          (for/or ([added (in-list added-methods)])
+            (and (not (added-method-rhs added))
+                 (added-method-id added)))))
 
 (define-syntax-parameter this-id #f)
 (define-syntax-parameter private-tables #f)
@@ -201,7 +204,9 @@
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))])
       (list
-       #`(define-values #,(map added-method-rhs-id added-methods)
+       #`(define-values #,(for/list ([added (in-list added-methods)]
+                                     #:when (added-method-rhs added))
+                            (added-method-rhs-id added))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
                                                           (quote-syntax name-field)
@@ -222,7 +227,8 @@
                                                                    ...))
                                                      (get-private-tables)))
              (values
-              #,@(for/list ([added (in-list added-methods)])
+              #,@(for/list ([added (in-list added-methods)]
+                            #:when (added-method-rhs added))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name-instance
                                                                     new-private-tables)])

@@ -40,7 +40,8 @@
          field
          method
          override
-         private)
+         private
+         unimplemented)
 
 (define-syntax rhombus-class
   (definition-transformer
@@ -154,9 +155,6 @@
                                                        [df (in-list super-defaults)])
                                                 (and (not (syntax-e kw))
                                                      (syntax-e df))))
-       (define need-constructor-wrapper?
-         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
-                                          super-has-keywords? super-has-defaults? super))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
        (define field-ht (check-duplicate-field-names stxes fields super))
        (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
@@ -183,12 +181,18 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier
+                       method-vtable   ; index -> accessor-identifier or 'unimplemented
                        method-private  ; symbol -> identifier
-                       method-decls)   ; symbol -> identifier, intended for checking distinct
+                       method-decls    ; symbol -> identifier, intended for checking distinct
+                       unimplemented-name)
          (build-method-map stxes added-methods super))
 
        (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
+       (check-consistent-unimmplemented stxes final? unimplemented-name)
+
+       (define need-constructor-wrapper?
+         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
+                                          super-has-keywords? super-has-defaults? unimplemented-name super))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -282,6 +286,7 @@
               (build-class-struct super
                                   fields mutables final? authentic?
                                   method-map method-names method-vtable
+                                  unimplemented-name
                                   #'(name class:name make-all-name name?
                                           [public-field-name ...]
                                           [field-name ...]
@@ -296,12 +301,13 @@
                                        constructor-keywords super-keywords
                                        constructor-defaults super-defaults
                                        need-constructor-wrapper?
+                                       unimplemented-name
                                        has-defaults? super-has-defaults?
                                        final?
                                        exposed-internal-id
-                                       #'(make-name make-all-name constructor-name constructor-maker-name
-                                                    name?
-                                                    name-defaults))
+                                       #'(name make-name make-all-name constructor-name constructor-maker-name
+                                               name?
+                                               name-defaults))
               (build-class-binding-form super binding-id options
                                         exposed-internal-id intro
                                         #'(name name-instance name?
@@ -346,6 +352,7 @@
 (define-for-syntax (build-class-struct super
                                        fields mutables final? authentic?
                                        method-map method-names method-vtable
+                                       unimplemented-name
                                        names)
   (with-syntax ([(name class:name make-all-name name?
                        [public-field-name ...]
@@ -387,19 +394,22 @@
                          (make-struct-type 'name
                                            #,(and super (class-desc-class:id super))
                                            #,(length fields) 0 #f
-                                           (list (cons prop:field-name->accessor
-                                                       (list* '(public-field-name ...)
-                                                              (hasheq (~@ 'super-field-name super-name-field)
-                                                                      ...)
-                                                              (hasheq (~@ 'method-name method-proc)
-                                                                      ...)))
+                                           (list #,@(if unimplemented-name
+                                                        null
+                                                        #`((cons prop:field-name->accessor
+                                                                 (list* '(public-field-name ...)
+                                                                        (hasheq (~@ 'super-field-name super-name-field)
+                                                                                ...)
+                                                                        (hasheq (~@ 'method-name method-proc)
+                                                                                ...)))))
                                                  #,@(if final?
                                                         (list #'(cons prop:sealed #t))
                                                         '())
                                                  #,@(if authentic?
                                                         (list #'(cons prop:authentic #t))
                                                         '())
-                                                 #,@(if (zero? (vector-length method-vtable))
+                                                 #,@(if (or (zero? (vector-length method-vtable))
+                                                            unimplemented-name)
                                                         '()
                                                         (list #`(cons prop:methods
                                                                       (vector #,@(vector->list method-vtable))))))
