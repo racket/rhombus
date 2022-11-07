@@ -14,6 +14,13 @@ check:
   ~eval_exn
   class Posn(x, y):
     method x(): 0
+    unimplemented x
+  "duplicate method name"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    method x(): 0
   "identifier used as both a field name and method name"
 
 check:
@@ -121,6 +128,37 @@ check:
     extends Posn
     override m(): 0
   "cannot override superclass's final method"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    unimplemented m
+  "final class cannot have unimplemented methods"
+
+check:
+  class Posn(x, y):
+    nonfinal
+    unimplemented m
+  Posn is_a List
+  #false
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    unimplemented m
+  Posn(1, 2)
+  "cannot instantiate class with unimplemented"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    unimplemented m
+  class Posn3D(z):
+    extends Posn
+  Posn3D(1, 2, 3)
+  "cannot instantiate class with unimplemented"
 
 check:
   class Posn(x, y):
@@ -261,3 +299,37 @@ check:
       Helper().get(this)
   Posn(0, 10).get()
   [1, 1000]
+
+check:
+  class Posn(x, y):
+    nonfinal
+    unimplemented m
+  class Posn3D(z):
+    extends Posn
+    override m(): "ok"
+  Posn3D(1, 2, 3).m()
+  "ok"
+
+check:
+  class Posn(x, y):
+    nonfinal
+    method a(): 1
+    method b(): 2
+    method c(): 3
+  class Posn3D(z):
+    extends Posn
+    override a(): [super.a()]
+    override c(): [super.b()]
+  val p: Posn3D(1, 2, 3)
+  [p.a(), p.b(), p.c()]
+  [[1], 2, [2]]
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    unimplemented m
+  class Posn3D(z):
+    extends Posn
+    override m(): super.m()
+  "method is unimplemented in superclass"

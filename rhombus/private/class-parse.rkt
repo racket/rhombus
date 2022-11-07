@@ -44,7 +44,7 @@
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list symbol-or-id ...), includes private fields
                     method-names  ; list of symbol or boxed symbol; plain symbol means final
-                    method-vtable ; syntax-object vector of accessor identifiers
+                    method-vtable ; syntax-object vector of accessor identifiers or #'#:unimplemented
                     method-map    ; hash of name -> index or boxed index; the inverse of `method-names`
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
@@ -199,7 +199,7 @@
 (define (check-consistent-unimmplemented stxes final? unimplemented-name)
   (when (and final? unimplemented-name)
     (raise-syntax-error #f
-                        "final class cannot have unimplemented method"
+                        "final class cannot have unimplemented methods"
                         stxes
                         unimplemented-name)))
 

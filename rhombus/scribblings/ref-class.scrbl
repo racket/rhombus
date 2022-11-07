@@ -341,8 +341,21 @@
   expr.macro 'this'
 ){
 
- The @rhombus(this) form can only be used with a method. See
+ The @rhombus(this) form can only be used within a method. See
  @rhombus(method, ~class_clause) for more information.
+
+}
+
+@doc(  
+  expr.macro 'super . $identifier($arg, ...)'
+){
+
+ The @rhombus(super) form can only be used within a method to call
+ another method (possibly with the same name) that is statically known to
+ be implemented in a superclass of the enclosing class. The
+ @rhombus(super) call invokes the superclass's implementation, even if a
+ method named @rhombus(identifier) is overridden in a class or a
+ subclass.
 
 }
 

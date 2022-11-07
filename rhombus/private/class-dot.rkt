@@ -112,7 +112,7 @@
                              (no-srcloc #`(#,form1 #,dot #,field-id))))
        (cond
          [(identifier? pos/id)
-          (success #`(curried #,pos/id #,form1) new-tail)]
+          (success #`(curry-method #,pos/id #,form1) new-tail)]
          [else
           (success #`(method-curried-ref #,form1 #,pos/id) new-tail)])]))
   (cond

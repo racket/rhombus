@@ -24,6 +24,7 @@
                      get-private-table)
 
          this
+         super
 
          prop:methods
          method-ref
@@ -51,7 +52,10 @@
                      (syntax-e (class-desc-method-vtable super))
                      '#()))
   (define vtable-ht (for/hasheqv ([i (in-range (vector-length vtable))])
-                      (values i (vector-ref vtable i))))
+                      (values i (let ([m (vector-ref vtable i)])
+                                  (if (eq? (syntax-e m) '#:unimplemented)
+                                      '#:unimplemented
+                                      m)))))
   (define-values (new-ht new-vtable-ht priv-ht here-ht)
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
       (define id (added-method-id added))
@@ -102,9 +106,8 @@
             (hash-ref new-vtable-ht i))
           priv-ht
           here-ht
-          (for/or ([added (in-list added-methods)])
-            (and (not (added-method-rhs added))
-                 (added-method-id added)))))
+          (for/or ([v (in-hash-values new-vtable-ht)])
+            (eq? v '#:unimplemented))))
 
 (define-syntax-parameter this-id #f)
 (define-syntax-parameter private-tables #f)
@@ -117,13 +120,44 @@
        [(head . tail)
         (cond
           [(syntax-parameter-value #'this-id)
-           => (lambda (id+dp)
-                (syntax-parse id+dp
-                  [(id . dp)
+           => (lambda (id+dp+super)
+                (syntax-parse id+dp+super
+                  [(id dp . super-id)
                    (values (wrap-static-info (datum->syntax #'id (syntax-e #'id) #'head #'head)
                                              #'#%dot-provider
                                              #'dp)
                            #'tail)]))]
+          [else
+           (raise-syntax-error #f
+                               "allowed only within methods"
+                               #'head)])]))))
+
+(define-syntax super
+  (expression-transformer
+   #'this
+   (lambda (stxs)
+     (syntax-parse stxs
+       #:datum-literals (op |.|)
+       [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
+        (cond
+          [(syntax-parameter-value #'this-id)
+           => (lambda (id+dp+super)
+                (syntax-parse id+dp+super
+                  [(id dp . super-id)
+                   (unless (syntax-e #'super-id)
+                     (raise-syntax-error #f "class has no superclass" #'head))
+                   (define super (syntax-local-value* (in-class-desc-space #'super-id) class-desc-ref))
+                   (unless super
+                     (raise-syntax-error #f "class not found" #'super-id))
+                   (define pos (hash-ref (class-desc-method-map super) (syntax-e #'method-id) #f))
+                   (unless pos
+                     (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
+                   (define impl (vector-ref (syntax-e (class-desc-method-vtable super)) (if (box? pos) (unbox pos) pos)))
+                   (when (eq? (syntax-e impl) '#:unimplemented)
+                     (raise-syntax-error #f "method is unimplemented in superclass" #'head #'method-id))
+                   (define-values (call new-tail)
+                     (parse-function-call impl (list #'id) #'(method-id args)))
+                   (values call #'tail)]))]
           [else
            (raise-syntax-error #f
                                "allowed only within methods"
@@ -199,7 +233,8 @@
                        [private-method-name ...]
                        [private-method-id ...]
                        [private-field-name ...]
-                       [private-field-desc ...])
+                       [private-field-desc ...]
+                       super-name)
                  names])
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))])
@@ -231,7 +266,8 @@
                             #:when (added-method-rhs added))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name-instance
-                                                                    new-private-tables)])
+                                                                    new-private-tables
+                                                                    super-name)])
                        #,(added-method-id added))))))))))
 
 (define-syntax (method-block stx)
@@ -239,11 +275,12 @@
     #:datum-literals (block)
     [(_ (block expr)
         name-instance
-        private-tables-id)
+        private-tables-id
+        super-name)
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
                                    (lambda (stx)
-                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj . name-instance))]
+                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-name))]
                                                              [private-tables (quote-syntax private-tables-id)])
                                          #,stx))
                                    #t)))

@@ -29,6 +29,7 @@
 
 (provide (rename-out [rhombus-class class])
          this
+         super
          extends
          internal
          constructor
@@ -181,7 +182,7 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier or 'unimplemented
+                       method-vtable   ; index -> accessor-identifier or '#:unimplemented
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        unimplemented-name)
@@ -226,6 +227,7 @@
                                                     (map added-field-predicate added-fields))]
                      [(field-annotation-str ...) (append (syntax->list #'(constructor-field-annotation-str ...))
                                                          (map added-field-annotation-str added-fields))]
+                     [super-name (and super (class-desc-id super))]
                      [((super-field-name
                         super-name-field
                         super-maybe-set-name-field!
@@ -282,7 +284,8 @@
                                             (quote-syntax private-maybe-set-name-field!)
                                             (quote-syntax private-field-static-infos)
                                             (quote-syntax private-field-argument))
-                                      ...]))
+                                      ...]
+                                     super-name))
               (build-class-struct super
                                   fields mutables final? authentic?
                                   method-map method-names method-vtable

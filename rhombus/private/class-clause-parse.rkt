@@ -131,7 +131,7 @@
                                                 (hash-ref options 'methods null)))]
               [(unimplemented id)
                (hash-set options 'methods (cons (added-method #'id
-                                                              (car (generate-temporaries #'(id)))
+                                                              '#:unimplemented
                                                               #f
                                                               'unimplemented)
                                                 (hash-ref options 'methods null)))]
