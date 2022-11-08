@@ -590,6 +590,12 @@ m.horns()
 Open Issues
 -----------
 
+Possibly, `<class>.<method>` should access a version of the method
+that expects the object as its form argument, and that version would
+check that the argument instantiates the class. The called method
+would be based on dynamic dispatch, though (not like C++'s static
+dispatch, if I remember correctly).
+
 An uncooperative custom constructor for a non-final class might return
 an instance of itself or some other subclass when called on behalf of
 the constructor for a different subclass.
@@ -607,10 +613,18 @@ to be the same. That goal seems to fundamentaly conflict with dynamic
 better to just live with a prohibiton against same-named method in
 superinterfaces.
 
+Currently, an unimplemented method has no signature. More generally,
+there's no support for checking that a method override has a signature
+that is compatible with the implementation that it replaces.
+
 Prior art
 ---------
 
 R6RS Records, especially constructor protocols.
+
+Java classes and interfaces.
+
+C++ private superclasses.
 
 Contributors
 ------------
