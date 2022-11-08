@@ -3,7 +3,8 @@
                      syntax/parse
                      "name-path-op.rkt"
                      "operator-parse.rkt")
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "parens.rkt")
 
 (begin-for-syntax
   (provide :dotted-identifier-sequence
@@ -13,15 +14,19 @@
            build-dot-identifier))
 
 (begin-for-syntax
-  (define-splicing-syntax-class :dotted-identifier-sequence
+  (define-syntax-class :op-dot
+    #:description "a dot operator"
     #:datum-literals (op |.|)
-    (pattern (~seq head-id:identifier (~seq (op |.|) tail-id:identifier) ...)))
+    (pattern (op |.|)))
+  
+  (define-splicing-syntax-class :dotted-identifier-sequence
+    (pattern (~seq head-id:identifier (~seq _::op-dot tail-id:identifier) ...)))
 
   (define-splicing-syntax-class :dotted-operator-or-identifier-sequence
-    #:datum-literals (op |.| parens group)
-    (pattern (~seq (op _)))
-    (pattern (~seq (~seq _:identifier (op |.|)) ... _:identifier))
-    (pattern (~seq (~seq _:identifier (op |.|)) ... (parens (group (op _))))))
+    #:datum-literals (group)
+    (pattern (~seq _::operator))
+    (pattern (~seq (~seq _:identifier _::op-dot) ... _:identifier))
+    (pattern (~seq (~seq _:identifier _::op-dot) ... (_::parens (group _::operator)))))
 
   (define (build-dot-symbol ids)
     (string->symbol

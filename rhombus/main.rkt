@@ -29,6 +29,7 @@
         "private/dot.rkt"
         "private/dynamic-static.rkt"
         "private/class.rkt"
+        "private/interface.rkt"
         "private/define.rkt"
         "private/value.rkt"
         "private/import.rkt"

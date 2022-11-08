@@ -54,34 +54,36 @@
      (if need-constructor-wrapper?
          (list
           #`(define make-name
-              (lambda #,(apply append (for/list ([f (in-list (append super-constructor-fields constructor-fields))]
-                                                 [kw (in-list (append super-keywords keywords))]
-                                                 [df (in-list (append super-defaults defaults))])
-                                        (let ([arg (if (syntax-e df)
-                                                       (if final?
-                                                           #`[#,f . #,df]
-                                                           #`[#,f unsafe-undefined])
-                                                       f)])
-                                          (if (keyword? (syntax-e kw))
-                                              (list kw arg)
-                                              (list arg)))))
-                (let-values #,(cond
-                                [(and super-has-defaults? (or final? (not has-defaults?)))
-                                 #`([#,super-constructor-fields
-                                     (#,(class-desc-defaults-id super) . #,super-constructor-fields)])]
-                                [(and has-defaults? (not final?))
-                                 (define fields (append super-constructor-fields constructor-fields))
-                                 #`([#,fields (name-defaults . #,fields)])]
-                                [else '()])
-                  #,(if unimplemented-name
-                        #`(raise-unimplemented-methods 'name)
-                        #`(make-all-name #,@(or (and super (class-desc-all-fields super))
-                                                (for/list ([f (in-list (if super (class-desc-fields super) null))])
-                                                  (if (identifier? (field-desc-constructor-arg f))
-                                                      (field-desc-constructor-arg f)
-                                                      (field-desc-name f))))
-                                         #,@constructor-fields
-                                         #,@(map added-field-arg-id added-fields)))))))
+              (let ([name
+                     (lambda #,(apply append (for/list ([f (in-list (append super-constructor-fields constructor-fields))]
+                                                        [kw (in-list (append super-keywords keywords))]
+                                                        [df (in-list (append super-defaults defaults))])
+                                               (let ([arg (if (syntax-e df)
+                                                              (if final?
+                                                                  #`[#,f . #,df]
+                                                                  #`[#,f unsafe-undefined])
+                                                              f)])
+                                                 (if (keyword? (syntax-e kw))
+                                                     (list kw arg)
+                                                     (list arg)))))
+                       (let-values #,(cond
+                                       [(and super-has-defaults? (or final? (not has-defaults?)))
+                                        #`([#,super-constructor-fields
+                                            (#,(class-desc-defaults-id super) . #,super-constructor-fields)])]
+                                       [(and has-defaults? (not final?))
+                                        (define fields (append super-constructor-fields constructor-fields))
+                                        #`([#,fields (name-defaults . #,fields)])]
+                                       [else '()])
+                         #,(if unimplemented-name
+                               #`(raise-unimplemented-methods 'name)
+                               #`(make-all-name #,@(or (and super (class-desc-all-fields super))
+                                                       (for/list ([f (in-list (if super (class-desc-fields super) null))])
+                                                         (if (identifier? (field-desc-constructor-arg f))
+                                                             (field-desc-constructor-arg f)
+                                                             (field-desc-name f))))
+                                                #,@constructor-fields
+                                                #,@(map added-field-arg-id added-fields)))))])
+                name)))
          null)
      (if exposed-internal-id
          (list

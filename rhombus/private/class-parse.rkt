@@ -43,9 +43,9 @@
                     class:id
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list symbol-or-id ...), includes private fields
-                    method-names  ; list of symbol or boxed symbol; plain symbol means final
+                    method-names  ; vector of symbol or boxed symbol; plain symbol means final
                     method-vtable ; syntax-object vector of accessor identifiers or #'#:unimplemented
-                    method-map    ; hash of name -> index or boxed index; the inverse of `method-names`
+                    method-map    ; hash of name -> index or boxed index; inverse of `method-names`
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
                     custom-annotation?

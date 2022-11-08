@@ -53,7 +53,16 @@ Specifying a keyword for a field causes the constructor, binding
 pattern, and annotation to expect a keyword for the corresponding
 field instead of a by-position argument or subform. Specifying a
 default-value expression causes the corresponding argument in the
-constructor to be optional.<
+constructor to be optional.
+
+The `interface` form is similar, but without fields, constructors,
+custom binding, or custom annotation.
+
+```
+interface identifier:
+  interface_clause_or_body
+  ...
+```
 
 Predefined class-clause forms:
 
@@ -65,9 +74,13 @@ class_clause := extension_decl
               | authentic
 
 extension_decl := extends identifier
+                | implements_decl
                 | final
                 | nonfinal
 
+implements_decl := implements identifier
+                 | implements: identifier ...; ...
+                
 field_decl := field identifier maybe_annotation: body; ...
             | private field identifier maybe_annotation: body; ...
 
@@ -75,6 +88,7 @@ method_decl := method method_spec
              | override method_spec
              | final method_spec
              | private method_spec
+             | unimplemented identifier
 
 method_spec := id(arg, ..) maybe_annot : body
              | id: entry_point
@@ -89,6 +103,10 @@ An `extends` clause specifies a superclass. The superclass must be
 nonfinal. The `final` and `nonfinal` clauses can specify a finality
 other than the default.
 
+An `implements` clauses specifies one or more interfaces. Interfaces
+tend to have unimplemented methods that must be implemented by a
+(sub)class before the (sub)class can be instantiated.
+
 Each `field` clause adds additional mutable fields to the class, but
 the extra fields are not included in the default constructor, etc.
 A field can be declared as `private`, which means that it can only
@@ -97,7 +115,9 @@ be accessed within methods of the class.
 Each `method`, `override`, method-shaped `final`, or method-shaped
 `final` private declaration adds a method to the class. A `method` can
 appear after `override`. An `override`, `method`, or both can appear
-after `final`. A `method` can appear after `private`.
+after `final`. A `method` can appear after `private`. An
+`unimplemented` declaration also adds a `method`, but without an
+implementation.
 
 The `constructor`, `binding` and `annotation` clause forms support
 customizing those aspects of the class. In each case, the form expects
@@ -113,25 +133,51 @@ that `identifier` also serves as a default for `make_identifier`,
 The `authentic` clause is a performance hack that disallows custodians
 and impersonators.
 
+Predefined interface-clause forms are similar, but usually simpler:
+
+```
+interface_clause := extension_decl
+                  | method_decl
+
+extension_decl := extends identifier
+                | extends: identifier ...; ...
+                
+method_decl := method method_spec
+             | override method_spec
+             | final method_spec
+             | private method_spec
+             | unimplemented identifier
+```
+
+Both class and interface names works as annotations, and the
+annotation is satisfied by an instance of the class, subclass, or (in
+the case of an interface) implementing class. A class name further
+provides an annotation constructor via `.of`, by default, but an
+interface name does not.
+
 Design
 ------
 
-The block after `class` contains a mixture of class clauses and other
-definitions and expressions. Clauses can add extra fields to the
-class, add methods, customize the constructor, and so on.
+The block after `class` or `interface` ontains a mixture of class
+clauses and other definitions and expressions. Clauses can add extra
+fields to the class, add methods to a class or interface, customize
+the constructor of a class, and so on.
 
-Definitions and expressions that appear a `class` block are evaluated
-at *class* creation time (instead of *instance* creation time, like
-someone familiar with Racket's `class` might expect). Allowing
-definitions here is necessary to support macro extensibility of
-`class` using macro-generating macros, which is a common Racket and
-Rhombus idiom. It's possible for a form within the block to be
-ambiguous as a class clause or a definition or expression. Potential
+Definitions and expressions that appear in a `class` or `interface`
+block are evaluated at *class* or *interface* creation time (instead
+of *instance* creation time, like someone familiar with Racket's
+`class` might expect). Allowing definitions here is necessary to
+support macro extensibility of `class` or `interface` using
+macro-generating macros, which is a common Racket and Rhombus idiom.
+It's possible for a form within the block to be ambiguous as a
+class/interface clause or a definition or expression. Potential
 ambiguity is resolved by ordering parse attempts: each form in the
-block is first tried as a class clause, then as a definition, and
-finally as an expression (analogous to the way that definitions and
-then experessions are tried in a Rhombus module or body blocks
-generally).
+block is first tried as a class/interface clause, then as a
+definition, and finally as an expression (analogous to the way that
+definitions and then experessions are tried in a Rhombus module or
+body blocks generally). Class-clause macros and interface-clause
+macros are defined separately, but an identifier can be bound in both
+spaces (as well as the expression space, and so on).
 
 The right-hand side of a `field` declaration is similarly evaluated
 once when the class is defined. The resulting constant is used to
@@ -145,26 +191,29 @@ or it can be written as an identifier followed by a block that
 contains an `entry_point`. The `entry_point` syntactic category
 includes `fun` with the same syntax as its expression form. When a
 method is declared with `method` or `final` without `override`, then
-the a method with the same name must not be declared in the
-superclass, if any. When a method is declared with `override`, then it
-must be declared in the superclass.
+the a method with the same name must not be declared in a superclass
+or superinterface, if any. When a method is declared with `override`,
+then it must be declared in a superclass or superinterface. (By
+"superinterface", we include interfaces implemented by a class.)
 
 Within a method, `this` refers to the object that was used for the
 method call. A class's fields and methods can be access via `this`,
-but they also can be referenced directly, including public superclass
-field and method names. When a method argument has the same name as a
-field or method, then it shadows the field or method.
+and an interface's methods can be access similarly, but they also can
+be referenced directly, including inherited field and method names.
+When a method argument has the same name as a field or method, then it
+shadows the field or method.
 
 Method and fields names must all be distinct, both within a class and
-taking into account superclass public fields and methods. A private
-field or method name is not visible outside of a class, so it is not
-required to be distinct from subclass fields and methods. All field
-and methods names can be accessed through an object with `.`, but
-private field and methods names can only be accessed statically. In
-static mode (i.e., when `use_static` is declared), then a method can
-only be used in a call form; when dynamic `.` is used to access a
-method, then it does not have to be a call, and the result of the `.`
-expression is a closure over the object.
+taking into account superclass and superinterface public fields and
+methods. A private field or method name is not visible outside of a
+class or interface, so it is not required to be distinct from subclass
+or subinterface fields and methods. All field and methods names can be
+accessed through an object with `.`, but private field and methods
+names can only be accessed statically. In static mode (i.e., when
+`use_static` is declared), then a method can only be used in a call
+form; when dynamic `.` is used to access a method, then it does not
+have to be a call, and the result of the `.` expression is a closure
+over the object.
 
 The `constructor` clause expects an immediate function in its block as
 an `entry_point`. Similarly, `binding` and `anotation` expect a
@@ -450,6 +499,41 @@ class Posn0D():
 Posn0D() === Posn0D()
 ```
 
+Interfaces:
+
+```
+interface Shape:
+  unimplemented area
+  method ten_area(): 10 * area()
+
+interface Polygon:
+  extends Shape
+  unimplemented sides
+  method has_corners(): #true
+
+interface Circle:
+  extends Shape
+  method has_sides(): #false
+
+class ApproxCircle():
+  implements: Polygon Circle
+  override area(): 33
+  override sides(): 100
+
+val a: ApproxCircle()
+
+a.area()
+(a -: Polygon).has_corners()
+(a -: Circle).has_sides()
+
+(a -: Shape).area()
+(a -: Polygon).area()
+(a -: Circle).area()
+
+a.ten_area()
+
+```
+
 Open Issues
 -----------
 
@@ -462,6 +546,12 @@ fields of the enclosing class. Moving `extends` out of the class body
 would make it easier to expose to all clause forms, but a better
 approach may be to report the information accumulated so far, which
 might not include the superclass is `extends` is later in the body.
+
+It would be nice to support implementing different interfaces that use
+the same name for a method. That goal seems to fundamentaly conflict
+with dynamic `.`; it might make sense to compromise on dynamic `.`, or
+it might be better to just live with a prohibiton against same-named
+method in superinterfaces.
 
 Prior art
 ---------

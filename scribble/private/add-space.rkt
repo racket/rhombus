@@ -16,6 +16,7 @@
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for-clause]
                      [(class_clause) 'rhombus/class-clause]
+                     [(intf_clause) 'rhombus/interface-clause]
                      [(entry_point) 'rhombus/entry-point]
                      [(#f) 'rhombus/expression]
                      [else #f]))

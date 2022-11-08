@@ -4,6 +4,7 @@
                      racket/stxparam-exptime
                      enforest/syntax-local
                      "class-parse.rkt"
+                     "interface-parse.rkt"
                      "tag.rkt"
                      "srcloc.rkt")
          racket/stxparam
@@ -19,6 +20,7 @@
          (submod "function.rkt" for-call))
 
 (provide (for-syntax build-method-map
+                     build-interface-vtable
                      build-methods
 
                      get-private-table)
@@ -28,7 +30,8 @@
 
          prop:methods
          method-ref
-         method-curried-ref)
+         method-curried-ref
+         interface-method-ref)
 
 (define-values (prop:methods prop-methods? prop-methods-ref)
   (make-struct-type-property 'methods))
@@ -40,22 +43,53 @@
 (define (method-curried-ref obj pos)
   (curry-method (method-ref obj pos) obj))
 
-(define-for-syntax (build-method-map stx added-methods super)
-  (define ht (if super
-                 (for/hasheq ([name (class-desc-method-names super)]
-                              [i (in-naturals)])
-                   (if (box? name)
-                       (values (unbox name) (cons (box i) (unbox name)))
-                       (values name (cons i name))))
-                 #hasheq()))
-  (define vtable (if super
-                     (syntax-e (class-desc-method-vtable super))
-                     '#()))
-  (define vtable-ht (for/hasheqv ([i (in-range (vector-length vtable))])
-                      (values i (let ([m (vector-ref vtable i)])
-                                  (if (eq? (syntax-e m) '#:unimplemented)
-                                      '#:unimplemented
-                                      m)))))
+(define-syntax (interface-method-ref stx)
+  (syntax-parse stx
+    [(_ ref obj pos) #`(vector-ref (ref obj) pos)]))
+
+(define-for-syntax (build-method-map stx added-methods super interfaces)
+  (define supers (if super (cons super interfaces) interfaces))
+  (define-values (super-str supers-str)
+    (cond
+      [(null? interfaces)
+       (values "superclass" "superclasses(!?)")]
+      [(not super)
+       (values "interface" "superinterfaces")]
+      [else
+       (values "class or interface" "classes or superinterfaces")]))
+
+  ;; create merged method tables from the superclass (if any) and all superinterfaces;
+  ;; we start with the superclass, if any, so the methods from its vtable stay
+  ;; in the same place in the new vtable
+  (define-values (ht         ; symbol -> (cons maybe-boxed-index id)
+                  vtable-ht) ; int -> accessor-identifier or '#:unimplemented
+    (for/fold ([ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
+      (define super-vtable (super-method-vtable super))
+      (for/fold ([ht ht] [vtable-ht vtable-ht]) ([name (super-method-names super)]
+                                                 [super-i (in-naturals)])
+        (define i (hash-count ht))
+        (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
+                          (if (eq? (syntax-e rhs) '#:unimplemented) '#:unimplemented rhs)))
+        (define-values (key val)
+          (if (box? name)
+              (values (unbox name) (cons (box i) (unbox name)))
+              (values name (cons i name))))
+        (define old-val (hash-ref ht key #f))
+        (cond
+          [old-val
+           (define old-i (car old-val))
+           (define old-rhs (hash-ref vtable-ht (if (box? old-i) (unbox old-i) old-i)))
+           (unless (if (identifier? old-rhs)
+                       (and (identifier? new-rhs)
+                            (free-identifier=? old-rhs new-rhs))
+                       (eq? old-rhs new-rhs))
+             (raise-syntax-error #f (format "method supplied by multiple ~a" supers-str) stx key))
+           (values ht vtable-ht)]
+          [else
+           (values (hash-set ht key val)
+                   (hash-set vtable-ht i new-rhs))]))))
+
+  ;; add methods for the new class/interface
   (define-values (new-ht new-vtable-ht priv-ht here-ht)
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
       (define id (added-method-id added))
@@ -69,7 +103,7 @@
               (cond
                 [(memq (added-method-mode added) '(override final-override))
                  (when (integer? pos)
-                   (raise-syntax-error #f "cannot override superclass's final method" stx id))
+                   (raise-syntax-error #f (format "cannot override ~a's final method" super-str) stx id))
                  (values (if (eq? (added-method-mode added) 'final-override)
                              (hash-set ht (syntax-e id) (cons (unbox pos) id))
                              ht)
@@ -77,11 +111,11 @@
                          priv-ht
                          new-here-ht)]
                 [else
-                 (raise-syntax-error #f "method is already in superclass" stx id)]))]
+                 (raise-syntax-error #f (format "method is already in ~a" super-str) stx id)]))]
         [else
          (cond
            [(memq (added-method-mode added) '(override final-override))
-            (raise-syntax-error #f "method is not in superclass" stx id)]
+            (raise-syntax-error #f (format "method is not in ~a" super-str) stx id)]
            [(eq? (added-method-mode added) 'private)
             (values ht
                     vtable-ht
@@ -97,17 +131,52 @@
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
                     new-here-ht)])])))
-  (values (for/hasheq ([(k pos+id) (in-hash new-ht)])
-            (values k (car pos+id)))
-          (for/hasheqv ([(s pos+id) (in-hash new-ht)])
-            (define i (car pos+id))
-            (values (if (box? i) (unbox i) i) (cdr pos+id)))
-          (for/vector ([i (in-range (hash-count new-vtable-ht))])
-            (hash-ref new-vtable-ht i))
+
+  (define method-map
+    (for/hasheq ([(k pos+id) (in-hash new-ht)])
+      (values k (car pos+id))))
+  (define method-names
+    (for/hasheqv ([(s pos+id) (in-hash new-ht)])
+      (define i (car pos+id))
+      (values (if (box? i) (unbox i) i) (cdr pos+id))))
+  (define method-vtable
+    (for/vector ([i (in-range (hash-count new-vtable-ht))])
+      (hash-ref new-vtable-ht i)))
+  (define unimplemented-name
+    (for/or ([v (in-hash-values new-vtable-ht)]
+             [i (in-naturals)])
+      (and (eq? v '#:unimplemented)
+           (hash-ref method-names i))))
+
+  (values method-map
+          method-names
+          method-vtable
           priv-ht
           here-ht
-          (for/or ([v (in-hash-values new-vtable-ht)])
-            (eq? v '#:unimplemented))))
+          unimplemented-name))
+
+(define-for-syntax (build-interface-vtable intf method-map method-vtable method-names)
+  (for/list ([maybe-boxed-name (in-vector (interface-desc-method-names intf))])
+    (define name (if (box? maybe-boxed-name) (unbox maybe-boxed-name) maybe-boxed-name))
+    (define maybe-boxed-pos (hash-ref method-map name))
+    (define pos (if (box? maybe-boxed-pos) (unbox maybe-boxed-pos) maybe-boxed-pos))
+    (vector-ref method-vtable pos)))
+  
+(define-for-syntax (super-method-vtable p)
+  (syntax-e
+   (if (class-desc? p)
+       (class-desc-method-vtable p)
+       (interface-desc-method-vtable p))))
+
+(define-for-syntax (super-method-names p)
+  (if (class-desc? p)
+      (class-desc-method-names p)
+      (interface-desc-method-names p)))
+
+(define-for-syntax (super-method-map p)
+  (if (class-desc? p)
+      (class-desc-method-map p)
+      (interface-desc-method-map p)))
 
 (define-syntax-parameter this-id #f)
 (define-syntax-parameter private-tables #f)
@@ -120,9 +189,9 @@
        [(head . tail)
         (cond
           [(syntax-parameter-value #'this-id)
-           => (lambda (id+dp+super)
-                (syntax-parse id+dp+super
-                  [(id dp . super-id)
+           => (lambda (id+dp+supers)
+                (syntax-parse id+dp+supers
+                  [(id dp . _)
                    (values (wrap-static-info (datum->syntax #'id (syntax-e #'id) #'head #'head)
                                              #'#%dot-provider
                                              #'dp)
@@ -141,18 +210,26 @@
        [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
         (cond
           [(syntax-parameter-value #'this-id)
-           => (lambda (id+dp+super)
-                (syntax-parse id+dp+super
-                  [(id dp . super-id)
-                   (unless (syntax-e #'super-id)
-                     (raise-syntax-error #f "class has no superclass" #'head))
-                   (define super (syntax-local-value* (in-class-desc-space #'super-id) class-desc-ref))
-                   (unless super
-                     (raise-syntax-error #f "class not found" #'super-id))
-                   (define pos (hash-ref (class-desc-method-map super) (syntax-e #'method-id) #f))
-                   (unless pos
+           => (lambda (id+dp+supers)
+                (syntax-parse id+dp+supers
+                  [(id dp)
+                   (raise-syntax-error #f "class has no superclass" #'head)]
+                  [(id dp . super-ids)
+                   (define super+pos
+                     (for/or ([super-id (in-list (syntax->list #'super-ids))])
+                       (define super (syntax-local-value* (in-class-desc-space super-id)
+                                                          (lambda (v)
+                                                            (or (class-desc-ref v)
+                                                                (interface-desc-ref v)))))
+                       (unless super
+                         (raise-syntax-error #f "class or interface not found" super-id))
+                       (define pos (hash-ref (super-method-map super) (syntax-e #'method-id) #f))
+                       (and pos (cons super pos))))
+                   (unless super+pos
                      (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
-                   (define impl (vector-ref (syntax-e (class-desc-method-vtable super)) (if (box? pos) (unbox pos) pos)))
+                   (define super (car super+pos))
+                   (define pos (cdr super+pos))
+                   (define impl (vector-ref (super-method-vtable super) (if (box? pos) (unbox pos) pos)))
                    (when (eq? (syntax-e impl) '#:unimplemented)
                      (raise-syntax-error #f "method is unimplemented in superclass" #'head #'method-id))
                    (define-values (call new-tail)
@@ -223,21 +300,32 @@
                             "method must be called"
                             #'head)]))))
 
-(define-for-syntax (build-methods added-methods names)
+(define-for-syntax (build-methods added-methods method-map method-names method-private
+                                  names)
   (with-syntax ([(name name-instance
                        [field-name ...]
                        [name-field ...]
                        [maybe-set-name-field! ...]
-                       [method-name ...]
-                       [method-index/id ...]
-                       [private-method-name ...]
-                       [private-method-id ...]
                        [private-field-name ...]
                        [private-field-desc ...]
-                       super-name)
+                       [super-name ...])
                  names])
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
-                                      (datum->syntax #'name (syntax-e id) id id))])
+                                      (datum->syntax #'name (syntax-e id) id id))]
+                  [((method-name method-index/id) ...) (for/list ([i (in-range (hash-count method-map))])
+                                                         (define m-name (let ([n (hash-ref method-names i)])
+                                                                          (if (syntax? n)
+                                                                              (syntax-e n)
+                                                                              n)))
+                                                         (define id/boxed (hash-ref method-map m-name))
+                                                         (list (datum->syntax #'name m-name)
+                                                               (if (box? id/boxed)
+                                                                   i
+                                                                   id/boxed)))]
+                  [((private-method-name private-method-id) ...) (for/list ([m-name (in-list (sort (hash-keys method-private)
+                                                                                                   symbol<?))])
+                                                                   (list (datum->syntax #'name m-name)
+                                                                         (hash-ref method-private m-name)))])
       (list
        #`(define-values #,(for/list ([added (in-list added-methods)]
                                      #:when (added-method-rhs added))
@@ -267,7 +355,7 @@
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name-instance
                                                                     new-private-tables
-                                                                    super-name)])
+                                                                    [super-name ...])])
                        #,(added-method-id added))))))))))
 
 (define-syntax (method-block stx)
@@ -276,11 +364,11 @@
     [(_ (block expr)
         name-instance
         private-tables-id
-        super-name)
+        super-names)
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
-                                   (lambda (stx)
-                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-name))]
+                                   (lambda (stx)<
+                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-names))]
                                                              [private-tables (quote-syntax private-tables-id)])
                                          #,stx))
                                    #t)))

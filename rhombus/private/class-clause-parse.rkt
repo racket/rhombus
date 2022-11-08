@@ -6,6 +6,7 @@
                      "name-path-op.rkt"
                      "class-parse.rkt")
          "class-clause.rkt"
+         "interface-clause.rkt"
          (only-in "binding.rkt" raise-binding-failure)
          (submod "annotation.rkt" for-class)
          "parens.rkt"
@@ -17,6 +18,7 @@
                      parse-options
                      wrap-class-clause)
          extends
+         implements
          internal
          constructor
          binding
@@ -29,6 +31,18 @@
          override
          private
          unimplemented)
+
+(module+ for-interface
+  (provide final-override))
+
+(begin-for-syntax
+  (struct class+interface-clause-transformer (cls int)
+    #:property prop:class-clause-transformer (lambda (self) (class+interface-clause-transformer-cls self))
+    #:property prop:interface-clause-transformer (lambda (self) (class+interface-clause-transformer-int self)))
+  (define (make-class+interface-clause-transformer proc [int-proc proc])
+    (class+interface-clause-transformer
+     (class-clause-transformer proc)
+     (interface-clause-transformer int-proc))))
 
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
@@ -78,42 +92,45 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends constructor final nonfinal authentic binding annotation
+              #:literals (extends implements constructor final nonfinal authentic binding annotation
                                   method private override unimplemented internal
                                   final-override)
               [(extends id)
                (when (hash-has-key? options 'extends)
-                 (raise-syntax-error #f "redundant superclass clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
                (hash-set options 'extends #'id)]
+              [(implements id ...)
+               (hash-set options 'implements (append (syntax->list #'(id ...))
+                                                     (hash-ref options 'implements '())))]
               [(internal id)
                (when (hash-has-key? options 'internal)
-                 (raise-syntax-error #f "redundant internal-name clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
                (hash-set options 'internal #'id)]
               [(constructor id block)
                (when (hash-has-key? options 'constructor-id)
-                 (raise-syntax-error #f "redundant constructor clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
                (hash-set (hash-set options 'constructor-id #'id)
                          'constructor-rhs
                          (extract-rhs #'block))]
               [(binding core-name block)
                (when (hash-has-key? options 'binding)
-                 (raise-syntax-error #f "redundant binding clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
                (hash-set options 'binding (list #'core-name (extract-rhs #'block)))]
               [(annotation core-name block)
                (when (hash-has-key? options 'annotation)
-                 (raise-syntax-error #f "redundant annotation clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation (list #'core-name (extract-rhs #'block)))]
               [(final)
                (when (hash-has-key? options 'final?)
-                 (raise-syntax-error #f "redundant finality clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
                (hash-set options 'final? #t)]
               [(nonfinal)
                (when (hash-has-key? options 'final?)
-                 (raise-syntax-error #f "redundant finality clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
                (hash-set options 'final? #f)]
               [(authentic)
                (when (hash-has-key? options 'authentic?)
-                 (raise-syntax-error #f "redundant authenticity clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple authenticity clause" orig-stx clause))
                (hash-set options 'authentic? #t)]
               [(field id rhs-id static-infos predicate annotation-str mode)
                (hash-set options 'fields (cons (added-field #'id
@@ -142,14 +159,40 @@
 (define-for-syntax (wrap-class-clause parsed)
   #`[(quote-syntax (rhombus-class #,parsed) #:local)]) ; `quote-syntax` + `rhombus-class` wrapper => clause
 
+(define-for-syntax (parse-multiple-names stx)
+  (define lines
+    (syntax-parse stx
+      [(_ (tag::block (group form ...) ...))
+       (syntax->list #'((form ...) ...))]
+      [(_ form ...)
+       (list #'(form ...))]))
+  (apply append
+         (for/list ([line (in-list lines)])
+           (let loop ([line line])
+             (syntax-parse line
+               [() null]
+               [(~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref))
+                (cons #'id.name (loop #'id.tail))])))))
+
 (define-syntax extends
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
+   ;; class clause
    (lambda (stx)
      (syntax-parse stx
        [(_ (~seq form ...))
         #:with (~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref)) #'(form ...)
         #:with () #'id.tail
-        (wrap-class-clause #'(extends id.name))]))))
+        (wrap-class-clause #'(extends id.name))]))
+   ;; interface clause
+   (lambda (stx)
+     (define names (parse-multiple-names stx))
+     (wrap-class-clause #`(extends . #,names)))))
+
+(define-syntax implements
+  (class-clause-transformer
+   (lambda (stx)
+     (define names (parse-multiple-names stx))
+     (wrap-class-clause #`(implements . #,names)))))
 
 (define-syntax internal
   (class-clause-transformer
@@ -259,7 +302,8 @@
              #:attr form (wrap-class-clause #`(#,mode id rhs)))))
 
 (define-syntax final
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
+   ;; class clause
    (lambda (stx)
      (syntax-parse stx
        #:literals (override method)
@@ -267,17 +311,25 @@
        [(_ override method (~var m (:method #'final-override))) #'m.form]
        [(_ method (~var m (:method #'final))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]
+       [(_ (~var m (:method #'final))) #'m.form]))
+   ;; interface clause
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (override method)
+       [(_ override method (~var m (:method #'final-override))) #'m.form]
+       [(_ method (~var m (:method #'final))) #'m.form]
+       [(_ override (~var m (:method #'final-override))) #'m.form]
        [(_ (~var m (:method #'final))) #'m.form]))))
 (define-syntax final-override 'placeholder)
 
 (define-syntax method
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ (~var m (:method #'method))) #'m.form]))))
 
 (define-syntax override
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
@@ -285,19 +337,25 @@
        [(_ (~var m (:method #'override))) #'m.form]))))
 
 (define-syntax private
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
+   ;; class clause
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
+       [(_ (~var m (:method #'private))) #'m.form]))
+   ;; interface clause
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (method)
+       [(_ method (~var m (:method #'private))) #'m.form]
        [(_ (~var m (:method #'private))) #'m.form]))))
 
 (define-syntax unimplemented
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
        [(_ method name:identifier) (wrap-class-clause #'(unimplemented name))]
        [(_ name:identifier) (wrap-class-clause #'(unimplemented name))]))))
-

@@ -7,7 +7,8 @@
                      "name-path-op.rkt"
                      "introducer.rkt"
                      "tag.rkt"
-                     "class-parse.rkt")
+                     "class-parse.rkt"
+                     "interface-parse.rkt")
          racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"
@@ -31,6 +32,7 @@
          this
          super
          extends
+         implements
          internal
          constructor
          binding
@@ -49,7 +51,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        #:datum-literals (group block)
-       [(_ name-seq::dotted-identifier-sequence ((~datum parens) field::field ...)
+       [(_ name-seq::dotted-identifier-sequence (tag::parens field::field ...)
            options::options-block)
         #:with full-name::dotted-identifier #'name-seq
         #:with name #'full-name.name
@@ -108,6 +110,7 @@
        (define super (and parent-name
                           (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
                               (raise-syntax-error #f "not a class name" stxes parent-name))))
+       (define interfaces (interface-names->interfaces stxes (hash-ref options 'implements '())))
        (define final? (hash-ref options 'final? (not super)))
        (define authentic? (hash-ref options 'authentic? #f))
        (define-values (internal-id exposed-internal-id constructor-id binding-id annotation-id)
@@ -185,8 +188,8 @@
                        method-vtable   ; index -> accessor-identifier or '#:unimplemented
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
-                       unimplemented-name)
-         (build-method-map stxes added-methods super))
+                       unimplemented-name) ; #f or identifier
+         (build-method-map stxes added-methods super interfaces))
 
        (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
        (check-consistent-unimmplemented stxes final? unimplemented-name)
@@ -237,21 +240,7 @@
                       (if super
                           (class-desc-fields super)
                           '())]
-                     [(super-field-keyword ...) super-keywords]
-                     [((method-name method-index/id) ...) (for/list ([i (in-range (hash-count method-map))])
-                                                            (define m-name (let ([n (hash-ref method-names i)])
-                                                                             (if (syntax? n)
-                                                                                 (syntax-e n)
-                                                                                 n)))
-                                                            (define id/boxed (hash-ref method-map m-name))
-                                                            (list (datum->syntax #'name m-name)
-                                                                  (if (box? id/boxed)
-                                                                      i
-                                                                      id/boxed)))]
-                     [((private-method-name private-method-id) ...) (for/list ([m-name (in-list (sort (hash-keys method-private)
-                                                                                                      symbol<?))])
-                                                                      (list (datum->syntax #'name m-name)
-                                                                            (hash-ref method-private m-name)))])
+                     [(super-field-keyword ...) super-keywords])
          (with-syntax ([constructor-name (if constructor-id
                                              (temporary "~a-ctr")
                                              #'make-name)]
@@ -266,18 +255,15 @@
                        [((public-name-field ...) (private-name-field ...)) (partition-fields #'(name-field ...))]
                        [((public-maybe-set-name-field! ...) (private-maybe-set-name-field! ...)) (partition-fields #'(maybe-set-name-field! ...))]
                        [((public-field-static-infos ...) (private-field-static-infos ...)) (partition-fields #'(field-static-infos ...))]
-                       [((public-field-argument ...) (private-field-argument ...)) (partition-fields #'(field-argument ...))])
+                       [((public-field-argument ...) (private-field-argument ...)) (partition-fields #'(field-argument ...))]
+                       [(super-name* ...) (if super #'(super-name) '())])
            (define defns
              (append
-              (build-methods added-methods
+              (build-methods added-methods method-map method-names method-private
                              #'(name name-instance
                                      [field-name ... super-field-name ...]
                                      [name-field ... super-name-field ...]
                                      [maybe-set-name-field! ... super-maybe-set-name-field! ...]
-                                     [method-name ...]
-                                     [method-index/id ...]
-                                     [private-method-name ...]
-                                     [private-method-id ...]
                                      [private-field-name ...]
                                      [(list 'private-field-name
                                             (quote-syntax private-name-field)
@@ -285,11 +271,12 @@
                                             (quote-syntax private-field-static-infos)
                                             (quote-syntax private-field-argument))
                                       ...]
-                                     super-name))
+                                     [super-name* ...]))
               (build-class-struct super
                                   fields mutables final? authentic?
                                   method-map method-names method-vtable
                                   unimplemented-name
+                                  interfaces
                                   #'(name class:name make-all-name name?
                                           [public-field-name ...]
                                           [field-name ...]
@@ -356,6 +343,7 @@
                                        fields mutables final? authentic?
                                        method-map method-names method-vtable
                                        unimplemented-name
+                                       interfaces
                                        names)
   (with-syntax ([(name class:name make-all-name name?
                        [public-field-name ...]
@@ -415,7 +403,13 @@
                                                             unimplemented-name)
                                                         '()
                                                         (list #`(cons prop:methods
-                                                                      (vector #,@(vector->list method-vtable))))))
+                                                                      (vector #,@(vector->list method-vtable)))))
+                                                 #,@(if unimplemented-name
+                                                        null
+                                                        (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces))])
+                                                          #`(cons #,(interface-desc-interface:id intf)
+                                                                  (vector #,@(build-interface-vtable intf
+                                                                                                     method-map method-vtable method-names))))))
                                            #f #f
                                            '(immutable-field-index ...)
                                            #,(build-guard-expr fields

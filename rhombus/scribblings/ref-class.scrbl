@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Classes}
+@title{Classes and Interfaces}
 
 @doc(
   ~literal: :: extends binding field,
@@ -44,6 +44,7 @@
     $$(@rhombus(private, ~class_clause)) $method_decl
     $$(@rhombus(unimplemented, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
+    $$(@rhombus(implements, ~class_clause)) $implements_decl
     $$(@rhombus(final, ~class_clause))
     $$(@rhombus(nonfinal, ~class_clause))
     $$(@rhombus(internal, ~class_clause)) $identifier
@@ -142,6 +143,16 @@
  extended class must not be @tech{final}. At most one
  @rhombus(class_clause) can have @rhombus(extends, ~class_clause).
 
+ When a @rhombus(class_clause) is an @rhombus(implements, ~class_clause)
+ form, the new class is created as an implemented of the named
+ interfaces. Like a superclass, an interface can supply method
+ implementations (that can be overridden) and have unimplemented methods,
+ but an interface does not have fields; see @rhombus(interface) for more
+ information. A @rhombus(class_clause) can have any number of
+ @rhombus(implements, ~class_clause) clauses. Any rule that applies to
+ the superinterface of an interface also applies to the implemented
+ interfaces of class, as well as any superinterface of those interfaces.
+
  When a @rhombus(class_clause) is @rhombus(final, ~class_clause), then
  the new class is @deftech{final}, which means that it cannot have
  subclasses. When a @rhombus(class_clause) is
@@ -226,11 +237,80 @@
 }
 
 @doc(
+  ~literal: :: extends binding field,
+  defn.macro 'interface $identifier_path',
+  defn.macro 'interface $identifier_path:
+                $interface_clause_or_body
+                ...',
+
+  grammar identifier_path:
+    $identifier
+    $identifier_path . $identifier,
+
+  grammar class_clause_or_body:
+    $interface_clause
+    $body,
+
+  grammar interface_clause:
+    $$(@rhombus(method, ~intf_clause)) $method_decl
+    $$(@rhombus(override, ~intf_clause)) $method_decl
+    $$(@rhombus(final, ~intf_clause)) $method_decl
+    $$(@rhombus(private, ~intf_clause)) $method_decl
+    $$(@rhombus(unimplemented, ~intf_clause)) $method_decl
+    $$(@rhombus(extends, ~intf_clause)) $extends_decl
+    $other_interface_clause
+
+){
+
+ Similar to @rhombus(class) for defining classes, but defines an
+ interface, which has no fields but can have multiple superinterfaces.
+
+ The body of an @rhombus(interface) form has @deftech{interface clauses}
+ that are similar to @tech{class clauses}, but declared separately and
+ sometimes with different syntax. For example,
+ @rhombus(extends, ~intf_clause) as an interface clause supports multiple
+ superinterface names instead of just one, and
+ @rhombus(extends, ~intf_clause) can appear multiple times in an
+ @rhombus(interface) body.
+
+ Typically, an interface declares methods with
+ @rhombus(unimplemented, ~intf_clause) to be implemented by classes that
+ implement the interface. However, an interface can defined methods
+ implementations that are inherited by classes that implement the
+ interface and subinterfaces that extend the interface. An interface can
+ also have private helper methods, but they are useful only when an
+ interface also has implemented public methods that refer to them.
+
+ When a class or interface extends or implements multiple interfaces
+ that provide a method with the same name, the method implementation must
+ be the same for all interfaces. That is, the method must be
+ unimplemented, or the implementation must reside in a shared
+ superinterface of the interfaces.
+
+}
+
+@doc(
   class_clause.macro 'extends $identifier_path',
+  interface_clause.macro 'extends $identifier_path',
+  interface_clause.macro 'extends: $identifier_path ...; ...',
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that is a subclass of the one named by @rhombus(identifier_path).
+ that is a subclass of the one named by @rhombus(identifier_path), and an
+ @tech{interface clause} recognized by @rhombus(interface) to define an
+ interface that is a subinterface of the ones named by the
+ @rhombus(identifier_path)s.
+
+}
+
+@doc(
+  class_clause.macro 'implements $identifier_path',
+  class_clause.macro 'implements: $identifier_path ...; ...',
+){
+
+ A @tech{class clause} recognized by @rhombus(class) to define a class
+ that implements subclasses named by @rhombus(identifier_path)s. See
+ @rhombus(class) and @rhombus(interface).
 
 }
 
@@ -241,22 +321,29 @@
   class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_decl',
   class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_decl',
   class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_decl',
+  interface_clause.macro 'final $method_decl',
+  interface_clause.macro 'final $$(@rhombus(method, ~intf_clause)) $method_decl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $method_decl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_decl',
 ){
 
  As a @tech{class clause} by itself, @rhombus(nonfinal, ~class_clause)
  and @rhombus(final, ~class_clause) are recognized by @rhombus(class) to
  determine whether the defined class is @tech{final}.
 
- The @rhombus(final, ~class_clause) form can instead be followed by a
- method declaration, where @rhombus(method_decl) is the same as for
- @rhombus(method, ~class_clause). In that case the method is final, even
- if the class if not. A final method cannot be overridden in subclaseses.
- Using @rhombus(final, ~class_clause) with an immediate declaration is
- the same as @rhombus(final, ~class_clause) followed by ,
+ The @rhombus(final, ~class_clause) form as a @tech{class clause} or
+ tech{interface clause} can instead be followed by a method declaration,
+ where @rhombus(method_decl) is the same as for
+ @rhombus(method, ~class_clause). In that case, the method is final, even
+ if the enclosing class is not (and an interface is never final). A final
+ method cannot be overridden in subclaseses or subinterfaces. Using
+ @rhombus(final, ~class_clause) with an immediate declaration is the same
+ as @rhombus(final, ~class_clause) followed by ,
  @rhombus(method, ~class_clause). Including
  @rhombus(override, ~class_clause) means that the method must be defined
- in the superclass, while it must not be defined in the superclass if
- @rhombus(override, ~class_clause) is not used.
+ in the superclass or a superinterface, while it must not be defined in
+ the superclass or a superinterface if @rhombus(override, ~class_clause)
+ is not used.
 
 }
 
@@ -273,6 +360,9 @@
   class_clause.macro 'method $method_decl',
   class_clause.macro 'override $method_decl',
   class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_decl',
+  interface_clause.macro 'method $method_decl',
+  interface_clause.macro 'override $method_decl',
+  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_decl',
 
   grammar method_decl:
     $identifier $fun_form
@@ -283,9 +373,10 @@
     ($binding, ..., $rest, ...) $maybe_res_ann: $body; ...
 ){
 
- These @tech{class clauses} are recognized by @rhombus(class) to declare
- methods, along with the method forms of @rhombus(final, ~class_clause)
- and @rhombus(private, ~class_clause). The combination
+ These @tech{class clauses} and @tech{interface clauses} are recognized
+ by @rhombus(class) and @rhombus(interface) to declare methods, along
+ with the method forms of @rhombus(final, ~class_clause) and
+ @rhombus(private, ~class_clause). The combination
  @rhombus(override, ~class_clause) followed by
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
@@ -295,13 +386,13 @@
  block containing an @tech{entry point}.
 
  In the body of a method, the special expression form @rhombus(this)
- refers to the object whose method was called. Fields and methods can be
- accessed using @rhombus(this) and @rhombus(.), but they can also be used
- directly. Using a field or method name directly is the same as using
- @rhombus(this) and @rhombus(.) in static mode (which implies that a
- direct reference to a method name must be a call of the method). An
- argument that has the same name as a field or method shadow the field or
- method.
+ refers to the object whose method was called. Fields (in the case of a
+ class) and methods can be accessed using @rhombus(this) and @rhombus(.),
+ but they can also be used directly. Using a field or method name
+ directly is the same as using @rhombus(this) and @rhombus(.) in static
+ mode (which implies that a direct reference to a method name must be a
+ call of the method). An argument that has the same name as a field or
+ method shadow the field or method.
 
 }
 
@@ -309,14 +400,17 @@
   class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl',
   class_clause.macro 'private $method_decl',
   class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_decl',
+  interface_clause.macro 'private $method_decl',
+  interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_decl',
 ){
 
- A @tech{class clause} that declares a private field or method. See
- @rhombus(class) and @rhombus(method, ~class_clause) for more
- information on field and method declarations. A
- @rhombus(private, ~class_clause) without @rhombus(field, ~class_clause)
- or @rhombus(method, ~class_clause) is equivalent to
- @rhombus(private, ~class_clause) followed by @rhombus(method, ~class_clause).
+ A @tech{class clause} or @tech{interface clause} that declares a
+ private field or method. See @rhombus(class) and
+ @rhombus(method, ~class_clause) for more information on field and method
+ declarations. A @rhombus(private, ~class_clause) without
+ @rhombus(field, ~class_clause) or @rhombus(method, ~class_clause) is
+ equivalent to @rhombus(private, ~class_clause) followed by
+ @rhombus(method, ~class_clause).
 
  Private fields can be accessed only statically, and only through the
  enclosing class's annotation (not a subclass annotation).
@@ -326,10 +420,13 @@
 @doc(
   class_clause.macro 'unimplemented $identifier',
   class_clause.macro 'unimplemented $$(@rhombus(method, ~class_clause)) $identifier',
+  interface_clause.macro 'unimplemented $identifier',
+  interface_clause.macro 'unimplemented $$(@rhombus(method, ~intf_clause)) $identifier',
 ){
 
- A @tech{class clause} that declares a method without an implementation.
- When a class has an unimplemented method, the constructor for the class
+ A @tech{class clause} or @tech{interface clause} that declares a method
+ without an implementation. When a class has an unimplemented method,
+ either declared directly or inherited, the constructor for the class
  raises an exception. The method must be overridden with a
  @rhombus(override, ~class_clause) class in a subclass, and then the
  subclass can be instantiated (as long as it has no other unimplemented
@@ -352,10 +449,10 @@
 
  The @rhombus(super) form can only be used within a method to call
  another method (possibly with the same name) that is statically known to
- be implemented in a superclass of the enclosing class. The
- @rhombus(super) call invokes the superclass's implementation, even if a
- method named @rhombus(identifier) is overridden in a class or a
- subclass.
+ be implemented in a superclass or superinterface of the enclosing class.
+ The @rhombus(super) call invokes the superclass's or superinterface's
+ implementation, even if a method named @rhombus(identifier) is
+ overridden in a class, interface, or a subclass.
 
 }
 
@@ -449,8 +546,9 @@
   class_clause.macro 'authentic'
 ){
 
- When a @rhombus(class_clause) is @rhombus(authentic, ~class_clause),
- then the new class cannot be chaperoned or impersonated. At most one
- @rhombus(class_clause) can have @rhombus(authentic, ~class_clause).
+ When a @tech{class clause} is @rhombus(authentic, ~class_clause), then
+ the new class cannot be chaperoned or impersonated. At most one class
+ clause in a @rhombus(class) form can be
+ @rhombus(authentic, ~class_clause).
 
 }
