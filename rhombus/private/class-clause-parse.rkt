@@ -85,6 +85,13 @@
           (raise-syntax-error #f
                               "expected a single entry point in block body"
                               b)]))
+     (define (add-implements options extra-key ids-stx)
+       (define l (reverse (syntax->list ids-stx)))
+       (define new-options
+         (hash-set options 'implements (append l (hash-ref options 'implements '()))))
+       (if extra-key
+           (hash-set new-options extra-key (append l (hash-ref new-options extra-key '())))
+           new-options))
      (let loop ([clauses clauses] [options #hasheq()])
        (cond
          [(null? clauses) options]
@@ -92,7 +99,8 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends implements constructor final nonfinal authentic binding annotation
+              #:literals (extends implements private-implements
+                                  constructor final nonfinal authentic binding annotation
                                   method private override unimplemented internal
                                   final-override)
               [(extends id)
@@ -100,8 +108,9 @@
                  (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
                (hash-set options 'extends #'id)]
               [(implements id ...)
-               (hash-set options 'implements (append (syntax->list #'(id ...))
-                                                     (hash-ref options 'implements '())))]
+               (add-implements options 'public-implements #'(id ...))]
+              [(private-implements id ...)
+               (add-implements options 'private-implements #'(id ...))]
               [(internal id)
                (when (hash-has-key? options 'internal)
                  (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
@@ -140,7 +149,7 @@
                                                             #'annotation-str
                                                             (syntax-e #'mode))
                                                (hash-ref options 'fields null)))]
-              [((~and tag (~or method override private final final-override)) id rhs)
+              [((~and tag (~or method override private final final-override private-override)) id rhs)
                (hash-set options 'methods (cons (added-method #'id
                                                               (car (generate-temporaries #'(id)))
                                                               #'rhs
@@ -195,7 +204,7 @@
      (wrap-class-clause #`(implements . #,names)))))
 
 (define-syntax internal
-  (class-clause-transformer
+  (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ name:identifier)
@@ -341,8 +350,12 @@
    ;; class clause
    (lambda (stx)
      (syntax-parse stx
-       #:literals (method)
+       #:literals (implements method override)
+       [(_ (~and tag implements) form ...)
+        (wrap-class-clause #`(private-implements . #,(parse-multiple-names #'(tag form ...))))]
        [(_ method (~var m (:method #'private))) #'m.form]
+       [(_ override (~var m (:method #'private-override))) #'m.form]
+       [(_ override method (~var m (:method #'private-override))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method #'private))) #'m.form]))
    ;; interface clause
@@ -351,6 +364,7 @@
        #:literals (method)
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ (~var m (:method #'private))) #'m.form]))))
+(define-syntax private-implements 'placeholder)
 
 (define-syntax unimplemented
   (make-class+interface-clause-transformer

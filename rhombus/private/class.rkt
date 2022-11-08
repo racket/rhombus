@@ -110,7 +110,10 @@
        (define super (and parent-name
                           (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
                               (raise-syntax-error #f "not a class name" stxes parent-name))))
-       (define interfaces (interface-names->interfaces stxes (hash-ref options 'implements '())))
+       (define interfaces (interface-names->interfaces stxes (reverse (hash-ref options 'implements '()))))
+       (define private-interfaces (interface-set-diff
+                                   (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
+                                   (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
        (define final? (hash-ref options 'final? (not super)))
        (define authentic? (hash-ref options 'authentic? #f))
        (define-values (internal-id exposed-internal-id constructor-id binding-id annotation-id)
@@ -189,7 +192,7 @@
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        unimplemented-name) ; #f or identifier
-         (build-method-map stxes added-methods super interfaces))
+         (build-method-map stxes added-methods super interfaces private-interfaces))
 
        (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
        (check-consistent-unimmplemented stxes final? unimplemented-name)
@@ -274,9 +277,9 @@
                                      [super-name* ...]))
               (build-class-struct super
                                   fields mutables final? authentic?
-                                  method-map method-names method-vtable
+                                  method-map method-names method-vtable method-private
                                   unimplemented-name
-                                  interfaces
+                                  interfaces private-interfaces
                                   #'(name class:name make-all-name name?
                                           [public-field-name ...]
                                           [field-name ...]
@@ -341,9 +344,9 @@
 
 (define-for-syntax (build-class-struct super
                                        fields mutables final? authentic?
-                                       method-map method-names method-vtable
+                                       method-map method-names method-vtable method-private
                                        unimplemented-name
-                                       interfaces
+                                       interfaces private-interfaces
                                        names)
   (with-syntax ([(name class:name make-all-name name?
                        [public-field-name ...]
@@ -406,10 +409,12 @@
                                                                       (vector #,@(vector->list method-vtable)))))
                                                  #,@(if unimplemented-name
                                                         null
-                                                        (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces))])
-                                                          #`(cons #,(interface-desc-interface:id intf)
+                                                        (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
+                                                                                                                         private-interfaces))])
+                                                          #`(cons #,(interface-desc-prop:id intf)
                                                                   (vector #,@(build-interface-vtable intf
-                                                                                                     method-map method-vtable method-names))))))
+                                                                                                     method-map method-vtable method-names
+                                                                                                     method-private))))))
                                            #f #f
                                            '(immutable-field-index ...)
                                            #,(build-guard-expr fields

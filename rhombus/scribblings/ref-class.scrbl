@@ -45,6 +45,7 @@
     $$(@rhombus(unimplemented, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(implements, ~class_clause)) $implements_decl
+    $$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause)) $implements_decl
     $$(@rhombus(final, ~class_clause))
     $$(@rhombus(nonfinal, ~class_clause))
     $$(@rhombus(internal, ~class_clause)) $identifier
@@ -144,13 +145,17 @@
  @rhombus(class_clause) can have @rhombus(extends, ~class_clause).
 
  When a @rhombus(class_clause) is an @rhombus(implements, ~class_clause)
- form, the new class is created as an implemented of the named
+ form, the new class is created as an implementation of the named
  interfaces. Like a superclass, an interface can supply method
  implementations (that can be overridden) and have unimplemented methods,
  but an interface does not have fields; see @rhombus(interface) for more
- information. A @rhombus(class_clause) can have any number of
- @rhombus(implements, ~class_clause) clauses. Any rule that applies to
- the superinterface of an interface also applies to the implemented
+ information. Prefixing @rhombus(implements, ~class_clause) with
+ @rhombus(private, ~class_clause) makes the interface privately
+ implemented; see @rhombus(interface) for information on privately
+ implementing an interface. A @rhombus(class_clause) can have any number
+ of @rhombus(implements, ~class_clause) clauses (with or without
+ @rhombus(private, ~class_clause)). Any rule that applies to the
+ superinterface of an interface also applies to the implemented
  interfaces of class, as well as any superinterface of those interfaces.
 
  When a @rhombus(class_clause) is @rhombus(final, ~class_clause), then
@@ -258,6 +263,7 @@
     $$(@rhombus(private, ~intf_clause)) $method_decl
     $$(@rhombus(unimplemented, ~intf_clause)) $method_decl
     $$(@rhombus(extends, ~intf_clause)) $extends_decl
+    $$(@rhombus(internal, ~intf_clause)) $identifier
     $other_interface_clause
 
 ){
@@ -273,6 +279,11 @@
  @rhombus(extends, ~intf_clause) can appear multiple times in an
  @rhombus(interface) body.
 
+ Interfaces cannot be instantiated. They are implemented by classes via
+ the @rhombus(implements, ~class_clause) form. When a class implements an
+ interface (not privately), it has all methods of the interface, and its
+ instances satisfy the interface as an annotation.
+
  Typically, an interface declares methods with
  @rhombus(unimplemented, ~intf_clause) to be implemented by classes that
  implement the interface. However, an interface can defined methods
@@ -281,11 +292,28 @@
  also have private helper methods, but they are useful only when an
  interface also has implemented public methods that refer to them.
 
+ When a class implements an interface privately using
+ @rhombus($$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause))),
+ its instances do not satisfy the interface as an annotation. If the
+ privately implemented interface has an internal name declared with
+ @rhombus(internal, ~intf_clause), however, instances satisfy the
+ internal name as an annotation. Methods of a privately implemented
+ instance can be called only with static @rhombus(.) via the
+ internal-name annotation. As long as a method belongs to only privately
+ implemented interfaces, it can be overridden with
+ @rhombus($$(@rhombus(private, ~class_clause)) $$(@rhombus(override, ~class_clause))),
+ otherwise it is overidden normally. If a class declares the
+ implementation of a interface both normally and privately, then the
+ interface is implemented normally. Unimplemented private methods must be
+ implemented immediately in the class that privately implements the
+ associated interface.
+
  When a class or interface extends or implements multiple interfaces
  that provide a method with the same name, the method implementation must
  be the same for all interfaces. That is, the method must be
- unimplemented, or the implementation must reside in a shared
- superinterface of the interfaces.
+ unimplemented, the implementation must reside in a shared superinterface
+ of the interfaces, or the method must be overridden in the implementing
+ class. Overriding applies to same-named methods of all interfaces.
 
 }
 
@@ -304,7 +332,7 @@
 }
 
 @doc(
-  class_clause.macro 'implements $identifier_path',
+  class_clause.macro 'implements $identifier_path ...',
   class_clause.macro 'implements: $identifier_path ...; ...',
 ){
 
@@ -397,23 +425,33 @@
 }
 
 @doc(
+  class_clause.macro 'private $$(@rhombus(implements, ~class_clause)) $identifier_path ...',
+  class_clause.macro 'private $$(@rhombus(implements, ~class_clause)): $identifier_path ...; ...',
   class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl',
   class_clause.macro 'private $method_decl',
   class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_decl',
+  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $method_decl',
+  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_decl',
   interface_clause.macro 'private $method_decl',
   interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_decl',
 ){
 
- A @tech{class clause} or @tech{interface clause} that declares a
- private field or method. See @rhombus(class) and
- @rhombus(method, ~class_clause) for more information on field and method
- declarations. A @rhombus(private, ~class_clause) without
- @rhombus(field, ~class_clause) or @rhombus(method, ~class_clause) is
+ A @tech{class clause} that declares interfaces that are privately
+ implemented (see @rhombus(interface)), a @tech{class clause} that
+ declares a private field, or a @tech{class clause} or @tech{interface
+  clause} that declares a private method. See @rhombus(class),
+ @rhombus(interface), and @rhombus(method, ~class_clause) for more
+ information on field and method declarations. A
+ @rhombus(private, ~class_clause) without
+ @rhombus(implements, ~class_clause), @rhombus(field, ~class_clause),
+ @rhombus(method, ~class_clause), or @rhombus(override, ~class_clause) is
  equivalent to @rhombus(private, ~class_clause) followed by
  @rhombus(method, ~class_clause).
 
- Private fields can be accessed only statically, and only through the
- enclosing class's annotation (not a subclass annotation).
+ Private fields can be accessed only within the body of the enclsong
+ @rhombus(class), only statically, and only through the enclosing class's
+ annotation (not a subclass annotation) when referenced via the
+ @rhombus(.) operator.
 
 }
 
@@ -457,12 +495,14 @@
 }
 
 @doc(  
-  class_clause.macro 'internal $identifier'
+  class_clause.macro 'internal $identifier',
+  interface_clause.macro 'internal $identifier'
 ){
 
- A @tech{class clause} recognized by @rhombus(class) to bind
- @rhombus(identifier) to the class's representation. See @rhombus(class)
- for more information.
+ A @tech{class clause} or @tech{interface clause} recognized by
+ @rhombus(class) and @rhombus(interface) to bind @rhombus(identifier) to
+ the class or interface's representation. See @rhombus(class) and
+ @rhombus(interface) for more information.
 
 }
 

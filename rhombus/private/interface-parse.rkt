@@ -7,11 +7,13 @@
 (provide (struct-out interface-desc)
          interface-desc-ref
          interface-names->interfaces
+         interface-set-diff
          close-interfaces-over-superinterfaces)
 
 (struct interface-desc (id
+                        internal-id
                         super-ids
-                        interface:id
+                        prop:id
                         ref-id
                         method-names  ; same as `class-desc`
                         method-vtable ; same as `class-desc`
@@ -30,16 +32,45 @@
       [(hash-ref ht (car intfs) #f) (loop ht (cdr intfs))]
       [else (cons (car intfs) (loop (hash-set ht (car intfs) #t) (cdr intfs)))])))
 
-(define (close-interfaces-over-superinterfaces interfaces)
-  (let loop ([seen #hasheq()] [ints interfaces])
+(define (interface-set-diff l1 l2)
+  (define s2 (for/hasheq ([intf (in-list l2)]) (values intf #t)))
+  (for/hasheq ([intf (in-list l1)]
+               #:unless (hash-ref s2 intf #f))
+    (values intf #t)))
+
+(define (close-interfaces-over-superinterfaces interfaces private-interfaces)
+  (let loop ([seen #hasheq()]
+             [priv-seen #hasheq()]
+             [int+priv?s (for/list ([intf (in-list interfaces)])
+                           (cons intf (hash-ref private-interfaces intf #f)))])
     (cond
-      [(null? ints) null]
-      ((hash-ref seen (car ints) #f) (loop seen (cdr ints)))
+      [(null? int+priv?s)
+       (append (for/list ([intf (in-hash-keys seen)])
+                 intf)
+               ;; for privately implemented interfaces, return the internal
+               ;; interface, if it exists
+               (for/list ([intf (in-hash-keys priv-seen)]
+                          #:do [(define int-id (interface-desc-internal-id intf))]
+                          #:when int-id)
+                 (or (syntax-local-value* (in-class-desc-space int-id) interface-desc-ref)
+                     (raise-syntax-error #f "could not find internal interface" int-id))))]
+      [(hash-ref seen (caar int+priv?s) #f)
+       (loop seen priv-seen (cdr int+priv?s))]
+      [(and (hash-ref priv-seen (caar int+priv?s) #f)
+            (cdar int+priv?s))
+       (loop seen priv-seen (cdr int+priv?s))]
       [else
-       (define intf (car ints))
+       (define intf+priv? (car int+priv?s))
+       (define intf (car intf+priv?))
+       (define priv? (cdr intf+priv?))
        (define supers (for/list ([id (in-list (syntax->list (interface-desc-super-ids intf)))])
-                        (or (syntax-local-value* (in-class-desc-space id) interface-desc-ref)
-                            (error "missing interface" id))))
-       (cons intf
-             (loop (hash-set seen intf #t)
-                   (append supers (cdr ints))))])))
+                        (cons (or (syntax-local-value* (in-class-desc-space id) interface-desc-ref)
+                                  (error "missing interface" id))
+                              priv?)))
+       (if priv?
+           (loop seen
+                 (hash-set priv-seen intf #t)
+                 (append supers (cdr int+priv?s)))
+           (loop (hash-set seen intf #t)
+                 (hash-remove priv-seen intf)
+                 (append supers (cdr int+priv?s))))])))

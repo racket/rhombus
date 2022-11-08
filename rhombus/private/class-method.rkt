@@ -47,7 +47,7 @@
   (syntax-parse stx
     [(_ ref obj pos) #`(vector-ref (ref obj) pos)]))
 
-(define-for-syntax (build-method-map stx added-methods super interfaces)
+(define-for-syntax (build-method-map stx added-methods super interfaces private-interfaces)
   (define supers (if super (cons super interfaces) interfaces))
   (define-values (super-str supers-str)
     (cond
@@ -61,12 +61,15 @@
   ;; create merged method tables from the superclass (if any) and all superinterfaces;
   ;; we start with the superclass, if any, so the methods from its vtable stay
   ;; in the same place in the new vtable
-  (define-values (ht         ; symbol -> (cons maybe-boxed-index id)
-                  vtable-ht) ; int -> accessor-identifier or '#:unimplemented
-    (for/fold ([ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
+  (define-values (ht            ; symbol -> (cons maybe-boxed-index id)
+                  super-priv-ht ; symbol -> identifier, implies not in `ht`
+                  vtable-ht)    ; int -> accessor-identifier or '#:unimplemented
+    (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
       (define super-vtable (super-method-vtable super))
-      (for/fold ([ht ht] [vtable-ht vtable-ht]) ([name (super-method-names super)]
-                                                 [super-i (in-naturals)])
+      (define private? (hash-ref private-interfaces super #f))
+      (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht])
+                ([name (super-method-names super)]
+                 [super-i (in-naturals)])
         (define i (hash-count ht))
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:unimplemented) '#:unimplemented rhs)))
@@ -74,19 +77,34 @@
           (if (box? name)
               (values (unbox name) (cons (box i) (unbox name)))
               (values name (cons i name))))
-        (define old-val (hash-ref ht key #f))
+        (define old-val (or (hash-ref ht key #f)
+                            (hash-ref priv-ht key #f)))
         (cond
           [old-val
-           (define old-i (car old-val))
-           (define old-rhs (hash-ref vtable-ht (if (box? old-i) (unbox old-i) old-i)))
-           (unless (if (identifier? old-rhs)
-                       (and (identifier? new-rhs)
-                            (free-identifier=? old-rhs new-rhs))
-                       (eq? old-rhs new-rhs))
-             (raise-syntax-error #f (format "method supplied by multiple ~a" supers-str) stx key))
-           (values ht vtable-ht)]
+           (define old-rhs (if (pair? old-val)
+                               (let ([old-i (car old-val)])
+                                 (hash-ref vtable-ht (if (box? old-i) (unbox old-i) old-i)))
+                               old-val))
+           (unless (or (if (identifier? old-rhs)
+                           (and (identifier? new-rhs)
+                                (free-identifier=? old-rhs new-rhs))
+                           (eq? old-rhs new-rhs))
+                       (for/or ([added (in-list added-methods)])
+                         (and (eq? key (syntax-e (added-method-id added)))
+                              (memq (added-method-mode added) '(override final-override private-override))))) 
+             (raise-syntax-error #f (format "method supplied by multiple ~a and not overridden" supers-str) stx key))
+           (if (eq? (not private?) (pair? old-val))
+               (values ht priv-ht vtable-ht)
+               (values (hash-set vtable-ht key val)
+                       (hash-remove priv-ht key)
+                       (hash-set vtable-ht i new-rhs)))]
+          [private?
+           (values ht
+                   (hash-set priv-ht key new-rhs)
+                   vtable-ht)]
           [else
            (values (hash-set ht key val)
+                   priv-ht
                    (hash-set vtable-ht i new-rhs))]))))
 
   ;; add methods for the new class/interface
@@ -110,8 +128,22 @@
                          (hash-set vtable-ht (unbox pos) (added-method-rhs-id added))
                          priv-ht
                          new-here-ht)]
+                [(memq (added-method-mode added) '(private-override))
+                 (raise-syntax-error #f (format "method is not in private ~a" super-str) stx id)]
                 [else
                  (raise-syntax-error #f (format "method is already in ~a" super-str) stx id)]))]
+        [(hash-ref super-priv-ht (syntax-e id) #f)
+         => (lambda (rhs)
+              (cond
+                [(eq? (added-method-mode added) 'private-override)
+                 (values ht
+                         vtable-ht
+                         (hash-set priv-ht (syntax-e id) (added-method-rhs-id added))
+                         new-here-ht)]
+                [(memq (added-method-mode added) '(override final-override))
+                 (raise-syntax-error #f (format "method is in private ~a" super-str) stx id)]
+                [else
+                 (raise-syntax-error #f (format "method is already in private ~a" super-str) stx id)]))]
         [else
          (cond
            [(memq (added-method-mode added) '(override final-override))
@@ -131,6 +163,11 @@
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
                     new-here-ht)])])))
+
+  (for ([(name rhs) (in-hash super-priv-ht)])
+    (when (eq? rhs '#:unimplemented)
+      (unless (hash-ref priv-ht name #f)
+        (raise-syntax-error #f (format "method from private ~a must be overridden" super-str) stx name))))
 
   (define method-map
     (for/hasheq ([(k pos+id) (in-hash new-ht)])
@@ -155,13 +192,17 @@
           here-ht
           unimplemented-name))
 
-(define-for-syntax (build-interface-vtable intf method-map method-vtable method-names)
+(define-for-syntax (build-interface-vtable intf method-map method-vtable method-names method-private)
   (for/list ([maybe-boxed-name (in-vector (interface-desc-method-names intf))])
     (define name (if (box? maybe-boxed-name) (unbox maybe-boxed-name) maybe-boxed-name))
-    (define maybe-boxed-pos (hash-ref method-map name))
-    (define pos (if (box? maybe-boxed-pos) (unbox maybe-boxed-pos) maybe-boxed-pos))
-    (vector-ref method-vtable pos)))
-  
+    (cond
+      [(hash-ref method-private name #f)
+       => (lambda (id) id)]
+      [else
+       (define maybe-boxed-pos (hash-ref method-map name))
+       (define pos (if (box? maybe-boxed-pos) (unbox maybe-boxed-pos) maybe-boxed-pos))
+       (vector-ref method-vtable pos)])))
+
 (define-for-syntax (super-method-vtable p)
   (syntax-e
    (if (class-desc? p)

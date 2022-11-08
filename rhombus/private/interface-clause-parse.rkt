@@ -10,6 +10,8 @@
 
 (provide (for-syntax parse-options))
 
+;; interface clause forms are defined in "class-clause-parse.rkt"
+
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
     #:context orig-stx
@@ -29,7 +31,11 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends method private override unimplemented final final-override)
+              #:literals (extends method private override unimplemented final final-override internal)
+              [(internal id)
+               (when (hash-has-key? options 'internal)
+                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
+               (hash-set options 'internal #'id)]
               [(extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]

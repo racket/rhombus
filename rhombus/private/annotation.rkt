@@ -81,7 +81,7 @@
 
   (define (raise-not-a-annotation id)
     (raise-syntax-error #f
-                        "not bound as a annotation"
+                        "not bound as an annotation"
                         id))
 
   (define (check-annotation-result stx proc)

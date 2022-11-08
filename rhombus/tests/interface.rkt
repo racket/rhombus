@@ -55,6 +55,20 @@ check:
     implements Cowboy
   "method supplied by multiple superinterfaces"
 
+// conflict resolved
+check:
+  interface Shape:
+    method draw(): "circle"
+  interface Cowboy:
+    method draw(): "bang"
+  class LoneRanger():
+    implements Shape
+    implements Cowboy
+    override draw(): "bullseye"
+  val l: LoneRanger()
+  [l.draw(), (l -: Shape).draw(), (l -: Cowboy).draw()]
+  ["bullseye", "bullseye", "bullseye"]
+
 // diamond
 check:
   interface Shape:
@@ -98,3 +112,86 @@ check:
     implements Circle
   Oval().draw()
   "circle shape"
+
+// private interface implementation
+check:
+  interface Adder:
+    internal _Adder
+    unimplemented total
+  class Sum(x):
+    private implements Adder
+    private override total(): x
+  val s: Sum(20)
+  [s is_a Adder,
+   s is_a _Adder,
+   (s -: _Adder).total()]
+  [#false, #true, 20]
+
+check:
+  interface Adder:
+    unimplemented total
+  class Sum(x):
+    private implements Adder
+    private override total(): x
+  Sum(20) is_a Adder
+  #false
+
+check:
+  ~eval_exn
+  begin:
+    interface Adder:
+      unimplemented total
+    class Sum(x):
+      private implements Adder
+      private override total(): x
+    Sum(20).total
+  "no such field"
+
+check:
+  ~eval_exn
+  begin:
+    use_static
+    interface Adder:
+      unimplemented total
+    class Sum(x):
+      private implements Adder
+      private override total(): x
+    Sum(20).total
+  "no such public field or method"
+
+// implement an interface both privately and publicly => public
+check:
+  interface Adder:
+    unimplemented total
+  class Sum(x):
+    private implements Adder
+    implements Adder
+    override total(): x
+  [Sum(20) is_a Adder,
+   Sum(21).total()]
+  [#true, 21]
+
+// overlap of private and public is public
+check:
+  interface Stool:
+    internal _Stool
+    unimplemented legs
+    unimplemented seat
+  interface Cow:
+    unimplemented legs
+    unimplemented horns
+  class MilkShed():
+    private implements Stool
+    implements Cow
+    override legs(): 4
+    override horns(): 2
+    private override seat(): 1
+  val m: MilkShed()
+  [m is_a Stool,
+   m is_a _Stool,
+   m is_a Cow,
+   m.legs(),
+   m.horns(),
+   (m -: Stool).seat()]   
+  [#false, #true, #true,
+   4, 2, 1]

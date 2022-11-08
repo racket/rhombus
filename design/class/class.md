@@ -33,7 +33,8 @@ cover in a complete design:
 Summary
 -------
 
-The syntax of `class` is
+The syntax of `class` is (approximately; see Scribble-based docs for
+more precise grammars):
 
 ```
 class identifier(field_spec, ...):
@@ -80,6 +81,8 @@ extension_decl := extends identifier
 
 implements_decl := implements identifier
                  | implements: identifier ...; ...
+                 | private implements identifier
+                 | private implements: identifier ...; ...
                 
 field_decl := field identifier maybe_annotation: body; ...
             | private field identifier maybe_annotation: body; ...
@@ -105,7 +108,10 @@ other than the default.
 
 An `implements` clauses specifies one or more interfaces. Interfaces
 tend to have unimplemented methods that must be implemented by a
-(sub)class before the (sub)class can be instantiated.
+(sub)class before the (sub)class can be instantiated. The combinatio
+`private implements` implements an interface privately, which can
+communicate to the creator of an interface in combination with
+`internal`, but does not necessarily expose the implemented methods.
 
 Each `field` clause adds additional mutable fields to the class, but
 the extra fields are not included in the default constructor, etc.
@@ -116,7 +122,7 @@ Each `method`, `override`, method-shaped `final`, or method-shaped
 `final` private declaration adds a method to the class. A `method` can
 appear after `override`. An `override`, `method`, or both can appear
 after `final`. A `method` can appear after `private`. An
-`unimplemented` declaration also adds a `method`, but without an
+`unimplemented` declaration also adds a method, but without an
 implementation.
 
 The `constructor`, `binding` and `annotation` clause forms support
@@ -138,6 +144,7 @@ Predefined interface-clause forms are similar, but usually simpler:
 ```
 interface_clause := extension_decl
                   | method_decl
+                  | internal identifier
 
 extension_decl := extends identifier
                 | extends: identifier ...; ...
@@ -148,6 +155,11 @@ method_decl := method method_spec
              | private method_spec
              | unimplemented identifier
 ```
+
+If `internal` is present in `interface`, then it binds the associated
+`identifier` to the representation in the same context as the
+`interface` definition, and it can be used to recognize private
+implementations of the interface.
 
 Both class and interface names works as annotations, and the
 annotation is satisfied by an instance of the class, subclass, or (in
@@ -207,13 +219,25 @@ Method and fields names must all be distinct, both within a class and
 taking into account superclass and superinterface public fields and
 methods. A private field or method name is not visible outside of a
 class or interface, so it is not required to be distinct from subclass
-or subinterface fields and methods. All field and methods names can be
-accessed through an object with `.`, but private field and methods
-names can only be accessed statically. In static mode (i.e., when
-`use_static` is declared), then a method can only be used in a call
-form; when dynamic `.` is used to access a method, then it does not
-have to be a call, and the result of the `.` expression is a closure
-over the object.
+or subinterface fields and methods. Method names inherited from
+multiple implemented interfaces must all be implemented the same way,
+either unimplemented, implemented in the same originating interface,
+or overridden in the implementing class. All field and methods names
+can be accessed through an object with `.`, but private field and
+methods names can only be accessed statically. In static mode (i.e.,
+when `use_static` is declared), then a method can only be used in a
+call form; when dynamic `.` is used to access a method, then it does
+not have to be a call, and the result of the `.` expression is a
+closure over the object.
+
+When a class implements an interface privately, the private methods
+are overridden with `private override` (and no other use of `private`
+combined with `override` makes sense). If an interface is declared to
+be implemented both privately and normally (perhaps as a
+superinterface of a normally implemented interface), the interface is
+implemented normally. Indvidual method names of a privately
+implemented interface may overlap with methods of a normally
+implemented interface, in which case those methods are public.
 
 The `constructor` clause expects an immediate function in its block as
 an `entry_point`. Similarly, `binding` and `anotation` expect a
@@ -534,6 +558,35 @@ a.ten_area()
 
 ```
 
+Overlap of public and privately implemented interfaces:
+
+```
+interface Stool:
+  internal _Stool
+  unimplemented legs
+  unimplemented seat
+
+interface Cow:
+  unimplemented legs
+  unimplemented horns
+
+class MilkShed():
+  private implements Stool
+  implements Cow
+  override legs(): 4
+  override horns(): 2
+  private override seat(): 1
+
+val m: MilkShed()
+
+!(m is_a Stool)
+m is_a _Stool
+m is_a Cow
+m.legs()
+m.horns()
+(m -: Stool).seat()
+```
+
 Open Issues
 -----------
 
@@ -548,10 +601,11 @@ approach may be to report the information accumulated so far, which
 might not include the superclass is `extends` is later in the body.
 
 It would be nice to support implementing different interfaces that use
-the same name for a method. That goal seems to fundamentaly conflict
-with dynamic `.`; it might make sense to compromise on dynamic `.`, or
-it might be better to just live with a prohibiton against same-named
-method in superinterfaces.
+the same name for a method without forcing the method implementations
+to be the same. That goal seems to fundamentaly conflict with dynamic
+`.`; it might make sense to compromise on dynamic `.`, or it might be
+better to just live with a prohibiton against same-named method in
+superinterfaces.
 
 Prior art
 ---------
