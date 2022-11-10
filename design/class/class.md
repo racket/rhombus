@@ -199,18 +199,23 @@ in a `field` clause.
 
 A `class` or `interface` body can contain `export` clauses, because
 the class or interface also serves as a namespace. Exoprted names must
-be distinct from fields, whcih are implicitly exported from a class.
+be distinct from fields and methods, which are implicitly exported
+from a class. A field name is exported from a class as an accessor for
+the field. A method name is exported from a class as a procedure that
+expects an instance of the class followed by arguments to the object's
+methods.
 
-Clauses like `method` expect an immediate function. It can be written
-like `fun` (but with `method` or similar form name in place of `fun`),
-or it can be written as an identifier followed by a block that
-contains an `entry_point`. The `entry_point` syntactic category
-includes `fun` with the same syntax as its expression form. When a
-method is declared with `method` or `final` without `override`, then
-the a method with the same name must not be declared in a superclass
-or superinterface, if any. When a method is declared with `override`,
-then it must be declared in a superclass or superinterface. (By
-"superinterface", we include interfaces implemented by a class.)
+Clauses like `method` expect an immediate function. A `method` clause
+can be written like `fun` (but with `method` or similar form name in
+place of `fun`), or it can be written as an identifier followed by a
+block that contains an `entry_point`. The `entry_point` syntactic
+category includes `fun` with the same syntax as its expression form.
+When a method is declared with `method` or `final` without `override`,
+then the a method with the same name must not be declared in a
+superclass or superinterface, if any. When a method is declared with
+`override`, then it must be declared in a superclass or
+superinterface. (By "superinterface", we include interfaces
+implemented by a class.)
 
 Within a method, `this` refers to the object that was used for the
 method call. A class's fields and methods can be access via `this`,
@@ -293,6 +298,7 @@ val p: Posn(1, 2)
 p.x
 
 Posn(1, 2).x
+Posn.x(p)
 
 fun dist(p :: Posn):
   return p.x + p.y
@@ -318,6 +324,9 @@ val p: Posn3D(1, 2, 3)
 p.mdist()
 p.is_in_2D()
 p.is_close()
+
+Posn.mdist(p)
+Posn3D.is_in_2D(p)
 ```
 
 Private fields:
@@ -334,9 +343,10 @@ val p: Posn(1, 2)
 p.color("blue")
 val p2: Posn(3, 4)
 p2.color(~like: p)
+Posn.color(p2, ~like: p)
 ```
 
-Keyword arguments:
+Keyword constructor arguments:
 
 ```
 class Posn(~x, ~y)
@@ -594,12 +604,6 @@ m.horns()
 Open Issues
 -----------
 
-Possibly, `<class>.<method>` should access a version of the method
-that expects the object as its form argument, and that version would
-check that the argument instantiates the class. The called method
-would be based on dynamic dispatch, though (not like C++'s static
-dispatch, if I remember correctly).
-
 An uncooperative custom constructor for a non-final class might return
 an instance of itself or some other subclass when called on behalf of
 the constructor for a different subclass.
@@ -619,7 +623,10 @@ superinterfaces.
 
 Currently, an unimplemented method has no signature. More generally,
 there's no support for checking that a method override has a signature
-that is compatible with the implementation that it replaces.
+that is compatible with the implementation that it replaces. Along
+those lines, static information about the result of a method is not
+propagated to a method-call site (even for a final method or final
+class, currently).
 
 Expansion order in the body of a `class` form limits the places where
 the class being defined can be referenced. For example, this works:
@@ -632,8 +639,8 @@ class Posn(x, y):
 Posn.get_origin()
 ```
 
-However, neither `origin` nor `get_orign` work when written as
-follows:
+However, neither `origin` nor `get_orign` (with a `Posn` result
+annotation) works when written as follows:
 
 ```
 class Posn(x, y):

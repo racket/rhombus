@@ -42,6 +42,7 @@
                     id
                     super-id
                     class:id
+                    ref-id
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list symbol-or-id ...), includes private fields
                     method-names  ; vector of symbol or boxed symbol; plain symbol means final
@@ -222,7 +223,7 @@
                                                f)]
       [else #f])))
 
-(define (check-exports-distinct stxes exports-stx fields)
+(define (check-exports-distinct stxes exports-stx fields method-map)
   (define exports (for/list ([ex (in-list exports-stx)])
                     (syntax-parse ex
                       [(id ext-id) #'ext-id]
@@ -230,7 +231,12 @@
   (define ht (for/hasheq ([field (in-list fields)])
                (values (syntax-e field) #t)))
   (for ([ex (in-list exports)])
-    (when (hash-ref ht (syntax-e ex) #f)
+    (define name (syntax-e ex))
+    (when (hash-ref ht name #f)
       (raise-syntax-error #f
                           "exported name conflicts with field name"
+                          ex))
+    (when (hash-ref method-map name #f)
+      (raise-syntax-error #f
+                          "exported name conflicts with method name"
                           ex))))

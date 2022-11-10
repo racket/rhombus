@@ -19,28 +19,96 @@
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling))
 
-(define-for-syntax (build-class-dot-handling names)
-  (with-syntax ([(name constructor-name name-instance
+(define-for-syntax (build-class-dot-handling method-map method-vtable final? names)
+  (with-syntax ([(name constructor-name name-instance name-ref
                        [field-name ...]
                        [name-field ...]
                        [ex ...])
                  names])
-    (list
-     #'(define-name-root name
-         #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
-         #:fields ([field-name name-field] ... ex ...))
-     #'(define-dot-provider-syntax name-instance
-         (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))
+    (define-values (method-names method-impl-ids method-defns)
+      (method-static-entries method-map method-vtable #'name-ref final?))
+    (with-syntax ([(method-name ...) method-names]
+                  [(method-id ...) method-impl-ids])
+      (append
+       method-defns
+       (list
+        #'(define-name-root name
+            #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
+            #:fields ([field-name name-field]
+                      ...
+                      [method-name method-id]
+                      ...
+                      ex ...))
+        #'(define-dot-provider-syntax name-instance
+            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))))
 
-(define-for-syntax (build-interface-dot-handling names)
-  (with-syntax ([(name name-instance
+(define-for-syntax (build-interface-dot-handling method-map method-vtable names)
+  (with-syntax ([(name name-instance name-ref
                        [ex ...])
                  names])
-    (list
-     #'(define-name-root name
-         #:fields (ex ...))
-     #'(define-dot-provider-syntax name-instance
-         (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))
+    (define-values (method-names method-impl-ids method-defns)
+      (method-static-entries method-map method-vtable #'name-ref #f))
+    (with-syntax ([(method-name ...) method-names]
+                  [(method-id ...) method-impl-ids])
+      (append
+       method-defns
+       (list
+        #'(define-name-root name
+            #:fields ([method-name method-id]
+                      ...
+                      ex ...))
+        #'(define-dot-provider-syntax name-instance
+            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))))
+
+(define-for-syntax (method-static-entries method-map method-vtable name-ref-id final?)
+  (for/fold ([names '()] [ids '()] [defns '()])
+            ([(name idx) (in-hash method-map)])
+    (cond
+      [(and (box? idx)
+            (not final?))
+       (define proc-id (car (generate-temporaries (list name))))
+       (define stx-id (car (generate-temporaries (list name))))
+       (values (cons name names)
+               (cons stx-id ids)
+               (list* #`(define #,proc-id
+                          (make-method-accessor '#,name #,name-ref-id #,(unbox idx)))
+                      #`(define-syntax #,stx-id
+                          (make-method-accessor-transformer (quote-syntax #,stx-id)
+                                                            (quote-syntax #,name-ref-id)
+                                                            #,(unbox idx)
+                                                            (quote-syntax #,proc-id)))
+                      defns))]
+      [else
+       (let ([idx (if (box? idx) (unbox idx) idx)])
+         (values (cons name names)
+                 (cons (vector-ref method-vtable idx) ids)
+                 defns))])))
+
+(define (make-method-accessor name ref idx)
+  (procedure-rename
+   (make-keyword-procedure
+    (lambda (kws kw-args obj . args)
+      (keyword-apply (method-ref ref obj idx) kws kw-args obj args))
+    (lambda (obj . args)
+      (apply (method-ref ref obj idx) obj args)))
+   name))
+
+(define-for-syntax (make-method-accessor-transformer id name-ref-id idx proc-id)
+  (expression-transformer
+   id
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (op)
+       [(_ (~and args (tag::parens self arg ...)) . tail)
+        (define obj-id #'this)
+        (define rator #`(method-ref #,name-ref-id #,obj-id #,idx))
+        (define-values (call new-tail)
+          (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))))
+        (values #`(let ([#,obj-id (rhombus-expression self)])
+                    #,call)
+                #'tail)]
+       [(_ . tail)
+        (values proc-id #'tail)]))))
 
 (define-for-syntax (class-expression-transformer id make-id)
   (expression-transformer
@@ -58,6 +126,11 @@
   (if (class-desc? desc)
       (class-desc-method-map desc)
       (interface-desc-method-map desc)))
+
+(define-for-syntax (desc-ref-id desc)
+  (if (class-desc? desc)
+      (class-desc-ref-id desc)
+      (interface-desc-ref-id desc)))
 
 ;; dot provider for a class instance used before a `.`
 (define-for-syntax ((make-handle-class-instance-dot name) form1 dot field-id
@@ -124,8 +197,7 @@
        (define rator
          (cond
            [(identifier? pos/id) pos/id]
-           [(class-desc? desc) #`(method-ref #,obj-id #,pos/id)]
-           [else #`(interface-method-ref #,(interface-desc-ref-id desc) #,obj-id #,pos/id)]))
+           [else #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id)]))
        (define-values (call-stx empty-tail)
          (parse-function-call rator (list obj-id) #`(#,obj-id #,args)))
        (success #`(let ([#,obj-id #,form1])
@@ -140,7 +212,7 @@
          [(identifier? pos/id)
           (success #`(curry-method #,pos/id #,form1) new-tail)]
          [else
-          (success #`(method-curried-ref #,form1 #,pos/id) new-tail)])]))
+          (success #`(method-curried-ref #,(desc-ref-id desc) #,form1 #,pos/id) new-tail)])]))
   (cond
     [(and (class-desc? desc)
           (for/or ([field+acc (in-list (class-desc-fields desc))])

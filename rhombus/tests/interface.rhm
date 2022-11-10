@@ -36,12 +36,16 @@ check:
    (a -: Polygon).area(),
    (a -: Circle).area(),
 
-   a.ten_area()]
+   a.ten_area(),
+
+   Shape.area(a),
+   Circle.area(a)]
 
   [33, 100, #true, #false,
    #true, #false,
    33, 33, 33,
-   330]
+   330,
+   33, 33]
 
 // conflict
 check:

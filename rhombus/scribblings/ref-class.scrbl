@@ -76,22 +76,24 @@
   matches an instance of the class where the fields match the
   corresponding patterns;},
 
- @item{a @tech{namespace} to access exported local bindings as well as
-  accessor functions
-  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(field,~var))), which
-  by default includes a @rhombus(field,~var) for every field in the class,
-  whether listed as a @rhombus(field_spec) in parentheses or added by a
-  @rhombus(field, ~class_clause) clause.}
+ @item{a @tech{namespace} to access exported bindings as well as a
+  function
+  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(method,~var))) and a
+  field accessor
+  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(field,~var))) for each
+  non-@rhombus(private, ~class_clause) method and field in the class
+  (including inherited methods and fields).}
 
 )
 
- Fields and methods of a class can be accessed from an object using
- @rhombus(.), but fields and methods declared as
- @rhombus(private, ~class_clause) can only be accessed by @rhombus(.)
- within methods of the class. In static mode (see @rhombus(use_static)),
- a method must be called like a function; in dynamic mode, a method
- accessed from an object closes over the object. Private fields and
- methods can be accessed with @rhombus(.) only statically.
+ Fields and methods of a class can be accessed from an object (as
+ opposed to just a class) using @rhombus(.), but fields and methods
+ declared as @rhombus(private, ~class_clause) can only be accessed by
+ @rhombus(.) within methods of the class. In static mode (see
+ @rhombus(use_static)), a method must be called like a function; in
+ dynamic mode, a method accessed from an object closes over the object.
+ Private fields and methods can be accessed with @rhombus(.) only
+ statically.
 
  A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
  implies that the default constructor expects the corresponding argument
@@ -120,8 +122,9 @@
  the same time as the @rhombus(class) form is evaluated (not when an
  instance is created), and definitions are scoped to the block for
  potential use by class clauses. Local definitions can be exported, but
- exported names must be distinct from all non-private field names (which
- are automatically exported from the class in its role as a namespace).
+ exported names must be distinct from all non-private field and method
+ names (which are automatically exported from the class in its role as a
+ namespace).
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
  then an additional field is added to the class, but the additional field
@@ -202,6 +205,16 @@
  @rhombus(constructor, ~class_clause), @rhombus(binding, ~class_clause),
  and @rhombus(annotation, ~class_clause) for more information on those
  forms.
+
+ When a method procedure is accessed from a class (as a namespace) via
+ @rhombus(.), the procedure expects an extra by-position argument that
+ must be an instance of the class the extra argument is supplied before
+ all other arguments. A field accessor accessed frmo a class (as a
+ namespace) via @rhombus(.) similarly takes an instance of the class.
+ Even when a method is accessed via its class instead of an object, if
+ the method and class are not @tech{final}, the called method is
+ determined by the object and may be from a subclass that overrides the
+ method.
  
  Each field and method name must be distinct from all other field and
  method names, whether from a parenthesized @rhombus(field_spec), from a

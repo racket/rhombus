@@ -321,8 +321,10 @@ check:
     override a(): [super.a()]
     override c(): [super.b()]
   val p: Posn3D(1, 2, 3)
-  [p.a(), p.b(), p.c()]
-  [[1], 2, [2]]
+  [p.a(), p.b(), p.c(),
+   Posn.a(p), Posn.b(p), Posn.c(p)]
+  [[1], 2, [2],
+   [1], 2, [2]]
 
 check:
   ~eval_exn
@@ -333,3 +335,33 @@ check:
     extends Posn
     override m(): super.m()
   "method is unimplemented in superclass"
+
+check:
+  class Posn(x, y):
+    nonfinal
+    method a(): 1
+    method b(): 2
+    method c(): 3
+  class Posn3D(z):
+    extends Posn
+    final
+    override a(): [super.a()]
+    override c(): [super.b()]
+  val p: Posn3D(1, 2, 3)
+  [Posn.a(p), Posn.b(p), Posn.c(p),
+   Posn3D.a(p), Posn3D.b(p), Posn3D.c(p)]
+  [[1], 2, [2],
+   [1], 2, [2]]
+
+check:
+  class Posn(x, y):
+    method a(): 1
+  Posn.a is_a Integer
+  #false
+
+check:
+  ~exn
+  class Posn(x, y):
+    method a(): 1
+  Posn.a(0)
+  "not an instance"

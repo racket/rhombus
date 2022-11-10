@@ -17,7 +17,8 @@
          (submod "dot.rkt" for-dot-provider)
          "assign.rkt"
          "parens.rkt"
-         (submod "function.rkt" for-call))
+         (submod "function.rkt" for-call)
+         "realm.rkt")
 
 (provide (for-syntax build-method-map
                      build-interface-vtable
@@ -29,23 +30,24 @@
          super
 
          prop:methods
+         prop-methods-ref
          method-ref
          method-curried-ref
-         interface-method-ref)
+
+         raise-not-an-instance)
 
 (define-values (prop:methods prop-methods? prop-methods-ref)
   (make-struct-type-property 'methods))
 
-(define (method-ref obj pos)
-  (define vtable (prop-methods-ref obj #f))
-  (vector-ref vtable pos))
-
-(define (method-curried-ref obj pos)
-  (curry-method (method-ref obj pos) obj))
-
-(define-syntax (interface-method-ref stx)
+(define-syntax (method-ref stx)
   (syntax-parse stx
     [(_ ref obj pos) #`(vector-ref (ref obj) pos)]))
+
+(define (method-curried-ref ref obj pos)
+  (curry-method (method-ref ref obj pos) obj))
+
+(define (raise-not-an-instance name v)
+  (raise-argument-error* name rhombus-realm "not an instance for method call" v))
 
 (define-for-syntax (build-method-map stx added-methods super interfaces private-interfaces)
   (define supers (if super (cons super interfaces) interfaces))
@@ -343,7 +345,7 @@
 
 (define-for-syntax (build-methods added-methods method-map method-names method-private
                                   names)
-  (with-syntax ([(name name-instance
+  (with-syntax ([(name name-instance name?
                        [field-name ...]
                        [name-field ...]
                        [maybe-set-name-field! ...]
@@ -394,7 +396,7 @@
               #,@(for/list ([added (in-list added-methods)]
                             #:when (added-method-rhs added))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
-                                                                    name-instance
+                                                                    name name-instance name?
                                                                     new-private-tables
                                                                     [super-name ...])])
                        #,(added-method-id added))))))))))
@@ -403,15 +405,18 @@
   (syntax-parse stx
     #:datum-literals (block)
     [(_ (block expr)
-        name-instance
+        name name-instance name?
         private-tables-id
         super-names)
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
-                                   (lambda (stx)<
+                                   (lambda (stx)
                                      #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-names))]
                                                              [private-tables (quote-syntax private-tables-id)])
-                                         #,stx))
+                                         ;; This check might be redundant, depending on how the method was called:
+                                         (unless (name? this-obj) (raise-not-an-instance 'name this-obj))
+                                         (let ()
+                                           #,stx)))
                                    #t)))
      #'expr
      #'e.parsed]))

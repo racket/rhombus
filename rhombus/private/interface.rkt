@@ -10,7 +10,8 @@
                      "interface-parse.rkt"
                      (only-in "class-parse.rkt"
                               :options-block
-                              in-class-desc-space))
+                              in-class-desc-space
+                              check-exports-distinct))
          (only-in "class.rkt"
                   [class rhombus-class])
          "forwarding-sequence.rkt"
@@ -91,6 +92,7 @@
          (build-method-map stxes added-methods #f supers #hasheq()))
 
        (define exs (parse-exports #'(combine-out . exports)))
+       (check-exports-distinct stxes exs '() method-map)
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -109,8 +111,12 @@
                                               #'name-ref)])
            (define defns
              (append
+              (if (eq? (syntax-local-context) 'top-level)
+                  ;; forward declaration for methods:
+                  (list #'(define-syntaxes (name?) (values)))
+                  null)
               (build-methods added-methods method-map method-names method-private
-                             #'(name name-instance
+                             #'(name name-instance name?
                                      []
                                      []
                                      []
@@ -123,7 +129,8 @@
               (build-interface-annotation internal-name
                                           #'(name name? name-instance
                                                   internal-name?))
-              (build-interface-dot-handling #'(name name-instance
+              (build-interface-dot-handling method-map method-vtable
+                                            #'(name name-instance name-ref
                                                     [export ...]))
               (build-interface-desc parent-names
                                     method-map method-names method-vtable

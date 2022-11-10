@@ -189,7 +189,7 @@
                                 field)))))
 
        (define added-methods (reverse (hash-ref options 'methods '())))
-       (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
+       (define-values (method-map      ; symbol -> index (final) or box-of-index (non-final)
                        method-names    ; index -> symbol-or-identifier
                        method-vtable   ; index -> accessor-identifier or '#:unimplemented
                        method-private  ; symbol -> identifier
@@ -201,7 +201,7 @@
        (check-consistent-unimmplemented stxes final? unimplemented-name)
 
        (define exs (parse-exports #'(combine-out . exports)))
-       (check-exports-distinct stxes exs fields)
+       (check-exports-distinct stxes exs fields method-map)
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
@@ -213,6 +213,7 @@
        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [class:name (temporary "class:~a")]
                      [make-name (temporary "make-~a")]
+                     [name-ref (temporary "~a-ref")]
                      [name-defaults (and (or super-has-defaults? (and has-defaults? (not final?)))
                                          (temporary "~a-defaults"))]
                      [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
@@ -269,8 +270,12 @@
                        [(super-name* ...) (if super #'(super-name) '())])
            (define defns
              (append
+              (if (eq? (syntax-local-context) 'top-level)
+                  ;; forward declaration for methods:
+                  (list #'(define-syntaxes (name?) (values)))
+                  null)
               (build-methods added-methods method-map method-names method-private
-                             #'(name name-instance
+                             #'(name name-instance name?
                                      [field-name ... super-field-name ...]
                                      [name-field ... super-name-field ...]
                                      [maybe-set-name-field! ... super-maybe-set-name-field! ...]
@@ -287,7 +292,7 @@
                                   method-map method-names method-vtable method-private
                                   unimplemented-name
                                   interfaces private-interfaces
-                                  #'(name class:name make-all-name name?
+                                  #'(name class:name make-all-name name? name-ref
                                           [public-field-name ...]
                                           [field-name ...]
                                           [name-field ...]
@@ -320,7 +325,8 @@
                                            #'(name name-instance name?
                                                    [constructor-name-field ...] [super-name-field ...]
                                                    [constructor-field-keyword ...] [super-field-keyword ...]))
-              (build-class-dot-handling #'(name constructor-name name-instance
+              (build-class-dot-handling method-map method-vtable final?
+                                        #'(name constructor-name name-instance name-ref
                                                 [public-field-name ...]
                                                 [public-name-field ...]
                                                 [export ...]))
@@ -334,7 +340,7 @@
                                 final? has-private-fields?
                                 parent-name
                                 method-map method-names method-vtable
-                                #'(name class:name constructor-maker-name name-defaults
+                                #'(name class:name constructor-maker-name name-defaults name-ref
                                         (list (list 'super-field-name
                                                     (quote-syntax super-name-field)
                                                     (quote-syntax super-make-set-name-field!)
@@ -356,7 +362,7 @@
                                        unimplemented-name
                                        interfaces private-interfaces
                                        names)
-  (with-syntax ([(name class:name make-all-name name?
+  (with-syntax ([(name class:name make-all-name name? name-ref
                        [public-field-name ...]
                        [field-name ...]
                        [name-field ...]
@@ -437,7 +443,11 @@
                       mutable-field
                       mutable-field-predicate
                       mutable-field-annotation-str)
-                     ...)))))))
+                     ...)))
+       #`(define (name-ref v)
+           (if (name? v)
+               (prop-methods-ref v)
+               (raise-not-an-instance 'name v)))))))
 
 (define-syntax (define-class-desc-syntax stx)
   (syntax-parse stx
@@ -452,7 +462,7 @@
                                      parent-name
                                      method-map method-names method-vtable
                                      names)
-  (with-syntax ([(name class:name constructor-maker-name name-defaults
+  (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        fields
                        ([field-name field-argument] ...))
                  names])
@@ -462,6 +472,7 @@
                      (quote-syntax name)
                      #,(and parent-name #`(quote-syntax #,parent-name))
                      (quote-syntax class:name)
+                     (quote-syntax name-ref)
                      fields
                      #,(and (or has-private-fields?
                                 (and super (class-desc-all-fields super)))
