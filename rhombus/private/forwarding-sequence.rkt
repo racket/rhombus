@@ -12,6 +12,7 @@
 (provide rhombus-forwarding-sequence
          rhombus-nested-forwarding-sequence
          rhombus-mixed-forwarding-sequence
+         rhombus-mixed-nested-forwarding-sequence
 
          ;; wrap `rhombus-forward` around a sequence of declarations
          ;; to make any bindings among the  declarations visible only
@@ -24,6 +25,7 @@
      #`(sequence ctx mode orig base-ctx add-ctx remove-ctx . tail)]))
 
 (define-syntax (rhombus-nested-forwarding-sequence stx)
+  ;; Used for something like `namespace`
   (syntax-parse stx
     [(_ final . tail)
      #`(sequence [final] #f #f base-ctx add-ctx remove-ctx . tail)]))
@@ -35,6 +37,12 @@
   (syntax-parse stx
     [(_ (final . data) stop-id . tail)
      #`(sequence [(final . data) #:stop-at stop-id] #f #f base-ctx add-ctx remove-ctx . tail)]))
+
+(define-syntax (rhombus-mixed-nested-forwarding-sequence stx)
+  ;; Actually used by `class`, which acts like `namespace`, too
+  (syntax-parse stx
+    [(_ (final . data) stop-id . tail)
+     #`(sequence [(final . data) #:stop-at* stop-id ()] #f #f base-ctx add-ctx remove-ctx . tail)]))
 
 (define-syntax (sequence stx)
   (let loop ([stx stx] [accum null])
@@ -49,6 +57,10 @@
           #`(begin
               #,forms
               (final ... #,@(reverse (syntax->list #'(accum ...)))))]
+         [[(final ...) #:stop-at* _ binds accum ...]
+          #`(begin
+              #,forms
+              (final ... #,(reverse (syntax->list #'binds)) #,@(reverse (syntax->list #'(accum ...)))))]
          [[(final ...) bind ...]
           #`(begin
               #,forms
@@ -118,19 +130,32 @@
                  (sequence ctx mode orig base-ctx add-ctx remove-ctx . forms))])]
          [(provide prov ...)
           #:when (not (keyword? (syntax-e #'ctx)))
-          (syntax-parse #'ctx
-            [(head . tail)
-             (define rev-prov (reverse (syntax->list #'(prov ...))))
-             #`(sequence (head #,@rev-prov . tail) mode orig base-ctx add-ctx remove-ctx . forms)])]
+          (define rev-prov (reverse (syntax->list #'(prov ...))))
+          (define new-ctx
+            (syntax-parse #'ctx
+              [(head #:stop-at* stop-id binds-tail . tail)
+               #`(head #:stop-at* stop-id (#,@rev-prov . binds-tail) . tail)]
+              [(head . tail)
+               #`(head #,@rev-prov . tail)]))
+          #`(sequence #,new-ctx mode orig base-ctx add-ctx remove-ctx . forms)]
          [(#%provide . _)
           (raise-syntax-error #f "shouldn't happen" exp-form)]
          [(quote-syntax (~and keep (id:identifier . _)) #:local)
-          (syntax-parse #'ctx
-            [(head #:stop-at stop-id . tail)
-             (free-identifier=? #'id #'stop-id)
-             #`(begin
-                 #,@(reverse accum)
-                 (sequence (head #:stop-at stop-id keep . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))])]
+          #:do [(define next
+                  (syntax-parse #'ctx
+                    [(head #:stop-at stop-id . tail)
+                     (free-identifier=? #'id #'stop-id)
+                     #`(begin
+                         #,@(reverse accum)
+                         (sequence (head #:stop-at stop-id keep . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))]
+                    [(head #:stop-at* stop-id binds . tail)
+                     (free-identifier=? #'id #'stop-id)
+                     #`(begin
+                         #,@(reverse accum)
+                         (sequence (head #:stop-at* stop-id binds keep . tail) #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))]
+                    [_ #f]))]
+          #:when next
+          next]
          [_ #`(begin
                 #,@(reverse accum)
                 #,exp-form

@@ -33,7 +33,8 @@
          check-fields-methods-distinct
          check-consistent-subclass
          check-consistent-unimmplemented
-         check-field-defaults)
+         check-field-defaults
+         check-exports-distinct)
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -220,3 +221,16 @@
                                                stxes
                                                f)]
       [else #f])))
+
+(define (check-exports-distinct stxes exports-stx fields)
+  (define exports (for/list ([ex (in-list exports-stx)])
+                    (syntax-parse ex
+                      [(id ext-id) #'ext-id]
+                      [_ ex])))
+  (define ht (for/hasheq ([field (in-list fields)])
+               (values (syntax-e field) #t)))
+  (for ([ex (in-list exports)])
+    (when (hash-ref ht (syntax-e ex) #f)
+      (raise-syntax-error #f
+                          "exported name conflicts with field name"
+                          ex))))

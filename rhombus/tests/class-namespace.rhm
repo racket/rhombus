@@ -1,0 +1,19 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+  
+check:
+  class Posn(x, y):
+    export: origin
+  val origin: Posn(0, 0)
+  val p: Posn.origin
+  [p.x, p.y]
+  [0, 0]
+
+check:
+  interface Pointable:
+    fun zero(): 0
+    export: zero
+  Pointable.zero()
+  0

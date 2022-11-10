@@ -26,7 +26,8 @@
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
-         "error.rkt")
+         "error.rkt"
+         (submod "namespace.rkt" for-exports))
 
 (provide (rename-out [rhombus-class class])
          this
@@ -68,10 +69,10 @@
                                         (field.static-infos ...)])
         (cond
           [(null? (syntax-e body))
-           #`((class-finish #,finish-data))]
+           #`((class-finish #,finish-data ()))]
           [else
-           #`((rhombus-mixed-forwarding-sequence (class-finish #,finish-data) rhombus-class
-                                                 (class-body-step . #,(syntax-local-introduce body))))])]))))
+           #`((rhombus-mixed-nested-forwarding-sequence (class-finish #,finish-data) rhombus-class
+                                                        (class-body-step . #,(syntax-local-introduce body))))])]))))
 
 (define-syntax class-body-step
   (lambda (stx)
@@ -86,9 +87,10 @@
            ...
            (class-body-step . rest))]
       [(_ form . rest)
-       #`(begin
-           (rhombus-definition form)
-           (class-body-step . rest))]
+       #`(rhombus-top-step
+          class-body-step
+          #f
+          form . rest)]
       [(_) #'(begin)])))
 
 (define-syntax class-finish
@@ -103,6 +105,7 @@
                     (constructor-field-predicate ...)
                     (constructor-field-annotation-str ...)
                     (constructor-field-static-infos ...)]
+          exports
           option ...)
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...)))
@@ -197,13 +200,16 @@
        (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
        (check-consistent-unimmplemented stxes final? unimplemented-name)
 
+       (define exs (parse-exports #'(combine-out . exports)))
+       (check-exports-distinct stxes exs fields)
+
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
                                           super-has-keywords? super-has-defaults? unimplemented-name super))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
-    
+
        (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [class:name (temporary "class:~a")]
                      [make-name (temporary "make-~a")]
@@ -243,7 +249,8 @@
                       (if super
                           (class-desc-fields super)
                           '())]
-                     [(super-field-keyword ...) super-keywords])
+                     [(super-field-keyword ...) super-keywords]
+                     [(export ...) exs])
          (with-syntax ([constructor-name (if constructor-id
                                              (temporary "~a-ctr")
                                              #'make-name)]
@@ -315,7 +322,8 @@
                                                    [constructor-field-keyword ...] [super-field-keyword ...]))
               (build-class-dot-handling #'(name constructor-name name-instance
                                                 [public-field-name ...]
-                                                [public-name-field ...]))
+                                                [public-name-field ...]
+                                                [export ...]))
               (build-class-static-infos exposed-internal-id
                                         #'(name constructor-name name-instance
                                                 [name-field ...]

@@ -24,7 +24,8 @@
          (only-meta-in 1
                        "class-method.rkt")
          "class-dot.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         (submod "namespace.rkt" for-exports))
 
 (provide interface)
 
@@ -42,10 +43,10 @@
                                         full-name name])
         (cond
           [(null? (syntax-e body))
-           #`((interface-finish #,finish-data))]
+           #`((interface-finish #,finish-data ()))]
           [else
-           #`((rhombus-mixed-forwarding-sequence (interface-finish #,finish-data) rhombus-class
-                                                 (interface-body-step . #,(syntax-local-introduce body))))])]))))
+           #`((rhombus-mixed-nested-forwarding-sequence (interface-finish #,finish-data) rhombus-class
+                                                        (interface-body-step . #,(syntax-local-introduce body))))])]))))
 
 (define-syntax interface-body-step
   (lambda (stx)
@@ -60,9 +61,10 @@
            ...
            (interface-body-step . rest))]
       [(_ form . rest)
-       #`(begin
-           (rhombus-definition form)
-           (interface-body-step . rest))]
+       #`(rhombus-top-step
+          interface-body-step
+          #f
+          form . rest)]
       [(_) #'(begin)])))
 
 (define-syntax interface-finish
@@ -70,6 +72,7 @@
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
                     full-name name]
+          exports
           option ...)
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...)))
@@ -87,6 +90,8 @@
                        unimplemented-name) ; #f or identifier
          (build-method-map stxes added-methods #f supers #hasheq()))
 
+       (define exs (parse-exports #'(combine-out . exports)))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
@@ -97,7 +102,8 @@
                      [internal-name? (temporary "~a?" #:name internal-name)]
                      [prop-internal:name (temporary "prop:~a" #:name internal-name)]
                      [name-instance (temporary "~a-instance")]
-                     [(super-name ...) parent-names])
+                     [(super-name ...) parent-names]
+                     [(export ...) exs])
          (with-syntax ([internal-name-ref (if internal-name
                                               (temporary "~a-ref" #:name internal-name)
                                               #'name-ref)])
@@ -117,7 +123,8 @@
               (build-interface-annotation internal-name
                                           #'(name name? name-instance
                                                   internal-name?))
-              (build-interface-dot-handling #'(name name-instance))
+              (build-interface-dot-handling #'(name name-instance
+                                                    [export ...]))
               (build-interface-desc parent-names
                                     method-map method-names method-vtable
                                     internal-name
@@ -151,14 +158,14 @@
      (if internal-name
          (with-syntax ([internal-name internal-name])
            (list
-            #`(define-syntax internal-name (identifier-annotation (quote-syntax internal-name)
-                                                                  (quote-syntax internal-name?)
-                                                                  (quote-syntax ((#%dot-provider name-instance)))))))
+            #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name)
+                                                                             (quote-syntax internal-name?)
+                                                                             (quote-syntax ((#%dot-provider name-instance)))))))
          null)
      (list
-      #`(define-syntax name (identifier-annotation (quote-syntax name)
-                                                   (quote-syntax name?)
-                                                   (quote-syntax ((#%dot-provider name-instance)))))))))
+      #`(define-annotation-syntax name (identifier-annotation (quote-syntax name)
+                                                              (quote-syntax name?)
+                                                              (quote-syntax ((#%dot-provider name-instance)))))))))
 
 (define-for-syntax (build-interface-desc parent-names
                                          method-map method-names method-vtable

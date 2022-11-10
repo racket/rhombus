@@ -7,7 +7,7 @@
   ~literal: :: extends binding field,
   defn.macro 'class $identifier_path($field_spec, ...)',
   defn.macro 'class $identifier_path($field_spec, ...):
-                $class_clause_or_body
+                $class_clause_or_body_or_export
                 ...',
 
   grammar identifier_path:
@@ -31,9 +31,11 @@
     = $default_expr
     ε,
 
-  grammar class_clause_or_body:
+  grammar class_clause_or_body_or_export:
     $class_clause
-    $body,
+    $body
+    $export,
+
 
   grammar class_clause:
     $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
@@ -74,7 +76,8 @@
   matches an instance of the class where the fields match the
   corresponding patterns;},
 
- @item{a dot povider to access accessor functions
+ @item{a @tech{namespace} to access exported local bindings as well as
+  accessor functions
   @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(field,~var))), which
   by default includes a @rhombus(field,~var) for every field in the class,
   whether listed as a @rhombus(field_spec) in parentheses or added by a
@@ -109,14 +112,16 @@
  @rhombus(class) to produce a default value.
 
  If a block follows a @rhombus(class) form's @rhombus(field_spec) sequence,
- it contains a mixture of definitions, expressions, and class clauses. A
+ it contains a mixture of definitions, expressions, exports, and class clauses. A
  @deftech{class clause} adjusts the class and bindings created by the
  @rhombus(class) form; it be one of the predefined clause forms,
  or it can be a macro that ultimately expands to a predefined form.
  Definitions and expressions in a @rhombus(class) block are evaluated at
  the same time as the @rhombus(class) form is evaluated (not when an
  instance is created), and definitions are scoped to the block for
- potential use by class clauses.
+ potential use by class clauses. Local definitions can be exported, but
+ exported names must be distinct from all non-private field names (which
+ are automatically exported from the class in its role as a namespace).
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
  then an additional field is added to the class, but the additional field
@@ -245,16 +250,17 @@
   ~literal: :: extends binding field,
   defn.macro 'interface $identifier_path',
   defn.macro 'interface $identifier_path:
-                $interface_clause_or_body
+                $interface_clause_or_body_or_export
                 ...',
 
   grammar identifier_path:
     $identifier
     $identifier_path . $identifier,
 
-  grammar class_clause_or_body:
+  grammar class_clause_or_body_or_export:
     $interface_clause
-    $body,
+    $body
+    $export,
 
   grammar interface_clause:
     $$(@rhombus(method, ~intf_clause)) $method_decl

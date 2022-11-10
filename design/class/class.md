@@ -38,7 +38,7 @@ more precise grammars):
 
 ```
 class identifier(field_spec, ...):
-  class_clause_or_body
+  class_clause_or_body_or_export
   ...
 
 field_spec := maybe_mutable identifier maybe_annot maybe_default
@@ -61,7 +61,7 @@ custom binding, or custom annotation.
 
 ```
 interface identifier:
-  interface_clause_or_body
+  interface_clause_or_body_or_export
   ...
 ```
 
@@ -161,7 +161,7 @@ If `internal` is present in `interface`, then it binds the associated
 `interface` definition, and it can be used to recognize private
 implementations of the interface.
 
-Both class and interface names works as annotations, and the
+Both class and interface names work as annotations, and the
 annotation is satisfied by an instance of the class, subclass, or (in
 the case of an interface) implementing class. A class name further
 provides an annotation constructor via `.of`, by default, but an
@@ -196,6 +196,10 @@ once when the class is defined. The resulting constant is used to
 initialize the field in each instance. Since these fields must be
 mutable to be useful, the `mutable` keyword is not needed or allowed
 in a `field` clause.
+
+A `class` or `interface` body can contain `export` clauses, because
+the class or interface also serves as a namespace. Exoprted names must
+be distinct from fields, whcih are implicitly exported from a class.
 
 Clauses like `method` expect an immediate function. It can be written
 like `fun` (but with `method` or similar form name in place of `fun`),
@@ -616,6 +620,49 @@ superinterfaces.
 Currently, an unimplemented method has no signature. More generally,
 there's no support for checking that a method override has a signature
 that is compatible with the implementation that it replaces.
+
+Expansion order in the body of a `class` form limits the places where
+the class being defined can be referenced. For example, this works:
+
+```
+class Posn(x, y):
+  export: get_origin
+  fun get_origin(): Posn(0, 0)
+
+Posn.get_origin()
+```
+
+However, neither `origin` nor `get_orign` work when written as
+follows:
+
+```
+class Posn(x, y):
+  export: origin get_origin
+  fun origin: Posn(0, 0)
+  fun get_origin() :: Posn: Posn(0, 0)
+```
+
+A `method` form in `Posn` can use `Posn` as a return annotation
+because, essentially, it cannot be referenced directly in the body of
+a `class` form. But the `get_origin` above needs to be build for later
+use within the body, along with information its explicit return
+annotation, and so `Posn` would have to be given a meaning before it
+is defined.
+
+An `origin` variable and return-annotation `get_origin` function can
+be written outside the class and still exported by the class, because
+a namespace can export bindings from outside the namespace:
+
+```
+class Posn(x, y):
+  export: origin
+          get_origin
+val origin: Posn(0, 0)
+fun get_origin() :: Posn: Posn(0, 0)
+
+Posn.orign
+Posn.get_origin()
+```
 
 Prior art
 ---------

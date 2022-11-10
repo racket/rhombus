@@ -22,19 +22,23 @@
 (define-for-syntax (build-class-dot-handling names)
   (with-syntax ([(name constructor-name name-instance
                        [field-name ...]
-                       [name-field ...])
+                       [name-field ...]
+                       [ex ...])
                  names])
     (list
      #'(define-name-root name
          #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
-         #:fields ([field-name name-field] ...))
+         #:fields ([field-name name-field] ... ex ...))
      #'(define-dot-provider-syntax name-instance
          (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))
 
 (define-for-syntax (build-interface-dot-handling names)
-  (with-syntax ([(name name-instance)
+  (with-syntax ([(name name-instance
+                       [ex ...])
                  names])
     (list
+     #'(define-name-root name
+         #:fields (ex ...))
      #'(define-dot-provider-syntax name-instance
          (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))
 
