@@ -157,6 +157,7 @@ check:
     abstract m
   class Posn3D(z):
     extends Posn
+    nonfinal
   Posn3D(1, 2, 3)
   "cannot instantiate class with abstract"
 
@@ -318,6 +319,7 @@ check:
     method c(): 3
   class Posn3D(z):
     extends Posn
+    nonfinal
     override a(): [super.a()]
     override c(): [super.b()]
   val p: Posn3D(1, 2, 3)
@@ -344,7 +346,6 @@ check:
     method c(): 3
   class Posn3D(z):
     extends Posn
-    final
     override a(): [super.a()]
     override c(): [super.b()]
   val p: Posn3D(1, 2, 3)

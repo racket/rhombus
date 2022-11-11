@@ -16,7 +16,7 @@
 
 (provide (for-syntax build-class-binding-form))
 
-(define-for-syntax (build-class-binding-form super binding-id options
+(define-for-syntax (build-class-binding-form super binding-ctx+rhs
                                              exposed-internal-id intro
                                              names)
   (with-syntax ([(name name-instance name?
@@ -24,7 +24,7 @@
                        [constructor-field-static-infos ...] [super-field-static-infos ...]
                        [field-keyword ...] [super-field-keyword ...])
                  names])
-    (with-syntax ([core-bind-name (if (hash-ref options 'binding #f)
+    (with-syntax ([core-bind-name (if binding-ctx+rhs
                                       (car (generate-temporaries #'(name)))
                                       #'name)])
       (append
@@ -33,7 +33,7 @@
             (binding-transformer
              (quote-syntax name)
              #,(if (and super
-                        binding-id)
+                        binding-ctx+rhs)
                    #`(make-curried-binding-transformer (quote-syntax #,(class-desc-id super))
                                                        #,(symbol->string (syntax-e #'name))
                                                        (quote-syntax name?)
@@ -55,13 +55,12 @@
             #`(define-binding-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax core-bind-name))))
            null)
        (cond
-         [(hash-ref options 'binding #f)
-          => (lambda (bind)
-               (list
-                #`(define-binding-syntax #,(intro binding-id) (make-rename-transformer
-                                                               (quote-syntax #,(in-binding-space #'core-bind-name))))
-                #`(define-binding-syntax name
-                    (wrap-class-transformer name #,(intro (cadr bind)) make-binding-prefix-operator))))]
+         [binding-ctx+rhs
+          (list
+           #`(define-binding-syntax #,(intro (datum->syntax (car binding-ctx+rhs) 'super))
+               (make-rename-transformer (quote-syntax #,(in-binding-space #'core-bind-name))))
+           #`(define-binding-syntax name
+               (wrap-class-transformer name #,(intro (cadr binding-ctx+rhs)) make-binding-prefix-operator)))]
          [else null])))))
 
 (define-for-syntax (make-curried-binding-transformer super-binding-id

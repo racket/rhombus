@@ -11,6 +11,7 @@
          "expression.rkt"
          "parse.rkt"
          "entry-point.rkt"
+         "class-this.rkt"
          "function-arity-key.rkt"
          "dot-provider-key.rkt"
          "static-info.rkt"
@@ -221,7 +222,6 @@
       (class-desc-method-map p)
       (interface-desc-method-map p)))
 
-(define-syntax-parameter this-id #f)
 (define-syntax-parameter private-tables #f)
 
 (define-syntax this
@@ -231,7 +231,8 @@
      (syntax-parse stxs
        [(head . tail)
         (cond
-          [(syntax-parameter-value #'this-id)
+          [(let ([v (syntax-parameter-value #'this-id)])
+             (and (not (identifier? v)) v))
            => (lambda (id+dp+supers)
                 (syntax-parse id+dp+supers
                   [(id dp . _)
@@ -248,40 +249,47 @@
   (expression-transformer
    #'this
    (lambda (stxs)
-     (syntax-parse stxs
-       #:datum-literals (op |.|)
-       [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
-        (cond
-          [(syntax-parameter-value #'this-id)
-           => (lambda (id+dp+supers)
-                (syntax-parse id+dp+supers
-                  [(id dp)
-                   (raise-syntax-error #f "class has no superclass" #'head)]
-                  [(id dp . super-ids)
-                   (define super+pos
-                     (for/or ([super-id (in-list (syntax->list #'super-ids))])
-                       (define super (syntax-local-value* (in-class-desc-space super-id)
-                                                          (lambda (v)
-                                                            (or (class-desc-ref v)
-                                                                (interface-desc-ref v)))))
-                       (unless super
-                         (raise-syntax-error #f "class or interface not found" super-id))
-                       (define pos (hash-ref (super-method-map super) (syntax-e #'method-id) #f))
-                       (and pos (cons super pos))))
-                   (unless super+pos
-                     (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
-                   (define super (car super+pos))
-                   (define pos (cdr super+pos))
-                   (define impl (vector-ref (super-method-vtable super) (if (box? pos) (unbox pos) pos)))
-                   (when (eq? (syntax-e impl) '#:abstract)
-                     (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
-                   (define-values (call new-tail)
-                     (parse-function-call impl (list #'id) #'(method-id args)))
-                   (values call #'tail)]))]
-          [else
-           (raise-syntax-error #f
-                               "allowed only within methods"
-                               #'head)])]))))
+     (define id-or-id+dp+supers (syntax-parameter-value #'this-id))
+     (cond
+       [(not id-or-id+dp+supers)
+        (raise-syntax-error #f
+                            "allowed only within methods and constructors"
+                            #'head)]
+       [(identifier? id-or-id+dp+supers)
+        ;; in a constructor
+        (syntax-parse stxs
+          [(head . tail)
+           (values id-or-id+dp+supers #'tail)])]
+       [else
+        ;; in a method
+        (define id+dp+supers id-or-id+dp+supers)
+        (syntax-parse stxs
+          #:datum-literals (op |.|)
+          [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
+           (syntax-parse id+dp+supers
+             [(id dp)
+              (raise-syntax-error #f "class has no superclass" #'head)]
+             [(id dp . super-ids)
+              (define super+pos
+                (for/or ([super-id (in-list (syntax->list #'super-ids))])
+                  (define super (syntax-local-value* (in-class-desc-space super-id)
+                                                     (lambda (v)
+                                                       (or (class-desc-ref v)
+                                                           (interface-desc-ref v)))))
+                  (unless super
+                    (raise-syntax-error #f "class or interface not found" super-id))
+                  (define pos (hash-ref (super-method-map super) (syntax-e #'method-id) #f))
+                  (and pos (cons super pos))))
+              (unless super+pos
+                (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
+              (define super (car super+pos))
+              (define pos (cdr super+pos))
+              (define impl (vector-ref (super-method-vtable super) (if (box? pos) (unbox pos) pos)))
+              (when (eq? (syntax-e impl) '#:abstract)
+                (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
+              (define-values (call new-tail)
+                (parse-function-call impl (list #'id) #'(method-id args)))
+              (values call #'tail)])])]))))
 
 (define-for-syntax (get-private-tables)
   (let ([id (syntax-parameter-value #'private-tables)])

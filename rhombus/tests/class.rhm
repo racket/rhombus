@@ -85,9 +85,8 @@ check:
 
 check:
   class Posn(x, y):
-    constructor (make):
-      fun (z):
-        make(z+1, z-1)
+    constructor (z):
+      super(z+1, z-1)
   val p: Posn(1)
   [p.x, p.y]
   [2, 0]
@@ -97,9 +96,8 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-    constructor (make):
-      fun (z):
-        make(z+1, z+2)(z+3)
+    constructor (z):
+      super(z+1, z+2)(z+3)
   val p: Posn3D(1)
   [p.x, p.y, p.z]
   [2, 3, 4]
@@ -109,11 +107,11 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
+    nonfinal
   class Posn4D(w):
     extends Posn3D
-    constructor (make):
-      fun (z):
-        make(z+1, z+2, z+3)(z+4)
+    constructor (z):
+      super(z+1, z+2, z+3)(z+4)
   val p: Posn4D(1)
   [p.x, p.y, p.z, p.w]
   [2, 3, 4, 5]
@@ -121,14 +119,14 @@ check:
 check:
   class Posn(x, y):
     nonfinal
-    constructor (make):
+    constructor:
       fun (y, x):
-        make(x, y)
+        super(x, y)
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    constructor:
       fun (z):
-        make(z+1, z+2)(z+3)
+        super(z+1, z+2)(z+3)
   val p: Posn3D(1)
   [p.x, p.y, p.z]
   [3, 2, 4]
@@ -136,19 +134,21 @@ check:
 check:
   class Posn(x, y):
     nonfinal
-    constructor (make):
+    constructor:
       fun (y, x):
-        make(x, y)
+        super(x, y)
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    nonfinal
+    constructor:
       fun (z):
-        make(z+1, z+2)(z+3)
+        super(z+1, z+2)(z+3)
   class Posn4D(w):
     extends Posn3D
-    constructor (make):
+    nonfinal
+    constructor:
       fun (z):
-        make(z+1)(z+5)
+        super(z+1)(z+5)
   val p: Posn4D(1)
   [p.x, p.y, p.z, p.w]
   [4, 3, 5, 6]
@@ -156,20 +156,20 @@ check:
 check:
   class Posn(x, y):
     nonfinal
-    constructor (make):
+    constructor:
       fun
       | (~x: x, ~y: y):
-          make(x, y)
+          super(x, y)
       | (x):
-          make(x, 0)
+          super(x, 0)
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    constructor:
       fun
       | (z):
-          make(z+1)(z+3)
+          super(z+1)(z+3)
       | (x, y, z):
-          make(~x: x, ~y: y)(z)
+          super(~x: x, ~y: y)(z)
   val p: Posn3D(1)
   val p2: Posn3D(10, 20, 30)
   [p.x, p.y, p.z,
@@ -199,14 +199,14 @@ check:
     binding:
       rule
       | 'Posn($y, $x)':
-          '_Posn($x, $y)'
+          'super($x, $y)'
       | 'Posn($v)':
-          '_Posn($v, 0)'
+          'super($v, 0)'
     annotation:
       rule
       | 'Posn.of($x, $y)':
-          '_Posn.of($y, $x)'
-      | 'Posn': '_Posn'    
+          'super.of($y, $x)'
+      | 'Posn': 'super'    
   val p: Posn(0, 2)
   val Posn(yy, xx): p
   val Posn(a): p    
@@ -267,9 +267,9 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    constructor:
       fun(x, y, z):
-        make(~x: 1, y)(z)
+        super(~x: 1, y)(z)
   val p2: Posn(~x: 1, 2)
   val p3: Posn3D(1, 2, 3)
   [[p2.x, p2.y], [p3.x, p3.y, p3.z]]
@@ -280,14 +280,15 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    nonfinal
+    constructor:
       fun(x, y, z):
-        make(~x: 1, y)(z)
+        super(~x: 1, y)(z)
   class Posn4D(~w):
     extends Posn3D
-    constructor (make):
+    constructor:
       fun(x, y, z, w):
-        make(x, y, z)(~w: w)
+        super(x, y, z)(~w: w)
   val p2: Posn(~x: 1, 2)
   val p3: Posn3D(1, 2, 3)
   val p4: Posn4D(1, 2, 3, 4)
@@ -301,20 +302,21 @@ check:
 check:
   class Posn(~x, y):
     nonfinal
-    constructor (make):
+    constructor:
       fun(~ex: x, ~wy: y):
-        make(~x: 1, y)
+        super(~x: 1, y)
   class Posn3D(z):
     extends Posn
-    constructor (make):
+    nonfinal
+    constructor:
       fun(x, ~y: y, z):
-        make(~ex: 1, ~wy: y)(z)
+        super(~ex: 1, ~wy: y)(z)
     internal _Posn3D
   class Posn4D(w):
     extends Posn3D
-    constructor (make):
+    constructor:
       fun(x, y, z, w):
-        make(x, ~y: y, z)(w)
+        super(x, ~y: y, z)(w)
   val p2: Posn(~ex: 1, ~wy: 2)
   val p3: Posn3D(1, ~y: 2, 3)
   val _p3: _Posn3D(~x: 1, 2, 3)
@@ -426,8 +428,10 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
+    nonfinal
   class Posn4D(w):
     extends Posn3D
+    nonfinal
   val p: Posn4D(1, ~y: 2, 3, 6)
   val Posn(a2, ~y: b2): p
   val Posn3D(a3, ~y: b3, c3): p
@@ -445,8 +449,8 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-    binding (bind):
-      rule 'Posn3D($x, $y ..., $z)': 'bind($x, ~y: $y ...)($z)'
+    binding:
+      rule 'Posn3D($x, $y ..., $z)': 'super($x, ~y: $y ...)($z)'
   val p: Posn3D(1, ~y: 2, 3)
   val Posn(a2, ~y: b2): p
   val Posn3D(a3, b3, c3): p
@@ -459,16 +463,18 @@ check:
   import rhombus/meta open
   class Posn(x, ~y):
     nonfinal
-    binding (bind):
-      rule 'Posn(X $x, Y $y)': 'bind($x, ~y: $y)'
+    binding:
+      rule 'Posn(X $x, Y $y)': 'super($x, ~y: $y)'
   class Posn3D(z):
     extends Posn
-    binding (bind):
-      rule 'Posn3D[$x, $y ..., $z]': 'bind(X $x, Y $y ...)($z)'
+    nonfinal
+    binding:
+      rule 'Posn3D[$x, $y ..., $z]': 'super(X $x, Y $y ...)($z)'
   class Posn4D(w):
     extends Posn3D
-    binding (bind):
-      rule 'Posn4D($x, ~y: $y, $z, $w)': 'bind[$x, $y, $z]($w)'
+    nonfinal
+    binding:
+      rule 'Posn4D($x, ~y: $y, $z, $w)': 'super[$x, $y, $z]($w)'
   val p: Posn4D(1, ~y: 2, 3, 6)
   val Posn(X a2, Y b2): p
   val Posn3D[a3, b3, c3]: p
@@ -486,8 +492,10 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
+    nonfinal
   class Posn4D(w):
     extends Posn3D
+    nonfinal
   val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
@@ -504,9 +512,9 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-    annotation (ann):
-      rule | 'Posn3D.of($x, $y ..., $z)': 'ann.of($x, ~y: $y ...)($z)'
-           | 'Posn3D': 'ann'                           
+    annotation:
+      rule | 'Posn3D.of($x, $y ..., $z)': 'super.of($x, ~y: $y ...)($z)'
+           | 'Posn3D': 'super'
   val p: Posn3D(1, ~y: "2", symbol'three')
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
@@ -519,19 +527,21 @@ check:
   import rhombus/meta open
   class Posn(x, ~y):
     nonfinal
-    annotation (ann):
-      rule | 'Posn $dot of(X $x, Y $y)': 'ann.of($x, ~y: $y)'
-           | 'Posn': 'ann'
+    annotation:
+      rule | 'Posn $dot of(X $x, Y $y)': 'super.of($x, ~y: $y)'
+           | 'Posn': 'super'
   class Posn3D(z):
     extends Posn
-    annotation (ann):
-      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'ann.of(X $x, Y $y ...)($z)'
-           | 'Posn3D': 'ann'
+    nonfinal
+    annotation:
+      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'super.of(X $x, Y $y ...)($z)'
+           | 'Posn3D': 'super'
   class Posn4D(w):
     extends Posn3D
-    annotation (ann):
-      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'ann.of[$x, $y, $z]($w)'
-           | 'Posn4D': 'ann'
+    nonfinal
+    annotation:
+      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'super.of[$x, $y, $z]($w)'
+           | 'Posn4D': 'super'
   val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
   p :: Posn
   p :: Posn.of(X Integer, Y String)

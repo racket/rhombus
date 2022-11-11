@@ -18,7 +18,7 @@
                      build-guard-expr)
          compose-annotation-check)
 
-(define-for-syntax (build-class-annotation-form super annotation-id options
+(define-for-syntax (build-class-annotation-form super annotation-ctx+rhs
                                                 constructor-fields super-constructor-fields
                                                 exposed-internal-id intro
                                                 names)
@@ -26,11 +26,11 @@
                        [constructor-name-field ...] [super-name-field ...]
                        [field-keyword ...] [super-field-keyword ...])
                  names])
-    (with-syntax ([core-ann-name (if (hash-ref options 'annotation #f)
+    (with-syntax ([core-ann-name (if annotation-ctx+rhs
                                      (car (generate-temporaries #'(name)))
                                      #'name)]
                   [parse-name-of (and super
-                                      annotation-id
+                                      annotation-ctx+rhs
                                       (car (generate-temporaries #'(name))))])
       (append
        (list
@@ -62,13 +62,12 @@
             #`(define-annotation-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax core-ann-name))))
            null)
        (cond
-         [(hash-ref options 'annotation #f)
-          => (lambda (ann)
-               (list
-                #`(define-annotation-syntax #,(intro annotation-id) (make-rename-transformer
-                                                                     (quote-syntax #,(in-annotation-space #'core-ann-name))))
-                #`(define-annotation-syntax name
-                    (wrap-class-transformer name #,(intro (cadr ann)) make-annotation-prefix-operator))))]
+         [annotation-ctx+rhs
+          (list
+           #`(define-annotation-syntax #,(intro (datum->syntax (car annotation-ctx+rhs) 'super))
+               (make-rename-transformer (quote-syntax #,(in-annotation-space #'core-ann-name))))
+           #`(define-annotation-syntax name
+               (wrap-class-transformer name #,(intro (cadr annotation-ctx+rhs)) make-annotation-prefix-operator)))]
          [else null])))))
 
 (define-for-syntax (make-curried-annotation-of-tranformer super-annotation-id)

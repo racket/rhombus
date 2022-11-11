@@ -2,16 +2,18 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "class-parse.rkt")
+         racket/unsafe/undefined
+         racket/stxparam
+         "class-this.rkt"
          "entry-point.rkt"
          "error.rkt"
-         "realm.rkt"
-         racket/unsafe/undefined)
+         "realm.rkt")
 
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
                      encode-protocol))
 
-(define-for-syntax (build-class-constructor super constructor-id options
+(define-for-syntax (build-class-constructor super constructor-rhs
                                             constructor-fields super-constructor-fields added-fields
                                             keywords super-keywords
                                             defaults super-defaults
@@ -89,23 +91,22 @@
          (list
           #`(define-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax make-name))))
          null)
-     (if constructor-id
+     (if constructor-rhs
          (cond
            [(and final?
                  (not super))
             (list
              #`(define constructor-name
-                 (let-syntax ([#,constructor-id (make-rename-transformer (quote-syntax make-name))])
-                   (let ([name (wrap-constructor name name?
-                                                 #,(hash-ref options 'constructor-rhs))])
+                 (syntax-parameterize ([this-id (quote-syntax make-name)])
+                   (let ([name (wrap-constructor name name? #,constructor-rhs)])
                      name))))]
            [else
             (list
              #`(define constructor-maker-name
-                 (lambda (#,constructor-id)
-                   (let ([name (wrap-constructor name name?
-                                                 #,(hash-ref options 'constructor-rhs))])
-                     name)))
+                 (lambda (make-name)
+                   (syntax-parameterize ([this-id (quote-syntax make-name)])
+                     (let ([name (wrap-constructor name name? #,constructor-rhs)])
+                       name))))
              #`(define constructor-name
                  #,(cond
                      [super
@@ -117,7 +118,7 @@
                      [else #'(constructor-maker-name make-name)])))])
          null))))
 
-(define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-id
+(define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-rhs
                                                     super-has-keywords? super-has-defaults?
                                                     abstract-name
                                                     super)
@@ -127,7 +128,7 @@
       (and (or super-has-keywords?
                super-has-defaults?)
            (or (not (class-desc-constructor-makers super))
-               constructor-id))
+               constructor-rhs))
       abstract-name
       (and super
            (or (class-desc-all-fields super)
@@ -136,7 +137,7 @@
 
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
-    [(_ name predicate-id g)
+    [(_ name predicate-id (block g))
      #:do [(define adjustments (entry-point-adjustments
                                 '()
                                 (lambda (body)
@@ -194,7 +195,7 @@
                  (#,final-make #,@ancestor-args #,@args))))]
          [([ancestor-proto ancestor-id] . _)
           #`(id
-             ;; The position after `constructor` is syntactically constrainted, but
+             ;; The position after `constructor` is syntactically constrained, but
              ;; not so much that we can statically extract its signature. So, we
              ;; dynamically adjust a generic wrapper to match the constructor's
              ;; signature

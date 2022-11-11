@@ -4,7 +4,8 @@
                      enforest/hier-name-parse
                      "srcloc.rkt"
                      "name-path-op.rkt"
-                     "class-parse.rkt")
+                     "class-parse.rkt"
+                     (only-in "rule.rkt" rule))
          "class-clause.rkt"
          "interface-clause.rkt"
          (only-in "binding.rkt" raise-binding-failure)
@@ -53,25 +54,8 @@
                        (lambda (stx)
                          (intro stx 'remove)))
                      (lambda (stx) stx)))
-  (define (maybe-use-internal-id id clause-name)
-    (cond
-      [(syntax-e id) id]
-      [internal-id internal-id]
-      [else (raise-syntax-error #f
-                                (format "no `internal` clause, and no maker name in `~a` clause"
-                                        clause-name)
-                                stxes)]))
   (values internal-id
-          (expose internal-id)
-          (let ([id (hash-ref options 'constructor-id #f)])
-            (and id
-                 (maybe-use-internal-id id 'constructor)))
-          (let ([b (hash-ref options 'binding #f)])
-            (and b
-                 (maybe-use-internal-id (car b) 'binding)))
-          (let ([b (hash-ref options 'annotation #f)])
-            (and b
-                 (maybe-use-internal-id (car b) 'annotation)))))
+          (expose internal-id)))
   
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
@@ -115,24 +99,18 @@
                (when (hash-has-key? options 'internal)
                  (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
                (hash-set options 'internal #'id)]
-              [(constructor id block)
-               (when (hash-has-key? options 'constructor-id)
+              [(constructor _ rhs)
+               (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
-               (hash-set (hash-set options 'constructor-id #'id)
-                         'constructor-rhs
-                         (extract-rhs #'block))]
-              [(binding core-name block)
-               (when (hash-has-key? options 'binding)
+               (hash-set options 'constructor-rhs #'rhs)]
+              [(binding bind-ctx block)
+               (when (hash-has-key? options 'binding-rhs)
                  (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
-               (hash-set options 'binding (list #'core-name (extract-rhs #'block)))]
-              [(annotation core-name block)
-               (when (hash-has-key? options 'annotation)
+               (hash-set options 'binding-ctx+rhs (list #'bind-ctx (extract-rhs #'block)))]
+              [(annotation bind-ctx block)
+               (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
-               (hash-set options 'annotation (list #'core-name (extract-rhs #'block)))]
-              [(final)
-               (when (hash-has-key? options 'final?)
-                 (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
-               (hash-set options 'final? #t)]
+               (hash-set options 'annotation-ctx+rhs (list #'bind-ctx (extract-rhs #'block)))]
               [(nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
@@ -210,44 +188,33 @@
        [(_ name:identifier)
         (wrap-class-clause #'(internal name))]))))
 
-(define-syntax constructor
-  (class-clause-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ (_::parens (group make:identifier))
-           (~and (_::block . _)
-                 constructor-block))
-        (wrap-class-clause #`(constructor make constructor-block))]
-       [(_ (~and (_::block . _)
-                 constructor-block))
-        (wrap-class-clause #`(constructor #f constructor-block))]))))
-
 (define-syntax binding
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ (_::parens (group core:identifier))
-           (~and (_::block . _)
-                 binding-block))
-        (wrap-class-clause #`(binding core binding-block))]
-       [(_ (~and (_::block . _)
-                 binding-block))
-        (wrap-class-clause #`(binding #f binding-block))]))))
+       [(form-name (~and (_::quotes . _)
+                         pattern)
+                   (~and (_::block . _)
+                         template-block))
+        (wrap-class-clause #`(binding form-name (block (group rule pattern template-block))))]
+       [(form-name (~and (_::block . _)
+                         binding-block))
+        (wrap-class-clause #`(binding form-name binding-block))]))))
 
 (define-syntax annotation
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group)
-       [(_ (_::parens (group core:identifier))
-           (~and (_::block . _)
-                 annotation-block))
-        (wrap-class-clause #`(annotation core annotation-block))]
-       [(_ (~and (_::block . _)
-                 annotation-block))
-        (wrap-class-clause #`(annotation #f annotation-block))]))))
+       [(form-name (~and (_::quotes . _)
+                         pattern)
+                   (~and (_::block . _)
+                         template-block))
+        (wrap-class-clause #`(annotation form-name (block (group rule pattern template-block))))]
+       [(form-name (~and (_::block . _)
+                         annotation-block))
+        (wrap-class-clause #`(annotation form-name annotation-block))]))))
 
 (define-syntax nonfinal
   (class-clause-transformer
@@ -310,13 +277,18 @@
     (pattern (~seq id:identifier (~and rhs (_::block . _)))
              #:attr form (wrap-class-clause #`(#,mode id rhs)))))
 
+(define-syntax constructor
+  (class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [((~var m (:method #'constructor))) #'m.form]))))
+
 (define-syntax final
   (make-class+interface-clause-transformer
    ;; class clause
    (lambda (stx)
      (syntax-parse stx
        #:literals (override method)
-       [(_) (wrap-class-clause #`(final))]
        [(_ override method (~var m (:method #'final-override))) #'m.form]
        [(_ method (~var m (:method #'final))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]

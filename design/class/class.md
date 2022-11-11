@@ -76,7 +76,6 @@ class_clause := extension_decl
 
 extension_decl := extends identifier
                 | implements_decl
-                | final
                 | nonfinal
 
 implements_decl := implements identifier
@@ -96,15 +95,15 @@ method_decl := method method_spec
 method_spec := id(arg, ..) maybe_annot : body
              | id: entry_point
 
-represent_decl := constructor (make_identifier): entry_point
-                | binding (bind_identifier): entry_point
-                | annotation (annot_identifier): entry_point
+represent_decl := constructor: entry_point
+                | binding: entry_point
+                | annotation: entry_point
                 | internal identifier
 ```
 
 An `extends` clause specifies a superclass. The superclass must be
-nonfinal. The `final` and `nonfinal` clauses can specify a finality
-other than the default.
+nonfinal. The `nonfinal` clauses can specify a finality other than the
+default, which is that the class is final.
 
 An `implements` clauses specifies one or more interfaces. Interfaces
 tend to have abstract methods that must be implemented by a
@@ -126,15 +125,12 @@ after `final`. A `method` can appear after `private`. An
 implementation.
 
 The `constructor`, `binding` and `annotation` clause forms support
-customizing those aspects of the class. In each case, the form expects
-an identifier afterward that is bound to the default constructor,
-binding, or annotation, or a curried version in the case of
-subclassing.
+customizing those aspects of the class.
 
 If `internal` is present, then it binds the associated `identifier` to
-the representation in the same context as the `class` definition, and
-that `identifier` also serves as a default for `make_identifier`,
-`bind_identifier` or `annot_identifier`.
+the representation of the class in the same context as the `class`
+definition. The representation accesses the default constructor,
+binding, and annotation.
 
 The `authentic` clause is a performance hack that disallows custodians
 and impersonators.
@@ -248,41 +244,41 @@ implemented normally. Indvidual method names of a privately
 implemented interface may overlap with methods of a normally
 implemented interface, in which case those methods are public.
 
-The `constructor` clause expects an immediate function in its block as
-an `entry_point`. Similarly, `binding` and `anotation` expect a
-meta-time `entry_point`; the `rule` form serves an `entry_point` for
-simple pattern-matching macro transformations. (When `constructor` is
-specified, then typically `binding` and `annotation` should also be
-specified.)
+The `constructor` clause must either have an anonymous-function shape
+like `fun` (but with `constructor` in place of `fun`) or be followed
+by a blocking continaing an immediate function as an `entry_point`.
+Similarly, `binding` and `anotation` can have a pattern-rule shape or
+expect a meta-time `entry_point`; the `rule` form serves an
+`entry_point` for simple pattern-matching macro transformations. (When
+`constructor` is specified, then typically `binding` and `annotation`
+should also be specified.)
 
-A class is `final` unless `nonfinal` or `extends` is present (i.e., by
-default, classes do not have subclasses). A `nonfinal` clause is
-implied when `extends` is present and `final` is not present (i.e., by
-default, a subclass can have further subclasses).
+A class is final unless `nonfinal` is present (i.e., by default,
+classes do not have subclasses).
 
 When a class extends a superclass that has a customized constructor,
 then the class must also have a customized constuctor. In that case,
-the binding of `make_identifier` is a curried constructor: it expects
-the arguments that the superclass wants, and it returns a function to
-consume the arguments that the default constructor wants; the result
-of calling the second function is the class instance. A customized
-constructor is not obligated to call `make_identifier`, but it is
-obligated to return an instance of the class. When `make_identifier`
-or its result produces an instance of class, it will be an instance of
-a subclass if the constructor was call on behalf of the subclass.
+the binding of `super` within the constructor is a curried
+constructor: it expects the arguments that the superclass wants, and
+it returns a function to consume the arguments that the default
+constructor wants; the result of calling the second function is the
+class instance. A customized constructor is not obligated to call
+`super`, but it is obligated to return an instance of the class. When
+`super` or its result produces an instance of class, it will be an
+instance of a subclass if the constructor was call on behalf of the
+subclass.
 
 Similarly, when a class extends a superclass that has a customized
 binding or annotation, then the class must also have a customized
-binding or annotation, respectively. A `bind_identifier` or
-`annot_identifier` in a subclass is “curried” in the sense that
-`bind_identifier` or `annot_identifier.of` expects two terms
-afterward: the first corresponds to a term to follow the superclass
-binding or annotation form, and the second is a parenthesized sequence
-of bindings or annotations correponding to the `field_spec`s of the
-subclass. Typically, the term for the superclass form expects
-parentheses, but it can have any shape; to work with a subclass
-customization, however, it will need a shape that is represented as a
-single term.
+binding or annotation, respectively. A `super` binding or annotayion
+in a subclass is “curried” in the sense that `bind_identifier` or
+`annot_identifier.of` expects two terms afterward: the first
+corresponds to a term to follow the superclass binding or annotation
+form, and the second is a parenthesized sequence of bindings or
+annotations correponding to the `field_spec`s of the subclass.
+Typically, the term for the superclass form expects parentheses, but
+it can have any shape; to work with a subclass customization, however,
+it will need a shape that is represented as a single term.
 
 Examples
 --------
@@ -301,7 +297,7 @@ Posn(1, 2).x
 Posn.x(p)
 
 fun dist(p :: Posn):
-  return p.x + p.y
+  p.x + p.y
 
 val Posn(x, y): Posn(1, 2)
 x
@@ -366,8 +362,8 @@ class Posn(x, y, dist = x+y)
 val p: Posn(2, 3)
 p.dist
 
-val p: Posn(2, 3, 17)
-p.dist
+val p2: Posn(2, 3, 17)
+p2.dist
 ```
 
 Keywords distinct from field names, annotations on fields:
@@ -403,13 +399,12 @@ Custom constructor and binding:
 import rhombus/meta open
 
 class Posn(x, y):
-  constructor (make):
-    fun (x = 0, y = 0):
-      make(x, y)
-  binding (bind):
-    rule | 'Posn()': 'bind(_, _)'
-         | 'Posn($(x :: Group))': 'bind($x, _)'
-         | 'Posn($x, $y)': 'bind($x, $y)'
+  constructor (x = 0, y = 0):
+    super(x, y)
+  binding:
+    rule | 'Posn()': 'super(_, _)'
+         | 'Posn($(x :: Group))': 'super($x, _)'
+         | 'Posn($x, $y)': 'super($x, $y)'
 
 Posn()
 Posn(1)
@@ -422,42 +417,24 @@ val Posn(_, y): Posn(1, 2)
 y
 ```
 
-Using `internal`:
-
-```
-import rhombus/meta open
-
-class Posn(x, y):
-  internal _Posn
-  constructor:
-    fun (x = 0, y = 0):
-      _Posn(x, y)
-  binding:
-    rule | 'Posn()': '_Posn(_, _)'
-         | 'Posn($(x :: Group))': '_Posn($x, _)'
-         | 'Posn($x, $y)': '_Posn($x, $y)'
-```
-
 Subclassing with custom constructors:
 
 ```
 class Posn(x, y):
   nonfinal
-  constructor (make):
-    fun (x = 0, y = 0):
-      make(x, y)
+  constructor (x = 0, y = 0):
+    super(x, y)
 
 class Posn3D(z):
   extends Posn
-  constructor (make):
-    fun (~x: x = 0, ~y: y = 0, ~z: z = 0):
-      make(x, y)(z)
+  nonfinal
+  constructor (~x: x = 0, ~y: y = 0, ~z: z = 0):
+    super(x, y)(z)
 
 class Posn4D(w):
   extends Posn3D
-  constructor (make):
-    fun (~x = 0, ~y = 0, ~z = 0, ~w = 0):
-      make(~z: z, ~y: y, ~x: x)(w)
+  constructor (~x = 0, ~y = 0, ~z = 0, ~w = 0):
+    super(~z: z, ~y: y, ~x: x)(w)
 
 Posn4D()
 Posn4D(~x: 1, ~y: 2, ~w: 4)
@@ -470,15 +447,13 @@ import rhombus/meta open
 
 class Posn(x, y):
   nonfinal
-  binding (bind):
-    rule 'Posn[[$x $y]]': 'bind($x, $y)'
+  binding 'Posn[[$x $y]]': 'super($x, $y)'
 
 val Posn[[x y]]: Posn(1, 2)
 
 class Posn3D(z):
   extends Posn
-  binding (bind):
-    rule 'Posn3D[([$x $y $z])]': 'bind[[$x $y]]($z)'
+  binding 'Posn3D[([$x $y $z])]': 'super[[$x $y]]($z)'
 
 val Posn3D[([x3 y3 z3])]: Posn3D(1, 2, 3)
 ```
@@ -488,22 +463,20 @@ Mixing keywords for default constructors with customized constructors:
 ```
 class Posn(~x, y):
   nonfinal
-  constructor (make):
-    fun (~ex: x, ~wy: y):
-      make(~x: 1, y)
+  constructor (~ex: x, ~wy: y):
+    super(~x: 1, y)
 
 class Posn3D(z):
   extends Posn
-  constructor (make):
-    fun (x, ~y: y, z):
-      make(~ex: 1, ~wy: y)(z)
+  nonfinal
+  constructor (x, ~y: y, z):
+    super(~ex: 1, ~wy: y)(z)
   internal _Posn3D
 
 class Posn4D(w):
   extends Posn3D
-  constructor (make):
-    fun (x, y, z, w):
-      make(x, ~y: y, z)(w)
+  constructor (x, y, z, w):
+    super(x, ~y: y, z)(w)
 
 Posn(~ex: 1, ~wy: 2)
 Posn3D(1, ~y: 2, 3)
@@ -516,9 +489,9 @@ Mixing default-value forms and customized constructors:
 ```
 class Posn(x, y, dist = x+y):
   nonfinal
-  constructor (make):
-    fun | (x, y): make(x, y)
-        | (dist): make(dist, 0, dist)
+  constructor:
+    fun | (x, y): super(x, y)
+        | (dist): super(dist, 0, dist)
 
 Posn(2, 3)
 Posn(5)
@@ -529,9 +502,9 @@ Helper definition within class:
 ```
 class Posn0D():
   val mutable singleton: #false
-  constructor (make):
+  constructor:
     fun ():
-      unless singleton | singleton := make()
+      unless singleton | singleton := super()
       singleton
 
 Posn0D() === Posn0D()
@@ -569,7 +542,6 @@ a.area()
 (a -: Circle).area()
 
 a.ten_area()
-
 ```
 
 Overlap of public and privately implemented interfaces:

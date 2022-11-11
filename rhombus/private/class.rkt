@@ -117,9 +117,12 @@
        (define private-interfaces (interface-set-diff
                                    (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
                                    (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
-       (define final? (hash-ref options 'final? (not super)))
+       (define final? (hash-ref options 'final? #t))
        (define authentic? (hash-ref options 'authentic? #f))
-       (define-values (internal-id exposed-internal-id constructor-id binding-id annotation-id)
+       (define constructor-rhs (hash-ref options 'constructor-rhs #f))
+       (define binding-ctx+rhs (hash-ref options 'binding-ctx+rhs #f))
+       (define annotation-ctx+rhs (hash-ref options 'annotation-ctx+rhs #f))
+       (define-values (internal-id exposed-internal-id)
          (extract-internal-ids options
                                #'scope-stx #'base-stx
                                stxes))
@@ -204,7 +207,7 @@
        (check-exports-distinct stxes exs fields method-map)
 
        (define need-constructor-wrapper?
-         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
+         (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
                                           super-has-keywords? super-has-defaults? abstract-name super))
 
        (define (temporary template)
@@ -252,12 +255,12 @@
                           '())]
                      [(super-field-keyword ...) super-keywords]
                      [(export ...) exs])
-         (with-syntax ([constructor-name (if constructor-id
+         (with-syntax ([constructor-name (if constructor-rhs
                                              (temporary "~a-ctr")
                                              #'make-name)]
                        [constructor-maker-name (and (or (not final?)
                                                         super)
-                                                    constructor-id
+                                                    constructor-rhs
                                                     (temporary "~a-maker"))]
                        [make-all-name (if need-constructor-wrapper?
                                           (temporary "~a-make")
@@ -301,7 +304,7 @@
                                           [field-annotation-str ...]
                                           [super-field-name ...]
                                           [super-name-field ...]))
-              (build-class-constructor super constructor-id options
+              (build-class-constructor super constructor-rhs
                                        constructor-fields super-constructor-fields added-fields
                                        constructor-keywords super-keywords
                                        constructor-defaults super-defaults
@@ -313,13 +316,13 @@
                                        #'(name make-name make-all-name constructor-name constructor-maker-name
                                                name?
                                                name-defaults))
-              (build-class-binding-form super binding-id options
+              (build-class-binding-form super binding-ctx+rhs
                                         exposed-internal-id intro
                                         #'(name name-instance name?
                                                 [constructor-name-field ...] [super-name-field ...]
                                                 [constructor-field-static-infos ...] [super-field-static-infos ...]
                                                 [constructor-field-keyword ...] [super-field-keyword ...]))
-              (build-class-annotation-form super annotation-id options
+              (build-class-annotation-form super annotation-ctx+rhs
                                            constructor-fields super-constructor-fields
                                            exposed-internal-id intro
                                            #'(name name-instance name?

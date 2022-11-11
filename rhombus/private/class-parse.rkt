@@ -194,7 +194,7 @@
                           (format "superclass has a custom ~a, so a subclass needs a custom ~a" what what)
                           stxes
                           parent-name)))
-  (check-consistent-custom (class-desc-constructor-makers super) (hash-ref options 'constructor-id #f) "constructor")
+  (check-consistent-custom (class-desc-constructor-makers super) (hash-ref options 'constructor-rhs #f) "constructor")
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding #f) "binding")
   (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation #f) "annotation"))
 
