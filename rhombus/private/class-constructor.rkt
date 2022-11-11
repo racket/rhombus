@@ -16,7 +16,7 @@
                                             keywords super-keywords
                                             defaults super-defaults
                                             need-constructor-wrapper?
-                                            unimplemented-name
+                                            abstract-name
                                             has-defaults? super-has-defaults?
                                             final?
                                             exposed-internal-id
@@ -74,8 +74,8 @@
                                         (define fields (append super-constructor-fields constructor-fields))
                                         #`([#,fields (name-defaults . #,fields)])]
                                        [else '()])
-                         #,(if unimplemented-name
-                               #`(raise-unimplemented-methods 'name)
+                         #,(if abstract-name
+                               #`(raise-abstract-methods 'name)
                                #`(make-all-name #,@(or (and super (class-desc-all-fields super))
                                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
                                                          (if (identifier? (field-desc-constructor-arg f))
@@ -119,7 +119,7 @@
 
 (define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-id
                                                     super-has-keywords? super-has-defaults?
-                                                    unimplemented-name
+                                                    abstract-name
                                                     super)
   (or (pair? extra-fields)
       (any-stx? keywords)
@@ -128,7 +128,7 @@
                super-has-defaults?)
            (or (not (class-desc-constructor-makers super))
                constructor-id))
-      unimplemented-name
+      abstract-name
       (and super
            (or (class-desc-all-fields super)
                (for/or ([f (in-list (class-desc-fields super))])
@@ -252,5 +252,5 @@
                                        allow-kws
                                        req-kws))
 
-(define (raise-unimplemented-methods name)
-  (raise-arguments-error* name rhombus-realm "cannot instantiate class with unimplemented methods"))
+(define (raise-abstract-methods name)
+  (raise-arguments-error* name rhombus-realm "cannot instantiate class with abstract methods"))

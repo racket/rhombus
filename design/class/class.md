@@ -91,7 +91,7 @@ method_decl := method method_spec
              | override method_spec
              | final method_spec
              | private method_spec
-             | unimplemented identifier
+             | abstract identifier
 
 method_spec := id(arg, ..) maybe_annot : body
              | id: entry_point
@@ -107,7 +107,7 @@ nonfinal. The `final` and `nonfinal` clauses can specify a finality
 other than the default.
 
 An `implements` clauses specifies one or more interfaces. Interfaces
-tend to have unimplemented methods that must be implemented by a
+tend to have abstract methods that must be implemented by a
 (sub)class before the (sub)class can be instantiated. The combinatio
 `private implements` implements an interface privately, which can
 communicate to the creator of an interface in combination with
@@ -122,7 +122,7 @@ Each `method`, `override`, method-shaped `final`, or method-shaped
 `final` private declaration adds a method to the class. A `method` can
 appear after `override`. An `override`, `method`, or both can appear
 after `final`. A `method` can appear after `private`. An
-`unimplemented` declaration also adds a method, but without an
+`abstract` declaration also adds a method, but without an
 implementation.
 
 The `constructor`, `binding` and `annotation` clause forms support
@@ -153,7 +153,7 @@ method_decl := method method_spec
              | override method_spec
              | final method_spec
              | private method_spec
-             | unimplemented identifier
+             | abstract identifier
 ```
 
 If `internal` is present in `interface`, then it binds the associated
@@ -230,7 +230,7 @@ methods. A private field or method name is not visible outside of a
 class or interface, so it is not required to be distinct from subclass
 or subinterface fields and methods. Method names inherited from
 multiple implemented interfaces must all be implemented the same way,
-either unimplemented, implemented in the same originating interface,
+either abstract, implemented in the same originating interface,
 or overridden in the implementing class. All field and methods names
 can be accessed through an object with `.`, but private field and
 methods names can only be accessed statically. In static mode (i.e.,
@@ -541,12 +541,12 @@ Interfaces:
 
 ```
 interface Shape:
-  unimplemented area
+  abstract area
   method ten_area(): 10 * area()
 
 interface Polygon:
   extends Shape
-  unimplemented sides
+  abstract sides
   method has_corners(): #true
 
 interface Circle:
@@ -577,12 +577,12 @@ Overlap of public and privately implemented interfaces:
 ```
 interface Stool:
   internal _Stool
-  unimplemented legs
-  unimplemented seat
+  abstract legs
+  abstract seat
 
 interface Cow:
-  unimplemented legs
-  unimplemented horns
+  abstract legs
+  abstract horns
 
 class MilkShed():
   private implements Stool
@@ -621,7 +621,7 @@ to be the same. That goal seems to fundamentaly conflict with dynamic
 better to just live with a prohibiton against same-named method in
 superinterfaces.
 
-Currently, an unimplemented method has no signature. More generally,
+Currently, an abstract method has no signature. More generally,
 there's no support for checking that a method override has a signature
 that is compatible with the implementation that it replaces. Along
 those lines, static information about the result of a method is not
@@ -683,6 +683,7 @@ C++ private superclasses.
 Contributors
 ------------
 
+* Robby Findler
 * Jack Firth
 * Matthew Flatt
 * Alex Knauth

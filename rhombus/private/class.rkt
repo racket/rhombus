@@ -45,7 +45,7 @@
          method
          override
          private
-         unimplemented)
+         abstract)
 
 (define-syntax rhombus-class
   (definition-transformer
@@ -191,21 +191,21 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (final) or box-of-index (non-final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier or '#:unimplemented
+                       method-vtable   ; index -> accessor-identifier or '#:abstract
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
-                       unimplemented-name) ; #f or identifier
+                       abstract-name)  ; #f or identifier for a still-abstract method
          (build-method-map stxes added-methods super interfaces private-interfaces))
 
        (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
-       (check-consistent-unimmplemented stxes final? unimplemented-name)
+       (check-consistent-unimmplemented stxes final? abstract-name)
 
        (define exs (parse-exports #'(combine-out . exports)))
        (check-exports-distinct stxes exs fields method-map)
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-id
-                                          super-has-keywords? super-has-defaults? unimplemented-name super))
+                                          super-has-keywords? super-has-defaults? abstract-name super))
 
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
@@ -290,7 +290,7 @@
               (build-class-struct super
                                   fields mutables final? authentic?
                                   method-map method-names method-vtable method-private
-                                  unimplemented-name
+                                  abstract-name
                                   interfaces private-interfaces
                                   #'(name class:name make-all-name name? name-ref
                                           [public-field-name ...]
@@ -306,7 +306,7 @@
                                        constructor-keywords super-keywords
                                        constructor-defaults super-defaults
                                        need-constructor-wrapper?
-                                       unimplemented-name
+                                       abstract-name
                                        has-defaults? super-has-defaults?
                                        final?
                                        exposed-internal-id
@@ -359,7 +359,7 @@
 (define-for-syntax (build-class-struct super
                                        fields mutables final? authentic?
                                        method-map method-names method-vtable method-private
-                                       unimplemented-name
+                                       abstract-name
                                        interfaces private-interfaces
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref
@@ -402,7 +402,7 @@
                          (make-struct-type 'name
                                            #,(and super (class-desc-class:id super))
                                            #,(length fields) 0 #f
-                                           (list #,@(if unimplemented-name
+                                           (list #,@(if abstract-name
                                                         null
                                                         #`((cons prop:field-name->accessor
                                                                  (list* '(public-field-name ...)
@@ -417,11 +417,11 @@
                                                         (list #'(cons prop:authentic #t))
                                                         '())
                                                  #,@(if (or (zero? (vector-length method-vtable))
-                                                            unimplemented-name)
+                                                            abstract-name)
                                                         '()
                                                         (list #`(cons prop:methods
                                                                       (vector #,@(vector->list method-vtable)))))
-                                                 #,@(if unimplemented-name
+                                                 #,@(if abstract-name
                                                         null
                                                         (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
                                                                                                                          private-interfaces))])

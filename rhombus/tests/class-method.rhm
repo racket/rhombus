@@ -14,7 +14,7 @@ check:
   ~eval_exn
   class Posn(x, y):
     method x(): 0
-    unimplemented x
+    abstract x
   "duplicate method name"
 
 check:
@@ -132,13 +132,13 @@ check:
 check:
   ~eval_exn
   class Posn(x, y):
-    unimplemented m
-  "final class cannot have unimplemented methods"
+    abstract m
+  "final class cannot have abstract methods"
 
 check:
   class Posn(x, y):
     nonfinal
-    unimplemented m
+    abstract m
   Posn is_a List
   #false
 
@@ -146,19 +146,19 @@ check:
   ~eval_exn
   class Posn(x, y):
     nonfinal
-    unimplemented m
+    abstract m
   Posn(1, 2)
-  "cannot instantiate class with unimplemented"
+  "cannot instantiate class with abstract"
 
 check:
   ~eval_exn
   class Posn(x, y):
     nonfinal
-    unimplemented m
+    abstract m
   class Posn3D(z):
     extends Posn
   Posn3D(1, 2, 3)
-  "cannot instantiate class with unimplemented"
+  "cannot instantiate class with abstract"
 
 check:
   class Posn(x, y):
@@ -303,7 +303,7 @@ check:
 check:
   class Posn(x, y):
     nonfinal
-    unimplemented m
+    abstract m
   class Posn3D(z):
     extends Posn
     override m(): "ok"
@@ -330,11 +330,11 @@ check:
   ~eval_exn
   class Posn(x, y):
     nonfinal
-    unimplemented m
+    abstract m
   class Posn3D(z):
     extends Posn
     override m(): super.m()
-  "method is unimplemented in superclass"
+  "method is abstract in superclass"
 
 check:
   class Posn(x, y):

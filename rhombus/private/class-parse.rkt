@@ -46,7 +46,7 @@
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list symbol-or-id ...), includes private fields
                     method-names  ; vector of symbol or boxed symbol; plain symbol means final
-                    method-vtable ; syntax-object vector of accessor identifiers or #'#:unimplemented
+                    method-vtable ; syntax-object vector of accessor identifiers or #'#:abstract
                     method-map    ; hash of name -> index or boxed index; inverse of `method-names`
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
@@ -198,12 +198,12 @@
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding #f) "binding")
   (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation #f) "annotation"))
 
-(define (check-consistent-unimmplemented stxes final? unimplemented-name)
-  (when (and final? unimplemented-name)
+(define (check-consistent-unimmplemented stxes final? abstract-name)
+  (when (and final? abstract-name)
     (raise-syntax-error #f
-                        "final class cannot have unimplemented methods"
+                        "final class cannot have abstract methods"
                         stxes
-                        unimplemented-name)))
+                        abstract-name)))
 
 (define (check-field-defaults stxes super-has-defaults? constructor-fields defaults keywords)
   (for/fold ([need-default? #f]) ([f (in-list constructor-fields)]

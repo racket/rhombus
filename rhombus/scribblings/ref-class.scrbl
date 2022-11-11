@@ -44,7 +44,7 @@
     $$(@rhombus(override, ~class_clause)) $method_decl
     $$(@rhombus(final, ~class_clause)) $method_decl
     $$(@rhombus(private, ~class_clause)) $method_decl
-    $$(@rhombus(unimplemented, ~class_clause)) $method_decl
+    $$(@rhombus(abstract, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(implements, ~class_clause)) $implements_decl
     $$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause)) $implements_decl
@@ -140,7 +140,7 @@
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form,
- @rhombus(unimplemented, ~class_clause) form, or method-shaped
+ @rhombus(abstract, ~class_clause) form, or method-shaped
  @rhombus(final, ~class_clause) or @rhombus(private, ~class_clause) form,
  then the clause declares a method for the class. These clauses can
  appear any number of times as a @rhombus(class_clause) to add or
@@ -155,7 +155,7 @@
  When a @rhombus(class_clause) is an @rhombus(implements, ~class_clause)
  form, the new class is created as an implementation of the named
  interfaces. Like a superclass, an interface can supply method
- implementations (that can be overridden) and have unimplemented methods,
+ implementations (that can be overridden) and have abstract methods,
  but an interface does not have fields; see @rhombus(interface) for more
  information. Prefixing @rhombus(implements, ~class_clause) with
  @rhombus(private, ~class_clause) makes the interface privately
@@ -280,7 +280,7 @@
     $$(@rhombus(override, ~intf_clause)) $method_decl
     $$(@rhombus(final, ~intf_clause)) $method_decl
     $$(@rhombus(private, ~intf_clause)) $method_decl
-    $$(@rhombus(unimplemented, ~intf_clause)) $method_decl
+    $$(@rhombus(abstract, ~intf_clause)) $method_decl
     $$(@rhombus(extends, ~intf_clause)) $extends_decl
     $$(@rhombus(internal, ~intf_clause)) $identifier
     $other_interface_clause
@@ -304,7 +304,7 @@
  instances satisfy the interface as an annotation.
 
  Typically, an interface declares methods with
- @rhombus(unimplemented, ~intf_clause) to be implemented by classes that
+ @rhombus(abstract, ~intf_clause) to be implemented by classes that
  implement the interface. However, an interface can defined methods
  implementations that are inherited by classes that implement the
  interface and subinterfaces that extend the interface. An interface can
@@ -323,14 +323,14 @@
  @rhombus($$(@rhombus(private, ~class_clause)) $$(@rhombus(override, ~class_clause))),
  otherwise it is overidden normally. If a class declares the
  implementation of a interface both normally and privately, then the
- interface is implemented normally. Unimplemented private methods must be
+ interface is implemented normally. Abstract private methods must be
  implemented immediately in the class that privately implements the
  associated interface.
 
  When a class or interface extends or implements multiple interfaces
  that provide a method with the same name, the method implementation must
  be the same for all interfaces. That is, the method must be
- unimplemented, the implementation must reside in a shared superinterface
+ abstract, the implementation must reside in a shared superinterface
  of the interfaces, or the method must be overridden in the implementing
  class. Overriding applies to same-named methods of all interfaces.
 
@@ -475,19 +475,19 @@
 }
 
 @doc(
-  class_clause.macro 'unimplemented $identifier',
-  class_clause.macro 'unimplemented $$(@rhombus(method, ~class_clause)) $identifier',
-  interface_clause.macro 'unimplemented $identifier',
-  interface_clause.macro 'unimplemented $$(@rhombus(method, ~intf_clause)) $identifier',
+  class_clause.macro 'abstract $identifier',
+  class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $identifier',
+  interface_clause.macro 'abstract $identifier',
+  interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $identifier',
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
- without an implementation. When a class has an unimplemented method,
+ without an implementation. When a class has an abstract method,
  either declared directly or inherited, the constructor for the class
  raises an exception. The method must be overridden with a
  @rhombus(override, ~class_clause) class in a subclass, and then the
- subclass can be instantiated (as long as it has no other unimplemented
- methods). A @tech{final} class cannot have an unimplemented method.
+ subclass can be instantiated (as long as it has no other abstract
+ methods). A @tech{final} class cannot have an abstract method.
 
 }
 

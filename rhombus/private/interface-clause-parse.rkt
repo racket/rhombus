@@ -31,7 +31,7 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends method private override unimplemented final final-override internal)
+              #:literals (extends method private override abstract final final-override internal)
               [(internal id)
                (when (hash-has-key? options 'internal)
                  (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
@@ -45,11 +45,11 @@
                                                               #'rhs
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(unimplemented id)
+              [(abstract id)
                (hash-set options 'methods (cons (added-method #'id
-                                                              '#:unimplemented
+                                                              '#:abstract
                                                               #f
-                                                              'unimplemented)
+                                                              'abstract)
                                                 (hash-ref options 'methods null)))]
               [_
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))

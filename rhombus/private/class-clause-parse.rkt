@@ -30,7 +30,7 @@
          method
          override
          private
-         unimplemented)
+         abstract)
 
 (module+ for-interface
   (provide final-override))
@@ -101,7 +101,7 @@
             (syntax-parse clause
               #:literals (extends implements private-implements
                                   constructor final nonfinal authentic binding annotation
-                                  method private override unimplemented internal
+                                  method private override abstract internal
                                   final-override)
               [(extends id)
                (when (hash-has-key? options 'extends)
@@ -155,11 +155,11 @@
                                                               #'rhs
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(unimplemented id)
+              [(abstract id)
                (hash-set options 'methods (cons (added-method #'id
-                                                              '#:unimplemented
+                                                              '#:abstract
                                                               #f
-                                                              'unimplemented)
+                                                              'abstract)
                                                 (hash-ref options 'methods null)))]
               [_
                (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
@@ -366,10 +366,10 @@
        [(_ (~var m (:method #'private))) #'m.form]))))
 (define-syntax private-implements 'placeholder)
 
-(define-syntax unimplemented
+(define-syntax abstract
   (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
-       [(_ method name:identifier) (wrap-class-clause #'(unimplemented name))]
-       [(_ name:identifier) (wrap-class-clause #'(unimplemented name))]))))
+       [(_ method name:identifier) (wrap-class-clause #'(abstract name))]
+       [(_ name:identifier) (wrap-class-clause #'(abstract name))]))))

@@ -5,12 +5,12 @@ use_static
 
 check:
   interface Shape:
-    unimplemented area
+    abstract area
     method ten_area(): 10 * area()
 
   interface Polygon:
     extends Shape
-    unimplemented sides
+    abstract sides
     method has_corners(): #true
 
   interface Circle:
@@ -76,9 +76,9 @@ check:
 // diamond
 check:
   interface Shape:
-    unimplemented draw
+    abstract draw
   interface Cowboy:
-    unimplemented draw
+    abstract draw
   class LoneRanger():
     implements Shape
     implements Cowboy
@@ -89,7 +89,7 @@ check:
 // diamond with extra methods
 check:
   interface Shape:
-    unimplemented draw
+    abstract draw
   interface Circle:
     extends Shape
     method cdraw(): draw() +& "_circle"
@@ -121,7 +121,7 @@ check:
 check:
   interface Adder:
     internal _Adder
-    unimplemented total
+    abstract total
   class Sum(x):
     private implements Adder
     private override total(): x
@@ -133,7 +133,7 @@ check:
 
 check:
   interface Adder:
-    unimplemented total
+    abstract total
   class Sum(x):
     private implements Adder
     private override total(): x
@@ -144,7 +144,7 @@ check:
   ~eval_exn
   begin:
     interface Adder:
-      unimplemented total
+      abstract total
     class Sum(x):
       private implements Adder
       private override total(): x
@@ -156,7 +156,7 @@ check:
   begin:
     use_static
     interface Adder:
-      unimplemented total
+      abstract total
     class Sum(x):
       private implements Adder
       private override total(): x
@@ -166,7 +166,7 @@ check:
 // implement an interface both privately and publicly => public
 check:
   interface Adder:
-    unimplemented total
+    abstract total
   class Sum(x):
     private implements Adder
     implements Adder
@@ -179,11 +179,11 @@ check:
 check:
   interface Stool:
     internal _Stool
-    unimplemented legs
-    unimplemented seat
+    abstract legs
+    abstract seat
   interface Cow:
-    unimplemented legs
-    unimplemented horns
+    abstract legs
+    abstract horns
   class MilkShed():
     private implements Stool
     implements Cow

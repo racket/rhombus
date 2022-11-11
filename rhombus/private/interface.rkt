@@ -85,10 +85,10 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier or '#:unimplemented
+                       method-vtable   ; index -> accessor-identifier or '#:abstract
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
-                       unimplemented-name) ; #f or identifier
+                       abstract-name)  ; #f or identifier
          (build-method-map stxes added-methods #f supers #hasheq()))
 
        (define exs (parse-exports #'(combine-out . exports)))

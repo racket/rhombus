@@ -65,7 +65,7 @@
   ;; in the same place in the new vtable
   (define-values (ht            ; symbol -> (cons maybe-boxed-index id)
                   super-priv-ht ; symbol -> identifier, implies not in `ht`
-                  vtable-ht)    ; int -> accessor-identifier or '#:unimplemented
+                  vtable-ht)    ; int -> accessor-identifier or '#:abstract
     (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
       (define super-vtable (super-method-vtable super))
       (define private? (hash-ref private-interfaces super #f))
@@ -74,7 +74,7 @@
                  [super-i (in-naturals)])
         (define i (hash-count ht))
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
-                          (if (eq? (syntax-e rhs) '#:unimplemented) '#:unimplemented rhs)))
+                          (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))
         (define-values (key val)
           (if (box? name)
               (values (unbox name) (cons (box i) (unbox name)))
@@ -167,7 +167,7 @@
                     new-here-ht)])])))
 
   (for ([(name rhs) (in-hash super-priv-ht)])
-    (when (eq? rhs '#:unimplemented)
+    (when (eq? rhs '#:abstract)
       (unless (hash-ref priv-ht name #f)
         (raise-syntax-error #f (format "method from private ~a must be overridden" super-str) stx name))))
 
@@ -181,10 +181,10 @@
   (define method-vtable
     (for/vector ([i (in-range (hash-count new-vtable-ht))])
       (hash-ref new-vtable-ht i)))
-  (define unimplemented-name
+  (define abstract-name
     (for/or ([v (in-hash-values new-vtable-ht)]
              [i (in-naturals)])
-      (and (eq? v '#:unimplemented)
+      (and (eq? v '#:abstract)
            (hash-ref method-names i))))
 
   (values method-map
@@ -192,7 +192,7 @@
           method-vtable
           priv-ht
           here-ht
-          unimplemented-name))
+          abstract-name))
 
 (define-for-syntax (build-interface-vtable intf method-map method-vtable method-names method-private)
   (for/list ([maybe-boxed-name (in-vector (interface-desc-method-names intf))])
@@ -273,8 +273,8 @@
                    (define super (car super+pos))
                    (define pos (cdr super+pos))
                    (define impl (vector-ref (super-method-vtable super) (if (box? pos) (unbox pos) pos)))
-                   (when (eq? (syntax-e impl) '#:unimplemented)
-                     (raise-syntax-error #f "method is unimplemented in superclass" #'head #'method-id))
+                   (when (eq? (syntax-e impl) '#:abstract)
+                     (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
                    (define-values (call new-tail)
                      (parse-function-call impl (list #'id) #'(method-id args)))
                    (values call #'tail)]))]
