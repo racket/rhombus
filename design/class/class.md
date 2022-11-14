@@ -19,8 +19,8 @@ cover in a complete design:
    Racket's more modern approach to keyword arguments.
 
  * A way to control the binding pattern, annotation predicate,
-   annotation constructor, dot provider, printer, and equality
-   operator for a class.
+   annotation constructor, namespace, printer, and equality operator
+   for a class.
 
  * Support for methods, including inheritance for implementation, but
    also something like properties, traits, or mixins for interface.
@@ -41,20 +41,22 @@ class identifier(field_spec, ...):
   class_clause_or_body_or_export
   ...
 
-field_spec := maybe_mutable identifier maybe_annot maybe_default
-            | keyword: maybe_mutable identifier maybe_annot maybe_default
+field_spec := modifiers identifier maybe_annot maybe_default
+            | keyword: modifier identifier maybe_annot maybe_default
             | keyword maybe_default
 
-maybe_mutable := mutable | ε
+modifiers := private | mutable | private mutable | ε
 maybe_annot := :: annotation | ε
 maybe_default := = expr | ε
 ```
 
-Specifying a keyword for a field causes the constructor, binding
-pattern, and annotation to expect a keyword for the corresponding
-field instead of a by-position argument or subform. Specifying a
-default-value expression causes the corresponding argument in the
-constructor to be optional.
+Specifying a keyword for a non-private field causes the constructor,
+binding pattern, and annotation to expect a keyword for the
+corresponding field instead of a by-position argument or subform.
+Specifying a default-value expression causes the corresponding
+argument in the constructor to be optional. Private fields from a
+`field_spec` are not included in the default constructor, so they
+either need defaults or a custom constructor.
 
 The `interface` form is similar, but without fields, constructors,
 custom binding, or custom annotation.
@@ -106,16 +108,24 @@ nonfinal. The `nonfinal` clauses can specify a finality other than the
 default, which is that the class is final.
 
 An `implements` clauses specifies one or more interfaces. Interfaces
-tend to have abstract methods that must be implemented by a
-(sub)class before the (sub)class can be instantiated. The combinatio
-`private implements` implements an interface privately, which can
-communicate to the creator of an interface in combination with
-`internal`, but does not necessarily expose the implemented methods.
+tend to have abstract methods that must be implemented by a (sub)class
+before the (sub)class can be instantiated. The combinatio `private
+implements` implements an interface privately, which can communicate
+to the creator of an interface in combination with `internal`, but
+does not necessarily expose the implemented methods. For example,
+privately implementing a printing method can customize a trusted
+printing implementation without exposing the method to callers that
+might provide unsuitable arguments. Private implementation also
+supports some of the same patterns as `define-local-member-name` in
+Racket.
 
 Each `field` clause adds additional mutable fields to the class, but
-the extra fields are not included in the default constructor, etc.
-A field can be declared as `private`, which means that it can only
-be accessed within methods of the class.
+the extra fields are not included in the default constructor, etc.,
+even in the internal view of the constructor. A field can be declared
+as `private`, which means that it can only be accessed within methods
+of the class or through an `internal` identifier. For most purposes, a
+`private field` class is more convenient that `private` in a class's
+initial `field_spec`, unless immutability is important.
 
 Each `method`, `override`, method-shaped `final`, or method-shaped
 `final` private declaration adds a method to the class. A `method` can
@@ -128,9 +138,10 @@ The `constructor`, `binding` and `annotation` clause forms support
 customizing those aspects of the class.
 
 If `internal` is present, then it binds the associated `identifier` to
-the representation of the class in the same context as the `class`
-definition. The representation accesses the default constructor,
-binding, and annotation.
+the an internal view of the class in the same context as the `class`
+definition. The representation accesses a default constructor,
+binding, and annotation, and it provides static access private fields
+and methods.
 
 The `authentic` clause is a performance hack that disallows custodians
 and impersonators.
@@ -155,7 +166,7 @@ method_decl := method method_spec
 If `internal` is present in `interface`, then it binds the associated
 `identifier` to the representation in the same context as the
 `interface` definition, and it can be used to recognize private
-implementations of the interface.
+implementations of the interface as well as access private methods.
 
 Both class and interface names work as annotations, and the
 annotation is satisfied by an instance of the class, subclass, or (in
@@ -166,7 +177,7 @@ interface name does not.
 Design
 ------
 
-The block after `class` or `interface` ontains a mixture of class
+The block after `class` or `interface` contains a mixture of class
 clauses and other definitions and expressions. Clauses can add extra
 fields to the class, add methods to a class or interface, customize
 the constructor of a class, and so on.
@@ -223,17 +234,18 @@ shadows the field or method.
 Method and fields names must all be distinct, both within a class and
 taking into account superclass and superinterface public fields and
 methods. A private field or method name is not visible outside of a
-class or interface, so it is not required to be distinct from subclass
-or subinterface fields and methods. Method names inherited from
-multiple implemented interfaces must all be implemented the same way,
-either abstract, implemented in the same originating interface,
-or overridden in the implementing class. All field and methods names
-can be accessed through an object with `.`, but private field and
-methods names can only be accessed statically. In static mode (i.e.,
-when `use_static` is declared), then a method can only be used in a
-call form; when dynamic `.` is used to access a method, then it does
-not have to be a call, and the result of the `.` expression is a
-closure over the object.
+class or interface, except whe using an `internal` name, so it is not
+required to be distinct from subclass or subinterface fields and
+methods. Method names inherited from multiple implemented interfaces
+must all be implemented the same way, either abstract, implemented in
+the same originating interface, or overridden in the implementing
+class. All field and methods names can be accessed through an object
+with `.`, but private field and methods names can only be accessed
+statically, either within the defining class or via an `internal`
+binding. In static mode (i.e., when `use_static` is declared), then a
+method can only be used in a call form; when dynamic `.` is used to
+access a method, then it does not have to be a call, and the result of
+the `.` expression is a closure over the object.
 
 When a class implements an interface privately, the private methods
 are overridden with `private override` (and no other use of `private`
@@ -256,29 +268,27 @@ should also be specified.)
 A class is final unless `nonfinal` is present (i.e., by default,
 classes do not have subclasses).
 
-When a class extends a superclass that has a customized constructor,
-then the class must also have a customized constuctor. In that case,
-the binding of `super` within the constructor is a curried
-constructor: it expects the arguments that the superclass wants, and
-it returns a function to consume the arguments that the default
-constructor wants; the result of calling the second function is the
-class instance. A customized constructor is not obligated to call
-`super`, but it is obligated to return an instance of the class. When
-`super` or its result produces an instance of class, it will be an
-instance of a subclass if the constructor was call on behalf of the
-subclass.
+When a class extends a superclass that has a custom constructor, the
+new class's default constructor assumes that the superclass construct
+accepts arguments consistent with its immediate and inherited
+`field_spec`s. In a custom constructor, the binding of `super` within
+the constructor is a curried constructor: it expects the arguments
+that the superclass wants, and it returns a function to consume the
+arguments that the default constructor wants, including arguments for
+`private` `field_spec` fields; the result of calling the second
+function is the class instance. A customized constructor is not
+obligated to call `super`, but it is obligated to return an instance
+of the class. When `super` or its result produces an instance of
+class, it will be an instance of a subclass if the constructor was
+call on behalf of the subclass.
 
-Similarly, when a class extends a superclass that has a customized
-binding or annotation, then the class must also have a customized
-binding or annotation, respectively. A `super` binding or annotayion
-in a subclass is “curried” in the sense that `bind_identifier` or
-`annot_identifier.of` expects two terms afterward: the first
-corresponds to a term to follow the superclass binding or annotation
-form, and the second is a parenthesized sequence of bindings or
-annotations correponding to the `field_spec`s of the subclass.
-Typically, the term for the superclass form expects parentheses, but
-it can have any shape; to work with a subclass customization, however,
-it will need a shape that is represented as a single term.
+When a class extends a superclass that has a customized binding or
+annotation, then the class must also have a customized binding or
+annotation, respectively. There is no `super` binding or annotation;
+instead, `internal` can be used to get an internal binding and
+annotation that expects components only for the immediate class. That
+internal view can be combined with the superclass binding or
+annotation and the `&&` binding or annotation operator.
 
 Examples
 --------
@@ -401,10 +411,11 @@ import rhombus/meta open
 class Posn(x, y):
   constructor (x = 0, y = 0):
     super(x, y)
+  internal _Posn
   binding:
-    rule | 'Posn()': 'super(_, _)'
-         | 'Posn($(x :: Group))': 'super($x, _)'
-         | 'Posn($x, $y)': 'super($x, $y)'
+    rule | 'Posn()': '_Posn(_, _)'
+         | 'Posn($(x :: Group))': '_Posn($x, _)'
+         | 'Posn($x, $y)': '_Posn($x, $y)'
 
 Posn()
 Posn(1)
@@ -447,13 +458,15 @@ import rhombus/meta open
 
 class Posn(x, y):
   nonfinal
-  binding 'Posn[[$x $y]]': 'super($x, $y)'
+  internal _Posn
+  binding 'Posn[[$x $y]]': '_Posn($x, $y)'
 
 val Posn[[x y]]: Posn(1, 2)
 
 class Posn3D(z):
   extends Posn
-  binding 'Posn3D[([$x $y $z])]': 'super[[$x $y]]($z)'
+  internal _Posn3D
+  binding 'Posn3D[([$x $y $z])]': 'Posn[[$x $y]] && _Posn3D($z)'
 
 val Posn3D[([x3 y3 z3])]: Posn3D(1, 2, 3)
 ```
@@ -573,8 +586,30 @@ m.horns()
 (m -: Stool).seat()
 ```
 
+Private immutable field:
+
+```
+class Posn(x, y, private stamp):
+  constructor (x, y):
+    super(x, y, current_stamp())
+  internal _Posn
+
+val p: Posn(1, 2)
+val Posn(x, y): p
+_Posn.stamp(p)
+(p -: _Posn).stamp
+```
+
 Open Issues
 -----------
+
+Access to private fields and methods relies on static resolution of
+the private reference. Up to this point, we have tried to make dynamic
+resolution produce the same answer, if more slowly. Still, statis
+resolution of a namespace `.` is a kind of precedent. And for the
+limited case of accessing private members, hopefully all relevant code
+is in the same maintenance region, so maybe it will be ok to rely on a
+static-information system that is somewhat brittle.
 
 An uncooperative custom constructor for a non-final class might return
 an instance of itself or some other subclass when called on behalf of

@@ -1,0 +1,190 @@
+#lang rhombus
+import:
+  rhombus/meta open
+  "check.rhm" open
+
+use_static
+  
+check:
+  ~eval_exn
+  use_static
+  begin:
+    class Posn(x, y, private color = "blue"):
+      method get_color():
+        color
+    Posn(1, 2).color
+  "no such public field"
+
+check:
+  ~eval_exn
+  begin:
+    class Posn(x, y, private color = "blue"):
+      method get_color():
+        color
+    Posn(1, 2).color
+  "no such field"
+
+check:
+  class Posn(x, y, private color = "blue"):
+    method get_color():
+      color
+  val p: Posn(1, 2)
+  val Posn(px, py): p
+  [p.x, p.y, p.get_color(),
+   px, py,
+   p is_a Posn.of(Integer, Integer)]
+  [1, 2, "blue",
+   1, 2,
+   #true]
+
+// internal
+check:
+  class Posn(x, y, private color = "blue"):
+    method get_color():
+      color
+    private method secret():
+      [color]
+    internal _Posn
+  val p: Posn(1, 2)
+  val _p: _Posn(-1, -2, "red")
+  val Posn(px, py): p
+  val _Posn(_px, _py, _pcolor): p
+  [p.x, p.y, p.get_color(),
+   _p.x, _p.y, _p.get_color(),
+   px, py,
+   _px, _py, _pcolor,
+   p is_a Posn.of(Integer, Integer),
+   p is_a _Posn.of(Integer, Integer, String),
+   _p.color, _Posn.color(p), _Posn.color(_p),
+   _Posn.secret(p)]
+  [1, 2, "blue",
+   -1, -2, "red",
+   1, 2,
+   1, 2, "blue",
+   #true,
+   #true,
+   "red", "blue", "red",
+   ["blue"]]
+
+// private fields with defaults, no custom constructor
+check:
+  class Posn(x, y, private color = "blue"):
+    nonfinal
+    method get_color():
+      color
+  class Posn3D(z, private weight = "light"):
+    nonfinal
+    extends Posn
+    method get_weight():
+      weight
+  val p3: Posn3D(1, 2, 3)
+  val Posn(px, py): p3
+  val Posn3D(px3, py3, pz3): p3
+  [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
+   px, py,
+   px3, py3, pz3,
+   p3 is_a Posn.of(Integer, Integer)]
+  [1, 2, "blue", 3, "light",
+   1, 2,
+   1, 2, 3,
+   #true]
+
+// private fields, custom constructor, default subclass constructor
+check:
+  class Posn(x, private color, y):
+    nonfinal
+    method get_color():
+      color
+    constructor (x, y):
+      super(x, "red", y)
+  class Posn3D(z):
+    nonfinal
+    extends Posn
+  val p3: Posn3D(1, 2, 3)
+  val Posn(px, py): p3
+  val Posn3D(px3, py3, pz3): p3
+  [p3.x, p3.y, p3.get_color(), p3.z,
+   px, py,
+   px3, py3, pz3,
+   p3 is_a Posn.of(Integer, Integer)]
+  [1, 2, "red", 3,
+   1, 2,
+   1, 2, 3,
+   #true]
+
+// private fields, custom constructor, subclass private
+check:
+  class Posn(x, private color, y):
+    nonfinal
+    method get_color():
+      color
+    constructor (x, y):
+      super(x, "red", y)
+  class Posn3D(private weight, z):
+    nonfinal
+    extends Posn
+    constructor (x, y, z):
+      super(x, y)("heavy", z)
+    method get_weight():
+      weight
+  val p3: Posn3D(1, 2, 3)
+  val Posn(px, py): p3
+  val Posn3D(px3, py3, pz3): p3
+  [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
+   px, py,
+   px3, py3, pz3,
+   p3 is_a Posn.of(Integer, Integer)]
+  [1, 2, "red", 3, "heavy",
+   1, 2,
+   1, 2, 3,
+   #true]
+
+// private fields and more customization plus internal
+check:
+  class Posn(x, private color, y):
+    nonfinal
+    internal _Posn
+    method get_color():
+      color
+    constructor (x, y):
+      super(x, "red", y)
+    binding:
+      rule | 'Posn{$x, $y}': '_Posn($x, _, $y)'
+           | 'Posn[$c]{$x, $y}': '_Posn($x, $c, $y)'
+    annotation:
+      rule | 'Posn $dot of{$x, $y}': '_Posn.of($x, Any, $y)'
+           | 'Posn' : '_Posn'
+  class Posn3D(private weight, z):
+    nonfinal
+    extends Posn
+    internal _Posn3D
+    constructor (x, y, z):
+      super(x, y)("heavy", z)
+    method get_weight():
+      weight
+    binding 'Posn3D{$x, $y, $z}': 'Posn{$x, $y} && _Posn3D(_, $z)'
+    annotation:
+      rule | 'Posn3D $dot of{$x, $y, $z}': 'Posn.of{$x, $y} && _Posn3D.of(Any, $z)'
+           | 'Posn3D' : '_Posn3D'      
+  val p3: Posn3D(1, 2, 3)
+  val Posn{px, py}: p3
+  val Posn3D{px3, py3, pz3}: p3
+  [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
+   px, py,
+   px3, py3, pz3,
+   p3 is_a Posn.of{Integer, Integer}]
+  [1, 2, "red", 3, "heavy",
+   1, 2,
+   1, 2, 3,
+   #true]
+
+check:
+  class Posn(x, y, private stamp):
+    constructor (x, y):
+      super(x, y, 10)
+    internal _Posn
+  val p: Posn(1, 2)
+  val Posn(x, y): p
+  [_Posn.stamp(p),
+   (p -: _Posn).stamp]
+  [10, 10]

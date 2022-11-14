@@ -16,52 +16,53 @@
 
 (provide (for-syntax build-class-binding-form))
 
-(define-for-syntax (build-class-binding-form super binding-ctx+rhs
+(define-for-syntax (build-class-binding-form super binding-rhs
                                              exposed-internal-id intro
                                              names)
   (with-syntax ([(name name-instance name?
-                       [constructor-name-field ...] [super-name-field ...]
-                       [constructor-field-static-infos ...] [super-field-static-infos ...]
-                       [field-keyword ...] [super-field-keyword ...])
+                       constructor-name-fields constructor-public-name-fields super-name-fields
+                       constructor-field-static-infoss constructor-public-field-static-infoss super-field-static-infoss
+                       field-keywords public-field-keywords super-field-keywords)
                  names])
-    (with-syntax ([core-bind-name (if binding-ctx+rhs
-                                      (car (generate-temporaries #'(name)))
-                                      #'name)])
-      (append
-       (list
-        #`(define-binding-syntax core-bind-name
-            (binding-transformer
-             (quote-syntax name)
-             #,(if (and super
-                        binding-ctx+rhs)
-                   #`(make-curried-binding-transformer (quote-syntax #,(class-desc-id super))
-                                                       #,(symbol->string (syntax-e #'name))
-                                                       (quote-syntax name?)
-                                                       #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                       (list (quote-syntax constructor-name-field) ...)
-                                                       #:keywords '(field-keyword ...)
-                                                       (list (quote-syntax constructor-field-static-infos) ...))
-                   #`(make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
-                                                         (quote-syntax name?)
-                                                         #:static-infos (quote-syntax ((#%dot-provider name-instance)))
-                                                         (list (quote-syntax super-name-field) ...
-                                                               (quote-syntax constructor-name-field) ...)
-                                                         #:keywords '(super-field-keyword ... field-keyword ...)
-                                                         (list (quote-syntax super-field-static-infos) ...
-                                                               (quote-syntax constructor-field-static-infos) ...)
-                                                         #:accessor->info? #t)))))
-       (if exposed-internal-id
-           (list
-            #`(define-binding-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax core-bind-name))))
-           null)
-       (cond
-         [binding-ctx+rhs
-          (list
-           #`(define-binding-syntax #,(intro (datum->syntax (car binding-ctx+rhs) 'super))
-               (make-rename-transformer (quote-syntax #,(in-binding-space #'core-bind-name))))
-           #`(define-binding-syntax name
-               (wrap-class-transformer name #,(intro (cadr binding-ctx+rhs)) make-binding-prefix-operator)))]
-         [else null])))))
+    (define (make-binding-transformer no-super? name-fields static-infoss keywords)
+      (with-syntax ([(constructor-name-field ...) name-fields]
+                    [(constructor-field-static-infos ...) static-infoss]
+                    [(field-keyword ...) keywords]
+                    [(super-name-field ...) (if no-super? '() #'super-name-fields)]
+                    [(super-field-static-infos ...) (if no-super? '() #'super-field-static-infoss)]
+                    [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)])
+        #`(binding-transformer
+           (quote-syntax name)
+           (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
+                                               (quote-syntax name?)
+                                               #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                               (list (quote-syntax super-name-field) ...
+                                                     (quote-syntax constructor-name-field) ...)
+                                               #:keywords '(super-field-keyword ... field-keyword ...)
+                                               (list (quote-syntax super-field-static-infos) ...
+                                                     (quote-syntax constructor-field-static-infos) ...)
+                                               #:accessor->info? #t))))
+    (append
+     (if exposed-internal-id
+         (list
+          #`(define-binding-syntax #,exposed-internal-id
+              #,(make-binding-transformer #t
+                                          #'constructor-name-fields
+                                          #'constructor-field-static-infoss
+                                          #'field-keywords)))
+         null)
+     (cond
+       [binding-rhs
+        (list
+         #`(define-binding-syntax name
+             (wrap-class-transformer name #,(intro binding-rhs) make-binding-prefix-operator)))]
+       [else
+        (list
+         #`(define-binding-syntax name
+             #,(make-binding-transformer #f
+                                         #'constructor-public-name-fields
+                                         #'constructor-public-field-static-infoss
+                                         #'public-field-keywords)))]))))
 
 (define-for-syntax (make-curried-binding-transformer super-binding-id
                                                      constructor-str predicate accessors static-infoss

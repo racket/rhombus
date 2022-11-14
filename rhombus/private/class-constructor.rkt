@@ -7,25 +7,27 @@
          "class-this.rkt"
          "entry-point.rkt"
          "error.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "parse.rkt")
 
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
                      encode-protocol))
 
 (define-for-syntax (build-class-constructor super constructor-rhs
-                                            constructor-fields super-constructor-fields added-fields
-                                            keywords super-keywords
-                                            defaults super-defaults
+                                            added-fields constructor-private?s
+                                            constructor-fields super-constructor-fields super-constructor+-fields
+                                            keywords super-keywords super-constructor+-keywords
+                                            defaults super-defaults super-constructor+-defaults
                                             need-constructor-wrapper?
                                             abstract-name
                                             has-defaults? super-has-defaults?
                                             final?
-                                            exposed-internal-id
                                             names)
   (with-syntax ([(name make-name make-all-name constructor-name constructor-maker-name
                        name?
-                       name-defaults)
+                       name-defaults
+                       make-internal-name)
                  names])
     (append
      (if (syntax-e #'name-defaults)
@@ -33,7 +35,7 @@
           ;; default-value expressions should see only earlier fields
           ;; from `constructor-fields`, so use some temporary names
           ;; to make sure they can't be referenced
-          (let ([super-tmps (generate-temporaries super-constructor-fields)]
+          (let ([super-tmps (generate-temporaries super-constructor+-fields)]
                 [tmps (generate-temporaries constructor-fields)])
             #`(define (name-defaults #,@(append super-tmps tmps))
                 (let-values #,(cond
@@ -57,9 +59,18 @@
          (list
           #`(define make-name
               (let ([name
-                     (lambda #,(apply append (for/list ([f (in-list (append super-constructor-fields constructor-fields))]
-                                                        [kw (in-list (append super-keywords keywords))]
-                                                        [df (in-list (append super-defaults defaults))])
+                     (lambda #,(apply append (for/list ([f (in-list (append super-constructor+-fields constructor-fields))]
+                                                        [kw (in-list (append super-constructor+-keywords keywords))]
+                                                        [df (in-list (append (cond
+                                                                               [(and super
+                                                                                     (class-desc-constructor-makers super))
+                                                                                ;; no need for optional arguments, because protocol
+                                                                                ;; composition will supply `unsafe-undefined` for
+                                                                                ;; missing arguments
+                                                                                (map (lambda (v) #'#f) super-constructor+-defaults)]
+                                                                               [else
+                                                                                super-constructor+-defaults])
+                                                                             defaults))])
                                                (let ([arg (if (syntax-e df)
                                                               (if final?
                                                                   #`[#,f . #,df]
@@ -70,15 +81,23 @@
                                                      (list arg)))))
                        (let-values #,(cond
                                        [(and super-has-defaults? (or final? (not has-defaults?)))
-                                        #`([#,super-constructor-fields
-                                            (#,(class-desc-defaults-id super) . #,super-constructor-fields)])]
+                                        #`([#,super-constructor+-fields
+                                            (#,(class-desc-defaults-id super) . #,super-constructor+-fields)])]
                                        [(and has-defaults? (not final?))
-                                        (define fields (append super-constructor-fields constructor-fields))
+                                        (define fields (append super-constructor+-fields constructor-fields))
                                         #`([#,fields (name-defaults . #,fields)])]
                                        [else '()])
                          #,(if abstract-name
                                #`(raise-abstract-methods 'name)
-                               #`(make-all-name #,@(or (and super (class-desc-all-fields super))
+                               #`(make-all-name #,@(or (and super
+                                                            (class-desc-all-fields super)
+                                                            (let loop ([fields (class-desc-all-fields super)]
+                                                                       [c+-fs super-constructor+-fields])
+                                                              (cond
+                                                                [(null? c+-fs) fields]
+                                                                [(identifier? (car fields))
+                                                                 (cons (car fields) (loop (cdr fields) (cdr c+-fs)))]
+                                                                [else (cons (car c+-fs) (loop (cdr fields) (cdr c+-fs)))])))
                                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
                                                          (if (identifier? (field-desc-constructor-arg f))
                                                              (field-desc-constructor-arg f)
@@ -87,38 +106,70 @@
                                                 #,@(map added-field-arg-id added-fields)))))])
                 name)))
          null)
-     (if exposed-internal-id
-         (list
-          #`(define-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax make-name))))
-         null)
      (if constructor-rhs
-         (cond
-           [(and final?
-                 (not super))
-            (list
-             #`(define constructor-name
-                 (syntax-parameterize ([this-id (quote-syntax make-name)])
-                   (let ([name (wrap-constructor name name? #,constructor-rhs)])
-                     name))))]
-           [else
-            (list
-             #`(define constructor-maker-name
-                 (lambda (make-name)
+         (let ([constructor-rhs (if (eq? constructor-rhs 'synthesize)
+                                    (make-default-constructor super
+                                                              super-constructor-fields constructor-fields
+                                                              super-keywords keywords
+                                                              super-defaults defaults
+                                                              constructor-private?s
+                                                              #'make-name)
+                                    constructor-rhs)])
+           (cond
+             [(and final?
+                   (not super))
+              (list
+               #`(define constructor-name
                    (syntax-parameterize ([this-id (quote-syntax make-name)])
                      (let ([name (wrap-constructor name name? #,constructor-rhs)])
-                       name))))
-             #`(define constructor-name
-                 #,(cond
-                     [super
-                      (compose-constructor
-                       #'make-name
-                       #`([#,(encode-protocol keywords defaults) constructor-maker-name]
-                          #,@(or (class-desc-constructor-makers super)
-                                 (list (list (encode-protocol super-keywords super-defaults) #f)))))]
-                     [else #'(constructor-maker-name make-name)])))])
+                       name))))]
+             [else
+              (list
+               #`(define constructor-maker-name
+                   (lambda (make-name)
+                     (syntax-parameterize ([this-id (quote-syntax make-name)])
+                       (let ([name (wrap-constructor name name? #,constructor-rhs)])
+                         name))))
+               #`(define constructor-name
+                   #,(cond
+                       [super
+                        (compose-constructor
+                         #'make-name
+                         #`([#,(encode-protocol keywords defaults keywords defaults) constructor-maker-name]
+                            #,@(or (class-desc-constructor-makers super)
+                                   (list (list (encode-protocol super-keywords super-defaults
+                                                                super-constructor+-keywords super-constructor+-defaults)
+                                               #f)))))]
+                       [else #'(constructor-maker-name make-name)])))]))
+         null)
+     (if (syntax-e #'make-internal-name)
+         (cond
+           [(not super)
+            ;; no superclass => can use `make-name` directly
+            (list
+             #`(define-syntax make-internal-name (make-rename-transformer (quote-syntax make-name))))]
+           [(not (class-desc-constructor-makers super))
+            ;; we can directly build the curried version
+            (list
+             #`(define make-internal-name
+                 #,(make-curried-default-constructor super-constructor-fields constructor-fields
+                                                     super-keywords keywords
+                                                     super-defaults defaults
+                                                     #'make-name)))]
+           [else
+            ;; need to use `compose-constructor`, but the `super` function passed
+            ;; in is the one we want as the
+            (list
+             #`(define make-internal-name
+                 (let ([constructor-maker-name (lambda (make-name) make-name)])
+                   #,(compose-constructor
+                      #'make-name
+                      #`([#,(encode-protocol keywords defaults keywords defaults) constructor-maker-name]
+                         #,@(class-desc-constructor-makers super))))))])
          null))))
 
 (define-for-syntax (need-class-constructor-wrapper? extra-fields keywords defaults constructor-rhs
+                                                    has-private-constructor-fields?
                                                     super-has-keywords? super-has-defaults?
                                                     abstract-name
                                                     super)
@@ -128,7 +179,8 @@
       (and (or super-has-keywords?
                super-has-defaults?)
            (or (not (class-desc-constructor-makers super))
-               constructor-rhs))
+               constructor-rhs
+               has-private-constructor-fields?))
       abstract-name
       (and super
            (or (class-desc-all-fields super)
@@ -137,6 +189,8 @@
 
 (define-syntax (wrap-constructor stx)
   (syntax-parse stx
+    #:datum-literals (parsed block)
+    [(_ name predicate-id (parsed e)) #'e]
     [(_ name predicate-id (block g))
      #:do [(define adjustments (entry-point-adjustments
                                 '()
@@ -167,7 +221,7 @@
          (list (generate-protocol-formal-arguments #'proto))]
         [([proto _] . rest)
          (define super-args (loop #'rest))
-         (cons (append (car super-args) (generate-protocol-formal-arguments #'proto))
+         (cons (append-protocols (car super-args) (generate-protocol-formal-arguments #'proto))
                super-args)])))
   (let loop ([makers makers]
              [argss argss]
@@ -183,10 +237,12 @@
        (error "should not get here")]
       [([proto id] . rest)
        ;; look ahead by one in `rest` so we can get the arity right
-       (define formal-args (generate-protocol-formal-arguments #'proto))
-       (define ancestor-formal-args (cadr argss))
+       (define formal-args (internal-protocol (generate-protocol-formal-arguments #'proto)))
+       (define ancestor-formal-args (external-protocol (cadr argss)))
+       (define ancestor-all-formal-args (internal-protocol (cadr argss)))
        (define args (protocol-formal->actual formal-args))
        (define ancestor-args (protocol-formal->actual ancestor-formal-args))
+       (define ancestor-all-args (protocol-formal->actual ancestor-all-formal-args))
        (syntax-parse #'rest
          [([ancestor-proto #f])
           #`(id
@@ -205,27 +261,38 @@
                 (lambda #,formal-args
                   (keyword-apply #,(loop #'rest
                                          (cdr argss)
-                                         #`(lambda #,ancestor-formal-args
-                                             (#,final-make #,@ancestor-args #,@args)))
+                                         #`(lambda #,ancestor-all-formal-args
+                                             (#,final-make #,@ancestor-all-args #,@args)))
                                  kws kw-args
                                  next-args)))))])])))
 
-(define-for-syntax (encode-protocol keywords defaults)
-  (if (for/and ([kw (in-list keywords)]
-                [df (in-list defaults)])
-        (and (not (syntax-e kw))
-             (not (syntax-e df))))
-      (length keywords)
-      (for/list ([kw (in-list keywords)]
-                 [df (in-list defaults)])
-        (if (syntax-e df)
-            (box kw)
-            kw))))
+(define-for-syntax (encode-protocol keywords defaults
+                                    +keywords +defaults)
+  (define (encode keywords defaults)
+    (for/list ([kw (in-list keywords)]
+               [df (in-list defaults)])
+      (if (syntax-e df)
+          (box kw)
+          kw)))
+  (cond
+    [(not (= (length keywords) (length +keywords)))
+     (vector (encode keywords defaults)
+             (encode +keywords +defaults))]
+    [(for/and ([kw (in-list keywords)]
+               [df (in-list defaults)])
+       (and (not (syntax-e kw))
+            (not (syntax-e df))))
+     (length keywords)]
+    [else
+     (encode keywords defaults)]))
 
 (define-for-syntax (generate-protocol-formal-arguments proto)
   (syntax-parse proto
     [count:exact-integer
      (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
+    [#(proto internal-proto)
+     (vector (generate-protocol-formal-arguments #'proto)
+             (generate-protocol-formal-arguments #'internal-proto))]
     [(arg-desc ...)
      (apply append
             (for/list ([desc (syntax->list #'(arg-desc ...))])
@@ -238,6 +305,19 @@
                            (keyword? (syntax-e (unbox (syntax-e desc))))))
                   (list desc arg)
                   (list arg))))]))
+
+(define-for-syntax (external-protocol v) (if (vector? v) (vector-ref v 0) v))
+(define-for-syntax (internal-protocol v) (if (vector? v) (vector-ref v 1) v))
+(define-for-syntax (append-protocols a b)
+  (cond
+    [(vector? a) (if (vector? b)
+                     (vector (append (vector-ref a 0) (vector-ref b 0))
+                             (append (vector-ref a 1) (vector-ref b 1)))
+                     (vector (append (vector-ref a 0) b)
+                             (append (vector-ref a 1) b)))]
+    [(vector? b) (vector (append a (vector-ref b 0))
+                         (append a (vector-ref b 1)))]
+    [else (append a b)]))
 
 (define-for-syntax (protocol-formal->actual args)
   (for/list ([arg (in-list args)])
@@ -255,3 +335,60 @@
 
 (define (raise-abstract-methods name)
   (raise-arguments-error* name rhombus-realm "cannot instantiate class with abstract methods"))
+
+(define-for-syntax (make-default-constructor super
+                                             super-constructor-fields constructor-fields
+                                             super-keywords constructor-keywords
+                                             super-defaults constructor-defaults
+                                             constructor-private?s
+                                             make-name)
+  (define proto (encode-protocol constructor-keywords constructor-defaults
+                                 constructor-keywords constructor-defaults))
+  (define all-formal-args (generate-protocol-formal-arguments proto))
+  (define (filter-map-arg proc)
+    (let loop ([args all-formal-args] [private?s constructor-private?s])
+      (cond
+        [(null? args) '()]
+        [(keyword? (syntax-e (car args))) (cons (car args) (loop (cdr args) private?s))]
+        [else
+         (define a (proc (car args) (car private?s)))
+         (if a
+             (cons a (loop (cdr args) (cdr private?s)))
+             (loop (cdr args) (cdr private?s)))])))
+  (define formal-args (filter-map-arg (lambda (arg private?)
+                                        (and (not private?) arg))))
+  (define all-args (filter-map-arg (lambda (arg private?)
+                                     (if private?
+                                         #'unsafe-undefined
+                                         (syntax-parse arg
+                                           [(id . _) #'id]
+                                           [_ arg])))))
+  (cond
+    [(not super)
+     #`(parsed
+        (lambda #,formal-args
+          (#,make-name #,@all-args)))]
+    [else
+     (define super-proto (encode-protocol super-keywords super-defaults
+                                          super-keywords super-defaults))
+     (define super-formal-args (external-protocol (generate-protocol-formal-arguments super-proto)))
+     (define super-all-args (protocol-formal->actual super-formal-args))
+     #`(parsed
+        (lambda (#,@super-formal-args #,@formal-args)
+          ((#,make-name #,@super-all-args) #,@all-args)))]))
+
+(define-for-syntax (make-curried-default-constructor super-constructor-fields constructor-fields
+                                                     super-keywords constructor-keywords
+                                                     super-defaults constructor-defaults
+                                                     make-name)
+  (define super-proto (encode-protocol super-keywords super-defaults
+                                       super-keywords super-defaults))
+  (define proto (encode-protocol constructor-keywords constructor-defaults
+                                 constructor-keywords constructor-defaults))
+  (define all-formal-args (generate-protocol-formal-arguments proto))
+  (define all-args (protocol-formal->actual all-formal-args))
+  (define super-formal-args (external-protocol (generate-protocol-formal-arguments super-proto)))
+  (define super-all-args (protocol-formal->actual super-formal-args))
+  #`(lambda (#,@super-formal-args)
+      (lambda (#,@all-formal-args)
+        (#,make-name #,@super-all-args #,@all-args))))

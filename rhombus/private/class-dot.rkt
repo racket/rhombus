@@ -19,10 +19,14 @@
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling))
 
-(define-for-syntax (build-class-dot-handling method-map method-vtable final? names)
+(define-for-syntax (build-class-dot-handling method-map method-vtable final?
+                                             has-private? method-private exposed-internal-id
+                                             names)
   (with-syntax ([(name constructor-name name-instance name-ref
-                       [field-name ...]
-                       [name-field ...]
+                       make-internal-name internal-name-instance
+                       [public-field-name ...] [private-field-name ...] [field-name ...]
+                       [public-name-field ...] [name-field ...]
+                       [private-field-desc ...]
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
@@ -31,16 +35,44 @@
                   [(method-id ...) method-impl-ids])
       (append
        method-defns
-       (list
-        #'(define-name-root name
-            #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
-            #:fields ([field-name name-field]
-                      ...
-                      [method-name method-id]
-                      ...
-                      ex ...))
-        #'(define-dot-provider-syntax name-instance
-            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))))
+       (append
+        (list
+         #'(define-name-root name
+             #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
+             #:fields ([public-field-name public-name-field]
+                       ...
+                       [method-name method-id]
+                       ...
+                       ex ...))
+         #'(define-dot-provider-syntax name-instance
+             (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
+                                                                       #hasheq()
+                                                                       #hasheq()))))
+        (if exposed-internal-id
+            (with-syntax ([([private-method-name private-method-id] ...)
+                           (for/list ([(sym id) (in-hash method-private)])
+                             (list sym id))])
+              (list
+               #`(define-name-root #,exposed-internal-id
+                   #:root (class-expression-transformer (quote-syntax name) (quote-syntax make-internal-name))
+                   #:fields ([field-name name-field]
+                             ...
+                             [method-name method-id]
+                             ...
+                             [private-method-name private-method-id]
+                             ...
+                             ex ...))
+               #`(define-dot-provider-syntax internal-name-instance
+                   (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
+                                                                             (hasheq
+                                                                              (~@ 'private-field-name
+                                                                                  private-field-desc)
+                                                                              ...)
+                                                                             (hasheq
+                                                                              (~@ 'private-method-name
+                                                                                  (quote-syntax private-method-id))
+                                                                              ...))))))
+            null))))))
 
 (define-for-syntax (build-interface-dot-handling method-map method-vtable names)
   (with-syntax ([(name name-instance name-ref
@@ -58,7 +90,7 @@
                       ...
                       ex ...))
         #'(define-dot-provider-syntax name-instance
-            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)))))))))
+            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))))))
 
 (define-for-syntax (method-static-entries method-map method-vtable name-ref-id final?)
   (for/fold ([names '()] [ids '()] [defns '()])
@@ -133,9 +165,10 @@
       (interface-desc-ref-id desc)))
 
 ;; dot provider for a class instance used before a `.`
-(define-for-syntax ((make-handle-class-instance-dot name) form1 dot field-id
-                                                          tail more-static?
-                                                          success failure)
+(define-for-syntax ((make-handle-class-instance-dot name internal-fields internal-methods)
+                    form1 dot field-id
+                    tail more-static?
+                    success failure)
   (define desc (syntax-local-value* (in-class-desc-space name) (lambda (v)
                                                                  (or (class-desc-ref v)
                                                                      (interface-desc-ref v)))))
@@ -221,6 +254,10 @@
      => (lambda (fld) (do-field fld))]
     [(hash-ref (desc-method-map desc) (syntax-e field-id) #f)
      => (lambda (pos/boxed) (do-method pos/boxed))]
+    [(hash-ref internal-fields (syntax-e field-id) #f)
+     => (lambda (fld) (do-field fld))]
+    [(hash-ref internal-methods (syntax-e field-id) #f)
+     => (lambda (id) (do-method id))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
      => (lambda (id/fld)
           (if (identifier? id/fld)

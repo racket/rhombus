@@ -199,14 +199,14 @@ check:
     binding:
       rule
       | 'Posn($y, $x)':
-          'super($x, $y)'
+          '_Posn($x, $y)'
       | 'Posn($v)':
-          'super($v, 0)'
+          '_Posn($v, 0)'
     annotation:
       rule
       | 'Posn.of($x, $y)':
-          'super.of($y, $x)'
-      | 'Posn': 'super'    
+          '_Posn.of($y, $x)'
+      | 'Posn': '_Posn'    
   val p: Posn(0, 2)
   val Posn(yy, xx): p
   val Posn(a): p    
@@ -254,7 +254,7 @@ check:
   val p1: Posn(20, ~x: -10)
   val p: Posn3D(2, ~x: 1, 3)
   val ip1: _Posn(20, ~x: -10)
-  val ip: _Posn3D(2, ~x: 1, 3)
+  val ip: _Posn3D(2, ~x: 1)(3)
   fun get(p1 :: Posn, p :: Posn3D):
     [[p1.x, p1.y, p1.w],
      [p.x, p.y, p.w, p.z]]
@@ -319,7 +319,7 @@ check:
         super(x, ~y: y, z)(w)
   val p2: Posn(~ex: 1, ~wy: 2)
   val p3: Posn3D(1, ~y: 2, 3)
-  val _p3: _Posn3D(~x: 1, 2, 3)
+  val _p3: _Posn3D(~ex: 1, ~wy: 2)(3)
   val p4: Posn4D(1, 2, 3, 4)
   [[p2.x, p2.y],
    [p3.x, p3.y, p3.z],
@@ -449,8 +449,9 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
+    internal _Posn3D
     binding:
-      rule 'Posn3D($x, $y ..., $z)': 'super($x, ~y: $y ...)($z)'
+      rule 'Posn3D($x, $y ..., $z)': 'Posn($x, ~y: $y ...) && _Posn3D($z)'
   val p: Posn3D(1, ~y: 2, 3)
   val Posn(a2, ~y: b2): p
   val Posn3D(a3, b3, c3): p
@@ -463,18 +464,21 @@ check:
   import rhombus/meta open
   class Posn(x, ~y):
     nonfinal
+    internal _Posn
     binding:
-      rule 'Posn(X $x, Y $y)': 'super($x, ~y: $y)'
+      rule 'Posn(X $x, Y $y)': '_Posn($x, ~y: $y)'
   class Posn3D(z):
     extends Posn
     nonfinal
+    internal _Posn3D
     binding:
-      rule 'Posn3D[$x, $y ..., $z]': 'super(X $x, Y $y ...)($z)'
+      rule 'Posn3D[$x, $y ..., $z]': 'Posn(X $x, Y $y ...) && _Posn3D($z)'
   class Posn4D(w):
     extends Posn3D
     nonfinal
+    internal _Posn4D
     binding:
-      rule 'Posn4D($x, ~y: $y, $z, $w)': 'super[$x, $y, $z]($w)'
+      rule 'Posn4D($x, ~y: $y, $z, $w)': 'Posn3D[$x, $y, $z] && _Posn4D($w)'
   val p: Posn4D(1, ~y: 2, 3, 6)
   val Posn(X a2, Y b2): p
   val Posn3D[a3, b3, c3]: p
@@ -512,9 +516,10 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
+    internal _Posn3D
     annotation:
-      rule | 'Posn3D.of($x, $y ..., $z)': 'super.of($x, ~y: $y ...)($z)'
-           | 'Posn3D': 'super'
+      rule | 'Posn3D.of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
+           | 'Posn3D': '_Posn3D'
   val p: Posn3D(1, ~y: "2", symbol'three')
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
@@ -527,21 +532,24 @@ check:
   import rhombus/meta open
   class Posn(x, ~y):
     nonfinal
+    internal _Posn
     annotation:
-      rule | 'Posn $dot of(X $x, Y $y)': 'super.of($x, ~y: $y)'
-           | 'Posn': 'super'
+      rule | 'Posn $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
+           | 'Posn': '_Posn'
   class Posn3D(z):
     extends Posn
     nonfinal
+    internal _Posn3D
     annotation:
-      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'super.of(X $x, Y $y ...)($z)'
-           | 'Posn3D': 'super'
+      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
+           | 'Posn3D': '_Posn3D'
   class Posn4D(w):
     extends Posn3D
     nonfinal
+    internal _Posn4D
     annotation:
-      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'super.of[$x, $y, $z]($w)'
-           | 'Posn4D': 'super'
+      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
+           | 'Posn4D': '_Posn4D'
   val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
   p :: Posn
   p :: Posn.of(X Integer, Y String)
@@ -551,6 +559,3 @@ check:
   p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
   "ok plain+custom annotations"
   "ok plain+custom annotations"
-  
-       
-       

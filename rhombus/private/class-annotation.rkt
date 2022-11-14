@@ -18,57 +18,50 @@
                      build-guard-expr)
          compose-annotation-check)
 
-(define-for-syntax (build-class-annotation-form super annotation-ctx+rhs
-                                                constructor-fields super-constructor-fields
+(define-for-syntax (build-class-annotation-form super annotation-rhs
+                                                super-constructor-fields
                                                 exposed-internal-id intro
                                                 names)
   (with-syntax ([(name name-instance name?
-                       [constructor-name-field ...] [super-name-field ...]
-                       [field-keyword ...] [super-field-keyword ...])
+                       internal-name-instance
+                       constructor-name-fields constructor-public-name-fields super-name-fields
+                       field-keywords public-field-keywords super-field-keywords)
                  names])
-    (with-syntax ([core-ann-name (if annotation-ctx+rhs
+    (with-syntax ([core-ann-name (if annotation-rhs
                                      (car (generate-temporaries #'(name)))
-                                     #'name)]
-                  [parse-name-of (and super
-                                      annotation-ctx+rhs
-                                      (car (generate-temporaries #'(name))))])
+                                     #'name)])
+      (define (make-ann-def id no-super? name-fields keywords name-instance-stx)
+        (define len (length (syntax->list name-fields)))
+        (with-syntax ([(constructor-name-field ...) name-fields]
+                      [(field-keyword ...) keywords]
+                      [(super-name-field ...) (if no-super? '() #'super-name-fields)]
+                      [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)]
+                      [name-instance name-instance-stx])
+          #`(define-annotation-constructor #,id
+              ([accessors (list (quote-syntax super-name-field) ...
+                                (quote-syntax constructor-name-field) ...)])
+              (quote-syntax name?)
+              (quote-syntax ((#%dot-provider name-instance)))
+              (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
+              (super-field-keyword ... field-keyword ...)
+              (make-class-instance-predicate accessors)
+              (make-class-instance-static-infos accessors))))
       (append
-       (list
-        #`(define-annotation-constructor core-ann-name
-            ([accessors #,(if (syntax-e #'parse-name-of)
-                              #'(list (quote-syntax constructor-name-field) ...)
-                              #'(list (quote-syntax super-name-field) ...
-                                      (quote-syntax constructor-name-field) ...))]
-             #,@(if (syntax-e #'parse-name-of)
-                    #`([parse-name-of
-                        (make-curried-annotation-of-tranformer (quote-syntax #,(class-desc-id super)))])
-                    null))
-            (quote-syntax name?)
-            (quote-syntax ((#%dot-provider name-instance)))
-            #,(if (syntax-e #'parse-name-of)
-                  (length constructor-fields)
-                  #`(quote #,(+ (length constructor-fields)
-                                (length super-constructor-fields))))
-            #,(if (syntax-e #'parse-name-of)
-                  #'(field-keyword ...)
-                  #'(super-field-keyword ... field-keyword ...))
-            (make-class-instance-predicate accessors)
-            (make-class-instance-static-infos accessors)
-            #:parse-of #,(if (syntax-e #'parse-name-of)
-                             #'parse-name-of
-                             #'parse-annotation-of)))
        (if exposed-internal-id
            (list
-            #`(define-annotation-syntax #,exposed-internal-id (make-rename-transformer (quote-syntax core-ann-name))))
+            (begin
+              (make-ann-def exposed-internal-id #t #'constructor-name-fields #'field-keywords
+                            #'internal-name-instance)))
            null)
        (cond
-         [annotation-ctx+rhs
+         [annotation-rhs
           (list
-           #`(define-annotation-syntax #,(intro (datum->syntax (car annotation-ctx+rhs) 'super))
-               (make-rename-transformer (quote-syntax #,(in-annotation-space #'core-ann-name))))
            #`(define-annotation-syntax name
-               (wrap-class-transformer name #,(intro (cadr annotation-ctx+rhs)) make-annotation-prefix-operator)))]
-         [else null])))))
+               (wrap-class-transformer name #,(intro annotation-rhs) make-annotation-prefix-operator)))]
+         [else
+          (list
+           (make-ann-def #'name #f #'constructor-public-name-fields #'public-field-keywords
+                         #'name-instance))])))))
 
 (define-for-syntax (make-curried-annotation-of-tranformer super-annotation-id)
   (lambda (tail predicate-stx static-infos

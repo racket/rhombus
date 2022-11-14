@@ -11,8 +11,10 @@
 (provide (for-syntax build-class-static-infos))
 
 (define-for-syntax (build-class-static-infos exposed-internal-id
+                                             super
                                              names)
   (with-syntax ([(name constructor-name name-instance
+                       internal-name-instance make-internal-name
                        [name-field ...]
                        [field-static-infos ...])
                  names])
@@ -21,7 +23,12 @@
       #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance)))))
      (if exposed-internal-id
          (list
-          #`(define-static-info-syntax #,exposed-internal-id (#%call-result ((#%dot-provider name-instance)))))
+          #`(define-static-info-syntax make-internal-name
+              #,(let ([info #'(#%call-result ((#%dot-provider internal-name-instance)))])
+                  (if super
+                      ;; internal constructor is curried
+                      #`(#%call-result (#,info))
+                      info))))
          '())
      (list
       #'(begin

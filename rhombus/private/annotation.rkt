@@ -59,6 +59,7 @@
              :annotation
              :annotation-form
              :inline-annotation
+             :annotation-infix-op+form+tail
 
              annotation-form
 
@@ -156,11 +157,11 @@
       #:datum-literals (parens)
       [(form-id ((~and tag parens) g ...) . tail)
        (define unsorted-gs (syntax->list #'(g ...)))
-       (define gs (sort-with-respect-to-keywords kws unsorted-gs stx))
-       (unless (= (length gs) sub-n)
+       (unless (= (length unsorted-gs) sub-n)
          (raise-syntax-error #f
                              "wrong number of subannotations in parentheses"
                              #'(form-id (tag g ...))))
+       (define gs (sort-with-respect-to-keywords kws unsorted-gs stx))
        (define c-parseds (for/list ([g (in-list gs)])
                            (syntax-parse g
                              [c::annotation #'c.parsed])))

@@ -206,10 +206,10 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def fun expr impo expo bind |.|)
+    #:literals (def fun expr impo expo bind annot |.|)
     #:datum-literals (op macro rule)
-    (pattern (~seq (~or expr bind expo impo) (op |.|) macro))
-    (pattern (~seq (~or expr bind) (op |.|) rule))
+    (pattern (~seq (~or expr bind annot expo impo) (op |.|) macro))
+    (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
     #:literals (def defn expr decl bind impo expo annot reducer
@@ -461,7 +461,7 @@
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
-    [(group annot . _) 'ann]
+    [(group annot . _) 'annot]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
     [(group class_clause . _) 'class_clause]

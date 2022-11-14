@@ -52,7 +52,7 @@
                #:datum-literals (group)
                [(a . more)
                 #:when (not (escape? #'a escape))
-                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'ann)
+                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'annot)
                    . more)]
                [_ tail])))))
 

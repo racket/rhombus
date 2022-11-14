@@ -103,14 +103,14 @@
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
                (hash-set options 'constructor-rhs #'rhs)]
-              [(binding bind-ctx block)
+              [(binding block)
                (when (hash-has-key? options 'binding-rhs)
                  (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
-               (hash-set options 'binding-ctx+rhs (list #'bind-ctx (extract-rhs #'block)))]
-              [(annotation bind-ctx block)
+               (hash-set options 'binding-rhs (extract-rhs #'block))]
+              [(annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
-               (hash-set options 'annotation-ctx+rhs (list #'bind-ctx (extract-rhs #'block)))]
+               (hash-set options 'annotation-rhs (extract-rhs #'block))]
               [(nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
@@ -197,10 +197,10 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(binding form-name (block (group rule pattern template-block))))]
+        (wrap-class-clause #`(binding (block (group rule pattern template-block))))]
        [(form-name (~and (_::block . _)
                          binding-block))
-        (wrap-class-clause #`(binding form-name binding-block))]))))
+        (wrap-class-clause #`(binding binding-block))]))))
 
 (define-syntax annotation
   (class-clause-transformer
@@ -211,10 +211,10 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(annotation form-name (block (group rule pattern template-block))))]
+        (wrap-class-clause #`(annotation (block (group rule pattern template-block))))]
        [(form-name (~and (_::block . _)
                          annotation-block))
-        (wrap-class-clause #`(annotation form-name annotation-block))]))))
+        (wrap-class-clause #`(annotation annotation-block))]))))
 
 (define-syntax nonfinal
   (class-clause-transformer

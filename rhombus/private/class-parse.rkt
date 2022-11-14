@@ -26,15 +26,18 @@
          
          any-stx?
 
-         :field
          :options-block
 
          check-duplicate-field-names
          check-fields-methods-distinct
          check-consistent-subclass
+         check-consistent-construction
          check-consistent-unimmplemented
          check-field-defaults
-         check-exports-distinct)
+         check-exports-distinct
+
+         extract-super-constructor-fields
+         extract-super-internal-constructor-fields)
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -44,7 +47,7 @@
                     class:id
                     ref-id
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
-                    all-fields ; #f or (list symbol-or-id ...), includes private fields
+                    all-fields ; #f or (list symbol-or-id-or-arg ...), includes private fields; arg means omitted from public constructor
                     method-names  ; vector of symbol or boxed symbol; plain symbol means final
                     method-vtable ; syntax-object vector of accessor identifiers or #'#:abstract
                     method-map    ; hash of name -> index or boxed index; inverse of `method-names`
@@ -68,83 +71,6 @@
 (struct added-method (id rhs-id rhs mode))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
-
-(define-syntax-class :not-equal
-  #:description "an annotation term"
-  #:datum-literals (op)
-  #:literals (rhombus=)
-  (pattern (~not (op rhombus=))))
-
-(define-syntax-class :id-field
-  #:datum-literals (group op)
-  #:literals (mutable rhombus=)
-  (pattern (group (~optional (~and mutable (~var mutable))
-                             #:defaults ([mutable #'#f]))
-                  name:identifier
-                  ann::not-equal ...
-                  (op rhombus=)
-                  default-form ...+)
-           #:with ((~optional c::inline-annotation)) #'(ann ...)
-           #:attr predicate (if (attribute c)
-                                #'c.predicate
-                                #'#f)
-           #:attr annotation-str (if (attribute c)
-                                     #'c.annotation-str
-                                     #'#f)
-           #:attr static-infos (if (attribute c)
-                                   #'c.static-infos
-                                   #'())
-           #:attr default #`((rhombus-expression (#,group-tag default-form ...))))
-  (pattern (group (~optional (~and mutable (~var mutable))
-                             #:defaults ([mutable #'#f]))
-                  name:identifier
-                  (~optional c::inline-annotation))
-           #:attr predicate (if (attribute c)
-                                #'c.predicate
-                                #'#f)
-           #:attr annotation-str (if (attribute c)
-                                     #'c.annotation-str
-                                     #'#f)
-           #:attr static-infos (if (attribute c)
-                                   #'c.static-infos
-                                   #'())
-           #:attr default #'#f))
-
-(define-syntax-class :field
-  #:datum-literals (group op)
-  #:literals (mutable rhombus=)
-  (pattern idf::id-field
-           #:attr predicate #'idf.predicate
-           #:attr annotation-str #'idf.annotation-str
-           #:attr static-infos #'idf.static-infos
-           #:attr name #'idf.name
-           #:attr keyword #'#f
-           #:attr default #'idf.default
-           #:attr mutable #'idf.mutable)
-  (pattern (group kw:keyword (::block idf::id-field))
-           #:attr predicate #'idf.predicate
-           #:attr annotation-str #'idf.annotation-str
-           #:attr static-infos #'idf.static-infos
-           #:attr name #'idf.name
-           #:attr keyword #'kw
-           #:attr default #'idf.default
-           #:attr mutable #'idf.mutable)
-  (pattern (group kw:keyword)
-           #:attr predicate #'#f
-           #:attr annotation-str #'#f
-           #:attr static-infos #'()
-           #:attr name (datum->syntax #'kw (string->symbol (keyword->string (syntax-e #'kw))) #'kw #'kw)
-           #:attr keyword #'kw
-           #:attr default #'#f
-           #:attr mutable #'#f)
-  (pattern (group kw:keyword (op rhombus=) default-form ...+)
-           #:attr predicate #'#f
-           #:attr annotation-str #'#f
-           #:attr static-infos #'()
-           #:attr name (datum->syntax #'kw (string->symbol (keyword->string (syntax-e #'kw))) #'kw #'kw)
-           #:attr keyword #'kw
-           #:attr default #`((rhombus-expression (#,group-tag default-form ...)))
-           #:attr mutable #'#f))
 
 (define-splicing-syntax-class :options-block
   #:datum-literals (block group parens)
@@ -194,9 +120,20 @@
                           (format "superclass has a custom ~a, so a subclass needs a custom ~a" what what)
                           stxes
                           parent-name)))
-  (check-consistent-custom (class-desc-constructor-makers super) (hash-ref options 'constructor-rhs #f) "constructor")
-  (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding #f) "binding")
-  (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation #f) "annotation"))
+  (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding-rhs #f) "binding")
+  (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation-rhs #f) "annotation"))
+
+(define (check-consistent-construction stxes mutables private?s defaults options)
+  (when (for/or ([m (in-list mutables)]
+                 [p? (in-list private?s)]
+                 [d (in-list defaults)])
+          (and (not (syntax-e m))
+               p?
+               (not (syntax-e d))))
+    (unless (hash-ref options 'constructor-rhs #f)
+      (raise-syntax-error #f
+                          "class needs a custom constructor to initialize private immutable fields"
+                          stxes))))
 
 (define (check-consistent-unimmplemented stxes final? abstract-name)
   (when (and final? abstract-name)
@@ -240,3 +177,45 @@
       (raise-syntax-error #f
                           "exported name conflicts with method name"
                           ex))))
+
+(define (field-to-field+keyword+default f arg)
+  (values (field-desc-name f)
+          (if (box? (syntax-e arg))
+              (unbox (syntax-e arg))
+              arg)
+          (if (box? (syntax-e arg))
+              #'(unsafe-undefined)
+              #'#f)))
+
+(define (extract-super-constructor-fields super)
+  (for/lists (fs ls ds) ([f (in-list (if super
+                                         (class-desc-fields super)
+                                         '()))]
+                         #:do [(define arg (field-desc-constructor-arg f))]
+                         #:unless (identifier? arg))
+    (field-to-field+keyword+default f arg)))
+
+(define (extract-super-internal-constructor-fields super super-constructor-fields super-keywords super-defaults)
+  (cond
+    [(and super (class-desc-all-fields super))
+     (let loop ([all-fields (class-desc-all-fields super)]
+                [fields (class-desc-fields super)]
+                [rev-fields '()]
+                [rev-keywords '()]
+                [rev-defaults '()])
+       (cond
+         [(null? all-fields) (values (reverse rev-fields) (reverse rev-keywords) (reverse rev-defaults))]
+         [(identifier? (car all-fields)) ; not in constructor
+          (loop (cdr all-fields) fields rev-fields rev-keywords rev-defaults)]
+         [(and (pair? fields) (identifier? (field-desc-constructor-arg (car fields)))) ; not in constructor
+          (loop all-fields (cdr fields) rev-fields rev-keywords rev-defaults)]
+         [(symbol? (car all-fields)) ; public field in constructor
+          (define-values (f k d) (field-to-field+keyword+default (car fields) (field-desc-constructor-arg (car fields))))
+          (loop (cdr all-fields) (cdr fields) (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]
+         [else ; private field in internal constructor, only
+          (define f (car (generate-temporaries '(field))))
+          (define k (datum->syntax #f (if (box? (car all-fields)) (unbox (car all-fields)) (car all-fields))))
+          (define d (if (box? (car all-fields)) #'(unsafe-undefined) #'#f))
+          (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
+    [else
+     (values super-constructor-fields super-keywords super-defaults)]))
