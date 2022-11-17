@@ -37,7 +37,9 @@
          check-exports-distinct
 
          extract-super-constructor-fields
-         extract-super-internal-constructor-fields)
+         extract-super-internal-constructor-fields
+
+         print-field-shapes)
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -62,7 +64,9 @@
 (define (field-desc-accessor-id f) (cadr f))
 (define (field-desc-mutator-id f) (list-ref f 2))
 (define (field-desc-static-infos f) (list-ref f 3))
-(define (field-desc-constructor-arg f) (list-ref f 4)) ; syntax of #f (by-position), keyword, or identifier (not in constructor)
+(define (field-desc-constructor-arg f) (list-ref f 4)) ; syntax of #f (by-position), keyword, or identifier
+;;                                                       where identifier =>  not in constructor,
+;;                                                       but also not private from body
 
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
@@ -219,3 +223,40 @@
           (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
     [else
      (values super-constructor-fields super-keywords super-defaults)]))
+
+(define (print-field-shapes super fields keywords private?s)
+  (append
+   (if super
+       (let ([shapes (for/list ([fld (in-list (class-desc-fields super))]
+                                #:do [(define arg (field-desc-constructor-arg fld))]
+                                #:when (not (identifier? arg)))
+                       (if (keyword? (syntax-e arg))
+                           (syntax-e arg)
+                           (field-desc-name fld)))])
+         (define all-fields (class-desc-all-fields super))
+         (if all-fields
+             ;; insert `#f`s for private fields
+             (let loop ([all-fields all-fields] [shapes shapes])
+               (cond
+                 [(null? all-fields) null]
+                 [(null? shapes)
+                  ;; only private fields left
+                  (cons #f (loop (cdr all-fields) shapes))]
+                 [(symbol? (car all-fields))
+                  ;; public, maybe keyword
+                  (cons (car shapes)
+                        (loop (cdr all-fields) (cdr shapes)))]
+                 [else
+                  ;; private
+                  (cons #f
+                        (loop (cdr all-fields) shapes))]))
+             shapes))
+       null)
+   (let loop ([fields fields] [keywords keywords] [private?s private?s])
+     (cond
+       [(null? keywords) '()]
+       [(car private?s) (cons #f (loop (cdr fields) (cdr keywords) (cdr private?s)))]
+       [else
+        (cons (or (syntax-e (car keywords))
+                  (syntax-e (car fields)))
+              (loop (cdr fields) (cdr keywords) (cdr private?s)))]))))

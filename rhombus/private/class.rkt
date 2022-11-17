@@ -24,11 +24,14 @@
          "class-dot.rkt"
          "class-static-info.rkt"
          "class-method.rkt"
+         "class-desc.rkt"
+         "class-top-level.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
          "error.rkt"
-         (submod "namespace.rkt" for-exports))
+         (submod "namespace.rkt" for-exports)
+         (submod "print.rkt" for-class))
 
 (provide (rename-out [rhombus-class class])
          this
@@ -166,6 +169,7 @@
        (check-consistent-construction stxes mutables private?s constructor-defaults options)
 
        (define has-defaults? (any-stx? constructor-defaults))
+       (define has-keywords? (any-stx? constructor-keywords))
        (define-values (super-constructor-fields super-keywords super-defaults)
          (extract-super-constructor-fields super))
        (define-values (super-constructor+-fields super-constructor+-keywords super-constructor+-defaults)
@@ -304,109 +308,106 @@
                                                    (temporary "~a-internal-instance")
                                                    #'name-instance)])
            (define defns
-             (append
-              (if (eq? (syntax-local-context) 'top-level)
-                  ;; forward declaration for methods:
-                  (list #'(define-syntaxes (name?) (values)))
-                  null)
-              (build-methods added-methods method-map method-names method-private
-                             #'(name name-instance name?
-                                     [field-name ... super-field-name ...]
-                                     [name-field ... super-name-field ...]
-                                     [maybe-set-name-field! ... super-maybe-set-name-field! ...]
-                                     [private-field-name ...]
-                                     [(list 'private-field-name
-                                            (quote-syntax private-name-field)
-                                            (quote-syntax private-maybe-set-name-field!)
-                                            (quote-syntax private-field-static-infos)
-                                            (quote-syntax private-field-argument))
-                                      ...]
-                                     [super-name* ...]))
-              (build-class-struct super
-                                  fields mutables final? authentic?
-                                  method-map method-names method-vtable method-private
-                                  abstract-name
-                                  interfaces private-interfaces
-                                  #'(name class:name make-all-name name? name-ref
-                                          [public-field-name ...]
-                                          [field-name ...]
-                                          [name-field ...]
-                                          [set-name-field! ...]
-                                          [field-predicate ...]
-                                          [field-annotation-str ...]
-                                          [super-field-name ...]
-                                          [super-name-field ...]))
-              (build-class-constructor super constructor-rhs
-                                       added-fields constructor-private?s
-                                       constructor-fields super-constructor-fields super-constructor+-fields
-                                       constructor-keywords super-keywords super-constructor+-keywords
-                                       constructor-defaults super-defaults super-constructor+-defaults
-                                       need-constructor-wrapper?
-                                       abstract-name
-                                       has-defaults? super-has-defaults?
-                                       final?
-                                       #'(name make-name make-all-name constructor-name constructor-maker-name
-                                               name?
-                                               name-defaults
-                                               make-internal-name))
-              (build-class-binding-form super binding-rhs
-                                        exposed-internal-id intro
-                                        #'(name name-instance name?
-                                                [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
-                                                [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
-                                                [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-              (build-class-annotation-form super annotation-rhs
-                                           super-constructor-fields
-                                           exposed-internal-id intro
-                                           #'(name name-instance name?
-                                                   internal-name-instance
-                                                   [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
-                                                   [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-              (build-class-dot-handling method-map method-vtable final?
-                                        has-private? method-private exposed-internal-id
-                                        #'(name constructor-name name-instance name-ref
-                                                make-internal-name internal-name-instance
-                                                [public-field-name ...] [private-field-name ...] [field-name ...]
-                                                [public-name-field ...] [name-field ...]
-                                                [(list 'private-field-name
-                                                       (quote-syntax private-name-field)
-                                                       (quote-syntax private-maybe-set-name-field!)
-                                                       (quote-syntax private-field-static-infos)
-                                                       (quote-syntax private-field-argument))
-                                                 ...]
-                                                [export ...]))
-              (build-class-static-infos exposed-internal-id
-                                        super
-                                        #'(name constructor-name name-instance
-                                                internal-name-instance make-internal-name
-                                                [name-field ...]
-                                                [field-static-infos ...]))
-              (build-class-desc super options
-                                constructor-public-keywords super-keywords ; public field for constructor
-                                constructor-public-defaults super-defaults
-                                constructor-keywords super-constructor+-keywords ; includes private fields for internal constructor
-                                constructor-defaults super-constructor+-defaults
-                                final? has-private-fields? private?s
-                                parent-name
-                                method-map method-names method-vtable
-                                #'(name class:name constructor-maker-name name-defaults name-ref
-                                        (list (list 'super-field-name
-                                                    (quote-syntax super-name-field)
-                                                    (quote-syntax super-make-set-name-field!)
-                                                    (quote-syntax super-field-static-infos)
-                                                    (quote-syntax super-field-argument))
-                                              ...
-                                              (list 'public-field-name
-                                                    (quote-syntax public-name-field)
-                                                    (quote-syntax public-maybe-set-name-field!)
-                                                    (quote-syntax public-field-static-infos)
-                                                    (quote-syntax public-field-argument))
-                                              ...)
-                                        ([field-name field-argument] ...)))))
+             (reorder-for-top-level
+              (append
+               (build-methods added-methods method-map method-names method-private
+                              #'(name name-instance name?
+                                      [field-name ... super-field-name ...]
+                                      [name-field ... super-name-field ...]
+                                      [maybe-set-name-field! ... super-maybe-set-name-field! ...]
+                                      [private-field-name ...]
+                                      [(list 'private-field-name
+                                             (quote-syntax private-name-field)
+                                             (quote-syntax private-maybe-set-name-field!)
+                                             (quote-syntax private-field-static-infos)
+                                             (quote-syntax private-field-argument))
+                                       ...]
+                                      [super-name* ...]))
+               (build-class-struct super
+                                   fields mutables constructor-keywords private?s final? authentic?
+                                   method-map method-names method-vtable method-private
+                                   abstract-name
+                                   interfaces private-interfaces
+                                   #'(name class:name make-all-name name? name-ref
+                                           [public-field-name ...]
+                                           [field-name ...]
+                                           [name-field ...]
+                                           [set-name-field! ...]
+                                           [field-predicate ...]
+                                           [field-annotation-str ...]
+                                           [super-field-name ...]
+                                           [super-name-field ...]))
+               (build-class-constructor super constructor-rhs
+                                        added-fields constructor-private?s
+                                        constructor-fields super-constructor-fields super-constructor+-fields
+                                        constructor-keywords super-keywords super-constructor+-keywords
+                                        constructor-defaults super-defaults super-constructor+-defaults
+                                        need-constructor-wrapper?
+                                        abstract-name
+                                        has-defaults? super-has-defaults?
+                                        final?
+                                        #'(name make-name make-all-name constructor-name constructor-maker-name
+                                                name?
+                                                name-defaults
+                                                make-internal-name))
+               (build-class-binding-form super binding-rhs
+                                         exposed-internal-id intro
+                                         #'(name name-instance name?
+                                                 [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
+                                                 [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
+                                                 [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
+               (build-class-annotation-form super annotation-rhs
+                                            super-constructor-fields
+                                            exposed-internal-id intro
+                                            #'(name name-instance name?
+                                                    internal-name-instance
+                                                    [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
+                                                    [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
+               (build-class-dot-handling method-map method-vtable final?
+                                         has-private? method-private exposed-internal-id
+                                         #'(name constructor-name name-instance name-ref
+                                                 make-internal-name internal-name-instance
+                                                 [public-field-name ...] [private-field-name ...] [field-name ...]
+                                                 [public-name-field ...] [name-field ...]
+                                                 [(list 'private-field-name
+                                                        (quote-syntax private-name-field)
+                                                        (quote-syntax private-maybe-set-name-field!)
+                                                        (quote-syntax private-field-static-infos)
+                                                        (quote-syntax private-field-argument))
+                                                  ...]
+                                                 [export ...]))
+               (build-class-static-infos exposed-internal-id
+                                         super
+                                         #'(name constructor-name name-instance
+                                                 internal-name-instance make-internal-name
+                                                 [name-field ...]
+                                                 [field-static-infos ...]))
+               (build-class-desc super options
+                                 constructor-public-keywords super-keywords ; public field for constructor
+                                 constructor-public-defaults super-defaults
+                                 constructor-keywords super-constructor+-keywords ; includes private fields for internal constructor
+                                 constructor-defaults super-constructor+-defaults
+                                 final? has-private-fields? private?s
+                                 parent-name
+                                 method-map method-names method-vtable
+                                 #'(name class:name constructor-maker-name name-defaults name-ref
+                                         (list (list 'super-field-name
+                                                     (quote-syntax super-name-field)
+                                                     (quote-syntax super-make-set-name-field!)
+                                                     (quote-syntax super-field-static-infos)
+                                                     (quote-syntax super-field-argument))
+                                               ...
+                                               (list 'public-field-name
+                                                     (quote-syntax public-name-field)
+                                                     (quote-syntax public-maybe-set-name-field!)
+                                                     (quote-syntax public-field-static-infos)
+                                                     (quote-syntax public-field-argument))
+                                               ...)
+                                         ([field-name field-argument] ...))))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
-                                       fields mutables final? authentic?
+                                       fields mutables constructor-keywords private?s final? authentic?
                                        method-map method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
@@ -459,6 +460,14 @@
                                                                                 ...)
                                                                         (hasheq (~@ 'method-name method-proc)
                                                                                 ...)))))
+                                                 #,@ (let ([field-print-shapes (print-field-shapes
+                                                                                super
+                                                                                fields constructor-keywords private?s)])
+                                                       (if (or abstract-name
+                                                               (andmap symbol? field-print-shapes))
+                                                           null
+                                                           #`((cons prop:print-field-shapes
+                                                                    '#,field-print-shapes))))
                                                  #,@(if final?
                                                         (list #'(cons prop:sealed #t))
                                                         '())
@@ -498,12 +507,6 @@
                (prop-methods-ref v)
                (raise-not-an-instance 'name v)))))))
 
-(define-syntax (define-class-desc-syntax stx)
-  (syntax-parse stx
-    [(_ id:identifier rhs)
-     #`(define-syntax #,(in-class-desc-space #'id)
-         rhs)]))
-
 (define-for-syntax (build-class-desc super options
                                      constructor-public-keywords super-keywords
                                      constructor-public-defaults super-defaults
@@ -539,7 +542,7 @@
                                                                [private? (in-list private?s)])
                                                       (cond
                                                         [(identifier? arg) arg]
-                                                        [private? arg] ; #f, keyword, or boxed keyword
+                                                        [private? arg] ; #f, keyword, or identifier
                                                         [else (syntax-e name)]))))))
                      '#,(for/vector ([i (in-range (vector-length method-vtable))])
                           (define name (hash-ref method-names i))

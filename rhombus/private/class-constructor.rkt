@@ -96,7 +96,7 @@
                                                               (cond
                                                                 [(null? c+-fs) fields]
                                                                 [(identifier? (car fields))
-                                                                 (cons (car fields) (loop (cdr fields) (cdr c+-fs)))]
+                                                                 (cons (car fields) (loop (cdr fields) c+-fs))]
                                                                 [else (cons (car c+-fs) (loop (cdr fields) (cdr c+-fs)))])))
                                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
                                                          (if (identifier? (field-desc-constructor-arg f))
@@ -287,24 +287,26 @@
      (encode keywords defaults)]))
 
 (define-for-syntax (generate-protocol-formal-arguments proto)
-  (syntax-parse proto
-    [count:exact-integer
-     (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
-    [#(proto internal-proto)
-     (vector (generate-protocol-formal-arguments #'proto)
-             (generate-protocol-formal-arguments #'internal-proto))]
-    [(arg-desc ...)
-     (apply append
-            (for/list ([desc (syntax->list #'(arg-desc ...))])
-              (define id (car (generate-temporaries '(arg))))
-              (define arg (if (box? (syntax-e desc))
-                              #`[#,id unsafe-undefined]
-                              id))
-              (if (or (keyword? (syntax-e desc))
-                      (and (box? (syntax-e desc))
-                           (keyword? (syntax-e (unbox (syntax-e desc))))))
-                  (list desc arg)
-                  (list arg))))]))
+  (let loop ([proto proto] [optionals? #t])
+    (syntax-parse proto
+      [count:exact-integer
+       (generate-temporaries (for/list ([i (syntax-e #'count)]) i))]
+      [#(proto internal-proto)
+       (vector (loop #'proto #t)
+               (loop #'internal-proto #f))]
+      [(arg-desc ...)
+       (apply append
+              (for/list ([desc (syntax->list #'(arg-desc ...))])
+                (define id (car (generate-temporaries '(arg))))
+                (define arg (if (and optionals?
+                                     (box? (syntax-e desc)))
+                                #`[#,id unsafe-undefined]
+                                id))
+                (if (or (keyword? (syntax-e desc))
+                        (and (box? (syntax-e desc))
+                             (keyword? (syntax-e (unbox (syntax-e desc))))))
+                    (list desc arg)
+                    (list arg))))])))
 
 (define-for-syntax (external-protocol v) (if (vector? v) (vector-ref v 0) v))
 (define-for-syntax (internal-protocol v) (if (vector? v) (vector-ref v 1) v))

@@ -17,6 +17,8 @@
 @include_section("list.scrbl")
 @include_section("map.scrbl")
 @include_section("set.scrbl")
+@include_section("subclass.scrbl")
+@include_section("method.scrbl")
 @include_section("for.scrbl")
 @include_section("more-arguments.scrbl")
 @include_section("syntax.scrbl")

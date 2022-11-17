@@ -1,0 +1,24 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+
+check:
+  class Posn(x, ~y, private w = 10):
+    nonfinal
+    field quiet: 11
+  
+  class Posn3D(~z: z, w):
+    nonfinal
+    extends Posn
+
+  class Posn4D(u):
+    extends Posn3D
+
+  ["" +& Posn(1, ~y: 2),
+   "" +& Posn3D(1, ~y: 2, ~z: 3, 4),
+   "" +& Posn4D(1, ~y: 2, ~z: 3, 4, 5)]
+  ["Posn(1, ~y: 2)",
+   "Posn3D(1, ~y: 2, ~z: 3, 4)",
+   "Posn4D(1, ~y: 2, ~z: 3, 4, 5)"]
+  

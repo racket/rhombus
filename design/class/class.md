@@ -652,7 +652,7 @@ annotation) works when written as follows:
 ```
 class Posn(x, y):
   export: origin get_origin
-  fun origin: Posn(0, 0)
+  val origin: Posn(0, 0)
   fun get_origin() :: Posn: Posn(0, 0)
 ```
 
@@ -674,7 +674,7 @@ class Posn(x, y):
 val origin: Posn(0, 0)
 fun get_origin() :: Posn: Posn(0, 0)
 
-Posn.orign
+Posn.origin
 Posn.get_origin()
 ```
 
