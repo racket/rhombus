@@ -445,18 +445,10 @@
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
 
- A @rhombus(method_impl) is either an @rhombus(identifier) followed by
- an optional result annotation and a block containing an @tech{entry
-  point}, or it has the same form as a @rhombus(fun) definition with a
- form name like @rhombus(method, ~class_clause) in place of
- @rhombus(fun). A @rhombus(maybe_res_ann) applies to the immediate method
- implementation as well as overriding implementations in subclasses; a
- result annotation within an @tech{entry point}, in contrast, does not
- apply to subclasses. To enable that propagation, a
- @rhombus(maybe_res_ann) is scoped differently than argument annotations
- of the both of a method: the environment of a @rhombus(maybe_res_ann) is
- the same as the @rhombus(class) or @rhombus(interace) form, and not the
- body block of the @rhombus(class) or @rhombus(interace) form.
+ A @rhombus(method_impl) is either an @rhombus(identifier) followed by a
+ block containing an @tech{entry point}, or it has the same form as a
+ @rhombus(fun) definition with a form name like
+ @rhombus(method, ~class_clause) in place of @rhombus(fun).
 
  In the body of a method, the special expression form @rhombus(this)
  refers to the object whose method was called. Fields (in the case of a
@@ -470,11 +462,7 @@
  In an interface, a @rhombus(method, ~intf_clause) declation can be just
  an identifier, or it can omit a body block. In that case,
  @rhombus(method, ~intf_clause) is treated like
- @rhombus(abstract, ~intf_clause). And abstract method declaration does
- not include a method body or implementation. An abstract method
- declaration can include arguments with annotations, but they are unused
- and ``advisory'' in the sense that they do not impose any checked
- requirements on overriding implementations of the method.
+ @rhombus(abstract, ~intf_clause).
 
 }
 

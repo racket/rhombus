@@ -85,7 +85,8 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier or '#:abstract
+                       method-vtable   ; index -> function-identifier or '#:abstract
+                       method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
@@ -115,7 +116,8 @@
                   ;; forward declaration for methods:
                   (list #'(define-syntaxes (name?) (values)))
                   null)
-              (build-methods added-methods method-map method-names method-private
+              (build-methods method-results
+                             added-methods method-map method-names method-private
                              #'(name name-instance name?
                                      []
                                      []
@@ -133,10 +135,13 @@
                                             #'(name name-instance name-ref
                                                     [export ...]))
               (build-interface-desc parent-names
-                                    method-map method-names method-vtable
+                                    method-map method-names method-vtable method-results
                                     internal-name
                                     #'(name prop:name name-ref
-                                            prop:internal-name internal-name? internal-name-ref))))
+                                            prop:internal-name internal-name? internal-name-ref))
+               (build-method-results added-methods
+                                     method-map method-vtable method-private
+                                     method-results)))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-name names)
@@ -175,7 +180,7 @@
                                                               (quote-syntax ((#%dot-provider name-instance)))))))))
 
 (define-for-syntax (build-interface-desc parent-names
-                                         method-map method-names method-vtable
+                                         method-map method-names method-vtable method-results
                                          internal-name
                                          names)
   (with-syntax ([(name prop:name name-ref
@@ -185,7 +190,8 @@
                     (define name (hash-ref method-names i))
                     (if (box? (hash-ref method-map (if (syntax? name) (syntax-e name) name)))
                         (box name)
-                        name))])
+                        name))]
+          [method-result-expr (build-method-result-expression method-results)])
       (append
        (if internal-name
            (list
@@ -197,7 +203,8 @@
                                 (quote-syntax internal-name-ref)
                                 '#,vtable
                                 (quote-syntax #,method-vtable)
-                                '#,method-map)))
+                                '#,method-map
+                                #,method-result-expr)))
            null)
        (list
         #`(define-syntax #,(in-class-desc-space #'name)
@@ -209,4 +216,5 @@
                             (quote-syntax internal-name-ref)
                             '#,vtable
                             (quote-syntax #,method-vtable)
-                            '#,method-map)))))))
+                            '#,method-map
+                            #,method-result-expr)))))))

@@ -5,15 +5,9 @@
 
 @(val subclass_eval: make_rhombus_eval())
 
-@title(~tag: "subclass"){Subclasses and Interfaces}
+@title(~tag: "subclass"){Subclasses}
 
-In @secref("classes_and_patterns"), we saw the basic syntax of
-@rhombus(class) for creating a new datatype. The @rhombus(class) form
-also supports a block (using @litchar{:}) immediately after the
-parenthesized field sequence. The block supplies @emph{clauses} that
-further customize a class.
-
-One basic clause form is @rhombus(extends, ~class_clause) followed by
+In a @rhombus(class) body, @rhombus(extends, ~class_clause) followed by
 the name of an existing class. Instances of the new class, the
 @emph{subclass}, will also count as instances of the existing class, the
 @emph{superclass}. Since that creates obligations on the superclass,

@@ -15,9 +15,10 @@
                         super-ids
                         prop:id
                         ref-id
-                        method-names  ; same as `class-desc`
-                        method-vtable ; same as `class-desc`
-                        method-map))  ; same as `class-desc`
+                        method-names    ; same as `class-desc`
+                        method-vtable   ; same as `class-desc`
+                        method-map      ; same as `class-desc`
+                        method-result)) ; same as `class-desc`
 (define (interface-desc-ref v) (and (interface-desc? v) v))
 
 (define (interface-names->interfaces stxes names)

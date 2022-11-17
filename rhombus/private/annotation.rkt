@@ -36,6 +36,7 @@
          Boolean
          Integer
          Number
+         Real
          String
          Symbol
          Keyword
@@ -351,6 +352,7 @@
 (define-syntax Boolean (identifier-annotation #'Boolean #'boolean? #'()))
 (define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
 (define-syntax Number (identifier-annotation #'Number #'number? #'()))
+(define-syntax Real (identifier-annotation #'Real #'real? #'()))
 (define-syntax String (identifier-annotation #'String #'string? #'()))
 (define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
 (define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))

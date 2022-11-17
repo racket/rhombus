@@ -39,16 +39,22 @@
               [(extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]
-              [((~and tag (~or method override private final final-override)) id rhs)
+              [((~and tag (~or method override private final final-override)) id rhs maybe-ret)
                (hash-set options 'methods (cons (added-method #'id
                                                               (car (generate-temporaries #'(id)))
                                                               #'rhs
+                                                              #'maybe-ret
+                                                              (and (pair? (syntax-e #'maybe-ret))
+                                                                   (car (generate-temporaries #'(id))))
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(abstract id rhs)
+              [(abstract id rhs maybe-ret)
                (hash-set options 'methods (cons (added-method #'id
                                                               '#:abstract
                                                               #'rhs
+                                                              #'maybe-ret
+                                                              (and (pair? (syntax-e #'maybe-ret))
+                                                                   (car (generate-temporaries #'(id))))
                                                               'abstract)
                                                 (hash-ref options 'methods null)))]
               [_

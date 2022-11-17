@@ -7,6 +7,7 @@
                      "class-parse.rkt"
                      "interface-parse.rkt")
          "class-method.rkt"
+         "class-method-result.rkt"
          (submod "dot.rkt" for-dot-provider)
          "parens.rkt"
          "static-info.rkt"
@@ -159,6 +160,11 @@
       (class-desc-method-map desc)
       (interface-desc-method-map desc)))
 
+(define-for-syntax (desc-method-result desc)
+  (if (class-desc? desc)
+      (class-desc-method-result desc)
+      (interface-desc-method-result desc)))
+
 (define-for-syntax (desc-ref-id desc)
   (if (class-desc? desc)
       (class-desc-ref-id desc)
@@ -211,7 +217,7 @@
                                  static-infos))
     (success (wrap-static-info* full-e all-static-infos)
              new-tail))
-  (define (do-method pos/boxed/id)
+  (define (do-method pos/boxed/id ret-info-id)
     (define-values (args new-tail tag)
       (syntax-parse tail
         #:datum-literals (op)
@@ -226,15 +232,27 @@
         [else (vector-ref (syntax-e (desc-method-vtable desc)) pos/boxed/id)]))
     (cond
       [args
-       (define obj-id #'obj)
-       (define rator
+       (define-values (rator obj-e wrap)
          (cond
-           [(identifier? pos/id) pos/id]
-           [else #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id)]))
+           [(identifier? pos/id)
+            (values pos/id form1 (lambda (e) e))]
+           [else
+            (define obj-id #'obj)
+            (define static-infos
+              (or (and ret-info-id
+                       (method-result-static-infos (syntax-local-method-result ret-info-id)))
+                  #'()))
+            (values #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id)
+                    obj-id
+                    (lambda (e)
+                      (define call-e #`(let ([#,obj-id #,form1])
+                                         #,e))
+                      (if (pair? (syntax-e static-infos))
+                          (wrap-static-info* call-e static-infos)
+                          call-e)))]))
        (define-values (call-stx empty-tail)
-         (parse-function-call rator (list obj-id) #`(#,obj-id #,args)))
-       (success #`(let ([#,obj-id #,form1])
-                    #,call-stx)
+         (parse-function-call rator (list obj-e) #`(#,obj-e #,args)))
+       (success (wrap call-stx)
                 new-tail)]
       [else
        (when more-static?
@@ -253,15 +271,16 @@
                  field+acc)))
      => (lambda (fld) (do-field fld))]
     [(hash-ref (desc-method-map desc) (syntax-e field-id) #f)
-     => (lambda (pos/boxed) (do-method pos/boxed))]
+     => (lambda (pos/boxed) (do-method pos/boxed
+                                       (hash-ref (desc-method-result desc) (syntax-e field-id) #f)))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
-     => (lambda (id) (do-method id))]
+     => (lambda (id) (do-method id #f))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
      => (lambda (id/fld)
           (if (identifier? id/fld)
-              (do-method id/fld)
+              (do-method id/fld #f)
               (do-field id/fld)))]
     [more-static?
      (raise-syntax-error #f

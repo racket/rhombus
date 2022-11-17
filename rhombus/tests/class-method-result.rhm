@@ -1,0 +1,235 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+
+// basic result annotation checks
+begin:
+  class Posn(x, y):
+    nonfinal
+    method m() :: Integer:
+      x+y
+    method n() :: String:
+      x+y
+    final method n_f() :: String:
+      x+y
+    // annotation not checked
+    method p() -: String:
+      x+y
+  check:
+    Posn(1, 2).m()
+    3
+  check:
+    ~exn
+    Posn(1, 2).n()
+    "result does not match annotation"
+  check:
+    ~exn
+    Posn(1, 2).n_f()
+    "result does not match annotation"
+  check:
+    Posn(1, 2).p()
+    3
+
+  begin:
+    class Posn3D(z):
+      extends Posn
+      override m():
+        "oops"   
+      override n():
+        "ok"
+      override p():
+        0 
+    check:
+      ~exn
+      Posn3D(1, 2, 3).m()
+      "result does not match annotation"
+    check:
+      Posn3D(1, 2, 3).p()
+      0
+    check:
+      Posn3D(1, 2, 3).n()
+      "ok"
+
+// annotation obligations are inherited and compose
+begin:
+  interface Red
+  interface Blue
+  interface Green
+  class Top():
+    nonfinal
+    method m(v) :: Red: v
+  class Middle():
+    nonfinal
+    extends Top
+    override m(v) :: Blue: v
+  class Bottom():
+    nonfinal
+    extends Middle
+    override m(v) :: Green: v
+
+  class White():
+    implements: Red Blue Green
+  class Magenta():
+    implements: Red Blue
+  class Cyan():
+    implements: Blue Green
+
+  check:
+    Top().m(White())
+    White()
+  check:
+    Middle().m(White())
+    White()
+  check:
+    Bottom().m(White())
+    White()
+
+  check:
+    Top().m(Magenta())
+    Magenta()
+  check:
+    Middle().m(Magenta())
+    Magenta()
+  check:
+    ~exn
+    Bottom().m(Magenta())
+    "result does not match annotation"
+
+  check:
+    ~exn
+    Top().m(Cyan())
+    "result does not match annotation"
+  check:
+    ~exn
+    Middle().m(Cyan())
+    "result does not match annotation"
+  check:
+    ~exn
+    Bottom().m(Cyan())
+    "result does not match annotation"
+
+// class self-reference
+begin:
+  class Posn(x, y):
+    nonfinal
+    method zero() :: Posn:
+      Posn(0, 0)
+  check:
+    Posn(1, 2).zero().x
+    0
+
+// class self-reference, final method
+begin:
+  class Posn(x, y):
+    final method zero() :: Posn:
+      Posn(0, 0)
+  check:
+    Posn(1, 2).zero().x
+    0
+
+// class self-reference, private method
+begin:
+  class Posn(x, y):
+    nonfinal
+    internal _Posn
+    private method zero() :: Posn:
+      Posn(0, 0)
+  check:
+    _Posn(1, 2).zero().x
+    0
+  check:
+    (Posn(1, 2) -: _Posn).zero().x
+    0
+
+// interface
+begin:
+  interface Pointy:
+    method visible() :: Boolean
+    method invisible() :: Boolean:
+      "nope"
+    method really_invisible() :: Boolean:
+      "nope"
+  class Point(x, y):
+    implements Pointy
+    override visible(~as_text = #true):
+      if as_text | "yes" | #true
+    override really_invisible() :: Boolean:
+      #false
+  check:
+    Point(1, 2).visible(~as_text: #false)
+    #true
+  check:
+    ~exn
+    Point(1, 2).visible()
+    "result does not match annotation"
+  check:
+    ~exn
+    Point(1, 2).invisible()
+    "result does not match annotation"
+  check:
+    Point(1, 2).really_invisible()
+    #false
+
+// multiple interface inheritance
+begin:
+  interface Red:
+    method example(x) :: Red:
+      this
+  interface Blue:
+    method example(x) :: Blue:
+      this
+
+  class Apple():
+    implements Red
+  class Sky():
+    implements Blue
+  class RacketLogo():
+    implements Red Blue
+    override example(x = this):
+      x
+
+  check:
+    Apple().example(#false)
+    Apple()    
+  check:
+    Sky().example(#false)
+    Sky()    
+  check:
+    RacketLogo().example()
+    RacketLogo()    
+  check:
+    ~exn
+    RacketLogo().example(#false)
+    "result does not match annotation"
+
+// alternate method forms, internal versus external annotations
+begin:
+  class Top():
+    nonfinal
+    method m:
+      fun (x) :: Integer:
+        x
+    method m2 :: Integer:
+      fun (x):
+        x
+  class Bottom():
+    extends Top
+    override m (x):
+      x
+    override m2 (x):
+      x
+  check:
+    [Top().m(1), Top().m2(2)]
+    [1, 2]
+  check:
+    ~exn
+    Top().m("apple")
+    "result does not match annotation"
+  check:
+    Bottom().m("apple")
+    "apple"
+  check:
+    ~exn
+    Bottom().m2("apple")
+    "result does not match annotation"

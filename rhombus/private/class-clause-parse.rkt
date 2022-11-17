@@ -5,10 +5,12 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "class-parse.rkt"
-                     (only-in "rule.rkt" rule))
+                     (only-in "rule.rkt" rule)
+                     "consistent.rkt")
          "class-clause.rkt"
          "interface-clause.rkt"
          (only-in "binding.rkt" raise-binding-failure)
+         (only-in "annotation.rkt" :: -:)
          (submod "annotation.rkt" for-class)
          "parens.rkt"
          "name-root-ref.rkt"
@@ -100,7 +102,7 @@
                (when (hash-has-key? options 'internal)
                  (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
                (hash-set options 'internal #'id)]
-              [(constructor _ rhs)
+              [(constructor rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
                (hash-set options 'constructor-rhs #'rhs)]
@@ -128,16 +130,22 @@
                                                             #'annotation-str
                                                             (syntax-e #'mode))
                                                (hash-ref options 'fields null)))]
-              [((~and tag (~or method override private final final-override private-override)) id rhs)
+              [((~and tag (~or method override private final final-override private-override)) id rhs maybe-ret)
                (hash-set options 'methods (cons (added-method #'id
                                                               (car (generate-temporaries #'(id)))
                                                               #'rhs
+                                                              #'maybe-ret
+                                                              (and (pair? (syntax-e #'maybe-ret))
+                                                                   (car (generate-temporaries #'(id))))
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(abstract id rhs)
+              [(abstract id rhs maybe-ret)
                (hash-set options 'methods (cons (added-method #'id
                                                               '#:abstract
                                                               #'rhs
+                                                              #'maybe-ret
+                                                              (and (pair? (syntax-e #'maybe-ret))
+                                                                   (car (generate-temporaries #'(id))))
                                                               'abstract)
                                                 (hash-ref options 'methods null)))]
               [_
@@ -269,26 +277,68 @@
   (if tst (let () thn) els))
 
 (begin-for-syntax
+  (define-splicing-syntax-class :maybe-ret
+    #:attributes (seq)
+    #:literals (:: -:)
+    #:datum-literals (op)
+    (pattern (~seq (~and o (op (~or :: -:))) ret ...)
+             #:attr seq #'(o ret ...))
+    (pattern (~seq)
+             #:attr seq #'()))
   (define-splicing-syntax-class (:method mode)
     #:description "method implementation"
     #:attributes (form)
-    (pattern (~seq id:identifier (tag::parens arg ...) ret ...
-                   (~and rhs (_::block body ...)))
-             #:attr form (wrap-class-clause #`(#,mode id (block (group fun (tag arg ...) ret ... rhs)))))
-    (pattern (~seq id:identifier (~and rhs (_::block . _)))
-             #:attr form (wrap-class-clause #`(#,mode id rhs))))
+    #:datum-literals (group)
+    (pattern (~seq id:identifier (~and args (_::parens . _)) ret::maybe-ret
+                   (~and rhs (_::block . _)))
+             #:attr form (wrap-class-clause #`(#,mode id
+                                               (block (group fun args rhs))
+                                               ret.seq)))
+    (pattern (~seq (~and alts
+                         (atag::alts
+                          (btag::block ((~and gtag group) a-id:identifier
+                                                          (~and args (_::parens . _)) ret::maybe-ret
+                                                          (~and body (_::block . _))))
+                          ...+)))
+             #:do [(define a-ids (syntax->list #'(a-id ...)))
+                   (check-consistent #:who (syntax-e mode) #'alts a-ids "name")]
+             #:attr id (car a-ids)
+             #:with (ret0 ...) (let ([retss (syntax->list #'(ret.seq ...))])
+                                 (if (for/and ([rets (in-list (cdr retss))])
+                                       (same-return-signature? (car retss) rets))
+                                     (car retss)
+                                     '()))
+             #:attr form (wrap-class-clause #`(#,mode id
+                                               (block (group fun (atag (btag (gtag args body)) ...)))
+                                               (ret0 ...))))
+    (pattern (~seq id:identifier ret::maybe-ret (~and rhs (_::block . _)))
+             #:attr form (wrap-class-clause #`(#,mode id rhs ret.seq))))
   (define-splicing-syntax-class :method-decl
     #:description "method declaration"
-    #:attributes (id rhs)
-    (pattern (~seq id:identifier (tag::parens arg ...) ret ...)
-             #:attr rhs #'(group fun (tag arg ...) ret ...
-                                 (block (group (parsed (void))))))))
+    #:attributes (id rhs maybe-ret)
+    (pattern (~seq id:identifier (tag::parens arg ...) ret::maybe-ret)
+             #:attr rhs #'(group fun (tag arg ...)
+                                 (block (group (parsed (void)))))
+             #:attr maybe-ret #'ret.seq)
+    (pattern (~seq id:identifier ret::maybe-ret)
+             #:attr rhs #'#f
+             #:attr maybe-ret #'ret.seq)))
 
 (define-syntax constructor
   (class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [((~var m (:method #'constructor))) #'m.form]))))
+       #:datum-literals (group)
+       [(_ (~and args (_::parens . _)) ret ...
+           (~and rhs (_::block . _)))
+        (wrap-class-clause #`(constructor (block (group fun args ret ... rhs))))]
+       [(_ (~and rhs (_::alts
+                      (_::block (group (_::parens . _) ret ...
+                                       (_::block . _)))
+                      ...+)))
+        (wrap-class-clause #`(constructor (block (group fun rhs))))]
+       [(_ (~and rhs (_::block . _)))
+        (wrap-class-clause #`(constructor rhs))]))))
 
 (define-syntax final
   (make-class+interface-clause-transformer
@@ -320,8 +370,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ (~var m (:method #'method))) #'m.form]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
-       [(_ name:identifier) (wrap-class-clause #'(abstract name #f))]))))
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
 
 (define-syntax override
   (make-class+interface-clause-transformer
@@ -358,7 +407,22 @@
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
-       [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
-       [(_ method name:identifier) (wrap-class-clause #'(abstract name #f))]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
-       [(_ name:identifier) (wrap-class-clause #'(abstract name #f))]))))
+       [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
+
+(define-for-syntax (same-return-signature? a b)
+  (cond
+    [(identifier? a)
+     (and (identifier? b)
+          (free-identifier=? a b))]
+    [(identifier? b) #f]
+    [(syntax? a)
+     (same-return-signature? (syntax-e a) b)]
+    [(syntax? b)
+     (same-return-signature? a (syntax-e b))]
+    [(null? a) (null? b)]
+    [(pair? a)
+     (and (pair? b)
+          (and (same-return-signature? (car a) (car b))
+               (same-return-signature? (cdr a) (cdr b))))]
+    [else (equal? a b)]))

@@ -52,7 +52,8 @@
                     all-fields ; #f or (list symbol-or-id-or-arg ...), includes private fields; arg means omitted from public constructor
                     method-names  ; vector of symbol or boxed symbol; plain symbol means final
                     method-vtable ; syntax-object vector of accessor identifiers or #'#:abstract
-                    method-map    ; hash of name -> index or boxed index; inverse of `method-names`
+                    method-map    ; hash of symbol -> index or boxed index; inverse of `method-names`
+                    method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
                     custom-annotation?
@@ -72,7 +73,7 @@
 (define (method-desc-name f) (car f))
 
 (struct added-field (id arg-id static-infos predicate annotation-str mode))
-(struct added-method (id rhs-id rhs mode))
+(struct added-method (id rhs-id rhs maybe-ret result-id mode))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 

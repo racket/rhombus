@@ -12,6 +12,7 @@
          "parse.rkt"
          "entry-point.rkt"
          "class-this.rkt"
+         "class-method-result.rkt"
          "function-arity-key.rkt"
          "dot-provider-key.rkt"
          "static-info.rkt"
@@ -23,6 +24,8 @@
 
 (provide (for-syntax build-method-map
                      build-interface-vtable
+                     build-method-results
+                     build-method-result-expression
                      build-methods
 
                      get-private-table)
@@ -110,6 +113,17 @@
                    priv-ht
                    (hash-set vtable-ht i new-rhs))]))))
 
+  ;; merge method-result tables from superclass and superinterfaces,
+  ;; assuming that the names all turn out to be sufficiently distinct
+  (define super-method-results
+    (for/fold ([method-results (if super
+                                   (for/hasheq ([(sym id) (in-hash (class-desc-method-result super))])
+                                     (values sym (list id)))
+                                   #hasheq())])
+              ([intf (in-list interfaces)])
+      (for/fold ([method-results method-results]) ([(sym id) (in-hash (interface-desc-method-result intf))])
+        (hash-set method-results sym (cons id (hash-ref method-results sym '()))))))
+
   ;; add methods for the new class/interface
   (define-values (new-ht new-vtable-ht priv-ht here-ht)
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
@@ -182,6 +196,12 @@
   (define method-vtable
     (for/vector ([i (in-range (hash-count new-vtable-ht))])
       (hash-ref new-vtable-ht i)))
+  (define method-results
+    (for/fold ([method-results super-method-results]) ([added (in-list added-methods)]
+                                                       #:when (added-method-result-id added))
+      (define sym (syntax-e (added-method-id added)))
+      (hash-set method-results sym (cons (added-method-result-id added)
+                                         (hash-ref method-results sym '())))))
   (define abstract-name
     (for/or ([v (in-hash-values new-vtable-ht)]
              [i (in-naturals)])
@@ -191,6 +211,7 @@
   (values method-map
           method-names
           method-vtable
+          method-results
           priv-ht
           here-ht
           abstract-name))
@@ -205,6 +226,28 @@
        (define maybe-boxed-pos (hash-ref method-map name))
        (define pos (if (box? maybe-boxed-pos) (unbox maybe-boxed-pos) maybe-boxed-pos))
        (vector-ref method-vtable pos)])))
+
+(define-for-syntax (build-method-results added-methods
+                                         method-map method-vtable method-private
+                                         method-results)
+  (for/list ([added (in-list added-methods)]
+             #:when (added-method-result-id added))
+    #`(define-method-result-syntax #,(added-method-result-id added)
+        #,(added-method-maybe-ret added)
+        #,(cdr (hash-ref method-results (syntax-e (added-method-id added))))
+        ;; When calls do not go through vtable, so also add static info
+        ;; as #%call-result to binding:
+        #,(or (hash-ref method-private (syntax-e (added-method-id added)) #f)
+              (let ([i (hash-ref method-map (syntax-e (added-method-id added)) #f)])
+                (and (integer? i)
+                     (vector-ref method-vtable i)))))))
+          
+(define-for-syntax (build-method-result-expression method-result)
+  #`(hasheq
+     #,@(apply append
+               (for/list ([(sym ids) (in-hash method-result)])
+                 (list #`(quote #,sym)
+                       #`(quote-syntax #,(car ids)))))))
 
 (define-for-syntax (super-method-vtable p)
   (syntax-e
@@ -332,7 +375,7 @@
                                   #'head)
                    #'tail)])]))))
 
-(define-for-syntax (make-method-syntax id index/id)
+(define-for-syntax (make-method-syntax id index/id result-id)
   (expression-transformer
    id
    (lambda (stx)
@@ -345,13 +388,20 @@
                              #`(vector-ref (prop-methods-ref id) #,index/id)))
            (define-values (call new-tail)
              (parse-function-call rator (list #'id) #'(head args)))
-           (values call #'tail)])]
+           (define r (and (syntax-e result-id)
+                          (syntax-local-method-result result-id)))
+           (define wrapped-call
+             (if r
+                 (wrap-static-info* call (method-result-static-infos r))
+                 call))
+           (values wrapped-call #'tail)])]
        [(head . _)
         (raise-syntax-error #f
                             "method must be called"
                             #'head)]))))
 
-(define-for-syntax (build-methods added-methods method-map method-names method-private
+(define-for-syntax (build-methods method-results
+                                  added-methods method-map method-names method-private
                                   names)
   (with-syntax ([(name name-instance name?
                        [field-name ...]
@@ -363,20 +413,26 @@
                  names])
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))]
-                  [((method-name method-index/id) ...) (for/list ([i (in-range (hash-count method-map))])
-                                                         (define m-name (let ([n (hash-ref method-names i)])
-                                                                          (if (syntax? n)
-                                                                              (syntax-e n)
-                                                                              n)))
-                                                         (define id/boxed (hash-ref method-map m-name))
-                                                         (list (datum->syntax #'name m-name)
-                                                               (if (box? id/boxed)
-                                                                   i
-                                                                   id/boxed)))]
-                  [((private-method-name private-method-id) ...) (for/list ([m-name (in-list (sort (hash-keys method-private)
-                                                                                                   symbol<?))])
-                                                                   (list (datum->syntax #'name m-name)
-                                                                         (hash-ref method-private m-name)))])
+                  [((method-name method-index/id method-result-id) ...)
+                   (for/list ([i (in-range (hash-count method-map))])
+                     (define m-name (let ([n (hash-ref method-names i)])
+                                      (if (syntax? n)
+                                          (syntax-e n)
+                                          n)))
+                     (define id/boxed (hash-ref method-map m-name))
+                     (list (datum->syntax #'name m-name)
+                           (if (box? id/boxed)
+                               i
+                               id/boxed)
+                           (let ([r (hash-ref method-results m-name #f)])
+                             (and (pair? r) (car r)))))]
+                  [((private-method-name private-method-id private-method-result-id) ...)
+                   (for/list ([m-name (in-list (sort (hash-keys method-private)
+                                                     symbol<?))])
+                     (list (datum->syntax #'name m-name)
+                           (hash-ref method-private m-name)
+                           (let ([r (hash-ref method-results m-name #f)])
+                             (and (pair? r) (car r)))))])
       (list
        #`(define-values #,(for/list ([added (in-list added-methods)]
                                      #:when (not (eq? 'abstract (added-method-mode added))))
@@ -387,10 +443,12 @@
                                                           (quote-syntax maybe-set-name-field!)))
              ...
              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
-                                                            (quote-syntax method-index/id)))
+                                                            (quote-syntax method-index/id)
+                                                            (quote-syntax method-result-id)))
              ...
              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
-                                                                    (quote-syntax private-method-id)))
+                                                                    (quote-syntax private-method-id)
+                                                                    (quote-syntax private-method-result-id)))
              ...
              (define-syntax new-private-tables (cons (cons (quote-syntax name)
                                                            (hasheq (~@ 'private-method-name
@@ -407,8 +465,10 @@
              (values
               #,@(for/list ([added (in-list added-methods)]
                             #:when (not (eq? 'abstract (added-method-mode added))))
+                   (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name name-instance name?
+                                                                    #,(and r (car r)) #,(added-method-id added)
                                                                     new-private-tables
                                                                     [super-name ...])])
                        #,(added-method-id added))))))))))
@@ -418,8 +478,13 @@
     #:datum-literals (block)
     [(_ (block expr)
         name name-instance name?
+        result-id method-name
         private-tables-id
         super-names)
+     #:do [(define result-pred
+             (cond
+               [(not (syntax-e #'result-id)) #f]
+               [else (method-result-predicate-expr (syntax-local-method-result #'result-id))]))]
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
                                    (lambda (stx)
@@ -427,8 +492,15 @@
                                                              [private-tables (quote-syntax private-tables-id)])
                                          ;; This check might be redundant, depending on how the method was called:
                                          (unless (name? this-obj) (raise-not-an-instance 'name this-obj))
-                                         (let ()
-                                           #,stx)))
+                                         #,(let ([body #`(let ()
+                                                           #,stx)])
+                                             (if result-pred
+                                                 #`(let ([result #,body])
+                                                     (unless (#,result-pred result)
+                                                       (raise-result-failure 'method-name result))
+                                                     result)
+                                                 body))))
                                    #t)))
      #'expr
      #'e.parsed]))
+

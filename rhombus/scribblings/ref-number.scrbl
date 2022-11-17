@@ -20,6 +20,15 @@
 }
 
 @doc(
+  annot.macro 'Real'
+){
+
+ Matches real numbers (as opposed to imaginary numbers like the result
+ of @rhombus(sqrt(-1))).
+
+}
+
+@doc(
   operator ((x :: Number) + (y :: Number)) :: Number,
   operator ((x :: Number) - (y :: Number)) :: Number,
   operator ((x :: Number) * (y :: Number)) :: Number,

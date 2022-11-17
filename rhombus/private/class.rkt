@@ -213,7 +213,8 @@
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-map      ; symbol -> index (final) or box-of-index (non-final)
                        method-names    ; index -> symbol-or-identifier
-                       method-vtable   ; index -> accessor-identifier or '#:abstract
+                       method-vtable   ; index -> function-identifier or '#:abstract
+                       method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
@@ -310,7 +311,8 @@
            (define defns
              (reorder-for-top-level
               (append
-               (build-methods added-methods method-map method-names method-private
+               (build-methods method-results
+                              added-methods method-map method-names method-private
                               #'(name name-instance name?
                                       [field-name ... super-field-name ...]
                                       [name-field ... super-name-field ...]
@@ -389,7 +391,7 @@
                                  constructor-defaults super-constructor+-defaults
                                  final? has-private-fields? private?s
                                  parent-name
-                                 method-map method-names method-vtable
+                                 method-map method-names method-vtable method-results
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
@@ -403,7 +405,10 @@
                                                      (quote-syntax public-field-static-infos)
                                                      (quote-syntax public-field-argument))
                                                ...)
-                                         ([field-name field-argument] ...))))))
+                                         ([field-name field-argument] ...)))
+               (build-method-results added-methods
+                                     method-map method-vtable method-private
+                                     method-results))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -514,7 +519,7 @@
                                      constructor-defaults super-constructor+-defaults
                                      final? has-private-fields? private?s
                                      parent-name
-                                     method-map method-names method-vtable
+                                     method-map method-names method-vtable method-results
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        fields
@@ -551,6 +556,7 @@
                               name))
                      (quote-syntax #,method-vtable)
                      '#,method-map
+                     #,(build-method-result-expression method-results)
                      #,(cond
                          [(syntax-e #'constructor-maker-name)
                           #`(quote-syntax ([#,(encode-protocol constructor-public-keywords constructor-public-defaults

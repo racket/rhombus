@@ -88,14 +88,17 @@ implements_decl := implements identifier
 field_decl := field identifier maybe_annotation: body; ...
             | private field identifier maybe_annotation: body; ...
 
-method_decl := method method_spec
-             | override method_spec
-             | final method_spec
-             | private method_spec
-             | abstract identifier
+method_decl := method method_impl
+             | override method_impl
+             | final method_impl
+             | private method_impl
+             | abstract method_decl
 
-method_spec := id(arg, ..) maybe_annot : body
-             | id: entry_point
+method_impl := id(arg, ..) maybe_annot: body
+             | id maybe_annot: entry_point
+
+method_decl := id(arg, ..) maybe_annot
+             | id maybe_annot
 
 represent_decl := constructor: entry_point
                 | binding: entry_point
@@ -130,9 +133,10 @@ initial `field_spec`, unless immutability is important.
 Each `method`, `override`, method-shaped `final`, or method-shaped
 `final` private declaration adds a method to the class. A `method` can
 appear after `override`. An `override`, `method`, or both can appear
-after `final`. A `method` can appear after `private`. An
-`abstract` declaration also adds a method, but without an
-implementation.
+after `final`. A `method` can appear after `private`. An `abstract`
+declaration also adds a method, but without an implementation. A
+result annotation (not counting any that is an the `entry_point`)
+applies to the method and any overriding implementation in a subclass.
 
 The `constructor`, `binding` and `annotation` clause forms support
 customizing those aspects of the class.
@@ -628,12 +632,13 @@ to be the same. That goal seems to fundamentaly conflict with dynamic
 better to just live with a prohibiton against same-named method in
 superinterfaces.
 
-Currently, an abstract method has no signature. More generally,
-there's no support for checking that a method override has a signature
-that is compatible with the implementation that it replaces. Along
-those lines, static information about the result of a method is not
-propagated to a method-call site (even for a final method or final
-class, currently).
+Although an abstract method can be written with arguments and
+annotations, only the result annotation has any effect and is
+propagated to overrides. More generally, there's no support for
+checking that a method override takes arguments consistent with the
+overidden declaration. It's not clear how argument checking would
+work. Result checking, meanwhile, justifies static information about
+the result of a method.
 
 Expansion order in the body of a `class` form limits the places where
 the class being defined can be referenced. For example, this works:
