@@ -13,7 +13,8 @@
          "parens.rkt"
          "name-root-ref.rkt"
          "parse.rkt"
-         (only-in "function.rkt" fun))
+         (only-in "function.rkt" fun)
+         (only-in "implicit.rkt" #%body))
 
 (provide (for-syntax extract-internal-ids
                      parse-options
@@ -86,7 +87,7 @@
               #:literals (extends implements private-implements
                                   constructor final nonfinal authentic binding annotation
                                   method private override abstract internal
-                                  final-override)
+                                  final-override private-override)
               [(extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
@@ -133,10 +134,10 @@
                                                               #'rhs
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(abstract id)
+              [(abstract id rhs)
                (hash-set options 'methods (cons (added-method #'id
                                                               '#:abstract
-                                                              #f
+                                                              #'rhs
                                                               'abstract)
                                                 (hash-ref options 'methods null)))]
               [_
@@ -269,13 +270,19 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class (:method mode)
-    #:description "method declaration"
+    #:description "method implementation"
     #:attributes (form)
     (pattern (~seq id:identifier (tag::parens arg ...) ret ...
                    (~and rhs (_::block body ...)))
              #:attr form (wrap-class-clause #`(#,mode id (block (group fun (tag arg ...) ret ... rhs)))))
     (pattern (~seq id:identifier (~and rhs (_::block . _)))
-             #:attr form (wrap-class-clause #`(#,mode id rhs)))))
+             #:attr form (wrap-class-clause #`(#,mode id rhs))))
+  (define-splicing-syntax-class :method-decl
+    #:description "method declaration"
+    #:attributes (id rhs)
+    (pattern (~seq id:identifier (tag::parens arg ...) ret ...)
+             #:attr rhs #'(group fun (tag arg ...) ret ...
+                                 (block (group (parsed (void))))))))
 
 (define-syntax constructor
   (class-clause-transformer
@@ -305,9 +312,16 @@
 
 (define-syntax method
   (make-class+interface-clause-transformer
+   ;; class clause
    (lambda (stx)
      (syntax-parse stx
-       [(_ (~var m (:method #'method))) #'m.form]))))
+       [(_ (~var m (:method #'method))) #'m.form]))
+   ;; interface clause
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (~var m (:method #'method))) #'m.form]
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
+       [(_ name:identifier) (wrap-class-clause #'(abstract name #f))]))))
 
 (define-syntax override
   (make-class+interface-clause-transformer
@@ -337,11 +351,14 @@
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ (~var m (:method #'private))) #'m.form]))))
 (define-syntax private-implements 'placeholder)
+(define-syntax private-override 'placeholder)
 
 (define-syntax abstract
   (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
-       [(_ method name:identifier) (wrap-class-clause #'(abstract name))]
-       [(_ name:identifier) (wrap-class-clause #'(abstract name))]))))
+       [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
+       [(_ method name:identifier) (wrap-class-clause #'(abstract name #f))]
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs))]
+       [(_ name:identifier) (wrap-class-clause #'(abstract name #f))]))))

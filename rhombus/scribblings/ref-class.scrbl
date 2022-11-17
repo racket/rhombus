@@ -42,10 +42,10 @@
   grammar class_clause:
     $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
     $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
-    $$(@rhombus(method, ~class_clause)) $method_decl
-    $$(@rhombus(override, ~class_clause)) $method_decl
-    $$(@rhombus(final, ~class_clause)) $method_decl
-    $$(@rhombus(private, ~class_clause)) $method_decl
+    $$(@rhombus(method, ~class_clause)) $method_impl
+    $$(@rhombus(override, ~class_clause)) $method_impl
+    $$(@rhombus(final, ~class_clause)) $method_impl
+    $$(@rhombus(private, ~class_clause)) $method_impl
     $$(@rhombus(abstract, ~class_clause)) $method_decl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(implements, ~class_clause)) $implements_decl
@@ -274,10 +274,10 @@
     $export,
 
   grammar interface_clause:
-    $$(@rhombus(method, ~intf_clause)) $method_decl
-    $$(@rhombus(override, ~intf_clause)) $method_decl
-    $$(@rhombus(final, ~intf_clause)) $method_decl
-    $$(@rhombus(private, ~intf_clause)) $method_decl
+    $$(@rhombus(method, ~intf_clause)) $method_impl
+    $$(@rhombus(override, ~intf_clause)) $method_impl
+    $$(@rhombus(final, ~intf_clause)) $method_impl
+    $$(@rhombus(private, ~intf_clause)) $method_impl
     $$(@rhombus(abstract, ~intf_clause)) $method_decl
     $$(@rhombus(extends, ~intf_clause)) $extends_decl
     $$(@rhombus(internal, ~intf_clause)) $identifier
@@ -287,6 +287,9 @@
 
  Similar to @rhombus(class) for defining classes, but defines an
  interface, which has no fields but can have multiple superinterfaces.
+ A @rhombus(method, ~intf_clause) clause is allowed to have just a method name
+ or omit the body, in which case @rhombus(method, ~intf_clause) is
+ treated as @rhombus(abstract, ~intf_clause).
 
  The body of an @rhombus(interface) form has @deftech{interface clauses}
  that are similar to @tech{class clauses}, but declared separately and
@@ -370,19 +373,19 @@
 }
 
 @doc(  
-  class_clause.macro 'final $method_decl',
-  class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_decl',
-  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_decl',
-  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_decl',
-  interface_clause.macro 'final $method_decl',
-  interface_clause.macro 'final $$(@rhombus(method, ~intf_clause)) $method_decl',
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $method_decl',
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_decl',
+  class_clause.macro 'final $method_impl',
+  class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_impl',
+  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl',
+  interface_clause.macro 'final $method_impl',
+  interface_clause.macro 'final $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $method_impl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_impl',
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
  @tech{interface clause} is followed by a method declaration,
- where @rhombus(method_decl) is the same as for
+ where @rhombus(method_impl) is the same as for
  @rhombus(method, ~class_clause). In that case, the method is final, even
  if the enclosing class is not (and an interface is never final). A final
  method cannot be overridden in subclaseses or subinterfaces. Using
@@ -406,20 +409,24 @@
 }
 
 @doc(
-  class_clause.macro 'method $method_decl',
-  class_clause.macro 'override $method_decl',
-  class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_decl',
+  class_clause.macro 'method $method_impl',
+  class_clause.macro 'override $method_impl',
+  class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_impl',
   interface_clause.macro 'method $method_decl',
-  interface_clause.macro 'override $method_decl',
-  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_decl',
+  interface_clause.macro 'method $method_impl',
+  interface_clause.macro 'override $method_impl',
+  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_impl',
 
-  grammar method_decl:
+  grammar method_impl:
     $identifier $fun_form
     $identifier: $entry_point,
   
   grammar fun_form:
-    ($kwopt_binding, ..., $rest, ...) $maybe_res_ann: $body; ...
-    ($binding, ..., $rest, ...) $maybe_res_ann: $body; ...
+    ($kwopt_binding, ..., $rest, ...) $maybe_res_ann: $body; ...,
+
+  grammar method_decl:
+    $identifier
+    $identifier ($kwopt_binding, ..., $rest, ...) $maybe_res_ann
 ){
 
  These @tech{class clauses} and @tech{interface clauses} are recognized
@@ -430,7 +437,7 @@
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
 
- A @rhombus(method_decl) either has the same form as after a
+ A @rhombus(method_impl) either has the same form as after a
  @rhombus(fun) definition, or it is an @rhombus(identifier) followed by a
  block containing an @tech{entry point}.
 
@@ -443,18 +450,23 @@
  call of the method). An argument that has the same name as a field or
  method shadow the field or method.
 
+ In an interface, a @rhombus(method, ~intf_clause) declation can omit a
+ @rhombus(fun_form) or omit a body block. In that case,
+ @rhombus(method, ~intf_clause) is treated like
+ @rhombus(abstract, ~intf_clause).
+
 }
 
 @doc(
   class_clause.macro 'private $$(@rhombus(implements, ~class_clause)) $identifier_path ...',
   class_clause.macro 'private $$(@rhombus(implements, ~class_clause)): $identifier_path ...; ...',
   class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl',
-  class_clause.macro 'private $method_decl',
-  class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_decl',
-  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $method_decl',
-  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_decl',
-  interface_clause.macro 'private $method_decl',
-  interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_decl',
+  class_clause.macro 'private $method_impl',
+  class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $method_impl',
+  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl',
+  interface_clause.macro 'private $method_impl',
+  interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_impl',
 ){
 
  A @tech{class clause} that declares interfaces that are privately
@@ -479,14 +491,17 @@
 }
 
 @doc(
-  class_clause.macro 'abstract $identifier',
-  class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $identifier',
-  interface_clause.macro 'abstract $identifier',
-  interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $identifier',
+  class_clause.macro 'abstract $method_decl',
+  class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $method_decl',
+  interface_clause.macro 'abstract $method_decl',
+  interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $method_decl',
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
- without an implementation. When a class has an abstract method,
+ without an implementation. See @rhombus(method, ~intf_clause) for the
+ shape of @rhombus(method_decl).
+
+ When a class has an abstract method,
  either declared directly or inherited, the constructor for the class
  raises an exception. The method must be overridden with a
  @rhombus(override, ~class_clause) class in a subclass, and then the
@@ -551,7 +566,6 @@
 
   grammar fun_form:
     ($kwopt_binding, ..., $rest, ...) $maybe_res_ann: $body; ...
-    ($binding, ..., $rest, ...) $maybe_res_ann: $body; ...
 ){
 
  These @tech{class clauses} are recognized by @rhombus(class) to replace

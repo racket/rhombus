@@ -5,12 +5,12 @@ use_static
 
 check:
   interface Shape:
-    abstract area
+    method area()
     method ten_area(): 10 * area()
 
   interface Polygon:
     extends Shape
-    abstract sides
+    method sides()
     method has_corners(): #true
 
   interface Circle:
@@ -199,3 +199,20 @@ check:
    (m -: Stool).seat()]   
   [#false, #true, #true,
    4, 2, 1]
+
+check:
+  interface I1: method m
+  interface I2: abstract m
+  interface I3: method m
+  interface I4: abstract method m
+  interface I5: method m()
+  interface I6: abstract method m()
+  interface I7: method m() :: Integer
+  interface I8: abstract method m() :: Integer
+  interface I9: method m(x, y) :: Integer
+  interface IA: abstract method m(x, y) :: Integer
+  interface IB: method m(x :: String, y :: Symbol) :: Integer
+  interface IC: abstract method m(x :: String, y :: Symbol) :: Integer
+  "ok"
+  "ok"
+  

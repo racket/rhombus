@@ -45,10 +45,10 @@
                                                               #'rhs
                                                               (syntax-e #'tag))
                                                 (hash-ref options 'methods null)))]
-              [(abstract id)
+              [(abstract id rhs)
                (hash-set options 'methods (cons (added-method #'id
                                                               '#:abstract
-                                                              #f
+                                                              #'rhs
                                                               'abstract)
                                                 (hash-ref options 'methods null)))]
               [_

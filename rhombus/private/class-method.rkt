@@ -379,7 +379,7 @@
                                                                          (hash-ref method-private m-name)))])
       (list
        #`(define-values #,(for/list ([added (in-list added-methods)]
-                                     #:when (added-method-rhs added))
+                                     #:when (not (eq? 'abstract (added-method-mode added))))
                             (added-method-rhs-id added))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
@@ -400,9 +400,13 @@
                                                                        private-field-desc)
                                                                    ...))
                                                      (get-private-tables)))
+             #,@(for/list ([added (in-list added-methods)]
+                           #:when (eq? 'abstract (added-method-mode added))
+                           #:when (syntax-e (added-method-rhs added)))
+                  #`(void (rhombus-expression #,(added-method-rhs added))))
              (values
               #,@(for/list ([added (in-list added-methods)]
-                            #:when (added-method-rhs added))
+                            #:when (not (eq? 'abstract (added-method-mode added))))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name name-instance name?
                                                                     new-private-tables
