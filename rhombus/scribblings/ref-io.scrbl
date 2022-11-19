@@ -48,3 +48,41 @@
  A parameter for the current output port.
 
 }
+
+@doc(
+  interface Printer
+){
+
+ An interface that a class can implement (publicly or privately) to
+ customize the way its objects print. The interface has two methods:
+
+@itemlist(
+
+ @item{@rhombus(Printer.print) --- takes an output port and prints to the port;
+   this method is abstract in the interface, so it must be overridden},
+
+ @item{@rhombus(Printer.display) --- takes an output port and displays to the
+   port; this method has a default impleemntation that calls the
+   @rhombus(Printer.print) method}
+
+)
+
+}
+
+
+@doc(
+  fun Printer.print(v :: Printer, out)
+){
+
+ Prints @rhombus(v) to the output port @rhombus(out).
+
+}
+
+
+@doc(
+  fun Printer.display(o :: Printer, out)
+){
+
+ Displays @rhombus(v) to the output port @rhombus(out).
+
+}

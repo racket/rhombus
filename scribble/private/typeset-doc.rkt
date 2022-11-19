@@ -27,7 +27,7 @@
          (only-in (submod rhombus/private/entry-point for-class)
                   in-entry-point-space)
          (only-in rhombus
-                  def val fun operator :: |.| $
+                  def val fun operator interface :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
@@ -240,10 +240,10 @@
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
-    #:literals (def val fun operator :: defn |.| grammar rhombus-syntax $)
+    #:literals (def val fun interface operator :: defn |.| grammar rhombus-syntax $)
     #:datum-literals (parens group op modifier class class_clause interface_clause entry_point quotes)
     [(group (~or def fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
-    [(group (~or def val) (~var id (identifier-target space-name)) . _) #'id.name]
+    [(group (~or def val interface) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
     [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
     [(group _:operator-macro-head (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
@@ -369,9 +369,9 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def val fun rhombus-syntax operator |.| |$| grammar)
+    #:literals (def val fun interface rhombus-syntax operator |.| |$| grammar)
     #:datum-literals (parens group op quotes)
-    [(group (~and tag (~or def val fun)) (~var id (identifier-target space-name)) e ...)
+    [(group (~and tag (~or def val fun interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)
@@ -475,7 +475,8 @@
   (syntax-parse stx
     #:literals (defn decl expr impo expo annot reducer
                  for_clause class_clause interface_clause entry_point
-                 bind grammar operator rhombus-syntax)
+                 bind grammar operator rhombus-syntax
+                 interface)
     #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
@@ -497,6 +498,7 @@
     [(group (~or def) (quotes . _) . _) "expression"]
     [(group operator . _) "operator"]
     [(group rhombus-syntax . _) "syntax-class"]
+    [(group interface . _) "interface"]
     [_ "value"]))
 
 (define (insert-labels l lbls)

@@ -239,6 +239,10 @@
       (define sym (syntax-e (added-method-id added)))
       (hash-set method-results sym (cons (added-method-result-id added)
                                          (hash-ref method-results sym '())))))
+  (define method-private
+    (for/fold ([ht super-priv-ht]) ([(k v) (in-hash priv-ht)])
+      (hash-set ht k v)))
+  
   (define abstract-name
     (for/or ([v (in-hash-values new-vtable-ht)]
              [i (in-naturals)])
@@ -249,7 +253,7 @@
           method-names
           method-vtable
           method-results
-          priv-ht
+          method-private
           here-ht
           abstract-name))
 

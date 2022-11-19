@@ -63,9 +63,9 @@
 
 ;; A shaped-symbol is one of the following, where a symbol is the method's external name:
 ;;  - symbol: final method
-;;  - &symbol: method (can be overridden)
+;;  - #&symbol: method (can be overridden)
 ;;  - (symbol): final property
-;;  - (&symbol): property (can be overridden)
+;;  - (#&symbol): property (can be overridden)
 
 ;; quoted as a list in a `class-desc` construction
 (define (field-desc-name f) (car f))

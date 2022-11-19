@@ -2,7 +2,9 @@
 (require enforest/syntax-local
          "introducer.rkt"
          (only-in "class-parse.rkt"
-                  in-class-desc-space))
+                  in-class-desc-space)
+         (for-template "name-root-ref.rkt"
+                       "expression.rkt"))
 
 (provide (struct-out interface-desc)
          interface-desc-ref
@@ -24,7 +26,9 @@
 (define (interface-names->interfaces stxes names)
   (define intfs
     (for/list ([name (in-list names)])
-      (or (syntax-local-value* (in-class-desc-space name) interface-desc-ref)
+      (or (syntax-local-value* (in-class-desc-space name)
+                               (lambda (v)
+                                 (name-root-ref-root v interface-desc-ref)))
           (raise-syntax-error #f "not an interface name" stxes name))))
   ;; remove duplicates, just to make the generated class or interface description more compact
   (let loop ([ht #hasheq()] [intfs intfs])

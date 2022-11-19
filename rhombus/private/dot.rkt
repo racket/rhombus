@@ -117,7 +117,7 @@
   (define (fail)
     (raise-arguments-error* field
                             rhombus-realm
-                            "no such field"
+                            "no such field or method"
                             "in value" v))
   (cond
     [(not ht) (fail)]

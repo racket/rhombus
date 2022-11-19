@@ -18,7 +18,9 @@
          (submod "function.rkt" for-call))
 
 (provide (for-syntax build-class-dot-handling
-                     build-interface-dot-handling))
+                     build-interface-dot-handling
+
+                     make-handle-class-instance-dot))
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable final?
                                              has-private? method-private exposed-internal-id

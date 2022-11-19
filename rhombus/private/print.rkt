@@ -3,7 +3,8 @@
          racket/keyword
          shrubbery/write
          (submod "set.rkt" for-ref)
-         "adjust-name.rkt")
+         "adjust-name.rkt"
+         "printer-property.rkt")
 
 (provide (rename-out
           [rhombus-print print]
@@ -60,6 +61,9 @@
        (display (if v "#true" "#false") op)]
       [(void? v)
        (display "#void" op)]
+      [(printer-ref v #f)
+       => (lambda (printer)
+            (printer v op mode))]
       [(struct? v)
        (define vec (struct->vector v))
        (write (object-name v) op)

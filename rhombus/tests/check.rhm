@@ -39,7 +39,8 @@ expr.macro
      $result1
      ...
      $result2':
-    values('check:
+    ~op_stx: check_id
+    values('$(check_id):
               ~equal
               $result1
               ...
