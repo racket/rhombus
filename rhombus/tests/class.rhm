@@ -559,3 +559,18 @@ check:
   p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
   "ok plain+custom annotations"
   "ok plain+custom annotations"
+
+check:
+  fun lookup_specs(make, model): [12, 25]
+  class Car(make, model, private mpg):
+    private field gas: 0
+    constructor(make, model):
+      val [tank_size, mpg]: lookup_specs(make, model)
+      val car: super(make, model, mpg)
+      car.gas := tank_size
+      car
+    method go(dist):
+      gas := gas - dist/mpg
+  val c: Car("Mazda", "Miata")
+  c.go(100)
+  8

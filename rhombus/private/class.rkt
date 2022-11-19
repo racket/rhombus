@@ -138,6 +138,7 @@
        (define constructor-fields (syntax->list #'(constructor-field-name ...)))
        (define added-fields (reverse (hash-ref options 'fields '())))
        (define extra-fields (map added-field-id added-fields))
+       (define has-extra-fields? (pair? extra-fields))
        (define fields (append constructor-fields extra-fields))
        (define mutables (append (syntax->list #'(constructor-field-mutable ...))
                                 (for/list ([f (in-list added-fields)])
@@ -331,6 +332,7 @@
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
+                                   has-extra-fields?
                                    #'(name class:name make-all-name name? name-ref
                                            [public-field-name ...]
                                            [field-name ...]
@@ -345,6 +347,7 @@
                                         constructor-fields super-constructor-fields super-constructor+-fields
                                         constructor-keywords super-keywords super-constructor+-keywords
                                         constructor-defaults super-defaults super-constructor+-defaults
+                                        method-private
                                         need-constructor-wrapper?
                                         abstract-name
                                         has-defaults? super-has-defaults?
@@ -352,7 +355,15 @@
                                         #'(name make-name make-all-name constructor-name constructor-maker-name
                                                 name?
                                                 name-defaults
-                                                make-internal-name))
+                                                make-internal-name
+                                                name-instance
+                                                [private-field-name ...]
+                                                [(list 'private-field-name
+                                                       (quote-syntax private-name-field)
+                                                       (quote-syntax private-maybe-set-name-field!)
+                                                       (quote-syntax private-field-static-infos)
+                                                       (quote-syntax private-field-argument))
+                                                 ...]))
                (build-class-binding-form super binding-rhs
                                          exposed-internal-id intro
                                          #'(name name-instance name?
@@ -417,6 +428,7 @@
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
+                                       has-extra-fields?
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref
                        [public-field-name ...]
@@ -478,7 +490,8 @@
                                                                                 super
                                                                                 fields constructor-keywords private?s)])
                                                        (if (or abstract-name
-                                                               (andmap symbol? field-print-shapes))
+                                                               (and (andmap symbol? field-print-shapes)
+                                                                    (not has-extra-fields?)))
                                                            null
                                                            #`((cons prop:print-field-shapes
                                                                     '#,field-print-shapes))))

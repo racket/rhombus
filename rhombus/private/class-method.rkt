@@ -316,8 +316,6 @@
       (class-desc-method-map p)
       (interface-desc-method-map p)))
 
-(define-syntax-parameter private-tables #f)
-
 (define-syntax this
   (expression-transformer
    #'this
@@ -343,20 +341,22 @@
   (expression-transformer
    #'this
    (lambda (stxs)
-     (define id-or-id+dp+supers (syntax-parameter-value #'this-id))
+     (define c-or-id+dp+supers (syntax-parameter-value #'this-id))
      (cond
-       [(not id-or-id+dp+supers)
+       [(not c-or-id+dp+supers)
         (raise-syntax-error #f
                             "allowed only within methods and constructors"
                             #'head)]
-       [(identifier? id-or-id+dp+supers)
+       [(keyword? (syntax-e (car (syntax-e c-or-id+dp+supers))))
         ;; in a constructor
-        (syntax-parse stxs
-          [(head . tail)
-           (values id-or-id+dp+supers #'tail)])]
+        (syntax-parse c-or-id+dp+supers
+          [(_ make-name)
+           (syntax-parse stxs
+             [(head . tail)
+              (values #'make-name #'tail)])])]
        [else
         ;; in a method
-        (define id+dp+supers id-or-id+dp+supers)
+        (define id+dp+supers c-or-id+dp+supers)
         (syntax-parse stxs
           #:datum-literals (op |.|)
           [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
@@ -384,12 +384,6 @@
               (define-values (call new-tail)
                 (parse-function-call impl (list #'id) #'(method-id args)))
               (values call #'tail)])])]))))
-
-(define-for-syntax (get-private-tables)
-  (let ([id (syntax-parameter-value #'private-tables)])
-    (if id
-        (syntax-local-value id)
-        '())))
 
 (define-for-syntax (get-private-table desc)
   (define tables (get-private-tables))
