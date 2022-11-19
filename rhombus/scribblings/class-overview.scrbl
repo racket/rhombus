@@ -20,3 +20,4 @@ has only methods and can be implemented by classes.
 @include_section("interface.scrbl")
 @include_section("method.scrbl")
 @include_section("constructor.scrbl")
+@include_section("custom-binding.scrbl")

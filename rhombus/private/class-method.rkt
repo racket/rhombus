@@ -22,8 +22,10 @@
          (submod "function.rkt" for-call)
          "realm.rkt")
 
-(provide (for-syntax build-method-map
+(provide (for-syntax extract-method-tables
                      build-interface-vtable
+                     build-quoted-method-map
+                     build-quoted-method-shapes
                      build-method-results
                      build-method-result-expression
                      build-methods
@@ -53,7 +55,16 @@
 (define (raise-not-an-instance name v)
   (raise-argument-error* name rhombus-realm "not an instance for method call" v))
 
-(define-for-syntax (build-method-map stx added-methods super interfaces private-interfaces)
+;; Results:
+;;   method-mindex   ; symbol -> mindex
+;;   method-names    ; index -> symbol-or-identifier
+;;   method-vtable   ; index -> function-identifier or '#:abstract
+;;   method-results  ; symbol -> nonempty list of identifiers; first one implies others
+;;   method-private  ; symbol -> identifier or (list identifier); list means property
+;;   method-decls    ; symbol -> identifier, intended for checking distinct
+;;   abstract-name   ; #f or identifier for a still-abstract method
+
+(define-for-syntax (extract-method-tables stx added-methods super interfaces private-interfaces final?)
   (define supers (if super (cons super interfaces) interfaces))
   (define-values (super-str supers-str)
     (cond
@@ -67,46 +78,54 @@
   ;; create merged method tables from the superclass (if any) and all superinterfaces;
   ;; we start with the superclass, if any, so the methods from its vtable stay
   ;; in the same place in the new vtable
-  (define-values (ht            ; symbol -> (cons maybe-boxed-index id)
-                  super-priv-ht ; symbol -> identifier, implies not in `ht`
+  (define-values (ht            ; symbol -> (cons mindex id)
+                  super-priv-ht ; symbol -> identifier or (list identifier), implies not in `ht`
                   vtable-ht)    ; int -> accessor-identifier or '#:abstract
     (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
       (define super-vtable (super-method-vtable super))
       (define private? (hash-ref private-interfaces super #f))
       (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht])
-                ([name (super-method-names super)]
+                ([shape (super-method-shapes super)]
                  [super-i (in-naturals)])
         (define i (hash-count ht))
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))
         (define-values (key val)
-          (if (box? name)
-              (values (unbox name) (cons (box i) (unbox name)))
-              (values name (cons i name))))
+          (let* ([property? (pair? shape)]
+                 [shape (if (pair? shape) (car shape) shape)]
+                 [final? (not (box? shape))]
+                 [shape (if (box? shape) (unbox shape) shape)])
+            (values shape (cons (mindex i final? property?) shape))))
         (define old-val (or (hash-ref ht key #f)
                             (hash-ref priv-ht key #f)))
         (cond
           [old-val
-           (define old-rhs (if (pair? old-val)
-                               (let ([old-i (car old-val)])
-                                 (hash-ref vtable-ht (if (box? old-i) (unbox old-i) old-i)))
-                               old-val))
+           (define old-rhs (cond
+                             [(and (pair? old-val)
+                                   (mindex? (car old-val)))
+                              (let ([old-i (car old-val)])
+                                (hash-ref vtable-ht (mindex-index old-i)))]
+                             [(pair? old-val) (car old-val)]
+                             [else old-val]))
            (unless (or (if (identifier? old-rhs)
                            (and (identifier? new-rhs)
                                 (free-identifier=? old-rhs new-rhs))
                            (eq? old-rhs new-rhs))
                        (for/or ([added (in-list added-methods)])
                          (and (eq? key (syntax-e (added-method-id added)))
-                              (memq (added-method-mode added) '(override final-override private-override))))) 
+                              (eq? 'override (added-method-mode added)))))
              (raise-syntax-error #f (format "method supplied by multiple ~a and not overridden" supers-str) stx key))
-           (if (eq? (not private?) (pair? old-val))
+           (if (or private?
+                   (and (pair? old-val) (mindex? (car old-val))))
                (values ht priv-ht vtable-ht)
                (values (hash-set vtable-ht key val)
                        (hash-remove priv-ht key)
                        (hash-set vtable-ht i new-rhs)))]
           [private?
            (values ht
-                   (hash-set priv-ht key new-rhs)
+                   (hash-set priv-ht key (if (pair? shape) ; => property
+                                             (list new-rhs)
+                                             new-rhs))
                    vtable-ht)]
           [else
            (values (hash-set ht key val)
@@ -129,53 +148,72 @@
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
       (define id (added-method-id added))
       (define new-here-ht (hash-set here-ht (syntax-e id) id))
+      (define (check-consistent-property property?)
+        (if property?
+            (when (eq? (added-method-kind added) 'method)
+              (raise-syntax-error #f (format "cannot override ~a's property with a non-property method" super-str)
+                                  stx id))
+            (when (eq? (added-method-kind added) 'property)
+              (raise-syntax-error #f (format "cannot override ~a's non-property method with a property" super-str)
+                                  stx id))))
       (cond
         [(hash-ref here-ht (syntax-e id) #f)
          (raise-syntax-error #f "duplicate method name" stx id)]
         [(hash-ref ht (syntax-e id) #f)
-         => (lambda (pos+id)
-              (define pos (car pos+id))
+         => (lambda (mix+id)
+              (define mix (car mix+id))
               (cond
-                [(memq (added-method-mode added) '(override final-override))
-                 (when (integer? pos)
+                [(eq? 'override (added-method-mode added))
+                 (when (eq? (added-method-disposition added) 'private)
+                   (raise-syntax-error #f (format "method is not in private ~a" super-str) stx id))
+                 (when (mindex-final? mix)
                    (raise-syntax-error #f (format "cannot override ~a's final method" super-str) stx id))
-                 (values (if (eq? (added-method-mode added) 'final-override)
-                             (hash-set ht (syntax-e id) (cons (unbox pos) id))
+                 (check-consistent-property (mindex-property? mix))
+                 (values (if (eq? (added-method-disposition added) 'final)
+                             (let ([property? (eq? (added-method-kind added) 'property)])
+                               (hash-set ht (syntax-e id) (cons (mindex mix #t property?) id)))
                              ht)
-                         (hash-set vtable-ht (unbox pos) (added-method-rhs-id added))
+                         (hash-set vtable-ht (mindex-index mix) (added-method-rhs-id added))
                          priv-ht
                          new-here-ht)]
-                [(memq (added-method-mode added) '(private-override))
-                 (raise-syntax-error #f (format "method is not in private ~a" super-str) stx id)]
                 [else
                  (raise-syntax-error #f (format "method is already in ~a" super-str) stx id)]))]
         [(hash-ref super-priv-ht (syntax-e id) #f)
          => (lambda (rhs)
               (cond
-                [(eq? (added-method-mode added) 'private-override)
+                [(and (eq? (added-method-mode added) 'override)
+                      (eq? (added-method-disposition added) 'private))
+                 (check-consistent-property (list? rhs))
                  (values ht
                          vtable-ht
-                         (hash-set priv-ht (syntax-e id) (added-method-rhs-id added))
+                         (hash-set priv-ht (syntax-e id) (let ([id (added-method-rhs-id added)])
+                                                           (if (eq? (added-method-kind added) 'property)
+                                                               (list id)
+                                                               id)))
                          new-here-ht)]
-                [(memq (added-method-mode added) '(override final-override))
+                [(eq? (added-method-mode added) 'override)
                  (raise-syntax-error #f (format "method is in private ~a" super-str) stx id)]
                 [else
                  (raise-syntax-error #f (format "method is already in private ~a" super-str) stx id)]))]
         [else
          (cond
-           [(memq (added-method-mode added) '(override final-override))
+           [(eq? (added-method-mode added) 'override)
             (raise-syntax-error #f (format "method is not in ~a" super-str) stx id)]
-           [(eq? (added-method-mode added) 'private)
+           [(eq? (added-method-disposition added) 'private)
             (values ht
                     vtable-ht
-                    (hash-set priv-ht (syntax-e id) (added-method-rhs-id added))
+                    (hash-set priv-ht (syntax-e id) (let ([id (added-method-rhs-id added)])
+                                                      (if (eq? (added-method-kind added) 'property)
+                                                          (list id)
+                                                          id)))
                     new-here-ht)]
            [else
             (define pos (hash-count vtable-ht))
             (values (hash-set ht (syntax-e id)
-                              (cons (if (eq? (added-method-mode added) 'final)
-                                        pos
-                                        (box pos))
+                              (cons (mindex pos
+                                            (or final?
+                                                (eq? (added-method-disposition added) 'final))
+                                            (eq? (added-method-kind added) 'property))
                                     id))
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
@@ -186,13 +224,12 @@
       (unless (hash-ref priv-ht name #f)
         (raise-syntax-error #f (format "method from private ~a must be overridden" super-str) stx name))))
 
-  (define method-map
-    (for/hasheq ([(k pos+id) (in-hash new-ht)])
-      (values k (car pos+id))))
+  (define method-mindex
+    (for/hasheq ([(k mix+id) (in-hash new-ht)])
+      (values k (car mix+id))))
   (define method-names
-    (for/hasheqv ([(s pos+id) (in-hash new-ht)])
-      (define i (car pos+id))
-      (values (if (box? i) (unbox i) i) (cdr pos+id))))
+    (for/hasheqv ([(s mix+id) (in-hash new-ht)])
+      (values (mindex-index (car mix+id)) (cdr mix+id))))
   (define method-vtable
     (for/vector ([i (in-range (hash-count new-vtable-ht))])
       (hash-ref new-vtable-ht i)))
@@ -208,7 +245,7 @@
       (and (eq? v '#:abstract)
            (hash-ref method-names i))))
 
-  (values method-map
+  (values method-mindex
           method-names
           method-vtable
           method-results
@@ -216,31 +253,45 @@
           here-ht
           abstract-name))
 
-(define-for-syntax (build-interface-vtable intf method-map method-vtable method-names method-private)
-  (for/list ([maybe-boxed-name (in-vector (interface-desc-method-names intf))])
-    (define name (if (box? maybe-boxed-name) (unbox maybe-boxed-name) maybe-boxed-name))
+(define-for-syntax (build-interface-vtable intf method-mindex method-vtable method-names method-private)
+  (for/list ([shape (in-vector (interface-desc-method-shapes intf))])
+    (define name (let* ([shape (if (pair? shape) (car shape) shape)]
+                        [shape (if (box? shape) (unbox shape) shape)])
+                   shape))
     (cond
       [(hash-ref method-private name #f)
-       => (lambda (id) id)]
+       => (lambda (id) (if (pair? id) (car id) id))]
       [else
-       (define maybe-boxed-pos (hash-ref method-map name))
-       (define pos (if (box? maybe-boxed-pos) (unbox maybe-boxed-pos) maybe-boxed-pos))
+       (define pos (mindex-index (hash-ref method-mindex name)))
        (vector-ref method-vtable pos)])))
 
+(define-for-syntax (build-quoted-method-map method-mindex)
+  (for/hasheq ([(sym mix) (in-hash method-mindex)])
+    (values sym (mindex-index mix))))
+
+(define-for-syntax (build-quoted-method-shapes method-vtable method-names method-mindex)
+  (for/vector ([i (in-range (vector-length method-vtable))])
+    (define name (hash-ref method-names i))
+    (define mix (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
+    ((if (mindex-property? mix) list values)
+     ((if (mindex-final? mix) values box)
+      name))))
+
 (define-for-syntax (build-method-results added-methods
-                                         method-map method-vtable method-private
+                                         method-mindex method-vtable method-private
                                          method-results)
   (for/list ([added (in-list added-methods)]
              #:when (added-method-result-id added))
     #`(define-method-result-syntax #,(added-method-result-id added)
         #,(added-method-maybe-ret added)
         #,(cdr (hash-ref method-results (syntax-e (added-method-id added))))
-        ;; When calls do not go through vtable, so also add static info
+        ;; When calls do not go through vtable, also add static info
         ;; as #%call-result to binding:
-        #,(or (hash-ref method-private (syntax-e (added-method-id added)) #f)
-              (let ([i (hash-ref method-map (syntax-e (added-method-id added)) #f)])
-                (and (integer? i)
-                     (vector-ref method-vtable i)))))))
+        #,(or (let ([id/property (hash-ref method-private (syntax-e (added-method-id added)) #f)])
+                (if (pair? id/property) (car id/property) id/property))
+              (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
+                (and (mindex-final? mix)
+                     (vector-ref method-vtable (mindex-index mix))))))))
           
 (define-for-syntax (build-method-result-expression method-result)
   #`(hasheq
@@ -255,10 +306,10 @@
        (class-desc-method-vtable p)
        (interface-desc-method-vtable p))))
 
-(define-for-syntax (super-method-names p)
+(define-for-syntax (super-method-shapes p)
   (if (class-desc? p)
-      (class-desc-method-names p)
-      (interface-desc-method-names p)))
+      (class-desc-method-shapes p)
+      (interface-desc-method-shapes p)))
 
 (define-for-syntax (super-method-map p)
   (if (class-desc? p)
@@ -327,7 +378,7 @@
                 (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
               (define super (car super+pos))
               (define pos (cdr super+pos))
-              (define impl (vector-ref (super-method-vtable super) (if (box? pos) (unbox pos) pos)))
+              (define impl (vector-ref (super-method-vtable super) pos))
               (when (eq? (syntax-e impl) '#:abstract)
                 (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
               (define-values (call new-tail)
@@ -401,7 +452,7 @@
                             #'head)]))))
 
 (define-for-syntax (build-methods method-results
-                                  added-methods method-map method-names method-private
+                                  added-methods method-mindex method-names method-private
                                   names)
   (with-syntax ([(name name-instance name?
                        [field-name ...]
@@ -414,23 +465,23 @@
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))]
                   [((method-name method-index/id method-result-id) ...)
-                   (for/list ([i (in-range (hash-count method-map))])
+                   (for/list ([i (in-range (hash-count method-mindex))])
                      (define m-name (let ([n (hash-ref method-names i)])
                                       (if (syntax? n)
                                           (syntax-e n)
                                           n)))
-                     (define id/boxed (hash-ref method-map m-name))
+                     (define mix (hash-ref method-mindex m-name))
                      (list (datum->syntax #'name m-name)
-                           (if (box? id/boxed)
-                               i
-                               id/boxed)
+                           (mindex-index mix)
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))))]
-                  [((private-method-name private-method-id private-method-result-id) ...)
+                  [((private-method-name private-method-id private-method-id/property private-method-result-id) ...)
                    (for/list ([m-name (in-list (sort (hash-keys method-private)
                                                      symbol<?))])
+                     (define id/property (hash-ref method-private m-name))
                      (list (datum->syntax #'name m-name)
-                           (hash-ref method-private m-name)
+                           (if (pair? id/property) (car id/property) id/property)
+                           id/property
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))))])
       (list
@@ -452,7 +503,7 @@
              ...
              (define-syntax new-private-tables (cons (cons (quote-syntax name)
                                                            (hasheq (~@ 'private-method-name
-                                                                       (quote-syntax private-method-id))
+                                                                       (quote-syntax private-method-id/property))
                                                                    ...
                                                                    (~@ 'private-field-name
                                                                        private-field-desc)

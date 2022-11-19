@@ -23,6 +23,7 @@
 
          (struct-out added-field)
          (struct-out added-method)
+         (struct-out mindex)
          
          any-stx?
 
@@ -50,15 +51,21 @@
                     ref-id
                     fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list symbol-or-id-or-arg ...), includes private fields; arg means omitted from public constructor
-                    method-names  ; vector of symbol or boxed symbol; plain symbol means final
-                    method-vtable ; syntax-object vector of accessor identifiers or #'#:abstract
-                    method-map    ; hash of symbol -> index or boxed index; inverse of `method-names`
+                    method-shapes ; vector of shaped-symbol; see below
+                    method-vtable ; syntax-object vector of function identifiers or #'#:abstract
+                    method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
                     method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
                     custom-binding?
                     custom-annotation?
                     defaults-id)) ; #f if no arguments with defaults
 (define (class-desc-ref v) (and (class-desc? v) v))
+
+;; A shaped-symbol is one of the following, where a symbol is the method's external name:
+;;  - symbol: final method
+;;  - &symbol: method (can be overridden)
+;;  - (symbol): final property
+;;  - (&symbol): property (can be overridden)
 
 ;; quoted as a list in a `class-desc` construction
 (define (field-desc-name f) (car f))
@@ -73,7 +80,13 @@
 (define (method-desc-name f) (car f))
 
 (struct added-field (id arg-id static-infos predicate annotation-str mode))
-(struct added-method (id rhs-id rhs maybe-ret result-id mode))
+(struct added-method (id rhs-id rhs maybe-ret result-id
+                         mode        ; 'method, 'override, or 'abstract
+                         disposition ; 'abstract, 'final, 'private
+                         kind))      ; 'method, 'property
+
+;; used for a table produced by `extract-method-tables`
+(struct mindex (index final? property?))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 
@@ -98,12 +111,12 @@
                             id))
       (hash-set ht (syntax-e id) id))))
   
-(define (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
+(define (check-fields-methods-distinct stxes field-ht method-mindex method-names method-decls)
   (for ([k (in-hash-keys field-ht)])
     (define id-or-sym (or (hash-ref method-decls k #f)
-                          (let ([i (hash-ref method-map k #f)])
-                            (and i
-                                 (hash-ref method-names (if (box? i) (unbox i) i))))))
+                          (let ([mix (hash-ref method-mindex k #f)])
+                            (and mix
+                                 (hash-ref method-names (mindex-index mix))))))
     (when id-or-sym
       (define id (if (symbol? id-or-sym)
                      (hash-ref field-ht k #f)
@@ -165,7 +178,7 @@
                                                f)]
       [else #f])))
 
-(define (check-exports-distinct stxes exports-stx fields method-map)
+(define (check-exports-distinct stxes exports-stx fields method-mindex)
   (define exports (for/list ([ex (in-list exports-stx)])
                     (syntax-parse ex
                       [(id ext-id) #'ext-id]
@@ -178,10 +191,12 @@
       (raise-syntax-error #f
                           "exported name conflicts with field name"
                           ex))
-    (when (hash-ref method-map name #f)
-      (raise-syntax-error #f
-                          "exported name conflicts with method name"
-                          ex))))
+    (let ([mix (hash-ref method-mindex name #f)])
+      (when mix
+        (raise-syntax-error #f
+                            (format "exported name conflicts with ~a name"
+                                    (if (mindex-property? mix) "property" "method"))
+                            ex)))))
 
 (define (field-to-field+keyword+default f arg)
   (values (field-desc-name f)

@@ -1,6 +1,7 @@
 #lang rhombus/and_meta
 import:
   "call-capture-exn.rkt" open
+  lib("racket/syntax-srcloc") as srcloc
 
 export:
  check
@@ -20,7 +21,9 @@ expr.macro
      $result1
      ...
      $result2':
-    values('check_same($(match '$mode ...'
+    ~op_stx: check_id
+    values('check_same('$(check_id)',
+                       $(match '$mode ...'
                          | '~eval' || '~eval_exn' || '~eval_print':
                             'fun():
                                eval_test(Syntax.literal '$result1
@@ -43,7 +46,7 @@ expr.macro
               $result2',
            '')
 
-fun check_same(thunk, expected_thunk, ~mode: mode):
+fun check_same(where, thunk, expected_thunk, ~mode: mode):
   val values(got, exn_msg): call_capturing_exn(thunk)
   val expected: call_capturing_values(expected_thunk)
   val ok:
@@ -60,7 +63,7 @@ fun check_same(thunk, expected_thunk, ~mode: mode):
   | fun
     | values_str([v]): v
     | values_str(lst): "values " +& lst
-    display("failed\n"
+    display("failed " +& srcloc.#{syntax-srcloc}(where) +& "\n"
               +& "  expected: " +& (if mode == keyword(~exn) | "exception " | "") +& values_str(expected) +& "\n"
               +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got)) +&  "\n",
             current_error_port())

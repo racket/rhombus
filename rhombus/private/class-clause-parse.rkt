@@ -32,12 +32,13 @@
          authentic
          field
          method
+         property
          override
          private
          abstract)
 
 (module+ for-interface
-  (provide final-override))
+  (provide (for-syntax parse-method-clause)))
 
 (begin-for-syntax
   (struct class+interface-clause-transformer (cls int)
@@ -88,8 +89,11 @@
             (syntax-parse clause
               #:literals (extends implements private-implements
                                   constructor final nonfinal authentic binding annotation
-                                  method private override abstract internal
-                                  final-override private-override)
+                                  method property private override abstract internal
+                                  final-override private-override
+                                  override-property final-property final-override-property
+                                  private-property private-override-property
+                                  abstract-property)
               [(extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
@@ -130,27 +134,65 @@
                                                             #'annotation-str
                                                             (syntax-e #'mode))
                                                (hash-ref options 'fields null)))]
-              [((~and tag (~or method override private final final-override private-override)) id rhs maybe-ret)
-               (hash-set options 'methods (cons (added-method #'id
-                                                              (car (generate-temporaries #'(id)))
-                                                              #'rhs
-                                                              #'maybe-ret
-                                                              (and (pair? (syntax-e #'maybe-ret))
-                                                                   (car (generate-temporaries #'(id))))
-                                                              (syntax-e #'tag))
-                                                (hash-ref options 'methods null)))]
-              [(abstract id rhs maybe-ret)
-               (hash-set options 'methods (cons (added-method #'id
-                                                              '#:abstract
-                                                              #'rhs
-                                                              #'maybe-ret
-                                                              (and (pair? (syntax-e #'maybe-ret))
-                                                                   (car (generate-temporaries #'(id))))
-                                                              'abstract)
-                                                (hash-ref options 'methods null)))]
               [_
-               (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+               (parse-method-clause orig-stx options clause)]))
           (loop (cdr clauses) new-options)]))]))
+
+(define-for-syntax (parse-method-clause orig-stx options clause)
+  (syntax-parse clause
+    #:literals (extends implements private-implements
+                        constructor final nonfinal authentic binding annotation
+                        method property private override abstract internal
+                        final-override private-override
+                        override-property final-property final-override-property
+                        private-property private-override-property
+                        abstract-property)
+    [((~and tag (~or method override private final final-override private-override
+                     property override-property
+                     final-property final-override-property
+                     private-property private-override-property))
+      id rhs maybe-ret)
+     (define-values (mode disposition kind)
+       (case (syntax-e #'tag)
+         [(method) (values 'method 'abstract 'method)]
+         [(override) (values 'override 'abstract 'method)]
+         [(private) (values 'method 'private 'method)]
+         [(private-override) (values 'override 'private 'method)]
+         [(final) (values 'method 'final 'method)]
+         [(final-override) (values 'override 'final 'method)]
+         [(property) (values 'method 'abstract 'property)]
+         [(override-property) (values 'override 'abstract 'property)]
+         [(final-property) (values 'method 'final 'property)]
+         [(final-override-property) (values 'override 'final 'property)]
+         [(private-property) (values 'method 'private 'property)]
+         [(private-override-property) (values 'override 'private 'property)]
+         [else (error "method kind not handled" #'tag)]))
+     (hash-set options 'methods (cons (added-method #'id
+                                                    (car (generate-temporaries #'(id)))
+                                                    #'rhs
+                                                    #'maybe-ret
+                                                    (and (pair? (syntax-e #'maybe-ret))
+                                                         (car (generate-temporaries #'(id))))
+                                                    mode
+                                                    disposition
+                                                    kind)
+                                      (hash-ref options 'methods null)))]
+    [((~and tag (~or abstract abstract-property))
+      id rhs maybe-ret)
+     (hash-set options 'methods (cons (added-method #'id
+                                                    '#:abstract
+                                                    #'rhs
+                                                    #'maybe-ret
+                                                    (and (pair? (syntax-e #'maybe-ret))
+                                                         (car (generate-temporaries #'(id))))
+                                                    'abstract
+                                                    'abstract
+                                                    (if (eq? (syntax-e #'tag) 'abstract-property)
+                                                        'property
+                                                        'method))
+                                      (hash-ref options 'methods null)))]
+    [_
+     (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
 
 (define-for-syntax (wrap-class-clause parsed)
   #`[(quote-syntax (rhombus-class #,parsed) #:local)]) ; `quote-syntax` + `rhombus-class` wrapper => clause
@@ -207,6 +249,11 @@
                    (~and (_::block . _)
                          template-block))
         (wrap-class-clause #`(binding (block (group rule pattern template-block))))]
+       [(form-name (~and rhs (_::alts
+                              (_::block (group (_::quotes . _)
+                                               (_::block . _)))
+                              ...)))
+        (wrap-class-clause #`(binding (block (group rule rhs))))]
        [(form-name (~and (_::block . _)
                          binding-block))
         (wrap-class-clause #`(binding binding-block))]))))
@@ -221,6 +268,11 @@
                    (~and (_::block . _)
                          template-block))
         (wrap-class-clause #`(annotation (block (group rule pattern template-block))))]
+       [(form-name (~and rhs (_::alts
+                              (_::block (group (_::quotes . _)
+                                               (_::block . _)))
+                              ...)))
+        (wrap-class-clause #`(annotation (block (group rule rhs))))]
        [(form-name (~and (_::block . _)
                          annotation-block))
         (wrap-class-clause #`(annotation annotation-block))]))))
@@ -342,23 +394,19 @@
 
 (define-syntax final
   (make-class+interface-clause-transformer
-   ;; class clause
    (lambda (stx)
      (syntax-parse stx
-       #:literals (override method)
+       #:literals (override method property)
        [(_ override method (~var m (:method #'final-override))) #'m.form]
        [(_ method (~var m (:method #'final))) #'m.form]
+       [(_ override property (~var m (:method #'final-override-property))) #'m.form]
+       [(_ property (~var m (:method #'final-property))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]
-       [(_ (~var m (:method #'final))) #'m.form]))
-   ;; interface clause
-   (lambda (stx)
-     (syntax-parse stx
-       #:literals (override method)
-       [(_ override method (~var m (:method #'final-override))) #'m.form]
-       [(_ method (~var m (:method #'final))) #'m.form]
-       [(_ override (~var m (:method #'final-override))) #'m.form]
+       [(_ override property (~var m (:method #'final-override-property))) #'m.form]
        [(_ (~var m (:method #'final))) #'m.form]))))
 (define-syntax final-override 'placeholder)
+(define-syntax final-property 'placeholder)
+(define-syntax final-override-property 'placeholder)
 
 (define-syntax method
   (make-class+interface-clause-transformer
@@ -372,25 +420,41 @@
        [(_ (~var m (:method #'method))) #'m.form]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
 
+(define-syntax property
+  (make-class+interface-clause-transformer
+   ;; class clause
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (~var m (:method #'property))) #'m.form]))
+   ;; interface clause
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (~var m (:method #'property))) #'m.form]
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]))))
+
 (define-syntax override
   (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
+       [(_ property (~var m (:method #'override-property))) #'m.form]
        [(_ (~var m (:method #'override))) #'m.form]))))
+(define-syntax override-property 'placeholder)
 
 (define-syntax private
   (make-class+interface-clause-transformer
    ;; class clause
    (lambda (stx)
      (syntax-parse stx
-       #:literals (implements method override)
+       #:literals (implements method override property)
        [(_ (~and tag implements) form ...)
         (wrap-class-clause #`(private-implements . #,(parse-multiple-names #'(tag form ...))))]
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ override (~var m (:method #'private-override))) #'m.form]
        [(_ override method (~var m (:method #'private-override))) #'m.form]
+       [(_ property (~var m (:method #'private-property))) #'m.form]
+       [(_ override property (~var m (:method #'private-override-property))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method #'private))) #'m.form]))
    ;; interface clause
@@ -401,14 +465,18 @@
        [(_ (~var m (:method #'private))) #'m.form]))))
 (define-syntax private-implements 'placeholder)
 (define-syntax private-override 'placeholder)
+(define-syntax private-property 'placeholder)
+(define-syntax private-override-property 'placeholder)
 
 (define-syntax abstract
   (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:literals (method)
+       #:literals (method property)
        [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]
+       [(_ property decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
+(define-syntax abstract-property 'placeholder)
 
 (define-for-syntax (same-return-signature? a b)
   (cond

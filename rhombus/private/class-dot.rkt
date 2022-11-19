@@ -20,7 +20,7 @@
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling))
 
-(define-for-syntax (build-class-dot-handling method-map method-vtable final?
+(define-for-syntax (build-class-dot-handling method-mindex method-vtable final?
                                              has-private? method-private exposed-internal-id
                                              names)
   (with-syntax ([(name constructor-name name-instance name-ref
@@ -31,7 +31,7 @@
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-map method-vtable #'name-ref final?))
+      (method-static-entries method-mindex method-vtable #'name-ref final?))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids])
       (append
@@ -50,9 +50,10 @@
                                                                        #hasheq()
                                                                        #hasheq()))))
         (if exposed-internal-id
-            (with-syntax ([([private-method-name private-method-id] ...)
-                           (for/list ([(sym id) (in-hash method-private)])
-                             (list sym id))])
+            (with-syntax ([([private-method-name private-method-id private-method-id/prop] ...)
+                           (for/list ([(sym id/prop) (in-hash method-private)])
+                             (define id (if (pair? id/prop) (car id/prop) id/prop))
+                             (list sym id id/prop))])
               (list
                #`(define-name-root #,exposed-internal-id
                    #:root (class-expression-transformer (quote-syntax name) (quote-syntax make-internal-name))
@@ -71,16 +72,16 @@
                                                                               ...)
                                                                              (hasheq
                                                                               (~@ 'private-method-name
-                                                                                  (quote-syntax private-method-id))
+                                                                                  (quote-syntax private-method-id/prop))
                                                                               ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-map method-vtable names)
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable names)
   (with-syntax ([(name name-instance name-ref
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-map method-vtable #'name-ref #f))
+      (method-static-entries method-mindex method-vtable #'name-ref #f))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids])
       (append
@@ -93,29 +94,28 @@
         #'(define-dot-provider-syntax name-instance
             (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))))))
 
-(define-for-syntax (method-static-entries method-map method-vtable name-ref-id final?)
+(define-for-syntax (method-static-entries method-mindex method-vtable name-ref-id final?)
   (for/fold ([names '()] [ids '()] [defns '()])
-            ([(name idx) (in-hash method-map)])
+            ([(name mix) (in-hash method-mindex)])
     (cond
-      [(and (box? idx)
+      [(and (not (mindex-final? mix))
             (not final?))
        (define proc-id (car (generate-temporaries (list name))))
        (define stx-id (car (generate-temporaries (list name))))
        (values (cons name names)
                (cons stx-id ids)
                (list* #`(define #,proc-id
-                          (make-method-accessor '#,name #,name-ref-id #,(unbox idx)))
+                          (make-method-accessor '#,name #,name-ref-id #,(mindex-index mix)))
                       #`(define-syntax #,stx-id
                           (make-method-accessor-transformer (quote-syntax #,stx-id)
                                                             (quote-syntax #,name-ref-id)
-                                                            #,(unbox idx)
+                                                            #,(mindex-index mix)
                                                             (quote-syntax #,proc-id)))
                       defns))]
       [else
-       (let ([idx (if (box? idx) (unbox idx) idx)])
-         (values (cons name names)
-                 (cons (vector-ref method-vtable idx) ids)
-                 defns))])))
+       (values (cons name names)
+               (cons (vector-ref method-vtable (mindex-index mix)) ids)
+               defns)])))
 
 (define (make-method-accessor name ref idx)
   (procedure-rename
@@ -149,6 +149,11 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ . tail) (values make-id #'tail)]))))
+
+(define-for-syntax (desc-method-shapes desc)
+  (if (class-desc? desc)
+      (class-desc-method-shapes desc)
+      (interface-desc-method-shapes desc)))
 
 (define-for-syntax (desc-method-vtable desc)
   (if (class-desc? desc)
@@ -217,19 +222,27 @@
                                  static-infos))
     (success (wrap-static-info* full-e all-static-infos)
              new-tail))
-  (define (do-method pos/boxed/id ret-info-id)
-    (define-values (args new-tail tag)
-      (syntax-parse tail
-        #:datum-literals (op)
-        [((~and args (::parens arg ...)) . tail)
-         (values #'args #'tail #'tag)]
-        [_
-         (values #f tail #f)]))
+  (define (do-method pos/id* ret-info-id nonfinal? property?)
+    (define-values (args new-tail)
+      (if property?
+          (syntax-parse tail
+            #:datum-literals (op)
+            #:literals (:=)
+            [((op :=) rhs ...)
+             (values #`(#,(no-srcloc #'parens) (#,group-tag rhs ...))
+                     #'())]
+            [_ (values #'(parens) tail)])
+          (syntax-parse tail
+            #:datum-literals (op)
+            [((~and args (::parens arg ...)) . tail)
+             (values #'args #'tail)]
+            [_
+             (values #f tail)])))
     (define pos/id
       (cond
-        [(identifier? pos/boxed/id) pos/boxed/id]
-        [(box? pos/boxed/id) (unbox pos/boxed/id)] ; dynamic dispatch
-        [else (vector-ref (syntax-e (desc-method-vtable desc)) pos/boxed/id)]))
+        [(identifier? pos/id*) pos/id*]
+        [nonfinal? pos/id*] ; dynamic dispatch
+        [else (vector-ref (syntax-e (desc-method-vtable desc)) pos/id*)]))
     (cond
       [args
        (define-values (rator obj-e wrap)
@@ -255,7 +268,8 @@
        (success (wrap call-stx)
                 new-tail)]
       [else
-       (when more-static?
+       (when (and more-static?
+                  (not property?))
          (raise-syntax-error #f
                              "method must be called for static mode"
                              (no-srcloc #`(#,form1 #,dot #,field-id))))
@@ -271,16 +285,27 @@
                  field+acc)))
      => (lambda (fld) (do-field fld))]
     [(hash-ref (desc-method-map desc) (syntax-e field-id) #f)
-     => (lambda (pos/boxed) (do-method pos/boxed
-                                       (hash-ref (desc-method-result desc) (syntax-e field-id) #f)))]
+     => (lambda (pos)
+          (define shape (vector-ref (desc-method-shapes desc) pos))
+          (do-method pos
+                     (hash-ref (desc-method-result desc) (syntax-e field-id) #f)
+                     ;; non-final?
+                     (or (box? shape) (and (pair? shape) (box? (car shape))))
+                     ;; property?
+                     (pair? shape)))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
-     => (lambda (id) (do-method id #f))]
+     => (lambda (id/property)
+          (define id (if (identifier? id/property)
+                         id/property
+                         (car (syntax-e id/property))))
+          (define property? (pair? (syntax-e id/property)))
+          (do-method id #f #f property?))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
      => (lambda (id/fld)
           (if (identifier? id/fld)
-              (do-method id/fld #f)
+              (do-method id/fld #f #f #f)
               (do-field id/fld)))]
     [more-static?
      (raise-syntax-error #f

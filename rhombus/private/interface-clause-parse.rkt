@@ -31,7 +31,7 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (extends method private override abstract final final-override internal)
+              #:literals (internal extends)
               [(internal id)
                (when (hash-has-key? options 'internal)
                  (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
@@ -39,24 +39,6 @@
               [(extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]
-              [((~and tag (~or method override private final final-override)) id rhs maybe-ret)
-               (hash-set options 'methods (cons (added-method #'id
-                                                              (car (generate-temporaries #'(id)))
-                                                              #'rhs
-                                                              #'maybe-ret
-                                                              (and (pair? (syntax-e #'maybe-ret))
-                                                                   (car (generate-temporaries #'(id))))
-                                                              (syntax-e #'tag))
-                                                (hash-ref options 'methods null)))]
-              [(abstract id rhs maybe-ret)
-               (hash-set options 'methods (cons (added-method #'id
-                                                              '#:abstract
-                                                              #'rhs
-                                                              #'maybe-ret
-                                                              (and (pair? (syntax-e #'maybe-ret))
-                                                                   (car (generate-temporaries #'(id))))
-                                                              'abstract)
-                                                (hash-ref options 'methods null)))]
               [_
-               (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+               (parse-method-clause orig-stx options clause)]))
           (loop (cdr clauses) new-options)]))]))

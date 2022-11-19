@@ -47,6 +47,7 @@
          authentic
          field
          method
+         property
          override
          private
          abstract)
@@ -211,20 +212,20 @@
                   'synthesize)))
 
        (define added-methods (reverse (hash-ref options 'methods '())))
-       (define-values (method-map      ; symbol -> index (final) or box-of-index (non-final)
+       (define-values (method-mindex   ; symbol -> mindex
                        method-names    ; index -> symbol-or-identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (build-method-map stxes added-methods super interfaces private-interfaces))
+         (extract-method-tables stxes added-methods super interfaces private-interfaces final?))
 
-       (check-fields-methods-distinct stxes field-ht method-map method-names method-decls)
+       (check-fields-methods-distinct stxes field-ht method-mindex method-names method-decls)
        (check-consistent-unimmplemented stxes final? abstract-name)
 
        (define exs (parse-exports #'(combine-out . exports)))
-       (check-exports-distinct stxes exs fields method-map)
+       (check-exports-distinct stxes exs fields method-mindex)
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
@@ -312,7 +313,7 @@
              (reorder-for-top-level
               (append
                (build-methods method-results
-                              added-methods method-map method-names method-private
+                              added-methods method-mindex method-names method-private
                               #'(name name-instance name?
                                       [field-name ... super-field-name ...]
                                       [name-field ... super-name-field ...]
@@ -327,7 +328,7 @@
                                       [super-name* ...]))
                (build-class-struct super
                                    fields mutables constructor-keywords private?s final? authentic?
-                                   method-map method-names method-vtable method-private
+                                   method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
                                    #'(name class:name make-all-name name? name-ref
@@ -365,7 +366,7 @@
                                                     internal-name-instance
                                                     [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                     [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-               (build-class-dot-handling method-map method-vtable final?
+               (build-class-dot-handling method-mindex method-vtable final?
                                          has-private? method-private exposed-internal-id
                                          #'(name constructor-name name-instance name-ref
                                                  make-internal-name internal-name-instance
@@ -391,7 +392,7 @@
                                  constructor-defaults super-constructor+-defaults
                                  final? has-private-fields? private?s
                                  parent-name
-                                 method-map method-names method-vtable method-results
+                                 method-mindex method-names method-vtable method-results
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
@@ -407,13 +408,13 @@
                                                ...)
                                          ([field-name field-argument] ...)))
                (build-method-results added-methods
-                                     method-map method-vtable method-private
+                                     method-mindex method-vtable method-private
                                      method-results))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
                                        fields mutables constructor-keywords private?s final? authentic?
-                                       method-map method-names method-vtable method-private
+                                       method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
                                        names)
@@ -448,9 +449,15 @@
                               [mutable (in-list mutables)]
                               #:when (syntax-e mutable))
                      (list pred ann-str))]
-                  [((method-name method-proc) ...) (for/list ([v (in-vector method-vtable)]
-                                                              [i (in-naturals)])
-                                                     (list (hash-ref method-names i) v))])
+                  [(((method-name method-proc) ...)
+                    ((property-name property-proc) ...))
+                   (for/fold ([ms '()] [ps '()] #:result (list (reverse ms) (reverse ps)))
+                             ([v (in-vector method-vtable)]
+                              [i (in-naturals)])
+                     (define name (hash-ref method-names i))
+                     (if (mindex-property? (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
+                         (values ms (cons (list name v) ps))
+                         (values (cons (list name v) ms) ps)))])
       (list
        #`(define-values (class:name make-all-name name? name-field ... set-name-field! ...)
            (let-values ([(class:name name name? name-ref name-set!)
@@ -462,6 +469,8 @@
                                                         #`((cons prop:field-name->accessor
                                                                  (list* '(public-field-name ...)
                                                                         (hasheq (~@ 'super-field-name super-name-field)
+                                                                                ...
+                                                                                (~@ 'property-name property-proc)
                                                                                 ...)
                                                                         (hasheq (~@ 'method-name method-proc)
                                                                                 ...)))))
@@ -490,7 +499,7 @@
                                                                                                                          private-interfaces))])
                                                           #`(cons #,(interface-desc-prop:id intf)
                                                                   (vector #,@(build-interface-vtable intf
-                                                                                                     method-map method-vtable method-names
+                                                                                                     method-mindex method-vtable method-names
                                                                                                      method-private))))))
                                            #f #f
                                            '(immutable-field-index ...)
@@ -519,7 +528,7 @@
                                      constructor-defaults super-constructor+-defaults
                                      final? has-private-fields? private?s
                                      parent-name
-                                     method-map method-names method-vtable method-results
+                                     method-mindex method-names method-vtable method-results
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        fields
@@ -549,13 +558,9 @@
                                                         [(identifier? arg) arg]
                                                         [private? arg] ; #f, keyword, or identifier
                                                         [else (syntax-e name)]))))))
-                     '#,(for/vector ([i (in-range (vector-length method-vtable))])
-                          (define name (hash-ref method-names i))
-                          (if (box? (hash-ref method-map (if (syntax? name) (syntax-e name) name)))
-                              (box name)
-                              name))
+                     '#,(build-quoted-method-shapes method-vtable method-names method-mindex)
                      (quote-syntax #,method-vtable)
-                     '#,method-map
+                     '#,(build-quoted-method-map method-mindex)
                      #,(build-method-result-expression method-results)
                      #,(cond
                          [(syntax-e #'constructor-maker-name)

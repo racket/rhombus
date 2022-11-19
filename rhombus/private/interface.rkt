@@ -83,17 +83,17 @@
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
        (define parent-names (map interface-desc-id supers))
        (define added-methods (reverse (hash-ref options 'methods '())))
-       (define-values (method-map      ; symbol -> index (non-final) or box-of-index (final)
+       (define-values (method-mindex   ; symbol -> mindex
                        method-names    ; index -> symbol-or-identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
                        method-private  ; symbol -> identifier
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
-         (build-method-map stxes added-methods #f supers #hasheq()))
+         (extract-method-tables stxes added-methods #f supers #hasheq() #f))
 
        (define exs (parse-exports #'(combine-out . exports)))
-       (check-exports-distinct stxes exs '() method-map)
+       (check-exports-distinct stxes exs '() method-mindex)
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -117,7 +117,7 @@
                   (list #'(define-syntaxes (name?) (values)))
                   null)
               (build-methods method-results
-                             added-methods method-map method-names method-private
+                             added-methods method-mindex method-names method-private
                              #'(name name-instance name?
                                      []
                                      []
@@ -131,16 +131,16 @@
               (build-interface-annotation internal-name
                                           #'(name name? name-instance
                                                   internal-name?))
-              (build-interface-dot-handling method-map method-vtable
+              (build-interface-dot-handling method-mindex method-vtable
                                             #'(name name-instance name-ref
                                                     [export ...]))
               (build-interface-desc parent-names
-                                    method-map method-names method-vtable method-results
+                                    method-mindex method-names method-vtable method-results
                                     internal-name
                                     #'(name prop:name name-ref
                                             prop:internal-name internal-name? internal-name-ref))
                (build-method-results added-methods
-                                     method-map method-vtable method-private
+                                     method-mindex method-vtable method-private
                                      method-results)))
            #`(begin . #,defns)))])))
 
@@ -180,17 +180,14 @@
                                                               (quote-syntax ((#%dot-provider name-instance)))))))))
 
 (define-for-syntax (build-interface-desc parent-names
-                                         method-map method-names method-vtable method-results
+                                         method-mindex method-names method-vtable method-results
                                          internal-name
                                          names)
   (with-syntax ([(name prop:name name-ref
                        prop:internal-name internal-name? internal-name-ref)
                  names])
-    (let ([vtable (for/vector ([i (in-range (vector-length method-vtable))])
-                    (define name (hash-ref method-names i))
-                    (if (box? (hash-ref method-map (if (syntax? name) (syntax-e name) name)))
-                        (box name)
-                        name))]
+    (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
+          [method-map (build-quoted-method-map method-mindex)]
           [method-result-expr (build-method-result-expression method-results)])
       (append
        (if internal-name
@@ -201,7 +198,7 @@
                                 '()
                                 (quote-syntax prop:internal-name)
                                 (quote-syntax internal-name-ref)
-                                '#,vtable
+                                '#,method-shapes
                                 (quote-syntax #,method-vtable)
                                 '#,method-map
                                 #,method-result-expr)))
@@ -214,7 +211,7 @@
                             (quote-syntax #,parent-names)
                             (quote-syntax prop:name)
                             (quote-syntax internal-name-ref)
-                            '#,vtable
+                            '#,method-shapes
                             (quote-syntax #,method-vtable)
                             '#,method-map
                             #,method-result-expr)))))))

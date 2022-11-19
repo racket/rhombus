@@ -54,6 +54,7 @@
     $$(@rhombus(final, ~class_clause)) $method_impl
     $$(@rhombus(private, ~class_clause)) $method_impl
     $$(@rhombus(abstract, ~class_clause)) $method_decl
+    $$(@rhombus(property, ~class_clause)) $method_impl
     $$(@rhombus(extends, ~class_clause)) $identifier_path
     $$(@rhombus(implements, ~class_clause)) $implements_decl
     $$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause)) $implements_decl
@@ -101,10 +102,11 @@
  declared as @rhombus(private, ~class_clause) can only be accessed by
  @rhombus(.) within methods of the class or through an identifier bound
  by an @rhombus(internal, ~class_clause) form. In static mode (see
- @rhombus(use_static)), a method must be called like a function; in
- dynamic mode, a method accessed from an object closes over the object.
- Private fields and methods can be accessed with @rhombus(.) only
- statically.
+ @rhombus(use_static)), a non-@rhombus(property, ~class_clause) method
+ must be called like a function; in dynamic mode, a
+ non-@rhombus(property, ~class_clause) method accessed from an object
+ closes over the object. Private fields and methods can be accessed with
+ @rhombus(.) only statically.
 
  A @rhombus(field_spec) has an identifier, keyword, or both. A keyword
  implies that the default constructor expects the corresponding argument
@@ -159,8 +161,9 @@
 
  When a @rhombus(class_clause) is a @rhombus(method, ~class_clause)
  form, @rhombus(override, ~class_clause) form,
- @rhombus(abstract, ~class_clause) form, or method-shaped
+ @rhombus(abstract, ~class_clause) form, method-shaped
  @rhombus(final, ~class_clause) or @rhombus(private, ~class_clause) form,
+ or @rhombus(property, ~class_clause) form,
  then the clause declares a method for the class. These clauses can
  appear any number of times as a @rhombus(class_clause) to add or
  override any number of methods. See @rhombus(method, ~class_clause) for
@@ -226,12 +229,15 @@
  Each field and method name must be distinct from all other field and
  method names, whether from a parenthesized @rhombus(field_spec), from a
  @rhombus(field, ~class_clause) clause, or from a method clause. If an
- @rhombus(extends, ~class_clause) clause is present, then each field name must also be
- distinct from any field name in the superclass, except that a
- @rhombus(override, ~class_clause) clause must name a method that is already declared in
- the superclass. Private superclass fields and methods are not visible to
- the subclass, so their names are not required to be distinct from
- subclass field and method names.
+ @rhombus(extends, ~class_clause) clause is present, then each field name
+ must also be distinct from any field name in the superclass, except that
+ a @rhombus(override, ~class_clause) clause must name a method that is
+ already declared in the superclass. Private superclass fields and
+ methods are not visible to the subclass, so their names are not required
+ to be distinct from subclass field and method names. When a method is
+ overridden via @rhombus(override, ~class_clause), the original and
+ overriding methods must be both @tech{property methods} or both
+ non-property methods.
 
  See @secref("static-info-rules") for information about static
  information associated with classes.
@@ -286,6 +292,7 @@
     $$(@rhombus(final, ~intf_clause)) $method_impl
     $$(@rhombus(private, ~intf_clause)) $method_impl
     $$(@rhombus(abstract, ~intf_clause)) $method_decl
+    $$(@rhombus(property, ~intf_clause)) $method_impl
     $$(@rhombus(extends, ~intf_clause)) $extends_decl
     $$(@rhombus(internal, ~intf_clause)) $identifier
     $other_interface_clause
@@ -293,9 +300,10 @@
 ){
 
  Similar to @rhombus(class) for defining classes, but defines an
- interface, which has no fields but can have multiple superinterfaces.
- A @rhombus(method, ~intf_clause) clause is allowed to have just a method name
- or omit the body, in which case @rhombus(method, ~intf_clause) is
+ interface, which has no fields but can have multiple superinterfaces. A
+ @rhombus(method, ~intf_clause) clause or
+ @rhombus(property, ~intf_clause) clause is allowed to have just a method
+ name or omit the body, in which case @rhombus(method, ~intf_clause) is
  treated as @rhombus(abstract, ~intf_clause).
 
  The body of an @rhombus(interface) form has @deftech{interface clauses}
@@ -384,25 +392,32 @@
   class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_impl',
   class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_impl',
   class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'final $$(@rhombus(property, ~class_clause)) $method_impl',
+  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $method_impl',
   interface_clause.macro 'final $method_impl',
   interface_clause.macro 'final $$(@rhombus(method, ~intf_clause)) $method_impl',
   interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $method_impl',
   interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'final $$(@rhombus(property, ~intf_clause)) $method_impl',
+  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause)) $method_impl',
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
- @tech{interface clause} is followed by a method declaration,
- where @rhombus(method_impl) is the same as for
+ @tech{interface clause} is followed by a method declaration, where
+ @rhombus(method_impl) is the same as for
  @rhombus(method, ~class_clause). In that case, the method is final, even
  if the enclosing class is not (and an interface is never final). A final
  method cannot be overridden in subclaseses or subinterfaces. Using
  @rhombus(final, ~class_clause) with an immediate declaration is the same
- as @rhombus(final, ~class_clause) followed by ,
+ as @rhombus(final, ~class_clause) followed by
  @rhombus(method, ~class_clause). Including
  @rhombus(override, ~class_clause) means that the method must be defined
  in the superclass or a superinterface, while it must not be defined in
  the superclass or a superinterface if @rhombus(override, ~class_clause)
- is not used.
+ is not used. Including @rhombus(property, ~class_clause) means that the
+ method must be a property method; see @rhombus(property, ~class_clause)
+ for more information on property methods.
 
 }
 
@@ -417,12 +432,17 @@
 
 @doc(
   class_clause.macro 'method $method_impl',
+  class_clause.macro 'property $method_impl',
   class_clause.macro 'override $method_impl',
   class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'override $$(@rhombus(property, ~class_clause)) $method_impl',
   interface_clause.macro 'method $method_decl',
   interface_clause.macro 'method $method_impl',
+  interface_clause.macro 'property $method_decl',
+  interface_clause.macro 'property $method_impl',
   interface_clause.macro 'override $method_impl',
   interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'override $$(@rhombus(property, ~intf_clause)) $method_impl',
 
   grammar method_impl:
     $identifier $maybe_res_ann: $entry_point
@@ -443,7 +463,11 @@
  @rhombus(private, ~class_clause). The combination
  @rhombus(override, ~class_clause) followed by
  @rhombus(method, ~class_clause) is the same as just
- @rhombus(override, ~class_clause).
+ @rhombus(override, ~class_clause). Using
+ @rhombus(property, ~class_clause) declares or overrides a @tech{property
+  method}, which is the same as using @rhombus(method, ~class_clause)
+ except for the way the @rhombus(.) operator treats the name (as
+ explained below).
 
  A @rhombus(method_impl) is either an @rhombus(identifier) followed by
  an optional result annotation and a block containing an @tech{entry
@@ -461,20 +485,34 @@
  In the body of a method, the special expression form @rhombus(this)
  refers to the object whose method was called. Fields (in the case of a
  class) and methods can be accessed using @rhombus(this) and @rhombus(.),
- but they can also be used directly. Using a field or method name
+ but they can also be used directly. Except for @tech{property methods},
+ using a field or method name
  directly is the same as using @rhombus(this) and @rhombus(.) in static
  mode (which implies that a direct reference to a method name must be a
  call of the method). An argument that has the same name as a field or
  method shadow the field or method.
 
- In an interface, a @rhombus(method, ~intf_clause) declation can be just
- an identifier, or it can omit a body block. In that case,
- @rhombus(method, ~intf_clause) is treated like
- @rhombus(abstract, ~intf_clause). And abstract method declaration does
- not include a method body or implementation. An abstract method
- declaration can include arguments with annotations, but they are unused
- and ``advisory'' in the sense that they do not impose any checked
- requirements on overriding implementations of the method.
+ A @deftech{property method} is a method that is declared with
+ @rhombus(property, ~intf_clause). It behaves the same as a non-property
+ method, except in the case that the method is accessed with the
+ @rhombus(.) operator after an object expression. In that case, the
+ method name acts more like a field name: using @rhombus(.) to access the
+ method implcitly calls the method with zero arguments; when the
+ @rhombus(:=) operator is used after a property name, the method is
+ called with the right-hand side of @rhombus(:=) as one argument.
+ Property methods behave like non-property methods for direct calls
+ within a class or method body (i.e., not using @rhombus(this)) or for
+ @rhombus(super) calls.
+
+ In an interface, a @rhombus(method, ~intf_clause) or
+ @rhombus(property, ~intf_clause) declation can be just an identifier, or
+ it can omit a body block. In that case, @rhombus(method, ~intf_clause)
+ or @rhombus(property, ~intf_clause) is treated as if
+ @rhombus(abstract, ~intf_clause) is added before. An abstract method
+ declaration does not include a method body or implementation. An
+ abstract method declaration can include arguments with annotations, but
+ they are unused and ``advisory'' in the sense that they do not impose
+ any checked requirements on overriding implementations of the method.
 
 }
 
@@ -484,10 +522,16 @@
   class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl',
   class_clause.macro 'private $method_impl',
   class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'private $$(@rhombus(property, ~class_clause)) $method_impl',
   class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $method_impl',
   class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl',
+  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $method_impl',
   interface_clause.macro 'private $method_impl',
   interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'private $$(@rhombus(property, ~intf_clause)) $method_impl',
+  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $method_impl',
+  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause))  $method_impl',
+  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause))  $method_impl',
 ){
 
  A @tech{class clause} that declares interfaces that are privately
@@ -498,7 +542,8 @@
  information on field and method declarations. A
  @rhombus(private, ~class_clause) without
  @rhombus(implements, ~class_clause), @rhombus(field, ~class_clause),
- @rhombus(method, ~class_clause), or @rhombus(override, ~class_clause) is
+ @rhombus(method, ~class_clause), @rhombus(override, ~class_clause),
+ or @rhombus(property, ~class_clause) is
  equivalent to @rhombus(private, ~class_clause) followed by
  @rhombus(method, ~class_clause).
 
@@ -514,8 +559,10 @@
 @doc(
   class_clause.macro 'abstract $method_decl',
   class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $method_decl',
+  class_clause.macro 'abstract $$(@rhombus(property, ~class_clause)) $method_decl',
   interface_clause.macro 'abstract $method_decl',
   interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $method_decl',
+  interface_clause.macro 'abstract $$(@rhombus(property, ~intf_clause)) $method_decl',
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
@@ -587,8 +634,12 @@
                       | ...',
   class_clause.macro 'binding: $entry_point',
   class_clause.macro '«binding '$identifier $pattern ...': '$template'»',
+  class_clause.macro '«binding | '$identifier $pattern ...': '$template'
+                               | ...»',
   class_clause.macro 'annotation: $entry_point',
   class_clause.macro '«annotation '$identifier $pattern ...': '$template'»',
+  class_clause.macro '«annotation | '$identifier $pattern ...': '$template'
+                                  | ...»',
     
 ){
 
@@ -597,7 +648,7 @@
  @rhombus(constructor, ~class_clause), the second two forms are shorthand
  for using a @rhombus(fun) @tech{entry point}. For each of
  @rhombus(binding, ~class_clause) and @rhombus(binding, ~class_clause),
- the @rhombus(pattern) and @rhombus(template) shorthand is the same us
+ the @rhombus(pattern) and @rhombus(template) shorthands are the same us
  using a @rhombus(rule) entry point.
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
