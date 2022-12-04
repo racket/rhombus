@@ -1648,6 +1648,8 @@ then @{8}
 @x|{hello}there}|
 @x|(<[{hello}there}]>)|
 @x|(<[{hello}|(<[@6 there}]>)|
+@||{text}||
+@|| {not text} ||
 
 @x{  2
   1
@@ -1733,6 +1735,9 @@ INPUT
     (group x (parens (group (brackets (group "hello}there")))))
     (group x (parens (group (brackets (group "hello}there")))))
     (group x (parens (group (brackets (group "hello}") (group 6) (group " there")))))
+    (group (parens (group (brackets (group "text")))))
+    (group (op \|\|) (braces (group not text)) (op \|\|))
+
     (group
      x
      (parens

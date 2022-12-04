@@ -88,7 +88,7 @@ one of these forms:
       }
 
       where @italic{command} is allowed to be any group (but ending in
-      block only when @litchar("@") is at the end of the enclosing
+      a block only when @litchar("@") is at the end of the enclosing
       group), and space is allowed between @litchar("@(«") and
       @italic{command} or between @italic{command} and @litchar("»)").},
 
@@ -122,7 +122,7 @@ A @italic{braced_text} starts with an @italic{opener}, ends with a
        @litchar("@").},
 
  @item{The @italic{opener} can be @litchar("|"), a sequence of
-       non-@litchar("{") ASCII symbol and characters, and
+       non-@litchar("{") ASCII symbol and punctuation characters, and
        @litchar("{"). In that case, the @italic{closer} is
        @litchar("}"), the @italic{flipped} sequence of ASCII
        characters from the opener, and @litchar("|"). In a flipped
@@ -132,7 +132,10 @@ A @italic{braced_text} starts with an @italic{opener}, ends with a
        @litchar{]}, @litchar{]} to @litchar{[}, @litchar{<} to
        @litchar{>}, and @litchar{>} to @litchar{<}. The
        @italic{escape} is the same sequence as @italic{opener}, but
-       with @litchar("@") in place of @litchar("{").}
+       with @litchar("@") in place of @litchar("{"). When a sequence
+       after @litchar("@") could be parsed either as an operator
+       or as part of an opener ending with @litchar("{"), the parse
+       as part of an opener takes precedence.}
 
 )
 
