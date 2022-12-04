@@ -12,7 +12,7 @@ class Posn(x, y)
 
 fun map(f, l):
   for List:
-    ~each e: l
+    each e: l
     f(e)
 
 begin:

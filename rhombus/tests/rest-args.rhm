@@ -425,7 +425,7 @@ fun anyargs_rm(r, ..., ~& m): [[r, ...], m]
 fun anyargs_mr(~& m, r, ...): [[r, ...], m]
 
 for:
-  ~each anyargs: [anyargs_lm, anyargs_ml, anyargs_rm, anyargs_mr]
+  each anyargs: [anyargs_lm, anyargs_ml, anyargs_rm, anyargs_mr]
   check:
     anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
     [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]

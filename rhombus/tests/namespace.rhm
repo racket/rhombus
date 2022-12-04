@@ -28,7 +28,7 @@ check:
   match home.XList(1, 2)
   | home.XList(x, y):
       for home.XList:
-        ~each i: x..3
+        each i: x..3
         i
   [1, 2]
 
@@ -37,7 +37,7 @@ check:
   match XList(1, 2)
   | XList(x, y):
       for XList:
-        ~each i: x..3
+        each i: x..3
         i
   [1, 2]
 

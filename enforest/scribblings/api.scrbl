@@ -1,6 +1,6 @@
 #lang scribble/manual
 
-@title{API}
+@title{Enforestation API}
 
 The Rhombus expander's primary API consists of three Racket structure
 types and one macro:
@@ -104,7 +104,7 @@ types and one macro:
    @item{@racket[#:prefix-more-syntax-class] and @racket[#:infix-more-syntax-class]:
       names of syntax classes (defaulting to fresh names) that match
       an operator name followed by a sequence of terms and steps an
-      enforestation. A match has an @racket[parsed] attribute for the parsed
+      enforestation. A match has a @racket[parsed] attribute for the parsed
       result and a @racket[tail] attribute for the remaining terms.}
 
     @item{@racket[#:desc] and @racket[#:operator-desc]: strings used in error reporting

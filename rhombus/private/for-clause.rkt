@@ -17,7 +17,8 @@
 (begin-for-syntax
   (provide (property-out for-clause-transformer)
            :for-clause
-           :for-clause-form)
+           :for-clause-form
+           for-clause?)
 
   (property for-clause-transformer transformer)
 
@@ -35,6 +36,7 @@
     #:syntax-class :for-clause
     #:desc "for clause"
     #:in-space in-for-clause-space
+    #:predicate for-clause? 
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root

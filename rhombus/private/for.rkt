@@ -14,13 +14,14 @@
          "static-info.rkt"
          "ref-result-key.rkt"
          "parse.rkt"
+         "parens.rkt"
          (rename-in "values.rkt"
                     [values rhombus-values]))
 
 (provide (rename-out [rhombus-for for])
          each
-         (for-space rhombus/for-clause when)
-         (for-space rhombus/for-clause unless)
+         keep_when
+         skip_when
          break_when
          final_when)
 
@@ -73,83 +74,71 @@
                    ...
                    (rhombus-body
                     . #,(reverse (syntax->list #'rev-bodys)))))])]
-      [(_ orig state
-          (group #:do clause ...)
+      [(_ orig (~and state [finish rev-clauses rev-bodys matcher binder])
+          body0
           . bodys)
-       (syntax-parse #`(#,group-tag clause ...)
-         [body0::for-clause
-          #:with f::for-clause-form #'body0.parsed
-          #`(#:splice (for-clause-step orig state f.parsed ... . bodys))])]
-      [(_ orig [finish rev-clauses rev-bodys matcher binder]
-          (~and body0 (group (~or #:each #:when #:unless #:break_when #:final_when) . _))
-          . bodys)
-       #:when (pair? (syntax-e #'rev-bodys))
-       ;; emit accumulated body and clauses before starting more clauses
-       #`(#,@(reverse (syntax->list #'rev-clauses))
-          #:do (matcher
-                binder
-                (rhombus-body-sequence
-                 . #,(reverse (syntax->list #'rev-bodys))))
-          #:splice (for-clause-step orig
-                                    [finish () () (void) (void)]
-                                    body0 . bodys))]
-      [(_ orig [finish rev-clauses rev-bodys matcher binder]
-          (~and body0 (group (~or #:each #:when #:unless #:break_when #:final_when) . _))
-          . bodys)
-       #:when (pair? (syntax-e #'rev-clauses)) ; assert: empty rev-bodys
-       ;; emit clauses before starting a new group
-       #`(#,@(reverse (syntax->list #'rev-clauses))
-          #:do [matcher binder]
-          #:splice (for-clause-step orig
-                                    [finish () () (void) (void)]
-                                    body0 . bodys))]
-      [(_ orig state
-          (group #:each any ...+ (~and rhs-block (block body ...)))
-          . bodys)
-       ;; parse binding as binding group
-       #`(#:splice (for-clause-step
-                    orig
-                    #,(build-binding-clause/values #'orig
-                                                   #'state
-                                                   #`((#,group-tag any ...))
-                                                   #'rhs-block)
-                    . bodys))]
-      [(_ orig state
-          (group #:each (block (group any ...+ (~and rhs-block (block body ...)))
-                               ...))
-          . bodys)
-       ;; parse binding as binding group
-       #`(#:splice (for-clause-step
-                    orig
-                    #,(build-binding-clause*/values #'orig
-                                                    #'state
-                                                    (syntax->list #`(((#,group-tag any ...)) ...))
-                                                    (syntax->list #'(rhs-block ...)))
-                    . bodys))]
-      [(_ orig state
-          (~and body0 (group (~and tag #:each) . _))
-          . bodys)
-       (raise-syntax-error #f
-                           (format "`~~~a` clause needs binding followed by value block, or it needs a block of bindings with blocks"
-                                   (keyword->string (syntax-e #'tag)))
-                           #'orig
-                           #'body0)]
-      [(_ orig state
-          (group (~and kw (~or #:when #:unless #:break_when #:final_when)) expr ...)
-          . bodys)
-       #:with new-kw (case (syntax-e #'kw)
+       #:when (for-clause? #'body0)
+       (cond
+         [(pair? (syntax-e #'rev-bodys))
+          ;; emit accumulated body and clauses before starting more clauses
+          #`(#,@(reverse (syntax->list #'rev-clauses))
+             #:do (matcher
+                   binder
+                   (rhombus-body-sequence
+                    . #,(reverse (syntax->list #'rev-bodys))))
+             #:splice (for-clause-step orig
+                                       [finish () () (void) (void)]
+                                       body0 . bodys))]
+         [(pair? (syntax-e #'rev-clauses)) ; assert: empty rev-bodys
+          ;; emit clauses before starting a new group
+          #`(#,@(reverse (syntax->list #'rev-clauses))
+             #:do [matcher binder]
+             #:splice (for-clause-step orig
+                                       [finish () () (void) (void)]
+                                       body0 . bodys))]
+         [else
+          (syntax-parse #'body0
+            #:datum-literals (group block parens)
+            #:literals (prim-for-clause)
+            [(group prim-for-clause #:each any ...+ (~and rhs-block (block body ...)))
+             ;; parse binding as binding group
+             #`(#:splice (for-clause-step
+                          orig
+                          #,(build-binding-clause/values #'orig
+                                                         #'state
+                                                         #`((#,group-tag any ...))
+                                                         #'rhs-block)
+                          . bodys))]
+            [(group prim-for-clause #:each (block (group any ...+ (~and rhs-block (block body ...)))
+                                                  ...))
+             ;; parse binding as binding group
+             #`(#:splice (for-clause-step
+                          orig
+                          #,(build-binding-clause*/values #'orig
+                                                          #'state
+                                                          (syntax->list #`(((#,group-tag any ...)) ...))
+                                                          (syntax->list #'(rhs-block ...)))
+                          . bodys))]
+            [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
+                    expr ...)
+             #:with new-kw (case (syntax-e #'kw)
+                       [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
+                       [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
                        [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
                        [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
                        [else #'kw])
-       ;; assert: empty rev-bodys and rev-clauses
-       (when (null? (syntax-e #'(expr ...)))
-         (raise-syntax-error #f
-                             (format "missing expression after `~~~a`"
-                                     (keyword->string (syntax-e #'kw)))
-                             #'orig
-                             #'kw))
-       #`(new-kw (rhombus-expression (#,group-tag expr ...))
-                 #:splice (for-clause-step orig state . bodys))]
+             ;; assert: empty rev-bodys and rev-clauses
+             (when (null? (syntax-e #'(expr ...)))
+               (raise-syntax-error #f
+                                   (format "missing expression after `~~~a`"
+                                           (keyword->string (syntax-e #'kw)))
+                                   #'orig
+                                   #'kw))
+             #`(new-kw (rhombus-expression (#,group-tag expr ...))
+                       #:splice (for-clause-step orig state . bodys))]
+            [body0::for-clause
+             #:with f::for-clause-form #'body0.parsed
+             #`(#:splice (for-clause-step orig state f.parsed ... . bodys))])])]
       [(_ orig [finish rev-clauses rev-bodys matcher binder]
           body0
           . bodys)
@@ -254,46 +243,58 @@
 
 ;; ----------------------------------------
 
+;; To recognize all primitive forms:
+(define-syntax prim-for-clause
+  (for-clause-transformer
+   (lambda (stx)
+     (raise-syntax-error #f "should not try to expand" stx))))
+
 (define-syntax each
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group block)
-       [(form-id bind ...+ (~and rhs (block . _)))
-        #`[(#,group-tag #:each bind ... rhs)]]
+       [(form-id bind ...+ (~and rhs (_::block . _)))
+        #`[(#,group-tag prim-for-clause #:each bind ... rhs)]]
        [(form-id (~and blk
-                       (block (group bind ...+ (block . _))
-                              ...)))
-        #`[(#,group-tag #:each blk)]]))))
+                       (_::block (group bind ...+ (_::block . _))
+                                 ...)))
+        #`[(#,group-tag prim-for-clause #:each blk)]]
+       [_
+        (raise-syntax-error #f
+                            "needs binding followed by value block, or it needs a block of bindings with blocks"
+                            #'orig
+                            #'body0)]))))
 
-(define-for-clause-syntax when
+(define-syntax keep_when
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals ()
        [(form-id expr ...+)
-        #`[(#,group-tag #:when expr ...)]]))))
+        #`[(#,group-tag prim-for-clause #:keep_when expr ...)]]))))
 
-(define-for-clause-syntax unless
+(define-syntax skip_when
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals ()
        [(form-id expr ...+)
-        #`[(#,group-tag #:unless expr ...)]]))))
+        #`[(#,group-tag prim-for-clause #:skip_when expr ...)]]))))
 
 (define-syntax break_when
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals ()
        [(form-id expr ...+)
-        #`[(#,group-tag #:break_when expr ...)]]))))
+        #`[(#,group-tag prim-for-clause #:break_when expr ...)]]))))
 
 (define-syntax final_when
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block)
+       #:datum-literals ()
        [(form-id expr ...+)
-        #`[(#,group-tag #:final_when expr ...)]]))))
+        #`[(#,group-tag prim-for-clause #:final_when expr ...)]]))))
+

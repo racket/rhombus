@@ -667,7 +667,7 @@ operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
 
 fun enumerate(l :: List):
   for:
-    ~each:
+    each:
       v: l
       i: 0..
     displayln(i +& ". " +& v)
@@ -676,56 +676,56 @@ enumerate(["a", "b", "c"])
 
 fun grid(m, n):
   for List:
-    ~each i: 0..m
-    ~each j: 0..n
+    each i: 0..m
+    each j: 0..n
     [i, j]
 
 grid(2, 3)
 
 fun sum(l :: List):
   for values(sum = 0):
-    ~each i: l
+    each i: l
     sum+i
 
 sum([2, 3, 4])
 
 fun f17(l):
   for:
-    ~each i: (l :: List)
-    ~each j: 10..10+3
+    each i: (l :: List)
+    each j: 10..10+3
     [i, j]
     ~into List
 
 f17([1, 2, 3])
 
 for values(x = 0, y = 2):
-  ~each j: 0..3
+  each j: 0..3
   values(x + y, j)
 
 fun grid2(m, n):
   for List:
-    ~each i: 0..m
+    each i: 0..m
     val k: i + 1
-    ~each j: 0..n
+    each j: 0..n
     [k, j]
 
 grid2(2, 3)
 
 fun point_xs(l -: List.of(List.of(Posn))):
   for:
-    ~each ll: l
-    ~each p: ll
+    each ll: l
+    each p: ll
     p.x
     ~into List
 
 point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
 
 for:
-  ~each values(key, val): {1: "a", 2: "b"}
+  each values(key, val): {1: "a", 2: "b"}
   displayln(key +& " -> " +& val)
 
 for:
-  ~each (key, val): {3: "c", 4: "d"}
+  each (key, val): {3: "c", 4: "d"}
   displayln(key +& " -> " +& val)
 
 // syntax.class

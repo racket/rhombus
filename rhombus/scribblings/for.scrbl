@@ -12,47 +12,47 @@ and useful for writing many kinds of iterations.
 
 The @rhombus(for) form supports iteration over @deftech{sequences},
 which includes lists, arrays, and maps. In the body of a @rhombus(for)
-form, each @rhombus(~each) clause binds to an element of a sequence for
+form, each @rhombus(each, ~for_clause) clause binds to an element of a sequence for
 each iteration. The length of the sequence determines the number of
 iterations. The @rhombus(..) operator creates a sequence of integers
 from a starting integer (inclusive) to an ending integer (exclusive):
 
 @(demo:
     for:
-      ~each i: 1..4
+      each i: 1..4
       displayln(i)
 )
 
-If a @rhombus(for) body includes multiple @rhombus(~each) clauses, they
-are nested. That is, for each element of the first @rhombus(~each) clause,
-all elements are used for the second @rhombus(~each) clause, and so on.
+If a @rhombus(for) body includes multiple @rhombus(each, ~for_clause) clauses, they
+are nested. That is, for each element of the first @rhombus(each, ~for_clause) clause,
+all elements are used for the second @rhombus(each, ~for_clause) clause, and so on.
 
 @(demo:
     for:
-      ~each friend: ["Alice", "Bob", "Carol"]
-      ~each say: ["Hello", "Goodbye"]
+      each friend: ["Alice", "Bob", "Carol"]
+      each say: ["Hello", "Goodbye"]
       displayln(say +& ", " +& friend +& "!")
 )
 
-An advantage of having @rhombus(~each) clauses in the body of
+An advantage of having @rhombus(each, ~for_clause) clauses in the body of
 @rhombus(for), instead of putting them before the body as in many other
 languages, is that definitions or expressions can be written among
-@rhombus(~each) clauses.
+@rhombus(each, ~for_clause) clauses.
 
 @(demo:
     for:
-      ~each friend: ["Alice", "Bob", "Carol"]
+      each friend: ["Alice", "Bob", "Carol"]
       val dear_friend: "dear " +& friend
-      ~each say: ["Hello", "Goodbye"]
+      each say: ["Hello", "Goodbye"]
       displayln(say +& ", " +& dear_friend +& "!")
 )
 
 To draw elements from sequences in parallel, use a block of bindings
-immediately after @rhombus(~form).
+immediately after @rhombus(each, ~for_clause).
 
 @(demo:
     for:
-      ~each:
+      each:
         friend: ["Alice", "Bob", "Carol"]
         index: 1..4
       displayln(index +& ". " +& friend)
@@ -72,11 +72,11 @@ body.
 
 @(demo:
     for List:
-      ~each i: 1..4
+      each i: 1..4
       "number " +& i
     for List:
-      ~each i: [1, 2]
-      ~each j: ["a", "b", "c"]
+      each i: [1, 2]
+      each j: ["a", "b", "c"]
       [i, j]
 )
 
@@ -85,7 +85,7 @@ body with @rhombus(~into).
 
 @(demo:
     for:
-      ~each i: 1..4
+      each i: 1..4
       "number " +& i
       ~into List
 )
@@ -96,7 +96,7 @@ a value.
 
 @(demo:
     for Map:
-      ~each:
+      each:
         friend: ["alice", "bob", "carol"]
         index: 1..
       values(index, friend)
@@ -113,14 +113,14 @@ identifiers.
 @(demo:
     fun sum(l -: List):
       for values(sum = 0):
-        ~each i: l
+        each i: l
         sum+i
     sum([2, 3, 4])
 )
 
 In the same way that a @rhombus(List, ~annot) annotation specializes
 element access via @litchar{[}...@litchar{]}, it also specializes how
-@rhombus(~each) within @rhombus(for) iterates through a list. In the
+@rhombus(each, ~for_clause) within @rhombus(for) iterates through a list. In the
 following example, @rhombus(ll) is annotated as a list of lists, so both
 the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
@@ -128,8 +128,8 @@ specialization is visible only as a change in performance, if at all.
 @(demo:
     fun sum2d(ll -: List.of(List.of(Number))):
       for values(sum = 0):
-        ~each l: ll
-        ~each i: l
+        each l: ll
+        each i: l
         sum+i
     sum2d([[1], [2, 3, 4], [5, 6, 7], [8, 9]])
 )

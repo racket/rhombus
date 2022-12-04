@@ -191,8 +191,9 @@
 
 (define-for-syntax (for-body-spacer body)
   (syntax-parse body
-    [(group (~and kw #:do) id . args)
-     #`(group kw #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
+    #:datum-literals (each keep_when skip_when break_when final_when)
+    [(group (~and id (~or each keep_when skip_when break_when final_when)) . args)
+     #`(group #,(term-identifiers-syntax-property #'id 'typeset-space-name 'for_clause) . args)]
     [_
      body]))
 

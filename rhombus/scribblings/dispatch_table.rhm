@@ -15,7 +15,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
   fun extract_metavariables(term, ht):
     match term
     | '($g, ...)': for values(ht = ht):
-                     ~each g: [g, ...]
+                     each g: [g, ...]
                      extract_group_metavariables(g, ht)
     | '$(x :: Id)':
         ht ++ { Syntax.unwrap(x): x }
@@ -23,17 +23,17 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
   fun extract_group_metavariables(group, ht):
     match group
     | '$t ...': for values(ht = ht):
-                  ~each t: [t, ...]
+                  each t: [t, ...]
                   extract_metavariables(t, ht)
   fun extract_lhs_metavariables(groups -: List, ht):
     for values(ht = ht):
-      ~each g: groups
+      each g: groups
       match g
       | '$p . _': extract_metavariables(p, ht)
       | ~else: ht
   fun extract_rhs_metavariables(groups -: List, ht):
     for values(ht = ht):
-      ~each g: groups
+      each g: groups
       match g
       | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
       | ~else: ht
@@ -47,7 +47,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
           {})))
   val [id, ...]: vars.values()
   val [name_str, ...]: for List:
-                         ~each name: [name, ...]
+                         each name: [name, ...]
                          "" +& name.unwrap()
   values('«begin:
              rhombus_typeset '$id':

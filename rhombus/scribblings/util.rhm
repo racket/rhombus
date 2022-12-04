@@ -36,7 +36,7 @@ defn.macro 'demo: $form; ...':
     | [form, &rest]: find_eval(rest, was_found)    
   val [new_form, ...]:
     for List:
-      ~each j: split([form, ...])
+      each j: split([form, ...])
       val [no_prompt, ...]: match j[0]
                             | '~defn': ['~no_prompt']
                             | _: []

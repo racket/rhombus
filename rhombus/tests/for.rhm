@@ -6,47 +6,47 @@ begin:
   val mutable accum: []
   check:
     for:
-      ~each i: 0..2
+      each i: 0..2
       accum := List.cons(i, accum)
     accum
     [1, 0]
 
 check:
   for List:
-    ~each i: 0..2
+    each i: 0..2
     i
   [0, 1]
 
 check:
   for Map:
-    ~each i: 0..2
+    each i: 0..2
     values(i, "" +& i)
   {0: "0", 1: "1"}
 
 check:
   for:
-    ~each i: 0..2
+    each i: 0..2
     i
     ~into List
   [0, 1]
 
 check:
   for:
-    ~do each i: 0..2
+    each i: 0..2
     i
     ~into List
   [0, 1]
 
 check:
   for List:
-    ~each i: 0..2
-    ~each j: 0..2
+    each i: 0..2
+    each j: 0..2
     [i, -j-1]
   [[0, -1], [0, -2], [1, -1], [1, -2]]
 
 check:
   for List:
-    ~each:
+    each:
       i: 0..2
       j: 0..2
     [i, -j-1]
@@ -55,7 +55,7 @@ check:
 check:
   for List:
     val len: 2
-    ~each:
+    each:
       i: 0..len
       j: 0..len
     [i, -j-1]
@@ -63,65 +63,65 @@ check:
 
 check:
   for List:
-    ~each i: 0..2
+    each i: 0..2
     val i_plus: i+1
-    ~each j: 0..2
+    each j: 0..2
     [i_plus, -j-1]
   [[1, -1], [1, -2], [2, -1], [2, -2]]
 
 check:
   for List:
-    ~each i: 0..2
+    each i: 0..2
     val i_len: i+1
-    ~each j: 0..i_len
+    each j: 0..i_len
     [i, -j-1]
   [[0, -1], [1, -1], [1, -2]]
 
 check:
   for values(sum = 0):
-    ~each i: 0..4
+    each i: 0..4
     sum + i
   6
 
 check:
   for values(sum = 0, parity = #true):
-    ~each i: 0..4
+    each i: 0..4
     values(sum + i, !parity)
   values(6, #true)
 
 check:
   for values(sum = 0):
-    ~each i: 0..4
-    ~when i != 1
+    each i: 0..4
+    keep_when i != 1
     sum + i
   5
 
 check:
   for values(sum = 0):
-    ~each i: 0..4
-    ~unless i == 1
+    each i: 0..4
+    skip_when i == 1
     sum + i
   5
 
 check:
   for values(sum = 0):
-    ~each i: 0..8
-    ~break_when i == 4
+    each i: 0..8
+    break_when i == 4
     sum + i
   6
 
 check:
   for values(sum = 0):
-    ~each i: 0..8
-    ~final_when i == 4
+    each i: 0..8
+    final_when i == 4
     sum + i
   10
 
 check:
   for values(sum = 0):
-    ~each i: 0..8
+    each i: 0..8
     val new_sum: sum + i
-    ~final_when i == 4
+    final_when i == 4
     val result: new_sum + 1
     result
   15
