@@ -26,12 +26,11 @@ and override the interfaces methods with
 @rhombus(private, ~class_clause) methods.
 
 @(demo:
-    ~defn:
-      import: rhombus
     ~defn:      
       class Posn(x, y):
         private implements: Printer
         private override print(op):
+          import: rhombus
           rhombus.display("⟨⟨⟨", op)
           rhombus.print(x, op)
           rhombus.display(", ", op)
