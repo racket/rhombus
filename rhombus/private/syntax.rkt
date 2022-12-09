@@ -345,16 +345,19 @@
 (define-syntax (define-identifier-syntax-definition-transformer stx)
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id in-space-expr
+    [(_ id #:multi (in-space-expr ...)
         #'make-transformer-id)
      #`(begin
-         (define-syntax id (make-identifier-syntax-definition-transformer-runtime in-space-expr
+         (define-syntax id (make-identifier-syntax-definition-transformer-runtime (list in-space-expr ...)
                                                                                   #'compiletime-id))
          (begin-for-syntax
            (define-syntax compiletime-id
-             (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id))))]))
+             (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id))))]
+    [(_ id in-space-expr
+        #'make-transformer-id)
+     #'(define-identifier-syntax-definition-transformer id #:multi (in-space-expr) #'make-transformer-id)]))
 
-(define-for-syntax (make-identifier-syntax-definition-transformer-runtime in-space
+(define-for-syntax (make-identifier-syntax-definition-transformer-runtime in-spaces
                                                                           compiletime-id)
   (definition-transformer
     (lambda (stx)
@@ -366,8 +369,12 @@
                                         #:defaults ([self-id #'self]))
                              body ...)))
          (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-         (list #`(define-syntax #,(in-space (pre-parsed-name p))
-                   (#,compiletime-id #,p self-id)))]))))
+         (define name (pre-parsed-name p))
+         (list #`(define-syntaxes #,(for/list ([in-space (in-list in-spaces)])
+                                      (in-space name))
+                   (let ([#,name (#,compiletime-id #,p self-id)])
+                     (values #,@(for/list ([in-space (in-list in-spaces)])
+                                  name)))))]))))
 
 (begin-for-syntax
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id)

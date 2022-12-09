@@ -7,6 +7,7 @@
                      "class-parse.rkt"
                      (only-in "rule.rkt" rule)
                      "consistent.rkt")
+         "class+interface.rkt"
          "class-clause.rkt"
          "interface-clause.rkt"
          (only-in "binding.rkt" raise-binding-failure)
@@ -39,15 +40,6 @@
 
 (module+ for-interface
   (provide (for-syntax parse-method-clause)))
-
-(begin-for-syntax
-  (struct class+interface-clause-transformer (cls int)
-    #:property prop:class-clause-transformer (lambda (self) (class+interface-clause-transformer-cls self))
-    #:property prop:interface-clause-transformer (lambda (self) (class+interface-clause-transformer-int self)))
-  (define (make-class+interface-clause-transformer proc [int-proc proc])
-    (class+interface-clause-transformer
-     (class-clause-transformer proc)
-     (interface-clause-transformer int-proc))))
 
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
@@ -203,7 +195,7 @@
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
 
 (define-for-syntax (wrap-class-clause parsed)
-  #`[(quote-syntax (rhombus-class #,parsed) #:local)]) ; `quote-syntax` + `rhombus-class` wrapper => clause
+  #`[(group (parsed (quote-syntax (rhombus-class #,parsed) #:local)))]) ; `quote-syntax` + `rhombus-class` wrapper => clause
 
 (define-for-syntax (parse-multiple-names stx)
   (define lines
@@ -314,11 +306,13 @@
                                      #'c.static-infos
                                      #'())
              #:attr form
-             #`[(define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
-                                 {~? (if (c.predicate f-info.name-id)
-                                         f-info.name-id
-                                         (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
-                                     f-info.name-id}))
+             #`[(group
+                 (parsed
+                  (define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
+                                   {~? (if (c.predicate f-info.name-id)
+                                           f-info.name-id
+                                           (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
+                                       f-info.name-id}))))
                 #,@(wrap-class-clause #`(field id
                                                tmp-id
                                                static-infos

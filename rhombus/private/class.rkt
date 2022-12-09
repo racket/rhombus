@@ -87,11 +87,12 @@
     (syntax-parse stx
       [(_ form . rest)
        #:with clause::class-clause (syntax-local-introduce #'form)
-       #:with (parsed ...) (syntax-local-introduce #'clause.parsed)
-       #`(begin
-           parsed
-           ...
-           (class-body-step . rest))]
+       (syntax-parse (syntax-local-introduce #'clause.parsed)
+         #:datum-literals (group parsed)
+         [((group (parsed p)) ...)
+          #`(begin p ... (class-body-step . rest))]
+         [(form ...)
+          #`(class-body-step form ... . rest)])]
       [(_ form . rest)
        #`(rhombus-top-step
           class-body-step

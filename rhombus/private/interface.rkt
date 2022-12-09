@@ -56,11 +56,12 @@
     (syntax-parse stx
       [(_ form . rest)
        #:with clause::interface-clause (syntax-local-introduce #'form)
-       #:with (parsed ...) (syntax-local-introduce #'clause.parsed)
-       #`(begin
-           parsed
-           ...
-           (interface-body-step . rest))]
+       (syntax-parse (syntax-local-introduce #'clause.parsed)
+         #:datum-literals (group parsed)
+         [((group (parsed p)) ...)
+          #`(begin p ... (interface-body-step . rest))]
+         [(g ...)
+          #`(interface-body-step g ... . rest)])]
       [(_ form . rest)
        #`(rhombus-top-step
           interface-body-step
