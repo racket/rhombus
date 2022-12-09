@@ -335,7 +335,7 @@
 
 (define (raise-error who msg r)
   (if (procedure? who)
-      (raise-result-error (proc-name who) msg r)
+      (raise-result-error* (proc-name who) rhombus-realm msg r)
       (raise-arguments-error* who rhombus-realm
                               msg
                               "syntax" r)))

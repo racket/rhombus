@@ -20,7 +20,7 @@
                | ...»'
 ){
 
- Defines @rhombus(identifier) or @rhombus(operator) as an annotation form,
+ Defines an @rhombus(identifier, ~var) or @rhombus(operator, ~var) as an annotation form,
  which is implemented pattern-based macro whose expansion is described
  by a @rhombus(template) that can refer to pattern variables bound in
  the @rhombus(rule_pattern). The @rhombus(rule_pattern) and
