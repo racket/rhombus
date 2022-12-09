@@ -154,4 +154,44 @@ check:
     override property is_origin():
       x == 0 && y == 0
   "cannot override interface's non-property method with a property"
-  
+
+check:
+  class A():
+    nonfinal
+    property m():
+      5
+  class B():
+    extends A
+    nonfinal
+    abstract override property m()
+  class C():
+    extends B
+    override property m():
+      6
+  C().m
+  6
+
+check:
+  ~eval_exn
+  class A():
+    nonfinal
+    property m():
+      5
+  class B():
+    extends A
+    nonfinal
+    abstract override property m()
+  class C():
+    extends B
+  "final class cannot have abstract methods"
+
+check:
+  ~eval_exn
+  class A():
+    nonfinal
+    property m():
+      5
+  class B():
+    extends A
+    abstract override property m()
+  "final class cannot have abstract methods"

@@ -233,3 +233,44 @@ begin:
     ~exn
     Bottom().m2("apple")
     "result does not match annotation"
+
+// abstract override
+begin:
+  interface Left
+  interface Right
+  class Both():
+    implements: Left Right    
+  class LeftC():
+    implements: Left
+  class RightC():
+    implements: Right
+
+  interface A:
+    method m() :: Left
+  interface B:
+    extends A
+    abstract override m() :: Right
+  interface B2:
+    extends A
+    override m() :: Right
+
+  class C(x):
+    implements: B B2
+    override m():
+      x
+
+  check:
+    C(Both()).m()
+    Both()
+  check:
+    ~exn
+    C(#false).m()
+    "result does not match annotation"
+  check:
+    ~exn
+    C(LeftC()).m()
+    "result does not match annotation"
+  check:
+    ~exn
+    C(RightC()).m()
+    "result does not match annotation"

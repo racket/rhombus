@@ -81,7 +81,8 @@
 
 (struct added-field (id arg-id static-infos predicate annotation-str mode))
 (struct added-method (id rhs-id rhs maybe-ret result-id
-                         mode        ; 'method, 'override, or 'abstract
+                         body        ; 'method, 'abstract
+                         replace     ; 'method, 'override
                          disposition ; 'abstract, 'final, 'private
                          kind))      ; 'method, 'property
 

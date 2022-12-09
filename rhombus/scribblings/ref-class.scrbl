@@ -301,8 +301,9 @@
 
  Similar to @rhombus(class) for defining classes, but defines an
  interface, which has no fields but can have multiple superinterfaces. A
- @rhombus(method, ~intf_clause) clause or
- @rhombus(property, ~intf_clause) clause is allowed to have just a method
+ @rhombus(method, ~intf_clause),
+ @rhombus(property, ~intf_clause), or @rhombus(override, ~intf_clause)
+ clause is allowed to have just a method
  name or omit the body, in which case @rhombus(method, ~intf_clause) is
  treated as @rhombus(abstract, ~intf_clause).
 
@@ -441,8 +442,11 @@
   interface_clause.macro 'property $method_decl',
   interface_clause.macro 'property $method_impl',
   interface_clause.macro 'override $method_impl',
+  interface_clause.macro 'override $method_decl',
   interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_impl',
+  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_decl',
   interface_clause.macro 'override $$(@rhombus(property, ~intf_clause)) $method_impl',
+  interface_clause.macro 'override $$(@rhombus(property, ~intf_clause)) $method_decl',
 
   grammar method_impl:
     $identifier $maybe_res_ann: $entry_point
@@ -504,9 +508,9 @@
  within a class or method body (i.e., not using @rhombus(this)) or for
  @rhombus(super) calls.
 
- In an interface, a @rhombus(method, ~intf_clause) or
+ In an interface, a @rhombus(method, ~intf_clause), @rhombus(override, ~intf_clause),  or
  @rhombus(property, ~intf_clause) declation can be just an identifier, or
- it can omit a body block. In that case, @rhombus(method, ~intf_clause)
+ it can omit a body block. In that case, @rhombus(method, ~intf_clause), @rhombus(override, ~intf_clause),
  or @rhombus(property, ~intf_clause) is treated as if
  @rhombus(abstract, ~intf_clause) is added before. An abstract method
  declaration does not include a method body or implementation. An
@@ -559,10 +563,14 @@
 @doc(
   class_clause.macro 'abstract $method_decl',
   class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $method_decl',
+  class_clause.macro 'abstract $$(@rhombus(override, ~class_clause)) $method_decl',
   class_clause.macro 'abstract $$(@rhombus(property, ~class_clause)) $method_decl',
+  class_clause.macro 'abstract $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $method_decl',
   interface_clause.macro 'abstract $method_decl',
   interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $method_decl',
+  interface_clause.macro 'abstract $$(@rhombus(override, ~intf_clause)) $method_decl',
   interface_clause.macro 'abstract $$(@rhombus(property, ~intf_clause)) $method_decl',
+  interface_clause.macro 'abstract $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause))  $method_decl',
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
@@ -575,6 +583,14 @@
  @rhombus(override, ~class_clause) class in a subclass, and then the
  subclass can be instantiated (as long as it has no other abstract
  methods). A @tech{final} class cannot have an abstract method.
+
+ A method can be both @rhombus(abstract, ~class_clause) and
+ @rhombus(override, ~class_clause). In that case, if the overriden method
+ is not abstract, then the method becomes abstract and most be overridden
+ in a subclass before instantiation. Even if the overidden method is
+ already abstract, an @rhombus(abstract, ~class_clause)
+ @rhombus(override, ~class_clause) can be useful to impose an additional
+ result annotation.
 
 }
 

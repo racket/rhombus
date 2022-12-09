@@ -366,3 +366,44 @@ check:
     method a(): 1
   Posn.a(0)
   "not an instance"
+
+check:
+  class A():
+    nonfinal
+    method m():
+      5
+  class B():
+    extends A
+    nonfinal
+    abstract override m()
+  class C():
+    extends B
+    override m():
+      6
+  C().m()
+  6
+
+check:
+  ~eval_exn
+  class A():
+    nonfinal
+    method m():
+      5
+  class B():
+    extends A
+    nonfinal
+    abstract override m()
+  class C():
+    extends B
+  "final class cannot have abstract methods"
+
+check:
+  ~eval_exn
+  class A():
+    nonfinal
+    method m():
+      5
+  class B():
+    extends A
+    abstract override m()
+  "final class cannot have abstract methods"

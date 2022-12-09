@@ -113,7 +113,7 @@
                            (eq? old-rhs new-rhs))
                        (for/or ([added (in-list added-methods)])
                          (and (eq? key (syntax-e (added-method-id added)))
-                              (eq? 'override (added-method-mode added)))))
+                              (eq? 'override (added-method-replace added)))))
              (raise-syntax-error #f (format "method supplied by multiple ~a and not overridden" supers-str) stx key))
            (if (or private?
                    (and (pair? old-val) (mindex? (car old-val))))
@@ -163,7 +163,7 @@
          => (lambda (mix+id)
               (define mix (car mix+id))
               (cond
-                [(eq? 'override (added-method-mode added))
+                [(eq? 'override (added-method-replace added))
                  (when (eq? (added-method-disposition added) 'private)
                    (raise-syntax-error #f (format "method is not in private ~a" super-str) stx id))
                  (when (mindex-final? mix)
@@ -181,7 +181,7 @@
         [(hash-ref super-priv-ht (syntax-e id) #f)
          => (lambda (rhs)
               (cond
-                [(and (eq? (added-method-mode added) 'override)
+                [(and (eq? (added-method-replace added) 'override)
                       (eq? (added-method-disposition added) 'private))
                  (check-consistent-property (list? rhs))
                  (values ht
@@ -191,13 +191,13 @@
                                                                (list id)
                                                                id)))
                          new-here-ht)]
-                [(eq? (added-method-mode added) 'override)
+                [(eq? (added-method-replace added) 'override)
                  (raise-syntax-error #f (format "method is in private ~a" super-str) stx id)]
                 [else
                  (raise-syntax-error #f (format "method is already in private ~a" super-str) stx id)]))]
         [else
          (cond
-           [(eq? (added-method-mode added) 'override)
+           [(eq? (added-method-replace added) 'override)
             (raise-syntax-error #f (format "method is not in ~a" super-str) stx id)]
            [(eq? (added-method-disposition added) 'private)
             (values ht
@@ -484,7 +484,7 @@
                              (and (pair? r) (car r)))))])
       (list
        #`(define-values #,(for/list ([added (in-list added-methods)]
-                                     #:when (not (eq? 'abstract (added-method-mode added))))
+                                     #:when (not (eq? 'abstract (added-method-body added))))
                             (added-method-rhs-id added))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
@@ -508,12 +508,12 @@
                                                                    ...))
                                                      (get-private-tables)))
              #,@(for/list ([added (in-list added-methods)]
-                           #:when (eq? 'abstract (added-method-mode added))
+                           #:when (eq? 'abstract (added-method-body added))
                            #:when (syntax-e (added-method-rhs added)))
                   #`(void (rhombus-expression #,(added-method-rhs added))))
              (values
               #,@(for/list ([added (in-list added-methods)]
-                            #:when (not (eq? 'abstract (added-method-mode added))))
+                            #:when (not (eq? 'abstract (added-method-body added))))
                    (define r (hash-ref method-results (syntax-e (added-method-id added)) #f))
                    #`(let ([#,(added-method-id added) (method-block #,(added-method-rhs added)
                                                                     name name-instance name?

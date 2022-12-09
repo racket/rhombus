@@ -146,26 +146,27 @@
                         final-override private-override
                         override-property final-property final-override-property
                         private-property private-override-property
-                        abstract-property)
+                        abstract-property
+                        abstract-override abstract-override-property)
     [((~and tag (~or method override private final final-override private-override
                      property override-property
                      final-property final-override-property
                      private-property private-override-property))
       id rhs maybe-ret)
-     (define-values (mode disposition kind)
+     (define-values (body replace disposition kind)
        (case (syntax-e #'tag)
-         [(method) (values 'method 'abstract 'method)]
-         [(override) (values 'override 'abstract 'method)]
-         [(private) (values 'method 'private 'method)]
-         [(private-override) (values 'override 'private 'method)]
-         [(final) (values 'method 'final 'method)]
-         [(final-override) (values 'override 'final 'method)]
-         [(property) (values 'method 'abstract 'property)]
-         [(override-property) (values 'override 'abstract 'property)]
-         [(final-property) (values 'method 'final 'property)]
-         [(final-override-property) (values 'override 'final 'property)]
-         [(private-property) (values 'method 'private 'property)]
-         [(private-override-property) (values 'override 'private 'property)]
+         [(method) (values 'method 'method 'abstract 'method)]
+         [(override) (values 'method 'override 'abstract 'method)]
+         [(private) (values 'method 'method 'private 'method)]
+         [(private-override) (values 'method 'override 'private 'method)]
+         [(final) (values 'method 'method 'final 'method)]
+         [(final-override) (values 'method 'override 'final 'method)]
+         [(property) (values 'method 'method 'abstract 'property)]
+         [(override-property) (values 'method 'override 'abstract 'property)]
+         [(final-property) (values 'method 'method 'final 'property)]
+         [(final-override-property) (values 'method 'override 'final 'property)]
+         [(private-property) (values 'method 'method 'private 'property)]
+         [(private-override-property) (values 'method 'override 'private 'property)]
          [else (error "method kind not handled" #'tag)]))
      (hash-set options 'methods (cons (added-method #'id
                                                     (car (generate-temporaries #'(id)))
@@ -173,12 +174,20 @@
                                                     #'maybe-ret
                                                     (and (pair? (syntax-e #'maybe-ret))
                                                          (car (generate-temporaries #'(id))))
-                                                    mode
+                                                    body
+                                                    replace
                                                     disposition
                                                     kind)
                                       (hash-ref options 'methods null)))]
-    [((~and tag (~or abstract abstract-property))
+    [((~and tag (~or abstract abstract-property abstract-override abstract-override-property))
       id rhs maybe-ret)
+     (define-values (replace kind)
+       (case (syntax-e #'tag)
+         [(abstract) (values 'method 'method)]
+         [(abstract-property) (values 'method 'property)]
+         [(abstract-override) (values 'override 'method)]
+         [(abstract-override-property) (values 'override 'property)]
+         [else (error "method kind not handled" #'tag)]))
      (hash-set options 'methods (cons (added-method #'id
                                                     '#:abstract
                                                     #'rhs
@@ -186,10 +195,9 @@
                                                     (and (pair? (syntax-e #'maybe-ret))
                                                          (car (generate-temporaries #'(id))))
                                                     'abstract
+                                                    replace
                                                     'abstract
-                                                    (if (eq? (syntax-e #'tag) 'abstract-property)
-                                                        'property
-                                                        'method))
+                                                    kind)
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
@@ -434,12 +442,20 @@
 
 (define-syntax override
   (make-class+interface-clause-transformer
+   ;; class clause
    (lambda (stx)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
        [(_ property (~var m (:method #'override-property))) #'m.form]
-       [(_ (~var m (:method #'override))) #'m.form]))))
+       [(_ (~var m (:method #'override))) #'m.form]))
+   (lambda (stx)
+     (syntax-parse stx
+       #:literals (method)
+       [(_ method (~var m (:method #'override))) #'m.form]
+       [(_ property (~var m (:method #'override-property))) #'m.form]
+       [(_ (~var m (:method #'override))) #'m.form]
+       [(_ decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]))))
 (define-syntax override-property 'placeholder)
 
 (define-syntax private
@@ -472,11 +488,16 @@
   (make-class+interface-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:literals (method property)
+       #:literals (method override property)
        [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]
        [(_ property decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]
+       [(_ override decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
+       [(_ override method decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
+       [(_ override property decl::method-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
 (define-syntax abstract-property 'placeholder)
+(define-syntax abstract-override 'placeholder)
+(define-syntax abstract-override-property 'placeholder)
 
 (define-for-syntax (same-return-signature? a b)
   (cond
