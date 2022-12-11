@@ -574,3 +574,11 @@ check:
   val c: Car("Mazda", "Miata")
   c.go(100)
   8
+
+check:
+  class Posn(x, y):
+    field w :: Integer: 0
+    field name -: String: "ok"
+  Posn(1, 2).name +& Posn(3, 4).w
+  "ok0"
+

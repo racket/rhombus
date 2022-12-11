@@ -309,10 +309,11 @@
              #`[(group
                  (parsed
                   (define tmp-id (let ([f-info.name-id (rhombus-body-at . blk)])
-                                   {~? (if (c.predicate f-info.name-id)
-                                           f-info.name-id
-                                           (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
-                                       f-info.name-id}))))
+                                   #,(if (and (attribute c) (syntax-e #'c.predicate))
+                                         #`(if (c.predicate f-info.name-id)
+                                               f-info.name-id
+                                               (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
+                                         #'f-info.name-id)))))
                 #,@(wrap-class-clause #`(field id
                                                tmp-id
                                                static-infos
