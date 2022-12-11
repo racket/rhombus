@@ -64,7 +64,7 @@
       [(_ orig [(finish (body-wrap ...)) rev-clauses rev-bodys matcher binder])
        (when (null? (syntax-e #'rev-bodys))
          (raise-syntax-error #f
-                             "empty body (after any keyword clauses, such as `~each`)"
+                             "empty body (after any clauses such as `each`)"
                              #'orig))
        #`(#,@(reverse (syntax->list #'rev-clauses))
           #:do [matcher
