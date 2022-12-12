@@ -1,0 +1,26 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  let x: 0
+  def f(): x
+  let x: 2
+  [x, f()]
+  [2, 0]
+
+check:
+  let x: 0
+  def f(): x
+  let mutable x: 2
+  x := 3
+  [x, f()]
+  [3, 0]
+
+check:
+  let mutable x: 0
+  def f(): x
+  def g(n): x := n
+  let mutable x: 2
+  g(3)
+  [x, f()]
+  [2, 3]

@@ -30,18 +30,19 @@
                    #'((id))
                    #'mutable-identifier-succeed
                    #'mutable-bind
-                   #'id)]))
+                   #'[id mutable-id])]))
 
 (define-syntax (mutable-identifier-succeed stx)
   (syntax-parse stx
-    [(_ arg-id bind-id IF success fail)
-     #'(IF #t success fail)]))
+    [(_ arg-id [bind-id mutable-id] IF success fail)
+     #'(begin
+         (define mutable-id arg-id)
+         (IF #t success fail))]))
 
 (define-syntax (mutable-bind stx)
   (syntax-parse stx
-    [(_ arg-id bind-id)
+    [(_ arg-id [bind-id mutable-id])
      #'(begin
-         (define mutable-id arg-id)
          (begin (set! mutable-id mutable-id))
          (define-syntax bind-id
            (mutable-variable #'mutable-id)))]))
