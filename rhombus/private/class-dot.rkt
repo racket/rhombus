@@ -211,8 +211,7 @@
     (define full-e
       (cond
         [assign-rhs #`(let ([#,field-id #,assign-rhs])
-                        #,e
-                        #,field-id)]
+                        #,e)]
         [else e]))
     
     (define static-infos (field-desc-static-infos fld))

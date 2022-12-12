@@ -65,6 +65,5 @@
                            "left-hand argument is not a mutable identifier"
                            self-stx))
      #`(let ([#,form1 #,form2])
-         (set! #,(mutable-variable-id mv) #,form1)
-         #,form1))
+         (set! #,(mutable-variable-id mv) #,form1)))
    'left))

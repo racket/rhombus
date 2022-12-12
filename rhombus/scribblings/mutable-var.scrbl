@@ -7,8 +7,7 @@
 
 Variables are immutable unless they are declared with the
 @rhombus(mutable) binding operator. The @rhombus(:=) infix operator
-assigns to a mutable variable while also returning the variable’s new
-value.
+assigns to a mutable variable.
 
 @(demo:
     ~defn:
@@ -26,6 +25,17 @@ value.
       ~error: f := 5
   )
 
-@aside{The @rhombus(:=) operator should also cooperate with @rhombus(.)
- when a class field is declared @rhombus(mutable), but that’s not yet
- implemented.}
+The @rhombus(:=) operator can also change object fields accessed via
+@rhombus(.) when a class field is declared @rhombus(mutable, ~bind).
+
+@(demo:
+    ~defn:
+      class Box(mutable content)
+    ~repl:
+      def present: Box("socks")
+      present.content
+      present.content := "toy"
+      present.content
+  )
+
+

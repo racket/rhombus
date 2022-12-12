@@ -21,7 +21,7 @@
 ){
 
  Changes the value of @rhombus(identifier) to the result of
- @rhombus(expr) and also returns the result of @rhombus(expr). The
+ @rhombus(expr) and returns @rhombus(#void). The
  @rhombus(identifier) must be bound with @rhombus(mutable, ~bind).
 
 @examples(

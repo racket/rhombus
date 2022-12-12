@@ -408,13 +408,13 @@ check:
   class Posn(mutable x :: Integer, y :: Integer)
   val p: Posn(2, 0)
   [p.x, p.x := 5, p.x, p.y]
-  [2, 5, 5, 0]
+  [2, #void, 5, 0]
 
 check:
   class Posn(x :: Integer, mutable y :: Integer)
   val p: Posn(2, 0)
   [p.y, p.y := 5, p.y, p.x]
-  [0, 5, 5, 2]
+  [0, #void, 5, 2]
 
 check:
   ~exn

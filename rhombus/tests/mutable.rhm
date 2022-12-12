@@ -2,6 +2,11 @@
 import: "check.rhm" open
 
 check:
+  val mutable x: 0
+  [x := 1, x]
+  [#void, 1]
+
+check:
   let x: 0
   def f(): x
   let x: 2
