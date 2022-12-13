@@ -150,9 +150,9 @@
  is not represented by an arguments to the constructor, annotation form,
  or binding-pattern form. Instead, the
  @rhombus(body) block in @rhombus(field, ~class_clause) gives the added
- field its initial value; that block is evaluated at the time the
- @rhombus(class) form is evaluated, not when an object is instantiated,
- and the same values are used for every instance of the class. All fields
+ field its initial value; that block is evaluated each time an instance
+ of the class is created, but it cannot refer to @rhombus(this),
+ fields of the class, or methods of the class. All fields
  added through a @rhombus(field, ~class_clause) clause are mutable, and they
  can be updated in a custom constructor (form example) using @rhombus(:=). The
  @rhombus(field, ~class_clause) can appear any number of times as a
@@ -427,7 +427,9 @@
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to add fields to
- the class. See @rhombus(class) for more information.
+ the class. The @rhombus(body) is evaluated each time the class is instantiated,
+ but it cannot refer to @rhombus(this) or fields or methods of an object.
+ See @rhombus(class) for more information.
 
 }
 

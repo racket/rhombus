@@ -37,6 +37,7 @@
                        [private-field-name ...]
                        [private-field-desc ...])
                  names])
+    (define (build-field-init id) #`(#%plain-app #,id))
     (append
      (if (syntax-e #'name-defaults)
          (list
@@ -104,14 +105,14 @@
                                                               (cond
                                                                 [(null? c+-fs) fields]
                                                                 [(identifier? (car fields))
-                                                                 (cons (car fields) (loop (cdr fields) c+-fs))]
+                                                                 (cons (build-field-init (car fields)) (loop (cdr fields) c+-fs))]
                                                                 [else (cons (car c+-fs) (loop (cdr fields) (cdr c+-fs)))])))
                                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
                                                          (if (identifier? (field-desc-constructor-arg f))
-                                                             (field-desc-constructor-arg f)
+                                                             (build-field-init (field-desc-constructor-arg f))
                                                              (field-desc-name f))))
                                                 #,@constructor-fields
-                                                #,@(map added-field-arg-id added-fields)))))])
+                                                #,@(map (lambda (f) (build-field-init (added-field-arg-id f))) added-fields)))))])
                 name)))
          null)
      (if constructor-rhs

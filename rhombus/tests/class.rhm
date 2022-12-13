@@ -582,3 +582,9 @@ check:
   Posn(1, 2).name +& Posn(3, 4).w
   "ok0"
 
+check:
+  val mutable n: 0
+  class Posn(x, y):
+    field color: "red" +& begin: n := n + 1; n
+  [Posn(1, 2).color, Posn(1, 2).color]
+  ["red1", "red2"]

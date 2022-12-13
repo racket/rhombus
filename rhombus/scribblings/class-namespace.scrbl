@@ -32,7 +32,7 @@ definitions are accessible outside the class only if they are exported.
 There's a subtlety, however, when definitions within the @rhombus(class)
 body try to refer to the class. Unless the reference is sufficiently
 nested, it can't work, because the class is not defined until all of the
-class ody forms are processed.
+class body forms are processed.
 
 @(demo:
     ~repl:
