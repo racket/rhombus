@@ -13,81 +13,81 @@ export:
   rhombusblock
 
 meta:
-  def | map(proc, []): []
+  fun | map(proc, []): []
       | map(proc, [a, a1, ...]): List.cons(proc(a), map(proc, [a1, ...]))
 
-  def | andmap(proc, []): #true
+  fun | andmap(proc, []): #true
       | andmap(proc, [a, a1, ...]): proc(a) && andmap(proc, [a1, ...])
 
-  def | map2(proc, [], []): []
+  fun | map2(proc, [], []): []
       | map2(proc, [a, a1, ...], [b, b1, ...]): List.cons(proc(a, b), map2(proc, [a1, ...], [b1, ...]))
 
-  def head_context(stxs):
+  fun head_context(stxs):
     match stxs
     | '$head $_ ...':
         Syntax.relocate('#false', head)
 
-  def head_escape_context(stxs):
+  fun head_escape_context(stxs):
     match stxs
     | '$head $esc $_ ...':
         Syntax.relocate_span('#false', [head, esc])
 
-  def group_context(g):
+  fun group_context(g):
     Syntax.relocate('#false', g)
 
-  def literal_term(stxs):
+  fun literal_term(stxs):
     'Syntax.literal($stxs)'
 
-  def literal_group(stxs):
+  fun literal_group(stxs):
     'Syntax.literal_group($stxs)'
 
-  def is_literal_term(stx):
+  fun is_literal_term(stx):
     match stx
     | 'Syntax.literal $_': #true
     | ~else: #false
 
-  def is_literal_group(stx):
+  fun is_literal_group(stx):
     match stx
     | 'Syntax.literal_group $_': #true
     | ~else: #false
 
-  def extract_literal(stx):
+  fun extract_literal(stx):
     match stx
     | '$_ $_ $_($stxs)': stxs
 
-  def nested(gs, builder, builder_stx, stxs):
-    val [new_g, ...]: map(escape_group, gs)
+  fun nested(gs, builder, builder_stx, stxs):
+    def [new_g, ...]: map(escape_group, gs)
     if andmap(is_literal_group, [new_g, ...])
     | literal_term(builder(map(extract_literal, [new_g, ...]), head_context(stxs)))
     | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
 
-  def nested_alts(bs, stxs):
-    val [new_b, ...]: map(escape_term, bs)
+  fun nested_alts(bs, stxs):
+    def [new_b, ...]: map(escape_term, bs)
     if andmap(is_literal_term, [new_b, ...])
     | literal_term(alts_syntax(map(extract_literal, [new_b, ...]), head_context(stxs)))
     | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
 
-  def escape_group(g):
-    val new_g: escape_tail(g)
+  fun escape_group(g):
+    def new_g: escape_tail(g)
     if is_literal_group(new_g)
     | literal_group(Syntax.relocate(extract_literal(new_g), group_context(g)))
     | 'Syntax.relocate($new_g, Syntax.literal($(group_context(g))))'
 
-  def escape_tail(stxs):
+  fun escape_tail(stxs):
     match stxs
     | '$$($expr ...) $tail ...':
         'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
                               Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
-        val values(a_head, a_tail): adjust_spaces(head, '$tail ...')
-        val new_head: escape_term(a_head)
-        val new_tail: escape_tail(a_tail)
+        def values(a_head, a_tail): adjust_spaces(head, '$tail ...')
+        def new_head: escape_term(a_head)
+        def new_tail: escape_tail(a_tail)
         if is_literal_term(new_head) && is_literal_group(new_tail)
         | literal_group(sequence_append_syntax(extract_literal(new_head), extract_literal(new_tail)))
         | 'sequence_append_syntax($new_head, $new_tail)'
     | ~else: literal_group(stxs)
 
-  def escape_term(stxs):
+  fun escape_term(stxs):
     match stxs
     | '($(g :: Group), ...)':
         nested([g, ...], parens_syntax, 'parens_syntax', stxs)
@@ -102,7 +102,7 @@ meta:
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
     | '$(id :: Id_Op)':
-        val mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
+        def mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Transformer(proc):
             'relocate_expansion($(proc(id)),
@@ -110,10 +110,10 @@ meta:
         | ~else: literal_term(stxs)
     | ~else: literal_term(stxs)
 
-  def adjust_spaces(head, tail):
+  fun adjust_spaces(head, tail):
     match '$head'
     | '$(id :: Id_Op)':
-        val mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
+        def mv: Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Spacer(proc):
             proc(head, tail, '$$')                
@@ -135,7 +135,7 @@ expr.macro
     values('#{typeset-rhombus}($(escape_group(forms)))',
            '$main_tail ...')
 | 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
-    val kw: Syntax.unwrap(kw_stx)
+    def kw: Syntax.unwrap(kw_stx)
     if (kw === keyword(~var)
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
@@ -156,7 +156,7 @@ expr.macro 'rhombusblock $tail ...':
   fun finish(options, fin_tail):
     match fin_tail
     | ': $_':
-        val [opt, ...]: options
+        def [opt, ...]: options
         values('#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))', '')
     | ~else: Syntax.error("expected a block", '$me $tail ...')
   fun check_options(options):

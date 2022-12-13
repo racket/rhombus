@@ -92,7 +92,7 @@ Here are all of the implicit forms:
 @examples(
  (1+2),
  #{#%parens} (1+2),
- val (x): 1+2,
+ def (x): 1+2,
  x
 )
  

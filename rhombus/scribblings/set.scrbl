@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val set_eval: make_rhombus_eval())
+@(def set_eval: make_rhombus_eval())
 
 @title(~tag: "set"){Sets}
 
@@ -19,13 +19,13 @@ set. The @rhombus(++) operator effectively unions sets.
 @(demo:
     ~eval: set_eval
     ~defn:
-      val friends: {"alice", "bob", "carol"}
+      def friends: {"alice", "bob", "carol"}
     ~repl:
       if friends["alice"] && friends["carol"]
       | "I know both"
       | "Who are they?"
     ~defn:
-      val new_friends: friends ++ {"david"}
+      def new_friends: friends ++ {"david"}
     ~repl:
       new_friends["david"]
       friends["david"]

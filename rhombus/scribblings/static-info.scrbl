@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def meta(s): italic(s))
+@(fun meta(s): italic(s))
 
 @title(~tag: "static-info"){Defining and Using Static Information}
 
@@ -175,10 +175,10 @@ More rules about static information in general:
    provider. The same applies to a @rhombus(def) form that behaves like a
    @rhombus(fun) definition form.},
 
-  @item{When the right-hand side of a @rhombus(val), @rhombus(def), or @rhombus(let) has a single
+  @item{When the right-hand side of a @rhombus(def) or @rhombus(let) has a single
    group, and when that goes does not start with a definition-form
    name, then static information from that right-hand side expression
-   is propagated to the binding side. For example, @rhombus(val p: Posn(1, 2))
+   is propagated to the binding side. For example, @rhombus(def p: Posn(1, 2))
    associated that static information of @rhombus(Posn(1, 2)) with @rhombus(p), which
    among other things means that @rhombus(p.x) will be allowed.}
 

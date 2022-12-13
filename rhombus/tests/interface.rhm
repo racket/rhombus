@@ -22,7 +22,7 @@ check:
     override area(): 33
     override sides(): 100
 
-  val a: ApproxCircle()
+  def a: ApproxCircle()
 
   [a.area(),
    a.sides(),
@@ -69,7 +69,7 @@ check:
     implements Shape
     implements Cowboy
     override draw(): "bullseye"
-  val l: LoneRanger()
+  def l: LoneRanger()
   [l.draw(), (l -: Shape).draw(), (l -: Cowboy).draw()]
   ["bullseye", "bullseye", "bullseye"]
 
@@ -125,7 +125,7 @@ check:
   class Sum(x):
     private implements Adder
     private override total(): x
-  val s: Sum(20)
+  def s: Sum(20)
   [s is_a Adder,
    s is_a _Adder,
    (s -: _Adder).total()]
@@ -190,7 +190,7 @@ check:
     override legs(): 4
     override horns(): 2
     private override seat(): 1
-  val m: MilkShed()
+  def m: MilkShed()
   check:
     ~exn
     (m -: Stool).seat()

@@ -9,7 +9,7 @@
          "parse.rkt"
          "parsed.rkt"
          "pack.rkt"
-         (only-in "value.rkt" val)
+         (only-in "def+let.rkt" def)
          (rename-in "ellipsis.rkt"
                     [... rhombus...]))
 
@@ -89,7 +89,7 @@
           #:datum-literals (group block)
           [(group #:attr attr::attribute-lhs (block in-block ...))
            (values
-            (cons #`(group val attr.id (block in-block ...)) body-forms)
+            (cons #`(group def attr.id (block in-block ...)) body-forms)
             (cons (pattern-variable #'attr.id #'attr.id (syntax-e #'attr.depth) (quote-syntax unpack-element*)) attrs))]
           [other
            (values (cons #'other body-forms) attrs)])))

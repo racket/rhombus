@@ -3,9 +3,9 @@
     "common.rhm" open
     "macro.rhm")
 
-@(val macro_eval: macro.make_macro_eval())
+@(def macro_eval: macro.make_macro_eval())
 
-@(val dollar: @rhombus($))
+@(def dollar: @rhombus($))
 
 @title{For Clause Macros}
 
@@ -36,7 +36,7 @@
 @examples(
   ~eval: macro_eval,
   for_clause.macro 'each_in_three $id':
-    'val three: 3
+    'def three: 3
      each $id: 0..three',
   for List:
     each_in_three i

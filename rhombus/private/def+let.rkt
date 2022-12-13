@@ -15,14 +15,14 @@
          "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt")
 
-(provide val
+(provide def
          (rename-out [rhombus-let let]))
 
 (module+ for-define
   (provide (for-syntax build-value-definitions
                        build-values-definitions)))
 
-(define-for-syntax (make-val #:wrap-definition [wrap-definition values]
+(define-for-syntax (make-def #:wrap-definition [wrap-definition values]
                              #:check-context [check-context void])
   (definition-transformer
     (lambda (stx)
@@ -40,11 +40,11 @@
                                   #'rhs
                                   wrap-definition)]))))
 
-(define-syntax val
-  (make-val))
+(define-syntax def
+  (make-def))
 
 (define-syntax rhombus-let
-  (make-val #:wrap-definition (lambda (defn) #`(rhombus-forward #,defn))
+  (make-def #:wrap-definition (lambda (defn) #`(rhombus-forward #,defn))
             #:check-context (lambda (stx)
                               (when (eq? (syntax-local-context) 'top-level)
                                 (raise-syntax-error #f

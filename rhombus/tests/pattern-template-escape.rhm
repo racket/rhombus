@@ -90,8 +90,8 @@ check:
   ~print
   //  macro that acts as a template form
   expr.rule '$x =+= $y': '('$('$')$x + $('$')$y')'
-  val a: '3'
-  val b: '4'
+  def a: '3'
+  def b: '4'
   a =+= b
   '3 + 4'
 

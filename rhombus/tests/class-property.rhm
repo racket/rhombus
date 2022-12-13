@@ -19,7 +19,7 @@ begin:
     final property is_origin_dont_ask_again():
       is_origin()
   check:
-    val p: Posn(1, 2)
+    def p: Posn(1, 2)
     [p.is_origin,
      p.is_at_origin(),
      p.at_this_origin(),
@@ -34,7 +34,7 @@ begin:
     [dynamic(Posn(0, 0)).is_origin,
      dynamic(Posn(0, 0)).is_at_origin(),
      begin:
-       val proc: Posn(0, 1).is_at_origin
+       def proc: Posn(0, 1).is_at_origin
        proc(),
      dynamic(Posn(0, 0)).is_origin_dont_ask_again]
     [#true, #true, #false, #true]
@@ -50,7 +50,7 @@ begin:
     override property is_origin():
       z == 0 && super.is_origin()
   check:
-    val p: Posn3D(0, 0, 0)
+    def p: Posn3D(0, 0, 0)
     [p.is_origin,
      begin:
        use_dynamic
@@ -118,7 +118,7 @@ begin:
     private method is_at_origin():
       is_origin()
   check:
-    val p: _Posn(0, 0)
+    def p: _Posn(0, 0)
     [p.is_origin,
      p.is_at_origin()]
     [#true, #true]
@@ -131,7 +131,7 @@ begin:
     override property is_origin():
       x == 0 && y == 0
   check:
-    val p :: Pointy: Posn(0, 0)
+    def p :: Pointy: Posn(0, 0)
     [p.is_origin]
     [#true]
 

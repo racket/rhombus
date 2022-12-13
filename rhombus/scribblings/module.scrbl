@@ -21,11 +21,11 @@ module, then its value gets printed out.
  you can run Rhombus modules in DrRacket or by supplying the file path to
  @exec{racket} on the command line.}
 
-The ways to define names in a module include @rhombus(val) and
-@rhombus(fun). The @rhombus(val) form defines an immutable variable, and
+The ways to define names in a module include @rhombus(def) and
+@rhombus(fun). The @rhombus(def) form defines an immutable variable, and
 it expects an identifier to define followed by a block. The
 @rhombus(fun) form defines a function when it see an identifier,
-parentheses around argument names, and then a block. Function calls has
+parentheses around argument names, and then a block. Function calls have
 the usual shape: a function name (or, more generally, an expression that
 produces a function) followed by comma-separated arguments in
 parentheses.
@@ -33,7 +33,7 @@ parentheses.
 @(rhombusblock:
     #lang rhombus
 
-    val fahrenheit_freezing: 32
+    def fahrenheit_freezing: 32
                              
     fun fahrenheit_to_celsius(f):
       (f - 32) * 5/9
@@ -71,7 +71,7 @@ definitions.
       fahrenheit_freezing
       fahrenheit_to_celsius
 
-    val fahrenheit_freezing: 32
+    def fahrenheit_freezing: 32
 
     fun fahrenheit_to_celsius(f):
       (f - 32) * 5/9)
@@ -135,7 +135,7 @@ are shown with a leading @litchar{> } prompt and the expected result.
 
 @(demo:
     ~defn:
-      val fahrenheit_freezing: 32
+      def fahrenheit_freezing: 32
       fun fahrenheit_to_celsius(f):
         (f - 32) * 5/9
     ~repl:

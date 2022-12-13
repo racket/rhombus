@@ -37,7 +37,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
       match g
       | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
       | ~else: ht
-  val vars -: Map:
+  def vars -: Map:
     extract_rhs_metavariables(
       [rhs, ...],
       extract_metavariables(
@@ -45,8 +45,8 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
         extract_metavariables(
           [lhs, ...],
           {})))
-  val [id, ...]: vars.values()
-  val [name_str, ...]: for List:
+  def [id, ...]: vars.values()
+  def [name_str, ...]: for List:
                          each name: [name, ...]
                          "" +& name.unwrap()
   values('«begin:

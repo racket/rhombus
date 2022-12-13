@@ -3,8 +3,8 @@
     "common.rhm" open 
     "macro.rhm")
 
-@(val dots: @rhombus(..., ~bind))
-@(def list(x, ...): [x, ...])
+@(def dots: @rhombus(..., ~bind))
+@(fun list(x, ...): [x, ...])
 
 @title{Syntax Classes}
 

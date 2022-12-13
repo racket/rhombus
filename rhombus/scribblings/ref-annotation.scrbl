@@ -24,7 +24,7 @@
  be bound satisfies @rhombus(annotation).
 
 @examples(
-  val x :: List: [1, 2, 3]
+  def x :: List: [1, 2, 3]
 )
 
 }
@@ -60,8 +60,8 @@
  @rhombus(::, ~bind), but performs no run-time check.
 
 @examples(
-  val x -: List: [1, 2, 3],
-  val x -: List: "oops"
+  def x -: List: [1, 2, 3],
+  def x -: List: "oops"
 )
 
 }
@@ -91,8 +91,8 @@
  match.
 
 @examples(
-  val x :: matching([_, 10]): [9, 10],
-  ~error: val y :: matching([_, 10]): [9, 11]
+  def x :: matching([_, 10]): [9, 10],
+  ~error: def y :: matching([_, 10]): [9, 11]
 )
 
 }

@@ -16,7 +16,7 @@
 @examples(
  [1, 2, 3].length(),
  class Posn(x, y),
- val p: Posn(1, 2),
+ def p: Posn(1, 2),
  p.x
 )
 

@@ -1,8 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@(val dots: @rhombus(..., ~bind))
-@(val dots_expr: @rhombus(...))
+@(def dots: @rhombus(..., ~bind))
+@(def dots_expr: @rhombus(...))
 
 @title{Lists}
 
@@ -45,7 +45,7 @@ to append lists.
  @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
 
 @examples(
-  val lst: List(1, 2, 3),
+  def lst: List(1, 2, 3),
   lst,
   lst[0],
   lst ++ [4, 5],
@@ -72,13 +72,13 @@ to append lists.
  @see_implicit(@rhombus(#{#%brackets}, ~bind), @rhombus([]), "binding")
 
 @examples(
-  val List(1, x, y): [1, 2, 3],
+  def List(1, x, y): [1, 2, 3],
   y,
-  val [1, also_x, also_y]: [1, 2, 3],
+  def [1, also_x, also_y]: [1, 2, 3],
   also_y,
-  val List(1, & xs): [1, 2, 3],
+  def List(1, & xs): [1, 2, 3],
   xs,
-  val List(1, x, ...): [1, 2, 3],
+  def List(1, x, ...): [1, 2, 3],
   [x, ...]
 )
 
@@ -140,7 +140,7 @@ to append lists.
  rest of the list.
 
 @examples(
-  val List.cons(x, y): [1, 2, 3],
+  def List.cons(x, y): [1, 2, 3],
   x,
   y
 )

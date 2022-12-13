@@ -182,10 +182,10 @@ which matches only things that are fruits according to @rhombus(is_fruit):
     fun is_fruit(v):
       v == "apple" || v == "banana"
 
-    val fruit(snack): "apple"
+    def fruit(snack): "apple"
     snack // prints "apple"
 
-    // val fruit(dessert): "cookie"  // would fail with a match error
+    // def fruit(dessert): "cookie"  // would fail with a match error
   )
 
 The @rhombus(fruit) binding form assumes (without directly checking)
@@ -220,13 +220,13 @@ form. A builder must be used in tail position, and it's
                        ($a, $b))')
 
     bind.infoer 'anding_infoer($static_info, ($a, $b))':
-      val a_info: bind_meta.get_info(a, static_info)
-      val b_info: bind_meta.get_info(b, static_info)
-      val '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
+      def a_info: bind_meta.get_info(a, static_info)
+      def b_info: bind_meta.get_info(b, static_info)
+      def '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
         bind_meta.unpack_info(a_info)
-      val '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
+      def '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
         bind_meta.unpack_info(b_info)
-      val ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
+      def ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
       '($ann,
         $a_name,
         ($a_s_info, ..., $b_s_info, ...),
@@ -237,25 +237,25 @@ form. A builder must be used in tail position, and it's
 
     bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
                                  $IF, $success, $failure)':
-      val '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_meta.unpack_info(a_info)
-      val '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_meta.unpack_info(b_info)
+      def '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_meta.unpack_info(a_info)
+      def '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_meta.unpack_info(b_info)
       '$a_matcher($in_id, $a_data, $IF,
                   $b_matcher($in_id, $b_data, $IF, $success, $failure),
                   $failure)'
 
     bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
-      val '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
-      val '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
+      def '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
+      def '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
       '$a_binder($in_id, $a_data)
        $b_binder($in_id, $b_data)'
 
-    val one <&> 1: 1
+    def one <&> 1: 1
     one  // prints 1
     // value two <&> 1: 2 // would fail, since 2 does not match 1
 
     class Posn(x, y)
 
-    val Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
+    def Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
     x  // prints 0
     y  // prints 1
   )

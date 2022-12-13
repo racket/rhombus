@@ -58,8 +58,8 @@ as part of their grammar:
 @examples(
   namespace math:
     export: pi tau
-    val pi: 3.14
-    val tau: 6.28,
+    def pi: 3.14
+    def tau: 6.28,
   math.pi,
   begin:
     import: .math open

@@ -3,11 +3,11 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val posn_eval: make_rhombus_eval())
+@(def posn_eval: make_rhombus_eval())
 
 @title(~tag: "classes_and_patterns"){Classes and Patterns}
 
-In the same way that @rhombus(val) and @rhombus(fun) defines a variable
+In the same way that @rhombus(fun) and @rhombus(fun) defines a variable
 or function, @rhombus(class) defines a new class. By convention, class
 names start with a capital letter.
 
@@ -23,7 +23,7 @@ extracts the field value from the instance.
 @(demo:
     ~eval: posn_eval
     ~defn:
-      val origin: Posn(0, 0)
+      def origin: Posn(0, 0)
     ~repl:
       origin
       origin.x
@@ -98,12 +98,12 @@ arguments of an exported function.
 
 The use of @rhombus(-:, ~bind) or @rhombus(::, ~bind) as above is not specific to
 @rhombus(fun). The @rhombus(-:, ~bind) and @rhombus(::, ~bind) binding operators work
-in any binding position, including the one for @rhombus(val):
+in any binding position, including the one for @rhombus(def):
 
 @(demo:
     ~eval: posn_eval
     ~defn:
-      val (flipped -: Posn):  flip(Posn(1, 2))
+      def (flipped -: Posn):  flip(Posn(1, 2))
     ~repl:
       flipped.x
   )
@@ -185,30 +185,7 @@ with a @rhombus(::) result annotation.
       ~error: checked_same_posn(5)
   )
 
-The @rhombus(def) form is a kind of do-what-I-mean form that acts like
-@rhombus(val), @rhombus(fun), or certain other definition forms
-depending on the shape of the terms after @rhombus(def). It’s sensitive
-to binding forms, though, so it will not treat the immediate use of a
-pattern constructor as a function definition.
-
-@(demo:
-    ~eval: posn_eval
-    ~defn:
-      def pin: Posn(3, 4)
-    ~defn:
-      def distance(Posn(x, y), Posn(x2, y2)):
-        def dx: x2-x
-        def dy: y2-y
-        sqrt(dx*dx + dy*dy)
-    ~repl:
-      distance(origin, pin)
-    ~defn:
-      def Posn(pin_x, pin_y): pin
-    ~repl:
-      pin_x
-  )
-
-The @rhombus(let) form is like @rhombus(val), but it makes bindings
+The @rhombus(let) form is like @rhombus(def), but it makes bindings
 available only @emph{after} the definition, and it shadows any binding
 before, which is useful for binding a sequence of results to the same
 name. The @rhombus(let) form does not change the binding region of other

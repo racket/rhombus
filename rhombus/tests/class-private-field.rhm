@@ -28,8 +28,8 @@ check:
   class Posn(x, y, private color = "blue"):
     method get_color():
       color
-  val p: Posn(1, 2)
-  val Posn(px, py): p
+  def p: Posn(1, 2)
+  def Posn(px, py): p
   [p.x, p.y, p.get_color(),
    px, py,
    p is_a Posn.of(Integer, Integer)]
@@ -45,10 +45,10 @@ check:
     private method secret():
       [color]
     internal _Posn
-  val p: Posn(1, 2)
-  val _p: _Posn(-1, -2, "red")
-  val Posn(px, py): p
-  val _Posn(_px, _py, _pcolor): p
+  def p: Posn(1, 2)
+  def _p: _Posn(-1, -2, "red")
+  def Posn(px, py): p
+  def _Posn(_px, _py, _pcolor): p
   [p.x, p.y, p.get_color(),
    _p.x, _p.y, _p.get_color(),
    px, py,
@@ -77,9 +77,9 @@ check:
     extends Posn
     method get_weight():
       weight
-  val p3: Posn3D(1, 2, 3)
-  val Posn(px, py): p3
-  val Posn3D(px3, py3, pz3): p3
+  def p3: Posn3D(1, 2, 3)
+  def Posn(px, py): p3
+  def Posn3D(px3, py3, pz3): p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -100,9 +100,9 @@ check:
   class Posn3D(z):
     nonfinal
     extends Posn
-  val p3: Posn3D(1, 2, 3)
-  val Posn(px, py): p3
-  val Posn3D(px3, py3, pz3): p3
+  def p3: Posn3D(1, 2, 3)
+  def Posn(px, py): p3
+  def Posn3D(px3, py3, pz3): p3
   [p3.x, p3.y, p3.get_color(), p3.z,
    px, py,
    px3, py3, pz3,
@@ -127,9 +127,9 @@ check:
       super(x, y)("heavy", z)
     method get_weight():
       weight
-  val p3: Posn3D(1, 2, 3)
-  val Posn(px, py): p3
-  val Posn3D(px3, py3, pz3): p3
+  def p3: Posn3D(1, 2, 3)
+  def Posn(px, py): p3
+  def Posn3D(px3, py3, pz3): p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -149,11 +149,11 @@ check:
     constructor (x, y):
       super(x, "red", y)
     binding:
-      rule | 'Posn{$x, $y}': '_Posn($x, _, $y)'
-           | 'Posn[$c]{$x, $y}': '_Posn($x, $c, $y)'
+      rule | '(){$x, $y}': '_Posn($x, _, $y)'
+           | '()[$c]{$x, $y}': '_Posn($x, $c, $y)'
     annotation:
-      rule | 'Posn $dot of{$x, $y}': '_Posn.of($x, Any, $y)'
-           | 'Posn' : '_Posn'
+      rule | '() $dot of{$x, $y}': '_Posn.of($x, Any, $y)'
+           | '()' : '_Posn'
   class Posn3D(private weight, z):
     nonfinal
     extends Posn
@@ -163,12 +163,12 @@ check:
     method get_weight():
       weight
     binding 'Posn3D{$x, $y, $z}': 'Posn{$x, $y} && _Posn3D(_, $z)'
-    annotation:
-      rule | 'Posn3D $dot of{$x, $y, $z}': 'Posn.of{$x, $y} && _Posn3D.of(Any, $z)'
-           | 'Posn3D' : '_Posn3D'      
-  val p3: Posn3D(1, 2, 3)
-  val Posn{px, py}: p3
-  val Posn3D{px3, py3, pz3}: p3
+    annotation
+    | 'Posn3D $dot of{$x, $y, $z}': 'Posn.of{$x, $y} && _Posn3D.of(Any, $z)'
+    | 'Posn3D' : '_Posn3D'      
+  def p3: Posn3D(1, 2, 3)
+  def Posn{px, py}: p3
+  def Posn3D{px3, py3, pz3}: p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -183,8 +183,8 @@ check:
     constructor (x, y):
       super(x, y, 10)
     internal _Posn
-  val p: Posn(1, 2)
-  val Posn(x, y): p
+  def p: Posn(1, 2)
+  def Posn(x, y): p
   [_Posn.stamp(p),
    (p -: _Posn).stamp]
   [10, 10]

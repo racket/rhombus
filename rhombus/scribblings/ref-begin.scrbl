@@ -17,7 +17,7 @@
     1
     2,
   begin:
-    val one: 1
+    def one: 1
     one + one
 )
 

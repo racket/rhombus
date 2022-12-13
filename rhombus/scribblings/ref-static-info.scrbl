@@ -91,12 +91,12 @@
 }
 
 @doc(
-  val statinfo_meta.call_result_key,
-  val statinfo_meta.ref_result_key,
-  val statinfo_meta.map_ref_key,
-  val statinfo_meta.map_set_key,
-  val statinfo_meta.map_append_key,
-  val statinfo_meta.dot_provider_key
+  def statinfo_meta.call_result_key,
+  def statinfo_meta.ref_result_key,
+  def statinfo_meta.map_ref_key,
+  def statinfo_meta.map_set_key,
+  def statinfo_meta.map_append_key,
+  def statinfo_meta.dot_provider_key
 ){
 
  @provided_meta()

@@ -11,7 +11,7 @@ export:
   close_eval
 
 fun make_macro_eval():
-  val macro_eval: manual.make_rhombus_eval()
+  def macro_eval: manual.make_rhombus_eval()
   @examples(
     ~eval: macro_eval,
     ~hidden: #true,
@@ -20,7 +20,7 @@ fun make_macro_eval():
   macro_eval
 
 fun make_for_meta_eval():
-  val meta_eval: manual.make_rhombus_eval()
+  def meta_eval: manual.make_rhombus_eval()
   @examples(
     ~eval: meta_eval,
     ~hidden: #true,

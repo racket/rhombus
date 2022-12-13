@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val subclass_eval: make_rhombus_eval())
+@(def subclass_eval: make_rhombus_eval())
 
 @title(~tag: "subclass"){Subclasses}
 
@@ -42,7 +42,7 @@ included before new fields in the subclass's constructor:
 @(demo:
     ~eval: subclass_eval
     ~repl:
-      val p: Posn3D(1, 2, 3)
+      def p: Posn3D(1, 2, 3)
       p
       p.y
       p is_a Posn
@@ -66,7 +66,7 @@ needed in an interface.
       class Square(side):
         implements: Shape Dance
     ~repl:
-      val s: Square(10)
+      def s: Square(10)
       s is_a Shape
       s is_a Dance
   )

@@ -3,7 +3,7 @@ import:
   "check.rhm" open
 
 begin:
-  val mutable accum: []
+  def mutable accum: []
   check:
     for:
       each i: 0..2
@@ -54,7 +54,7 @@ check:
 
 check:
   for List:
-    val len: 2
+    def len: 2
     each:
       i: 0..len
       j: 0..len
@@ -64,7 +64,7 @@ check:
 check:
   for List:
     each i: 0..2
-    val i_plus: i+1
+    def i_plus: i+1
     each j: 0..2
     [i_plus, -j-1]
   [[1, -1], [1, -2], [2, -1], [2, -2]]
@@ -72,7 +72,7 @@ check:
 check:
   for List:
     each i: 0..2
-    val i_len: i+1
+    def i_len: i+1
     each j: 0..i_len
     [i, -j-1]
   [[0, -1], [1, -1], [1, -2]]
@@ -120,8 +120,8 @@ check:
 check:
   for values(sum = 0):
     each i: 0..8
-    val new_sum: sum + i
+    def new_sum: sum + i
     final_when i == 4
-    val result: new_sum + 1
+    def result: new_sum + 1
     result
   15

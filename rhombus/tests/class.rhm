@@ -5,7 +5,7 @@ use_static
   
 check:
   class Posn(x, y)
-  val p: Posn(1, 2)
+  def p: Posn(1, 2)
   [p is_a Posn, p.x, p.y]
   [#true, 1, 2]
 
@@ -37,8 +37,8 @@ check:
 
 check:
   class Posn(~x, y)
-  val p: Posn(~x: 1, 2)
-  val p2: Posn(2, ~x: 1)
+  def p: Posn(~x: 1, 2)
+  def p2: Posn(2, ~x: 1)
   [p.x, p.y, p2.x, p2.y]
   [1, 2, 1, 2]
 
@@ -47,8 +47,8 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-  val p: Posn3D(~x: 1, 2, 3)
-  val p2: Posn3D(2, 3, ~x: 1)
+  def p: Posn3D(~x: 1, 2, 3)
+  def p2: Posn3D(2, 3, ~x: 1)
   [p.x, p.y, p.z, p2.x, p2.y, p2.z]
   [1, 2, 3, 1, 2, 3]
 
@@ -57,8 +57,8 @@ check:
     nonfinal
   class Posn3D(~z):
     extends Posn
-  val p: Posn3D(1, 2, ~z: 3)
-  val p2: Posn3D(~z: 3, 1, 2)
+  def p: Posn3D(1, 2, ~z: 3)
+  def p2: Posn3D(~z: 3, 1, 2)
   [p.x, p.y, p.z, p2.x, p2.y, p2.z]
   [1, 2, 3, 1, 2, 3]
 
@@ -67,8 +67,8 @@ check:
     nonfinal
   class Posn3D(~z: zz):
     extends Posn
-  val p: Posn3D(~x: 1, 2, ~z: 3)
-  val p2: Posn3D(~z: 3, 2, ~x: 1)
+  def p: Posn3D(~x: 1, 2, ~z: 3)
+  def p2: Posn3D(~z: 3, 2, ~x: 1)
   [p.x, p.y, p.zz, p2.x, p2.y, p2.zz]
   [1, 2, 3, 1, 2, 3]
 
@@ -77,7 +77,7 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-  val p: Posn3D(1, 2, 3)
+  def p: Posn3D(1, 2, 3)
   [p is_a Posn, p is_a Posn3D, p.x, p.y, p.z,
    Posn(1, 2) is_a Posn3D]
   [#true, #true, 1, 2, 3,
@@ -87,7 +87,7 @@ check:
   class Posn(x, y):
     constructor (z):
       super(z+1, z-1)
-  val p: Posn(1)
+  def p: Posn(1)
   [p.x, p.y]
   [2, 0]
 
@@ -98,7 +98,7 @@ check:
     extends Posn
     constructor (z):
       super(z+1, z+2)(z+3)
-  val p: Posn3D(1)
+  def p: Posn3D(1)
   [p.x, p.y, p.z]
   [2, 3, 4]
 
@@ -112,7 +112,7 @@ check:
     extends Posn3D
     constructor (z):
       super(z+1, z+2, z+3)(z+4)
-  val p: Posn4D(1)
+  def p: Posn4D(1)
   [p.x, p.y, p.z, p.w]
   [2, 3, 4, 5]
 
@@ -127,7 +127,7 @@ check:
     constructor:
       fun (z):
         super(z+1, z+2)(z+3)
-  val p: Posn3D(1)
+  def p: Posn3D(1)
   [p.x, p.y, p.z]
   [3, 2, 4]
 
@@ -149,7 +149,7 @@ check:
     constructor:
       fun (z):
         super(z+1)(z+5)
-  val p: Posn4D(1)
+  def p: Posn4D(1)
   [p.x, p.y, p.z, p.w]
   [4, 3, 5, 6]
 
@@ -170,8 +170,8 @@ check:
           super(z+1)(z+3)
       | (x, y, z):
           super(~x: x, ~y: y)(z)
-  val p: Posn3D(1)
-  val p2: Posn3D(10, 20, 30)
+  def p: Posn3D(1)
+  def p2: Posn3D(10, 20, 30)
   [p.x, p.y, p.z,
    p2.x, p2.y, p2.z]
   [2, 0, 4,
@@ -183,7 +183,7 @@ check:
     nonfinal
   class Posn3D(z):
     extends Posn
-  val p: dynamic(Posn3D(1, 2, 3))
+  def p: dynamic(Posn3D(1, 2, 3))
   [p.x, p.y, p.z]
   [1, 2, 3]
 
@@ -198,18 +198,18 @@ check:
         _Posn(x, y)
     binding:
       rule
-      | 'Posn($y, $x)':
+      | '()($y, $x)':
           '_Posn($x, $y)'
-      | 'Posn($v)':
+      | '()($v)':
           '_Posn($v, 0)'
     annotation:
       rule
-      | 'Posn.of($x, $y)':
+      | '().of($x, $y)':
           '_Posn.of($y, $x)'
-      | 'Posn': '_Posn'    
-  val p: Posn(0, 2)
-  val Posn(yy, xx): p
-  val Posn(a): p    
+      | '()': '_Posn'    
+  def p: Posn(0, 2)
+  def Posn(yy, xx): p
+  def Posn(a): p    
   [p.y, p.x, yy, xx, a,
    p is_a Posn,
    Posn(1, "2") is_a Posn.of(Integer, String)]
@@ -223,8 +223,8 @@ check:
     field w: 0
   class Posn3D(z):
     extends Posn
-  val p1: Posn(10, 20)
-  val p: Posn3D(1, 2, 3)
+  def p1: Posn(10, 20)
+  def p: Posn3D(1, 2, 3)
   [[p1.x, p1.y, p1.w],
    [p.x, p.y, p.w, p.z]]
   [[10, 20, 0],
@@ -236,8 +236,8 @@ check:
     field w: 0
   class Posn3D(z):
     extends Posn
-  val p1: Posn(20, ~x: -10)
-  val p: Posn3D(2, ~x: 1, 3)
+  def p1: Posn(20, ~x: -10)
+  def p: Posn3D(2, ~x: 1, 3)
   [[p1.x, p1.y, p1.w],
    [p.x, p.y, p.w, p.z]]
   [[-10, 20, 0],
@@ -251,10 +251,10 @@ check:
   class Posn3D(z):
     extends Posn
     internal _Posn3D
-  val p1: Posn(20, ~x: -10)
-  val p: Posn3D(2, ~x: 1, 3)
-  val ip1: _Posn(20, ~x: -10)
-  val ip: _Posn3D(2, ~x: 1)(3)
+  def p1: Posn(20, ~x: -10)
+  def p: Posn3D(2, ~x: 1, 3)
+  def ip1: _Posn(20, ~x: -10)
+  def ip: _Posn3D(2, ~x: 1)(3)
   fun get(p1 :: Posn, p :: Posn3D):
     [[p1.x, p1.y, p1.w],
      [p.x, p.y, p.w, p.z]]
@@ -270,8 +270,8 @@ check:
     constructor:
       fun(x, y, z):
         super(~x: 1, y)(z)
-  val p2: Posn(~x: 1, 2)
-  val p3: Posn3D(1, 2, 3)
+  def p2: Posn(~x: 1, 2)
+  def p3: Posn3D(1, 2, 3)
   [[p2.x, p2.y], [p3.x, p3.y, p3.z]]
   [[1, 2], [1, 2, 3]]
 
@@ -289,9 +289,9 @@ check:
     constructor:
       fun(x, y, z, w):
         super(x, y, z)(~w: w)
-  val p2: Posn(~x: 1, 2)
-  val p3: Posn3D(1, 2, 3)
-  val p4: Posn4D(1, 2, 3, 4)
+  def p2: Posn(~x: 1, 2)
+  def p3: Posn3D(1, 2, 3)
+  def p4: Posn4D(1, 2, 3, 4)
   [[p2.x, p2.y],
    [p3.x, p3.y, p3.z],
    [p4.x, p4.y, p4.z, p4.w]]
@@ -317,10 +317,10 @@ check:
     constructor:
       fun(x, y, z, w):
         super(x, ~y: y, z)(w)
-  val p2: Posn(~ex: 1, ~wy: 2)
-  val p3: Posn3D(1, ~y: 2, 3)
-  val _p3: _Posn3D(~ex: 1, ~wy: 2)(3)
-  val p4: Posn4D(1, 2, 3, 4)
+  def p2: Posn(~ex: 1, ~wy: 2)
+  def p3: Posn3D(1, ~y: 2, 3)
+  def _p3: _Posn3D(~ex: 1, ~wy: 2)(3)
+  def p4: Posn4D(1, 2, 3, 4)
   [[p2.x, p2.y],
    [p3.x, p3.y, p3.z],
    [_p3.x, _p3.y, _p3.z],
@@ -332,31 +332,31 @@ check:
 
 check:
   class Posn(x, y = 0)
-  val p: Posn(1)
+  def p: Posn(1)
   [p.x, p.y]
   [1, 0]
 
 check:
   class Posn(x, y = x):
     nonfinal
-  val p: Posn(1)
+  def p: Posn(1)
   [p.x, p.y]
   [1, 1]
 
 check:
   class Posn(~x, y = x):
     nonfinal
-  val p: Posn(~x: 1)
-  val p2: Posn(~x: -1, 2)
+  def p: Posn(~x: 1)
+  def p2: Posn(~x: -1, 2)
   [p.x, p.y, p2.x, p2.y]
   [1, 1, -1, 2]
 
 check:
   class Posn3D(~x = 10, y, ~z: z = x+y)
-  val p: Posn3D(2)
-  val p2: Posn3D(2, ~z: 3)
-  val p3: Posn3D(2, ~x: 3)
-  val p4: Posn3D(~z: 0, 2, ~x: 3)
+  def p: Posn3D(2)
+  def p2: Posn3D(2, ~z: 3)
+  def p3: Posn3D(2, ~x: 3)
+  def p4: Posn3D(~z: 0, 2, ~x: 3)
   [[p.x, p.y, p.z],
    [p2.x, p2.y, p2.z],
    [p3.x, p3.y, p3.z],
@@ -408,13 +408,13 @@ check:
   class Posn(mutable x :: Integer, y :: Integer):
     method m():
       x := 8
-  val p: Posn(2, 0)
+  def p: Posn(2, 0)
   [p.x, p.x := 5, p.x, p.y, p.m(), p.x]
   [2, #void, 5, 0, #void, 8]
 
 check:
   class Posn(x :: Integer, mutable y :: Integer)
-  val p: Posn(2, 0)
+  def p: Posn(2, 0)
   [p.y, p.y := 5, p.y, p.x]
   [0, #void, 5, 2]
 
@@ -434,10 +434,10 @@ check:
   class Posn4D(w):
     extends Posn3D
     nonfinal
-  val p: Posn4D(1, ~y: 2, 3, 6)
-  val Posn(a2, ~y: b2): p
-  val Posn3D(a3, ~y: b3, c3): p
-  val Posn4D(a4, ~y: b4, c4, d4): p
+  def p: Posn4D(1, ~y: 2, 3, 6)
+  def Posn(a2, ~y: b2): p
+  def Posn3D(a3, ~y: b3, c3): p
+  def Posn4D(a4, ~y: b4, c4, d4): p
   [[a2, b2],
    [a3, b3, c3],
    [a4, b4, c4, d4]]
@@ -453,10 +453,10 @@ check:
     extends Posn
     internal _Posn3D
     binding:
-      rule 'Posn3D($x, $y ..., $z)': 'Posn($x, ~y: $y ...) && _Posn3D($z)'
-  val p: Posn3D(1, ~y: 2, 3)
-  val Posn(a2, ~y: b2): p
-  val Posn3D(a3, b3, c3): p
+      rule '()($x, $y ..., $z)': 'Posn($x, ~y: $y ...) && _Posn3D($z)'
+  def p: Posn3D(1, ~y: 2, 3)
+  def Posn(a2, ~y: b2): p
+  def Posn3D(a3, b3, c3): p
   [[a2, b2],
    [a3, b3, c3]]
   [[1, 2],
@@ -468,23 +468,23 @@ check:
     nonfinal
     internal _Posn
     binding:
-      rule 'Posn(X $x, Y $y)': '_Posn($x, ~y: $y)'
+      rule '()(X $x, Y $y)': '_Posn($x, ~y: $y)'
   class Posn3D(z):
     extends Posn
     nonfinal
     internal _Posn3D
     binding:
-      rule 'Posn3D[$x, $y ..., $z]': 'Posn(X $x, Y $y ...) && _Posn3D($z)'
+      rule '()[$x, $y ..., $z]': 'Posn(X $x, Y $y ...) && _Posn3D($z)'
   class Posn4D(w):
     extends Posn3D
     nonfinal
     internal _Posn4D
     binding:
-      rule 'Posn4D($x, ~y: $y, $z, $w)': 'Posn3D[$x, $y, $z] && _Posn4D($w)'
-  val p: Posn4D(1, ~y: 2, 3, 6)
-  val Posn(X a2, Y b2): p
-  val Posn3D[a3, b3, c3]: p
-  val Posn4D(a4, ~y: b4, c4, d4): p
+      rule '()($x, ~y: $y, $z, $w)': 'Posn3D[$x, $y, $z] && _Posn4D($w)'
+  def p: Posn4D(1, ~y: 2, 3, 6)
+  def Posn(X a2, Y b2): p
+  def Posn3D[a3, b3, c3]: p
+  def Posn4D(a4, ~y: b4, c4, d4): p
   [[a2, b2],
    [a3, b3, c3],
    [a4, b4, c4, d4]]
@@ -502,7 +502,7 @@ check:
   class Posn4D(w):
     extends Posn3D
     nonfinal
-  val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+  def p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
   p :: Posn3D
@@ -520,9 +520,9 @@ check:
     extends Posn
     internal _Posn3D
     annotation:
-      rule | 'Posn3D.of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
-           | 'Posn3D': '_Posn3D'
-  val p: Posn3D(1, ~y: "2", symbol'three')
+      rule | '().of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
+           | '()': '_Posn3D'
+  def p: Posn3D(1, ~y: "2", symbol'three')
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
   p :: Posn3D
@@ -536,23 +536,23 @@ check:
     nonfinal
     internal _Posn
     annotation:
-      rule | 'Posn $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
-           | 'Posn': '_Posn'
+      rule | '() $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
+           | '()': '_Posn'
   class Posn3D(z):
     extends Posn
     nonfinal
     internal _Posn3D
     annotation:
-      rule | 'Posn3D $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
-           | 'Posn3D': '_Posn3D'
+      rule | '() $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
+           | '()': '_Posn3D'
   class Posn4D(w):
     extends Posn3D
     nonfinal
     internal _Posn4D
     annotation:
-      rule | 'Posn4D $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
-           | 'Posn4D': '_Posn4D'
-  val p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+      rule | '() $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
+           | '()': '_Posn4D'
+  def p: Posn4D(1, ~y: "2", symbol'three', keyword'~four')
   p :: Posn
   p :: Posn.of(X Integer, Y String)
   p :: Posn3D
@@ -567,14 +567,14 @@ check:
   class Car(make, model, private mpg):
     private field gas: 0
     constructor(make, model):
-      val [tank_size, mpg]: lookup_specs(make, model)
-      val car: super(make, model, mpg)
+      def [tank_size, mpg]: lookup_specs(make, model)
+      def car: super(make, model, mpg)
       car.gas := tank_size
       car
     method go(dist):
       gas := gas - dist/mpg
       gas
-  val c: Car("Mazda", "Miata")
+  def c: Car("Mazda", "Miata")
   c.go(100)
   8
 
@@ -586,7 +586,7 @@ check:
   "ok0"
 
 check:
-  val mutable n: 0
+  def mutable n: 0
   class Posn(x, y):
     field color: "red" +& begin: n := n + 1; n
   [Posn(1, 2).color, Posn(1, 2).color]

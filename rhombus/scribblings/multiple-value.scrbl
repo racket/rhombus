@@ -14,13 +14,13 @@ The @rhombus(values) form returns multiple values:
 When an expression in a module body returns multiple values, each one is
 printed, the same as in @litchar{#lang racket}.
 
-When the @rhombus(val) binding form is followed by parentheses with @math{N}
+When the @rhombus(def) binding form is followed by parentheses with @math{N}
 groups, then the right-hand side should produce @math{N} values, and each
 value is matched against the corresponding group.
 
 @(demo:
     ~defn:
-      val (n, s): values(1, "apple")
+      def (n, s): values(1, "apple")
     ~repl:
       n
       s

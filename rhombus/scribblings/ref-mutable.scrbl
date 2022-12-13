@@ -25,7 +25,7 @@
  @rhombus(identifier) must be bound with @rhombus(mutable, ~bind).
 
 @examples(
-  val mutable count: 0,
+  def mutable count: 0,
   count := count + 1,
   count
 )

@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val ann_eval: make_rhombus_eval())
+@(def ann_eval: make_rhombus_eval())
 
 @examples(
   ~eval: ann_eval,

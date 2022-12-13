@@ -3,9 +3,9 @@
     "common.rhm" open
     "macro.rhm")
 
-@(val macro_eval: macro.make_macro_eval())
+@(def macro_eval: macro.make_macro_eval())
 
-@(val dollar: @rhombus($))
+@(def dollar: @rhombus($))
 
 @title{Class and Interface Clause Macros}
 
@@ -39,12 +39,12 @@
     'private field result: #false
      method $id():
        result || (begin:
-                    val v: $body
+                    def v: $body
                     result := v
                     v)',
   class Person(name):
     lazy_method greeting(): "Hello, " +& name,
-  val ming: Person("Ming"),
+  def ming: Person("Ming"),
   ming.greeting(),
   ming.greeting() === ming.greeting()
 )

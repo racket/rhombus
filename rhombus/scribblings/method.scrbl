@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @title(~tag: "methods"){Methods}
 
@@ -58,7 +58,7 @@ that is overidden (usually in the overriding implementation), use
         override method mdist():
           super.mdist() + z
     ~repl:
-      val p: Posn3D(1, 2, 3)
+      def p: Posn3D(1, 2, 3)
       p
       p.mdist()             
       p.area()             

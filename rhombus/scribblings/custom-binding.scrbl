@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @title(~tag: "custom-binding"){Binding and Annotation}
 
@@ -51,8 +51,8 @@ and annotation expansion:
         | 'Sandwich':
             '_Sandwich'
     ~repl:
-      val blt: Sandwich("bacon", "lettuce", "tomato")
-      val Sandwich(top, _, _): blt
+      def blt: Sandwich("bacon", "lettuce", "tomato")
+      def Sandwich(top, _, _): blt
       top
       blt is_a Sandwich
       blt is_a Sandwich.of(Number)
@@ -88,9 +88,9 @@ operator or @rhombus(&&, ~annot) annotation operator.
         | 'Sub':
             '_Sub'
     ~repl:
-      val blt: Sub("bacon", "lettuce", "tomato",
+      def blt: Sub("bacon", "lettuce", "tomato",
                    ~inches: 6)
-      val Sub(~inches: len, stuff, ...): blt
+      def Sub(~inches: len, stuff, ...): blt
       len
       [stuff, ...]
       blt is_a Sub.of(String)

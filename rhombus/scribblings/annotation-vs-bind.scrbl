@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val ann_eval: make_rhombus_eval())
+@(def ann_eval: make_rhombus_eval())
 
 @examples(
   ~eval: ann_eval,
@@ -33,7 +33,7 @@ specialization, but the @rhombus(Map) binding pattern can.
         'List.of(matching({"name": (_ :: String),
                            "location": (_ :: Posn)}))'
 
-      val players :: PersonList:
+      def players :: PersonList:
         [{"name": "alice", "location": Posn(1, 2)},
          {"name": "bob", "location": Posn(3, 4)}]
   )

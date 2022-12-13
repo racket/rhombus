@@ -21,7 +21,7 @@ as other operations.
  Constructs a mutable array containing given arguments.
 
 @examples(
-  val a: Array(1, 2, 3),
+  def a: Array(1, 2, 3),
   a,
   a[0],
   a[0] := 0,
@@ -38,7 +38,7 @@ as other operations.
  each element matches its corresponding @rhombus(binding).
 
 @examples(
-  val Array(1, x, y): Array(1, 2, 3),
+  def Array(1, x, y): Array(1, 2, 3),
   y
 )
 

@@ -102,7 +102,7 @@ operator. These uses of square brackets are implemented by
  @rhombus({}) form, or @rhombus({key: value, ...}) for the function form.
 
 @examples(
-  val m: Map{"x": 1, "y": 2},
+  def m: Map{"x": 1, "y": 2},
   m,
   m["x"],
   Map(["x", 1], ["y", 2]),
@@ -128,11 +128,11 @@ operator. These uses of square brackets are implemented by
  @see_implicit(@rhombus(#{#%braces}, ~bind), @rhombus({}), "binding") 
 
 @examples(
-  val Map{"x": x, "y": y}: {"x": 1, "y": 2},
+  def Map{"x": x, "y": y}: {"x": 1, "y": 2},
   y,
-  val Map{"a": a}: {"a": 1, "b": 2, "c": 3},
+  def Map{"a": a}: {"a": 1, "b": 2, "c": 3},
   a,
-  val Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3},
+  def Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3},
   rst
 )
 
@@ -171,7 +171,7 @@ operator. These uses of square brackets are implemented by
  immutable maps.
 
 @examples(
-  val m: MutableMap{"x": 1, "y": 2},
+  def m: MutableMap{"x": 1, "y": 2},
   m,
   m["x"],
   m["x"] := 0,
@@ -202,7 +202,7 @@ operator. These uses of square brackets are implemented by
  Set update is handled similarly.
 
 @examples(
-  val m: {"x": 1, "y": 2},
+  def m: {"x": 1, "y": 2},
   m ++ {"x": 0},
   m,
   {1, 2, 3} ++ {"four", "five"},

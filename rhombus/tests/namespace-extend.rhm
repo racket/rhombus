@@ -4,10 +4,10 @@ import:
 
 namespace root:
   namespace trunk:
-    val name: "trunk"
+    def name: "trunk"
     export: name
-  val name: "root"
-  val trunk.side: "left"
+  def name: "root"
+  def trunk.side: "left"
   export: trunk name
 
 check:
@@ -24,7 +24,7 @@ check:
 
 check:
   namespace root.trunk.branch:
-    val name: "branch"
+    def name: "branch"
     export: name
   root.trunk.branch.name
   "branch"
@@ -42,8 +42,8 @@ check:
   root.trunk.f(" hi")
   "trunk hi"
 
-val root.ten: 10
-val root.trunk.seven: 7
+def root.ten: 10
+def root.trunk.seven: 7
 
 check:
   root.ten
@@ -81,12 +81,12 @@ check:
   [[1, 2]]
 
 check:
-  val root.name: "ROOT"
+  def root.name: "ROOT"
   root.name
   "ROOT"
 
 check:
-  val root.trunk.name: "TRUNK"
+  def root.trunk.name: "TRUNK"
   [root.name, root.trunk.name]
   ["root", "TRUNK"]
 
@@ -98,7 +98,7 @@ check:
 namespace route:
   export: trunc
   namespace trunc
-  val trunc.name: "trunc"
+  def trunc.name: "trunc"
 
 check:
   route.trunc.name
@@ -122,10 +122,10 @@ check:
 check:
   namespace math
   namespace ext1:
-    val math.e: 2.71
+    def math.e: 2.71
     export: math
   namespace ext2:
-    val math.d: "d"
+    def math.d: "d"
     export: math
   [ext1.math.e, ext2.math.d]
   [2.71, "d"]

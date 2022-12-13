@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val macro_eval: make_rhombus_eval())
+@(def macro_eval: make_rhombus_eval())
 
 @title(~tag: "expr-macro"){Expression Macros}
 
@@ -44,15 +44,14 @@ defined; otherwise, the second term must be unescaped, and an infix
 macro is defined.
 
 The @rhombus(expr.rule) form must be imported from
-@rhombusmodname(rhombus/meta), but @rhombus(def) behaves like
-@rhombus(expr.rule) when the part before @rhombus(:) is valid for
-@rhombus(expr.rule):
+@rhombusmodname(rhombus/meta), but @rhombus(rule) is available in just
+@rhombusmodname(rhombus):
 
 @(demo:
     ~defn:
       :
         // no import needed      
-        def 'thunk: $body':
+        rule 'thunk: $body':
           'fun (): $body'
     ~repl:
       (thunk: 1 + 3)()
@@ -66,7 +65,7 @@ this:
 @(demo:
     ~eval: macro_eval
     ~defn:
-      def '$a !':
+      rule '$a !':
         'factorial($a)'
     ~defn:
       fun
@@ -141,7 +140,7 @@ side before it’s left-hand side:
 
 @(demo:
     ~defn:
-      def '$a +<= $b':
+      rule '$a +<= $b':
         ~parsed_right
         '$b + $a'
     ~repl:
