@@ -405,10 +405,12 @@ check:
   "value does not match annotation"
 
 check:
-  class Posn(mutable x :: Integer, y :: Integer)
+  class Posn(mutable x :: Integer, y :: Integer):
+    method m():
+      x := 8
   val p: Posn(2, 0)
-  [p.x, p.x := 5, p.x, p.y]
-  [2, #void, 5, 0]
+  [p.x, p.x := 5, p.x, p.y, p.m(), p.x]
+  [2, #void, 5, 0, #void, 8]
 
 check:
   class Posn(x :: Integer, mutable y :: Integer)
@@ -571,6 +573,7 @@ check:
       car
     method go(dist):
       gas := gas - dist/mpg
+      gas
   val c: Car("Mazda", "Miata")
   c.go(100)
   8

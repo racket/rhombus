@@ -412,8 +412,7 @@
                         #,(datum->syntax #'here
                                          (list maybe-mutator-id #'obj-id id)
                                          #'head
-                                         #'head)
-                        #,id))
+                                         #'head)))
                    #'())])]
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
