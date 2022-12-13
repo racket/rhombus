@@ -518,7 +518,8 @@
                                                                                                      method-private))))))
                                            #f #f
                                            '(immutable-field-index ...)
-                                           #,(build-guard-expr fields
+                                           #,(build-guard-expr #'(super-field-name ...)
+                                                               fields
                                                                (syntax->list #'(field-predicate ...))
                                                                (map syntax-e
                                                                     (syntax->list #'(field-annotation-str ...)))))])

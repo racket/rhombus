@@ -603,3 +603,17 @@ check:
       p
   PosnUser(Posn(1, 2)).m()
   3
+
+begin:
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z :: Integer):
+    extends Posn
+  check:
+    ~exn
+    Posn3D(1, 2, "x")
+    "annotation"
+  check:
+    Posn3D("1", "2", 3)
+    Posn3D("1", "2", 3)
+  

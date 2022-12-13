@@ -94,10 +94,11 @@
                [static-infos (in-list static-infoss)])
       #`(#,acc #,static-infos))))
 
-(define-for-syntax (build-guard-expr fields predicates annotation-strs)
+(define-for-syntax (build-guard-expr super-fields fields predicates annotation-strs)
   (and (any-stx? predicates)
-       #`(lambda (#,@fields who)
-           (values #,@(for/list ([field (in-list fields)]
+       #`(lambda (#,@super-fields #,@fields who)
+           (values #,@super-fields
+                   #,@(for/list ([field (in-list fields)]
                                  [predicate (in-list predicates)]
                                  [annotation-str (in-list annotation-strs)])
                         (cond
