@@ -125,6 +125,7 @@
                                      []
                                      []
                                      []
+                                     []
                                      [super-name ...]))
               (build-interface-property internal-name
                                         #'(name prop:name name? name-ref

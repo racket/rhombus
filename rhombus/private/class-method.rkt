@@ -396,7 +396,7 @@
              (cdr t)))
       #hasheq()))
 
-(define-for-syntax (make-field-syntax id accessor-id maybe-mutator-id)
+(define-for-syntax (make-field-syntax id static-infos accessor-id maybe-mutator-id)
   (expression-transformer
    id
    (lambda (stx)
@@ -418,10 +418,11 @@
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
-           (values (datum->syntax #'here
-                                  (list accessor-id #'id)
-                                  #'head
-                                  #'head)
+           (values (wrap-static-info* (datum->syntax #'here
+                                                     (list accessor-id #'id)
+                                                     #'head
+                                                     #'head)
+                                      static-infos)
                    #'tail)])]))))
 
 (define-for-syntax (make-method-syntax id index/id result-id)
@@ -454,6 +455,7 @@
                                   names)
   (with-syntax ([(name name-instance name?
                        [field-name ...]
+                       [field-static-infos ...]
                        [name-field ...]
                        [maybe-set-name-field! ...]
                        [private-field-name ...]
@@ -488,6 +490,7 @@
                             (added-method-rhs-id added))
            (let ()
              (define-syntax field-name (make-field-syntax (quote-syntax field-name)
+                                                          (quote-syntax field-static-infos)
                                                           (quote-syntax name-field)
                                                           (quote-syntax maybe-set-name-field!)))
              ...

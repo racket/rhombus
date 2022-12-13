@@ -103,7 +103,10 @@
                                                             (let loop ([fields (class-desc-all-fields super)]
                                                                        [c+-fs super-constructor+-fields])
                                                               (cond
-                                                                [(null? c+-fs) fields]
+                                                                [(null? c+-fs) (for/list ([f (in-list fields)])
+                                                                                 (if (identifier? f)
+                                                                                     (build-field-init f)
+                                                                                     f))]
                                                                 [(identifier? (car fields))
                                                                  (cons (build-field-init (car fields)) (loop (cdr fields) c+-fs))]
                                                                 [else (cons (car c+-fs) (loop (cdr fields) (cdr c+-fs)))])))

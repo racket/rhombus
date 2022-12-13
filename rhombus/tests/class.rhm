@@ -588,3 +588,15 @@ check:
     field color: "red" +& begin: n := n + 1; n
   [Posn(1, 2).color, Posn(1, 2).color]
   ["red1", "red2"]
+
+// Make sure static info flows through field and method
+// references without `this.`
+check:
+  class Posn(x, y)
+  class PosnUser(p :: Posn):
+    method m():
+      p.x + get().y
+    method get() :: Posn:
+      p
+  PosnUser(Posn(1, 2)).m()
+  3

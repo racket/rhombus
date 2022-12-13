@@ -318,6 +318,7 @@
                               added-methods method-mindex method-names method-private
                               #'(name name-instance name?
                                       [field-name ... super-field-name ...]
+                                      [field-static-infos ... super-field-static-infos ...]
                                       [name-field ... super-name-field ...]
                                       [maybe-set-name-field! ... super-maybe-set-name-field! ...]
                                       [private-field-name ...]
