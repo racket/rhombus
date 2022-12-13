@@ -191,12 +191,16 @@ check:
     override horns(): 2
     private override seat(): 1
   val m: MilkShed()
+  check:
+    ~exn
+    (m -: Stool).seat()
+    "Stool"
   [m is_a Stool,
    m is_a _Stool,
    m is_a Cow,
    m.legs(),
    m.horns(),
-   (m -: Stool).seat()]   
+   (m -: _Stool).seat()]
   [#false, #true, #true,
    4, 2, 1]
 

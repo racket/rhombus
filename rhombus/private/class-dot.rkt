@@ -78,8 +78,9 @@
                                                                               ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable names)
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable internal-name names)
   (with-syntax ([(name name-instance name-ref
+                       internal-name-instance internal-name-ref
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
@@ -94,7 +95,12 @@
                       ...
                       ex ...))
         #'(define-dot-provider-syntax name-instance
-            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))))))
+            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))
+       (if internal-name
+           (list
+            #`(define-dot-provider-syntax internal-name-instance
+                (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
+           null)))))
 
 (define-for-syntax (method-static-entries method-mindex method-vtable name-ref-id final?)
   (for/fold ([names '()] [ids '()] [defns '()])

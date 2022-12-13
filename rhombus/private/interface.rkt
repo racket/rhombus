@@ -110,7 +110,10 @@
                      [(export ...) exs])
          (with-syntax ([internal-name-ref (if internal-name
                                               (temporary "~a-ref" #:name internal-name)
-                                              #'name-ref)])
+                                              #'name-ref)]
+                       [internal-name-instance (if internal-name
+                                                   (temporary "~a-instance" #:name internal-name)
+                                                   #'name-instance)])
            (define defns
              (append
               (if (eq? (syntax-local-context) 'top-level)
@@ -132,9 +135,11 @@
                                                 prop:internal-name internal-name? internal-name-ref))
               (build-interface-annotation internal-name
                                           #'(name name? name-instance
-                                                  internal-name?))
+                                                  internal-name? internal-name-instance))
               (build-interface-dot-handling method-mindex method-vtable
+                                            internal-name
                                             #'(name name-instance name-ref
+                                                    internal-name-instance internal-name-ref
                                                     [export ...]))
               (build-interface-desc parent-names
                                     method-mindex method-names method-vtable method-results
@@ -166,7 +171,7 @@
 
 (define-for-syntax (build-interface-annotation internal-name names)
   (with-syntax ([(name name? name-instance
-                       internal-name?)
+                       internal-name? internal-name-instance)
                  names])
     (append
      (if internal-name
@@ -174,7 +179,7 @@
            (list
             #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name)
                                                                              (quote-syntax internal-name?)
-                                                                             (quote-syntax ((#%dot-provider name-instance)))))))
+                                                                             (quote-syntax ((#%dot-provider internal-name-instance)))))))
          null)
      (list
       #`(define-annotation-syntax name (identifier-annotation (quote-syntax name)
@@ -212,7 +217,7 @@
                                    #`(quote-syntax #,internal-name))
                             (quote-syntax #,parent-names)
                             (quote-syntax prop:name)
-                            (quote-syntax internal-name-ref)
+                            (quote-syntax name-ref)
                             '#,method-shapes
                             (quote-syntax #,method-vtable)
                             '#,method-map
