@@ -50,7 +50,7 @@ check:
 
 check:
   begin:
-    val v: mcons(1, 2)
+    def v: mcons(1, 2)
     v == v
   #true
 
@@ -68,9 +68,9 @@ check:
   "hash-ref: no value found for key"
 
 begin:
-  val a: mcons(1, 2)
-  val b: mcons(1, 2)
-  val m: {a: "a", b: "b"}
+  def a: mcons(1, 2)
+  def b: mcons(1, 2)
+  def m: {a: "a", b: "b"}
   check:
     m[a]
     "a"
@@ -88,15 +88,15 @@ check:
 
 check:
   begin:
-    val v: mcons(1, 2)
+    def v: mcons(1, 2)
     {v}[v]
   #true
 
 begin:
-  val a: mcons(1, 2)
-  val b: mcons(1, 2)
-  val c: mcons(1, 2)
-  val s: {a, b}
+  def a: mcons(1, 2)
+  def b: mcons(1, 2)
+  def c: mcons(1, 2)
+  def s: {a, b}
   check:
     s[a]
     #true
@@ -115,8 +115,8 @@ check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
 check: {"a": 1, "b": 2}; Map{"b": 2, "a": 1}
 check: {"a": 1, "b": 2}; Map(["b", 2], ["a", 1])
 begin:
-  val a: mcons(1, 2)
-  val b: mcons(1, 2)
+  def a: mcons(1, 2)
+  def b: mcons(1, 2)
   check: {a: 1, b: 2}; {b: 2, a: 1}
   check: {a: 1} == {b: 1}; #false
 check:
@@ -152,7 +152,7 @@ def local_map: Map{symbol(alice): Posn(4, 5),
                    symbol(bob): Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  val p: neighborhood[who]
+  def p: neighborhood[who]
   p.x +& ", " +& p.y
 
 check:
@@ -174,7 +174,7 @@ check: {"a", "b"}; {"b", "a"}
 check: {"a", "b"}; Set{"b", "a"}
 check: {"a", "b"}; Set("b", "a")
 begin:
-  val a: mcons(1, 2)
-  val b: mcons(1, 2)
+  def a: mcons(1, 2)
+  def b: mcons(1, 2)
   check: {a, b}; {b, a}
   check: {a} == {b}; #false

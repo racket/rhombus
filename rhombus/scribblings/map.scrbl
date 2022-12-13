@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val map_eval: make_rhombus_eval())
+@(def map_eval: make_rhombus_eval())
 
 @examples(
   ~eval: map_eval,
@@ -22,7 +22,7 @@ for assignment.
 
 @(demo:
     ~defn:
-      val buckets: Array(1, 2, 3, 4)
+      def buckets: Array(1, 2, 3, 4)
     ~repl:
       buckets[0]
       buckets[1] := 5
@@ -44,7 +44,7 @@ which case it accepts keys paired with values in two-item lists:
 @(demo:
     ~eval: map_eval
     ~defn:
-      val neighborhood: Map(["alice", Posn(4, 5)],
+      def neighborhood: Map(["alice", Posn(4, 5)],
                             ["bob", Posn(7, 9)])
     ~repl:
       neighborhood["alice"]
@@ -59,7 +59,7 @@ itself, the expression will have to be in parentheses.)
 @(demo:
     ~eval: map_eval
     ~defn:
-      val neighborhood: {"alice": Posn(4, 5),
+      def neighborhood: {"alice": Posn(4, 5),
                          "bob": Posn(7, 9)}
     ~repl:
       neighborhood["alice"]
@@ -74,7 +74,7 @@ To functionally extend a map, use the @rhombus(++) append operator:
 @(demo:
     ~eval: map_eval
     ~defn:
-      val new_neighborhood: neighborhood ++ {"alice": Posn(40, 50)}
+      def new_neighborhood: neighborhood ++ {"alice": Posn(40, 50)}
     ~repl:
       new_neighborhood["alice"]
       neighborhood["alice"]
@@ -115,7 +115,7 @@ for keys and one for values:
     ~eval: map_eval
     ~defn:
       fun locale(who, neighborhood -: Map.of(String, Posn)):
-        val p: neighborhood[who]
+        def p: neighborhood[who]
         p.x +& ", " +& p.y
     ~repl:
       locale("alice", neighborhood)
@@ -135,7 +135,7 @@ using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 @(demo:
     ~eval: map_eval
     ~defn:
-      val locations: MutableMap{"alice": Posn(4, 5),
+      def locations: MutableMap{"alice": Posn(4, 5),
                                 "bob": Posn(7, 9)}
     ~repl:
       locations["alice"] := Posn(40, 50)
@@ -151,7 +151,7 @@ binds with lists. In a map @litchar("{")...@litchar("}") expression,
 @(demo:
     ~eval: map_eval
     ~defn:
-      val {"bob": bob_home, & others}: neighborhood
+      def {"bob": bob_home, & others}: neighborhood
     ~repl:
       others
       {& others, "clara": Posn(8, 2)}

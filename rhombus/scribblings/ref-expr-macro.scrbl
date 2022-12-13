@@ -3,9 +3,9 @@
     "common.rhm" open
     "macro.rhm")
 
-@(val macro_eval: macro.make_macro_eval())
+@(def macro_eval: macro.make_macro_eval())
 
-@(val dollar: @rhombus($))
+@(def dollar: @rhombus($))
 
 @title{Expression Macros}
 

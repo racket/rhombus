@@ -6,5 +6,5 @@ export:
   rename:
     List as ExList
 
-val alpha: "alpha"
-val beta: "beta"
+def alpha: "alpha"
+def beta: "beta"

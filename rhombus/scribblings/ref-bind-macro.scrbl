@@ -3,9 +3,9 @@
     "common.rhm" open
     "macro.rhm")
 
-@(val macro_eval: macro.make_macro_eval())
+@(def macro_eval: macro.make_macro_eval())
 
-@(val dollar: @rhombus($))
+@(def dollar: @rhombus($))
 
 @title{Binding Macros}
 
@@ -30,9 +30,9 @@
   ~eval: macro_eval,
   bind.rule 'many $ann as $id':
     '$id && [_ :: $ann, $('...')]',
-  val many Integer as tickets: [1, 2, 3],
+  def many Integer as tickets: [1, 2, 3],
   tickets,
-  ~error: val many String as names: "oops",
+  ~error: def many String as names: "oops",
 )
 
 }

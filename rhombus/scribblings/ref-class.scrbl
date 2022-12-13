@@ -666,8 +666,10 @@
  @rhombus(constructor, ~class_clause), the second two forms are shorthand
  for using a @rhombus(fun) @tech{entry point}. For each of
  @rhombus(binding, ~class_clause) and @rhombus(binding, ~class_clause),
- the @rhombus(pattern) and @rhombus(template) shorthands are the same us
- using a @rhombus(rule) entry point.
+ the @rhombus(pattern) and @rhombus(template) shorthands are similar to
+ using a @rhombus(rule) entry point, but an @rhombus(identifer) must be
+ presented instead of @rhombus(()) for the pattern, and @rhombus(identifer)
+ must match the name of the class being defined.
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form, then a use of new class's @rhombus(identifier_path, ~var) as a

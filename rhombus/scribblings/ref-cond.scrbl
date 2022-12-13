@@ -20,7 +20,7 @@
   | "yes"
   | "no",
   if 1+2 == 3
-  | val yep: "yes"
+  | def yep: "yes"
     yep
   | "no"
 )

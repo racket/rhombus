@@ -54,7 +54,7 @@ begin:
   | f(a): 1
   | f(): 2
   */
-  val f:
+  def f:
     let c0: fun(): 0
     let c1: fun(a): 1
     let c2: fun(): 2
@@ -78,7 +78,7 @@ begin:
   | f([] = []): 0
   | f(a): 1
   */
-  val f:
+  def f:
     let c0: fun(): 0
     let c1: fun(a): 1
     let c2: fun(): 2
@@ -103,7 +103,7 @@ begin:
   | (a): 1
   | (): 2
   */
-  val f:
+  def f:
     let c0: fun(rst): 0
     let c1: fun(a): 1
     let c2: fun(): 2
@@ -128,7 +128,7 @@ begin:
   | ([] = [], & rst): 0
   | (a): 1
   */
-  val f:
+  def f:
     let c0: fun(rst): 0
     let c1: fun(a): 1
     let c2: fun(): 2
@@ -183,7 +183,7 @@ check: pythag(~a: 3, ~b: 4, ~c: 6); #false
 begin:
   check: object_name(pythag); symbol(pythag)
   check: procedure_arity(pythag); 0
-  val values(req_kws, all_kws): procedure_keywords(pythag)
+  def values(req_kws, all_kws): procedure_keywords(pythag)
   check: req_kws; []
   check: all_kws; [keyword(~a), keyword(~b), keyword(~c)]
 

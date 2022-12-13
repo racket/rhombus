@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @title(~tag: "private-implement"){Private Implementation}
 

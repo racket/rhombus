@@ -9,8 +9,8 @@
 
 @(defn.macro 'def_dynamics $dynamic_dot $dynamic_ref':
     'import: meta_label: rhombus open
-     val $dynamic_dot: @rhombus(.)
-     val $dynamic_ref: @rhombus(#{#%ref})')
+     def $dynamic_dot: @rhombus(.)
+     def $dynamic_ref: @rhombus(#{#%ref})')
 @(def_dynamics dynamic_dot dynamic_ref)
 
 @title(~tag: "static-lib"){Rhombus Static by Default}

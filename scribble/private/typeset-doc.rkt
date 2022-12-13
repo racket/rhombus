@@ -27,7 +27,7 @@
          (only-in (submod rhombus/private/entry-point for-class)
                   in-entry-point-space)
          (only-in rhombus
-                  def val fun operator interface :: |.| $
+                  def fun operator interface :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
@@ -240,10 +240,10 @@
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
-    #:literals (def val fun interface operator :: defn |.| grammar rhombus-syntax $)
+    #:literals (def fun interface operator :: defn |.| grammar rhombus-syntax $)
     #:datum-literals (parens group op modifier class class_clause interface_clause entry_point quotes)
-    [(group (~or def fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
-    [(group (~or def val interface) (~var id (identifier-target space-name)) . _) #'id.name]
+    [(group (~or fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
+    [(group (~or def interface) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
     [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
     [(group _:operator-macro-head (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
@@ -260,12 +260,12 @@
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (def val fun operator :: |.| grammar specsubform)
+    #:literals (def fun operator :: |.| grammar specsubform)
     #:datum-literals (parens group op quotes)
-    [(group (~or def fun) (~var id (identifier-target space-name)) (parens g ...) . _)
+    [(group (~or fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
-    [(group (~or def val) (~var id (identifier-target space-name)) . _) vars]
+    [(group (~or def) (~var id (identifier-target space-name)) . _) vars]
     [(group (~or operator) (parens (group (op id) arg)) . _)
      (extract-binding-metavariables #'(group arg) vars)]
     [(group (~or operator) (parens (group arg0 (op id) arg1)) . _)
@@ -287,7 +287,7 @@
 
 (define-for-syntax (extract-binding-metavariables stx vars)
   (syntax-parse stx
-    #:literals (def val fun :: rhombus-=)
+    #:literals (:: rhombus-=)
     #:datum-literals (parens group op)
     [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
     [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
@@ -369,9 +369,9 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def val fun interface rhombus-syntax operator |.| |$| grammar)
+    #:literals (def fun interface rhombus-syntax operator |.| |$| grammar)
     #:datum-literals (parens group op quotes)
-    [(group (~and tag (~or def val fun interface)) (~var id (identifier-target space-name)) e ...)
+    [(group (~and tag (~or def fun interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)

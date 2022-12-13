@@ -2,7 +2,7 @@
 import: "check.rhm" open
 
 namespace home:
-  val x: "x"
+  def x: "x"
   class Posn(x, y)
   export:
     x

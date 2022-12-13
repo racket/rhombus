@@ -42,7 +42,7 @@ to be included in the set. These uses of square brackets are implemented by
  instead.
 
 @examples(
-  val s: Set{"x", 1, "y", 2},
+  def s: Set{"x", 1, "y", 2},
   s,
   s["x"],
   s[1],
@@ -75,7 +75,7 @@ to be included in the set. These uses of square brackets are implemented by
  immutable sets.
 
 @examples(
-  val m: MutableSet{"x", 1, "y", 2},
+  def m: MutableSet{"x", 1, "y", 2},
   m,
   m["x"],
   m["x"] := #false,

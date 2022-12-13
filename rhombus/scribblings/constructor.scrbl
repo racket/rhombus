@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @title(~tag: "constructors"){Constructors}
 
@@ -18,7 +18,7 @@ printed with their keywords, too.
     ~repl:
       Posn(~y: 2, ~x: 1)
       Posn(~x: 1)
-      val Posn(~y: y1, ~x: x1): Posn(~x: 1, ~y: 2)
+      def Posn(~y: y1, ~x: x1): Posn(~x: 1, ~y: 2)
       y1
   )
 
@@ -32,13 +32,13 @@ corresponding identifier.
     ~defn:
       class Posn(~x, ~y)
     ~repl:
-      val p: Posn(~x: 1, ~y: 2)
+      def p: Posn(~x: 1, ~y: 2)
       p.x
       p.y
     ~defn:
       class Cell(~row: i, ~column: j)
     ~repl:
-      val c: Cell(~row: 1, ~column: 2)
+      def c: Cell(~row: 1, ~column: 2)
       c.i
       c.j
       c

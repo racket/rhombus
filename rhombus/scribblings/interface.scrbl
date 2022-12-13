@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val subclass_eval: make_rhombus_eval())
+@(def subclass_eval: make_rhombus_eval())
 
 @title(~tag: "interfaces"){Interfaces}
 
@@ -24,7 +24,7 @@ not needed in an interface.
       class Square(side):
         implements: Shape Dance
     ~repl:
-      val s: Square(10)
+      def s: Square(10)
       s is_a Shape
       s is_a Dance
   )

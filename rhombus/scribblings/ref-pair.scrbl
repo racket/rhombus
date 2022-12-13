@@ -27,7 +27,7 @@ to append lists.
  Constructs a pair containg @rhombus(fst_v) and @rhombus(rst_v).
 
 @examples(
-  val pr: Pair(1, 2),
+  def pr: Pair(1, 2),
   pr,
   pr.first,
   pr.rest
@@ -43,10 +43,10 @@ to append lists.
  rest component matches @rhombus(rst_bind).
 
 @examples(
-  val Pair(x, y): Pair(1, 2),
+  def Pair(x, y): Pair(1, 2),
   y,
-  ~error: val Pair(sx :: String, sy :: String): Pair(1, 2),
-  val Pair(lx, ly): [1, 2],
+  ~error: def Pair(sx :: String, sy :: String): Pair(1, 2),
+  def Pair(lx, ly): [1, 2],
   y
 )
 

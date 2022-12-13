@@ -254,7 +254,7 @@ that the content is more like a top-level or block sequence, and
 separate lines).
 
 @(rhombusblock:
-    def 'thunk: $body':
+    rule 'thunk: $body':
       'fun (): $body'
   )
 

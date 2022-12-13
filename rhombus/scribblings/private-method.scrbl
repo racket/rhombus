@@ -1,9 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
     "util.rhm" open
-    "common.rhm" open)
+    "common.rhm" open)val
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @examples(~eval: method_eval,
           ~hidden: #true,
@@ -24,7 +24,7 @@ in the @rhombus(class) body:
         method go(dist):
           gas := gas - dist/mpg
     ~repl:
-      val c : Car(30)
+      def c : Car(30)
       c.go(240)
       c
   )
@@ -41,7 +41,7 @@ constructor.
         method go(dist):
           gas := gas - dist/mpg
     ~repl:
-      val c : Car(30)
+      def c : Car(30)
       c.go(240)
       c
   )
@@ -62,14 +62,14 @@ constructor---accepts values for private fields as well as public ones.
       class Car(make, model, private mpg):
         private field gas: 0
         constructor(make, model):
-          val [tank_size, mpg]: lookup_specs(make, model)
-          val car: super(make, model, mpg)
+          def [tank_size, mpg]: lookup_specs(make, model)
+          def car: super(make, model, mpg)
           car.gas := tank_size
           car
         method go(dist):
           gas := gas - dist/mpg
     ~repl:
-      val c : Car("Mazda", "Miata")
+      def c : Car("Mazda", "Miata")
       c.go(240)
       c
 )
@@ -89,7 +89,7 @@ field accessible outside the class's implementation:
         method go(dist):
           gas := gas - dist/mpg
     ~repl:
-      val c : Car(30)
+      def c : Car(30)
       c.go(240)
       ~error:
         c.gas

@@ -92,7 +92,7 @@ begin:
 begin:
   syntax.class Foo
   | 'a $x':
-      val x: "whatever"
+      def x: "whatever"
   check:
     ~print
     match 'a 1'

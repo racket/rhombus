@@ -3,7 +3,7 @@
     "common.rhm" open
     "macro.rhm")
 
-@(val macro_eval: macro.make_macro_eval())
+@(def macro_eval: macro.make_macro_eval())
 
 @title{Definition Macros}
 
@@ -53,8 +53,8 @@
         | iota_accum(n, acc): iota_accum(n-1, List.cons(n, acc))
     fun iota(n): iota_accum(n, [])
     // useful example part is here:
-    val [n, ...]: iota(length([id, ...]))
-    'val $id: $n
+    def [n, ...]: iota(length([id, ...]))
+    'def $id: $n
      ...',
   enum:
     a

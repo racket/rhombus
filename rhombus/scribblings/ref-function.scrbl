@@ -1,8 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@(val dots: @rhombus(..., ~bind))
-@(val dots_expr: @rhombus(...))
+@(def dots: @rhombus(..., ~bind))
+@(def dots_expr: @rhombus(...))
 
 @title(~tag: "ref-function"){Functions}
 
@@ -127,7 +127,7 @@ normally bound to implement function calls.
 
 @examples(
   ~label: #false,
-  val identity: fun (x): x,
+  def identity: fun (x): x,
   identity(1),
 )
 

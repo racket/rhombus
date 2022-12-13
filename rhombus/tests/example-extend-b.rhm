@@ -3,4 +3,4 @@
 export:
   List
 
-val List.b: "b"
+def List.b: "b"

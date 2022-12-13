@@ -125,7 +125,7 @@
   fun grid2(m, n):
     for List:
       each i: 0..m
-      val k: i + 1
+      def k: i + 1
       each j: 0..n
       [k, j],
   grid2(2, 3),

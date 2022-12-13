@@ -9,12 +9,12 @@ export:
   aside
   demo
 
-def aside(content, ~italic = #true):
+fun aside(content, ~italic = #true):
   scribble.nested(~style: symbol(inset), if italic | scribble.italic(content) | content)
 
 defn.macro 'demo: $form; ...':
   ~op_stx: self
-  def split(forms):
+  fun split(forms):
     match forms
     | []: []
     | ['~eval: $_', &rest]:
@@ -25,7 +25,7 @@ defn.macro 'demo: $form; ...':
         [['~repl', [repl, ...]], &split(rest)]
     | [form, ...]:
         [['~repl', [form, ...]]]
-  def find_eval(forms, was_found):
+  fun find_eval(forms, was_found):
     match forms
     | []: #false
     | ['~eval: $(eval_expr :: Group)', &rest]:
@@ -34,10 +34,10 @@ defn.macro 'demo: $form; ...':
         find_eval(rest, #true)
         eval_expr
     | [form, &rest]: find_eval(rest, was_found)    
-  val [new_form, ...]:
+  def [new_form, ...]:
     for List:
       each j: split([form, ...])
-      val [no_prompt, ...]: match j[0]
+      def [no_prompt, ...]: match j[0]
                             | '~defn': ['~no_prompt']
                             | _: []
       Syntax.relocate_span('@manual.examples(~label: #false,
@@ -45,7 +45,7 @@ defn.macro 'demo: $form; ...':
                                              $no_prompt, ...,
                                              $(List.repet(j[1])), ...)',
                            j[1])
-  val eval: find_eval([form, ...], #false)
+  def eval: find_eval([form, ...], #false)
   'def eval: $(eval || 'manual.make_rhombus_eval()')
    $new_form
    ...

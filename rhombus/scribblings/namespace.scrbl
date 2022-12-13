@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val ns_eval: make_rhombus_eval())
+@(def ns_eval: make_rhombus_eval())
 
 @title(~tag: "namespaces-overview"){Namespaces}
 
@@ -31,8 +31,8 @@ name with @rhombus(.).
         export:
           tau
           Complex
-        val pi: 3.14
-        val tau: 2 * pi
+        def pi: 3.14
+        def tau: 2 * pi
         class Complex(real, imag)
     ~repl:
       math.tau
@@ -53,7 +53,7 @@ generally, such as a block created with @rhombus(begin) or
         import: .math open
         Complex(0, tau)
     ~defn:
-      val also_pi:
+      def also_pi:
         import: .math open
         tau / 2
     ~repl:
@@ -71,7 +71,7 @@ existing namespace or by nesting @rhombus(namespace) forms.
           math
           english
         namespace english:
-          val greeting: "Hello"
+          def greeting: "Hello"
           export: greeting
     ~repl:
       subject.english.greeting
@@ -100,7 +100,7 @@ scope of the extending definition.
 @(demo:
     ~eval: ns_eval
     begin:
-      val math.e: 2.71
+      def math.e: 2.71
       math.e
     ~error: math.e
   )

@@ -17,7 +17,7 @@ assigns to a mutable variable.
       todays_weather := "rainy"
       todays_weather
     ~defn:
-      def f(mutable x):
+      fun f(mutable x):
         x := x + 8
         x
     ~repl:

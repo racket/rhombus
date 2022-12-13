@@ -1,8 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@(val dots: @rhombus(..., ~bind))
-@(val dots_expr: @rhombus(...))
+@(def dots: @rhombus(..., ~bind))
+@(def dots_expr: @rhombus(...))
 
 @title{Repetitions}
 
@@ -58,7 +58,7 @@ positions.
  @rhombus(&).
 
 @examples(
-  val [a, b, &others]: [1, 2, 3, 4],
+  def [a, b, &others]: [1, 2, 3, 4],
   others,
   [0, &others]
 )

@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val args_eval: make_rhombus_eval())
+@(def args_eval: make_rhombus_eval())
 
 @examples(
   ~eval: args_eval,
@@ -34,10 +34,10 @@ arguments:
     ~repl:
       add(1, 2, 3, 4)
     ~repl:
-      val [n, ...]: [20, 30, 40]
+      def [n, ...]: [20, 30, 40]
       add(10, n, ..., 50)
     ~repl:
-      val ns: [20, 30, 40]
+      def ns: [20, 30, 40]
       add(10, & ns, 50)
   )
 

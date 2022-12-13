@@ -3,7 +3,7 @@
    "util.rhm" open
    "common.rhm" open)
 
-@(val ann_eval: make_rhombus_eval())
+@(def ann_eval: make_rhombus_eval())
 
 @examples(
   ~eval: ann_eval,
@@ -127,7 +127,7 @@ by using @rhombus(statinfo_meta.wrap):
     ~eval: ann_eval
     ~defn:
       expr.macro 'or_zero $p $tail ...':
-        val expansion: '$p || Posn(0,0)'
+        def expansion: '$p || Posn(0,0)'
         values(statinfo_meta.wrap(expansion,
                                   '(($(statinfo_meta.dot_provider_key),
                                      vector_dot_provider))'),

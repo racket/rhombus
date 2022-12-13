@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(val method_eval: make_rhombus_eval())
+@(def method_eval: make_rhombus_eval())
 
 @// Hack for initial example in a top-level environment:
 @examples(~eval: method_eval,
@@ -39,7 +39,7 @@ class body forms are processed.
       ~error:
         class Posn(x, y):
           export origin
-          val origin: Posn(0, 0)
+          def origin: Posn(0, 0)
   )
 
 One way around this problem is to not put the definition inside the
@@ -52,7 +52,7 @@ defined outside the @rhombus(class) form.
     ~defn:
       class Posn(x, y):
         export origin
-      val origin: Posn(0, 0)
+      def origin: Posn(0, 0)
     ~repl:
       Posn.origin
       Posn.x(Posn.origin)

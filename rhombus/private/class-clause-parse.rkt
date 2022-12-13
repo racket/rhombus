@@ -248,12 +248,12 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(binding (block (group rule pattern template-block))))]
+        (wrap-class-clause #`(binding (block (named-rule rule #,stx pattern template-block))))]
        [(form-name (~and rhs (_::alts
                               (_::block (group (_::quotes . _)
                                                (_::block . _)))
                               ...)))
-        (wrap-class-clause #`(binding (block (group rule rhs))))]
+        (wrap-class-clause #`(binding (block (named-rule rule #,stx rhs))))]
        [(form-name (~and (_::block . _)
                          binding-block))
         (wrap-class-clause #`(binding binding-block))]))))
@@ -267,12 +267,12 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(annotation (block (group rule pattern template-block))))]
+        (wrap-class-clause #`(annotation (block (named-rule rule #,stx pattern template-block))))]
        [(form-name (~and rhs (_::alts
                               (_::block (group (_::quotes . _)
                                                (_::block . _)))
                               ...)))
-        (wrap-class-clause #`(annotation (block (group rule rhs))))]
+        (wrap-class-clause #`(annotation (block (named-rule rule #,stx rhs))))]
        [(form-name (~and (_::block . _)
                          annotation-block))
         (wrap-class-clause #`(annotation annotation-block))]))))
