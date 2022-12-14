@@ -42,32 +42,34 @@
         (define body #'(options.form ...))
         (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
                                         full-name name])
+        (define interface-data-stx #f)
         (cond
           [(null? (syntax-e body))
            #`((interface-finish #,finish-data ()))]
           [else
            #`((rhombus-mixed-nested-forwarding-sequence (interface-finish #,finish-data) rhombus-class
-                                                        (interface-body-step . #,(syntax-local-introduce body))))])]))))
+                                                        (interface-body-step #,interface-data-stx . #,(syntax-local-introduce body))))])]))))
 
 (define-syntax interface-body-step
   (lambda (stx)
     ;; parse the first form as a interface clause, if possible, otherwise assume
     ;; an expression or definition
     (syntax-parse stx
-      [(_ form . rest)
-       #:with clause::interface-clause (syntax-local-introduce #'form)
+      [(_ data form . rest)
+       #:with (~var clause (:interface-clause (interface-data #'data))) (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
          [((group (parsed p)) ...)
-          #`(begin p ... (interface-body-step . rest))]
+          #`(begin p ... (interface-body-step data . rest))]
          [(g ...)
-          #`(interface-body-step g ... . rest)])]
-      [(_ form . rest)
+          #`(interface-body-step data g ... . rest)])]
+      [(_ data form . rest)
        #`(rhombus-top-step
           interface-body-step
           #f
+          (data)
           form . rest)]
-      [(_) #'(begin)])))
+      [(_ data) #'(begin)])))
 
 (define-syntax interface-finish
   (lambda (stx)

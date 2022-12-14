@@ -30,15 +30,23 @@
       [_ (raise-result-error (proc-name proc) rhombus-realm "Interface_Clause_Syntax" form)]))
 
   (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface-clause))
-  
+
+  (define (make-interface-clause-transformer-ref class-data)
+    ;; "accessor" closes over `class-data`:
+    (lambda (v)
+      (define cc (interface-clause-transformer-ref v))
+      (and cc
+           (transformer (lambda (stx)
+                          ((transformer-proc cc) stx class-data))))))
+
   (define-transform
-    #:syntax-class :interface-clause
+    #:syntax-class (:interface-clause intf-data)
     #:desc "interface clause"
     #:in-space in-interface-clause-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref
     #:name-root-ref-root name-root-ref-root
-    #:transformer-ref interface-clause-transformer-ref
+    #:transformer-ref (make-interface-clause-transformer-ref intf-data)
     #:check-result check-interface-clause-result))
 
 (define-syntax (define-interface-clause-syntax stx)

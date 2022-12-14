@@ -137,29 +137,29 @@
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)
   (syntax-parse stx
-    [(_ . rest) #'(rhombus-top-step rhombus-top #t . rest)]))
+    [(_ . rest) #'(rhombus-top-step rhombus-top #t () . rest)]))
 
 ;; For a nested context
 (define-syntax (rhombus-nested stx)
   (syntax-parse stx
-    [(_ . rest) #'(rhombus-top-step rhombus-nested #f . rest)]))
+    [(_ . rest) #'(rhombus-top-step rhombus-nested #f () . rest)]))
 
 ;; Trampoline variant where `top` for return is provided first
 (define-syntax (rhombus-top-step stx)
   (with-syntax-error-respan
     (syntax-local-introduce
      (syntax-parse (syntax-local-introduce stx)
-       [(_ top decl-ok?) #`(begin)]
-       [(_ top decl-ok? ((~datum group) ((~datum parsed) decl)) . forms)
-        #`(begin decl (top . forms))]
+       [(_ top decl-ok? data) #`(begin)]
+       [(_ top decl-ok? (data ...) ((~datum group) ((~datum parsed) decl)) . forms)
+        #`(begin decl (top data ... . forms))]
        ;; note that we may perform hierarchical name resolution
        ;; up to four times, since resolution in `:declaration`,
        ;; `:definition`, etc., doesn't carry over
-       [(_ top decl-ok? e::definition-sequence . tail)
+       [(_ top decl-ok? (data ...) e::definition-sequence . tail)
         (define-values (parsed new-tail)
           (apply-definition-sequence-transformer #'e.id #'e.tail #'tail))
-        #`(begin (begin . #,parsed) (top . #,new-tail))]
-       [(_ top decl-ok? form . forms)
+        #`(begin (begin . #,parsed) (top data ... . #,new-tail))]
+       [(_ top decl-ok? (data ...) form . forms)
         (define (nestable-parsed)
           (syntax-parse #'form
             [e::nestable-declaration #'(begin . e.parsed)]
@@ -173,7 +173,7 @@
               (nestable-parsed)))
         (syntax-parse #'forms
           [() parsed]
-          [_ #`(begin #,parsed (top . forms))])]))))
+          [_ #`(begin #,parsed (top data ... . forms))])]))))
 
 ;; For a definition context:
 (define-syntax (rhombus-definition stx)

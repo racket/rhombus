@@ -69,6 +69,7 @@
         (syntax-parse form1
           [dp::dot-provider
            (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
+           (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space #'dp.id)))
            (if (dot-provider-more-static? p)
                ((dot-provider-handler p) form1 #'dot #'field
                                          #'tail

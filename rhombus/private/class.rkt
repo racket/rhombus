@@ -8,6 +8,7 @@
                      "introducer.rkt"
                      "tag.rkt"
                      "class-parse.rkt"
+                     "class-data.rkt"
                      "class-field-parse.rkt"
                      "interface-parse.rkt")
          racket/unsafe/undefined
@@ -23,6 +24,7 @@
          "class-annotation.rkt"
          "class-dot.rkt"
          "class-static-info.rkt"
+         "class-field.rkt"
          "class-method.rkt"
          "class-desc.rkt"
          "class-top-level.rkt"
@@ -57,7 +59,7 @@
    (lambda (stxes)
      (syntax-parse stxes
        #:datum-literals (group block)
-       [(_ name-seq::dotted-identifier-sequence (tag::parens field::field ...)
+       [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
            options::options-block)
         #:with full-name::dotted-identifier #'name-seq
         #:with name #'full-name.name
@@ -70,57 +72,132 @@
                                         (field.default ...)
                                         (field.mutable ...)
                                         (field.private ...)
-                                        (field.predicate ...)
-                                        (field.annotation-str ...)
-                                        (field.static-infos ...)])
+                                        (field.ann-seq ...)])
+        (define class-data-stx #f)
         (cond
           [(null? (syntax-e body))
-           #`((class-finish #,finish-data ()))]
+           #`((class-annotation+finish #,finish-data ()))]
           [else
-           #`((rhombus-mixed-nested-forwarding-sequence (class-finish #,finish-data) rhombus-class
-                                                        (class-body-step . #,(syntax-local-introduce body))))])]))))
+           #`((rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
+                                                        (class-body-step #,class-data-stx . #,(syntax-local-introduce body))))])]))))
 
 (define-syntax class-body-step
   (lambda (stx)
     ;; parse the first form as a class clause, if possible, otherwise assume
     ;; an expression or definition
     (syntax-parse stx
-      [(_ form . rest)
-       #:with clause::class-clause (syntax-local-introduce #'form)
+      [(_ data form . rest)
+       #:with (~var clause (:class-clause (class-data #'data))) (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
          [((group (parsed p)) ...)
-          #`(begin p ... (class-body-step . rest))]
+          #`(begin p ... (class-body-step data . rest))]
          [(form ...)
-          #`(class-body-step form ... . rest)])]
-      [(_ form . rest)
+          #`(class-body-step data form ... . rest)])]
+      [(_ data form . rest)
        #`(rhombus-top-step
           class-body-step
           #f
+          (data)
           form . rest)]
-      [(_) #'(begin)])))
+      [(_ data) #'(begin)])))
+
+;; First phase of `class` output: bind the annotation form, so it can be used
+;; in field declarations
+(define-syntax class-annotation+finish
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ [orig-stx base-stx scope-stx
+                    full-name name
+                    constructor-field-names
+                    constructor-field-keywords
+                    constructor-field-defaults
+                    constructor-field-mutables
+                    constructor-field-privates
+                    constructor-field-ann-seqs]
+          exports
+          option ...)
+       (define options (parse-annotation-options #'orig-stx #'(option ...)))
+       (define parent-name (hash-ref options 'extends #f))
+       (define super (and parent-name
+                          (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
+                              (raise-syntax-error #f "not a class name" #'orig-stx parent-name))))
+       (define-values (super-constructor-fields super-keywords super-defaults)
+         (extract-super-constructor-fields super))
+
+       (define-values (internal-id exposed-internal-id)
+         (extract-internal-ids options
+                               #'scope-stx #'base-stx
+                               #'orig-stx))
+
+       (define annotation-rhs (hash-ref options 'annotation-rhs #f))
+
+       (define intro (make-syntax-introducer))
+       (define constructor-name-fields
+         (make-accessor-names #'name
+                              (syntax->list #'constructor-field-names)
+                              intro))
+
+       (with-syntax ([constructor-name-fields constructor-name-fields]
+                     [((constructor-public-name-field constructor-public-field-keyword) ...)
+                      (for/list ([priv?-stx (in-list (syntax->list #'constructor-field-privates))]
+                                 [name-field (in-list constructor-name-fields)]
+                                 [field-keyword (in-list (syntax->list #'constructor-field-keywords))]
+                                 #:unless (syntax-e priv?-stx))
+                        (list name-field field-keyword))]
+                     [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
+                     [internal-name-instance (and internal-id
+                                                  (intro (datum->syntax #f (string->symbol
+                                                                            (format "~a-internal-instance" (syntax-e #'name))))))]
+                     [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
+                     [(super-field-keyword ...) super-keywords]
+                     [((super-field-name super-name-field . _) ...) (if super
+                                                                        (class-desc-fields super)
+                                                                        '())])
+         #`(begin
+             #,@(build-class-annotation-form super annotation-rhs
+                                             super-constructor-fields
+                                             exposed-internal-id intro
+                                             #'(name name-instance name?
+                                                     internal-name-instance
+                                                     constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
+                                                     constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
+           (class-finish
+            [orig-stx base-stx scope-stx
+                      full-name name name?
+                      name-instance internal-name-instance
+                      constructor-field-names
+                      constructor-field-keywords
+                      constructor-field-defaults
+                      constructor-field-mutables
+                      constructor-field-privates
+                      constructor-field-ann-seqs
+                      constructor-name-fields]
+            exports
+            option ...)))])))
 
 (define-syntax class-finish
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    full-name name
+                    full-name name name?
+                    name-instance internal-name-instance
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
                     (constructor-field-mutable ...)
                     (constructor-field-private ...)
-                    (constructor-field-predicate ...)
-                    (constructor-field-annotation-str ...)
-                    (constructor-field-static-infos ...)]
+                    (constructor-field-ann-seq ...)
+                    (constructor-name-field ...)]
           exports
           option ...)
+       #:with [(constructor-field-predicate constructor-field-annotation-str constructor-field-static-infos)
+               ...] (parse-field-annotations #'(constructor-field-ann-seq ...))
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...)))
        (define parent-name (hash-ref options 'extends #f))
        (define super (and parent-name
-                          (or (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)
-                              (raise-syntax-error #f "not a class name" stxes parent-name))))
+                          (syntax-local-value* (in-class-desc-space parent-name) class-desc-ref)))
        (define interfaces (interface-names->interfaces stxes (reverse (hash-ref options 'implements '()))))
        (define private-interfaces (interface-set-diff
                                    (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
@@ -188,13 +265,15 @@
        (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
        (define intro (make-syntax-introducer))
        (define all-name-fields
-         (for/list ([field (in-list fields)])
-           (intro
-            (datum->syntax field
-                           (string->symbol (format "~a.~a"
-                                                   (syntax-e #'name)
-                                                   (syntax-e field)))
-                           field))))
+         (append
+          (syntax->list #'(constructor-name-field ...))
+          (for/list ([field (in-list extra-fields)])
+            (intro
+             (datum->syntax field
+                            (string->symbol (format "~a.~a"
+                                                    (syntax-e #'name)
+                                                    (syntax-e field)))
+                            field)))))
        (define maybe-set-name-fields
          (for/list ([field (in-list fields)]
                     [mutable (in-list mutables)])
@@ -241,17 +320,12 @@
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
 
-       (with-syntax ([name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
-                     [class:name (temporary "class:~a")]
+       (with-syntax ([class:name (temporary "class:~a")]
                      [make-name (temporary "make-~a")]
                      [name-ref (temporary "~a-ref")]
                      [name-defaults (and (or super-has-defaults? (and has-defaults? (not final?)))
                                          (temporary "~a-defaults"))]
-                     [name-instance (intro (datum->syntax #'name (string->symbol (format "~a.instance" (syntax-e #'name))) #'name))]
                      [(name-field ...) all-name-fields]
-                     [(constructor-name-field ...) (for/list ([c (in-list constructor-fields)]
-                                                              [n-f (in-list all-name-fields)])
-                                                     n-f)]
                      [(set-name-field! ...) (for/list ([id (in-list maybe-set-name-fields)]
                                                        #:when id)
                                               id)]
@@ -307,10 +381,7 @@
                        [(constructor-public-field-keyword ...) constructor-public-keywords]
                        [(super-name* ...) (if super #'(super-name) '())]
                        [make-internal-name (and exposed-internal-id
-                                                (temporary "make-internal-~a"))]
-                       [internal-name-instance (if exposed-internal-id
-                                                   (temporary "~a-internal-instance")
-                                                   #'name-instance)])
+                                                (temporary "make-internal-~a"))])
            (define defns
              (reorder-for-top-level
               (append
@@ -344,6 +415,7 @@
                                            [field-annotation-str ...]
                                            [super-field-name ...]
                                            [super-name-field ...]))
+               (build-added-field-arg-definitions added-fields)
                (build-class-constructor super constructor-rhs
                                         added-fields constructor-private?s
                                         constructor-fields super-constructor-fields super-constructor+-fields
@@ -372,13 +444,6 @@
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-               (build-class-annotation-form super annotation-rhs
-                                            super-constructor-fields
-                                            exposed-internal-id intro
-                                            #'(name name-instance name?
-                                                    internal-name-instance
-                                                    [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
-                                                    [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                (build-class-dot-handling method-mindex method-vtable final?
                                          has-private? method-private exposed-internal-id
                                          #'(name constructor-name name-instance name-ref

@@ -38,7 +38,7 @@
    (build-transformer proc)))
 
 (define-for-syntax (build-transformer proc)
-  (lambda (stx)
+  (lambda (stx data)
     (define defns (syntax-parse stx
                     [(head . tail) (proc (pack-tail #'tail) #'head)]))
     (unless (syntax? defns)

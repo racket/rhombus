@@ -20,7 +20,7 @@
 
 (define-for-syntax (make-interface-clause-transformer proc)
   (interface-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (define defns (syntax-parse stx
                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
      (unless (syntax? defns)

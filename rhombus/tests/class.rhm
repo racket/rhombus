@@ -616,4 +616,15 @@ begin:
   check:
     Posn3D("1", "2", 3)
     Posn3D("1", "2", 3)
-  
+
+// refer to class as annotation for a field
+begin:
+  class Posn(x, y)
+  class Dir(loc -: Posn, content :: List.of(Dir))
+  Dir(Posn(0, 0), [Dir(Posn(1, 2), [])]).content[0].loc.x
+
+begin:
+  class Posn(x, y)
+  class Dir(loc -: Posn, content :: List.of(Dir)):
+    method get() :: Dir: this
+  Dir(Posn(0, 0), [Dir(Posn(1, 2), [])]).content[0].get().loc.x

@@ -8,6 +8,7 @@
 
 (provide (struct-out interface-desc)
          interface-desc-ref
+         (struct-out interface-data)
          interface-names->interfaces
          interface-set-diff
          close-interfaces-over-superinterfaces)
@@ -22,6 +23,8 @@
                         method-map      ; same as `class-desc`
                         method-result)) ; same as `class-desc`
 (define (interface-desc-ref v) (and (interface-desc? v) v))
+
+(struct interface-data (stx))
 
 (define (interface-names->interfaces stxes names)
   (define intfs

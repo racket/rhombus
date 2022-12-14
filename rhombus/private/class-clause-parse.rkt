@@ -6,11 +6,11 @@
                      "name-path-op.rkt"
                      "class-parse.rkt"
                      (only-in "rule.rkt" rule)
-                     "consistent.rkt")
+                     "consistent.rkt"
+                     "class-data.rkt")
          "class+interface.rkt"
          "class-clause.rkt"
          "interface-clause.rkt"
-         (only-in "binding.rkt" raise-binding-failure)
          (only-in "annotation.rkt" :: -:)
          (submod "annotation.rkt" for-class)
          "parens.rkt"
@@ -20,6 +20,7 @@
          (only-in "implicit.rkt" #%body))
 
 (provide (for-syntax extract-internal-ids
+                     parse-annotation-options
                      parse-options
                      wrap-class-clause)
          extends
@@ -53,18 +54,53 @@
   (values internal-id
           (expose internal-id)))
   
+
+(define-for-syntax (extract-rhs b)
+  (syntax-parse b
+    [(_::block g) #'g]
+    [else
+     (raise-syntax-error #f
+                         "expected a single entry point in block body"
+                         b)]))
+
+(define-for-syntax (parse-annotation-options orig-stx forms)
+  (syntax-parse forms
+    #:context orig-stx
+    [((_ clause-parsed) ...)
+     (let loop ([clauses (syntax->list #'(clause-parsed ...))] [options #hasheq()])
+       (cond
+         [(null? clauses) options]
+         [else
+          (define clause (car clauses))
+          (define new-options
+            (syntax-parse clause
+              #:literals (extends implements private-implements
+                                  constructor final nonfinal authentic binding annotation
+                                  method property private override abstract internal
+                                  final-override private-override
+                                  override-property final-property final-override-property
+                                  private-property private-override-property
+                                  abstract-property)
+              [(extends id)
+               (when (hash-has-key? options 'extends)
+                 (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
+               (hash-set options 'extends #'id)]
+              [(internal id)
+               (when (hash-has-key? options 'internal)
+                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
+               (hash-set options 'internal #'id)]
+              [(annotation block)
+               (when (hash-has-key? options 'annotation-rhs)
+                 (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
+               (hash-set options 'annotation-rhs (extract-rhs #'block))]
+              [_ options]))
+          (loop (cdr clauses) new-options)]))]))
+
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
     #:context orig-stx
     [((_ clause-parsed) ...)
      (define clauses (syntax->list #'(clause-parsed ...)))
-     (define (extract-rhs b)
-       (syntax-parse b
-         [(_::block g) #'g]
-         [else
-          (raise-syntax-error #f
-                              "expected a single entry point in block body"
-                              b)]))
      (define (add-implements options extra-key ids-stx)
        (define l (reverse (syntax->list ids-stx)))
        (define new-options
@@ -86,17 +122,13 @@
                                   override-property final-property final-override-property
                                   private-property private-override-property
                                   abstract-property)
-              [(extends id)
-               (when (hash-has-key? options 'extends)
-                 (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
+              [(extends id) ; checked in `parse-annotation-options`
                (hash-set options 'extends #'id)]
               [(implements id ...)
                (add-implements options 'public-implements #'(id ...))]
               [(private-implements id ...)
                (add-implements options 'private-implements #'(id ...))]
-              [(internal id)
-               (when (hash-has-key? options 'internal)
-                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
+              [(internal id) ; checked in `parse-annotation-options`
                (hash-set options 'internal #'id)]
               [(constructor rhs)
                (when (hash-has-key? options 'constructor-rhs)
@@ -106,9 +138,7 @@
                (when (hash-has-key? options 'binding-rhs)
                  (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
                (hash-set options 'binding-rhs (extract-rhs #'block))]
-              [(annotation block)
-               (when (hash-has-key? options 'annotation-rhs)
-                 (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
+              [(annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
               [(nonfinal)
                (when (hash-has-key? options 'final?)
@@ -118,14 +148,19 @@
                (when (hash-has-key? options 'authentic?)
                  (raise-syntax-error #f "multiple authenticity clause" orig-stx clause))
                (hash-set options 'authentic? #t)]
-              [(field id rhs-id static-infos predicate annotation-str mode)
-               (hash-set options 'fields (cons (added-field #'id
-                                                            #'rhs-id
-                                                            #'static-infos
-                                                            #'predicate
-                                                            #'annotation-str
-                                                            (syntax-e #'mode))
-                                               (hash-ref options 'fields null)))]
+              [(field id rhs-id ann-seq blk form-id mode)
+               (with-syntax ([(predicate annotation-str static-infos)
+                              (syntax-parse #'ann-seq
+                                [#f (list #'#f #'#f #'())]
+                                [(c::inline-annotation)
+                                 (list #'c.predicate #'c.annotation-str #'c.static-infos)])])
+                 (hash-set options 'fields (cons (added-field #'id
+                                                              #'rhs-id #'blk #'form-id
+                                                              #'static-infos
+                                                              #'predicate
+                                                              #'annotation-str
+                                                              (syntax-e #'mode))
+                                                 (hash-ref options 'fields null))))]
               [_
                (parse-method-clause orig-stx options clause)]))
           (loop (cdr clauses) new-options)]))]))
@@ -215,33 +250,33 @@
 (define-syntax extends
   (make-class+interface-clause-transformer
    ;; class clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ (~seq form ...))
         #:with (~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref)) #'(form ...)
         #:with () #'id.tail
         (wrap-class-clause #'(extends id.name))]))
    ;; interface clause
-   (lambda (stx)
+   (lambda (stx data)
      (define names (parse-multiple-names stx))
      (wrap-class-clause #`(extends . #,names)))))
 
 (define-syntax implements
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (define names (parse-multiple-names stx))
      (wrap-class-clause #`(implements . #,names)))))
 
 (define-syntax internal
   (make-class+interface-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ name:identifier)
         (wrap-class-clause #'(internal name))]))))
 
 (define-syntax binding
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-name (~and (_::quotes . _)
@@ -260,7 +295,7 @@
 
 (define-syntax annotation
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
        [(form-name (~and (_::quotes . _)
@@ -279,13 +314,13 @@
 
 (define-syntax nonfinal
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(nonfinal))]))))
 
 (define-syntax authentic
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(authentic))]))))
 
@@ -295,36 +330,17 @@
     #:attributes (form)
     (pattern (~seq form-id bind ...
                    (~and blk (_::block . _)))
-             #:with (id:identifier (~optional c::inline-annotation)) #'(bind ...)
-             #:attr predicate (if (attribute c)
-                                  #'c.predicate
-                                  #'#f)
-             #:attr annotation-str (if (attribute c)
-                                       #'c.annotation-str
-                                       #'#f)
-             #:attr static-infos (if (attribute c)
-                                     #'c.static-infos
-                                     #'())
-             #:attr form
-             #`[(group
-                 (parsed
-                  (define tmp-id (lambda ()
-                                   (let ([f-info.name-id (rhombus-body-at . blk)])
-                                     #,(if (and (attribute c) (syntax-e #'c.predicate))
-                                           #`(if (c.predicate f-info.name-id)
-                                                 f-info.name-id
-                                                 (raise-binding-failure 'form-id "value" f-info.name-id 'c.annotation-str))
-                                           #'f-info.name-id))))))
-                #,@(wrap-class-clause #`(field id
-                                               tmp-id
-                                               static-infos
-                                               predicate
-                                               annotation-str
-                                               #,mode))])))
+             #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(bind ...)
+             #:attr ann-seq (if (attribute c)
+                                #'c.seq
+                                #'#f)
+             #:attr form (wrap-class-clause #`(field id
+                                                     tmp-id ann-seq blk form-id
+                                                     #,mode)))))
 
 (define-syntax field
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [((~var f (:field 'public)))
         #'f.form]))))
@@ -382,7 +398,7 @@
 
 (define-syntax constructor
   (class-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and args (_::parens . _)) ret ...
@@ -398,7 +414,7 @@
 
 (define-syntax final
   (make-class+interface-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (override method property)
        [(_ override method (~var m (:method #'final-override))) #'m.form]
@@ -415,11 +431,11 @@
 (define-syntax method
   (make-class+interface-clause-transformer
    ;; class clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method #'method))) #'m.form]))
    ;; interface clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method #'method))) #'m.form]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
@@ -427,11 +443,11 @@
 (define-syntax property
   (make-class+interface-clause-transformer
    ;; class clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method #'property))) #'m.form]))
    ;; interface clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        [(_ (~var m (:method #'property))) #'m.form]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]))))
@@ -439,13 +455,13 @@
 (define-syntax override
   (make-class+interface-clause-transformer
    ;; class clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
        [(_ property (~var m (:method #'override-property))) #'m.form]
        [(_ (~var m (:method #'override))) #'m.form]))
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
@@ -457,7 +473,7 @@
 (define-syntax private
   (make-class+interface-clause-transformer
    ;; class clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (implements method override property)
        [(_ (~and tag implements) form ...)
@@ -470,7 +486,7 @@
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method #'private))) #'m.form]))
    ;; interface clause
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'private))) #'m.form]
@@ -482,7 +498,7 @@
 
 (define-syntax abstract
   (make-class+interface-clause-transformer
-   (lambda (stx)
+   (lambda (stx data)
      (syntax-parse stx
        #:literals (method override property)
        [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]

@@ -60,6 +60,7 @@
              :annotation
              :annotation-form
              :inline-annotation
+             :unparsed-inline-annotation
              :annotation-infix-op+form+tail
 
              annotation-form
@@ -118,7 +119,6 @@
              #:attr parsed #'c.parsed
              #:attr tail #'c.tail))
 
-
   (define-splicing-syntax-class :inline-annotation
     #:datum-literals (op)
     #:literals (:: -:)
@@ -134,6 +134,15 @@
              #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
              #:attr predicate #'#f
              #:attr static-infos #'c-parsed.static-infos))
+
+  (define-splicing-syntax-class :unparsed-inline-annotation
+    #:datum-literals (op)
+    #:literals (:: -:)
+    #:attributes (seq)
+    (pattern (~seq (~and o (op ::)) ctc ...)
+             #:attr seq #'(o ctc ...))
+    (pattern (~seq (~and o (op -:)) ctc ...)
+             #:attr seq #'(o ctc ...)))
 
   (define-syntax-class :annotation-form
     (pattern (predicate static-infos)))

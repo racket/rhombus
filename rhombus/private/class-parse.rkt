@@ -24,7 +24,7 @@
          (struct-out added-field)
          (struct-out added-method)
          (struct-out mindex)
-         
+
          any-stx?
 
          :options-block
@@ -40,7 +40,9 @@
          extract-super-constructor-fields
          extract-super-internal-constructor-fields
 
-         print-field-shapes)
+         print-field-shapes
+
+         make-accessor-names)
 
 (define in-class-desc-space (make-interned-syntax-introducer/add 'rhombus/class))
 
@@ -79,7 +81,7 @@
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
 
-(struct added-field (id arg-id static-infos predicate annotation-str mode))
+(struct added-field (id arg-id arg-blk form-id static-infos predicate annotation-str mode))
 (struct added-method (id rhs-id rhs maybe-ret result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
@@ -277,3 +279,13 @@
         (cons (or (syntax-e (car keywords))
                   (syntax-e (car fields)))
               (loop (cdr fields) (cdr keywords) (cdr private?s)))]))))
+
+(define (make-accessor-names name field-ids intro)
+  (for/list ([field-id (in-list field-ids)])
+    (intro
+     (datum->syntax field-id
+                    (string->symbol (format "~a.~a"
+                                            (syntax-e name)
+                                            (syntax-e field-id)))
+                    field-id))))
+
