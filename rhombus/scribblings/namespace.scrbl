@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def ns_eval: make_rhombus_eval())
+@(def ns_eval = make_rhombus_eval())
 
 @title(~tag: "namespaces-overview"){Namespaces}
 
@@ -31,8 +31,8 @@ name with @rhombus(.).
         export:
           tau
           Complex
-        def pi: 3.14
-        def tau: 2 * pi
+        def pi = 3.14
+        def tau = 2 * pi
         class Complex(real, imag)
     ~repl:
       math.tau
@@ -44,7 +44,7 @@ A name defined with @rhombus(namespace) can be used with @rhombus(import),
 but the name must be prefixed with @rhombus(., ~impmod) to distinguish it from a
 module path. Also, @rhombus(import) can be used in nested blocks
 generally, such as a block created with @rhombus(begin) or
-@rhombus(val):
+@rhombus(def):
 
 @(demo:
     ~eval: ns_eval
@@ -71,7 +71,7 @@ existing namespace or by nesting @rhombus(namespace) forms.
           math
           english
         namespace english:
-          def greeting: "Hello"
+          def greeting = "Hello"
           export: greeting
     ~repl:
       subject.english.greeting
@@ -100,7 +100,7 @@ scope of the extending definition.
 @(demo:
     ~eval: ns_eval
     begin:
-      def math.e: 2.71
+      def math.e = 2.71
       math.e
     ~error: math.e
   )

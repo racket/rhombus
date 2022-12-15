@@ -35,19 +35,19 @@ begin:
     MutableMap(["a", 1], ["b", 2]).length()
     2
   check:
-    def map: {"a": 1, "b": 2}
+    def map = {"a": 1, "b": 2}
     map.length()
     2
   check:
-    def map :: Map: dynamic({"a": 1, "b": 2})
+    def map :: Map = dynamic({"a": 1, "b": 2})
     map.length()
     2
   check:
-    def map -: Map: dynamic({"a": 1, "b": 2})
+    def map -: Map = dynamic({"a": 1, "b": 2})
     map.length()
     2
   check:
-    def map :: Map.of(String, Integer): dynamic({"a": 1, "b": 2})
+    def map :: Map.of(String, Integer) = dynamic({"a": 1, "b": 2})
     map.length()
     2
 
@@ -83,7 +83,7 @@ begin:
     {&{"b": "oops"}, "c": "oops", "b": 2, "a": 1, &{"c": 3}}
     {"a": 1, "b": 2, "c": 3}
   check:
-    def mutable x: []
+    def mutable x = []
     [{&(begin: x := [1, x]; {"b": 2}), (begin: x:= [2, x]; "a"): 1, &(begin: x:= [3, x]; {"c": 3})},
      x]
     [{"a": 1, "b": 2, "c": 3},

@@ -38,6 +38,7 @@
 
   grammar maybe_default:
     = $default_expr
+    : : $default_body; ...
     ε,
 
   grammar class_clause_or_body_or_export:
@@ -47,7 +48,9 @@
 
 
   grammar class_clause:
+    $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
     $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
     $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
     $$(@rhombus(method, ~class_clause)) $method_impl
     $$(@rhombus(override, ~class_clause)) $method_impl
@@ -119,14 +122,14 @@
  however, then it is not included as an argument for the default
  constructor, binding form, or annotation form.
 
- When a default-value expression is provided for a field after
- @rhombus(=), then the default constructor evaluates the
- @rhombus(default_expr) to obtain a value for the argument when it is not
- supplied. If a by-position field has a default-value expression, then
+ When a default-value expression or block is provided for a field after
+ @rhombus(=) or @litchar{:}, then the default constructor evaluates the
+ @rhombus(default_expr) or @rhombus(default_body)s to obtain a value for the argument when it is not
+ supplied. If a by-position field has a default-value expression or block, then
  all later by-position fields must have a default. If the class extends a
  superclass that has a non- @rhombus(private, ~class_clause) by-position
  argument with a default, then all by-position arguments of the subclass
- must have a default. A @rhombus(default_expr) can refer to earlier field
+ must have a default. A @rhombus(default_expr) or @rhombus(default_body) can refer to earlier field
  names in the same @rhombus(class) to produce a default value. If a
  @rhombus(priviate) @rhombus(field_spec) lacks a @rhombus(=) and
  default-value expression, then a custom constructor must be declared
@@ -148,9 +151,9 @@
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
  then an additional field is added to the class, but the additional field
  is not represented by an arguments to the constructor, annotation form,
- or binding-pattern form. Instead, the
- @rhombus(body) block in @rhombus(field, ~class_clause) gives the added
- field its initial value; that block is evaluated each time an instance
+ or binding-pattern form. Instead, the @rhombus(expr) or
+ @rhombus(body) block the  @rhombus(field, ~class_clause) gives the added
+ field its initial value; that expression or block is evaluated each time an instance
  of the class is created, but it cannot refer to @rhombus(this),
  fields of the class, or methods of the class. All fields
  added through a @rhombus(field, ~class_clause) clause are mutable, and they
@@ -423,11 +426,12 @@
 }
 
 @doc(  
+  class_clause.macro 'field $identifier $maybe_annotation = $expr',
   class_clause.macro 'field $identifier $maybe_annotation: $body; ...',
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to add fields to
- the class. The @rhombus(body) is evaluated each time the class is instantiated,
+ the class. The @rhombus(expr) or @rhombus(body) block is evaluated each time the class is instantiated,
  but it cannot refer to @rhombus(this) or fields or methods of an object.
  See @rhombus(class) for more information.
 

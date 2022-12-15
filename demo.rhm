@@ -58,17 +58,17 @@ md2(Posn(1, 4))
 
 // more definitions
 
-def π: 3.14
+def π = 3.14
 π
 
-def (((ππ))): π * π
+def (((ππ))) = π * π
 ππ
 
 def (ma, mb, mc):
   values("1", "2", "3")
 mb
-  
-def List.cons(ca, cb): List.cons(1, [2])
+
+def List.cons(ca, cb) = List.cons(1, [2])
 ca
 
 fun
@@ -82,10 +82,10 @@ fun
 size(Posn(8, 6))
 size(1, 2)
 
-def Posn(px, py) -: Posn: Posn(1, 2)
+def Posn(px, py) -: Posn = Posn(1, 2)
 List(px, py)
 
-def identity: fun (x): x
+def identity = fun (x): x
 identity(1 + (fun (x): x) (99) )
 
 size
@@ -210,8 +210,8 @@ bind.macro '$a <> $b':
                    ($a, $b))')
 
 bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
-  def a: bind_meta.get_info(a_in, '()')
-  def b: bind_meta.get_info(b_in, '()')
+  def a = bind_meta.get_info(a_in, '()')
+  def b = bind_meta.get_info(b_in, '()')
   match bind_meta.unpack_info(a)
   | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
       match bind_meta.unpack_info(b)
@@ -262,7 +262,7 @@ bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
 // an expression operator that's consistent with the pattern
 expr.rule '$a <> $b': ~parsed_right; 'Pair.cons($b, $a)'
 
-def rx <> (ry :: Integer) : "2" <> 1
+def rx <> (ry :: Integer) = "2" <> 1
 rx
 
 // definition form, which returns either a block of definitions
@@ -271,7 +271,7 @@ rx
 defn.macro 'define_eight $e ...':
   match '$e ...'
   | '$name':
-      'def $name: 8'
+      'def $name = 8'
        
 define_eight ate
 ate
@@ -304,7 +304,7 @@ let accum: accum+1
 let accum: accum+1
 accum
 
-def ok_later: "ok"
+def ok_later = "ok"
 check_later()
 
 // Nested class types with contracts
@@ -313,7 +313,7 @@ class IPosn(x :: Integer, y :: Integer)
 
 class ILine(p1 :: IPosn, p2 :: IPosn)
 
-def l1: ILine(IPosn(1, 2), IPosn(3, 4))
+def l1 = ILine(IPosn(1, 2), IPosn(3, 4))
 
 l1.p2.x
 
@@ -325,7 +325,7 @@ ILine.p1(l1).x
 fun (p): (p :: IPosn).x
 
 begin:
-  def ILine(p1, p2): l1
+  def ILine(p1, p2) = l1
   p1.x + p2.y
 
 // function result contracts
@@ -348,7 +348,7 @@ add_two(7) .= 9.0
 add_two(6, 7) == "6 and 7"
 
 begin:
-  def f: fun (x) :: Integer: x
+  def f = fun (x) :: Integer: x
   f(10)
 
 fun on_diag(n :: Integer) :: Posn:
@@ -356,7 +356,7 @@ fun on_diag(n :: Integer) :: Posn:
 
 on_diag(1).x
 
-def known_posn: on_diag(2)
+def known_posn = on_diag(2)
 known_posn.x
 
 // contracts and dot providers
@@ -389,7 +389,7 @@ let vec :: Vector: Posn(3, 4)
 vec.angle
 vec.magnitude
 
-def AlsoPosn(also_x, also_y): Posn(10, 20)
+def AlsoPosn(also_x, also_y) = Posn(10, 20)
 also_x +& "," +& also_y
 
 expr.macro 'or_zero $p $tail ...':
@@ -414,18 +414,18 @@ begin:
 
 // indexables
 
-def nums: [1, 2, 3]
-def yes_nums :: List: nums
-def yep_nums :: List.of(Integer): nums
+def nums = [1, 2, 3]
+def yes_nums :: List = nums
+def yep_nums :: List.of(Integer) = nums
 
 nums[1]
 
 begin:
   use_dynamic
-  def also_nums: if #true | nums | #false
+  def also_nums = if #true | nums | #false
   also_nums[1]
 
-def nums_a: Array(1, 2, 3)
+def nums_a = Array(1, 2, 3)
 def yes_nums_a :: Array: nums_a
 def yep_nums_a :: Array.of(Integer): nums_a
 
@@ -433,36 +433,36 @@ nums_a[1]
 nums_a[2] := 30
 nums_a[2]
 
-def map: Map{symbol'x': "hello", symbol(y): "goodbye"}
-def yes_map :: Map : map
-def yup_map :: Map.of(Symbol, String) : map
+def map = Map{symbol'x': "hello", symbol(y): "goodbye"}
+def yes_map :: Map = map
+def yup_map :: Map.of(Symbol, String) = map
 
 map
 map[symbol'y']
 
-def also_map: Map([1, "one"], [2, "two"])
+def also_map = Map([1, "one"], [2, "two"])
 also_map[2]
 
-def also_also_map: {1: "one", 2: "two"}
+def also_also_map = {1: "one", 2: "two"}
 also_also_map[2]
 
-def key_map: {symbol'a': "ay", symbol'b': "bee"}
+def key_map = {symbol'a': "ay", symbol'b': "bee"}
 key_map[symbol'a']
 
-def mixed_map: {symbol'a': 1, "b": 2}
+def mixed_map = {symbol'a': 1, "b": 2}
 mixed_map[symbol'a'] + mixed_map["b"]
 
-def mut_map: MutableMap([1, "mone"])
+def mut_map = MutableMap([1, "mone"])
 mut_map[1]
 mut_map[2] := "mtwo"
 mut_map[2]
 
-def a_set: {1, 3, 5, 7, 9}
+def a_set = {1, 3, 5, 7, 9}
 if a_set[1] && !a_set[2]
 | "ok"
 | 1/0
 
-def [x, y, ...]: nums
+def [x, y, ...] = nums
 [y, ...]
 
 [100, 1000, & nums]
@@ -476,28 +476,28 @@ def [x, y, ...]: nums
 
 (fun(y, z): z)(y, ...)
 
-def Array(ax, ay, az): nums_a
+def Array(ax, ay, az) = nums_a
 az
 
-def local_map: Map{symbol'alice': Posn(4, 5),
-                   symbol'bob': Posn(7, 9)}
+def local_map = Map{symbol'alice': Posn(4, 5),
+                    symbol'bob': Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  def p: neighborhood[who]
+  def p = neighborhood[who]
   p.x +& ", " +& p.y
 
 locale(symbol'alice', local_map)
 
-def {symbol'bob': bob_loc}: local_map
+def {symbol'bob': bob_loc} = local_map
 bob_loc
 
-def Map{symbol'alice': alice_loc2, symbol'bob': bob_loc2}: local_map
+def Map{symbol'alice': alice_loc2, symbol'bob': bob_loc2} = local_map
 [alice_loc2, bob_loc2]
 
-def Map([symbol'alice', also_alice_loc2], [symbol'bob', also_bob_loc2]): local_map
+def Map([symbol'alice', also_alice_loc2], [symbol'bob', also_bob_loc2]) = local_map
 [also_alice_loc2, also_bob_loc2]
 
-def [p :: Posn, ...] : [Posn(1, 2), Posn(3, 4)]
+def [p :: Posn, ...] = [Posn(1, 2), Posn(3, 4)]
 [p, ...][0].x
 
 fun
@@ -519,10 +519,10 @@ got_milk(["apple", "milk", "banana"])
 got_milk(["apple", "coffee", "banana"])
 
 begin:
- def [n, ...]: [3, 4]
+ def [n, ...] = [3, 4]
  List(1, 2, n, ...)
 
-def nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)): Posn(1, Posn(3, 4))
+def nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)) = Posn(1, Posn(3, 4))
 nested_p.y.x
 
 // rest arguments
@@ -586,8 +586,8 @@ defn.sequence_macro 'reverse_defns; $defn1 ...; $defn2 ...; $tail; ...':
   values('$defn2 ...; $defn1 ...', '$tail; ...')
 
 reverse_defns
-def seq_x: seq_y+1
-def seq_y: 10
+def seq_x = seq_y+1
+def seq_y = 10
 
 seq_x
 
@@ -645,17 +645,17 @@ annot.macro 'MyInt':
                                    '(($(statinfo_meta.dot_provider_key), myint_dot_provider))'),
          '')
 
-def (one -: MyInt): 1
+def (one -: MyInt) = 1
 
 one.add(4).is_zero
 
 ((one.add(4)) -: MyInt).is_zero
 
-def two: 2 :: MyInt
+def two = 2 :: MyInt
 two.is_zero
 
 expr.rule 'I($n)': '$n -: MyInt'
-def three: (I(3))
+def three = (I(3))
 three.is_zero
 
 operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
@@ -705,7 +705,7 @@ for values(x = 0, y = 2):
 fun grid2(m, n):
   for List:
     each i: 0..m
-    def k: i + 1
+    def k = i + 1
     each j: 0..n
     [k, j]
 
@@ -734,7 +734,7 @@ syntax.class Arithmetic
 | '$x + $y'
 | '$x - $y'
 
-def '$(exp :: Arithmetic)': '1 + 2'
+def '$(exp :: Arithmetic)' = '1 + 2'
 exp.x
 
 meta:
@@ -778,7 +778,7 @@ syntax.class NTerms
     ~attr average:
       '$(sum / 2)'
 
-def '$(two_terms :: NTerms)': '~two 24 42'
+def '$(two_terms :: NTerms)' = '~two 24 42'
 two_terms.a
 two_terms.c
 two_terms.average

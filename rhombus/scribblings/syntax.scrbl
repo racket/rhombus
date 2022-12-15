@@ -46,7 +46,7 @@ those items is used in one replication.
 
 @(demo:
     ~defn:
-      def [seq, ...]: ['1', '2', '3']
+      def [seq, ...] = ['1', '2', '3']
     ~repl:
       '(hi $seq) ...'
   )
@@ -60,7 +60,7 @@ with no terms within a larger sequence with multiple groups is an error.
 
 @(demo:
     ~repl:
-      def [seq, ...]: []
+      def [seq, ...] = []
       '(hi $seq) ...'
       ~error: 'x; (hi $seq) ...; y'
   )
@@ -73,7 +73,7 @@ separating comma:
 
 @(demo:
     ~repl:
-      def [seq, ...]: ['1', '2', '3']
+      def [seq, ...] = ['1', '2', '3']
       '(hi $seq, ...)'
   )
 
@@ -82,7 +82,7 @@ Along the same lines, @rhombus(...) just after a @litchar{|} can replicate a pre
 
 @(demo:
     ~repl:
-      def [seq, ...]: ['1', '2', '3']
+      def [seq, ...] = ['1', '2', '3']
       'cond | $seq | ...'
   )
 
@@ -95,7 +95,7 @@ pattern with @rhombus($).
 
 @(demo:
     ~repl:
-      def '$x + $y': '1 + (2 + 3)'
+      def '$x + $y' = '1 + (2 + 3)'
       x
       y
   )
@@ -108,7 +108,7 @@ that would be parsed as an expression. For example, a pattern variable
 @rhombus(y) by itself cannot be matched to a sequence @rhombus(2 + 3):
 
 @(demo:
-    ~error: def '$x + $y': '1 + 2 + 3'
+    ~error: def '$x + $y' = '1 + 2 + 3'
   )
 
 If a @rhombus($) escape is alone within its group, however, the
@@ -116,7 +116,7 @@ If a @rhombus($) escape is alone within its group, however, the
 
 @(demo:
     ~repl:
-      def '$x': '1 + 2 + 3'
+      def '$x' = '1 + 2 + 3'
       x
   )
 
@@ -126,7 +126,7 @@ multi-term group in any other template context is an error.
 
 @(demo:
     ~repl:
-      def '$x': '1 + 2 + 3'
+      def '$x' = '1 + 2 + 3'
       '[$x]'
       ~error: '[0 + $x]'
   )
@@ -136,7 +136,7 @@ group is interchangeable with a single-term syntax object:
 
 @(demo:
     ~repl:
-      def '$y': '1'
+      def '$y' = '1'
       '[$y]'
       '[0 + $y]'
   )
@@ -146,10 +146,10 @@ with the @rhombus(Term, ~stxclass) syntax class using the @rhombus(::) operator.
 
 @(demo:
     ~repl:
-      def '$(x :: Term)': '1'
+      def '$(x :: Term)' = '1'
       x
     ~repl:
-      ~error: def '$(x :: Term)': '1 + 2'
+      ~error: def '$(x :: Term)' = '1 + 2'
   )
 
 If a @rhombus($) escape is not only alone within its group, but the
@@ -162,8 +162,8 @@ destination contexts have the same shape, so a match from a block-like
 context can be put into a brackets context, for example.
 
 @(demo:
-    def '$x': '1 + 2 + 3
-               4 * 5 * 6'
+    def '$x' = '1 + 2 + 3
+                4 * 5 * 6'
     '[$x]'
   )
 
@@ -179,7 +179,7 @@ to form a repetition of matches:
 
 @(demo:
     ~defn:
-      def '$x + $y ... + 0': '1 + 2 + 3 + 0'
+      def '$x + $y ... + 0' = '1 + 2 + 3 + 0'
     ~repl:
       x
       [y, ...]

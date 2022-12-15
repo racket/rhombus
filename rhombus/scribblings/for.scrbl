@@ -42,7 +42,7 @@ languages, is that definitions or expressions can be written among
 @(demo:
     for:
       each friend: ["Alice", "Bob", "Carol"]
-      def dear_friend: "dear " +& friend
+      def dear_friend = "dear " +& friend
       each say: ["Hello", "Goodbye"]
       displayln(say +& ", " +& dear_friend +& "!")
 )

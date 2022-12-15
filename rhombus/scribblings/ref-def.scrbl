@@ -4,12 +4,13 @@
 @title{Definitions}
 
 @doc(
+  defn.macro 'def $binding = $expr',
   defn.macro 'def $binding:
                 $body
                 ...'
 ){
 
- Binds the identifiers of @rhombus(binding) to the value of the
+ Binds the identifiers of @rhombus(binding) to the value of @rhombus(expr) or the
  @rhombus(body) sequence. The @rhombus(body) itself can include
  definitions, and its normally it ends with an expression to provide the
  result value.
@@ -19,27 +20,27 @@
  annotations.
 
 @examples(
-  def pi: 3.14,
+  def pi = 3.14,
   pi
 )
 
 @examples(
   ~label: #false,
   def pi:
-    def tau: 6.28
+    def tau = 6.28
     tau/2,
   pi
 )
 
 @examples(
   ~label: #false,
-  def [x, y, z]: [1+2, 3+4, 5+6],
+  def [x, y, z] = [1+2, 3+4, 5+6],
   y
 )
 
 @examples(
   ~label: #false,
-  def ns :: List: [1+2, 3+4, 5+6],
+  def ns :: List = [1+2, 3+4, 5+6],
   ns
 )
 
@@ -47,6 +48,7 @@
 
 
 @doc(
+  defn.macro 'let $binding = $expr',
   defn.macro 'let $binding:
                 $body
                 ...'
@@ -58,9 +60,9 @@
 
 @examples(
   begin:
-    let v: 1
+    let v = 1
     fun get_v(): v
-    let v: v+1
+    let v = v+1
     [get_v(), v]
 )
 

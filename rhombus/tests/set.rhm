@@ -27,19 +27,19 @@ begin:
     MutableSet("a", "b").length()
     2
   check:
-    def set: {1, 2}
+    def set = {1, 2}
     set.length()
     2
   check:
-    def set :: Set: dynamic({"a", "b"})
+    def set :: Set = dynamic({"a", "b"})
     set.length()
     2
   check:
-    def set -: Set: dynamic({"a", "b"})
+    def set -: Set = dynamic({"a", "b"})
     set.length()
     2
   check:
-    def set :: Set.of(String): dynamic({"a", "b"})
+    def set :: Set.of(String) = dynamic({"a", "b"})
     set.length()
     2
 
@@ -72,7 +72,7 @@ begin:
     {"b", &{"b"}, "c", "a", &{"c"}}
     {"a", "b", "c"}
   check:
-    def mutable x: []
+    def mutable x = []
     [{&(begin: x := [1, x]; {"b"}), (begin: x:= [2, x]; "a"), &(begin: x:= [3, x]; {"c"})},
      x]
     [{"a", "b", "c"},

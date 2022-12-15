@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def macro_eval: make_rhombus_eval())
+@(def macro_eval = make_rhombus_eval())
 
 @title(~tag: "expr-macro"){Expression Macros}
 

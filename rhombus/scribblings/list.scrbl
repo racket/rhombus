@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def list_eval: make_rhombus_eval())
+@(def list_eval = make_rhombus_eval())
 
 @examples(
   ~eval: list_eval,
@@ -115,7 +115,7 @@ be used multiple times.
 @(demo:
     ~eval: list_eval
     ~defn:
-      def [groceries, ...]: ["apple", "banana", "milk"]
+      def [groceries, ...] = ["apple", "banana", "milk"]
     ~repl:
       [groceries, ..., "cupcake"]
       [groceries, ..., groceries, ...]
@@ -128,7 +128,7 @@ or reference a plain list value whose elements are the rest of the list.
 @(demo:
     ~eval: list_eval
     ~defn:
-      def [x, & others]: [groceries, ...]
+      def [x, & others] = [groceries, ...]
     ~repl:
       others
       ["broccoli", & others ++ ["cupcake"], x]

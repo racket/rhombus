@@ -13,7 +13,10 @@
          "call-result-key.rkt"
          "static-info.rkt"
          "dotted-sequence-parse.rkt"
-         "forwarding-sequence.rkt")
+         "forwarding-sequence.rkt"
+         (submod "equal.rkt" for-parse)
+         (only-in "equal.rkt"
+                  [= rhombus=]))
 
 (provide def
          (rename-out [rhombus-let let]))
@@ -28,11 +31,21 @@
     (lambda (stx)
       (check-context stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts op)
+        #:datum-literals (parens group block alts)
         [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
          (build-values-definitions #'form-id
-                                   #'(g ...) #'rhs
+                                   #'(g ...) #'(rhombus-body-expression rhs)
                                    wrap-definition)]
+        [(form-id (~optional (~literal values)) (parens g ...) _::equal rhs ...+)
+         (build-values-definitions #'form-id
+                                   #'(g ...) #`(rhombus-expression (#,group-tag rhs ...))
+                                   wrap-definition)]
+        [(form-id any::not-equal ... _::equal rhs ...+)
+         #:with g-tag group-tag
+         (build-value-definitions #'form-id
+                                  (no-srcloc #'(g-tag any ...))
+                                  #`(#,group-tag rhs ...)
+                                  wrap-definition)]
         [(form-id any ... (~and rhs (block body ...)))
          #:with g-tag group-tag
          (build-value-definitions #'form-id
@@ -92,7 +105,7 @@
                          (shrubbery-syntax->string lhs))))
                      ")")
     (list
-      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) (rhombus-body-expression rhs)])
+      #'(define-values (tmp-id ...) (let-values ([(lhs-i.name-id ...) rhs])
                                       (values lhs-i.name-id ...)))
      (wrap-definition
       #`(begin

@@ -37,35 +37,35 @@ begin:
     List(1, 2, 3).length()
     3
   check:
-    def lst: [1, 2, 3]
+    def lst = [1, 2, 3]
     lst.length()
     3
   check:
-    def lst :: List: dynamic([1, 2, 3])
+    def lst :: List = dynamic([1, 2, 3])
     lst.length()
     3
   check:
-    def lst -: List: dynamic([1, 2, 3])
+    def lst -: List = dynamic([1, 2, 3])
     lst.length()
     3
   check:
-    def lst :: List.of(Integer): dynamic([1, 2, 3])
+    def lst :: List.of(Integer) = dynamic([1, 2, 3])
     lst.length()
     3
   check:
-    def [v, ...]: dynamic([1, 2, 3])
+    def [v, ...] = dynamic([1, 2, 3])
     [v, ...].length()
     3
   check:
-    def lst :: List.of(List): dynamic([[1, 2, 3]])
+    def lst :: List.of(List) = dynamic([[1, 2, 3]])
     lst.first.length()
     3
   check:
-    def lst :: List.of(Integer): dynamic([1, 2, 3])
+    def lst :: List.of(Integer) = dynamic([1, 2, 3])
     lst.rest.length()
     2
   check:
-    def lst :: NonemptyList.of(List): dynamic([[1, 2, 3]])
+    def lst :: NonemptyList.of(List) = dynamic([[1, 2, 3]])
     lst.first.length()
     3
 

@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def posn_eval: make_rhombus_eval())
+@(def posn_eval = make_rhombus_eval())
 
 @title(~tag: "classes_and_patterns"){Classes and Patterns}
 
@@ -23,7 +23,7 @@ extracts the field value from the instance.
 @(demo:
     ~eval: posn_eval
     ~defn:
-      def origin: Posn(0, 0)
+      def origin = Posn(0, 0)
     ~repl:
       origin
       origin.x
@@ -103,7 +103,7 @@ in any binding position, including the one for @rhombus(def):
 @(demo:
     ~eval: posn_eval
     ~defn:
-      def (flipped -: Posn):  flip(Posn(1, 2))
+      def (flipped -: Posn) = flip(Posn(1, 2))
     ~repl:
       flipped.x
   )
@@ -195,14 +195,14 @@ visible before the @rhombus(let) form.
 @(rhombusblock:
     #lang rhombus
 
-    def get_after(): after
+    fun get_after(): after
 
-    def accum: 0
-    let accum: accum+1
-    let accum: accum+1
+    def accum = 0
+    let accum = accum+1
+    let accum = accum+1
     accum  // prints 2
 
-    def after: 3
+    def after = 3
     get_after()  // prints 3
   )
 

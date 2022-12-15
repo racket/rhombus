@@ -2,30 +2,30 @@
 import: "check.rhm" open
 
 check:
-  def mutable x: 0
+  def mutable x = 0
   [x := 1, x]
   [#void, 1]
 
 check:
-  let x: 0
+  let x = 0
   fun f(): x
-  let x: 2
+  let x = 2
   [x, f()]
   [2, 0]
 
 check:
-  let x: 0
+  let x = 0
   fun f(): x
-  let mutable x: 2
+  let mutable x = 2
   x := 3
   [x, f()]
   [3, 0]
 
 check:
-  let mutable x: 0
+  let mutable x = 0
   fun f(): x
   fun g(n): x := n
-  let mutable x: 2
+  let mutable x = 2
   g(3)
   [x, f()]
   [2, 3]

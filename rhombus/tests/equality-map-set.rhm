@@ -50,7 +50,7 @@ check:
 
 check:
   begin:
-    def v: mcons(1, 2)
+    def v = mcons(1, 2)
     v == v
   #true
 
@@ -68,9 +68,9 @@ check:
   "hash-ref: no value found for key"
 
 begin:
-  def a: mcons(1, 2)
-  def b: mcons(1, 2)
-  def m: {a: "a", b: "b"}
+  def a = mcons(1, 2)
+  def b = mcons(1, 2)
+  def m = {a: "a", b: "b"}
   check:
     m[a]
     "a"
@@ -88,15 +88,15 @@ check:
 
 check:
   begin:
-    def v: mcons(1, 2)
+    def v = mcons(1, 2)
     {v}[v]
   #true
 
 begin:
-  def a: mcons(1, 2)
-  def b: mcons(1, 2)
-  def c: mcons(1, 2)
-  def s: {a, b}
+  def a = mcons(1, 2)
+  def b = mcons(1, 2)
+  def c = mcons(1, 2)
+  def s = {a, b}
   check:
     s[a]
     #true
@@ -115,8 +115,8 @@ check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
 check: {"a": 1, "b": 2}; Map{"b": 2, "a": 1}
 check: {"a": 1, "b": 2}; Map(["b", 2], ["a", 1])
 begin:
-  def a: mcons(1, 2)
-  def b: mcons(1, 2)
+  def a = mcons(1, 2)
+  def b = mcons(1, 2)
   check: {a: 1, b: 2}; {b: 2, a: 1}
   check: {a: 1} == {b: 1}; #false
 check:
@@ -148,23 +148,23 @@ check:
   | _: #false
   "Set.empty"
 
-def local_map: Map{symbol(alice): Posn(4, 5),
-                   symbol(bob): Posn(7, 9)}
+def local_map = Map{symbol(alice): Posn(4, 5),
+                    symbol(bob): Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  def p: neighborhood[who]
+  def p = neighborhood[who]
   p.x +& ", " +& p.y
 
 check:
   locale(symbol(alice), local_map)
   "4, 5"
 
-def {symbol(bob): bob_loc}: local_map
+def {symbol(bob): bob_loc} = local_map
 check:
   bob_loc
   Posn(7, 9)
 
-def Map{symbol(alice): alice_loc2, symbol(bob): bob_loc2}: local_map
+def Map{symbol(alice): alice_loc2, symbol(bob): bob_loc2} = local_map
 check:
   [alice_loc2, bob_loc2]
   [Posn(4, 5), Posn(7, 9)]
@@ -174,7 +174,7 @@ check: {"a", "b"}; {"b", "a"}
 check: {"a", "b"}; Set{"b", "a"}
 check: {"a", "b"}; Set("b", "a")
 begin:
-  def a: mcons(1, 2)
-  def b: mcons(1, 2)
+  def a = mcons(1, 2)
+  def b = mcons(1, 2)
   check: {a, b}; {b, a}
   check: {a} == {b}; #false

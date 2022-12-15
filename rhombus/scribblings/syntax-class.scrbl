@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def sc_eval: make_rhombus_eval())
+@(def sc_eval = make_rhombus_eval())
 
 @examples(
   ~eval: sc_eval,
@@ -24,7 +24,7 @@ among others.
 
 @(demo:
     ~defn:
-      def '$(x :: Term)': '1'
+      def '$(x :: Term)' = '1'
 )
 
 Rhombus also supports user-defined syntax classes via
@@ -106,7 +106,7 @@ alternative of a syntax class.
       | '$x + $y + $z'
       | '$x - $y'
     ~repl:
-      def '$(expr :: Arithmetic)': '1 + 2 + 3'
+      def '$(expr :: Arithmetic)' = '1 + 2 + 3'
       expr.y
       ~error: expr.z
 )

@@ -19,7 +19,7 @@ as a prefix operator to constrain a pattern to number inputs:
         ~parsed_right
         '$n :: Number'
     ~repl:
-      def $$$salary: 100.0
+      def $$$salary = 100.0
 
       salary
   )

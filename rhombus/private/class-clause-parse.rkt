@@ -16,6 +16,7 @@
          "parens.rkt"
          "name-root-ref.rkt"
          "parse.rkt"
+         "var-decl.rkt"
          (only-in "function.rkt" fun)
          (only-in "implicit.rkt" #%body))
 
@@ -53,7 +54,6 @@
                      (lambda (stx) stx)))
   (values internal-id
           (expose internal-id)))
-  
 
 (define-for-syntax (extract-rhs b)
   (syntax-parse b
@@ -328,14 +328,13 @@
   (define-splicing-syntax-class (:field mode)
     #:description "field identifier with optional annotation"
     #:attributes (form)
-    (pattern (~seq form-id bind ...
-                   (~and blk (_::block . _)))
-             #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(bind ...)
+    (pattern (~seq form-id d::var-decl)
+             #:with (id:identifier (~optional c::unparsed-inline-annotation)) #'(d.bind ...)
              #:attr ann-seq (if (attribute c)
                                 #'c.seq
                                 #'#f)
              #:attr form (wrap-class-clause #`(field id
-                                                     tmp-id ann-seq blk form-id
+                                                     tmp-id ann-seq d.blk form-id
                                                      #,mode)))))
 
 (define-syntax field

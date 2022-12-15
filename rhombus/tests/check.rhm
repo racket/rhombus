@@ -48,8 +48,8 @@ expr.macro
            '')
 
 fun check_same(where, thunk, expected_thunk, ~mode: mode):
-  def values(got, exn_msg): call_capturing_exn(thunk)
-  def expected: call_capturing_values(expected_thunk)
+  def values(got, exn_msg) =call_capturing_exn(thunk)
+  def expected = call_capturing_values(expected_thunk)
   def ok:
     match mode
     | keyword(~print) || keyword(~eval_print):

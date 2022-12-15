@@ -4,4 +4,4 @@ export:
   List
   rename: List as ExList
 
-def List.a: "a"
+def List.a = "a"

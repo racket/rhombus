@@ -23,7 +23,7 @@ module, then its value gets printed out.
 
 The ways to define names in a module include @rhombus(def) and
 @rhombus(fun). The @rhombus(def) form defines an immutable variable, and
-it expects an identifier to define followed by a block. The
+it expects an identifier to define followed by either @rhombus(=) or a block. The
 @rhombus(fun) form defines a function when it see an identifier,
 parentheses around argument names, and then a block. Function calls have
 the usual shape: a function name (or, more generally, an expression that
@@ -33,7 +33,7 @@ parentheses.
 @(rhombusblock:
     #lang rhombus
 
-    def fahrenheit_freezing: 32
+    def fahrenheit_freezing = 32
                              
     fun fahrenheit_to_celsius(f):
       (f - 32) * 5/9
@@ -56,6 +56,18 @@ parentheses.
  Use can use the @litchar{,enter} command to load a module and evaluate
  additional expressions in the context of that module's body.}
 
+The definition of @rhombus(fahrenheit_freezing) could also have been
+written with @litchar{:} instead of @rhombus(=), like this:
+
+@(rhombusblock:
+    def fahrenheit_freezing: 32
+  )
+
+By convention, however, @rhombus(=) is used for single expressions, while
+@litchar{:} is useful for multi-line definitions and blocks. A @rhombus(=) is
+interchangable for @litchar{:} only in certain forms, like
+@rhombus(def).
+
 A Rhombus module can export definitions to other modules using
 @rhombus(export), and it can import other modules using
 @rhombus(import). The @litchar{#lang rhombus} line is a kind of
@@ -71,7 +83,7 @@ definitions.
       fahrenheit_freezing
       fahrenheit_to_celsius
 
-    def fahrenheit_freezing: 32
+    def fahrenheit_freezing = 32
 
     fun fahrenheit_to_celsius(f):
       (f - 32) * 5/9)
@@ -135,7 +147,7 @@ are shown with a leading @litchar{> } prompt and the expected result.
 
 @(demo:
     ~defn:
-      def fahrenheit_freezing: 32
+      def fahrenheit_freezing = 32
       fun fahrenheit_to_celsius(f):
         (f - 32) * 5/9
     ~repl:

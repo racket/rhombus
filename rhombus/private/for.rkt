@@ -100,16 +100,16 @@
           (syntax-parse #'body0
             #:datum-literals (group block parens)
             #:literals (prim-for-clause)
-            [(group prim-for-clause #:each any ...+ (~and rhs-block (block body ...)))
+            [(group prim-for-clause #:each any ...+ rhs-blk)
              ;; parse binding as binding group
              #`(#:splice (for-clause-step
                           orig
                           #,(build-binding-clause/values #'orig
                                                          #'state
                                                          #`((#,group-tag any ...))
-                                                         #'rhs-block)
+                                                         #'rhs-blk)
                           . bodys))]
-            [(group prim-for-clause #:each (block (group any ...+ (~and rhs-block (block body ...)))
+            [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
                                                   ...))
              ;; parse binding as binding group
              #`(#:splice (for-clause-step
@@ -117,7 +117,7 @@
                           #,(build-binding-clause*/values #'orig
                                                           #'state
                                                           (syntax->list #`(((#,group-tag any ...)) ...))
-                                                          (syntax->list #'(rhs-block ...)))
+                                                          (syntax->list #'(rhs-blk ...)))
                           . bodys))]
             [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
                     expr ...)
@@ -168,7 +168,7 @@
 (define-for-syntax (build-binding-clause orig-stx
                                          state-stx
                                          bindings-stx
-                                         rhs-block-stx)
+                                         rhs-blk-stx)
   (define lhs-parsed-stxes (for/list ([binding-stx (in-list (syntax->list bindings-stx))])
                              (syntax-parse binding-stx
                                [lhs::binding #'lhs.parsed]
@@ -178,7 +178,7 @@
                                                       binding-stx)])))
   (syntax-parse lhs-parsed-stxes
     [(lhs-e::binding-form ...)
-     #:with rhs (rhombus-local-expand (enforest-expression-block rhs-block-stx))
+     #:with rhs (rhombus-local-expand (enforest-expression-block rhs-blk-stx))
      #:with static-infos (or (syntax-local-static-info #'rhs #'#%ref-result)
                              #'())
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data)...)
@@ -213,18 +213,18 @@
 (define-for-syntax (build-binding-clause*/values orig-stx
                                                  state-stx
                                                  bindings-stxs
-                                                 rhs-block-stxs)
+                                                 rhs-blk-stxs)
     (cond
       [(null? bindings-stxs) state-stx]
       [else
        (define new-state-stx (build-binding-clause/values orig-stx
                                                           state-stx
                                                           (car bindings-stxs)
-                                                          (car rhs-block-stxs)))
+                                                          (car rhs-blk-stxs)))
        (build-binding-clause*/values orig-stx
                                      new-state-stx
                                      (cdr bindings-stxs)
-                                     (cdr rhs-block-stxs))]))
+                                     (cdr rhs-blk-stxs))]))
 
 (define-syntax-rule (void-result e)
   (begin
@@ -249,22 +249,29 @@
    (lambda (stx)
      (raise-syntax-error #f "should not try to expand" stx))))
 
+(begin-for-syntax
+  ;; Like `:var-decl`, but we don't allow `=` here
+  (define-splicing-syntax-class :each-decl
+    #:datum-literals (group block)
+    #:attributes ([bind 1] blk)
+    (pattern (~seq bind ...+ (~and rhs (_::block . _)))
+             #:attr blk #'rhs)))
+
 (define-syntax each
   (for-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (group block)
-       [(form-id bind ...+ (~and rhs (_::block . _)))
-        #`[(#,group-tag prim-for-clause #:each bind ... rhs)]]
-       [(form-id (~and blk
-                       (_::block (group bind ...+ (_::block . _))
-                                 ...)))
-        #`[(#,group-tag prim-for-clause #:each blk)]]
+       [(form-id d::each-decl)
+        #`[(#,group-tag prim-for-clause #:each d.bind ... d.blk)]]
+       [(form-id (tag::block (group d::each-decl) ...))
+        #`[(#,group-tag prim-for-clause #:each (tag
+                                                (group d.bind ... d.blk)
+                                                ...))]]
        [_
         (raise-syntax-error #f
-                            "needs binding followed by value block, or it needs a block of bindings with blocks"
-                            #'orig
-                            #'body0)]))))
+                            "needs a binding followed by a block, or it needs a block of bindings (each with a block)"
+                            stx)]))))
 
 (define-syntax keep_when
   (for-clause-transformer
