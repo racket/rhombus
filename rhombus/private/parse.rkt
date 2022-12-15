@@ -257,6 +257,9 @@
        [else
         (syntax-parse #'g
           [g-e::expression #'g-e.parsed])])]
+    [((~datum group) . _)
+     (syntax-parse e
+       [g-e::expression #'g-e.parsed])]
     [((~datum block) g ...) #`(rhombus-body g ...)]))
 
 ;; Forces enforestation through `rhombus-expression`; note that

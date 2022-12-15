@@ -48,7 +48,7 @@ check:
   [1, 2, 3, 4]
 
 begin:
-  def [a, b, & rst] : [1, 2, 3, 4]
+  def [a, b, & rst] = [1, 2, 3, 4]
   check: a; 1
   check: b; 2
   check: rst; [3, 4]
@@ -78,21 +78,21 @@ check:
   {"a", "b", "c", "d"}
 
 begin:
-  def {"a": a, "b": b, & rst} : {"a": 1, "b": 2, "c": 3, "d": 4}
+  def {"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
   check: a; 1
   check: b; 2
   check: rst; {"c": 3, "d": 4}
 
 begin:
-  def Map{"a": a, "b": b, & rst} : {"a": 1, "b": 2, "c": 3, "d": 4}
+  def Map{"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
   check: a; 1
   check: b; 2
   check: rst; {"c": 3, "d": 4}
 
 // Match & rest on mutable maps produces an immutable copy
 begin:
-  def m : MutableMap{"a": 1, "b": 2}
-  def r : match m
+  def m = MutableMap{"a": 1, "b": 2}
+  def r = match m
           | {"a": a, & rst}: rst
           | _: #false
   m["b"] := 3
@@ -217,7 +217,7 @@ fun
 fun
 | triangle_area(~base, ~height): (1/2) * base * height
 | triangle_area(~side1, ~side2, ~side3):
-    def s: (1/2) * (side1 + side2 + side3)
+    def s = (1/2) * (side1 + side2 + side3)
     sqrt(s * (s - side1) * (s - side2) * (s - side3))
 
 fun
@@ -236,7 +236,7 @@ check: shape_area(~type: "triangle", ~side1: 17, ~side2: 17, ~side3: 16); 120
 // Repetition Rest with ...
 
 begin:
-  def [x, ...]: [2, 3]
+  def [x, ...] = [2, 3]
   check: expt(x, ...); 8
   check: List(x, ...); [2, 3]
 
@@ -263,7 +263,7 @@ check:
   add(1, 2, 3)
   6
 
-def [n :: Integer, ...]: [10, 20, 30]
+def [n :: Integer, ...] = [10, 20, 30]
 check:
   add(1, n, ...)
   61
@@ -280,7 +280,7 @@ check:
 
 check:
   ~print
-  def [s, ...]: ["a", "b", "c"]
+  def [s, ...] = ["a", "b", "c"]
   '(hi $s) ...'
   '(hi "a") (hi "b") (hi "c")'
   
@@ -291,13 +291,13 @@ check:
 
 class Posn(x, y)
 
-def List(p :: Posn, ...) : [Posn(1, 2), Posn(3, 4)]
+def List(p :: Posn, ...) = [Posn(1, 2), Posn(3, 4)]
 check:
   [p, ...][0].x
   1
 
 fun posns_y1(& rst):
-  def List(p :: Posn, ...) : rst
+  def List(p :: Posn, ...) = rst
   [p, ...][1].y
 
 check:
@@ -326,7 +326,7 @@ check:
   15
 
 check:
-  def [x, ...]: [3, 4]
+  def [x, ...] = [3, 4]
   add(1, 2, x, ..., 5)
   15
 
@@ -335,12 +335,12 @@ check:
   14
 
 check:
-  def [x, ...]: [3, 4]
+  def [x, ...] = [3, 4]
   add(&[-1, 1], 2, x, ..., 5)
   14
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [add(&(begin: s := [1, s]; [-1, 1]),
        (begin: s := [2, s]; 2),
        &(begin: s := [3, s]; [3, 4]),
@@ -352,19 +352,19 @@ check:
 // `~&` not at end
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { keyword'~height': 10 })),
    s]
   [5, [2, [1, 0]]]
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [triangle_area(~& (begin: s := [2, s]; { keyword'~height': 10 }), ~base: (begin: s := [1, s]; 1)), 
    s]
   [5, [1, [2, 0]]]
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [anyargs(~& (begin: s := [1, s]; { keyword'~height': 10 }),
            & (begin: s := [2, s]; [9, 10, 11]),
            ~base: (begin: s := [3, s]; 1),
@@ -373,7 +373,7 @@ check:
   [[[9, 10, 11, 8], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
            ~& (begin: s := [2, s]; { keyword'~height': 10 }),
            ~base: (begin: s := [3, s]; 1),
@@ -382,7 +382,7 @@ check:
   [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
-  def mutable s: 0
+  def mutable s = 0
   [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
            ~& (begin: s := [2, s]; { keyword'~height': 10 }),
            ~base: (begin: s := [3, s]; 1),

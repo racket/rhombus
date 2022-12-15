@@ -4,10 +4,10 @@ import:
 
 namespace root:
   namespace trunk:
-    def name: "trunk"
+    def name = "trunk"
     export: name
-  def name: "root"
-  def trunk.side: "left"
+  def name = "root"
+  def trunk.side = "left"
   export: trunk name
 
 check:
@@ -24,7 +24,7 @@ check:
 
 check:
   namespace root.trunk.branch:
-    def name: "branch"
+    def name = "branch"
     export: name
   root.trunk.branch.name
   "branch"
@@ -42,8 +42,8 @@ check:
   root.trunk.f(" hi")
   "trunk hi"
 
-def root.ten: 10
-def root.trunk.seven: 7
+def root.ten = 10
+def root.trunk.seven = 7
 
 check:
   root.ten
@@ -81,12 +81,12 @@ check:
   [[1, 2]]
 
 check:
-  def root.name: "ROOT"
+  def root.name = "ROOT"
   root.name
   "ROOT"
 
 check:
-  def root.trunk.name: "TRUNK"
+  def root.trunk.name = "TRUNK"
   [root.name, root.trunk.name]
   ["root", "TRUNK"]
 
@@ -98,7 +98,7 @@ check:
 namespace route:
   export: trunc
   namespace trunc
-  def trunc.name: "trunc"
+  def trunc.name = "trunc"
 
 check:
   route.trunc.name
@@ -122,10 +122,10 @@ check:
 check:
   namespace math
   namespace ext1:
-    def math.e: 2.71
+    def math.e = 2.71
     export: math
   namespace ext2:
-    def math.d: "d"
+    def math.d = "d"
     export: math
   [ext1.math.e, ext2.math.d]
   [2.71, "d"]

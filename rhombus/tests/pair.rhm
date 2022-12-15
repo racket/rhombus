@@ -14,7 +14,7 @@ check:
   [1, 2]
 
 check:
-  def p :: Pair: [1, 2]
+  def p :: Pair = [1, 2]
   p
   [1, 2]
 
@@ -52,25 +52,25 @@ begin:
     Pair.cons(1, 2).rest
     2
   check:
-    def x :: Pair: [1, 2, 3]
+    def x :: Pair = [1, 2, 3]
     x.first
     1
   check:
-    def Pair(x, y): [1, 2, 3]
+    def Pair(x, y) = [1, 2, 3]
     x
     1
   check:
     (["ok", "fine"] :: Pair.of(String, List)).rest
     ["fine"]
   check:
-    def Pair(x :: List, y): [[1, 2, 3]]
+    def Pair(x :: List, y) = [[1, 2, 3]]
     x.length()
     3
   check:
     (["ok", "fine"] :: Pair.of(String, List)).rest.length()
     1
   check:
-    def x :: Pair.of(List, Any): [[1, 2, 3]]
+    def x :: Pair.of(List, Any) = [[1, 2, 3]]
     x.first.length()
     3
 

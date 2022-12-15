@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def op_eval: make_rhombus_eval())
+@(def op_eval = make_rhombus_eval())
 
 @examples(
   ~eval: op_eval,

@@ -11,7 +11,7 @@ assigns to a mutable variable.
 
 @(demo:
     ~defn:
-      def mutable todays_weather: "sunny"
+      def mutable todays_weather = "sunny"
     ~repl:
       todays_weather
       todays_weather := "rainy"
@@ -32,7 +32,7 @@ The @rhombus(:=) operator can also change object fields accessed via
     ~defn:
       class Box(mutable content)
     ~repl:
-      def present: Box("socks")
+      def present = Box("socks")
       present.content
       present.content := "toy"
       present.content

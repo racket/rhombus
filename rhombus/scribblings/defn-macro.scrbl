@@ -20,7 +20,7 @@ Here’s the classic @rhombus(def_five) macro:
         rhombus/meta open
 
       defn.macro 'def_five $id':
-        'def $id: 5'
+        'def $id = 5'
     ~repl:
       def_five v
       v

@@ -11,12 +11,16 @@
   (for/list ([added (in-list added-fields)])
     (with-syntax ([id (added-field-id added)]
                   [tmp-id (added-field-arg-id added)]
-                  [blk (added-field-arg-blk added)]
+                  [rhs (let ([blk (added-field-arg-blk added)])
+                         (syntax-parse blk
+                           #:datum-literals (block)
+                           [(block . _) #`(rhombus-body-at . #,blk)]
+                           [_ #`(rhombus-expression #,blk)]))]
                   [predicate (added-field-predicate added)]
                   [annotation-str (added-field-annotation-str added)]
                   [form-id (added-field-form-id added)])
       #`(define tmp-id (lambda ()
-                         (let ([id (rhombus-body-at . blk)])
+                         (let ([id rhs])
                            #,(if (syntax-e #'predicate)
                                  #`(if (predicate id)
                                        id

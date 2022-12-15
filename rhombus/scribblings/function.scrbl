@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def posn_eval: make_rhombus_eval())
+@(def posn_eval = make_rhombus_eval())
 
 @examples(
   ~eval: posn_eval,
@@ -31,9 +31,9 @@ an anonymous function value.
 
 @(demo:
     ~defn:
-      def curried_add: fun (x):
-                         fun (y):
-                           x+y
+      def curried_add = fun (x):
+                          fun (y):
+                            x+y
     ~repl:
       curried_add(10)(20)
   )

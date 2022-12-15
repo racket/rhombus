@@ -5,6 +5,10 @@
 
 (provide (rename-out [rhombus= =]))
 
+(module+ for-parse
+  (provide (for-syntax :equal
+                       :not-equal)))
+
 (define-syntax rhombus=
   (make-expression+binding-infix-operator
    #'rhombus=
@@ -27,3 +31,13 @@
         (raise-syntax-error #f
                             "not a binding operator"
                             #'o)]))))
+
+(begin-for-syntax
+  (define-syntax-class :equal
+    #:datum-literals (op)
+    #:literals (rhombus=)
+    (pattern (op rhombus=)))
+  (define-syntax-class :not-equal
+    #:datum-literals (op)
+    #:literals (rhombus=)
+    (pattern (~not (op rhombus=)))))

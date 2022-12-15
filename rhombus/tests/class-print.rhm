@@ -6,7 +6,7 @@ use_static
 check:
   class Posn(x, ~y, private w = 10):
     nonfinal
-    field quiet: 11
+    field quiet = 11
   
   class Posn3D(~z: z, w):
     nonfinal

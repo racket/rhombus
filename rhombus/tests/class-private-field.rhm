@@ -28,8 +28,8 @@ check:
   class Posn(x, y, private color = "blue"):
     method get_color():
       color
-  def p: Posn(1, 2)
-  def Posn(px, py): p
+  def p = Posn(1, 2)
+  def Posn(px, py) = p
   [p.x, p.y, p.get_color(),
    px, py,
    p is_a Posn.of(Integer, Integer)]
@@ -45,10 +45,10 @@ check:
     private method secret():
       [color]
     internal _Posn
-  def p: Posn(1, 2)
-  def _p: _Posn(-1, -2, "red")
-  def Posn(px, py): p
-  def _Posn(_px, _py, _pcolor): p
+  def p = Posn(1, 2)
+  def _p = _Posn(-1, -2, "red")
+  def Posn(px, py) = p
+  def _Posn(_px, _py, _pcolor) = p
   [p.x, p.y, p.get_color(),
    _p.x, _p.y, _p.get_color(),
    px, py,
@@ -77,9 +77,9 @@ check:
     extends Posn
     method get_weight():
       weight
-  def p3: Posn3D(1, 2, 3)
-  def Posn(px, py): p3
-  def Posn3D(px3, py3, pz3): p3
+  def p3 = Posn3D(1, 2, 3)
+  def Posn(px, py) = p3
+  def Posn3D(px3, py3, pz3) = p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -100,9 +100,9 @@ check:
   class Posn3D(z):
     nonfinal
     extends Posn
-  def p3: Posn3D(1, 2, 3)
-  def Posn(px, py): p3
-  def Posn3D(px3, py3, pz3): p3
+  def p3 = Posn3D(1, 2, 3)
+  def Posn(px, py) = p3
+  def Posn3D(px3, py3, pz3) = p3
   [p3.x, p3.y, p3.get_color(), p3.z,
    px, py,
    px3, py3, pz3,
@@ -127,9 +127,9 @@ check:
       super(x, y)("heavy", z)
     method get_weight():
       weight
-  def p3: Posn3D(1, 2, 3)
-  def Posn(px, py): p3
-  def Posn3D(px3, py3, pz3): p3
+  def p3 = Posn3D(1, 2, 3)
+  def Posn(px, py) = p3
+  def Posn3D(px3, py3, pz3) = p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -166,9 +166,9 @@ check:
     annotation
     | 'Posn3D $dot of{$x, $y, $z}': 'Posn.of{$x, $y} && _Posn3D.of(Any, $z)'
     | 'Posn3D' : '_Posn3D'      
-  def p3: Posn3D(1, 2, 3)
-  def Posn{px, py}: p3
-  def Posn3D{px3, py3, pz3}: p3
+  def p3 = Posn3D(1, 2, 3)
+  def Posn{px, py} = p3
+  def Posn3D{px3, py3, pz3} = p3
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
@@ -183,8 +183,8 @@ check:
     constructor (x, y):
       super(x, y, 10)
     internal _Posn
-  def p: Posn(1, 2)
-  def Posn(x, y): p
+  def p = Posn(1, 2)
+  def Posn(x, y) = p
   [_Posn.stamp(p),
    (p -: _Posn).stamp]
   [10, 10]

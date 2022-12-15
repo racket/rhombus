@@ -66,7 +66,7 @@ normally bound to implement function calls.
                 $body
                 ...',
   defn.macro 'fun
-              | $identifier_path($binding, ..., $rest, ...) $maybe_res_ann:
+              | $identifier_path($kw_binding, ..., $rest, ...) $maybe_res_ann:
                   $body
                   ...
               | ...',
@@ -76,7 +76,7 @@ normally bound to implement function calls.
                 ...',
 
   expr.macro 'fun
-              | ($binding, ..., $rest, ...) $maybe_res_ann:
+              | ($kw_binding, ..., $rest, ...) $maybe_res_ann:
                   $body
                   ...
               | ...',
@@ -88,8 +88,15 @@ normally bound to implement function calls.
   grammar kwopt_binding:
     $binding
     $keyword: $binding
-    $binding $$(@tt{=}) $default_expr
-    $keyword: $binding $$(@tt{=}) $default_expr,
+    $binding = $default_expr
+    $binding: $default_body; ...
+    $keyword: $binding = $default_expr
+    $keyword: $binding: $default_body; ...
+    $keyword = $default_expr,
+  
+  grammar kw_binding:
+    $binding
+    $keyword: $binding,
   
   grammar maybe_res_ann:
     :: $annotation
@@ -139,14 +146,17 @@ normally bound to implement function calls.
   curried_add(1)(2)
 )
 
- When @litchar{|} is not used, then arguments can have default values.
+ When @litchar{|} is not used, then arguments can have default values
+ as specified after a @rhombus(=) or in a block after the argument name.
  Bindings for earlier arguments are visible in each
- @rhombus(default_expr), but not bindings for later arguments;
+ @rhombus(default_expr) or @rhombus(default_body), but not bindings for later arguments;
  accordingly, matching actions are interleaved with binding effects (such
  as rejecting a non-matching argument) left-to-right, except that the
  result of a @rhombus(default_expr) is subject to the same constraints
  imposed by annotations and patterns for its argument as an explicitly
- supplied argument would be.
+ supplied argument would be. An argument form @rhombus($keyword = $default_expr)
+ is equivalent to the form @rhombus($keyword: $identifier = $default_expr)
+ for the @rhombus($identifier) with the same string form as @rhombus($keyword).
 
 @examples(
   fun f(x, y = x+1):
@@ -240,7 +250,7 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
                        ...',
 
   entry_point.macro 'fun
-                     | ($binding, ..., $rest, ...) $maybe_res_ann:
+                     | ($kw_binding, ..., $rest, ...) $maybe_res_ann:
                          $body
                          ...
                      | ...'

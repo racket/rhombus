@@ -30,6 +30,7 @@
          (only-in (submod "list.rkt" for-binding)
                   parse-list-expression)
          (submod "annotation.rkt" for-class)
+         (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
                   [= rhombus=])
          "dotted-sequence-parse.rkt"
@@ -103,7 +104,7 @@
   (define-syntax-class :kw-binding
     #:attributes [kw parsed]
     #:datum-literals (op block group)
-    #:literals (rhombus= rhombus...)
+    #:literals (rhombus...)
     (pattern (group kw:keyword (block (group a ...)))
              #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:attr parsed #'arg.parsed)
@@ -117,21 +118,28 @@
   (define-syntax-class :kw-opt-binding
     #:attributes [kw parsed default]
     #:datum-literals (op block group)
-    #:literals (rhombus= rhombus...)
-    (pattern (group kw:keyword (block (group a ... (op rhombus=) e ...+)))
+    #:literals (rhombus...)
+    (pattern (group kw:keyword (block (group a::not-equal ... _::equal e ...+)))
              #:with arg::binding (empty->keyword #'(group a ...) #'kw)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:keyword (block (group (op rhombus=) e ...+)))
-             #:with default #'(group e ...)
+    (pattern (group kw:keyword (block (group a ... (b-tag::block b ...))))
+             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+             #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:keyword (op rhombus=) e ...+)
+    (pattern (group kw:keyword _::equal e ...+)
              #:with arg::binding (empty->keyword #'(group) #'kw)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
-    (pattern (group a ...+ (op rhombus=) e ...+)
+    (pattern (group a::not-equal ...+ _::equal e ...+)
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
+             #:attr kw #'#f
+             #:attr parsed #'arg.parsed)
+    (pattern (group a ...+ (b-tag::block b ...))
+             #:with (~not (_:keyword)) #'(a ...)
+             #:with arg::binding #'(group a ...)
+             #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern ::kw-binding

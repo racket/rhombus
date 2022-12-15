@@ -20,7 +20,7 @@ value is matched against the corresponding group.
 
 @(demo:
     ~defn:
-      def (n, s): values(1, "apple")
+      def (n, s) = values(1, "apple")
     ~repl:
       n
       s
@@ -33,7 +33,7 @@ look more the same:
 
 @(demo:
     ~defn:
-      def values(n, s): values(1, "apple")
+      def values(n, s) = values(1, "apple")
     ~repl:
       n
       s

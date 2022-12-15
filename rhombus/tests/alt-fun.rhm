@@ -183,7 +183,7 @@ check: pythag(~a: 3, ~b: 4, ~c: 6); #false
 begin:
   check: object_name(pythag); symbol(pythag)
   check: procedure_arity(pythag); 0
-  def values(req_kws, all_kws): procedure_keywords(pythag)
+  def values(req_kws, all_kws) = procedure_keywords(pythag)
   check: req_kws; []
   check: all_kws; [keyword(~a), keyword(~b), keyword(~c)]
 

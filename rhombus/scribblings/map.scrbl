@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def map_eval: make_rhombus_eval())
+@(def map_eval = make_rhombus_eval())
 
 @examples(
   ~eval: map_eval,
@@ -22,7 +22,7 @@ for assignment.
 
 @(demo:
     ~defn:
-      def buckets: Array(1, 2, 3, 4)
+      def buckets = Array(1, 2, 3, 4)
     ~repl:
       buckets[0]
       buckets[1] := 5
@@ -44,8 +44,8 @@ which case it accepts keys paired with values in two-item lists:
 @(demo:
     ~eval: map_eval
     ~defn:
-      def neighborhood: Map(["alice", Posn(4, 5)],
-                            ["bob", Posn(7, 9)])
+      def neighborhood = Map(["alice", Posn(4, 5)],
+                             ["bob", Posn(7, 9)])
     ~repl:
       neighborhood["alice"]
       ~error: neighborhood["clara"]
@@ -59,8 +59,8 @@ itself, the expression will have to be in parentheses.)
 @(demo:
     ~eval: map_eval
     ~defn:
-      def neighborhood: {"alice": Posn(4, 5),
-                         "bob": Posn(7, 9)}
+      def neighborhood = {"alice": Posn(4, 5),
+                          "bob": Posn(7, 9)}
     ~repl:
       neighborhood["alice"]
   )
@@ -115,7 +115,7 @@ for keys and one for values:
     ~eval: map_eval
     ~defn:
       fun locale(who, neighborhood -: Map.of(String, Posn)):
-        def p: neighborhood[who]
+        def p = neighborhood[who]
         p.x +& ", " +& p.y
     ~repl:
       locale("alice", neighborhood)
@@ -135,8 +135,8 @@ using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
 @(demo:
     ~eval: map_eval
     ~defn:
-      def locations: MutableMap{"alice": Posn(4, 5),
-                                "bob": Posn(7, 9)}
+      def locations = MutableMap{"alice": Posn(4, 5),
+                                 "bob": Posn(7, 9)}
     ~repl:
       locations["alice"] := Posn(40, 50)
       locations["alice"]
@@ -151,7 +151,7 @@ binds with lists. In a map @litchar("{")...@litchar("}") expression,
 @(demo:
     ~eval: map_eval
     ~defn:
-      def {"bob": bob_home, & others}: neighborhood
+      def {"bob": bob_home, & others} = neighborhood
     ~repl:
       others
       {& others, "clara": Posn(8, 2)}

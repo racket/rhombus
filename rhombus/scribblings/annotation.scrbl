@@ -3,14 +3,14 @@
     "util.rhm" open
     "common.rhm" open)
 
-@(def ann_eval: make_rhombus_eval())
+@(def ann_eval = make_rhombus_eval())
 
 @examples(
   ~eval: ann_eval,
   ~hidden: #true,
   class Posn(x, y),
   fun flip(p -: Posn): Posn(p.y, p.x),
-  def origin: Posn(0, 0)
+  def origin = Posn(0, 0)
 )
 
 @title(~tag: "annotation"){Annotations and the Dot Operator}
