@@ -15,7 +15,14 @@
          (only-in "class-method-result.rkt"
                   define-method-result-syntax))
 
-(provide (for-syntax reorder-for-top-level))
+(provide (for-syntax top-level-declare
+                     reorder-for-top-level))
+
+(define-for-syntax (top-level-declare ids-stx)
+  (cond
+    [(eq? (syntax-local-context) 'top-level)
+     (list #`(define-syntaxes #,ids-stx (values)))]
+    [else null]))
 
 (define-for-syntax (reorder-for-top-level defs)
   (cond

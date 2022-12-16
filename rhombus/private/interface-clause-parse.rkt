@@ -8,9 +8,31 @@
          (submod "class-clause-parse.rkt" for-interface)
          "parens.rkt")
 
-(provide (for-syntax parse-options))
+(provide (for-syntax parse-annotation-options
+                     parse-options)
+         rhombus-class)
 
 ;; interface clause forms are defined in "class-clause-parse.rkt"
+
+(define-for-syntax (parse-annotation-options orig-stx forms)
+  (syntax-parse forms
+    #:context orig-stx
+    [((_ clause-parsed) ...)
+     (define clauses (syntax->list #'(clause-parsed ...)))
+     (let loop ([clauses clauses] [options #hasheq()])
+       (cond
+         [(null? clauses) options]
+         [else
+          (define clause (car clauses))
+          (define new-options
+            (syntax-parse clause
+              #:literals (internal extends)
+              [(internal id)
+               (when (hash-has-key? options 'internal)
+                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
+               (hash-set options 'internal #'id)]
+              [_ options]))
+          (loop (cdr clauses) new-options)]))]))
 
 (define-for-syntax (parse-options orig-stx forms)
   (syntax-parse forms
@@ -32,9 +54,7 @@
           (define new-options
             (syntax-parse clause
               #:literals (internal extends)
-              [(internal id)
-               (when (hash-has-key? options 'internal)
-                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
+              [(internal id) ; checked in `parse-annotation-options`
                (hash-set options 'internal #'id)]
               [(extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))

@@ -24,3 +24,4 @@ has only methods and can be implemented by classes.
 @include_section("private-method.scrbl")
 @include_section("private-implement.scrbl")
 @include_section("class-namespace.scrbl")
+@include_section("class-together.scrbl")

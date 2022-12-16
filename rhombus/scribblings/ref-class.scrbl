@@ -141,12 +141,17 @@
  @rhombus(class) form; it be one of the predefined clause forms,
  or it can be a macro that ultimately expands to a predefined form.
  Definitions and expressions in a @rhombus(class) block are evaluated at
- the same time as the @rhombus(class) form is evaluated (not when an
- instance is created), and definitions are scoped to the block for
- potential use by class clauses. Local definitions can be exported, but
+ when the @rhombus(class) form is evaluated, and not when an
+ instance is created. Definitions are scoped to the block for
+ potential use by class clauses, but a @rhombus(class) form is analogous
+ to @rhombus(namespace) in that local definitions can be exported.
  exported names must be distinct from all non-private field and method
  names (which are automatically exported from the class in its role as a
- namespace).
+ namespace). Since the definitions and expressions of a @rhombus(class)
+ body must be processed to find @tech{class clauses} in the body, the
+ class is not available for use until after the definitions and
+ expressions, as if the definitions and expressions appeared before the
+ @rhombus(class) form.
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
  then an additional field is added to the class, but the additional field
@@ -241,6 +246,9 @@
  overridden via @rhombus(override, ~class_clause), the original and
  overriding methods must be both @tech{property methods} or both
  non-property methods.
+
+ The @rhombus(identifier_path) defined by @rhombus(class) does not
+ become usable until
 
  See @secref("static-info-rules") for information about static
  information associated with classes.
@@ -355,6 +363,43 @@
  class. Overriding applies to same-named methods of all interfaces.
 
 }
+
+@doc(
+  ~literal: :: class interface,
+  defn.macro 'class.together:
+                $class_or_interface
+                ...',
+  grammar class_or_interface:
+    class $class_decl
+    interface $interface_decl
+){
+
+ Defines the same bindings as the @rhombus(class_or_interface)s, but
+ reorders the expansion so that the defined class and interface names can
+ be used as field and method-result annotations and in all of the other
+ class and interface declarations.
+
+ Definitions and expressions within each @rhombus(class) and
+ @rhombus(interface) form (i.e., forms that are not @tech{class clauses}
+ or @tech{interface clauses}) are ordered before all of the class and
+ interface definitions, so using @rhombus(class.together) does not make
+ the class and interface names more available in those terms.
+
+@examples(
+  class.together:
+    class Tree(x :: List.of(Node))
+    class Node(val, children :: Tree),
+  class.together:
+    class Even():
+      nonfinal
+      abstract method get_next() :: Odd
+    class Odd():
+      nonfinal
+      abstract method get_next() :: Even  
+)
+
+}
+
 
 @doc(
   class_clause.macro 'extends $identifier_path',

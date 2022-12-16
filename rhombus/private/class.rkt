@@ -28,6 +28,7 @@
          "class-method.rkt"
          "class-desc.rkt"
          "class-top-level.rkt"
+         "class-together-parse.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt"
          "parse.rkt"
@@ -35,8 +36,8 @@
          (submod "namespace.rkt" for-exports)
          (submod "print.rkt" for-class))
 
-(provide (rename-out [rhombus-class class])
-         this
+;; the `class` form is provided by "class-together.rkt"
+(provide this
          super
          extends
          implements
@@ -54,32 +55,46 @@
          private
          abstract)
 
-(define-syntax rhombus-class
+(module+ for-together
+  (provide (for-syntax class-transformer)
+           class_for_together
+           class-finish))
+
+(define-for-syntax class-transformer
   (definition-transformer
-   (lambda (stxes)
-     (syntax-parse stxes
-       #:datum-literals (group block)
-       [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
-           options::options-block)
-        #:with full-name::dotted-identifier #'name-seq
-        #:with name #'full-name.name
-        #:with orig-stx stxes
-        (define body #'(options.form ...))
-        (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
-                                        full-name name
-                                        (field.name ...)
-                                        (field.keyword ...)
-                                        (field.default ...)
-                                        (field.mutable ...)
-                                        (field.private ...)
-                                        (field.ann-seq ...)])
-        (define class-data-stx #f)
-        (cond
-          [(null? (syntax-e body))
-           #`((class-annotation+finish #,finish-data ()))]
-          [else
-           #`((rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
-                                                        (class-body-step #,class-data-stx . #,(syntax-local-introduce body))))])]))))
+    (lambda (stxes)
+      (parse-class stxes))))
+      
+(define-syntax class_for_together
+  (definition-transformer
+    (lambda (stxes)
+      (parse-class stxes #t))))
+      
+(define-for-syntax (parse-class stxes [for-together? #f])
+  (syntax-parse stxes
+    #:datum-literals (group block)
+    [(_ name-seq::dotted-identifier-sequence (tag::parens field::constructor-field ...)
+        options::options-block)
+     #:with full-name::dotted-identifier #'name-seq
+     #:with name #'full-name.name
+     #:with orig-stx stxes
+     (define body #'(options.form ...))
+     (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
+                                     #,for-together?
+                                     full-name name
+                                     (field.name ...)
+                                     (field.keyword ...)
+                                     (field.default ...)
+                                     (field.mutable ...)
+                                     (field.private ...)
+                                     (field.ann-seq ...)])
+     (define class-data-stx #f)
+     (cond
+       [(null? (syntax-e body))
+        #`((class-annotation+finish #,finish-data ()))]
+       [else
+        #`((rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
+                                                     (class-body-step #,class-data-stx . #,(syntax-local-introduce body))))])]))
 
 (define-syntax class-body-step
   (lambda (stx)
@@ -108,6 +123,7 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
+                    for-together?
                     full-name name
                     constructor-field-names
                     constructor-field-keywords
@@ -154,27 +170,30 @@
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
                                                                         '())])
-         #`(begin
-             #,@(build-class-annotation-form super annotation-rhs
-                                             super-constructor-fields
-                                             exposed-internal-id intro
-                                             #'(name name-instance name?
-                                                     internal-name-instance
-                                                     constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
-                                                     constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
-           (class-finish
-            [orig-stx base-stx scope-stx
-                      full-name name name?
-                      name-instance internal-name-instance
-                      constructor-field-names
-                      constructor-field-keywords
-                      constructor-field-defaults
-                      constructor-field-mutables
-                      constructor-field-privates
-                      constructor-field-ann-seqs
-                      constructor-name-fields]
-            exports
-            option ...)))])))
+         (wrap-for-together
+          #'for-together?
+          #`(begin
+              #,@(top-level-declare #'(name? . constructor-name-fields))
+              #,@(build-class-annotation-form super annotation-rhs
+                                              super-constructor-fields
+                                              exposed-internal-id intro
+                                              #'(name name-instance name?
+                                                      internal-name-instance
+                                                      constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
+                                                      constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
+              (class-finish
+               [orig-stx base-stx scope-stx
+                         full-name name name?
+                         name-instance internal-name-instance
+                         constructor-field-names
+                         constructor-field-keywords
+                         constructor-field-defaults
+                         constructor-field-mutables
+                         constructor-field-privates
+                         constructor-field-ann-seqs
+                         constructor-name-fields]
+               exports
+               option ...))))])))
 
 (define-syntax class-finish
   (lambda (stx)

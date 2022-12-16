@@ -1,0 +1,36 @@
+#lang rhombus
+import: "check.rhm" open
+
+use_static
+
+class.together:
+  class Foo(x :: List.of(Bar))
+  class Bar(x :: Foo)
+
+check:
+  Foo([])
+  Foo([])
+
+check:
+  Bar(Foo([]))
+  Bar(Foo([]))
+
+check:
+  Foo([Bar(Foo([]))])
+  Foo([Bar(Foo([]))])
+
+check:
+  ~exn
+  Foo([1])
+  "does not match annotation"
+
+check:
+  ~exn
+  Bar(1)
+  "does not match annotation"
+
+check:
+  ~exn
+  Foo([Foo([])])
+  "does not match annotation"
+

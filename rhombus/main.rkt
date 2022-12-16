@@ -30,6 +30,7 @@
         "private/dynamic-static.rkt"
         "private/class.rkt"
         "private/interface.rkt"
+        "private/class-together.rkt"
         "private/def+let.rkt"
         "private/import.rkt"
         "private/export.rkt"

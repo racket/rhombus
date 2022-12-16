@@ -12,8 +12,6 @@
                               :options-block
                               in-class-desc-space
                               check-exports-distinct))
-         (only-in "class.rkt"
-                  [class rhombus-class])
          "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -21,6 +19,7 @@
          (submod "annotation.rkt" for-class)
          "interface-clause.rkt"
          "interface-clause-parse.rkt"
+         "class-together-parse.rkt"
          "dotted-sequence-parse.rkt"
          (only-meta-in 1
                        "class-method.rkt")
@@ -30,25 +29,38 @@
 
 (provide interface)
 
+(module+ for-together
+  (provide interface
+           interface_for_together))
+
 (define-syntax interface
   (definition-transformer
-   (lambda (stxes)
-     (syntax-parse stxes
-       #:datum-literals (group block)
-       [(_ name-seq::dotted-identifier-sequence options::options-block)
-        #:with full-name::dotted-identifier #'name-seq
-        #:with name #'full-name.name
-        #:with orig-stx stxes
-        (define body #'(options.form ...))
-        (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
-                                        full-name name])
-        (define interface-data-stx #f)
-        (cond
-          [(null? (syntax-e body))
-           #`((interface-finish #,finish-data ()))]
-          [else
-           #`((rhombus-mixed-nested-forwarding-sequence (interface-finish #,finish-data) rhombus-class
-                                                        (interface-body-step #,interface-data-stx . #,(syntax-local-introduce body))))])]))))
+    (lambda (stxes)
+      (parse-interface stxes))))
+
+(define-syntax interface_for_together
+  (definition-transformer
+    (lambda (stxes)
+      (parse-interface stxes #t))))
+
+(define-for-syntax (parse-interface stxes [for-together? #f])
+  (syntax-parse stxes
+    #:datum-literals (group block)
+    [(_ name-seq::dotted-identifier-sequence options::options-block)
+     #:with full-name::dotted-identifier #'name-seq
+     #:with name #'full-name.name
+     #:with orig-stx stxes
+     (define body #'(options.form ...))
+     (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
+                                     #,for-together?
+                                     full-name name])
+     (define interface-data-stx #f)
+     (cond
+       [(null? (syntax-e body))
+        #`((interface-annotation+finish #,finish-data ()))]
+       [else
+        #`((rhombus-mixed-nested-forwarding-sequence (interface-annotation+finish #,finish-data) rhombus-class
+                                                     (interface-body-step #,interface-data-stx . #,(syntax-local-introduce body))))])]))
 
 (define-syntax interface-body-step
   (lambda (stx)
@@ -71,18 +83,55 @@
           form . rest)]
       [(_ data) #'(begin)])))
 
-(define-syntax interface-finish
+(define-syntax interface-annotation+finish
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
+                    for-together?
                     full-name name]
           exports
           option ...)
        (define stxes #'orig-stx)
-       (define options (parse-options #'orig-stx #'(option ...)))
+       (define options (parse-annotation-options #'orig-stx #'(option ...)))
+
        (define internal-name (let ([id (hash-ref options 'internal #f)])
                                (and id
                                     ((make-syntax-delta-introducer #'scope-stx #'base-stx) id 'remove))))
+
+       (define (temporary template #:name [name #'name])
+         (and name
+              ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
+       
+       (with-syntax ([name? (temporary "~a?")]
+                     [name-instance (temporary "~a-instance")]
+                     [internal-name? (temporary "~a?" #:name internal-name)]
+                     [internal-name-instance (if internal-name
+                                                 (temporary "~a-instance" #:name internal-name)
+                                                 #'name-instance)])
+         (wrap-for-together
+          #'for-together?
+          #`(begin
+              #,@(build-interface-annotation internal-name
+                                             #'(name name? name-instance
+                                                     internal-name? internal-name-instance))
+              (interface-finish [orig-stx base-stx scope-stx
+                                          full-name name
+                                          name? name-instance
+                                          #,internal-name internal-name? internal-name-instance]
+                                exports
+                                option ...))))])))
+
+(define-syntax interface-finish
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ [orig-stx base-stx scope-stx
+                    full-name name
+                    name? name-instance
+                    maybe-internal-name internal-name? internal-name-instance]
+          exports
+          option ...)
+       (define stxes #'orig-stx)
+       (define options (parse-options #'orig-stx #'(option ...)))
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
        (define parent-names (map interface-desc-id supers))
        (define added-methods (reverse (hash-ref options 'methods '())))
@@ -98,24 +147,21 @@
        (define exs (parse-exports #'(combine-out . exports)))
        (check-exports-distinct stxes exs '() method-mindex)
 
+       (define internal-name (let ([id #'maybe-internal-name])
+                               (and (syntax-e id) id)))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
 
-       (with-syntax ([name? (temporary "~a?")]
-                     [prop:name (temporary "prop:~a")]
+       (with-syntax ([prop:name (temporary "prop:~a")]
                      [name-ref (temporary "~a-ref")]
-                     [internal-name? (temporary "~a?" #:name internal-name)]
                      [prop-internal:name (temporary "prop:~a" #:name internal-name)]
-                     [name-instance (temporary "~a-instance")]
                      [(super-name ...) parent-names]
                      [(export ...) exs])
          (with-syntax ([internal-name-ref (if internal-name
                                               (temporary "~a-ref" #:name internal-name)
-                                              #'name-ref)]
-                       [internal-name-instance (if internal-name
-                                                   (temporary "~a-instance" #:name internal-name)
-                                                   #'name-instance)])
+                                              #'name-ref)])
            (define defns
              (append
               (if (eq? (syntax-local-context) 'top-level)
@@ -135,9 +181,6 @@
               (build-interface-property internal-name
                                         #'(name prop:name name? name-ref
                                                 prop:internal-name internal-name? internal-name-ref))
-              (build-interface-annotation internal-name
-                                          #'(name name? name-instance
-                                                  internal-name? internal-name-instance))
               (build-interface-dot-handling method-mindex method-vtable
                                             internal-name
                                             #'(name name-instance name-ref

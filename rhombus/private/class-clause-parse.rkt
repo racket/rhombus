@@ -24,6 +24,7 @@
                      parse-annotation-options
                      parse-options
                      wrap-class-clause)
+         rhombus-class
          extends
          implements
          internal
@@ -228,6 +229,8 @@
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+
+(define-syntax rhombus-class 'placeholder)
 
 (define-for-syntax (wrap-class-clause parsed)
   #`[(group (parsed (quote-syntax (rhombus-class #,parsed) #:local)))]) ; `quote-syntax` + `rhombus-class` wrapper => clause
