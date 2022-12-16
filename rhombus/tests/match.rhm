@@ -12,6 +12,7 @@ check:
   8
 
 check:
+  ~print
   match '(z + y, {[10, 11, 12]})'
   | '(x $a)': a
   | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])

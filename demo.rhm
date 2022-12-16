@@ -1,25 +1,98 @@
 #lang rhombus
 
+// we'll define macros much later, but by convention,
+// `import` goes at the top:
 import:
   rhombus/meta open
 
+// to ensure that we're not sloppy in examples:
 use_static
 
-// Some expressions
+// ------------------------------------------------------------
+"Basics: expressions, variables, and functions"
+
+// some expressions
 
 10 * (-3) + 2
 10 + (-3) * 2
 
-#false || !(#false || #false)
-      
+#false || !(#false || #false && #true)
+
+// `++` is append on strings
 "hello" ++ " " ++ "world"
+
+// `+&` turns things into strings, then appends
+"example: " +& (0 + 1) +& " world "
+
+// Lists
+
+[1, 2, 3]
+List.cons(0, [1, 2, 3])
+
+// `++` is append on lists
+[1, 2, 3] ++ [4, 5]
+
+// a definition
+def π = 3.14
+π
+
+// a pattern-matching definition
+def [ca, cb] = List.cons(1, List.cons(2, List.empty))
+ca
+
+// parentheses around a pattern do not matter
+def (((ππ))) = π * π
+ππ
+
+// comma-separated patterns in parentheses match multiple values
+def (ma, mb, mc):
+  values("1", "2", "3")
+mb
 
 // define and call a function
 
 fun five(x):
   5
 
+five("anything")
 3*five(#true && #false || 2 < 3)-2
+
+// `fun` without a name is an expression that produces a function, so
+// you could also define a function like this:
+def identity = fun (x): x
+
+identity("hello")
+identity(1 + (fun (x): x)(99))
+
+// ------------------------------------------------------------
+"Conditionals"
+
+// plain old `if`
+if 1 == 2
+| "oops"
+| "sensible"
+
+// multi-arm `if`
+cond
+| 1 == 3: "oops"
+| 1 == 2: "also oops"
+| 1 == 1: "sensible"
+| ~else: "shouldn't get here"
+
+// pattern-matching dispatch
+match [1, 2]
+| [x, y, z]: "oops"
+| [x, y]: [y, x]
+| ~else: "shouldn't get here, either"
+
+// ------------------------------------------------------------
+"More functions"
+
+// keyword and optional arguments
+
+// a keyword starts `~`, and a keyword argument is written
+// as a keyword followed by `:`, while an optional argument
+// is one that has a default supplied via `=`
 
 fun six(x, ~plus: amt = 0):
   6 + amt
@@ -37,64 +110,42 @@ seven(12, 10, ~plus: 8)
 
 // pattern-matching on a function argument
 
-fun f(List.cons(x :: Integer, y)): List.cons(x + 1, y)
+fun first_one([x, y]): x
 
-f(List.cons(22, []))
+first_one(["alpha", "beta"])
 
-// classes (as records/structures)
+// would be an error, since a string doesn't match the pattern:
+//  first_one("oops")
 
-class Posn(x, y)
+// a `::` constrains a match to a data type
+fun also_first_one(x :: List): List.first(x)
 
-fun md(p -: Posn):
-  p.x + p.y
-fun md2(p):
-  use_dynamic
-  p.x + p.y
+also_first_one([1, 2, 3, 4])
+// would be an error, since a string doesn't match:
+//  also_first_one("oops")
 
-Posn.x(Posn(1, 4))
+// a function result annotation is written before the body `:`
 
-md(Posn(1, 4))
-md2(Posn(1, 4))
+fun add1(x) :: Integer:
+  match x
+   | n :: Integer : x + 1
+   | ~else: x
 
-// more definitions
-
-def π = 3.14
-π
-
-def (((ππ))) = π * π
-ππ
-
-def (ma, mb, mc):
-  values("1", "2", "3")
-mb
-
-def List.cons(ca, cb) = List.cons(1, [2])
-ca
+add1(100)
+// would trigger an error, since "oops" is not an `Integer`:
+//  add1("oops")
 
 fun
-| size(n :: Integer):
-    n
-| size(p :: Posn):
-    p.x + p.y
-| size(a, b):
-    a+b
+| add_two(x) :: Number:
+    x + 2.0
+| add_two(x, y) :: String:
+    x +& " and " +& y
 
-size(Posn(8, 6))
-size(1, 2)
+add_two(7) .= 9.0
+add_two(6, 7) == "6 and 7"
 
-def Posn(px, py) -: Posn = Posn(1, 2)
-List(px, py)
-
-def identity = fun (x): x
-identity(1 + (fun (x): x) (99) )
-
-size
-
-// quasiquoting an expression
-
-'apple + banana'
-'apple + $(3 + 4)'
-'apple + ('$(3 + 4)')'
+// ------------------------------------------------------------
+"Defining operators"
 
 // defining an infix operator
 
@@ -103,10 +154,10 @@ operator (a +* b):
 
 3 +* 4
 
-operator (;«x mod y»):
+operator (x mod y):
   x - floor(x / y) * y
 
-10 mod 3  // prints 1
+10 mod 3
 
 // with precedence and associativity
 
@@ -138,161 +189,334 @@ operator
 3 ** 8
 ** 10 // = 2 ** 10
 
-// match
+// ------------------------------------------------------------
+"Lists, arrays, maps, sets, and repetitions"
 
-match Pair.cons(7, 8)
-| Pair.cons(a, b):
-    b
-| x:
-    x
-| ~else:
-    "other"
+def nums = [1, 2, 3]
+def yes_nums :: List = nums
+def yep_nums :: List.of(Integer) = nums
 
-match '(z + y, {[10, 11, 12]})'
-| '(x $a)': a
-| '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
+// `[]` on a list accesses by a 0-based index
+nums[1]
 
-cond
-| #true: 17
-| ~else: 18
+begin:
+  // `use_dynamic` because `also_nums` is not declared to be a list
+  use_dynamic
+  def also_nums = if #true | nums | #false
+  also_nums[1]
 
-// postfix as a macro "infix" operator;
+def nums_a = Array(1, 2, 3)
+def yes_nums_a :: Array: nums_a
+def yep_nums_a :: Array.of(Integer): nums_a
+
+// unlike lists, arrays are mutable and support assignment with `:=`
+nums_a[1]
+nums_a[2] := 30
+nums_a[2]
+
+// the `Map` constructor expects `key: value` pairs in `{}`
+def map = Map{17: "hello", 24: "goodbye"}
+def yes_map :: Map = map
+def yup_map :: Map.of(Integer, String) = map
+
+map
+
+// `[]` on a map find the value for a key
+map[17]
+
+// `Map` is also bound as a constructor function, in which case
+// it expects 2-argument lists for the keys and values
+def also_map = Map([1, "one"], [2, "two"])
+also_map[2]
+
+// `Map` is the default constructor triggered by `{}`
+def also_also_map = {1: "one", 2: "two"}
+also_also_map[2]
+
+// a symbol is something like a string, often used for efficient map access
+def key_map = {symbol'a': "ay", symbol'b': "bee"}
+key_map[symbol'a']
+
+// a map can have different kinds of keys
+def mixed_map = {symbol'a': 1, "b": 2}
+mixed_map[symbol'a'] + mixed_map["b"]
+
+// a mutable map supports update via `:=`
+def mut_map = MutableMap{1: "mone"}
+mut_map[1]
+mut_map[2] := "mtwo"
+mut_map[2]
+
+// using `{}` without `:` creates a set instead of a map
+def a_set = {1, 3, 5, 7, 9}
+
+// `[]` on a set checks whether something is in a set
+if a_set[1] && !a_set[2]
+| "ok"
+| 1/0
+
+// some patterns forms (like `[]`) support `...` to create a repetition
+// binding, and some with constructors (like `[]`) support `...` to
+// reference a repetition
+def [x, y, ...] = nums
+[y, ...]
+[y, ..., 0, y, ...]
+
+// when you have a list instead of a repetition, some constructors
+// (like `[]`) recoginize `&` to splice elements of the list
+[100, 1000, & nums]
+[& nums, 0, & nums]
+
+// in a map construction, `&` splices an existing map:
+{& also_also_map, 100: "hundred"}
+{100: "hundred", & also_also_map, & map }
+
+// and so on for sets:
+{& a_set, 0}
+
+// function calls can also use `...`
+begin:
+  fun f (a, b): a
+  // this works because `y` happens to have two elements:
+  f(y, ...)
+
+// function defintions, too
+fun
+| slow_add(): 0
+| slow_add(x, y, ...): x + slow_add(y, ...)
+
+slow_add(1, 2, 3)
+
+// or you can write it "rest"-argument style
+fun
+| also_slow_add(): 0
+| also_slow_add(x, & y): x + slow_add(& y)
+
+also_slow_add(1, 2, 3)
+
+// it's more often useful to use `...` in function-argument list patterns:
+fun
+| sum([]): 0
+| sum([x, y, ...]): x + sum([y, ...])
+
+sum([1, 2, 3])
 
 fun
-| factorial(0): 1
-| factorial(n): n*factorial(n-1)
+| is_sorted([]): #true
+| is_sorted([head]): #true
+| is_sorted([head, next, tail, ...]):
+   head <= next && is_sorted([next, tail, ...])
 
-expr.macro '$a *! $tail ...':
-  values('(factorial($a))', '$tail ...')
+is_sorted([1, 2, 3, 4, 5])
+is_sorted([1, 2, 30, 4, 5])
 
-10*!
+// ------------------------------------------------------------
+"Classes as records"
 
-// a macro with an identifier name that does a weird
-// thing with the result tail
+class Posn(x, y)
 
-expr.macro 'prefix_plus $a $b $c ...':
-  values(a, '+ $b $c ...')
+// the class name is a constructor
+Posn(1, 2)
 
-prefix_plus 7 9
+// access a field using `.`
+Posn(2, 3).x
 
-// an identifier macro
+// alternatively, `Posn.x` is an accessor function
+Posn.x(Posn(2, 3))
 
-expr.rule 'just_five': '"five"'
+fun md(p :: Posn):
+  p.x + p.y
+md(Posn(1, 4))
 
-just_five ++ " is the result"
+// here, we need `use_dynamic`, since `p` is not known to be a `Posn`;
+// it can look up `x` and `y` dynamically, but `use_static` at the top
+// of this module 
+fun md2(p):
+  use_dynamic
+  p.x + p.y
 
-// another way to write that
+md2(Posn(5, 6))
+begin:
+  // dynamic lookup means that we can pass in anything that has `x` and `y`:
+  class Chromosomes(x, y, other)
+  md2(Chromosomes(100, 200, 314))
 
-expr.macro 'also_prefix_plus $e ...':
-  match '$e ...'
-  | '$a $b $c ...':
-      values(a, '+ $b $c ...')
-  | ~else:
-      values('"this is terrible error reporting"', '()')
+// `-:` is similar to `::`, but it declares static information without a
+// cooresponding run-time check, so a failure may happen later if the claimed
+// information is incorrect
+  
+fun md3(p -: Posn):
+  p.x + p.y
+md3(Posn(7, 8))
+// would trigger an error at `p.x` instead of the function call:
+//  md3("oops")
 
-also_prefix_plus 7 9
+// `is_a` is an expression operator that takes an annotation to check
+Posn(1, 2) is_a Posn
+5 is_a Posn
 
-// define a binding operator
+// `::` is an expression operator to form a run-time assertion
+(Posn(1, 2) :: Posn).x
+// static `.x` here would be allowed, but `::` would fail at run time:
+//  (5 :: Posn).x
 
-bind.rule '$$ $n':
-  ~parsed_right
-  '$n :: Integer'
+// function with multiple cases to match different kinds of calls
+fun
+| size(n :: Integer):
+    n
+| size(p :: Posn):
+    p.x + p.y
+| size(a, b):
+    a+b
 
-fun apply_interest($$ n):
-  n * 1.05
+size(Posn(8, 6))
+size(1, 2)
 
-apply_interest(7)
+// class names also work as binding patterns
+def Posn(px, py) = Posn(1, 2)
+[px, py]
 
-// define <> as revese-cons pattern
-bind.macro '$a <> $b':
-  ~parsed_right
-  bind_meta.pack('(build_reverse_cons_infoer,
-                   ($a, $b))')
+// Nested class types with annotations
+class IPosn(x :: Integer, y :: Integer)
+class ILine(p1 :: IPosn, p2 :: IPosn)
 
-bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
-  def a = bind_meta.get_info(a_in, '()')
-  def b = bind_meta.get_info(b_in, '()')
-  match bind_meta.unpack_info(a)
-  | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
-      match bind_meta.unpack_info(b)
-      | '($b_ann, $b_id, $b_info, ($b_bind_info, ...), $b_matcher, $b_binder, $b_data)':
-          '($("matching((_ :: " +& Syntax.unwrap(a_ann) +& ") <> (_ :: " +& Syntax.unwrap(b_ann) +& "))"),
-            pair,
-            (),
-            ($a_bind_info, ..., $b_bind_info, ...),
-            build_reverse_cons_match,
-            build_reverse_cons_bind,
-            ($a, $b, a_part, b_part))'
+IPosn(1, 2).x
 
-bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
-                                       $IF, $success, $fail)':
-  match bind_meta.unpack_info(a)
-  | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
-      match bind_meta.unpack_info(b)
-      | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
-          '// check for pair an extract reversed pieces
-           def (is_match, $a_part_id, $b_part_id):
-             match $in_id
-             | Pair.cons($b_id, $a_id):
-                 values(#true, $a_id, $b_id)
-             | ~else:
-                 values(#false, #false, #false)
-           // if a match, chain to a and b matchers
-           $IF is_match
-           | $a_matcher($a_part_id,
-                        $a_data,
-                        $IF,
-                        $b_matcher($b_part_id,
-                                   $b_data,
-                                   $IF,
-                                   $success,
-                                   $fail),
-                        $fail)
-           | $fail
-          '
+// would be an error:
+//  IPosn("x", "y")
 
-bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
-  match bind_meta.unpack_info(a)
-  | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
-      match bind_meta.unpack_info(b)
-      | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
-          '$a_binder($a_part_id, $a_data)
-           $b_binder($b_part_id, $b_data)'
+def l1 = ILine(IPosn(1, 2), IPosn(3, 4))
 
-// an expression operator that's consistent with the pattern
-expr.rule '$a <> $b': ~parsed_right; 'Pair.cons($b, $a)'
+// can statically access `x` from `p2` and similar
+l1.p2.x
+ILine.p1(l1).x
+(l1.p1 :: IPosn).x
+begin:
+  def ILine(p1, p2) = l1
+  p1.x + p2.y
 
-def rx <> (ry :: Integer) = "2" <> 1
-rx
+// ------------------------------------------------------------
+"Classes and interfaces with methods"
 
-// definition form, which returns either a block of definitions
-// or a block of definitions and a sequence of expressions
+interface Shape:
+  method area() :: Real
 
-defn.macro 'define_eight $e ...':
-  match '$e ...'
-  | '$name':
-      'def $name = 8'
-       
-define_eight ate
-ate
+class Circle(radius):
+  implements Shape
+  override area():
+    π * radius * radius
 
-defn.macro 'define_and_use $e ...':
-  match '$e ...'
-  | '$name: $rhs ...':
-      'def $name: $rhs ...
-       Syntax.literal($name)'
+class Rectangle(width, height):
+  implements Shape
+  nonfinal
+  override area():
+    width * height
 
-define_and_use nine: 1+8
-nine
+class Square(color):
+  extends Rectangle
+  constructor(side):
+    // curried `super` takes superclass arguments first
+    super(side, side)("blue")
 
-// declaration form
+def s :: Shape:
+  def pick = 2
+  match pick
+  | 0: Circle(2)
+  | 1: Rectangle(3, 4)
+  | 2: Square(5)
 
-decl.macro 'empty_import $e ...':
-  match '$e ...'
-  | '':
-      'import:«»'
+s.area()
 
-empty_import
+// ------------------------------------------------------------
+"Syntax objects and macros"
+
+// single-quotes make a syntax object, not a string
+'1 + 2'
+
+// would be an error, since `1x` is not a valid identifier,
+// because parentheses are not balanaced, or because a block
+// would be empty
+//  '1x'
+//  '1)'
+//  'x:'
+
+// single quotes also work as a pattern form to match a sintax object,
+// where `$` escapes to bind a match
+match '1 + 2'
+| '$x + $y': [x, y]
+
+match '1 * 2'
+| '$x + $y': [x, y]
+| 'x * y': "matched literal x and y"
+| '$x * $y': [x, y]
+
+// `$` escapes work in quotes for creating an expression, too
+match '1 + 2'
+| '$x + $y': '$y + $x'
+
+// `...` works with syntax patterns and macros
+match '1 2 3'
+| '$n ...': '([$n], ...)'
+
+// when it's the only thing in a group or block, an escape variable
+// can match the whole group or block:
+match '([{1 + 2}])'
+| '([{ $g }])': g
+
+// the `rule` form defines a simple pattern-based expression macro:
+rule 'thunk: $body':
+  'fun (): $body'
+
+def delayed_area = thunk: s.area()
+delayed_area()
+
+// the `expr.macro` form defines a macro where the result is determined
+// by arbitrary expand-time code
+expr.macro 'find_matching_name $expr ... : $id ...':
+  // convert identifiers to strings
+  def [name, ...]: Function.map(fun(id): "" +& id,
+                                [id, ...])
+  // build a result conditional
+  values('begin:
+            def val = $expr ...
+            cond
+            | val == $id: $name
+            | ...',
+         // also need to return an empty tail, meaning
+         // that nothing else can be afterward in the group
+         '')
+
+begin:
+  def x = 1
+  def y = 2
+  def z = 3
+  find_matching_name 1+1: x y z
+
+// `defn.macro` defines a macro that can expand to definitions
+defn.macro 'def_fives: $id ...':
+  'def $id = 5
+   ...'
+
+def_fives: cinco wu lima
+wu + lima + cinco
+
+// would be an error, because `def_fives` is not an expression form
+//  1 + def_fives
+
+// ------------------------------------------------------------
+"Potpourri"
+
+// namespaces are like local modules
+
+namespace Geometry:
+  fun combined_areas(s1 :: Shape, s2 :: Shape):
+    s1.area() + s2.area()
+  export:
+    combined_areas
+    // can export things defined outside the namespace
+    Shape Circle Square
+
+Geometry.combined_areas(Geometry.Square(1), Geometry.Square(2))
 
 // `let` is a definition that is only visible later
 
@@ -306,362 +530,6 @@ accum
 
 def ok_later = "ok"
 check_later()
-
-// Nested class types with contracts
-
-class IPosn(x :: Integer, y :: Integer)
-
-class ILine(p1 :: IPosn, p2 :: IPosn)
-
-def l1 = ILine(IPosn(1, 2), IPosn(3, 4))
-
-l1.p2.x
-
-IPosn(1, 2).x
-
-ILine.p1(l1).x
-(l1.p1 :: IPosn).x
-
-fun (p): (p :: IPosn).x
-
-begin:
-  def ILine(p1, p2) = l1
-  p1.x + p2.y
-
-// function result contracts
-
-fun add1(x) :: Integer:
-  match x
-   | n :: Integer : x + 1
-   | ~else: x
-
-add1(100)
-// add1("oops")
-
-fun
-| add_two(x) :: Number:
-    x + 2.0
-| add_two(x, y) :: String:
-    x +& " and " +& y
-
-add_two(7) .= 9.0
-add_two(6, 7) == "6 and 7"
-
-begin:
-  def f = fun (x) :: Integer: x
-  f(10)
-
-fun on_diag(n :: Integer) :: Posn:
-  Posn(n, n)
-
-on_diag(1).x
-
-def known_posn = on_diag(2)
-known_posn.x
-
-// contracts and dot providers
-
-import:
- racket/base open:
-   only: atan
-
-annot.macro 'AlsoPosn': values('Posn', '')
-Posn(1, 2) :: AlsoPosn  // prints Posn(1, 2)
-
-bind.macro 'AlsoPosn ($x, $y) $tail ...':
-  values('Posn($x, $y)', '$tail ...')
-
-annot.macro 'Vector':
-  values(annot_meta.pack_predicate('fun (x): x is_a Posn',
-                                   '(($(statinfo_meta.dot_provider_key), vector_dot_provider))'),
-         '')
-
-
-dot.macro 'vector_dot_provider $left $dot $right':
-  match right
-  | 'angle': 'vector_angle($left)'
-  | 'magnitude': 'vector_magnitude($left)'
-
-fun vector_angle(Posn(x, y)): atan(y, x)
-fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
-
-let vec :: Vector: Posn(3, 4)
-vec.angle
-vec.magnitude
-
-def AlsoPosn(also_x, also_y) = Posn(10, 20)
-also_x +& "," +& also_y
-
-expr.macro 'or_zero $p $tail ...':
-  values(statinfo_meta.wrap('$p || Posn(0,0)',
-                            '(($(statinfo_meta.dot_provider_key),
-                               vector_dot_provider))'),
-         '$tail ...')
-  
-or_zero(Posn(3, 4)).magnitude
-
-fun zero_vec(): Posn(0, 0)
-statinfo.macro 'zero_vec': '(($(statinfo_meta.call_result_key),
-                              $(statinfo_meta.pack('(($(statinfo_meta.dot_provider_key),
-                                                      vector_dot_provider))'))))'
-zero_vec().magnitude
-
-begin:
-  let p1 :: Posn.of(Integer, Posn): Posn(1, Posn(3, 4))
-  // RHS influences info for LHS:
-  let Posn(px, py): p1
-  py.y
-
-// indexables
-
-def nums = [1, 2, 3]
-def yes_nums :: List = nums
-def yep_nums :: List.of(Integer) = nums
-
-nums[1]
-
-begin:
-  use_dynamic
-  def also_nums = if #true | nums | #false
-  also_nums[1]
-
-def nums_a = Array(1, 2, 3)
-def yes_nums_a :: Array: nums_a
-def yep_nums_a :: Array.of(Integer): nums_a
-
-nums_a[1]
-nums_a[2] := 30
-nums_a[2]
-
-def map = Map{symbol'x': "hello", symbol(y): "goodbye"}
-def yes_map :: Map = map
-def yup_map :: Map.of(Symbol, String) = map
-
-map
-map[symbol'y']
-
-def also_map = Map([1, "one"], [2, "two"])
-also_map[2]
-
-def also_also_map = {1: "one", 2: "two"}
-also_also_map[2]
-
-def key_map = {symbol'a': "ay", symbol'b': "bee"}
-key_map[symbol'a']
-
-def mixed_map = {symbol'a': 1, "b": 2}
-mixed_map[symbol'a'] + mixed_map["b"]
-
-def mut_map = MutableMap([1, "mone"])
-mut_map[1]
-mut_map[2] := "mtwo"
-mut_map[2]
-
-def a_set = {1, 3, 5, 7, 9}
-if a_set[1] && !a_set[2]
-| "ok"
-| 1/0
-
-def [x, y, ...] = nums
-[y, ...]
-
-[100, 1000, & nums]
-[& nums, 0, & nums]
-[y, ..., 0, y, ...]
-
-{& also_also_map, 100: "hundred"}
-{100: "hundred", & also_also_map, & map }
-
-{& a_set, 0}
-
-(fun(y, z): z)(y, ...)
-
-def Array(ax, ay, az) = nums_a
-az
-
-def local_map = Map{symbol'alice': Posn(4, 5),
-                    symbol'bob': Posn(7, 9)}
-
-fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
-  def p = neighborhood[who]
-  p.x +& ", " +& p.y
-
-locale(symbol'alice', local_map)
-
-def {symbol'bob': bob_loc} = local_map
-bob_loc
-
-def Map{symbol'alice': alice_loc2, symbol'bob': bob_loc2} = local_map
-[alice_loc2, bob_loc2]
-
-def Map([symbol'alice', also_alice_loc2], [symbol'bob', also_bob_loc2]) = local_map
-[also_alice_loc2, also_bob_loc2]
-
-def [p :: Posn, ...] = [Posn(1, 2), Posn(3, 4)]
-[p, ...][0].x
-
-fun
-| is_sorted([]): #true
-| is_sorted([head]): #true
-| is_sorted([head, next, tail, ...]):
-   head <= next && is_sorted([next, tail, ...])
-
-is_sorted([1, 2, 30, 4, 5])
-
-
-fun
-| got_milk([]): #false
-| got_milk([head, tail, ...]):
-   head == "milk" || got_milk([tail, ...])
-
-got_milk([])
-got_milk(["apple", "milk", "banana"])
-got_milk(["apple", "coffee", "banana"])
-
-begin:
- def [n, ...] = [3, 4]
- List(1, 2, n, ...)
-
-def nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)) = Posn(1, Posn(3, 4))
-nested_p.y.x
-
-// rest arguments
-
-fun f_rest(x, & ys :: List):
-  ys
-
-fun f_elrest(x, y :: Integer, ...):
-  [y, ...]
-
-f_rest(10, 11, 12, 13)
-f_elrest(10, 11, 12, 13)
-
-fun
-| g_rest(): "no"
-| g_rest(x :: Integer): "simple"
-| g_rest(x :: Integer, y :: Integer, ...):
-   [y, ...]
-| g_rest(x): x
-
-g_rest()
-g_rest(1) == "simple"
-g_rest(1, 2, 3)
-g_rest("hello") == "hello"
-
-fun
-| posns_y(p :: Posn, ...):
-    [p, ...][1].y
-| posns_y(x):
-    x
-     
-posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
-posns_y(10)
-
-// `matching` contracts
-
-fun get_pt_x(pt :: matching(Posn(_, _))):
-  pt.x
-
-get_pt_x(Posn(1, 2))
-
-fun get_pts_x(pts :: matching([Posn(_, _), ...])):
-  pts[0].x
-
-get_pts_x([Posn(1, 2)])
-
-fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
-  pt.x.x
-
-annot.macro 'ListOf ($contract ...) $tail ...':
-  values('matching([_ :: ($contract ...), $('...')])',
-         '$tail ...')
-
-fun get_pts_x2(pts -: ListOf(Posn)):
-  pts[0].x
-
-get_pts_x2([Posn(5, 7)])
-
-// definition-sequence macros
-defn.sequence_macro 'reverse_defns; $defn1 ...; $defn2 ...; $tail; ...':
-  values('$defn2 ...; $defn1 ...', '$tail; ...')
-
-reverse_defns
-def seq_x = seq_y+1
-def seq_y = 10
-
-seq_x
-
-// mixin infix and prefix with multiple matching cases
-
-rule
-| 'weirdly coconut':
-    ~stronger_than: +
-    '"donut"'
-| 'weirdly':
-    '"banana"'
-| '$a weirdly $b + $c':
-    '$a + $b - $c'
-| '$a weirdly $b':
-    '$a + $b'
-
-weirdly
-weirdly coconut
-weirdly ++ "none"
-1 weirdly 5
-1 weirdly 5 + 7
-
-// shubbery-friendly @-expressions
-
-'@x'
-'@f{text}'
-'@f{text}{another text}'
-'@f(x, y){This is plain text.}'
-'@f(x, y)'
-'@{text}'
-'@[x, y]{text}'
-'@« library.f »(x, y){Text with @escape().}'
-'@(library.f)(x, y){Text with @« escape ».}'
-'@explain{Multi-line text
-           has newlines as separate
-           and leading whitespace
-          stripped}'
-'@explain{There are also
-           @// line comments and
-           other things.}'
-'@explain{Here is @//{a block comment
-                      that spans lines
-                      and}
-          stuff afterward.}'
-
-// checking some static-info propagation cases
-
-dot.macro 'myint_dot_provider $left $dot $right':
-  match right
-  | 'is_zero': '$left .= 0'
-  | 'add': 'fun (v -: MyInt) -: MyInt: $left + v'
-
-annot.macro 'MyInt':
-  values(annot_meta.pack_predicate('fun (x): x is_a Integer',
-                                   '(($(statinfo_meta.dot_provider_key), myint_dot_provider))'),
-         '')
-
-def (one -: MyInt) = 1
-
-one.add(4).is_zero
-
-((one.add(4)) -: MyInt).is_zero
-
-def two = 2 :: MyInt
-two.is_zero
-
-expr.rule 'I($n)': '$n -: MyInt'
-def three = (I(3))
-three.is_zero
-
-operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
-  x.add(y)
-
-(-2 my_plus 2).is_zero
 
 // for
 
@@ -682,103 +550,15 @@ fun grid(m, n):
 
 grid(2, 3)
 
-fun sum(l :: List):
+fun loop_sum(l :: List):
   for values(sum = 0):
     each i: l
     sum+i
 
-sum([2, 3, 4])
+loop_sum([2, 3, 4])
 
-fun f17(l):
-  for:
-    each i: (l :: List)
-    each j: 10..10+3
-    [i, j]
-    ~into List
+// mutable variables
 
-f17([1, 2, 3])
-
-for values(x = 0, y = 2):
-  each j: 0..3
-  values(x + y, j)
-
-fun grid2(m, n):
-  for List:
-    each i: 0..m
-    def k = i + 1
-    each j: 0..n
-    [k, j]
-
-grid2(2, 3)
-
-fun point_xs(l -: List.of(List.of(Posn))):
-  for:
-    each ll: l
-    each p: ll
-    p.x
-    ~into List
-
-point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
-
-for:
-  each values(key, val): {1: "a", 2: "b"}
-  displayln(key +& " -> " +& val)
-
-for:
-  each (key, val): {3: "c", 4: "d"}
-  displayln(key +& " -> " +& val)
-
-// syntax.class
-
-syntax.class Arithmetic
-| '$x + $y'
-| '$x - $y'
-
-def '$(exp :: Arithmetic)' = '1 + 2'
-exp.x
-
-meta:
-  syntax.class Arithmetic2:
-    ~description: "multiplication or division forms"
-    ~pattern
-    | '$x * $y'
-    | '$x / $y'
-
-expr.macro 'add_one_to_expr $(exp :: Arithmetic2) $tail ...':
-  values('$exp ... + 1', '$tail ...')
-
-add_one_to_expr 2 * 3
-
-expr.macro 'right_operand $(exp :: Arithmetic2)':
-  values(exp.y, '')
-
-right_operand 3 * 2
-right_operand 4 / 5
-
-syntax.class NTerms
-| '~one $a':
-    ~attr b:
-      '0'
-    ~attr c:
-      '0'
-    def sum:
-      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-    ~attr average:
-      '$(sum / 2)'
-| '~two $a $b':
-    ~attr c:
-      '0'
-    def sum:
-      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-    ~attr average:
-      '$(sum / 2)'
-| '~three $a $b $c':
-    def sum:
-      Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-    ~attr average:
-      '$(sum / 2)'
-
-def '$(two_terms :: NTerms)' = '~two 24 42'
-two_terms.a
-two_terms.c
-two_terms.average
+def mutable count = 0
+count := count + 1
+count

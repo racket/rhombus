@@ -147,6 +147,16 @@ to append lists.
 
 }
 
+
+@doc(
+  def List.empty :: [],
+){
+
+  A name for the empty list.
+
+}
+
+
 @doc(
   fun List.first(lst :: NonemptyList),
 ){

@@ -74,7 +74,8 @@
   (length
    [cons List.cons]
    first
-   rest)
+   rest
+   [empty null])
   #:root
   (make-expression+binding-prefix-operator
    #'List

@@ -18,6 +18,7 @@
     [(string? a) a]
     [(symbol? a) (symbol->immutable-string a)]
     [(keyword? a) (keyword->immutable-string a)]
+    [(identifier? a) (symbol->immutable-string (syntax-e a))]
     [else
      (define o (open-output-string))
      (rhombus:display a o)
