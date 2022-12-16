@@ -9,6 +9,7 @@
          (submod "dot.rkt" for-dot-provider)
          "name-root.rkt"
          "static-info.rkt"
+         "reducer.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "parse.rkt"
@@ -21,6 +22,7 @@
 (provide (rename-out [Set-expr Set])
          (for-space rhombus/annotation Set)
          (for-space rhombus/static-info Set)
+         (for-space rhombus/reducer Set)
 
          (rename-out [MutableSet-expr MutableSet])
          (for-space rhombus/static-info MutableSet))
@@ -120,6 +122,16 @@
      #'(IF (and (set? arg-id) (eqv? 0 (hash-count (set-ht arg-id))))
            success
            fail)]))
+
+(define-reducer-syntax Set
+  (reducer-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_)
+        #`[set
+           ([ht #hashalw()])
+           ((lambda (v) (hash-set ht v #t)))
+           #,set-static-info]]))))
 
 (define-name-root Set-expr
   #:fields

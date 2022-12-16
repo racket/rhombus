@@ -1,0 +1,64 @@
+#lang rhombus
+import: "check.rhm" open
+
+operator (a +* b):
+  (a + b) * b
+  
+check:
+  3 +* 4
+  28
+
+check:
+  operator (x mod y):
+    x - floor(x / y) * y
+  10 mod 3
+  1
+
+operator (;«x mod y»):
+  x - floor(x / y) * y
+
+check:
+  10 mod 3
+  1
+
+// with precedence and associativity
+
+operator (a ++* b):
+  ~weaker_than: *
+  ~associativity: ~right
+  (a + b) * b
+
+check:
+  3 ++* 4 * 2 ++* 5
+  4420
+
+check:
+  3 ++* ((4 * 2) ++* 5)
+  4420
+  
+// defining a prefix operator
+
+operator (!! b):
+  ! ! b
+
+check:
+  !!#true
+  #true
+
+// defining an operator that is both prefix and infix
+
+operator
+| (** exponent):
+    2 ** exponent
+| (base ** exponent):
+    if exponent == 0
+    | 1
+    | base * (base ** (exponent-1))
+
+check:
+  3 ** 8
+  6561
+
+check:
+  ** 10
+  1024

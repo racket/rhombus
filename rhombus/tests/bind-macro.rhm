@@ -1,0 +1,82 @@
+#lang rhombus
+import:
+  rhombus/meta open
+  "check.rhm" open
+
+// define a binding operator
+
+bind.rule '$$ $n':
+  ~parsed_right
+  '$n :: Integer'
+
+fun apply_interest($$ n):
+  n * 1.05
+
+check:
+  apply_interest(7)
+  7.3500000000000005
+
+// define <> as revese-cons pattern
+bind.macro '$a <> $b':
+  ~parsed_right
+  bind_meta.pack('(build_reverse_cons_infoer,
+                   ($a, $b))')
+
+bind.infoer 'build_reverse_cons_infoer($in_id, ($a_in, $b_in))':
+  def a = bind_meta.get_info(a_in, '()')
+  def b = bind_meta.get_info(b_in, '()')
+  match bind_meta.unpack_info(a)
+  | '($a_ann, $a_id, $a_info, ($a_bind_info, ...), $a_matcher, $a_binder, $a_data)':
+      match bind_meta.unpack_info(b)
+      | '($b_ann, $b_id, $b_info, ($b_bind_info, ...), $b_matcher, $b_binder, $b_data)':
+          '($("matching((_ :: " +& Syntax.unwrap(a_ann) +& ") <> (_ :: " +& Syntax.unwrap(b_ann) +& "))"),
+            pair,
+            (),
+            ($a_bind_info, ..., $b_bind_info, ...),
+            build_reverse_cons_match,
+            build_reverse_cons_bind,
+            ($a, $b, a_part, b_part))'
+
+bind.matcher 'build_reverse_cons_match($in_id, ($a, $b, $a_part_id, $b_part_id),
+                                       $IF, $success, $fail)':
+  match bind_meta.unpack_info(a)
+  | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
+      match bind_meta.unpack_info(b)
+      | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
+          '// check for pair an extract reversed pieces
+           def (is_match, $a_part_id, $b_part_id):
+             match $in_id
+             | Pair.cons($b_id, $a_id):
+                 values(#true, $a_id, $b_id)
+             | ~else:
+                 values(#false, #false, #false)
+           // if a match, chain to a and b matchers
+           $IF is_match
+           | $a_matcher($a_part_id,
+                        $a_data,
+                        $IF,
+                        $b_matcher($b_part_id,
+                                   $b_data,
+                                   $IF,
+                                   $success,
+                                   $fail),
+                        $fail)
+           | $fail
+          '
+
+bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
+  match bind_meta.unpack_info(a)
+  | '($a_ann, $a_id, $a_info, $a_bind_infos, $a_matcher, $a_binder, $a_data)':
+      match bind_meta.unpack_info(b)
+      | '($b_ann, $b_id, $b_info, $b_bind_infos, $b_matcher, $b_binder, $b_data)':
+          '$a_binder($a_part_id, $a_data)
+           $b_binder($b_part_id, $b_data)'
+
+// an expression operator that's consistent with the pattern
+expr.rule '$a <> $b': ~parsed_right; 'Pair.cons($b, $a)'
+
+def rx <> (ry :: Integer) = "2" <> 1
+
+check:
+  rx
+  "2"

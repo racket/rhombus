@@ -1,0 +1,69 @@
+#lang rhombus
+import:
+  rhombus/meta open
+  "check.rhm" open
+
+// definition form, which returns either a block of definitions
+// or a block of definitions and a sequence of expressions
+
+defn.macro 'define_eight $e ...':
+  match '$e ...'
+  | '$name':
+      'def $name = 8'
+       
+define_eight ate
+check:
+  ate
+  8
+
+defn.macro 'define_and_use $id $e ...':
+  match '$e ...'
+  | '$name: $rhs ...':
+      'def $name: $rhs ...
+       def $id = Syntax.literal($name)'
+
+define_and_use use_nine nine: 1+8
+check:
+  nine
+  9
+check:
+  ~print
+  use_nine
+  'nine'
+
+// declaration form
+
+decl.macro 'empty_import $e ...':
+  match '$e ...'
+  | '':
+      'import:«»'
+
+empty_import
+
+check:
+  ~eval_exn
+  import: rhombus/meta open
+  decl.macro 'empty_import': 'oops'
+  begin:
+    empty_import
+    "ok"
+  "llegal use of syntax"
+
+// definition-sequence macros
+defn.sequence_macro 'reverse_defns; $defn1 ...; $defn2 ...; $tail; ...':
+  values('$defn2 ...; $defn1 ...', '$tail; ...')
+
+reverse_defns
+def seq_x = seq_y+1
+def seq_y = 10
+
+check:
+  seq_x
+  11
+
+check:
+  reverse_defns
+  def seq2_x = seq2_y+1
+  def seq2_y = 100
+  seq2_x
+  101

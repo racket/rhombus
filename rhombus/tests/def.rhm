@@ -1,0 +1,24 @@
+#lang rhombus
+import: "check.rhm" open
+
+begin:
+  def π = 3.14
+  check:
+    π
+    3.14
+  check:
+    def (((ππ))) = π * π
+    ππ
+    expt(3.14, 2)
+
+check:
+  def (ma, mb, mc):
+    values("1", "2", "3")
+  [ma, mb, mc]
+  ["1", "2", "3"]
+
+check:
+  def values(ma, mb, mc):
+    values("1", "2", "3")
+  [ma, mb, mc]
+  ["1", "2", "3"]

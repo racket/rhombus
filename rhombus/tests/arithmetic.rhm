@@ -1,0 +1,25 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  10 * (-3) + 2
+  -28
+
+check:
+  10 + (-3) * 2
+  4
+
+check:
+  10 * 2 / 4
+  5
+
+check:
+  ~eval_exn
+  10 / 2 * 4
+  "combination of expression operators at same precedence, but only in the other order"
+
+check:
+  fun five(x):
+    5
+  3*five(#true && #false || 2 < 3)-2
+  13

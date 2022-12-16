@@ -294,7 +294,7 @@ decl.macro 'empty_import $e ...':
 
 empty_import
 
-// `forward` is a definition that is only visible later
+// `let` is a definition that is only visible later
 
 fun check_later():
   ok_later

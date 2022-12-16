@@ -1,0 +1,77 @@
+#lang rhombus
+import:
+  rhombus/meta open
+  "check.rhm" open
+
+// postfix as a macro "infix" operator;
+
+fun
+| factorial(0): 1
+| factorial(n): n*factorial(n-1)
+
+expr.macro '$a *! $tail ...':
+  values('(factorial($a))', '$tail ...')
+
+check:
+  10*!
+  3628800
+
+// a macro with an identifier name that does a weird
+// thing with the result tail
+
+expr.macro 'prefix_plus $a $b $c ...':
+  values(a, '+ $b $c ...')
+
+check:
+  prefix_plus 7 9
+  16
+
+// another way to write that
+
+expr.macro 'also_prefix_plus $e ...':
+  match '$e ...'
+  | '$a $b $c ...':
+      values(a, '+ $b $c ...')
+  | ~else:
+      values('"this is terrible error reporting"', '()')
+
+check:
+  also_prefix_plus 7 9
+  16
+
+// an identifier macro
+
+expr.rule 'just_five': '"five"'
+
+check:
+  just_five ++ " is the result"
+  "five is the result"
+
+// mixin infix and prefix with multiple matching cases
+
+rule
+| 'weirdly coconut':
+    ~stronger_than: +
+    '"donut"'
+| 'weirdly':
+    '"banana"'
+| '$a weirdly $b + $c':
+    '$a + $b - $c'
+| '$a weirdly $b':
+    '$a + $b'
+
+check:
+  weirdly
+  "banana"
+check:
+  weirdly coconut
+  "donut"
+check:
+  weirdly ++ "none"
+  "banananone"
+check:
+  1 weirdly 5
+  6
+check:
+  1 weirdly 5 + 7
+  -1

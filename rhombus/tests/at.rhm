@@ -1,0 +1,60 @@
+#lang rhombus
+import "check.rhm" open
+
+rule 'expect: $a; $b': 'check: ~print; $a; $b'
+
+expect:
+  '@x'
+  'x'
+
+expect:
+  '@f{text}'
+  'f (["text"])'
+
+expect:
+  'f (["text"], ["another text"])'
+  '@f{text}{another text}'
+
+expect:
+  '@f(x, y){This is plain text.}'
+  'f (x, y, ["This is plain text."])'
+
+expect:
+  '@f(x, y)'
+  'f (x, y)'
+
+expect:
+  '@{text}'
+  '(["text"])'
+
+expect:
+  '@[x, y]{text}'
+  '[x, y] (["text"])'
+
+expect:
+  '@« library.f »(x, y){Text with @escape().}'
+  'library . f (x, y, ["Text with ", escape (), "."])'
+
+expect:
+  '@(library.f)(x, y){Text with @« escape ».}'
+  '(library . f) (x, y, ["Text with ", escape, "."])'
+
+expect:
+  '@explain{Multi-line text
+             has newlines as separate
+             and leading whitespace
+            stripped}'
+  'explain (["Multi-line text", "\n", " ", "has newlines as separate", "\n", " ", "and leading whitespace", "\n", "stripped"])'
+
+expect:
+  '@explain{There are also
+             @// line comments and
+             other things.}'
+  'explain (["There are also", "\n", " ", "other things."])'
+
+expect:
+  '@explain{Here is @//{a block comment
+                        that spans lines
+                        and}
+            stuff afterward.}'
+  'explain (["Here is ", "\n", "stuff afterward."])'

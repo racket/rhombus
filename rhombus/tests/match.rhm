@@ -1,0 +1,18 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  match Pair.cons(7, 8)
+  | Pair.cons(a, b):
+      b
+  | x:
+      x
+  | ~else:
+      "other"
+  8
+
+check:
+  match '(z + y, {[10, 11, 12]})'
+  | '(x $a)': a
+  | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
+  ['z', '10', '11', '12']

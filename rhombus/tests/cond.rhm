@@ -1,0 +1,14 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  cond
+  | #true: 17
+  | ~else: 18
+  17
+
+check:
+  cond
+  | #false: 17
+  | ~else: 18
+  18

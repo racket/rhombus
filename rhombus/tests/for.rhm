@@ -125,3 +125,27 @@ check:
     def result = new_sum + 1
     result
   15
+
+check:
+  use_static
+  class Posn(x, y)
+  fun point_xs(l -: List.of(List.of(Posn))):
+    for:
+      each ll: l
+      each p: ll
+      p.x
+      ~into List
+  point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
+  [1, 0, 3]
+
+check:
+  for Set:
+    each values(key, val): {1: "a", 2: "b"}
+    key +& " -> " +& val
+  {"1 -> a", "2 -> b"}
+
+check:
+  for Set:
+    each (key, val): {3: "c", 4: "d"}
+    key +& " -> " +& val
+  {"3 -> c", "4 -> d"}

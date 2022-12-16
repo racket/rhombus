@@ -1,0 +1,6 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  "hello" ++ " " ++ "world"
+  "hello world"

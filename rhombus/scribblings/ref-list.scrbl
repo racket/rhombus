@@ -37,7 +37,7 @@ to append lists.
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of the
- @rhombus(expr_or_rest)s expressions. A @rhombus(&) or @dots_expr form
+ @rhombus(expr_or_splice)s. A @rhombus(&) or @dots_expr form
  can appear within @rhombus([]) to splice a @tech{repetition} or existing list
  into the constructed list, the same as in a function call (see
  @rhombus(#{#%call})).

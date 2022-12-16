@@ -1,0 +1,25 @@
+#lang rhombus/and_meta
+import:
+  "check.rhm" open
+  racket/base open:
+    only: atan
+
+class Posn(x, y)
+
+annot.macro 'AlsoPosn': values('Posn', '')
+check:
+  Posn(1, 2) :: AlsoPosn
+  Posn(1, 2)
+
+check:
+  ~exn
+  "no" :: AlsoPosn
+  "value does not match annotation"
+
+bind.macro 'AlsoPosn ($x, $y) $tail ...':
+  values('Posn($x, $y)', '$tail ...')
+
+def AlsoPosn(also_x, also_y) = Posn(10, 20)
+check:
+  also_x +& "," +& also_y
+  "10,20"

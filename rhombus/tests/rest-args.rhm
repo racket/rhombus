@@ -430,3 +430,53 @@ for:
     anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
     [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
 
+// ---------------------------
+// Old demo tests - probably redundant, but keeping in case
+
+begin:
+
+  fun f_rest(x, & ys :: List):
+    ys
+
+  fun f_elrest(x, y :: Integer, ...):
+    [y, ...]
+
+  check:
+    f_rest(10, 11, 12, 13)
+    [11, 12, 13]
+  check:
+    f_elrest(10, 11, 12, 13)
+    [11, 12, 13]
+
+  fun
+  | g_rest(): "no"
+  | g_rest(x :: Integer): "simple"
+  | g_rest(x :: Integer, y :: Integer, ...):
+     [y, ...]
+  | g_rest(x): x
+
+  check:
+    g_rest()
+    "no"
+  check:
+    g_rest(1)
+    "simple"
+  check:
+    g_rest(1, 2, 3)
+    [2, 3]
+  check:
+    g_rest("hello")
+    "hello"
+
+  fun
+  | posns_y(p :: Posn, ...):
+      [p, ...][1].y
+  | posns_y(x):
+      x
+
+  check:
+    posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
+    4
+  check:
+    posns_y(10)
+    10

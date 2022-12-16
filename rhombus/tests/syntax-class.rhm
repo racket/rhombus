@@ -327,3 +327,41 @@ check:
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
   "attribute is a repetition"
+
+begin:
+  syntax.class NTerms
+  | '~one $a':
+      ~attr b:
+        '0'
+      ~attr c:
+        '0'
+      def sum:
+        Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
+      ~attr average:
+        '$(sum / 2)'
+  | '~two $a $b':
+      ~attr c:
+        '0'
+      def sum:
+        Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
+      ~attr average:
+        '$(sum / 2)'
+  | '~three $a $b $c':
+      def sum:
+        Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
+      ~attr average:
+        '$(sum / 2)'
+
+  def '$(two_terms :: NTerms)' = '~two 24 42'
+  check:
+    ~print
+    two_terms.a
+    '24'
+  check:
+    ~print
+    two_terms.c
+    '0'
+  check:
+    ~print
+    two_terms.average
+    '33'

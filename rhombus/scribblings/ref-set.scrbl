@@ -64,6 +64,16 @@ to be included in the set. These uses of square brackets are implemented by
 
 
 @doc(
+  reducer.macro 'Set'
+){
+
+ A @tech{reducer} used with @rhombus(for), accumulates values into a
+ set.
+
+}
+
+
+@doc(
   expr.macro 'MutableSet{$value_expr, ...}',
   fun MutableSet(value:: Any, ...) :: Set
 ){

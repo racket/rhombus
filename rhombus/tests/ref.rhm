@@ -1,0 +1,190 @@
+#lang rhombus
+import:
+  "check.rhm" open
+
+// Miscellaneous tests of indexable values
+
+use_static
+
+class Posn(x, y)
+
+def nums = [1, 2, 3]
+def yes_nums :: List = nums
+def yep_nums :: List.of(Integer) = nums
+
+check:
+  nums[1]
+  2
+
+check:
+  use_dynamic
+  def also_nums = if #true | nums | #false
+  also_nums[1]
+  2
+
+def nums_a = Array(1, 2, 3)
+def yes_nums_a :: Array: nums_a
+def yep_nums_a :: Array.of(Integer): nums_a
+
+check:
+  nums_a[1]
+  2
+check:
+  nums_a[2] := 30
+  #void
+check:
+  nums_a[2]
+  30
+
+def map = Map{symbol'x': "hello", symbol(y): "goodbye"}
+def yes_map :: Map = map
+def yup_map :: Map.of(Symbol, String) = map
+
+check:
+  map
+  {symbol'x': "hello", symbol'y': "goodbye"}
+check:
+  map[symbol'y']
+  "goodbye"
+
+def also_map = Map([1, "one"], [2, "two"])
+check:
+  also_map[2]
+  "two"
+
+def also_also_map = {1: "one", 2: "two"}
+check:
+  also_also_map[2]
+  "two"
+
+def key_map = {symbol'a': "ay", symbol'b': "bee"}
+check:
+  key_map[symbol'a']
+  "ay"
+
+def mixed_map = {symbol'a': 1, "b": 2}
+check:
+  mixed_map[symbol'a'] + mixed_map["b"]
+  3
+
+def mut_map = MutableMap([1, "mone"])
+check:
+  mut_map[1]
+  "mone"
+check:
+  mut_map[2] := "mtwo"
+  #void
+check:
+  mut_map[2]
+  "mtwo"
+
+def a_set = {1, 3, 5, 7, 9}
+check:
+  if a_set[1] && !a_set[2]
+  | "ok"
+  | 1/0
+  "ok"
+
+def [x, y, ...] = nums
+check:
+  [y, ...]
+  [2, 3]
+
+check:
+  [100, 1000, & nums]
+  [100, 1000, 1, 2, 3]
+check:
+  [& nums, 0, & nums]
+  [1, 2, 3, 0, 1, 2, 3]
+check:
+  [y, ..., 0, y, ...]
+  [2, 3, 0, 2, 3]
+
+check:
+  {& also_also_map, 100: "hundred"}
+  {1: "one", 2: "two", 100: "hundred"}
+check:
+  {100: "hundred", & also_also_map, & map }
+  {1: "one", 2: "two", 100: "hundred", symbol'x': "hello", symbol'y': "goodbye"}
+
+check:
+  {& a_set, 0}
+  {0, 1, 3, 5, 7, 9}
+
+check:
+  (fun(y, z): z)(y, ...)
+  3
+
+def Array(ax, ay, az) = nums_a
+check:
+  az
+  30
+
+def local_map = Map{symbol'alice': Posn(4, 5),
+                    symbol'bob': Posn(7, 9)}
+
+fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
+  def p = neighborhood[who]
+  p.x +& ", " +& p.y
+
+check:
+  locale(symbol'alice', local_map)
+  "4, 5"
+
+def {symbol'bob': bob_loc} = local_map
+check:
+  bob_loc
+  local_map[symbol'bob']
+
+def Map{symbol'alice': alice_loc2, symbol'bob': bob_loc2} = local_map
+check:
+  [alice_loc2, bob_loc2]
+  [Posn(4, 5), Posn(7, 9)]
+
+def Map([symbol'alice', also_alice_loc2], [symbol'bob', also_bob_loc2]) = local_map
+check:
+  [also_alice_loc2, also_bob_loc2]
+  [Posn(4, 5), Posn(7, 9)]
+
+def [p :: Posn, ...] = [Posn(1, 2), Posn(3, 4)]
+check:
+  [p, ...][0].x
+  1
+
+fun
+| is_sorted([]): #true
+| is_sorted([head]): #true
+| is_sorted([head, next, tail, ...]):
+   head <= next && is_sorted([next, tail, ...])
+
+check:
+  is_sorted([1, 2, 30, 4, 5])
+  #false
+check:
+  is_sorted([1, 2, 3, 4, 5])
+  #true
+
+fun
+| got_milk([]): #false
+| got_milk([head, tail, ...]):
+   head == "milk" || got_milk([tail, ...])
+
+check:
+  got_milk([])
+  #false
+check:
+  got_milk(["apple", "milk", "banana"])
+  #true
+check:
+  got_milk(["apple", "coffee", "banana"])
+  #false
+
+check:
+ def [n, ...] = [3, 4]
+ List(1, 2, n, ...)
+ [1, 2, 3, 4]
+
+def nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)) = Posn(1, Posn(3, 4))
+check:
+  nested_p.y.x
+  3
