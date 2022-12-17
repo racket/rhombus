@@ -1,7 +1,7 @@
 #lang rhombus
 import:
   "check.rhm" open
-  racket/base open:
+  lib("racket/base.rkt") open:
     only: mcons
 
 use_static

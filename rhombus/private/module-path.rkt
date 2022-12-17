@@ -29,7 +29,9 @@
                        :module-path
                        in-module-path-space
                        
-                       current-module-path-context)))
+                       current-module-path-context
+
+                       convert-symbol-module-path)))
 
 (begin-for-syntax
   (property module-path-prefix-operator prefix-operator)
@@ -62,6 +64,16 @@
     #:infix-operator-ref module-path-infix-operator-ref
     #:check-result check-module-path-result
     #:make-identifier-form make-identifier-module-path))
+
+(define-for-syntax (convert-symbol-module-path mp)
+  (cond
+    [(identifier? mp)
+     (define str (symbol->string (syntax-e mp)))
+     (define name (if (regexp-match? #rx"/" str)
+                      (string-append str ".rhm")
+                      (string-append str "/main.rhm")))
+     (datum->syntax mp `(,#'lib ,name) mp mp)]
+    [else mp]))
 
 (define-syntax (define-module-path-syntax stx)
   (syntax-parse stx
@@ -149,7 +161,9 @@
   (make-module-path-string-arg-operator
    prefix-operator #'rhombus-lib #'lib
    (lambda (str)
-     (unless (module-path? `(lib ,(syntax->datum str)))
+     (define (maybe-add-rhm-suffix s)
+       (if (regexp-match? #rx"[.]" s) s (string-append s ".rhm")))
+     (unless (module-path? `(lib ,(maybe-add-rhm-suffix (syntax->datum str))))
        (raise-syntax-error (current-module-path-context)
                            "not a valid library path"
                            str)))))

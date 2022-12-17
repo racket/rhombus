@@ -1,8 +1,8 @@
 #lang rhombus/static/and_meta
 import:
-  scribble/rhombus open
-  scribble/manual.racketvarfont
-  scribble/manual.racketfont
+  lib("scribble/rhombus.rkt") open
+  lib("scribble/manual.rkt").racketvarfont
+  lib("scribble/manual.rkt").racketfont
 
 export:
   dispatch_table

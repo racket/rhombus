@@ -1,7 +1,7 @@
 #lang rhombus
 import:
   rhombus/meta open
-  scribble/base expose: #{include-section}
+  lib("scribble/base.rkt").#{include-section}
 
 export:
   include_section

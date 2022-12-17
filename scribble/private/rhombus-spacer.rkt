@@ -231,12 +231,13 @@
                           (as-mod #'slash)
                           (loop #'cs))]
                    [(id:identifier (~and dot (op |.|)) . cs)
-                    (list (hide #'id)
-                          (as-mod #'dot)
-                          (loop #'cs))]
+                    (list* (hide #'id)
+                           (as-mod #'dot)
+                           (loop #'cs))]
                    [((~and dot (op |.|)) . cs)
-                    (list (as-mod #'dot)
-                          (loop #'cs))]
+                    (list* (as-mod #'dot)
+                           (loop #'cs))]
+                   ;; Why not `file` and `lib`? They're reocgnized as literals.
                    [else cs])))]))
 
 (define-spacer class

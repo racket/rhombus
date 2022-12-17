@@ -309,7 +309,7 @@
            #'tail)]
          [(_ (parens mod-path::module-path)
              . tail)
-          (values #`(all-from-out mod-path.parsed)
+          (values #`(all-from-out #,(convert-symbol-module-path #'mod-path.parsed))
                   #'tail)])))))
 
 (define-export-syntax #%juxtapose

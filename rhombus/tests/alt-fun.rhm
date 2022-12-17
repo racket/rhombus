@@ -2,11 +2,11 @@
 
 import:
   "check.rhm" open
-  racket/math.sqr
-  racket/base.#{object-name} as object_name
-  racket/base.#{procedure-arity} as procedure_arity
-  racket/base.#{procedure-keywords} as procedure_keywords
-  math
+  lib("racket/math.rkt").sqr
+  lib("racket/base.rkt").#{object-name} as object_name
+  lib("racket/base.rkt").#{procedure-arity} as procedure_arity
+  lib("racket/base.rkt").#{procedure-keywords} as procedure_keywords
+  lib("math/main.rkt") as math
 
 class Posn(x, y)
 

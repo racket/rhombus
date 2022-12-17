@@ -85,7 +85,8 @@
    collection library, where the @rhombus(/, ~impmod) operator acts as a path
    separator. Each @rhombus(identifier) in the path is constrained to
    contain only characters allowed in a @rhombus(string) module path, with
-   the additional constraint that @litchar{.} is disallowed.},
+   the additional constraint that @litchar{.} is disallowed. A module path
+   of this form refers to a file with the @filepath{.rhm} suffix.},
 
  @item{@rhombus(string): refers to a module using @rhombus(string) as a
    relative path. The string can contain only the characters
@@ -100,7 +101,8 @@
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
    by itself, with the additional constraint that @litchar{.} and
-   @litchar{..} directory indicators are disallowed.},
+   @litchar{..} directory indicators are disallowed. When @rhombus(string)
+   does not end with a file suffix, @filepath{.rhm} is added.},
 
  @item{@rhombus(file(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
@@ -124,7 +126,7 @@
   impo.macro '$identifier / $collection_module_path'
 ){
 
-  As an import-clause operator, combines @rhombus(identifier) and
+  As a module-path operator, combines @rhombus(identifier) and
   @rhombus(collection_module_path) to build a longer collection-based
   module path.
 
@@ -135,12 +137,13 @@
   impo.macro '$collection_module_path . $identifier'
 ){
 
-  As an import-clause operator, a prefix @rhombus(., ~impmod) refers
+  As an module-path operator, a prefix @rhombus(., ~impmod) refers
   to an import prefix or a namespace @rhombus(identifier) in the enclosing
   environment, and an infix @rhombus(., ~impmod) refers to an
   @rhombus(identifier) provided by @rhombus(collection_module_path).
 
 }
+
 
 @doc(
   impo.modifier 'as $identifier'

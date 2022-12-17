@@ -1,11 +1,11 @@
 #lang rhombus/and_meta
 
 import:
-  scribble/manual expose:
+  lib("scribble/manual.rkt") expose:
     defmodule racketmodname
   "rhombus.rhm" open
   meta:
-    racket/base
+    lib("racket/base.rkt")
   meta_label:
     rhombus expose:
       import

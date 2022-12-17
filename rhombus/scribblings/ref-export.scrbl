@@ -60,9 +60,12 @@
 ){
 
  With @rhombus(module_path), exports all bindings imported without a
- prefix from @rhombus(module_path), where @rhombus(module_path)
- appears syntactically the same via @rhombus(import) or as the
- module's language.
+ prefix from @rhombus(module_path), where @rhombus(module_path) appears
+ the same via @rhombus(import). ``The same''
+ means that the module paths are the same after some normalization: paths
+ that use @rhombus(/)-separated indentifiers are converted to
+ @rhombus(lib) forms, and in a @rhombus(lib) form, an implicit
+ @filepath{.rhm} suffix is made explicit.
 
  With @rhombus($$(@rhombus(., ~expmod)) identifier_path), exports
  the content of the specified @tech{namespace} or module import (i.e.,

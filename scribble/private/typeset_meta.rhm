@@ -1,7 +1,7 @@
 #lang rhombus
 
 import:
-  racket/base
+  lib("racket/base.rkt")
 
 export:
   Transformer

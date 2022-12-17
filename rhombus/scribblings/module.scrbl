@@ -120,20 +120,31 @@ cases:
 
     fahrenheit_to_celsius(fahrenheit_freezing))
 
-Module paths are written with a @litchar{/} separator as in Racket, and the
+Module paths are written with a @rhombus(/, ~impmod) separator as in Racket, and the
 last path element is the one that determines the default import
-prefix:
+prefix.
 
 @(rhombusblock:
     import:
-      racket/math
+      rhombus/math
 
     math.pi  // prints 3.141592653589793
     )
 
 @aside{The use of @litchar{.} with an import name as a hierarchical reference is not
-the same as the @rhombus(.) operator described in the next section. We stick with @litchar{/}
-for module paths to avoid overloading @litchar{.} further.}
+the same as the @rhombus(.) operator described in the next section. We stick with
+@rhombus(/, ~impmod) for module paths to avoid overloading @litchar{.} further.}
+
+Unlike Racket, the default file suffix for unquoted module paths is
+@filepath{.rhm}. To reference a Racket module, use a
+@rhombus(lib) path with a @filepath{.rkt} suffix.
+
+@(rhombusblock:
+    import:
+      lib("racket/math.rkt")
+
+    math.pi  // prints 3.141592653589793
+    )
 
 There’s a lot more to the syntax or @rhombus(import) and
 @rhombus(export) for renaming, re-exporting, and so on. See the

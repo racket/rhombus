@@ -1,9 +1,8 @@
 #lang rhombus
 import:
   "check.rhm" open
-  racket/math open:
-    only: sqr
-  math
+  lib("racket/math.rkt").sqr
+  lib("math/main.rkt") as math
 
 use_static
 

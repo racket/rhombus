@@ -5,7 +5,7 @@ import:
   meta:
     "typeset_meta.rhm"
     "rebuild.rhm" open
-  scribble/base as scribble:
+  lib("scribble/base.rkt") as scribble:
     expose: elem
 
 export:

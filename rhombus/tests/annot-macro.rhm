@@ -1,8 +1,7 @@
 #lang rhombus/and_meta
 import:
   "check.rhm" open
-  racket/base open:
-    only: atan
+  lib("racket/base.rkt").atan
 
 class Posn(x, y)
 

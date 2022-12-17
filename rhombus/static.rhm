@@ -1,0 +1,3 @@
+#lang rhombus
+import: "static.rkt"
+export: all_from(.static)

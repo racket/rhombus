@@ -139,7 +139,7 @@ check:
 
 check:
   import:
-    racket/base as r:
+    lib("racket/base.rkt") as r:
       rename:
         cons as make_pair
       only:

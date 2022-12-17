@@ -228,7 +228,7 @@
                              (rhombus-import-dotted-one wrt dotted m-id id r k)))]
     [(_ wrt dotted (import-spaces dot-name ir ...) r (k-form write-placeholder dotted-placeholder . k-args))
      ;; Split into the three types of imports:
-     (define-values (mods namesps sings) (split-imports (syntax->list #'(ir ...))))
+     (define-values (mods orig-mods namesps sings) (split-imports (syntax->list #'(ir ...))))
      ;; For each space where the import is a module, collapse
      ;; module paths to deal with import chains
      (define new-wrt
@@ -240,8 +240,9 @@
                           #hasheq()
                           wrt)
                       (syntax-e #'space)
-                      (collapse-path #'mp (or (hash-ref wrt (syntax-e #'space) #f)
-                                              (hash-ref wrt '#:all #'#f))))])))
+                      (collapse-path #'mp
+                                     (or (hash-ref wrt (syntax-e #'space) #f)
+                                         (hash-ref wrt '#:all #'#f))))])))
      (define new-dotted (if (syntax-e #'dot-name)
                             (string->symbol (string-append
                                              (if (syntax-e #'dotted)
@@ -260,13 +261,13 @@
        (convert-require-from-namespace #'r #hasheq() #hasheq() #f #t))
      ;; module re-imports
      (define-values (mod-forms covered-ht)
-       (let loop ([mods mods] [rev-mod-forms '()] [covered-ht #hasheq()])
+       (let loop ([orig-mods orig-mods] [rev-mod-forms '()] [covered-ht #hasheq()])
          (cond
-           [(null? mods) (values (reverse rev-mod-forms) covered-ht)]
+           [(null? orig-mods) (values (reverse rev-mod-forms) covered-ht)]
            [else
-            (define mod (car mods))
+            (define orig-mod (car orig-mods))
             (define-values (mod-form new-covered-ht)
-              (syntax-parse mod
+              (syntax-parse orig-mod
                 [(space mp)
                  (define prefix (extract-prefix #'mp #'r))
                  ;; The name-root expansion of import prefixes is handled by
@@ -279,9 +280,9 @@
                                        (and (syntax-e prefix)
                                             prefix)
                                        covered-ht
-                                       (or (pair? (cdr mods))
+                                       (or (pair? (cdr orig-mods))
                                            (pair? namesps)))]))
-            (loop (cdr mods) (cons mod-form rev-mod-forms) new-covered-ht)])))
+            (loop (cdr orig-mods) (cons mod-form rev-mod-forms) new-covered-ht)])))
      ;; namespaces
      (define namesp-forms
        (let loop ([irs namesps] [covered-ht covered-ht])
@@ -362,19 +363,20 @@
      #`(import-spaces #,id #,@space+maps)]))
 
 (define-for-syntax (split-imports irs)
-  (let loop ([irs irs] [rev-mods '()] [rev-namesps '()] [rev-sings '()])
+  (let loop ([irs irs] [rev-mods '()] [rev-orig-mods '()] [rev-namesps '()] [rev-sings '()])
     (cond
-      [(null? irs) (values (reverse rev-mods) (reverse rev-namesps) (reverse rev-sings))]
+      [(null? irs) (values (reverse rev-mods) (reverse rev-orig-mods) (reverse rev-namesps) (reverse rev-sings))]
       [else
        (define ir (car irs))
        (syntax-parse ir
          #:datum-literals (import-root singleton)
          [(_ (import-root . _))
-          (loop (cdr irs) rev-mods (cons ir rev-namesps) rev-sings)]
+          (loop (cdr irs) rev-mods rev-orig-mods (cons ir rev-namesps) rev-sings)]
          [(_ (singleton . _))
-          (loop (cdr irs) rev-mods rev-namesps (cons ir rev-sings))]
-         [_
-          (loop (cdr irs) (cons ir rev-mods) rev-namesps rev-sings)])])))
+          (loop (cdr irs) rev-mods rev-orig-mods rev-namesps (cons ir rev-sings))]
+         [(space mp)
+          (define adj-ir #`(space #,(convert-symbol-module-path #'mp)))
+          (loop (cdr irs) (cons adj-ir rev-mods) (cons ir rev-orig-mods) rev-namesps rev-sings)])])))
 
 (define-for-syntax (imports-from-namespace im r-parsed covered-ht accum? open-all-spaces? dotted-id space-sym)
   (syntax-parse im
