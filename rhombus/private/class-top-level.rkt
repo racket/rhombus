@@ -21,7 +21,15 @@
 (define-for-syntax (top-level-declare ids-stx)
   (cond
     [(eq? (syntax-local-context) 'top-level)
-     (list #`(define-syntaxes #,ids-stx (values)))]
+     ;; avoid duplicate definitions here; they'll get reported by later checking
+     (define (remove-dups stx)
+       (let loop ([ids (syntax->list stx)] [seen #hasheq()])
+         (cond
+           [(null? ids) null]
+           [(hash-ref seen (syntax-e (car ids)) #f) (loop (cdr ids) seen)]
+           [else (cons (car ids)
+                       (loop (cdr ids) (hash-set seen (syntax-e (car ids)) #t)))])))
+     (list #`(define-syntaxes #,(remove-dups ids-stx) (values)))]
     [else null]))
 
 (define-for-syntax (reorder-for-top-level defs)

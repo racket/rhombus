@@ -96,20 +96,18 @@
              #:with arg::binding #'form
              #:with parsed #'arg.parsed))
   
-  (define (empty->keyword g kw)
-    (syntax-parse g
-      [(_) #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw))]
-      [_ g]))
+  (define (keyword->binding kw)
+    #`(group #,(datum->syntax kw (string->symbol (keyword->string (syntax-e kw))) kw)))
 
   (define-syntax-class :kw-binding
     #:attributes [kw parsed]
     #:datum-literals (op block group)
     #:literals (rhombus...)
-    (pattern (group kw:keyword (block (group a ...)))
-             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+    (pattern (group kw:keyword (block (group a ...+)))
+             #:with arg::binding #'(group a ...)
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword)
-             #:with arg::binding (empty->keyword #'(group) #'kw)
+             #:with arg::binding (keyword->binding #'kw)
              #:attr parsed #'arg.parsed)
     (pattern arg::non-...-binding
              #:attr kw #'#f
@@ -119,16 +117,16 @@
     #:attributes [kw parsed default]
     #:datum-literals (op block group)
     #:literals (rhombus...)
-    (pattern (group kw:keyword (block (group a::not-equal ... _::equal e ...+)))
-             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+    (pattern (group kw:keyword (block (group a::not-equal ...+ _::equal e ...+)))
+             #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
-    (pattern (group kw:keyword (block (group a ... (b-tag::block b ...))))
-             #:with arg::binding (empty->keyword #'(group a ...) #'kw)
+    (pattern (group kw:keyword (block (group a ...+ (b-tag::block b ...))))
+             #:with arg::binding #'(group a ...)
              #:with default #'(group (parsed (rhombus-body-at b-tag b ...)))
              #:attr parsed #'arg.parsed)
     (pattern (group kw:keyword _::equal e ...+)
-             #:with arg::binding (empty->keyword #'(group) #'kw)
+             #:with arg::binding (keyword->binding #'kw)
              #:with default #'(group e ...)
              #:attr parsed #'arg.parsed)
     (pattern (group a::not-equal ...+ _::equal e ...+)
