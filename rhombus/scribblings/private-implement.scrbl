@@ -15,10 +15,10 @@ known interface but without exposing the implementation of of the method
 to untrusted callers.
 
 For example, suppose that we'd like to customize printing by
-implementing the @rhombus(Printer) interface, but we don't want a public
+implementing the @rhombus(Printable) interface, but we don't want a public
 @rhombus(print) method. Printing and string conversion access
-customization methods using an internal name for @rhombus(Printer), so
-privately implementing @rhombus(Printer) will achieve the goal.
+customization methods using an internal name for @rhombus(Printable), so
+privately implementing @rhombus(Printable) will achieve the goal.
 
 To privately implement an interface, use
 @rhombus(private, ~class_clause) @rhombus(implements, ~class_clause),
@@ -28,7 +28,7 @@ and override the interfaces methods with
 @(demo:
     ~defn:      
       class Posn(x, y):
-        private implements: Printer
+        private implements: Printable
         private override print(op):
           import: rhombus
           rhombus.display("⟨⟨⟨", op)

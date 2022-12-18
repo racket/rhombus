@@ -67,7 +67,7 @@
         "private/boolean-pattern.rkt"
         "private/boolean-annotation.rkt"
         "private/eval.rkt"
-        "private/printer.rkt")
+        "private/printable.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

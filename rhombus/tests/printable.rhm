@@ -7,7 +7,7 @@ use_static
 check:
   import: rhombus
   class Posn(x, y):
-    implements Printer
+    implements Printable
     override print(op):
       rhombus.display("_" +& x +& "," +& y +& "_", op)
   "" +& Posn(1, 2)
@@ -16,7 +16,7 @@ check:
 check:
   import: rhombus
   class Posn(x, y):
-    private implements Printer
+    private implements Printable
     private override print(op):
       rhombus.display("_" +& x +& "," +& y +& "_", op)
   "" +& Posn(1, 2)

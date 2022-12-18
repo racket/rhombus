@@ -50,7 +50,7 @@
 }
 
 @doc(
-  interface Printer
+  interface Printable
 ){
 
  An interface that a class can implement (publicly or privately) to
@@ -58,12 +58,12 @@
 
 @itemlist(
 
- @item{@rhombus(Printer.print) --- takes an output port and prints to the port;
+ @item{@rhombus(Printable.print) --- takes an output port and prints to the port;
    this method is abstract in the interface, so it must be overridden},
 
- @item{@rhombus(Printer.display) --- takes an output port and displays to the
+ @item{@rhombus(Printable.display) --- takes an output port and displays to the
    port; this method has a default impleemntation that calls the
-   @rhombus(Printer.print) method}
+   @rhombus(Printable.print) method}
 
 )
 
@@ -71,7 +71,7 @@
 
 
 @doc(
-  fun Printer.print(v :: Printer, out)
+  fun Printable.print(v :: Printable, out)
 ){
 
  Prints @rhombus(v) to the output port @rhombus(out).
@@ -80,7 +80,7 @@
 
 
 @doc(
-  fun Printer.display(o :: Printer, out)
+  fun Printable.display(o :: Printable, out)
 ){
 
  Displays @rhombus(v) to the output port @rhombus(out).
