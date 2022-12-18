@@ -11,6 +11,7 @@
                      [(bind) 'rhombus/binding]
                      [(impmod) 'rhombus/import]
                      [(expmod) 'rhombus/export]
+                     [(modpath) 'rhombus/module-path]
                      [(annot) 'rhombus/annotation]
                      [(stxclass) 'rhombus/syntax-class]
                      [(reducer) 'rhombus/reducer]

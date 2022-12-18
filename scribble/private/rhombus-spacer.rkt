@@ -7,6 +7,8 @@
          (only-in rhombus
                   [= rhombus-=]
                   [/ rhombus-/]
+                  [file rhombus-file]
+                  [lib rhombus-lib]
                   [values rhombus-values]))
 
 (provide (for-space rhombus/scribble/typeset
@@ -222,7 +224,7 @@
      #`(tag #,@(let loop ([cs #'(c ...)])
                  (syntax-parse cs
                    #:datum-literals (group op |.| open as)
-                   #:literals (rhombus-/)
+                   #:literals (rhombus-/ rhombus-file rhombus-lib)
                    [(id:identifier) (list (hide #'id))]
                    [(mp (~and mod open)) (list (hide #'mp) (as-mod #'mod))]
                    [(mp (~and mod as) id:identifier) (list (hide #'mp) (as-mod #'mod) (hide #'id))]
@@ -237,7 +239,14 @@
                    [((~and dot (op |.|)) . cs)
                     (list* (as-mod #'dot)
                            (loop #'cs))]
-                   ;; Why not `file` and `lib`? They're reocgnized as literals.
+                   [((~and id rhombus-file) str . cs)
+                    (list* (as-mod #'id)
+                           #'str
+                           (loop #'cs))]
+                   [((~and id rhombus-lib) str . cs)
+                    (list* (as-mod #'id)
+                           #'str
+                           (loop #'cs))]
                    [else cs])))]))
 
 (define-spacer class

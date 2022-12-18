@@ -7,37 +7,50 @@
                      enforest/proc-name
                      enforest/name-root
                      "srcloc.rkt"
+                     "introducer.rkt"
                      "name-path-op.rkt"
                      "realm.rkt")
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
-                  [/ rhombus/]))
+                  [/ rhombus/])
+         "name-root.rkt")
+
+;; The syntax of module paths is not meant to be extensible, but it
+;; may be useful to expose `:module-path` parsing. For imports, we
+;; bind module-path operators in the same space as import operators,
+;; so that they can be mixed more freely. For exports, we distinguish
+;; module paths and export operators.
 
 (provide (for-space rhombus/module-path
                     #%literal
                     (rename-out [rhombus/ /]
-                                [rhombus-file file]
-                                [rhombus-lib lib])))
+                                [rhombus-! !]))
+         (rename-out [rhombus-file file]
+                     [rhombus-lib lib]))
 
 (module+ for-import-export
   (provide (for-syntax make-module-path-literal-operator
                        make-module-path-/-operator
                        make-module-path-file-operator
                        make-module-path-lib-operator
-                       
+                       make-module-path-submod-operator
+
                        :module-path
-                       in-module-path-space
-                       
+
                        current-module-path-context
 
                        convert-symbol-module-path)))
+
+(module+ for-meta
+  (provide (for-syntax in-module-path-space)
+           modpath))
 
 (begin-for-syntax
   (property module-path-prefix-operator prefix-operator)
   (property module-path-infix-operator infix-operator)
 
-  (define in-module-path-space (make-interned-syntax-introducer 'rhombus/module-path))
+  (define in-module-path-space (make-interned-syntax-introducer/add 'rhombus/module-path))
 
   (define current-module-path-context (make-parameter 'import))
 
@@ -154,7 +167,7 @@
                            "not a valid path"
                            str)))))
 
-(define-module-path-syntax rhombus-file
+(define-syntax rhombus-file
   (make-module-path-file-operator module-path-prefix-operator))
 
 (define-for-syntax (make-module-path-lib-operator prefix-operator)
@@ -168,5 +181,34 @@
                            "not a valid library path"
                            str)))))
 
-(define-module-path-syntax rhombus-lib
+(define-syntax rhombus-lib
   (make-module-path-lib-operator module-path-prefix-operator))
+
+(define-for-syntax (make-module-path-submod-operator infix-operator)
+  (infix-operator
+   #'rhombus-!
+   '((default . stronger))
+   'macro
+   (lambda (mp stx)
+     (unless (module-path? (syntax->datum mp))
+       (raise-syntax-error (current-module-path-context)
+                           "not a valid submodule prefix"
+                           mp))
+     (syntax-parse stx
+       #:datum-literals ()
+       [(form-id id:identifier . tail)
+        (values (datum->syntax #'id
+                               (list #'submod mp #'id)
+                               (span-srcloc #'form-id #'tag)
+                               #'form-id)
+                #'tail)]))
+   'left))
+
+(define-module-path-syntax rhombus-!
+  (make-module-path-submod-operator module-path-infix-operator))
+
+;; Defines a fake meta namespace that would be exposed if we allowed
+;; new module-path forms, needed to document the built-in ones
+(define-name-root modpath
+  #:fields ([macro modpath-macro]))
+(define-syntax modpath-macro 'placeholder)

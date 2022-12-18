@@ -38,6 +38,7 @@
                     (rename-out [rhombus/ /]
                                 [rhombus-file file]
                                 [rhombus-lib lib]
+                                [rhombus-! !]
                                 [rhombus. |.|])
                     as
                     open
@@ -134,7 +135,7 @@
     (cond
       [(null? prefixes)
        (syntax-parse mp
-         #:datum-literals (lib import-root import-dotted import-spaces file reimport singleton)
+         #:datum-literals (lib import-root import-dotted import-spaces file submod reimport singleton)
          [_:string (extract-string-prefix mp)]
          [_:identifier (datum->syntax
                         mp
@@ -152,6 +153,7 @@
                        (datum->syntax
                         mp
                         (string->symbol (path->string (path-replace-suffix name #"")))))]
+         [(submod _ id) #'id]
          [_ (raise-syntax-error 'import
                                 "don't know how to extract default prefix"
                                 mp)])]
@@ -575,6 +577,9 @@
 
 (define-import-syntax rhombus-lib
   (make-module-path-lib-operator import-prefix-operator))
+
+(define-import-syntax rhombus-!
+  (make-module-path-submod-operator import-infix-operator))
 
 (define-import-syntax rhombus.
   (import-prefix+infix-operator

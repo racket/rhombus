@@ -137,7 +137,7 @@ the same as the @rhombus(.) operator described in the next section. We stick wit
 
 Unlike Racket, the default file suffix for unquoted module paths is
 @filepath{.rhm}. To reference a Racket module, use a
-@rhombus(lib) path with a @filepath{.rkt} suffix.
+@rhombus(lib, ~impmod) path with a @filepath{.rkt} suffix.
 
 @(rhombusblock:
     import:

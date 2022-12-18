@@ -26,8 +26,9 @@
   grammar module_path:
     $collection_module_path
     $string
-    lib($string)
-    file($string)
+    $$(@rhombus(lib, ~impmod))($string)
+    $$(@rhombus(file, ~impmod))($string)
+    $module_path $$(@rhombus(!, ~impmod)) $identifier
     $$(@rhombus(., ~impmod)) $identifier
     $module_path $$(@rhombus(., ~impmod)) $identifier,
 
@@ -97,15 +98,19 @@
    digits must form a number that is not the ASCII value of a letter,
    digit, @litchar{-}, @litchar{+}, or @litchar{_}.},
 
- @item{@rhombus(lib(string)): refers to an installed collection library,
+ @item{@rhombus($$(@rhombus(lib, ~impmod))(string)): refers to an installed collection library,
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
    by itself, with the additional constraint that @litchar{.} and
    @litchar{..} directory indicators are disallowed. When @rhombus(string)
    does not end with a file suffix, @filepath{.rhm} is added.},
 
- @item{@rhombus(file(string)): refers to a file through a
+ @item{@rhombus($$(@rhombus(file, ~impmod))(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
+
+ @item{@rhombus(module_path $$(@rhombus(!, ~impmod)) identifier):
+  refers to submodule of another module. The submodule name
+  @rhombus(identifier) is used as the default import prefix.},
 
  @item{@rhombus($$(@rhombus(., ~impmod))identifier): refers to a namespace
   @rhombus(identifier), which might be predefined like @rhombus(List), or
@@ -141,6 +146,38 @@
   to an import prefix or a namespace @rhombus(identifier) in the enclosing
   environment, and an infix @rhombus(., ~impmod) refers to an
   @rhombus(identifier) provided by @rhombus(collection_module_path).
+
+}
+
+
+@doc(
+  impo.macro 'lib($string)'
+){
+
+ Refers to an installed collection library, where @rhombus(string) is
+ the library name. See @rhombus(import) for more information.
+
+}
+
+
+@doc(
+  impo.macro 'file($string)'
+){
+
+ Refers to a file through a platform-specific path, where
+ @rhombus(string) is the library name. See @rhombus(import) for more
+ information.
+
+}
+
+
+@doc(
+  impo.macro '$module_path ! $identifier'
+){
+
+ Refers to a submodule name @rhombus(identifier) of the module
+ referenced by @rhombus(module_path). See @rhombus(import) for more
+ information.
 
 }
 

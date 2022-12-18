@@ -12,6 +12,9 @@
                   in-import-space)
          (only-in (submod rhombus/private/export for-meta)
                   in-export-space)
+         (only-in (submod rhombus/private/module-path for-meta)
+                  in-module-path-space
+                  modpath)
          (only-in (submod rhombus/private/annotation for-class)
                   in-annotation-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
@@ -206,16 +209,17 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def fun expr impo expo bind annot |.|)
+    #:literals (def fun expr impo expo modpath bind annot |.|)
     #:datum-literals (op macro rule)
-    (pattern (~seq (~or expr bind annot expo impo) (op |.|) macro))
+    (pattern (~seq (~or expr bind annot expo impo modpath) (op |.|) macro))
+    (pattern (~seq (~or expo impo) (op |.|) modifier))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind impo expo annot reducer
+    #:literals (def defn expr decl bind impo expo modpath annot reducer
                  for_clause class_clause interface_clause entry_point |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annot bind reducer expo
+    (pattern (~seq (~or defn decl expr annot bind reducer expo modpath
                         for_clause class_clause interface_clause entry_point)
                    (op |.|) macro))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
@@ -442,10 +446,11 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo annot reducer for_clause class_clause interface_clause entry_point rhombus-syntax)
+    #:literals (impo expo modpath annot reducer for_clause class_clause interface_clause entry_point rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
+    [(group modpath . _) in-module-path-space]
     [(group annot . _) in-annotation-space]
     [(group reducer . _) in-reducer-space]
     [(group for_clause . _) in-for-clause-space]
@@ -457,10 +462,11 @@
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (impo expo annot reducer for_clause class_clause interface_clause entry_point bind rhombus-syntax)
+    #:literals (impo expo modpath annot reducer for_clause class_clause interface_clause entry_point bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
+    [(group modpath . _) 'modpath]
     [(group annot . _) 'annot]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
@@ -473,7 +479,7 @@
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr impo expo annot reducer
+    #:literals (defn decl expr impo expo modpath annot reducer
                  for_clause class_clause interface_clause entry_point
                  bind grammar operator rhombus-syntax
                  interface)
@@ -482,6 +488,7 @@
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]
     [(group impo . _) "import modifier"]
+    [(group modpath . _) "module path"]
     [(group expo _ modifier . _) "export modifier"]
     [(group expo _ macro . _) "export"]
     [(group annot . _) "annotation"]

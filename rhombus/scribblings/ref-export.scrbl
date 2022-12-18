@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    lib("rhombus/private/module-path.rkt")!#{for-meta}.modpath)
 
 @title{Export}
 
@@ -163,5 +165,45 @@
   and @rhombus(identifier_path, ~var) or @rhombus(operator_path, ~var)
   as described for @rhombus(export). It can also be used to form an
   @rhombus(identifier_path, ~var) for @rhombus(all_from).
+
+}
+
+
+@doc(
+  modpath.macro '$identifier / $collection_module_path'
+){
+
+ Like the @rhombus(/, ~impmod) operator for @rhombus(import) module
+ paths, used for module paths in @rhombus(all_from, ~expmod).
+
+}
+
+
+@doc(
+  modpath.macro 'lib($string)'
+){
+
+ Like the @rhombus(lib, ~impmod) form for @rhombus(import), used for
+ module paths in @rhombus(all_from, ~expmod).
+
+}
+
+
+@doc(
+  modpath.macro 'file($string)'
+){
+
+ Like the @rhombus(file, ~impmod) form for @rhombus(import), used for
+ module paths in @rhombus(all_from, ~expmod).
+
+}
+
+
+@doc(
+  modpath.macro '$module_path ! $identifier'
+){
+
+ Like the @rhombus(!, ~impmod) operator for @rhombus(import) to access a
+ submodule, used for module paths in @rhombus(all_from, ~expmod).
 
 }
