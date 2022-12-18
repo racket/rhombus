@@ -9,6 +9,7 @@
          "static-info.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
+         "ref-result-key.rkt"
          "composite.rkt"
          "name-root.rkt"
          "dot-parse.rkt")

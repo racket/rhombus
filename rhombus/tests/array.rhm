@@ -41,6 +41,11 @@ begin:
     def [v, ...] = dynamic([1, 2, 3])
     Array(v, ...).length()
     3
+  check:
+    class Posn(x, y)
+    def arr :: Array.of(Posn) = Array(Posn(1, 2))
+    arr[0].x
+    1
 
 begin:
   check:
