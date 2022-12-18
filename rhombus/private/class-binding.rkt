@@ -55,7 +55,7 @@
        [binding-rhs
         (list
          #`(define-binding-syntax name
-             (wrap-class-transformer name #,(intro binding-rhs) make-binding-prefix-operator)))]
+             (wrap-class-transformer name #,(intro binding-rhs) make-binding-prefix-operator "class")))]
        [else
         (list
          #`(define-binding-syntax name

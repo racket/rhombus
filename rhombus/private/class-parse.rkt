@@ -144,7 +144,8 @@
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding-rhs #f) "binding")
   (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation-rhs #f) "annotation"))
 
-(define (check-consistent-construction stxes mutables private?s defaults options)
+(define (check-consistent-construction stxes mutables private?s defaults options
+                                       name given-constructor-rhs given-constructor-name expression-macro-rhs)
   (when (for/or ([m (in-list mutables)]
                  [p? (in-list private?s)]
                  [d (in-list defaults)])
@@ -154,7 +155,18 @@
     (unless (hash-ref options 'constructor-rhs #f)
       (raise-syntax-error #f
                           "class needs a custom constructor to initialize private immutable fields"
-                          stxes))))
+                          stxes)))
+  (when (and given-constructor-rhs
+             expression-macro-rhs)
+    (cond
+      [(not given-constructor-name)
+       (raise-syntax-error #f
+                           "unnamed constructor inaccessible due to expression macro"
+                           stxes)]
+      [(bound-identifier=? given-constructor-name name)
+       (raise-syntax-error #f
+                           "constructor name conflicts with expression macro"
+                           stxes)])))
 
 (define (check-consistent-unimmplemented stxes final? abstract-name)
   (when (and final? abstract-name)

@@ -43,6 +43,7 @@
          implements
          internal
          constructor
+         expression
          binding
          annotation
          final
@@ -224,6 +225,8 @@
        (define final? (hash-ref options 'final? #t))
        (define authentic? (hash-ref options 'authentic? #f))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
+       (define given-constructor-name (hash-ref options 'constructor-name #f))
+       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
        (define binding-rhs (hash-ref options 'binding-rhs #f))
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
        (define-values (internal-id exposed-internal-id)
@@ -265,7 +268,11 @@
        (define-values (constructor-public-defaults constructor-private-defaults)
          (partition-fields constructor-defaults constructor-private?s #:result values))
 
-       (check-consistent-construction stxes mutables private?s constructor-defaults options)
+       (check-consistent-construction stxes mutables private?s constructor-defaults options
+                                      #'name given-constructor-rhs
+                                      (and given-constructor-name
+                                           ((make-expose #'scope-stx #'base-stx) given-constructor-name))
+                                      expression-macro-rhs)
 
        (define has-defaults? (any-stx? constructor-defaults))
        (define has-keywords? (any-stx? constructor-keywords))
@@ -376,9 +383,13 @@
                           '())]
                      [(super-field-keyword ...) super-keywords]
                      [(export ...) exs])
-         (with-syntax ([constructor-name (if constructor-rhs
-                                             (temporary "~a-ctr")
+         (with-syntax ([constructor-name (if (or constructor-rhs
+                                                 expression-macro-rhs)
+                                             (or given-constructor-name
+                                                 (temporary "~a-ctr"))
                                              #'make-name)]
+                       [constructor-visible-name (or given-constructor-name
+                                                     #'name)]
                        [constructor-maker-name (and (or (not final?)
                                                         super)
                                                     (or constructor-rhs
@@ -446,6 +457,7 @@
                                         has-defaults? super-has-defaults?
                                         final?
                                         #'(name make-name make-all-name constructor-name constructor-maker-name
+                                                constructor-visible-name
                                                 name?
                                                 name-defaults
                                                 make-internal-name
@@ -465,6 +477,7 @@
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                (build-class-dot-handling method-mindex method-vtable final?
                                          has-private? method-private exposed-internal-id
+                                         expression-macro-rhs intro (hash-ref options 'constructor-name #f)
                                          #'(name constructor-name name-instance name-ref
                                                  make-internal-name internal-name-instance
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]

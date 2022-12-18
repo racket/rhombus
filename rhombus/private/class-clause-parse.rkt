@@ -14,6 +14,7 @@
          (only-in "annotation.rkt" :: -:)
          (submod "annotation.rkt" for-class)
          "parens.rkt"
+         "name-root.rkt"
          "name-root-ref.rkt"
          "parse.rkt"
          "var-decl.rkt"
@@ -21,6 +22,7 @@
          (only-in "implicit.rkt" #%body))
 
 (provide (for-syntax extract-internal-ids
+                     make-expose
                      parse-annotation-options
                      parse-options
                      wrap-class-clause)
@@ -29,6 +31,7 @@
          implements
          internal
          constructor
+         expression
          binding
          annotation
          final
@@ -42,19 +45,23 @@
          abstract)
 
 (module+ for-interface
-  (provide (for-syntax parse-method-clause)))
+  (provide (for-syntax parse-method-clause
+                       extract-rhs)))
 
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
                                          stxes)
   (define internal-id (hash-ref options 'internal #f))
   (define expose (if internal-id
-                     (let ([intro (make-syntax-delta-introducer scope-stx base-stx)])
-                       (lambda (stx)
-                         (intro stx 'remove)))
+                     (make-expose scope-stx base-stx)
                      (lambda (stx) stx)))
   (values internal-id
           (expose internal-id)))
+
+(define-for-syntax (make-expose scope-stx base-stx)
+  (let ([intro (make-syntax-delta-introducer scope-stx base-stx)])
+    (lambda (stx)
+      (intro stx 'remove))))
 
 (define-for-syntax (extract-rhs b)
   (syntax-parse b
@@ -117,7 +124,7 @@
           (define new-options
             (syntax-parse clause
               #:literals (extends implements private-implements
-                                  constructor final nonfinal authentic binding annotation
+                                  constructor expression final nonfinal authentic binding annotation
                                   method property private override abstract internal
                                   final-override private-override
                                   override-property final-property final-override-property
@@ -131,10 +138,17 @@
                (add-implements options 'private-implements #'(id ...))]
               [(internal id) ; checked in `parse-annotation-options`
                (hash-set options 'internal #'id)]
-              [(constructor rhs)
+              [(constructor id rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
-               (hash-set options 'constructor-rhs #'rhs)]
+               (define rhs-options (hash-set options 'constructor-rhs #'rhs))
+               (if (syntax-e #'id)
+                   (hash-set rhs-options 'constructor-name #'id)
+                   rhs-options)]
+              [(expression rhs)
+               (when (hash-has-key? options 'expression-rhs)
+                 (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
+               (hash-set options 'expression-rhs (extract-rhs #'rhs))]
               [(binding block)
                (when (hash-has-key? options 'binding-rhs)
                  (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
@@ -277,8 +291,10 @@
        [(_ name:identifier)
         (wrap-class-clause #'(internal name))]))))
 
-(define-syntax binding
-  (class-clause-transformer
+(define-for-syntax (make-macro-clause-transformer
+                    key
+                    #:clause-transformer [clause-transformer make-class+interface-clause-transformer])
+  (clause-transformer
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
@@ -286,34 +302,22 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(binding (block (named-rule rule #,stx pattern template-block))))]
+        (wrap-class-clause #`(#,key (block (named-rule rule #,stx pattern template-block))))]
        [(form-name (~and rhs (_::alts
                               (_::block (group (_::quotes . _)
                                                (_::block . _)))
                               ...)))
-        (wrap-class-clause #`(binding (block (named-rule rule #,stx rhs))))]
+        (wrap-class-clause #`(#,key (block (named-rule rule #,stx rhs))))]
        [(form-name (~and (_::block . _)
-                         binding-block))
-        (wrap-class-clause #`(binding binding-block))]))))
+                         a-block))
+        (wrap-class-clause #`(#,key a-block))]))))
+
+(define-syntax binding
+  (make-macro-clause-transformer #'binding
+                                 #:clause-transformer class-clause-transformer))
 
 (define-syntax annotation
-  (class-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-name (~and (_::quotes . _)
-                         pattern)
-                   (~and (_::block . _)
-                         template-block))
-        (wrap-class-clause #`(annotation (block (named-rule rule #,stx pattern template-block))))]
-       [(form-name (~and rhs (_::alts
-                              (_::block (group (_::quotes . _)
-                                               (_::block . _)))
-                              ...)))
-        (wrap-class-clause #`(annotation (block (named-rule rule #,stx rhs))))]
-       [(form-name (~and (_::block . _)
-                         annotation-block))
-        (wrap-class-clause #`(annotation annotation-block))]))))
+  (make-macro-clause-transformer #'annotation))
 
 (define-syntax nonfinal
   (class-clause-transformer
@@ -403,16 +407,33 @@
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
+       [(_ id:identifier (~and args (_::parens . _)) ret ...
+           (~and rhs (_::block . _)))
+        (wrap-class-clause #`(constructor id (block (group fun args ret ... rhs))))]
        [(_ (~and args (_::parens . _)) ret ...
            (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor (block (group fun args ret ... rhs))))]
+        (wrap-class-clause #`(constructor #f (block (group fun args ret ... rhs))))]
+       [(_ (~and rhs (_::alts
+                      (_::block id:identifier (group (_::parens . _) ret ...
+                                                     (_::block . _)))
+                      ...+)))
+        #:with (id0 idx ...) #'(id ...)
+        (for ([idx (in-list (syntax->list #'(idx ...)))])
+          (unless (bound-identifier=? idx #'id0)
+            (raise-syntax-error #f "inconsistent name identifier" stx idx)))
+        (wrap-class-clause #`(constructor id0 (block (group fun rhs))))]
        [(_ (~and rhs (_::alts
                       (_::block (group (_::parens . _) ret ...
                                        (_::block . _)))
                       ...+)))
-        (wrap-class-clause #`(constructor (block (group fun rhs))))]
+        (wrap-class-clause #`(constructor #f (block (group fun rhs))))]
+       [(_ id:identifier (~and rhs (_::block . _)))
+        (wrap-class-clause #`(constructor id rhs))]
        [(_ (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor rhs))]))))
+        (wrap-class-clause #`(constructor #f rhs))]))))
+
+(define-syntax expression
+  (make-macro-clause-transformer #'expression))
 
 (define-syntax final
   (make-class+interface-clause-transformer

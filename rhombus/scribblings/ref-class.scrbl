@@ -65,6 +65,7 @@
     $$(@rhombus(nonfinal, ~class_clause))
     $$(@rhombus(internal, ~class_clause)) $identifier
     $$(@rhombus(constructor, ~class_clause)) $constructor_decl
+    $$(@rhombus(expression, ~class_clause)) $expression_decl
     $$(@rhombus(binding, ~class_clause)) $binding_decl
     $$(@rhombus(annotation, ~class_clause)) $annotation_decl
     $other_class_clause
@@ -75,7 +76,8 @@
 
 @itemlist(
 
- @item{a constructor function, which by default takes as many arguments
+ @item{a constructor function or form, which by default is a function that
+  takes as many arguments
   as the supplied non-@rhombus(private, ~class_clause) @rhombus(field_spec)s
   in parentheses, and it returns an instance of the class;},
 
@@ -155,7 +157,7 @@
 
  When a @rhombus(class_clause) is a @rhombus(field, ~class_clause) form,
  then an additional field is added to the class, but the additional field
- is not represented by an arguments to the constructor, annotation form,
+ is not represented by an arguments to the default constructor, annotation form,
  or binding-pattern form. Instead, the @rhombus(expr) or
  @rhombus(body) block the  @rhombus(field, ~class_clause) gives the added
  field its initial value; that expression or block is evaluated each time an instance
@@ -215,14 +217,16 @@
  annotation, and binding pattern customization. At most one
  @rhombus(class_clause) can have @rhombus(internal, ~class_clause).
 
- The @rhombus(class_clause) forms @rhombus(constructor, ~class_clause),
+ The @rhombus(class_clause) forms @rhombus(constructor, ~class_clause)
+ or @rhombus(expression, ~class_clause),
  @rhombus(binding, ~class_clause), and
  @rhombus(annotation, ~class_clause) replace default meanings of the
  defined @rhombus(identifier_path) for an expression context, binding
  context, and annotation context, respectively. See
- @rhombus(constructor, ~class_clause), @rhombus(binding, ~class_clause),
- and @rhombus(annotation, ~class_clause) for more information on those
- forms.
+ @rhombus(constructor, ~class_clause),
+ @rhombus(expression, ~class_clause),
+ @rhombus(binding, ~class_clause), and
+ @rhombus(annotation, ~class_clause) for more information on those forms.
 
  When a method procedure is accessed from a class (as a namespace) via
  @rhombus(.), the procedure expects an extra by-position argument that
@@ -306,6 +310,8 @@
     $$(@rhombus(property, ~intf_clause)) $method_impl
     $$(@rhombus(extends, ~intf_clause)) $extends_decl
     $$(@rhombus(internal, ~intf_clause)) $identifier
+    $$(@rhombus(expression, ~intf_clause)) $expression_decl
+    $$(@rhombus(annotation, ~intf_clause)) $annotation_decl
     $other_interface_clause
 
 ){
@@ -629,7 +635,7 @@
  shape of @rhombus(method_decl).
 
  When a class has an abstract method,
- either declared directly or inherited, the constructor for the class
+ either declared directly or inherited, the underlying constructor for the class
  raises an exception. The method must be overridden with a
  @rhombus(override, ~class_clause) class in a subclass, and then the
  subclass can be instantiated (as long as it has no other abstract
@@ -662,7 +668,7 @@
  The @rhombus(super) form can only be used in two places: within a
  method call to invoke another method @rhombus(identifier) that is
  statically known to be implemented in a superclass or superinterface of
- the enclosing class; or within a custom constructor to as a refernce to
+ the enclosing class; or within a custom constructor to as a reference to
  an underlying constructor. In the case of a method call, the
  @rhombus(super) call invokes the superclass's or superinterface's
  implementation, even if a method named @rhombus(identifier) is
@@ -692,13 +698,18 @@
 }
 
 @doc(  
-  class_clause.macro 'constructor: $entry_point',
-  class_clause.macro 'constructor ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
+  class_clause.macro 'constructor $maybe_name: $entry_point',
+  class_clause.macro 'constructor $maybe_name($kwopt_binding, ...,
+                                              $rest, ...) $maybe_res_ann:
                         $body; ...',
   class_clause.macro 'constructor
-                      | ($binding, ..., $rest, ...) $maybe_res_ann:
+                      | $maybe_name($binding, ..., $rest, ...) $maybe_res_ann:
                           $body; ...
                       | ...',
+  class_clause.macro 'expression: $entry_point',
+  class_clause.macro '«expression '$identifier $pattern ...': '$template'»',
+  class_clause.macro '«expression | '$identifier $pattern ...': '$template'
+                                  | ...»',
   class_clause.macro 'binding: $entry_point',
   class_clause.macro '«binding '$identifier $pattern ...': '$template'»',
   class_clause.macro '«binding | '$identifier $pattern ...': '$template'
@@ -707,21 +718,26 @@
   class_clause.macro '«annotation '$identifier $pattern ...': '$template'»',
   class_clause.macro '«annotation | '$identifier $pattern ...': '$template'
                                   | ...»',
-    
+
+  grammar maybe_name:
+    $identifier
+    $$("ϵ")
 ){
 
  These @tech{class clauses} are recognized by @rhombus(class) to replace
- the default constructor, binding form, or annotation form. For
+ the default constructor, expression form, binding form, or annotation form. For
  @rhombus(constructor, ~class_clause), the second two forms are shorthand
  for using a @rhombus(fun) @tech{entry point}. For each of
- @rhombus(binding, ~class_clause) and @rhombus(binding, ~class_clause),
+ @rhombus(expression, ~class_clause),
+ @rhombus(binding, ~class_clause), and @rhombus(binding, ~class_clause),
  the @rhombus(pattern) and @rhombus(template) shorthands are similar to
  using a @rhombus(rule) entry point, but an @rhombus(identifer) must be
  presented instead of @rhombus(()) for the pattern, and @rhombus(identifer)
  must match the name of the class being defined.
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
- form, then a use of new class's @rhombus(identifier_path, ~var) as a
+ form with an empty @rhombus(maybe_name), then a use of new class's
+ @rhombus(identifier_path, ~var) as a
  constructor function invokes a function the @tech{entry point} (typically a
  @rhombus(fun, ~entry_point) form) in the block after
  @rhombus(constructor, ~class_clause). That function must return an
@@ -746,6 +762,14 @@
 
 )
 
+ If a @rhombus(constructor, ~class_clause) form has an
+ @rhombus(identifier) for @rhombus(maybe_name) that is not the same as
+ the enclosing class's @rhombus(identifier_path, ~var), then the constructor is bound to
+ @rhombus(identifier) instead of @rhombus(identifier_path, ~var).
+ Typically, naming a constructor is paired with an
+ @rhombus(expression, ~class_clause) declaration that refers to that
+ constructor.
+
  If a class has an @rhombus(internal, ~class_clause) clause, then the
  bound name acts as a constructor like @rhombus(super), except that it
  always instantiates the class that contains the
@@ -754,6 +778,14 @@
  superclass has a custom constructor, the default constructor of a
  subclass assumes that the superclass constructor accepts the same
  argument as the default superclass constructor.
+
+ When a @rhombus(class) has a @rhombus(expression, ~class_clause) form,
+ then a use of new class's @rhombus(identifier_path, ~var) as an
+ expression invokes the @tech{entry point} (typically a
+ @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
+ meta-time expression. This macro replaces the default meaning of the
+ @rhombus(identifier_path, ~var) as a reference to the constructor.
  
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
  then a use of new class's @rhombus(identifier_path, ~var) as a
@@ -788,6 +820,28 @@
  annotation form, then a class must have a custom annotation form, too.
 
 }
+
+
+@doc(  
+  interface_clause.macro 'expression: $expresssion_decl',
+  interface_clause.macro 'annotation: $annotation_point'
+){
+
+ These @tech{interface clause} forms have the same syntax and analogous
+ meaning as the @rhombus(expression, ~class_clause) and
+ @rhombus(annotation, ~class_clause) @tech{class clauses}.
+
+ There is no @rhombus(constructor, ~class_clause) for interfaces, since
+ interfaces cannot be instantiated directly, but an
+ @rhombus(expression, ~intf_clause) clause can make an interface
+ identifier behave like a constructor, perhaps instantiating some default
+ class. There is no @rhombus(binding, ~class_clause) for interfaces,
+ because @rhombus(interface) does not otherwise define an interfeace name
+ for binding, and so @rhombus(bind.rule) or @rhombus(bind.macro) can be
+ used alongside @rhombus(interface) with the same interface name.
+
+}
+
 
 @doc(
   class_clause.macro 'authentic'

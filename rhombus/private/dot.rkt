@@ -8,7 +8,8 @@
          "expression.rkt"
          "static-info.rkt"
          "dot-provider-key.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "parse.rkt")
 
 (provide |.|)
 
@@ -66,20 +67,21 @@
                                   (list form1))
               (values #`(dot-lookup-by-name #,form1 'field)
                       #'tail)))
-        (syntax-parse form1
-          [dp::dot-provider
-           (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
-           (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space #'dp.id)))
-           (if (dot-provider-more-static? p)
-               ((dot-provider-handler p) form1 #'dot #'field
-                                         #'tail
-                                         more-static?
-                                         values generic)
-               (let ([e ((dot-provider-handler p) form1 #'dot #'field)])
-                 (if e
-                     (values e #'tail)
-                     (generic))))]
-          [_ (generic)])]
+        (let ([form1 (rhombus-local-expand form1)])
+          (syntax-parse form1
+            [dp::dot-provider
+             (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
+             (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space #'dp.id)))
+             (if (dot-provider-more-static? p)
+                 ((dot-provider-handler p) form1 #'dot #'field
+                                           #'tail
+                                           more-static?
+                                           values generic)
+                 (let ([e ((dot-provider-handler p) form1 #'dot #'field)])
+                   (if e
+                       (values e #'tail)
+                       (generic))))]
+            [_ (generic)]))]
        [(dot::operator other . tail)
         (raise-syntax-error #f
                             "expected an identifier for a field name, but found something else"

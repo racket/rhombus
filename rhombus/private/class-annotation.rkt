@@ -57,7 +57,10 @@
          [annotation-rhs
           (list
            #`(define-annotation-syntax name
-               (wrap-class-transformer name #,(intro annotation-rhs) make-annotation-prefix-operator)))]
+               (wrap-class-transformer name
+                                       #,(intro annotation-rhs)
+                                       make-annotation-prefix-operator
+                                       "class")))]
          [else
           (list
            (make-ann-def #'name #f #'constructor-public-name-fields #'public-field-keywords

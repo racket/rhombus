@@ -7,6 +7,7 @@
          racket/stxparam
          "call-result-key.rkt"
          "dot-provider-key.rkt"
+         "expression.rkt"
          "static-info.rkt"
          "class-this.rkt"
          "entry-point.rkt"
@@ -17,6 +18,8 @@
 (provide (for-syntax build-class-constructor
                      need-class-constructor-wrapper?
                      encode-protocol))
+
+;; Note: `constructor.macro` is handed in "class-dot.rkt"
 
 (define-for-syntax (build-class-constructor super constructor-rhs
                                             added-fields constructor-private?s
@@ -30,6 +33,7 @@
                                             final?
                                             names)
   (with-syntax ([(name make-name make-all-name constructor-name constructor-maker-name
+                       visible-name
                        name?
                        name-defaults
                        make-internal-name
@@ -154,16 +158,16 @@
                  #`(define constructor-name
                      (syntax-parameterize ([this-id (quote-syntax super-this)]
                                            [private-tables private-tables-spec])
-                       (let ([name (wrap-constructor name name? #,constructor-rhs)])
-                         name))))]
+                       (let ([visible-name (wrap-constructor name name? #,constructor-rhs)])
+                         visible-name))))]
                [else
                 (list
                  #`(define constructor-maker-name
                      (lambda (make-name)
                        (syntax-parameterize ([this-id (quote-syntax super-this)]
                                              [private-tables private-tables-spec])
-                         (let ([name (wrap-constructor name name? #,constructor-rhs)])
-                           name))))
+                         (let ([visible-name (wrap-constructor name name? #,constructor-rhs)])
+                           visible-name))))
                  #`(define constructor-name
                      #,(cond
                          [super

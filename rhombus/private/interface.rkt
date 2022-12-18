@@ -17,10 +17,12 @@
          "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
+         (submod "annotation-syntax.rkt" for-class)
          "interface-clause.rkt"
          "interface-clause-parse.rkt"
          "class-together-parse.rkt"
          "dotted-sequence-parse.rkt"
+         (for-syntax "class-transformer.rkt")
          (only-meta-in 1
                        "class-method.rkt")
          "class-dot.rkt"
@@ -98,6 +100,8 @@
                                (and id
                                     ((make-syntax-delta-introducer #'scope-stx #'base-stx) id 'remove))))
 
+       (define annotation-rhs (hash-ref options 'annotation-rhs #f))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
@@ -112,6 +116,7 @@
           #'for-together?
           #`(begin
               #,@(build-interface-annotation internal-name
+                                             annotation-rhs
                                              #'(name name? name-instance
                                                      internal-name? internal-name-instance))
               (interface-finish [orig-stx base-stx scope-stx
@@ -150,6 +155,8 @@
        (define internal-name (let ([id #'maybe-internal-name])
                                (and (syntax-e id) id)))
 
+       (define expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
@@ -183,6 +190,7 @@
                                                 prop:internal-name internal-name? internal-name-ref))
               (build-interface-dot-handling method-mindex method-vtable
                                             internal-name
+                                            expression-macro-rhs
                                             #'(name name-instance name-ref
                                                     internal-name-instance internal-name-ref
                                                     [export ...]))
@@ -214,7 +222,7 @@
                                                               (lambda (vt) vt))))
                                             '())))))))
 
-(define-for-syntax (build-interface-annotation internal-name names)
+(define-for-syntax (build-interface-annotation internal-name annotation-rhs names)
   (with-syntax ([(name name? name-instance
                        internal-name? internal-name-instance)
                  names])
@@ -226,11 +234,18 @@
                                                                              (quote-syntax internal-name?)
                                                                              (quote-syntax ((#%dot-provider internal-name-instance)))))))
          null)
-     (list
-      #`(define-annotation-syntax name (identifier-annotation (quote-syntax name)
-                                                              (quote-syntax name?)
-                                                              (quote-syntax ((#%dot-provider name-instance)))))))))
-
+     (if annotation-rhs
+         (list
+          #`(define-annotation-syntax name
+              (wrap-class-transformer name
+                                      #,((make-syntax-introducer) annotation-rhs)
+                                      make-annotation-prefix-operator
+                                      "interface")))
+         (list
+          #`(define-annotation-syntax name (identifier-annotation (quote-syntax name)
+                                                                  (quote-syntax name?)
+                                                                  (quote-syntax ((#%dot-provider name-instance))))))))))
+  
 (define-for-syntax (build-interface-desc parent-names
                                          method-mindex method-names method-vtable method-results
                                          internal-name

@@ -12,10 +12,13 @@
          "parens.rkt"
          "static-info.rkt"
          "expression.rkt"
+         (only-in (submod "expression-syntax.rkt" for-define)
+                  make-expression-prefix-operator)
          "assign.rkt"
          "name-root.rkt"
          "parse.rkt"
-         (submod "function.rkt" for-call))
+         (submod "function.rkt" for-call)
+         (for-syntax "class-transformer.rkt"))
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
@@ -24,6 +27,7 @@
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable final?
                                              has-private? method-private exposed-internal-id
+                                             expression-macro-rhs intro constructor-given-name
                                              names)
   (with-syntax ([(name constructor-name name-instance name-ref
                        make-internal-name internal-name-instance
@@ -40,8 +44,17 @@
        method-defns
        (append
         (list
-         #'(define-name-root name
-             #:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))
+         #`(define-name-root name
+             #,@(cond
+                  [expression-macro-rhs
+                   #`(#:root (wrap-class-transformer name
+                                                     #,(intro expression-macro-rhs)
+                                                     make-expression-prefix-operator
+                                                     "class"))]
+                  [(and constructor-given-name
+                        (not (free-identifier=? #'name constructor-given-name)))
+                   '()]
+                  [else #`(#:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name)))])
              #:fields ([public-field-name public-name-field]
                        ...
                        [method-name method-id]
@@ -78,7 +91,10 @@
                                                                               ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable internal-name names)
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable
+                                                 internal-name
+                                                 expression-macro-rhs
+                                                 names)
   (with-syntax ([(name name-instance name-ref
                        internal-name-instance internal-name-ref
                        [ex ...])
@@ -90,7 +106,14 @@
       (append
        method-defns
        (list
-        #'(define-name-root name
+        #`(define-name-root name
+            #,@(cond
+                 [expression-macro-rhs
+                  #`(#:root (wrap-class-transformer name
+                                                    #,((make-syntax-introducer) expression-macro-rhs)
+                                                    make-expression-prefix-operator
+                                                    "interface"))]
+                 [else '()])
             #:fields ([method-name method-id]
                       ...
                       ex ...))
