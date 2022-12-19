@@ -2,7 +2,7 @@
 
 import:
   scribble/rhombus open
-  scribble/bnf:
+  lib("scribble/bnf.rkt"):
     rename: #{BNF-seq} as bseq
             #{BNF-alt} as balt
             optional as boptional
