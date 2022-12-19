@@ -438,6 +438,7 @@
                                    has-extra-fields?
                                    #'(name class:name make-all-name name? name-ref
                                            [public-field-name ...]
+                                           [public-maybe-set-name-field! ...]
                                            [field-name ...]
                                            [name-field ...]
                                            [set-name-field! ...]
@@ -531,6 +532,7 @@
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref
                        [public-field-name ...]
+                       [public-maybe-set-name-field! ...]
                        [field-name ...]
                        [name-field ...]
                        [set-name-field! ...]
@@ -560,6 +562,10 @@
                               [mutable (in-list mutables)]
                               #:when (syntax-e mutable))
                      (list pred ann-str))]
+                  [(maybe-public-mutable-field-name ...)
+                   (for/list ([name (in-list (syntax->list #'(public-field-name ...)))]
+                              [mutator (in-list (syntax->list #'(public-maybe-set-name-field! ...)))])
+                     (and (syntax-e mutator) name))]
                   [(((method-name method-proc) ...)
                     ((property-name property-proc) ...))
                    (for/fold ([ms '()] [ps '()] #:result (list (reverse ms) (reverse ps)))
@@ -584,6 +590,15 @@
                                                                                 (~@ 'property-name property-proc)
                                                                                 ...)
                                                                         (hasheq (~@ 'method-name method-proc)
+                                                                                ...)))))
+                                                 #,@(if (or abstract-name
+                                                            (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
+                                                                   (not (syntax-e maybe-name)))
+                                                                 (null? (syntax-e #'(property-proc ...)))))
+                                                        null
+                                                        #`((cons prop:field-name->mutator
+                                                                 (list* '(maybe-public-mutable-field-name ...)
+                                                                        (hasheq (~@ 'property-name property-proc)
                                                                                 ...)))))
                                                  #,@ (let ([field-print-shapes (print-field-shapes
                                                                                 super

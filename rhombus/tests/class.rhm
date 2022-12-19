@@ -630,3 +630,19 @@ check:
     method get() :: Dir: this
   Dir(Posn(0, 0), [Dir(Posn(1, 2), [])]).content[0].get().loc.x
   1
+
+check:
+  use_dynamic
+  class CPosn(mutable x, y):
+    private field c = "red"
+    property | color(): c
+             | color(new_c): c := new_c
+    property | is_red(): c == "red"
+  def p = CPosn(1, 2)
+  [dynamic(p).x := 3,
+   p.x,
+   dynamic(p).color := "blue",
+   p.color,
+   p.is_red]
+  [#void, 3, #void, "blue", #false]
+

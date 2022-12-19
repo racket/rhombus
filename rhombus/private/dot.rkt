@@ -3,13 +3,15 @@
                      syntax/parse
                      enforest/property
                      enforest/syntax-local
-                     "operator-parse.rkt")
+                     "operator-parse.rkt"
+                     "tag.rkt")
          "definition.rkt"
          "expression.rkt"
          "static-info.rkt"
          "dot-provider-key.rkt"
          "realm.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "assign.rkt")
 
 (provide |.|)
 
@@ -24,6 +26,7 @@
   (provide define-dot-provider-syntax
            #%dot-provider
            prop:field-name->accessor
+           prop:field-name->mutator
            curry-method))
 
 (module+ for-builtin
@@ -65,8 +68,16 @@
                                   #'dot.name
                                   #f
                                   (list form1))
-              (values #`(dot-lookup-by-name #,form1 'field)
-                      #'tail)))
+              (syntax-parse #'tail
+                #:datum-literals (op)
+                #:literals (:=)
+                [((op :=) . tail)
+                 #:with e::infix-op+expression+tail #'(:= . tail)
+                 (values #`(dot-assign-by-name #,form1 'field e.parsed)
+                         #'e.tail)]
+                [else
+                 (values #`(dot-lookup-by-name #,form1 'field)
+                         #'tail)])))
         (let ([form1 (rhombus-local-expand form1)])
           (syntax-parse form1
             [dp::dot-provider
@@ -110,6 +121,16 @@
                                (for/fold ([ht field-ht]) ([(name proc) (in-hash (cddr field-names+ht+method-ht))])
                                  (hash-set ht name (lambda (obj) (curry-method proc obj)))))))
 
+(define-values (prop:field-name->mutator field-name->mutator? field-name->mutator-ref)
+  (make-struct-type-property 'field-name->mutator
+                             (lambda (field-names+ht info)
+                               (define field-names (car field-names+ht))
+                               (define gen-mut (list-ref info 4))
+                               (for/fold ([ht (cdr field-names+ht)]) ([name (in-list field-names)]
+                                                                      [i (in-naturals)]
+                                                                      #:when name)
+                                 (hash-set ht name (make-struct-field-mutator gen-mut i name))))))
+
 ;; To tie a loop with built-in data structures:
 (define builtin->accessor-ref (lambda (v) #f))
 (define (set-builtin->accessor-ref! proc) (set! builtin->accessor-ref proc))
@@ -125,6 +146,18 @@
   (cond
     [(not ht) (fail)]
     [(hash-ref ht field #f) => (lambda (acc) (acc v))]
+    [else (fail)]))
+
+(define (dot-assign-by-name v field new-val)
+  (define ht (field-name->mutator-ref v #f))
+  (define (fail)
+    (raise-arguments-error* field
+                            rhombus-realm
+                            "no such mutable field or property"
+                            "in value" v))
+  (cond
+    [(not ht) (fail)]
+    [(hash-ref ht field #f) => (lambda (mut) (mut v new-val))]
     [else (fail)]))
 
 (define (curry-method proc obj)
