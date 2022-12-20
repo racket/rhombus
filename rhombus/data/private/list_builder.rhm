@@ -18,9 +18,11 @@ class ListBuilder():
 
   method add(element):
     storage.add(element)
+    this
 
   method addAll(elements):
     storage.addAll(elements)
+    this
 
   method build():
     match storage.size
