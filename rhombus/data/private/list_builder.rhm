@@ -1,0 +1,35 @@
+#lang rhombus
+
+
+export:
+  ListBuilder
+
+
+import:
+  rhombus/data/private/array_list.ArrayList
+  rhombus/data/private/regular_immutable_list.RegularImmutableList
+  rhombus/data/private/small_lists.SingletonList
+  rhombus/data/private/small_lists.EmptyList
+
+
+class ListBuilder():
+
+  private field storage :: ArrayList = ArrayList()
+
+  method add(element):
+    storage.add(element)
+
+  method addAll(elements):
+    storage.addAll(elements)
+
+  method build():
+    match storage.size
+    | 0: EmptyList()
+    | 1: SingletonList(storage[0])
+    | n:
+        let copy = Array.make(n)
+        for:
+          each:
+            i: 0..n
+          copy[i] := storage.get(i)
+        RegularImmutableList(copy)
