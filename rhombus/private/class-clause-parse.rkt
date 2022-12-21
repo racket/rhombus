@@ -18,8 +18,11 @@
          "name-root-ref.rkt"
          "parse.rkt"
          "var-decl.rkt"
+         (only-in "assign.rkt" :=)
          (only-in "function.rkt" fun)
-         (only-in "implicit.rkt" #%body))
+         (only-in "implicit.rkt" #%body)
+         (only-in "begin.rkt"
+                  [begin rhombus-begin]))
 
 (provide (for-syntax extract-internal-ids
                      make-expose
@@ -400,6 +403,58 @@
              #:attr maybe-ret #'ret.seq)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:attr rhs #'#f
+             #:attr maybe-ret #'ret.seq))
+  (define-splicing-syntax-class (:property mode)
+    #:description "property implementation"
+    #:attributes (form)
+    #:datum-literals (group op)
+    #:literals (:=)
+    (pattern (~seq id:identifier ret::maybe-ret
+                   (~and rhs (_::block . _)))
+             #:attr form (wrap-class-clause #`(#,mode id
+                                               (block
+                                                (group fun
+                                                       (alts
+                                                        (block (group (parens) rhs))
+                                                        (block (group (parens (group ignored))
+                                                                      (block (group (parsed (not-assignable 'id)))))))))
+                                               ret.seq)))
+    
+    (pattern (~seq (_::alts
+                    (_::block
+                     (group id:identifier ret::maybe-ret
+                            (~and rhs (_::block . _))))))
+             #:attr form (wrap-class-clause #`(#,mode id
+                                               (block
+                                                (group fun
+                                                       (alts
+                                                        (block (group (parens) rhs))
+                                                        (block (group (parens (group ignored))
+                                                                      (block (group (parsed (not-assignable 'id)))))))))
+                                               ret.seq)))
+    (pattern (~seq (~and alts
+                         (atag::alts
+                          (btag1::block
+                           ((~and gtag1 group) a-id1:identifier ret1::maybe-ret
+                                               (~and body1 (_::block . _))))
+                          (btag2::block
+                           ((~and gtag2 group) a-id2:identifier
+                                               (op :=)
+                                               assign-rhs ...+
+                                               (~and body2 (_::block . _)))))))
+             #:do [(check-consistent #:who (syntax-e mode) #'alts (list #'a-id1 #'a-id2) "name")]
+             #:attr form (wrap-class-clause #`(#,mode a-id1
+                                               (block (group fun
+                                                             (atag
+                                                              (btag1 (group (parens) body1))
+                                                              (btag2 (group (parens (group assign-rhs ...))
+                                                                            body2)))))
+                                               ret1.seq))))
+  (define-splicing-syntax-class :property-decl
+    #:description "proper declaration"
+    #:attributes (id rhs maybe-ret)
+    (pattern (~seq id:identifier ret::maybe-ret)
+             #:attr rhs #'#f
              #:attr maybe-ret #'ret.seq)))
 
 (define-syntax constructor
@@ -442,10 +497,10 @@
        #:literals (override method property)
        [(_ override method (~var m (:method #'final-override))) #'m.form]
        [(_ method (~var m (:method #'final))) #'m.form]
-       [(_ override property (~var m (:method #'final-override-property))) #'m.form]
-       [(_ property (~var m (:method #'final-property))) #'m.form]
+       [(_ override property (~var m (:property #'final-override-property))) #'m.form]
+       [(_ property (~var m (:property #'final-property))) #'m.form]
        [(_ override (~var m (:method #'final-override))) #'m.form]
-       [(_ override property (~var m (:method #'final-override-property))) #'m.form]
+       [(_ override property (~var m (:property #'final-override-property))) #'m.form]
        [(_ (~var m (:method #'final))) #'m.form]))))
 (define-syntax final-override 'placeholder)
 (define-syntax final-property 'placeholder)
@@ -468,12 +523,12 @@
    ;; class clause
    (lambda (stx data)
      (syntax-parse stx
-       [(_ (~var m (:method #'property))) #'m.form]))
+       [(_ (~var m (:property #'property))) #'m.form]))
    ;; interface clause
    (lambda (stx data)
      (syntax-parse stx
-       [(_ (~var m (:method #'property))) #'m.form]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]))))
+       [(_ (~var m (:property #'property))) #'m.form]
+       [(_ decl::property-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]))))
 
 (define-syntax override
   (make-class+interface-clause-transformer
@@ -482,13 +537,13 @@
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
-       [(_ property (~var m (:method #'override-property))) #'m.form]
+       [(_ property (~var m (:property #'override-property))) #'m.form]
        [(_ (~var m (:method #'override))) #'m.form]))
    (lambda (stx data)
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
-       [(_ property (~var m (:method #'override-property))) #'m.form]
+       [(_ property (~var m (:property #'override-property))) #'m.form]
        [(_ (~var m (:method #'override))) #'m.form]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]))))
 (define-syntax override-property 'placeholder)
@@ -504,8 +559,8 @@
        [(_ method (~var m (:method #'private))) #'m.form]
        [(_ override (~var m (:method #'private-override))) #'m.form]
        [(_ override method (~var m (:method #'private-override))) #'m.form]
-       [(_ property (~var m (:method #'private-property))) #'m.form]
-       [(_ override property (~var m (:method #'private-override-property))) #'m.form]
+       [(_ property (~var m (:property #'private-property))) #'m.form]
+       [(_ override property (~var m (:property #'private-override-property))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method #'private))) #'m.form]))
    ;; interface clause
@@ -525,10 +580,10 @@
      (syntax-parse stx
        #:literals (method override property)
        [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]
-       [(_ property decl::method-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]
+       [(_ property decl::property-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]
        [(_ override decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
        [(_ override method decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
-       [(_ override property decl::method-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
+       [(_ override property decl::property-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
 (define-syntax abstract-property 'placeholder)
 (define-syntax abstract-override 'placeholder)
@@ -550,3 +605,6 @@
           (and (same-return-signature? (car a) (car b))
                (same-return-signature? (cdr a) (cdr b))))]
     [else (equal? a b)]))
+
+(define (not-assignable name)
+  (error name "property does not support assignment"))

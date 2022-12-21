@@ -232,7 +232,7 @@
     [(_ name predicate-id (block g))
      #:do [(define adjustments (entry-point-adjustments
                                 '()
-                                (lambda (body)
+                                (lambda (arity body)
                                   #`(let ([r #,body])
                                       (if (predicate-id r)
                                           r

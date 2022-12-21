@@ -106,6 +106,7 @@
                 #`(lambda (#,@extra-args left #,right-id self-id)
                     #,(adjust-result
                        adjustments
+                       1
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
                                                   (list #'left right-id #'self-id))
@@ -138,6 +139,7 @@
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     #,(adjust-result
                        adjustments
+                       1
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
                                                   (list arg-id #'opt-self-id))
@@ -186,6 +188,7 @@
                     #`(lambda (#,@extra-args #,@(if prefix? '() (list #'left)) tail self)
                         #,(adjust-result
                            adjustments
+                           1
                            #`(syntax-parse (insert-multi-front-group self tail)
                                #,@(map parsed-impl ps))))))])
        #,(parsed-name p))
@@ -237,8 +240,8 @@
              #,(build-cases prefixes #t make-prefix-id adjustments)
              #,(build-cases infixes #f make-infix-id adjustments))]))
 
-(define-for-syntax (adjust-result adjustments b)
-  ((entry-point-adjustments-wrap-body adjustments) b))
+(define-for-syntax (adjust-result adjustments arity b)
+  ((entry-point-adjustments-wrap-body adjustments) arity b))
 
 ;; ----------------------------------------
 

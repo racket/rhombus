@@ -45,16 +45,17 @@
        (append
         (list
          #`(define-name-root name
-             #,@(cond
-                  [expression-macro-rhs
-                   #`(#:root (wrap-class-transformer name
-                                                     #,(intro expression-macro-rhs)
-                                                     make-expression-prefix-operator
-                                                     "class"))]
-                  [(and constructor-given-name
-                        (not (free-identifier=? #'name constructor-given-name)))
-                   '()]
-                  [else #`(#:root (class-expression-transformer (quote-syntax name) (quote-syntax constructor-name)))])
+             #:root
+             #,(cond
+                 [expression-macro-rhs
+                  #`(wrap-class-transformer name
+                                            #,(intro expression-macro-rhs)
+                                            make-expression-prefix-operator
+                                            "class")]
+                 [(and constructor-given-name
+                       (not (free-identifier=? #'name constructor-given-name)))
+                  #`no-constructor-transformer]
+                 [else #`(class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))])
              #:fields ([public-field-name public-name-field]
                        ...
                        [method-name method-id]
@@ -107,13 +108,14 @@
        method-defns
        (list
         #`(define-name-root name
-            #,@(cond
+            #:root
+            #,(cond
                  [expression-macro-rhs
-                  #`(#:root (wrap-class-transformer name
-                                                    #,((make-syntax-introducer) expression-macro-rhs)
-                                                    make-expression-prefix-operator
-                                                    "interface"))]
-                 [else '()])
+                  #`(wrap-class-transformer name
+                                            #,((make-syntax-introducer) expression-macro-rhs)
+                                            make-expression-prefix-operator
+                                            "interface")]
+                 [else #'no-constructor-transformer])
             #:fields ([method-name method-id]
                       ...
                       ex ...))
@@ -221,11 +223,12 @@
       (syntax-parse tail
         #:datum-literals (op)
         #:literals (:=)
-        [((op :=) rhs ...)
+        [((op :=) . tail)
          #:when (syntax-e (field-desc-mutator-id fld))
+         #:with e::infix-op+expression+tail #'(:= . tail)
          (values (field-desc-mutator-id fld)
-                 #`(rhombus-expression (#,group-tag rhs ...))
-                 #'())]
+                 #'e.parsed
+                 #'e.tail)]
         [_
          (values accessor-id
                  #f
@@ -258,9 +261,10 @@
           (syntax-parse tail
             #:datum-literals (op)
             #:literals (:=)
-            [((op :=) rhs ...)
-             (values #`(#,(no-srcloc #'parens) (#,group-tag rhs ...))
-                     #'())]
+            [((op :=) . tail)
+             #:with e::infix-op+expression+tail #'(:= . tail)
+             (values #`(#,(no-srcloc #'parens) (group (parsed e.parsed)))
+                     #'e.tail)]
             [_ (values #'(parens) tail)])
           (syntax-parse tail
             #:datum-literals (op)
@@ -342,3 +346,9 @@
                          "no such public field or method"
                          field-id)]
     [else (failure)]))
+
+(define-for-syntax no-constructor-transformer
+  (expression-transformer
+   #'no-constructor
+   (lambda (stx)
+     (raise-syntax-error #f "cannot be used as an expression" stx))))

@@ -365,6 +365,7 @@
                             (list (list kw arg+default) default)]))])
           (define body
             ((entry-point-adjustments-wrap-body adjustments)
+             ((if (syntax-e rest-arg) arity-at-least values) (length (syntax->list #'(arg ...))))
              #`(nested-bindings
                 #,function-name
                 #f ; try-next
@@ -526,8 +527,9 @@
                                         maybe-bind-rest ...
                                         maybe-bind-kwrest-seq ...
                                         maybe-bind-kwrest ...
-
                                         #,((entry-point-adjustments-wrap-body adjustments)
+                                           ((if (syntax-e (fcase-rest-arg fc)) arity-at-least values)
+                                            (length (fcase-args fc)))
                                            #`(add-annotation-check
                                               #,function-name
                                               pred
@@ -748,6 +750,7 @@
 
 (define-for-syntax (generate-call rator head extra-rands rands rsts dots kwrsts tail)
   (with-syntax-parse ([(rand::kw-expression ...) rands])
+    (define num-rands (length (syntax->list #'(rand.kw ...))))
     (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
                                                          [parsed (in-list (syntax->list #'(rand.parsed ...)))])
                                                 (if (syntax-e kw)
@@ -791,7 +794,15 @@
                                head)]))
       (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
                                       #'()))
-      (values (wrap-static-info* e result-static-infos)
+      (define all-result-static-infos (or (let loop ([r (syntax-local-static-info rator #'#%call-results-at-arities)])
+                                            (syntax-parse r
+                                              [((n (result ...)) . rest)
+                                               (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands)))
+                                                   #`(result ... . #,result-static-infos)
+                                                   (loop #'rest))]
+                                              [_ #f]))
+                                          result-static-infos))
+      (values (wrap-static-info* e all-result-static-infos)
               tail))))
 
 (define-for-syntax (complex-argument-splice? gs-stx)

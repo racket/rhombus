@@ -6,18 +6,18 @@ use_static
 begin:
   class Posn(x, y):
     property
-    | is_origin():
+    | is_origin:
         x == 0 && y == 0
-    | is_origin(at):
-        if (if at | is_origin() | !is_origin())
+    | is_origin := at:
+        if (if at | is_origin | !is_origin)
         | #void
         | "no!"
     method is_at_origin():
-      is_origin()
+      is_origin
     method at_this_origin():
       this.is_origin
-    final property is_origin_dont_ask_again():
-      is_origin()
+    final property is_origin_dont_ask_again:
+      is_origin
   check:
     def p: Posn(1, 2)
     [p.is_origin,
@@ -28,7 +28,7 @@ begin:
      p.is_origin_dont_ask_again,
      p.is_origin := "somewhere"]
     [#false, #false, #false, #false, #false, #false,
-     "no!"]
+     #void]
   check:
     use_dynamic
     [dynamic(Posn(0, 0)).is_origin,
@@ -43,12 +43,12 @@ begin:
   class Posn(x, y):
     nonfinal
     internal _Posn
-    property is_origin():
+    property is_origin:
       x == 0 && y == 0
   class Posn3D(z):
     extends Posn
-    override property is_origin():
-      z == 0 && super.is_origin()
+    override property is_origin:
+      z == 0 && super.is_origin
   check:
     def p: Posn3D(0, 0, 0)
     [p.is_origin,
@@ -62,10 +62,10 @@ begin:
   class Posn(x, y):
     nonfinal
     internal _Posn
-    abstract property is_origin()
+    abstract property is_origin
   class Posn3D(z):
     extends Posn
-    override property is_origin(): #true
+    override property is_origin: #true
   check:
     Posn3D(0, 0, 0).is_origin
     #true
@@ -74,7 +74,17 @@ check:
   ~eval_exn
   class Posn(x, y):
     nonfinal
-    property is_origin(): #true
+    property is_origin: #true
+  class Posn3D(z):
+    extends Posn
+    override is_origin: #false
+  "cannot override superclass's property with a non-property method"
+
+check:
+  ~eval_exn
+  class Posn(x, y):
+    nonfinal
+    abstract property is_origin
   class Posn3D(z):
     extends Posn
     override is_origin(): #false
@@ -84,20 +94,10 @@ check:
   ~eval_exn
   class Posn(x, y):
     nonfinal
-    abstract property is_origin()
+    property is_origin: #true
   class Posn3D(z):
     extends Posn
-    override is_origin(): #false
-  "cannot override superclass's property with a non-property method"
-
-check:
-  ~eval_exn
-  class Posn(x, y):
-    nonfinal
-    property is_origin(): #true
-  class Posn3D(z):
-    extends Posn
-    final override is_origin(): #false
+    final override is_origin: #false
   "cannot override superclass's property with a non-property method"
 
 check:
@@ -107,16 +107,16 @@ check:
     method is_origin(): #true
   class Posn3D(z):
     extends Posn
-    override property is_origin(): #false
+    override property is_origin: #false
   "cannot override superclass's non-property method with a property"
 
 begin:
   class Posn(x, y):
     internal _Posn
-    private property is_origin():
+    private property is_origin:
       x == 0 && y == 0
     private method is_at_origin():
-      is_origin()
+      is_origin
   check:
     def p: _Posn(0, 0)
     [p.is_origin,
@@ -128,7 +128,7 @@ begin:
     abstract property is_origin
   class Posn(x, y):
     implements Pointy
-    override property is_origin():
+    override property is_origin:
       x == 0 && y == 0
   check:
     def p :: Pointy: Posn(0, 0)
@@ -151,22 +151,22 @@ check:
     abstract is_origin
   class Posn(x, y):
     implements Pointy
-    override property is_origin():
+    override property is_origin:
       x == 0 && y == 0
   "cannot override interface's non-property method with a property"
 
 check:
   class A():
     nonfinal
-    property m():
+    property m:
       5
   class B():
     extends A
     nonfinal
-    abstract override property m()
+    abstract override property m
   class C():
     extends B
-    override property m():
+    override property m:
       6
   C().m
   6
@@ -175,12 +175,12 @@ check:
   ~eval_exn
   class A():
     nonfinal
-    property m():
+    property m:
       5
   class B():
     extends A
     nonfinal
-    abstract override property m()
+    abstract override property m
   class C():
     extends B
   "final class cannot have abstract methods"
@@ -189,9 +189,9 @@ check:
   ~eval_exn
   class A():
     nonfinal
-    property m():
+    property m:
       5
   class B():
     extends A
-    abstract override property m()
+    abstract override property m
   "final class cannot have abstract methods"

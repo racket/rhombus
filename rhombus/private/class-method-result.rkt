@@ -28,7 +28,7 @@
 (define-syntax (define-method-result-syntax stx)
   (syntax-parse stx
     #:datum-literals (op)
-    [(_ id ((op mode) ret ...) (super-result-id ...) maybe-final-id)
+    [(_ id ((op mode) ret ...) (super-result-id ...) maybe-final-id kind)
      #:with c::annotation (no-srcloc #`(#,group-tag ret ...))
      #:with c-parsed::annotation-form #'c.parsed
      #:do [(define super-results (map syntax-local-method-result
@@ -57,5 +57,7 @@
              (syntax-e #'maybe-final-id))
         #`(begin
             #,def
-            (define-static-info-syntax maybe-final-id (#%call-result all-static-infos)))]
+            (define-static-info-syntax maybe-final-id #,(if (eq? (syntax-e #'kind) 'property)
+                                                            #`(#%call-results-at-arities ((1 all-static-infos)))
+                                                            #`(#%call-result all-static-infos))))]
        [else def])]))

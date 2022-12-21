@@ -19,6 +19,7 @@ has only methods and can be implemented by classes.
 @include_section("subclass.scrbl")
 @include_section("interface.scrbl")
 @include_section("method.scrbl")
+@include_section("property.scrbl")
 @include_section("constructor.scrbl")
 @include_section("custom-binding.scrbl")
 @include_section("private-method.scrbl")

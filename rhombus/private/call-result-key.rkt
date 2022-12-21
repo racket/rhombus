@@ -1,9 +1,7 @@
 #lang racket/base
 
 (provide #%call-result
-         #%call-result-predicate)
+         #%call-results-at-arities)
 
 (define #%call-result #f)
-
-;; used by the entry-point protocol
-(define #%call-result-predicate #f)
+(define #%call-results-at-arities #f)

@@ -28,7 +28,7 @@
   (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry-point))
 
   (struct entry-point-adjustments (prefix-arguments wrap-body method?))
-  (define no-adjustments (entry-point-adjustments '() (lambda (stx) stx) #f))
+  (define no-adjustments (entry-point-adjustments '() (lambda (arity stx) stx) #f))
   
   (define-transform
     #:syntax-class (:entry-point adjustments)

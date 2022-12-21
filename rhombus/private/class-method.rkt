@@ -295,7 +295,8 @@
                 (if (pair? id/property) (car id/property) id/property))
               (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
                 (and (mindex-final? mix)
-                     (vector-ref method-vtable (mindex-index mix))))))))
+                     (vector-ref method-vtable (mindex-index mix)))))
+        #,(added-method-kind added))))
           
 (define-for-syntax (build-method-result-expression method-result)
   #`(hasheq
@@ -361,13 +362,13 @@
        [else
         ;; in a method
         (define id+dp+supers c-or-id+dp+supers)
-        (syntax-parse stxs
-          #:datum-literals (op |.|)
-          [(head (op |.|) method-id:identifier (~and args (tag::parens arg ...)) . tail)
-           (syntax-parse id+dp+supers
-             [(id dp)
-              (raise-syntax-error #f "class has no superclass" #'head)]
-             [(id dp . super-ids)
+        (syntax-parse id+dp+supers
+          [(id dp)
+           (raise-syntax-error #f "class has no superclass" #'head)]
+          [(id dp . super-ids)
+           (syntax-parse stxs
+             #:datum-literals (op |.|)
+             [(head (op |.|) method-id:identifier . tail)
               (define super+pos
                 (for/or ([super-id (in-list (syntax->list #'super-ids))])
                   (define super (syntax-local-value* (in-class-desc-space super-id)
@@ -385,9 +386,29 @@
               (define impl (vector-ref (super-method-vtable super) pos))
               (when (eq? (syntax-e impl) '#:abstract)
                 (raise-syntax-error #f "method is abstract in superclass" #'head #'method-id))
-              (define-values (call new-tail)
-                (parse-function-call impl (list #'id) #'(method-id args)))
-              (values call #'tail)])])]))))
+              (define shape (vector-ref (super-method-shapes super) pos))
+              (cond
+                [(pair? shape)
+                 ;; a property
+                 (syntax-parse #'tail
+                   #:datum-literals (op)
+                   #:literals (:=)
+                   [((op :=) rhs ...)
+                    #:with e::infix-op+expression+tail #'(:= . tail)
+                    (values (datum->syntax #'here (list impl #'id #'e.parsed) #'head #'head)
+                            #'e.tail)]
+                   [_
+                    (define-values (call new-tail)
+                      (parse-function-call impl (list #'id) #'(method-id (parens))))
+                    (values call
+                            #'tail)])]
+                [else
+                 ;; a method
+                 (syntax-parse #'tail
+                   [((~and args (tag::parens arg ...)) . tail)
+                    (define-values (call new-tail)
+                      (parse-function-call impl (list #'id) #'(method-id args)))
+                    (values call #'tail)])])])])]))))
 
 (define-for-syntax (get-private-table desc)
   (define tables (get-private-tables))
@@ -403,17 +424,18 @@
      (syntax-parse stx
        #:datum-literals (op)
        #:literals (:=)
-       [(head (op :=) rhs ...)
+       [(head (op :=) . tail)
         #:when (syntax-e maybe-mutator-id)
+        #:with e::infix-op+expression+tail #'(:= . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
            (values (no-srcloc
-                    #`(let ([#,id (rhombus-expression (#,group-tag rhs ...))])
+                    #`(let ([#,id e.parsed])
                         #,(datum->syntax #'here
                                          (list maybe-mutator-id #'obj-id id)
                                          #'head
                                          #'head)))
-                   #'())])]
+                   #'e.tail)])]
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
@@ -424,30 +446,57 @@
                                       static-infos)
                    #'tail)])]))))
 
-(define-for-syntax (make-method-syntax id index/id result-id)
-  (expression-transformer
-   id
-   (lambda (stx)
-     (syntax-parse stx
-       [(head (~and args (tag::parens arg ...)) . tail)
+(define-for-syntax (make-method-syntax id index/id result-id kind)
+  (cond
+    [(eq? kind 'property)
+     (expression-transformer
+      id
+      (lambda (stx)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
            (define rator (if (identifier? index/id)
                              index/id
                              #`(vector-ref (prop-methods-ref id) #,index/id)))
-           (define-values (call new-tail)
-             (parse-function-call rator (list #'id) #'(head args)))
-           (define r (and (syntax-e result-id)
-                          (syntax-local-method-result result-id)))
-           (define wrapped-call
-             (if r
-                 (wrap-static-info* call (method-result-static-infos r))
-                 call))
-           (values wrapped-call #'tail)])]
-       [(head . _)
-        (raise-syntax-error #f
-                            "method must be called"
-                            #'head)]))))
+           (syntax-parse stx
+             #:datum-literals (op)
+             #:literals (:=)
+             [(head (op :=) . tail)
+              #:with e::infix-op+expression+tail #'(:= . tail)
+              (values #`(#,rator id e.parsed)
+                      #'e.tail)]
+             [(head . tail)
+              (define call #`(#,rator id))
+              (define r (and (syntax-e result-id)
+                             (syntax-local-method-result result-id)))
+              (values (if r
+                          (wrap-static-info* call (method-result-static-infos r))
+                          call)
+                      #'tail)])])))]
+    [else
+     (expression-transformer
+      id
+      (lambda (stx)
+        (syntax-parse stx
+          [(head (~and args (tag::parens arg ...)) . tail)
+           (syntax-parse (syntax-parameter-value #'this-id)
+             [(id . _)
+              (define rator (if (identifier? index/id)
+                                index/id
+                                #`(vector-ref (prop-methods-ref id) #,index/id)))
+              (define-values (call new-tail)
+                (parse-function-call rator (list #'id) #'(head args)))
+              (define r (and (syntax-e result-id)
+                             (syntax-local-method-result result-id)))
+              (define wrapped-call
+                (if r
+                    (wrap-static-info* call (method-result-static-infos r))
+                    call))
+              (values wrapped-call #'tail)])]
+          [(head . _)
+           (raise-syntax-error #f
+                               "method must be called"
+                               #'head)])))]))
+    
 
 (define-for-syntax (build-methods method-results
                                   added-methods method-mindex method-names method-private
@@ -463,7 +512,7 @@
                  names])
     (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
                                       (datum->syntax #'name (syntax-e id) id id))]
-                  [((method-name method-index/id method-result-id) ...)
+                  [((method-name method-index/id method-result-id method-kind) ...)
                    (for/list ([i (in-range (hash-count method-mindex))])
                      (define m-name (let ([n (hash-ref method-names i)])
                                       (if (syntax? n)
@@ -473,8 +522,9 @@
                      (list (datum->syntax #'name m-name)
                            (mindex-index mix)
                            (let ([r (hash-ref method-results m-name #f)])
-                             (and (pair? r) (car r)))))]
-                  [((private-method-name private-method-id private-method-id/property private-method-result-id) ...)
+                             (and (pair? r) (car r)))
+                           (if (mindex-property? mix) 'property 'method)))]
+                  [((private-method-name private-method-id private-method-id/property private-method-result-id private-method-kind) ...)
                    (for/list ([m-name (in-list (sort (hash-keys method-private)
                                                      symbol<?))])
                      (define id/property (hash-ref method-private m-name))
@@ -482,7 +532,8 @@
                            (if (pair? id/property) (car id/property) id/property)
                            id/property
                            (let ([r (hash-ref method-results m-name #f)])
-                             (and (pair? r) (car r)))))])
+                             (and (pair? r) (car r)))
+                           (if (pair? id/property) 'property 'method)))])
       (list
        #`(define-values #,(for/list ([added (in-list added-methods)]
                                      #:when (not (eq? 'abstract (added-method-body added))))
@@ -495,11 +546,13 @@
              ...
              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
                                                             (quote-syntax method-index/id)
-                                                            (quote-syntax method-result-id)))
+                                                            (quote-syntax method-result-id)
+                                                            (quote method-kind)))
              ...
              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
                                                                     (quote-syntax private-method-id)
-                                                                    (quote-syntax private-method-result-id)))
+                                                                    (quote-syntax private-method-result-id)
+                                                                    (quote private-method-kind)))
              ...
              (define-syntax new-private-tables (cons (cons (quote-syntax name)
                                                            (hasheq (~@ 'private-method-name
@@ -521,7 +574,8 @@
                                                                     name name-instance name?
                                                                     #,(and r (car r)) #,(added-method-id added)
                                                                     new-private-tables
-                                                                    [super-name ...])])
+                                                                    [super-name ...]
+                                                                    #,(added-method-kind added))])
                        #,(added-method-id added))))))))))
 
 (define-syntax (method-block stx)
@@ -531,26 +585,31 @@
         name name-instance name?
         result-id method-name
         private-tables-id
-        super-names)
+        super-names
+        kind)
      #:do [(define result-pred
              (cond
                [(not (syntax-e #'result-id)) #f]
                [else (method-result-predicate-expr (syntax-local-method-result #'result-id))]))]
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
-                                   (lambda (stx)
+                                   (lambda (arity stx)
                                      #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-names))]
                                                              [private-tables (quote-syntax private-tables-id)])
                                          ;; This check might be redundant, depending on how the method was called:
                                          (unless (name? this-obj) (raise-not-an-instance 'name this-obj))
                                          #,(let ([body #`(let ()
                                                            #,stx)])
-                                             (if result-pred
-                                                 #`(let ([result #,body])
-                                                     (unless (#,result-pred result)
-                                                       (raise-result-failure 'method-name result))
-                                                     result)
-                                                 body))))
+                                             (cond
+                                               [(and (eq? (syntax-e #'kind) 'property)
+                                                     (eqv? arity 1))
+                                                #`(begin #,body (void))]
+                                               [result-pred
+                                                #`(let ([result #,body])
+                                                    (unless (#,result-pred result)
+                                                      (raise-result-failure 'method-name result))
+                                                    result)]
+                                               [else body]))))
                                    #t)))
      #'expr
      #'e.parsed]))

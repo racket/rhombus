@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "util.rhm" open
-    "common.rhm" open)val
+    "common.rhm" open)
 
 @(def method_eval: make_rhombus_eval())
 

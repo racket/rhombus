@@ -635,14 +635,39 @@ check:
   use_dynamic
   class CPosn(mutable x, y):
     private field c = "red"
-    property | color(): c
-             | color(new_c): c := new_c
-    property | is_red(): c == "red"
+    property | color: c
+             | color := new_c: c := new_c
+    property | is_red: c == "red"
+    property me: this
+    property | me2: this
+             | me2 := other: "no"
   def p = CPosn(1, 2)
   [dynamic(p).x := 3,
    p.x,
    dynamic(p).color := "blue",
    p.color,
-   p.is_red]
-  [#void, 3, #void, "blue", #false]
+   p.is_red,
+   p.me.color, p.me2.color]
+  [#void, 3, #void, "blue", #false, "blue", "blue"]
 
+check:
+  class CPosn(x, y):
+    private field c = "red"
+    property | color: c
+             | color := new_c: c := new_c
+    property me :: CPosn: this
+    property | me2 :: CPosn: this
+             | me2 := other: "no"
+  def p = CPosn(1, 2)
+  [p.color,
+   p.me.color, p.me2.color]
+  ["red", "red", "red"]
+
+check:
+  ~eval_exn
+  use_static
+  class CPosn(x, y):
+    property | me2 :: CPosn: this
+             | me2 := other: "no"
+  (CPosn(1, 2).me2 := 10).x
+  "static operator not supported"

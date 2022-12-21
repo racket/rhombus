@@ -78,8 +78,8 @@ create an instance of a @emph{subclass}. That's because calling
 @rhombus(super) in general continues the construction of an object that
 might have been started for instantiating this class or a subclass.
 
-When a class has a superclass, @rhombus(super) in a constructor does
-call the superclass constructor, and the arguments should match whatever
+When a class has a superclass, @rhombus(super) in a constructor
+calls the superclass constructor, and the arguments should match whatever
 is expected by the superclass's constructor. The result, however, is not
 an instance of the class or superclass, but a function that expects
 arguments for the fields that are added to the new class. That second
