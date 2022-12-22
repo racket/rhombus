@@ -313,21 +313,29 @@
 (define (make-in-text-status)
   (in-at 'inside #f #f "" 'initial 0))
 
-(define (out-of-s-exp-mode status)
+(define (out-of-s-exp-mode status will-see-closer?)
   (cond
     [(pending-backup-mode? status) (struct-copy pending-backup-mode status
                                                 [status (out-of-s-exp-mode
-                                                         (pending-backup-mode-status status))])]
-    [(s-exp-mode? status) (or (s-exp-mode-in-quotes status)
+                                                         (pending-backup-mode-status status)
+                                                         will-see-closer?)])]
+    [(s-exp-mode? status) (or (let ([q (s-exp-mode-in-quotes status)])
+                                (if will-see-closer?
+                                    (and q
+                                         ;; add closer to be immediately removed
+                                         (struct-copy in-quotes q
+                                                      [openers (cons 'opener (in-quotes-openers q))]))
+                                    q))
                               'continuing)]
     [(in-at? status) (struct-copy in-at status
-                                  [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status))]
+                                  [shrubbery-status (out-of-s-exp-mode (in-at-shrubbery-status status) will-see-closer?)]
                                   [openers (let ([openers (in-at-openers status)])
                                              (unless (and (pair? openers) (equal? "{" (car openers)))
                                                (error 'out-of-s-exp-mode "expected opener not found"))
                                              (cdr openers))])]
     [(in-escaped? status) (struct-copy in-escaped status
-                                       [shrubbery-status (out-of-s-exp-mode (in-escaped-shrubbery-status status))])]
+                                       [shrubbery-status (out-of-s-exp-mode (in-escaped-shrubbery-status status)
+                                                                            will-see-closer?)])]
     [else (error 'out-of-s-exp-mode "not in S-expression mode!")]))
 
 (define (lex-nested-status? status)
@@ -358,7 +366,7 @@
                        [(and (zero? depth)
                              (eqv? #\} (peek-char in)))
                         ;; go out of S-expression mode by using shrubbery lexer again
-                        (adjust-for-quotes shrubbery-lexer/status in (out-of-s-exp-mode status))]
+                        (adjust-for-quotes shrubbery-lexer/status in (out-of-s-exp-mode status #t))]
                        [else
                         (define-values (tok type paren start end backup s-exp-status action)
                           (racket-lexer*/status in pos (s-exp-mode-status status)))
@@ -478,7 +486,7 @@
    [(:or ")" "]" "}" "»")
     (ret 'closer lexeme 'parenthesis (string->symbol lexeme) start-pos end-pos 'continuing)]
    ["'"
-    ;; called rewrites to 'opener or 'closer and picks a parentheses representation
+    ;; caller rewrites to 'opener or 'closer and picks a parentheses representation
     (ret 'squote lexeme 'parenthesis '? start-pos end-pos 'initial)]
    ["#{"
     (ret 's-exp lexeme 'parenthesis '|{| start-pos end-pos (s-exp-mode 0 #f #f))]
@@ -1065,7 +1073,7 @@
                          (wrap (finish-s-exp tok in fail))]
                         [else (wrap tok)]))
             (define d (loop (case name
-                              [(s-exp) (out-of-s-exp-mode new-status)]
+                              [(s-exp) (out-of-s-exp-mode new-status #f)]
                               [else new-status])
                             (case name
                               [(opener) (add1 depth)]

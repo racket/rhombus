@@ -1685,6 +1685,8 @@ tail @(«in: content»)
 tail @«| then | else»
 tail @(«| then | else»)
 
+@('«#{x} 'x'»')
+
 The end
 INPUT
   )
@@ -1788,6 +1790,7 @@ INPUT
     (group tail in (block (group content)))
     (group tail (alts (block (group then)) (block (group else))))
     (group tail (alts (block (group then)) (block (group else))))
+    (group (parens (group (quotes (group x (quotes (group x)))))))
     (group The end)))
 
 (define input4
