@@ -1,0 +1,14 @@
+#lang rhombus
+import: "check.rhm" open
+
+// dfferent repetition depths at same template depth
+check:
+  ~print
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+  def [y, ...] = ["a", "b", "c"]
+  def one = 1
+
+  '([$x, $y] ... $0) ...
+   {$y, $one} ...'
+  '([1, "a"] [2, "b"] [3, "c"] 0) ([4, "a"] [5, "b"] [6, "c"] 0) ([7, "a"] [8, "b"] [9, "c"] 0)
+   {"a", 1} {"b", 1} {"c", 1}'

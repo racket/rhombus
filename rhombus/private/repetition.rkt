@@ -72,9 +72,11 @@
   (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repetition))
 
   (define (identifier-repetition-use id)
-    (raise-syntax-error #f
-                        "not bound as a repetition"
-                        id))
+    (make-repetition-info id
+                          id
+                          0
+                          0
+                          #'()))
 
   ;; Form in a repetition context:
   (define-enforest
@@ -117,32 +119,35 @@
                                        #'tail)]))))))
 
   (define (repetition-transformer name proc)
-    (repetition-prefix-operator name '((default . stronger)) 'macro proc))
+    (repetition-prefix-operator name '((default . stronger)) 'macro proc)))
 
-  )
-
-(define-for-syntax (repetition-as-list ellipses stx depth)
-  (syntax-parse stx
-    [rep::repetition
-     #:with rep-info::repetition-info #'rep.parsed
-     (define want-depth (syntax-e #'rep-info.bind-depth))
-     (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
-     (unless (= use-depth want-depth)
-       (raise-syntax-error #f
-                           "used with wrong ellipsis depth"
-                           #'rep-info.name
-                           #f
-                           null
-                           (format "\n  expected: ~a\n  actual: ~a"
-                                   want-depth
-                                   use-depth)))
-     (wrap-static-info #'rep-info.seq-expr
-                       #'#%ref-result
-                       #'rep-info.element-static-infos)]
-    [_
-     (raise-syntax-error (syntax-e ellipses)
-                         "not preceded by a repetition"
-                         stx)]))
+(define-for-syntax repetition-as-list
+  (case-lambda
+    [(ellipses stx depth)
+     (syntax-parse stx
+       [rep::repetition
+        (repetition-as-list #'rep.parsed depth)]
+       [_
+        (raise-syntax-error (syntax-e ellipses)
+                            "not preceded by a repetition"
+                            stx)])]
+    [(rep-parsed depth)
+     (syntax-parse rep-parsed
+       [rep-info::repetition-info
+        (define want-depth (syntax-e #'rep-info.bind-depth))
+        (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
+        (unless (= use-depth want-depth)
+          (raise-syntax-error #f
+                              "used with wrong ellipsis depth"
+                              #'rep-info.name
+                              #f
+                              null
+                              (format "\n  expected: ~a\n  actual: ~a"
+                                      want-depth
+                                      use-depth)))
+        (wrap-static-info #'rep-info.seq-expr
+                          #'#%ref-result
+                          #'rep-info.element-static-infos)])]))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

@@ -3,6 +3,8 @@
     "common.rhm" open 
     "macro.rhm")
 
+@(def dots = @rhombus(...))
+
 @title(~tag: "stxobj"){Syntax Objects}
 
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
@@ -79,6 +81,41 @@ Metadata for a syntax object can include a source location and the raw
   '« x '$(1 + 2)' z »'
 )
 
+ A @dots as a @rhombus(term,~var) must follow a
+ @rhombus(term,~var) that includes at least one escape, and each of those
+ escapes must contain a @tech{repetition} instead of an expression. The
+ preceding term is replaced as many times as the repetition supplies
+ values.
+
+@examples(
+  def [x, ...] = [1, 2, 3],
+  '(1 + $x) ...'
+)
+
+ When multiple escapes appear in the term before @dots, the
+ repetitions are drawn in parallel, assuming that they are at the
+ same repeition depth, and they must supply the same number of
+ values.
+
+@examples(
+  def [x, ...] = [1, 2, 3],
+  def [y, ...] = ["a", "b", "c"],
+  '($y +& $x) ...'
+)
+
+ The term before a @dots can itself use @dots,
+ in which case the inner @dots must be preceded by a
+ repetition at depth 2, and so on. If a @dots is preceded
+ by repetitions at different depths, the shallower repetition is
+ be repeated for outer layers of the deeper repetion.
+
+@examples(
+  def [[x, ...], ...] = [[1, 2, 3], [4, 5, 6]],
+  def [y, ...] = ["a", "b", "c"],
+  '[($x + $y) ..., ...]'
+)
+
+ 
 }
 
 @doc(
@@ -172,8 +209,8 @@ Metadata for a syntax object can include a source location and the raw
 ){
 
  Similar to a plain @rhombus('') form, but @rhombus($) escapes or
- @rhombus(...) and @rhombus(......) repetition forms are not
- recognizes in the @rhombus(term)s, so that the @rhombus(term)s are
+ @dots repetitions are not
+ recognized in the @rhombus(term)s, so that the @rhombus(term)s are
  all treated as literal terms to be quoted.
 
  There's no difference in result between using @rhombus('') or
