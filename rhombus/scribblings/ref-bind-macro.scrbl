@@ -138,6 +138,7 @@
       $$(@rhombus(name_identifier, ~var)),
       (($$(@rhombus(static_key, ~var)), $$(@rhombus(static_value, ~var))), ...),
       (($$(@rhombus(defined_identifier, ~var)),
+        [$$(@rhombus(var_use, ~var)), ...],
         ($$(@rhombus(var_static_key, ~var)), $$(@rhombus(var_static_value, ~var))), ...),
        ...),
       $$(@rhombus(matcher_id, ~var)),
@@ -160,8 +161,14 @@
 
  The @rhombus(defined_identifier, ~var)s are the identifiers that are
  ultimately bound by the binding form. Each identifier to be defined has
- associated ``downward'' static information through the
+ associated uses through @rhombus(var_use, ~var) values, and each
+ identifier has ``downward'' static information through the
  @rhombus(var_static_key, ~var)--@rhombus(var_static_value, ~var) pairs.
+ Like @rhombus(var_static_key, ~var)s, the meaning of
+ @rhombus(var_use, ~var)s is up to cooperating parts in general, but an
+ exact non-negative integer indicates that the variable can be used as an
+ expression (in the case of @rhombus(0)) or repetition at a certain depth
+ (in the case of @rhombus(k, ~var) greater than @rhombus(0)).
 
  The @rhombus(matcher_id) and @rhombus(binder_id) identifiers provide
  the ``continuation'' of the binder's expansion to generate a matching

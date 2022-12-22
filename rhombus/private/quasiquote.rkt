@@ -696,13 +696,19 @@
 (define-syntax (syntax-infoer stx)
   (syntax-parse stx
     [(_ static-infos (annotation-str pattern repack tmp-ids (id ...) id-refs (sid ...) sid-refs))
-     (binding-info #'annotation-str
-                   #'syntax
-                   #'()
-                   #'((id) ... (sid) ...)
-                   #'syntax-matcher
-                   #'syntax-binder
-                   #'(pattern repack tmp-ids (id ...) id-refs (sid ...) sid-refs))]))
+     (with-syntax ([(id-depth ...) (for/list ([id-ref (in-list (syntax->list #'id-refs))])
+                                     (syntax-parse id-ref
+                                       [(pack _ depth) #'depth]))]
+                   [(sid-depth ...) (for/list ([sid-ref (in-list (syntax->list #'sid-refs))])
+                                      (syntax-parse sid-ref
+                                        [(make-pattern-variable-syntax _ _ _ depth . _) #'depth]))])
+       (binding-info #'annotation-str
+                     #'syntax
+                     #'()
+                     #'((id (id-depth)) ... (sid (sid-depth)) ...)
+                     #'syntax-matcher
+                     #'syntax-binder
+                     #'(pattern repack tmp-ids (id ...) id-refs (sid ...) sid-refs)))]))
 
 (define-syntax (syntax-matcher stx)
   (syntax-parse stx

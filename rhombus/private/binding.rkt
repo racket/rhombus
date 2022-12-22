@@ -72,7 +72,7 @@
     (pattern (annotation-str:string
               name-id:identifier
               (~and static-infos ((:identifier _) ...))
-              (~and bind-infos ((bind-id:identifier (~and bind-static-info (:identifier _)) ...) ...))
+              (~and bind-infos ((bind-id:identifier (~and bind-uses (bind-use ...)) (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
               binder-id:identifier
               data)))
@@ -99,7 +99,7 @@
                             data)))
 
   (define (make-identifier-binding id)
-    (binding-form #'identifier-info
+    (binding-form #'identifier-infoer
                   id))
 
   (define (check-binding-result form proc)
@@ -126,13 +126,13 @@
              #:do [(define name (build-dot-identifier #'(head-id ...) #'tail-id #'all))]
              #:attr name name)))
 
-(define-syntax (identifier-info stx)
+(define-syntax (identifier-infoer stx)
   (syntax-parse stx
     [(_ static-infos id)
      (binding-info annotation-any-string
                    #'id
                    #'static-infos
-                   #'((id . static-infos))
+                   #'((id (0) . static-infos))
                    #'identifier-succeed
                    #'identifier-bind
                    #'id)]))

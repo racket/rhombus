@@ -307,7 +307,7 @@
     [(form-id (tag rep::repetition (group (op (~and ellipses rhombus...)))) . tail)
      #:with rep-info::repetition-info #'rep.parsed
      (values (make-repetition-info #'rep-info.name
-                                   #'rep-info.seq-id
+                                   #'rep-info.seq-expr
                                    #'rep-info.bind-depth
                                    (+ (syntax-e #'rep-info.use-depth) 1)
                                    #'rep-info.element-static-infos)

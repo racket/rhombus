@@ -35,13 +35,13 @@
   (define-syntax-class :repetition-info
     #:datum-literals (parens group)
     (pattern (name
-              seq-id
+              seq-expr
               bind-depth:exact-nonnegative-integer
               use-depth:exact-nonnegative-integer
               element-static-infos)))
 
-  (define (make-repetition-info name seq-id bind-depth use-depth element-static-infos)
-    #`(#,name #,seq-id #,bind-depth #,use-depth #,element-static-infos))
+  (define (make-repetition-info name seq-expr bind-depth use-depth element-static-infos)
+    #`(#,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos))
 
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -92,7 +92,7 @@
     #:check-result check-repetition-result
     #:make-identifier-form identifier-repetition-use)
 
-  (define (make-repetition name seq-id element-static-infos
+  (define (make-repetition name seq-expr element-static-infos
                            #:depth [depth 1]
                            #:expr-handler [expr-handler (lambda (stx fail) (fail))]
                            #:repet-handler [repet-handler (lambda (stx next) (next))])
@@ -110,7 +110,7 @@
                             (syntax-parse stx
                               [(id . tail)
                                (values (make-repetition-info name
-                                                             seq-id
+                                                             seq-expr
                                                              depth
                                                              #'0
                                                              element-static-infos)
@@ -136,7 +136,7 @@
                            (format "\n  expected: ~a\n  actual: ~a"
                                    want-depth
                                    use-depth)))
-     (wrap-static-info #'rep-info.seq-id
+     (wrap-static-info #'rep-info.seq-expr
                        #'#%ref-result
                        #'rep-info.element-static-infos)]
     [_

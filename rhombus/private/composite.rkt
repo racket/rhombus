@@ -9,15 +9,14 @@
          "repetition.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
-         (submod "annotation.rkt" for-class))
+         (submod "annotation.rkt" for-class)
+         "repetition.rkt")
 
 ;; `make-composite-binding-transformer` is mostly generic with respect
 ;; to a composite datatype, but the `rest` support is currently
 ;; hardwired to lists.
 
-(provide (for-syntax make-composite-binding-transformer
-                     make-rest-match
-                     make-arg-getter))
+(provide (for-syntax make-composite-binding-transformer))
 
 (define-for-syntax (make-composite-binding-transformer constructor-str ; string name for constructor or map list, used for contract
                                                        predicate     ; predicate for the composite value
@@ -90,9 +89,9 @@
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
-     (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str)
+     (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'rest #f)]
+         [#f (values #'#f #'() #'rest #f #'())]
          [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
@@ -102,7 +101,17 @@
                                        '()))
                   #'rest-info.static-infos
                   #'rest-info.name-id
-                  #'rest-info.annotation-str)]))
+                  #'rest-info.annotation-str
+                  (with-syntax ([(bind-uses ...)
+                                 (if (syntax-e #'rest-repetition?)
+                                     (for/list ([uses (in-list (syntax->list #'(rest-info.bind-uses ...)))]
+                                                [id (in-list (syntax->list #'(rest-info.bind-id ...)))])
+                                       (define depth (uses->depth uses))
+                                       (unless depth
+                                         (raise-syntax-error #f "cannot bind within a repetition" id))
+                                       (list (add1 depth)))
+                                     #'(rest-info.bind-uses ...))])
+                    #'((rest-info.bind-id bind-uses rest-info.bind-static-info ...) ...)))]))
 
      (define all-composite-static-infos
        (let* ([composite-static-infos #'(composite-static-info ... . static-infos)]
@@ -128,7 +137,7 @@
      (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str)
                    #'composite
                    all-composite-static-infos
-                   #`((a-info.bind-id a-info.bind-static-info ...) ... ...)
+                   #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
                    #'composite-matcher
                    #'composite-binder
                    #`(predicate steppers accessors #,(generate-temporaries #'(a-info.name-id ...))
@@ -155,14 +164,20 @@
                   (syntax-parse #'rest-data
                     [#f #`(IF #t success-expr fail-expr)]
                     [(rest-tmp-id rest-accessor rest-repetition? rest-info down-static-infos)
-                     #`(begin
-                         (define rest-tmp-id
-                           #,(if (syntax-e #'rest-repetition?)
-                                 (make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))
-                                 (make-arg-getter c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f))))
-                         (IF rest-tmp-id
-                             success-expr
-                             fail-expr))])]
+                     (cond
+                       [(syntax-e #'rest-repetition?)
+                        #`(begin
+                            (define rest-tmp-id
+                              #,(make-rest-match c-arg-id #'rest-accessor #'rest-info #'(lambda (arg) #f)))
+                            (IF rest-tmp-id
+                                success-expr
+                                fail-expr))]
+                       [else
+                        (make-arg-getter c-arg-id #'rest-accessor #'rest-info
+                                         #'rest-tmp-id
+                                         #'IF
+                                         #'success-expr
+                                         #'fail-expr)])])]
                  [else
                   (define new-c-arg-id (if steppers
                                            (car (generate-temporaries '(c-arg-id)))
@@ -196,33 +211,31 @@
                #:with rest::binding-info #'rest-info
                #:with (rest-seq-tmp-id ...) (generate-temporaries #'(rest.bind-id ...))
                (if (syntax-e #'rest-repetition?)
-                   #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
-                      (define-syntax rest.bind-id
-                        (make-repetition (quote-syntax rest.bind-id)
-                                         (quote-syntax rest-seq-tmp-id)
-                                         (quote-syntax (rest.bind-static-info ... . down-static-infos))))
-                      ...)
-                   #'((define-values (rest.bind-id ...) (rest-tmp-id))
-                      (define-static-info-syntax/maybe rest.bind-id rest.bind-static-info ...)
-                      ...))]))]))
+                   (with-syntax ([(depth ...) (for/list ([uses (syntax->list #'(rest.bind-uses ...))])
+                                                (add1 (uses->depth uses)))])
+                     #'((define-values (rest-seq-tmp-id ...) (rest-tmp-id))
+                        (define-syntax rest.bind-id
+                          (make-repetition (quote-syntax rest.bind-id)
+                                           (quote-syntax rest-seq-tmp-id)
+                                           (quote-syntax (rest.bind-static-info ... . down-static-infos))
+                                           #:depth depth))
+                        ...))
+                   #'((rest.binder-id rest-tmp-id rest.data)))]))]))
 
 ;; ------------------------------------------------------------
 
 ;; make a "getter" expression for an argument, used for "rest-getter"
 ;; without assuming ellipses
-(define-for-syntax (make-arg-getter c-arg-id accessor arg-info fail)
+(define-for-syntax (make-arg-getter c-arg-id accessor arg-info arg-id IF success fail)
   (syntax-parse arg-info
     [arg::binding-info
-     #`(let ([arg-id (let ([arg.name-id (#,accessor #,c-arg-id)])
-                       arg.name-id)])
-         (arg.matcher-id
-          arg-id
-          arg.data
-          if/blocked
-          (lambda ()
-            (arg.binder-id arg-id arg.data)
-            (values arg.bind-id ...))
-          (#,fail arg-id)))]))
+     #`(begin
+         (define #,arg-id (let ([arg.name-id (#,accessor #,c-arg-id)])
+                            arg.name-id))
+         (arg.matcher-id #,arg-id arg.data
+                         #,IF
+                         #,success
+                         #,fail))]))
 
 ;; a match result for a "rest" match is a function that gets
 ;; lists of results; the binder step for each element is delayed
@@ -238,8 +251,14 @@
                             if/blocked
                             (lambda ()
                               (rest.binder-id arg-id rest.data)
-                              (values (rhombus-expression (group rest.bind-id)) ...))
+                              (values (maybe-repetition-as-list rest.bind-id rest.bind-uses)
+                                      ...))
                             (#,fail arg-id))))]))
+
+(define-syntax (maybe-repetition-as-list stx)
+  (syntax-parse stx
+    [(_ id (_ ... 0 _ ...)) #'(rhombus-expression (group id))]
+    [(_ id (_ ... depth:exact-integer _ ...)) (repetition-as-list (quote-syntax ...) #'(group id) (syntax-e #'depth))]))
 
 (define-syntax-rule (if/blocked tst thn els)
   (if tst (let () thn) els))
@@ -302,3 +321,8 @@
         (string-append ", " (syntax-e rest-annotation-str) ", ...")
         "")
     (if (pair? c-str) "}" ")"))))
+
+(define-for-syntax (uses->depth uses)
+  (for/or ([use (in-list (syntax->list uses))])
+    (define u (syntax-e use))
+    (and (exact-integer? u) u)))

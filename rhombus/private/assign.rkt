@@ -27,7 +27,7 @@
      (binding-info annotation-any-string
                    #'id
                    #'() ; mutable => don't claim input's static info
-                   #'((id))
+                   #'((id (0)))
                    #'mutable-identifier-succeed
                    #'mutable-bind
                    #'[id mutable-id])]))

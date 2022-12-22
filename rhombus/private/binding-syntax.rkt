@@ -6,6 +6,7 @@
                      "srcloc.rkt"
                      "pack.rkt"
                      "static-info-pack.rkt"
+                     "uses-pack.rkt"
                      (for-syntax racket/base
                                  syntax/parse))
          "name-root.rkt"
@@ -72,13 +73,17 @@
 (define-for-syntax (unpack_info stx)
   (syntax-parse (unpack-term stx 'bind_meta.unpack_info #f)
     [((~datum parsed) b::binding-info)
+     #:with (unpacked-uses ...) (map (lambda (v) (unpack-uses v))
+                                     (syntax->list #'(b.bind-uses ...)))
      #:with (unpacked-static-infos ...) (map (lambda (v) (unpack-static-infos v))
                                              (syntax->list #'((b.bind-static-info ...) ...)))
      (pack-term
       #`(parens (group b.annotation-str)
                 (group b.name-id)
                 (group #,(unpack-static-infos #'b.static-infos))
-                (group (parens (group (parens (group b.bind-id) (group unpacked-static-infos))) ...))
+                (group (parens (group (parens (group b.bind-id)
+                                              (group unpacked-uses)
+                                              (group unpacked-static-infos))) ...))
                 (group chain-to-matcher)
                 (group chain-to-binder)
                 (group (parsed (b.matcher-id b.binder-id b.data)))))]))
@@ -104,13 +109,15 @@
              (group matcher-id:identifier)
              (group binder-id:identifier)
              (group data))
-     #:with (parens (group (parens (group bind-id) (group bind-static-infos))) ...) #'bind-ids
+     #:with (parens (group (parens (group bind-id) (group bind-uses) (group bind-static-infos))) ...) #'bind-ids
+     #:with (packed-bind-uses ...) (map (lambda (v) (pack-uses v 'bind_meta.pack))
+                                        (syntax->list #'(bind-uses ...)))
      #:with (packed-bind-static-infos ...) (map (lambda (v) (pack-static-infos v 'bind_meta.pack))
                                                 (syntax->list #'(bind-static-infos ...)))
      (binding-info #'name-str
                    #'name-id
                    (pack-static-infos #'static-infos 'bind_meta.pack)
-                   #'((bind-id . packed-bind-static-infos) ...)
+                   #'((bind-id packed-bind-uses . packed-bind-static-infos) ...)
                    #'matcher-id
                    #'binder-id
                    #'data)]

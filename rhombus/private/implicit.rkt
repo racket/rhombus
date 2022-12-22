@@ -40,7 +40,7 @@
                 #'tail)]))))
 
 (define-syntax #%literal
-  (make-expression+binding-prefix-operator
+  (make-expression+binding+repetition-prefix-operator
    #'#%literal
    '((default . stronger))
    'macro
@@ -56,6 +56,16 @@
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
         (values (binding-form #'literal-infoer
                               #'datum)
+                #'tail)]))
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ datum . tail)
+        (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
+        (values (make-repetition-info #'value
+                                      (syntax/loc #'datum (quote datum))
+                                      0
+                                      0
+                                      #'())
                 #'tail)]))))
 
 (define-for-syntax (raise-keyword-error datum)

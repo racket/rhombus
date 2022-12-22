@@ -1,7 +1,10 @@
 #lang scribble/rhombus/manual
 @(import:
     "util.rhm" open
-    "common.rhm" open)
+    "common.rhm" open
+    "macro.rhm")
+
+@(def bind_eval: macro.make_macro_eval())
 
 @title(~tag: "bind-macro-protocol"){Binding Low-Level Protocol}
 
@@ -12,7 +15,7 @@ A binding form using the low-level protocol has three parts:
  @item{A compile-time function to report ``upward'' @tech{static
    information} about the variables that it binds. The function receives
   ``downward'' information provided by the context, such as static
-  information inferred for the right-hand side of a @rhombus(val) binding
+  information inferred for the right-hand side of a @rhombus(def) binding
   or imposed by enclosing binding forms. If a binding form has subforms,
   it can query those subforms, pushing its down information ``downward''
   and receiving the subform information ``upward''.},
@@ -125,11 +128,16 @@ seven parts:
    static information.},
 
  @item{A list of invdidual names that are bound by the overall binding,
-   plus ``upward'' static information for each name.
-   For example, @rhombus(Posn(x, y)) as a binding pattern binds @rhombus(x) and @rhombus(y).
+   a description of valid uses for each name (e.g., as an expression, as
+   a repetition of some depth), and ``upward'' static information for each name.
+   For example, @rhombus(Posn(x, y)) as a binding pattern binds @rhombus(x) and @rhombus(y)
+   as identifiers that can be used as expressions, and static information
+   about @rhombus(x) and @rhombus(y) might come from annotations in the
+   definition of @rhombus(Posn).
    The final transformer function described in the third bullet above
    is responsible for actually binding each name and associating
-   static information with it.},
+   static information with it, but this summary of binding enables cooperation
+   with composite binding forms, so that those that create repetitions.},
 
  @item{The name of a compile-time function that is bound with
    @rhombus(bind.matcher).},
@@ -150,42 +158,44 @@ receives the @rhombus(IF) form name, a @rhombus(success) form, and a @rhombus(fa
 Here's a use of the low-level protocol to implement a @rhombus(fruit) pattern,
 which matches only things that are fruits according to @rhombus(is_fruit):
 
-@(rhombusblock:
-    import: rhombus/meta open
+@(demo:
+    ~eval: bind_eval
+    ~defn:
+      import: rhombus/meta open
 
-    bind.macro 'fruit($id) $tail ...':
-      values(bind_meta.pack('(fruit_infoer,
-                              // remember the id:
-                              $id)'),
-             '$tail ...')
+      bind.macro 'fruit($id) $tail ...':
+        values(bind_meta.pack('(fruit_infoer,
+                                // remember the id:
+                                $id)'),
+               '$tail ...')
 
-    bind.infoer 'fruit_infoer($static_info, $id)':
-      '("matching(fruit(_))",
-        $id,
-        // no overall static info:
-        (),
-        // `id` is bound:
-        (($id, ())),
-        fruit_matcher,
-        fruit_binder,
-        // binder needs id:
-        $id)'
+      bind.infoer 'fruit_infoer($static_info, $id)':
+        '("matching(fruit(_))",
+          $id,
+          // no overall static info:
+          (),
+          // `id` is bound, `0` means usable as expression, no static info:
+          (($id, [0], ())),
+          fruit_matcher,
+          fruit_binder,
+          // binder needs id:
+          $id)'
 
-    bind.matcher 'fruit_matcher($arg, $id, $IF, $success, $failure)':
-      '$IF is_fruit($arg)
-       | $success
-       | $failure'
+      bind.matcher 'fruit_matcher($arg, $id, $IF, $success, $failure)':
+        '$IF is_fruit($arg)
+         | $success
+         | $failure'
       
-    bind.binder 'fruit_binder($arg, $id)':
-      'def $id: $arg'
+      bind.binder 'fruit_binder($arg, $id)':
+        'def $id: $arg'
 
-    fun is_fruit(v):
-      v == "apple" || v == "banana"
-
-    def fruit(snack): "apple"
-    snack // prints "apple"
-
-    // def fruit(dessert): "cookie"  // would fail with a match error
+      fun is_fruit(v):
+        v == "apple" || v == "banana"
+    ~repl:
+      def fruit(snack) = "apple"
+      snack
+      ~error:
+        def fruit(dessert) = "cookie"
   )
 
 The @rhombus(fruit) binding form assumes (without directly checking)
@@ -213,51 +223,54 @@ original builder was given, and possibly extending the @rhombus(success)
 form. A builder must be used in tail position, and it's
 @rhombus(success) position is a tail position.
 
-@(rhombusblock:
-    bind.macro '$a <&> $b':
-      ~parsed_right
-      bind_meta.pack('(anding_infoer,
-                       ($a, $b))')
+@(demo:
+    ~eval: bind_eval
+    ~defn:
+      bind.macro '$a <&> $b':
+        ~parsed_right
+        bind_meta.pack('(anding_infoer,
+                         ($a, $b))')
 
-    bind.infoer 'anding_infoer($static_info, ($a, $b))':
-      def a_info: bind_meta.get_info(a, static_info)
-      def b_info: bind_meta.get_info(b, static_info)
-      def '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
-        bind_meta.unpack_info(a_info)
-      def '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
-        bind_meta.unpack_info(b_info)
-      def ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
-      '($ann,
-        $a_name,
-        ($a_s_info, ..., $b_s_info, ...),
-        ($a_var_info, ..., $b_var_info, ...),
-        anding_matcher,
-        anding_binder,
-        ($a_info, $b_info))'
+      bind.infoer 'anding_infoer($static_info, ($a, $b))':
+        def a_info: bind_meta.get_info(a, static_info)
+        def b_info: bind_meta.get_info(b, static_info)
+        def '($a_ann, $a_name, ($a_s_info, ...), ($a_var_info, ...), $_, $_, $_)':
+          bind_meta.unpack_info(a_info)
+        def '($b_ann, $b_name, ($b_s_info, ...), ($b_var_info, ...), $_, $_, $_)':
+          bind_meta.unpack_info(b_info)
+        def ann: "and(" +& Syntax.unwrap(a_ann) +& ", " +& Syntax.unwrap(b_ann) +& ")"
+        '($ann,
+          $a_name,
+          ($a_s_info, ..., $b_s_info, ...),
+          ($a_var_info, ..., $b_var_info, ...),
+          anding_matcher,
+          anding_binder,
+          ($a_info, $b_info))'
 
-    bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
-                                 $IF, $success, $failure)':
-      def '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_meta.unpack_info(a_info)
-      def '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_meta.unpack_info(b_info)
-      '$a_matcher($in_id, $a_data, $IF,
-                  $b_matcher($in_id, $b_data, $IF, $success, $failure),
-                  $failure)'
+      bind.matcher 'anding_matcher($in_id, ($a_info, $b_info),
+                                   $IF, $success, $failure)':
+        def '($_, $_, $_, $_, $a_matcher, $_, $a_data)': bind_meta.unpack_info(a_info)
+        def '($_, $_, $_, $_, $b_matcher, $_, $b_data)': bind_meta.unpack_info(b_info)
+        '$a_matcher($in_id, $a_data, $IF,
+                    $b_matcher($in_id, $b_data, $IF, $success, $failure),
+                    $failure)'
 
-    bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
-      def '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
-      def '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
-      '$a_binder($in_id, $a_data)
-       $b_binder($in_id, $b_data)'
-
-    def one <&> 1: 1
-    one  // prints 1
-    // value two <&> 1: 2 // would fail, since 2 does not match 1
-
-    class Posn(x, y)
-
-    def Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
-    x  // prints 0
-    y  // prints 1
+      bind.binder 'anding_binder($in_id, ($a_info, $b_info))':
+        def '($_, $_, $_, $_, $_, $a_binder, $a_data)': bind_meta.unpack_info(a_info)
+        def '($_, $_, $_, $_, $_, $b_binder, $b_data)': bind_meta.unpack_info(b_info)
+        '$a_binder($in_id, $a_data)
+         $b_binder($in_id, $b_data)'
+    ~repl:
+      def one <&> 1 = 1
+      one
+      ~error:
+        def two <&> 1 = 2
+    ~defn:
+      class Posn(x, y)
+    ~repl:
+      def Posn(0, y) <&> Posn(x, 1) : Posn(0, 1)
+      x
+      y
   )
 
 One subtlety here is the syntactic category of @rhombus(IF) for a builder
@@ -273,3 +286,5 @@ and it can simply propagate ``downward'' static information. When a
 binding operator reflects a composite value with separate binding forms
 for component values, then upward and downward information needs to be
 adjusted accordingly.
+
+@(close_eval(bind_eval))
