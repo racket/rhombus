@@ -25,3 +25,18 @@ begin:
   check:
     [w, ...]
     [["A", "B", "C"]]
+
+begin:
+  def [x, ...] = [1, 4, 3]
+  def four = 4
+  check:
+    [!(x == four), ...]
+    [#true, #false, #true]
+  check:
+    [(x + (- four)), ...]
+    [-3, 0, -1]
+  check:
+    operator (x %% y): [x, y]
+    [x %% four, ...]
+    [[1, 4], [4, 4], [3, 4]]
+

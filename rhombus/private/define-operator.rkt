@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      "srcloc.rkt")
-         "expression.rkt")
+         "expression.rkt"
+         "compound-repetition.rkt")
 
 (provide define-prefix
          define-infix
@@ -26,28 +27,29 @@
                      #:defaults ([(same-on-left-op 1) '()]))
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()])))
-       #`(expression-prefix-operator (quote-syntax name)
-                                     (list (cons (quote-syntax weaker-op)
-                                                 'weaker)
-                                           ...
-                                           (cons (quote-syntax same-op)
-                                                 'same)
-                                           ...
-                                           (cons (quote-syntax same-on-right-op)
-                                                 'same-on-right)
-                                           ...
-                                           (cons (quote-syntax same-on-left-op)
-                                                 'same-on-left)
-                                           ...
-                                           (cons (quote-syntax stronger-op)
-                                                 'stronger)
-                                           ...)
-                                     'automatic
-                                     (lambda (form stx)
-                                       (datum->syntax (quote-syntax here)
-                                                      (list (quote-syntax prim) form)
-                                                      (span-srcloc stx form)
-                                                      stx)))]))
+       #`(make-expression&repetition-prefix-operator
+          (quote-syntax name)
+          (list (cons (quote-syntax weaker-op)
+                      'weaker)
+                ...
+                (cons (quote-syntax same-op)
+                      'same)
+                ...
+                (cons (quote-syntax same-on-right-op)
+                      'same-on-right)
+                ...
+                (cons (quote-syntax same-on-left-op)
+                      'same-on-left)
+                ...
+                (cons (quote-syntax stronger-op)
+                      'stronger)
+                ...)
+          'automatic
+          (lambda (form stx)
+            (datum->syntax (quote-syntax here)
+                           (list (quote-syntax prim) form)
+                           (span-srcloc stx form)
+                           stx)))]))
 
   (define-syntax (infix stx)
     (syntax-parse stx
@@ -62,26 +64,27 @@
                      #:defaults ([(stronger-op 1) '()]))
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left])))
-       #`(expression-infix-operator (quote-syntax name)
-                                    (list (cons (quote-syntax weaker-op)
-                                                'weaker)
-                                          ...
-                                          (cons (quote-syntax same-op)
-                                                'same)
-                                          ...
-                                          (cons (quote-syntax same-on-left-op)
-                                                'same-on-left)
-                                          ...
-                                          (cons (quote-syntax stronger-op)
-                                                'stronger)
-                                          ...)
-                                    'automatic
-                                    (lambda (form1 form2 stx)
-                                      (datum->syntax (quote-syntax here)
-                                                     (list (quote-syntax prim) form1 form2)
-                                                     (span-srcloc form1 form2)
-                                                     stx))
-                                    assoc)])))
+       #`(make-expression&repetition-infix-operator
+          (quote-syntax name)
+          (list (cons (quote-syntax weaker-op)
+                      'weaker)
+                ...
+                (cons (quote-syntax same-op)
+                      'same)
+                ...
+                (cons (quote-syntax same-on-left-op)
+                      'same-on-left)
+                ...
+                (cons (quote-syntax stronger-op)
+                      'stronger)
+                ...)
+          'automatic
+          (lambda (form1 form2 stx)
+            (datum->syntax (quote-syntax here)
+                           (list (quote-syntax prim) form1 form2)
+                           (span-srcloc form1 form2)
+                           stx))
+          assoc)])))
 
 (define-syntax (define-infix stx)
   (syntax-parse stx

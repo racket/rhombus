@@ -290,7 +290,9 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
  Binds @rhombus(operator_path) as an operator, either prefix or infix.
  The @rhombus(maybe_res_ann) parts are the same as in @rhombus(fun)
- definitions.
+ definitions. The operator is also a @tech{repetition} operator,
+ in which case its arguments must be repetitions, and the depth of the
+ resulting repetition is the maximum of the argument repetition depths.
 
  When an operator definition includes both a prefix and infix variant
  with @litchar{|}, the variants can be in either order.

@@ -65,7 +65,8 @@
                                       (syntax/loc #'datum (quote datum))
                                       0
                                       0
-                                      #'())
+                                      #'()
+                                      #t)
                 #'tail)]))))
 
 (define-for-syntax (raise-keyword-error datum)

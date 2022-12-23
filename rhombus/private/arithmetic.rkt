@@ -5,7 +5,9 @@
          "expression.rkt"
          "define-operator.rkt"
          (only-in "dot.rkt"
-                  |.|))
+                  |.|)
+         (only-in "repetition.rkt"
+                  expression+repetition-prefix+infix-operator))
 
 (provide (rename-out [rhombus+ +]
                      [rhombus- -]
@@ -33,7 +35,7 @@
   #:same-as (rhombus-))
 
 (define-syntax rhombus-
-  (expression-prefix+infix-operator
+  (expression+repetition-prefix+infix-operator
    (prefix rhombus- - #:weaker-than (rhombus* rhombus/))
    (infix rhombus- - #:weaker-than (rhombus* rhombus/))))
 

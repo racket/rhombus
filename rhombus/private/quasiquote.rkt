@@ -113,7 +113,8 @@
                                                               (syntax-class-attribute-id attr)
                                                               (+ (syntax-class-attribute-depth attr) depth (if splice? -1 0))
                                                               #'0
-                                                              syntax-static-infos)
+                                                              syntax-static-infos
+                                                              #f)
                                         #'tail)]
                                [_ (next)]))
            #:expr-handler expr-handler)]))
@@ -589,7 +590,8 @@
                                        #`(pack-element* #,template-e #,depth)
                                        depth
                                        0
-                                       syntax-static-infos)]
+                                       syntax-static-infos
+                                       #f)]
     [else (wrap-static-info* template-e
                              syntax-static-infos)]))
 
@@ -774,7 +776,8 @@
                                                                     #`(quote-syntax #,e)
                                                                     0
                                                                     0
-                                                                    #'()))))))
+                                                                    #'()
+                                                                    #t))))))
 
 (define-syntax syntax_term
   (make-expression+binding-prefix-operator

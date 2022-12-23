@@ -5,6 +5,9 @@
                      "consistent.rkt"
                      "srcloc.rkt")
          "expression.rkt"
+         (only-in "repetition.rkt"
+                  expression+repetition-prefix+infix-operator)
+         "compound-repetition.rkt"
          "dotted-sequence-parse.rkt"
          "parse.rkt"
          "syntax.rkt"
@@ -48,7 +51,7 @@
 
   (define (make-prefix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
-      #`(expression-prefix-operator
+      #`(make-expression&repetition-prefix-operator
          (quote-syntax #,name)
          #,(convert-prec prec)
          'automatic
@@ -60,7 +63,7 @@
 
   (define (make-infix name op-proc prec assc static-infos)
     (with-syntax ([op-proc op-proc])
-      #`(expression-infix-operator
+      #`(make-expression&repetition-infix-operator
          (quote-syntax #,name)
          #,(convert-prec prec)
          'automatic
@@ -124,7 +127,7 @@
        #`(define i-op-proc
            #,(build-infix-function i-name i-left i-right i-rhs i-g i-g i-ret-predicate))
        #`(define-syntax #,p-name
-           (expression-prefix+infix-operator
+           (expression+repetition-prefix+infix-operator
             #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)
             #,(make-infix i-name #'i-op-proc i-prec i-assc i-ret-static-infos)))))))
 

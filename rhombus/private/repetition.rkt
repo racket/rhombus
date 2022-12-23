@@ -18,20 +18,28 @@
          "static-info.rkt"
          "ref-result-key.rkt")
 
-(provide
- (for-syntax make-repetition
-             make-expression+binding+repetition-prefix-operator
-             repetition-transformer
+(provide define-repetition-syntax)
+(begin-for-syntax
+  (provide  (property-out repetition-prefix-operator)
+            (property-out repetition-infix-operator)
 
-             repetition-as-list
+            repetition-transformer
+            make-expression+repetition-prefix-operator
+            make-expression+repetition-infix-operator
+            make-expression+binding+repetition-prefix-operator
+            make-expression+binding+repetition-infix-operator
+            expression+repetition-prefix+infix-operator
 
-             :repetition
-             :repetition-info
+            make-repetition
 
-             in-repetition-space
+            repetition-as-list
 
-             make-repetition-info)
- define-repetition-syntax)
+            :repetition
+            :repetition-info
+
+            in-repetition-space
+
+            make-repetition-info))
 
 (begin-for-syntax
   (define-syntax-class :repetition-info
@@ -40,10 +48,13 @@
               seq-expr
               bind-depth:exact-nonnegative-integer
               use-depth:exact-nonnegative-integer
-              element-static-infos)))
+              element-static-infos
+              immediate?)))
 
-  (define (make-repetition-info name seq-expr bind-depth use-depth element-static-infos)
-    #`(#,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos))
+  (define (make-repetition-info name seq-expr bind-depth use-depth element-static-infos immediate?)
+    ;; `element-static-infos` can be an identifier, which means both that static
+    ;; information can be looked up on demand
+    #`(#,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos #,immediate?))
 
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -61,6 +72,28 @@
      (expression-prefix-operator name prec protocol exp)
      (repetition-prefix-operator name prec protocol rep)))
 
+  (struct expression+repetition-infix-operator (exp-op rep-op)
+    #:property prop:expression-infix-operator (lambda (self) (expression+repetition-infix-operator-exp-op self))
+    #:property prop:repetition-infix-operator (lambda (self) (expression+repetition-infix-operator-rep-op self)))
+  (define (make-expression+repetition-infix-operator name prec protocol exp rep assc)
+    (expression+repetition-infix-operator
+     (expression-infix-operator name prec protocol exp assc)
+     (repetition-infix-operator name prec protocol rep assc)))
+
+  (struct expression+repetition-prefix+infix-operator (prefix infix)
+    #:property prop:expression-prefix-operator (lambda (self)
+                                                 (expression+repetition-prefix-operator-exp-op
+                                                  (expression+repetition-prefix+infix-operator-prefix self)))
+    #:property prop:expression-infix-operator (lambda (self)
+                                                (expression+repetition-infix-operator-exp-op
+                                                 (expression+repetition-prefix+infix-operator-infix self)))
+    #:property prop:repetition-prefix-operator (lambda (self)
+                                                 (expression+repetition-prefix-operator-rep-op
+                                                  (expression+repetition-prefix+infix-operator-prefix self)))
+    #:property prop:repetition-infix-operator (lambda (self)
+                                                (expression+repetition-infix-operator-rep-op
+                                                 (expression+repetition-prefix+infix-operator-infix self))))
+
   (struct expression+binding+repetition-prefix-operator (exp-op bind-op rep-op)
     #:property prop:expression-prefix-operator (lambda (self) (expression+binding+repetition-prefix-operator-exp-op self))
     #:property prop:binding-prefix-operator (lambda (self) (expression+binding+repetition-prefix-operator-bind-op self))
@@ -71,6 +104,16 @@
      (binding-prefix-operator name prec protocol bind)
      (repetition-prefix-operator name prec protocol rep)))
 
+  (struct expression+binding+repetition-infix-operator (exp-op bind-op rep-op)
+    #:property prop:expression-infix-operator (lambda (self) (expression+binding+repetition-infix-operator-exp-op self))
+    #:property prop:binding-infix-operator (lambda (self) (expression+binding+repetition-infix-operator-bind-op self))
+    #:property prop:repetition-infix-operator (lambda (self) (expression+binding+repetition-infix-operator-rep-op self)))
+  (define (make-expression+binding+repetition-infix-operator name prec protocol exp bind rep assc)
+    (expression+binding+repetition-infix-operator
+     (expression-infix-operator name prec protocol exp assc)
+     (binding-infix-operator name prec protocol bind assc)
+     (repetition-infix-operator name prec protocol rep assc)))
+
   (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repetition))
 
   (define (identifier-repetition-use id)
@@ -78,7 +121,8 @@
                           id
                           0
                           0
-                          #'()))
+                          id
+                          #t))
 
   ;; Form in a repetition context:
   (define-enforest
@@ -117,7 +161,8 @@
                                                              seq-expr
                                                              depth
                                                              #'0
-                                                             element-static-infos)
+                                                             element-static-infos
+                                                             #f)
                                        #'tail)]))))))
 
   (define (repetition-transformer name proc)

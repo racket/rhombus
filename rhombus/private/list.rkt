@@ -172,7 +172,8 @@
                                       #`(check-repetition-list '#,name (rhombus-expression g))
                                       1
                                       0
-                                      #'())
+                                      #'()
+                                      #f)
                 #'tail)]))))
 
 (define (check-repetition-list who v)
@@ -310,7 +311,8 @@
                                    #'rep-info.seq-expr
                                    #'rep-info.bind-depth
                                    (+ (syntax-e #'rep-info.use-depth) 1)
-                                   #'rep-info.element-static-infos)
+                                   #'rep-info.element-static-infos
+                                   #f)
              #'tail)]))
 
 (define-for-syntax (complex-argument-splice? gs-stx)
