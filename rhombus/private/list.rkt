@@ -42,6 +42,9 @@
 (module+ for-implicit
   (provide (for-syntax set-#%call-id!)))
 
+(module+ for-compound-repetition
+  (provide (for-syntax list-static-infos)))
+
 (define list-method-table
   (hash 'length (method1 length)
         'first car

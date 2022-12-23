@@ -27,6 +27,7 @@ normally bound to implement function calls.
 
 @doc(
   expr.macro '$fun_expr #{#%call} ($arg, ...)',
+  repet.macro '$fun_expr #{#%call} ($repet_arg, ...)',
 
   grammar arg:
     $arg_expr
@@ -38,7 +39,9 @@ normally bound to implement function calls.
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
   argument, and each @rhombus(keyword: arg_expr) combination is a
-  by-keyword argument.
+  by-keyword argument. Function calls can serve as repetitions,
+  where @rhombus(repet_arg) is like @rhombus(arg), but with repetitions
+  in place of expressions. 
 
   If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
   @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the

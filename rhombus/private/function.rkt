@@ -38,7 +38,8 @@
          "error.rkt"
          (submod "dot.rkt" for-dot-provider)
          "dot-parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "compound-repetition.rkt")
 
 (provide fun
          Function
@@ -707,103 +708,154 @@
    val))
 
 (begin-for-syntax
-  (define-syntax-class :kw-expression
+  (define-syntax-class :kw-argument
+    #:attributes (kw exp)
     #:datum-literals (op block group)
-    (pattern (group kw:keyword (block (group e ...)))
-             #:with exp::expression #'(group e ...)
-             #:attr parsed #'exp.parsed)
-    (pattern exp::expression
-             #:attr kw #'#f
-             #:attr parsed #'exp.parsed)))
+    (pattern (group kw:keyword (block exp)))
+    (pattern exp
+             #:attr kw #'#f)))
 
-(define-for-syntax (parse-function-call rator-in extra-args stxes)
-  (define rator (rhombus-local-expand rator-in))
+(define-for-syntax (parse-function-call rator-in extra-args stxes #:repetition? [repetition? #f])
   (syntax-parse stxes
     #:datum-literals (group op)
     #:literals (& ~& rhombus...)
     [(_ (head::parens rand ...) . tail)
      #:when (complex-argument-splice? #'(rand ...))
-     (values (complex-argument-splice-call rator-in #'head extra-args #'(rand ...))
+     (values (complex-argument-splice-call rator-in #'head extra-args #'(rand ...) #:repetition? repetition?)
              #'tail)]
     [(_ (head::parens rand ...
                       (group (op &) rst ...)
                       (group (op ~&) kwrst ...))
         . tail)
-     (generate-call rator #'head extra-args #'(rand ...) #'(group rst ...) #f
+     (generate-call rator-in #'head extra-args #'(rand ...) #'(group rst ...) #f
                     #'(group kwrst ...) #t
-                    #'tail)]
+                    #'tail
+                    #:repetition? repetition?)]
     [(_ (head::parens rand ...
                       rep (group (op (~and dots rhombus...)))
                       (group (op ~&) kwrst ...))
         . tail)
-     (generate-call rator #'head #'(rand ...) #'rep #'dots
+     (generate-call rator-in #'head #'(rand ...) #'rep #'dots
                     #'(group kwrst ...)
-                    #'tail)]
+                    #'tail
+                    #:repetition? repetition?)]
     [(_ (head::parens rand ... (group (op &) rst ...)) . tail)
-     (generate-call rator #'head extra-args #'(rand ...) #'(group rst ...) #f #f #'tail)]
+     (generate-call rator-in #'head extra-args #'(rand ...) #'(group rst ...) #f #f #'tail #:repetition? repetition?)]
     [(_ (head::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
-     (generate-call rator #'head extra-args #'(rand ...) #'rep #'dots #f #'tail)]
+     (generate-call rator-in #'head extra-args #'(rand ...) #'rep #'dots #f #'tail #:repetition? repetition?)]
     [(_ (head::parens rand ... (group (op ~&) kwrst ...)) . tail)
-     (generate-call rator #'head extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
+     (generate-call rator-in #'head extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail #:repetition? repetition?)]
     [(_ (head::parens rand ...) . tail)
-     (generate-call rator #'head extra-args #'(rand ...) #f #f #f #'tail)]))
+     (generate-call rator-in #'head extra-args #'(rand ...) #f #f #f #'tail #:repetition? repetition?)]))
 
-(define-for-syntax (generate-call rator head extra-rands rands rsts dots kwrsts tail)
-  (with-syntax-parse ([(rand::kw-expression ...) rands])
-    (define num-rands (length (syntax->list #'(rand.kw ...))))
-    (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
-                                                         [parsed (in-list (syntax->list #'(rand.parsed ...)))])
-                                                (if (syntax-e kw)
-                                                    (list kw parsed)
-                                                    (list parsed)))])
-      (define e
-        (cond
-          [kwrsts
-           (define kwrest-args
-             (with-syntax-parse ([kwrst::expression kwrsts]) #'kwrst.parsed))
-           (define rest-args
-             (cond
-               [dots (repetition-as-list dots rsts 1)]
-               [rsts (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]
-               [else #''()]))
-           (datum->syntax (quote-syntax here)
-                          (list (append (list #'keyword-apply/map rator)
-                                        extra-rands
-                                        (syntax->list #'(arg-form ... ...))
-                                        (list rest-args))
-                                kwrest-args)
-                          (span-srcloc rator head)
-                          head)]
-          [rsts
-           (define rest-args
-             (cond 
-               [dots (repetition-as-list dots rsts 1)]
-               [else (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]))
-           (datum->syntax (quote-syntax here)
-                          (append (list #'apply rator)
-                                  extra-rands
-                                  (syntax->list #'(arg-form ... ...))
-                                  (list rest-args))
-                          (span-srcloc rator head)
-                          head)]
-          [else (datum->syntax (quote-syntax here)
-                               (cons rator
-                                     (append extra-rands
-                                             #'(arg-form ... ...)))
-                               (span-srcloc rator head)
-                               head)]))
-      (define result-static-infos (or (syntax-local-static-info rator #'#%call-result)
-                                      #'()))
-      (define all-result-static-infos (or (let loop ([r (syntax-local-static-info rator #'#%call-results-at-arities)])
-                                            (syntax-parse r
-                                              [((n (result ...)) . rest)
-                                               (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands)))
-                                                   #`(result ... . #,result-static-infos)
-                                                   (loop #'rest))]
-                                              [_ #f]))
-                                          result-static-infos))
-      (values (wrap-static-info* e all-result-static-infos)
-              tail))))
+(define-for-syntax (generate-call rator-in head extra-rands rands rsts dots kwrsts tail
+                                  #:repetition? repetition?)
+  (values
+   (with-syntax-parse ([(rand::kw-argument ...) rands])
+     (handle-repetition
+      repetition?
+      (if repetition? rator-in (rhombus-local-expand rator-in))
+      (syntax->list #'(rand.exp ...))
+      rsts dots
+      kwrsts
+      (lambda (rator args rest-args kwrest-args rator-static-info)
+        (define num-rands (length (syntax->list #'(rand.kw ...))))
+        (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
+                                                             [arg (in-list args)])
+                                                    (if (syntax-e kw)
+                                                        (list kw arg)
+                                                        (list arg)))])
+          (define e
+            (cond
+              [kwrsts
+               (datum->syntax (quote-syntax here)
+                              (list (append (list #'keyword-apply/map rator)
+                                            extra-rands
+                                            (syntax->list #'(arg-form ... ...))
+                                            (list rest-args))
+                                    kwrest-args)
+                              (span-srcloc rator head)
+                              head)]
+              [rsts
+               (datum->syntax (quote-syntax here)
+                              (append (list #'apply rator)
+                                      extra-rands
+                                      (syntax->list #'(arg-form ... ...))
+                                      (list rest-args))
+                              (span-srcloc rator head)
+                              head)]
+              [else (datum->syntax (quote-syntax here)
+                                   (cons rator
+                                         (append extra-rands
+                                                 #'(arg-form ... ...)))
+                                   (span-srcloc rator head)
+                                   head)]))
+          (define result-static-infos (or (rator-static-info #'#%call-result)
+                                          #'()))
+          (define all-result-static-infos (or (let loop ([r (rator-static-info #'#%call-results-at-arities)])
+                                                (syntax-parse r
+                                                  [((n (result ...)) . rest)
+                                                   (if (equal? (syntax-e #'n) (+ num-rands (length extra-rands)))
+                                                       #`(result ... . #,result-static-infos)
+                                                       (loop #'rest))]
+                                                  [_ #f]))
+                                              result-static-infos))
+          (values e all-result-static-infos)))))
+   tail))
+
+(define-for-syntax (handle-repetition repetition?
+                                      rator ; already parsed as expression or repetition
+                                      rands
+                                      rsts dots
+                                      kwrsts
+                                      k)
+  (cond
+    [(not repetition?)
+     ;; parse arguments as expressions
+     (define args
+       (for/list ([arg (in-list rands)])
+         (with-syntax-parse ([e::expression arg]) #'e.parsed)))
+     (define rest-args
+       (cond
+         [dots (repetition-as-list dots rsts 1)]
+         [rsts (with-syntax-parse ([rst::expression rsts]) #'rst.parsed)]
+         [else #''()]))
+     (define kwrest-args
+       (and kwrsts
+            (with-syntax-parse ([kwrst::expression kwrsts]) #'kwrst.parsed)))
+     (define-values (e result-static-infos)
+       (k rator args rest-args kwrest-args (lambda (key) (syntax-local-static-info rator key))))
+     (wrap-static-info* e result-static-infos)]
+    [else
+     ;; parse arguments as repetitions
+     (define args
+       (for/list ([arg (in-list rands)])
+         (with-syntax-parse ([rep::repetition arg]) #'rep.parsed)))
+     (define n (length args))
+     (let* ([args (append
+                   (cons rator args)
+                   (if rsts
+                       (list (with-syntax-parse ([rep::repetition rsts]) #'rep.parsed))
+                       null)
+                   (if kwrsts
+                       (list (with-syntax-parse ([rep::repetition kwrsts]) #'rep.parsed))
+                       null))])
+       (build-compound-repetition
+        args #:rest-i (and dots (add1 n))
+        (lambda one-args
+          (let* ([one-rator (car one-args)]
+                 [args (for/list ([i (in-range n)]
+                                  [arg (in-list (cdr one-args))])
+                         arg)]
+                 [rest-args (and rsts (list-ref one-args (add1 n)))]
+                 [kwrest-args (and kwrsts (list-ref one-args (+ n 1 (if rsts 1 0))))])
+            ;; returns expression plus static infors for result elements
+            (k one-rator args (or rest-args #''()) kwrest-args
+               (lambda (key)
+                 (with-syntax-parse ([rep::repetition-info rator])
+                   (if (identifier? #'rep.element-static-infos)
+                       (syntax-local-static-info #'rep.element-static-infos key)
+                       (static-info-lookup key #'rep.element-static-infos)))))))))]))
 
 (define-for-syntax (complex-argument-splice? gs-stx)
   ;; multiple `&` or `...`, or not at the end before `~&`,
@@ -828,7 +880,8 @@
        (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
       [(_ . gs) (loop #'gs)])))
 
-(define-for-syntax (complex-argument-splice-call rator head extra-args gs-stx)
+(define-for-syntax (complex-argument-splice-call rator head extra-args gs-stx
+                                                 #:repetition? repetition?)
   (define (gen-id) (car (generate-temporaries '(arg))))
   (let loop ([gs-stx gs-stx]
              [rev-args '()])
@@ -879,7 +932,8 @@
                                       [(null? kwss) #f]
                                       [(null? (cdr kwss)) #`(group (parsed #,(car kwss)))]
                                       [else #`(group (parsed (merge-keyword-argument-maps #,@kwss)))]))
-                                  #'#f))
+                                  #'#f
+                                  #:repetition? repetition?))
                  term))]
       [(((~and tag group) (op &) rand ...+) . gs)
        (loop #'gs

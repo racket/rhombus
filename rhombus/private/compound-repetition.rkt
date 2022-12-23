@@ -4,71 +4,103 @@
                      "srcloc.rkt"
                      "with-syntax.rkt")
          "expression.rkt"
-         "repetition.rkt")
+         "repetition.rkt"
+         "static-info.rkt")
 
 (provide (for-syntax make-expression&repetition-prefix-operator
-                     make-expression&repetition-infix-operator))
+                     make-expression&repetition-infix-operator
+
+                     repetition-depth
+
+                     build-compound-repetition))
 
 (begin-for-syntax
   (define (make-expression&repetition-prefix-operator name prec protocol exp)
     (define rep
       (lambda (form stx)
-        (build-compound-repetition (list form) (lambda (form) (exp form stx)))))
+        (build-compound-repetition (list form)
+                                   (lambda (form) (values (exp form stx)
+                                                          #'())))))
     (make-expression+repetition-prefix-operator name prec protocol exp rep))
 
   (define (make-expression&repetition-infix-operator name prec protocol exp assc)
     (define rep
       (lambda (form1 form2 stx)
-        (build-compound-repetition (list form1 form2) (lambda (form1 form2) (exp form1 form2 stx)))))
-    (make-expression+repetition-infix-operator name prec protocol exp rep assc)))
+        (build-compound-repetition (list form1 form2)
+                                   (lambda (form1 form2) (values (exp form1 form2 stx)
+                                                                 #'())))))
+    (make-expression+repetition-infix-operator name prec protocol exp rep assc))
 
-(define-for-syntax (build-compound-repetition forms build-one)
+  (define (repetition-depth form)
+    (with-syntax-parse ([rep::repetition-info form])
+      (- (syntax-e #'rep.bind-depth)
+         (syntax-e #'rep.use-depth)))))
+
+(define-for-syntax (build-compound-repetition forms build-one #:rest-i [rest-i #f])
   (define depths
-    (for/list ([form (in-list forms)])
-      (with-syntax-parse ([rep::repetition-info form])
-        (- (syntax-e #'rep.bind-depth)
-           (syntax-e #'rep.use-depth)))))
+    (for/list ([form (in-list forms)]
+               [i (in-naturals)])
+      (define depth (repetition-depth form))
+      (if (eqv? i rest-i)
+          (sub1 depth)
+          depth)))
   (define depth (apply max depths))
+  (define-values (names lists use-depths immed?s)
+    (for/lists (names lists depths immed?s) ([form (in-list forms)]
+                                             [form-depth (in-list depths)]
+                                             [i (in-naturals)])
+      (with-syntax-parse ([rep::repetition-info form])
+        (values #'rep.name
+                (repetition-as-list form
+                                    (+ (min depth form-depth)
+                                       (if (eqv? i rest-i) 1 0)))
+                form-depth
+                (if (eqv? i rest-i)
+                    #f
+                    (syntax-e #'rep.immediate?))))))
+  (define-values (list-e element-static-infos)
+    (build-repetition-map depth
+                          names lists use-depths immed?s
+                          build-one))
   (make-repetition-info #'value
-                        (map-repetition build-one
-                                        depth
-                                        (for/list ([form (in-list forms)]
-                                                   [form-depth (in-list depths)])
-                                          (with-syntax-parse ([rep::repetition-info form])
-                                            (list #'rep.name
-                                                  (repetition-as-list form
-                                                                      (min depth form-depth))
-                                                  form-depth
-                                                  (syntax-e #'rep.immediate?)))))
+                        list-e
                         depth
                         0
-                        #'()
+                        element-static-infos
                         #f))
 
-(define-for-syntax (map-repetition build depth name+list+depth+immed?s)
-  (let ([names (map car name+list+depth+immed?s)]
-        [lists (map cadr name+list+depth+immed?s)]
-        [depths (map caddr name+list+depth+immed?s)]
-        [immed?s (map cadddr name+list+depth+immed?s)])
+(define-for-syntax (build-repetition-map depth names lists depths immed?s build)
+  (define (wrap-body body)
     #`(let #,(for/list ([name (in-list names)]
                         [lst (in-list lists)]
                         [immed? (in-list immed?s)]
                         #:unless immed?)
                #`[#,name #,lst])
-          #,(let loop ([depth depth]
-                       [depths depths])
-              (cond
-                [(= 0 depth) (apply build (for/list ([name (in-list names)]
-                                                     [lst (in-list lists)]
-                                                     [immed? (in-list immed?s)])
-                                            (if immed?
-                                                lst
-                                                name)))]
-                [else
-                 #`(for/list #,(for/list ([a-depth (in-list depths)]
-                                          [name (in-list names)]
-                                          #:when (= a-depth depth))
-                                 #`[#,name (in-list #,name)])
-                     #,(loop (sub1 depth)
-                             (for/list ([a-depth (in-list depths)])
-                               (min a-depth (sub1 depth)))))])))))
+          #,body))
+  (define-values (body static-infos)
+    (let loop ([depth depth]
+               [depths depths])
+      (cond
+        [(= 0 depth)
+         ;; returns expression + static infos
+         (apply build (for/list ([name (in-list names)]
+                                 [lst (in-list lists)]
+                                 [immed? (in-list immed?s)])
+                        (if immed?
+                            lst
+                            name)))]
+        [else
+         (define (wrap-body body)
+           #`(for/list #,(for/list ([a-depth (in-list depths)]
+                                    [name (in-list names)]
+                                    #:when (= a-depth depth))
+                           #`[#,name (in-list #,name)])
+               #,body))
+         (define-values (body static-infos)
+           (loop (sub1 depth)
+                 (for/list ([a-depth (in-list depths)])
+                   (min a-depth (sub1 depth)))))
+         (values (wrap-body body)
+                 static-infos)])))
+  (values (wrap-body body)
+          static-infos))

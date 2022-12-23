@@ -29,6 +29,7 @@
             make-expression+binding+repetition-prefix-operator
             make-expression+binding+repetition-infix-operator
             expression+repetition-prefix+infix-operator
+            make-expression+repetition-transformer
 
             make-repetition
 
@@ -79,6 +80,9 @@
     (expression+repetition-infix-operator
      (expression-infix-operator name prec protocol exp assc)
      (repetition-infix-operator name prec protocol rep assc)))
+
+  (define (make-expression+repetition-transformer name exp rep)
+    (make-expression+repetition-prefix-operator name '((default . stronger)) 'macro exp rep))
 
   (struct expression+repetition-prefix+infix-operator (prefix infix)
     #:property prop:expression-prefix-operator (lambda (self)

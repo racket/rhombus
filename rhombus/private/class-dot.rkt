@@ -14,6 +14,9 @@
          "expression.rkt"
          (only-in (submod "expression-syntax.rkt" for-define)
                   make-expression-prefix-operator)
+         (only-in (submod "repetition.rkt")
+                  make-repetition-info
+                  make-expression+repetition-transformer)
          "assign.rkt"
          "name-root.rkt"
          "parse.rkt"
@@ -177,11 +180,20 @@
         (values proc-id #'tail)]))))
 
 (define-for-syntax (class-expression-transformer id make-id)
-  (expression-transformer
+  (make-expression+repetition-transformer
    id
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values make-id #'tail)]))))
+       [(_ . tail) (values make-id #'tail)]))
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ . tail) (values (make-repetition-info make-id
+                                                 make-id
+                                                 0
+                                                 0
+                                                 make-id
+                                                 #t)
+                           #'tail)]))))
 
 (define-for-syntax (desc-method-shapes desc)
   (if (class-desc? desc)

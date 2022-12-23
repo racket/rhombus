@@ -122,12 +122,14 @@
                [r::repetition (values #'r.parsed #'tail)])]))]))))
 
 (define-syntax #%call
-  (expression-infix-operator
+  (make-expression+repetition-infix-operator
    #'#%call
    '((default . stronger))
    'macro
    (lambda (rator stxes)
      (parse-function-call rator '() stxes))
+   (lambda (rator stxes)
+     (parse-function-call rator '() stxes #:repetition? #t))
    'left))
 
 (define-syntax #%brackets
