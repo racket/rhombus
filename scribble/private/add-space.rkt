@@ -13,6 +13,7 @@
                      [(expmod) 'rhombus/export]
                      [(modpath) 'rhombus/module-path]
                      [(annot) 'rhombus/annotation]
+                     [(repet) 'rhombus/repetition]
                      [(stxclass) 'rhombus/syntax-class]
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for-clause]

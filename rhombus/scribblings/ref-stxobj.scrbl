@@ -50,7 +50,8 @@ Metadata for a syntax object can include a source location and the raw
 )
 
 @doc(
-  expr.macro '«#{#%quotes} '$term ...; ...'»'
+  expr.macro '«#{#%quotes} '$term ...; ...'»',
+  repet.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
  Constructs a syntax object. When a single @rhombus(term) is present,
@@ -115,7 +116,17 @@ Metadata for a syntax object can include a source location and the raw
   '[($x + $y) ..., ...]'
 )
 
- 
+ Quotes work as a repetition to construct multiple syntax objects within
+ another kind of repetition context, such as forming a list. Alls escapes
+ must then be repetitions, instead of just expressions, and the depth of
+ the repetition is the amount of repetition depth left over from the
+ deepest escape.
+
+@examples(
+  def [[x, ...], ...] = [[1, 2, 3], [4], [5, 6]],
+  ['[$x, ...]', ...]
+)
+
 }
 
 @doc(

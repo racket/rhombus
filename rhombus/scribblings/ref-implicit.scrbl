@@ -57,13 +57,16 @@ Here are all of the implicit forms:
 @doc(
   expr.macro '#{#%literal} $literal',
   bind.macro '#{#%literal} $literal',
-  annot.macro '#{#%literal} $literal'
+  annot.macro '#{#%literal} $literal',
+  repet.macro '#{#%literal} $literal'
 ){
 
  Produces the value @rhombus(literal) as an expression or matches
  values that are @rhombus(==) to @rhombus(literal) as a binding; the
  annotation form reports an error that a literal is not allowed as an
- annotation.
+ annotation. A literal also works as a @tech{repetition} of depth 0,
+ which can be useful for repeating a constant alongside a repetition of
+ greater depth.
 
  A @rhombus(literal) is any individual term other than an identifier,
  keyword, operator, parenthesized term, bracketed term, quoted term,
@@ -74,7 +77,7 @@ Here are all of the implicit forms:
  #{#%literal} 7,
  fun only_sevens(7): "yes",
  only_sevens(7),
- ~error: only_sevens(8),
+ ~error: only_sevens(8)
 )
  
 }

@@ -16,6 +16,7 @@
         "private/interface-clause-syntax.rkt"
         "private/entry-point-syntax.rkt"
         "private/static-info-syntax.rkt"
+        "private/repetition-syntax.rkt"
         "private/dot-syntax.rkt"
         "private/import-syntax.rkt"
         "private/export-syntax.rkt"

@@ -28,6 +28,8 @@
              :repetition
              :repetition-info
 
+             in-repetition-space
+
              make-repetition-info)
  define-repetition-syntax)
 
@@ -46,7 +48,7 @@
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::repetition-info form]
-      [_ (raise-result-error (proc-name proc) "repeaition-info?" form)]))
+      [_ (raise-result-error (proc-name proc) "repetition-info?" form)]))
 
   (property repetition-prefix-operator prefix-operator)
   (property repetition-infix-operator infix-operator)

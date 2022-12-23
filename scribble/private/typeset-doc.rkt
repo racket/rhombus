@@ -17,6 +17,8 @@
                   modpath)
          (only-in (submod rhombus/private/annotation for-class)
                   in-annotation-space)
+         (only-in rhombus/private/repetition
+                  in-repetition-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
                   in-syntax-class-space)
          (only-in (submod rhombus/private/reducer for-class)
@@ -34,7 +36,7 @@
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
-                  decl defn expr impo expo annot bind reducer for_clause
+                  decl defn expr impo expo annot repet bind reducer for_clause
                   class_clause interface_clause entry_point)
          (only-in "rhombus.rhm"
                   rhombusblock
@@ -209,17 +211,17 @@
 
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def fun expr impo expo modpath bind annot |.|)
+    #:literals (def fun expr impo expo modpath bind annot repet |.|)
     #:datum-literals (op macro rule)
-    (pattern (~seq (~or expr bind annot expo impo modpath) (op |.|) macro))
+    (pattern (~seq (~or expr bind annot repet expo impo modpath) (op |.|) macro))
     (pattern (~seq (~or expo impo) (op |.|) modifier))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind impo expo modpath annot reducer
+    #:literals (def defn expr decl bind impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point |.|)
     #:datum-literals (op modifier macro rule)
-    (pattern (~seq (~or defn decl expr annot bind reducer expo modpath
+    (pattern (~seq (~or defn decl expr annot repet bind reducer expo modpath
                         for_clause class_clause interface_clause entry_point)
                    (op |.|) macro))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
@@ -446,12 +448,13 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo modpath annot reducer for_clause class_clause interface_clause entry_point rhombus-syntax)
+    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
     [(group modpath . _) in-module-path-space]
     [(group annot . _) in-annotation-space]
+    [(group repet . _) in-repetition-space]
     [(group reducer . _) in-reducer-space]
     [(group for_clause . _) in-for-clause-space]
     [(group class_clause . _) in-class-clause-space]
@@ -462,12 +465,13 @@
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (impo expo modpath annot reducer for_clause class_clause interface_clause entry_point bind rhombus-syntax)
+    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point bind rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
     [(group modpath . _) 'modpath]
     [(group annot . _) 'annot]
+    [(group repet . _) 'repet]
     [(group reducer . _) 'reducer]
     [(group for_clause . _) 'for_clause]
     [(group class_clause . _) 'class_clause]
@@ -479,7 +483,7 @@
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr impo expo modpath annot reducer
+    #:literals (defn decl expr impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
                  bind grammar operator rhombus-syntax
                  interface)
@@ -492,6 +496,7 @@
     [(group expo _ modifier . _) "export modifier"]
     [(group expo _ macro . _) "export"]
     [(group annot . _) "annotation"]
+    [(group repet . _) "repetition"]
     [(group reducer . _) "reducer"]
     [(group for_clause . _) "for clause"]
     [(group class_clause . _) "class clause"]

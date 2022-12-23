@@ -488,7 +488,8 @@
 
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]
-                                     #:rhombus-expression [rhombus-expression #'rhombus-expression])
+                                     #:rhombus-expression [rhombus-expression #'rhombus-expression]
+                                     #:repetition? [repetition? #f])
   (define-values (template idrs sidrs vars can-be-empty?)
     (convert-syntax e
                     #:in-space in-expression-space
@@ -520,14 +521,7 @@
                       (adjust-template-sibling-depths idrs))
                     ;; deepen-escape
                     (lambda (idr)
-                      (syntax-parse idr
-                        #:literals (unpacking)
-                        [(id-pat (unpacking depth 0 . u))
-                         #`[(id-pat (... ...)) (unpacking #,(add1 (syntax-e #'depth)) 0 . u)]]
-                        [(id-pat (unpacking depth k . u))
-                         #`[id-pat (unpacking depth #,(sub1 (syntax-e #'k)) . u)]]
-                        [(id-pat (converter depth (qs t) . args))
-                         #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
+                      (deepen-template-escape idr))
                     ;; deepen-syntax-escape
                     (lambda (sidr)
                       (error "should have no sidrs for template"))
@@ -575,6 +569,10 @@
                               sidrs
                               vars
                               #f))))
+  (define-values (depth new-idrs new-template)
+    (cond
+      [repetition? (deepen-for-repetition idrs template)]
+      [else (values 0 idrs template)]))
   (define (wrap-bindings idrs body)
     (cond
       [(null? idrs) body]
@@ -584,21 +582,33 @@
                         [(id-pat e)
                          #`(with-syntax ([id-pat e])
                              #,body)]))]))
-  (wrap-static-info* (wrap-bindings idrs #`(#,(quote-syntax quasisyntax) #,template))
-                     syntax-static-infos))
+  (define template-e
+    (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
+  (cond
+    [repetition? (make-repetition-info #'template
+                                       #`(pack-element* #,template-e #,depth)
+                                       depth
+                                       0
+                                       syntax-static-infos)]
+    [else (wrap-static-info* template-e
+                             syntax-static-infos)]))
+
+(define-for-syntax (convert-repetition-template e)
+  (convert-template e #:repetition? #t))
+
+(define-for-syntax (deepen-template-escape idr)
+  (syntax-parse idr
+    #:literals (unpacking)
+    [(id-pat (unpacking depth 0 . u))
+     #`[(id-pat (... ...)) (unpacking #,(add1 (syntax-e #'depth)) 0 . u)]]
+    [(id-pat (unpacking depth k . u))
+     #`[id-pat (unpacking depth #,(sub1 (syntax-e #'k)) . u)]]
+    [(id-pat (converter depth (qs t) . args))
+     #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
 
 (define-for-syntax (adjust-template-sibling-depths idrs)
   ;; under `...`, so expose any unexposed repetitions
-  (define u-idrs
-    (for/list ([idr (in-list idrs)])
-      (syntax-parse idr
-        #:literals (pending-unpack)
-        [[id-pat (pending-unpack e . u)]
-         ;; Since `e` is under `...`, it needs to parse as a repetition
-         (syntax-parse #'(group e)
-           [rep::repetition
-            #`[id-pat (unpacking 0 0 rep.parsed . u)]])]
-        [_ idr])))
+  (define u-idrs (expose-repetitions idrs))
   (cond
     [(or (null? u-idrs)
          (null? (cdr u-idrs)))
@@ -623,6 +633,36 @@
           ;; ok to skip a `...` layer:
           #`[pat (unpacking depth 1 rep-info . u)]]
          [_ idr]))]))
+
+(define-for-syntax (expose-repetitions idrs)
+  (for/list ([idr (in-list idrs)])
+    (syntax-parse idr
+      #:literals (pending-unpack)
+      [[id-pat (pending-unpack e . u)]
+       ;; Since `e` is under `...`, it needs to parse as a repetition
+       (syntax-parse #'(group e)
+         [rep::repetition
+          #`[id-pat (unpacking 0 0 rep.parsed . u)]])]
+      [_ idr])))
+
+(define-for-syntax (deepen-for-repetition idrs template)
+  (define u-idrs (expose-repetitions idrs))
+  (define depth
+    (for/fold ([max-depth 0]) ([idr (in-list u-idrs)])
+      (syntax-parse idr
+        #:literals (unpacking)
+        [[_ (unpacking depth k rep-info::repetition-info . _)]
+         (max max-depth (- (- (syntax-e #'rep-info.bind-depth)
+                              (syntax-e #'rep-info.use-depth))
+                           (syntax-e #'depth)))]
+        [_ max-depth])))
+  (let loop ([d depth] [idrs u-idrs] [template template])
+    (cond
+      [(d . <= . 0) (values (max depth 0) idrs template)]
+      [else (loop (sub1 d)
+                  (map deepen-template-escape
+                       (adjust-template-sibling-depths idrs))
+                  #`(#,template (... ...)))])))
 
 ;; if we get here, it means that an escape was not under `...`
 (define-syntax (pending-unpack stx)
@@ -701,7 +741,7 @@
           (sid-ref ...))))))
 
 (define-syntax #%quotes
-  (make-expression+binding-prefix-operator
+  (make-expression+binding+repetition-prefix-operator
    #'#%quotes
    '((default . stronger))
    'macro
@@ -724,7 +764,17 @@
                                                   repack-as-term
                                                   ()
                                                   ()
-                                                  ())))))))
+                                                  ())))))
+   (lambda (stx)
+     (call-with-quoted-expression stx
+                                  in-expression-space
+                                  convert-repetition-template
+                                  convert-repetition-template
+                                  (lambda (e) (make-repetition-info #'template
+                                                                    #`(quote-syntax #,e)
+                                                                    0
+                                                                    0
+                                                                    #'()))))))
 
 (define-syntax syntax_term
   (make-expression+binding-prefix-operator

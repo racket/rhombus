@@ -59,6 +59,7 @@
          unpack-list-tail*
          unpack-multi-list-tail*
 
+         pack-element*
          unpack-element*
 
          repack-as-term
@@ -245,6 +246,9 @@
 (define (unpack-multi-as-term* qs r depth)
   (unpack* qs r depth (lambda (r name qs)
                         (datum->syntax qs (cons multi-blank (unpack-multi r name qs))))))
+
+(define (pack-element* r depth)
+  (pack* r depth (lambda (r) r)))
 
 (define (unpack-element* qs r depth)
   (unpack* qs r depth (lambda (r name qs) r)))
