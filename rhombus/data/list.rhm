@@ -3,22 +3,22 @@
 
 export:
   List
-  ImmutableList
+  ListView
   MutableList
 
 
 import:
   rhombus/data/collection.Collection
-  rhombus/data/collection.ImmutableCollection
+  rhombus/data/collection.CollectionView
   rhombus/data/collection.MutableCollection
   rhombus/private/precondition.checkArgument
 
 
-interface List:
-  extends Collection
+interface ListView:
+  extends CollectionView
 
   method get(index :: Integer)
-  method sublist(start :: Integer, end :: Integer) :: List
+  method sublist(start :: Integer, end :: Integer) :: ListView
 
   method checkIndex(who, index):
     checkArgument(
@@ -60,22 +60,22 @@ interface List:
       "size", size())
 
 
-interface ImmutableList:
+interface List:
   extends:
-    List
-    ImmutableCollection
+    ListView
+    Collection
 
-  method set(index :: Integer, element) :: ImmutableList
-  override add(element) :: ImmutableList
-  override remove(element) :: ImmutableList
-  method insert(index :: Integer, element) :: ImmutableList
-  method delete(index :: Integer) :: ImmutableList
-  override sublist(start :: Integer, end :: Integer) :: ImmutableList
+  method set(index :: Integer, element) :: List
+  override add(element) :: List
+  override remove(element) :: List
+  method insert(index :: Integer, element) :: List
+  method delete(index :: Integer) :: List
+  override sublist(start :: Integer, end :: Integer) :: List
 
 
 interface MutableList:
   extends:
-    List
+    ListView
     MutableCollection
 
   method set(index :: Integer, element) :: Void

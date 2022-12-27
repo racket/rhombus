@@ -24,7 +24,7 @@ class ArrayList():
 
   override method iterate(): ArrayListIterator(this)
 
-  override property size(): currentSize
+  override property size: currentSize
 
   override method get(index):
     checkIndex("List.get", index)
@@ -100,7 +100,7 @@ class ArraySublist(backingList :: PrivateArrayList, start :: Integer, mutable en
   override method iterate():
     ArraySublistIterator(this)
 
-  override property size():
+  override property size:
     end - start
 
   override method contains(element):
@@ -138,7 +138,7 @@ class ArraySublist(backingList :: PrivateArrayList, start :: Integer, mutable en
 
   override method clear():
     let elementsToShift = backingList.currentSize - end
-    let currentSize = size()
+    let currentSize = size
     for:
       each i: start .. start + elementsToShift
       backingList.storage[i] := backingList.storage[i + currentSize]

@@ -7,16 +7,16 @@ export:
 
 
 import:
-  rhombus/data/list.ImmutableList
+  rhombus/data/list.List
   rhombus/data/private/persistent_list.PersistentList
   rhombus/data/sequence.Iterator
   lib("racket/base.rkt").error
 
 
 class SingletonList(onlyElement):
-  implements ImmutableList
+  implements List
   override method iterate(): SingletonIterator(onlyElement)
-  override property size(): 1
+  override property size: 1
   override method isEmpty(): #false
   override method contains(element): element == onlyElement
 
@@ -58,9 +58,9 @@ class SingletonIterator(element):
 
 
 class EmptyList():
-  implements ImmutableList
+  implements List
   override method iterate(): EmptyIterator()
-  override property size(): 0
+  override property size: 0
   override method isEmpty(): #true
   override method contains(_): #false
   override method get(index): checkIndex("List.get", index)
