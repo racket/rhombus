@@ -17,7 +17,7 @@ class RegularImmutableList(storage :: Array):
   internal PrivateRegularImmutableList
 
   override method iterate(): ImmutableListIterator(this)
-  override property size: storage.length
+  override property size: storage.length()
   override method isEmpty(): #false
 
   override method get(index):
