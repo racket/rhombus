@@ -6,18 +6,18 @@ export:
 
 
 import:
-  rhombus/data/list.ImmutableList
+  rhombus/data/list.List
   rhombus/data/private/persistent_list.PersistentList
   rhombus/data/sequence.Iterator
   lib("racket/base").error
 
 
 class RegularImmutableList(storage :: Array):
-  implements ImmutableList
+  implements List
   internal PrivateRegularImmutableList
 
   override method iterate(): ImmutableListIterator(this)
-  override property size(): storage.length
+  override property size: storage.length
   override method isEmpty(): #false
 
   override method get(index):
@@ -49,10 +49,10 @@ class RegularImmutableList(storage :: Array):
 class RegularImmutableSublist(
   backingList :: PrivateRegularImmutableList, start :: Integer, end :: Integer):
 
-  implements ImmutableList
+  implements List
 
   override method iterate(): ImmutableListIterator(this)
-  override property size(): end - start
+  override property size: end - start
   override method isEmpty(): start < end
 
   override method get(index):

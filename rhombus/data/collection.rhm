@@ -3,7 +3,7 @@
 
 export:
   Collection
-  ImmutableCollection
+  CollectionView
   MutableCollection
 
 
@@ -11,7 +11,7 @@ import:
   rhombus/data/sequence.Sequence
 
 
-interface Collection:
+interface CollectionView:
   extends Sequence
   // read-only property
   property size :: Integer
@@ -25,14 +25,14 @@ interface Collection:
     loop()
 
 
-interface ImmutableCollection:
-  extends Collection
-  method add(element) :: ImmutableCollection
-  method remove(element) :: ImmutableCollection
+interface Collection:
+  extends CollectionView
+  method add(element) :: Collection
+  method remove(element) :: Collection
 
 
 interface MutableCollection:
-  extends Collection
+  extends CollectionView
   method add(element) :: Void
 
   method addAll(elements :: Sequence) :: Void:
