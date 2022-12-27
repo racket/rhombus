@@ -27,7 +27,7 @@ class ListBuilder():
   method build():
     match storage.size
     | 0: EmptyList()
-    | 1: SingletonList(storage[0])
+    | 1: SingletonList(storage.get(0))
     | n:
         let copy = Array.make(n)
         for:
