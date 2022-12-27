@@ -6,7 +6,7 @@ export:
 
 
 import:
-  rhombus/data/list.List
+  rhombus/data/private/list.List
   rhombus/data/private/persistent_list.PersistentList
   rhombus/data/sequence.Iterator
   lib("racket/base").error
@@ -81,7 +81,7 @@ class RegularImmutableSublist(
   private method toPersistent(): PersistentList().addAll(this)
 
 
-class ImmutableListIterator(backingList :: ImmutableList):
+class ImmutableListIterator(backingList :: List):
   implements Iterator
 
   private field index :: Integer: 0
