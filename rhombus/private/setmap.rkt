@@ -15,14 +15,19 @@
 
 (define-for-syntax (parse-setmap-expression stx
                                              #:shape [init-shape #f]
-                                             #:who [who #f])
-  (define-values (shape argss) (parse-setmap-content stx
-                                                     #:shape init-shape
-                                                     #:who who))
+                                             #:who [who #f]
+                                             #:repetition? [repetition? #f])
+  (define-values (shape argss)
+    (parse-setmap-content stx
+                          #:shape init-shape
+                          #:who who
+                          #:repetition? repetition?))
   (build-setmap stx
                 argss
                 (if (eq? shape 'set) #'Set-build #'Map-build)
                 (if (eq? shape 'set) #'set-extend* #'hash-extend*)
                 (if (eq? shape 'set) #'set-append #'hash-append)
                 (if (eq? shape 'set) #'set-assert #'hash-assert)
-                (if (eq? shape 'set) set-static-info map-static-info)))
+                (if (eq? shape 'set) set-static-info map-static-info)
+                #:repetition? repetition?))
+  

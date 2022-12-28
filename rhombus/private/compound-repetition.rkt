@@ -18,7 +18,8 @@
   (define (make-expression&repetition-prefix-operator name prec protocol exp)
     (define rep
       (lambda (form stx)
-        (build-compound-repetition (list form)
+        (build-compound-repetition stx
+                                   (list form)
                                    (lambda (form) (values (exp form stx)
                                                           #'())))))
     (make-expression+repetition-prefix-operator name prec protocol exp rep))
@@ -26,7 +27,8 @@
   (define (make-expression&repetition-infix-operator name prec protocol exp assc)
     (define rep
       (lambda (form1 form2 stx)
-        (build-compound-repetition (list form1 form2)
+        (build-compound-repetition stx
+                                   (list form1 form2)
                                    (lambda (form1 form2) (values (exp form1 form2 stx)
                                                                  #'())))))
     (make-expression+repetition-infix-operator name prec protocol exp rep assc))
@@ -36,33 +38,38 @@
       (- (syntax-e #'rep.bind-depth)
          (syntax-e #'rep.use-depth)))))
 
-(define-for-syntax (build-compound-repetition forms build-one #:rest-i [rest-i #f])
+(define-for-syntax (build-compound-repetition at-stx forms build-one
+                                              #:is-sequence? [is-sequence? (lambda (form) #f)]
+                                              #:extract [extract (lambda (form) form)])
   (define depths
     (for/list ([form (in-list forms)]
                [i (in-naturals)])
-      (define depth (repetition-depth form))
-      (if (eqv? i rest-i)
+      (define depth (repetition-depth (extract form)))
+      (if (is-sequence? form)
           (sub1 depth)
           depth)))
   (define depth (apply max depths))
   (define-values (names lists use-depths immed?s)
     (for/lists (names lists depths immed?s) ([form (in-list forms)]
-                                             [form-depth (in-list depths)]
-                                             [i (in-naturals)])
-      (with-syntax-parse ([rep::repetition-info form])
+                                             [form-depth (in-list depths)])
+      (define seq? (is-sequence? form))
+      (with-syntax-parse ([rep::repetition-info (extract form)])
         (values #'rep.name
-                (repetition-as-list form
+                (repetition-as-list (extract form)
                                     (+ (min depth form-depth)
-                                       (if (eqv? i rest-i) 1 0)))
+                                       (if seq? 1 0)))
                 form-depth
-                (if (eqv? i rest-i)
+                (if seq?
                     #f
                     (syntax-e #'rep.immediate?))))))
   (define-values (list-e element-static-infos)
     (build-repetition-map depth
                           names lists use-depths immed?s
                           build-one))
-  (make-repetition-info #'value
+  (make-repetition-info (syntax/loc (syntax-parse at-stx
+                                      [(x . _) #'x]
+                                      [_ at-stx])
+                          value)
                         list-e
                         depth
                         0

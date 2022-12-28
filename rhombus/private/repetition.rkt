@@ -40,6 +40,8 @@
 
             in-repetition-space
 
+            identifier-repetition-use
+
             make-repetition-info))
 
 (begin-for-syntax

@@ -835,13 +835,17 @@
      (let* ([args (append
                    (cons rator args)
                    (if rsts
-                       (list (with-syntax-parse ([rep::repetition rsts]) #'rep.parsed))
+                       (list (with-syntax-parse ([rep::repetition rsts])
+                               (if dots (list #'rep.parsed) #'rep.parsed)))
                        null)
                    (if kwrsts
                        (list (with-syntax-parse ([rep::repetition kwrsts]) #'rep.parsed))
                        null))])
        (build-compound-repetition
-        args #:rest-i (and dots (add1 n))
+        rator
+        args
+        #:is-sequence? (lambda (e) (pair? e))
+        #:extract (lambda (e) (if (pair? e) (car e) e))
         (lambda one-args
           (let* ([one-rator (car one-args)]
                  [args (for/list ([i (in-range n)]

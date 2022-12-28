@@ -5,6 +5,8 @@
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
+         "repetition.rkt"
+         "compound-repetition.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "name-root.rkt"
@@ -138,22 +140,30 @@
   ([empty empty-set]
    [length set-count])
   #:root
-  (expression-transformer
-   #'Set
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape argss) (parse-setmap-content #'content
-                                                           #:shape 'set
-                                                           #:who (syntax-e #'form-id)))
-        (values (build-setmap stx argss
-                              #'Set-build
-                              #'set-extend*
-                              #'set-append
-                              #'set-assert
-                              set-static-info)
-                #'tail)]
-       [(_ . tail) (values #'Set #'tail)]))))
+  (let ()
+    (define (parse-set stx repetition?)
+      (syntax-parse stx
+        [(form-id (~and content (_::braces . _)) . tail)
+         (define-values (shape argss) (parse-setmap-content #'content
+                                                            #:shape 'set
+                                                            #:who (syntax-e #'form-id)
+                                                            #:repetition? repetition?))
+         (values (build-setmap stx argss
+                               #'Set-build
+                               #'set-extend*
+                               #'set-append
+                               #'set-assert
+                               set-static-info
+                               #:repetition? repetition?)
+                 #'tail)]
+        [(_ . tail) (values (if repetition?
+                                (identifier-repetition-use #'Set)
+                                #'Set)
+                            #'tail)]))
+    (make-expression+repetition-transformer
+     #'Set
+     (lambda (stx) (parse-set stx #f))
+     (lambda (stx) (parse-set stx #t)))))
 
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)
@@ -185,27 +195,43 @@
   (set ht))
 
 (define-syntax MutableSet-expr
-  (expression-transformer
-   #'Set
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id (~and content (_::braces . _)) . tail)
-        (define-values (shape argss)
-          (parse-setmap-content #'content
-                                #:shape 'set
-                                #:who (syntax-e #'form-id)))
-        (unless (or (null? argss)
-                    (and (pair? (car argss))
-                         (null? (cdr argss))))
-          (raise-syntax-error (syntax-e #'form-id)
-                              "& rest is not supported on mutable sets"
-                              #'content))
-        (values (wrap-static-info*
-                 (quasisyntax/loc stx
-                   (MutableSet #,@(car argss)))
-                 mutable-set-static-info)
-                #'tail)]
-       [(_ . tail) (values #'MutableSet #'tail)]))))
+  (let ()
+    (define (parse-set stx repetition?)
+      (syntax-parse stx
+        [(form-id (~and content (_::braces . _)) . tail)
+         (define-values (shape argss)
+           (parse-setmap-content #'content
+                                 #:shape 'set
+                                 #:who (syntax-e #'form-id)
+                                 #:repetition? repetition?))
+         (unless (or (null? argss)
+                     (and (pair? (car argss))
+                          (null? (cdr argss))))
+           (raise-syntax-error (syntax-e #'form-id)
+                               "& rest is not supported on mutable sets"
+                               #'content))
+         (values (cond
+                   [repetition?
+                    (build-compound-repetition
+                     stx
+                     (car argss)
+                     (lambda args
+                       (values (quasisyntax/loc stx
+                                 (MutableSet #,@args))
+                               mutable-set-static-info)))]
+                   [else (wrap-static-info*
+                          (quasisyntax/loc stx
+                            (MutableSet #,@(car argss)))
+                          mutable-set-static-info)])
+                 #'tail)]
+        [(_ . tail) (values (if repetition?
+                                (identifier-repetition-use #'MutableSet)
+                                #'MutableSet)
+                            #'tail)]))
+    (make-expression+repetition-transformer
+     #'Set
+     (lambda (stx) (parse-set stx #f))
+     (lambda (stx) (parse-set stx #t)))))
 
 (define-static-info-syntax MutableSet
   (#%call-result #,mutable-set-static-info))

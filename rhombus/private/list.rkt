@@ -17,6 +17,7 @@
          (only-in "rest-marker.rkt"
                   &)
          "repetition.rkt"
+         "compound-repetition.rkt"
          "name-root.rkt"
          (submod "dot.rkt" for-dot-provider)
          "parse.rkt"
@@ -241,97 +242,99 @@
                            (= (length v) #,len))))
      (generate-binding #'form-id pred args #'tail)]))
 
-(define-for-syntax (parse-list-expression stx)
+(define-for-syntax (parse-list-form stx #:repetition? repetition?)
   (syntax-parse stx
     #:datum-literals (group op)
     #:literals (& rhombus...)
     [(form-id (tag arg ...) . tail)
-     #:when (complex-argument-splice? #'(arg ...))
-     ;; general case: multiple `...` or `&`, or at least one of those not at the end:
-     (let loop ([gs-stx #'(arg ...)] [accum-values '()] [accum-lists '()])
-       (define (build-list)
-         (with-syntax ([(arg ...) (reverse accum-values)])
-           #`(list arg ...)))
-       (syntax-parse gs-stx
-         #:datum-literals (group op)
-         #:literals (& rhombus...)
-         [()
-          (cond
-            [(null? accum-values)
-             (with-syntax ([(lst ...) (reverse accum-lists)])
-               (values (wrap-list-static-info
-                        (quasisyntax/loc #'tag
-                          (append lst ...)))
-                       #'tail))]
-            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
-         [((group (op &) rand ...+) . gs)
-          (cond
-            [(null? accum-values)
-             (loop #'gs '() (cons #'(assert-list (rhombus-expression (group rand ...))) accum-lists))]
-            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
-         [(rep-arg (group (op rhombus...)) . gs)
-          (cond
-            [(null? accum-values)
-             (loop #'gs '() (cons (repetition-as-list #'ellipses #'rep-arg 1) accum-lists))]
-            [else (loop gs-stx '() (cons (build-list) accum-lists))])]
-         [(g . gs) (loop #'gs (cons #'(rhombus-expression g) accum-values) accum-lists)]))]
-    [(form-id (tag arg ... (group (op &) rest-arg ...)) . tail)
-     (values (wrap-list-static-info
-              (cond
-                [(null? (syntax->list #'(arg ...)))
-                 ;; special case to expose static info on rest elements
-                 (quasisyntax/loc #'tag
-                   (rhombus-expression (group rest-arg ...)))]
-                [else
-                 (quasisyntax/loc #'tag
-                   (list* (rhombus-expression arg) ...
-                          (assert-list (rhombus-expression (group rest-arg ...)))))]))
-             #'tail)]
-    [(form-id (tag arg ... rep-arg (group (op (~and ellipses rhombus...)))) . tail)
-     (values (wrap-list-static-info
-              (cond
-                [(null? (syntax->list #'(arg ...)))
-                 ;; special case to expose static info on rest elements
-                 (quasisyntax/loc #'tag
-                   #,(repetition-as-list #'ellipses #'rep-arg 1))]
-                [else
-                 (quasisyntax/loc #'tag
-                   (list* (rhombus-expression arg) ... #,(repetition-as-list #'ellipses #'rep-arg 1)))]))
-             #'tail)]
-    [(form-id (tag arg ...) . tail)
-     (values (wrap-list-static-info
-              (syntax/loc #'tag
-                (list (rhombus-expression arg) ...)))
-             #'tail)]))
+     ;; a list of syntax, (cons 'splice syntax), and (cons 'seq syntax):
+     (define content
+       (let loop ([gs-stx #'(arg ...)] [accum '()])
+         (syntax-parse gs-stx
+           #:datum-literals (group op)
+           #:literals (& rhombus...)
+           [() (reverse accum)]
+           [((group (op &) rand ...+) . gs)
+            (define e (let ([g #'(group rand ...)])
+                        (if repetition?
+                            (syntax-parse g
+                              [rep::repetition #'rep.parsed])
+                            (syntax-parse g
+                              [e::expression #'e.parsed]))))
+            (loop #'gs (cons (list 'splice e) accum))]
+           [(rep-arg (group (op rhombus...)) . gs)
+            (define e (syntax-parse #'rep-arg
+                        [rep::repetition
+                         (if repetition?
+                             #'rep.parsed
+                             (repetition-as-list #'rep.parsed 1))]))
+            (loop #'gs (cons (list 'rep e) accum))]
+           [(g . gs)
+            (define e (if repetition?
+                          (syntax-parse #'g
+                            [rep::repetition #'rep.parsed])
+                          (syntax-parse #'g
+                            [e::expression #'e.parsed])))
+            (loop #'gs (cons e accum))])))
+     (values
+      (cond
+        [(and (pair? content) (null? (cdr content))
+              (pair? (car content)) (eq? 'seq (caar content)))
+         ;; special case, especially to expose static info on rest elements
+         (define seq (cadar content))
+         (cond
+           [repetition? seq]
+           [else (wrap-list-static-info seq)])]
+        [(not repetition?)
+         (wrap-list-static-info
+          (build-list-form content))]
+        [else
+         (build-compound-repetition
+          stx
+          content
+          #:is-sequence? (lambda (e) (and (pair? e) (eq? 'rep (car e))))
+          #:extract (lambda (e) (if (pair? e) (cadr e) e))
+          (lambda new-content
+            (let ([content (for/list ([e (in-list content)]
+                                      [new-e (in-list new-content)])
+                             (if (pair? e) (list (car e) new-e) new-e))])
+              (values (build-list-form content)
+                      list-static-infos))))])
+      #'tail)]))
+
+(define-for-syntax (build-list-form content)
+  ;; group content into a list of list-generating groups,
+  ;; and those lists will be appended
+  (let loop ([content content] [accum '()] [accums '()])
+    (define (gather)
+      (if (null? accum) accums (cons #`(list #,@(reverse accum)) accums)))
+    (cond
+      [(null? content)
+       (define es (gather))
+       (cond
+         [(null? es) #'null]
+         [(null? (cdr es)) (car es)]
+         [else #`(append #,@(reverse es))])]
+      [(pair? (car content))
+       (cond
+         [(eq? (caar content) 'splice)
+          (loop (cdr content) '() (cons #`(assert-list #,(cadar content)) (gather)))]
+         [else
+          (loop (cdr content) '() (cons (cadar content) (gather)))])]
+      [else
+       (loop (cdr content) (cons (car content) accum) accums)])))
+
+(define-for-syntax (parse-list-expression stx)
+  (parse-list-form stx #:repetition? #f))
 
 (define-for-syntax (parse-list-repetition stx)
-  (syntax-parse stx
-    #:datum-literals (group op)
-    #:literals (rhombus...)
-    [(form-id (tag rep::repetition (group (op (~and ellipses rhombus...)))) . tail)
-     #:with rep-info::repetition-info #'rep.parsed
-     (values (make-repetition-info #'rep-info.name
-                                   #'rep-info.seq-expr
-                                   #'rep-info.bind-depth
-                                   (+ (syntax-e #'rep-info.use-depth) 1)
-                                   #'rep-info.element-static-infos
-                                   #f)
-             #'tail)]))
-
-(define-for-syntax (complex-argument-splice? gs-stx)
-  (syntax-parse gs-stx
-    #:datum-literals (group op)
-    #:literals (& rhombus...)
-    [() #f]
-    [((group (op &) rand ...+) g . _) #t]
-    [(g0 (group (op rhombus...)) g . _) #t]
-    [(_ . gs) (complex-argument-splice? #'gs)]))
+  (parse-list-form stx #:repetition? #t))
 
 (define (assert-list v)
   (unless (list? v)
     (raise-arguments-error* 'List rhombus-realm
-                            "not a set for splicing"
-                           "value" v))
+                            "not a list for splicing"
+                            "value" v))
   v)
 
 (begin-for-syntax

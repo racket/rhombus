@@ -10,6 +10,8 @@
          "expression.rkt"
          "expression+binding.rkt"
          "binding.rkt"
+         "repetition.rkt"
+         "compound-repetition.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "literal.rkt"
@@ -131,23 +133,32 @@
    [values hash-values]
    [has_key hash-has-key?])
   #:root
-  (expression-transformer
-   #'Map
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (braces)
-       [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape argss) (parse-setmap-content #'content
-                                                           #:shape 'map
-                                                           #:who (syntax-e #'form-id)))
-        (values (build-setmap stx argss
-                              #'Map-build
-                              #'hash-extend*
-                              #'hash-append
-                              #'hash-assert
-                              map-static-info)
-                #'tail)]
-       [(_ . tail) (values #'Map #'tail)]))))
+  (let ()
+    (define (parse-map stx repetition?)
+      (syntax-parse stx
+        #:datum-literals (braces)
+        [(form-id (~and content (braces . _)) . tail)
+         (define-values (shape argss) (parse-setmap-content #'content
+                                                            #:shape 'map
+                                                            #:who (syntax-e #'form-id)
+                                                            #:repetition? repetition?))
+         (values (build-setmap stx argss
+                               #'Map-build
+                               #'hash-extend*
+                               #'hash-append
+                               #'hash-assert
+                               map-static-info
+                               #:repetition? repetition?)
+                 #'tail)]
+        [(_ . tail) (values (cond
+                              [repetition? (identifier-repetition-use #'Map)]
+                              [else #'Map])
+                            #'tail)]))
+    (make-expression+repetition-transformer
+     #'Map
+     (lambda (stx) (parse-map stx #f))
+     (lambda (stx) (parse-map stx #t)))))
+
 
 (define-for-syntax map-static-info
   #'((#%map-ref hash-ref)
@@ -204,28 +215,45 @@
     (hash-copy (build-map 'MutableMap args))))
 
 (define-syntax MutableMap-expr
-  (expression-transformer
-   #'MutableMap
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (braces)
-       [(form-id (~and content (braces . _)) . tail)
-        (define-values (shape argss)
-          (parse-setmap-content #'content
-                                #:shape 'map
-                                #:who (syntax-e #'form-id)))
-        (unless (or (null? argss)
-                    (and (pair? (car argss))
-                         (null? (cdr argss))))
-          (raise-syntax-error (syntax-e #'form-id)
-                              "& rest is not supported on mutable maps"
-                              #'content))
-        (values (wrap-static-info*
-                 (quasisyntax/loc stx
-                   (hash-copy (Map-build #,@(car argss))))
-                 mutable-map-static-info)
-                #'tail)]
-       [(_ . tail) (values #'MutableMap #'tail)]))))
+  (let ()
+    (define (parse-map stx repetition?)
+      (syntax-parse stx
+        #:datum-literals (braces)
+        [(form-id (~and content (braces . _)) . tail)
+         (define-values (shape argss)
+           (parse-setmap-content #'content
+                                 #:shape 'map
+                                 #:who (syntax-e #'form-id)
+                                 #:repetition? repetition?))
+         (unless (or (null? argss)
+                     (and (pair? (car argss))
+                          (null? (cdr argss))))
+           (raise-syntax-error (syntax-e #'form-id)
+                               "& rest is not supported on mutable maps"
+                               #'content))
+         (values (cond
+                   [repetition?
+                    (build-compound-repetition
+                     stx
+                     (car argss)
+                     (lambda args
+                       (values (quasisyntax/loc stx
+                                 (hash-copy (Map-build #,@args)))
+                               mutable-map-static-info)))]
+                   [else
+                    (wrap-static-info*
+                     (quasisyntax/loc stx
+                       (hash-copy (Map-build #,@(car argss))))
+                     mutable-map-static-info)])
+                 #'tail)]
+        [(_ . tail) (values (if repetition?
+                                (identifier-repetition-use #'MutableMap)
+                                #'MutableMap)
+                            #'tail)]))
+    (make-expression+repetition-transformer
+     #'MutableMap
+     (lambda (stx) (parse-map stx #f))
+     (lambda (stx) (parse-map stx #t)))))
 
 (define-static-info-syntax MutableMap
   (#%call-result #,mutable-map-static-info))

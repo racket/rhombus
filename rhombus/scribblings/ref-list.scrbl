@@ -29,6 +29,7 @@ to append lists.
 @doc(
   fun List(v :: Any, ...) :: List,
   expr.macro '#{#%brackets} [$expr_or_splice, ...]',
+  repet.macro '#{#%brackets} [$repet_or_splice, ...]',
 
   grammar expr_or_splice:
     $expr
@@ -40,8 +41,10 @@ to append lists.
  @rhombus(expr_or_splice)s. A @rhombus(&) or @dots_expr form
  can appear within @rhombus([]) to splice a @tech{repetition} or existing list
  into the constructed list, the same as in a function call (see
- @rhombus(#{#%call})).
- 
+ @rhombus(#{#%call})). List constructions can also serve as
+ repetitions, where @rhombus(repet_or_splice) is like
+ @rhombus(expr_or_splice), but with repetitions in place of expressions.
+
  @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
 
 @examples(

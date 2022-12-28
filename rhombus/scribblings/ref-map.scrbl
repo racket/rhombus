@@ -35,13 +35,19 @@ operator. These uses of square brackets are implemented by
   expr.macro '#{#%braces} {$expr_or_splice, ...+}',
   grammar expr_or_splice:
     $elem_expr
-    & $set_expr
+    & $set_expr,
+  repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}',
+  repet.macro '#{#%braces} {$expr_or_splice_repet, ...+}',
 ){
 
  Constructs either a map or a set, depending on whether
  @rhombus(key_expr) and @rhombus(val_expr) are provided or
- @rhombus(elem_expr) is provided. If no elements are provided
- directly, the result is a map (not a set).
+ @rhombus(elem_expr) is provided. If no elements are provided directly,
+ the result is a map (not a set). Map/set constructions can also serve as
+ repetitions, where @rhombus(key_val_or_splice_repet) and
+ @rhombus(expr_or_splice_repet) are like
+ @rhombus(key_val_or_splice) and @rhombus(expr_or_splice),
+ but with repetitions in place of expressions.
 
  When @rhombus(& map_expr) or @rhombus(& set_expr) appears among the
  content, the map or set produced by @rhombus(map_expr)

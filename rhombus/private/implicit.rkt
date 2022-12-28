@@ -167,7 +167,7 @@
   (make-#%ref #f))
 
 (define-syntax #%braces
-  (make-expression+binding-prefix-operator
+  (make-expression+binding+repetition-prefix-operator
    #'#%braces
    '((default . stronger))
    'macro
@@ -179,7 +179,13 @@
                 #'tail)]))
    ;; binding
    (lambda (stxes)
-     (parse-map-binding 'braces stxes "braces"))))
+     (parse-map-binding 'braces stxes "braces"))
+   ;; repetition
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ braces . tail)
+        (values (parse-setmap-expression #'braces #:repetition? #t)
+                #'tail)]))))
 
 (begin-for-syntax
   (set-#%call-id! (quote-syntax #%call)))
