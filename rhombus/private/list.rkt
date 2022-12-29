@@ -28,7 +28,6 @@
 (provide List
          (for-space rhombus/annotation List)
          (for-space rhombus/reducer List)
-         (for-space rhombus/repetition List)
 
          (for-space rhombus/annotation NonemptyList))
 
@@ -79,7 +78,8 @@
    [cons List.cons]
    first
    rest
-   [empty null])
+   [empty null]
+   repet)
   #:root
   (make-expression+binding-prefix-operator
    #'List
@@ -158,11 +158,6 @@
            ([accum null])
            ((lambda (v) (cons v accum)))
            #,list-static-infos]]))))
-
-(define-name-root List
-  #:space rhombus/repetition
-  #:fields
-  (repet))
 
 (define-syntax repet
   (repetition-transformer

@@ -16,7 +16,8 @@
          "expression.rkt"
          "binding.rkt"
          "static-info.rkt"
-         "ref-result-key.rkt")
+         "ref-result-key.rkt"
+         "parse.rkt")
 
 (provide define-repetition-syntax)
 (begin-for-syntax
@@ -130,6 +131,14 @@
                           id
                           #t))
 
+  (define (identifier-repetition-use/maybe id)
+    (make-repetition-info id
+                          #`(rhombus-expression (group #,id))
+                          0
+                          0
+                          id
+                          #t))
+
   ;; Form in a repetition context:
   (define-enforest
     #:syntax-class :repetition
@@ -144,7 +153,7 @@
     #:prefix-operator-ref repetition-prefix-operator-ref
     #:infix-operator-ref repetition-infix-operator-ref
     #:check-result check-repetition-result
-    #:make-identifier-form identifier-repetition-use)
+    #:make-identifier-form identifier-repetition-use/maybe)
 
   (define (make-repetition name seq-expr element-static-infos
                            #:depth [depth 1]
