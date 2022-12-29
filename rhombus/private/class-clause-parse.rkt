@@ -543,7 +543,9 @@
      (syntax-parse stx
        #:literals (method)
        [(_ method (~var m (:method #'override))) #'m.form]
+       [(_ method decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
        [(_ property (~var m (:property #'override-property))) #'m.form]
+       [(_ property decl::property-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
        [(_ (~var m (:method #'override))) #'m.form]
        [(_ decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]))))
 (define-syntax override-property 'placeholder)

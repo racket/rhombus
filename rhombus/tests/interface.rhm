@@ -219,4 +219,21 @@ check:
   interface IC: abstract method m(x :: String, y :: Symbol) :: Integer
   "ok"
   "ok"
+
+check:
+  interface Foo:
+    method foo() :: Foo
+  interface Bar:
+    extends Foo
+    override method foo() :: Bar
+  "ok implicit abstract"
+  "ok implicit abstract"
   
+check:
+  interface Foo:
+    property foo :: Foo
+  interface Bar:
+    extends Foo
+    override propetry foo :: Bar
+  "ok implicit abstract property"
+  "ok implicit abstract property"
