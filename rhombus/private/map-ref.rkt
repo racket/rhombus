@@ -13,6 +13,8 @@
                   :=)
          (submod "set.rkt" for-ref)
          (submod "set.rkt" for-build)
+         "repetition.rkt"
+         "compound-repetition.rkt"
          "realm.rkt")
 
 (provide ++)
@@ -20,14 +22,18 @@
 (module+ for-ref
   (provide (for-syntax parse-map-ref-or-set)))
 
-(define-for-syntax (parse-map-ref-or-set map-in stxes more-static?)
-  (define map (rhombus-local-expand map-in))
+(define-for-syntax (parse-map-ref-or-set map-in stxes more-static?
+                                         #:repetition? [repetition? #f])
+  (define map (if repetition?
+                  map-in
+                  (rhombus-local-expand map-in)))
   (define who '|[]|)
   (define not-static "specialization not statically known")
   (syntax-parse stxes
     #:datum-literals (brackets op)
     #:literals (:=)
     [(_ ((~and head brackets) index) (op :=) . rhs+tail)
+     #:when (not repetition?)
      #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                              (if more-static?
@@ -40,18 +46,39 @@
      (values e
              #'rhs.tail)]
     [(_ ((~and head brackets) index) . tail)
-     (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
-                            (if more-static?
-                                (raise-syntax-error who not-static map-in)
-                                #'map-ref)))
-     (define e (datum->syntax (quote-syntax here)
-                              (list map-ref-id map #'(rhombus-expression index))
-                              (span-srcloc map #'head)
-                              #'head))
-     (define result-static-infos (or (syntax-local-static-info map #'#%ref-result)
-                                     #'()))
-     (values (wrap-static-info* e result-static-infos)
-             #'tail)]))
+     (define (build-ref map index map-static-info)
+       (define map-ref-id (or (map-static-info #'#%map-ref)
+                              (if more-static?
+                                  (raise-syntax-error who not-static map-in)
+                                  #'map-ref)))
+       (define e (datum->syntax (quote-syntax here)
+                                (list map-ref-id map index)
+                                (span-srcloc map #'head)
+                                #'head))
+       (define result-static-infos (or (map-static-info #'#%ref-result)
+                                       #'()))
+       (values e result-static-infos))
+     (cond
+       [repetition?
+        (syntax-parse #'index
+          [rep::repetition
+           #:with map-info::repetition-info map
+           (values
+            (build-compound-repetition #'head (list map #'rep.parsed)
+                                       (lambda (map index)
+                                         (build-ref map
+                                                    index
+                                                    (lambda (key)
+                                                      (repetition-static-info-lookup #'map-info.element-static-infos key)))))
+            #'tail)])]
+       [else
+        (define-values (e result-static-infos)
+          (build-ref map
+                     #'(rhombus-expression index)
+                     (lambda (key)
+                       (syntax-local-static-info map key))))
+        (values (wrap-static-info* e result-static-infos)
+                #'tail)])]))
 
 (define (map-ref map index)
   (cond

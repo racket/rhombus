@@ -857,9 +857,7 @@
             (k one-rator args (or rest-args #''()) kwrest-args
                (lambda (key)
                  (with-syntax-parse ([rep::repetition-info rator])
-                   (if (identifier? #'rep.element-static-infos)
-                       (syntax-local-static-info #'rep.element-static-infos key)
-                       (static-info-lookup key #'rep.element-static-infos)))))))))]))
+                   (repetition-static-info-lookup #'rep.element-static-infos key))))))))]))
 
 (define-for-syntax (complex-argument-splice? gs-stx)
   ;; multiple `&` or `...`, or not at the end before `~&`,

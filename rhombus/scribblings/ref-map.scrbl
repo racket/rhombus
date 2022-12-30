@@ -74,11 +74,13 @@ operator. These uses of square brackets are implemented by
 @doc(
   expr.macro '$expr #{#%ref} [$at_expr]',
   expr.macro '$expr #{#%ref} [$at_expr] := $rhs_expr',
+  repet.macro '$repetition #{#%ref} [$at_repetition]',
 ){
 
  Without @rhombus(:=), accesses the element of the map, array, list, or
  string produced by @rhombus(expr) at the index or key produced by
- @rhombus(at_expr).
+ @rhombus(at_expr). The access form also works as a @tech{repetition}
+ given repetitions for a collection and an index.
 
  With @rhombus(:=), a mutable array, map, or set element is assigned to
  the value produced by @rhombus(rhs_expr), and the expression result is
@@ -86,7 +88,7 @@ operator. These uses of square brackets are implemented by
 
  See also @rhombus(use_static).
 
- @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression", ~is_infix: #true)
+ @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression or repetition", ~is_infix: #true)
 
 @examples(
   {"a": 1, "b": 2}["a"],

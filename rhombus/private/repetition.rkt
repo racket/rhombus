@@ -43,7 +43,9 @@
 
             identifier-repetition-use
 
-            make-repetition-info))
+            make-repetition-info
+
+            repetition-static-info-lookup))
 
 (begin-for-syntax
   (define-syntax-class :repetition-info
@@ -181,7 +183,12 @@
                                        #'tail)]))))))
 
   (define (repetition-transformer name proc)
-    (repetition-prefix-operator name '((default . stronger)) 'macro proc)))
+    (repetition-prefix-operator name '((default . stronger)) 'macro proc))
+
+  (define (repetition-static-info-lookup element-static-infos key)
+    (if (identifier? element-static-infos)
+        (syntax-local-static-info element-static-infos key)
+        (static-info-lookup key element-static-infos))))
 
 (define-for-syntax repetition-as-list
   (case-lambda

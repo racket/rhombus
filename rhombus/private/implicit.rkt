@@ -155,12 +155,14 @@
     [(_ (_::brackets . _) . _) (void)]))
 
 (define-for-syntax (make-#%ref more-static?)
-  (expression-infix-operator
+  (make-expression+repetition-infix-operator
    #'#%ref
    '((default . stronger))
    'macro
    (lambda (array stxes)
      (parse-map-ref-or-set array stxes more-static?))
+   (lambda (array stxes)
+     (parse-map-ref-or-set array stxes more-static? #:repetition? #t))
    'left))
 
 (define-syntax #%ref
