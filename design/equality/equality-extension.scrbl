@@ -130,8 +130,8 @@ This could be done using a generic interface resembling the existing @code{gen:e
 A generic interface specifying a key function would resemble:
 
 @codeblock{
-  (define-generics comparable
-    (key comparable))
+  (define-generics equatable
+    (key equatable))
 }
 
 That is, users would need to implement a single unary method, @code{key}. By doing so, they gain all of the machinery of hashing and recursive comparisons for free, by virtue of delegating to an existing solution among the key types.
@@ -149,15 +149,15 @@ Note that once a definition of equality has been provided for a user-defined typ
 
 @subsubsection{Default Equality for User-defined Types}
 
-In case @code{gen:comparable} is not implemented, then there are two options to consider:
+In case @code{gen:equatable} is not implemented, then there are two options to consider:
 
 A. Assume a default key function that maps to a vector containing the fields of the type in a particular order. This would mean that every new type that isn't "opaque" becomes a key type.
 
-B. Assume that the new type is not comparable, so that attempting @code{a = b} is an error by default, assuming either @code{a} or @code{b} is an incomparable type of this kind.
+B. Assume that the new type is not equatable, so that attempting @code{a = b} is an error by default, assuming either @code{a} or @code{b} is an incomparable type of this kind.
 
 @subsubsection{Recommendation}
 
-For extending key types to include user-defined types via @code{gen:comparable}, options are:
+For extending key types to include user-defined types via @code{gen:equatable}, options are:
 
 A. Use a @code{key} method, exclusively.
 
@@ -203,7 +203,7 @@ With this approach, the properties of this extended hash function @${H'} (such a
 
 While the key types may always be extended to new user-defined types, often (and perhaps more commonly), users need a definition of equality on the fly, either for a custom type or even a key type.
 
-Such definitions of equality could either be temporary extensions of the key types to encapsulate instances of new types that do not have a definition of equality (i.e. where @code{gen:comparable} isn't implemented), or simply a specialization of the equality relation to a coarser version of itself (e.g. comparing strings in a case-insensitive way, for which the key function @code{string-upcase} or @code{string-downcase} may be used).
+Such definitions of equality could either be temporary extensions of the key types to encapsulate instances of new types that do not have a definition of equality (i.e. where @code{gen:equatable} isn't implemented), or simply a specialization of the equality relation to a coarser version of itself (e.g. comparing strings in a case-insensitive way, for which the key function @code{string-upcase} or @code{string-downcase} may be used).
 
 One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. @code{egal?}) that delegates to each of these in a disjoint way. But in practice we may desire a @emph{different} definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on @emph{other} types (for instance, comparing two strings by their @emph{length})@my-note{Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion document on "Primitive Equality Predicates."}. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
 
