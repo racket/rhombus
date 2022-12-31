@@ -159,15 +159,15 @@ B. Assume that the new type is not comparable, so that attempting @code{a = b} i
 
 For extending key types to include user-defined types via @code{gen:comparable}, options are:
 
-A. Use a key method, exclusively
+A. Use a @code{key} method, exclusively.
 
-B. Use a (comparator, hash, hash2) interface, exclusively
+B. Use a @code{(comparator, hash, hash2)} interface, exclusively.
 
-C. Support the user providing either a key method or (comparator, hash, hash2) implementation (but not both).
+C. Support the user providing either a @code{key} method or @code{(comparator, hash, hash2)} implementation (but not both).
 
 This proposal recommends (A) here due to the various benefits pointed out above, and also recommends against (C) for the following additional reasons:
 
-1. Supporting both would be worthwhile out of some known necessity, but otherwise, the (comparator, hash, hash2) interface represents complexity -- both for writers as well as readers of the language. It also increases the size of the language and the consequent burden on maintainers to support two different ways of doing the same thing, and which come with dramatically different guarantees.
+1. Supporting both would be worthwhile out of some known necessity, but otherwise, the @code{(comparator, hash, hash2)} interface represents complexity -- both for writers as well as readers of the language. It also increases the size of the language and the consequent burden on maintainers to support two different ways of doing the same thing, and which come with dramatically different guarantees.
 
 2. If a comparator is truly needed in some cases, unless these cases are common, it may be worth considering "out of band" remedies, such as providing a type-specific equality predicate independent of generic equality predicates, rather than bloat the primary interface in order to support fringe cases.
 
@@ -341,10 +341,9 @@ For instance, currently, @code{hash-union} can union across different equality r
 
 Proposed handling, either:
 
-@itemlist[
-@item{A. @emph{Union} could be defined as "equal under any key" and @emph{intersection} could be defined as "equal under all keys."}
-@item{B. Or we don't allow it.}
-]
+A. @emph{Union} could be defined as "equal under any key" and @emph{intersection} could be defined as "equal under all keys."
+
+B. Or we don't allow it.
 
 @section[#:tag "appendix-b"]{Appendix B: Case Breakdown for Performance Analysis of Equality Comparison}
 
