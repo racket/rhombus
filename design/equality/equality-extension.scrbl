@@ -101,7 +101,7 @@ Thus, incomparable values become comparable for equality by the addition of new 
 
 A language like Racket has types of arbitrary size including hashes, lists, strings, and numbers, and empirically, these can be composed to express a variety of comparisons. Additionally, extensibility via generic interfaces allows key functions to be implemented as generic methods having local access to information for opaque types, allowing those to be compared as well.
 
-Appendix C provides a straightforward construction of a function producing a unique ground representative for many common types.
+@seclink["appendix-c"]{Appendix C} provides a straightforward construction of a function producing a unique ground representative for many common types.
 
 @subsection{Primitive Equality Predicate}
 
@@ -226,7 +226,7 @@ There are four broad aspects of the proposed scheme that could be optimized.
 
 Of these, the first two are aspects of the two-level scheme, while the third is an aspect of the primitive equality predicate (e.g. the implementation of @code{egal?}). The fourth is an aspect common to the proposed scheme and existing ways of doing it.
 
-Some criteria on which performance of these could be judged are collected in Appendix B.
+Some criteria on which performance of these could be judged are collected in @seclink["appendix-b"]{Appendix B}.
 
 @subsubsection{Computing the Ground Representative}
 
@@ -346,7 +346,7 @@ Proposed handling, either:
 @item{B. Or we don't allow it.}
 ]
 
-@section{Appendix B: Case Breakdown for Performance Analysis of Equality Comparison}
+@section[#:tag "appendix-b"]{Appendix B: Case Breakdown for Performance Analysis of Equality Comparison}
 
 In designing for, or gauging, the performance of equality comparison on arbitrary values with and without an ad hoc key function being specified, it may be useful to employ these cases and see how performance is affected when, for inputs large and small:
 
@@ -361,7 +361,7 @@ With the ad hoc key function and the input size multipliers, this is a 16-row gr
 
 The same analysis may be done for hash computation, as well.
 
-@section{Appendix C: Regarding the Completeness of the System}
+@section[#:tag "appendix-c"]{Appendix C: Regarding the Completeness of the System}
 
 Assume that pairs (and lists) and vectors are key types. Let @${I(v)} signify a unique identifier in the language for the value @${v}, let @${(\ldots)} signify a pair or list, let @${t_{i}} signify a type tag in a disjoint union type, and let @${[v_{i}]} signify a vector with components @${v_{i}}. Then, for common types, @${I} may be constructed as:
 
