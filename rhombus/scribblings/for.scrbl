@@ -5,10 +5,13 @@
 
 @title(~tag: "for"){Iteration}
 
-Rhombus supports a proper implementation of tail-call handling (i.e.,
-tail calls do not extend the continuation), so looping can be written as
-a recursive function. Nevertheless, a looping construct is convenient
-and useful for writing many kinds of iterations.
+Many simple forms of iteration can be expressed through repetitions. For
+other cases. Rhombus supports a proper implementation of tail-call
+handling (i.e., tail calls do not extend the continuation), so looping
+can be written as a recursive function. Still, a looping construct is
+convenient and useful for writing iterations that are not simple enough
+for repetitions but also do not need the full expressiveness of
+functions.
 
 The @rhombus(for) form supports iteration over @deftech{sequences},
 which includes lists, arrays, and maps. In the body of a @rhombus(for)

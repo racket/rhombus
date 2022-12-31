@@ -17,6 +17,7 @@
 @include_section("list.scrbl")
 @include_section("map.scrbl")
 @include_section("set.scrbl")
+@include_section("repetition.scrbl")
 @include_section("for.scrbl")
 @include_section("more-arguments.scrbl")
 @include_section("syntax.scrbl")

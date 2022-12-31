@@ -207,7 +207,7 @@
         (define use-depth (+ depth (syntax-e #'rep-info.use-depth)))
         (unless (= use-depth want-depth)
           (raise-syntax-error #f
-                              "used with wrong ellipsis depth"
+                              "used with wrong repetition depth"
                               #'rep-info.name
                               #f
                               null

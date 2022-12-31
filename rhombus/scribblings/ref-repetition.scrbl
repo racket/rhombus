@@ -12,6 +12,74 @@ expressions appear in expression positions and bindings in binding
 positions). For example, a repetition can be used at the end of a list
 with @rhombus(...) after it.
 
+One way to create a repetition is through a binding that uses @(dots).
+Some expression-like forms are also repetition forms, creating new
+repetitions from one or more repetitions. For example, if @rhombus(x) is
+bound as a repetition, then @rhombus(x+1) can be used as a repetition to
+add @rhombus(1) to each element of @rhombus(x):
+
+@examples(
+  ~label: #false,
+  def [x, ...] = [1, 2, 3],
+  [x+1, ...]
+)
+
+When @rhombus(+) is used as a repetition operator, then it expects a
+repetition for both arguments, but a literal value like @rhombus(1)
+works as a repetition via @rhombus(#{#%literal}).
+
+A repetition has a @italic{depth}, and each repetition context expects a
+repetition of a particular depth, typically based on how many
+@(dots_expr)s appear after the repetition context. In the above example,
+@rhombus(x) is bound as a repetition of depth 1, and it is used in a
+context of depth 1, since there is one @dots_expr after @rhombus(x+1) to
+form the list. Using multiple @dots in a bininding context typically
+binds at a greater depth, as in this example that binds and uses
+@rhombus(z) at depth 2:
+
+@examples(
+  ~label: #false,
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]],
+  [[z+1, ...], ...]
+)
+
+More precisely, in this example, the outer list construction expects a
+repetition of depth 1 before its @dots_expr, and @rhombus([z+1, ...])
+creates a repetition of depth 1. The @rhombus([z+1, ...]) repetition is
+depth 1, because a list repetition subtracts one from the depth of a
+repetition before (another) @dots_expr, and @rhombus(z+1) has depth 2
+due to the @rhombus(z) binding.
+
+When a repetition form combines multiple repetitions, then unless
+documented otherwise, elements at the same repetition depth are drawn
+from the repetitions in parallel.
+
+@examples(
+  ~label: #false,
+  def [x, ...] = [1, 2, 3],
+  def [y, ...] = ["a", "b", "c"],
+  [[x, y], ...]
+)
+
+When combined repetitions are at different depths, the shallower
+repetition is repeated for outer layers of the deeper repetition. That's
+why the @rhombus(x+1) and @rhombus(z+1) examples above work: a literal
+@rhombus(1) works as repetition of depth 0, but it is repeated as needed
+to match the @rhombus(x) repetition of depth 1 or the @rhombus(z)
+repetition of depth 2. A repetition of depth 2 can be similarly repeated
+to match a repetition of depth 2:
+
+@examples(
+  ~label: #false,
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5, 6]],
+  def [y, ...] = [10, 100, 1000],
+  [[z+y, ...], ...]
+)
+
+In other words, unless otherwise documented, the depth of a repetition
+formed by combining repetitions is the maximum of the depths of the
+combined repetitions, so @rhombus(z+y) is a repetition of depth 2.
+
 @doc(
   bind.macro '...',
   expr.macro '...'

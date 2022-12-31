@@ -93,31 +93,13 @@ Metadata for a syntax object can include a source location and the raw
   '(1 + $x) ...'
 )
 
- When multiple escapes appear in the term before @dots, the
- repetitions are drawn in parallel, assuming that they are at the
- same repeition depth, and they must supply the same number of
- values.
-
-@examples(
-  def [x, ...] = [1, 2, 3],
-  def [y, ...] = ["a", "b", "c"],
-  '($y +& $x) ...'
-)
-
- The term before a @dots can itself use @dots,
- in which case the inner @dots must be preceded by a
- repetition at depth 2, and so on. If a @dots is preceded
- by repetitions at different depths, the shallower repetition is
- be repeated for outer layers of the deeper repetion.
-
-@examples(
-  def [[x, ...], ...] = [[1, 2, 3], [4, 5, 6]],
-  def [y, ...] = ["a", "b", "c"],
-  '[($x + $y) ..., ...]'
-)
+ Multiple escapes can appear in the term before @dots, in which the
+ repetitions are drawn in parallel (assuming that they are at the same
+ repetition depth, repetition @dots can be nested around escapes, and
+ so on, following the normal rules of @tech{repetitions}.
 
  Quotes work as a repetition to construct multiple syntax objects within
- another kind of repetition context, such as forming a list. Alls escapes
+ another kind of repetition context, such as forming a list. All escapes
  must then be repetitions, instead of just expressions, and the depth of
  the repetition is the amount of repetition depth left over from the
  deepest escape.
