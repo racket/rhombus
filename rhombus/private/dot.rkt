@@ -9,6 +9,8 @@
          "expression.rkt"
          "static-info.rkt"
          "dot-provider-key.rkt"
+         "repetition.rkt"
+         "compound-repetition.rkt"
          "realm.rkt"
          "parse.rkt"
          "assign.rkt")
@@ -54,52 +56,96 @@
              #:attr id #'ref-id.val)))
 
 (define-for-syntax (make-|.| more-static?)
-  (expression-infix-operator
+  (make-expression+repetition-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
    'macro
+   ;; expression
    (lambda (form1 tail)
-     (syntax-parse tail
-       [(dot::operator field:identifier . tail)
-        (define (generic)
-          (if more-static?
-              (raise-syntax-error #f
-                                  "static operator not supported for left-hand side"
-                                  #'dot.name
-                                  #f
-                                  (list form1))
-              (syntax-parse #'tail
-                #:datum-literals (op)
-                #:literals (:=)
-                [((op :=) . tail)
-                 #:with e::infix-op+expression+tail #'(:= . tail)
-                 (values #`(dot-assign-by-name #,form1 'field e.parsed)
-                         #'e.tail)]
-                [else
-                 (values #`(dot-lookup-by-name #,form1 'field)
-                         #'tail)])))
+     (parse-dot-provider
+      tail
+      (lambda (dot dot-name field-id tail)
         (let ([form1 (rhombus-local-expand form1)])
-          (syntax-parse form1
-            [dp::dot-provider
-             (define p (syntax-local-value* (in-dot-provider-space #'dp.id) dot-provider-ref))
-             (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space #'dp.id)))
-             (if (dot-provider-more-static? p)
-                 ((dot-provider-handler p) form1 #'dot #'field
-                                           #'tail
-                                           more-static?
-                                           values generic)
-                 (let ([e ((dot-provider-handler p) form1 #'dot #'field)])
-                   (if e
-                       (values e #'tail)
-                       (generic))))]
-            [_ (generic)]))]
-       [(dot::operator other . tail)
-        (raise-syntax-error #f
-                            "expected an identifier for a field name, but found something else"
-                            #'dot.name
-                            #f
-                            (list #'other))]))
+          (define dp-id
+            (syntax-parse form1
+              [dp::dot-provider #'dp.id]
+              [_ #f]))
+          (build-dot-access form1 dp-id
+                            more-static? #:repetition? #f
+                            dot dot-name field-id tail)))))
+   ;; repetition
+   (lambda (form1 tail)
+     (parse-dot-provider
+      tail
+      (lambda (dot dot-name field-id tail)
+        (syntax-parse form1
+          [rep::repetition-info
+           (define dp-id
+             (or (repetition-static-info-lookup #'rep.element-static-infos #'#%dot-provider)
+                 (and (zero? (syntax-e #'rep.bind-depth))
+                      (identifier? #'rep.seq-expr)
+                      (syntax-local-value* (in-dot-provider-space #'rep.seq-expr) dot-provider-ref))))
+           (values
+            (build-compound-repetition
+             dot (list form1)
+             (lambda (form1)
+               (define-values (expr new-tail)
+                 (build-dot-access form1 dp-id
+                                   more-static? #:repetition? #t
+                                   dot dot-name field-id tail))
+               (unless (eq? new-tail tail) (error "internal error: expected same tail"))
+               (values expr
+                       (extract-static-infos expr))))
+            tail)]))))
    'left))
+
+(define-for-syntax (parse-dot-provider tail finish)
+  (syntax-parse tail
+    [(dot::operator field:identifier . tail)
+     (finish #'dot #'dot.name #'field #'tail)]
+    [(dot::operator other . tail)
+     (raise-syntax-error #f
+                         "expected an identifier for a field name, but found something else"
+                         #'dot.name
+                         #f
+                         (list #'other))]))
+
+(define-for-syntax (build-dot-access form1 dp-id
+                                     more-static? #:repetition? repetition?
+                                     dot dot-name field-id tail)
+  (define (generic)
+    (if more-static?
+        (raise-syntax-error #f
+                            "static operator not supported for left-hand side"
+                            dot-name
+                            #f
+                            (list form1))
+        (syntax-parse tail
+          #:datum-literals (op)
+          #:literals (:=)
+          [((op :=) . tail)
+           #:when (not repetition?)
+           #:with e::infix-op+expression+tail #'(:= . tail)
+           (values #`(dot-assign-by-name #,form1 '#,field-id e.parsed)
+                   #'e.tail)]
+          [else
+           (values #`(dot-lookup-by-name #,form1 '#,field-id)
+                   tail)])))
+  (cond
+    [dp-id
+     (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))
+     (unless p (raise-syntax-error #f "not bound as a dot provider" (in-dot-provider-space dp-id)))
+     (if (dot-provider-more-static? p)
+         ((dot-provider-handler p) form1 dot field-id
+                                   tail
+                                   more-static?
+                                   values generic)
+         (let ([e ((dot-provider-handler p) form1 dot field-id)])
+           (if e
+               (values e tail)
+               (generic))))]
+    [else (generic)]))
+
 
 (define-syntax |.| (make-|.| #f))
 

@@ -188,7 +188,7 @@
   (define (repetition-static-info-lookup element-static-infos key)
     (if (identifier? element-static-infos)
         (syntax-local-static-info element-static-infos key)
-        (static-info-lookup key element-static-infos))))
+        (static-info-lookup element-static-infos key))))
 
 (define-for-syntax repetition-as-list
   (case-lambda

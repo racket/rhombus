@@ -1,6 +1,7 @@
 #lang rhombus
 import: "check.rhm" open
 
+// syntax-object templates with repetitions
 begin:
   def [x, ...] = [1, 2, 3]
   def [[y, ...], ...] = [["a", "b", "c"], ["A", "B", "C"]]
@@ -26,6 +27,15 @@ begin:
     [w, ...]
     [["A", "B", "C"]]
 
+// syntax objects as repetitions
+begin:
+  def [x, ...] = ['1', '2', '3']
+  check:
+    ~print
+    ['$x+1', ...]
+    ['1+1', '2+1', '3+1']
+
+// operator uses as reptitions
 begin:
   def [x, ...] = [1, 4, 3]
   def four = 4
@@ -40,6 +50,7 @@ begin:
     [x %% four, ...]
     [[1, 4], [4, 4], [3, 4]]
 
+// function calls as reptitions
 begin:
   def [x, ...] = [1, 2, 3]
   check:
@@ -55,6 +66,7 @@ begin:
     [f(x, x, ...), ...]
     [[1, 1, 2, 3], [2, 1, 2, 3], [3, 1, 2, 3]]
 
+// function calls with rest arguments as repetitions
 begin:
   def [x, ...] = [[1], [2, 3]]
   check:
@@ -62,6 +74,7 @@ begin:
     [f(&x), ...]
     [[1], [2, 3]]
 
+// function calls with repetition arguments as repetitions
 begin:
   def [[x, ...], ...] = [[1, 2, 3], [4, 5]]
   check:
@@ -73,6 +86,7 @@ begin:
     [f(x+1, ...), ...]
     [[2, 3, 4], [5, 6]]
 
+// function calls with keyword arguments as repetitions
 begin:
   def [x, ...] = [{keyword'~a': "a"}, {keyword'~b': "b"}]
   fun f(~a: a = #false, ~b: b = #false): [a, b]
@@ -80,6 +94,7 @@ begin:
     [f(~& x), ...]
     [["a", #false], [#false, "b"]]
 
+// static information through a constructor call as repetition
 check:
   use_static
   class Posn(x, y)
@@ -87,6 +102,7 @@ check:
   [Posn(x, x), ...][1].x
   2
 
+// map- and set-building `{}` as a repetition
 begin:
   def [x, ...] = [1, 2, 3]
   check:
@@ -121,6 +137,7 @@ begin:
     m[1][2]
     #true
 
+// list-builiding `[]` as a repetition
 begin:
   def [x, ...] = [0, 10, 100]
   check:
@@ -134,6 +151,18 @@ begin:
     [[(z), ...], ...]
     [[(0), (10), 100], [(333)]]
 
+// reference `[]` as a repetition
+begin:
+  use_static
+  class Posn(x, y)
+  def a :: List.of(Posn):
+    [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
+  def [x, ...] = [3, 2, 1]
+  check:
+    [a[x], ...][0].x
+    4
+
+// dotted names as repetitions
 begin:
   def [i, ...] = [1, 2, 3]
   check:
@@ -155,12 +184,16 @@ begin:
     [[i, M.pi_ish], ...]
     [[1, 3], [2, 3], [3, 3]]
 
+// `.` as a repetition
 begin:
   use_static
   class Posn(x, y)
-  def a :: List.of(Posn):
-    [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
-  def [x, ...] = [3, 2, 1]
+  def [p :: Posn, ...] = [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
   check:
-    [a[x], ...][0].x
-    4
+    [p.x, ...]
+    [1, 2, 3, 4]
+  class Square(tl :: Posn, s :: Integer)
+  def [s :: Square, ...] = [Square(Posn(0, 0), 10)]
+  check:
+    [s.tl, ...][0].x
+    0
