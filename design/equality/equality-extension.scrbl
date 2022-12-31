@@ -49,7 +49,7 @@ By unifying the equality interface presented by the language in terms of primiti
 
 @section{How?}
 
-@bold{Note}: If at any point the use of a term isn't clear, refer to the @secref{Glossary}.
+@bold{Note}: If at any point the use of a term isn't clear, refer to the @seclink["Glossary"]{Glossary}.
 
 The proposed scheme has the following components:
 
@@ -195,7 +195,7 @@ It would be better if we could find a way to extend the domain of the built-in h
 
 Towards this goal, we observe that for a given value @${v}, assuming we have a type identifier that uniquely identifies its type, and as the chosen ground representative uniquely identifies a value within that type, the pair of these values constitutes a unique representative in the language for @${v} – a globally unique or lossless identifier.
 
-So one way in which we could extend the built-in hash function @${H} to a new value @${v} not in its domain, is to construct the pair made up of the type of the value (which we could signify by @${τ(v)}) + its ground representative (@${ρ(v)}), and then define the hash of @${v} to be the hash of this synthesized value, i.e. @${H'(v) = H((τ(v), ρ(v)))} (a kind of "macro," as it extends the built-in scheme to new values by defining it in terms of old values). This value can now be computed using the built-in hash function @${H}, as the pair so constructed is a ground value (assuming, of course, that pairs are a key type).
+So one way in which we could extend the built-in hash function @${H} to a new value @${v} not in its domain, is to construct the pair made up of the type of the value (which we could signify by @${τ(v)}) + its ground representative (@${ρ(v)}), and then define the hash of @${v} to be the hash of this synthesized value, i.e. @${H'(v) := H((τ(v), ρ(v)))} (a kind of "macro," as it extends the built-in scheme to new values by defining it in terms of old values). This value can now be computed using the built-in hash function @${H}, as the pair so constructed is a ground value (assuming, of course, that pairs are a key type).
 
 With this approach, the properties of this extended hash function @${H'} (such as uniformity, efficiency, and diffusion) reduce to those of the built-in hash function @${H} on key types, since the implementation itself is a simple facade on the primitive hashing scheme. And in particular, double-hashing and any other techniques employed in @${H} would not need to be extended beyond the key types.
 
@@ -205,11 +205,9 @@ While the key types may always be extended to new user-defined types, often (and
 
 Such definitions of equality could either be temporary extensions of the key types to encapsulate instances of new types that do not have a definition of equality (i.e. where @code{gen:comparable} isn't implemented), or simply a specialization of the equality relation to a coarser version of itself (e.g. comparing strings in a case-insensitive way, for which the key function @code{string-upcase} or @code{string-downcase} may be used).
 
-One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. @code{egal?}) that delegates to each of these in a disjoint way. But in practice we may desire a @emph{different} definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on @emph{other} types (for instance, comparing two strings by their @emph{length})[1]. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
+One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. @code{egal?}) that delegates to each of these in a disjoint way. But in practice we may desire a @emph{different} definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on @emph{other} types (for instance, comparing two strings by their @emph{length})@my-note{Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion document on "Primitive Equality Predicates."}. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
 
 The way to customize the definition of equality in such cases is the same as usual, i.e. a key function – any unary, single-valued function mapping to a key type. The practical implications are that all APIs provided built-in by the language or even those authored by third parties should support a key argument if their user-facing purpose leverages a notion of equality.
-
-[1] Note that the latter case too is just a "coarser" definition of equality like the former, by the requirement of "well-defined specializations of equality" in the companion document on "Primitive Equality Predicates."
 
 @make-my-note[]
 
@@ -260,17 +258,17 @@ Memoization (#1), or computation at construction time (#5) are applicable here -
 
 @subsubsection{Primitive Predicate}
 
-6. *Hash preverification* -- Since hash values can be memoized but comparison results cannot (see #1), and since numeric comparison is efficient (as opposed to, say, linear or log-linear comparison of collection-like structures), always compare the hash values first, and if they are equal, proceed with the equality comparison. Otherwise immediately return false.
+6. @emph{Hash preverification} -- Since hash values can be memoized but comparison results cannot (see #1), and since numeric comparison is efficient (as opposed to, say, linear or log-linear comparison of collection-like structures), always compare the hash values first, and if they are equal, proceed with the equality comparison. Otherwise immediately return false.
 
-This optimization means that every equality comparison returning false is effectively a constant time operation. This may be the *majority of cases*.
+This optimization means that every equality comparison returning false is effectively a constant time operation. This may be the @emph{majority of cases}.
 
-This optimization is only possible since the proposed scheme guarantees that equal values have equal hashes -- a guarantee that we do not have with the existing way of extending equality to user-defined types – see `Extending the Key Types`_.
+This optimization is only possible since the proposed scheme guarantees that equal values have equal hashes -- a guarantee that we do not have with the existing way of extending equality to user-defined types – see @seclink["Extending_the_Key_Types"]{Extending the Key Types}.
 
-7. *Native comparison of common representatives* -- The binary comparison of vectors (the most common representative for user-defined types, and the default for transparent struct types) under the primitive predicate could have an optimized, perhaps native, implementation.
+7. @emph{Native comparison of common representatives} -- The binary comparison of vectors (the most common representative for user-defined types, and the default for transparent struct types) under the primitive predicate could have an optimized, perhaps native, implementation.
 
-8. *Meh-less not meh-mo* -- Whenever an equality check returns true, the memoized representatives for each participant in the comparison could be merged, to free memory.
+8. @emph{Meh-less not meh-mo} -- Whenever an equality check returns true, the memoized representatives for each participant in the comparison could be merged, to free memory.
 
-9. *Equivalence class construction* -- Naively, in cases where the equality predicate would return true, the data structures being compared must always be fully traversed. But in certain cases (perhaps cases where the traversal could be assumed to be expensive), values that have already been found to be equal could be stored in hashes containing sets of equal values -- known equivalence classes, essentially -- and then the equality comparison could reduce to checking for membership of all values in a common equivalence class. The equivalence classes could be keyed in the hash by all members. A positive result here allows us to return a positive result for the comparison, while a negative result requires traversal of the data structures, as usual, with a positive result of the equality comparison then resulting in the values being added to a common equivalence class.
+9. @emph{Equivalence class construction} -- Naively, in cases where the equality predicate would return true, the data structures being compared must always be fully traversed. But in certain cases (perhaps cases where the traversal could be assumed to be expensive), values that have already been found to be equal could be stored in hashes containing sets of equal values -- known equivalence classes, essentially -- and then the equality comparison could reduce to checking for membership of all values in a common equivalence class. The equivalence classes could be keyed in the hash by all members. A positive result here allows us to return a positive result for the comparison, while a negative result requires traversal of the data structures, as usual, with a positive result of the equality comparison then resulting in the values being added to a common equivalence class.
 
 This optimization is only possible because the proposed scheme guarantees symmetry and transitivity of equality -- guarantees we do not have with the existing way of extending equality to user-defined types.
 
@@ -288,44 +286,52 @@ Note that these optimizations are not necessarily relevant for extended key type
 
 In the proposed scheme, at a high level, there are three sets of interest, @${K}, @${K+} and @${T}, and there are functions that map between them. The following terms name different aspects of the scheme.
 
-* **The set of all types, T**: This is the set of all types either defined or definable in a language. The elements of this set are *types* rather than values.
-* **Key type**: A built-in type provided by the language, which is in the domain of the primitive equality predicate @${=}. The set of key types will be denoted @${K}. The elements of this set are *types* rather than values.
-* **Extended key types**: The set of key types augmented with user-defined types that have defined key functions. We will denote this set by @${K+} and it is a superset of @${K}.
-* **The set of all values, V**: This is the set of all values that could be constructed in the language.
-* **Extent of a type**: For a type @${t ∈ T}, the "extent" of the type is the set of all values that are instances of that type. We will denote this @${ε(t)}. For convenience, we may also denote the extent of a set of types using the same notation, and for instance, @${ε(T) = V}. That is, the extent of the set of all types is the set of all values (of any type).
-* **Type of a value**: For a value @${v}, we will denote its type as @${τ(v)}. @${τ(v) ∈ T}.
-* **Key function, χ**: A unary, single-valued function @${χ} mapping a value of any type to a value in @${ε(K+)}, i.e. @${χ : ε(T) → ε(K+)}. Key functions either (1) extend the equality predicate to new types, or (2) specialize the equality predicate to a coarser definition.
-* **Key chain, ρ**: The sequence of key functions mapping a value in @${ε(K+)} to a value in @${ε(K)}, i.e. @${χ₁, χ₂, ..., χn} such that the composed function @${ρ = χn . ... . χ₁ : ε(T) → ε(K)}. In some cases it may be useful to think about the members or "links" of a key chain as *types*, so that for instance, a key chain may look something like (Teacher, Person, Vector). For convenience, we will also use the term to refer to the corresponding structure on individual values.
-* **Immediate representative**: A value @${r ∈ ε(K+)} that is the result of mapping an arbitrary value @${v ∈ ε(T)} under a key function. We say that @${r} is the immediate representative of @${v}.
-* **Ground value**: Any value @${v ∈ ε(K)}, i.e. an instance of a key type.
-* **Ground representative**: A ground value @${k ∈ ε(K)} that is the result of mapping an arbitrary value @${v ∈ ε(T)} under its key chain, i.e. @${ρ(v) = k}. We say that @${k} is the ground representative of @${v}.
+@itemlist[
+@item{@bold{The set of all types, @${T}}: This is the set of all types either defined or definable in a language. The elements of this set are @emph{types} rather than values.}
+@item{@bold{Key type}: A built-in type provided by the language, which is in the domain of the primitive equality predicate @${=}. The set of key types will be denoted @${K}. The elements of this set are @emph{types} rather than values.}
+@item{@bold{Extended key types}: The set of key types augmented with user-defined types that have defined key functions. We will denote this set by @${K+} and it is a superset of @${K}.}
+@item{@bold{The set of all values, @${V}}: This is the set of all values that could be constructed in the language.}
+@item{@bold{Extent of a type}: For a type @${t ∈ T}, the "extent" of the type is the set of all values that are instances of that type. We will denote this @${ε(t)}. For convenience, we may also denote the extent of a set of types using the same notation, and for instance, @${ε(T) = V}. That is, the extent of the set of all types is the set of all values (of any type).}
+@item{@bold{Type of a value}: For a value @${v}, we will denote its type as @${τ(v)}. @${τ(v) ∈ T}.}
+@item{@bold{Key function, @${χ}}: A unary, single-valued function @${χ} mapping a value of any type to a value in @${ε(K+)}, i.e. @${χ : ε(T) → ε(K+)}. Key functions either (1) extend the equality predicate to new types, or (2) specialize the equality predicate to a coarser definition.}
+@item{@bold{Key chain, @${ρ}}: The sequence of key functions mapping a value in @${ε(K+)} to a value in @${ε(K)}, i.e. @${χ_{1}, χ_{2}, ..., χ_{n}} such that the composed function @${ρ = χ_{n} . ... . χ_{1} : ε(T) → ε(K)}. In some cases it may be useful to think about the members or "links" of a key chain as @emph{types}, so that for instance, a key chain may look something like (Teacher, Person, Vector). For convenience, we will also use the term to refer to the corresponding structure on individual values.}
+@item{@bold{Immediate representative}: A value @${r ∈ ε(K+)} that is the result of mapping an arbitrary value @${v ∈ ε(T)} under a key function. We say that @${r} is the immediate representative of @${v}.}
+@item{@bold{Ground value}: Any value @${v ∈ ε(K)}, i.e. an instance of a key type.}
+@item{@bold{Ground representative}: A ground value @${k ∈ ε(K)} that is the result of mapping an arbitrary value @${v ∈ ε(T)} under its key chain, i.e. @${ρ(v) = k}. We say that @${k} is the ground representative of @${v}.}
+]
 
 @section{Prior Art}
 
-* `Generic Relations <https://docs.racket-lang.org/relation/index.html>`_
-* `Interconfection <https://docs.racket-lang.org/interconfection/index.html>`_
-* `Rebellion <https://docs.racket-lang.org/rebellion/index.html>`_
+@itemlist[
+@item{@hyperlink["https://docs.racket-lang.org/relation/index.html"]{Generic Relations}}
+@item{@hyperlink["https://docs.racket-lang.org/interconfection/index.html"]{Interconfection}}
+@item{@hyperlink["https://docs.racket-lang.org/rebellion/index.html"]{Rebellion}}
+]
 
 @section{Contributors}
 
-* Ross "Nia" Angle
-* Jack Firth
-* Matthew Flatt
-* Sid Kasivajhula
-* Alex Knauth
-* Sorawee Porncharoenwase
-* Jens Axel Søgaard
-* (among others -- see the references below)
+@itemlist[
+@item{Ross "Nia" Angle}
+@item{Jack Firth}
+@item{Matthew Flatt}
+@item{Sid Kasivajhula}
+@item{Alex Knauth}
+@item{Sorawee Porncharoenwase}
+@item{Jens Axel Søgaard}
+@item{(among others -- see the references below)}
+]
 
 @section{References}
 
-`RRFI [Draft]: Equality and Order Relations Interface <https://gist.github.com/countvajhula/bf4041e4ae5e2feb7ad4b9631e2cf734>`_ -- The predecessor of this document. In addition to relevant context, this document also contains a full listing of Racket APIs affected by this proposal.
+@itemlist[
+@item{@hyperlink["https://gist.github.com/countvajhula/bf4041e4ae5e2feb7ad4b9631e2cf734"]{RRFI [Draft]: Equality and Order Relations Interface} -- The predecessor of this document. In addition to relevant context, this document also contains a full listing of Racket APIs affected by this proposal.}
 
-Rhombus Discussion: `What do we do about equality? <https://github.com/racket/rhombus-prototype/issues/16>`_
+@item{Rhombus Discussion: @hyperlink["https://github.com/racket/rhombus-prototype/issues/16"]{What do we do about equality?}}
 
-Rhombus Discussion: `Generic order relations <https://github.com/racket/rhombus-prototype/issues/214>`_
+@item{Rhombus Discussion: @hyperlink["https://github.com/racket/rhombus-prototype/issues/214"]{Generic order relations}}
 
-Rhombus Discussion: `Rhombus bi-weekly virtual meeting <https://github.com/racket/rhombus-prototype/discussions/180>`_
+@item{Rhombus Discussion: @hyperlink["https://github.com/racket/rhombus-prototype/discussions/180"]{Rhombus bi-weekly virtual meeting}}
+]
 
 @section{Appendix A: Reasoning Under Differing Notions of Equality}
 
@@ -335,17 +341,21 @@ For instance, currently, @code{hash-union} can union across different equality r
 
 Proposed handling, either:
 
-A. *Union* could be defined as "equal under any key" and *intersection* could be defined as "equal under all keys."
-B. Or we don't allow it.
+@itemlist[
+@item{A. @emph{Union} could be defined as "equal under any key" and @emph{intersection} could be defined as "equal under all keys."}
+@item{B. Or we don't allow it.}
+]
 
 @section{Appendix B: Case Breakdown for Performance Analysis of Equality Comparison}
 
 In designing for, or gauging, the performance of equality comparison on arbitrary values with and without an ad hoc key function being specified, it may be useful to employ these cases and see how performance is affected when, for inputs large and small:
 
-1. The values are actually equal
-2. The values are very similar but still different
-3. The values are dramatically different but of the same type
-4. The values are of different types
+@itemlist[#:style 'ordered
+@item{The values are actually equal.}
+@item{The values are very similar but still different.}
+@item{The values are dramatically different but of the same type.}
+@item{The values are of different types.}
+]
 
 With the ad hoc key function and the input size multipliers, this is a 16-row grid, which could either (1) have 3 columns containing average case, best case, and worst case algorithmic performance, or (2) have benchmark results, or (3) both.
 
@@ -353,14 +363,14 @@ The same analysis may be done for hash computation, as well.
 
 @section{Appendix C: Regarding the Completeness of the System}
 
-Assume that pairs (and lists) and vectors are key types. Let @${I(v)} signify a unique identifier in the language for the value @${v}, let @${(...)} signify a pair or list, let @${tᵢ} signify a type tag in a disjoint union type, and let @${[vᵢ]} signify a vector with components @${vᵢ}. Then, for common types, @${I} may be constructed as:
+Assume that pairs (and lists) and vectors are key types. Let @${I(v)} signify a unique identifier in the language for the value @${v}, let @${(\ldots)} signify a pair or list, let @${t_{i}} signify a type tag in a disjoint union type, and let @${[v_{i}]} signify a vector with components @${v_{i}}. Then, for common types, @${I} may be constructed as:
 
 @$${
 I(v) =
 \begin{cases}
 v &\text{if } v ∈ K \\
-(T, [I(vᵢ)]) &\text{if } v \text{ is a product type} \\
-(T, tᵢ, I(\text{value}(v))) &\text{if } v \text{ is a sum type}
+(T, [I(v_{i})]) &\text{if } v \text{ is a product type} \\
+(T, t_{i}, I(\text{value}(v))) &\text{if } v \text{ is a sum type}
 \end{cases}
 }
 
