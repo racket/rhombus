@@ -31,7 +31,7 @@ This allows the language to provide a simple and robust means of extending the e
 
 2. The existing way of extending equality to user-defined types in Racket requires the user to specify a binary comparison predicate as well as implement part of the hash computation that will be used as a distinguishing key in data structures. There are also practical complications introduced in having to manage references for recursive equality and hash computation. In contrast, the present proposal requires the user to implement a single unary function, by doing which they gain all of the equality as well as hashing functionality.
 
-3. Existing equality-based APIs and data structures in the Racket ecosystem present many different means of customization to users -- sometimes a key function is expected, sometimes a comparator, sometimes there are parallel sets of interfaces, and other times customization isn't supported. The present proposal would replace all of these with just one way -- that is, the option to specify a key function.
+3. Existing equality-based APIs and data structures in the Racket ecosystem present many different means of customization to users -- sometimes a key function is expected, sometimes a comparator, sometimes there are parallel sets of interfaces, and at other times, customization isn't supported. The present proposal would replace all of these with just one way -- that is, the option to specify a key function.
 
 @subsection{Robustness}
 
@@ -61,7 +61,7 @@ The proposed scheme has the following components:
 @item{A means to map arbitrary values to key types for primitive comparison.}
 ]
 
-For (1), we will assume that the set of built-in types found in most programming languages are sufficient as the key types, but also suggest some criteria for sufficiency here.
+For (1), we will assume that the set of built-in types found in most programming languages are sufficient as the key types, and we describe some criteria for sufficiency in support of this assumption.
 
 For (2), we propose that @emph{any} primitive equality predicate in the language that needs to support extension leverage the proposed key system. The proposal takes no position on this choice, but employs @code{egal?} for the purposes of illustration.
 
@@ -121,7 +121,7 @@ This could be done using a generic interface resembling the existing @code{gen:e
 
 1. With a binary comparator, there are no correctness guarantees regarding the definition of equality provided for a particular type. Indeed, the definition could violate reflexivity (via @${a \ne a}), symmetry (via @${a = b} but @${b \ne a}), or transitivity (via @${a = b} and @${b = c} but @${a \ne c}), the three properties commonly taken to define valid equivalence relations. This could lead to surprising behavior as equality is broadly assumed to have these properties. With a key function, reflexivity, symmetry, and transitivity are implicitly guaranteed.
 
-2. A binary comparator is a familiar way to define equality, with both objects available for manual comparison. Though it is familiar, it is not as simple as one might expect. In addition to the two input arguments, the user must also manage another binary predicate to be used for any recursive comparisons that may be necessary. In contrast, a key function involves a single argument, and requires the user to select a representative value from the key types. This may be a less familiar way to define equality, but it is also objectively simpler, and does not require that the user manage a predicate for recursive comparison.
+2. A binary comparator is a familiar way to define equality, with both objects available for manual comparison. Though it is familiar, it is not as simple as one might expect. In addition to the two input arguments, the user must also manage another binary predicate to be used for any recursive comparisons that may be necessary. In contrast, a key function involves a single argument (the object itself), and requires the user to select a representative value from the key types. This may be a less familiar way to define equality, but it is also objectively simpler, and does not require that the user manage a predicate for recursive comparison.
 
 3. The Racket implementation of @code{gen:equal+hash} employs double hashing, a standard technique to resolve hash collisions. This means that users must implement not one but two hash functions, exposing the hashing mechanism to the user who may be ill-equipped to grapple with the technicalities of writing good hash functions. Not to mention, there is once again the need for users to manage hash procedures used in recursive hash computation. In contrast, with key functions, the hashing mechanism is completely hidden from the user.
 
@@ -169,7 +169,7 @@ This proposal recommends (A) here due to the various benefits pointed out above,
 
 1. Supporting both would be worthwhile out of some known necessity, but otherwise, the (comparator, hash, hash2) interface represents complexity -- both for writers as well as readers of the language. It also increases the size of the language and the consequent burden on maintainers to support two different ways of doing the same thing, and which come with dramatically different guarantees.
 
-2. If a comparator is truly needed in some cases, unless these cases are common, it may be worth considering an alternate "special case" channel rather than bloat the primary interface in order to support fringe cases.
+2. If a comparator is truly needed in some cases, unless these cases are common, it may be worth considering "out of band" remedies, such as providing a type-specific equality predicate independent of generic equality predicates, rather than bloat the primary interface in order to support fringe cases.
 
 @subsection{Hashing Scheme}
 
