@@ -111,9 +111,7 @@ The present proposal is a way to extend @emph{any} equality predicate. It leaves
 
 2. Of these primitive predicates, which ones should be made extensible via this scheme?
 
-We will use @code{egal?} (also known as @code{equal-always?}) for illustration purposes, as it is billed as "the finest equality predicate [a language should provide.]," and may be a good choice if a single primitive predicate is desired. See [1] for an implementation for Racket.
-
-[1] https://github.com/racket/racket/pull/4076
+We will use @code{egal?} (also known as @code{equal-always?}) for illustration purposes, as it is billed as "the finest equality predicate [a language should provide.]," and may be a good choice if a single primitive predicate is desired. See @hyperlink["https://github.com/racket/racket/pull/4076"]{WIP: Add equal-always?} for an implementation for Racket.
 
 @subsection{Extending the Key Types}
 
@@ -131,23 +129,23 @@ This could be done using a generic interface resembling the existing @code{gen:e
 
 A generic interface specifying a key function would resemble:
 
-::
-
+@codeblock{
   (define-generics comparable
     (key comparable))
+}
 
 That is, users would need to implement a single unary method, @code{key}. By doing so, they gain all of the machinery of hashing and recursive comparisons for free, by virtue of delegating to an existing solution among the key types.
 
 The existing @code{gen:equal+hash} interface is reproduced below, for comparison.
 
-::
-
+@codeblock{
   (define-generics equal+hash
     (equal-proc a b equal?-recur)
     (hash-proc a hash-recur)
     (hash2-proc a hash2-recur))
+}
 
-Note that once a definition of equality has been provided for a user-defined type, that type joins the key types. Ultimately, values in the language are compared for equality via key functions that may form arbitrarily long chains ("key chains") that terminate in the primitive key types.
+Note that once a definition of equality has been provided for a user-defined type, that type joins the key types. Ultimately, values in the language are compared for equality via key functions that may form arbitrarily long chains (@emph{key chains}) that terminate in the primitive key types.
 
 @subsubsection{Default Equality for User-defined Types}
 
@@ -179,11 +177,13 @@ This proposal recommends (A) here due to the various benefits pointed out above,
 
 Given an equality relation @${=}, a hash function @${h} should satisfy:
 
-@${a = b ⇒ h(a) = h(b)}
+@$${a = b ⇒ h(a) = h(b)}
 
-Conversely, @${\text{not}(h(a) = h(b)) ⇒ \text{not}(a = b)}
+Conversely,
 
-Additional desirable qualities of the hashing scheme include *uniformity* (resulting hash values should occur equally often across all inputs), *efficiency* (in space and time), *diffusion* (differential changes in the input should result in unpredictable changes in the output) and more – e.g. see `Hash function <https://en.wikipedia.org/wiki/Hash_function>`__.
+@$${\text{not}(h(a) = h(b)) ⇒ \text{not}(a = b)}
+
+Additional desirable qualities of the hashing scheme include @emph{uniformity} (resulting hash values should occur equally often across all inputs), @emph{efficiency} (in space and time), @emph{diffusion} (differential changes in the input should result in unpredictable changes in the output) and more – e.g. see @hyperlink["https://en.wikipedia.org/wiki/Hash_function"]{Hash function}.
 
 @subsubsection{Extending Built-in Hashing to User-Defined Types}
 
@@ -205,7 +205,7 @@ While the key types may always be extended to new user-defined types, often (and
 
 Such definitions of equality could either be temporary extensions of the key types to encapsulate instances of new types that do not have a definition of equality (i.e. where @code{gen:comparable} isn't implemented), or simply a specialization of the equality relation to a coarser version of itself (e.g. comparing strings in a case-insensitive way, for which the key function @code{string-upcase} or @code{string-downcase} may be used).
 
-One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. @code{egal?}) that delegates to each of these in a disjoint way. But in practice we may desire a *different* definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on *other* types (for instance, comparing two strings by their *length*)[1]. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
+One way to think about this is that each key type represents a definition of equality, and there is also a global definition of equality (e.g. @code{egal?}) that delegates to each of these in a disjoint way. But in practice we may desire a @emph{different} definition for any one of these key types than the default one. This may be a coarser definition (e.g. case insensitive comparison, for strings), or even one that leverages the definition of equality on @emph{other} types (for instance, comparing two strings by their @emph{length})[1]. It is for these (very common) cases that we need to provide the ability to customize the definition of equality in any setting where a notion of equality is presumed.
 
 The way to customize the definition of equality in such cases is the same as usual, i.e. a key function – any unary, single-valued function mapping to a key type. The practical implications are that all APIs provided built-in by the language or even those authored by third parties should support a key argument if their user-facing purpose leverages a notion of equality.
 
@@ -219,10 +219,12 @@ The way to customize the definition of equality in such cases is the same as usu
 
 There are four broad aspects of the proposed scheme that could be optimized.
 
-1. Computing the ground representative.
-2. Computing the hash.
-3. Computing the result of equality comparison.
-4. Ad hoc equality comparison.
+@itemlist[#:style 'ordered
+@item{Computing the ground representative.}
+@item{Computing the hash.}
+@item{Computing the result of equality comparison.}
+@item{Ad hoc equality comparison.}
+]
 
 Of these, the first two are aspects of the two-level scheme, while the third is an aspect of the primitive equality predicate (e.g. the implementation of @code{egal?}). The fourth is an aspect common to the proposed scheme and existing ways of doing it.
 
@@ -230,27 +232,27 @@ Some criteria on which performance of these could be judged are collected in App
 
 @subsubsection{Computing the Ground Representative}
 
-1. *Memoization* -- As ground representatives and hashes don't change (for immutable values), both of these may be cached after being computed once. Doing so makes this scheme equivalent in performance to the built-in equality predicate and hashing scheme (after the initial computation).
+1. @emph{Memoization} -- As ground representatives and hashes don't change (for immutable values), both of these may be cached after being computed once. Doing so makes this scheme equivalent in performance to the built-in equality predicate and hashing scheme (after the initial computation).
 
-Note that memoization is not an option with a binary comparator instead of a key function. With comparators, memoizing the results of equality comparisons for @${n} values would need @${C(n,2)} (choosing pairs of elements) cached results before equality comparison on the set is always constant time. In contrast, with key functions, @${n} cached values would suffice to compute representatives in constant time, followed by @${C(k,2)} cached values on the set of key types K to ensure contant time comparisons as well – where K is a smaller set than the set of all types T and also allows reuse of the same memoized value across many different types (since, for example, a @code{teacher} type and a @code{student} type may both map to the same ground vector if these types happen to have the same field names). Although, it seems likely that memoization on binary comparisons is not feasible in either case.
+Note that memoization is not an option with a binary comparator instead of a key function. With comparators, memoizing the results of equality comparisons for @${n} values would need @${C(n,2)} (choosing pairs of elements) cached results before equality comparison on the set is always constant time. In contrast, with key functions, @${n} cached values would suffice to compute representatives in constant time, followed by @${C(k,2)} cached values on the set of key types @${K} to ensure contant time comparisons as well – where @${K} is a smaller set than the set of all types @${T} and also allows reuse of the same memoized value across many different types (since, for example, a @code{teacher} type and a @code{student} type may both map to the same ground vector if these types happen to have the same field names). Although, it seems likely that memoization on binary comparisons is not feasible in either case.
 
-A `weak hashtable <https://docs.racket-lang.org/reference/eval-model.html#%28tech._weak._reference%29>`__ could probably be used for the purposes of memoization.
+A @hyperlink["https://docs.racket-lang.org/reference/eval-model.html#%28tech._weak._reference%29"]{weak hashtable} could probably be used for the purposes of memoization.
 
-For mutable values, memoization is not applicable since the representative as well as (consequently) the hash may change. Options here include (1) avoid mapping altogether (in both ad hoc as well as key type cases) and just use reference equality (i.e. egal's usual handling here, and key function is just ignored), or (2) respect the key function and live with worse performance for mutable values, and of course, forbid the use of such values in cases where deterministic hashing is assumed (e.g. dictionaries and sets – though, this could be handled at the data structure level so that sets always insert immutable copies of mutable values, and check for membership on a synthesized immutable copy of mutable input).
+For mutable values, memoization is not applicable since the representative as well as (consequently) the hash may change. Options here include (1) avoid mapping altogether (in both ad hoc as well as key type cases) and just use reference equality (i.e. @code{egal?}'s usual handling here, and key function is just ignored), or (2) respect the key function and live with worse performance for mutable values, and of course, forbid the use of such values in cases where deterministic hashing is assumed (e.g. dictionaries and sets – though, this could be handled at the data structure level so that sets always insert immutable copies of mutable values, and check for membership on a synthesized immutable copy of mutable input).
 
 The latter option here would be more user friendly while still remaining consistent with @code{egal?} and hashing considerations. Mutable values would have poorer performance but that is a tradeoff made by the user.
 
-2. *Common representative optimization* -- The most common representative for equality of user-defined types (and the default choice for "transparent" struct types) would be a vector containing the component fields. This case could be optimized, perhaps by exposing an existing such representation present in the implementation of the struct type to avoid a duplicate memoized value, or by modifying the implementation to be vector-based to enable this confluence.
+2. @emph{Common representative optimization} -- The most common representative for equality of user-defined types (and the default choice for "transparent" struct types) would be a vector containing the component fields. This case could be optimized, perhaps by exposing an existing such representation present in the implementation of the struct type to avoid a duplicate memoized value, or by modifying the implementation to be vector-based to enable this confluence.
 
-3. *Lazy key computation* -- Instead of always constructing the representative (e.g. a vector) at once, in some (perhaps all) cases generate it lazily, one comparable component at a time. That way, equality comparison would not usually need to traverse the entire data structure before reaching a negative result (but still would, for a positive result).
+3. @emph{Lazy key computation} -- Instead of always constructing the representative (e.g. a vector) at once, in some (perhaps all) cases generate it lazily, one comparable component at a time. That way, equality comparison would not usually need to traverse the entire data structure before reaching a negative result (but still would, for a positive result).
 
 Note that this optimization is not immediately compatible with memoization (#1). But it may be possible to leverage them together if, for instance, partially generated representatives could be memoized.
 
 Additionally, doing it this way means that the actual ground representative here is not a simple vector (for instance) but a lazily generated sequence, meaning that such a sequence would need to be part of the key types in order for the primitive equality predicate to be able to use it.
 
-4. *No intermediate representations* -- For chained key functions, instead of generating the intermediate representations each time, employ a transducer so that only the final representation is constructed. This could also be combined with lazy generation of the key so that the transduced key computation is done lazily and generates only one representation.
+4. @emph{No intermediate representations} -- For chained key functions, instead of generating the intermediate representations each time, employ a transducer so that only the final representation is constructed. This could also be combined with lazy generation of the key so that the transduced key computation is done lazily and generates only one representation.
 
-5. *Construction-time metadata* -- As an alternative to memoization (#1), the key may be computed and stored at instance construction time.
+5. @emph{Construction-time metadata} -- As an alternative to memoization (#1), the key may be computed and stored at instance construction time.
 
 @subsubsection{Computing the Hash}
 
@@ -358,7 +360,7 @@ I(v) =
 \begin{cases}
 v &\text{if } v ∈ K \\
 (T, [I(vᵢ)]) &\text{if } v \text{ is a product type} \\
-(T, tᵢ, I(value(v))) &\text{if } v \text{ is a sum type}
+(T, tᵢ, I(\text{value}(v))) &\text{if } v \text{ is a sum type}
 \end{cases}
 }
 
