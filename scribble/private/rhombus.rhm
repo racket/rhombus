@@ -13,14 +13,8 @@ export:
   rhombusblock
 
 meta:
-  fun | map(proc, []): []
-      | map(proc, [a, a1, ...]): List.cons(proc(a), map(proc, [a1, ...]))
-
   fun | andmap(proc, []): #true
       | andmap(proc, [a, a1, ...]): proc(a) && andmap(proc, [a1, ...])
-
-  fun | map2(proc, [], []): []
-      | map2(proc, [a, a1, ...], [b, b1, ...]): List.cons(proc(a, b), map2(proc, [a1, ...], [b1, ...]))
 
   fun head_context(stxs):
     match stxs
@@ -55,16 +49,16 @@ meta:
     match stx
     | '$_ $_ $_($stxs)': stxs
 
-  fun nested(gs, builder, builder_stx, stxs):
-    def [new_g, ...] = map(escape_group, gs)
+  fun nested([g, ...], builder, builder_stx, stxs):
+    def [new_g, ...] = [escape_group(g), ...]
     if andmap(is_literal_group, [new_g, ...])
-    | literal_term(builder(map(extract_literal, [new_g, ...]), head_context(stxs)))
+    | literal_term(builder([extract_literal(new_g), ...], head_context(stxs)))
     | '$builder_stx([$new_g, ...], Syntax.literal($(head_context(stxs))))'
 
-  fun nested_alts(bs, stxs):
-    def [new_b, ...] = map(escape_term, bs)
+  fun nested_alts([b, ...], stxs):
+    def [new_b, ...] = [escape_term(b), ...]
     if andmap(is_literal_term, [new_b, ...])
-    | literal_term(alts_syntax(map(extract_literal, [new_b, ...]), head_context(stxs)))
+    | literal_term(alts_syntax([extract_literal(new_b), ...], head_context(stxs)))
     | 'alts_syntax([$new_b, ...], Syntax.literal($(head_context(stxs))))'
 
   fun escape_group(g):

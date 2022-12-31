@@ -12,10 +12,14 @@
 }
 
 @doc(
-  annot.macro 'Integer'
+  annot.macro 'Integer',
+  annot.macro 'PositiveInteger',
+  annot.macro 'NegativeInteger',
+  annot.macro 'NonnegativeInteger',
 ){
 
-  Matches exact integers.
+ Matches exact integers: all of them, positive integers, negative
+ integers, or nonnegative integers.
 
 }
 

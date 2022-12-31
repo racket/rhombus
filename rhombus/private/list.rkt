@@ -72,6 +72,12 @@
   (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
   (cdr l))
 
+(define (iota n)
+  (unless (exact-nonnegative-integer? n)
+    (raise-argument-error* 'List.iota rhombus-realm "NonnegativeInteger" n))
+  (for/list ([i (in-range n)])
+    i))
+
 (define-name-root List
   #:fields
   (length
@@ -79,6 +85,7 @@
    first
    rest
    [empty null]
+   iota
    repet)
   #:root
   (make-expression+binding-prefix-operator
@@ -181,6 +188,9 @@
   v)
 
 (define-static-info-syntax list
+  (#%call-result #,list-static-infos))
+
+(define-static-info-syntax iota
   (#%call-result #,list-static-infos))
 
 (define-for-syntax (wrap-list-static-info expr)

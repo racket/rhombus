@@ -196,3 +196,17 @@ to append lists.
   [1, 4, 8].length
   )
 }
+
+
+@doc(
+  fun List.iota(n :: NonnegativeInteger) :: List.of(NonnegativeInteger),
+){
+
+ Returns a list containing the integers 0 to @rhombus(n) (exclusive) in
+ order.
+
+@examples(
+  List.iota(3),
+  List.iota(0)
+)
+}

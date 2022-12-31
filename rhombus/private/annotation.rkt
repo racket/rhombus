@@ -35,6 +35,9 @@
          Any
          Boolean
          Integer
+         PositiveInteger
+         NegativeInteger
+         NonnegativeInteger
          Number
          Real
          String
@@ -360,6 +363,9 @@
 (define-syntax Any (identifier-annotation #'Any #'(lambda (x) #t) #'()))
 (define-syntax Boolean (identifier-annotation #'Boolean #'boolean? #'()))
 (define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
+(define-syntax PositiveInteger (identifier-annotation #'PositiveInteger #'exact-positive-integer? #'()))
+(define-syntax NegativeInteger (identifier-annotation #'NegativeInteger #'exact-negative-integer? #'()))
+(define-syntax NonnegativeInteger (identifier-annotation #'NonnegativeInteger #'exact-nonnegative-integer? #'()))
 (define-syntax Number (identifier-annotation #'Number #'number? #'()))
 (define-syntax Real (identifier-annotation #'Real #'real? #'()))
 (define-syntax String (identifier-annotation #'String #'string? #'()))

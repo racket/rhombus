@@ -46,14 +46,7 @@
   defn.macro 'enum:
                 $(id :: Group)
                 ...':
-    // temporary list library:
-    fun | length([]): 0
-        | length([a, a1, ...]): 1+length([a1, ...])
-    fun | iota_accum(0, acc): acc
-        | iota_accum(n, acc): iota_accum(n-1, List.cons(n, acc))
-    fun iota(n): iota_accum(n, [])
-    // useful example part is here:
-    def [n, ...]: iota(length([id, ...]))
+    def [n, ...]: List.iota([id, ...].length())
     'def $id: $n
      ...',
   enum:
