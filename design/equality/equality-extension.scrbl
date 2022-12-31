@@ -177,11 +177,11 @@ This proposal recommends (A) here due to the various benefits pointed out above,
 
 Given an equality relation @${=}, a hash function @${h} should satisfy:
 
-@$${a = b ⇒ h(a) = h(b)}
+@$${a = b \implies h(a) = h(b)}
 
 Conversely,
 
-@$${\text{not}(h(a) = h(b)) ⇒ \text{not}(a = b)}
+@$${\text{not}(h(a) = h(b)) \implies \text{not}(a = b)}
 
 Additional desirable qualities of the hashing scheme include @emph{uniformity} (resulting hash values should occur equally often across all inputs), @emph{efficiency} (in space and time), @emph{diffusion} (differential changes in the input should result in unpredictable changes in the output) and more – e.g. see @hyperlink["https://en.wikipedia.org/wiki/Hash_function"]{Hash function}.
 
