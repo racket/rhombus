@@ -21,7 +21,9 @@
     (parse-setmap-content stx
                           #:shape init-shape
                           #:who who
-                          #:repetition? repetition?))
+                          #:repetition? repetition?
+                          #:list->set #'list->set
+                          #:list->map #'list->map))
   (build-setmap stx
                 argss
                 (if (eq? shape 'set) #'Set-build #'Map-build)
@@ -29,5 +31,6 @@
                 (if (eq? shape 'set) #'set-append #'hash-append)
                 (if (eq? shape 'set) #'set-assert #'hash-assert)
                 (if (eq? shape 'set) set-static-info map-static-info)
-                #:repetition? repetition?))
+                #:repetition? repetition?
+                #:list->setmap (if (eq? shape 'set) #'list->set #'list->map)))
   

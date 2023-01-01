@@ -1,6 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
+@(def dots_expr: @rhombus(...))
+
 @title{Sets}
 
 Immutable sets can be constructed using the syntax
@@ -26,11 +28,13 @@ to be included in the set. These uses of square brackets are implemented by
 
 @doc(
   expr.macro 'Set{$expr_or_splice, ...}',
+  repet.macro 'Set{$repet_or_splice, ...}',
   fun Set(value:: Any, ...) :: Set,
 
   grammar expr_or_splice:
     $expr
-    & $set_expr  
+    $repetition $$(@litchar{,}) $$(dots_expr)
+    & $set_expr    
 ){
 
  Constructs an immutable set containing given values, equivalent to
@@ -81,8 +85,8 @@ to be included in the set. These uses of square brackets are implemented by
  Similar to @rhombus(Set) as a constructor, but creates a mutable set
  that can be updated using @rhombus(:=).
 
- Note that @rhombus(& rest) is not supported on mutable sets, only
- immutable sets.
+ Note that @dots_expr and @rhombus(&) are not supported for construction
+ mutable sets, only immutable sets.
 
 @examples(
   def m: MutableSet{"x", 1, "y", 2},

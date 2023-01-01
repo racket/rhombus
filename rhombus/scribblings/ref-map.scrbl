@@ -1,6 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
+@(def dots_expr: @rhombus(...))
+
 @title{Maps}
 
 Immutable maps can be constructed using the syntax
@@ -31,13 +33,15 @@ operator. These uses of square brackets are implemented by
   expr.macro '#{#%braces} {$key_val_or_splice, ...}',
   grammar key_val_or_splice:
     $key_expr: $val_expr
+    $key_repetition: $val_repetition $$(@litchar{,}) $$(dots_expr)
     & $map_expr,
   expr.macro '#{#%braces} {$expr_or_splice, ...+}',
   grammar expr_or_splice:
     $elem_expr
+    $elem_repetition $$(@litchar{,}) $$(dots_expr)
     & $set_expr,
   repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}',
-  repet.macro '#{#%braces} {$expr_or_splice_repet, ...+}',
+  repet.macro '#{#%braces} {$repet_or_splice, ...+}',
 ){
 
  Constructs either a map or a set, depending on whether
@@ -45,18 +49,21 @@ operator. These uses of square brackets are implemented by
  @rhombus(elem_expr) is provided. If no elements are provided directly,
  the result is a map (not a set). Map/set constructions can also serve as
  repetitions, where @rhombus(key_val_or_splice_repet) and
- @rhombus(expr_or_splice_repet) are like
+ @rhombus(repet_or_splice) are like
  @rhombus(key_val_or_splice) and @rhombus(expr_or_splice),
  but with repetitions in place of expressions.
 
- When @rhombus(& map_expr) or @rhombus(& set_expr) appears among the
- content, the map or set produced by @rhombus(map_expr)
+ When @dots_expr is used among the content with two repetitions (for a
+ map) or one repetition (for a set), the paired key and value elements
+ (for a map) or value elements (for a set) are included in the result map
+ or set. When @rhombus(& map_expr) or @rhombus(& set_expr) appears among
+ the content, the map or set produced by @rhombus(map_expr) or
  @rhombus(set_expr) is included in the result map or set.
 
  Mappings or elements are added to the result map or set left-to-right,
  which means that a later @rhombus(key_expr) or @rhombus(elem_expr) may
  replace one earlier in the sequence. This ordering applies to mappings
- or elements spliced via @rhombus(&), too.
+ or elements spliced via @dots_expr and @rhombus(&), too.
  
  @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
@@ -99,8 +106,10 @@ operator. These uses of square brackets are implemented by
 
 @doc(
   expr.macro 'Map{$key_val_or_splice, ...}',
+  repet.macro 'Map{$key_val_or_splice_repet, ...}',
   grammar key_val_or_splice:
     $key_expr: $val_expr
+    $key_repetition: $val_repetition $$(@litchar{,}) $$(dots_expr)
     @rhombus(&) $map_expr,
   fun Map([key :: Any, value :: Any], ...) :: Map
 ){
@@ -108,6 +117,8 @@ operator. These uses of square brackets are implemented by
  Constructs an immutable map containing given keys mapped to the given
  values, equivalent to using @rhombus({key_val_or_splice, ...}) for the
  @rhombus({}) form, or @rhombus({key: value, ...}) for the function form.
+ The @rhombus({}) form works as a repetition, where @rhombus(key_val_or_splice_repet)
+ is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
 @examples(
   def m: Map{"x": 1, "y": 2},
@@ -175,8 +186,8 @@ operator. These uses of square brackets are implemented by
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
  that can be updated using @rhombus(=).
 
- Note that @rhombus(&) rest is not supported on mutable maps, only
- immutable maps.
+ Note that @dots_expr and @rhombus(&) are not supported for constructing
+ mutable maps, only immutable maps.
 
 @examples(
   def m: MutableMap{"x": 1, "y": 2},

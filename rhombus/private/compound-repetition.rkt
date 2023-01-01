@@ -46,7 +46,7 @@
                [i (in-naturals)])
       (define depth (repetition-depth (extract form)))
       (if (is-sequence? form)
-          (sub1 depth)
+          (max 0 (sub1 depth))
           depth)))
   (define depth (apply max depths))
   (define-values (names lists use-depths immed?s)
@@ -66,7 +66,8 @@
     (build-repetition-map depth
                           names lists use-depths immed?s
                           build-one))
-  (make-repetition-info (syntax/loc (syntax-parse at-stx
+  (make-repetition-info at-stx
+                        (syntax/loc (syntax-parse at-stx
                                       [(x . _) #'x]
                                       [_ at-stx])
                           value)

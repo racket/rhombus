@@ -15,7 +15,6 @@
          (only-in (submod "expression-syntax.rkt" for-define)
                   make-expression-prefix-operator)
          (only-in (submod "repetition.rkt")
-                  make-repetition-info
                   make-expression+repetition-transformer
                   identifier-repetition-use)
          "assign.rkt"

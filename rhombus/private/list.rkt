@@ -172,9 +172,10 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (op |.| parens group repet)
-       [(form-id (parens g) . tail)
+       [(form-id (~and args (parens g)) . tail)
         (define name (syntax-e #'form-id))
-        (values (make-repetition-info name
+        (values (make-repetition-info #'(form-id args)
+                                      name
                                       #`(check-repetition-list '#,name (rhombus-expression g))
                                       1
                                       0

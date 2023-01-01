@@ -8,7 +8,7 @@
 @title(~tag: "set"){Sets}
 
 When @litchar("{")...@litchar("}") is used with elements that do not
-have @rhombus(:), then @litchar("{")...@litchar("}") creates a set. (If
+have @rhombus(:) to separate a key and value, then @litchar("{")...@litchar("}") creates a set. (If
 a set-element expression uses @rhombus(:), then it will need to be in
 parentheses to avoid being parsed as a key–value pair.) A set can serve
 as a map, where the set's elements act as keys and each key's value is
@@ -50,4 +50,13 @@ way @rhombus(&) works for list constructions.
 @(demo:
     ~eval: set_eval
     {"dennis", & friends}
+  )
+
+Also similar to maps, a repetition can be used to construct a set.
+
+@(demo:
+    ~defn:
+      def [elem, ...] = ["a", "b", "a", "c", "c"]
+    ~repl:
+      {elem, ...}
   )

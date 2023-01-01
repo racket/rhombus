@@ -53,7 +53,8 @@
   (provide hash-append
            hash-append/proc
            hash-extend*
-           hash-assert))
+           hash-assert
+           list->map))
 
 (define map-method-table
   (hash 'length (method1 hash-count)
@@ -90,6 +91,10 @@
           (loop (hash-set ht (car arg) (cadr arg)) (cdr args))]
          [else
           (raise-argument-error* who rhombus-realm "[_, _]" arg)])])))
+
+(define (list->map key+vals)
+  (for/hashalw ([key+val (in-list key+vals)])
+    (values (car key+val) (cdr key+val))))
 
 (define-syntax empty-map
   (make-expression+binding-prefix-operator
@@ -141,14 +146,16 @@
          (define-values (shape argss) (parse-setmap-content #'content
                                                             #:shape 'map
                                                             #:who (syntax-e #'form-id)
-                                                            #:repetition? repetition?))
+                                                            #:repetition? repetition?
+                                                            #:list->map #'list->map))
          (values (build-setmap stx argss
                                #'Map-build
                                #'hash-extend*
                                #'hash-append
                                #'hash-assert
                                map-static-info
-                               #:repetition? repetition?)
+                               #:repetition? repetition?
+                               #:list->setmap #'list->map)
                  #'tail)]
         [(_ . tail) (values (cond
                               [repetition? (identifier-repetition-use #'Map)]
@@ -224,13 +231,9 @@
            (parse-setmap-content #'content
                                  #:shape 'map
                                  #:who (syntax-e #'form-id)
-                                 #:repetition? repetition?))
-         (unless (or (null? argss)
-                     (and (pair? (car argss))
-                          (null? (cdr argss))))
-           (raise-syntax-error (syntax-e #'form-id)
-                               "& rest is not supported on mutable maps"
-                               #'content))
+                                 #:repetition? repetition?
+                                 #:list->map #'list->map
+                                 #:no-splice "mutable maps"))
          (values (cond
                    [repetition?
                     (build-compound-repetition

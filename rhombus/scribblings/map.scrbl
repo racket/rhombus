@@ -157,4 +157,20 @@ binds with lists. In a map @litchar("{")...@litchar("}") expression,
       {& others, "clara": Posn(8, 2)}
   )
 
+The map pattern form does not support binding a repetition, but
+repetitions can be used to construct a map. Before @rhombus(...) in a
+map construction, supply one repeition for keys before @rhombus(:), and
+supply another repetition for values. The repetitions must have the same
+length.
+
+@(demo:
+    ~defn:
+      def [key, ...] = ["a", "b", "c"]
+      def [val, ...] = [1, 2, 3]
+    ~repl:
+      {key: val, ...}
+  )
+
+
+
 @close_eval(map_eval)

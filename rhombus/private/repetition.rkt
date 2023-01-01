@@ -50,17 +50,18 @@
 (begin-for-syntax
   (define-syntax-class :repetition-info
     #:datum-literals (parens group)
-    (pattern (name
+    (pattern (rep-expr
+              name
               seq-expr
               bind-depth:exact-nonnegative-integer
               use-depth:exact-nonnegative-integer
               element-static-infos
               immediate?)))
 
-  (define (make-repetition-info name seq-expr bind-depth use-depth element-static-infos immediate?)
+  (define (make-repetition-info rep-expr name seq-expr bind-depth use-depth element-static-infos immediate?)
     ;; `element-static-infos` can be an identifier, which means both that static
     ;; information can be looked up on demand
-    #`(#,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos #,immediate?))
+    #`(#,rep-expr #,name #,seq-expr #,bind-depth #,use-depth #,element-static-infos #,immediate?))
 
   (define (check-repetition-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
@@ -128,6 +129,7 @@
   (define (identifier-repetition-use id)
     (make-repetition-info id
                           id
+                          id
                           0
                           0
                           id
@@ -135,6 +137,7 @@
 
   (define (identifier-repetition-use/maybe id)
     (make-repetition-info id
+                          id
                           #`(rhombus-expression (group #,id))
                           0
                           0
@@ -174,7 +177,8 @@
        (repet-handler stx (lambda ()
                             (syntax-parse stx
                               [(id . tail)
-                               (values (make-repetition-info name
+                               (values (make-repetition-info stx
+                                                             name
                                                              seq-expr
                                                              depth
                                                              #'0
@@ -208,7 +212,7 @@
         (unless (= use-depth want-depth)
           (raise-syntax-error #f
                               "used with wrong repetition depth"
-                              #'rep-info.name
+                              #'rep-info.rep-expr
                               #f
                               null
                               (format "\n  expected: ~a\n  actual: ~a"

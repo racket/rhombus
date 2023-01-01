@@ -46,7 +46,8 @@
   (provide set-append
            set-append/proc
            set-extend*
-           set-assert))
+           set-assert
+           list->set))
 
 (struct set (ht)
   #:property prop:equal+hash
@@ -90,6 +91,8 @@
   (define base-ht (hashalw))
   (set (for/fold ([ht base-ht]) ([val (in-list vals)])
          (hash-set ht val #t))))
+
+(define (list->set l) (apply Set l))
 
 (define-syntax empty-set
   (make-expression+binding-prefix-operator
@@ -147,14 +150,16 @@
          (define-values (shape argss) (parse-setmap-content #'content
                                                             #:shape 'set
                                                             #:who (syntax-e #'form-id)
-                                                            #:repetition? repetition?))
+                                                            #:repetition? repetition?
+                                                            #:list->set #'list->set))
          (values (build-setmap stx argss
                                #'Set-build
                                #'set-extend*
                                #'set-append
                                #'set-assert
                                set-static-info
-                               #:repetition? repetition?)
+                               #:repetition? repetition?
+                               #:list->setmap #'list->set)
                  #'tail)]
         [(_ . tail) (values (if repetition?
                                 (identifier-repetition-use #'Set)
@@ -203,13 +208,9 @@
            (parse-setmap-content #'content
                                  #:shape 'set
                                  #:who (syntax-e #'form-id)
-                                 #:repetition? repetition?))
-         (unless (or (null? argss)
-                     (and (pair? (car argss))
-                          (null? (cdr argss))))
-           (raise-syntax-error (syntax-e #'form-id)
-                               "& rest is not supported on mutable sets"
-                               #'content))
+                                 #:repetition? repetition?
+                                 #:list->set #'list->set
+                                 #:no-splice "mutable sets"))
          (values (cond
                    [repetition?
                     (build-compound-repetition

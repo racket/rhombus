@@ -78,6 +78,14 @@ repetition.
       [five, ...]
   )
 
+Analogous to lists, map and set constructions work as repetition forms.
+
+@(demo:
+    def [x, ...] = [1, 2, 3]
+    [{x}, ...]
+    [{x: #true}, ...]
+  )
+
 Function calls, the @rhombus(.) operator, array or map access via
 @rhombus([]), and syntax templates all work as repetition forms, too,
 given other repetitions to start with.

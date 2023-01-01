@@ -61,7 +61,8 @@
      (syntax-parse stxes
        [(_ datum . tail)
         (when (keyword? (syntax-e #'datum)) (raise-keyword-error #'datum))
-        (values (make-repetition-info #'value
+        (values (make-repetition-info #'datum
+                                      #'value
                                       (syntax/loc #'datum (quote datum))
                                       0
                                       0

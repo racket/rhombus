@@ -106,9 +106,10 @@
            #:repet-handler (lambda (stx next)
                              (syntax-parse stx
                                #:datum-literals (op |.|)
-                               [(var-id (op |.|) attr-id . tail)
+                               [(var-id (~and dot-op (op |.|)) attr-id . tail)
                                 (define attr (lookup-attribute stx #'var-id #'attr-id #t))
-                                (values (make-repetition-info (string->symbol
+                                (values (make-repetition-info #'(var-id dot-op attr-id)
+                                                              (string->symbol
                                                                (format "~a.~a" (syntax-e #'var-id) (syntax-e #'attr-id)))
                                                               (syntax-class-attribute-id attr)
                                                               (+ (syntax-class-attribute-depth attr) depth (if splice? -1 0))
@@ -586,7 +587,8 @@
   (define template-e
     (wrap-bindings new-idrs #`(#,(quote-syntax quasisyntax) #,new-template)))
   (cond
-    [repetition? (make-repetition-info #'template
+    [repetition? (make-repetition-info e
+                                       #'template
                                        #`(pack-element* #,template-e #,depth)
                                        depth
                                        0
@@ -772,7 +774,8 @@
                                   in-expression-space
                                   convert-repetition-template
                                   convert-repetition-template
-                                  (lambda (e) (make-repetition-info #'template
+                                  (lambda (e) (make-repetition-info stx
+                                                                    #'template
                                                                     #`(quote-syntax #,e)
                                                                     0
                                                                     0

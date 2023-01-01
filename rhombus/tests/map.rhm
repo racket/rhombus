@@ -92,3 +92,19 @@ begin:
     ~exn
     {&"oops"}
     "not a map"
+
+begin:
+  def [x, ...] = [1, 2, 3]
+  check:
+    {x: x, ..., #true: 0}
+    {1: 1, 2: 2, 3: 3, #true: 0}
+  check:
+    {#true: 0, x: x, ...}
+    {1: 1, 2: 2, 3: 3, #true: 0}
+  check:
+    {#true: 0, &{7: 7}, x: x, ...}
+    {1: 1, 2: 2, 3: 3, 7: 7, #true: 0}
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    [{z: #true, ...}, ...]
+    [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
