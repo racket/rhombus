@@ -108,3 +108,49 @@ begin:
   check:
     [{z: #true, ...}, ...]
     [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
+
+check:
+  def {"x": y}  = {"x": 1}
+  y
+  1
+
+check:
+  def Map{"x": y}  = {"x": 1}
+  y
+  1
+
+check:
+  def Map(["x", y])  = {"x": 1}
+  y
+  1
+
+check:
+  def {"x": y}  = {"x": 1, "y": 2}
+  y
+  1
+
+check:
+  def Map{"x": y}  = {"x": 1, "y": 2}
+  y
+  1
+
+check:
+  def ex = "x"
+  def {ex +& "y": y}  = {"xy": 1}
+  y
+  1
+
+check:
+  def {"x": x, "y": y}  = {"x": 1, "y": 2}
+  [x, y]
+  [1, 2]
+
+check:
+  def {"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
+  [{key, ...}, {val, ...}]
+  [{"y", "z"}, {2, 3}]
+
+check:
+  def Map{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
+  [{key, ...}, {val, ...}]
+  [{"y", "z"}, {2, 3}]

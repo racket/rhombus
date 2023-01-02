@@ -36,33 +36,41 @@
 (define-for-syntax (parse-setmap-content stx
                                          #:shape [init-shape #f]
                                          #:who [who #f]
+                                         #:raw? [raw? #f]
                                          #:repetition? [repetition? #f]
                                          #:list->set [list->set #f]
                                          #:list->map [list->map #f]
                                          #:no-splice [no-splice #f])
   (define (one-argument e)
     (cond
+      [raw? e]
       [repetition? (syntax-parse e [rep::repetition #'rep.parsed])]
       [else #`(rhombus-expression #,e)]))
   (define (repetition-set-argument e)
-    (syntax-parse e
-      [rep::repetition
-       (if repetition?
-           (inlined #'rep.parsed)
-           #`(#,list->set #,(repetition-as-list #'rep.parsed 1)))]))
+    (cond
+      [raw? e]
+      [else
+       (syntax-parse e
+         [rep::repetition
+          (if repetition?
+              (inlined #'rep.parsed)
+              #`(#,list->set #,(repetition-as-list #'rep.parsed 1)))])]))
   (define (repetition-map-arguments key-e val-e)
-    (with-syntax-parse ([key::repetition key-e]
-                        [val::repetition val-e])
-      ;; This could be faster than building list of pair
-      ;; to convert to a hash table...
-      (define pair-rep (build-compound-repetition
-                        stx (list #'key.parsed #'val.parsed)
-                        (lambda (key val)
-                          (values #`(cons #,key #,val)
-                                  #'()))))
-      (if repetition?
-          (list (inlined pair-rep))
-          (list #`(#,list->map #,(repetition-as-list pair-rep 1))))))
+    (cond
+      [raw? (list key-e val-e)]
+      [else
+       (with-syntax-parse ([key::repetition key-e]
+                           [val::repetition val-e])
+         ;; This could be faster than building list of pair
+         ;; to convert to a hash table...
+         (define pair-rep (build-compound-repetition
+                           stx (list #'key.parsed #'val.parsed)
+                           (lambda (key val)
+                             (values #`(cons #,key #,val)
+                                     #'()))))
+         (if repetition?
+             (list (inlined pair-rep))
+             (list #`(#,list->map #,(repetition-as-list pair-rep 1)))))]))
   (syntax-parse stx
     #:datum-literals (block braces parens group)
     [(braces elem ...)
@@ -186,8 +194,10 @@
          (loop (if base
                    (quasisyntax/loc stx
                      (#,append-id #,base #,e))
-                   (quasisyntax/loc stx
-                     (#,assert-id #,e)))
+                   (if (inlined? e)
+                       e
+                       (quasisyntax/loc stx
+                         (#,assert-id #,e))))
                (cdr argss))])))
   (cond
     [repetition? (build-compound-repetition

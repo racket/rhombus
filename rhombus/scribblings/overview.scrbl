@@ -15,6 +15,7 @@
 @include_section("mutable-var.scrbl")
 @include_section("operator.scrbl")
 @include_section("list.scrbl")
+@include_section("array.scrbl")
 @include_section("map.scrbl")
 @include_section("set.scrbl")
 @include_section("repetition.scrbl")

@@ -28,7 +28,11 @@
          "dot-parse.rkt"
          "parens.rkt"
          (only-in "lambda-kwrest.rkt" hash-remove*)
-         (only-in "rest-marker.rkt" &))
+         (only-in "rest-marker.rkt" &)
+         (rename-in "ellipsis.rkt"
+                    [... rhombus...])
+         (only-in "pair.rkt"
+                  Pair))
 
 (provide (rename-out [Map-expr Map])
          (for-space rhombus/binding Map)
@@ -95,6 +99,9 @@
 (define (list->map key+vals)
   (for/hashalw ([key+val (in-list key+vals)])
     (values (car key+val) (cdr key+val))))
+
+(define (hash-pairs ht)
+  (for/list ([p (in-hash-pairs ht)]) p))
 
 (define-syntax empty-map
   (make-expression+binding-prefix-operator
@@ -290,7 +297,15 @@
 (define-for-syntax (parse-map-binding who stx opener+closer)
   (syntax-parse stx
     #:datum-literals (parens block group op)
-    #:literals (&)
+    #:literals (& rhombus...)
+    [(form-id (_ (group key-e ... (block (group val ...))) ...
+                 (group key-b ... (block (group val-b ...)))
+                 (group (op rhombus...)))
+              . tail)
+     (generate-map-binding (syntax->list #`((#,group-tag key-e ...) ...)) #`((#,group-tag val ...) ...)
+                           #`(group Pair (parens (#,group-tag key-b ...) (#,group-tag val-b ...)))
+                           #'tail
+                           #:rest-repetition? #t)]
     [(form-id (_ (group key-e ... (block (group val ...))) ...
                  (group (op &) rst ...))
               . tail)
@@ -304,7 +319,8 @@
                          (format "bad key-value combination within ~a" opener+closer)
                          #'wrong)]))
 
-(define-for-syntax (generate-map-binding keys vals maybe-rest tail)
+(define-for-syntax (generate-map-binding keys vals maybe-rest tail
+                                         #:rest-repetition? [rest-repetition? #f])
   (with-syntax ([(key ...) keys]
                 [(val ...) vals]
                 [tail tail])
@@ -312,7 +328,7 @@
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
     (define-values (composite new-tail)
       ((make-composite-binding-transformer (cons "Map" (map shrubbery-syntax->string keys))
-                                           #'(lambda (v) #t)
+                                           #'(lambda (v) #t) ; predicate built into map-matcher
                                            (for/list ([tmp-id (in-list tmp-ids)])
                                              #`(lambda (v) #,tmp-id))
                                            (for/list ([arg (in-list tmp-ids)])
@@ -320,8 +336,11 @@
                                            #:ref-result-info? #t
                                            #:rest-accessor
                                            (and maybe-rest
-                                                #`(lambda (v) #,rest-tmp))
-                                           #:rest-repetition? #f)
+                                                (if rest-repetition?
+                                                    #`(lambda (v) (hash-pairs #,rest-tmp))
+                                                    #`(lambda (v) #,rest-tmp)))
+                                           #:rest-repetition? (and rest-repetition?
+                                                                   'pair))
        #`(form-id (parens val ...) . tail)
        maybe-rest))
     (with-syntax-parse ([composite::binding-form composite])

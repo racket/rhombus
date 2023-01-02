@@ -12,7 +12,6 @@
          (submod "list.rkt" for-binding)
          (submod "list.rkt" for-implicit)
          "setmap.rkt"
-         (submod "map.rkt" for-binding)
          "literal.rkt"
          "parens.rkt")
 
@@ -182,7 +181,7 @@
                 #'tail)]))
    ;; binding
    (lambda (stxes)
-     (parse-map-binding 'braces stxes "braces"))
+     (parse-setmap-binding 'braces stxes))
    ;; repetition
    (lambda (stxes)
      (syntax-parse stxes

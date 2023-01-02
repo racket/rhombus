@@ -29,6 +29,7 @@
             make-expression+repetition-infix-operator
             make-expression+binding+repetition-prefix-operator
             make-expression+binding+repetition-infix-operator
+            make-expression+binding+repetition-transformer
             expression+repetition-prefix+infix-operator
             make-expression+repetition-transformer
 
@@ -123,6 +124,9 @@
      (expression-infix-operator name prec protocol exp assc)
      (binding-infix-operator name prec protocol bind assc)
      (repetition-infix-operator name prec protocol rep assc)))
+
+  (define (make-expression+binding+repetition-transformer name exp bind rep)
+    (make-expression+binding+repetition-prefix-operator name '((default . stronger)) 'macro exp bind rep))
 
   (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repetition))
 

@@ -479,3 +479,75 @@ begin:
   check:
     posns_y(10)
     10
+
+// maps and sets with `...` binding
+
+begin:
+  def {x: y, ...} = {1: "a", 2: "b"}
+  check:
+    {[x, y], ...}
+    {[1, "a"], [2, "b"]}
+  check:
+    {x, ...}
+    {1, 2}    
+  check:
+    {y, ...}
+    {"a", "b"}
+  check:
+    {y: x, ...}
+    {"a": 1, "b": 2}
+
+begin:
+  def {2: two, x: y, ...} = {1: "a", 2: "b"}
+  check:
+    two
+    "b"
+  check:
+    [[x, ...], [y, ...]]
+    [[1], ["a"]]
+
+begin:
+  def {1: one, 2: two, x: y, ...} = {1: "a", 2: "b"}
+  check:
+    one
+    "a"
+  check:
+    two
+    "b"
+  check:
+    [[x, ...], [y, ...]]
+    [[], []]
+
+check:
+  ~eval_exn
+  def {2: two, x: y, ...} = {1: "a"}
+  "value does not satisfy annotation"
+
+begin:
+  def {x, ...} = {1, 2}
+  check:
+    {[x], ...}
+    {[1], [2]}
+  check:
+    {x, ...}
+    {1, 2}    
+  check:
+    {x: "a", ...}
+    {1: "a", 2: "a"}
+
+begin:
+  def {2, x, ...} = {1, 2}
+  check:
+    [x, ...]
+    [1]
+
+begin:
+  def {1, 2, x, ...} = {1, 2}
+  check:
+    [x, ...]
+    []
+
+check:
+  ~eval_exn
+  def {2, x, ...} = {1}
+  "value does not satisfy annotation"

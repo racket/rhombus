@@ -28,7 +28,7 @@
                                                        #:accessor->info? [accessor->info? #f] ; extend composite info?
                                                        #:ref-result-info? [ref-result-info? #f]
                                                        #:rest-accessor [rest-accessor #f] ; for a list "rest"
-                                                       #:rest-repetition? [rest-repetition? #t])
+                                                       #:rest-repetition? [rest-repetition? #t]) ; #t, #f, or 'pair
   (lambda (tail [rest-arg #f] [stx-in #f])
     (syntax-parse tail
       [(form-id ((~and tag (~datum parens)) a_g ...) . new-tail)
@@ -89,9 +89,10 @@
      #:with (a-impl::binding-impl ...) #'((infoer-id (static-info ... . arg-static-infos) data) ...)
      #:with (a-info::binding-info ...) #'(a-impl.info ...)
 
-     (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos)
+     (define-values (new-rest-data rest-static-infos rest-name-id rest-annotation-str rest-bind-ids+static-infos
+                                   rest-repetition?)
        (syntax-parse #'rest-data
-         [#f (values #'#f #'() #'rest #f #'())]
+         [#f (values #'#f #'() #'rest #f #'() #f)]
          [(rest-accessor rest-repetition? rest-infoer-id rest-a-data)
           #:with rest-impl::binding-impl #'(rest-infoer-id () rest-a-data)
           #:with rest-info::binding-info #'rest-impl.info
@@ -111,7 +112,8 @@
                                          (raise-syntax-error #f "cannot bind within a repetition" id))
                                        (list (add1 depth)))
                                      #'(rest-info.bind-uses ...))])
-                    #'((rest-info.bind-id bind-uses rest-info.bind-static-info ...) ...)))]))
+                    #'((rest-info.bind-id bind-uses rest-info.bind-static-info ...) ...))
+                  (syntax-e #'rest-repetition?))]))
 
      (define all-composite-static-infos
        (let* ([composite-static-infos #'(composite-static-info ... . static-infos)]
@@ -134,7 +136,8 @@
                                                  . #,composite-static-infos))]
                                         [else composite-static-infos])])
          composite-static-infos))
-     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str)
+     (binding-info (build-annotation-str #'constructor-str (syntax->list #'(a-info.annotation-str ...)) rest-annotation-str
+                                         #:rest-repetition? rest-repetition?)
                    #'composite
                    all-composite-static-infos
                    #`((a-info.bind-id a-info.bind-uses a-info.bind-static-info ...) ... ... . #,rest-bind-ids+static-infos)
@@ -299,26 +302,45 @@
                         [rest-vals (in-list rest-valss)])
                (cons val rest-vals))]))))]))
 
-(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str)
+(define-for-syntax (build-annotation-str constructor-str arg-annotation-strs rest-annotation-str
+                                         #:rest-repetition? rest-repetition?)
   (define c-str (syntax-e constructor-str))
   (annotation-string-from-pattern
    (string-append
     (if (pair? c-str) (syntax-e (car c-str)) c-str)
     (if (pair? c-str) "{" "(")
-    (apply string-append
-           (for/list ([a-str (in-list arg-annotation-strs)]
-                      [key-str (in-list (if (pair? c-str)
-                                            (cdr c-str)
-                                            arg-annotation-strs))]
-                      [i (in-naturals)])
-             (string-append
-              (if (zero? i) "" ", ")
-              (if (pair? c-str)
-                  (string-append (syntax-e key-str) ": ")
-                  "")
-              (annotation-string-to-pattern (syntax-e a-str)))))
+    (if (and (pair? c-str)
+             (null? arg-annotation-strs))
+        ;; Set mode
+        (apply string-append
+               (for/list ([key-str (in-list (cdr c-str))]
+                          [i (in-naturals)])
+                 (string-append
+                  (if (zero? i) "" ", ")
+                  (syntax-e key-str))))
+        ;; Map mode
+        (apply string-append
+               (for/list ([a-str (in-list arg-annotation-strs)]
+                          [key-str (in-list (if (pair? c-str)
+                                                (cdr c-str)
+                                                arg-annotation-strs))]
+                          [i (in-naturals)])
+                 (string-append
+                  (if (zero? i) "" ", ")
+                  (if (pair? c-str)
+                      (string-append (syntax-e key-str) ": ")
+                      "")
+                  (annotation-string-to-pattern (syntax-e a-str))))))
     (if rest-annotation-str
-        (string-append ", " (syntax-e rest-annotation-str) ", ...")
+        (string-append (if (and (null? arg-annotation-strs)
+                                (or (not (pair? c-str))
+                                    (null? (cdr c-str))))
+                           "" ", ")
+                       (if rest-repetition? "" "& ")
+                       (if (eq? rest-repetition? 'pair)
+                           (annotation-string-convert-pair (syntax-e rest-annotation-str))
+                           (syntax-e rest-annotation-str))
+                       (if rest-repetition? ", ..." ""))
         "")
     (if (pair? c-str) "}" ")"))))
 

@@ -11,29 +11,7 @@
   class Posn(x, y)
 )
 
-@title(~tag: "map"){Arrays and Maps}
-
-The @rhombus(Array) constructor is similar to @rhombus(List), but it
-creates an array, which has a fixed length at the time that it’s created
-and offers constant-time access to any element of the array. Like a
-list, and array is a map. Unlike a list, an array is mutable, so
-@litchar{[}...@litchar{]} for indexing can be combined with @rhombus(:=)
-for assignment.
-
-@(demo:
-    ~defn:
-      def buckets = Array(1, 2, 3, 4)
-    ~repl:
-      buckets[0]
-      buckets[1] := 5
-      buckets
-  )
-
-@rhombus(Array) is also an annotation and a binding contructor,
-analogous to @rhombus(List), and @rhombus(Array.of) is an annotation
-constructor. The @rhombus(Array, ~bind) binding form does not support
-@rhombus(..., ~bind) or @rhombus(&, ~bind), but the @rhombus(Array)
-constructor supports @rhombus(..., ~bind) and @rhombus(&, ~bind).
+@title(~tag: "map"){Maps}
 
 The @rhombus(Map) constructor creates an immutable mapping of arbitrary
 keys to values. The term @deftech{map} is meant to be generic, and
@@ -157,11 +135,15 @@ binds with lists. In a map @litchar("{")...@litchar("}") expression,
       {& others, "clara": Posn(8, 2)}
   )
 
-The map pattern form does not support binding a repetition, but
-repetitions can be used to construct a map. Before @rhombus(...) in a
-map construction, supply one repeition for keys before @rhombus(:), and
-supply another repetition for values. The repetitions must have the same
-length.
+Map patterns can also bind repetitions, and map constructions can use
+repetitions. These repeition constructions tend to go through
+intermediate lists, and so they tend to be less efficient than using
+@rhombus(&) to work with maps, but they are especially useful when the
+intent is to convert between lists and maps.
+
+Before @rhombus(...) in a map construction, supply one repeition for
+keys before @rhombus(:), and supply another repetition for values. The
+repetitions must have the same length.
 
 @(demo:
     ~defn:
@@ -171,6 +153,20 @@ length.
       {key: val, ...}
   )
 
+In a map pattern, @rhombus(:)-separated key and value bindings should
+appear before @rhombus(...). Unlike key expressions for individual keys,
+the key part of a repetition binding is a binding. There is no
+guaranteed about the order of the keys and values, except that those two
+repetitions use the same order (i.e., keys with associated values in
+parallel).
+
+@(demo:
+    ~defn:
+      def {key: val, ...} = {"b": 2, "a": 1, "c": 3}
+    ~repl:
+      [key, ...]
+      [val, ...]
+  )
 
 
 @close_eval(map_eval)

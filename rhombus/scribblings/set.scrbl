@@ -60,3 +60,13 @@ Also similar to maps, a repetition can be used to construct a set.
     ~repl:
       {elem, ...}
   )
+
+Set forms work as bindings, too, analogous to map binding forms.
+
+@(demo:
+    ~eval: set_eval
+    ~defn:
+      def {"carol", other_friend, ...} = friends
+    ~repl:
+      [other_friend, ...]
+  )

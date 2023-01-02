@@ -103,3 +103,49 @@ begin:
   check:
     [{z, ...}, ...]
     [{1, 2, 3}, {4, 5}]
+
+check:
+  def {"x"}  = {"x"}
+  "ok"
+  "ok"
+
+check:
+  def Set{"x"}  = {"x"}
+  "ok"
+  "ok"
+
+check:
+  def Set("x")  = {"x"}
+  "ok"
+  "ok"
+
+check:
+  def {"x"}  = {"x", "y"}
+  "still ok"
+  "still ok"
+
+check:
+  def Set{"x"}  = {"x", "y"}
+  "still ok"
+  "still ok"
+
+check:
+  def ex = "x"
+  def {ex +& "y"}  = {"xy"}
+  "expr ok"
+  "expr ok"
+
+check:
+  def Set{"x", "y"}  = {"x", "y"}
+  "two ok"
+  "two ok"
+
+check:
+  def {"x", key, ...} = {"x", "y", "z"}
+  {key, ...}
+  {"y", "z"}
+
+check:
+  def Set{"x", key, ...} = {"x", "y", "z"}
+  {key, ...}
+  {"y", "z"}

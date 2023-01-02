@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
+@(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
 
 @title{Sets}
@@ -55,6 +56,38 @@ to be included in the set. These uses of square brackets are implemented by
 )
 
 }
+
+@doc(
+  bind.macro 'Set{$expr, ...}',
+  bind.macro 'Set{$expr, ..., $rest}',
+  grammar rest:
+    & $set_binding
+    $rest_binding $$(@litchar{,}) $$(dots)
+){
+
+ Matches a set containing at least the values computed by the @rhombus(expr)s.
+ The matched set may have additional values.
+ If @rhombus(& set_binding) is supplied, the rest of the set excluding
+ the values of the given @rhombus(expr)s must match the @rhombus(set_binding).
+ If @rhombus(rest_binding) followed by @dots is
+ supplied, the rest of the set excluding the given @rhombus(expr)s
+ must have individual values that match @rhombus(rest_binding), and identifiers in
+ @rhombus(rest_binding) are bound
+ as repetitions.
+
+@examples(
+  def Set{"x", "y"}: {"x", "y"},
+  ~error:
+    def Set{"x", "y"}: {"x"},
+  def Set{"a"}: {"a", "b"},
+  def Set{"a", & rst}: {"a", "b", "c"},
+  rst,
+  def Set{"a", val, ...}: {"a", "b", "c"},
+  [val, ...]
+)
+
+}
+
 
 @doc(
   annot.macro 'Set',

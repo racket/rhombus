@@ -1,7 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     "srcloc.rkt")
+                     racket/syntax
+                     "srcloc.rkt"
+                     "tag.rkt"
+                     "with-syntax.rkt"
+                     shrubbery/print)
          "expression.rkt"
          "binding.rkt"
          "expression+binding.rkt"
@@ -19,7 +23,12 @@
          "realm.rkt"
          "setmap-parse.rkt"
          "dot-parse.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "composite.rkt"
+         (only-in "lambda-kwrest.rkt" hash-remove*)
+         (only-in "rest-marker.rkt" &)
+         (rename-in "ellipsis.rkt"
+                    [... rhombus...]))
 
 (provide (rename-out [Set-expr Set])
          (for-space rhombus/annotation Set)
@@ -28,6 +37,9 @@
 
          (rename-out [MutableSet-expr MutableSet])
          (for-space rhombus/static-info MutableSet))
+
+(module+ for-binding
+  (provide (for-syntax parse-set-binding)))
 
 (module+ for-ref
   (provide set?
@@ -93,6 +105,8 @@
          (hash-set ht val #t))))
 
 (define (list->set l) (apply Set l))
+
+(define (set->list s) (hash-keys (set-ht s)))
 
 (define-syntax empty-set
   (make-expression+binding-prefix-operator
@@ -165,10 +179,114 @@
                                 (identifier-repetition-use #'Set)
                                 #'Set)
                             #'tail)]))
-    (make-expression+repetition-transformer
+    (make-expression+binding+repetition-transformer
      #'Set
+     ;; expression
      (lambda (stx) (parse-set stx #f))
+     ;; binding
+     (lambda (stx)
+       (syntax-parse stx
+         [(form-id (~and content (_::braces . _)) . tail)
+          (parse-set-binding (syntax-e #'form-id) stx "braces")]
+         [(form-id (_::parens arg ...) . tail)
+          (parse-set-binding (syntax-e #'form-id) stx "parentheses")]))
+     ;; repetition
      (lambda (stx) (parse-set stx #t)))))
+
+(define-for-syntax (parse-set-binding who stx opener+closer)
+  (syntax-parse stx
+    #:datum-literals (parens block group op)
+    #:literals (& rhombus...)
+    [(form-id (_ (group key-e ...) ...
+                 (group elem-b ...)
+                 (group (op rhombus...)))
+              . tail)
+     (generate-set-binding (syntax->list #`((#,group-tag key-e ...) ...))
+                           #`(#,group-tag elem-b ...)
+                           #'tail
+                           #:rest-repetition? #t)]
+    [(form-id (_ (group elem-e ...) ...
+                 (group (op &) rst ...))
+              . tail)
+     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
+                           #`(#,group-tag rst ...)
+                           #'tail)]
+    [(form-id (_ (group elem-e ...) ...) . tail)
+     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...)) #f #'tail)]))
+
+(define-for-syntax (generate-set-binding keys maybe-rest tail
+                                         #:rest-repetition? [rest-repetition? #f])
+  (with-syntax ([(key ...) keys]
+                [tail tail])
+    (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
+    (define-values (composite new-tail)
+      ((make-composite-binding-transformer (cons "Set" (map shrubbery-syntax->string keys))
+                                           #'(lambda (v) #t) ; predicate built into set-matcher
+                                           '()
+                                           '()
+                                           #:rest-accessor
+                                           (and maybe-rest
+                                                (if rest-repetition?
+                                                    #`(lambda (v) (set->list #,rest-tmp))
+                                                    #`(lambda (v) #,rest-tmp)))
+                                           #:rest-repetition? (and rest-repetition?
+                                                                   'pair))
+       #`(form-id (parens) . tail)
+       maybe-rest))
+    (with-syntax-parse ([composite::binding-form composite])
+      (values
+       (binding-form #'set-infoer
+                     #`((key ...)
+                        #,rest-tmp
+                        composite.infoer-id
+                        composite.data))
+       new-tail))))
+
+(define-syntax (set-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos (keys rest-tmp composite-infoer-id composite-data))
+     #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
+     #:with composite-info::binding-info #'composite-impl.info
+     (binding-info #'composite-info.annotation-str
+                   #'composite-info.name-id
+                   #'composite-info.static-infos
+                   #'composite-info.bind-infos
+                   #'set-matcher
+                   #'set-binder
+                   #'(keys rest-tmp composite-info.matcher-id composite-info.binder-id composite-info.data))]))
+
+(define-syntax (set-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-data)
+        IF success failure)
+     (define key-tmps (generate-temporaries #'keys))
+     #`(IF (set? arg-id)
+           #,(let loop ([keys (syntax->list #'keys)]
+                        [key-tmp-ids key-tmps])
+               (cond
+                 [(and (null? keys) (syntax-e #'rest-tmp))
+                  #`(begin
+                      (define rest-tmp (set-remove*/copy arg-id (list #,@key-tmps)))
+                      (composite-matcher-id 'set composite-data IF success failure))]
+                 [(null? keys)
+                  #`(composite-matcher-id 'set composite-data IF success failure)]
+                 [else
+                  #`(begin
+                      (define #,(car key-tmp-ids) (rhombus-expression #,(car keys)))
+                      (IF (set-ref arg-id #,(car key-tmp-ids))
+                          #,(loop (cdr keys) (cdr key-tmp-ids))
+                          failure))]))
+           failure)]))
+
+(define (set-remove*/copy s ks)
+  (define h (set-ht s))
+  (set (hash-remove* (if (immutable? h) h (hash-map/copy h values #:kind 'immutable)) ks)))
+
+(define-syntax (set-binder stx)
+  (syntax-parse stx
+    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-data))
+     #`(composite-binder-id 'set composite-data)]))
+
 
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)
