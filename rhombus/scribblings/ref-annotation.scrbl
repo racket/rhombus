@@ -46,7 +46,7 @@
  @rhombus(expr).
 
 @examples(
-  [1, 2, 3] -: List,
+  [1, 2, 3] -: List
   "oops" -: List
 )
 
@@ -60,7 +60,7 @@
  @rhombus(::, ~bind), but performs no run-time check.
 
 @examples(
-  def x -: List: [1, 2, 3],
+  def x -: List: [1, 2, 3]
   def x -: List: "oops"
 )
 
@@ -75,7 +75,7 @@
  satisfies @rhombus(annotation), @rhombus(#false) otherwise.
 
 @examples(
-  [1, 2, 3] is_a List,
+  [1, 2, 3] is_a List
   "oops" is_a List
 )
 
@@ -91,7 +91,7 @@
  match.
 
 @examples(
-  def x :: matching([_, 10]): [9, 10],
+  def x :: matching([_, 10]): [9, 10]
   ~error: def y :: matching([_, 10]): [9, 11]
 )
 

@@ -12,14 +12,14 @@ list, and array is a map. Unlike a list, an array is mutable, so
 @litchar{[}...@litchar{]} for indexing can be combined with @rhombus(:=)
 for assignment.
 
-@(demo:
-    ~defn:
-      def buckets = Array(1, 2, 3, 4)
-    ~repl:
-      buckets[0]
-      buckets[1] := 5
-      buckets
-  )
+@demo(
+  ~defn:
+    def buckets = Array(1, 2, 3, 4)
+  ~repl:
+    buckets[0]
+    buckets[1] := 5
+    buckets
+)
 
 @rhombus(Array) is also an annotation and a binding contructor,
 analogous to @rhombus(List), and @rhombus(Array.of) is an annotation

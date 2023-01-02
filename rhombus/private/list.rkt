@@ -48,7 +48,8 @@
 (define list-method-table
   (hash 'length (method1 length)
         'first car
-        'rest cdr))
+        'rest cdr
+        'reverse (method1 reverse)))
 
 (define-for-syntax list-static-infos
   #'((#%map-ref list-ref)
@@ -85,6 +86,7 @@
    first
    rest
    [empty null]
+   reverse
    iota
    repet)
   #:root
@@ -154,6 +156,7 @@
                                             (datum->syntax #f
                                                            (or (extract-static-infos e)
                                                                '())))))]
+        [(reverse) (0ary #'reverse)]
         [else (fail-k)])))))
 
 (define-reducer-syntax List

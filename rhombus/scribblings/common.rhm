@@ -2,6 +2,7 @@
 
 import:
   rhombus/meta open
+  scribble/rhombus/manual
   scribble/rhombus as scribble
   "dispatch_table.rhm" open
   meta_label:
@@ -16,6 +17,7 @@ export:
   all_from("dispatch_table.rhm")
   see_implicit
   provided_meta
+  demo
  
 fun see_implicit(what, when, context, ~is_infix = #false):
  @scribble.elem{The @what form is implicitly used when @when is
@@ -27,3 +29,9 @@ fun see_implicit(what, when, context, ~is_infix = #false):
 
 fun provided_meta():
  @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expmod).}}
+
+// suppressed a label, but `examples` now does that, anyway, so maybe
+// we'll end up removing this alias:
+defn.macro 'demo($form, ...)':
+  ~op_stx: self
+  'manual.examples(~label: #false, $form, ...)'

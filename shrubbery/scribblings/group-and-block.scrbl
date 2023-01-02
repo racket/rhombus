@@ -59,10 +59,10 @@ not a block.
 The main grouping rule is that sequences on different lines with the
 same indentation create separate @tech{groups}, one for each line.
 
-@(rhombusblock:
-    this is the first group
-    this is the second group
-  )
+@rhombusblock(
+  this is the first group
+  this is the second group
+)
 
 Comments and lines with only whitespace are ignored. They don't count
 when this document says “the previous line” or “the next line.”
@@ -80,17 +80,17 @@ indentation, but groups on separate lines still must be separated by
 retains whether a subgroup is formed by @litchar{()}, @litchar{[]},
 @litchar{{}}, or @litchar{''}.
 
-@(rhombusblock:
-    group 1
-    [group 2 - subgroup I,
-     group 2 - subgroup II,
-     (group 2 - subgroup III - subsubgroup A,
-      group 2 - subgroup III - subsubgroup B,
-      {group 2 - subgroup III - subsubgroup C, subsubsubgroup α,
-       group 2 - subgroup III - subsubgroup C, subsubsubgroup β})]
-    'group 3 - subgroup I;  group 3 - subgroup II
-     group 3 - subgroup III'
-  )
+@rhombusblock(
+  group 1
+  [group 2 - subgroup I,
+   group 2 - subgroup II,
+   (group 2 - subgroup III - subsubgroup A,
+    group 2 - subgroup III - subsubgroup B,
+    {group 2 - subgroup III - subsubgroup C, subsubsubgroup α,
+     group 2 - subgroup III - subsubgroup C, subsubsubgroup β})]
+  'group 3 - subgroup I;  group 3 - subgroup II
+   group 3 - subgroup III'
+)
 
 The following three forms are not allowed, because they are missing a
 @litchar{,} between two groups:
@@ -120,13 +120,13 @@ that a trailing @litchar{,} is allowed.
 A trailing @litchar{,} is only standard style when the @closer that follows is
 on its own line.
 
-@(rhombusblock:
-    list(
-      red,
-      green,
-      blue,
-      orange,
-    )
+@rhombusblock(
+  list(
+    red,
+    green,
+    blue,
+    orange,
+  )
 )
 
 Using @litchar{'} as both an @opener and @closer prevents simple nesting
@@ -139,7 +139,7 @@ after an opener @litchar{'}, and then @litchar{»} must be used just before the
 closing @litchar{'}. The @litchar{«} and @litchar{»} are @emph{not}
 preserved in the parsed representation.
 
-@(rhombusblock:
+@rhombusblock(
    'a ('nested') b'
    '«a 'nested' b»'
 )
@@ -160,10 +160,10 @@ group 2
 When a line ends with @litchar{:} and the next line is more indented, then
 it starts a new sequence of groups that form a @tech{block}:
 
-@(rhombusblock:
-    group:
-      subgroup 1
-      subgroup 2
+@rhombusblock(
+  group:
+    subgroup 1
+    subgroup 2
 )
 
 There is no constraint on how much indentation a nested group sequence
@@ -173,32 +173,32 @@ Also, a new line is not required after @litchar{:}, but then it's as if the
 the @litchar{:}. All four of the following groups are the same, each with one
 block that has two nested groups:
 
-@(rhombusblock:
-    hello:
-     world
-     universe
+@rhombusblock(
+  hello:
+   world
+   universe
 
-    hello:
-           world
-           universe
+  hello:
+         world
+         universe
 
-    hello: world
-           universe
+  hello: world
+         universe
 
-    hello:    world
-              universe
-  )
+  hello:    world
+            universe
+)
 
 Within an @opener_closer pair, a nested group sequence can start at
 any indentation; it doesn't have to be indented to the right of the
 @opener.
 
-@(rhombusblock:
-    function(
-      argument,
-      more
-    )
+@rhombusblock(
+  function(
+    argument,
+    more
   )
+)
 
 A block that is started with @litchar{:} normally cannot be empty
 (unless explicit-grouping @litchar{«} and @litchar{»} are used as
@@ -237,13 +237,13 @@ continuing line; however, additional continuing lines can start with an
 operator (not necessarily the same one) at the same indentation as the
 original continuing line. The following two groups are the same:
 
-@(rhombusblock:
-    f(1) + 2
-      + 3 + 4
-      - 5 - 6
+@rhombusblock(
+  f(1) + 2
+    + 3 + 4
+    - 5 - 6
 
-    f(1) + 2 + 3 + 4 - 5 - 6
-  )
+  f(1) + 2 + 3 + 4 - 5 - 6
+)
 
 A block is always at the end of its immediately containing group. One
 consequence is that an operator-starting line cannot continue a group
@@ -260,12 +260,12 @@ is part of the block, since it cannot continue the group that contains
 the block. For example, the following two groups are the same, each
 with a block that has a @litchar{+ 3} group:
 
-@(rhombusblock:
-    hello: + 3
+@rhombusblock(
+  hello: + 3
 
-    hello:
-      + 3
-  )
+  hello:
+    + 3
+)
 
 @section(~tag: "alt-block"){Blocking with @litchar{|}}
 
@@ -281,23 +281,23 @@ under an implicit @litchar{:} is an @tech{alt-block}.
 A @litchar{|} that starts the enclosing block can appear at the start of
 a line with new indentation. The following four groups are the same:
 
-@(rhombusblock:
-    hello
+@rhombusblock(
+  hello
+  | world
+  | universe
+
+  hello
     | world
     | universe
 
-    hello
-      | world
-      | universe
+  hello | world
+        | universe
 
-    hello | world
-          | universe
-
-    hello |
-            world
-          |
-            universe
-  )
+  hello |
+          world
+        |
+          universe
+)
 
 Each of the four groups has two elements: @litchar{hello} and a block.
 The block has two groups, each of which is a more nested block. The
@@ -318,11 +318,11 @@ and consequence of this rule is that multiple @litchar{|}s can be used
 on a single line as an alternative to starting each @litchar{|} on its
 own line, making the following groups the same as the above groups:
 
-@(rhombusblock:
-    hello | world | universe
+@rhombusblock(
+  hello | world | universe
 
-    hello
-    | world | universe
+  hello
+  | world | universe
 )
 
 The implicit shifting of @litchar{|} by half a column is consistent with its
@@ -339,16 +339,16 @@ allowed in any context—except between groups immediately within,
 @litchar{()}, @litchar{[]}, or @litchar{{}}, where a @litchar{,}
 separates groups. The following three blocks are the same:
 
-@(rhombusblock:
-    hello:
-      world
-      universe  
+@rhombusblock(
+  hello:
+    world
+    universe  
 
-    hello:
-      world; universe
+  hello:
+    world; universe
 
-    hello: world; universe
-  )
+  hello: world; universe
+)
 
 The @litchar{;} and @litchar{,} separators interact differently with blocks formed by
 @litchar{:} and @litchar{|}. A @litchar{,} closes subgroups and blocks as necessary to reach
@@ -360,24 +360,24 @@ For example, the following two groups are the same, and they have one
 parenthesized term that has a single block, and the block has two
 groups:
 
-@(rhombusblock:
-    (hello: world; universe)
+@rhombusblock(
+  (hello: world; universe)
 
-    (hello: world
-            universe)
-  )
+  (hello: world
+          universe)
+)
 
 The following two groups are also the same, where the group has one
 parenthesized term, but that term contains two groups, where the first
 group is a block that contains a single group:
 
 
-@(rhombusblock:
-    (hello: world, universe)
+@rhombusblock(
+  (hello: world, universe)
 
-    (hello: world,
-     universe)
-  )
+  (hello: world,
+   universe)
+)
 
 @section(~tag: "guillemot"){Line- and Column-Insensitivity with @litchar{«} and @litchar{»}}
 
@@ -409,41 +409,41 @@ context, the @litchar{«} must be on the same line as its @litchar{:},
 
 The following five groups are the same:
 
-@(rhombusblock:
-    hello:
-      if x
-      | world
-        planet
-      | universe
-
-    hello: if x | world; planet | universe
-
-    hello:«
-      if x
-      |« world;
-         planet »
-      |« universe »»
-
-    hello:« if x |« world; planet » |« universe »»
-
-    ;«hello
-      :
-      «
-      if
-      x
-      |
-      «
-      world
-      ;
+@rhombusblock(
+  hello:
+    if x
+    | world
       planet
-      »
-      |
-      «
-      universe
-      »
-      »
-      »
-  )
+    | universe
+
+  hello: if x | world; planet | universe
+
+  hello:«
+    if x
+    |« world;
+       planet »
+    |« universe »»
+
+  hello:« if x |« world; planet » |« universe »»
+
+  ;«hello
+    :
+    «
+    if
+    x
+    |
+    «
+    world
+    ;
+    planet
+    »
+    |
+    «
+    universe
+    »
+    »
+    »
+)
 
 Using @litchar{«} and @litchar{»} can “armor” a shrubbery for transport from one
 context to another where its line breaks or indentation might get
@@ -459,57 +459,57 @@ line, as illustrated above, not all forms can be collapsed to a single
 line without extra delimiters. For example, these six groups are all
 different:
 
-@(rhombusblock:
-    outside:
-      inside: fruit
-      rind
+@rhombusblock(
+  outside:
+    inside: fruit
+    rind
 
-    // not the same, because `rind` is within `inside:`
-    outside: inside: fruit; rind
+  // not the same, because `rind` is within `inside:`
+  outside: inside: fruit; rind
 
-    if true
-    | if false
-      | x
-      | y
-    | z
+  if true
+  | if false
+    | x
+    | y
+  | z
 
-    // not the same, because there's one block with five `|` alternatives
-    if | true | if false | x | y | z
+  // not the same, because there's one block with five `|` alternatives
+  if | true | if false | x | y | z
 
-    hello:
-      if x
-      | world
-      | universe
-      the end
+  hello:
+    if x
+    | world
+    | universe
+    the end
 
-    // not the same, because `the end` is in the second `|`:
-    hello: if x | world | universe; the end
-  )
+  // not the same, because `the end` is in the second `|`:
+  hello: if x | world | universe; the end
+)
 
 Using @litchar{«} and @litchar{»} can help in those cases:
 
-@(rhombusblock:
-    outside:
-      inside: fruit
-      rind
+@rhombusblock(
+  outside:
+    inside: fruit
+    rind
 
-    outside: inside:« fruit »; rind
+  outside: inside:« fruit »; rind
 
-    if true
-    | if false
-      | x
-      | y
-    | z
+  if true
+  | if false
+    | x
+    | y
+  | z
 
-    if | true |« if false | x | y » | z
+  if | true |« if false | x | y » | z
 
-    hello:
-      if x
-      | world
-      | universe
-      the end
+  hello:
+    if x
+    | world
+    | universe
+    the end
 
-    hello: if x | world |« universe »; the end
+  hello: if x | world |« universe »; the end
 )
 
 Even so, delimiting blocks with @litchar{«} and @litchar{»} is expected to be rare in
@@ -519,13 +519,13 @@ allow @litchar{()} in places where grouping might be needed. For example,
 assuming that @litchar{if} is an expression form and @litchar{()} can wrap an
 expression, a nested conditional is probably better written like this:
 
-@(rhombusblock:
-    if | true | (if false | x | y) | z
+@rhombusblock(
+  if | true | (if false | x | y) | z
 )
 
 Using @litchar{()} in this way does not produce an equivalent shrubbery to
 
-@(rhombusblock: if | true |« if false | x | y »| z)
+@rhombusblock( if | true |« if false | x | y »| z)
 
 but it might represent an equivalent expression in the language using
 shrubbery notation.
@@ -554,30 +554,30 @@ as “the next line” even for @litchar{\} continuations, so any number of
 whitespace and comment lines can appear between @litchar{\} and the line that
 it continues.
 
-@(rhombusblock:
-    this is \
-      the first group
-    this \ is \ the \ second \ group
+@rhombusblock(
+  this is \
+    the first group
+  this \ is \ the \ second \ group
 
-    this is a group \
-      with (a,
-                                 nested,
-                                 list)
+  this is a group \
+    with (a,
+                             nested,
+                             list)
 
-    this is a group \
-     with (a,
-                    \
-           nested,
-                    \
-           list)
+  this is a group \
+   with (a,
+                  \
+         nested,
+                  \
+         list)
 
-    this is a group \
-     with (a,
-                    \
-           /* this a comment on `nested`: */
-           nested,
-                    \
-           list)
+  this is a group \
+   with (a,
+                  \
+         /* this a comment on `nested`: */
+         nested,
+                  \
+         list)
 )
 
 @section(~tag: "group-comment"){Group Comments with @litchar{#//}}
@@ -622,55 +622,55 @@ always an error).
 
 The following three groups all parse the same:
 
-@(rhombusblock:
-    {
-      hello:
-        val x: f(1, 2 + 3)
-        match x
-        | 1: 'one'
-        | 2: 'two'
-    }
+@rhombusblock(
+  {
+    hello:
+      val x: f(1, 2 + 3)
+      match x
+      | 1: 'one'
+      | 2: 'two'
+  }
 
-    {
-      hello:
-        val x:
+  {
+    hello:
+      val x:
+        #//
+        g(-1)
+        f(
           #//
-          g(-1)
-          f(
-            #//
-            0,
-            1,
-            2 + 3,
-            #//
-            4 + 5)
-        #//
-        not included in the code
-        match x
-        #//
-        | 0: no
-        | 1: 'one'
-        #//
-        | 1.5: no
-        | 2: 'two'
-        #//
-        | 3: no,
+          0,
+          1,
+          2 + 3,
+          #//
+          4 + 5)
       #//
-      goodbye:
-        the enclosing group of the block is commented out
-    }
+      not included in the code
+      match x
+      #//
+      | 0: no
+      | 1: 'one'
+      #//
+      | 1.5: no
+      | 2: 'two'
+      #//
+      | 3: no,
+    #//
+    goodbye:
+      the enclosing group of the block is commented out
+  }
 
-    {
-      hello:
-        val x:
-          #// g(-1)
-          f(#// 0, 1, 2 + 3, #// 4 + 5)
-        #// not included in the code
-        match x #// | 0: no | 1: 'one' #// | 1.5: no
-                    | 2: 'two' #// | 3: no,
-      #// goodbye:
-        the enclosing group of the block is commented out
-    }
-  )
+  {
+    hello:
+      val x:
+        #// g(-1)
+        f(#// 0, 1, 2 + 3, #// 4 + 5)
+      #// not included in the code
+      match x #// | 0: no | 1: 'one' #// | 1.5: no
+                  | 2: 'two' #// | 3: no,
+    #// goodbye:
+      the enclosing group of the block is commented out
+  }
+)
 
 
 @include_section("at-notation.scrbl")

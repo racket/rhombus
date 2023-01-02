@@ -25,22 +25,21 @@ as part of their grammar:
 @doc(
   grammar identifier_path:
     $identifier
-    $identifier_path . $identifier,
+    $identifier_path . $identifier
 
   grammar operator_path:
     $operator
-    $identifier_path . ($operator),
-
+    $identifier_path . ($operator)
 ){}
 
 @doc(
   defn.macro 'namespace $identifier_path:
                 $body_or_export
-                ...',
+                ...'
 
   grammar identifier_path:
     $identifier
-    $identifier_path . $identifier,
+    $identifier_path . $identifier
 
   grammar body_or_export:
     $body
@@ -59,8 +58,8 @@ as part of their grammar:
   namespace math:
     export: pi tau
     def pi: 3.14
-    def tau: 6.28,
-  math.pi,
+    def tau: 6.28
+  math.pi
   begin:
     import: .math open
     [pi, tau]

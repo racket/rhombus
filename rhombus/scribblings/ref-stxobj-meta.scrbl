@@ -19,8 +19,8 @@
 
 
 @doc(
-  fun Syntax.error(at_stx :: Syntax),
-  fun Syntax.error(message :: String, at_stx :: Syntax),
+  fun Syntax.error(at_stx :: Syntax)
+  fun Syntax.error(message :: String, at_stx :: Syntax)
   fun Syntax.error(message :: String, in_stx :: Syntax, at_stx :: Syntax)
 ){
 

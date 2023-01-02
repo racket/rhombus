@@ -2,13 +2,73 @@
 
 import:
   "typeset-example.rkt" open
+  
 
 export:
   examples
+  examples_stanza
   make_rhombus_eval
   close_eval
 
-expr.macro 'examples $parens $tail ...':
+expr.macro 'examples($form, ...)':
+  ~op_stx: self
+  fun split(forms):
+    match forms
+    | []: []
+    | ['~eval: $_', &rest]:
+        split(rest)
+    | ['~label: $_', &rest]:
+        split(rest)
+    | ['~defn: $defn; ...', &rest]:
+        [['~defn', [defn, ...]], &split(rest)]
+    | ['~repl: $repl; ...', &rest]:
+        [['~repl', [repl, ...]], &split(rest)]
+    | ['~hidden: $repl; ...', &rest]:
+        [['~hidden', [repl, ...]], &split(rest)]
+    | ['~error: $repl', &rest]:
+        [['~repl', forms]]
+    | ['$(kw :: Keyw) $_ ...', &rest]:
+        Syntax.error("misplaced or unrecognized keyword", self, kw)
+    | [form, ...]:
+        [['~repl', [form, ...]]]
+  fun find_kw(forms, want_kw, was_found):
+    match forms
+    | []: #false
+    | ['$(kw :: Keyw): $(eval_expr :: Group)', &rest]:
+        cond
+        | kw.unwrap() == want_kw:
+            when was_found
+            | Syntax.error("duplicate `~eval` clause", '$eval_expr')
+            find_kw(rest, want_kw, #true)
+            eval_expr
+        | ~else: find_kw(rest, want_kw, was_found)
+    | [form, &rest]: find_kw(rest, want_kw, was_found)
+  fun find_eval(): find_kw([form, ...], keyword'~eval', #false)
+  fun find_label(): find_kw([form, ...], keyword'~label', #false)
+  def [new_form, ...]:
+    for List:
+      each:
+        j -: List: split([form, ...])
+        i: 0..
+      def [no_prompt, ...]: match j[0]
+                            | '~defn': ['~no_prompt']
+                            | '~hidden': ['~hidden: #true']
+                            | _: []
+      def label: if i == 0 | find_label() | #false
+      Syntax.relocate_span('@examples_stanza(~label: $label,
+                                             ~eval: eval,
+                                             $no_prompt, ...,
+                                             $(List.repet(j[1])), ...)',
+                           j[1])
+  def eval = find_eval()
+  values('begin:
+            def eval: $(eval || 'make_rhombus_eval()')
+            def content = [$new_form, ...]
+            $(if eval | #void | 'close_eval(eval)')
+            content',
+         '')
+
+expr.macro 'examples_stanza $parens $tail ...':
   ~op_stx: me
   match parens
   | '($_)':

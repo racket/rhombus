@@ -35,9 +35,9 @@
   fun check_shape(v):
     match v
     | [x] || [x, y, z]: #true
-    | ~else: #false,
-  check_shape([1]),
-  check_shape([1, 2, 3]),
+    | ~else: #false
+  check_shape([1])
+  check_shape([1, 2, 3])
   check_shape([1, 2])
 )
 
@@ -53,7 +53,7 @@
  @rhombus(left_annot) and @rhombus(right_annot).
 
 @examples(
-  1 is_a (String || Integer),
+  1 is_a (String || Integer)
   1 is_a (Boolean || Integer)
 )
 
@@ -82,15 +82,15 @@
  @rhombus(right_bind) (but not the other way around).
 
 @examples(
-  class Posn(x, y),
+  class Posn(x, y)
   fun three_xs(v):
     match v
     | [a, b, c] && [Posn(x, _), ...]:
         [x, ...]
-    | ~else: #false,
-  three_xs([Posn(1, 2), Posn(3, 4), Posn(5, 6)]),
-  three_xs([Posn(1, 2), Posn(3, 4)]),
-  three_xs([Posn(1, 2), Posn(3, 4), "no"]),
+    | ~else: #false
+  three_xs([Posn(1, 2), Posn(3, 4), Posn(5, 6)])
+  three_xs([Posn(1, 2), Posn(3, 4)])
+  three_xs([Posn(1, 2), Posn(3, 4), "no"])
 )
 
 }
@@ -108,7 +108,7 @@
  supply values for the same static-information key.
 
 @examples(
-  1 is_a (String && Integer),
+  1 is_a (String && Integer)
   Pair.cons(1, "hello") is_a (Pair.of(Integer, Any) && Pair.of(Any, String))
 )
 
@@ -124,8 +124,8 @@
 
 
 @examples(
-  !#false,
-  !#true,
+  !#false
+  !#true
   !"false"
 )
 

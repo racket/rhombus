@@ -23,8 +23,8 @@
  character content.
 
 @examples(
-  "hello" +& "world",
-  "it goes to " +& 11,
+  "hello" +& "world"
+  "it goes to " +& 11
   "the list " +& [1, 2, 3] +& " has " +& 3 +& " elements"
 )
 

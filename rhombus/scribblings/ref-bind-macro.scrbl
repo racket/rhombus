@@ -12,7 +12,7 @@
 @doc(
   defn.macro '«bind.rule $rule_pattern:
                  $option; ...
-                 '$template'»',
+                 '$template'»'
   defn.macro '«bind.rule
                | $rule_pattern:
                    $option; ...
@@ -27,12 +27,12 @@
  @rhombus(template) forms are the same as for @rhombus(expr.rule).
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   bind.rule 'many $ann as $id':
-    '$id && [_ :: $ann, $('...')]',
-  def many Integer as tickets: [1, 2, 3],
-  tickets,
-  ~error: def many String as names: "oops",
+    '$id && [_ :: $ann, $('...')]'
+  def many Integer as tickets: [1, 2, 3]
+  tickets
+  ~error: def many String as names: "oops"
 )
 
 }
@@ -42,13 +42,13 @@
   defn.macro 'bind.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'bind.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Like @rhombus(expr.macro), but the first result of the transformer
@@ -69,8 +69,8 @@
  two parts: @rhombus(infoer_id, ~var) and @rhombus(data, ~var),
  combined in the form
 
- @(rhombusblock:
-    '($$(@rhombus(infoer_id, ~var)), $$(@rhombus(data, ~var)))')
+ @rhombusblock(
+  '($$(@rhombus(infoer_id, ~var)), $$(@rhombus(data, ~var)))')
 
  The @rhombus(infoer_id, ~var) identifier must be bound to a transformer
  with @rhombus(bind.infoer), and @rhombus(data, ~var) is propagated to
@@ -133,17 +133,17 @@
 
  The syntax object @rhombus(stx) must have the following shape:
 
- @(rhombusblock:
-    '($$(@rhombus(ann_string, ~var)),
-      $$(@rhombus(name_identifier, ~var)),
-      (($$(@rhombus(static_key, ~var)), $$(@rhombus(static_value, ~var))), ...),
-      (($$(@rhombus(defined_identifier, ~var)),
-        [$$(@rhombus(var_use, ~var)), ...],
-        ($$(@rhombus(var_static_key, ~var)), $$(@rhombus(var_static_value, ~var))), ...),
-       ...),
-      $$(@rhombus(matcher_id, ~var)),
-      $$(@rhombus(binder_id, ~var)),
-      $$(@rhombus(data, ~var)))'
+ @rhombusblock(
+  '($$(@rhombus(ann_string, ~var)),
+    $$(@rhombus(name_identifier, ~var)),
+    (($$(@rhombus(static_key, ~var)), $$(@rhombus(static_value, ~var))), ...),
+    (($$(@rhombus(defined_identifier, ~var)),
+      [$$(@rhombus(var_use, ~var)), ...],
+      ($$(@rhombus(var_static_key, ~var)), $$(@rhombus(var_static_value, ~var))), ...),
+     ...),
+    $$(@rhombus(matcher_id, ~var)),
+    $$(@rhombus(binder_id, ~var)),
+    $$(@rhombus(data, ~var)))'
    )
 
  The @rhombus(ann_string, ~var) term is for error repoting when a value
@@ -211,8 +211,8 @@
  Static information is represented by a syntax object that has the
  following shape:
 
- @(rhombusblock:
-    '(($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...)')
+ @rhombusblock(
+  '(($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...)')
  
  The result is a syntax object that represents the initial expansion of
  the binding form as a packed syntax object, whose form is unspecified

@@ -4,9 +4,9 @@
 @title{Dot}
 
 @doc(
-  expr.macro '$target_expr . $identifier',
-  expr.macro '$target_expr . $identifier := $expr',
-  repet.macro '$target_repetition . $identifier',
+  expr.macro '$target_expr . $identifier'
+  expr.macro '$target_expr . $identifier := $expr'
+  repet.macro '$target_repetition . $identifier'
 ){
 
  Accesses or updates a component of @rhombus(target), either statically
@@ -17,12 +17,12 @@
  See also @rhombus(use_static).
 
 @examples(
- [1, 2, 3].length(),
- class Posn(x, mutable y),
- def p: Posn(1, 2),
- p.x,
- p.y := 20,
- p
+  [1, 2, 3].length()
+  class Posn(x, mutable y)
+  def p: Posn(1, 2)
+  p.x
+  p.y := 20
+  p
 )
 
 }

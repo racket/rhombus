@@ -14,9 +14,9 @@
  has the same effect as mutating the other).
 
 @examples(
-  "apple" == "apple",
-  [1, 2, 3] == 1,
-  [1, "apple", {"alice": 97}] == [1, "apple", {"alice": 97}],
+  "apple" == "apple"
+  [1, 2, 3] == 1
+  [1, "apple", {"alice": 97}] == [1, "apple", {"alice": 97}]
   1 == 1.0
 )
 
@@ -33,8 +33,8 @@
  values like symbols are @rhombus(===) when they are @rhombus(==).
 
 @examples(
-  symbol'apple' === symbol'apple',
-  symbol'apple' === symbol'banana',
+  symbol'apple' === symbol'apple'
+  symbol'apple' === symbol'banana'
 )
 
 }
@@ -50,8 +50,8 @@
  itself).
 
 @examples(
-  1 .= 1,
-  1 .= 2,
+  1 .= 1
+  1 .= 2
   1.0 .= 1
 )
 

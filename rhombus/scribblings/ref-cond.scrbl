@@ -18,7 +18,8 @@
 @examples(
   if #true
   | "yes"
-  | "no",
+  | "no"
+
   if 1+2 == 3
   | def yep: "yes"
     yep
@@ -66,7 +67,8 @@
 
 @examples(
   when #true
-  | displayln("yes"),
+  | displayln("yes")
+
   when #false
   | displayln("no")
 )
@@ -84,7 +86,8 @@
 
 @examples(
   unless #true
-  | displayln("yes"),
+  | displayln("yes")
+  
   unless #false
   | displayln("no")
 )

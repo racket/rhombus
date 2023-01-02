@@ -9,13 +9,13 @@ A Rhombus module, which implements a program or a library, always
 starts @litchar{#lang rhombus}. If you write an expression at the top of a
 module, then its value gets printed out.
 
-@(rhombusblock:
-    #lang rhombus
+@rhombusblock(
+  #lang rhombus
 
-    1+4  // prints 5
-    
-    "Hello, world!"  // prints "Hello, world!", including the quotes
-  )
+  1+4  // prints 5
+  
+  "Hello, world!"  // prints "Hello, world!", including the quotes
+)
 
 @aside{If you have installed the @pkg{rhombus-prototype} package, then
  you can run Rhombus modules in DrRacket or by supplying the file path to
@@ -30,16 +30,16 @@ the usual shape: a function name (or, more generally, an expression that
 produces a function) followed by comma-separated arguments in
 parentheses.
 
-@(rhombusblock:
-    #lang rhombus
+@rhombusblock(
+  #lang rhombus
 
-    def fahrenheit_freezing = 32
-                             
-    fun fahrenheit_to_celsius(f):
-      (f - 32) * 5/9
+  def fahrenheit_freezing = 32
+                           
+  fun fahrenheit_to_celsius(f):
+    (f - 32) * 5/9
 
-    fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
-    )
+  fahrenheit_to_celsius(fahrenheit_freezing)  // prints 0
+)
 
 @aside{The interactions area in DrRacket will work to call
  @rhombus(fahrenheit_to_celsius). In interactions, a single input line is
@@ -59,9 +59,9 @@ parentheses.
 The definition of @rhombus(fahrenheit_freezing) could also have been
 written with @litchar{:} instead of @rhombus(=), like this:
 
-@(rhombusblock:
-    def fahrenheit_freezing: 32
-  )
+@rhombusblock(
+  def fahrenheit_freezing: 32
+)
 
 By convention, however, @rhombus(=) is used for single expressions, while
 @litchar{:} is useful for multi-line definitions and blocks. A @rhombus(=) is
@@ -75,28 +75,29 @@ A Rhombus module can export definitions to other modules using
 at the top of a module, and then @rhombus(export)s, and then the
 definitions.
 
-@(rhombusblock:
-    // f2c.rhm
-    #lang rhombus
+@rhombusblock(
+  // f2c.rhm
+  #lang rhombus
 
-    export:
-      fahrenheit_freezing
-      fahrenheit_to_celsius
+  export:
+    fahrenheit_freezing
+    fahrenheit_to_celsius
 
-    def fahrenheit_freezing = 32
+  def fahrenheit_freezing = 32
 
-    fun fahrenheit_to_celsius(f):
-      (f - 32) * 5/9)
+  fun fahrenheit_to_celsius(f):
+    (f - 32) * 5/9
+)
 
-@(rhombusblock:
-    // freezing.rhm
-    #lang rhombus
+@rhombusblock(
+  // freezing.rhm
+  #lang rhombus
 
-    import:
-      "f2c.rhm"
+  import:
+    "f2c.rhm"
 
-    f2c.fahrenheit_to_celsius(f2cfahrenheit_freezing)  // prints 0
-  )
+  f2c.fahrenheit_to_celsius(f2cfahrenheit_freezing)  // prints 0
+)
 
 Unlike Racket, imported bindings must accessed using a prefix name and
 then @litchar{.}, at least by default. The prefix is inferred from a module
@@ -104,32 +105,34 @@ path by taking its last component and removing any extension, so
 that’s why the import of @rhombus("f2c.rhm") leads to the @rhombus(f2c) prefix. To
 supply an explicit prefix, use the @rhombus(as, ~impmod) modifier:
 
-@(rhombusblock:
-    import:
-      "f2c.rhm" as convert
+@rhombusblock(
+  import:
+    "f2c.rhm" as convert
 
-    convert.fahrenheit_to_celsius(convert.fahrenheit_freezing))
+  convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
+)
 
 Use the @rhombus(open, ~impmod) modifier to import without a prefix, but
 this kind of ``namespace dumping'' is considered bad style in most
 cases:
 
-@(rhombusblock:
-    import:
-      "f2c.rhm" open
+@rhombusblock(
+  import:
+    "f2c.rhm" open
 
-    fahrenheit_to_celsius(fahrenheit_freezing))
+  fahrenheit_to_celsius(fahrenheit_freezing)
+)
 
 Module paths are written with a @rhombus(/, ~impmod) separator as in Racket, and the
 last path element is the one that determines the default import
 prefix.
 
-@(rhombusblock:
-    import:
-      rhombus/math
+@rhombusblock(
+  import:
+    rhombus/math
 
-    math.pi  // prints 3.141592653589793
-    )
+  math.pi  // prints 3.141592653589793
+)
 
 @aside{The use of @litchar{.} with an import name as a hierarchical reference is not
 the same as the @rhombus(.) operator described in the next section. We stick with
@@ -139,12 +142,12 @@ Unlike Racket, the default file suffix for unquoted module paths is
 @filepath{.rhm}. To reference a Racket module, use a
 @rhombus(lib, ~impmod) path with a @filepath{.rkt} suffix.
 
-@(rhombusblock:
-    import:
-      lib("racket/math.rkt")
+@rhombusblock(
+  import:
+    lib("racket/math.rkt")
 
-    math.pi  // prints 3.141592653589793
-    )
+  math.pi  // prints 3.141592653589793
+)
 
 There’s a lot more to the syntax or @rhombus(import) and
 @rhombus(export) for renaming, re-exporting, and so on. See the
@@ -156,11 +159,11 @@ modules explicitly. Examples will sometimes show definitions, which
 meant as part of some implicit module, which interactive examples with
 are shown with a leading @litchar{> } prompt and the expected result.
 
-@(demo:
-    ~defn:
-      def fahrenheit_freezing = 32
-      fun fahrenheit_to_celsius(f):
-        (f - 32) * 5/9
-    ~repl:
-      fahrenheit_to_celsius(fahrenheit_freezing)
-  )
+@demo(
+  ~defn:
+    def fahrenheit_freezing = 32
+    fun fahrenheit_to_celsius(f):
+      (f - 32) * 5/9
+  ~repl:
+    fahrenheit_to_celsius(fahrenheit_freezing)
+)

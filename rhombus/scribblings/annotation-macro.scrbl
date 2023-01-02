@@ -5,11 +5,11 @@
 
 @(def ann_eval: make_rhombus_eval())
 
-@examples(
-  ~eval: ann_eval,
-  ~hidden: #true,
-  class Posn(x, y),
-  import: rhombus/meta open
+@demo(
+  ~eval: ann_eval
+  ~hidden:
+    class Posn(x, y)
+    import: rhombus/meta open
 )
 
 @title(~tag: "annotation-macro"){Annotations and Static Information}
@@ -25,26 +25,26 @@ The @rhombus(annot.rule) or @rhombus(annot.macro) form
 defines an annotation. In the simplest case, the expansion of an
 annotation can be another annotation:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      annot.rule 'AlsoPosn': 'Posn'
-    ~repl:
-      Posn(1, 2) :: AlsoPosn
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    annot.rule 'AlsoPosn': 'Posn'
+  ~repl:
+    Posn(1, 2) :: AlsoPosn
+)
 
 Note that @rhombus(annot.rule) defines only an annotation. To make
 @rhombus(AlsoPosn) also a binding operator, you can use @rhombus(bind.rule):
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      bind.rule 'AlsoPosn ($x, $y)':
-        'Posn($x, $y)'
-    ~repl:
-      def AlsoPosn(x, y): Posn(1, 2)
-      x
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    bind.rule 'AlsoPosn ($x, $y)':
+      'Posn($x, $y)'
+  ~repl:
+    def AlsoPosn(x, y): Posn(1, 2)
+    x
+)
 
 To define an annotation with explicit control over the associated
 predicate, use @rhombus(annot_meta.pack_predicate). This
@@ -53,17 +53,17 @@ implementation if @rhombus(IsPosn) creates a new predicate that uses
 @rhombus(Posn) instance, but it doesn't act as a @rhombus(Posn)-like
 binding form or constructor:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      annot.macro 'IsPosn $tail ...':
-        values(annot_meta.pack_predicate('fun (x): x is_a Posn'),
-               '$tail ...')
-    ~repl:
-      fun get_x(p :: IsPosn): Posn.x(p)
-      get_x(Posn(1, 2))
-      ~error: get_x(10)
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    annot.macro 'IsPosn $tail ...':
+      values(annot_meta.pack_predicate('fun (x): x is_a Posn'),
+             '$tail ...')
+  ~repl:
+    fun get_x(p :: IsPosn): Posn.x(p)
+    get_x(Posn(1, 2))
+    ~error: get_x(10)
+)
 
 The @rhombus(annot_meta.pack_predicate) takes an optional second
 argument, which is static information to associate with uses of the
@@ -79,15 +79,15 @@ the ``fields'' are @rhombus(angle) and @rhombus(magnitude) instead of
 @rhombus(x) and @rhombus(y), we start with an annotation definition that
 refers to a @rhombus(vector_dot_provider) that we will define:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      annot.macro 'Vector $tail ...':
-        values(annot_meta.pack_predicate('fun (x): x is_a Posn',
-                                         '(($(statinfo_meta.dot_provider_key),
-                                            vector_dot_provider))'),
-               '$tail ...')
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    annot.macro 'Vector $tail ...':
+      values(annot_meta.pack_predicate('fun (x): x is_a Posn',
+                                       '(($(statinfo_meta.dot_provider_key),
+                                          vector_dot_provider))'),
+             '$tail ...')
+)
 
 A dot-provider transformer is defined using @rhombus(dot.macro). A
 dot-provider transformer always receives three parts, which are the
@@ -96,46 +96,46 @@ identifier to the right of the dot. The dot provider associated with
 @rhombus(Vector) access @rhombus(angle) and @rhombus(magnitude)
 ``fields'' by calling helper functions:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      dot.macro 'vector_dot_provider $left $dot $right':
-        match right
-        | 'angle': 'vector_angle($left)'
-        | 'magnitude': 'vector_magnitude($left)'
-    ~defn:
-      fun vector_angle(Posn(x, y)): atan(y, x)
-      fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
-    )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    dot.macro 'vector_dot_provider $left $dot $right':
+      match right
+      | 'angle': 'vector_angle($left)'
+      | 'magnitude': 'vector_magnitude($left)'
+  ~defn:
+    fun vector_angle(Posn(x, y)): atan(y, x)
+    fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
+  )
 
 With those pieces in place, a binding using @rhombus(:: Vector) creates
 a dot provider:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      def vec :: Vector: Posn(3, 4)
-    ~repl:
-      vec.angle
-      vec.magnitude
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    def vec :: Vector: Posn(3, 4)
+  ~repl:
+    vec.angle
+    vec.magnitude
 )
 
 A macro can explicitly associate static information with an expression
 by using @rhombus(statinfo_meta.wrap):
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      expr.macro 'or_zero $p $tail ...':
-        def expansion: '$p || Posn(0,0)'
-        values(statinfo_meta.wrap(expansion,
-                                  '(($(statinfo_meta.dot_provider_key),
-                                     vector_dot_provider))'),
-               '$tail ...')
-    ~repl:
-      or_zero(Posn(3, 4)).magnitude
-      or_zero(#false).magnitude
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    expr.macro 'or_zero $p $tail ...':
+      def expansion: '$p || Posn(0,0)'
+      values(statinfo_meta.wrap(expansion,
+                                '(($(statinfo_meta.dot_provider_key),
+                                   vector_dot_provider))'),
+             '$tail ...')
+  ~repl:
+    or_zero(Posn(3, 4)).magnitude
+    or_zero(#false).magnitude
+)
 
 A similar effect could be acheived by expanding to
 @rhombus('($p || Posn(0,0)) :: Vector'), but for better or worse, this
@@ -159,13 +159,13 @@ representation.
  information. The overall right-hand side result for
  @rhombus(statinfo.macro) is similarly automatically packed.}
 
-@(rhombusblock:
-    fun zero(): Posn(0, 0)
-    statinfo.macro 'zero':
-       '($(statinfo_meta.call_result_key),
-         $(statinfo_meta.pack('(($(statinfo_meta.dot_provider_key),
-                                 vector_dot_provider))')))'
-    zero().magnitude  // prints 0
+@rhombusblock(
+  fun zero(): Posn(0, 0)
+  statinfo.macro 'zero':
+     '($(statinfo_meta.call_result_key),
+       $(statinfo_meta.pack('(($(statinfo_meta.dot_provider_key),
+                               vector_dot_provider))')))'
+  zero().magnitude  // prints 0
 )
 
 The @rhombus(statinfo.macro) form expects @rhombus('') containing an
@@ -179,18 +179,18 @@ exposed outside of the module that implements @rhombus(Vector). But if a
 dot provider is used directly, then it receives itself as the left
 argument:
 
-@(rhombusblock:
-    dot.macro 'hello $left $dot $right':
-      match right
-      | 'english': '"Hi"'
-      | 'chinese': '"你好"'
-      | 'spanish': '"Hola"'
+@rhombusblock(
+  dot.macro 'hello $left $dot $right':
+    match right
+    | 'english': '"Hi"'
+    | 'chinese': '"你好"'
+    | 'spanish': '"Hola"'
 
-    hello.chinese  // prints "你好"
-    hello.spanish  // prints "Hola"
-    hello.english  // prints "Hello"
-    // hello.greek  // would be a compile-time match error
-  )
+  hello.chinese  // prints "你好"
+  hello.spanish  // prints "Hola"
+  hello.english  // prints "Hello"
+  // hello.greek  // would be a compile-time match error
+)
 
 A direct use like this makes sense when a dot provider is not associated
 with a run-time value. Attempting to use @rhombus(hello) in an

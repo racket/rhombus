@@ -14,40 +14,40 @@ the name of an existing class. Instances of the new class, the
 however, a class is @emph{final} by default, which means that it does
 not permit subclasses.
 
-@(demo:
-    ~defn:
-      class Posn(x, y)
-    ~defn:      
-      ~error:
-        class Posn3D(z):
-          extends Posn
-  )
+@demo(
+  ~defn:
+    class Posn(x, y)
+  ~defn:      
+    ~error:
+      class Posn3D(z):
+        extends Posn
+)
 
 To allow subclasses, add a @rhombus(nonfinal, ~class_clause) clause in a
 class:
 
-@(demo:
-    ~eval: subclass_eval
-    ~defn:
-      class Posn(x, y):
-        nonfinal
-    ~defn:             
-      class Posn3D(z):
-        extends Posn
-  )
+@demo(
+  ~eval: subclass_eval
+  ~defn:
+    class Posn(x, y):
+      nonfinal
+  ~defn:             
+    class Posn3D(z):
+      extends Posn
+)
 
 When a subclass is created, superclass fields are implicitly
 included before new fields in the subclass's constructor:
 
-@(demo:
-    ~eval: subclass_eval
-    ~repl:
-      def p: Posn3D(1, 2, 3)
-      p
-      p.y
-      p is_a Posn
-      p is_a Posn3D
-  )
+@demo(
+  ~eval: subclass_eval
+  ~repl:
+    def p: Posn3D(1, 2, 3)
+    p
+    p.y
+    p is_a Posn
+    p is_a Posn3D
+)
 
 The @rhombus(interface) definition form is similar to @rhombus(class),
 but without fields. A @rhombus(class) form can declare that the class
@@ -59,17 +59,17 @@ at most one superclass. but it can implement any number of interfaces.
 An interface is never final, so no @rhombus(nonfinal, ~class_clause) is
 needed in an interface.
 
-@(demo:
-    ~defn:
-      interface Shape
-      interface Dance
-      class Square(side):
-        implements: Shape Dance
-    ~repl:
-      def s: Square(10)
-      s is_a Shape
-      s is_a Dance
-  )
+@demo(
+  ~defn:
+    interface Shape
+    interface Dance
+    class Square(side):
+      implements: Shape Dance
+  ~repl:
+    def s: Square(10)
+    s is_a Shape
+    s is_a Dance
+)
 
 Interfaces can @rhombus(extend, ~intf_clause) other interfaces. Unlike
 classes extending at one most superclass, interfaces can extend any

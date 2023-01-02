@@ -12,24 +12,24 @@
 @doc(
   defn.macro '«expr.rule $rule_pattern:
                  $option; ...
-                 '$template'»',
+                 '$template'»'
   defn.macro '«expr.rule
                | $rule_pattern:
                    $option; ...
                    '$template'
-               | ...»',
+               | ...»'
   grammar rule_pattern:
     '$identifier_or_operator $pattern ...'
-    '$ $term_pattern $identifier_or_operator $pattern ...',
+    '$ $term_pattern $identifier_or_operator $pattern ...'
   grammar identifier_or_operator:
     $identifier
     $operator
     $$(dollar)('$$(dollar)')
     ($identifier_path)
-    ($operator_path),
+    ($operator_path)
   grammar term_pattern:
     $term_identifier
-    ($term_identifier :: $syntax_class),
+    ($term_identifier :: $syntax_class)
   grammar option:
     ~stronger_than: $identifier_or_operator ...
     ~weaker_than: $identifier_or_operator ...
@@ -38,7 +38,7 @@
     ~same_on_right_as: $identifier_or_operator ...
     ~associativity: $assoc
     ~op_stx: $identifier
-    ~parsed_right,
+    ~parsed_right
   grammar assoc:
     ~left
     ~right
@@ -92,10 +92,10 @@
  and @rhombus(operator_path).
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   expr.rule 'thunk: $body':
-    'fun (): $body',
-  thunk: "ok",
+    'fun (): $body'
+  thunk: "ok"
   (thunk: "ok")()
 )
 
@@ -106,13 +106,13 @@
   defn.macro 'expr.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'expr.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Like @rhombus(expr.rule), but

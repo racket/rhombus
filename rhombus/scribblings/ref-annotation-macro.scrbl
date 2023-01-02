@@ -12,7 +12,7 @@
 @doc(
   defn.macro '«annot.rule $rule_pattern:
                  $option; ...
-                 '$template'»',
+                 '$template'»'
   defn.macro '«annot.rule
                | $rule_pattern:
                    $option; ...
@@ -27,11 +27,11 @@
  @rhombus(template) forms are the same as for @rhombus(expr.rule).
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   annot.rule 'two_of($ann)':
-    'matching(List(_ :: $ann, _ :: $ann))',
-  [1, 2] :: two_of(Number),
-  ~error: [1, 2, 3] :: two_of(Number),
+    'matching(List(_ :: $ann, _ :: $ann))'
+  [1, 2] :: two_of(Number)
+  ~error: [1, 2, 3] :: two_of(Number)
   ~error: [1, "x"] :: two_of(Number)
 )
 
@@ -42,13 +42,13 @@
   defn.macro 'annot.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'annot.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Like @rhombus(expr.macro), but producing an annotation like

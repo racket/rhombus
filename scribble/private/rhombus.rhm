@@ -11,6 +11,7 @@ import:
 export:
   rhombus
   rhombusblock
+  rhombusblock_etc
 
 meta:
   fun | andmap(proc, []): #true
@@ -147,7 +148,7 @@ expr.macro
              '$main_tail ...')
     | Syntax.error("invalid space", kw)
 
-expr.macro 'rhombusblock $tail ...':
+expr.macro 'rhombusblock_etc $tail ...':
   ~op_stx: me
   fun finish(options, fin_tail):
     match fin_tail
@@ -167,3 +168,6 @@ expr.macro 'rhombusblock $tail ...':
       check_options([option, ...])
       finish([option, ...], '$new_tail ...')
   | ~else: finish([], '$tail ...')
+
+expr.macro 'rhombusblock ($args)':
+  values('#{typeset-rhombusblock}($(escape_term(': $args')))', '')

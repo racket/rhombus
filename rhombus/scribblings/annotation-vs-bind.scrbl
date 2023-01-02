@@ -5,12 +5,12 @@
 
 @(def ann_eval = make_rhombus_eval())
 
-@examples(
-  ~eval: ann_eval,
-  ~hidden: #true,
-  import:
-    rhombus/meta open,
-  class Posn(x, y)
+@demo(
+  ~eval: ann_eval
+  ~hidden:
+    import:
+      rhombus/meta open
+    class Posn(x, y)
 )
 
 @title(~tag: "annotation-vs-bind"){Annotations versus Binding Patterns}
@@ -26,28 +26,28 @@ a @rhombus(String) and @rhombus("location") to a @rhombus(Posn). The
 @rhombus(Map.of) annotation combination cannot express a per-key
 specialization, but the @rhombus(Map) binding pattern can.
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      annot.rule 'PersonList': 
-        'List.of(matching({"name": (_ :: String),
-                           "location": (_ :: Posn)}))'
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    annot.rule 'PersonList': 
+      'List.of(matching({"name": (_ :: String),
+                         "location": (_ :: Posn)}))'
 
-      def players :: PersonList:
-        [{"name": "alice", "location": Posn(1, 2)},
-         {"name": "bob", "location": Posn(3, 4)}]
-  )
+    def players :: PersonList:
+      [{"name": "alice", "location": Posn(1, 2)},
+       {"name": "bob", "location": Posn(3, 4)}]
+)
 
 As another example, here’s how a @rhombus(ListOf) annotation constructor
 could be implemented if @rhombus(List.of) did not exist already:
 
-@(demo:
-    ~eval: ann_eval
-    ~defn:
-      annot.macro 'ListOf ($annotation ...) $tail ...':
-        values('matching([_ :: ($annotation ...), $('...')])',
-               '$tail ...')
-  )
+@demo(
+  ~eval: ann_eval
+  ~defn:
+    annot.macro 'ListOf ($annotation ...) $tail ...':
+      values('matching([_ :: ($annotation ...), $('...')])',
+             '$tail ...')
+)
 
 At a lower level, the bridge between binding patterns and annotations is
 based on their shared use of @seclink("static-info"){static information}

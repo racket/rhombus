@@ -13,18 +13,18 @@ export:
 fun make_macro_eval():
   def macro_eval: manual.make_rhombus_eval()
   @examples(
-    ~eval: macro_eval,
-    ~hidden: #true,
-    import: rhombus/meta open
-  )
+    ~eval: macro_eval
+    ~hidden:
+      import: rhombus/meta open
+  )  
   macro_eval
 
 fun make_for_meta_eval():
   def meta_eval: manual.make_rhombus_eval()
   @examples(
-    ~eval: meta_eval,
-    ~hidden: #true,
-    import: 
-      rhombus/meta open
+    ~eval: meta_eval
+    ~hidden:
+      import: 
+        rhombus/meta open
   )
   meta_eval

@@ -10,19 +10,19 @@ Macros can extend binding-position syntax, too, via @rhombus(bind.rule) and
 by expanding to other binding operators, like this definition of @rhombus($$$)
 as a prefix operator to constrain a pattern to number inputs:
 
-@(demo:
-    ~defn:
-      import:
-        rhombus/meta open
+@demo(
+  ~defn:
+    import:
+      rhombus/meta open
 
-      bind.rule '$$$ $n':
-        ~parsed_right
-        '$n :: Number'
-    ~repl:
-      def $$$salary = 100.0
+    bind.rule '$$$ $n':
+      ~parsed_right
+      '$n :: Number'
+  ~repl:
+    def $$$salary = 100.0
 
-      salary
-  )
+    salary
+)
 
 More expressive binding operators can use a lower-level protocol where a
 binding is represented by transformers that generate checking and
@@ -35,14 +35,14 @@ simple expansion.
 The @rhombus(annot.macro) form is similar to @rhombus(bind.macro), but for
 annotations. 
 
-@(rhombusblock:
-    use_static
+@rhombusblock(
+  use_static
 
-    annot.rule 'PosnList': 'List.of(Posn)'
+  annot.rule 'PosnList': 'List.of(Posn)'
 
-    fun nth_x(ps -: PosnList, n):
-      ps[n].x
-  )
+  fun nth_x(ps -: PosnList, n):
+    ps[n].x
+)
 
 For details on the low-level annotation protocol, see @secref("annotation-macro").
 

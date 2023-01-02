@@ -13,13 +13,13 @@
   defn.macro 'for_clause.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'for_clause.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Defines an @rhombus(identifier, ~var), @rhombus(operator, ~var),
@@ -34,10 +34,10 @@
  expression, or a defintion.
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   for_clause.macro 'each_in_three $id':
     'def three: 3
-     each $id: 0..three',
+     each $id: 0..three'
   for List:
     each_in_three i
     i

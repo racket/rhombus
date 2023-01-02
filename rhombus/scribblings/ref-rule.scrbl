@@ -8,25 +8,25 @@
 @doc(
   defn.macro '«rule $rule_pattern:
                  $option; ...
-                 '$template'»',
+                 '$template'»'
   defn.macro '«rule
                | $rule_pattern:
                    $option; ...
                    '$template'
-               | ...»',
+               | ...»'
 
   expr.macro '«rule '() $pattern ...':
                  $option; ...
-                 '$template'»',
+                 '$template'»'
   expr.macro '«rule
                | '() $pattern':
                    $option; ...
                    '$template'
-               | ...»',
+               | ...»'
 
   entry_point.macro '«rule '() $pattern ...':
                        $option; ...
-                       '$template'»',
+                       '$template'»'
   entry_point.macro '«rule
                       | '() $pattern ...':
                           $option; ...

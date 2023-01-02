@@ -29,8 +29,8 @@
  some values.
 
 @examples(
-  def mutable count: 0,
-  count := count + 1,
+  def mutable count: 0
+  count := count + 1
   count
 )
 

@@ -22,32 +22,32 @@ operator. These uses of square brackets are implemented by
 @rhombus(#{#%ref}).
 
 @dispatch_table(
-  "map",
-  @rhombus(Map),
-  [map.length(), Map.length(map)],
-  [map.keys(), Map.keys(map)],
-  [map.values(), Map.values(map)],
+  "map"
+  @rhombus(Map)
+  [map.length(), Map.length(map)]
+  [map.keys(), Map.keys(map)]
+  [map.values(), Map.values(map)]
   [map.has_key(k), Map.has_key(map, k)]
 )
 
 @doc(
-  expr.macro '#{#%braces} {$key_val_or_splice, ...}',
+  expr.macro '#{#%braces} {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
     $key_repetition: $val_repetition $$(@litchar{,}) $ellipses
-    & $map_expr,
-  expr.macro '#{#%braces} {$expr_or_splice, ...+}',
+    & $map_expr
+  expr.macro '#{#%braces} {$expr_or_splice, ...+}'
   grammar expr_or_splice:
     $elem_expr
     $elem_repetitions $$(@litchar{,}) $ellipses
-    & $set_expr,
+    & $set_expr
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) $ellipsis,
+    $ellipses $$(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots_expr),
-  repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}',
-  repet.macro '#{#%braces} {$repet_or_splice, ...+}',
+    $$(dots_expr)
+  repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}'
+  repet.macro '#{#%braces} {$repet_or_splice, ...+}'
 ){
 
  Constructs either a map or a set, depending on whether
@@ -74,20 +74,20 @@ operator. These uses of square brackets are implemented by
  @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
 
 @examples(
-  {1, 2, 3},
-  {"a": 1, "b": 2},
-  #{#%braces} {1, 2, 3},
-  #{#%braces} {"a": 1, "b": 2},
-  {1, 2, & {3, 4}},
+  {1, 2, 3}
+  {"a": 1, "b": 2}
+  #{#%braces} {1, 2, 3}
+  #{#%braces} {"a": 1, "b": 2}
+  {1, 2, & {3, 4}}
   {"a": 1, "b": 2, & {"c": 3, "d": 4}}
 )
 
 }
 
 @doc(
-  expr.macro '$expr #{#%ref} [$at_expr]',
-  expr.macro '$expr #{#%ref} [$at_expr] := $rhs_expr',
-  repet.macro '$repetition #{#%ref} [$at_repetition]',
+  expr.macro '$expr #{#%ref} [$at_expr]'
+  expr.macro '$expr #{#%ref} [$at_expr] := $rhs_expr'
+  repet.macro '$repetition #{#%ref} [$at_repetition]'
 ){
 
  Without @rhombus(:=), accesses the element of the map, array, list, or
@@ -104,19 +104,19 @@ operator. These uses of square brackets are implemented by
  @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression or repetition", ~is_infix: #true)
 
 @examples(
-  {"a": 1, "b": 2}["a"],
+  {"a": 1, "b": 2}["a"]
   {"a": 1, "b": 2} #{#%ref} ["a"]
 )
 
 }
 
 @doc(
-  expr.macro 'Map{$key_val_or_splice, ...}',
-  repet.macro 'Map{$key_val_or_splice_repet, ...}',
+  expr.macro 'Map{$key_val_or_splice, ...}'
+  repet.macro 'Map{$key_val_or_splice_repet, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
     $key_repetition: $val_repetition $$(@litchar{,}) $ellipsis
-    @rhombus(&) $map_expr,
+    @rhombus(&) $map_expr
   grammar ellipsis:
     $$(dots),
   fun Map([key :: Any, value :: Any], ...) :: Map
@@ -129,28 +129,28 @@ operator. These uses of square brackets are implemented by
  is like @rhombus(key_val_or_splice) with repetitions in place of expressions.
 
 @examples(
-  def m: Map{"x": 1, "y": 2},
-  m,
-  m["x"],
-  Map(["x", 1], ["y", 2]),
+  def m: Map{"x": 1, "y": 2}
+  m
+  m["x"]
+  Map(["x", 1], ["y", 2])
   Map{"a": 4, "b": 4, & m}
 )
 
 }
 
 @doc(
-  bind.macro '#{#%braces} {$key_expr: $val_binding, ...}',
-  bind.macro '#{#%braces} {$key_expr: $val_binding, ..., map_rest}',
+  bind.macro '#{#%braces} {$key_expr: $val_binding, ...}'
+  bind.macro '#{#%braces} {$key_expr: $val_binding, ..., map_rest}'
   grammar map_rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis,
-  bind.macro '#{#%braces} {$expr, ...}',
-  bind.macro '#{#%braces} {$expr, ..., set_rest}',
+    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis
+  bind.macro '#{#%braces} {$expr, ...}'
+  bind.macro '#{#%braces} {$expr, ..., set_rest}'
   grammar map_rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $ellipsis,
+    $rest_binding $$(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots),
+    $$(dots)
 ){
 
  Matches either a map or set, depending on whether
@@ -163,23 +163,23 @@ operator. These uses of square brackets are implemented by
  @see_implicit(@rhombus(#{#%braces}, ~bind), @rhombus({}), "binding") 
 
 @examples(
-  def {"x": x, "y": y}: Map{"x": 1, "y": 2},
-  y,
-  def {"b", rest, ...}: Set{"a", "b", "c"},
+  def {"x": x, "y": y}: Map{"x": 1, "y": 2}
+  y
+  def {"b", rest, ...}: Set{"a", "b", "c"}
   [rest, ...]
 )
 
 }
 
 @doc(
-  bind.macro 'Map{$key_expr: $val_binding, ...}',
-  bind.macro 'Map{$key_expr: $val_binding, ..., $rest}',
-  bind.macro 'Map([$key_expr, $val_binding], ...)',
+  bind.macro 'Map{$key_expr: $val_binding, ...}'
+  bind.macro 'Map{$key_expr: $val_binding, ..., $rest}'
+  bind.macro 'Map([$key_expr, $val_binding], ...)'
   grammar rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis,
+    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots),
+    $$(dots)
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
@@ -195,14 +195,14 @@ operator. These uses of square brackets are implemented by
  as repetitions.
 
 @examples(
-  def Map{"x": x, "y": y}: {"x": 1, "y": 2},
-  y,
-  def Map{"a": a}: {"a": 1, "b": 2, "c": 3},
-  a,
-  def Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3},
-  rst,
-  def Map{"a": _, key: val, ...}: {"a": 1, "b": 2, "c": 3},
-  [key, ...],
+  def Map{"x": x, "y": y}: {"x": 1, "y": 2}
+  y
+  def Map{"a": a}: {"a": 1, "b": 2, "c": 3}
+  a
+  def Map{"a": _, & rst}: {"a": 1, "b": 2, "c": 3}
+  rst
+  def Map{"a": _, key: val, ...}: {"a": 1, "b": 2, "c": 3}
+  [key, ...]
   [val, ...]
 )
 
@@ -210,8 +210,8 @@ operator. These uses of square brackets are implemented by
 
 
 @doc(
-  annot.macro 'Map',
-  annot.macro 'Map.of($key_annotation, $value_annotation)',
+  annot.macro 'Map'
+  annot.macro 'Map.of($key_annotation, $value_annotation)'
 ){
 
  Matches any map in the form without @rhombus(of). The @rhombus(of)
@@ -231,7 +231,7 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  expr.macro 'MutableMap{key: value, ...}',
+  expr.macro 'MutableMap{key: value, ...}'
   fun MutableMap(key :: Any, value:: Any, ...) :: Map
 ){
 
@@ -242,10 +242,10 @@ operator. These uses of square brackets are implemented by
  mutable maps, only immutable maps.
 
 @examples(
-  def m: MutableMap{"x": 1, "y": 2},
-  m,
-  m["x"],
-  m["x"] := 0,
+  def m: MutableMap{"x": 1, "y": 2}
+  m
+  m["x"]
+  m["x"] := 0
   m
 )
 
@@ -253,10 +253,10 @@ operator. These uses of square brackets are implemented by
 
 
 @doc(
-  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map,
-  operator ((v1 :: Set) ++ (v2 :: Set)) :: Set,
-  operator ((v1 :: List) ++ (v2 :: List)) :: List,
-  operator ((v1 :: String) ++ (v2 :: String)) :: String,
+  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
+  operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
+  operator ((v1 :: List) ++ (v2 :: List)) :: List
+  operator ((v1 :: String) ++ (v2 :: String)) :: String
 ){
 
  Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list, or
@@ -273,18 +273,18 @@ operator. These uses of square brackets are implemented by
  Set update is handled similarly.
 
 @examples(
-  def m: {"x": 1, "y": 2},
-  m ++ {"x": 0},
-  m,
-  {1, 2, 3} ++ {"four", "five"},
-  [1, 2, 3] ++ [4, 5],
+  def m: {"x": 1, "y": 2}
+  m ++ {"x": 0}
+  m
+  {1, 2, 3} ++ {"four", "five"}
+  [1, 2, 3] ++ [4, 5]
   "hello" ++ " " ++ "world"
 )
 
 }
 
 @doc(
-  bind.macro 'Map.empty',
+  bind.macro 'Map.empty'
   expr.macro 'Map.empty'
 ){
 
@@ -294,32 +294,32 @@ operator. These uses of square brackets are implemented by
  matches any map.
 
 @examples(
-  Map.empty,
+  Map.empty
   match {}
   | Map.empty: "empty map"
-  | _: #false,
+  | _: #false
   match {"x": 1, "y": 2}
   | Map.empty: "empty map"
-  | _: #false,
+  | _: #false
   match {"x": 1, "y": 2}
   | {}: "curly braces allow extra"
-  | _: #false,
+  | _: #false
   match {"x": 1, "y": 2}
   | Map(): "Map binding allows extra"
-  | _: #false,
+  | _: #false
 )
 
 }
 
 @doc(
-  fun Map.length(map :: Map) :: Integer,
+  fun Map.length(map :: Map) :: Integer
 ){
 
  Returns the number of key--value mappings in @rhombus(map).
 
 @examples(
-  Map.length({"a": 1, "b": 2}),
-  Map.length({}),
+  Map.length({"a": 1, "b": 2})
+  Map.length({})
   {"a": 1, "b": 2}.length()
 )
 
@@ -327,7 +327,7 @@ operator. These uses of square brackets are implemented by
 
 
 @doc(
-  fun Map.keys(map :: Map) :: List,
+  fun Map.keys(map :: Map) :: List
 ){
 
  Returns the keys of @rhombus(map) in a list.
@@ -340,7 +340,7 @@ operator. These uses of square brackets are implemented by
 
 
 @doc(
-  fun Map.values(map :: Map) :: List,
+  fun Map.values(map :: Map) :: List
 ){
 
  Returns the values of @rhombus(map) in a list.
@@ -353,14 +353,14 @@ operator. These uses of square brackets are implemented by
 
 
 @doc(
-  fun Map.has_key(map :: Map, key) :: Boolean,
+  fun Map.has_key(map :: Map, key) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
  @rhombus(map), @rhombus(#false) otherwise.
 
 @examples(
-  Map.has_key({"a": 1, "b": 2}, "a"),
+  Map.has_key({"a": 1, "b": 2}, "a")
   Map.has_key({"a": 1, "b": 2}, "c")
 )
 

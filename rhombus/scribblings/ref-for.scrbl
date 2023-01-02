@@ -7,16 +7,16 @@
   decl.macro 'for:
                 $clause_or_body
                 ...
-                $body',
+                $body'
   decl.macro 'for $reducer:
                 $clause_or_body
                 ...
-                $body',
+                $body'
   decl.macro 'for:
                 $clause_or_body
                 ...
                 $body
-                ~into $reducer',
+                ~into $reducer'
   grammar clause_or_body:
     $$(@rhombus(each, ~for_clause)) $binding:
       $body
@@ -79,66 +79,73 @@
  @rhombus(Map, ~reducer), and @rhombus(values, ~reducer).
 
 @examples(
-  for:
-    each v: ["a", "b", "c"]
-    displayln(v),
-  for:
-    each v: ["a", "b", "c"]
-    keep_when v == "b"
-    displayln(v),
-  for:
-    each v: ["a", "b", "c"]
-    skip_when v == "b"
-    displayln(v),
-  for:
-    each v: ["a", "b", "c"]
-    break_when v == "b"
-    displayln(v),
-  for:
-    each v: ["a", "b", "c"]
-    final_when v == "b"
-    displayln(v),
-  for:
-    each:
-      v: ["a", "b", "c"]
-      i: 0..
-    displayln(i +& ". " +& v),
-  fun grid(m, n):
-    for List:
-      each i: 0..m
-      each j: 0..n
-      [i, j],
-  grid(2, 3),
-  fun sum(l :: List):
-    for values(sum = 0):
-      each i: l
-      sum+i,
-  sum([2, 3, 4]),
-  for:
-    each i: [1, 2, 3]
-    each j: 10..10+3
-    [i, j]
-    ~into List,
-  for values(x = 0, y = 2):
-    each j: 0..3
-    values(x + y, j),
-  fun grid2(m, n):
-    for List:
-      each i: 0..m
-      def k: i + 1
-      each j: 0..n
-      [k, j],
-  grid2(2, 3),
-  for Map:
-    each i: 0..3
-    values(i, i +& "!")
+  ~repl:
+    for:
+      each v: ["a", "b", "c"]
+      displayln(v)
+    for:
+      each v: ["a", "b", "c"]
+      keep_when v == "b"
+      displayln(v)
+    for:
+      each v: ["a", "b", "c"]
+      skip_when v == "b"
+      displayln(v)
+    for:
+      each v: ["a", "b", "c"]
+      break_when v == "b"
+      displayln(v)
+    for:
+      each v: ["a", "b", "c"]
+      final_when v == "b"
+      displayln(v)
+    for:
+      each:
+        v: ["a", "b", "c"]
+        i: 0..
+      displayln(i +& ". " +& v)
+  ~repl:
+    fun grid(m, n):
+      for List:
+        each i: 0..m
+        each j: 0..n
+        [i, j]
+    grid(2, 3)
+  ~repl:
+    fun sum(l :: List):
+      for values(sum = 0):
+        each i: l
+        sum+i
+    sum([2, 3, 4])
+  ~repl:
+    for:
+      each i: [1, 2, 3]
+      each j: 10..10+3
+      [i, j]
+      ~into List
+  ~repl:
+    for values(x = 0, y = 2):
+      each j: 0..3
+      values(x + y, j)
+  ~repl:
+    fun grid2(m, n):
+      for List:
+        each i: 0..m
+        def k: i + 1
+        each j: 0..n
+        [k, j]
+    grid2(2, 3)
+  ~repl:
+    for Map:
+      each i: 0..3
+      values(i, i +& "!")
 )
 
 }
 
 
 @doc(
-  expr.macro '$n_expr .. $m_expr',
+  expr.macro '$n_expr .. $m_expr'
   expr.macro '$n_expr ..'
 ){
 
@@ -161,13 +168,13 @@
                       $binding:
                         $body
                         ...
-                      ...',
+                      ...'
   for_clause.macro 'each $binding:
                       $body
-                      ...',
-  for_clause.macro 'keep_when $expr',
-  for_clause.macro 'skip_when $expr',
-  for_clause.macro 'break_when $expr',
+                      ...'
+  for_clause.macro 'keep_when $expr'
+  for_clause.macro 'skip_when $expr'
+  for_clause.macro 'break_when $expr'
   for_clause.macro 'final_when $expr'
 ){
 

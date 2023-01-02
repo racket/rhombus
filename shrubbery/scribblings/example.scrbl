@@ -11,33 +11,33 @@ that's roughly a shorthand for starting a new indented line after the
 @litchar{:} or before the @litchar{|}. The complete rules involve more
 terminology, but that's enough to get a sense of the examples.
 
-@(rhombusblock:
-    def identity(x): x
+@rhombusblock(
+  def identity(x): x
 
-    def fib(n):
-      cond
-      | n == 0: 0
-      | n == 1: 1
-      | ~else: fib(n-1) + fib(n-2)
+  def fib(n):
+    cond
+    | n == 0: 0
+    | n == 1: 1
+    | ~else: fib(n-1) + fib(n-2)
 
-    def print_sexp(v):
-      match v
-      | empty: display("()")
-      | cons(a, d):
-          if is_list(d)
-          | display("(")
-            print_sexp(a)
-            for (v = in_list(d)):
-              display(" ")
-              print_sexp(v)
-            display(")")
-          | display("(")
-            print_sexp(a)
-            display(". ")
-            print_sexp(d)
-            display(")")
-      | v: print_atom(v)
-  )
+  def print_sexp(v):
+    match v
+    | empty: display("()")
+    | cons(a, d):
+        if is_list(d)
+        | display("(")
+          print_sexp(a)
+          for (v = in_list(d)):
+            display(" ")
+            print_sexp(v)
+          display(")")
+        | display("(")
+          print_sexp(a)
+          display(". ")
+          print_sexp(d)
+          display(")")
+    | v: print_atom(v)
+)
 
 Forms like @litchar{def}, @litchar{cond}, and @litchar{match} are not
 specified by shrubbery notation, since specifying those forms is up to a

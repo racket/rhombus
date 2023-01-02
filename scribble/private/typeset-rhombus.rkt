@@ -145,7 +145,7 @@
                               #:prompt [prompt ""])
   ;; Go back to a string, then parse again using the
   ;; colorer. Why didn't we use a string to start with?
-  ;; Because having `rhm` work on implicitly quoted syntax
+  ;; Because having `rhombusblock` work on implicitly quoted syntax
   ;; means that you get nice editor support.
   (define block-stx
     (syntax-parse stx

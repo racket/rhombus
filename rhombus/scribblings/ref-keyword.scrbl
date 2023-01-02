@@ -17,9 +17,9 @@ equal by @rhombus(==) only when they are equal by @rhombus(===).
 }
 
 @doc(
-  expr.macro '«keyword'$a_keyword'»',
-  bind.macro '«keyword'$a_keyword'»',
-  expr.macro 'keyword($a_keyword)',
+  expr.macro '«keyword'$a_keyword'»'
+  bind.macro '«keyword'$a_keyword'»'
+  expr.macro 'keyword($a_keyword)'
   bind.macro 'keyword($a_keyword)'
 ){
 
@@ -27,7 +27,7 @@ equal by @rhombus(==) only when they are equal by @rhombus(===).
  @rhombus(a_keyword). Parentheses and quotes are interchangeable.
 
 @examples(
-  keyword'~hello',
+  keyword'~hello'
   keyword'~hello' +& " there"
 )
 

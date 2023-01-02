@@ -13,13 +13,13 @@
   defn.macro 'class_clause.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'class_clause.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Defines an @rhombus(identifier, ~var), @rhombus(operator, ~var),
@@ -34,18 +34,18 @@
  expression, a defintion, or an export.
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   class_clause.macro 'lazy_method $id(): $body':
     'private field result: #false
      method $id():
        result || (begin:
                     def v: $body
                     result := v
-                    v)',
+                    v)'
   class Person(name):
-    lazy_method greeting(): "Hello, " +& name,
-  def ming: Person("Ming"),
-  ming.greeting(),
+    lazy_method greeting(): "Hello, " +& name
+  def ming: Person("Ming")
+  ming.greeting()
   ming.greeting() === ming.greeting()
 )
 
@@ -55,13 +55,13 @@
   defn.macro 'interface_clause.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'interface_clause.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
 Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
@@ -72,13 +72,13 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
   defn.macro 'class_and_interface_clause.macro $rule_pattern:
                 $option; ...
                 $body
-                ...',
+                ...'
   defn.macro 'class_and_interface_clause.macro
               | $rule_pattern:
                   $option; ...
                   $body
                   ...
-              | ...',
+              | ...'
 ){
 
  Like @rhombus(class_clause.macro), but defines for use both in

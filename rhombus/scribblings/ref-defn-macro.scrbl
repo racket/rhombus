@@ -11,13 +11,13 @@
   defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
                  $option; ...
                  $body
-                 ...»',
+                 ...»'
 
   grammar identifier_or_operator:
     $identifier
     $operator
-    ($identifier_path)    
-    ($operator_path),
+    ($identifier_path)
+    ($operator_path)
   grammar option:
     ~op_stx: $identifier
 ){
@@ -42,17 +42,17 @@
  @rhombus(identifier_path) and @rhombus(operator_path).
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   defn.macro 'enum:
                 $(id :: Group)
                 ...':
     def [n, ...]: List.iota([id, ...].length())
     'def $id: $n
-     ...',
+     ...'
   enum:
     a
     b
-    c,
+    c
   b
 )
 
@@ -64,12 +64,12 @@
                                     ...':
                  $option; ...
                  $body
-                 ...»',
+                 ...»'
   grammar identifier_or_operator:
     $identifier
     $operator
     ($identifier_path)    
-    ($operator_path),
+    ($operator_path)
   grammar option:
     ~op_stx: $identifier
 ){
@@ -86,13 +86,13 @@
  @rhombus(identifier_path) and @rhombus(operator_path).
 
 @examples(
-  ~eval: macro_eval,
+  ~eval: macro_eval
   defn.sequence_macro 'reverse_defns
                        $defn1
                        $defn2
                        $tail
                        ...':
-    values('$defn2; $defn1', '$tail; ...'),
+    values('$defn2; $defn1', '$tail; ...')
   :
     reverse_defns
     def seq_x: seq_y+1

@@ -15,7 +15,8 @@
 @examples(
   begin:
     1
-    2,
+    2
+
   begin:
     def one: 1
     one + one

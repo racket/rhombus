@@ -8,7 +8,7 @@
               | $binding:
                   $result_body
                   ...
-              | ...',
+              | ...'
   decl.macro 'match $target_expr
               | $binding:
                   $result_body
@@ -41,7 +41,8 @@
 @examples(
   match 1+2
   | 3: "three"
-  | ~else: "not three",
+  | ~else: "not three"
+
   match [1+2, 3+4]
   | [x, y]: x+y
 )
@@ -59,4 +60,5 @@
   | 0: "zero"
   | _: "nonzero"
 )
+
 }

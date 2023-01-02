@@ -13,37 +13,37 @@ Here are all of the implicit forms:
 @itemlist(
 
  @item{@rhombus(#{#%literal}) --- used for anything other than an
-       identifier, keyword, operator, or compound form},
+       identifier, keyword, operator, or compound form}
 
- @item{@rhombus(#{#%parens}) --- used for @rhombus(())},
+ @item{@rhombus(#{#%parens}) --- used for @rhombus(())}
 
- @item{@rhombus(#{#%brackets}) --- used for @rhombus([])},
+ @item{@rhombus(#{#%brackets}) --- used for @rhombus([])}
  
- @item{@rhombus(#{#%braces}) --- used for @rhombus({})},
+ @item{@rhombus(#{#%braces}) --- used for @rhombus({})}
 
- @item{@rhombus(#{#%quotes}) --- used for @rhombus('')},
+ @item{@rhombus(#{#%quotes}) --- used for @rhombus('')}
 
  @item{@rhombus(#{#%call}) --- used as an infix form when a parsed form
-       is followed immediately by a @rhombus(()) term},
+       is followed immediately by a @rhombus(()) term}
 
  @item{@rhombus(#{#%ref}) --- used as an infix form when a pared form
-       is followed immediately by a @rhombus([]) term},
+       is followed immediately by a @rhombus([]) term}
 
  @item{@rhombus(#{#%comp}) --- used as an infix form when a
        parsed form is followed immediately by a @rhombus({}) term;
-       this implicit form is not bound by @rhombusmodname(rhombus)},
+       this implicit form is not bound by @rhombusmodname(rhombus)}
 
  @item{@rhombus(#{#%juxtapose}) --- used as an infix form when a
        parsed form is followed immediately by a non-compound term;
-       this implicit form is not bound by @rhombusmodname(rhombus)},
+       this implicit form is not bound by @rhombusmodname(rhombus)}
 
  @item{@rhombus(#{#%block}) --- used for a block formed with
        @litchar{:} (by itself as a would-be parsed term); this
-       implicit form is not bound by @rhombusmodname(rhombus)},
+       implicit form is not bound by @rhombusmodname(rhombus)}
 
  @item{@rhombus(#{#%alts}) --- used for a block formed with
        @litchar{|} (by itself as a would-be parsed term); this
-       implicit form is not bound by @rhombusmodname(rhombus)},
+       implicit form is not bound by @rhombusmodname(rhombus)}
 
  @item{@rhombus(#{#%body}) --- used by forms that contain a
         @rhombus(body) sequence, such as @rhombus(begin), the body of
@@ -55,9 +55,9 @@ Here are all of the implicit forms:
 
 
 @doc(
-  expr.macro '#{#%literal} $literal',
-  bind.macro '#{#%literal} $literal',
-  annot.macro '#{#%literal} $literal',
+  expr.macro '#{#%literal} $literal'
+  bind.macro '#{#%literal} $literal'
+  annot.macro '#{#%literal} $literal'
   repet.macro '#{#%literal} $literal'
 ){
 
@@ -73,18 +73,18 @@ Here are all of the implicit forms:
  or braced term.
 
 @examples(
- 7,
- #{#%literal} 7,
- fun only_sevens(7): "yes",
- only_sevens(7),
- ~error: only_sevens(8)
+  7
+  #{#%literal} 7
+  fun only_sevens(7): "yes"
+  only_sevens(7)
+  ~error: only_sevens(8)
 )
- 
+
 }
 
 @doc(
-  expr.macro '#{#%parens} ($expr)',
-  bind.macro '#{#%parens} ($binding)',
+  expr.macro '#{#%parens} ($expr)'
+  bind.macro '#{#%parens} ($binding)'
   annot.macro '#{#%parens} ($annotation)'
 ){
 
@@ -93,10 +93,10 @@ Here are all of the implicit forms:
  are disallowed.
 
 @examples(
- (1+2),
- #{#%parens} (1+2),
- def (x): 1+2,
- x
+  (1+2)
+  #{#%parens} (1+2)
+  def (x): 1+2
+  x
 )
  
 }

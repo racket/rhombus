@@ -35,28 +35,28 @@ The customization shown below defines @rhombus(_Sandwich) with
 @rhombus(internal, ~class_clause) so that it can be used in the binding
 and annotation expansion:
 
-@(demo:
-    ~eval: method_eval
-    ~defn:
-      class Sandwich(ingredients):
-        nonfinal
-        internal _Sandwich
-        constructor (ingredient, ...):
-          super([ingredient, ...])
-        binding 'Sandwich($ingredient, ...)':
-          '_Sandwich([$ingredient, ...])'
-        annotation
-        | 'Sandwich $dot of($ingredient)':
-            '_Sandwich.of(List.of($ingredient))'
-        | 'Sandwich':
-            '_Sandwich'
-    ~repl:
-      def blt: Sandwich("bacon", "lettuce", "tomato")
-      def Sandwich(top, _, _): blt
-      top
-      blt is_a Sandwich
-      blt is_a Sandwich.of(Number)
-  )
+@demo(
+  ~eval: method_eval
+  ~defn:
+    class Sandwich(ingredients):
+      nonfinal
+      internal _Sandwich
+      constructor (ingredient, ...):
+        super([ingredient, ...])
+      binding 'Sandwich($ingredient, ...)':
+        '_Sandwich([$ingredient, ...])'
+      annotation
+      | 'Sandwich $dot of($ingredient)':
+          '_Sandwich.of(List.of($ingredient))'
+      | 'Sandwich':
+          '_Sandwich'
+  ~repl:
+    def blt: Sandwich("bacon", "lettuce", "tomato")
+    def Sandwich(top, _, _): blt
+    top
+    blt is_a Sandwich
+    blt is_a Sandwich.of(Number)
+)
 
 When a class has a superclass, the @rhombus(super) constructor function
 is curried for customizing a subclass constructor. The name bound by
@@ -72,30 +72,30 @@ of the class. A superclass binding or annotation can be combined with an
 internal binding or annotation using the @rhombus(&&, ~bind) binding
 operator or @rhombus(&&, ~annot) annotation operator.
 
-@(demo:
-    ~eval: method_eval
-    ~defn:
-      class Sub(inches):
-        extends Sandwich
-        internal _Sub
-        constructor (~inches: inches, ingredient, ...):
-          super(ingredient, ...)(inches)
-        binding 'Sub($pre, ..., ~inches: $inches, $post, ...)':
-          'Sandwich($pre, ..., $post, ...) && _Sub($inches)'
-        annotation
-        | 'Sub $dot of($ingredient)':
-            '_Sub && Sandwich.of($ingredient)'
-        | 'Sub':
-            '_Sub'
-    ~repl:
-      def blt: Sub("bacon", "lettuce", "tomato",
-                   ~inches: 6)
-      def Sub(~inches: len, stuff, ...): blt
-      len
-      [stuff, ...]
-      blt is_a Sub.of(String)
-      Sandwich("pb", "j") is_a Sub.of(String)
-  )
+@demo(
+  ~eval: method_eval
+  ~defn:
+    class Sub(inches):
+      extends Sandwich
+      internal _Sub
+      constructor (~inches: inches, ingredient, ...):
+        super(ingredient, ...)(inches)
+      binding 'Sub($pre, ..., ~inches: $inches, $post, ...)':
+        'Sandwich($pre, ..., $post, ...) && _Sub($inches)'
+      annotation
+      | 'Sub $dot of($ingredient)':
+          '_Sub && Sandwich.of($ingredient)'
+      | 'Sub':
+          '_Sub'
+  ~repl:
+    def blt: Sub("bacon", "lettuce", "tomato",
+                 ~inches: 6)
+    def Sub(~inches: len, stuff, ...): blt
+    len
+    [stuff, ...]
+    blt is_a Sub.of(String)
+    Sandwich("pb", "j") is_a Sub.of(String)
+)
 
 
 @close_eval(method_eval)

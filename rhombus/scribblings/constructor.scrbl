@@ -12,15 +12,15 @@ both. In that case, the class constructor accepts the argument in
 keyword form, makes the argument optional, or both. Keyword fields are
 printed with their keywords, too.
 
-@(demo:
-    ~defn:
-      class Posn(~x: x, ~y: y = x)
-    ~repl:
-      Posn(~y: 2, ~x: 1)
-      Posn(~x: 1)
-      def Posn(~y: y1, ~x: x1): Posn(~x: 1, ~y: 2)
-      y1
-  )
+@demo(
+  ~defn:
+    class Posn(~x: x, ~y: y = x)
+  ~repl:
+    Posn(~y: 2, ~x: 1)
+    Posn(~x: 1)
+    def Posn(~y: y1, ~x: x1): Posn(~x: 1, ~y: 2)
+    y1
+)
 
 The keyword for a field does not have to match the name of the field as
 it is referenced by the @rhombus(.) operator. Typically, the names are
@@ -28,21 +28,21 @@ the same, and keyword fields support the same shothand as in function
 definitions where a keyword by itself implicitly supplies the
 corresponding identifier.
 
-@(demo:
-    ~defn:
-      class Posn(~x, ~y)
-    ~repl:
-      def p: Posn(~x: 1, ~y: 2)
-      p.x
-      p.y
-    ~defn:
-      class Cell(~row: i, ~column: j)
-    ~repl:
-      def c: Cell(~row: 1, ~column: 2)
-      c.i
-      c.j
-      c
-    )
+@demo(
+  ~defn:
+    class Posn(~x, ~y)
+  ~repl:
+    def p: Posn(~x: 1, ~y: 2)
+    p.x
+    p.y
+  ~defn:
+    class Cell(~row: i, ~column: j)
+  ~repl:
+    def c: Cell(~row: 1, ~column: 2)
+    c.i
+    c.j
+    c
+  )
 
 Keyword and optional arguments tweak the default constructor that is
 implemented for a class, but a @rhombus(constructor, ~class_clause)
@@ -53,22 +53,22 @@ form, but with @rhombus(constructor, ~class_clause) in place of
 function that is like the default constructor, at least in the case of a
 class without a superclass.
 
-@(demo:
-    ~eval: method_eval
-    ~defn:
-      class Posn(~x, ~y):
-        nonfinal
-        constructor
-        | (): super(~x: 0, ~y: 0)
-        | (~x: x, ~y: y):
-            super(~x: x, ~y: x)
-        | (~r: r, ~θ: θ):
-            super(~x: r*cos(θ), ~y: r*sin(θ))
-    ~repl:
-      Posn()
-      Posn(~x: 1, ~y: 2)
-      Posn(~r: 1, ~θ: 0.79)
-  )
+@demo(
+  ~eval: method_eval
+  ~defn:
+    class Posn(~x, ~y):
+      nonfinal
+      constructor
+      | (): super(~x: 0, ~y: 0)
+      | (~x: x, ~y: y):
+          super(~x: x, ~y: x)
+      | (~r: r, ~θ: θ):
+          super(~x: r*cos(θ), ~y: r*sin(θ))
+  ~repl:
+    Posn()
+    Posn(~x: 1, ~y: 2)
+    Posn(~r: 1, ~θ: 0.79)
+)
 
 Using the name @rhombus(super) to access an underlying constructor makes
 a kind of sense, but that name can also be misleading: calling
@@ -97,21 +97,21 @@ tagged with a @rhombus(~z) keyword, so the second set of arguments to
 keyword. Meanwhile, the first set of arguments can take any of the forms
 that the @rhombus(Posn) constructor supports.
 
-@(demo:
-    ~eval: method_eval
-    ~defn:
-      class Posn3D(~z):
-        extends Posn
-        constructor
-        | (): super()(~z: 0)
-        | (~x: x, ~y: y, ~z: z):
-            super(~x: x, ~y: x)(~z: z)
-        | (~r: r, ~θ: θ, ~φ: φ):
-            super(~r: r*cos(φ), ~θ: θ)(~z: r*sin(φ))
-    ~repl:
-      Posn3D()
-      Posn3D(~x: 1, ~y: 2, ~z: 3)
-      Posn3D(~r: 1, ~θ: 0.79, ~φ: 0.314)
+@demo(
+  ~eval: method_eval
+  ~defn:
+    class Posn3D(~z):
+      extends Posn
+      constructor
+      | (): super()(~z: 0)
+      | (~x: x, ~y: y, ~z: z):
+          super(~x: x, ~y: x)(~z: z)
+      | (~r: r, ~θ: θ, ~φ: φ):
+          super(~r: r*cos(φ), ~θ: θ)(~z: r*sin(φ))
+  ~repl:
+    Posn3D()
+    Posn3D(~x: 1, ~y: 2, ~z: 3)
+    Posn3D(~r: 1, ~θ: 0.79, ~φ: 0.314)
 )
 
 When @rhombus(Posn3D) instances are created like this, the

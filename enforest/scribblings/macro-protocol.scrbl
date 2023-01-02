@@ -26,10 +26,10 @@ itself has no shrubbery representation, it's conveniently opaque to a
 shrubbery layer of patterning matching. For example, in the earlier
 example implementing the @rhombus(->) macro infix operator,
 
-@(rhombusblock:
-    expr.macro '($x -> $y $tail ...)':
-      values('($x . $y)', tail)
-  )
+@rhombusblock(
+  expr.macro '($x -> $y $tail ...)':
+    values('($x . $y)', tail)
+)
 
 the macro transformer receives an syntax-object representing the
 already-parsed left-hand argument @rhombus(x) as a @racket_q_parsed

@@ -8,9 +8,9 @@
 @doc(
   decl.macro 'export:
                 $export_clause
-                ...',
+                ...'
 
-  decl.macro 'export $export_clause',
+  decl.macro 'export $export_clause'
 
   grammar export_clause:
     apple
@@ -20,15 +20,15 @@
       ...
     $modifier:
       $export_clause
-      ...,
+      ...
 
   grammar export_item:
     $identifier_or_operator
-    $export,
+    $export
 
   grammar identifier_or_operator:
     $identifier_path
-    $operator_path,
+    $operator_path
 ){
 
  Exports from the enclosing module. An @rhombus(export) form with a
@@ -57,7 +57,7 @@
 }
 
 @doc(
-  expo.macro 'all_from($module_path)',
+  expo.macro 'all_from($module_path)'
   expo.macro 'all_from($$(@rhombus(., ~expmod)) $identifier_path)'
 ){
 
@@ -157,7 +157,7 @@
 }
 
 @doc(
-  expo.macro '$identifier_path . $identifier',
+  expo.macro '$identifier_path . $identifier'
   expo.macro '$identifier_path . ($operator)'
 ){
 

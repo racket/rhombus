@@ -8,7 +8,7 @@
 @doc(
   defn.macro '«dot.macro '$identifier_or_operator $pattern ...':
                            $body
-                           ...»',
+                           ...»'
 ){
 
  Similar to @rhombus(defn.macro), but binds a @tech{dot provider} that
@@ -31,7 +31,7 @@
 @doc(
   defn.macro '«dot.macro_more_static '$identifier_or_operator $pattern ...':
                                         $body
-                                        ...»',
+                                        ...»'
 ){
 
  Like @rhombus(dot.macro), but the @rhombus(pattern) sequence after

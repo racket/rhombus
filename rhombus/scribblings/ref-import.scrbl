@@ -6,9 +6,9 @@
 @doc(
   defn.macro 'import:
                 $import_clause
-                ...',
+                ...'
 
-  defn.macro 'import $import_clause',
+  defn.macro 'import $import_clause'
 
   grammar import_clause:
     $module_path
@@ -21,7 +21,7 @@
       ...
     $modifier:
       $import_clause
-      ...,
+      ...
   
   grammar module_path:
     $collection_module_path
@@ -30,7 +30,7 @@
     $$(@rhombus(file, ~impmod))($string)
     $module_path $$(@rhombus(!, ~impmod)) $identifier
     $$(@rhombus(., ~impmod)) $identifier
-    $module_path $$(@rhombus(., ~impmod)) $identifier,
+    $module_path $$(@rhombus(., ~impmod)) $identifier
 
   grammar collection_module_path:
     $identifier
@@ -138,7 +138,7 @@
 }
 
 @doc(
-  impo.macro '. $identifier',
+  impo.macro '. $identifier'
   impo.macro '$collection_module_path . $identifier'
 ){
 

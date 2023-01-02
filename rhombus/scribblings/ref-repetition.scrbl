@@ -18,9 +18,8 @@ repetitions from one or more repetitions. For example, if @rhombus(x) is
 bound as a repetition, then @rhombus(x+1) can be used as a repetition to
 add @rhombus(1) to each element of @rhombus(x):
 
-@examples(
-  ~label: #false,
-  def [x, ...] = [1, 2, 3],
+@demo(
+  def [x, ...] = [1, 2, 3]
   [x+1, ...]
 )
 
@@ -37,9 +36,8 @@ form the list. Using multiple @dots in a bininding context typically
 binds at a greater depth, as in this example that binds and uses
 @rhombus(z) at depth 2:
 
-@examples(
-  ~label: #false,
-  def [[z, ...], ...] = [[1, 2, 3], [4, 5]],
+@demo(
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   [[z+1, ...], ...]
 )
 
@@ -55,9 +53,8 @@ opposed to nested @rhombus(...)s, then the repetitions that would be
 accessed by nesting are flattend into a single repetition. This
 flattening has the effect of appending sequences.
 
-@examples(
-  ~label: #false,
-  def [[z, ...], ...] = [[1, 2, 3], [4, 5]],
+@demo(
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   [z, ..., ...]
 )
 
@@ -65,10 +62,9 @@ When a repetition form combines multiple repetitions, then unless
 documented otherwise, elements at the same repetition depth are drawn
 from the repetitions in parallel.
 
-@examples(
-  ~label: #false,
-  def [x, ...] = [1, 2, 3],
-  def [y, ...] = ["a", "b", "c"],
+@demo(
+  def [x, ...] = [1, 2, 3]
+  def [y, ...] = ["a", "b", "c"]
   [[x, y], ...]
 )
 
@@ -80,10 +76,9 @@ to match the @rhombus(x) repetition of depth 1 or the @rhombus(z)
 repetition of depth 2. A repetition of depth 2 can be similarly repeated
 to match a repetition of depth 2:
 
-@examples(
-  ~label: #false,
-  def [[z, ...], ...] = [[1, 2, 3], [4, 5, 6]],
-  def [y, ...] = [10, 100, 1000],
+@demo(
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5, 6]]
+  def [y, ...] = [10, 100, 1000]
   [[z+y, ...], ...]
 )
 
@@ -125,7 +120,7 @@ positions.
 }
 
 @doc(
-  expr.macro '& list_expr',
+  expr.macro '& list_expr'
   bind.macro '& list_binding'
 ){
 
@@ -137,15 +132,15 @@ positions.
  @rhombus(&).
 
 @examples(
-  def [a, b, &others]: [1, 2, 3, 4],
-  others,
+  def [a, b, &others]: [1, 2, 3, 4]
+  others
   [0, &others]
 )
 
 }
 
 @doc(
-  expr.macro '~& map_expr',
+  expr.macro '~& map_expr'
   bind.macro '~& map_binding'
 ){
 
@@ -157,7 +152,7 @@ positions.
 
 @examples(
   fun roster(~manager: who, ~&players):
-    players,
+    players
   roster(~pitcher: "Dave", ~manager: "Phil", ~catcher: "Johnny")
 )
 

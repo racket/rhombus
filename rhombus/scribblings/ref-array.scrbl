@@ -21,10 +21,10 @@ as other operations.
  Constructs a mutable array containing given arguments.
 
 @examples(
-  def a: Array(1, 2, 3),
-  a,
-  a[0],
-  a[0] := 0,
+  def a: Array(1, 2, 3)
+  a
+  a[0]
+  a[0] := 0
   a
 )
 
@@ -38,15 +38,15 @@ as other operations.
  each element matches its corresponding @rhombus(binding).
 
 @examples(
-  def Array(1, x, y): Array(1, 2, 3),
+  def Array(1, x, y): Array(1, 2, 3)
   y
 )
 
 }
 
 @doc(
-  annot.macro 'Array',
-  annot.macro 'Array.of($annotation)',
+  annot.macro 'Array'
+  annot.macro 'Array.of($annotation)'
 ){
 
  Matches any array in the form without @rhombus(of). The @rhombus(of)
@@ -68,7 +68,7 @@ as other operations.
 }
 
 @doc(
-  fun Array.length(arr :: Array) :: Integer,
+  fun Array.length(arr :: Array) :: Integer
 ){
 
  Returns the length of @rhombus(arr).

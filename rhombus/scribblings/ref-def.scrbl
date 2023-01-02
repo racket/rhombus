@@ -4,7 +4,7 @@
 @title{Definitions}
 
 @doc(
-  defn.macro 'def $binding = $expr',
+  defn.macro 'def $binding = $expr'
   defn.macro 'def $binding:
                 $body
                 ...'
@@ -20,35 +20,27 @@
  annotations.
 
 @examples(
-  def pi = 3.14,
-  pi
-)
-
-@examples(
-  ~label: #false,
-  def pi:
-    def tau = 6.28
-    tau/2,
-  pi
-)
-
-@examples(
-  ~label: #false,
-  def [x, y, z] = [1+2, 3+4, 5+6],
-  y
-)
-
-@examples(
-  ~label: #false,
-  def ns :: List = [1+2, 3+4, 5+6],
-  ns
+  ~repl:
+    def pi = 3.14
+    pi
+  ~repl:
+    def pi:
+      def tau = 6.28
+      tau/2
+    pi
+  ~repl:
+    def [x, y, z] = [1+2, 3+4, 5+6]
+    y
+  ~repl:
+    def ns :: List = [1+2, 3+4, 5+6]
+    ns
 )
 
 }
 
 
 @doc(
-  defn.macro 'let $binding = $expr',
+  defn.macro 'let $binding = $expr'
   defn.macro 'let $binding:
                 $body
                 ...'
@@ -70,7 +62,7 @@
 
 
 @doc(
-  bind.macro '$identifier_path . $identifier',
+  bind.macro '$identifier_path . $identifier'
  
   grammar identifier_path:
     $identifier
@@ -90,8 +82,8 @@
 @examples(
   namespace math:
     export: pi
-    def pi: 3.14,
-  def math.tau: 2 * math.pi,
+    def pi: 3.14
+  def math.tau: 2 * math.pi
   math.tau
 )
 

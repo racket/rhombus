@@ -39,7 +39,7 @@
                   decl defn expr impo expo annot repet bind reducer for_clause
                   class_clause interface_clause entry_point)
          (only-in "rhombus.rhm"
-                  rhombusblock
+                  rhombusblock_etc
                   [rhombus one-rhombus])
          (only-in rhombus/parse
                   rhombus-expression)
@@ -358,7 +358,7 @@
                                              [(_ a . _) #'a]))
                             "")]
                   [(option ...) options])
-      #'(rhombus-expression (group rhombusblock option ... (t-block t-form)))))
+      #'(rhombus-expression (group rhombusblock_etc option ... (t-block t-form)))))
   (define (relocate to from-in from-property to-property)
     (define from (syntax-parse from-in
                    #:datum-literals (op)

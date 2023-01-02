@@ -8,7 +8,7 @@
 @doc(
   defn.macro '«statinfo.macro '$identifier': 
                 $body
-                ...»',
+                ...»'
 ){
 
  Binds @rhombus(identifier) in the static-information space to
@@ -49,7 +49,7 @@
  an opaque internal format. The given @rhombus(statinfo_stx) must
  match the form
 
-@(rhombusblock:
+@rhombusblock(
    (($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...))
 
  Keys for static information are compared based on binding, not merely
@@ -91,11 +91,11 @@
 }
 
 @doc(
-  def statinfo_meta.call_result_key,
-  def statinfo_meta.ref_result_key,
-  def statinfo_meta.map_ref_key,
-  def statinfo_meta.map_set_key,
-  def statinfo_meta.map_append_key,
+  def statinfo_meta.call_result_key
+  def statinfo_meta.ref_result_key
+  def statinfo_meta.map_ref_key
+  def statinfo_meta.map_set_key
+  def statinfo_meta.map_append_key
   def statinfo_meta.dot_provider_key
 ){
 
@@ -108,26 +108,26 @@
 
   @item{@rhombus(statinfo_meta.call_result_key) --- packed static
         information for the result value if the expression is used as
-        a function to call},
+        a function to call}
 
   @item{@rhombus(statinfo_meta.ref_result_key) --- packed static information
         for the result value if the expression is used with
-        @rhombus([]) to access an element},
+        @rhombus([]) to access an element}
 
   @item{@rhombus(statinfo_meta.map_ref_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        access an element},
+        access an element}
         
   @item{@rhombus(statinfo_meta.map_set_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus([]) to
-        update an element},
+        update an element}
         
   @item{@rhombus(statinfo_meta.map_append_key) --- an identifier bound to a
         function to call (instead of falling back to a generic dynamic
         dispatch) when the expression is used with @rhombus(++) to
-        append the result of another expression},
+        append the result of another expression}
 
   @item{@rhombus(statinfo_meta.dot_provider_key) --- an identifier
         bound to a @rhombus(dot.macro) or

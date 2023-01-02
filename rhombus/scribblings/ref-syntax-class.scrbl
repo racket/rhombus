@@ -11,30 +11,30 @@
 @doc(
   defn.macro '«syntax.class $name
                | $clause
-               | ...»',
+               | ...»'
   defn.macro '«syntax.class $name:
                 $option; ...
                 ~pattern
                 | $clause
-                | ...»',
+                | ...»'
   grammar option:
     ~description: $body; ...
-    $kind,
+    $kind
   grammar kind:
     ~term
     ~sequence
     ~group
     ~multi
-    ~block,
+    ~block
   grammar clause:
     $syntax_pattern
-    $syntax_pattern: $pattern_body; ...,
+    $syntax_pattern: $pattern_body; ...
   grammar pattern_body:
     $body
-    ~attr $identifier_maybe_rep: $body; ...,
+    ~attr $identifier_maybe_rep: $body; ...
   grammar identifier_maybe_rep:
     $identifier
-    [$identifier_maybe_rep, $ellipsis],
+    [$identifier_maybe_rep, $ellipsis]
   grammar ellipsis:
     $$(dots)
 ){
@@ -111,17 +111,17 @@
  for use in @rhombus(pattern_body).
 
 @examples(
-  ~eval: macro.make_for_meta_eval(),
+  ~eval: macro.make_for_meta_eval()
   meta:
     syntax.class Arithmetic
     | '$x + $y'
-    | '$x - $y',
+    | '$x - $y'
   expr.macro 'doubled_operands $(e :: Arithmetic)':
-    values('$(e.x) * 2 + $(e.y) * 2', ''),
-  doubled_operands 3 + 5,
+    values('$(e.x) * 2 + $(e.y) * 2', '')
+  doubled_operands 3 + 5
   expr.macro 'add_one_to_expression $(e :: Arithmetic)':
-    values('$e ... + 1', ''),
-  add_one_to_expression 2 + 2,
+    values('$e ... + 1', '')
+  add_one_to_expression 2 + 2
   meta:
     syntax.class NTerms
     | '~one $a':
@@ -133,13 +133,13 @@
         def sum:
           Syntax.unwrap(a) + Syntax.unwrap(b)
         ~attr average:
-          '$(sum / 2)',
+          '$(sum / 2)'
   expr.macro 'second_term $(e :: NTerms)':
-    values(e.b, ''),
-  second_term ~two 1 2,
-  second_term ~one 3,
+    values(e.b, '')
+  second_term ~two 1 2
+  second_term ~one 3
   expr.macro 'average $(e :: NTerms)':
-    values(e.average, ''),
+    values(e.average, '')
   average ~two 24 42
 )
 

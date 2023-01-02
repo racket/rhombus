@@ -22,27 +22,27 @@ to be included in the set. These uses of square brackets are implemented by
 @rhombus(#{#%ref}).
 
 @dispatch_table(
-  "set",
-  @rhombus(Set),
+  "set"
+  @rhombus(Set)
   [set.length(), Set.length(set)]
 )
 
 @doc(
-  expr.macro 'Set{$expr_or_splice, ...}',
-  repet.macro 'Set{$repet_or_splice, ...}',
-  fun Set(value:: Any, ...) :: Set,
+  expr.macro 'Set{$expr_or_splice, ...}'
+  repet.macro 'Set{$repet_or_splice, ...}'
+  fun Set(value:: Any, ...) :: Set
 
   grammar expr_or_splice:
     $expr
     $repetition $$(@litchar{,}) ellipses
-    & $set_expr,
+    & $set_expr
 
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) $ellipsis,
+    $ellipses $$(@litchar{,}) $ellipsis
 
   grammar ellipsis:
-    $$(dots_expr),
+    $$(dots_expr)
 
 ){
 
@@ -55,22 +55,22 @@ to be included in the set. These uses of square brackets are implemented by
  instead.
 
 @examples(
-  def s: Set{"x", 1, "y", 2},
-  s,
-  s["x"],
-  s[1],
-  s[42],
+  def s: Set{"x", 1, "y", 2}
+  s
+  s["x"]
+  s[1]
+  s[42]
   Set("x", 1, "y", 2)
 )
 
 }
 
 @doc(
-  bind.macro 'Set{$expr, ...}',
-  bind.macro 'Set{$expr, ..., $rest}',
+  bind.macro 'Set{$expr, ...}'
+  bind.macro 'Set{$expr, ..., $rest}'
   grammar rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $ellipsis,
+    $rest_binding $$(@litchar{,}) $ellipsis
   grammar ellipsis:
     $$(dots)
 ){
@@ -86,13 +86,13 @@ to be included in the set. These uses of square brackets are implemented by
  as repetitions.
 
 @examples(
-  def Set{"x", "y"}: {"x", "y"},
+  def Set{"x", "y"}: {"x", "y"}
   ~error:
-    def Set{"x", "y"}: {"x"},
-  def Set{"a"}: {"a", "b"},
-  def Set{"a", & rst}: {"a", "b", "c"},
-  rst,
-  def Set{"a", val, ...}: {"a", "b", "c"},
+    def Set{"x", "y"}: {"x"}
+  def Set{"a"}: {"a", "b"}
+  def Set{"a", & rst}: {"a", "b", "c"}
+  rst
+  def Set{"a", val, ...}: {"a", "b", "c"}
   [val, ...]
 )
 
@@ -100,8 +100,8 @@ to be included in the set. These uses of square brackets are implemented by
 
 
 @doc(
-  annot.macro 'Set',
-  annot.macro 'Set.of($annotation)',
+  annot.macro 'Set'
+  annot.macro 'Set.of($annotation)'
 ){
 
  Matches any set in the form without @rhombus(of). The @rhombus(of)
@@ -121,7 +121,7 @@ to be included in the set. These uses of square brackets are implemented by
 
 
 @doc(
-  expr.macro 'MutableSet{$value_expr, ...}',
+  expr.macro 'MutableSet{$value_expr, ...}'
   fun MutableSet(value:: Any, ...) :: Set
 ){
 
@@ -132,19 +132,19 @@ to be included in the set. These uses of square brackets are implemented by
  mutable sets, only immutable sets.
 
 @examples(
-  def m: MutableSet{"x", 1, "y", 2},
-  m,
-  m["x"],
-  m["x"] := #false,
-  m,
-  m["x"] := #true,
+  def m: MutableSet{"x", 1, "y", 2}
+  m
+  m["x"]
+  m["x"] := #false
+  m
+  m["x"] := #true
   m
 )
 
 }
 
 @doc(
-  bind.macro 'Set.empty',
+  bind.macro 'Set.empty'
   expr.macro 'Set.empty'
 ){
 
@@ -152,7 +152,7 @@ to be included in the set. These uses of square brackets are implemented by
  only an empty set (mutable or immutable).
 
 @examples(
-  Set.empty,
+  Set.empty
   match Set()
   | Set.empty: "empty set"
   | _: #false
@@ -162,15 +162,15 @@ to be included in the set. These uses of square brackets are implemented by
 
 
 @doc(
-  fun Set.length(set :: Set) :: Integer,
+  fun Set.length(set :: Set) :: Integer
 ){
 
  Returns the number of values in @rhombus(set).
 
 @examples(
-  Set.length({"a", "b"}),
-  Set.length(Set()),
+  Set.length({"a", "b"})
+  Set.length(Set())
   {"a", "b"}.length()
-  )
+)
 
 }
