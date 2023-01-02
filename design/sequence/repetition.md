@@ -15,13 +15,14 @@ pattern `'$x + $y'` is used to match the syntax object `'1 + 2'`, then
 
 When a binding is modified an ellipsis, `syntax-parse` binds the
 pattern variable so that it much be referenced using an ellipsis in
-a template, while `match` causes the bound variable to hold a list of
-matches. For example, the pattern `'($x ...)'` matched against `'(1 2
-3)'` causes `x` to be bound to `['1', '2', '3']`. Here, again, the
-advantage is that plain variables and value are used. This
-simplification, however, comes at some cost:
+a template, while `match` in the original Rhombus prototype caused
+the bound variable to hold a list of
+matches. For example, the pattern `'($x ...)'` matched against `'(1 2 3)'`
+causes `x` to be bound to `['1', '2', '3']`. Here, again, the
+advantage is that plain variables and value are used. That
+simplification, however, came at some cost:
 
-  * There's a naming mismatch between `x` in a pattern standing for
+  * There was a naming mismatch between `x` in a pattern standing for
     something that's replicated versus its value as a list of matches.
     Following the convention of adding `s` to the end of a variable
     name when it holds a list, the right binding form is either
@@ -42,15 +43,15 @@ simplification, however, comes at some cost:
     feed into a template, however.
 
   * Mismatches in the number of ellipses for a binding and for a use
-    are detected dynamically, instead of statically.
+    were detected dynamically, instead of statically.
 
-  * Templates cannot straightforwardly handle mixtures of binding
+  * Templates could not straightforwardly handle mixtures of binding
     depth nested under the same number of ellipses (matching the
     deepest binding). This generalization has proven occassionally
     useful in Scheme and Racket's `syntax` templates.
 
-  * Exposing the representation of a `match` sequence interferes with
-    efficiently traneferring a tail pattern match to a tail template
+  * Exposing the representation of a `match` sequence interfered with
+    efficiently transferring a tail pattern match to a tail template
     positions, as in
 
     ```
@@ -69,14 +70,14 @@ simplification, however, comes at some cost:
 Summary
 -------
 
-We explore an alternative design where `...` creates a new kind of
+We adopted an alternative design where `...` creates a new kind of
 _repetition_ binding that can be referenced only in a repetition
 context. A repetition context is created by various forms, such as
 syntax templates, list constructions, and function calls, typically
 triggered by a `...` (but extensibility means that a repetition
 context can be anywhere a macro implementer wants one).
 
-This change resolves the naming problem with ellipses, since a
+This approach resolves the naming problem with ellipses, since a
 variable is modified by ellipses both at a binding and at a use:
 
 ```
@@ -97,7 +98,7 @@ fun
 add(1, 2, 3)    // prints 6
 ```
 
-Other problems with binding plain variable to lists in the motivation
+Other problems with binding plain variables to lists in the motivation
 (i.e., besides naming) are also resolved with repetitions in a simple
 and consistent way. The notion of repetition positions fits well in
 the Rhombus language model, both because Rhombus is already set up to
@@ -136,34 +137,7 @@ generally, an identifier or operator can be bound as a prefix or infix
 operator, and repetition expansion is based enforestation as usual.
 
 Repetition forms, repetition binders, and repetition positions from
-`#lang rhombus` in the attached implementation:
-
- * A list pattern recognizes `...` in place of the last element and
-   converts each identifier in the preceding binding form to a
-   repetition binding. (This could be generalized to allow `...` in
-   other positions, but some generalizations lead to non-linear
-   matching.)
-
- * A list construction recognizes `...` in place of the last element
-   and treats the preceding element as a repetition form of depth 1.
-   The repetition's elements form the tail of the list. (This could be
-   straightforwardly generalized to allow multiple `...` anywhere
-   among the list elements, as long as a non-`...` form precedes each
-   `...`.)
-
- * A list construction of the form `[repetition, ...]` is a repetition
-   of depth N+1 if `repeition` is of depth N.
-
- * A function declaration with `...` in place of the last formal
-   argument convert each identifier in the preceding binding form to a
-   repetition binding reperseting “rest” argument.
-
- * A function call with recognizes `...` in place of the last argument
-   and treats the preceding argument as a repetition form of depth 1.
-   The repetition elements serve as by-position arguments after all
-   others. (This could be straightforwardly generalized to allow
-   multiple `...` anywhere among the arguments, as long as a non-`...`
-   forms precedes each `...`.)
+`#lang rhombus` in the implementation:
 
  * A syntax pattern recognizes nested ellipses and `$` escapes to
    create repetition bindings that expansion to depths N as determined
@@ -179,39 +153,93 @@ Repetition forms, repetition binders, and repetition positions from
    like Scheme when a repetition is used under more ellipses than its
    depth.)
 
- * The `List.repet(expr)` form is a repetition of depth 1 and expects
-   `expr` to produce a list.
+ * A list pattern recognizes `...` in place of the last element and
+   converts each identifier in the preceding binding form to a
+   repetition binding. (This could be generalized to allow `...` in
+   other positions, but some generalizations lead to non-linear
+   matching.) Patterns with `...` can be nested, leading to repetition
+   bindings at greater depths.
+
+ * A list construction recognizes `...` after any element and treats
+   the preceding element as a repetition form of depth 1. The
+   repetition's elements are spliced into the last , or they form the
+   tail of the list if `...` is at the end. A `...` repetition
+   reference can appear anywhere in a list construction, and multiple
+   `...` repetitions can be used in the same list construction.
+
+ * The list-construction form also works as repetition. In that case,
+   its elements are parsed as repetitions, and the depth of the
+   overall list repetition is the same as the greatest depth among its
+   elements. Referring to repetitions of different depths is handled
+   as in `syntax-parse`: shallower repetitions are repeated for
+   additional outer instances of other repetitions.
+
+ * Literals and variables are repetitions of depth 0, which means that
+   they can be combined with deeper repetitions to "copy" the literal
+   or variable reference as needed.
+
+ * A function declaration with `...` in place of the last formal
+   argument convert each identifier in the preceding binding form to a
+   repetition binding reperseting “rest” argument.
+
+ * A function call recognizes `...` in place of an argument and treats
+   the preceding argument as a repetition form of depth 1. The
+   repetition elements serve as by-position arguments, spliced in
+   among other arguments.
+
+ * A function-call form is also a repetition, analogous to a list
+   construction. Since a variable bound to a function works as a
+   repetition (of depth 0), a list construction can effectively map a
+   function over a repetition, as in `[f(x), ...]` where `x` is a
+   repetition of depth 1 and `f` is a variable that is bound to a
+   function.
+
+ * Uses of operators (as defined by `operator`), `.`, and `[]` for map
+   and array indexing all work as repetition forms analogous to
+   function calls. For example, `[x+1, ...]` maps the addition of 1
+   over the elements of the repetition `x`. Note that the right-hand
+   side of `.` is not an expression position normally, and it is also
+   not a repetition position when `.` is used as a repetition.
 
  * A parenthesized repetition is a repetition.
+
+ * The `List.repet(expr)` form is a repetition of depth 1 and expects
+   `expr` to produce a list.
 
 Open Issues
 -----------
 
-This design is meant to complement most of #225, not replace it,
-except for the “Ellipses” parts. In particular, `& lst` syntax seems
-better and worthwhile to apply a function to a list compared to
-`List.repet(lst), ...`. Also, the design here does not address keyword
-“rest” arguments at all.
+This design complements most of #225, not replace it, except for the
+“Ellipses” parts. In particular, `& lst` syntax seems better and
+worthwhile to apply a function to a list compared to
+`List.repet(lst), ...`. Also, the design here does not address
+keyword “rest” arguments at all.
 
 `List.repet` is a placeholder to demonstrate an idea. The final name
 or operator could be different, or the operation could be omitted from
 `#lang rhombus`, but the possibility of creating this operator seem
 important to the generality of repetitions.
 
-If `x` is bound as a repetition, then it might make sense for `y + x`
-to be a repetition equvalent to `List.repet(map (fun(x): y+x) [x, ...])`.
-It's not obvious how `y + x` would to mean that unambigiously in an
-repetition context, though, since `+` might be bound as an expression
-macro operator, in which case maybe `x` isn't even a variable
-reference. Possibly, simple patterns could be supported along the same
-lines as Scala-style implicit functions; see
-mflatt/shrubbery-rhombus-0#4. Possibly, being more explicit about
-literal versus repeated parts is better; see also Steele (2017). And
-possibly, along those lines, code-quoting notation like `'y+$x'` is
-the right way to go. If the difference between literal and repeated parts
-is made explicit, it's not clear that the concept of repetition positions
-is needed, since the explciit form turns into some variant of `map`
-either way.
+Defining repetition variants of forms like function calls, operator
+use, and `.` seems to work well in striking a balance between
+generality and simplicity. Trying to automatically adapt all
+expression forms to repetitions seems to invite trouble, because some
+binding forms will introduce bindings or have non-expression
+components (like the right-hand side of `.`). The current
+implementation does not include as repetition any predefined form that
+has binding or a block (that can contain definitions); it might make
+sense to allow `if` with single-expression branches, or maybe it's
+better to defer those kinds of computations to a less compact but more
+general form like `for`. This issue seems related to Scala-style
+implicit functions (see mflatt/shrubbery-rhombus-0#4), which would also
+ideally automatically adapt expression forms, but it's not clear how
+that can be done in general. Another possibility is that being more
+explicit about literal versus repeated parts is better; see also
+Steele (2017), and along those lines, maybe code-quoting notation
+like `'y+$x'` would be a good approach. (If the difference between
+literal and repeated parts is made explicit, it's not clear that the
+concept of repetition positions is needed, since the explcit form
+turns into some variant of `map` either way.)
 
 Other Discussion
 ----------------
