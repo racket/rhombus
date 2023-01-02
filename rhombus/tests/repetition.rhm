@@ -102,6 +102,23 @@ check:
   [Posn(x, x), ...][1].x
   2
 
+// static information through nested repetitions
+begin:
+  use_static
+  class Posn(x, y)
+  def [y -: Posn, ...] = [Posn(1, 2)]
+  def [[x -: Posn, ...], ...] = [[Posn(1, 2)]]
+  def '($z, ...) ...' = '(1, 2, 3) (4, 5)'
+  check:
+    [y, ...][0].x
+    1
+  check:
+    [[x, ...], ...][0][0].x
+    1
+  check:
+    [[z, ...], ...][1][1].unwrap()
+    5
+
 // map- and set-building `{}` as a repetition
 begin:
   def [x, ...] = [1, 2, 3]

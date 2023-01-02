@@ -36,6 +36,7 @@
             make-repetition
 
             repetition-as-list
+            repetition-as-deeper-repetition
 
             :repetition
             :repetition-info
@@ -225,6 +226,18 @@
         (wrap-static-info #'rep-info.seq-expr
                           #'#%ref-result
                           #'rep-info.element-static-infos)])]))
+
+(define-for-syntax (repetition-as-deeper-repetition rep-parsed static-infos)
+  (syntax-parse rep-parsed
+    [rep-info::repetition-info
+     (make-repetition-info #'rep-info.rep-expr
+                           #'rep-info.name
+                           #'rep-info.seq-expr
+                           #'rep-info.bind-depth
+                           (+ 1 (syntax-e #'rep-info.use-depth))
+                           #`((#%ref-result rep-info.element-static-infos)
+                              . #,static-infos)
+                           #'rep-info.immediate?)]))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

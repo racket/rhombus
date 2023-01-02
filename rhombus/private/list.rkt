@@ -154,7 +154,7 @@
                                             (datum->syntax #f
                                                            (or (extract-static-infos e)
                                                                '())))))]
-        [else #f])))))
+        [else (fail-k)])))))
 
 (define-reducer-syntax List
   (reducer-transformer
@@ -269,12 +269,13 @@
                               [e::expression #'e.parsed]))))
             (loop #'gs (cons (list 'splice e) accum))]
            [(rep-arg (group (op rhombus...)) . gs)
+            (define-values (new-gs count) (values #'gs 1) #;(consume-ellipses #'gs))
             (define e (syntax-parse #'rep-arg
                         [rep::repetition
                          (if repetition?
                              #'rep.parsed
                              (repetition-as-list #'rep.parsed 1))]))
-            (loop #'gs (cons (list 'rep e) accum))]
+            (loop new-gs (cons (list 'rep e) accum))]
            [(g . gs)
             (define e (if repetition?
                           (syntax-parse #'g
@@ -285,11 +286,11 @@
      (values
       (cond
         [(and (pair? content) (null? (cdr content))
-              (pair? (car content)) (eq? 'seq (caar content)))
+              (pair? (car content)) (eq? 'rep (caar content)))
          ;; special case, especially to expose static info on rest elements
          (define seq (cadar content))
          (cond
-           [repetition? seq]
+           [repetition? (repetition-as-deeper-repetition seq list-static-infos)]
            [else (wrap-list-static-info seq)])]
         [(not repetition?)
          (wrap-list-static-info
