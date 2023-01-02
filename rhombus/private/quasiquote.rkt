@@ -18,8 +18,6 @@
          (submod "syntax-class.rkt" for-quasiquote)
          (only-in "underscore.rkt"
                   [_ rhombus-_])
-         (only-in "ellipsis.rkt"
-                  [... rhombus...])
          "dollar.rkt"
          "repetition.rkt"
          "op-literal.rkt"
@@ -130,7 +128,8 @@
                                    #:tail-any-escape? [tail-any-escape? #f]
                                    #:as-tail? [as-tail? #f]
                                    #:splice? [splice? #f]
-                                   #:splice-pattern [splice-pattern #f])
+                                   #:splice-pattern [splice-pattern #f]
+                                   #:allow-fltten? [allow-flatten? #f])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
@@ -169,7 +168,8 @@
                                  [idrs '()]  ; list of #`[#,id #,rhs] for definitions
                                  [sidrs '()] ; list of #`[#,id #,rhs] for syntax definitions
                                  [vars '()]  ; list of `[,id . ,depth] for visible subset of `idrs` and `sidrs`
-                                 [ps '()] [can-be-empty? #t] [tail #f] [depth depth])
+                                 [ps '()] [can-be-empty? #t] [pend-is-rep? #f] [tail #f] [depth depth])
+         (define really-can-be-empty? (and can-be-empty? (or pend-is-rep? (not pend-idrs))))
          (define (simple gs a-depth)
            (syntax-parse gs
              [(g . gs)
@@ -178,7 +178,7 @@
                     (append (or pend-idrs '()) idrs)
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
-                    (cons p ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
+                    (cons p ps) really-can-be-empty? #f #f depth)]))
          (define (simple2 gs a-depth)
            (syntax-parse gs
              [(g0 g1 . gs)
@@ -188,7 +188,7 @@
                     (append (or pend-idrs '()) idrs)
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
-                    (list* p1 p0 ps) (and can-be-empty? (not pend-idrs)) #f depth)]))
+                    (list* p1 p0 ps) really-can-be-empty? #f #f depth)]))
          (syntax-parse gs
            [()
             (let ([ps (let ([ps (reverse ps)])
@@ -198,7 +198,7 @@
                   [idrs (append (or pend-idrs '()) idrs)]
                   [sidrs (append (or pend-sidrs '()) sidrs)]
                   [vars (append (or pend-vars '()) vars)]
-                  [can-be-empty? (and can-be-empty? (not pend-idrs))])
+                  [can-be-empty? really-can-be-empty?])
               (cond
                 [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
                  (handle-maybe-empty-alts #'tag ps idrs sidrs vars)]
@@ -225,7 +225,7 @@
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
-                  ps (and can-be-empty? (not pend-idrs)) id depth)]
+                  ps really-can-be-empty? #f id depth)]
            [((~var op (block-tail-repetition in-space)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
@@ -235,7 +235,7 @@
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
-                  ps (and can-be-empty? (not pend-idrs)) id depth)]
+                  ps really-can-be-empty? #f id depth)]
            [((~var op (list-repetition in-space)) . gs)
             #:when (zero? depth)
             (unless pend-idrs
@@ -250,11 +250,17 @@
             (define new-pend-vars (for/list ([var (in-list pend-vars)])
                                     (struct-copy pattern-variable var
                                                  [depth (+ 1 (pattern-variable-depth var))])))
-            (loop #'gs #f #f #f
-                  (append new-pend-idrs idrs)
-                  (append new-pend-sidrs sidrs)
-                  (append new-pend-vars vars)
-                  (cons (quote-syntax ...) ps) can-be-empty? #f depth)]
+            (if allow-flatten?
+                (loop #'gs new-pend-idrs new-pend-sidrs new-pend-vars
+                      idrs
+                      sidrs
+                      vars
+                      (cons (quote-syntax ...) ps) can-be-empty? #t #f depth)
+                (loop #'gs #f #f #f
+                      (append new-pend-idrs idrs)
+                      (append new-pend-sidrs sidrs)
+                      (append new-pend-vars vars)
+                      (cons (quote-syntax ...) ps) can-be-empty? #f #f depth))]
            [(((~datum op) (~var $-id (:$ in-space))) esc . n-gs)
             (cond
               [(zero? depth)
@@ -263,7 +269,7 @@
                      (append (or pend-idrs '()) idrs)
                      (append (or pend-sidrs '()) sidrs)
                      (append (or pend-vars '()) vars)
-                     (cons pat ps) (and can-be-empty? (not pend-idrs)) #f depth)]
+                     (cons pat ps) really-can-be-empty? #f #f depth)]
               [else
                (simple2 gs (sub1 depth))])]
            [(g . _)
@@ -496,6 +502,7 @@
     (convert-syntax e
                     #:in-space in-expression-space
                     #:tail-any-escape? #t
+                    #:allow-fltten? #t
                     ;; make-datum
                     (lambda (d) d)
                     ;; make-literal

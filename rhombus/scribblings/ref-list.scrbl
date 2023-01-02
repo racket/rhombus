@@ -33,8 +33,16 @@ to append lists.
 
   grammar expr_or_splice:
     $expr
-    $repetition $$(@litchar{,}) $$(dots_expr)
-    & $list_expr
+    $repetition $$(@litchar{,}) $ellipses
+    & $list_expr,
+
+  grammar ellipses:
+    $ellipsis
+    $ellipses $$(@litchar{,}) ellipsis,
+
+  grammar ellipsis:
+    $$(dots_expr)
+
 ){
 
  Constructs a list of the given @rhombus(v)s values or results of the
@@ -63,8 +71,10 @@ to append lists.
   bind.macro '#{#%brackets} [$binding, ...]',
   bind.macro '#{#%brackets} [$binding, ..., $rest]',
   grammar rest:
-    $repetition_binding $$(@litchar{,}) $$(dots)
-    & $list_binding
+    $repetition_binding $$(@litchar{,}) $ellipsis
+    & $list_binding,
+  grammar ellipsis:
+    $$(dots)
 ){
 
  Matches a list with as many elements as @rhombus(binding)s, or if

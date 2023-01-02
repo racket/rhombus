@@ -37,6 +37,7 @@
 
             repetition-as-list
             repetition-as-deeper-repetition
+            flatten-repetition
 
             :repetition
             :repetition-info
@@ -202,9 +203,11 @@
 (define-for-syntax repetition-as-list
   (case-lambda
     [(ellipses stx depth)
+     (repetition-as-list ellipses stx depth 0)]
+    [(ellipses stx depth extra-ellipses)
      (syntax-parse stx
        [rep::repetition
-        (repetition-as-list #'rep.parsed depth)]
+        (repetition-as-list (flatten-repetition #'rep.parsed extra-ellipses) depth)]
        [_
         (raise-syntax-error (syntax-e ellipses)
                             "not preceded by a repetition"
@@ -238,6 +241,25 @@
                            #`((#%ref-result rep-info.element-static-infos)
                               . #,static-infos)
                            #'rep-info.immediate?)]))
+
+(define-for-syntax (flatten-repetition rep-parsed count)
+  (cond
+    [(= 0 count) rep-parsed]
+    [else
+     (syntax-parse rep-parsed
+       [rep-info::repetition-info
+        (make-repetition-info #'rep-info.rep-expr
+                              #'rep-info.name
+                              #`(flatten rep-info.seq-expr #,count)
+                              #'rep-info.bind-depth
+                              (+ count (syntax-e #'rep-info.use-depth))
+                              #'rep-info.element-static-infos
+                              #f)])]))
+
+(define (flatten lists count)
+  (if (zero? count)
+      lists
+      (flatten (apply append lists) (sub1 count))))
 
 (define-syntax (define-repetition-syntax stx)
   (syntax-parse stx

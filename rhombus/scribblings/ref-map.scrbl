@@ -34,13 +34,18 @@ operator. These uses of square brackets are implemented by
   expr.macro '#{#%braces} {$key_val_or_splice, ...}',
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition $$(@litchar{,}) $$(dots_expr)
+    $key_repetition: $val_repetition $$(@litchar{,}) $ellipses
     & $map_expr,
   expr.macro '#{#%braces} {$expr_or_splice, ...+}',
   grammar expr_or_splice:
     $elem_expr
-    $elem_repetition $$(@litchar{,}) $$(dots_expr)
+    $elem_repetitions $$(@litchar{,}) $ellipses
     & $set_expr,
+  grammar ellipses:
+    $ellipsis
+    $ellipses $$(@litchar{,}) $ellipsis,
+  grammar ellipsis:
+    $$(dots_expr),
   repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}',
   repet.macro '#{#%braces} {$repet_or_splice, ...+}',
 ){
@@ -110,8 +115,10 @@ operator. These uses of square brackets are implemented by
   repet.macro 'Map{$key_val_or_splice_repet, ...}',
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition $$(@litchar{,}) $$(dots_expr)
+    $key_repetition: $val_repetition $$(@litchar{,}) $ellipsis
     @rhombus(&) $map_expr,
+  grammar ellipsis:
+    $$(dots),
   fun Map([key :: Any, value :: Any], ...) :: Map
 ){
 
@@ -136,12 +143,14 @@ operator. These uses of square brackets are implemented by
   bind.macro '#{#%braces} {$key_expr: $val_binding, ..., map_rest}',
   grammar map_rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $$(dots),
+    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis,
   bind.macro '#{#%braces} {$expr, ...}',
   bind.macro '#{#%braces} {$expr, ..., set_rest}',
   grammar map_rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $$(dots)
+    $rest_binding $$(@litchar{,}) $ellipsis,
+  grammar ellipsis:
+    $$(dots),
 ){
 
  Matches either a map or set, depending on whether
@@ -168,7 +177,9 @@ operator. These uses of square brackets are implemented by
   bind.macro 'Map([$key_expr, $val_binding], ...)',
   grammar rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $$(dots)
+    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis,
+  grammar ellipsis:
+    $$(dots),
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values

@@ -32,9 +32,14 @@ normally bound to implement function calls.
   grammar arg:
     $arg_expr
     $keyword: $arg_expr
-    $repetition $$(@litchar{,}) $$(dots_expr)
+    $repetition $$(@litchar{,}) $ellipses
     & $list_expr
-    ~& $map_expr
+    ~& $map_expr,
+  grammar ellipses:
+    $ellipsis
+    $ellipses $$(@litchar{,}) $ellipsis,
+  grammar ellipsis:
+    $$(dots_expr)
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
@@ -44,7 +49,7 @@ normally bound to implement function calls.
   in place of expressions. 
 
   If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
-  @rhombus(repetition $$(@litchar{,}) $$(dots_expr)), then the
+  @rhombus(repetition $$(@litchar{,}) ellipses), then the
   elements of the list or @tech{repetition} are spliced into the
   call as separate by-position arguments.
 
@@ -107,9 +112,12 @@ normally bound to implement function calls.
     $$("ϵ"),
 
   grammar rest:
-    $repetition_binding $$(@litchar{,}) $$(dots)
+    $repetition_binding $$(@litchar{,}) $ellipsis
     & $list_binding
-    ~& $map_binding
+    ~& $map_binding,
+
+  grammar ellipsis:
+    $$(dots)
 
 ){
 
@@ -249,7 +257,7 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 @doc(
   entry_point.macro 'fun ($kwopt_binding, ..., $rest, ...) $maybe_res_ann:
-                       $bo≈dy
+                       $body
                        ...',
 
   entry_point.macro 'fun

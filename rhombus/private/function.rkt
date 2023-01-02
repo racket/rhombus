@@ -22,8 +22,8 @@
          "function-arity-key.rkt"
          "static-info.rkt"
          "annotation.rkt"
-         (only-in "ellipsis.rkt"
-                  [... rhombus...])
+         (rename-in "ellipsis.rkt"
+                    [... rhombus...])
          "repetition.rkt"
          "rest-marker.rkt"
          (only-in "list.rkt" List)
@@ -942,8 +942,9 @@
              (cons (list (gen-id) 'list #'(rhombus-expression (tag rand ...)) #f)
                    rev-args))]
       [(g0 (group (op (~and dots rhombus...))) . gs)
-       (loop #'gs
-             (cons (list (gen-id) 'list (repetition-as-list #'dots #'g0 1))
+       (define-values (new-gs extras) (consume-extra-ellipses #'gs))
+       (loop new-gs
+             (cons (list (gen-id) 'list (repetition-as-list #'dots #'g0 1 extras))
                    rev-args))]
       [(((~and tag group) (op ~&) rand ...+) . gs)
        (loop #'gs

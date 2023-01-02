@@ -70,7 +70,7 @@
           #:hidden? (rhombus-expression hidden-expr)
           (list
            (list t-form
-                 (quote-syntax (top e-form)))
+                 (adjust-top-srcloc (quote-syntax (top e-form))))
            ...)))]))
 
 (define (make-rhombus-eval)
@@ -168,3 +168,15 @@
                                                  [current-error-port o])
                                     ((error-display-handler) (exn-message exn) exn))))
   (get-output-string o))
+
+(define (adjust-top-srcloc stx)
+  (define l (syntax->list stx))
+  (datum->syntax #f
+                 (cons (syntax-property (car l) 'raw "")
+                       (cdr l))
+                 (cadr l)))
+
+  
+  
+
+

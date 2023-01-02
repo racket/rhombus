@@ -34,8 +34,16 @@ to be included in the set. These uses of square brackets are implemented by
 
   grammar expr_or_splice:
     $expr
-    $repetition $$(@litchar{,}) $$(dots_expr)
-    & $set_expr    
+    $repetition $$(@litchar{,}) ellipses
+    & $set_expr,
+
+  grammar ellipses:
+    $ellipsis
+    $ellipses $$(@litchar{,}) $ellipsis,
+
+  grammar ellipsis:
+    $$(dots_expr),
+
 ){
 
  Constructs an immutable set containing given values, equivalent to
@@ -62,7 +70,9 @@ to be included in the set. These uses of square brackets are implemented by
   bind.macro 'Set{$expr, ..., $rest}',
   grammar rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $$(dots)
+    $rest_binding $$(@litchar{,}) $ellipsis,
+  grammar ellipsis:
+    $$(dots)
 ){
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.

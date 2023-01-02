@@ -46,16 +46,17 @@
       [raw? e]
       [repetition? (syntax-parse e [rep::repetition #'rep.parsed])]
       [else #`(rhombus-expression #,e)]))
-  (define (repetition-set-argument e)
+  (define (repetition-set-argument e extra-ellipses)
     (cond
       [raw? e]
       [else
        (syntax-parse e
          [rep::repetition
+          (define the-rep (flatten-repetition #'rep.parsed extra-ellipses))
           (if repetition?
-              (inlined #'rep.parsed)
-              #`(#,list->set #,(repetition-as-list #'rep.parsed 1)))])]))
-  (define (repetition-map-arguments key-e val-e)
+              (inlined the-rep)
+              #`(#,list->set #,(repetition-as-list the-rep 1)))])]))
+  (define (repetition-map-arguments key-e val-e extra-ellipses)
     (cond
       [raw? (list key-e val-e)]
       [else
@@ -63,11 +64,13 @@
                            [val::repetition val-e])
          ;; This could be faster than building list of pair
          ;; to convert to a hash table...
-         (define pair-rep (build-compound-repetition
-                           stx (list #'key.parsed #'val.parsed)
-                           (lambda (key val)
-                             (values #`(cons #,key #,val)
-                                     #'()))))
+         (define pair-rep (flatten-repetition
+                           (build-compound-repetition
+                            stx (list #'key.parsed #'val.parsed)
+                            (lambda (key val)
+                              (values #`(cons #,key #,val)
+                                      #'())))
+                           extra-ellipses))
          (if repetition?
              (list (inlined pair-rep))
              (list #`(#,list->map #,(repetition-as-list pair-rep 1)))))]))
@@ -102,25 +105,26 @@
                    [_ #f]))
             ;; repetition
             (define elem (car elems))
+            (define-values (ignored-gs extra-ellipses) (consume-extra-ellipses (cddr elems)))
             (syntax-parse elem
               #:datum-literals (block braces parens group op)
               #:literals (&)
               [(group key-e ... (block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
-               (loop (cddr elems)
+               (loop (list-tail (cddr elems) extra-ellipses)
                      'map
                      '()
-                     (append (repetition-map-arguments #`(#,group-tag key-e ...) #'val)
+                     (append (repetition-map-arguments #`(#,group-tag key-e ...) #'val extra-ellipses)
                              (if (null? rev-args)
                                  rev-argss
                                  (cons (reverse rev-args) rev-argss))))]
               [_
                (assert-set)
-               (loop (cddr elems)
+               (loop (list-tail (cddr elems) extra-ellipses)
                      'set
                      '()
-                     (cons (repetition-set-argument elem)
+                     (cons (repetition-set-argument elem extra-ellipses)
                            (if (null? rev-args)
                                rev-argss
                                (cons (reverse rev-args) rev-argss))))])]

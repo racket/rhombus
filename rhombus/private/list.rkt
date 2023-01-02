@@ -12,8 +12,8 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
-         (only-in "ellipsis.rkt"
-                  [... rhombus...])
+         (rename-in "ellipsis.rkt"
+                    [... rhombus...])
          (only-in "rest-marker.rkt"
                   &)
          "repetition.rkt"
@@ -269,12 +269,13 @@
                               [e::expression #'e.parsed]))))
             (loop #'gs (cons (list 'splice e) accum))]
            [(rep-arg (group (op rhombus...)) . gs)
-            (define-values (new-gs count) (values #'gs 1) #;(consume-ellipses #'gs))
+            (define-values (new-gs extras) (consume-extra-ellipses #'gs))
             (define e (syntax-parse #'rep-arg
                         [rep::repetition
+                         (define the-rep (flatten-repetition #'rep.parsed extras))
                          (if repetition?
-                             #'rep.parsed
-                             (repetition-as-list #'rep.parsed 1))]))
+                             the-rep
+                             (repetition-as-list the-rep 1))]))
             (loop new-gs (cons (list 'rep e) accum))]
            [(g . gs)
             (define e (if repetition?

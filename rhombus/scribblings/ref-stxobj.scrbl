@@ -95,7 +95,8 @@ Metadata for a syntax object can include a source location and the raw
 
  Multiple escapes can appear in the term before @dots, in which the
  repetitions are drawn in parallel (assuming that they are at the same
- repetition depth, repetition @dots can be nested around escapes, and
+ repetition depth), repetition @dots can be nested around escapes,
+ consecutive @dots splice deeper repetitions, and
  so on, following the normal rules of @tech{repetitions}.
 
  Quotes work as a repetition to construct multiple syntax objects within
@@ -118,13 +119,25 @@ Metadata for a syntax object can include a source location and the raw
  Matches a syntax object consistent with @rhombus(term,~var)s. A
  @rhombus($, ~bind) within @rhombus(form) escapes to an binding that
  is matched against the corresponding portion of a candidate syntax
- object. Ellipses, etc.
+ object. A @rhombus(..., ~bind) following a subpattern matches any number
+ of instances of the preceding subpattern, and escapes in the pattern
+ are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
+ @rhombus(..., ~bind) can appear before the end of a sequence, and
+ multiple @rhombus(..., ~bind) can be used in the same group; when matching
+ is ambiguous, matching prefers earlier @rhombus(..., ~bind) repetitions to
+ later ones.
 
  @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
 
 @examples(
   match '1 + 2'
-  | '$n + $m': [n, m]
+  | '$n + $m': [n, m],
+  match '(1/1) (2/1) (3/1)'
+  | '($x/1) ...': [x, ...],
+  match '1 + 2 * 3'
+  | '$x ... * 3': [x, ...],
+  match '1 + 2 * 3'
+  | '$x ... * $y ...': values([x, ...], [y, ...])
 )
 }
 

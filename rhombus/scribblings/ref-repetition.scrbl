@@ -50,6 +50,17 @@ depth 1, because a list repetition subtracts one from the depth of a
 repetition before (another) @dots_expr, and @rhombus(z+1) has depth 2
 due to the @rhombus(z) binding.
 
+When a repetition is followed by multiple @rhombus(...)s in a row, as
+opposed to nested @rhombus(...)s, then the repetitions that would be
+accessed by nesting are flattend into a single repetition. This
+flattening has the effect of appending sequences.
+
+@examples(
+  ~label: #false,
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]],
+  [z, ..., ...]
+)
+
 When a repetition form combines multiple repetitions, then unless
 documented otherwise, elements at the same repetition depth are drawn
 from the repetitions in parallel.
