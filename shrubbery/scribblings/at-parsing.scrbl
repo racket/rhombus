@@ -25,8 +25,9 @@ one of these forms:
       @secref("lexeme-parsing") as @nonterm{command}, and it always
       corresponds to a group. A group that ends in a block is
       disallowed. Each @italic{argument} is also a group, with no
-      additional constraints. The form of @italic{braced_text} is
-      described below.
+      additional constraints, but the separating @litchar{,} is
+      optional for arguments that are newline-separated groups.
+      The form of @italic{braced_text} is described below.
 
       No space is allowed between @litchar("@") and @litchar{command},
       between @italic{command} and @litchar("("), between

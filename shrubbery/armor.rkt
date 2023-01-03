@@ -11,6 +11,7 @@
 (struct group (col
                bar-line  ; line start for a `|`
                add-semi?
+               add-comma?
                close?
                in-at?)
   #:transparent)
@@ -25,9 +26,10 @@
 (define (make-group col
                     #:bar-line [bar-line #f]
                     #:add-semi? [add-semi? #t]
+                    #:add-comma? [add-comma? #f]
                     #:close? [close? #t]
                     #:in-at? [in-at? #f])
-  (group col bar-line add-semi? close? in-at?))
+  (group col bar-line add-semi? add-comma? close? in-at?))
 
 (define (toggle-armor t e)
   (define orig-from-pos (send t get-start-position))
@@ -203,6 +205,7 @@
                           (make-parse-state (list (make-group (+ (- next-pos line)
                                                                  (line-delta t line))
                                                               #:add-semi? (equal? (send t get-text s (add1 s)) "'")
+                                                              #:add-comma? (equal? (send t get-text s (add1 s)) "(")
                                                               #:close? #f
                                                               #:in-at? (eq? use-category 'at-opener)))
                                             #:skip? (or (eq? use-category 'at-opener)
@@ -221,7 +224,8 @@
                  [(and (not init?)
                        g-col
                        (= col g-col)
-                       (group-add-semi? (car (parse-state-gs state))))
+                       (or (group-add-semi? (car (parse-state-gs state)))
+                           (group-add-comma? (car (parse-state-gs state)))))
                   (case category
                     [(bar-operator)
                      (cond
@@ -230,9 +234,13 @@
                     [else
                      (loop pos prev-end #t
                            state
-                           ;; maybe add redundant `;` so we preserve it when unarmoring
-                           (if #t ; (not (equal? ";" (send t get-text (sub1 prev-end) prev-end)))
-                               (cons (cons prev-end 'semi) inserts)
+                           ;; ok to add redundant `;` so we preserve it when unarmoring,
+                           ;; but don't add a redundant comma
+                           (if (not (equal? "," (send t get-text (sub1 prev-end) prev-end)))
+                               (cons (cons prev-end (if (group-add-semi? (car (parse-state-gs state)))
+                                                        'semi
+                                                        'comma))
+                                     inserts)
                                inserts))])]
                  [(eq? category 'bar-operator)
                   (define line (line-orig-start t pos))
@@ -253,6 +261,7 @@
                       [(close) "»"]
                       [(enter) ";«"]
                       [(semi) ";"]
+                      [(comma) "/*,*/,"] ;; `/*,*/` marks a comma that should be removed by unarmor
                       [else "??"]))
         (define line (line-start t pos))
         (define col (+ (- pos line) (line-delta t line)))
@@ -328,7 +337,14 @@
                (when (and (pair? stack) (eq? 'at (car stack)))
                  ;; line comment => don't adjust next line's indentation
                  (hash-set! skip-adjust-lines (add1 (send t position-paragraph s)) #t))
-               (loop e pos category deletes stack)]
+               (cond
+                 [(and (= 5 (- e s))
+                       (equal? (send t get-text s e) "/*,*/")
+                       (equal? (send t get-text s e) "/*,*/")
+                       (eq? 'comma-operator (classify-position t e)))
+                  (loop e pos category (cons (cons s 6) deletes) stack)]
+                 [else
+                  (loop e pos category deletes stack)])]
               [else
                (loop e pos category deletes stack)])])))
      (define start (line-start t from-pos))

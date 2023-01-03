@@ -1680,6 +1680,9 @@ then @{8}
 @same(1) x @group(2)
 @same(1) @group(2)
 
+@f(arg one
+   arg two)
+
 tail @«in: content»
 tail @(«in: content»)
 tail @«| then | else»
@@ -1786,6 +1789,7 @@ INPUT
     (group same group)
     (group same (parens (group 1)) x group (parens (group 2)))
     (group same (parens (group 1)) group (parens (group 2)))
+    (group f (parens (group arg one) (group arg two)))
     (group tail in (block (group content)))
     (group tail in (block (group content)))
     (group tail (alts (block (group then)) (block (group else))))

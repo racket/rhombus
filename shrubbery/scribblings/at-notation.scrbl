@@ -119,6 +119,11 @@ Some additional @litchar("@") rules:
        written without grouping @litchar{«»}, as long as no space
        appears between the identifiers and operators.},
 
+ @item{When @litchar{(} @italic{arg} @litchar{,} ... @litchar{)} is
+       present, the separating commas are optional. That is, arguments
+       can be provided as different newline-separated groups without a
+       @litchar{,} in between.}
+
  @item{The form @rhombus($$(@litchar("@(«")) $$(@italic{command}) ... $$(@litchar{»)}))
        splices as-is with no arguments, even if the subsequent text has
        the shape of parenthesed @italic{arg}s or braced @italic{text}.},

@@ -208,7 +208,7 @@ but the table below describes the shape of @litchar("@") forms.
     [no_lex, @nonterm{prefix}, bis, @bseq(@nonterm{identifier}, @nonterm{operator}), "no space between parts"],
     empty_line,
     [no_lex, @nonterm{arguments}, bis, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}),
-     @italic{usual @litchar{,}-separated}],
+     @italic{optional @litchar{,}-separated}],
     empty_line,
     [no_lex, @nonterm{text}, bis, bseq(@nonterm{atopen}, @nonterm{text}, @nonterm{atclose}),
      @elem{@italic{escapes in} @nonterm{text}}],

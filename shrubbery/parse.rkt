@@ -13,7 +13,7 @@
                line            ; current group's line and last consumed token's line
                column          ; group's column; below ends group, above starts indented
                operator-column ; column for operator that continues group on a new line
-               paren-immed?    ; immediately in `()` or `[]`?
+               paren-immed     ; immediately in `()` or `[]`: #f, 'normal, or 'at
                bar-closes?     ; does `|` always end a group?
                bar-closes-line ; `|` (also) ends a group on this line
                block-mode      ; 'inside, #f, `:` or `|` token, or 'end
@@ -26,7 +26,7 @@
                     #:line line
                     #:column column
                     #:operator-column [operator-column #f]
-                    #:paren-immed? [paren-immed? #f]
+                    #:paren-immed [paren-immed #f]
                     #:bar-closes? [bar-closes? #f]
                     #:bar-closes-line [bar-closes-line #f]
                     #:block-mode [block-mode #f]
@@ -38,7 +38,7 @@
          line
          column
          operator-column
-         paren-immed?
+         paren-immed
          bar-closes?
          bar-closes-line
          block-mode
@@ -67,7 +67,7 @@
 ;; Parsing state for group sequences: top level, in opener-closer, or after `:`
 (struct group-state (count?         ; parsed based on lines and columns?
                      closer         ; expected closer: a string, EOF, or column (maybe 'any as column)
-                     paren-immed?   ; immediately in `()` or `[]`?
+                     paren-immed    ; immediately in `()` or `[]`: #f, 'normal, or 'at
                      column         ; not #f => required indentation check checking
                      check-column?  ; #f => allow any sufficiently large (based on closer) indentation
                      bar-closes?    ; does `|` always end the sequence of groups?
@@ -84,7 +84,7 @@
 
 (define (make-group-state #:count? count?
                           #:closer closer
-                          #:paren-immed? [paren-immed? #f]
+                          #:paren-immed [paren-immed #f]
                           #:column column
                           #:check-column? [check-column? count?]
                           #:bar-closes? [bar-closes? #f]
@@ -98,7 +98,7 @@
                           #:raw [raw null])
   (group-state count?
                closer
-               paren-immed?
+               paren-immed
                column
                check-column?
                bar-closes?
@@ -285,10 +285,10 @@
              [(closer-column? (group-state-closer sg))
               (done)]
              [else
-              (unless (and (group-state-paren-immed? sg)
+              (unless (and (group-state-paren-immed sg)
                            (group-state-comma-time? sg))
                 (fail t (format "misplaced comma~a"
-                                (if (group-state-paren-immed? sg)
+                                (if (group-state-paren-immed sg)
                                     ""
                                     (string-append " (not immediately " within-parens-str ")")))))
               (define-values (rest-l last-line delta raw)
@@ -322,7 +322,7 @@
                  (define-values (gs close-l close-line close-delta end-t never-tail-commenting group-tail-raw)
                    (parse-groups splice-l (make-group-state #:count? #f
                                                             #:closer (make-closer-expected "»" next-t)
-                                                            #:paren-immed? #f
+                                                            #:paren-immed #f
                                                             #:block-mode #f
                                                             #:can-empty? #f
                                                             #:column #f
@@ -330,12 +330,12 @@
                                                             #:delta splice-delta
                                                             #:commenting group-commenting
                                                             #:raw splice-raw)))
-                 (when (group-state-paren-immed? sg)
+                 (when (group-state-paren-immed sg)
                    (unless (= 1 (length gs))
                      (fail t (format "multi-group splice not allowed (immediately ~a)" within-parens-str))))
                  (define-values (more-gs more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)
                    (parse-groups close-l (struct-copy group-state sg
-                                                      [comma-time? (group-state-paren-immed? sg)]
+                                                      [comma-time? (and (group-state-paren-immed sg) #t)]
                                                       [check-column? (next-line?* close-l close-line)]
                                                       [column (or (group-state-column sg) column)]
                                                       [last-line close-line]
@@ -349,7 +349,7 @@
                          more-l more-line more-delta more-end-t more-tail-commenting more-tail-raw)]
                 
                 [else
-                 (when (group-state-paren-immed? sg)
+                 (when (group-state-paren-immed sg)
                    (fail t (format "misplaced semicolon (immediately ~a)" within-parens-str)))
                  (parse-groups rest-l (struct-copy group-state sg
                                                    [check-column? (next-line?* rest-l last-line)]
@@ -361,7 +361,8 @@
                                                    [block-mode (next-block-mode (group-state-block-mode sg))]
                                                    [raw raw]))])])]
           [else
-           (when (group-state-comma-time? sg)
+           (when (and (group-state-comma-time? sg)
+                      (not (eq? 'at (group-state-paren-immed sg))))
              (fail t (format "missing comma before new group (~a)" within-parens-str)))
            (case (and (not (eq? (group-state-block-mode sg) 'start))
                       (token-name t))
@@ -406,7 +407,7 @@
                                                      [check-column? (next-line?* rest-l group-end-line)]
                                                      [last-line group-end-line]
                                                      [delta group-end-delta]
-                                                     [comma-time? (group-state-paren-immed? sg)]
+                                                     [comma-time? (and (group-state-paren-immed sg) #t)]
                                                      [commenting #f]
                                                      [tail-commenting block-tail-commenting]
                                                      [raw (if commenting
@@ -446,7 +447,7 @@
                 (fail t "second group not allowed after `@` within `«` and `»`"))
               (define-values (g rest-l group-end-line group-delta group-tail-commenting group-tail-raw)
                 (parse-group l (make-state #:count? (group-state-count? sg)
-                                           #:paren-immed? (group-state-paren-immed? sg)
+                                           #:paren-immed (group-state-paren-immed sg)
                                            #:line line
                                            #:column use-column
                                            #:bar-closes? (group-state-bar-closes? sg)
@@ -460,7 +461,7 @@
                                                   [column use-column]
                                                   [check-column? (next-line?* rest-l group-end-line)]
                                                   [last-line group-end-line]
-                                                  [comma-time? (group-state-paren-immed? sg)]
+                                                  [comma-time? (and (group-state-paren-immed sg) #t)]
                                                   [delta group-delta]
                                                   [commenting #f]
                                                   [tail-commenting group-tail-commenting]
@@ -634,11 +635,14 @@
            (parse-alts-block t l)]
           [(opener)
            (check-block-mode)
-           (define-values (closer tag paren-immed?)
+           (define-values (closer tag paren-immed)
              (case (token-e t)
-               [("(") (values ")" 'parens #t)]
-               [("{") (values "}" 'braces #t)]
-               [("[") (values "]" 'brackets #t)]
+               [("(") (values ")" 'parens (let ([am (state-at-mode s)])
+                                            (if (and am (not (at-mode-initial? am)))
+                                                'at
+                                                'normal)))]
+               [("{") (values "}" 'braces 'normal)]
+               [("[") (values "]" 'brackets 'normal)]
                [("'") (values "'" 'quotes #f)]
                [("«") (define am (state-at-mode s))
                       (if (and am (at-mode-initial? am))
@@ -665,7 +669,7 @@
            (define-values (gs rest-l0 close-line0 close-delta0 end-t0 never-tail-commenting group-tail-raw0)
              (parse-groups next-l (make-group-state #:count? (state-count? s)
                                                     #:closer (make-closer-expected use-closer t)
-                                                    #:paren-immed? paren-immed?
+                                                    #:paren-immed paren-immed
                                                     #:block-mode 'start
                                                     #:column sub-column
                                                     #:last-line last-line
