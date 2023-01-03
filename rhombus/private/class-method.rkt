@@ -53,7 +53,7 @@
   (curry-method (method-ref ref obj pos) obj))
 
 (define (raise-not-an-instance name v)
-  (raise-argument-error* name rhombus-realm "not an instance for method call" v))
+  (raise-arguments-error* name rhombus-realm "not an instance for method call" "value" v))
 
 ;; Results:
 ;;   method-mindex   ; symbol -> mindex

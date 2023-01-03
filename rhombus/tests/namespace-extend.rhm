@@ -9,6 +9,9 @@ namespace root:
   def name = "root"
   def trunk.side = "left"
   export: trunk name
+  check:
+    trunk.side
+    "left"
 
 check:
   root.name
@@ -151,3 +154,10 @@ check:
     lib("rhombus/tests/example-extend-b.rhm") open
   List(List.a, List.b, ExList.a)
   ["a", "b", "a"]
+
+check:
+  ~eval
+  namespace toplevel: "ok"
+  def toplevel.greeting = "hi"
+  toplevel.greeting
+  "hi"

@@ -14,10 +14,6 @@
            build-dot-identifier))
 
 (begin-for-syntax
-  (define-syntax-class :op-dot
-    #:description "a dot operator"
-    #:datum-literals (op |.|)
-    (pattern (op |.|)))
   
   (define-splicing-syntax-class :dotted-identifier-sequence
     (pattern (~seq head-id:identifier (~seq _::op-dot tail-id:identifier) ...)))

@@ -8,7 +8,8 @@
           :alts
           :braces
           :brackets
-          :quotes))
+          :quotes
+          :op-dot))
 
 (begin-for-syntax
   (define-syntax-class :parens
@@ -34,4 +35,9 @@
   (define-syntax-class :quotes
     #:description "quotes"
     #:opaque
-    (pattern (~datum quotes))))
+    (pattern (~datum quotes)))
+  (define-syntax-class :op-dot
+    #:description "a dot operator"
+    #:opaque
+    #:datum-literals (op |.|)
+    (pattern (op |.|))))

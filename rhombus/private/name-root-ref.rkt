@@ -50,7 +50,7 @@
                      (cond
                        [(not get)
                         (define name (build-name prefix field-id))
-                        (and (identifier-binding (in-space name))
+                        (and (identifier-binding (in-space name) (syntax-local-phase-level) #t)
                              (relocate-field form-id field-id name))]
                        [else
                         (define sub-id (if prefix
