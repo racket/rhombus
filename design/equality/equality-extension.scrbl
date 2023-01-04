@@ -260,7 +260,7 @@ Memoization (#1), or computation at construction time (#5) are applicable here -
 
 6. @emph{Hash preverification} -- Since hash values can be memoized but comparison results cannot (see #1), and since numeric comparison is efficient (as opposed to, say, linear or log-linear comparison of collection-like structures), always compare the hash values first, and if they are equal, proceed with the equality comparison. Otherwise immediately return false.
 
-This optimization means that every equality comparison returning false is effectively a constant time operation. This may be the @emph{majority of cases}.
+This optimization means that equality comparison in cases where hashes are unequal is effectively a constant time operation. This may be the @emph{majority of cases}.
 
 This optimization is only possible since the proposed scheme guarantees that equal values have equal hashes -- a guarantee that we do not have with the existing way of extending equality to user-defined types – see @seclink["Extending_the_Key_Types"]{Extending the Key Types}.
 
