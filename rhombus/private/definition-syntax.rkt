@@ -7,6 +7,8 @@
                      "pack.rkt")
          "name-root.rkt"
          "definition.rkt"
+         (only-in "expression.rkt"
+                  in-expression-space)
          "syntax.rkt"
          "parse.rkt")
 
@@ -14,12 +16,18 @@
 
 (define-simple-name-root defn
   macro
-  sequence_macro)
+  sequence_macro
+  only)
+
+(define-name-root only
+  #:fields
+  ([macro macro-only]
+   [rule sequence_macro-only]))
 
 ;; ----------------------------------------
 
-(define-identifier-syntax-definition-transformer macro
-  (lambda (x) x)
+(define-identifier-syntax-definition-transformer+only macro macro-only
+  in-expression-space
   #'make-definition-transformer)
 
 (define-for-syntax (make-definition-transformer proc)
@@ -40,6 +48,10 @@
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro
   (lambda (x) x)
+  #'make-definition-sequence-transformer)
+
+(define-identifier-syntax-definition-sequence-transformer sequence_macro-only
+  in-expression-space
   #'make-definition-sequence-transformer)
 
 (define-for-syntax (make-definition-sequence-transformer proc)

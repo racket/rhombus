@@ -11,8 +11,7 @@
          "wrap-expression.rkt"
          (for-syntax "name-root.rkt"))
 
-(provide expr
-         expr_only)
+(provide expr)
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
@@ -20,35 +19,22 @@
 
 (define-simple-name-root expr
   macro
-  rule)
+  rule
+  only)
 
-(define-name-root expr_only
+(define-name-root only
   #:fields
   ([macro macro-only]
    [rule rule-only]))
 
-(define-operator-definition-transformer macro
-  'macro
-  (lambda (x) x)
-  #'make-expression-prefix-operator
-  #'make-expression-infix-operator
-  #'expression-prefix+infix-operator)
-
-(define-operator-definition-transformer rule
-  'rule
-  (lambda (x) x)
-  #'make-expression-prefix-operator
-  #'make-expression-infix-operator
-  #'expression-prefix+infix-operator)
-
-(define-operator-definition-transformer macro-only
+(define-operator-definition-transformer+only macro macro-only
   'macro
   in-expression-space
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
   #'expression-prefix+infix-operator)
 
-(define-operator-definition-transformer rule-only
+(define-operator-definition-transformer+only rule rule-only
   'rule
   in-expression-space
   #'make-expression-prefix-operator

@@ -8,7 +8,7 @@
 @docmodule(~lang, ~no_declare, rhombus/and_meta)
 
 Simple pattern-based expression macros can be written using
-@rhombus(def) without imorting any additional libraries besides
+@rhombus(rule) without importing any additional libraries besides
 @rhombusmodname(rhombus), but implementing others forms of macros requires
 using the @rhombusmodname(rhombus/meta) module (usually with no prefix).
 
@@ -25,6 +25,7 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 
 @local_table_of_contents()
 
+@include_section("ref-space.scrbl")
 @include_section("ref-meta.scrbl")
 @include_section("ref-defn-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")

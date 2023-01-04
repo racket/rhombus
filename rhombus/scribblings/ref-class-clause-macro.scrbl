@@ -22,11 +22,10 @@
               | ...'
 ){
 
- Defines an @rhombus(identifier, ~var), @rhombus(operator, ~var),
- @rhombus(identifier_path, ~var), or @rhombus(operator_path, ~var) as a
- @rhombus(class) clause form, where @rhombus(rule_pattern) and form is the
- same as for @rhombus(defn.macro). The macro pattern is matched to an
- entire group in a definition context.
+ Defines an @rhombus(identifier, ~var) or @rhombus(operator_path, ~var)
+ as a @rhombus(class) clause form, where @rhombus(rule_pattern) and form
+ is the same as for @rhombus(defn.macro). The macro pattern is matched to
+ an entire group in a definition context.
 
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
@@ -85,5 +84,20 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
  @rhombus(class) clauses and @rhombus(interface) clauses.
 
 }
+
+@doc(
+  defn.macro 'class_clause.only.macro $macro_decl'
+  defn.macro 'interface_clause.only.macro $macro_decl'
+  defn.macro 'class_and_interface_clause.only.macro $macro_impl'
+){
+
+ Like @rhombus(class_clause.macro), @rhombus(interface_clause.macro),
+ and @rhombus(class_and_interface_clause.macro), but the identifier is
+ bound only in the @rhombus(rhombus/class, ~datum) space,
+ @rhombus(rhombus/interface, ~datum) space, or both @tech{spaces},
+ respectively.
+
+}
+
 
 @«macro.close_eval»(macro_eval)

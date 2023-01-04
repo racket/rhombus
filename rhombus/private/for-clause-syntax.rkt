@@ -12,9 +12,14 @@
 (provide for_clause)
 
 (define-simple-name-root for_clause
-  macro)
+  macro
+  only)
 
-(define-identifier-syntax-definition-transformer macro
+(define-name-root only
+  #:fields
+  ([macro macro-only]))
+
+(define-identifier-syntax-definition-transformer+only macro macro-only
   in-for-clause-space
   #'make-for-clause-transformer)
 

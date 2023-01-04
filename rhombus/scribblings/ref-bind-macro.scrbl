@@ -264,4 +264,15 @@
 
 }
 
+@doc(
+  defn.macro 'bind.only.rule $rule_decl'
+  defn.macro 'bind.only.macro $macro_decl'
+){
+
+ Like @rhombus(bind.rule) and @rhombus(bind.macro), but the identifier
+ or operator is bound only in the @rhombus(rhombus/bind, ~datum)
+ @tech{space}.
+
+}
+
 @«macro.close_eval»(macro_eval)

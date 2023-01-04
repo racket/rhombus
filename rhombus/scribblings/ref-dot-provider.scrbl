@@ -56,3 +56,14 @@
  right-hand name to form a method-like call).
  
 }
+
+@doc(
+  defn.macro 'dot.only.macro $macro_decl'
+  defn.macro 'dot.only.macro_more_static $macro_decl'
+){
+
+ Like @rhombus(dot.macro) and @rhombus(dot.macro_more_static), but the
+ identifier is bound only in the @rhombus(rhombus/dot, ~datum)
+ @tech{space}.
+
+}

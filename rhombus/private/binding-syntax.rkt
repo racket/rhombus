@@ -35,7 +35,13 @@
   rule
   infoer
   matcher
-  binder)
+  binder
+  only)
+
+(define-name-root only
+  #:fields
+  ([macro macro-only]
+   [rule rule-only]))
 
 (begin-for-syntax
   (define-simple-name-root bind_meta
@@ -45,14 +51,14 @@
     unpack_info
     get_info))
 
-(define-operator-definition-transformer macro
+(define-operator-definition-transformer+only macro macro-only
   'macro
   in-binding-space
   #'make-binding-prefix-operator
   #'make-binding-infix-operator
   #'prefix+infix)
 
-(define-operator-definition-transformer rule
+(define-operator-definition-transformer+only rule rule-only
   'rule
   in-binding-space
   #'make-binding-prefix-operator

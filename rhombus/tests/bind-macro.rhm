@@ -17,7 +17,7 @@ check:
   7.3500000000000005
 
 // define <> as revese-cons pattern
-bind.macro '$a <> $b':
+bind.only.macro '$a <> $b':
   ~parsed_right
   bind_meta.pack('(build_reverse_cons_infoer,
                    ($a, $b))')

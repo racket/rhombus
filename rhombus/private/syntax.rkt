@@ -21,7 +21,9 @@
          "parens.rkt")
 
 (provide define-operator-definition-transformer
+         define-operator-definition-transformer+only
          define-identifier-syntax-definition-transformer
+         define-identifier-syntax-definition-transformer+only
          define-identifier-syntax-definition-sequence-transformer
 
          (for-syntax parse-operator-definition
@@ -275,6 +277,29 @@
                                                                #'make-infix-id
                                                                #'prefix+infix-id))))]))
 
+(define-syntax (define-operator-definition-transformer+only stx)
+  (syntax-parse stx
+    #:literals (syntax quote)
+    [(_ id only-id
+        'protocol
+        in-space-expr
+        #'make-prefix-id
+        #'make-infix-id
+        #'prefix+infix-id)
+     #'(begin
+         (define-operator-definition-transformer id
+           'protocol
+           (lambda (x) x)
+           #'make-prefix-id
+           #'make-infix-id
+           #'prefix+infix-id)
+         (define-operator-definition-transformer only-id
+           'protocol
+           in-space-expr
+           #'make-prefix-id
+           #'make-infix-id
+           #'prefix+infix-id))]))
+
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
                                                                  in-space
                                                                  compiletime-id)
@@ -356,6 +381,20 @@
     [(_ id in-space-expr
         #'make-transformer-id)
      #'(define-identifier-syntax-definition-transformer id #:multi (in-space-expr) #'make-transformer-id)]))
+
+(define-syntax (define-identifier-syntax-definition-transformer+only stx)
+  (syntax-parse stx
+    #:literals (syntax)
+    [(_ id only-id
+        in-space-expr
+        #'make-transformer-id)
+     #'(begin
+         (define-identifier-syntax-definition-transformer id
+           (lambda (x) x)
+           #'make-transformer-id)
+         (define-identifier-syntax-definition-transformer only-id
+           in-space-expr
+           #'make-transformer-id))]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer-runtime in-spaces
                                                                           compiletime-id)

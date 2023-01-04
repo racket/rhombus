@@ -233,10 +233,10 @@
     (pattern specsubform))
   (define-splicing-syntax-class (identifier-target space-name)
     #:datum-literals (|.| op)
-    (pattern (~seq root:identifier (op (~and dot |.|)) field:identifier)
-             #:do [(define target (resolve-name-ref (add-space #'root space-name) #'field))]
-             #:when target
-             #:attr name (datum->syntax #f (list #'root target)))
+    (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
+             #:do [(define target+remains (resolve-name-ref space-name (add-space #'root space-name) (syntax->list #'(field ...))))]
+             #:when target+remains
+             #:attr name (datum->syntax #f (list #'root (car target+remains))))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
     #:datum-literals (op)

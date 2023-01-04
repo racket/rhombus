@@ -15,18 +15,32 @@
          class_and_interface_clause)
 
 (define-simple-name-root class_clause
-  macro)
+  macro
+  only)
 
 (define-name-root class_and_interface_clause
   #:fields
-  ([macro both_macro]))
+  ([macro both_macro]
+   [only both_only]))
 
-(define-identifier-syntax-definition-transformer macro
+(define-name-root only
+  #:fields
+  ([macro macro-only]))
+
+(define-name-root both_only
+  #:fields
+  ([macro both_macro-only]))
+
+(define-identifier-syntax-definition-transformer+only macro macro-only
   in-class-clause-space
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
   #:multi (in-class-clause-space in-interface-clause-space)
+  #'make-class-and-interface-clause-transformer)
+
+(define-identifier-syntax-definition-transformer both_macro-only
+  (lambda (x) x)
   #'make-class-and-interface-clause-transformer)
 
 (define-for-syntax (make-class-clause-transformer proc)

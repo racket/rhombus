@@ -31,29 +31,40 @@
                   t))
   (syntax-raw-prefix-property t/s (syntax-raw-prefix-property pre)))
 
-(define-for-syntax (resolve-name-ref root field)
-  (define p (identifier-binding-portal-syntax root #f))
-  (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
-  (define dest (and lookup (lookup #f "identifier" field)))
-  (define raw (format "~a.~a"
-                      (syntax-e root)
-                      (syntax-e field)))
+(define-for-syntax (resolve-name-ref space-name root fields)
   (cond
-    [dest
-     (define loc-stx
-       (append-consecutive-syntax-objects
-        'loc-stx
-        (append-consecutive-syntax-objects 'loc-stx root #'dot)
-        field))
-     (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
-                          raw)]
+    [(null? fields) #f]
     [else
-     (define id (datum->syntax root (string->symbol raw)))
-     (and (identifier-binding id #f)
-          (syntax-raw-property
-           (datum->syntax id (syntax-e id)
-                          (append-consecutive-syntax-objects
-                           'loc-stx
-                           (append-consecutive-syntax-objects 'loc-stx root #'dot)
-                           field))
-           raw))]))
+     (define field (car fields))
+     (define p (identifier-binding-portal-syntax root #f))
+     (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
+     (define dest (and lookup (lookup #f "identifier" field)))
+     (define raw (format "~a.~a"
+                         (or (syntax-raw-property root)
+                             (syntax-e root))
+                         (syntax-e field)))
+     (define (add-rest p) (and p (cons p (cdr fields))))
+     (cond
+       [dest
+        (define loc-stx
+          (append-consecutive-syntax-objects
+           'loc-stx
+           (append-consecutive-syntax-objects 'loc-stx root #'dot)
+           field))
+        (define named-dest
+          (syntax-raw-property (datum->syntax dest (syntax-e dest) loc-stx loc-stx)
+                               raw))
+        (or (resolve-name-ref space-name named-dest (cdr fields))
+            (add-rest named-dest))]
+       [else
+        (define id (datum->syntax root (string->symbol raw)))
+        (and (identifier-binding id #f)
+             (let ([named-id (syntax-raw-property
+                              (datum->syntax id (syntax-e id)
+                                             (append-consecutive-syntax-objects
+                                              'loc-stx
+                                              (append-consecutive-syntax-objects 'loc-stx root #'dot)
+                                              field))
+                              raw)])
+               (or (resolve-name-ref space-name named-id (cdr fields))
+                   (add-rest named-id))))])]))

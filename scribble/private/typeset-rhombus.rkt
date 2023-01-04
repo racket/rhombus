@@ -113,18 +113,23 @@
          [(quotes elem ...) (seq "'" #'(elem ...) "'" #:sep tt-semicolon)]
          [(op id)
           (define str (shrubbery-syntax->string stx))
-          (define space-name (id-space-name* #'id))
-          (if (identifier-binding (add-space #'id space-name) #f)
-              (element tt-style (make-id-element (add-space #'id space-name) str #f
-                                                 #:space space-name
-                                                 #:unlinked-ok? #t))
-              (element tt-style str))]
+          (cond
+            [(eq? space-name 'datum) (element tt-style str)]
+            [else
+             (define space-name (id-space-name* #'id))
+             (if (identifier-binding (add-space #'id space-name) #f)
+                 (element tt-style (make-id-element (add-space #'id space-name) str #f
+                                                    #:space space-name
+                                                    #:unlinked-ok? #t))
+                 (element tt-style str))])]
          [id:identifier
           (define str (shrubbery-syntax->string stx))
           (define space-name (id-space-name* #'id))
           (cond
             [(eq? space-name 'var)
              (element variable-color str)]
+            [(eq? space-name 'datum)
+             (element tt-style str)]
             [(identifier-binding (add-space stx space-name) #f)
              (element tt-style (make-id-element (add-space stx space-name) str #f
                                                 #:space space-name
@@ -422,19 +427,28 @@
   (or (syntax-property id 'typeset-space-name) default-name))
 
 (define (initial-name-ref elems space-name)
+  (define (dotted-elems? elems)
+    (and (identifier? (car elems))
+         (pair? (cdr elems))
+         (let ([op (syntax->list (cadr elems))])
+           (and op
+                (= (length op) 2)
+                (eq? (syntax-e (car op)) 'op)
+                (eq? (syntax-e (cadr op)) '|.|)))
+         (pair? (cddr elems))
+         (identifier? (caddr elems))))
   (cond
-    [(and (identifier? (car elems))
-          (pair? (cdr elems))
-          (let ([op (syntax->list (cadr elems))])
-            (and op
-                 (= (length op) 2)
-                 (eq? (syntax-e (car op)) 'op)
-                 (eq? (syntax-e (cadr op)) '|.|)))
-          (pair? (cddr elems))
-          (identifier? (caddr elems)))
-     (define target (resolve-name-ref (add-space (car elems) space-name) (caddr elems)))
+    [(dotted-elems? elems)
+     (define dotted-elems (let loop ([elems (cddr elems)])
+                            (cond
+                              [(dotted-elems? elems)
+                               (cons (car elems) (loop (cddr elems)))]
+                              [else (list (car elems))])))
+     (define target+rest (resolve-name-ref space-name (add-space (car elems) space-name) dotted-elems))
+     (define target (and target+rest (car target+rest)))
      (cond
        [target
+        (define skip (add1 (* 2 (- (length dotted-elems) (length (cdr target+rest))))))
         (define id (car elems))
         (cons (datum->syntax target
                              (element tt-style
@@ -445,7 +459,7 @@
                                                 #:unlinked-ok? #t))
                              target
                              target)
-              (cdddr elems))]
+              (list-tail elems skip))]
        [else #f])]
     [else #f]))
 

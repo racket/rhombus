@@ -14,7 +14,8 @@
 
 (define-simple-name-root dot
   macro
-  macro_more_static)
+  macro_more_static
+  only)
 
 (define-for-syntax provider_key #'#%dot-provider)
 

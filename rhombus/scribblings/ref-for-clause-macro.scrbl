@@ -45,4 +45,13 @@
 
 }
 
+@doc(
+  defn.macro 'for_clause.only.macro $macro_decl'
+){
+
+ Like @rhombus(for_clause.macro), but the identifier or operator is bound
+ only in the @rhombus(rhombus/for_clause, ~datum) @tech{space}.
+
+}
+
 @«macro.close_eval»(macro_eval)

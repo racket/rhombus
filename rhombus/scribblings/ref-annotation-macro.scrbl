@@ -76,4 +76,15 @@
 }
 
 
+@doc(
+  defn.macro 'annot.only.rule $rule_decl'
+  defn.macro 'annot.only.macro $rule_decl'
+){
+
+ Like @rhombus(annot.rule) and @rhombus(annot.macro), but the identifier
+ or operator is bound only in the @rhombus(rhombus/annot, ~datum) @tech{space}.
+
+}
+
+
 @«macro.close_eval»(macro_eval)

@@ -8,23 +8,20 @@
 @title{Definition Macros}
 
 @doc(
-  defn.macro '«defn.macro '$identifier_or_operator $pattern ...':
+  defn.macro '«defn.macro '$identifier_or_path $pattern ...':
                  $option; ...
                  $body
                  ...»'
 
   grammar identifier_or_operator:
     $identifier
-    $operator
     ($identifier_path)
-    ($operator_path)
   grammar option:
     ~op_stx: $identifier
 ){
 
- Defines @rhombus(identifier), @rhombus(operator),
- @rhombus(identifier_path), or @rhombus(operator_path) as a macro that
- can be used in a definition context, where the compile-time
+ Defines @rhombus(identifier) or @rhombus(identifier_path) as a macro
+ that can be used in a definition context, where the compile-time
  @rhombus(body) block returns the expansion result. The macro pattern is
  matched to an entire group in a definition context.
 
@@ -39,7 +36,7 @@
  that @rhombus(expr.rule) binds).
 
  See @secref("namespaces") for information about
- @rhombus(identifier_path) and @rhombus(operator_path).
+ @rhombus(identifier_path).
 
 @examples(
   ~eval: macro_eval
@@ -99,6 +96,17 @@
     def seq_y: 10
     seq_x
 )
+}
+
+@doc(
+  defn.macro 'defn.only.macro $macro_decl'
+  defn.macro 'defn.only.sequence_macro $macro_decl'
+){
+
+ Like @rhombus(defn.macro) or @rhombus(defn.sequence_macro), but the
+ identifier is bound only in the @rhombus(rhombus/expr, ~datum)
+ @tech{space}.
+
 }
 
 @«macro.close_eval»(macro_eval)

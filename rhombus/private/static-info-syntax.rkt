@@ -22,7 +22,12 @@
          (for-syntax statinfo_meta))
 
 (define-simple-name-root statinfo
-  macro)
+  macro
+  only)
+
+(define-name-root only
+  #:fields
+  ([macro macro-only]))
 
 (begin-for-syntax
   (define-simple-name-root statinfo_meta
@@ -38,15 +43,20 @@
     map_append_key
     dot_provider_key))
 
-(define-syntax macro
+(define-for-syntax (make-static-info-macro-macro in-space)
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (block quotes)
         [(_ (quotes (group name::name)) (body-tag::block body ...))
-         #`((define-syntax #,(in-static-info-space #'name.name)
+         #`((define-syntax #,(in-space #'name.name)
               (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 
+(define-syntax macro
+  (make-static-info-macro-macro (lambda (x) x)))
+(define-syntax macro-only
+  (make-static-info-macro-macro in-static-info-space))
+   
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
     (raise-result-error who "syntax?" stx))

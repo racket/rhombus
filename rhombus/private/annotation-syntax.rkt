@@ -21,20 +21,26 @@
 
 (define-simple-name-root annot
   rule
-  macro)
+  macro
+  only)
+
+(define-name-root only
+  #:fields
+  ([macro macro-only]
+   [rule rule-only]))
 
 (begin-for-syntax
   (define-simple-name-root annot_meta
     pack_predicate))
 
-(define-operator-definition-transformer rule
+(define-operator-definition-transformer+only rule rule-only
   'rule
   in-annotation-space
   #'make-annotation-prefix-operator
   #'make-annotation-infix-operator
   #'annotation-prefix+infix-operator)
 
-(define-operator-definition-transformer macro
+(define-operator-definition-transformer+only macro macro-only
   'macro
   in-annotation-space
   #'make-annotation-prefix-operator

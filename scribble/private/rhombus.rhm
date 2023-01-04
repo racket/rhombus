@@ -132,6 +132,7 @@ expr.macro
 | 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
     def kw = Syntax.unwrap(kw_stx)
     if (kw === keyword(~var)
+          || kw === keyword(~datum)
           || kw === keyword(~bind)
           || kw === keyword(~impmod)
           || kw === keyword(~expmod)

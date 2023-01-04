@@ -12,9 +12,14 @@
 (provide interface_clause)
 
 (define-simple-name-root interface_clause
-  macro)
+  macro
+  only)
 
-(define-identifier-syntax-definition-transformer macro
+(define-name-root only
+  #:fields
+  ([macro macro-only]))
+
+(define-identifier-syntax-definition-transformer+only macro macro-only
   in-interface-clause-space
   #'make-interface-clause-transformer)
 
