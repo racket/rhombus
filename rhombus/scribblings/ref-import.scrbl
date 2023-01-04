@@ -275,3 +275,26 @@
  supported for module paths that use the @rhombus(., ~impmod) operator
 
 }
+
+@doc(
+  ~literal: /
+  impo.modifier 'only_space: $space ...'
+  impo.modifier 'except_space: $space ...'
+  grammar space:
+    ~default
+    $space_path
+  grammar space_path:
+    $identifier
+    $space_path / $identifier
+    
+){
+
+ Modifies an @rhombus(import) clause to include bindings only in the
+ specifically listed @tech{spaces} or only in the spaces not specifically
+ listed.
+
+ As a @rhombus(space), @rhombus(~default) refers to the default space,
+ and other spaces are named through an identifier or
+ @rhombus(/)-separated identifiers.
+
+}

@@ -33,8 +33,7 @@
            :binding-info
            binding-info
 
-           in-binding-space
-           :non-binding-dotted-identifier))
+           in-binding-space))
 
 (provide define-binding-syntax
          raise-binding-failure)
@@ -112,19 +111,7 @@
       [_::binding-info form]
       [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
 
-  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
-
-  (define-syntax-class :non-binding-dotted-identifier
-    #:datum-literals (op |.|)
-    (pattern (~and all ((~seq head-id:identifier (op |.|)) ... tail-id:identifier))
-             #:when (not (syntax-parse #'all
-                           [(~var id (:hier-name-seq in-binding-space name-path-op name-root-ref))
-                            (syntax-local-value* (in-binding-space #'id.name)
-                                                 (lambda (v)
-                                                   (name-root-ref-root v binding-prefix-operator?)))]
-                           [_ #f]))
-             #:do [(define name (build-dot-identifier #'(head-id ...) #'tail-id #'all))]
-             #:attr name name)))
+  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind)))
 
 (define-syntax (identifier-infoer stx)
   (syntax-parse stx

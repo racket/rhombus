@@ -1,0 +1,111 @@
+#lang rhombus/and_meta
+import: "check.rhm" open
+
+namespace n:
+  export: exint
+  def exint = 10
+  bind.only.rule 'exint': '(_ :: Integer)'
+  annot.only.rule 'exint': 'Integer'
+
+check:
+  ~eval_exn
+  begin:
+    namespace n:
+      export: exint
+      def exint = 10  
+    import: .n.exint meta
+  "phase shifting not supported with a dotted module path"
+
+check:
+  ~eval_exn
+  begin:
+    namespace n:
+      export: exint
+      def exint = 10  
+    import: .n.exint:
+              except: exint
+  "identifier to exclude is not included"
+
+check:
+  import: .n.exint
+  def exint = 10
+  10 :: exint
+  exint
+  10
+
+check:
+  import: lib("rhombus/tests/example-c.rhm").exint
+  def exint = 10
+  10 :: exint
+  exint
+  10
+
+check:
+  ~exn
+  import: .n.exint
+  def exint = "10"
+  "value does not satisfy annotation"
+
+check:
+  ~exn
+  import: .n.exint
+  "10" :: exint
+  "value does not match annotation"
+
+check:
+  import: .n.exint as ex_int
+  def ex_int = 10
+  10 :: ex_int
+  ex_int
+  10
+
+check:
+  import:
+    .n.exint:
+      only_space: ~default
+  exint
+  10
+
+check:
+  import:
+    .n.exint as ex_int:
+      only_space: ~default
+  ex_int
+  10
+
+check:
+  ~eval_exn
+  begin:
+    import rhombus/meta open
+    namespace n:
+      export: exint
+      def exint = 10
+      bind.only.rule 'exint': '(_ :: Integer)'
+      annot.only.rule 'exint': 'Integer'
+    import:
+      .n.exint:
+        only_space: ~default
+    10 :: exint
+  "not bound as an annotation"
+
+check:
+  import:
+    .n.exint:
+      only_space: rhombus/annot
+  def exint = 11
+  exint
+  11
+
+check:
+  import:
+    .n.exint:
+      only_space: rhombus/annot
+  11 :: exint
+  11
+
+check:
+  import:
+    .n.exint as ex_int:
+      only_space: rhombus/annot
+  11 :: ex_int
+  11

@@ -113,9 +113,9 @@
 
   (define name-root-binding-ref
     (make-name-root-ref in-binding-space
-                        (lambda (v)
-                          (or (binding-prefix-operator-ref v)
-                              (binding-infix-operator-ref v)))))
+                        #:binding-ref (lambda (v)
+                                        (or (binding-prefix-operator-ref v)
+                                            (binding-infix-operator-ref v)))))
 
   ;; Form in a binding context:
   (define-enforest

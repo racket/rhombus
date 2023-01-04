@@ -14,6 +14,8 @@
      rename
      only
      except
+     only_space
+     except_space
      meta
      meta_label
      names

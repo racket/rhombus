@@ -17,7 +17,9 @@
                      import-root-ref
                      extensible-name-root?))
 
-(define-for-syntax (make-name-root-ref in-space binding-ref)
+(define-for-syntax (make-name-root-ref in-space
+                                       #:binding-ref [binding-ref #f]
+                                       #:non-portal-ref [non-portal-ref #f])
   (lambda (v)
     (define (make self-id get)
       (enforest:name-root
@@ -75,21 +77,26 @@
                  [((op |.|) _:identifier . _) #t]
                  [((op |.|) (parens (group target (op _))) . tail) #t]
                  [_ #f]))
-             (define v (and more-dots?
+             (define v (and (or more-dots?
+                                non-portal-ref)
                             (syntax-local-value* (in-space id) (lambda (v) (and (portal-syntax? v) v)))))
              (cond
                [v
                 (portal-syntax->lookup (portal-syntax-content v)
                                        (lambda (self-id next-get)
-                                         (loop (cons id tail)
-                                               (cons
-                                                (cons next-get #f)
-                                                (for/list ([get+prefix (in-list gets)])
-                                                  (define get (car get+prefix))
-                                                  (define prefix (cdr get+prefix))
-                                                  (cons get (if prefix
-                                                                (build-name prefix field-id)
-                                                                field-id)))))))]
+                                         (if more-dots?
+                                             (loop (cons id tail)
+                                                   (cons
+                                                    (cons next-get #f)
+                                                    (for/list ([get+prefix (in-list gets)])
+                                                      (define get (car get+prefix))
+                                                      (define prefix (cdr get+prefix))
+                                                      (cons get (if prefix
+                                                                    (build-name prefix field-id)
+                                                                    field-id)))))
+                                             (values self-id tail))))]
+               [non-portal-ref
+                (non-portal-ref form-id field-id tail)]
                [else
                 (values id tail)]))
            (syntax-parse stxes
@@ -112,7 +119,7 @@
       (portal-syntax? v)
       (portal-syntax->lookup (portal-syntax-content v) make)))))
 
-(define-for-syntax name-root-ref (make-name-root-ref (lambda (x) x) #f))
+(define-for-syntax name-root-ref (make-name-root-ref (lambda (x) x)))
 
 (define-for-syntax (name-root-ref-root v ref)
   (or (and

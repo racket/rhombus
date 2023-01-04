@@ -3,7 +3,8 @@
                      syntax/parse
                      racket/phase+space
                      enforest/transformer
-                     "import-cover.rkt"))
+                     "import-cover.rkt")
+         "space-in.rkt")
 
 ;; Convert a subset of `racket` require clauses to `#%require` clauses,
 ;; including the use of `portal` for a prefixed import
@@ -23,7 +24,7 @@
     (define-values (r-phase+spaces syms new-covered-ht phase-shift renames revnames only-mentioned?)
       ;; A call to `extract` returns
       ;;  - phases+spaces: relevant phase+space combinations
-      ;;  - syms: all names imported at relevant phase+space by the specification so far
+      ;;  - syms: all names imported at relevant phase+space by the specification so far, mapped to spaces where it resides
       ;;  - covered-ht: similar info to make sure all actions are covered across multiple import conversions
       ;;  - shift: phase shift
       ;;  - renames: summarizes rename/exclude history (redundant with `syms`, but allows some improved errors and optimization)
@@ -39,12 +40,14 @@
                                #:when (eq? space (phase+space-space (car phase+space+syms))))
                       phase+space+syms)]))
           (define phase+spaces (map car phase+space+symss))
-          (define syms (for*/hasheq ([phase+space+syms (in-list phase+space+symss)]
-                                     [sym (in-list (cdr phase+space+syms))])
-                         (values sym #t)))
+          (define syms (for*/fold ([syms #hasheq()])
+                                  ([phase+space+syms (in-list phase+space+symss)]
+                                   [sym (in-list (cdr phase+space+syms))])
+                         (hash-set syms sym (hash-set (hash-ref syms sym #hasheq()) (phase+space-space (car phase+space+syms)) #t))))
           (values phase+spaces syms covered-ht 0 #hasheq() #hasheq() #f))
         (syntax-parse r
-          #:datum-literals (rename-in only-in except-in expose-in for-meta for-label rhombus-prefix-in only-space-in)
+          #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
+                                      rhombus-prefix-in only-spaces-in except-spaces-in only-space-in)
           [#f (root)]
           [(rename-in mp [orig bind] ...)
            (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space (add1 step)))
@@ -88,8 +91,9 @@
                         [bind-s (in-list (syntax->list #'(bind ...)))])
                (define orig (syntax-e orig-s))
                (define bind (syntax-e bind-s))
-               (if (hash-ref syms orig #f)
-                   (hash-set new-syms bind #t)
+               (define spaces (hash-ref syms orig #f))
+               (if spaces
+                   (hash-set new-syms bind spaces)
                    new-syms)))
            (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames only-mentioned?)]
           [(only-in mp id ...)
@@ -109,7 +113,7 @@
                      => (lambda (target)
                           (values (hash-set new-renames orig target)
                                   (hash-set new-revnames id orig)
-                                  (hash-set new-syms id #t)
+                                  (hash-set new-syms id (hash-ref syms (syntax-e target)))
                                   (cover covered-ht id step)))]
                     [else
                      (raise-syntax-error 'import "identifier to include was previously excluded" id-s)])]
@@ -119,12 +123,13 @@
                                  (not (or (hash-ref syms id #f)
                                           (covered? covered-ht id step)))))
                     (raise-syntax-error 'import "identifier to include was not previously included" id-s))
+                  (define spaces (hash-ref syms id #f))
                   (values (hash-set new-renames id id-s)
                           (hash-set new-revnames id id)
-                          (if (hash-ref syms id #f)
-                              (hash-set new-syms id #t)
+                          (if spaces
+                              (hash-set new-syms id spaces)
                               new-syms)
-                          (if (hash-ref syms id #f)
+                          (if spaces
                               (cover covered-ht id step)
                               covered-ht))])))
            (values phase+spaces new-syms new-covered-ht shift new-renames new-revnames #t)]
@@ -202,6 +207,43 @@
            (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space step))
            (define new-shift #f)
            (values phase+spaces syms covered-ht new-shift renames revnames only-mentioned?)]
+          [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
+           (define-values (phase+spaces syms covered-ht shift renames revnames only-mentioned?) (extract #'mp space step))
+           (define the-spaces
+             (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
+               (values (syntax-e a-space) #t)))
+           (define keep? (free-identifier=? #'mode #'only-spaces-in))
+           (define new-syms
+             (for/fold ([new-syms #hasheq()])
+                       ([(sym spaces*) (in-hash syms)])
+               (define spaces (if (pair? spaces*) (car spaces*) spaces*))
+               (define new-spaces (for/hasheq ([space (in-hash-keys spaces)]
+                                               #:when (if keep?
+                                                          (hash-ref the-spaces space #f)
+                                                          (not (hash-ref the-spaces space #f))))
+                                    (values space #t)))
+               (if (positive? (hash-count new-spaces))
+                   (hash-set new-syms sym (cond
+                                            [(equal? spaces new-spaces) spaces*]
+                                            [(pair? spaces*) (cons new-spaces (cdr spaces*))]
+                                            [else (cons new-spaces spaces)]))
+                   new-syms)))
+           (define-values (new-revnames new-renames)
+             (for/fold ([new-revnames revnames]
+                        [new-renames renames])
+                       ([(name orig) (in-hash revnames)])
+               (if (hash-ref new-syms name)
+                   (values new-revnames new-renames)
+                   (values (hash-remove new-revnames name)
+                           (hash-remove new-renames orig)))))
+           (define new-phase+spaces
+             (for/list ([phase+space (in-list phase+spaces)]
+                        #:when (let ([space (phase+space-space phase+space)])
+                                 (if keep?
+                                     (hash-ref the-spaces space #f)
+                                     (not (hash-ref the-spaces space #f)))))
+               phase+space))
+           (values new-phase+spaces new-syms covered-ht shift new-renames new-revnames only-mentioned?)]
           [(only-space-in new-space mp)
            (unless (eq? space '#:all)
              (raise-syntax-error 'import "duplicate or conflicting space" #'new-space))
@@ -213,9 +255,11 @@
     (define (strip-prefix r mp)
       (let strip ([r r])
         (syntax-parse r
-          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in)
+          #:literals (rename-in only-in except-in expose-in for-label for-meta only-space-in
+                                only-spaces-in except-spaces-in)
           [#f mp]
-          [((~and tag (~or rename-in only-in except-in expose-in for-label)) mp . rest)
+          [((~and tag (~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in))
+            mp . rest)
            #`(tag #,(strip #'mp) . rest)]
           [((~and tag for-meta) phase mp)
            #`(tag phase #,(strip #'mp))]
@@ -224,7 +268,19 @@
           [((~literal rhombus-prefix-in) mp name) (strip #'mp)]
           [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
-    (define (make-ins for-expose?)
+    (define any-space-limited?
+      (for/and ([spaces* (in-hash-values syms)])
+        (pair? spaces*)))
+    (define space->ids
+      (and any-space-limited?
+           (for*/fold ([space->ids #hasheq()])
+                      ([(k spaces*) (in-hash syms)]
+                       [space (in-hash-keys (if (pair? spaces*)
+                                                (car spaces*)
+                                                spaces*))])
+             (hash-set space->ids space
+                       (hash-set (hash-ref space->ids space #hasheq()) k #t)))))
+    (define (make-ins* syms for-expose?)
       (cond
         [only-mentioned?
          (cond
@@ -272,6 +328,11 @@
                                      (expose? v))
                                  (hash-ref syms (syntax-e (plain-id v)) #f)))
             #`(rename #,mod-path #,(plain-id v) #,k)))]))
+    (define (make-ins for-expose?)
+      (if any-space-limited?
+          (for/list ([(space ids) (in-hash space->ids)])
+            #`(just-space #,space #,@(make-ins* ids for-expose?)))
+          (make-ins* syms for-expose?)))
     (define prefix-intro (and prefix-id (make-syntax-introducer)))
     (define module? (not (list? (syntax-local-context))))
     (define reqs+defss

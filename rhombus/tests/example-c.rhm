@@ -1,0 +1,7 @@
+#lang rhombus/and_meta
+
+export: exint
+
+def exint = 10
+bind.only.rule 'exint': '(_ :: Integer)'
+annot.only.rule 'exint': 'Integer'

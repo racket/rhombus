@@ -1,5 +1,6 @@
 #lang racket/base
-(require syntax/parse)
+(require syntax/parse
+         "space-in.rkt")
 
 (provide import-invert)
 
@@ -12,8 +13,9 @@
       [_ (void)]))
   (let loop ([r r])
     (syntax-parse r
-      #:datum-literals (rename-in only-in except-in expose-in for-label for-meta rhombus-prefix-in)
-      [((~and tag (~or rename-in only-in except-in expose-in rhombus-prefix-in)) imp . rest)
+      #:datum-literals (rename-in only-in except-in expose-in for-label for-meta
+                                  rhombus-prefix-in only-spaces-in except-spaces-in)
+      [((~and tag (~or rename-in only-in except-in expose-in rhombus-prefix-in only-spaces-in except-spaces-in)) imp . rest)
        (define-values (mp new-imp) (loop #'imp))
        (values mp #`(tag #,new-imp . rest))]
       [((~and tag for-label) imp)
