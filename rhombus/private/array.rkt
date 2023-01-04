@@ -15,8 +15,8 @@
          "dot-parse.rkt")
 
 (provide Array
-         (for-space rhombus/binding Array)
-         (for-space rhombus/annotation Array))
+         (for-space rhombus/bind Array)
+         (for-space rhombus/annot Array))
 
 (module+ for-builtin
   (provide array-method-table))

@@ -112,7 +112,7 @@
       [_::binding-info form]
       [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
 
-  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/binding))
+  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
 
   (define-syntax-class :non-binding-dotted-identifier
     #:datum-literals (op |.|)

@@ -8,19 +8,19 @@
      (quote-syntax never-bound)]
     [else
      (define space (case space-name
-                     [(bind) 'rhombus/binding]
-                     [(impmod) 'rhombus/import]
-                     [(expmod) 'rhombus/export]
-                     [(modpath) 'rhombus/module-path]
-                     [(annot) 'rhombus/annotation]
-                     [(repet) 'rhombus/repetition]
-                     [(stxclass) 'rhombus/syntax-class]
+                     [(bind) 'rhombus/bind]
+                     [(impmod) 'rhombus/impo]
+                     [(expmod) 'rhombus/expo]
+                     [(modpath) 'rhombus/modpath]
+                     [(annot) 'rhombus/annot]
+                     [(repet) 'rhombus/repet]
+                     [(stxclass) 'rhombus/syntax/class]
                      [(reducer) 'rhombus/reducer]
-                     [(for_clause) 'rhombus/for-clause]
-                     [(class_clause) 'rhombus/class-clause]
-                     [(intf_clause) 'rhombus/interface-clause]
-                     [(entry_point) 'rhombus/entry-point]
-                     [(#f) 'rhombus/expression]
+                     [(for_clause) 'rhombus/for_clause]
+                     [(class_clause) 'rhombus/class_clause]
+                     [(intf_clause) 'rhombus/interface_clause]
+                     [(entry_point) 'rhombus/entry_point]
+                     [(#f) 'rhombus/expr]
                      [else #f]))
      (if space
          ((make-interned-syntax-introducer space) stx 'add)

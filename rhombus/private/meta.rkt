@@ -12,10 +12,10 @@
 ;; definition/declaration space, since `meta` as a declaration
 ;; form is not meant to be exported from `rhombus`
 
-(provide (for-space rhombus/expression meta))
+(provide (for-space rhombus/expr meta))
 
 (define-name-root meta
-  #:space rhombus/expression
+  #:space rhombus/expr
   #:root
   (declaration-transformer
    (lambda (stx)

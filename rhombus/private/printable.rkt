@@ -11,7 +11,7 @@
 
 (provide Printable
          (for-space rhombus/class Printable)
-         (for-space rhombus/annotation Printable))
+         (for-space rhombus/annot Printable))
 
 (define-values (prop:Printable Printable? Printable-ref)
   (make-struct-type-property 'Printable

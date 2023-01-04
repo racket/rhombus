@@ -31,12 +31,12 @@
                     [... rhombus...]))
 
 (provide (rename-out [Set-expr Set])
-         (for-space rhombus/annotation Set)
-         (for-space rhombus/static-info Set)
+         (for-space rhombus/annot Set)
+         (for-space rhombus/statinfo Set)
          (for-space rhombus/reducer Set)
 
          (rename-out [MutableSet-expr MutableSet])
-         (for-space rhombus/static-info MutableSet))
+         (for-space rhombus/statinfo MutableSet))
 
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))

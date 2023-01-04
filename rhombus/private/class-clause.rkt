@@ -29,7 +29,7 @@
       [_::class-clause-form form]
       [_ (raise-result-error (proc-name proc) rhombus-realm "Class_Clause_Syntax" form)]))
 
-  (define in-class-clause-space (make-interned-syntax-introducer/add 'rhombus/class-clause))
+  (define in-class-clause-space (make-interned-syntax-introducer/add 'rhombus/class_clause))
 
   (define (make-class-clause-transformer-ref class-data)
     ;; "accessor" closes over `class-data`:

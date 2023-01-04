@@ -16,7 +16,7 @@
          (submod "dot.rkt" for-dot-provider))
 
 (provide Syntax
-         (for-space rhombus/annotation Syntax))
+         (for-space rhombus/annot Syntax))
 
 (module+ for-builtin
   (provide syntax-method-table))

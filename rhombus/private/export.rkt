@@ -24,7 +24,7 @@
 
 (provide export
 
-         (for-space rhombus/export
+         (for-space rhombus/expo
                     rename
                     as
                     except
@@ -45,7 +45,7 @@
 
   (property export-modifier transformer)
 
-  (define in-export-space (make-interned-syntax-introducer/add 'rhombus/export))
+  (define in-export-space (make-interned-syntax-introducer/add 'rhombus/expo))
 
   (define (check-export-result form proc)
     (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))

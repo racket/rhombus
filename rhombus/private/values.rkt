@@ -8,7 +8,7 @@
                     [= rhombus=]))
 
 (provide values
-         (for-space rhombus/binding values)
+         (for-space rhombus/bind values)
          (for-space rhombus/reducer values))
 
 (define-binding-syntax values

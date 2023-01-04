@@ -16,8 +16,8 @@
          "realm.rkt")
 
 (provide Pair
-         (for-space rhombus/binding Pair)
-         (for-space rhombus/annotation Pair))
+         (for-space rhombus/bind Pair)
+         (for-space rhombus/annot Pair))
 
 (module+ for-builtin
   (provide pair-method-table))
@@ -42,7 +42,7 @@
        [(head . tail) (values (syntax/loc #'head cons) #'tail)]))))
 
 (define-name-root Pair
-  #:space rhombus/binding
+  #:space rhombus/bind
   #:fields
   ([cons Pair])
   #:root

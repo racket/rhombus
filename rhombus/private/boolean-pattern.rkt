@@ -5,7 +5,7 @@
          "binding.rkt"
          "parse.rkt")
 
-(provide (for-space rhombus/binding
+(provide (for-space rhombus/bind
                     &&
                     \|\|))
 

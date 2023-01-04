@@ -35,13 +35,13 @@
                   Pair))
 
 (provide (rename-out [Map-expr Map])
-         (for-space rhombus/binding Map)
-         (for-space rhombus/annotation Map)
+         (for-space rhombus/bind Map)
+         (for-space rhombus/annot Map)
          (for-space rhombus/reducer Map)
-         (for-space rhombus/static-info Map)
+         (for-space rhombus/statinfo Map)
 
          (rename-out [MutableMap-expr MutableMap])
-         (for-space rhombus/static-info MutableMap))
+         (for-space rhombus/statinfo MutableMap))
 
 (module+ for-binding
   (provide (for-syntax parse-map-binding)))
@@ -269,7 +269,7 @@
   (#%call-result #,mutable-map-static-info))
 
 (define-name-root Map
-  #:space rhombus/binding
+  #:space rhombus/bind
   #:fields ([empty empty-map])
   #:root
   (binding-prefix-operator

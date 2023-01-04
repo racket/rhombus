@@ -43,7 +43,7 @@
 
 (provide fun
          Function
-         (for-space rhombus/annotation Function))
+         (for-space rhombus/annot Function))
 
 (module+ for-build
   (provide (for-syntax :kw-binding

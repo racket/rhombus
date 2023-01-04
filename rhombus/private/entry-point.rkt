@@ -25,7 +25,7 @@
       (raise-result-error (proc-name proc) rhombus-realm "Entry_Point_Syntax" form))
     form)
 
-  (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry-point))
+  (define in-entry-point-space (make-interned-syntax-introducer/add 'rhombus/entry_point))
 
   (struct entry-point-adjustments (prefix-arguments wrap-body method?))
   (define no-adjustments (entry-point-adjustments '() (lambda (arity stx) stx) #f))

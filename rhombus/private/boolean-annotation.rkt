@@ -7,7 +7,7 @@
          "static-info.rkt"
          "parse.rkt")
 
-(provide (for-space rhombus/annotation
+(provide (for-space rhombus/annot
                     &&
                     \|\|))
 

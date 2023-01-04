@@ -32,7 +32,7 @@
 
 (provide import
 
-         (for-space rhombus/import
+         (for-space rhombus/impo
                     #%juxtapose
                     #%literal
                     (rename-out [rhombus/ /]
@@ -66,7 +66,7 @@
   (property import-modifier transformer)
   (property import-modifier-block transformer)
 
-  (define in-import-space (make-interned-syntax-introducer/add 'rhombus/import))
+  (define in-import-space (make-interned-syntax-introducer/add 'rhombus/impo))
 
   (define (check-import-result form proc)
     (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))

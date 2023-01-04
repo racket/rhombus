@@ -26,10 +26,10 @@
          "parens.rkt")
 
 (provide List
-         (for-space rhombus/annotation List)
+         (for-space rhombus/annot List)
          (for-space rhombus/reducer List)
 
-         (for-space rhombus/annotation NonemptyList))
+         (for-space rhombus/annot NonemptyList))
 
 (module+ for-binding
   (provide (for-syntax parse-list-binding

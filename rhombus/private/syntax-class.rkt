@@ -26,7 +26,7 @@
   (provide (for-syntax rhombus-syntax-class in-syntax-class-space)))
 
 (begin-for-syntax
-  (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/syntax-class))
+  (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/syntax/class))
 
   (struct rhombus-syntax-class (kind class attributes splicing?))
 

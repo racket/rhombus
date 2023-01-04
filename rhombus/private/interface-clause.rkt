@@ -29,7 +29,7 @@
       [_::interface-clause-form form]
       [_ (raise-result-error (proc-name proc) rhombus-realm "Interface_Clause_Syntax" form)]))
 
-  (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface-clause))
+  (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface_clause))
 
   (define (make-interface-clause-transformer-ref class-data)
     ;; "accessor" closes over `class-data`:

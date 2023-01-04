@@ -45,7 +45,7 @@
          Keyword
          Void
 
-         (for-space rhombus/annotation
+         (for-space rhombus/annot
                     #%parens
                     #%literal))
 
@@ -83,7 +83,7 @@
 
   (property annotation (predicate-stx static-infos))
 
-  (define in-annotation-space (make-interned-syntax-introducer/add 'rhombus/annotation))
+  (define in-annotation-space (make-interned-syntax-introducer/add 'rhombus/annot))
 
   (define (raise-not-a-annotation id)
     (raise-syntax-error #f
@@ -259,7 +259,7 @@
                                             sub-n 'kws predicate-maker info-maker
                                             parse-annotation-of-id))))
             (define-name-root name
-              #:space rhombus/annotation
+              #:space rhombus/annot
               #:fields (of)
               #:root root-proc)
             (define-syntax of of-proc))]

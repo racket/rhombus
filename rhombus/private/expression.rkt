@@ -52,7 +52,7 @@
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
-  (define in-expression-space (make-interned-syntax-introducer/add 'rhombus/expression)))
+  (define in-expression-space (make-interned-syntax-introducer/add 'rhombus/expr)))
 
 (define-syntax (define-expression-syntax stx)
   (syntax-parse stx

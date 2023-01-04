@@ -22,7 +22,7 @@
 ;; so that they can be mixed more freely. For exports, we distinguish
 ;; module paths and export operators.
 
-(provide (for-space rhombus/module-path
+(provide (for-space rhombus/modpath
                     #%literal
                     (rename-out [rhombus/ /]
                                 [rhombus-! !]))
@@ -50,7 +50,7 @@
   (property module-path-prefix-operator prefix-operator)
   (property module-path-infix-operator infix-operator)
 
-  (define in-module-path-space (make-interned-syntax-introducer/add 'rhombus/module-path))
+  (define in-module-path-space (make-interned-syntax-introducer/add 'rhombus/modpath))
 
   (define current-module-path-context (make-parameter 'import))
 

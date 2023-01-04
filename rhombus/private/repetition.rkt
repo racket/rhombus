@@ -130,7 +130,7 @@
   (define (make-expression+binding+repetition-transformer name exp bind rep)
     (make-expression+binding+repetition-prefix-operator name '((default . stronger)) 'macro exp bind rep))
 
-  (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repetition))
+  (define in-repetition-space (make-interned-syntax-introducer/add 'rhombus/repet))
 
   (define (identifier-repetition-use id)
     (make-repetition-info id

@@ -41,7 +41,7 @@
   (property dot-provider (handler))
   (property dot-provider-more-static dot-provider ())
 
-  (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot-provider))
+  (define in-dot-provider-space (make-interned-syntax-introducer 'rhombus/dot))
 
   (define (wrap-dot-provider expr provider-stx)
     (quasisyntax/loc expr

@@ -34,7 +34,7 @@
 (begin-for-syntax
   (property static-info (stxs))
 
-  (define in-static-info-space (make-interned-syntax-introducer 'rhombus/static-info))
+  (define in-static-info-space (make-interned-syntax-introducer 'rhombus/statinfo))
     
   (define (wrap-static-info expr key-id val-stx)
     (quasisyntax/loc expr
