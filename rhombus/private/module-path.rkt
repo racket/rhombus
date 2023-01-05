@@ -151,9 +151,9 @@
      (syntax-parse stx
        #:datum-literals (parens group)
        [(form-id ((~and tag parens) (group str:string)) . tail)
-        (check #'str)
+        (define new-str (check #'str))
         (values (datum->syntax #'str
-                               (list mp-form-id #'str)
+                               (list mp-form-id new-str)
                                (span-srcloc #'form-id #'tag)
                                #'form-id)
                 #'tail)]))))
@@ -165,7 +165,8 @@
      (unless (path-string? (syntax->datum str))
        (raise-syntax-error (current-module-path-context)
                            "not a valid path"
-                           str)))))
+                           str))
+     str)))
 
 (define-syntax rhombus-file
   (make-module-path-file-operator module-path-prefix-operator))
@@ -176,10 +177,12 @@
    (lambda (str)
      (define (maybe-add-rhm-suffix s)
        (if (regexp-match? #rx"[.]" s) s (string-append s ".rhm")))
-     (unless (module-path? `(lib ,(maybe-add-rhm-suffix (syntax->datum str))))
+     (define new-str (maybe-add-rhm-suffix (syntax->datum str)))
+     (unless (module-path? `(lib ,new-str))
        (raise-syntax-error (current-module-path-context)
                            "not a valid library path"
-                           str)))))
+                           str))
+     new-str)))
 
 (define-syntax rhombus-lib
   (make-module-path-lib-operator module-path-prefix-operator))

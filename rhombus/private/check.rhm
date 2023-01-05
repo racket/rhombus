@@ -2,7 +2,7 @@
 import:
   "core-meta.rkt" open
   "call-capture-exn.rkt" open
-  lib("racket/syntax-srcloc") as srcloc
+  lib("racket/syntax-srcloc.rkt") as srcloc
   lib("racket/base.rkt").#{error-print-source-location}
   lib("rackunit/log.rkt").#{test-log!}
 
