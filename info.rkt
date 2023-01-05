@@ -7,7 +7,8 @@
     "syntax-color-lib"
     "parser-tools-lib"
     ["scribble-lib" #:version "1.43"]
-    "sandbox-lib"))
+    "sandbox-lib"
+    "testing-util-lib"))
 
 (define build-deps
   '("at-exp-lib"

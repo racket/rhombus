@@ -138,7 +138,7 @@
        #:attr kw-mand-arity (and (pair? (@ s.mand-kws)) #`'#,(@ s.mand-kws))
        #:attr kw-allowed-arity (and (pair? (@ s.mand-kws)) #`'#,(@ allowed-kws))
        #:with {~var case-tmps (pos-arity-case-tmps (@ pos-arity))} #f
-       
+       #:with kwhash-proc (car (generate-temporaries '(kwhash-proc)))
        #'(let* ([kwhash-proc
                  (lambda (kwhash {~? s.pos.param/tmp} ... . {~? r ()})
                    (let*
@@ -193,6 +193,7 @@
        #:attr kw-mand-arity (and reduce-kws? #`'#,mand-kws)
        #:attr kw-allowed-arity (and reduce-kws? #`'#,overall-kws)
        #:with {~var case-tmps (pos-arity-case-tmps pos-arity)} #f
+       #:with kwhash-proc (car (generate-temporaries '(kwhash-proc)))
        #'(let* ([kwhash-proc
                  (lambda (kwhash . lst)
                    (define N (length lst))

@@ -2,7 +2,8 @@
 
 (provide call_capturing_exn
          call_capturing_values
-         does_contain_each)
+         does_contain_each
+         display_as_exn)
 
 (define (call_capturing_exn thunk)
   (with-handlers ([exn:fail?
@@ -31,3 +32,15 @@
            #t]
           [else
            (loop (add1 i))]))))
+
+(struct exn:fail:test exn:fail (srcloc)
+  #:property prop:exn:srclocs (lambda (e)
+                                (list (exn:fail:test-srcloc e))))
+
+(define (display_as_exn msg loc)
+  (if loc
+      ((error-display-handler) msg
+                               (exn:fail:test msg
+                                              (current-continuation-marks)
+                                              loc))
+      (display msg (current-error-port))))

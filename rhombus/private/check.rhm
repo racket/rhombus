@@ -3,6 +3,8 @@ import:
   "core-meta.rkt" open
   "call-capture-exn.rkt" open
   lib("racket/syntax-srcloc") as srcloc
+  lib("racket/base.rkt").#{error-print-source-location}
+  lib("rackunit/log.rkt").#{test-log!}
 
 export:
  check
@@ -10,8 +12,10 @@ export:
 meta:
   syntax.class result_mode
   | '~is'
+  | '~is_a'
   | '~prints_like'
   | '~raises'
+  | '~matches'
   syntax.class result  
   | '$(mode :: result_mode): $body':
       ~attr [suffix, ...]: []
@@ -59,7 +63,7 @@ expr.macro
                          ...
                          $(result2.suffix)
                          ...,
-                       fun(): $(result2.body),
+                       matcher($(result2.mode) ..., : $(result2.body)),
                        keyword'$(result2.mode) ...')',
            '')
 // single lines in block
@@ -68,7 +72,7 @@ expr.macro
     values('begin:
               check_same(located'$(check_id)',
                          fun (): $result1 ...; $(result2.suffix); ...,
-                         fun(): $(result2.body),
+                         matcher($(result2.mode) ..., : $(result2.body)),
                          located'$(result2.mode) ...')
               ...',
            '')
@@ -77,9 +81,20 @@ expr.macro
     ~op_stx: check_id
     values('check_same(located'$(check_id)',
                        fun (): $result1 ...; $(result2.suffix); ...,
-                       fun(): $(result2.body),
+                       matcher($(result2.mode) ..., : $(result2.body)),
                        keyword'$(result2.mode) ...')',
            '')
+
+expr.macro
+| 'matcher(~matches, : $binding)':
+    values('fun | (): (fun | ($binding): #true | (&_): #false)
+                | (x): $("" +& '$binding')',
+           '')
+| 'matcher(~is_a, : $ann)':
+    values('fun | (): (fun (x): x is_a ($ann))
+                | (x): $("" +& '$ann')',
+           '')
+| 'matcher($_, : $body)': values('fun (): $body', '')
 
 fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
   def [mode, srcloc]:
@@ -98,19 +113,31 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         exn_msg && does_contain_each(expected, exn_msg)
     | keyword(~completes):
         !exn_msg
+    | keyword(~is_a):
+        !exn_msg && got.length() == 1 && expected[0](got[0])
+    | keyword(~matches):
+        !exn_msg && expected[0](&got)
+  #{test-log!}(ok)
   if ok
   | #void
   | fun
     | values_str([v]): v
     | values_str(lst): "values " +& lst
-    display(srcloc.source +& ":" +& srcloc.line +& ": failed\n"
-              +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
-              +&  "\n"
-              +& "  expected: " +& (if mode == keyword(~completes)
-                                    | "completion"
-                                    | (if mode == keyword(~raises) | "exception " | "") +& values_str(expected))
-              +& "\n",
-            current_error_port())
+    def msg:
+      (if #{error-print-source-location}()
+       | srcloc.source +& ":" +& srcloc.line
+       | loc_where[0])
+        +& ": failed\n"
+        +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
+        +&  "\n"
+        +& "  expected: " +& (match mode
+                              | keyword(~completes): "completion"
+                              | keyword(~raises): "exception " +& values_str(expected)
+                              | keyword(~matches): "matching " +& expected_thunk(#false)
+                              | keyword(~is_a): "satisfying " +& expected_thunk(#false)
+                              | ~else: values_str(expected))
+        +& "\n"
+    display_as_exn(msg, srcloc)
 
 fun eval_test(stx):
   parameterize {current_toplevel: make_rhombus_toplevel()}:
