@@ -1,30 +1,26 @@
 #lang rhombus
-import:
-  "check.rhm" open
 
 begin:
   syntax.class Arithmetic
   | '$x + $y'
 
   check:
-    ~print
     match '1+2'
     | '$(exp :: Arithmetic)': exp.x
-    '1'
+    ~prints_like '1'
 
   check:
-    ~print
     match '1+2'
     | '$(exp :: Arithmetic)': exp.y
-    '2'
+    ~prints_like '2'
 
 check:
-  ~eval_exn
+  ~eval
   syntax.class Arithmetic
   | '$x + $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp
-  "cannot use repetition binding as an expression"
+  ~raises "cannot use repetition binding as an expression"
 
 begin:
   syntax.class Arithmetic
@@ -32,16 +28,14 @@ begin:
   | '$x - $y'
 
   check:
-    ~print
     match '1+2'
     | '$(exp :: Arithmetic)': exp.x
-    '1'
+    ~prints_like '1'
 
   check:
-    ~print
     match '1-2'
     | '$(exp :: Arithmetic)': exp.y
-    '2'
+    ~prints_like '2'
 
 begin:
   syntax.class Arithmetic
@@ -50,42 +44,37 @@ begin:
       ~attr [num, ...]: [x, y]
 
   check:
-    ~print
     match '1+2'
     | '$(exp :: Arithmetic)': exp.sum
-    '3'
+    ~prints_like '3'
 
   check:
-    ~print
     match '1+2'
     | '$(exp :: Arithmetic)': [exp.num, ...]
-    ['1', '2']
+    ~prints_like ['1', '2']
 
 begin:
   syntax.class Foo
   | 'a ($x, ...) z'
 
   check:
-    ~print
     match 'a (1, 2, 3) z'
     | '$(f :: Foo)': [f.x, ...]
-    ['1', '2', '3']
+    ~prints_like ['1', '2', '3']
 
   check:
-    ~print
     match '[a (1, 2, 3) z, a () z, a ("x", "y") z]'
     | '[$(f :: Foo), ...]': [[f.x, ...], ...]
-    [['1', '2', '3'], [], ['"x"', '"y"']]
+    ~prints_like [['1', '2', '3'], [], ['"x"', '"y"']]
 
 begin:
   syntax.class Foo
   | 'a $x ...'
 
   check:
-    ~print
     match 'a (1, 2, 3) z'
     | '$(f :: Foo)': [f.x, ...]
-    ['(1, 2, 3)', 'z']
+    ~prints_like ['(1, 2, 3)', 'z']
 
 // check that right-hand side of pattern
 // is in a more nested scope than pattern variables
@@ -94,15 +83,14 @@ begin:
   | 'a $x':
       def x = "whatever"
   check:
-    ~print
     match 'a 1'
     | '$(f :: Foo)': f.x
-    '1'
+    ~prints_like '1'
 
 // check that syntax class description appears in match error
 begin:
   check:
-    ~eval_exn
+    ~eval
     import:
       rhombus/meta open
     meta:
@@ -114,25 +102,23 @@ begin:
     expr.macro 'right_operand $(e :: Arithmetic)':
       values(e.y, '')
     right_operand 1 +
-    "expression with addition or subtraction"
+    ~raises "expression with addition or subtraction"
 
 begin:
   syntax.class Foo
   | '$x + $y'
   | '$x + $y + $z'
   check:
-    ~print
     match '1 + 2'
     | '$(f :: Foo)': [f.x, f.y]
-    ['1', '2']
+    ~prints_like ['1', '2']
   check:
-    ~print
     match '10 + 20 + 30'
     | '$(f :: Foo)': [f.x, f.y]
-    ['10', '20']
+    ~prints_like ['10', '20']
 
 check:
-  ~eval_exn
+  ~eval
   import:
     rhombus/meta open
   syntax.class Foo
@@ -140,7 +126,7 @@ check:
   | '$x + $y + $z'
   match '10 + 20 + 30'
   | '$(f :: Foo)': f.z
-  "attribute not found"
+  ~raises "attribute not found"
 
 begin:
   syntax.class Foo:
@@ -148,10 +134,9 @@ begin:
     ~pattern
     | '$x + $y'
   check:
-    ~print
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    ['1', '2']
+    ~prints_like ['1', '2']
 
 begin:
   syntax.class Foo:
@@ -159,18 +144,17 @@ begin:
     ~pattern
     | '($x + $y)'
   check:
-    ~print
     match '0 + (1 + 2)'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    ['1', '2']
+    ~prints_like ['1', '2']
 
 check:
-  ~eval_exn
+  ~eval
   syntax.class Foo:
     ~term
     ~pattern
     | '$x + $y'
-  "not a single-term pattern"
+  ~raises "not a single-term pattern"
 
 begin:
   syntax.class Foo:
@@ -178,10 +162,9 @@ begin:
     ~pattern
     | '$x + $y'
   check:
-    ~print
     match '(1 + 2)'
     | '($(f :: Foo))': [f.x, f.y]
-    ['1', '2']
+    ~prints_like ['1', '2']
 
 begin:
   syntax.class Foo:
@@ -189,21 +172,20 @@ begin:
     ~pattern
     | '$g'
   check:
-    ~print
     match '(1 + 2)'
     | '($(f :: Foo))': f.g
-    '1 + 2'
+    ~prints_like '1 + 2'
 
 begin:
   check:
-    ~eval_exn
+    ~eval
     syntax.class Foo:
       ~group
       ~pattern
       | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
-    "syntax class incompatible with this context"
+    ~raises "syntax class incompatible with this context"
 
 begin:
   syntax.class Foo:
@@ -212,17 +194,15 @@ begin:
     | '$x + $y
        $z - $w'
   check:
-    ~print
     match ': 1 + 2
              3 - 4'
     | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
-    ['1', '2', '3', '4', '1 + 2; 3 - 4']
+    ~prints_like ['1', '2', '3', '4', '1 + 2; 3 - 4']
   check:
-    ~print
     match '(1 + 2,
             3 - 4)'
     | '($(f :: Foo))': [f.x, f.y, f.z, f.w, f]
-    ['1', '2', '3', '4', '1 + 2; 3 - 4']
+    ~prints_like ['1', '2', '3', '4', '1 + 2; 3 - 4']
 
 begin:
   syntax.class Foo:
@@ -231,20 +211,19 @@ begin:
     | ': $x + $y
          $z - $w'
   check:
-    ~print
     match ': 1 + 2
              3 - 4'
     | ': $(f :: Foo)': [f.x, f.y, f.z, f.w, f]
-    ['1', '2', '3', '4', ': 1 + 2; 3 - 4']
+    ~prints_like ['1', '2', '3', '4', ': 1 + 2; 3 - 4']
 
 check:
-  ~eval_exn
+  ~eval
   syntax.class Foo:
     ~block
     ~pattern
     | '($x + $y,
         $z - $w)'
-  "not a block pattern"
+  ~raises "not a block pattern"
 
 begin:
   syntax.class Foo:
@@ -252,21 +231,19 @@ begin:
     ~pattern
     | '($x, $y)'
   check:
-    ~print
     match '((1 + 2, 3 - 4))'
     | '($(f :: Foo))': f
-    '(1 + 2, 3 - 4)'
+    ~prints_like '(1 + 2, 3 - 4)'
   check:
     match '(1 + 2, 3 - 4)'
     | '($(f :: Foo))': f
     | ~else: "no"
-    "no"
+    ~is "no"
   check:
-    ~print
     match '(1 + 2, 3 - 4)'
     | '$(f :: Foo)': f
     | ~else: "no"
-    '(1 + 2, 3 - 4)'
+    ~prints_like '(1 + 2, 3 - 4)'
 
 begin:
   syntax.class Foo:
@@ -274,18 +251,15 @@ begin:
     ~pattern
     | '$x'
   check:
-    ~print
     match '(1 + 2, 3 - 4)'
     | '($(f :: Foo))': f
-    '1 + 2; 3 - 4'
+    ~prints_like '1 + 2; 3 - 4'
   check:
-    ~print
     match ': 1 + 2; 3 - 4; 5 / 6'
     | ': $(f :: Foo)': f
-    '1 + 2; 3 - 4; 5 / 6'
+    ~prints_like '1 + 2; 3 - 4; 5 / 6'
 
 check:
-  ~print
   syntax.class Option:
     ~term
     ~pattern
@@ -293,10 +267,9 @@ check:
         ~attr form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form, ...]
-  ['~lang', '~lang']
+  ~prints_like ['~lang', '~lang']
 
 check:
-  ~print
   syntax.class Option:
     ~pattern
     | '~lang':
@@ -305,10 +278,10 @@ check:
         ~attr form: '~and'
   match '(~lang, ~lang ~and)'
   | '($(o :: Option), ...)': [o.form, ...]
-  ['~lang', '~and']
+  ~prints_like ['~lang', '~and']
 
 check:
-  ~eval_exn
+  ~eval
   syntax.class Option:
     ~term
     ~pattern
@@ -316,17 +289,17 @@ check:
         ~attr form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  "attribute is a repetition"
+  ~raises "attribute is a repetition"
 
 check:
-  ~eval_exn
+  ~eval
   syntax.class Option:
     ~pattern
     | '~lang':
         ~attr form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  "attribute is a repetition"
+  ~raises "attribute is a repetition"
 
 begin:
   syntax.class NTerms
@@ -354,14 +327,11 @@ begin:
 
   def '$(two_terms :: NTerms)' = '~two 24 42'
   check:
-    ~print
     two_terms.a
-    '24'
+    ~prints_like '24'
   check:
-    ~print
     two_terms.c
-    '0'
+    ~prints_like '0'
   check:
-    ~print
     two_terms.average
-    '33'
+    ~prints_like '33'

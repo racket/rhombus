@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -18,7 +17,6 @@ check:
   ["" +& Posn(1, ~y: 2),
    "" +& Posn3D(1, ~y: 2, ~z: 3, 4),
    "" +& Posn4D(1, ~y: 2, ~z: 3, 4, 5)]
-  ["Posn(1, ~y: 2)",
-   "Posn3D(1, ~y: 2, ~z: 3, 4)",
-   "Posn4D(1, ~y: 2, ~z: 3, 4, 5)"]
-  
+  ~is ["Posn(1, ~y: 2)",
+       "Posn3D(1, ~y: 2, ~z: 3, 4)",
+       "Posn4D(1, ~y: 2, ~z: 3, 4, 5)"]

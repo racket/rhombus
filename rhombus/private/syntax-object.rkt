@@ -44,7 +44,7 @@
   strip
   relocate
   relocate_span
-  [srcloc syntax-srcloc])
+  [srcloc get-srcloc])
 
 (define-syntax literal
   (expression-transformer
@@ -345,8 +345,21 @@
         [(strip) (0ary #'strip)]
         [(relocate) (nary #'relocate_method 1 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 1 #'relocate_span)]
-        [(srcloc) (0ary #'syntax-srcloc)]
+        [(srcloc) (0ary #'get-srcloc)]
         [else (fail-k)])))))
 
-(define-static-info-syntax syntax-srcloc
+(define get-srcloc
+  (let ([srcloc
+         (lambda (v)
+           (cond
+             [(syntax? v)
+              (define u (unpack-term v 'Syntax.srcloc #f))
+              (syntax-srcloc u)]
+             [else
+              (raise-argument-error* 'Syntax.srcloc "Syntax" v)]))])
+    srcloc))
+
+;; Needs "maybe":
+#;
+(define-static-info-syntax srcloc
   (#%call-result #,srcloc-static-infos))

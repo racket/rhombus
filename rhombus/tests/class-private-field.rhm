@@ -1,28 +1,25 @@
-#lang rhombus
-import:
-  rhombus/meta open
-  "check.rhm" open
+#lang rhombus/and_meta
 
 use_static
   
 check:
-  ~eval_exn
+  ~eval
   use_static
   begin:
     class Posn(x, y, private color = "blue"):
       method get_color():
         color
     Posn(1, 2).color
-  "no such public field"
+  ~raises "no such public field"
 
 check:
-  ~eval_exn
+  ~eval
   begin:
     class Posn(x, y, private color = "blue"):
       method get_color():
         color
     Posn(1, 2).color
-  "no such field"
+  ~raises "no such field"
 
 check:
   class Posn(x, y, private color = "blue"):
@@ -33,9 +30,9 @@ check:
   [p.x, p.y, p.get_color(),
    px, py,
    p is_a Posn.of(Integer, Integer)]
-  [1, 2, "blue",
-   1, 2,
-   #true]
+  ~is [1, 2, "blue",
+       1, 2,
+       #true]
 
 // internal
 check:
@@ -57,14 +54,14 @@ check:
    p is_a _Posn.of(Integer, Integer, String),
    _p.color, _Posn.color(p), _Posn.color(_p),
    _Posn.secret(p)]
-  [1, 2, "blue",
-   -1, -2, "red",
-   1, 2,
-   1, 2, "blue",
-   #true,
-   #true,
-   "red", "blue", "red",
-   ["blue"]]
+  ~is [1, 2, "blue",
+       -1, -2, "red",
+       1, 2,
+       1, 2, "blue",
+       #true,
+       #true,
+       "red", "blue", "red",
+       ["blue"]]
 
 // private fields with defaults, no custom constructor
 check:
@@ -84,10 +81,10 @@ check:
    px, py,
    px3, py3, pz3,
    p3 is_a Posn.of(Integer, Integer)]
-  [1, 2, "blue", 3, "light",
-   1, 2,
-   1, 2, 3,
-   #true]
+  ~is [1, 2, "blue", 3, "light",
+       1, 2,
+       1, 2, 3,
+       #true]
 
 // private fields, custom constructor, default subclass constructor
 check:
@@ -107,10 +104,10 @@ check:
    px, py,
    px3, py3, pz3,
    p3 is_a Posn.of(Integer, Integer)]
-  [1, 2, "red", 3,
-   1, 2,
-   1, 2, 3,
-   #true]
+  ~is [1, 2, "red", 3,
+       1, 2,
+       1, 2, 3,
+       #true]
 
 // private fields, custom constructor, subclass private
 check:
@@ -134,10 +131,10 @@ check:
    px, py,
    px3, py3, pz3,
    p3 is_a Posn.of(Integer, Integer)]
-  [1, 2, "red", 3, "heavy",
-   1, 2,
-   1, 2, 3,
-   #true]
+  ~is [1, 2, "red", 3, "heavy",
+       1, 2,
+       1, 2, 3,
+       #true]
 
 // private fields and more customization plus internal
 check:
@@ -173,10 +170,10 @@ check:
    px, py,
    px3, py3, pz3,
    p3 is_a Posn.of{Integer, Integer}]
-  [1, 2, "red", 3, "heavy",
-   1, 2,
-   1, 2, 3,
-   #true]
+  ~is [1, 2, "red", 3, "heavy",
+       1, 2,
+       1, 2, 3,
+       #true]
 
 check:
   class Posn(x, y, private stamp):
@@ -187,4 +184,4 @@ check:
   def Posn(x, y) = p
   [_Posn.stamp(p),
    (p -: _Posn).stamp]
-  [10, 10]
+  ~is [10, 10]

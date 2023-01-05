@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 class Posn(x, y)
 
@@ -13,25 +12,25 @@ fun
 
 check:
   size(Posn(8, 6))
-  14
+  ~is 14
 
 check:
   size(1, 2)
-  3
+  ~is 3
 
 def Posn(px, py) -: Posn = Posn(1, 2)
 
 check:
   List(px, py)
-  [1, 2]
+  ~is [1, 2]
 
 def identity = fun (x): x
 check:
   identity(1 + (fun (x): x) (99) )
-  100
+  ~is 100
 check:
   identity(1+(fun (x): x)(99))
-  100
+  ~is 100
 
 // function result contracts
 
@@ -42,12 +41,11 @@ fun add1(x) :: Integer:
 
 check:
   add1(100)
-  101
+  ~is 101
 
 check:
-  ~exn
   add1("oops")
-  "result does not satisfy annotation"
+  ~raises "result does not satisfy annotation"
 
 fun
 | add_two(x) :: Number:
@@ -57,17 +55,17 @@ fun
 
 check:
   add_two(7) .= 9.0
-  #true
+  ~is #true
 
 check:
   add_two(6, 7)
-  "6 and 7"
+  ~is "6 and 7"
 
 check:
   begin:
     def f = fun (x) :: Integer: x
     f(10)
-  10
+  ~is 10
 
 fun on_diag(n :: Integer) :: Posn:
   Posn(n, n)
@@ -75,10 +73,10 @@ fun on_diag(n :: Integer) :: Posn:
 check:
   use_static
   on_diag(1).x
-  1
+  ~is 1
 
 check:
   use_static
   def known_posn = on_diag(2)
   known_posn.x
-  2
+  ~is 2

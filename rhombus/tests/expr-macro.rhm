@@ -1,7 +1,4 @@
-#lang rhombus
-import:
-  rhombus/meta open
-  "check.rhm" open
+#lang rhombus/and_meta
 
 // postfix as a macro "infix" operator;
 
@@ -14,7 +11,7 @@ expr.macro '$a *! $tail ...':
 
 check:
   10*!
-  3628800
+  ~is 3628800
 
 // a macro with an identifier name that does a weird
 // thing with the result tail
@@ -24,7 +21,7 @@ expr.macro 'prefix_plus $a $b $c ...':
 
 check:
   prefix_plus 7 9
-  16
+  ~is 16
 
 // another way to write that
 
@@ -37,7 +34,7 @@ expr.macro 'also_prefix_plus $e ...':
 
 check:
   also_prefix_plus 7 9
-  16
+  ~is 16
 
 // an identifier macro
 
@@ -45,7 +42,7 @@ expr.rule 'just_five': '"five"'
 
 check:
   just_five ++ " is the result"
-  "five is the result"
+  ~is "five is the result"
 
 // mixin infix and prefix with multiple matching cases
 
@@ -62,16 +59,16 @@ rule
 
 check:
   weirdly
-  "banana"
+  ~is "banana"
 check:
   weirdly coconut
-  "donut"
+  ~is "donut"
 check:
   weirdly ++ "none"
-  "banananone"
+  ~is "banananone"
 check:
   1 weirdly 5
-  6
+  ~is 6
 check:
   1 weirdly 5 + 7
-  -1
+  ~is -1

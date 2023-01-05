@@ -1,83 +1,79 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   Pair(1, 2)
-  Pair.cons(1, 2)
+  ~is Pair.cons(1, 2)
 
 check:
   Pair
-  Pair.cons
+  ~is Pair.cons
 
 check:
   Pair(1, [2])
-  [1, 2]
+  ~is [1, 2]
 
 check:
   def p :: Pair = [1, 2]
   p
-  [1, 2]
+  ~is [1, 2]
 
 check:
-  ~exn
   Pair.first(1)
-  values("contract violation", "expected: Pair")
+  ~raises values("contract violation", "expected: Pair")
 
 check:
-  ~exn
   Pair("ok", "oops") :: Pair.of(String, Number)
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 
 check:
-  ~exn
   ["ok", "oops"] :: Pair.of(String, Number)
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 
 check:
   ["ok", "fine"] :: Pair.of(String, List)
-  ["ok", "fine"]
+  ~is ["ok", "fine"]
 
 begin:
   use_static
   check:
     Pair(1, 2).first
-    1
+    ~is 1
   check:
     Pair(1, 2).rest
-    2
+    ~is 2
   check:
     Pair.cons(1, 2).first
-    1
+    ~is 1
   check:
     Pair.cons(1, 2).rest
-    2
+    ~is 2
   check:
     def x :: Pair = [1, 2, 3]
     x.first
-    1
+    ~is 1
   check:
     def Pair(x, y) = [1, 2, 3]
     x
-    1
+    ~is 1
   check:
     (["ok", "fine"] :: Pair.of(String, List)).rest
-    ["fine"]
+    ~is ["fine"]
   check:
     def Pair(x :: List, y) = [[1, 2, 3]]
     x.length()
-    3
+    ~is 3
   check:
     (["ok", "fine"] :: Pair.of(String, List)).rest.length()
-    1
+    ~is 1
   check:
     def x :: Pair.of(List, Any) = [[1, 2, 3]]
     x.first.length()
-    3
+    ~is 3
 
 begin:
   check:
     dynamic(Pair(1, 2)).first
-    1
+    ~is 1
   check:
     dynamic(Pair(1, 2)).rest
-    2
+    ~is 2

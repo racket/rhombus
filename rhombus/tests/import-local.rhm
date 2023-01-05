@@ -1,125 +1,118 @@
 #lang rhombus
-import: "check.rhm" open
 
 begin:
   import:
     "example-a.rhm" as ex_a
   check:
     ex_a.alpha
-    "alpha"
+    ~is "alpha"
   check:
     ex_a.beta
-    "beta"
+    ~is "beta"
   check:
     ex_a.ExList(1, 2, 3)
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
     match [1, 2, 3]
     | ex_a.ExList(n, ...): [0, n, ...]
-    [0, 1, 2, 3]
+    ~is [0, 1, 2, 3]
   check:
     ex_a.ExList.length([1, 2, 3])
-    3
+    ~is 3
   check:
     ([1, 2, 3] :: ex_a.ExList.of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: ex_a.ExList.of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 
 begin:
   import:
     "example-a.rhm" open
   check:
     alpha
-    "alpha"
+    ~is "alpha"
   check:
     beta
-    "beta"
+    ~is "beta"
   check:
     ExList(1, 2, 3)
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
     match [1, 2, 3]
     | ExList(n, ...): [0, n, ...]
-    [0, 1, 2, 3]
+    ~is [0, 1, 2, 3]
   check:
     ExList.length([1, 2, 3])
-    3
+    ~is 3
   check:
     ([1, 2, 3] :: ExList.of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: ExList.of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 
 begin:
   import:
     "example-a.rhm" expose: ExList
   check:
     ExList(1, 2, 3)
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
     match [1, 2, 3]
     | ExList(n, ...): [0, n, ...]
-    [0, 1, 2, 3]
+    ~is [0, 1, 2, 3]
   check:
     ExList.length([1, 2, 3])
-    3
+    ~is 3
   check:
     ([1, 2, 3] :: ExList.of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: ExList.of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 
 begin:
   import:
     "example-a.rhm".ExList
   check:
     ExList(1, 2, 3)
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
     match [1, 2, 3]
     | ExList(n, ...): [0, n, ...]
-    [0, 1, 2, 3]
+    ~is [0, 1, 2, 3]
   check:
     ([1, 2, 3] :: ExList.of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: ExList.of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 
 begin:
   import:
     "example-a.rhm".ExList open
   check:
     ([1, 2, 3] :: of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 
 begin:
   import:
     "example-a.rhm".ExList as XList
   check:
     XList(1, 2, 3)
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
     match [1, 2, 3]
     | XList(n, ...): [0, n, ...]
-    [0, 1, 2, 3]
+    ~is [0, 1, 2, 3]
   check:
     ([1, 2, 3] :: XList.of(Integer))
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~exn
     ([1, 2, 3] :: XList.of(String))
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
 

@@ -1,6 +1,4 @@
 #lang rhombus/and_meta
-import:
-  "check.rhm" open
 
 use_static
 
@@ -23,10 +21,10 @@ fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
 let vec :: Vector: Posn(3, 4)
 check:
   vec.angle
-  atan(4, 3)
+  ~is atan(4, 3)
 check:
   vec.magnitude
-  5
+  ~is 5
 
 expr.macro 'or_zero $p $tail ...':
   values(statinfo_meta.wrap('$p || Posn(0,0)',
@@ -36,11 +34,11 @@ expr.macro 'or_zero $p $tail ...':
 
 check:
   or_zero(Posn(3, 4)).magnitude
-  5
+  ~is 5
 
 check:
   or_zero(#false).magnitude
-  0
+  ~is 0
 
 fun zero_vec(): Posn(0, 0)
 statinfo.only.macro 'zero_vec': '(($(statinfo_meta.call_result_key),
@@ -48,14 +46,14 @@ statinfo.only.macro 'zero_vec': '(($(statinfo_meta.call_result_key),
                                                            vector_dot_provider))'))))'
 check:
   zero_vec().magnitude
-  0
+  ~is 0
 
 check:
   let p1 :: Posn.of(Integer, Posn): Posn(1, Posn(3, 4))
   // RHS influences info for LHS:
   let Posn(px, py): p1
   py.y
-  4
+  ~is 4
 
 // checking some static-info propagation cases
   
@@ -73,29 +71,29 @@ def (one -: MyInt) = 1
 
 check:
   one.add(4).is_zero
-  #false
+  ~is #false
 check:
   one.add(-1).is_zero
-  #true
+  ~is #true
 
 check:
   ((one.add(4)) -: MyInt).is_zero
-  #false
+  ~is #false
 
 def two = 2 :: MyInt
 check:
   two.is_zero
-  #false
+  ~is #false
 
 expr.rule 'I($n)': '$n -: MyInt'
 def three = (I(3))
 check:
   three.is_zero
-  #false
+  ~is #false
 
 operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
   x.add(y)
 
 check:
   (-2 my_plus 2).is_zero
-  #true
+  ~is #true

@@ -1,114 +1,100 @@
 #lang rhombus/and_meta
-import:
-  "check.rhm" open
 
 // Try patterns and templates that involve literal
 // `$` operators, including defining `$`
 
 check:
-  ~print
   '$'
-  '$'
+  ~prints_like '$'
 
 check:
-  ~print
   '$('$')'
-  '$'
+  ~prints_like '$'
 
 check:
-  ~print
   '$('...')'
-  '...'
+  ~prints_like '...'
 
 check:
-  ~print
   match '$('$') 1 + 2'
   | '$x 1 + 2': x
-  '$'
+  ~prints_like '$'
 
 check:
-  ~print
   match '$('$') 1 + 2'
   | '$('$') $x + 2': x
-  '1'
+  ~prints_like '1'
 
 check:
-  ~print
   match '($('$')) 10 + 2'
   | '($'$') $x + 2': x
-  '10'
+  ~prints_like '10'
 
 check:
-  ~print
   match ': $('$')'
   | ': $('$')': "block"
-  "block"
+  ~is "block"
 
 check:
-  ~print
   match '($('$'))'
   | '($'$')': "ok"
-  "ok"
+  ~is "ok"
 
 check:
-  ~print
   match '($('...'))'
   | '($'...')': "dots"
-  "dots"
+  ~is "dots"
 
 check:
-  ~print
   match '$('...') $('...') $('...')'
   | '$('...') ...': "dotss"
-  "dotss"
+  ~is "dotss"
 
 check:
   // special syntax to define `$` as a prefix operator
   expr.rule '$('$') $x': '1 + $x'
   $10
-  11
+  ~is 11
 
 check:
   // special syntax to `$` as an infix operator
   expr.rule '$x $('$') $y': '[$x, $y]'
   1 $ 2
-  [1, 2]
+  ~is [1, 2]
 
 check:
-  ~eval_exn
+  ~eval
   import: rhombus/meta open
   expr.rule '$1 + $2': '0'
-  "expected operator-macro pattern"
+  ~raises "expected operator-macro pattern"
 
 check:
-  ~eval_exn
+  ~eval
   import: rhombus/meta open
   expr.rule '$x $ $x': '0'
-  "expected operator-macro pattern"
+  ~raises "expected operator-macro pattern"
 
 check:
-  ~print
   //  macro that acts as a template form
   expr.rule '$x =+= $y': '('$('$')$x + $('$')$y')'
   def a = '3'
   def b = '4'
   a =+= b
-  '3 + 4'
+  ~prints_like '3 + 4'
 
 check:
-  ~print
   // phase-0 binding of `$` does not affect `expr.rule` use
   operator ($ b): b
   expr.rule '$x + $y': '[$x, $y]'
   (1+2)
-  [1, 2]
+  ~is [1, 2]
 
 check:
-  ~eval_print
+  ~eval
   import: rhombus/meta open
   // phase-1 binding of `$` makes `expr.rule` bind `$`
   meta:  
     operator ($ b): b
   expr.rule '$x + $y': '[$x, $y]'
   (1+2)
-  3
+  ~is 3

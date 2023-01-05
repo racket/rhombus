@@ -1,25 +1,24 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") as ex_a
   [ex_a.alpha, ex_a.beta]
-  ["alpha", "beta"]
+  ~is ["alpha", "beta"]
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") as ex_a:
             expose: beta
   [ex_a.alpha, beta, ex_a.beta]
-  ["alpha", "beta", "beta"]
+  ~is ["alpha", "beta", "beta"]
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm") as ex_a:
             expose: beta
   alpha
-  "alpha: undefined"
+  ~raises "alpha: undefined"
 
 check:
   ~eval
@@ -28,31 +27,31 @@ check:
    for ExList:
      each i: 10..12
      i]
-  [[1, 2], 3, [10, 11]]
+  ~is [[1, 2], 3, [10, 11]]
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").ExList open
   length([1, 2, 3])
-  3
+  ~is 3
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm").ExList open
   for ExList: "oops, no ExList"
-  "expected reducer"
+  ~raises "expected reducer"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
   [alpha, beta]
-  ["alpha", "beta"]
+  ~is ["alpha", "beta"]
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm") open
   ex_a.alpha
-  "ex_a: undefined"
+  ~raises "ex_a: undefined"
 
 check:
   ~eval
@@ -60,32 +59,32 @@ check:
     lib("rhombus/tests/example-a.rhm") as ex_a
     .ex_a expose: beta
   [ex_a.alpha, beta]
-  ["alpha", "beta"]
+  ~is ["alpha", "beta"]
 
 check:
   ~eval
   import: lib("rhombus/tests/example-b.rhm") as ex_b
   ex_b.ex_a.alpha
-  "alpha"
+  ~is "alpha"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-b.rhm") open
   ex_a.alpha
-  "alpha"
+  ~is "alpha"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-b.rhm").ex_a
   ex_a.alpha
-  "alpha"
+  ~is "alpha"
 
 check:
   ~eval
   import: .List: 
             rename: cons as kons
   List.kons(1, [2])
-  List.cons(1, [2])
+  ~is List.cons(1, [2])
 
 check:
   ~eval
@@ -94,7 +93,7 @@ check:
             rename: cons as kons
   [ExList.kons(1, [2]),
    List.cons(1, [2])]
-  [List.cons(1, [2]), List.cons(1, [2])]
+  ~is [List.cons(1, [2]), List.cons(1, [2])]
 
 check:
   ~eval
@@ -104,38 +103,38 @@ check:
               rename: cons as kons
     [ExList.kons(1, [2]),
      List.cons(1, [2])]
-  [List.cons(1, [2]), List.cons(1, [2])]
+  ~is [List.cons(1, [2]), List.cons(1, [2])]
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha
   alpha
-  "alpha"
+  ~is "alpha"
 
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha as a
   a
-  "alpha"
+  ~is "alpha"
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha open
   alpha
-  "cannot open binding"
+  ~raises"cannot open binding"
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha:
            except: other
   "does not get here"
-  "identifier to exclude is not included"
+  ~raises "identifier to exclude is not included"
 
 check:
-  ~eval_exn
+  ~eval
   import: lib("rhombus/tests/example-a.rhm").alpha
   beta
-  "beta: undefined"
+  ~raises "beta: undefined"
 
 check:
   import:
@@ -145,4 +144,4 @@ check:
       only:
         make_pair
   r.make_pair
-  Pair.cons
+  ~is Pair.cons

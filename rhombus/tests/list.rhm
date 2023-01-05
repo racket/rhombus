@@ -1,84 +1,81 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   List.length([1, 2, 3])
-  3
+  ~is 3
 
 check:
-  ~exn
   List.length({1, 2, 3})
-  values("contract violation", "expected: List")
+  ~raises values("contract violation", "expected: List")
 
 check:
   [1] :: NonemptyList
-  [1]
+  ~is [1]
 
 check:
-  ~exn
   [] :: NonemptyList
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 
 begin:
   use_static
   check:
     [1, 2, 3].length()
-    3
+    ~is 3
   check:
     [1, 2, 3][0]
-    1
+    ~is 1
   check:
     [1, 2, 3].first
-    1
+    ~is 1
   check:
     [1, 2, 3].rest
-    [2, 3]
+    ~is [2, 3]
   check:
     List(1, 2, 3).length()
-    3
+    ~is 3
   check:
     def lst = [1, 2, 3]
     lst.length()
-    3
+    ~is 3
   check:
     def lst :: List = dynamic([1, 2, 3])
     lst.length()
-    3
+    ~is 3
   check:
     def lst -: List = dynamic([1, 2, 3])
     lst.length()
-    3
+    ~is 3
   check:
     def lst :: List.of(Integer) = dynamic([1, 2, 3])
     lst.length()
-    3
+    ~is 3
   check:
     def [v, ...] = dynamic([1, 2, 3])
     [v, ...].length()
-    3
+    ~is 3
   check:
     def lst :: List.of(List) = dynamic([[1, 2, 3]])
     lst.first.length()
-    3
+    ~is 3
   check:
     def lst :: List.of(Integer) = dynamic([1, 2, 3])
     lst.rest.length()
-    2
+    ~is 2
   check:
     def lst :: NonemptyList.of(List) = dynamic([[1, 2, 3]])
     lst.first.length()
-    3
+    ~is 3
 
 begin:
   check:
     dynamic([1, 2, 3]).length()
-    3
+    ~is 3
   check:
     dynamic([1, 2, 3]).first
-    1
+    ~is 1
   check:
     dynamic([1, 2, 3]).rest
-    [2, 3]
+    ~is [2, 3]
   check:
     dynamic([1, 2, 3])[0]
-    1
+    ~is 1

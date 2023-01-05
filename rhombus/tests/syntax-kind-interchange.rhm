@@ -1,63 +1,51 @@
 #lang rhombus
-import:
-  "check.rhm" open
 
 check:
-  ~print
   match '1 2 3 0'
   | '$a ...': '$a ...'
-  '1 2 3 0'
+  ~prints_like  '1 2 3 0'
 
 check:
-  ~print
   match '1 2 3 0'
   | '$a ...': [a, ...]
-  ['1', '2', '3', '0']
+  ~prints_like  ['1', '2', '3', '0']
   
 check:
-  ~print
   match '1 2; 3 0'
   | '$a; ...': '$a; ...'
-  '1 2; 3 0'
+  ~prints_like '1 2; 3 0'
 
 check:
-  ~print
   match '1 2; 3 0'
   | '$a; ...': [a, ...]
-  ['1 2', '3 0']
+  ~prints_like ['1 2', '3 0']
 
 check:
-  ~print
   match '1 2 3 0'
   | '$a ... 0': '$a ...'
-  '1 2 3'
+  ~prints_like '1 2 3'
 
 check:
-  ~print
   match '1 2 3 0'
   | '$a ...': '($a, ...)'
-  '(1, 2, 3, 0)'
+  ~prints_like '(1, 2, 3, 0)'
 
 check:
-  ~print
   match '1 2 3'
   | '$a ...': '$a; ...'
-  '1; 2; 3'
+  ~prints_like '1; 2; 3'
 
 check:
-  ~exn
   match '1; 2 4; 3'
   | '$a; ...': '$a ...'
-  "multi-term syntax not allowed in term context"
+  ~raises "multi-term syntax not allowed in term context"
 
 check:
-  ~print
   match '(1) (2 + 7, 14) (3)'
   | '($a) ...': [a, ...]
-  ['1', '2 + 7; 14', '3']
+  ~prints_like ['1', '2 + 7; 14', '3']
 
 check:
-  ~print
   match '1 + 2'
   | '$a + $b': '($a)'
-  '(1)'
+  ~prints_like '(1)'

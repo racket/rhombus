@@ -1,56 +1,54 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   Array.length(Array(1, 2, 3))
-  3
+  ~is 3
 
 check:
-  ~exn
   Array.length([1, 2, 3])
-  values("contract violation", "expected: Array")
+  ~raises values("contract violation", "expected: Array")
 
 begin:
   use_static
   check:
     Array(1, 2, 3).length()
-    3
+    ~is 3
   check:
     Array(1, 2, 3)[0]
-    1
+    ~is 1
   check:
     Array(1, 2, 3).length()
-    3
+    ~is 3
   check:
     def arr = Array(1, 2, 3)
     arr.length()
-    3
+    ~is 3
   check:
     def arr :: Array = dynamic(Array(1, 2, 3))
     arr.length()
-    3
+    ~is 3
   check:
     def arr -: Array = dynamic(Array(1, 2, 3))
     arr.length()
-    3
+    ~is 3
   check:
     def arr :: Array.of(Integer) = dynamic(Array(1, 2, 3))
     arr.length()
-    3
+    ~is 3
   check:
     def [v, ...] = dynamic([1, 2, 3])
     Array(v, ...).length()
-    3
+    ~is 3
   check:
     class Posn(x, y)
     def arr :: Array.of(Posn) = Array(Posn(1, 2))
     arr[0].x
-    1
+    ~is 1
 
 begin:
   check:
     dynamic(Array(1, 2, 3)).length()
-    3
+    ~is 3
   check:
     dynamic(Array(1, 2, 3))[0]
-    1
+    ~is 1

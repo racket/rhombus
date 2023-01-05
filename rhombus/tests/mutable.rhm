@@ -1,17 +1,16 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   def mutable x = 0
   [x := 1, x]
-  [#void, 1]
+  ~is [#void, 1]
 
 check:
   let x = 0
   fun f(): x
   let x = 2
   [x, f()]
-  [2, 0]
+  ~is [2, 0]
 
 check:
   let x = 0
@@ -19,7 +18,7 @@ check:
   let mutable x = 2
   x := 3
   [x, f()]
-  [3, 0]
+  ~is [3, 0]
 
 check:
   let mutable x = 0
@@ -28,4 +27,4 @@ check:
   let mutable x = 2
   g(3)
   [x, f()]
-  [2, 3]
+  ~is [2, 3]

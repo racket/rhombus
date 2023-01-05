@@ -1,105 +1,84 @@
 #lang rhombus
-import:
-  "check.rhm" open
 
 check:
-  ~print
   Syntax.make(1)
-  '1'
+  ~prints_like '1'
 
 check:
-  ~exn
   Syntax.make([1, 2])
-  "invalid as a shrubbery term"
+  ~raises "invalid as a shrubbery term"
 
 check:
-  ~print
   Syntax.make([symbol(parens), [symbol(group), 1, "a", symbol(z)]])
-  '(1 "a" z)'
+  ~prints_like '(1 "a" z)'
 
 check:
-  ~print
   Syntax.make([symbol(parens),
                [symbol(group), 1],
                [symbol(group), "a"],
                [symbol(group), [symbol(op), symbol(#{+})]]])
-  '(1, "a", +)'
+  ~prints_like '(1, "a", +)'
 
 check:
-  ~print
   Syntax.make([symbol(parens), '1', '"a"', '+'])
-  '(1, "a", +)'
+  ~prints_like '(1, "a", +)'
 
 check:
-  ~print
   Syntax.make([symbol(parens), '1 2 3', '"a"', '4 + 5'])
-  '(1 2 3, "a", 4 + 5)'
+  ~prints_like '(1 2 3, "a", 4 + 5)'
 
 check:
-  ~print
   Syntax.make(['block', '1 2', '3'])
-  ': 1 2; 3'
+  ~prints_like ': 1 2; 3'
 
 check:
-  ~print
   Syntax.make_group([1, 2])
-  '1 2'
+  ~prints_like '1 2'
 
 check:
-  ~print
   Syntax.make_group(['begin', ['block', '1 2', '3']])
-  'begin: 1 2; 3'
+  ~prints_like 'begin: 1 2; 3'
 
 check:
-  ~print
   Syntax.make(['block'])
-  ':«»'
+  ~prints_like ':«»'
 
 check:
-  ~exn
   Syntax.make_group(['begin', ['block', '1 2', '3'], 'more'])
-  "invalid as a shrubbery non-tail term"
+  ~raises "invalid as a shrubbery non-tail term"
 
 check:
-  ~exn
   Syntax.make_group([])
-  "NonemptyList"
+  ~raises "NonemptyList"
 
 check:
-  ~print
   Syntax.make([symbol(parens), Syntax.make_group([1])])
-  '(1)'
+  ~prints_like '(1)'
 
 check:
-  ~print
   Syntax.make_sequence(['a', 'b c', 'd e f'])
-  'a; b c; d e f'
+  ~prints_like 'a; b c; d e f'
 
 check:
   Syntax.unwrap('x')
-  symbol(x)
+  ~is symbol(x)
 
 check:
-  ~print
   Syntax.unwrap('(1 2 3)')
-  ['parens', '1 2 3']
+  ~prints_like ['parens', '1 2 3']
 
 check:
-  ~print
   Syntax.unwrap('(1, 2, 3)')
-  ['parens', '1', '2', '3']
+  ~prints_like ['parens', '1', '2', '3']
 
 check:
-  ~print
   Syntax.unwrap_sequence('1 2; 3 4 5')
-  ['1 2', '3 4 5']
+  ~prints_like ['1 2', '3 4 5']
 
 check:
-  ~print
   Syntax.unwrap_sequence('1 2')
-  ['1 2']
+  ~prints_like ['1 2']
 
 check:
-  ~print
   Syntax.unwrap_sequence('1')
-  ['1']
+  ~prints_like ['1']

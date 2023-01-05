@@ -1,157 +1,156 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     method x(): 0
     method x(): 1
-  "duplicate method name"
+  ~raises "duplicate method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     method x(): 0
     abstract x
-  "duplicate method name"
+  ~raises "duplicate method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     method x(): 0
-  "identifier used as both a field name and method name"
+  ~raises "identifier used as both a field name and method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     private method x(): 0
-  "identifier used as both a field name and method name"
+  ~raises "identifier used as both a field name and method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     field q: 1
     method q(): 0
-  "identifier used as both a field name and method name"
+  ~raises "identifier used as both a field name and method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     private field q: 1
     method q(): 0
-  "identifier used as both a field name and method name"
+  ~raises "identifier used as both a field name and method name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
   class Posn3D(z):
     extends Posn
     method x(): 0
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
   class Posn3D(z):
     extends Posn
     private method x(): 0
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     field q: 1
   class Posn3D(z):
     extends Posn
     method q(): 0
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     method z(): 0
   class Posn3D(z):
     extends Posn
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     method q(): 0
   class Posn3D(z):
     extends Posn
     field q: 1
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     method q(): 0
   class Posn3D(z):
     extends Posn
     private field q: 1
-  "identifier used as both a field name and method name"    
+  ~raises "identifier used as both a field name and method name"    
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     method m(): 0
   class Posn3D(z):
     extends Posn
     method m(): 0
-  "method is already in superclass"
+  ~raises "method is already in superclass"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
   class Posn3D(z):
     extends Posn
     override m(): 0
-  "method is not in superclass"
+  ~raises "method is not in superclass"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     final method m(): 0
   class Posn3D(z):
     extends Posn
     override m(): 0
-  "cannot override superclass's final method"
+  ~raises "cannot override superclass's final method"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     abstract m
-  "final class cannot have abstract methods"
+  ~raises "final class cannot have abstract methods"
 
 check:
   class Posn(x, y):
     nonfinal
     abstract m
   Posn is_a List
-  #false
+  ~is #false
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     abstract m
   Posn(1, 2)
-  "cannot instantiate class with abstract"
+  ~raises "cannot instantiate class with abstract"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     abstract m
@@ -159,7 +158,7 @@ check:
     extends Posn
     nonfinal
   Posn3D(1, 2, 3)
-  "cannot instantiate class with abstract"
+  ~raises "cannot instantiate class with abstract"
 
 check:
   class Posn(x, y):
@@ -170,9 +169,9 @@ check:
   [p.m0(),
    p.m1(3),
    p.m2(3)]
-  [[2, 1],
-   [2, 1, 3],
-   [2, 1, -3]]
+  ~is [[2, 1],
+       [2, 1, 3],
+       [2, 1, -3]]
 
 check:
   class Posn(x, y):
@@ -193,31 +192,31 @@ check:
    p3.m2(4),
    p3.m3(10, 11, 12),
    p3.m4("x")]
-  [[2, 1], [2, 1, 3], [2, 1, -3],
-   [2, 1],
-   [2, 1, 3, 4],
-   [2, 1, 3, -4],
-   [10, [2, 1], [2, 1, 3, 5], [2, 1, 3, -6]],
-   "x"]
+  ~is [[2, 1], [2, 1, 3], [2, 1, -3],
+       [2, 1],
+       [2, 1, 3, 4],
+       [2, 1, 3, -4],
+       [10, [2, 1], [2, 1, 3, 5], [2, 1, 3, -6]],
+       "x"]
 
 check:
-  ~eval_exn
+  ~eval
   use_static
   begin:
     class Posn(x, y):
       method m0(): [y, x]
     def p = Posn(1, 2)
     p.m0
-  "method must be called for static mode"
+  ~raises "method must be called for static mode"
 
 check:
-  ~eval_exn
+  ~eval
   use_static
   begin:
     class Posn(x, y):
       method m0(): m0
     "ok"
-  "method must be called"
+  ~raises "method must be called"
 
 check:
   use_dynamic
@@ -227,9 +226,9 @@ check:
   [dynamic(p).x,
    dynamic(p).m0 +& "",
    dynamic(p).m0()]
-  [1,
-   "#<function:m0>",
-   [2, 1]]
+  ~is [1,
+       "#<function:m0>",
+       [2, 1]]
 
 check:
   class Posn(x, y):
@@ -237,31 +236,30 @@ check:
     method m0(): [q, this.q]
   def p = Posn(1, 2)
   [p.m0()]
-  [[1, 1]]
+  ~is [[1, 1]]
 
 check:
-  ~eval_exn
+  ~eval
   use_static
   class Posn(x, y):
     private field q = 1
   (Posn(1, 2)).q
-  "no such public field or method"
+  ~raises "no such public field or method"
 
 check:
-  ~eval_exn
+  ~eval
   use_static
   class Posn(x, y):
     private field q: 1
   Posn.q
-  "identifier not provided"
+  ~raises "identifier not provided"
 
 check:
-  ~exn
   use_dynamic
   class Posn(x, y):
     private field q: 1
   (Posn(1, 2)).q
-  "no such field"
+  ~raises "no such field"
 
 check:
   class Posn(x, y):
@@ -274,10 +272,10 @@ check:
     method get(): q
   def p = Posn3D(0, 2, 3)
   [p.lookup(p), p.get()]
-  [1, "other"]
+  ~is [1, "other"]
 
 check:
-  ~eval_exn
+  ~eval
   use_static
   begin:
     class Posn(x, y):
@@ -288,7 +286,7 @@ check:
     class Posn3D(z):
       extends Posn
     "ok"
-  "no such public field or method"
+  ~raises "no such public field or method"
 
 check:
   class Posn(x, y):
@@ -299,7 +297,7 @@ check:
         method get(p :: Posn): [p.q, q]
       Helper().get(this)
   Posn(0, 10).get()
-  [1, 1000]
+  ~is [1, 1000]
 
 check:
   class Posn(x, y):
@@ -309,7 +307,7 @@ check:
     extends Posn
     override m(): "ok"
   Posn3D(1, 2, 3).m()
-  "ok"
+  ~is "ok"
 
 check:
   class Posn(x, y):
@@ -325,18 +323,18 @@ check:
   def p = Posn3D(1, 2, 3)
   [p.a(), p.b(), p.c(),
    Posn.a(p), Posn.b(p), Posn.c(p)]
-  [[1], 2, [2],
-   [1], 2, [2]]
+  ~is [[1], 2, [2],
+       [1], 2, [2]]
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     abstract m
   class Posn3D(z):
     extends Posn
     override m(): super.m()
-  "method is abstract in superclass"
+  ~raises "method is abstract in superclass"
 
 check:
   class Posn(x, y):
@@ -351,21 +349,20 @@ check:
   def p = Posn3D(1, 2, 3)
   [Posn.a(p), Posn.b(p), Posn.c(p),
    Posn3D.a(p), Posn3D.b(p), Posn3D.c(p)]
-  [[1], 2, [2],
-   [1], 2, [2]]
+  ~is [[1], 2, [2],
+       [1], 2, [2]]
 
 check:
   class Posn(x, y):
     method a(): 1
   Posn.a is_a Integer
-  #false
+  ~is #false
 
 check:
-  ~exn
   class Posn(x, y):
     method a(): 1
   Posn.a(0)
-  "not an instance"
+  ~raises "not an instance"
 
 check:
   class A():
@@ -381,10 +378,10 @@ check:
     override m():
       6
   C().m()
-  6
+  ~is 6
 
 check:
-  ~eval_exn
+  ~eval
   class A():
     nonfinal
     method m():
@@ -395,10 +392,10 @@ check:
     abstract override m()
   class C():
     extends B
-  "final class cannot have abstract methods"
+  ~raises "final class cannot have abstract methods"
 
 check:
-  ~eval_exn
+  ~eval
   class A():
     nonfinal
     method m():
@@ -406,4 +403,4 @@ check:
   class B():
     extends A
     abstract override m()
-  "final class cannot have abstract methods"
+  ~raises "final class cannot have abstract methods"

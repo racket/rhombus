@@ -1,5 +1,4 @@
 #lang rhombus
-import "check.rhm" open
 
 fun check_later():
   ok_later
@@ -9,14 +8,14 @@ let accum: accum+1
 let accum: accum+1
 check:
   accum
-  3
+  ~is 3
 
 def ok_later = "ok"
 def c_later = check_later()
 
 check:
   c_later
-  "ok"
+  ~is "ok"
 check:
   check_later()
-  "ok"
+  ~is "ok"

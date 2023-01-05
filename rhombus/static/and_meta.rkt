@@ -11,7 +11,7 @@
   #:info rhombus:get-info-proc
   #:whole-body-readers? #t
   (require shrubbery/parse
-           (prefix-in rhombus: (submod "../main.rkt" reader))))
+           (prefix-in rhombus: (submod "../private/core.rkt" reader))))
 
 (module configure-runtime racket/base
   (require rhombus/runtime-config))

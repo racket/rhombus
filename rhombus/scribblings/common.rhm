@@ -18,6 +18,7 @@ export:
   see_implicit
   provided_meta
   demo
+  epsilon
  
 fun see_implicit(what, when, context, ~is_infix = #false):
  @scribble.elem{The @what form is implicitly used when @when is
@@ -35,3 +36,5 @@ fun provided_meta():
 defn.macro 'demo($form, ...)':
   ~op_stx: self
   'manual.examples(~label: #false, $form, ...)'
+
+def epsilon = "ϵ"

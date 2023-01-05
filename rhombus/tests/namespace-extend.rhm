@@ -1,6 +1,4 @@
 #lang rhombus/and_meta
-import:
-  "check.rhm" open
 
 namespace root:
   namespace trunk:
@@ -11,26 +9,26 @@ namespace root:
   export: trunk name
   check:
     trunk.side
-    "left"
+    ~is "left"
 
 check:
   root.name
-  "root"
+  ~is "root"
 
 check:
   root.trunk.name
-  "trunk"
+  ~is "trunk"
 
 check:
   root.trunk.side
-  "left"
+  ~is "left"
 
 check:
   namespace root.trunk.branch:
     def name = "branch"
     export: name
   root.trunk.branch.name
-  "branch"
+  ~is "branch"
 
 fun root.f(x):
   "root" ++ x
@@ -39,22 +37,22 @@ fun root.trunk.f(x):
 
 check:
   root.f(" hi")
-  "root hi"
+  ~is "root hi"
 
 check:
   root.trunk.f(" hi")
-  "trunk hi"
+  ~is "trunk hi"
 
 def root.ten = 10
 def root.trunk.seven = 7
 
 check:
   root.ten
-  10
+  ~is 10
 
 check:
   root.trunk.seven
-  7
+  ~is 7
 
 class root.Posn(x, y)
 
@@ -64,39 +62,39 @@ check:
     ~weaker_than: *
     [x, y]
   1 inner.(+) 2*8
-  [1, 16]
+  ~is [1, 16]
 
 check:
   use_static
   root.Posn(1, 2).x
-  1
+  ~is 1
 
 check:
   match root.Posn(1, 2)
   | root.Posn(x, y): [y, x]
-  [2, 1]
+  ~is [2, 1]
 
 expr.rule '$left (root.(^^^)) $right':
   '[[$left, $right]]'
 
 check:
   1 root.(^^^) 2
-  [[1, 2]]
+  ~is [[1, 2]]
 
 check:
   def root.name = "ROOT"
   root.name
-  "ROOT"
+  ~is "ROOT"
 
 check:
   def root.trunk.name = "TRUNK"
   [root.name, root.trunk.name]
-  ["root", "TRUNK"]
+  ~is ["root", "TRUNK"]
 
 check:
   fun root.f(x): "ROOT" ++ x
   root.f(" hi")
-  "ROOT hi"
+  ~is "ROOT hi"
 
 namespace route:
   export: trunc
@@ -105,22 +103,22 @@ namespace route:
 
 check:
   route.trunc.name
-  "trunc"
+  ~is "trunc"
 
 check:
   import: .root open
   trunk.name
-  "trunk"
+  ~is "trunk"
 
 check:
   import: .root.trunk
   trunk.name
-  "trunk"
+  ~is "trunk"
 
 check:
   import: .root.trunk
   trunk.side
-  "left"
+  ~is "left"
 
 check:
   namespace math
@@ -131,33 +129,33 @@ check:
     def math.d = "d"
     export: math
   [ext1.math.e, ext2.math.d]
-  [2.71, "d"]
+  ~is [2.71, "d"]
 
 check:
   import: .root open
   f(" hello")
-  "root hello"
+  ~is "root hello"
 
 check:
   import: .root open
   trunk.f(" hi")
-  "trunk hi"
+  ~is "trunk hi"
 
 check:
   import: .root open
   trunk.side
-  "left"
+  ~is "left"
 
 check:
   import: 
     lib("rhombus/tests/example-extend-a.rhm") open
     lib("rhombus/tests/example-extend-b.rhm") open
   List(List.a, List.b, ExList.a)
-  ["a", "b", "a"]
+  ~is ["a", "b", "a"]
 
 check:
   ~eval
   namespace toplevel: "ok"
   def toplevel.greeting = "hi"
   toplevel.greeting
-  "hi"
+  ~is "hi"

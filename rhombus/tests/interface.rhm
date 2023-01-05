@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -41,15 +40,15 @@ check:
    Shape.area(a),
    Circle.area(a)]
 
-  [33, 100, #true, #false,
-   #true, #false,
-   33, 33, 33,
-   330,
-   33, 33]
+  ~is [33, 100, #true, #false,
+       #true, #false,
+       33, 33, 33,
+       330,
+       33, 33]
 
 // conflict
 check:
-  ~eval_exn
+  ~eval
   interface Shape:
     method draw(): "circle"
   interface Cowboy:
@@ -57,7 +56,7 @@ check:
   class LoneRanger():
     implements Shape
     implements Cowboy
-  "method supplied by multiple superinterfaces"
+  ~raises "method supplied by multiple superinterfaces"
 
 // conflict resolved
 check:
@@ -71,7 +70,7 @@ check:
     override draw(): "bullseye"
   def l = LoneRanger()
   [l.draw(), (l -: Shape).draw(), (l -: Cowboy).draw()]
-  ["bullseye", "bullseye", "bullseye"]
+  ~is ["bullseye", "bullseye", "bullseye"]
 
 // diamond
 check:
@@ -84,7 +83,7 @@ check:
     implements Cowboy
     override draw(): 10
   LoneRanger().draw()
-  10
+  ~is 10
 
 // diamond with extra methods
 check:
@@ -102,8 +101,8 @@ check:
     override draw(): "squircle"
   [Squircle().cdraw(),
    Squircle().sdraw()]
-  ["squircle_circle",
-   "squircle_square"]
+  ~is ["squircle_circle",
+       "squircle_square"]
 
 // super call in interface
 check:
@@ -115,7 +114,7 @@ check:
   class Oval():
     implements Circle
   Oval().draw()
-  "circle shape"
+  ~is "circle shape"
 
 // private interface implementation
 check:
@@ -129,7 +128,7 @@ check:
   [s is_a Adder,
    s is_a _Adder,
    (s -: _Adder).total()]
-  [#false, #true, 20]
+  ~is [#false, #true, 20]
 
 check:
   interface Adder:
@@ -138,10 +137,10 @@ check:
     private implements Adder
     private override total(): x
   Sum(20) is_a Adder
-  #false
+  ~is #false
 
 check:
-  ~eval_exn
+  ~eval
   begin:
     interface Adder:
       abstract total
@@ -149,10 +148,10 @@ check:
       private implements Adder
       private override total(): x
     Sum(20).total
-  "no such field"
+  ~raises "no such field"
 
 check:
-  ~eval_exn
+  ~eval
   begin:
     use_static
     interface Adder:
@@ -161,7 +160,7 @@ check:
       private implements Adder
       private override total(): x
     Sum(20).total
-  "no such public field or method"
+  ~raises "no such public field or method"
 
 // implement an interface both privately and publicly => public
 check:
@@ -173,7 +172,7 @@ check:
     override total(): x
   [Sum(20) is_a Adder,
    Sum(21).total()]
-  [#true, 21]
+  ~is [#true, 21]
 
 // overlap of private and public is public
 check:
@@ -192,17 +191,16 @@ check:
     private override seat(): 1
   def m = MilkShed()
   check:
-    ~exn
     (m -: Stool).seat()
-    "Stool"
+    ~raises "Stool"
   [m is_a Stool,
    m is_a _Stool,
    m is_a Cow,
    m.legs(),
    m.horns(),
    (m -: _Stool).seat()]
-  [#false, #true, #true,
-   4, 2, 1]
+  ~is [#false, #true, #true,
+       4, 2, 1]
 
 check:
   interface I1: method m
@@ -217,8 +215,7 @@ check:
   interface IA: abstract method m(x, y) :: Integer
   interface IB: method m(x :: String, y :: Symbol) :: Integer
   interface IC: abstract method m(x :: String, y :: Symbol) :: Integer
-  "ok"
-  "ok"
+  ~completes
 
 check:
   interface Foo:
@@ -226,8 +223,7 @@ check:
   interface Bar:
     extends Foo
     override method foo() :: Bar
-  "ok implicit abstract"
-  "ok implicit abstract"
+  ~completes
   
 check:
   interface Foo:
@@ -235,5 +231,4 @@ check:
   interface Bar:
     extends Foo
     override propetry foo :: Bar
-  "ok implicit abstract property"
-  "ok implicit abstract property"
+  ~completes

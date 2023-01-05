@@ -1,6 +1,4 @@
 #lang rhombus/and_meta
-import:
-  "check.rhm" open
 
 use_static
 
@@ -11,14 +9,14 @@ fun get_pt_x(pt :: matching(Posn(_, _))):
 
 check:
   get_pt_x(Posn(1, 2))
-  1
+  ~is 1
 
 fun get_pts_x(pts :: matching([Posn(_, _), ...])):
   pts[0].x
 
 check:
   get_pts_x([Posn(1, 2)])
-  1
+  ~is 1
 
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
@@ -32,4 +30,4 @@ fun get_pts_x2(pts -: ListOf(Posn)):
 
 check:
   get_pts_x2([Posn(5, 7)])
-  5
+  ~is 5

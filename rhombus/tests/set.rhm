@@ -1,9 +1,8 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   Set.length({10, 20})
-  2
+  ~is 2
 
 // FIXME
 #//
@@ -16,136 +15,128 @@ begin:
   use_static
   check:
     {1, 2}.length()
-    2
+    ~is 2
   check:
     {"a", "b"}["a"]
-    #true
+    ~is #true
   check:
     Set("a", "b").length()
-    2
+    ~is 2
   check:
     MutableSet("a", "b").length()
-    2
+    ~is 2
   check:
     def set = {1, 2}
     set.length()
-    2
+    ~is 2
   check:
     def set :: Set = dynamic({"a", "b"})
     set.length()
-    2
+    ~is 2
   check:
     def set -: Set = dynamic({"a", "b"})
     set.length()
-    2
+    ~is 2
   check:
     def set :: Set.of(String) = dynamic({"a", "b"})
     set.length()
-    2
+    ~is 2
 
 begin:
   check:
     dynamic({"a", "b"}).length()
-    2
+    ~is 2
   check:
     dynamic({"a", "b"})["a"]
-    #true
+    ~is #true
 
 // See also tests in "rest-args.rhm"
 begin:
   check:
     {"a", "b", &{"c"}}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     {"a", &{"b", "c"}}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     {&{"b", "c"}, "a"}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     {&{"b"}, "a", &{"c"}}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     {"c", "b", &{"b"}, "a", &{"c"}}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     {"b", &{"b"}, "c", "a", &{"c"}}
-    {"a", "b", "c"}
+    ~is {"a", "b", "c"}
   check:
     def mutable x = []
     [{&(begin: x := [1, x]; {"b"}), (begin: x:= [2, x]; "a"), &(begin: x:= [3, x]; {"c"})},
      x]
-    [{"a", "b", "c"},
-     [3, [2, [1, []]]]]
+    ~is [{"a", "b", "c"},
+         [3, [2, [1, []]]]]
   check:
-    ~exn
     Set{&"oops"}
-    "not a set"
+    ~raises "not a set"
 
 begin:
   def [x, ...] = [1, 2, 3]
   check:
     {x, ...}
-    {1, 2, 3}
+    ~is {1, 2, 3}
   check:
     {x, ..., 0}
-    {0, 1, 2, 3}
+    ~is {0, 1, 2, 3}
   check:
     {0, x, ...}
-    {0, 1, 2, 3}
+    ~is {0, 1, 2, 3}
   check:
     {&{10, 11}, x, ..., 0}
-    {0, 1, 2, 3, 10, 11}
+    ~is {0, 1, 2, 3, 10, 11}
   check:
     [{x}, ...]
-    [{1}, {2}, {3}]
+    ~is [{1}, {2}, {3}]
   def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   check:
     [{z, ...}, ...]
-    [{1, 2, 3}, {4, 5}]
+    ~is [{1, 2, 3}, {4, 5}]
 
 check:
   def {"x"}  = {"x"}
-  "ok"
-  "ok"
+  ~completes
 
 check:
   def Set{"x"}  = {"x"}
-  "ok"
-  "ok"
+  ~completes
 
 check:
   def Set("x")  = {"x"}
-  "ok"
-  "ok"
+  ~completes
 
 check:
   def {"x"}  = {"x", "y"}
-  "still ok"
-  "still ok"
+  ~completes
 
 check:
   def Set{"x"}  = {"x", "y"}
-  "still ok"
-  "still ok"
+  ~completes
 
 check:
   def ex = "x"
   def {ex +& "y"}  = {"xy"}
-  "expr ok"
-  "expr ok"
+  ~completes
 
 check:
   def Set{"x", "y"}  = {"x", "y"}
-  "two ok"
-  "two ok"
+  ~completes
 
 check:
   def {"x", key, ...} = {"x", "y", "z"}
   {key, ...}
-  {"y", "z"}
+  ~is {"y", "z"}
 
 check:
   def Set{"x", key, ...} = {"x", "y", "z"}
   {key, ...}
-  {"y", "z"}
+  ~is {"y", "z"}

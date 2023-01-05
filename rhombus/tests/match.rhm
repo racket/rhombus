@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   match Pair.cons(7, 8)
@@ -9,11 +8,10 @@ check:
       x
   | ~else:
       "other"
-  8
+  ~is 8
 
 check:
-  ~print
   match '(z + y, {[10, 11, 12]})'
   | '(x $a)': a
   | '($a + y, {[$n, ...]})': List.cons(a, [n, ...])
-  ['z', '10', '11', '12']
+  ~prints_like ['z', '10', '11', '12']

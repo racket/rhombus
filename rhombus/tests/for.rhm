@@ -1,6 +1,4 @@
 #lang rhombus
-import:
-  "check.rhm" open
 
 begin:
   def mutable accum = []
@@ -9,40 +7,40 @@ begin:
       each i: 0..2
       accum := List.cons(i, accum)
     accum
-    [1, 0]
+    ~is [1, 0]
 
 check:
   for List:
     each i: 0..2
     i
-  [0, 1]
+  ~is [0, 1]
 
 check:
   for Map:
     each i: 0..2
     values(i, "" +& i)
-  {0: "0", 1: "1"}
+  ~is {0: "0", 1: "1"}
 
 check:
   for:
     each i: 0..2
     i
     ~into List
-  [0, 1]
+  ~is [0, 1]
 
 check:
   for:
     each i: 0..2
     i
     ~into List
-  [0, 1]
+  ~is [0, 1]
 
 check:
   for List:
     each i: 0..2
     each j: 0..2
     [i, -j-1]
-  [[0, -1], [0, -2], [1, -1], [1, -2]]
+  ~is [[0, -1], [0, -2], [1, -1], [1, -2]]
 
 check:
   for List:
@@ -50,7 +48,7 @@ check:
       i: 0..2
       j: 0..2
     [i, -j-1]
-  [[0, -1], [1, -2]]
+  ~is [[0, -1], [1, -2]]
 
 check:
   for List:
@@ -59,7 +57,7 @@ check:
       i: 0..len
       j: 0..len
     [i, -j-1]
-  [[0, -1], [1, -2]]
+  ~is [[0, -1], [1, -2]]
 
 check:
   for List:
@@ -67,7 +65,7 @@ check:
     def i_plus = i+1
     each j: 0..2
     [i_plus, -j-1]
-  [[1, -1], [1, -2], [2, -1], [2, -2]]
+  ~is [[1, -1], [1, -2], [2, -1], [2, -2]]
 
 check:
   for List:
@@ -75,47 +73,47 @@ check:
     def i_len = i+1
     each j: 0..i_len
     [i, -j-1]
-  [[0, -1], [1, -1], [1, -2]]
+  ~is [[0, -1], [1, -1], [1, -2]]
 
 check:
   for values(sum = 0):
     each i: 0..4
     sum + i
-  6
+  ~is 6
 
 check:
   for values(sum = 0, parity = #true):
     each i: 0..4
     values(sum + i, !parity)
-  values(6, #true)
+  ~is values(6, #true)
 
 check:
   for values(sum = 0):
     each i: 0..4
     keep_when i != 1
     sum + i
-  5
+  ~is 5
 
 check:
   for values(sum = 0):
     each i: 0..4
     skip_when i == 1
     sum + i
-  5
+  ~is 5
 
 check:
   for values(sum = 0):
     each i: 0..8
     break_when i == 4
     sum + i
-  6
+  ~is 6
 
 check:
   for values(sum = 0):
     each i: 0..8
     final_when i == 4
     sum + i
-  10
+  ~is 10
 
 check:
   for values(sum = 0):
@@ -124,7 +122,7 @@ check:
     final_when i == 4
     def result = new_sum + 1
     result
-  15
+  ~is 15
 
 check:
   use_static
@@ -136,16 +134,16 @@ check:
       p.x
       ~into List
   point_xs([[Posn(1, 2), Posn(0, 5)], [], [Posn(3, 3)]])
-  [1, 0, 3]
+  ~is [1, 0, 3]
 
 check:
   for Set:
     each values(key, val): {1: "a", 2: "b"}
     key +& " -> " +& val
-  {"1 -> a", "2 -> b"}
+  ~is {"1 -> a", "2 -> b"}
 
 check:
   for Set:
     each (key, val): {3: "c", 4: "d"}
     key +& " -> " +& val
-  {"3 -> c", "4 -> d"}
+  ~is {"3 -> c", "4 -> d"}

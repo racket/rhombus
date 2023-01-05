@@ -1,156 +1,153 @@
 #lang rhombus
-import: "check.rhm" open
 
 check:
   {"a": 1, keyword(~b): 2}
-  Map(["a", 1], [keyword(~b), 2])
+  ~is Map(["a", 1], [keyword(~b), 2])
 
 check:
   Map.length({"a": 1, "b": 2})
-  2
+  ~is 2
 
 check:
-  ~exn
   Map.length({1, 2, 3})
-  values("contract violation", "expected: Map")
+  ~raises values("contract violation", "expected: Map")
 
 begin:
   use_static
   check:
     {"a": 1, "b": 2}.length()
-    2
+    ~is 2
   check:
     {"a": 1, "b": 2}["a"]
-    1
+    ~is 1
   check:
     Map{"a": 1, "b": 2}.length()
-    2
+    ~is 2
   check:
     Map(["a", 1], ["b", 2]).length()
-    2
+    ~is 2
   check:
     MutableMap{"a": 1, "b": 2}.length()
-    2
+    ~is 2
   check:
     MutableMap(["a", 1], ["b", 2]).length()
-    2
+    ~is 2
   check:
     def map = {"a": 1, "b": 2}
     map.length()
-    2
+    ~is 2
   check:
     def map :: Map = dynamic({"a": 1, "b": 2})
     map.length()
-    2
+    ~is 2
   check:
     def map -: Map = dynamic({"a": 1, "b": 2})
     map.length()
-    2
+    ~is 2
   check:
     def map :: Map.of(String, Integer) = dynamic({"a": 1, "b": 2})
     map.length()
-    2
+    ~is 2
 
 begin:
   check:
     dynamic({"a": 1, "b": 2}).length()
-    2
+    ~is 2
   check:
     dynamic({"a": 1, "b": 2})["a"]
-    1
+    ~is 1
 
 // See also tests in "rest-args.rhm"
 begin:
   check:
     {"a": 1, "b": 2, &{"c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {"a": 1, &{"b": 2, "c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {&{"b": 2, "c": 3}, "a": 1}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {&{"b": 2}, "a": 1, &{"c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {"c": "oops", "b": "oops", &{"b": 2}, "a": 1, &{"c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {"b": "oops", &{"b": 2}, "c": "oops", "a": 1, &{"c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     {&{"b": "oops"}, "c": "oops", "b": 2, "a": 1, &{"c": 3}}
-    {"a": 1, "b": 2, "c": 3}
+    ~is {"a": 1, "b": 2, "c": 3}
   check:
     def mutable x = []
     [{&(begin: x := [1, x]; {"b": 2}), (begin: x:= [2, x]; "a"): 1, &(begin: x:= [3, x]; {"c": 3})},
      x]
-    [{"a": 1, "b": 2, "c": 3},
-     [3, [2, [1, []]]]]
+    ~is [{"a": 1, "b": 2, "c": 3},
+         [3, [2, [1, []]]]]
   check:
-    ~exn
     {&"oops"}
-    "not a map"
+    ~raises "not a map"
 
 begin:
   def [x, ...] = [1, 2, 3]
   check:
     {x: x, ..., #true: 0}
-    {1: 1, 2: 2, 3: 3, #true: 0}
+    ~is {1: 1, 2: 2, 3: 3, #true: 0}
   check:
     {#true: 0, x: x, ...}
-    {1: 1, 2: 2, 3: 3, #true: 0}
+    ~is {1: 1, 2: 2, 3: 3, #true: 0}
   check:
     {#true: 0, &{7: 7}, x: x, ...}
-    {1: 1, 2: 2, 3: 3, 7: 7, #true: 0}
+    ~is {1: 1, 2: 2, 3: 3, 7: 7, #true: 0}
   def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
   check:
     [{z: #true, ...}, ...]
-    [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
+    ~is [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
 
 check:
   def {"x": y}  = {"x": 1}
   y
-  1
+  ~is 1
 
 check:
   def Map{"x": y}  = {"x": 1}
   y
-  1
+  ~is 1
 
 check:
   def Map(["x", y])  = {"x": 1}
   y
-  1
+  ~is 1
 
 check:
   def {"x": y}  = {"x": 1, "y": 2}
   y
-  1
+  ~is 1
 
 check:
   def Map{"x": y}  = {"x": 1, "y": 2}
   y
-  1
+  ~is 1
 
 check:
   def ex = "x"
   def {ex +& "y": y}  = {"xy": 1}
   y
-  1
+  ~is 1
 
 check:
   def {"x": x, "y": y}  = {"x": 1, "y": 2}
   [x, y]
-  [1, 2]
+  ~is [1, 2]
 
 check:
   def {"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
   [{key, ...}, {val, ...}]
-  [{"y", "z"}, {2, 3}]
+  ~is [{"y", "z"}, {2, 3}]
 
 check:
   def Map{"x": x, key: val, ...} = {"x": 1, "y": 2, "z": 3}
   [{key, ...}, {val, ...}]
-  [{"y", "z"}, {2, 3}]
+  ~is [{"y", "z"}, {2, 3}]

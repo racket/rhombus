@@ -1,0 +1,117 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+  "call-capture-exn.rkt" open
+  lib("racket/syntax-srcloc") as srcloc
+
+export:
+ check
+
+meta:
+  syntax.class result_mode
+  | '~is'
+  | '~prints_like'
+  | '~raises'
+  syntax.class result  
+  | '$(mode :: result_mode): $body':
+      ~attr [suffix, ...]: []
+  | '$(mode :: result_mode) $g ...':
+      ~attr body: '$g ...'
+      ~attr [suffix, ...]: []
+  | '~completes':
+      ~attr [mode, ...]: ['~completes']
+      ~attr body: '#void'
+      ~attr [suffix, ...]: ['#void']
+
+expr.macro '«located '$w' $tail ...»':
+  values('[$(if w.unwrap() is_a Keyword
+             | 'keyword($w)'
+             | 'symbol($w)'),
+           $(w.srcloc())]',
+         '$tail ...')
+
+expr.macro
+// `~eval` case
+| 'check:
+     ~eval
+     $result1
+     ...
+     $(result2 :: result)':
+    ~op_stx: check_id
+    values('check_same(located '$(check_id)',
+                       fun():
+                         eval_test(Syntax.literal '$result1
+                                                   ...
+                                                   $(result2.suffix)
+                                                   ...'),
+                       fun(): $(result2.body),
+                       located '$(result2.mode) ...')',
+           '')
+// normal block
+| 'check:
+     $result1
+     ...
+     $(result2 :: result)':
+    ~op_stx: check_id
+    values('check_same(located'$(check_id)',
+                       fun ():
+                         $result1
+                         ...
+                         $(result2.suffix)
+                         ...,
+                       fun(): $(result2.body),
+                       keyword'$(result2.mode) ...')',
+           '')
+// single lines in block
+| 'check: $result1 ... $(result2 :: result); ...':
+    ~op_stx: check_id
+    values('begin:
+              check_same(located'$(check_id)',
+                         fun (): $result1 ...; $(result2.suffix); ...,
+                         fun(): $(result2.body),
+                         located'$(result2.mode) ...')
+              ...',
+           '')
+// single line
+| 'check $result1 ... $(result2 :: result)':
+    ~op_stx: check_id
+    values('check_same(located'$(check_id)',
+                       fun (): $result1 ...; $(result2.suffix); ...,
+                       fun(): $(result2.body),
+                       keyword'$(result2.mode) ...')',
+           '')
+
+fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
+  def [mode, srcloc]:
+    match maybe_loc_mode
+    | [mode, srcloc]: maybe_loc_mode
+    | mode: [mode, loc_where[1]]
+  def values(got, exn_msg) = call_capturing_exn(thunk)
+  def expected = call_capturing_values(expected_thunk)
+  def ok:
+    match mode
+    | keyword(~prints_like):
+        !exn_msg && (("" +& got) == ("" +& expected))
+    | keyword(~is):
+        !exn_msg && (got == expected)
+    | keyword(~raises):
+        exn_msg && does_contain_each(expected, exn_msg)
+    | keyword(~completes):
+        !exn_msg
+  if ok
+  | #void
+  | fun
+    | values_str([v]): v
+    | values_str(lst): "values " +& lst
+    display(srcloc.source +& ":" +& srcloc.line +& ": failed\n"
+              +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
+              +&  "\n"
+              +& "  expected: " +& (if mode == keyword(~completes)
+                                    | "completion"
+                                    | (if mode == keyword(~raises) | "exception " | "") +& values_str(expected))
+              +& "\n",
+            current_error_port())
+
+fun eval_test(stx):
+  parameterize {current_toplevel: make_rhombus_toplevel()}:
+    eval(Syntax.strip(stx))

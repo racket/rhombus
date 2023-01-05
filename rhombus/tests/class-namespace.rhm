@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
   
@@ -9,34 +8,34 @@ check:
   def origin = Posn(0, 0)
   def p = Posn.origin
   [p.x, p.y]
-  [0, 0]
+  ~is [0, 0]
 
 check:
   interface Pointable:
     fun zero(): 0
     export: zero
   Pointable.zero()
-  0
+  ~is 0
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     def x = 10
     export: x
-  "conflicts with field name"
+  ~raises "conflicts with field name"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     method dist(): x+y
     def dist = 10
     export: dist
-  "conflicts with method name"
+  ~raises "conflicts with method name"
 
 check:
-  ~eval_exn
+  ~eval
   interface Pointable:
     method zero(): 0
     def zero = 0
     export: zero
-  "conflicts with method name"
+  ~raises "conflicts with method name"

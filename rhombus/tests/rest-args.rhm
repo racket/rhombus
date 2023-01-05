@@ -1,6 +1,5 @@
 #lang rhombus
 import:
-  "check.rhm" open
   lib("racket/math.rkt").sqr
   lib("math/main.rkt") as math
 
@@ -9,25 +8,26 @@ use_static
 // ---------------------------
 // Positional Rest with &
 
-check: sqrt(& [25]); 5
-check: expt(& [2, 3]); 8
-check: List(& [5, 6, 7, 8]); [5, 6, 7, 8]
-check: sqrt(25, & []); 5
-check: expt(2, & [3]); 8
-check: List(5, 6, & [7, 8]); [5, 6, 7, 8]
+check:
+  sqrt(& [25]) ~is 5
+  expt(& [2, 3]) ~is 8
+  List(& [5, 6, 7, 8]) ~is [5, 6, 7, 8]
+  sqrt(25, & []) ~is 5
+  expt(2, & [3]) ~is 8
+  List(5, 6, & [7, 8]) ~is [5, 6, 7, 8]
 
 fun prlist(& xs :: List): xs
 
 check:
   prlist(1, 2, 3)
-  [1, 2, 3]
+  ~is [1, 2, 3]
 
 fun
 | altprlist(& xs :: List): xs
 
 check:
   altprlist(4, 5, 6)
-  [4, 5, 6]
+  ~is [4, 5, 6]
 
 fun
 | addition(): 0
@@ -36,57 +36,57 @@ fun
 
 check:
   addition(1, 2, 3)
-  6
+  ~is 6
 
 check:
   addition(1, & [10, 20, 30])
-  61
+  ~is 61
 
 check:
   [1, 2, & [3, 4]]
-  [1, 2, 3, 4]
+  ~is [1, 2, 3, 4]
 
 begin:
   def [a, b, & rst] = [1, 2, 3, 4]
-  check: a; 1
-  check: b; 2
-  check: rst; [3, 4]
+  check a ~is 1
+  check b ~is 2
+  check rst ~is [3, 4]
 
 check:
   {"a": 1, "b": 2, & {"c": 3, "d": 4}}
-  {"a": 1, "b": 2, "c": 3, "d": 4}
+  ~is {"a": 1, "b": 2, "c": 3, "d": 4}
 
 check:
   Map{"a": 1, "b": 2, & {"c": 3, "d": 4}}
-  {"a": 1, "b": 2, "c": 3, "d": 4}
+  ~is {"a": 1, "b": 2, "c": 3, "d": 4}
 
 check:
   Map(["a", 1], ["b", 2], & [["c", 3], ["d", 4]])
-  {"a": 1, "b": 2, "c": 3, "d": 4}
+  ~is {"a": 1, "b": 2, "c": 3, "d": 4}
 
 check:
   {"a", "b", & {"c", "d"}}
-  {"a", "b", "c", "d"}
+  ~is {"a", "b", "c", "d"}
 
 check:
   Set{"a", "b", & {"c", "d"}}
-  {"a", "b", "c", "d"}
+  ~is {"a", "b", "c", "d"}
 
 check:
   Set("a", "b", & ["c", "d"])
-  {"a", "b", "c", "d"}
+  ~is {"a", "b", "c", "d"}
 
 begin:
   def {"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
-  check: a; 1
-  check: b; 2
-  check: rst; {"c": 3, "d": 4}
+  check a ~is 1
+  check b ~is 2
+  check rst ~is {"c": 3, "d": 4}
 
 begin:
   def Map{"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
-  check: a; 1
-  check: b; 2
-  check: rst; {"c": 3, "d": 4}
+  check a ~is 1
+  check b ~is 2
+  check rst ~is {"c": 3, "d": 4}
 
 // Match & rest on mutable maps produces an immutable copy
 begin:
@@ -95,23 +95,23 @@ begin:
           | {"a": a, & rst}: rst
           | _: #false
   m["b"] := 3
-  check: r; {"b": 2}
+  check r ~is {"b": 2}
 
 begin:
   fun avg(a, b):
     (a + b) / 2
-  check: avg(1, 5); 3
-  check: avg(7, 9); 8
-  check: avg(-2, 4); 1
+  check avg(1, 5) ~is 3
+  check avg(7, 9) ~is 8
+  check avg(-2, 4) ~is 1
 
 begin:
   fun avg(a, & bs):
     (a + math.sum(bs)) / (1 + List.length(bs))
-  check: avg(1, 5); 3
-  check: avg(7, 9); 8
-  check: avg(-2, 4); 1
-  check: avg(1, 2, 5); 8/3
-  check: avg(-8, 5, 6, 7); 5/2
+  check avg(1, 5) ~is 3
+  check avg(7, 9) ~is 8
+  check avg(-2, 4) ~is 1
+  check avg(1, 2, 5) ~is 8/3
+  check avg(-8, 5, 6, 7) ~is 5/2
 
 // ---------------------------
 // Keyword Rest with ~&
@@ -120,29 +120,29 @@ fun krmap(~& m): m
 
 check:
   krmap(~a: 1, ~b: 2)
-  {keyword(~a): 1, keyword(~b): 2}
+  ~is {keyword(~a): 1, keyword(~b): 2}
 
 fun
 | altkrmap(~& m): m
 
 check:
   altkrmap(~a: 1, ~b: 2)
-  {keyword(~a): 1, keyword(~b): 2}
+  ~is {keyword(~a): 1, keyword(~b): 2}
 
 fun kinetic_energy(~m: m, ~v: v): (1/2) * m * sqr(v)
 
 check:
   kinetic_energy(~m: 2, ~v: 3)
-  9
+  ~is 9
 check:
   kinetic_energy(~& {keyword(~m): 4, keyword(~v): 5})
-  50
+  ~is 50
 check:
   kinetic_energy(~m: 6, ~& {keyword(~v): 7})
-  147
+  ~is 147
 check:
   kinetic_energy(~v: 2, ~& {keyword(~m): 1})
-  2
+  ~is 2
 
 fun
 | kws_provided(): #false
@@ -150,10 +150,10 @@ fun
 
 check:
   kws_provided()
-  #false
+  ~is #false
 check:
   kws_provided(~a: 1, ~b: 2)
-  #true
+  ~is #true
 
 fun
 | krpythag(~& {keyword(~a): a, keyword(~b): b, & Map.empty}):
@@ -165,15 +165,16 @@ fun
 | krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c, & Map.empty}):
     sqr(a) + sqr(b) == sqr(c)
 
-check: krpythag(~a: 3, ~b: 4); 5
-check: krpythag(~c: 5, ~a: 3); 4
-check: krpythag(~c: 5, ~b: 4); 3
-check: krpythag(~a: 3, ~b: 4, ~c: 5); #true
-check: krpythag(~a: 3, ~b: 4, ~c: 6); #false    
-check: krpythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
-check: krpythag(~a: 5, ~& {keyword'~b': 12}); 13
-check: krpythag(~a: 8, ~b: 15, ~& {}); 17
-check: krpythag(~b: 24, ~& {keyword'~a': 7}); 25
+check :
+  krpythag(~a: 3, ~b: 4) ~is 5
+  krpythag(~c: 5, ~a: 3) ~is 4
+  krpythag(~c: 5, ~b: 4) ~is 3
+  krpythag(~a: 3, ~b: 4, ~c: 5) ~is #true
+  krpythag(~a: 3, ~b: 4, ~c: 6) ~is #false    
+  krpythag(~& {keyword'~a': 3, keyword'~b': 4}) ~is 5
+  krpythag(~a: 5, ~& {keyword'~b': 12}) ~is 13
+  krpythag(~a: 8, ~b: 15, ~& {}) ~is 17
+  krpythag(~b: 24, ~& {keyword'~a': 7}) ~is 25
 
 fun
 | pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
@@ -181,30 +182,31 @@ fun
 | pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
 | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
 
-check: pythag(~a: 3, ~b: 4); 5
-check: pythag(~c: 5, ~a: 3); 4
-check: pythag(~c: 5, ~b: 4); 3
-check: pythag(~a: 3, ~b: 4, ~c: 5); #true
-check: pythag(~a: 3, ~b: 4, ~c: 6); #false
-check: pythag(~& {keyword'~a': 3, keyword'~b': 4}); 5
-check: pythag(~a: 5, ~& {keyword'~b': 12}); 13
-check: pythag(~a: 8, ~b: 15, ~& {}); 17
-check: pythag(~b: 24, ~& {keyword'~a': 7}); 25
+check:
+  pythag(~a: 3, ~b: 4) ~is 5
+  pythag(~c: 5, ~a: 3) ~is 4
+  pythag(~c: 5, ~b: 4) ~is 3
+  pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
+  pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
+  pythag(~& {keyword'~a': 3, keyword'~b': 4}) ~is 5
+  pythag(~a: 5, ~& {keyword'~b': 12}) ~is 13
+  pythag(~a: 8, ~b: 15, ~& {}) ~is 17
+  pythag(~b: 24, ~& {keyword'~a': 7}) ~is 25
 
 fun anyargs(& l, ~& m):
   [l, m]
 
 check:
   anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
-  [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+  ~is [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
 
 fun anykws(~& m): m
 
-check: anykws(~a: 1, ~b: 2); {keyword'~a': 1, keyword'~b': 2}
+check anykws(~a: 1, ~b: 2) ~is {keyword'~a': 1, keyword'~b': 2}
 
 fun a_and_more(~a: _, ~& more): more
 
-check: a_and_more(~a: 1, ~b: 2, ~c: 3); {keyword'~b': 2, keyword'~c': 3}
+check a_and_more(~a: 1, ~b: 2, ~c: 3) ~is {keyword'~b': 2, keyword'~c': 3}
 
 fun
 | rectangle_area(~width, ~height): width * height
@@ -223,35 +225,36 @@ fun
 | shape_area(~type: "rectangle", ~& props): rectangle_area(~& props)
 | shape_area(~type: "triangle", ~& props): triangle_area(~& props)
 
-check: shape_area(~type: "rectangle", ~width: 8.5, ~height: 11); 93.5
-check: shape_area(~type: "rectangle", ~diagonal: 10, ~aspect_ratio: 4/3); 48
-check: shape_area(~type: "rectangle", ~diagonal: 17, ~aspect_ratio: 15/8); 120
-check: shape_area(~type: "triangle", ~base: 4.25, ~height: 11); 23.375
-check: shape_area(~type: "triangle", ~side1: 5, ~side2: 5, ~side3: 6); 12
-check: shape_area(~type: "triangle", ~side1: 13, ~side2: 13, ~side3: 10); 60
-check: shape_area(~type: "triangle", ~side1: 17, ~side2: 17, ~side3: 16); 120
+check:
+  shape_area(~type: "rectangle", ~width: 8.5, ~height: 11) ~is 93.5
+  shape_area(~type: "rectangle", ~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
+  shape_area(~type: "rectangle", ~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
+  shape_area(~type: "triangle", ~base: 4.25, ~height: 11) ~is 23.375
+  shape_area(~type: "triangle", ~side1: 5, ~side2: 5, ~side3: 6) ~is 12
+  shape_area(~type: "triangle", ~side1: 13, ~side2: 13, ~side3: 10) ~is 60
+  shape_area(~type: "triangle", ~side1: 17, ~side2: 17, ~side3: 16) ~is 120
 
 // ---------------------------
 // Repetition Rest with ...
 
 begin:
   def [x, ...] = [2, 3]
-  check: expt(x, ...); 8
-  check: List(x, ...); [2, 3]
+  check expt(x, ...) ~is 8
+  check List(x, ...) ~is [2, 3]
 
 fun rrlist(x, ...):
   [x, ...]
 
 check:
   rrlist(1, 2, 3)
-  [1, 2, 3]
+  ~is [1, 2, 3]
 
 fun
 | altrrlist(y, ...): [y, ...]
 
 check:
   altrrlist(4, 5, 6)
-  [4, 5, 6]
+  ~is [4, 5, 6]
 
 fun
 | add(): 0
@@ -260,40 +263,37 @@ fun
 
 check:
   add(1, 2, 3)
-  6
+  ~is 6
 
 def [n :: Integer, ...] = [10, 20, 30]
 check:
   add(1, n, ...)
-  61
+  ~is 61
 
 check:
   add(1, List.repet([10, 20, 30]), ...)
-  61
+  ~is 61
 
 check:
-  ~print
   match '(1 10) (2 3 4 10) (5 6 10)'
   | '($a ... 10) ...': [[a, ...], ...]
-  [['1'], ['2', '3', '4'], ['5', '6']]
+  ~prints_like [['1'], ['2', '3', '4'], ['5', '6']]
 
 check:
-  ~print
   def [s, ...] = ["a", "b", "c"]
   '(hi $s) ...'
-  '(hi "a") (hi "b") (hi "c")'
+  ~prints_like '(hi "a") (hi "b") (hi "c")'
   
 check:
-  ~print
   '(hi $(List.repet(["a", "b", "c"]))) ...'
-  '(hi "a") (hi "b") (hi "c")'
+  ~prints_like '(hi "a") (hi "b") (hi "c")'
 
 class Posn(x, y)
 
 def List(p :: Posn, ...) = [Posn(1, 2), Posn(3, 4)]
 check:
   [p, ...][0].x
-  1
+  ~is 1
 
 fun posns_y1(& rst):
   def List(p :: Posn, ...) = rst
@@ -301,42 +301,42 @@ fun posns_y1(& rst):
 
 check:
   posns_y1(Posn(1, 2), Posn(3, 4), Posn(5, 6))
-  4
+  ~is 4
 
 fun posns_y2(& List(p :: Posn, ...)):
   [p, ...][1].y
      
 check:
   posns_y2(Posn(1, 2), Posn(3, 4), Posn(5, 6))
-  4
+  ~is 4
 
 fun posns_y(p :: Posn, ...):
   [p, ...][1].y
      
 check:
   posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
-  4
+  ~is 4
 
 // ---------------------------
 // Mixing `...` and `&` and not at end
 
 check:
   add(1, 2, &[3, 4], 5)
-  15
+  ~is 15
 
 check:
   def [x, ...] = [3, 4]
   add(1, 2, x, ..., 5)
-  15
+  ~is 15
 
 check:
   add(&[-1, 1], 2, &[3, 4], 5)
-  14
+  ~is 14
 
 check:
   def [x, ...] = [3, 4]
   add(&[-1, 1], 2, x, ..., 5)
-  14
+  ~is 14
 
 check:
   def mutable s = 0
@@ -345,7 +345,7 @@ check:
        &(begin: s := [3, s]; [3, 4]),
        (begin: s := [4, s]; 5)),
    s]
-  [14, [4, [3, [2, [1, 0]]]]]
+  ~is [14, [4, [3, [2, [1, 0]]]]]
 
 // ---------------------------
 // `~&` not at end
@@ -354,13 +354,13 @@ check:
   def mutable s = 0
   [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { keyword'~height': 10 })),
    s]
-  [5, [2, [1, 0]]]
+  ~is [5, [2, [1, 0]]]
 
 check:
   def mutable s = 0
   [triangle_area(~& (begin: s := [2, s]; { keyword'~height': 10 }), ~base: (begin: s := [1, s]; 1)), 
    s]
-  [5, [1, [2, 0]]]
+  ~is [5, [1, [2, 0]]]
 
 check:
   def mutable s = 0
@@ -369,7 +369,7 @@ check:
            ~base: (begin: s := [3, s]; 1),
            (begin: s := [4, s]; 8)),
    s]
-  [[[9, 10, 11, 8], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+  ~is [[[9, 10, 11, 8], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
@@ -378,7 +378,7 @@ check:
            ~base: (begin: s := [3, s]; 1),
            List.repet(begin: s := [4, s]; [8, 88]), ...),
    s]
-  [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+  ~is [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
@@ -388,28 +388,24 @@ check:
            ~& (begin: s := [4, s]; { keyword'~width': 20 }),
            List.repet(begin: s := [5, s]; [8, 88]), ...),
    s]
-  [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10, keyword'~width': 20}],
-   [5, [4, [3, [2, [1, 0]]]]]]
+  ~is [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10, keyword'~width': 20}],
+       [5, [4, [3, [2, [1, 0]]]]]]
 
 check:
-  ~exn
   anyargs(~x: 10, ~&{keyword'~x': 10})
-  "duplicate keyword"
+  ~raises "duplicate keyword"
 
 check:
-  ~exn
   anyargs(~&{keyword'~x': 10}, ~x: 10)
-  "duplicate keyword"
+  ~raises "duplicate keyword"
 
 check:
-  ~exn
   anyargs(~&{keyword'~x': 10}, ~&{keyword'~x': 10})
-  "duplicate keyword"
+  ~raises "duplicate keyword"
 
 check:
-  ~exn
   anyargs(~&{keyword'~x': 10}, ~&{keyword'~y': 10}, ~&{keyword'~x': 10})
-  "duplicate keyword"
+  ~raises "duplicate keyword"
 
 // ---------------------------
 // Combinations of Positional and Keyword Rest
@@ -427,7 +423,7 @@ for:
   each anyargs: [anyargs_lm, anyargs_ml, anyargs_rm, anyargs_mr]
   check:
     anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
-    [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+    ~is [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
 
 // ---------------------------
 // Old demo tests - probably redundant, but keeping in case
@@ -442,10 +438,10 @@ begin:
 
   check:
     f_rest(10, 11, 12, 13)
-    [11, 12, 13]
+    ~is [11, 12, 13]
   check:
     f_elrest(10, 11, 12, 13)
-    [11, 12, 13]
+    ~is [11, 12, 13]
 
   fun
   | g_rest(): "no"
@@ -456,16 +452,16 @@ begin:
 
   check:
     g_rest()
-    "no"
+    ~is "no"
   check:
     g_rest(1)
-    "simple"
+    ~is "simple"
   check:
     g_rest(1, 2, 3)
-    [2, 3]
+    ~is [2, 3]
   check:
     g_rest("hello")
-    "hello"
+    ~is "hello"
 
   fun
   | posns_y(p :: Posn, ...):
@@ -475,10 +471,10 @@ begin:
 
   check:
     posns_y(Posn(1, 2), Posn(3, 4), Posn(5, 6))
-    4
+    ~is 4
   check:
     posns_y(10)
-    10
+    ~is 10
 
 // maps and sets with `...` binding
 
@@ -486,68 +482,68 @@ begin:
   def {x: y, ...} = {1: "a", 2: "b"}
   check:
     {[x, y], ...}
-    {[1, "a"], [2, "b"]}
+    ~is {[1, "a"], [2, "b"]}
   check:
     {x, ...}
-    {1, 2}    
+    ~is {1, 2}    
   check:
     {y, ...}
-    {"a", "b"}
+    ~is {"a", "b"}
   check:
     {y: x, ...}
-    {"a": 1, "b": 2}
+    ~is {"a": 1, "b": 2}
 
 begin:
   def {2: two, x: y, ...} = {1: "a", 2: "b"}
   check:
     two
-    "b"
+    ~is "b"
   check:
     [[x, ...], [y, ...]]
-    [[1], ["a"]]
+    ~is [[1], ["a"]]
 
 begin:
   def {1: one, 2: two, x: y, ...} = {1: "a", 2: "b"}
   check:
     one
-    "a"
+    ~is "a"
   check:
     two
-    "b"
+    ~is "b"
   check:
     [[x, ...], [y, ...]]
-    [[], []]
+    ~is [[], []]
 
 check:
-  ~eval_exn
+  ~eval
   def {2: two, x: y, ...} = {1: "a"}
-  "value does not satisfy annotation"
+  ~raises "value does not satisfy annotation"
 
 begin:
   def {x, ...} = {1, 2}
   check:
     {[x], ...}
-    {[1], [2]}
+    ~is {[1], [2]}
   check:
     {x, ...}
-    {1, 2}    
+    ~is {1, 2}    
   check:
     {x: "a", ...}
-    {1: "a", 2: "a"}
+    ~is {1: "a", 2: "a"}
 
 begin:
   def {2, x, ...} = {1, 2}
   check:
     [x, ...]
-    [1]
+    ~is [1]
 
 begin:
   def {1, 2, x, ...} = {1, 2}
   check:
     [x, ...]
-    []
+    ~is []
 
 check:
-  ~eval_exn
+  ~eval
   def {2, x, ...} = {1}
-  "value does not satisfy annotation"
+  ~raises "value does not satisfy annotation"

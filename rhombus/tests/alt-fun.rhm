@@ -1,7 +1,6 @@
 #lang rhombus
 
 import:
-  "check.rhm" open
   lib("racket/math.rkt").sqr
   lib("racket/base.rkt").#{object-name} as object_name
   lib("racket/base.rkt").#{procedure-arity} as procedure_arity
@@ -20,32 +19,26 @@ begin:
   | f([]): 0
   | f(a): 1
   | f(): 2
-  check: f([]); 0
-  check: f([1]); 1
-  check: f(); 2
+  check f([]) ~is 0
+  check f([1]) ~is 1
+  check f() ~is 2
 
 begin:
   fun
   | f([]): 0
   | f(): 2
   check:
-    ~exn
-    f([1])
-    "f: no matching case for arguments"
+    f([1]) ~raises "f: no matching case for arguments"
 
 begin:
   fun f([] = [1]): 0
   check:
-    ~exn
-    f()
-    "f: argument does not satisfy annotation"
+    f() ~raises "f: argument does not satisfy annotation"
 
 begin:
   fun f([] = [], & rst): rst
   check:
-    ~exn
-    f("a")
-    "f: argument does not satisfy annotation"
+    f("a") ~raises "f: argument does not satisfy annotation"
 
 begin:
   /*
@@ -68,9 +61,9 @@ begin:
         match tmp2
         | []: c0()
         | _: c2()
-  check: f([]); 0
-  check: f([1]); 1
-  check: f(); 2
+  check f([]) ~is 0
+  check f([1]) ~is 1
+  check f() ~is 2
 
 begin:
   /*
@@ -92,9 +85,9 @@ begin:
         match tmp2
         | []: c0()
         | _: c2()
-  check: f([]); 0
-  check: f(); 0
-  check: f("a"); 1
+  check f([]) ~is 0
+  check f() ~is 0
+  check f("a") ~is 1
 
 begin:
   /*
@@ -117,10 +110,10 @@ begin:
         match tmp2
         | []: c0([])
         | _: c2()
-  check: f([]); 0
-  check: f([1]); 1
-  check: f(); 2
-  check: f([], [1]); 0
+  check f([]) ~is 0
+  check f([1]) ~is 1
+  check f() ~is 2
+  check f([], [1]) ~is 0
 
 begin:
   /*
@@ -142,17 +135,17 @@ begin:
         match tmp2
         | []: c0([])
         | _: c2()
-  check: f([]); 0
-  check: f([1]); 1
-  check: f(); 0
-  check: f([], [1]); 0
+  check f([]) ~is 0
+  check f([1]) ~is 1
+  check f() ~is 0
+  check f([], [1]) ~is 0
 
 fun
 | distance(x, y): sqrt(x*x + y*y)
 | distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1)
 
-check: distance(3, 4); 5
-check: distance(10, 5, 18, 20); 17
+check: distance(3, 4); ~is 5
+check: distance(10, 5, 18, 20); ~is 17
 
 fun
 | avg(a :: Number, & bs -: List.of(Number)):
@@ -161,10 +154,10 @@ fun
     Posn(avg(a.x, & map(Posn.x, bs)),
          avg(a.y, & map(Posn.y, bs)))
 
-check: avg(1, 2, 5); 8/3
-check: avg(-8, 5, 6, 7); 5/2
-check: avg(Posn(1, 7), Posn(5, 9)); Posn(3, 8)
-check: avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)); Posn(1, 1)
+check: avg(1, 2, 5); ~is 8/3
+check: avg(-8, 5, 6, 7); ~is 5/2
+check: avg(Posn(1, 7), Posn(5, 9)); ~is Posn(3, 8)
+check: avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)); ~is Posn(1, 1)
 
 // ---------------------------------------------------------
 // Alt Functions with Keywords
@@ -175,17 +168,17 @@ fun
 | pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
 | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
 
-check: pythag(~a: 3, ~b: 4); 5
-check: pythag(~c: 5, ~a: 3); 4
-check: pythag(~c: 5, ~b: 4); 3
-check: pythag(~a: 3, ~b: 4, ~c: 5); #true
-check: pythag(~a: 3, ~b: 4, ~c: 6); #false
+check pythag(~a: 3, ~b: 4) ~is 5
+check pythag(~c: 5, ~a: 3) ~is 4
+check pythag(~c: 5, ~b: 4) ~is 3
+check pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
+check pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
 begin:
-  check: object_name(pythag); symbol(pythag)
-  check: procedure_arity(pythag); 0
+  check object_name(pythag) ~is symbol(pythag)
+  check procedure_arity(pythag) ~is 0
   def values(req_kws, all_kws) = procedure_keywords(pythag)
-  check: req_kws; []
-  check: all_kws; [keyword(~a), keyword(~b), keyword(~c)]
+  check req_kws ~is []
+  check all_kws ~is [keyword(~a), keyword(~b), keyword(~c)]
 
 fun
 | rectangle_area(~width, ~height): width * height
@@ -194,7 +187,7 @@ fun
     // width * height = aspect_ratio * height^2
     (aspect_ratio / (aspect_ratio*aspect_ratio + 1)) * diagonal * diagonal
 
-check: rectangle_area(~width: 8.5, ~height: 11); 93.5
-check: rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3); 48
-check: rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8); 120
+check rectangle_area(~width: 8.5, ~height: 11) ~is 93.5
+check rectangle_area(~diagonal: 10, ~aspect_ratio: 4/3) ~is 48
+check rectangle_area(~diagonal: 17, ~aspect_ratio: 15/8) ~is 120
 

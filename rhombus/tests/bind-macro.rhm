@@ -1,7 +1,6 @@
 #lang rhombus
 import:
   rhombus/meta open
-  "check.rhm" open
 
 // define a binding operator
 
@@ -14,7 +13,7 @@ fun apply_interest($$ n):
 
 check:
   apply_interest(7)
-  7.3500000000000005
+  ~is 7.3500000000000005
 
 // define <> as revese-cons pattern
 bind.only.macro '$a <> $b':
@@ -79,4 +78,4 @@ def rx <> (ry :: Integer) = "2" <> 1
 
 check:
   rx
-  "2"
+  ~is "2"

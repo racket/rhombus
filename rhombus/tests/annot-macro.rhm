@@ -1,6 +1,5 @@
 #lang rhombus/and_meta
 import:
-  "check.rhm" open
   lib("racket/base.rkt").atan
 
 class Posn(x, y)
@@ -8,12 +7,11 @@ class Posn(x, y)
 annot.only.macro 'AlsoPosn': values('Posn', '')
 check:
   Posn(1, 2) :: AlsoPosn
-  Posn(1, 2)
+  ~is Posn(1, 2)
 
 check:
-  ~exn
   "no" :: AlsoPosn
-  "value does not satisfy annotation"
+  ~raises "value does not satisfy annotation"
 
 bind.only.macro 'AlsoPosn ($x, $y) $tail ...':
   values('Posn($x, $y)', '$tail ...')
@@ -21,4 +19,4 @@ bind.only.macro 'AlsoPosn ($x, $y) $tail ...':
 def AlsoPosn(also_x, also_y) = Posn(10, 20)
 check:
   also_x +& "," +& also_y
-  "10,20"
+  ~is "10,20"

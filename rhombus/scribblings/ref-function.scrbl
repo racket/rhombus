@@ -109,7 +109,7 @@ normally bound to implement function calls.
   grammar maybe_res_ann:
     :: $annotation
     -: $annotation
-    $$("ϵ")
+    $$(epsilon)
 
   grammar rest:
     $repetition_binding $$(@litchar{,}) $ellipsis

@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -9,28 +8,25 @@ class.together:
 
 check:
   Foo([])
-  Foo([])
+  ~is Foo([])
 
 check:
   Bar(Foo([]))
-  Bar(Foo([]))
+  ~is Bar(Foo([]))
 
 check:
   Foo([Bar(Foo([]))])
-  Foo([Bar(Foo([]))])
+  ~is Foo([Bar(Foo([]))])
 
 check:
-  ~exn
   Foo([1])
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 
 check:
-  ~exn
   Bar(1)
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 
 check:
-  ~exn
   Foo([Foo([])])
-  "does not satisfy annotation"
+  ~raises "does not satisfy annotation"
 

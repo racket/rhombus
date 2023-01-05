@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -18,18 +17,16 @@ begin:
       x+y
   check:
     Posn(1, 2).m()
-    3
+    ~is 3
   check:
-    ~exn
     Posn(1, 2).n()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     Posn(1, 2).n_f()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
     Posn(1, 2).p()
-    3
+    ~is 3
 
   begin:
     class Posn3D(z):
@@ -41,15 +38,14 @@ begin:
       override p():
         0 
     check:
-      ~exn
       Posn3D(1, 2, 3).m()
-      "result does not satisfy annotation"
+      ~raises "result does not satisfy annotation"
     check:
       Posn3D(1, 2, 3).p()
-      0
+      ~is 0
     check:
       Posn3D(1, 2, 3).n()
-      "ok"
+      ~is "ok"
 
 // annotation obligations are inherited and compose
 begin:
@@ -77,37 +73,33 @@ begin:
 
   check:
     Top().m(White())
-    White()
+    ~is White()
   check:
     Middle().m(White())
-    White()
+    ~is White()
   check:
     Bottom().m(White())
-    White()
+    ~is White()
 
   check:
     Top().m(Magenta())
-    Magenta()
+    ~is Magenta()
   check:
     Middle().m(Magenta())
-    Magenta()
+    ~is Magenta()
   check:
-    ~exn
     Bottom().m(Magenta())
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
 
   check:
-    ~exn
     Top().m(Cyan())
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     Middle().m(Cyan())
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     Bottom().m(Cyan())
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
 
 // class self-reference
 begin:
@@ -117,7 +109,7 @@ begin:
       Posn(0, 0)
   check:
     Posn(1, 2).zero().x
-    0
+    ~is 0
 
 // class self-reference, final method
 begin:
@@ -126,7 +118,7 @@ begin:
       Posn(0, 0)
   check:
     Posn(1, 2).zero().x
-    0
+    ~is 0
 
 // class self-reference, private method
 begin:
@@ -137,10 +129,10 @@ begin:
       Posn(0, 0)
   check:
     _Posn(1, 2).zero().x
-    0
+    ~is 0
   check:
     (Posn(1, 2) -: _Posn).zero().x
-    0
+    ~is 0
 
 // interface
 begin:
@@ -158,18 +150,16 @@ begin:
       #false
   check:
     Point(1, 2).visible(~as_text: #false)
-    #true
+    ~is #true
   check:
-    ~exn
     Point(1, 2).visible()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     Point(1, 2).invisible()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
     Point(1, 2).really_invisible()
-    #false
+    ~is #false
 
 // multiple interface inheritance
 begin:
@@ -191,17 +181,16 @@ begin:
 
   check:
     Apple().example(#false)
-    Apple()    
+    ~is Apple()    
   check:
     Sky().example(#false)
-    Sky()    
+    ~is Sky()    
   check:
     RacketLogo().example()
-    RacketLogo()    
+    ~is RacketLogo()    
   check:
-    ~exn
     RacketLogo().example(#false)
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
 
 // alternate method forms, internal versus external annotations
 begin:
@@ -221,18 +210,16 @@ begin:
       x
   check:
     [Top().m(1), Top().m2(2)]
-    [1, 2]
+    ~is [1, 2]
   check:
-    ~exn
     Top().m("apple")
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
     Bottom().m("apple")
-    "apple"
+    ~is "apple"
   check:
-    ~exn
     Bottom().m2("apple")
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
 
 // abstract override
 begin:
@@ -261,16 +248,13 @@ begin:
 
   check:
     C(Both()).m()
-    Both()
+    ~is Both()
   check:
-    ~exn
     C(#false).m()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     C(LeftC()).m()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"
   check:
-    ~exn
     C(RightC()).m()
-    "result does not satisfy annotation"
+    ~raises "result does not satisfy annotation"

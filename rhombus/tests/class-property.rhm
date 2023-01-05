@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -27,8 +26,8 @@ begin:
      Posn.is_at_origin(p),
      p.is_origin_dont_ask_again,
      p.is_origin := "somewhere"]
-    [#false, #false, #false, #false, #false, #false,
-     #void]
+    ~is [#false, #false, #false, #false, #false, #false,
+         #void]
   check:
     use_dynamic
     [dynamic(Posn(0, 0)).is_origin,
@@ -37,7 +36,7 @@ begin:
        def proc: Posn(0, 1).is_at_origin
        proc(),
      dynamic(Posn(0, 0)).is_origin_dont_ask_again]
-    [#true, #true, #false, #true]
+    ~is [#true, #true, #false, #true]
 
 begin:
   class Posn(x, y):
@@ -56,7 +55,7 @@ begin:
        use_dynamic
        dynamic(p).is_origin,
      (_Posn(1, 2)).is_origin]
-    [#true, #true, #false]
+    ~is [#true, #true, #false]
     
 begin:
   class Posn(x, y):
@@ -68,47 +67,47 @@ begin:
     override property is_origin: #true
   check:
     Posn3D(0, 0, 0).is_origin
-    #true
+    ~is #true
     
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     property is_origin: #true
   class Posn3D(z):
     extends Posn
     override is_origin: #false
-  "cannot override superclass's property with a non-property method"
+  ~raises "cannot override superclass's property with a non-property method"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     abstract property is_origin
   class Posn3D(z):
     extends Posn
     override is_origin(): #false
-  "cannot override superclass's property with a non-property method"
+  ~raises "cannot override superclass's property with a non-property method"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     property is_origin: #true
   class Posn3D(z):
     extends Posn
     final override is_origin: #false
-  "cannot override superclass's property with a non-property method"
+  ~raises "cannot override superclass's property with a non-property method"
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     nonfinal
     method is_origin(): #true
   class Posn3D(z):
     extends Posn
     override property is_origin: #false
-  "cannot override superclass's non-property method with a property"
+  ~raises "cannot override superclass's non-property method with a property"
 
 begin:
   class Posn(x, y):
@@ -121,7 +120,7 @@ begin:
     def p: _Posn(0, 0)
     [p.is_origin,
      p.is_at_origin()]
-    [#true, #true]
+    ~is [#true, #true]
 
 begin:
   interface Pointy:
@@ -133,27 +132,27 @@ begin:
   check:
     def p :: Pointy: Posn(0, 0)
     [p.is_origin]
-    [#true]
+    ~is [#true]
 
 check:
-  ~eval_exn
+  ~eval
   interface Pointy:
     abstract property is_origin
   class Posn(x, y):
     implements Pointy
     override is_origin():
       x == 0 && y == 0
-  "cannot override interface's property with a non-property method"
+  ~raises "cannot override interface's property with a non-property method"
 
 check:
-  ~eval_exn
+  ~eval
   interface Pointy:
     abstract is_origin
   class Posn(x, y):
     implements Pointy
     override property is_origin:
       x == 0 && y == 0
-  "cannot override interface's non-property method with a property"
+  ~raises "cannot override interface's non-property method with a property"
 
 check:
   class A():
@@ -169,10 +168,10 @@ check:
     override property m:
       6
   C().m
-  6
+  ~is 6
 
 check:
-  ~eval_exn
+  ~eval
   class A():
     nonfinal
     property m:
@@ -183,10 +182,10 @@ check:
     abstract override property m
   class C():
     extends B
-  "final class cannot have abstract methods"
+  ~raises "final class cannot have abstract methods"
 
 check:
-  ~eval_exn
+  ~eval
   class A():
     nonfinal
     property m:
@@ -194,4 +193,4 @@ check:
   class B():
     extends A
     abstract override property m
-  "final class cannot have abstract methods"
+  ~raises "final class cannot have abstract methods"

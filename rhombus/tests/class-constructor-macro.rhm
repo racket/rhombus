@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 use_static
 
@@ -9,7 +8,7 @@ check:
     export: Psn
   [Posn.Psn(2, 1).x,
    Posn.Psn(2, 1).y]
-  [1, 2]
+  ~is [1, 2]
 
 check:
   class Posn(x, y):
@@ -17,7 +16,7 @@ check:
     expression 'Posn[$y, $x]': '_Posn($x, $y)'
   [Posn[2, 1].x,
    Posn[2, 1].y]
-  [1, 2]
+  ~is [1, 2]
 
 check:
   class Posn(x, y):
@@ -29,36 +28,36 @@ check:
                [Posn[1, &, 2],
                 Posn.Psn(2, 1),
                 _Posn(1, 2)])
-  [[1, 2],
-   [1, 2],
-   [1, 2]]
+  ~is [[1, 2],
+       [1, 2],
+       [1, 2]]
 
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     constructor (x): 0
     expression 'Posn': '0'
-  "unnamed constructor inaccessible due to expression macro"
+  ~raises "unnamed constructor inaccessible due to expression macro"
   
 check:
-  ~eval_exn
+  ~eval
   class Posn(x, y):
     constructor Posn(x): 0
     expression 'Posn': '0'
-  "constructor name conflicts with expression macro"
+  ~raises "constructor name conflicts with expression macro"
 
 check:
   interface Shape:
     expression 'Shape{}': '"circle"'
   Shape{}
-  "circle"
+  ~is "circle"
 
 check:
   class Posn(x, y):
     constructor Posn(y, x): super(x, y)
   [Posn(20, 10).x,
    Posn(20, 10).y]
-  [10, 20]
+  ~is [10, 20]
 
 begin:
   interface Stringish:
@@ -66,14 +65,13 @@ begin:
     annotation 'Stringish': 'String || _Stringish'
   check:
     "hello" :: Stringish
-    "hello"
+    ~is "hello"
   check:
-    ~exn
     5 :: Stringish
-    "value does not satisfy annotation"
+    ~raises "value does not satisfy annotation"
   begin:
     class S():
       implements Stringish
     check:
       S() :: Stringish
-      S()
+      ~is S()

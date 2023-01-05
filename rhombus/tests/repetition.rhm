@@ -1,5 +1,4 @@
 #lang rhombus
-import: "check.rhm" open
 
 // syntax-object templates with repetitions
 begin:
@@ -11,29 +10,26 @@ begin:
 
   check:
     [x, ...]
-    [1, 2, 3]
+    ~is [1, 2, 3]
   check:
-    ~print
     '[($y) ...] ...'
-    '[("a") ("b") ("c")] [("A") ("B") ("C")]'
+    ~prints_like '[("a") ("b") ("c")] [("A") ("B") ("C")]'
   check:
-    ~print
     '[($z) ...]'
-    '[("a") ("b") ("c")]'
+    ~prints_like '[("a") ("b") ("c")]'
   check:
     q
-    ["A", "B", "C"]
+    ~is ["A", "B", "C"]
   check:
     [w, ...]
-    [["A", "B", "C"]]
+    ~is [["A", "B", "C"]]
 
 // syntax objects as repetitions
 begin:
   def [x, ...] = ['1', '2', '3']
   check:
-    ~print
     ['$x+1', ...]
-    ['1+1', '2+1', '3+1']
+    ~prints_like ['1+1', '2+1', '3+1']
 
 // operator uses as reptitions
 begin:
@@ -41,14 +37,14 @@ begin:
   def four = 4
   check:
     [!(x == four), ...]
-    [#true, #false, #true]
+    ~is [#true, #false, #true]
   check:
     [(x + (- four)), ...]
-    [-3, 0, -1]
+    ~is [-3, 0, -1]
   check:
     operator (x %% y): [x, y]
     [x %% four, ...]
-    [[1, 4], [4, 4], [3, 4]]
+    ~is [[1, 4], [4, 4], [3, 4]]
 
 // function calls as reptitions
 begin:
@@ -56,15 +52,15 @@ begin:
   check:
     fun f(x, y): {x: y}
     [f(x, 0), ...]
-    [{1: 0}, {2: 0}, {3: 0}]    
+    ~is [{1: 0}, {2: 0}, {3: 0}]    
   check:
     fun f(~x: x, y): {x: y}
     [f(~x: x, 0), ...]
-    [{1: 0}, {2: 0}, {3: 0}]
+    ~is [{1: 0}, {2: 0}, {3: 0}]
   check:
     fun f(& vs): vs
     [f(x, x, ...), ...]
-    [[1, 1, 2, 3], [2, 1, 2, 3], [3, 1, 2, 3]]
+    ~is [[1, 1, 2, 3], [2, 1, 2, 3], [3, 1, 2, 3]]
 
 // function calls with rest arguments as repetitions
 begin:
@@ -72,7 +68,7 @@ begin:
   check:
     fun f(& vs): vs
     [f(&x), ...]
-    [[1], [2, 3]]
+    ~is [[1], [2, 3]]
 
 // function calls with repetition arguments as repetitions
 begin:
@@ -80,11 +76,11 @@ begin:
   check:
     fun f(v, ...): [[v, ...]]
     [f(x, ...), ...]
-    [[[1, 2, 3]], [[4, 5]]]
+    ~is [[[1, 2, 3]], [[4, 5]]]
   check:
     fun f(v, ...): [v, ...]
     [f(x+1, ...), ...]
-    [[2, 3, 4], [5, 6]]
+    ~is [[2, 3, 4], [5, 6]]
 
 // function calls with keyword arguments as repetitions
 begin:
@@ -92,7 +88,7 @@ begin:
   fun f(~a: a = #false, ~b: b = #false): [a, b]
   check:
     [f(~& x), ...]
-    [["a", #false], [#false, "b"]]
+    ~is [["a", #false], [#false, "b"]]
 
 // static information through a constructor call as repetition
 check:
@@ -100,7 +96,7 @@ check:
   class Posn(x, y)
   def [x, ...] = [1, 2, 3]
   [Posn(x, x), ...][1].x
-  2
+  ~is 2
 
 // static information through nested repetitions
 begin:
@@ -111,65 +107,62 @@ begin:
   def '($z, ...) ...' = '(1, 2, 3) (4, 5)'
   check:
     [y, ...][0].x
-    1
+    ~is 1
   check:
     [[x, ...], ...][0][0].x
-    1
+    ~is 1
   check:
     [x, ..., ...][0].x
-    1
+    ~is 1
   check:
     [[z, ...], ...][1][1].unwrap()
-    5
+    ~is 5
 
 // map- and set-building `{}` as a repetition
 begin:
   def [x, ...] = [1, 2, 3]
   check:
     [{x: 1}, ...]
-    [{1: 1}, {2: 1}, {3: 1}]
+    ~is [{1: 1}, {2: 1}, {3: 1}]
   check:
     [Map{x: 1}, ...]
-    [{1: 1}, {2: 1}, {3: 1}]
+    ~is [{1: 1}, {2: 1}, {3: 1}]
   check:
-    ~print
     [MutableMap{x: 1}, ...]
-    [{1: 1}, {2: 1}, {3: 1}]
+    ~prints_like [{1: 1}, {2: 1}, {3: 1}]
   check:
     use_static
     def m = [{x: 1}, ...]
     m[1][2]
-    1
+    ~is 1
   check:
     [Set(x, 1), ...]
-    [{1}, {1, 2}, {1, 3}]
+    ~is [{1}, {1, 2}, {1, 3}]
   check:
-    ~print
     [MutableSet{x, 1}, ...]
-    [{1}, {1, 2}, {1, 3}]
+    ~prints_like [{1}, {1, 2}, {1, 3}]
   check:
-    ~print
     [MutableSet(x, 1), ...]
-    [{1}, {1, 2}, {1, 3}]
+    ~prints_like [{1}, {1, 2}, {1, 3}]
   check:
     use_static
     def m = [{x}, ...]
     m[1][2]
-    #true
+    ~is #true
 
 // list-builiding `[]` as a repetition
 begin:
   def [x, ...] = [0, 10, 100]
   check:
     [1, 2, &[3, 4], 5, x, ..., 6]
-    [1, 2, 3, 4, 5, 0, 10, 100, 6]
+    ~is [1, 2, 3, 4, 5, 0, 10, 100, 6]
   check:
     [[-1, x], ...]
-    [[-1, 0], [-1, 10], [-1, 100]]
+    ~is [[-1, 0], [-1, 10], [-1, 100]]
   check:
     def [[z, ...], ...] = [[0, 10, 100], [333]]
     [[(z), ...], ...]
-    [[(0), (10), 100], [(333)]]
+    ~is [[(0), (10), 100], [(333)]]
 
 // reference `[]` as a repetition
 begin:
@@ -180,14 +173,14 @@ begin:
   def [x, ...] = [3, 2, 1]
   check:
     [a[x], ...][0].x
-    4
+    ~is 4
 
 // dotted names as repetitions
 begin:
   def [i, ...] = [1, 2, 3]
   check:
     [[List.length, i], ...]
-    [[List.length, 1], [List.length, 2], [List.length, 3]]
+    ~is [[List.length, 1], [List.length, 2], [List.length, 3]]
   check:
     namespace M:
       export: N
@@ -195,14 +188,14 @@ begin:
         export: three
         def three = 3
     [[i, M.N.three], ...]
-    [[1, 3], [2, 3], [3, 3]]
+    ~is [[1, 3], [2, 3], [3, 3]]
   check:
     namespace M:
       export pi_ish
       def three = 3
       rule 'pi_ish': 'three'
     [[i, M.pi_ish], ...]
-    [[1, 3], [2, 3], [3, 3]]
+    ~is [[1, 3], [2, 3], [3, 3]]
 
 // `.` as a repetition
 begin:
@@ -211,12 +204,12 @@ begin:
   def [p :: Posn, ...] = [Posn(1, 1), Posn(2, 2), Posn(3, 3), Posn(4, 4)]
   check:
     [p.x, ...]
-    [1, 2, 3, 4]
+    ~is [1, 2, 3, 4]
   class Square(tl :: Posn, s :: Integer)
   def [s :: Square, ...] = [Square(Posn(0, 0), 10)]
   check:
     [s.tl, ...][0].x
-    0
+    ~is 0
 
 // splicing
 begin:
@@ -225,35 +218,34 @@ begin:
   def [[x -: Posn, ...], ...] = [[Posn(1, 2)], [Posn(3, 4), Posn(5, 6)]]
   check:
     [x, ..., ...]
-    [Posn(1, 2), Posn(3, 4), Posn(5, 6)]
+    ~is [Posn(1, 2), Posn(3, 4), Posn(5, 6)]
   check:
     [x.x, ..., ...]
-    [1, 3, 5]
+    ~is [1, 3, 5]
   check:
     [x, ..., ...][1].x
-    3
+    ~is 3
   fun f(x, ...): [x, ...]
   check:
     f(x, ..., ...)
-    [Posn(1, 2), Posn(3, 4), Posn(5, 6)]
+    ~is [Posn(1, 2), Posn(3, 4), Posn(5, 6)]
   check:
     f(x, ..., ..., "done")
-    [Posn(1, 2), Posn(3, 4), Posn(5, 6), "done"]
+    ~is [Posn(1, 2), Posn(3, 4), Posn(5, 6), "done"]
   check:
     {x, ..., ...}
-    {Posn(1, 2), Posn(3, 4), Posn(5, 6)}
+    ~is {Posn(1, 2), Posn(3, 4), Posn(5, 6)}
   check:
     {x, ..., ..., 0}
-    {0, Posn(1, 2), Posn(3, 4), Posn(5, 6)}
+    ~is {0, Posn(1, 2), Posn(3, 4), Posn(5, 6)}
   check:
     {x: #true, ..., ...}
-    {Posn(1, 2): #true, Posn(3, 4): #true, Posn(5, 6): #true}
+    ~is {Posn(1, 2): #true, Posn(3, 4): #true, Posn(5, 6): #true}
   check:
     {x: #true, ..., ..., 0: 0}
-    {0: 0, Posn(1, 2): #true, Posn(3, 4): #true, Posn(5, 6): #true}
+    ~is {0: 0, Posn(1, 2): #true, Posn(3, 4): #true, Posn(5, 6): #true}
   check:
-    ~print
     '$(x.y) ... ...'
-    '2 4 6'
+    ~prints_like '2 4 6'
 
 

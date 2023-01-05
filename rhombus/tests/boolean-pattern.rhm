@@ -1,12 +1,10 @@
 #lang rhombus
-import:
-  "check.rhm" open
 
 check:
   use_static
   let x && [y] : [10]
   [[x, y], x.length()]
-  [[[10], 10], 1]
+  ~is [[[10], 10], 1]
 
 check:
   // static info flows from lhs to rhs
@@ -14,16 +12,16 @@ check:
   class Posn(x, y)
   def Posn(x, y) && z = dynamic(Posn(1, 2))
   z.x
-  1
+  ~is 1
 
 check:
-  ~eval_exn
-  // static info doens't go right to left
+  // static info doesn't go right to left
+  ~eval
   use_static
   class Posn(x, y)
   def z && Posn(x, y) = dynamic(Posn(1, 2))
   z.x
-  "static operator not supported"
+  ~raises "static operator not supported"
 
 begin:
   fun try(v):
@@ -32,10 +30,10 @@ begin:
     | ~else: "other"
   check:
     try([1])
-    "lists"
+    ~is "lists"
   check:
     try([1, 2, 3])
-    "lists"
+    ~is "lists"
   check:
     try([])
-    "other"
+    ~is "other"

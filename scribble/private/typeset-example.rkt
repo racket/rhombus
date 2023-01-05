@@ -126,6 +126,7 @@
                                     list)]))])
                  (append
                   (format-lines (get-output eval) racketoutput)
+                  (format-lines (get-error-output eval) racketerror)
                   (cond
                     [(eq? mode 'error)
                      (if (string? vs)

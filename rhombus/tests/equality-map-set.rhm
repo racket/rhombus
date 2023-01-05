@@ -1,8 +1,6 @@
 #lang rhombus
 import:
-  "check.rhm" open
-  lib("racket/base.rkt") open:
-    only: mcons
+  lib("racket/base.rkt").mcons
 
 use_static
 
@@ -10,62 +8,61 @@ class Posn(x, y)
 
 check:
   "apple" == "apple"
-  #true
+  ~is #true
 
 check:
   [1, 2, 3] == 1
-  #false
+  ~is #false
 
 check:
   [1, "apple", {"alice": 97}] == [1, "apple", {"alice": 97}]
-  #true
+  ~is #true
 
 check:
   1 == 1.0
-  #false
+  ~is #false
 
 check:
   "yes" == "yes"
-  #true
+  ~is #true
 
 check:
   "yes" == "no"
-  #false
+  ~is #false
 
 check:
   6 * 7 == 42
-  #true
+  ~is #true
 
 check:
   expt(2, 100) == expt(2, 100)
-  #true
+  ~is #true
 
 check:
   2 == 2.0
-  #false
+  ~is #false
 
 check:
   [1, 2] == [1, 2]
-  #true
+  ~is #true
 
 check:
   begin:
     def v = mcons(1, 2)
     v == v
-  #true
+  ~is #true
 
 check:
   mcons(1, 2) == mcons(1, 2)
-  #false
+  ~is #false
 
 check:
   {[1, 2]: 3}[[1, 2]]
-  3
+  ~is 3
 
 check:
-  ~exn
   {mcons(1, 2): 3}[mcons(1, 2)]
-  "hash-ref: no value found for key"
+  ~raises "hash-ref: no value found for key"
 
 begin:
   def a = mcons(1, 2)
@@ -73,24 +70,24 @@ begin:
   def m = {a: "a", b: "b"}
   check:
     m[a]
-    "a"
+    ~is "a"
   check:
     m[b]
-    "b"
+    ~is "b"
 
 check:
   {[1, 2]}[[1, 2]]
-  #true
+  ~is #true
 
 check:
   {mcons(1, 2)}[mcons(1, 2)]
-  #false
+  ~is #false
 
 check:
   begin:
     def v = mcons(1, 2)
     {v}[v]
-  #true
+  ~is #true
 
 begin:
   def a = mcons(1, 2)
@@ -99,54 +96,54 @@ begin:
   def s = {a, b}
   check:
     s[a]
-    #true
+    ~is #true
   check:
     s[b]
-    #true
+    ~is #true
   check:
     s[c]
-    #false
+    ~is #false
 
 // empty map, not empty set
-check: {}; Map()
-check: {} == Set(); #false
-check: Map.empty; {}
-check: {"a": 1, "b": 2}; {"b": 2, "a": 1}
-check: {"a": 1, "b": 2}; Map{"b": 2, "a": 1}
-check: {"a": 1, "b": 2}; Map(["b", 2], ["a", 1])
+check {} ~is Map()
+check {} == Set() ~is #false
+check Map.empty ~is {}
+check {"a": 1, "b": 2} ~is {"b": 2, "a": 1}
+check {"a": 1, "b": 2} ~is Map{"b": 2, "a": 1}
+check {"a": 1, "b": 2} ~is Map(["b", 2], ["a", 1])
 begin:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
-  check: {a: 1, b: 2}; {b: 2, a: 1}
-  check: {a: 1} == {b: 1}; #false
+  check {a: 1, b: 2} ~is {b: 2, a: 1}
+  check {a: 1} == {b: 1} ~is #false
 check:
   match {}
   | Map.empty: "Map.empty"
   | _: #false
-  "Map.empty"
+  ~is "Map.empty"
 check:
   match MutableMap()
   | Map.empty: "Map.empty"
   | _: #false
-  "Map.empty"
+  ~is "Map.empty"
 check:
   match {"a": 1}
   | Map.empty: "Map.empty"
   | {}: "{}"
   | _: #false
-  "{}"
+  ~is "{}"
 
-check: Set.empty; Set()
+check Set.empty ~is Set()
 check:
   match Set()
   | Set.empty: "Set.empty"
   | _: #false
-  "Set.empty"
+  ~is "Set.empty"
 check:
   match MutableSet()
   | Set.empty: "Set.empty"
   | _: #false
-  "Set.empty"
+  ~is "Set.empty"
 
 def local_map = Map{symbol(alice): Posn(4, 5),
                     symbol(bob): Posn(7, 9)}
@@ -157,24 +154,24 @@ fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
 
 check:
   locale(symbol(alice), local_map)
-  "4, 5"
+  ~is "4, 5"
 
 def {symbol(bob): bob_loc} = local_map
 check:
   bob_loc
-  Posn(7, 9)
+  ~is Posn(7, 9)
 
 def Map{symbol(alice): alice_loc2, symbol(bob): bob_loc2} = local_map
 check:
   [alice_loc2, bob_loc2]
-  [Posn(4, 5), Posn(7, 9)]
+  ~is [Posn(4, 5), Posn(7, 9)]
 
-check: Set(); Set()
-check: {"a", "b"}; {"b", "a"}
-check: {"a", "b"}; Set{"b", "a"}
-check: {"a", "b"}; Set("b", "a")
+check Set() ~is Set()
+check {"a", "b"} ~is {"b", "a"}
+check {"a", "b"} ~is Set{"b", "a"}
+check {"a", "b"} ~is Set("b", "a")
 begin:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
-  check: {a, b}; {b, a}
-  check: {a} == {b}; #false
+  check {a, b} ~is {b, a}
+  check {a} == {b} ~is #false
