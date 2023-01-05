@@ -1,0 +1,13 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  use_static
+  def s = Srcloc("here", 1, 2, 3, 4)
+  [s.source, s.line, s.column, s.position, s.span]
+  ["here", 1, 2, 3, 4]
+
+check:
+  def s = dynamic(Srcloc("here", 1, 2, 3, 4))
+  [s.source, s.line, s.column, s.position, s.span]
+  ["here", 1, 2, 3, 4]

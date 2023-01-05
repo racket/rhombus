@@ -52,6 +52,9 @@
                          [(hash?) "Map"]
                          [(vector?) "Array"]
                          [(pair?) "Pair"]
+                         [(bytes?) "Bytes"]
+                         [(path?) "Path"]
+                         [(srcloc?) "Srcloc"]
                          [else (format "~s" c)])))
                    'rhombus/primitive)]
           [else (values str realm)]))]
@@ -66,6 +69,15 @@
                [(=) (rhombus '.=)]
                [(vector-ref) (rhombus 'Array.ref)]
                [(vector-set!) (rhombus 'Array.set)]
+               [(srcloc-source) (rhombus 'Srcloc.source)]
+               [(srcloc-line) (rhombus 'Srcloc.line)]
+               [(srcloc-column) (rhombus 'Srcloc.column)]
+               [(srcloc-position) (rhombus 'Srcloc.position)]
+               [(srcloc-span) (rhombus 'Srcloc.span)]
+               [(bytes->path) (rhombus 'Path)]
+               [(string->path) (rhombus 'Path)]
+               [(path->bytes) (rhombus 'Path.bytes)]
+               [(path->string) (rhombus 'Path.string)]
                [else (values who who-realm)])]
             [else (values who who-realm)]))
         (define-values (new-msg new-msg-realm)

@@ -13,7 +13,9 @@
          "name-root.rkt"
          "tag.rkt"
          "dot-parse.rkt"
-         (submod "dot.rkt" for-dot-provider))
+         "static-info.rkt"
+         (submod "dot.rkt" for-dot-provider)
+         (submod "srcloc-object.rkt" for-static-info))
 
 (provide Syntax
          (for-space rhombus/annot Syntax))
@@ -41,7 +43,8 @@
   unwrap_sequence
   strip
   relocate
-  relocate_span)
+  relocate_span
+  [srcloc syntax-srcloc])
 
 (define-syntax literal
   (expression-transformer
@@ -328,7 +331,8 @@
         'unwrap_sequence (method1 unwrap_sequence)
         'strip (method1 strip)
         'relocate relocate_method
-        'relocate_span relocate_span_method))
+        'relocate_span relocate_span_method
+        'srcloc (method1 syntax-srcloc)))
 
 (define-syntax syntax-instance
   (dot-provider-more-static
@@ -341,4 +345,8 @@
         [(strip) (0ary #'strip)]
         [(relocate) (nary #'relocate_method 1 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 1 #'relocate_span)]
+        [(srcloc) (0ary #'syntax-srcloc)]
         [else (fail-k)])))))
+
+(define-static-info-syntax syntax-srcloc
+  (#%call-result #,srcloc-static-infos))

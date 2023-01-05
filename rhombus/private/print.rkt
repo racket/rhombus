@@ -64,9 +64,18 @@
       [(printer-ref v #f)
        => (lambda (printer)
             (printer v op mode))]
+      [(path? v)
+       (cond
+         [(eq? mode 'display)
+          (display v op)]
+         [else
+          (write v op)])]
       [(struct? v)
        (define vec (struct->vector v))
-       (write (object-name v) op)
+       (write (if (srcloc? v)
+                  'Srcloc
+                  (object-name v))
+              op)
        (display "(" op)
        (cond
          [(print-field-shapes-ref v #f)

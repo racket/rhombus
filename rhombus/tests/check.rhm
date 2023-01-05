@@ -64,7 +64,7 @@ fun check_same(where, thunk, expected_thunk, ~mode: mode):
   | fun
     | values_str([v]): v
     | values_str(lst): "values " +& lst
-    display("failed " +& srcloc.#{syntax-srcloc}(where) +& "\n"
+    display(where.srcloc().source +& ":" +& where.srcloc().line +& ": failed\n"
               +& "  expected: " +& (if mode == keyword(~exn) | "exception " | "") +& values_str(expected) +& "\n"
               +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got)) +&  "\n",
             current_error_port())

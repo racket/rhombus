@@ -28,6 +28,7 @@
         "private/arithmetic.rkt"
         "private/string.rkt"
         "private/dot.rkt"
+        "private/maybe.rkt"
         "private/dynamic-static.rkt"
         "private/class.rkt"
         "private/interface.rkt"
@@ -68,7 +69,9 @@
         "private/boolean-pattern.rkt"
         "private/boolean-annotation.rkt"
         "private/eval.rkt"
-        "private/printable.rkt")
+        "private/printable.rkt"
+        "private/path-object.rkt"
+        "private/srcloc-object.rkt")
 
 (module reader syntax/module-reader
   #:language 'rhombus

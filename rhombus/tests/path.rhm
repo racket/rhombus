@@ -1,0 +1,13 @@
+#lang rhombus
+import: "check.rhm" open
+
+check:
+  use_static
+  def p = Path("x")
+  [p.bytes(), p.string()]
+  [#"x", "x"]
+
+check:
+  def p = dynamic(Path("x"))
+  [p.bytes(), p.string()]
+  [#"x", "x"]

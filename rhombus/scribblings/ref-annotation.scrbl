@@ -96,3 +96,19 @@
 )
 
 }
+
+@doc(
+  annot.macro 'Maybe($annotation)'
+){
+
+ An annotation that is satisfied by either @rhombus(#false) or a value
+ that satisfies @rhombus(annotation).
+
+@examples(
+  #false :: Maybe(String)
+  "string" :: Maybe(String)
+  ~error:
+    #true :: Maybe(String)
+)
+
+}
