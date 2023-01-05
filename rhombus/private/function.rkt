@@ -703,7 +703,7 @@
 (define (raise-result-failure who val)
   (raise-contract-error
    who
-   (string-append "result does not match annotation\n"
+   (string-append "result does not satisfy annotation\n"
                   "  result: ~v")
    val))
 

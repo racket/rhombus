@@ -26,12 +26,12 @@ check:
 check:
   ~exn
   Pair("ok", "oops") :: Pair.of(String, Number)
-  "does not match annotation"
+  "does not satisfy annotation"
 
 check:
   ~exn
   ["ok", "oops"] :: Pair.of(String, Number)
-  "does not match annotation"
+  "does not satisfy annotation"
 
 check:
   ["ok", "fine"] :: Pair.of(String, List)

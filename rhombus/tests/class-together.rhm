@@ -22,15 +22,15 @@ check:
 check:
   ~exn
   Foo([1])
-  "does not match annotation"
+  "does not satisfy annotation"
 
 check:
   ~exn
   Bar(1)
-  "does not match annotation"
+  "does not satisfy annotation"
 
 check:
   ~exn
   Foo([Foo([])])
-  "does not match annotation"
+  "does not satisfy annotation"
 

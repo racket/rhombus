@@ -382,7 +382,8 @@ check:
 check:
   ~eval_exn
   class Posn(x, y = no_such_variable)
-  "no_such_variable: unbound identifier"
+  Posn(1)
+  "no_such_variable: undefined"
 
 check:
   ~eval_exn
@@ -390,19 +391,20 @@ check:
     nonfinal
   class Posn3D(z = the_y):
     extends Posn
-  "the_y: unbound identifier"
+  Posn3D(0)
+  "the_y: undefined"
 
 check:
   ~exn
   class Posn(x :: Integer, y :: Integer)
   Posn("x", 0)
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 check:
   ~exn
   class Posn(mutable x :: Integer, y :: Integer)
   Posn("x", 0)
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 check:
   class Posn(mutable x :: Integer, y :: Integer):
@@ -422,7 +424,7 @@ check:
   ~exn
   class Posn(mutable x :: Integer, y :: Integer)
   Posn("x", 0).x := "oops"
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 check:
   import rhombus/meta open

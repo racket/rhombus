@@ -13,7 +13,7 @@ check:
 check:
   ~exn
   "no" :: AlsoPosn
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 bind.only.macro 'AlsoPosn ($x, $y) $tail ...':
   values('Posn($x, $y)', '$tail ...')

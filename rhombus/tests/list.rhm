@@ -17,7 +17,7 @@ check:
 check:
   ~exn
   [] :: NonemptyList
-  "does not match annotation"
+  "does not satisfy annotation"
 
 begin:
   use_static

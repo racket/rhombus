@@ -105,7 +105,7 @@
      (finish #'dot #'dot.name #'field #'tail)]
     [(dot::operator other . tail)
      (raise-syntax-error #f
-                         "expected an identifier for a field name, but found something else"
+                         "expected an identifier for a field or method name, but found something else"
                          #'dot.name
                          #f
                          (list #'other))]))

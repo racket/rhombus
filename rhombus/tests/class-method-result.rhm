@@ -22,11 +22,11 @@ begin:
   check:
     ~exn
     Posn(1, 2).n()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     Posn(1, 2).n_f()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     Posn(1, 2).p()
     3
@@ -43,7 +43,7 @@ begin:
     check:
       ~exn
       Posn3D(1, 2, 3).m()
-      "result does not match annotation"
+      "result does not satisfy annotation"
     check:
       Posn3D(1, 2, 3).p()
       0
@@ -94,20 +94,20 @@ begin:
   check:
     ~exn
     Bottom().m(Magenta())
-    "result does not match annotation"
+    "result does not satisfy annotation"
 
   check:
     ~exn
     Top().m(Cyan())
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     Middle().m(Cyan())
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     Bottom().m(Cyan())
-    "result does not match annotation"
+    "result does not satisfy annotation"
 
 // class self-reference
 begin:
@@ -162,11 +162,11 @@ begin:
   check:
     ~exn
     Point(1, 2).visible()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     Point(1, 2).invisible()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     Point(1, 2).really_invisible()
     #false
@@ -201,7 +201,7 @@ begin:
   check:
     ~exn
     RacketLogo().example(#false)
-    "result does not match annotation"
+    "result does not satisfy annotation"
 
 // alternate method forms, internal versus external annotations
 begin:
@@ -225,14 +225,14 @@ begin:
   check:
     ~exn
     Top().m("apple")
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     Bottom().m("apple")
     "apple"
   check:
     ~exn
     Bottom().m2("apple")
-    "result does not match annotation"
+    "result does not satisfy annotation"
 
 // abstract override
 begin:
@@ -265,12 +265,12 @@ begin:
   check:
     ~exn
     C(#false).m()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     C(LeftC()).m()
-    "result does not match annotation"
+    "result does not satisfy annotation"
   check:
     ~exn
     C(RightC()).m()
-    "result does not match annotation"
+    "result does not satisfy annotation"

@@ -35,7 +35,7 @@ check:
   ~exn
   import: .n as ex_c
   "10" :: ex_c.exint
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 check:
   import: .n open

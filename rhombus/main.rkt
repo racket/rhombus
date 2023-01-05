@@ -15,6 +15,7 @@
 
 (provide (rename-out [rhombus-module-begin #%module-begin])
          #%top-interaction
+         #%top
          (for-syntax
           (rename-out [rhombus... ...])
           $

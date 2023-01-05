@@ -50,7 +50,7 @@ check:
   ~exn
   import: .n.exint
   "10" :: exint
-  "value does not match annotation"
+  "value does not satisfy annotation"
 
 check:
   import: .n.exint as ex_int

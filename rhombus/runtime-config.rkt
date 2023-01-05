@@ -88,4 +88,8 @@
 ;; for syntax errors in the REPL
 (error-syntax->string-handler
  (lambda (s len)
-   (shrubbery-syntax->string s #:max-length len)))
+   (define str (shrubbery-syntax->string s #:max-length len))
+   (if (equal? str "")
+       "[end of group]"
+       str)))
+

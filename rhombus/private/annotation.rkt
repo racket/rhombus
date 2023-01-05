@@ -389,7 +389,7 @@
      who
      rhombus-realm
      (format
-      (string-append "value does not match annotation\n"
+      (string-append "value does not satisfy annotation\n"
                      "  argument: ~v\n"
                      "  annotation: ~a")
       val

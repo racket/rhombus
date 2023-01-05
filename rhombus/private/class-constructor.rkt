@@ -244,7 +244,7 @@
 
 (define (raise-constructor-result-error who val)
   (raise-contract-error who
-                        (string-append "constructor result does not match annotation\n"
+                        (string-append "constructor result does not satisfy annotation\n"
                                        "  result: ~v")
                         val))
 

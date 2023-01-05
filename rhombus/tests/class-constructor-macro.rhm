@@ -70,7 +70,7 @@ begin:
   check:
     ~exn
     5 :: Stringish
-    "value does not match annotation"
+    "value does not satisfy annotation"
   begin:
     class S():
       implements Stringish

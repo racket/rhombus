@@ -19,7 +19,7 @@ check:
   import: lib("rhombus/tests/example-a.rhm") as ex_a:
             expose: beta
   alpha
-  "unbound identifier"
+  "alpha: undefined"
 
 check:
   ~eval
@@ -52,7 +52,7 @@ check:
   ~eval_exn
   import: lib("rhombus/tests/example-a.rhm") open
   ex_a.alpha
-  "unbound identifier"
+  "ex_a: undefined"
 
 check:
   ~eval
@@ -135,7 +135,7 @@ check:
   ~eval_exn
   import: lib("rhombus/tests/example-a.rhm").alpha
   beta
-  "unbound identifier"
+  "beta: undefined"
 
 check:
   import:

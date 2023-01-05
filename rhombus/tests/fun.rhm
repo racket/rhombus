@@ -47,7 +47,7 @@ check:
 check:
   ~exn
   add1("oops")
-  "result does not match annotation"
+  "result does not satisfy annotation"
 
 fun
 | add_two(x) :: Number:

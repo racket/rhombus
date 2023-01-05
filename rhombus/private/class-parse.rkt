@@ -3,6 +3,7 @@
          "tag.rkt"
          "introducer.rkt"
          (for-template
+          racket/unsafe/undefined
           (submod "annotation.rkt" for-class)
           "parens.rkt"
           "assign.rkt"
