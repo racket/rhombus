@@ -193,7 +193,7 @@ definitions, so a @rhombus(def) after @rhombus(let) binds a name that is
 visible before the @rhombus(let) form.
 
 @rhombusblock(
-  #lang rhombus
+  $$(hash_lang()) $$(@rhombusmodname(rhombus))
 
   fun get_after(): after
 

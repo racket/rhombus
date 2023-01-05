@@ -4,7 +4,7 @@
          "../private/delta-text.rkt")
 
 (define input
-  (string-append "#lang shrubbery\n"
+  (string-append "#! shrubbery\n"
                  "a\n"
                  " b\n"
                  "  c\n"

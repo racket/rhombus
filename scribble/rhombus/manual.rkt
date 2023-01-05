@@ -16,7 +16,8 @@
                      [manual:tech tech]
                      [manual:math math]
                      [manual:filepath filepath]
-                     [manual:exec exec])
+                     [manual:exec exec]
+                     [manual:hash-lang hash_lang])
          doc
          docmodule
          rhombusmodname

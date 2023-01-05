@@ -32,7 +32,7 @@
 
 @doc(
   fun current_toplevel() :: Toplevel,
-  fun current_toplevel(ns :: Toplevel) :: #!void
+  fun current_toplevel(ns :: Toplevel) :: #void
 ){
 
  A @tech{parameter} for the current toplevel.

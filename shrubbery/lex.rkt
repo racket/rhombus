@@ -473,11 +473,7 @@
    ["/*" (read-nested-comment 1 start-pos lexeme input-port)]
    ["#//"
     (ret 'group-comment lexeme 'comment #f start-pos end-pos 'initial)]
-   [(:: (:or "#lang " "#!")
-        (:or langchar
-             (:: langchar (:* (:or langchar "/")) langchar)))
-    (ret 'comment lexeme 'other #f start-pos end-pos 'initial)]
-   [(:: (:or "#lang " "#!") (:* (:& any-char (complement whitespace))))
+   [(:: (:or "#!") (:* (:& any-char (complement whitespace))))
     (ret 'fail lexeme 'error #f start-pos end-pos 'initial)]
    [script
     (ret 'comment lexeme 'comment #f start-pos end-pos 'initial)]
