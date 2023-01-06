@@ -1,0 +1,56 @@
+#lang rhombus/and_meta
+
+use_static
+
+// Make sure that introduced names can be referenced directly
+
+begin:
+  class_clause.macro 'gen $mode ... : $m':
+    '$mode ... method introduced(): 5
+     method $m(): introduced()'
+
+  check:
+    class Posn(x, y):
+      gen: five
+    Posn(1, 2).five()
+    ~is 5
+
+  check:
+    class Posn(x, y):
+      gen private: five
+    Posn(1, 2).five()
+    ~is 5
+
+begin:
+  class_clause.macro 'gen $mode ... : $m':
+    '$mode ... property | introduced: 5
+     method $m(): introduced'
+
+  check:
+    class Posn(x, y):
+      gen: five
+    Posn(1, 2).five()
+    ~is 5
+
+  check:
+    class Posn(x, y):
+      gen private: five
+    Posn(1, 2).five()
+    ~is 5
+
+begin:
+  class_clause.macro 'gen $mode ... : $m':
+    '$mode ... field introduced: 5
+     method $m(): introduced'
+
+  check:
+    class Posn(x, y):
+      gen: five
+    Posn(1, 2).five()
+    ~is 5
+
+  check:
+    class Posn(x, y):
+      gen private: five
+    Posn(1, 2).five()
+    ~is 5

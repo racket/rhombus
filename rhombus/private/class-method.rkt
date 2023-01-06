@@ -57,10 +57,10 @@
 
 ;; Results:
 ;;   method-mindex   ; symbol -> mindex
-;;   method-names    ; index -> symbol-or-identifier
+;;   method-names    ; index -> symbol-or-identifier; symbol is inherited
 ;;   method-vtable   ; index -> function-identifier or '#:abstract
 ;;   method-results  ; symbol -> nonempty list of identifiers; first one implies others
-;;   method-private  ; symbol -> identifier or (list identifier); list means property
+;;   method-private  ; symbol -> identifier or (list identifier); list means property; non-super symbol's identifier attached as 'lhs-id
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
 
@@ -143,6 +143,14 @@
       (for/fold ([method-results method-results]) ([(sym id) (in-hash (interface-desc-method-result intf))])
         (hash-set method-results sym (cons id (hash-ref method-results sym '()))))))
 
+  (define (private-id/property lhs-id added)
+    (let ([id (syntax-property (added-method-rhs-id added)
+                               'lhs-id
+                               lhs-id)])
+      (if (eq? (added-method-kind added) 'property)
+          (list id)
+          id)))
+
   ;; add methods for the new class/interface
   (define-values (new-ht new-vtable-ht priv-ht here-ht)
     (for/fold ([ht ht] [vtable-ht vtable-ht] [priv-ht #hasheq()] [here-ht #hasheq()]) ([added (in-list added-methods)])
@@ -186,10 +194,7 @@
                  (check-consistent-property (list? rhs))
                  (values ht
                          vtable-ht
-                         (hash-set priv-ht (syntax-e id) (let ([id (added-method-rhs-id added)])
-                                                           (if (eq? (added-method-kind added) 'property)
-                                                               (list id)
-                                                               id)))
+                         (hash-set priv-ht (syntax-e id) (private-id/property id added))
                          new-here-ht)]
                 [(eq? (added-method-replace added) 'override)
                  (raise-syntax-error #f (format "method is in private ~a" super-str) stx id)]
@@ -202,10 +207,7 @@
            [(eq? (added-method-disposition added) 'private)
             (values ht
                     vtable-ht
-                    (hash-set priv-ht (syntax-e id) (let ([id (added-method-rhs-id added)])
-                                                      (if (eq? (added-method-kind added) 'property)
-                                                          (list id)
-                                                          id)))
+                    (hash-set priv-ht (syntax-e id) (private-id/property id added))
                     new-here-ht)]
            [else
             (define pos (hash-count vtable-ht))
@@ -510,16 +512,20 @@
                        [private-field-desc ...]
                        [super-name ...])
                  names])
-    (with-syntax ([(field-name ...) (for/list ([id (in-list (syntax->list #'(field-name ...)))])
-                                      (datum->syntax #'name (syntax-e id) id id))]
+    (with-syntax ([(field-name ...) (for/list ([id/l (in-list (syntax->list #'(field-name ...)))])
+                                      (if (identifier? id/l)
+                                          (datum->syntax #'name (syntax-e id/l) id/l id/l)
+                                          (car (syntax-e id/l))))]
                   [((method-name method-index/id method-result-id method-kind) ...)
                    (for/list ([i (in-range (hash-count method-mindex))])
-                     (define m-name (let ([n (hash-ref method-names i)])
-                                      (if (syntax? n)
-                                          (syntax-e n)
-                                          n)))
+                     (define raw-m-name (hash-ref method-names i))
+                     (define m-name (if (syntax? raw-m-name)
+                                        (syntax-e raw-m-name)
+                                        raw-m-name))
                      (define mix (hash-ref method-mindex m-name))
-                     (list (datum->syntax #'name m-name)
+                     ;; We use `raw-m-name` to support local references
+                     ;; to macro-introduced methods
+                     (list (datum->syntax #'name raw-m-name)
                            (mindex-index mix)
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))
@@ -528,8 +534,11 @@
                    (for/list ([m-name (in-list (sort (hash-keys method-private)
                                                      symbol<?))])
                      (define id/property (hash-ref method-private m-name))
-                     (list (datum->syntax #'name m-name)
-                           (if (pair? id/property) (car id/property) id/property)
+                     (define id (if (pair? id/property) (car id/property) id/property))
+                     (define raw-m-name (or (syntax-property id 'lhs-id) m-name))
+                     ;; See above for explanation of `raw-m-name`
+                     (list (datum->syntax #'name raw-m-name)
+                           id
                            id/property
                            (let ([r (hash-ref method-results m-name #f)])
                              (and (pair? r) (car r)))
