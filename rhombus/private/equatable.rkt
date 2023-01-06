@@ -77,7 +77,7 @@
 (define equals-method
   (let ([equals (lambda (this other)
                   ((vector-ref (get-equatable 'equals this) 0) this other))])
-    print))
+    equals))
   
 (define hashCode-method
   (let ([hashCode (lambda (this)
