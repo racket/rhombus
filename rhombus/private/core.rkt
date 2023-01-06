@@ -68,6 +68,7 @@
         "parameterize.rkt"
         "boolean-pattern.rkt"
         "boolean-annotation.rkt"
+        "equatable.rkt"
         "eval.rkt"
         "printable.rkt"
         "path-object.rkt"
