@@ -17,3 +17,27 @@ begin:
   check:
     ['x: $x; ...', ...]
     ~prints_like ['x: 1; 2; 3', 'x: 4; 5; 6', 'x: 7; 8; 9']
+
+begin:
+  check:
+    '$[1, 2] 3'
+    ~prints_like '1 2 3'
+  check:
+    '0 $[1, 2]'
+    ~prints_like '0 1 2'
+  check:
+    '0 $[1, 2] 3'
+    ~prints_like '0 1 2 3'
+
+  def [x, ...] = [1, 2, 3]
+  check:
+    '0 $[x, ...]'
+    ~prints_like '0 1 2 3'
+  check:
+    '0 $['+', x] ...'
+    ~prints_like '0 + 1 + 2 + 3'
+
+  def [[z, ...], ...] = [[1, 2, 3], [4, 5]]
+  check:
+    '0 $[z, ...] ...'
+    ~prints_like '0 1 2 3 4 5'

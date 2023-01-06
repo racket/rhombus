@@ -72,7 +72,7 @@ Metadata for a syntax object can include a source location and the raw
 
  A @rhombus($) as a @rhombus(term,~var) escapes a following expression
  whose value replaces the @rhombus($) term and expression. The value
- is normally a syntax objects, but other kinds of values are coerced
+ is normally a syntax objects, but except for lists, other kinds of values are coerced
  to a syntax object. Nested @rhombus('') forms are allowed around
  @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
 
@@ -80,6 +80,15 @@ Metadata for a syntax object can include a source location and the raw
   'x $(if #true | 'y' | 'why') z'
   'x $(1 + 2) z'
   '« x '$(1 + 2)' z »'
+)
+
+ When @rhombus($) is followed by an immediate @rhombus([]) form, the result
+ must be a list (as with the normal binding of @rhombus(#{#%brackets})),
+ and the elements of the list are spliced in place of the
+ @rhombus($) term and @rhombus([]) expression.
+
+@examples(
+  'x $[1, 2, 3] z'
 )
 
  A @dots as a @rhombus(term,~var) must follow a
@@ -91,6 +100,7 @@ Metadata for a syntax object can include a source location and the raw
 @examples(
   def [x, ...] = [1, 2, 3]
   '(1 + $x) ...'
+  '0 $['+', x] ...'
 )
 
  Multiple escapes can appear in the term before @dots, in which the

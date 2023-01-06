@@ -41,6 +41,7 @@
          
          pack-term*
          unpack-term*
+         unpack-term-list*
          pack-group*
          unpack-group*
          pack-multi*
@@ -220,6 +221,9 @@
 
 (define (unpack-term* qs r depth)
   (unpack* qs r depth unpack-term))
+
+(define (unpack-term-list* qs r depth)
+  (unpack* qs r (add1 depth) unpack-term))
 
 ;; Packs to a `group` form
 (define (pack-group* stx depth)

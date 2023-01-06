@@ -85,18 +85,19 @@
                  (and (zero? (syntax-e #'rep.bind-depth))
                       (identifier? #'rep.seq-expr)
                       (syntax-local-value* (in-dot-provider-space #'rep.seq-expr) dot-provider-ref))))
-           (values
-            (build-compound-repetition
-             dot (list form1)
-             (lambda (form1)
-               (define-values (expr new-tail)
-                 (build-dot-access form1 dp-id
-                                   more-static? #:repetition? #t
-                                   dot dot-name field-id tail))
-               (unless (eq? new-tail tail) (error "internal error: expected same tail"))
-               (values expr
-                       (extract-static-infos expr))))
-            tail)]))))
+           (define rep
+             (build-compound-repetition
+              dot (list form1)
+              (lambda (form1)
+                (define-values (expr new-tail)
+                  (build-dot-access form1 dp-id
+                                    more-static? #:repetition? #t
+                                    dot dot-name field-id tail))
+                (set! tail new-tail)
+                (values expr
+                        (extract-static-infos expr)))))
+           (values rep
+                   tail)]))))
    'left))
 
 (define-for-syntax (parse-dot-provider tail finish)
