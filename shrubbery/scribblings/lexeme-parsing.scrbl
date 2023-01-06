@@ -9,8 +9,8 @@ The tokens used for grouping and indentation are distinct lexemes:
 ( ) [ ] { } '   ; ,   : |   « »  \
 }|
 
-Other lexemes are described by the grammar in the table below, where an
-star in the left column indicates the productions that correspond to
+Other lexemes are described by the grammar in the table below, where a
+star (★) in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
 Numbers are supported directly in in simple forms---decimal integers,
@@ -33,7 +33,8 @@ identifier with @litchar{#:} in Racket.
 Operators are formed from Unicode symbolic and punctuation characters
 other than the ones listed above as distinct lexemes (plus a few more,
 like @litchar{"}, @litchar{'}, and single-character emoji sequences), but @litchar{|} or @litchar{:} is
-also allowed in an operator name as long as it is not by itself. A
+also allowed in an operator name as long as it is not by itself, and
+some @litchar{#} combinations like @litchar{#'} and @litchar{#,} are also operators. A
 multi-character operator cannot end in @litchar{+}, @litchar{-}, or
 @litchar{.} to avoid ambiguity in cases like @litchar{1+-2} (which is
 @litchar{1} plus @litchar{-2}, not @litchar{1} and @litchar{2} combined
@@ -96,6 +97,7 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, kleeneplus(@litchar{.}), @elem{@italic{... or containing} @litchar{//} @italic{...}}],
     ["", "", bor, kleeneplus(@litchar{+}), @elem{@italic{... or containing} @litchar{/*}}],
     ["", "", bor, kleeneplus(@litchar{-}), ""],
+    ["", "", bor, bseq(@litchar{#}, @nonterm{hashopchar}), ""],
     empty_line,
     [no_lex, @nonterm{opchar}, bis, @elem{@italic{symbolic Unicode character not in} @nonterm{special}}, ""],
     ["", "", bor, @elem{@italic{punctuation Unicode character not in} @nonterm{special}}, ""],
@@ -103,6 +105,9 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
     [no_lex, @nonterm{tailopchar}, bis, @elem{@italic{anything in} @nonterm{opchar} @italic{except}
                                               @litchar{+}, @litchar{-}, @litchar{.}, @litchar{/}}, ""],
+    empty_line,
+    [no_lex, @nonterm{hashopchar}, bis, @elem{@italic{one of} @litchar{'}, @litchar{,}, @litchar{;},
+                                              @litchar{:}, @litchar{|}}, ""],
     empty_line,
     [no_lex, @nonterm{special}, bis, @elem{@italic{one of} @litchar{(}, @litchar{)}, @litchar{[},
                                            @litchar{]}, @litchar("{"), @litchar("}"), @litchar{'},

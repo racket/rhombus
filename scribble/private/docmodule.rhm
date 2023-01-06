@@ -23,7 +23,7 @@ meta:
                                  +& "/"
                                  +& translate_mod('$b ...'))
     | 'lib($str)':
-        [symbol(lib), str]
+        [#'lib, str]
 
   syntax.class Option:
     ~term
@@ -35,7 +35,7 @@ meta:
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   '$(parsed(['defmodule',
-             keyword(#{#:require-form}),
+             #'#{#:require-form},
              unparsed('fun (mod): @rhombus(import: $$(mod))'),
              translate_mod('$mod ...'),
              option.form, ...]))'

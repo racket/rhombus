@@ -10,9 +10,9 @@
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
  multi-group sequence with binding scopes and other metadata on
  individual terms, and metadata potentially on individual groups. See
- @secref(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top")
+ @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top")
  for information on shrubbery notation, and specifically
- @secref(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
+ @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
  for information on representing shrubbery terms as
  Rhombus values. The @rhombus(Syntax.make) function takes such a value
  and wraps it as a syntax object, so that it can accumulate binding
@@ -268,8 +268,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @examples(
   Syntax.make(1.0)
-  Syntax.make([symbol'parens', '1.0', '2', '"c"'])
-  Syntax.make([symbol'alts', ': result1', ': result2'])
+  Syntax.make([#'parens, '1.0', '2', '"c"'])
+  Syntax.make([#'alts, ': result1', ': result2'])
   ~error: Syntax.make(['1.0', '2', '"c"'])
 )
 
@@ -284,7 +284,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @examples(
   Syntax.make_group([1.0, 2, "c"])
-  Syntax.make_group(['if', 'test', [symbol'alts', ': result1', ': result2']])
+  Syntax.make_group(['if', 'test', [#'alts, ': result1', ': result2']])
   ~error: Syntax.make_group(['1 2'])
 )
 

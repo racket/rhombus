@@ -167,17 +167,15 @@
          [(display?)
           (display (symbol->immutable-string v))]
          [else
-          (display "symbol'" op)
-          (write-shrubbery v op)
-          (display "'" op)])]
+          (display "#'" op)
+          (write-shrubbery v op)])]
       [(keyword? v)
        (cond
          [(display?)
           (display (keyword->immutable-string v))]
          [else
-          (display "keyword'" op)
-          (write-shrubbery v op)
-          (display "'" op)])]
+          (display "#'" op)
+          (write-shrubbery v op)])]
       [else
        (cond
          [(display?)

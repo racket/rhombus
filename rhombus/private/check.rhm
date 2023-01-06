@@ -28,10 +28,7 @@ meta:
       ~attr [suffix, ...]: ['#void']
 
 expr.macro '«located '$w' $tail ...»':
-  values('[$(if w.unwrap() is_a Keyword
-             | 'keyword($w)'
-             | 'symbol($w)'),
-           $(w.srcloc())]',
+  values('[#' $w, $(w.srcloc())]',
          '$tail ...')
 
 expr.macro
@@ -64,7 +61,7 @@ expr.macro
                          $(result2.suffix)
                          ...,
                        matcher($(result2.mode) ..., : $(result2.body)),
-                       keyword'$(result2.mode) ...')',
+                       #'$(result2.mode) ...)',
            '')
 // single lines in block
 | 'check: $result1 ... $(result2 :: result); ...':
@@ -82,7 +79,7 @@ expr.macro
     values('check_same(located'$(check_id)',
                        fun (): $result1 ...; $(result2.suffix); ...,
                        matcher($(result2.mode) ..., : $(result2.body)),
-                       keyword'$(result2.mode) ...')',
+                       #'$(result2.mode) ...)',
            '')
 
 expr.macro
@@ -105,17 +102,17 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
   def expected = call_capturing_values(expected_thunk)
   def ok:
     match mode
-    | keyword(~prints_like):
+    | #'~prints_like:
         !exn_msg && (("" +& got) == ("" +& expected))
-    | keyword(~is):
+    | #'~is:
         !exn_msg && (got == expected)
-    | keyword(~raises):
+    | #'~raises:
         exn_msg && does_contain_each(expected, exn_msg)
-    | keyword(~completes):
+    | #'~completes:
         !exn_msg
-    | keyword(~is_a):
+    | #'~is_a:
         !exn_msg && got.length() == 1 && expected[0](got[0])
-    | keyword(~matches):
+    | #'~matches:
         !exn_msg && expected[0](&got)
   #{test-log!}(ok)
   if ok
@@ -131,10 +128,10 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
         +&  "\n"
         +& "  expected: " +& (match mode
-                              | keyword(~completes): "completion"
-                              | keyword(~raises): "exception " +& values_str(expected)
-                              | keyword(~matches): "matching " +& expected_thunk(#false)
-                              | keyword(~is_a): "satisfying " +& expected_thunk(#false)
+                              | #'~completes: "completion"
+                              | #'~raises: "exception " +& values_str(expected)
+                              | #'~matches: "matching " +& expected_thunk(#false)
+                              | #'~is_a: "satisfying " +& expected_thunk(#false)
                               | ~else: values_str(expected))
         +& "\n"
     display_as_exn(msg, srcloc)

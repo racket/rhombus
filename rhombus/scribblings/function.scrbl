@@ -89,10 +89,10 @@ with a leading @litchar{~}, and then starting a block with @litchar{:}.
 
 Since a keyword by itself is not allowed as an expression or pattern,
 there is no possibility that a keyword will be inadvertently treated as
-an actual argument or binding pattern by itself. The @rhombus(keyword)
-form turns a keyword into an expression that produces the keyword, as in
-@rhombus(keyword'~scale'). The @rhombus(symbol) form similarly turns an
-identifier into a symbol, as in @rhombus(symbol'x').
+an actual argument or binding pattern by itself. The @rhombus(#')
+prefix operator turns a keyword into an expression that produces the keyword, as in
+@rhombus(#'~scale). The operator also works on an identifiers, as in @rhombus(#'x),
+to produce a symbol.
 
 @aside{The keyword prefix and @rhombus(=) for default values are not
  binding operators. They are specific to the syntax of @rhombus(fun).}

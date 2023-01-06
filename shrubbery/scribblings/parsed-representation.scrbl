@@ -49,28 +49,28 @@ always appear as non-initial items in a @litchar{'group} list.
 
 Overall, the grammar of S-expression representations is as follows:
 
-@nested(~style: symbol(inset), shrubbery_s_expression_grammar)
+@nested(~style: #'inset, shrubbery_s_expression_grammar)
 
 Here's the same grammar, but expressed using Rhombus constructors:
 
-@nested(~style: symbol(inset),
+@nested(~style: #'inset,
         bnf.BNF([@nonterm{parsed},
-                 @rhombus([symbol(top), $$(@nonterm{group}), ...])],
+                 @rhombus([#'top, $$(@nonterm{group}), ...])],
                 [@nonterm{group},
-                 @rhombus([symbol(group), $$(@nonterm{term}), ..., $$(@nonterm{tail-term})])],
+                 @rhombus([#'group, $$(@nonterm{term}), ..., $$(@nonterm{tail-term})])],
                 [@nonterm{term},
                  @nonterm{atom},
-                 @rhombus([symbol(op), $$(@nonterm{symbol})]),
-                 @rhombus([symbol(parens), $$(@nonterm{group}), ...]),
-                 @rhombus([symbol(brackets), $$(@nonterm{group}), ...]),
-                 @rhombus([symbol(braces), $$(@nonterm{group}), ...]),
-                 @rhombus([symbol(quotes), $$(@nonterm{group}), ...])],
+                 @rhombus([#'op, $$(@nonterm{symbol})]),
+                 @rhombus([#'parens, $$(@nonterm{group}), ...]),
+                 @rhombus([#'brackets, $$(@nonterm{group}), ...]),
+                 @rhombus([#'braces, $$(@nonterm{group}), ...]),
+                 @rhombus([#'quotes, $$(@nonterm{group}), ...])],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},
-                 @rhombus([symbol(alts), $$(@nonterm{block}), ...])],
+                 @rhombus([#'alts, $$(@nonterm{block}), ...])],
                 [@nonterm{block},
-                 @rhombus([symbol(block), $$(@nonterm{group}), ...])]))
+                 @rhombus([#'block, $$(@nonterm{group}), ...])]))
 
 Here are some example shrubberies with their S-expression parsed
 representations:

@@ -34,15 +34,15 @@ check:
   nums_a[2]
   ~is 30
 
-def map = Map{symbol'x': "hello", symbol(y): "goodbye"}
+def map = Map{#'x: "hello", #'y: "goodbye"}
 def yes_map :: Map = map
 def yup_map :: Map.of(Symbol, String) = map
 
 check:
   map
-  ~is {symbol'x': "hello", symbol'y': "goodbye"}
+  ~is {#'x: "hello", #'y: "goodbye"}
 check:
-  map[symbol'y']
+  map[#'y]
   ~is "goodbye"
 
 def also_map = Map([1, "one"], [2, "two"])
@@ -55,14 +55,14 @@ check:
   also_also_map[2]
   ~is "two"
 
-def key_map = {symbol'a': "ay", symbol'b': "bee"}
+def key_map = {#'a: "ay", #'b: "bee"}
 check:
-  key_map[symbol'a']
+  key_map[#'a]
   ~is "ay"
 
-def mixed_map = {symbol'a': 1, "b": 2}
+def mixed_map = {#'a: 1, "b": 2}
 check:
-  mixed_map[symbol'a'] + mixed_map["b"]
+  mixed_map[#'a] + mixed_map["b"]
   ~is 3
 
 def mut_map = MutableMap([1, "mone"])
@@ -103,7 +103,7 @@ check:
   ~is {1: "one", 2: "two", 100: "hundred"}
 check:
   {100: "hundred", & also_also_map, & map }
-  ~is {1: "one", 2: "two", 100: "hundred", symbol'x': "hello", symbol'y': "goodbye"}
+  ~is {1: "one", 2: "two", 100: "hundred", #'x: "hello", #'y: "goodbye"}
 
 check:
   {& a_set, 0}
@@ -118,28 +118,28 @@ check:
   az
   ~is 30
 
-def local_map = Map{symbol'alice': Posn(4, 5),
-                    symbol'bob': Posn(7, 9)}
+def local_map = Map{#'alice: Posn(4, 5),
+                    #'bob: Posn(7, 9)}
 
 fun locale(who, neighborhood :: Map.of(Symbol, Posn)):
   def p = neighborhood[who]
   p.x +& ", " +& p.y
 
 check:
-  locale(symbol'alice', local_map)
+  locale(#'alice, local_map)
   ~is "4, 5"
 
-def {symbol'bob': bob_loc} = local_map
+def {#'bob: bob_loc} = local_map
 check:
   bob_loc
-  ~is local_map[symbol'bob']
+  ~is local_map[#'bob]
 
-def Map{symbol'alice': alice_loc2, symbol'bob': bob_loc2} = local_map
+def Map{#'alice: alice_loc2, #'bob: bob_loc2} = local_map
 check:
   [alice_loc2, bob_loc2]
   ~is [Posn(4, 5), Posn(7, 9)]
 
-def Map([symbol'alice', also_alice_loc2], [symbol'bob', also_bob_loc2]) = local_map
+def Map([#'alice, also_alice_loc2], [#'bob, also_bob_loc2]) = local_map
 check:
   [also_alice_loc2, also_bob_loc2]
   ~is [Posn(4, 5), Posn(7, 9)]

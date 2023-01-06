@@ -131,21 +131,21 @@ expr.macro
            '$main_tail ...')
 | 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
     def kw = Syntax.unwrap(kw_stx)
-    if (kw === keyword(~var)
-          || kw === keyword(~datum)
-          || kw === keyword(~bind)
-          || kw === keyword(~impmod)
-          || kw === keyword(~expmod)
-          || kw === keyword(~modpath)
-          || kw === keyword(~annot)
-          || kw === keyword(~repet)
-          || kw === keyword(~stxclass)
-          || kw === keyword(~reducer)
-          || kw === keyword(~for_clause)
-          || kw === keyword(~class_clause)
-          || kw === keyword(~intf_clause)
-          || kw === keyword(~entry_point))
-    | values('#{typeset-rhombus}(~space: keyword($kw), $(escape_group(forms)))',
+    if (kw === #'~var
+          || kw === #'~datum
+          || kw === #'~bind
+          || kw === #'~impmod
+          || kw === #'~expmod
+          || kw === #'~modpath
+          || kw === #'~annot
+          || kw === #'~repet
+          || kw === #'~stxclass
+          || kw === #'~reducer
+          || kw === #'~for_clause
+          || kw === #'~class_clause
+          || kw === #'~intf_clause
+          || kw === #'~entry_point)
+    | values('#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))',
              '$main_tail ...')
     | Syntax.error("invalid space", kw)
 

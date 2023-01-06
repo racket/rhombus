@@ -84,7 +84,7 @@ begin:
 
 // function calls with keyword arguments as repetitions
 begin:
-  def [x, ...] = [{keyword'~a': "a"}, {keyword'~b': "b"}]
+  def [x, ...] = [{#'~a: "a"}, {#'~b: "b"}]
   fun f(~a: a = #false, ~b: b = #false): [a, b]
   check:
     [f(~& x), ...]

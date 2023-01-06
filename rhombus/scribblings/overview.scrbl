@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 
-@title(~style: symbol(toc)){Rhombus Overview}
+@title(~style: #'toc){Rhombus Overview}
 
 @local_table_of_contents()
 

@@ -234,12 +234,12 @@ def also_also_map = {1: "one", 2: "two"}
 also_also_map[2]
 
 // a symbol is something like a string, often used for efficient map access
-def key_map = {symbol'a': "ay", symbol'b': "bee"}
-key_map[symbol'a']
+def key_map = {#'a: "ay", #'b: "bee"}
+key_map[#'a]
 
 // a map can have different kinds of keys
-def mixed_map = {symbol'a': 1, "b": 2}
-mixed_map[symbol'a'] + mixed_map["b"]
+def mixed_map = {#'a: 1, "b": 2}
+mixed_map[#'a] + mixed_map["b"]
 
 // a mutable map supports update via `:=`
 def mut_map = MutableMap{1: "mone"}

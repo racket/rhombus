@@ -51,13 +51,13 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
                          "" +& name.unwrap()
   values('«begin:
              rhombus_typeset '$id':
-               '@racketvarfont("" +& symbol($id))'
+               '@racketvarfont("" +& #'$id)'
              ...
              [
                @elem{The @rhombus(.) operator can be used on a @($what) expression as
                    equivalent to calling @($who) functions:},
                @nested(
-                 ~style: symbol(inset),
+                 ~style: #'inset,
                  @tabular(
                    ~sep: @elem{@hspace(1)is@hspace(1)},
                    [

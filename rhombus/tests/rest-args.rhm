@@ -120,14 +120,14 @@ fun krmap(~& m): m
 
 check:
   krmap(~a: 1, ~b: 2)
-  ~is {keyword(~a): 1, keyword(~b): 2}
+  ~is {#'~a: 1, #'~b: 2}
 
 fun
 | altkrmap(~& m): m
 
 check:
   altkrmap(~a: 1, ~b: 2)
-  ~is {keyword(~a): 1, keyword(~b): 2}
+  ~is {#'~a: 1, #'~b: 2}
 
 fun kinetic_energy(~m: m, ~v: v): (1/2) * m * sqr(v)
 
@@ -135,13 +135,13 @@ check:
   kinetic_energy(~m: 2, ~v: 3)
   ~is 9
 check:
-  kinetic_energy(~& {keyword(~m): 4, keyword(~v): 5})
+  kinetic_energy(~& {#'~m: 4, #'~v: 5})
   ~is 50
 check:
-  kinetic_energy(~m: 6, ~& {keyword(~v): 7})
+  kinetic_energy(~m: 6, ~& {#'~v: 7})
   ~is 147
 check:
-  kinetic_energy(~v: 2, ~& {keyword(~m): 1})
+  kinetic_energy(~v: 2, ~& {#'~m: 1})
   ~is 2
 
 fun
@@ -156,13 +156,13 @@ check:
   ~is #true
 
 fun
-| krpythag(~& {keyword(~a): a, keyword(~b): b, & Map.empty}):
+| krpythag(~& {#'~a: a, #'~b: b, & Map.empty}):
     sqrt(sqr(a) + (sqr(b)))
-| krpythag(~& {keyword(~a): a, keyword(~c): c, & Map.empty}):
+| krpythag(~& {#'~a: a, #'~c: c, & Map.empty}):
     sqrt(sqr(c) - (sqr(a)))
-| krpythag(~& {keyword(~b): b, keyword(~c): c, & Map.empty}):
+| krpythag(~& {#'~b: b, #'~c: c, & Map.empty}):
     sqrt(sqr(c) - (sqr(b)))
-| krpythag(~& {keyword(~a): a, keyword(~b): b, keyword(~c): c, & Map.empty}):
+| krpythag(~& {#'~a: a, #'~b: b, #'~c: c, & Map.empty}):
     sqr(a) + sqr(b) == sqr(c)
 
 check :
@@ -171,10 +171,10 @@ check :
   krpythag(~c: 5, ~b: 4) ~is 3
   krpythag(~a: 3, ~b: 4, ~c: 5) ~is #true
   krpythag(~a: 3, ~b: 4, ~c: 6) ~is #false    
-  krpythag(~& {keyword'~a': 3, keyword'~b': 4}) ~is 5
-  krpythag(~a: 5, ~& {keyword'~b': 12}) ~is 13
+  krpythag(~& {#'~a: 3, #'~b: 4}) ~is 5
+  krpythag(~a: 5, ~& {#'~b: 12}) ~is 13
   krpythag(~a: 8, ~b: 15, ~& {}) ~is 17
-  krpythag(~b: 24, ~& {keyword'~a': 7}) ~is 25
+  krpythag(~b: 24, ~& {#'~a: 7}) ~is 25
 
 fun
 | pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
@@ -188,25 +188,25 @@ check:
   pythag(~c: 5, ~b: 4) ~is 3
   pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
   pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
-  pythag(~& {keyword'~a': 3, keyword'~b': 4}) ~is 5
-  pythag(~a: 5, ~& {keyword'~b': 12}) ~is 13
+  pythag(~& {#'~a: 3, #'~b: 4}) ~is 5
+  pythag(~a: 5, ~& {#'~b: 12}) ~is 13
   pythag(~a: 8, ~b: 15, ~& {}) ~is 17
-  pythag(~b: 24, ~& {keyword'~a': 7}) ~is 25
+  pythag(~b: 24, ~& {#'~a: 7}) ~is 25
 
 fun anyargs(& l, ~& m):
   [l, m]
 
 check:
   anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
-  ~is [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+  ~is [["a", "b"], {#'~c: "do", #'~d: "re", #'~e: "mi"}]
 
 fun anykws(~& m): m
 
-check anykws(~a: 1, ~b: 2) ~is {keyword'~a': 1, keyword'~b': 2}
+check anykws(~a: 1, ~b: 2) ~is {#'~a: 1, #'~b: 2}
 
 fun a_and_more(~a: _, ~& more): more
 
-check a_and_more(~a: 1, ~b: 2, ~c: 3) ~is {keyword'~b': 2, keyword'~c': 3}
+check a_and_more(~a: 1, ~b: 2, ~c: 3) ~is {#'~b: 2, #'~c: 3}
 
 fun
 | rectangle_area(~width, ~height): width * height
@@ -352,59 +352,59 @@ check:
 
 check:
   def mutable s = 0
-  [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { keyword'~height': 10 })),
+  [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { #'~height: 10 })),
    s]
   ~is [5, [2, [1, 0]]]
 
 check:
   def mutable s = 0
-  [triangle_area(~& (begin: s := [2, s]; { keyword'~height': 10 }), ~base: (begin: s := [1, s]; 1)), 
+  [triangle_area(~& (begin: s := [2, s]; { #'~height: 10 }), ~base: (begin: s := [1, s]; 1)), 
    s]
   ~is [5, [1, [2, 0]]]
 
 check:
   def mutable s = 0
-  [anyargs(~& (begin: s := [1, s]; { keyword'~height': 10 }),
+  [anyargs(~& (begin: s := [1, s]; { #'~height: 10 }),
            & (begin: s := [2, s]; [9, 10, 11]),
            ~base: (begin: s := [3, s]; 1),
            (begin: s := [4, s]; 8)),
    s]
-  ~is [[[9, 10, 11, 8], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+  ~is [[[9, 10, 11, 8], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
   [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
-           ~& (begin: s := [2, s]; { keyword'~height': 10 }),
+           ~& (begin: s := [2, s]; { #'~height: 10 }),
            ~base: (begin: s := [3, s]; 1),
            List.repet(begin: s := [4, s]; [8, 88]), ...),
    s]
-  ~is [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10}], [4, [3, [2, [1, 0]]]]]
+  ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
   [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
-           ~& (begin: s := [2, s]; { keyword'~height': 10 }),
+           ~& (begin: s := [2, s]; { #'~height: 10 }),
            ~base: (begin: s := [3, s]; 1),
-           ~& (begin: s := [4, s]; { keyword'~width': 20 }),
+           ~& (begin: s := [4, s]; { #'~width: 20 }),
            List.repet(begin: s := [5, s]; [8, 88]), ...),
    s]
-  ~is [[[9, 10, 11, 8, 88], {keyword'~base': 1, keyword'~height': 10, keyword'~width': 20}],
+  ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10, #'~width: 20}],
        [5, [4, [3, [2, [1, 0]]]]]]
 
 check:
-  anyargs(~x: 10, ~&{keyword'~x': 10})
+  anyargs(~x: 10, ~&{#'~x: 10})
   ~raises "duplicate keyword"
 
 check:
-  anyargs(~&{keyword'~x': 10}, ~x: 10)
+  anyargs(~&{#'~x: 10}, ~x: 10)
   ~raises "duplicate keyword"
 
 check:
-  anyargs(~&{keyword'~x': 10}, ~&{keyword'~x': 10})
+  anyargs(~&{#'~x: 10}, ~&{#'~x: 10})
   ~raises "duplicate keyword"
 
 check:
-  anyargs(~&{keyword'~x': 10}, ~&{keyword'~y': 10}, ~&{keyword'~x': 10})
+  anyargs(~&{#'~x: 10}, ~&{#'~y: 10}, ~&{#'~x: 10})
   ~raises "duplicate keyword"
 
 // ---------------------------
@@ -423,7 +423,7 @@ for:
   each anyargs: [anyargs_lm, anyargs_ml, anyargs_rm, anyargs_mr]
   check:
     anyargs("a", "b", ~c: "do", ~d: "re", ~e: "mi")
-    ~is [["a", "b"], {keyword'~c': "do", keyword'~d': "re", keyword'~e': "mi"}]
+    ~is [["a", "b"], {#'~c: "do", #'~d: "re", #'~e: "mi"}]
 
 // ---------------------------
 // Old demo tests - probably redundant, but keeping in case

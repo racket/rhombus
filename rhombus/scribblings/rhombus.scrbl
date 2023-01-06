@@ -3,7 +3,7 @@
 @title{Rhombus Prototype}
 
 This is the experimental Rhombus prototype using
-@seclink(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}.
+@seclink(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}.
 
 @table_of_contents()
 

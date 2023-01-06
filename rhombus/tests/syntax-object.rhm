@@ -9,22 +9,22 @@ check:
   ~raises "invalid as a shrubbery term"
 
 check:
-  Syntax.make([symbol(parens), [symbol(group), 1, "a", symbol(z)]])
+  Syntax.make([#'parens, [#'group, 1, "a", #'z]])
   ~prints_like '(1 "a" z)'
 
 check:
-  Syntax.make([symbol(parens),
-               [symbol(group), 1],
-               [symbol(group), "a"],
-               [symbol(group), [symbol(op), symbol(#{+})]]])
+  Syntax.make([#'parens,
+               [#'group, 1],
+               [#'group, "a"],
+               [#'group, [#'op, #'#{+}]]])
   ~prints_like '(1, "a", +)'
 
 check:
-  Syntax.make([symbol(parens), '1', '"a"', '+'])
+  Syntax.make([#'parens, '1', '"a"', '+'])
   ~prints_like '(1, "a", +)'
 
 check:
-  Syntax.make([symbol(parens), '1 2 3', '"a"', '4 + 5'])
+  Syntax.make([#'parens, '1 2 3', '"a"', '4 + 5'])
   ~prints_like '(1 2 3, "a", 4 + 5)'
 
 check:
@@ -52,7 +52,7 @@ check:
   ~raises "NonemptyList"
 
 check:
-  Syntax.make([symbol(parens), Syntax.make_group([1])])
+  Syntax.make([#'parens, Syntax.make_group([1])])
   ~prints_like '(1)'
 
 check:
@@ -61,7 +61,7 @@ check:
 
 check:
   Syntax.unwrap('x')
-  ~is symbol(x)
+  ~is #'x
 
 check:
   Syntax.unwrap('(1 2 3)')

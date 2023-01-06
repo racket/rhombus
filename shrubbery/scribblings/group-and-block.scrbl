@@ -13,7 +13,7 @@ The heart of shrubbery notation is its set of rules for organizing
 structure of a shrubbery-notation document, where literal fragments like
 @litchar{(} serve merely as tags:
 
-@nested(~style: symbol(inset),
+@nested(~style: #'inset,
         bnf.BNF([@nonterm{document},
                  kleenestar(@nonterm{group})],
                 [@nonterm{group},

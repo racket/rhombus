@@ -1,8 +1,8 @@
 #lang rhombus
 
 check:
-  {"a": 1, keyword(~b): 2}
-  ~is Map(["a", 1], [keyword(~b), 2])
+  {"a": 1, #'~b: 2}
+  ~is Map(["a", 1], [#'~b, 2])
 
 check:
   Map.length({"a": 1, "b": 2})

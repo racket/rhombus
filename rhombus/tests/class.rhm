@@ -500,7 +500,7 @@ check:
   class Posn4D(w):
     extends Posn3D
     nonfinal
-  def p = Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+  def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
   p :: Posn3D
@@ -519,7 +519,7 @@ check:
     annotation:
       rule | '().of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
            | '()': '_Posn3D'
-  def p = Posn3D(1, ~y: "2", symbol'three')
+  def p = Posn3D(1, ~y: "2", #'three)
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
   p :: Posn3D
@@ -548,7 +548,7 @@ check:
     annotation:
       rule | '() $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
            | '()': '_Posn4D'
-  def p = Posn4D(1, ~y: "2", symbol'three', keyword'~four')
+  def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
   p :: Posn.of(X Integer, Y String)
   p :: Posn3D

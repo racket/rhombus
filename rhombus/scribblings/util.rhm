@@ -9,4 +9,4 @@ export:
   aside
 
 fun aside(content, ~italic = #true):
-  scribble.nested(~style: symbol(inset), if italic | scribble.italic(content) | content)
+  scribble.nested(~style: #'inset, if italic | scribble.italic(content) | content)

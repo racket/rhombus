@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 
-@title(~style: symbol(toc)){Core Rhombus Reference}
+@title(~style: #'toc){Core Rhombus Reference}
 
 @docmodule(~lang, rhombus)
 
@@ -24,6 +24,8 @@
 
 @include_section("ref-implicit.scrbl")
 @include_section("ref-dynamic-static.scrbl")
+
+@include_section("ref-quote.scrbl")
 
 @include_section("ref-boolean.scrbl")
 @include_section("ref-number.scrbl")

@@ -6,7 +6,7 @@
 @title{Notation}
 
 This is a summary of
-@seclink(~doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}
+@seclink(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}
 as used for Rhombus.
 
 @aside{If you install @tt{https://github.com/racket/rhombus-prototype.git},

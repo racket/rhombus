@@ -241,6 +241,8 @@ define approx_thunk(x):
                | (): 0
                | (n): n
 
+#' #, #; #: #|
+
 INPUT
 
 ;; ----------------------------------------
@@ -898,6 +900,8 @@ INPUT
             (alts
              (block (group (parens) (block (group 0))))
              (block (group (parens (group n)) (block (group n)))))))))))))
+    (group
+     (op |#'|) (op |#,|) (op |#;|) (op |#:|) (op \#\|))
     (group
      define
      curried

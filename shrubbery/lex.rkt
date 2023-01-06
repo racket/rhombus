@@ -100,12 +100,14 @@
                       (:or "inf"
                            "neginf"
                            "nan"))]
+  [escopchar (:or "'" "," ":" ";" "|")]
 
   [bad-hash (:- (:or (:: "#" (:* non-delims))
                      "#/")
                 boolean
                 void-const
-                special-number)]
+                special-number
+                (:: "#" escopchar (:* any-char)))]
 
   [exponent-marker e]
   [sign (char-set "+-")]
@@ -121,7 +123,8 @@
                      (:: (:+ opchar) (:- opchar "+" "-" "." "/"))
                      (:+ ".")
                      (:+ "+")
-                     (:+ "-"))
+                     (:+ "-")
+                     (:: "#" escopchar))
                 "|" ":"
                 (:: (:* any-char) (:or "//" "/*") (:* any-char)))]
 

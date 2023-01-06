@@ -10,7 +10,7 @@ export:
   rhombus_doc
   Rhombus
 
-def shrubbery_doc: [symbol(lib), "shrubbery/scribblings/shrubbery.scrbl"]
-def rhombus_doc: [symbol(lib), "rhombus/scribblings/rhombus.scrbl"]
+def shrubbery_doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"]
+def rhombus_doc: [#'lib, "rhombus/scribblings/rhombus.scrbl"]
 
 def Rhombus: @seclink(~doc: rhombus_doc, "top"){Rhombus}
