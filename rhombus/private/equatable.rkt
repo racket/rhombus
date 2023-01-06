@@ -11,7 +11,7 @@
 
 (provide Equatable
          (for-space rhombus/class Equatable)
-         (for-space rhombus/annotation Equatable))
+         (for-space rhombus/annot Equatable))
 
 
 (define-values (prop:Equatable Equatable? Equatable-ref)
