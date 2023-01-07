@@ -139,7 +139,7 @@
        [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
        [else (list r)])]
     [(list? r) r]
-    [else (raise-error who "expected a list or syntax object" r)]))
+    [else (expected-list-or-syntax who "expected a list or syntax object" r)]))
 
 ;; `r` is a sequence of groups
 (define (pack-multi r)
@@ -355,6 +355,11 @@
   (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm
                           "cannot coerce pair to syntax"
                           "pair" r))
+
+(define (expected-list-or-syntax who msg r)
+  (raise-arguments-error* who rhombus-realm
+                          msg
+                          "value" r))
 
 (define (raise-error who msg r)
   (if (procedure? who)
