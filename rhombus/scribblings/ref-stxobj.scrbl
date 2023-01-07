@@ -82,13 +82,16 @@ Metadata for a syntax object can include a source location and the raw
   '« x '$(1 + 2)' z »'
 )
 
- When @rhombus($) is followed by an immediate @rhombus([]) form, the result
- must be a list (as with the normal binding of @rhombus(#{#%brackets})),
- and the elements of the list are spliced in place of the
- @rhombus($) term and @rhombus([]) expression.
+ A @rhombus($$) escape is similar to @rhombus($), but the result of the
+ expression after @rhombus($$) can be a list, in which case and the
+ elements of the list are spliced in place of the @rhombus($$) term and
+ expression witin the enclosing group. If the result is a syntax object,
+ it can be a single-term syntax object or a group syntax object; in the
+ latter case, the group terms are spliced in place of the
 
 @examples(
-  'x $[1, 2, 3] z'
+  'x $$[1, 2, 3] z'
+  'x $$('1 2 3') z'
 )
 
  A @dots as a @rhombus(term,~var) must follow a
@@ -100,7 +103,7 @@ Metadata for a syntax object can include a source location and the raw
 @examples(
   def [x, ...] = [1, 2, 3]
   '(1 + $x) ...'
-  '0 $['+', x] ...'
+  '0 $$('+ $x') ...'
 )
 
  Multiple escapes can appear in the term before @dots, in which the
@@ -162,10 +165,11 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   expr.macro '$ $expr'
+  expr.macro '$$ $expr'
 ){
 
  Only allowed within a @rhombus('') form, escapes so that the value of
- @rhombus(expr) is used in place of the @rhombus($) form.
+ @rhombus(expr) is used in place of the @rhombus($) or @rhombus($$) form.
 
 }
 

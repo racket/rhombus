@@ -25,7 +25,7 @@
 
   grammar maybe_eval:
     ~eval
-    $$(epsilon)
+    #,(epsilon)
   
   grammar expected_result:
     ~is $expected_expr

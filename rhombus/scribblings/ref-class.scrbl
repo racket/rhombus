@@ -27,13 +27,13 @@
     $keyword $maybe_default
 
   grammar modifers:
-    $$(@rhombus(private, ~class_clause))
-    $$(@rhombus(mutable, ~bind))
-    $$(@rhombus(private, ~class_clause)) $$(@rhombus(mutable, ~bind))
+    #,(@rhombus(private, ~class_clause))
+    #,(@rhombus(mutable, ~bind))
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
     ε
 
   grammar maybe_annot:
-    :: $$(@rhombus(annotation, ~var))
+    :: #,(@rhombus(annotation, ~var))
     ε
 
   grammar maybe_default:
@@ -47,26 +47,26 @@
     $export
 
   grammar class_clause:
-    $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
-    $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
-    $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
-    $$(@rhombus(private, ~class_clause)) $$(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
-    $$(@rhombus(method, ~class_clause)) $method_impl
-    $$(@rhombus(override, ~class_clause)) $method_impl
-    $$(@rhombus(final, ~class_clause)) $method_impl
-    $$(@rhombus(private, ~class_clause)) $method_impl
-    $$(@rhombus(abstract, ~class_clause)) $method_decl
-    $$(@rhombus(property, ~class_clause)) $property_impl
-    $$(@rhombus(extends, ~class_clause)) $identifier_path
-    $$(@rhombus(implements, ~class_clause)) $implements_decl
-    $$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause)) $implements_decl
-    $$(@rhombus(final, ~class_clause))
-    $$(@rhombus(nonfinal, ~class_clause))
-    $$(@rhombus(internal, ~class_clause)) $identifier
-    $$(@rhombus(constructor, ~class_clause)) $constructor_decl
-    $$(@rhombus(expression, ~class_clause)) $expression_decl
-    $$(@rhombus(binding, ~class_clause)) $binding_decl
-    $$(@rhombus(annotation, ~class_clause)) $annotation_decl
+    #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
+    #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    #,(@rhombus(method, ~class_clause)) $method_impl
+    #,(@rhombus(override, ~class_clause)) $method_impl
+    #,(@rhombus(final, ~class_clause)) $method_impl
+    #,(@rhombus(private, ~class_clause)) $method_impl
+    #,(@rhombus(abstract, ~class_clause)) $method_decl
+    #,(@rhombus(property, ~class_clause)) $property_impl
+    #,(@rhombus(extends, ~class_clause)) $identifier_path
+    #,(@rhombus(implements, ~class_clause)) $implements_decl
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
+    #,(@rhombus(final, ~class_clause))
+    #,(@rhombus(nonfinal, ~class_clause))
+    #,(@rhombus(internal, ~class_clause)) $identifier
+    #,(@rhombus(constructor, ~class_clause)) $constructor_decl
+    #,(@rhombus(expression, ~class_clause)) $expression_decl
+    #,(@rhombus(binding, ~class_clause)) $binding_decl
+    #,(@rhombus(annotation, ~class_clause)) $annotation_decl
     $other_class_clause
 ){
 
@@ -92,11 +92,11 @@
 
  @item{a @tech{namespace} to access exported bindings as well as a
   function
-  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(method,~var))),
+  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
-  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(property,~var))),
+  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(property,~var))),
   and a field accessor
-  @rhombus(identifier_path$$(rhombus(.))$$(@rhombus(field,~var))) for each
+  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, and field in the class
   (including inherited methods, properties, and fields).}
 
@@ -305,16 +305,16 @@
     $export
 
   grammar interface_clause:
-    $$(@rhombus(method, ~intf_clause)) $method_impl
-    $$(@rhombus(override, ~intf_clause)) $method_impl
-    $$(@rhombus(final, ~intf_clause)) $method_impl
-    $$(@rhombus(private, ~intf_clause)) $method_impl
-    $$(@rhombus(abstract, ~intf_clause)) $method_decl
-    $$(@rhombus(property, ~intf_clause)) $property_impl
-    $$(@rhombus(extends, ~intf_clause)) $extends_decl
-    $$(@rhombus(internal, ~intf_clause)) $identifier
-    $$(@rhombus(expression, ~intf_clause)) $expression_decl
-    $$(@rhombus(annotation, ~intf_clause)) $annotation_decl
+    #,(@rhombus(method, ~intf_clause)) $method_impl
+    #,(@rhombus(override, ~intf_clause)) $method_impl
+    #,(@rhombus(final, ~intf_clause)) $method_impl
+    #,(@rhombus(private, ~intf_clause)) $method_impl
+    #,(@rhombus(abstract, ~intf_clause)) $method_decl
+    #,(@rhombus(property, ~intf_clause)) $property_impl
+    #,(@rhombus(extends, ~intf_clause)) $extends_decl
+    #,(@rhombus(internal, ~intf_clause)) $identifier
+    #,(@rhombus(expression, ~intf_clause)) $expression_decl
+    #,(@rhombus(annotation, ~intf_clause)) $annotation_decl
     $other_interface_clause
 
 ){
@@ -349,7 +349,7 @@
  interface also has implemented public methods or properties that refer to them.
 
  When a class implements an interface privately using
- @rhombus($$(@rhombus(private, ~class_clause)) $$(@rhombus(implements, ~class_clause))),
+ @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
  its instances do not satisfy the interface as an annotation. If the
  privately implemented interface has an internal name declared with
  @rhombus(internal, ~intf_clause), however, instances satisfy the
@@ -357,7 +357,7 @@
  instance can be accessed only with static @rhombus(.) via the
  internal-name annotation. As long as a method or property belongs to only privately
  implemented interfaces, it can be overridden with
- @rhombus($$(@rhombus(private, ~class_clause)) $$(@rhombus(override, ~class_clause))),
+ @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(override, ~class_clause))),
  otherwise it is overidden normally. If a class declares the
  implementation of a interface both normally and privately, then the
  interface is implemented normally. Abstract private methods and properties must be
@@ -447,18 +447,18 @@
 
 @doc(  
   class_clause.macro 'final $method_impl'
-  class_clause.macro 'final $$(@rhombus(method, ~class_clause)) $method_impl'
-  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $method_impl'
-  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl'
-  class_clause.macro 'final $$(@rhombus(property, ~class_clause)) $property_impl'
-  class_clause.macro 'final $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'final #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'final #,(@rhombus(override, ~class_clause)) $method_impl'
+  class_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'final #,(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'final $method_impl'
-  interface_clause.macro 'final $$(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final $$(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'final $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause)) $property_impl'
+  interface_clause.macro 'final #,(@rhombus(method, ~intf_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(property, ~intf_clause)) $property_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause)) $property_impl'
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
@@ -494,18 +494,18 @@
   class_clause.macro 'method $method_impl'
   class_clause.macro 'property $property_impl'
   class_clause.macro 'override $method_impl'
-  class_clause.macro 'override $$(@rhombus(method, ~class_clause)) $method_impl'
-  class_clause.macro 'override $$(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'override #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'override #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'method $method_decl'
   interface_clause.macro 'method $method_impl'
   interface_clause.macro 'property $property_decl'
   interface_clause.macro 'property $property_impl'
   interface_clause.macro 'override $method_impl'
   interface_clause.macro 'override $method_decl'
-  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'override $$(@rhombus(method, ~intf_clause)) $method_decl'
-  interface_clause.macro 'override $$(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'override $$(@rhombus(property, ~intf_clause)) $property_decl'
+  interface_clause.macro 'override #,(@rhombus(method, ~intf_clause)) $method_impl'
+  interface_clause.macro 'override #,(@rhombus(method, ~intf_clause)) $method_decl'
+  interface_clause.macro 'override #,(@rhombus(property, ~intf_clause)) $property_impl'
+  interface_clause.macro 'override #,(@rhombus(property, ~intf_clause)) $property_decl'
 
   grammar method_impl:
     $identifier $maybe_res_ann: $entry_point
@@ -591,21 +591,21 @@
 }
 
 @doc(
-  class_clause.macro 'private $$(@rhombus(implements, ~class_clause)) $identifier_path ...'
-  class_clause.macro 'private $$(@rhombus(implements, ~class_clause)): $identifier_path ...; ...'
-  class_clause.macro 'private $$(@rhombus(field, ~class_clause)) $field_decl'
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $identifier_path ...'
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $identifier_path ...; ...'
+  class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_decl'
   class_clause.macro 'private $method_impl'
-  class_clause.macro 'private $$(@rhombus(method, ~class_clause)) $method_impl'
-  class_clause.macro 'private $$(@rhombus(property, ~class_clause)) $property_impl'
-  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $method_impl'
-  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(method, ~class_clause)) $method_impl'
-  class_clause.macro 'private $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'private #,(@rhombus(property, ~class_clause)) $property_impl'
+  class_clause.macro 'private #,(@rhombus(override, ~class_clause)) $method_impl'
+  class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
+  class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'private $method_impl'
-  interface_clause.macro 'private $$(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'private $$(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $method_impl'
-  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $$(@rhombus(method, ~intf_clause))  $method_impl'
-  interface_clause.macro 'private $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause))  $property_impl'
+  interface_clause.macro 'private #,(@rhombus(method, ~intf_clause)) $method_impl'
+  interface_clause.macro 'private #,(@rhombus(property, ~intf_clause)) $property_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) $method_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause))  $method_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause))  $property_impl'
 ){
 
  A @tech{class clause} that declares interfaces that are privately
@@ -632,15 +632,15 @@
 
 @doc(
   class_clause.macro 'abstract $method_decl'
-  class_clause.macro 'abstract $$(@rhombus(method, ~class_clause)) $method_decl'
-  class_clause.macro 'abstract $$(@rhombus(override, ~class_clause)) $method_decl'
-  class_clause.macro 'abstract $$(@rhombus(property, ~class_clause)) $property_decl'
-  class_clause.macro 'abstract $$(@rhombus(override, ~class_clause)) $$(@rhombus(property, ~class_clause)) $property_decl'
+  class_clause.macro 'abstract #,(@rhombus(method, ~class_clause)) $method_decl'
+  class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) $method_decl'
+  class_clause.macro 'abstract #,(@rhombus(property, ~class_clause)) $property_decl'
+  class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
   interface_clause.macro 'abstract $method_decl'
-  interface_clause.macro 'abstract $$(@rhombus(method, ~intf_clause)) $method_decl'
-  interface_clause.macro 'abstract $$(@rhombus(override, ~intf_clause)) $method_decl'
-  interface_clause.macro 'abstract $$(@rhombus(property, ~intf_clause)) $property_decl'
-  interface_clause.macro 'abstract $$(@rhombus(override, ~intf_clause)) $$(@rhombus(property, ~intf_clause))  $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(method, ~intf_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~intf_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(property, ~intf_clause)) $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause))  $property_decl'
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
@@ -735,7 +735,7 @@
 
   grammar maybe_name:
     $identifier
-    $$("ϵ")
+    #,("ϵ")
 ){
 
  These @tech{class clauses} are recognized by @rhombus(class) to replace

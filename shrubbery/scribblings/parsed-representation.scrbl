@@ -55,22 +55,22 @@ Here's the same grammar, but expressed using Rhombus constructors:
 
 @nested(~style: #'inset,
         bnf.BNF([@nonterm{parsed},
-                 @rhombus([#'top, $$(@nonterm{group}), ...])],
+                 @rhombus([#'top, #,(@nonterm{group}), ...])],
                 [@nonterm{group},
-                 @rhombus([#'group, $$(@nonterm{term}), ..., $$(@nonterm{tail-term})])],
+                 @rhombus([#'group, #,(@nonterm{term}), ..., #,(@nonterm{tail-term})])],
                 [@nonterm{term},
                  @nonterm{atom},
-                 @rhombus([#'op, $$(@nonterm{symbol})]),
-                 @rhombus([#'parens, $$(@nonterm{group}), ...]),
-                 @rhombus([#'brackets, $$(@nonterm{group}), ...]),
-                 @rhombus([#'braces, $$(@nonterm{group}), ...]),
-                 @rhombus([#'quotes, $$(@nonterm{group}), ...])],
+                 @rhombus([#'op, #,(@nonterm{symbol})]),
+                 @rhombus([#'parens, #,(@nonterm{group}), ...]),
+                 @rhombus([#'brackets, #,(@nonterm{group}), ...]),
+                 @rhombus([#'braces, #,(@nonterm{group}), ...]),
+                 @rhombus([#'quotes, #,(@nonterm{group}), ...])],
                 [@nonterm{tail-term},
                  @nonterm{term},
                  @nonterm{block},
-                 @rhombus([#'alts, $$(@nonterm{block}), ...])],
+                 @rhombus([#'alts, #,(@nonterm{block}), ...])],
                 [@nonterm{block},
-                 @rhombus([#'block, $$(@nonterm{group}), ...])]))
+                 @rhombus([#'block, #,(@nonterm{group}), ...])]))
 
 Here are some example shrubberies with their S-expression parsed
 representations:

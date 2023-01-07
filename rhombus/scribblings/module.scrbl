@@ -10,7 +10,7 @@ starts @litchar{#lang rhombus}. If you write an expression at the top of a
 module, then its value gets printed out.
 
 @rhombusblock(
-  $$(hash_lang()) $$(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombusmodname(rhombus))
 
   1+4  // prints 5
   
@@ -31,7 +31,7 @@ produces a function) followed by comma-separated arguments in
 parentheses.
 
 @rhombusblock(
-  $$(hash_lang()) $$(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombusmodname(rhombus))
 
   def fahrenheit_freezing = 32
                            
@@ -77,7 +77,7 @@ definitions.
 
 @rhombusblock(
   // f2c.rhm
-  $$(hash_lang()) $$(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombusmodname(rhombus))
 
   export:
     fahrenheit_freezing
@@ -91,7 +91,7 @@ definitions.
 
 @rhombusblock(
   // freezing.rhm
-  $$(hash_lang()) $$(@rhombusmodname(rhombus))
+  #,(hash_lang()) #,(@rhombusmodname(rhombus))
 
   import:
     "f2c.rhm"

@@ -7,7 +7,7 @@
 @title{Maps}
 
 Immutable maps can be constructed using the syntax
-@rhombus({$$(@rhombus(key_expr, ~var)): $$(@rhombus(value_expr, ~var)), ...}),
+@rhombus({#,(@rhombus(key_expr, ~var)): #,(@rhombus(value_expr, ~var)), ...}),
 which creates a map from the values of the @rhombus(key_expr, ~var)s to
 the corresponding values of the @rhombus(value_expr, ~var)s. Note
 that using @litchar{,} in place of @litchar{:} creates a set with
@@ -34,18 +34,18 @@ operator. These uses of square brackets are implemented by
   expr.macro '#{#%braces} {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition $$(@litchar{,}) $ellipses
+    $key_repetition: $val_repetition #,(@litchar{,}) $ellipses
     & $map_expr
   expr.macro '#{#%braces} {$expr_or_splice, ...+}'
   grammar expr_or_splice:
     $elem_expr
-    $elem_repetitions $$(@litchar{,}) $ellipses
+    $elem_repetitions #,(@litchar{,}) $ellipses
     & $set_expr
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) $ellipsis
+    $ellipses #,(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots_expr)
+    #,(dots_expr)
   repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}'
   repet.macro '#{#%braces} {$repet_or_splice, ...+}'
 ){
@@ -115,10 +115,10 @@ operator. These uses of square brackets are implemented by
   repet.macro 'Map{$key_val_or_splice_repet, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition $$(@litchar{,}) $ellipsis
+    $key_repetition: $val_repetition #,(@litchar{,}) $ellipsis
     @rhombus(&) $map_expr
   grammar ellipsis:
-    $$(dots),
+    #,(dots),
   fun Map([key :: Any, value :: Any], ...) :: Map
 ){
 
@@ -143,14 +143,14 @@ operator. These uses of square brackets are implemented by
   bind.macro '#{#%braces} {$key_expr: $val_binding, ..., map_rest}'
   grammar map_rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis
+    $rest_key_binding: $rest_val_binding #,(@litchar{,}) $ellipsis
   bind.macro '#{#%braces} {$expr, ...}'
   bind.macro '#{#%braces} {$expr, ..., set_rest}'
   grammar map_rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $ellipsis
+    $rest_binding #,(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 ){
 
  Matches either a map or set, depending on whether
@@ -177,9 +177,9 @@ operator. These uses of square brackets are implemented by
   bind.macro 'Map([$key_expr, $val_binding], ...)'
   grammar rest:
     & $map_binding
-    $rest_key_binding: $rest_val_binding $$(@litchar{,}) $ellipsis
+    $rest_key_binding: $rest_val_binding #,(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
@@ -267,7 +267,7 @@ operator. These uses of square brackets are implemented by
  first in the result followed by the elements of @rhombus(v2).
 
  The combination
- @rhombus($$(@rhombus(map_expr, ~var)) ++ {$$(@rhombus(key_expr, ~var)): $$(@rhombus(value_expr, ~var))})
+ @rhombus(#,(@rhombus(map_expr, ~var)) ++ {#,(@rhombus(key_expr, ~var)): #,(@rhombus(value_expr, ~var))})
  is recognized by the compiler and turned into an efficient functional update of the
  map produced by @rhombus(map_expr), as opposed to creating an intermediate map.
  Set update is handled similarly.

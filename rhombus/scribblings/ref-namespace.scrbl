@@ -51,7 +51,7 @@ as part of their grammar:
  outside the body, and @rhombus(export) declarations are allowed and
  determine exports for the @rhombus(identifier_path) immediately after
  @rhombus(namespace). An exported @rhombus(name, ~var) can be reached using
- @rhombus(identifier_path$$(rhombus(.))$$(rhombus(name, ~var))). The name
+ @rhombus(identifier_path#,(rhombus(.))#,(rhombus(name, ~var))). The name
  @rhombus(identifier_path) also works with @rhombus(import).
 
 @examples(

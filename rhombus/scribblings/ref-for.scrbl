@@ -18,18 +18,18 @@
                 $body
                 ~into $reducer'
   grammar clause_or_body:
-    $$(@rhombus(each, ~for_clause)) $binding:
+    #,(@rhombus(each, ~for_clause)) $binding:
       $body
       ...
-    $$(@rhombus(each, ~for_clause)):
+    #,(@rhombus(each, ~for_clause)):
       $binding:
         $body
         ...
       ...
-    $$(@rhombus(keep_when, ~for_clause)) $expr
-    $$(@rhombus(skip_when, ~for_clause)) $expr
-    $$(@rhombus(break_when, ~for_clause)) $expr
-    $$(@rhombus(final_when, ~for_clause)) $expr
+    #,(@rhombus(keep_when, ~for_clause)) $expr
+    #,(@rhombus(skip_when, ~for_clause)) $expr
+    #,(@rhombus(break_when, ~for_clause)) $expr
+    #,(@rhombus(final_when, ~for_clause)) $expr
     $other_for_clause
     $body
 ){

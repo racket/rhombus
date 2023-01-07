@@ -26,15 +26,15 @@
   grammar module_path:
     $collection_module_path
     $string
-    $$(@rhombus(lib, ~impmod))($string)
-    $$(@rhombus(file, ~impmod))($string)
-    $module_path $$(@rhombus(!, ~impmod)) $identifier
-    $$(@rhombus(., ~impmod)) $identifier
-    $module_path $$(@rhombus(., ~impmod)) $identifier
+    #,(@rhombus(lib, ~impmod))($string)
+    #,(@rhombus(file, ~impmod))($string)
+    $module_path #,(@rhombus(!, ~impmod)) $identifier
+    #,(@rhombus(., ~impmod)) $identifier
+    $module_path #,(@rhombus(., ~impmod)) $identifier
 
   grammar collection_module_path:
     $identifier
-    $identifier $$(@rhombus(/, ~impmod)) $collection_module_path
+    $identifier #,(@rhombus(/, ~impmod)) $collection_module_path
 
 ){
 
@@ -57,7 +57,7 @@
    @rhombus(module_path: modifier; modifier; ...) where the initial
    @rhombus(modifier) does not accept a block argument. This form is
    especially handy when the initial @rhombus(modifier) is @rhombus(open)
-   or @rhombus(as $$(@rhombus(identifier,~var))) and additional modifiers
+   or @rhombus(as #,(@rhombus(identifier,~var))) and additional modifiers
    are needed.},
 
  @item{@rhombus(modifier: import_clause; ....) is the same as the
@@ -98,25 +98,25 @@
    digits must form a number that is not the ASCII value of a letter,
    digit, @litchar{-}, @litchar{+}, or @litchar{_}.},
 
- @item{@rhombus($$(@rhombus(lib, ~impmod))(string)): refers to an installed collection library,
+ @item{@rhombus(#,(@rhombus(lib, ~impmod))(string)): refers to an installed collection library,
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
    by itself, with the additional constraint that @litchar{.} and
    @litchar{..} directory indicators are disallowed. When @rhombus(string)
    does not end with a file suffix, @filepath{.rhm} is added.},
 
- @item{@rhombus($$(@rhombus(file, ~impmod))(string)): refers to a file through a
+ @item{@rhombus(#,(@rhombus(file, ~impmod))(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
 
- @item{@rhombus(module_path $$(@rhombus(!, ~impmod)) identifier):
+ @item{@rhombus(module_path #,(@rhombus(!, ~impmod)) identifier):
   refers to submodule of another module. The submodule name
   @rhombus(identifier) is used as the default import prefix.},
 
- @item{@rhombus($$(@rhombus(., ~impmod))identifier): refers to a namespace
+ @item{@rhombus(#,(@rhombus(., ~impmod))identifier): refers to a namespace
   @rhombus(identifier), which might be predefined like @rhombus(List), or
   might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
- @item{@rhombus(module_path$$(@rhombus(.,~impmod))identifier): a shorthand for importing only
+ @item{@rhombus(module_path#,(@rhombus(.,~impmod))identifier): a shorthand for importing only
   @rhombus(identifier) from @rhombus(module_path) path and then importing
   with @rhombus(.identifier). The last @rhombus(identifier) in a dotted
   sequence is allowed to be an export that is not a namespace, in which
@@ -215,7 +215,7 @@
 
 @doc(
   impo.modifier 'rename:
-                   $identifier $$(@rhombus(as, ~impmod)) $local_identifier
+                   $identifier #,(@rhombus(as, ~impmod)) $local_identifier
                    ...'
 ){
 

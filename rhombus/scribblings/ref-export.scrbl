@@ -58,7 +58,7 @@
 
 @doc(
   expo.macro 'all_from($module_path)'
-  expo.macro 'all_from($$(@rhombus(., ~expmod)) $identifier_path)'
+  expo.macro 'all_from(#,(@rhombus(., ~expmod)) $identifier_path)'
 ){
 
  With @rhombus(module_path), exports all bindings imported without a
@@ -69,7 +69,7 @@
  @rhombus(lib) forms, and in a @rhombus(lib) form, an implicit
  @filepath{.rhm} suffix is made explicit.
 
- With @rhombus($$(@rhombus(., ~expmod)) identifier_path), exports
+ With @rhombus(#,(@rhombus(., ~expmod)) identifier_path), exports
  the content of the specified @tech{namespace} or module import (i.e.,
  the content that would be accessed with a prefix in the exporting
  context). See @secref("namespaces") for information on
@@ -78,7 +78,7 @@
 
 @doc(
   expo.macro 'rename:
-                $int_identifier_or_operator $$(@rhombus(as, ~expmod)) $ext_identifier_or_operator
+                $int_identifier_or_operator #,(@rhombus(as, ~expmod)) $ext_identifier_or_operator
                 ...'
 ){
 

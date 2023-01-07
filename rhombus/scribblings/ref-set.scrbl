@@ -7,7 +7,7 @@
 @title{Sets}
 
 Immutable sets can be constructed using the syntax
-@rhombus({$$(@rhombus(val_expr, ~var)), ...}),
+@rhombus({#,(@rhombus(val_expr, ~var)), ...}),
 which creates a set containing the values of the @rhombus(value_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
 parsed as an implicit use of the @rhombus(#{#%braces}) form.
@@ -34,15 +34,15 @@ to be included in the set. These uses of square brackets are implemented by
 
   grammar expr_or_splice:
     $expr
-    $repetition $$(@litchar{,}) ellipses
+    $repetition #,(@litchar{,}) ellipses
     & $set_expr
 
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) $ellipsis
+    $ellipses #,(@litchar{,}) $ellipsis
 
   grammar ellipsis:
-    $$(dots_expr)
+    #,(dots_expr)
 
 ){
 
@@ -70,9 +70,9 @@ to be included in the set. These uses of square brackets are implemented by
   bind.macro 'Set{$expr, ..., $rest}'
   grammar rest:
     & $set_binding
-    $rest_binding $$(@litchar{,}) $ellipsis
+    $rest_binding #,(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 ){
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.

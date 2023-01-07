@@ -36,7 +36,7 @@ meta:
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   '$(parsed(['defmodule',
              #'#{#:require-form},
-             unparsed('fun (mod): @rhombus(import: $$(mod))'),
+             unparsed('fun (mod): @rhombus(import: #,(mod))'),
              translate_mod('$mod ...'),
              option.form, ...]))'
   

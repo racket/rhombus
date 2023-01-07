@@ -24,7 +24,7 @@
   grammar identifier_or_operator:
     $identifier
     $operator
-    $$(dollar)('$$(dollar)')
+    #,(dollar)('#,(dollar)')
     ($identifier_path)
     ($operator_path)
   grammar term_pattern:

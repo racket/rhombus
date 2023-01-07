@@ -7,7 +7,7 @@
 @title{Lists}
 
 @deftech{Lists} can be constructed using the syntax
-@rhombus([$$(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
+@rhombus([#,(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the
 @rhombus(#{#%brackets}) form, which (despite its name) is normally bound to
@@ -34,15 +34,15 @@ to append lists.
 
   grammar expr_or_splice:
     $expr
-    $repetition $$(@litchar{,}) $ellipses
+    $repetition #,(@litchar{,}) $ellipses
     & $list_expr
 
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) ellipsis
+    $ellipses #,(@litchar{,}) ellipsis
 
   grammar ellipsis:
-    $$(dots_expr)
+    #,(dots_expr)
 
 ){
 
@@ -72,10 +72,10 @@ to append lists.
   bind.macro '#{#%brackets} [$binding, ...]'
   bind.macro '#{#%brackets} [$binding, ..., $rest]'
   grammar rest:
-    $repetition_binding $$(@litchar{,}) $ellipsis
+    $repetition_binding #,(@litchar{,}) $ellipsis
     & $list_binding
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 ){
 
  Matches a list with as many elements as @rhombus(binding)s, or if

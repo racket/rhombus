@@ -371,7 +371,7 @@
   
   (define (subst name)
     (define id (if (identifier? name) name (cadr (syntax->list name))))
-    #`((op #,(relocate #'$$ id syntax-raw-prefix-property syntax-raw-prefix-property))
+    #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx

@@ -110,7 +110,7 @@ Some additional @litchar("@") rules:
 
  @item{While the @italic{command} component itself can be parenthesized, it
        can also have the form
-       @rhombus($$(@litchar("«")) $$(@italic{command}) ... $$(@litchar{»})),
+       @rhombus(#,(@litchar("«")) #,(@italic{command}) ... #,(@litchar{»})),
        for a multi-part command component that is spliced into the translation
        without surrounding parentheses.},
 
@@ -124,7 +124,7 @@ Some additional @litchar("@") rules:
        can be provided as different newline-separated groups without a
        @litchar{,} in between.}
 
- @item{The form @rhombus($$(@litchar("@(«")) $$(@italic{command}) ... $$(@litchar{»)}))
+ @item{The form @rhombus(#,(@litchar("@(«")) #,(@italic{command}) ... #,(@litchar{»)}))
        splices as-is with no arguments, even if the subsequent text has
        the shape of parenthesed @italic{arg}s or braced @italic{text}.},
 

@@ -30,7 +30,7 @@ which case it accepts keys paired with values in two-item lists:
 )
 
 Curly braces @litchar("{")...@litchar("}") can be used as a shorthand
-for writing @rhombus(Map($$(@elem{...}))). Within curly braces, the key and value
+for writing @rhombus(Map(#,(@elem{...}))). Within curly braces, the key and value
 are joined by @litchar{:}. (If a key expression needs to use @litchar{:}
 itself, the expression will have to be in parentheses.)
 

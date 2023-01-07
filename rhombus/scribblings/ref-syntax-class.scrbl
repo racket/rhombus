@@ -36,7 +36,7 @@
     $identifier
     [$identifier_maybe_rep, $ellipsis]
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 ){
 
  Defines a syntax class that can be used in syntax patterns with
@@ -75,7 +75,7 @@
 
  When a variable @rhombus(id, ~var) is bound through a
  @seclink("stxobj"){syntax pattern} with
- @rhombus($($$(@rhombus(id, ~var)) :: $$(@rhombus(stx_class_id, ~var)))),
+ @rhombus($(#,(@rhombus(id, ~var)) :: #,(@rhombus(stx_class_id, ~var)))),
  it matches a syntax object that matches any of the
  @rhombus(syntax_pattern)s in the definition of
  @rhombus(stx_class_id ,~var), where the @rhombus(syntax_pattern)s are tried
@@ -88,7 +88,7 @@
  within a template, parentheses are needed around the variable name,
  @rhombus(.), and attribute name to group them together if the variable
  name is preceded by a @rhombus($) escape:
- @rhombus($($$(@list(@rhombus(id, ~var), @rhombus(.), @rhombus(attr_id, ~var))))).
+ @rhombus($(#,(@list(@rhombus(id, ~var), @rhombus(.), @rhombus(attr_id, ~var))))).
 
  A variable bound with a syntax class (within a syntax pattern) can be
  used without dot notation. In that case, the result for

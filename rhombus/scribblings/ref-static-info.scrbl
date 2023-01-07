@@ -50,7 +50,7 @@
  match the form
 
 @rhombusblock(
-   (($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...))
+   ((#,(@rhombus(key_id, ~var)), #,(@rhombus(val, ~var))), ...))
 
  Keys for static information are compared based on binding, not merely
  the key's symbolic form.

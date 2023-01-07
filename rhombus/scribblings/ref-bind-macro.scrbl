@@ -70,7 +70,7 @@
  combined in the form
 
  @rhombusblock(
-  '($$(@rhombus(infoer_id, ~var)), $$(@rhombus(data, ~var)))')
+  '(#,(@rhombus(infoer_id, ~var)), #,(@rhombus(data, ~var)))')
 
  The @rhombus(infoer_id, ~var) identifier must be bound to a transformer
  with @rhombus(bind.infoer), and @rhombus(data, ~var) is propagated to
@@ -134,16 +134,16 @@
  The syntax object @rhombus(stx) must have the following shape:
 
  @rhombusblock(
-  '($$(@rhombus(ann_string, ~var)),
-    $$(@rhombus(name_identifier, ~var)),
-    (($$(@rhombus(static_key, ~var)), $$(@rhombus(static_value, ~var))), ...),
-    (($$(@rhombus(defined_identifier, ~var)),
-      [$$(@rhombus(var_use, ~var)), ...],
-      ($$(@rhombus(var_static_key, ~var)), $$(@rhombus(var_static_value, ~var))), ...),
+  '(#,(@rhombus(ann_string, ~var)),
+    #,(@rhombus(name_identifier, ~var)),
+    ((#,(@rhombus(static_key, ~var)), #,(@rhombus(static_value, ~var))), ...),
+    ((#,(@rhombus(defined_identifier, ~var)),
+      [#,(@rhombus(var_use, ~var)), ...],
+      (#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...),
      ...),
-    $$(@rhombus(matcher_id, ~var)),
-    $$(@rhombus(binder_id, ~var)),
-    $$(@rhombus(data, ~var)))'
+    #,(@rhombus(matcher_id, ~var)),
+    #,(@rhombus(binder_id, ~var)),
+    #,(@rhombus(data, ~var)))'
    )
 
  The @rhombus(ann_string, ~var) term is for error repoting when a value
@@ -212,7 +212,7 @@
  following shape:
 
  @rhombusblock(
-  '(($$(@rhombus(key_id, ~var)), $$(@rhombus(val, ~var))), ...)')
+  '((#,(@rhombus(key_id, ~var)), #,(@rhombus(val, ~var))), ...)')
  
  The result is a syntax object that represents the initial expansion of
  the binding form as a packed syntax object, whose form is unspecified

@@ -126,6 +126,21 @@
     [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
     [else (datum->syntax at-stx (list group-blank r))]))
 
+(define (unpack-term-list r who at-stx)
+  (cond
+    [(syntax? r)
+     (cond
+       [(multi-syntax? r)
+        (define l (syntax->list r))
+        (cond
+          [(= 2 (length l)) (cdr (syntax->list (cadr l)))]
+          [else (raise-error who "multi-group syntax not allowed in group context" r)])]
+       [(group-syntax? r) (cdr (syntax->list r))]
+       [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+       [else (list r)])]
+    [(list? r) r]
+    [else (raise-error who "expected a list or syntax object" r)]))
+
 ;; `r` is a sequence of groups
 (define (pack-multi r)
   (datum->syntax #f (cons multi-blank r)))
@@ -223,7 +238,7 @@
   (unpack* qs r depth unpack-term))
 
 (define (unpack-term-list* qs r depth)
-  (unpack* qs r (add1 depth) unpack-term))
+  (unpack* qs r depth unpack-term-list))
 
 ;; Packs to a `group` form
 (define (pack-group* stx depth)

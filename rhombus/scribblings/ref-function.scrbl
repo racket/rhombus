@@ -32,14 +32,14 @@ normally bound to implement function calls.
   grammar arg:
     $arg_expr
     $keyword: $arg_expr
-    $repetition $$(@litchar{,}) $ellipses
+    $repetition #,(@litchar{,}) $ellipses
     & $list_expr
     ~& $map_expr
   grammar ellipses:
     $ellipsis
-    $ellipses $$(@litchar{,}) $ellipsis
+    $ellipses #,(@litchar{,}) $ellipsis
   grammar ellipsis:
-    $$(dots_expr)
+    #,(dots_expr)
 ){
 
   A function call. Each @rhombus(arg_expr) alone is a by-position
@@ -49,7 +49,7 @@ normally bound to implement function calls.
   in place of expressions. 
 
   If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
-  @rhombus(repetition $$(@litchar{,}) ellipses), then the
+  @rhombus(repetition #,(@litchar{,}) ellipses), then the
   elements of the list or @tech{repetition} are spliced into the
   call as separate by-position arguments.
 
@@ -109,15 +109,15 @@ normally bound to implement function calls.
   grammar maybe_res_ann:
     :: $annotation
     -: $annotation
-    $$(epsilon)
+    #,(epsilon)
 
   grammar rest:
-    $repetition_binding $$(@litchar{,}) $ellipsis
+    $repetition_binding #,(@litchar{,}) $ellipsis
     & $list_binding
     ~& $map_binding
 
   grammar ellipsis:
-    $$(dots)
+    #,(dots)
 
 ){
 
@@ -201,17 +201,17 @@ normally bound to implement function calls.
 )
 
 When a @rhombus(rest) sequence contains @rhombus(& list_binding) or
-@rhombus(repetition_binding $$(@litchar{,}) $$(dots)), then the
+@rhombus(repetition_binding #,(@litchar{,}) #,(dots)), then the
 function or function alternative accepts any number of additional
 by-position arguments.
 For @rhombus(& list_binding), the additional arguments are collected
 into a list value, and that list value is bound to the
 @rhombus(list_binding).
-For @rhombus(repetition_binding $$(@litchar{,}) $$(dots)), each
+For @rhombus(repetition_binding #,(@litchar{,}) #,(dots)), each
 variable in @rhombus(repetition_binding) is bound to a repetition that
 repeats access to that piece of each additional argument.
 Only one by-position rest binding, @rhombus(& list_binding) or
-@rhombus(repetition_binding $$(@litchar{,}) $$(dots_expr)), can appear
+@rhombus(repetition_binding #,(@litchar{,}) #,(dots_expr)), can appear
 in a @rhombus(rest) sequence.
 
 When a @rhombus(rest) sequence contains @rhombus(~& map_binding), then

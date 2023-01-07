@@ -186,8 +186,8 @@ to form a repetition of matches:
     '$y ...'
 )
 
-@aside{A tail pattern @rhombus($$(@rhombus($))$$(@rhombus(id, ~var)) $$(@rhombus(..., ~bind))) combined with a tail
- template @rhombus($$(@rhombus($))$$(@rhombus(id, ~var)) ...) is similar to using @litchar{.} in
+@aside{A tail pattern @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))) combined with a tail
+ template @rhombus(#,(@rhombus($))#,(@rhombus(id, ~var)) ...) is similar to using @litchar{.} in
  S-expression patterns and templates, where it allows sharing between the
  input and output syntax objects. That sharing and an associated expansion-cost difference
  is all the more important in the Rhombus expansion protocol, which

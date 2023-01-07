@@ -70,7 +70,7 @@ meta:
 
   fun escape_tail(stxs):
     match stxs
-    | '$$($expr ...) $tail ...':
+    | '#,($expr ...) $tail ...':
         'sequence_cons_syntax(elem($expr ...), $(escape_tail('$tail ...')),
                               Syntax.literal($(head_escape_context(stxs))))'
     | '$head $tail ...':
@@ -111,7 +111,7 @@ meta:
         def mv = Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Spacer(proc):
-            proc(head, tail, '$$')                
+            proc(head, tail, '#,')                
         | ~else: values(head, tail)
     | ~else: values(head, tail)
 
