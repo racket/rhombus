@@ -215,8 +215,10 @@
  with @rhombus(field_spec)s, including private fields. For more
  information on internal names, see @rhombus(constructor, ~class_clause),
  since the details of internal names are closely related to constructor,
- annotation, and binding pattern customization. At most one
- @rhombus(class_clause) can have @rhombus(internal, ~class_clause).
+ annotation, and binding pattern customization. Any number of
+ @rhombus(internal, ~class_clause) declarations can appear among the
+ @rhombus(class_clause)s, which means that multiple internal aliases may
+ be defined.
 
  The @rhombus(class_clause) forms @rhombus(constructor, ~class_clause)
  or @rhombus(expression, ~class_clause),

@@ -15,7 +15,8 @@
          (submod "dot.rkt" for-dot-provider))
 
 (provide (for-syntax build-class-annotation-form
-                     build-guard-expr)
+                     build-guard-expr
+                     build-extra-internal-id-aliases)
          compose-annotation-check)
 
 (define-for-syntax (build-class-annotation-form super annotation-rhs
@@ -123,3 +124,9 @@
                                        val
                                        'annotation-str))
            (m obj val)))]))
+
+(define-for-syntax (build-extra-internal-id-aliases internal extra-internals)
+  (for/list ([extra (in-list extra-internals)])
+    #`(define-syntax #,extra (make-rename-transformer (quote-syntax #,internal)))))
+
+      

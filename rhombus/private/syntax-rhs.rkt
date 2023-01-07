@@ -13,7 +13,11 @@
          "binding.rkt"
          "op-literal.rkt"
          "pack.rkt"
-         "entry-point.rkt")
+         "entry-point.rkt"
+         (only-in "static-info.rkt"
+                  in-static-info-space
+                  make-static-infos)
+         (submod "syntax-object.rkt" for-quasiquote))
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -257,8 +261,9 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (parse-transformer-definition-rhs pre-parsed self-id
+(define-for-syntax (parse-transformer-definition-rhs pre-parsed self-id extra-id
                                                      make-transformer-id
+                                                     extra-static-infos-stx
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values])
   (syntax-parse pre-parsed
@@ -273,7 +278,13 @@
      (with-syntax ([((p-id id-ref) ...) idrs]
                    [((s-id sid-ref) ...) sidrs] )
        #`(#,make-transformer-id
-          (let ([id (lambda (tail #,@tail-ids #,self-id)
+          (let ([id (lambda (tail #,@tail-ids self #,@(if (syntax-e extra-id) (list #'extra) null))
+                      (define #,self-id self)
+                      (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
+                      #,@(if (syntax-e extra-id)
+                             #`((define #,extra-id extra)
+                                (define-syntax #,(in-static-info-space extra-id) (make-static-infos #,extra-static-infos-stx)))
+                             null)
                       (syntax-parse (insert-multi-front-group #,self-id tail)
                         [#,pattern
                          (let ([p-id id-ref] ...)
@@ -285,8 +296,8 @@
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs pre-parsed self-id
-                                    make-transformer-id
+  (parse-transformer-definition-rhs pre-parsed self-id #'#f
+                                    make-transformer-id #'#f
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
                                     (lambda (body)

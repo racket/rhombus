@@ -43,7 +43,8 @@
                   (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
                   #'#(#:abstract #:abstract)
                   (hasheq 'equals 0 'hashCode 1)
-                  #hasheq()))
+                  #hasheq()
+                  #t))
 
 (define-class-desc-syntax Equatable
   (interface-desc #'Equatable
@@ -54,7 +55,8 @@
                   (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
                   #'#(#:abstract #:abstract)
                   (hasheq 'equals 0 'hashCode 1)
-                  #hasheq()))
+                  #hasheq()
+                  #t))
 
 (define-name-root Equatable
   #:fields

@@ -42,6 +42,7 @@
                        [private-field-desc ...])
                  names])
     (define (build-field-init id) #`(#%plain-app #,id))
+    (define (show v) (log-error "= ~s" v) v)
     (append
      (if (syntax-e #'name-defaults)
          (list
@@ -105,15 +106,45 @@
                                #`(make-all-name #,@(or (and super
                                                             (class-desc-all-fields super)
                                                             (let loop ([fields (class-desc-all-fields super)]
+                                                                       [public-fields (class-desc-fields super)]
                                                                        [c+-fs super-constructor+-fields])
                                                               (cond
-                                                                [(null? c+-fs) (for/list ([f (in-list fields)])
-                                                                                 (if (identifier? f)
-                                                                                     (build-field-init f)
-                                                                                     f))]
-                                                                [(identifier? (car fields))
-                                                                 (cons (build-field-init (car fields)) (loop (cdr fields) c+-fs))]
-                                                                [else (cons (car c+-fs) (loop (cdr fields) (cdr c+-fs)))])))
+                                                                [(null? c+-fs) (let loop ([fields fields]
+                                                                                          [public-fields public-fields])
+                                                                                 (cond
+                                                                                   [(null? fields) '()]
+                                                                                   [(and (symbol? (car fields))
+                                                                                         (let ([arg (field-desc-constructor-arg (car public-fields))])
+                                                                                           (and (identifier? arg)
+                                                                                                arg)))
+                                                                                    => (lambda (arg)
+                                                                                         (cons (build-field-init arg)
+                                                                                               (loop (cdr fields) (cdr public-fields))))]
+                                                                                   [else
+                                                                                    (define f (car fields))
+                                                                                    (cons (if (and (pair? f)
+                                                                                                   (identifier? (cdr f)))
+                                                                                              (build-field-init (cdr f))
+                                                                                              f)
+                                                                                          (loop (cdr fields)
+                                                                                                (if (symbol? f)
+                                                                                                    (cdr public-fields)
+                                                                                                    public-fields)))]))]
+                                                                [(and (symbol? (car fields))
+                                                                      (let ([arg (field-desc-constructor-arg (car public-fields))])
+                                                                        (and (identifier? arg)
+                                                                             arg)))
+                                                                 => (lambda (arg)
+                                                                      (cons (build-field-init arg)
+                                                                            (loop (cdr fields) (cdr public-fields) c+-fs)))]
+                                                                [(and (pair? (car fields))
+                                                                      (identifier? (cdar fields)))
+                                                                 (cons (build-field-init (cdar fields))
+                                                                       (loop (cdr fields) public-fields c+-fs))]
+                                                                [else
+                                                                 (cons (car c+-fs) (loop (cdr fields)
+                                                                                         (if (symbol? (car fields)) (cdr public-fields) public-fields)
+                                                                                         (cdr c+-fs)))])))
                                                        (for/list ([f (in-list (if super (class-desc-fields super) null))])
                                                          (if (identifier? (field-desc-constructor-arg f))
                                                              (build-field-init (field-desc-constructor-arg f))
@@ -340,11 +371,13 @@
                                      (box? (syntax-e desc)))
                                 #`[#,id unsafe-undefined]
                                 id))
-                (if (or (keyword? (syntax-e desc))
-                        (and (box? (syntax-e desc))
-                             (keyword? (syntax-e (unbox (syntax-e desc))))))
-                    (list desc arg)
-                    (list arg))))])))
+                (cond
+                  [(keyword? (syntax-e desc))
+                   (list desc arg)]
+                  [(and (box? (syntax-e desc))
+                        (keyword? (syntax-e (unbox (syntax-e desc)))))
+                   (list (unbox (syntax-e desc)) arg)]
+                  [else (list arg)])))])))
 
 (define-for-syntax (external-protocol v) (if (vector? v) (vector-ref v 0) v))
 (define-for-syntax (internal-protocol v) (if (vector? v) (vector-ref v 1) v))

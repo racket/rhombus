@@ -3,7 +3,8 @@
                      syntax/parse
                      enforest/proc-name
                      "pack.rkt"
-                     "realm.rkt")
+                     "realm.rkt"
+                     (submod "class-meta.rkt" for-static-info))
          "class+interface.rkt"
          "class-clause.rkt"
          (submod "class-clause.rkt" for-class)
@@ -33,14 +34,17 @@
 
 (define-identifier-syntax-definition-transformer+only macro macro-only
   in-class-clause-space
+  #:extra [#:info class-data-static-infos]
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
   #:multi (in-class-clause-space in-interface-clause-space)
+  #:extra [#:info #'()]
   #'make-class-and-interface-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro-only
   (lambda (x) x)
+  #:extra [#:info #'()]
   #'make-class-and-interface-clause-transformer)
 
 (define-for-syntax (make-class-clause-transformer proc)
@@ -54,7 +58,7 @@
 (define-for-syntax (build-transformer proc)
   (lambda (stx data)
     (define defns (syntax-parse stx
-                    [(head . tail) (proc (pack-tail #'tail) #'head)]))
+                    [(head . tail) (proc (pack-tail #'tail) #'head data)]))
     (unless (syntax? defns)
       (raise-result-error* (proc-name proc) rhombus-realm "Syntax" defns))
     (datum->syntax #f (unpack-multi defns proc #f))))

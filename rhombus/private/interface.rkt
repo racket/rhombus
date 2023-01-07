@@ -8,6 +8,7 @@
                      "introducer.rkt"
                      "tag.rkt"
                      "interface-parse.rkt"
+                     (submod "interface-meta.rkt" for-class)
                      (only-in "class-parse.rkt"
                               :options-block
                               in-class-desc-space
@@ -25,6 +26,8 @@
          (for-syntax "class-transformer.rkt")
          (only-meta-in 1
                        "class-method.rkt")
+         (only-in "class-annotation.rkt"
+                  build-extra-internal-id-aliases)
          "class-dot.rkt"
          "parse.rkt"
          (submod "namespace.rkt" for-exports))
@@ -53,53 +56,60 @@
      #:with name #'full-name.name
      #:with orig-stx stxes
      (define body #'(options.form ...))
-     (define finish-data #`[orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
-                                     #,for-together?
-                                     full-name name])
+     ;; The shape of `finish-data` is recognzied in `interface-annotation+finish`
+     ;; and "interface-meta.rkt"
+     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
+                                      #,for-together?
+                                      full-name name]
+                            ;; data accumulated from parsed clauses:
+                            ()))
      (define interface-data-stx #f)
      (cond
        [(null? (syntax-e body))
         #`((interface-annotation+finish #,finish-data ()))]
        [else
         #`((rhombus-mixed-nested-forwarding-sequence (interface-annotation+finish #,finish-data) rhombus-class
-                                                     (interface-body-step #,interface-data-stx . #,(syntax-local-introduce body))))])]))
+                                                     (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body))))])]))
 
 (define-syntax interface-body-step
   (lambda (stx)
     ;; parse the first form as a interface clause, if possible, otherwise assume
     ;; an expression or definition
     (syntax-parse stx
-      [(_ data form . rest)
-       #:with (~var clause (:interface-clause (interface-data #'data))) (syntax-local-introduce #'form)
+      [(_ (data accum) form . rest)
+       #:with (~var clause (:interface-clause (interface-expand-data #'data #'accum))) (syntax-local-introduce #'form)
        (syntax-parse (syntax-local-introduce #'clause.parsed)
          #:datum-literals (group parsed)
          [((group (parsed p)) ...)
-          #`(begin p ... (interface-body-step data . rest))]
+          #:with (new-accum ...) (class-clause-accum #'(p ...))
+          #`(begin p ... (interface-body-step (data (new-accum ... . accum)) . rest))]
          [(g ...)
-          #`(interface-body-step data g ... . rest)])]
-      [(_ data form . rest)
+          #`(interface-body-step (data accum) g ... . rest)])]
+      [(_ data+accum form . rest)
        #`(rhombus-top-step
           interface-body-step
           #f
-          (data)
+          (data+accum)
           form . rest)]
-      [(_ data) #'(begin)])))
+      [(_ data+accum) #'(begin)])))
 
 (define-syntax interface-annotation+finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ [orig-stx base-stx scope-stx
-                    for-together?
-                    full-name name]
+      [(_ ([orig-stx base-stx scope-stx
+                     for-together?
+                     full-name name]
+           . _)
           exports
           option ...)
        (define stxes #'orig-stx)
        (define options (parse-annotation-options #'orig-stx #'(option ...)))
 
-       (define internal-name (let ([id (hash-ref options 'internal #f)])
-                               (and id
-                                    ((make-syntax-delta-introducer #'scope-stx #'base-stx) id 'remove))))
-
+       (define-values (unexposed-internal-name internal-name extra-internal-names)
+         (extract-internal-ids options
+                               #'scope-stx #'base-stx
+                               #'orig-stx))
+                                    
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
        (define (temporary template #:name [name #'name])
@@ -119,6 +129,7 @@
                                              annotation-rhs
                                              #'(name name? name-instance
                                                      internal-name? internal-name-instance))
+              #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
               (interface-finish [orig-stx base-stx scope-stx
                                           full-name name
                                           name? name-instance
@@ -144,7 +155,7 @@
                        method-names    ; index -> symbol-or-identifier
                        method-vtable   ; index -> function-identifier or '#:abstract
                        method-results  ; symbol -> nonempty list of identifiers; first one implies others
-                       method-private  ; symbol -> identifier
+                       method-private  ; symbol -> identifier or (list identifier)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
          (extract-method-tables stxes added-methods #f supers #hasheq() #f))
@@ -194,8 +205,8 @@
                                             #'(name name-instance name-ref
                                                     internal-name-instance internal-name-ref
                                                     [export ...]))
-              (build-interface-desc parent-names
-                                    method-mindex method-names method-vtable method-results
+              (build-interface-desc parent-names options
+                                    method-mindex method-names method-vtable method-results method-private
                                     internal-name
                                     #'(name prop:name name-ref
                                             prop:internal-name internal-name? internal-name-ref))
@@ -246,8 +257,8 @@
                                                                   (quote-syntax name?)
                                                                   (quote-syntax ((#%dot-provider name-instance))))))))))
   
-(define-for-syntax (build-interface-desc parent-names
-                                         method-mindex method-names method-vtable method-results
+(define-for-syntax (build-interface-desc parent-names options
+                                         method-mindex method-names method-vtable method-results method-private
                                          internal-name
                                          names)
   (with-syntax ([(name prop:name name-ref
@@ -255,20 +266,25 @@
                  names])
     (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
           [method-map (build-quoted-method-map method-mindex)]
-          [method-result-expr (build-method-result-expression method-results)])
+          [method-result-expr (build-method-result-expression method-results)]
+          [custom-annotation? (and (hash-ref options 'annotation-rhs #f) #t)])
       (append
        (if internal-name
            (list
             #`(define-syntax #,(in-class-desc-space internal-name)
-                (interface-desc (quote-syntax name)
-                                #f
-                                '()
-                                (quote-syntax prop:internal-name)
-                                (quote-syntax internal-name-ref)
-                                '#,method-shapes
-                                (quote-syntax #,method-vtable)
-                                '#,method-map
-                                #,method-result-expr)))
+                ;; could improve by avoiding duplicate information
+                (interface-internal-desc (quote-syntax name)
+                                         #f
+                                         (quote-syntax #,parent-names)
+                                         (quote-syntax prop:internal-name)
+                                         (quote-syntax internal-name-ref)
+                                         '#,method-shapes
+                                         (quote-syntax #,method-vtable)
+                                         '#,method-map
+                                         #,method-result-expr
+                                         #,custom-annotation?
+                                         (quote #,(build-quoted-private-method-list 'method method-private))
+                                         (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
        (list
         #`(define-syntax #,(in-class-desc-space #'name)
@@ -281,4 +297,5 @@
                             '#,method-shapes
                             (quote-syntax #,method-vtable)
                             '#,method-map
-                            #,method-result-expr)))))))
+                            #,method-result-expr
+                            #,custom-annotation?)))))))

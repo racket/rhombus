@@ -26,6 +26,7 @@
                      build-interface-vtable
                      build-quoted-method-map
                      build-quoted-method-shapes
+                     build-quoted-private-method-list
                      build-method-results
                      build-method-result-expression
                      build-methods
@@ -282,6 +283,12 @@
     ((if (mindex-property? mix) list values)
      ((if (mindex-final? mix) values box)
       name))))
+
+(define-for-syntax (build-quoted-private-method-list mode method-private)
+  (sort (for/list ([(sym v) (in-hash method-private)]
+                   #:when (eq? mode (if (pair? v) 'property 'method)))
+          sym)
+        symbol<?))
 
 (define-for-syntax (build-method-results added-methods
                                          method-mindex method-vtable method-private

@@ -39,7 +39,8 @@
                   #'#(#:abstract display_as_print)
                   (hasheq 'print 0
                           'display 1)
-                  #hasheq()))
+                  #hasheq()
+                  #t))
 
 (define-class-desc-syntax Printable
   (interface-desc #'Printable
@@ -51,7 +52,8 @@
                   #'#(#:abstract display_as_print)
                   (hasheq 'print 0
                           'display 1)
-                  #hasheq()))
+                  #hasheq()
+                  #t))
 
 (define-name-root Printable
   #:fields

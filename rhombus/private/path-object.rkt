@@ -1,15 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse)
-         "name-root.rkt"
-         "expression.rkt"
-         "expression+binding.rkt"
-         (submod "annotation.rkt" for-class)
-         (submod "dot.rkt" for-dot-provider)
-         "static-info.rkt"
+         "class-primitive.rkt"
          "dot-parse.rkt"
-         "call-result-key.rkt"
-         "composite.rkt"
          "realm.rkt")
 
 (provide Path
@@ -20,15 +13,6 @@
 
 (module+ for-static-info
   (provide (for-syntax path-static-infos)))
-
-(define-for-syntax path-static-infos
-  #'((#%dot-provider path-instance)))
-
-(define-static-info-syntax path
-  (#%call-result #,path-static-infos))
-
-(define-annotation-syntax Path
-  (identifier-annotation #'Path #'path? path-static-infos))
 
 (define path
   (let ([Path (lambda (c)
@@ -42,38 +26,22 @@
                                                c)]))])
     Path))
 
-(define-name-root Path
-  #:root (make-expression+binding-prefix-operator
-          #'Path
-          '((default . stronger))
-          'macro
-          (lambda (stx)
-            (syntax-parse stx
-              [(_ . tail)
-               (values #'path #'tail)]))
-          (make-composite-binding-transformer "Path"
-                                              #'path?
-                                              (list #'path->bytes)
-                                              #'(())))
-  #:fields
-  ([bytes path->bytes]
-   [string path->string]))
-
-(define (Path.bytes s)
+(define (path-bytes s)
   (bytes->immutable-bytes (path->bytes s)))
 
-(define (Path.string s)
+(define (path-string s)
   (string->immutable-string (path->string s)))
 
-(define path-method-table
-  (hash 'bytes (method1 Path.bytes)
-        'string (method1 Path.string)))
+(define path-bytes/method (method1 path-bytes))
+(define path-string/method (method1 path-string))
 
-(define-syntax path-instance
-  (dot-provider-more-static
-   (dot-parse-dispatch
-    (lambda (field-sym field ary 0ary nary fail-k)
-      (case field-sym
-        [(bytes) (0ary #'Path.bytes)]
-        [(string) (0ary #'Path.string)]
-        [else (fail-k)])))))
+(define-primitive-class Path path
+  #:existing
+  #:translucent
+  #:fields
+  ([bytes ()])
+  #:properties
+  ()
+  #:methods
+  ([bytes 0 path-bytes path-bytes/method]
+   [string 0 path-string path-string/method]))

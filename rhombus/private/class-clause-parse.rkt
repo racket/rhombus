@@ -6,8 +6,7 @@
                      "name-path-op.rkt"
                      "class-parse.rkt"
                      (only-in "rule.rkt" rule)
-                     "consistent.rkt"
-                     "class-data.rkt")
+                     "consistent.rkt")
          "class+interface.rkt"
          "class-clause.rkt"
          "interface-clause.rkt"
@@ -28,7 +27,10 @@
                      make-expose
                      parse-annotation-options
                      parse-options
-                     wrap-class-clause)
+                     wrap-class-clause
+                     class-clause-accum
+                     class-clause-extract
+                     method-shape-extract)
          rhombus-class
          extends
          implements
@@ -54,12 +56,15 @@
 (define-for-syntax (extract-internal-ids options
                                          scope-stx base-stx
                                          stxes)
-  (define internal-id (hash-ref options 'internal #f))
+  (define internal-ids (reverse (hash-ref options 'internals '())))
+  (define internal-id (and (pair? internal-ids) (car internal-ids)))
+  (define extra-internal-ids (if (pair? internal-ids) (cdr internal-ids) '()))
   (define expose (if internal-id
                      (make-expose scope-stx base-stx)
                      (lambda (stx) stx)))
   (values internal-id
-          (expose internal-id)))
+          (expose internal-id)
+          (map expose extra-internal-ids)))
 
 (define-for-syntax (make-expose scope-stx base-stx)
   (let ([intro (make-syntax-delta-introducer scope-stx base-stx)])
@@ -97,9 +102,7 @@
                  (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
                (hash-set options 'extends #'id)]
               [(internal id)
-               (when (hash-has-key? options 'internal)
-                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
-               (hash-set options 'internal #'id)]
+               (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
@@ -139,8 +142,8 @@
                (add-implements options 'public-implements #'(id ...))]
               [(private-implements id ...)
                (add-implements options 'private-implements #'(id ...))]
-              [(internal id) ; checked in `parse-annotation-options`
-               (hash-set options 'internal #'id)]
+              [(internal id)
+               (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(constructor id rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
@@ -246,6 +249,110 @@
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+
+(define-for-syntax (class-clause-accum forms)
+  ;; early processing of a clause to accumulate information of `class-data`;
+  ;; keep only things that are useful to report to clause macros
+  (for/list ([form (in-list (syntax->list forms))]
+             #:do [(define v
+                     (syntax-parse form
+                       [(_ (_ e) _)
+                        (define form #'e)
+                        (syntax-parse form
+                          #:literals (extends)
+                          [(extends id) form]
+                          [(implements id ...) form]
+                          [_ #f])]))]
+             #:when v)
+    v))
+
+(define-for-syntax (class-clause-extract who accum key)
+  (define (method id vis)
+    (case key
+      [(method_names) (list id)]
+      [(method_visibilities) (list vis)]
+      [else null]))
+  (define (property id vis)
+    (case key
+      [(property_names) (list id)]
+      [(property_visibilities) (list vis)]
+      [else null]))
+  (for/list ([a (in-list (reverse (syntax->list accum)))]
+             #:do [(define v
+                     (syntax-parse a
+                       [((~literal extends) id) (if (eq? key 'extends)
+                                                    (list #'id)
+                                                    null)]
+                       [((~literal implements) id ...) (case key
+                                                         [(implements)
+                                                          (syntax->list #'(id ...))]
+                                                         [(implements_visibilities)
+                                                          '(public)]
+                                                         [else null])]
+                       [((~literal private-implements) id ...) (case key
+                                                                 [(implements)
+                                                                  (syntax->list #'(id ...))]
+                                                                 [(implements_visibilities)
+                                                                  '(private)]
+                                                                 [else null])]
+                       [((~literal field) id rhs-id ann-seq blk form-id mode)
+                        (case key
+                          [(field-names) (list #'id)]
+                          [(field-visibilities) (list #'mode)]
+                          [else null])]
+                       [((~literal internal) id) (case key
+                                                   [(internal_names) (list #'id)]
+                                                   [else null])]
+                       [((~literal method) id . _) (method #'id 'public)]
+                       [((~literal override) id . _) (method #'id 'public)]
+                       [((~literal private) id . _) (method #'id 'private)]
+                       [((~literal private-override) id . _) (method #'id 'private)]
+                       [((~literal final) id . _) (method #'id 'public)]
+                       [((~literal final-override) id . _) (method #'id 'public)]
+                       [((~literal property) id . _) (property #'id 'public)]
+                       [((~literal override-property) id . _) (property #'id 'public)]
+                       [((~literal final-property) id . _) (property #'id 'public)]
+                       [((~literal final-overrode-property) id . _) (property #'id 'public)]
+                       [((~literal private-property) id . _) (property #'id 'private)]
+                       [((~literal private-override-property) id . _) (property #'id 'private)]
+                       [((~literal private-override-property) id . _) (property #'id 'private)]
+                       [((~literal constructor) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
+                       [((~literal expression) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
+                       [((~literal binding) . _) (if (eq? key 'uses_default_binding) '(#f) null)]
+                       [((~literal annotation) . _) (if (eq? key 'uses_default_annotation) '(#f) null)]
+                       [_ null]))]
+             [e (in-list v)])
+    e))
+
+(define-for-syntax (method-shape-extract shapes private-methods private-properties key)
+  (case key
+    [(method_names)
+     (append
+      private-methods
+      (for/list ([m (in-vector shapes)]
+                 #:unless (pair? m))
+        (datum->syntax #f (if (box? m) (unbox m) m))))]
+    [(method_visibilities)
+     (append
+      (for/list ([m (in-list private-methods)])
+        'private)
+      (for/list ([m (in-vector shapes)]
+                 #:unless (pair? m))
+        'public))]
+    [(property_names)
+     (append
+      private-properties
+      (for ([m (in-vector shapes)]
+            #:when (pair? m))
+        (let ([m (car m)])
+          (datum->syntax #f (if (box? m) (unbox m) m)))))]
+    [(property_visibilities)
+     (append
+      (for/list ([m (in-list private-properties)])
+        'private)
+      (for/list ([m (in-vector shapes)]
+                 #:when (pair? m))
+        'public))]))
 
 (define-syntax rhombus-class 'placeholder)
 

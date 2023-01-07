@@ -43,4 +43,4 @@
                                (exn:fail:test msg
                                               (current-continuation-marks)
                                               loc))
-      (display msg (current-error-port))))
+      (displayln msg (current-error-port))))

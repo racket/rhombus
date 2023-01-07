@@ -7,11 +7,12 @@
                        "expression.rkt"))
 
 (provide (struct-out interface-desc)
+         (struct-out interface-internal-desc)
          interface-desc-ref
-         (struct-out interface-data)
          interface-names->interfaces
          interface-set-diff
-         close-interfaces-over-superinterfaces)
+         close-interfaces-over-superinterfaces
+         interface-names->quoted-list)
 
 (struct interface-desc (id
                         internal-id
@@ -21,24 +22,32 @@
                         method-shapes   ; same as `class-desc`
                         method-vtable   ; same as `class-desc`
                         method-map      ; same as `class-desc`
-                        method-result)) ; same as `class-desc`
+                        method-result   ; same as `class-desc`
+                        custom-annotation?))
+(struct interface-internal-desc interface-desc (private-methods      ; (list symbol ...)
+                                                private-properties)) ; (list symbol ...)
+
 (define (interface-desc-ref v) (and (interface-desc? v) v))
+(define (interface-noninternal-desc-ref v) (and (interface-desc? v)
+                                                (not (interface-internal-desc? v))
+                                                v))
 
-(struct interface-data (stx))
-
-(define (interface-names->interfaces stxes names)
+(define (interface-names->interfaces stxes names
+                                     #:results [results (lambda (all pruned) pruned)])
   (define intfs
     (for/list ([name (in-list names)])
       (or (syntax-local-value* (in-class-desc-space name)
                                (lambda (v)
-                                 (name-root-ref-root v interface-desc-ref)))
+                                 (name-root-ref-root v interface-noninternal-desc-ref)))
           (raise-syntax-error #f "not an interface name" stxes name))))
-  ;; remove duplicates, just to make the generated class or interface description more compact
-  (let loop ([ht #hasheq()] [intfs intfs])
-    (cond
-      [(null? intfs) null]
-      [(hash-ref ht (car intfs) #f) (loop ht (cdr intfs))]
-      [else (cons (car intfs) (loop (hash-set ht (car intfs) #t) (cdr intfs)))])))
+  (results
+   intfs
+   ;; remove duplicates, just to make the generated class or interface description more compact
+   (let loop ([ht #hasheq()] [intfs intfs])
+     (cond
+       [(null? intfs) null]
+       [(hash-ref ht (car intfs) #f) (loop ht (cdr intfs))]
+       [else (cons (car intfs) (loop (hash-set ht (car intfs) #t) (cdr intfs)))]))))
 
 (define (interface-set-diff l1 l2)
   (define s2 (for/hasheq ([intf (in-list l2)]) (values intf #t)))
@@ -82,3 +91,15 @@
            (loop (hash-set seen intf #t)
                  (hash-remove priv-seen intf)
                  (append supers (cdr int+priv?s))))])))
+
+(define (interface-names->quoted-list interface-names interfaces only-ht mode)
+  (let loop ([seen #hasheq()]
+             [names interface-names]
+             [intfs interfaces])
+    (cond
+      [(null? names) '()]
+      [(or (hash-ref seen (car intfs) #f)
+           ((if (eq? mode 'public) values not) (hash-ref only-ht (car intfs) #f)))
+       (loop seen (cdr names) (cdr intfs))]
+      [else
+       (cons (car names) (loop (hash-set seen (car intfs) #t) (cdr names) (cdr intfs)))])))

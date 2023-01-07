@@ -1,6 +1,225 @@
-#lang rhombus/and_meta
+#lang rhombus/static/and_meta
 
-use_static
+begin:
+  class_clause.macro 'bounce':
+    ~info: i
+    'method names(): ('$(class_meta.Info.lookup(i, #'name))')
+     method supers(): ('$$(i.lookup(#'extends))')
+     method intfs(): ('$$(i.lookup(#'implements))')
+     method internals(): ('$$(i.lookup(#'internal_names))')
+     method fields(): ('$$(i.lookup(#'field_names))')
+     method keywords(): ('$$(i.lookup(#'field_keywords))')
+     method mutables(): ('$$(i.lookup(#'field_mutabilities))')
+     method visibilities(): ('$$(i.lookup(#'field_visibilities))')
+     method constructives(): ('$$(i.lookup(#'field_constructives))')
+     method methods(): ('$$(i.lookup(#'method_names))')
+     method mvisibilities(): ('$$(i.lookup(#'method_visibilities))')
+     method defaults(): ('$(i.lookup(#'uses_default_constructor))
+                          $(i.lookup(#'uses_default_binding))
+                          $(i.lookup(#'uses_default_annotation))')'
+  interface_clause.macro 'ibounce':
+    ~info: i
+    'method supers(): ('$$(interface_meta.Info.lookup(i, #'extends))')
+     method methods(): ('$$(i.lookup(#'method_names))')
+     method visibilities(): ('$$(i.lookup(#'method_visibilities))')'
+  defn.macro 'def_describe $name $key':
+    '«expr.macro '$name $('$')id': values('('$('$$')(class_meta.describe(id).lookup(#'$key))')', '')»'
+  defn.macro 'def_idescribe $name $key':
+    '«expr.macro '$name $('$')id': values('('$('$$')(interface_meta.describe(id).lookup(#'$key))')', '')»'
+  def_describe dname name
+  def_describe dsuper extends
+  def_describe dinterfaces implements
+  def_describe dinterfaces_vis implements_visibilities
+  def_describe dinternals internal_names
+  def_describe dfields field_names
+  def_describe dfield_visabilities field_visibilities
+  def_describe dfield_keywords field_keywords
+  def_describe dfield_constructives field_constructives
+  def_describe dfield_mutabilities field_mutabilities
+  def_describe dmethods method_names
+  expr.macro 'dctr $name': values('$(class_meta.describe(name).lookup(#'uses_default_constructor))', '')
+  expr.macro 'dbind $name': values('$(class_meta.describe(name).lookup(#'uses_default_binding))', '')
+  expr.macro 'dann $name': values('$(class_meta.describe(name).lookup(#'uses_default_annotation))', '')
+  def_idescribe diname name
+  def_idescribe disuper extends
+  def_idescribe dimethods method_names
+  expr.macro 'diann $name': values('$(interface_meta.describe(name).lookup(#'uses_default_annotation))', '')
+  
+  begin:
+    interface Pointy
+    interface VeryPointy:
+      extends Pointy
+      method get_extent(): "very_small"
+      ibounce
+    class Posn(x, y):
+      nonfinal
+      method is_origin(): x == 0 && y == 0
+    class Posn3D(z):
+      field color = "red"
+      extends Posn
+      implements Pointy
+      method get_color(): color
+      bounce
+    class Posn0D():
+      implements VeryPointy
+    def p = Posn3D(1, 2, 3)
+    def p0 = Posn0D()
+    check:
+      p.names() ~prints_like 'Posn3D'
+      p.supers() ~prints_like 'Posn'
+      p.intfs() ~prints_like 'Pointy'
+      p.internals() ~prints_like ''
+      p.fields() ~prints_like 'z color'
+      p.keywords() ~prints_like '#false #false'
+      p.mutables() ~prints_like 'immutable mutable'
+      p.visibilities() ~prints_like 'public public'
+      p.constructives() ~prints_like 'required absent'
+      p.methods() ~prints_like 'get_color'
+      p.mvisibilities() ~prints_like 'public'
+      p.defaults() ~prints_like '#true; #true; #true'
+      p0.supers() ~prints_like 'Pointy'
+      p0.methods() ~prints_like 'get_extent'
+      p0.visibilities() ~prints_like 'public'
+      
+    begin:
+      check:
+        dname Posn ~prints_like 'Posn'
+        dsuper Posn ~prints_like ''
+        dinterfaces Posn ~prints_like ''
+        dfields Posn ~prints_like 'x y'
+        dfield_keywords Posn ~prints_like '#false #false'
+        dfield_visabilities Posn ~prints_like 'public public'
+        dfield_constructives Posn ~prints_like 'required required'
+        dfield_mutabilities Posn ~prints_like 'immutable immutable'
+        dmethods Posn ~prints_like 'is_origin'
+        dinternals Posn ~prints_like ''
+      check:
+        dname Posn3D ~prints_like 'Posn3D'
+        dsuper Posn3D ~prints_like 'Posn'
+        dinterfaces Posn3D ~prints_like 'Pointy'
+        dfields Posn3D ~prints_like 'x y z color'
+        dfield_keywords Posn3D ~prints_like '#false #false #false #false'
+        dfield_visabilities Posn3D ~prints_like 'public public public public'
+        dfield_constructives Posn3D ~prints_like 'required required required absent'
+        dfield_mutabilities Posn3D ~prints_like 'immutable immutable immutable mutable'
+        dmethods Posn3D ~prints_like 'is_origin get_color
+                                        $$('names supers intfs internals fields keywords')
+                                        $$('mutables visibilities constructives')
+                                        $$('methods mvisibilities defaults')'
+      check:
+        dname Posn0D ~prints_like 'Posn0D'
+        dsuper Posn0D ~prints_like ''
+        dinterfaces Posn0D ~prints_like 'VeryPointy'
+        dfields Posn0D ~prints_like ''
+        dfield_keywords Posn0D ~prints_like ''
+        dfield_visabilities Posn0D ~prints_like ''
+        dfield_constructives Posn0D ~prints_like ''
+        dfield_mutabilities Posn0D ~prints_like ''
+        dmethods Posn0D ~prints_like 'get_extent
+                                        $$('supers methods visibilities')'
+
+  begin:
+    interface Pointy:
+      internal _Pointy
+      method here(): 0
+      private method inside(): 1
+    interface Secret:
+      internal _UnusedSecret
+      internal _Secret
+    class Posn3D(x, ~y: mutable y = 11, private z = 10):
+      nonfinal
+      internal _Posn3D
+      implements Pointy
+      field color = "red"
+      private field size = #'large
+      method get_color(): color
+      private method get_size(): size
+      bounce
+    class Posn4D(~w = 12, q = 13, private s = 10):
+      extends Posn3D
+      private field weight = "heavy"
+      field angle = #'wide
+      internal _Posn4D
+      private implements: Secret
+    def p = Posn3D(1)
+    def p4 = Posn4D(1)
+    check:
+      diname Pointy ~prints_like 'Pointy'
+      disuper Pointy ~prints_like ''
+      dimethods Pointy ~prints_like 'here'
+      diann Pointy ~is #true
+    check:
+      diname _Pointy ~prints_like 'Pointy'
+      disuper _Pointy ~prints_like ''
+      dimethods _Pointy ~prints_like 'inside here'
+      diann _Pointy ~is #true
+    check:
+      p.fields() ~prints_like 'x y z color size'
+      p.mutables() ~prints_like 'immutable mutable immutable mutable mutable'
+      p.visibilities() ~prints_like 'public public private public private'
+      p.keywords() ~prints_like '#false ~y #false #false #false'
+      p.constructives() ~prints_like 'required optional absent absent absent'
+      p.methods() ~prints_like 'get_color get_size'
+      p.mvisibilities() ~prints_like 'public private'
+      p.internals() ~prints_like '_Posn3D'
+    check:
+      dname Posn3D ~prints_like 'Posn3D'
+      dsuper Posn3D ~prints_like ''
+      dinterfaces Posn3D ~prints_like 'Pointy'
+      dfields Posn3D ~prints_like 'x y color'
+      dfield_keywords Posn3D ~prints_like '#false ~y #false'
+      dfield_visabilities Posn3D ~prints_like 'public public public'
+      dfield_constructives Posn3D ~prints_like 'required optional absent'
+      dfield_mutabilities Posn3D ~prints_like 'immutable mutable mutable'
+      dmethods Posn3D ~prints_like 'here get_color
+                                      $$('names supers intfs internals fields keywords')
+                                      $$('mutables visibilities constructives')
+                                      $$('methods mvisibilities defaults')'
+      dctr Posn3D ~is #true
+      dbind Posn3D ~is #true
+      dann Posn3D ~is #true
+    check:
+      dname _Posn3D ~prints_like 'Posn3D'
+      dsuper _Posn3D ~prints_like ''
+      dinterfaces _Posn3D ~prints_like 'Pointy'
+      dinterfaces_vis _Posn3D ~prints_like 'public'
+      dfields _Posn3D ~prints_like 'x y z color size'
+      dfield_keywords _Posn3D ~prints_like '#false ~y #false #false #false'
+      dfield_visabilities _Posn3D ~prints_like 'public public private public private'
+      dfield_constructives _Posn3D ~prints_like 'required optional optional absent absent'
+      dfield_mutabilities _Posn3D ~prints_like 'immutable mutable immutable mutable mutable'
+      dmethods _Posn3D ~prints_like 'get_size here get_color
+                                       $$('names supers intfs internals fields keywords')
+                                       $$('mutables visibilities constructives')
+                                       $$('methods mvisibilities defaults')'
+    check:
+      dname Posn4D ~prints_like 'Posn4D'
+      dsuper Posn4D ~prints_like 'Posn3D'
+      dinterfaces Posn4D ~prints_like ''
+      dinterfaces_vis Posn4D ~prints_like ''
+      dfields Posn4D ~prints_like 'x y color w q angle'
+      dfield_keywords Posn4D ~prints_like '#false ~y #false ~w #false #false'
+      dfield_visabilities Posn4D ~prints_like 'public public public public public public'
+      dfield_constructives Posn4D ~prints_like 'required optional absent optional optional absent'
+      dfield_mutabilities Posn4D ~prints_like 'immutable mutable mutable immutable immutable mutable'
+      dmethods Posn4D ~prints_like 'here get_color
+                                      $$('names supers intfs internals fields keywords')
+                                      $$('mutables visibilities constructives')
+                                      $$('methods mvisibilities defaults')'
+    check:
+      dname _Posn4D ~prints_like 'Posn4D'
+      dsuper _Posn4D ~prints_like 'Posn3D'
+      dinterfaces _Posn4D ~prints_like 'Secret'
+      dinterfaces_vis _Posn4D ~prints_like 'private'
+      dfields _Posn4D ~prints_like 'x y color w q s weight angle'
+      dfield_keywords _Posn4D ~prints_like '#false ~y #false ~w #false #false #false #false'
+      dfield_visabilities _Posn4D ~prints_like 'public public public public public private private public'
+      dfield_constructives _Posn4D ~prints_like 'required optional absent optional optional optional absent absent'
+      dfield_mutabilities _Posn4D ~prints_like 'immutable mutable mutable immutable immutable immutable mutable mutable'
+      dmethods _Posn4D ~prints_like 'here get_color
+                                       $$('names supers intfs internals fields keywords')
+                                       $$('mutables visibilities constructives')
+                                       $$('methods mvisibilities defaults')'
 
 // Make sure that introduced names can be referenced directly
 

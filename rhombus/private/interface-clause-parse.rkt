@@ -9,7 +9,9 @@
          "parens.rkt")
 
 (provide (for-syntax parse-annotation-options
-                     parse-options)
+                     parse-options
+                     class-clause-accum
+                     extract-internal-ids)
          rhombus-class)
 
 ;; interface clause forms are defined in "class-clause-parse.rkt"
@@ -28,9 +30,7 @@
             (syntax-parse clause
               #:literals (internal annotation)
               [(internal id)
-               (when (hash-has-key? options 'internal)
-                 (raise-syntax-error #f "multiple internal-name clauses" orig-stx clause))
-               (hash-set options 'internal #'id)]
+               (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
@@ -52,7 +52,7 @@
             (syntax-parse clause
               #:literals (internal extends expression annotation)
               [(internal id) ; checked in `parse-annotation-options`
-               (hash-set options 'internal #'id)]
+               (hash-set options 'internals (cons #'id (hash-ref options 'internals #'id)))]
               [(extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]

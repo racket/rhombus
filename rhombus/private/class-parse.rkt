@@ -16,6 +16,9 @@
          (struct-out class-desc)
          class-desc-ref
 
+         (struct-out class-internal-desc)
+         class-internal-desc-ref
+
          field-desc-name
          field-desc-accessor-id
          field-desc-mutator-id
@@ -50,19 +53,29 @@
 (struct class-desc (final?
                     id
                     super-id
+                    interface-ids
                     class:id
                     ref-id
-                    fields ; (list (list id accessor-id mutator-id static-infos constructor-arg) ...)
-                    all-fields ; #f or (list symbol-or-id-or-arg ...), includes private fields; arg means omitted from public constructor
+                    fields ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
+                    all-fields ; #f or (list a-field ...), includes private fields; see below for a-field
+                    inherited-field-count ; number of fields that are inherited
                     method-shapes ; vector of shaped-symbol; see below
                     method-vtable ; syntax-object vector of function identifiers or #'#:abstract
                     method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
                     method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
                     constructor-makers  ; (list constructor-maker ... maybe-default-constuctor-desc)
+                    custom-constructor?
                     custom-binding?
                     custom-annotation?
                     defaults-id)) ; #f if no arguments with defaults
 (define (class-desc-ref v) (and (class-desc? v) v))
+
+(struct class-internal-desc (id                   ; identifier of non-internal class
+                             private-methods      ; (list symbol ...)
+                             private-properties   ; (list symbol ...)
+                             private-interfaces)) ; (list identifier ...)
+
+(define (class-internal-desc-ref v) (and (class-internal-desc? v) v))
 
 ;; A shaped-symbol is one of the following, where a symbol is the method's external name:
 ;;  - symbol: final method
@@ -70,14 +83,25 @@
 ;;  - (symbol): final property
 ;;  - (#&symbol): property (can be overridden)
 
+;; An a-field is one of the following:
+;;  - symbol: public (so `class-desc-fields` describes constructor arg)
+;;  - (cons sym arg): private as internal constructor argument; sym is name, and see below for arg
+;;  - (cons sym (vector arg)): like the previous case, but mutable
+;;  - (cons sym identifier): private and not in constructor; sym is name, and calling identifier supplies default
+
+;; An arg is one of the following:
+;;  - #f: by-position, required
+;;  - &#f: by-position, optional
+;;  - keyword: by-position, required
+;;  - &keyword: by-position, optional
+;;  - identifier: not in constructor, call identifier to get the default value
+
 ;; quoted as a list in a `class-desc` construction
 (define (field-desc-name f) (car f))
 (define (field-desc-accessor-id f) (cadr f))
 (define (field-desc-mutator-id f) (list-ref f 2))
 (define (field-desc-static-infos f) (list-ref f 3))
-(define (field-desc-constructor-arg f) (list-ref f 4)) ; syntax of #f (by-position), keyword, or identifier
-;;                                                       where identifier =>  not in constructor,
-;;                                                       but also not private from body
+(define (field-desc-constructor-arg f) (list-ref f 4)) ; see above for arg
 
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
@@ -241,18 +265,19 @@
                 [rev-defaults '()])
        (cond
          [(null? all-fields) (values (reverse rev-fields) (reverse rev-keywords) (reverse rev-defaults))]
-         [(identifier? (car all-fields)) ; not in constructor
+         [(and (pair? (car all-fields)) (identifier? (cdar all-fields))) ; not in constructor
           (loop (cdr all-fields) fields rev-fields rev-keywords rev-defaults)]
+         [(pair? (car all-fields)) ; private field in internal constructor, only
+          (define f (car (generate-temporaries (list (caar all-fields)))))
+          (define arg (cdar all-fields))
+          (define k (datum->syntax #f (if (box? arg) (unbox arg) arg)))
+          (define d (if (box? arg) #'(unsafe-undefined) #'#f))
+          (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]
          [(and (pair? fields) (identifier? (field-desc-constructor-arg (car fields)))) ; not in constructor
-          (loop all-fields (cdr fields) rev-fields rev-keywords rev-defaults)]
-         [(symbol? (car all-fields)) ; public field in constructor
+          (loop (cdr all-fields) (cdr fields) rev-fields rev-keywords rev-defaults)]
+         [else ; public field in constructor
           (define-values (f k d) (field-to-field+keyword+default (car fields) (field-desc-constructor-arg (car fields))))
-          (loop (cdr all-fields) (cdr fields) (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]
-         [else ; private field in internal constructor, only
-          (define f (car (generate-temporaries '(field))))
-          (define k (datum->syntax #f (if (box? (car all-fields)) (unbox (car all-fields)) (car all-fields))))
-          (define d (if (box? (car all-fields)) #'(unsafe-undefined) #'#f))
-          (loop (cdr all-fields) fields (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
+          (loop (cdr all-fields) (cdr fields) (cons f rev-fields) (cons k rev-keywords) (cons d rev-defaults))]))]
     [else
      (values super-constructor-fields super-keywords super-defaults)]))
 
@@ -260,11 +285,12 @@
   (append
    (if super
        (let ([shapes (for/list ([fld (in-list (class-desc-fields super))]
-                                #:do [(define arg (field-desc-constructor-arg fld))]
-                                #:when (not (identifier? arg)))
-                       (if (keyword? (syntax-e arg))
-                           (syntax-e arg)
-                           (field-desc-name fld)))])
+                                #:do [(define arg (field-desc-constructor-arg fld))])
+                       (if (identifier? arg)
+                           #f
+                           (if (keyword? (syntax-e arg))
+                               (syntax-e arg)
+                               (field-desc-name fld))))])
          (define all-fields (class-desc-all-fields super))
          (if all-fields
              ;; insert `#f`s for private fields

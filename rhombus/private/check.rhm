@@ -118,14 +118,14 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
   if ok
   | #void
   | fun
-    | values_str([v]): v
-    | values_str(lst): "values " +& lst
+    | values_str([v]): print_to_string(v)
+    | values_str(lst): "values " +& print_to_string(lst)
     def msg:
       (if #{error-print-source-location}()
        | srcloc.source +& ":" +& srcloc.line
        | loc_where[0])
         +& ": failed\n"
-        +& "  got: " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
+        +& "  got:      " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
         +&  "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"
@@ -133,7 +133,6 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
                               | #'~matches: "matching " +& expected_thunk(#false)
                               | #'~is_a: "satisfying " +& expected_thunk(#false)
                               | ~else: values_str(expected))
-        +& "\n"
     display_as_exn(msg, srcloc)
 
 fun eval_test(stx):

@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse))
 
-(provide bounce)
+(provide bounce
+         bounce-meta)
 
 (define-syntax (bounce stx)
   (syntax-case stx ()
@@ -12,3 +13,11 @@
                        (provide (all-from-out mod)))
                 ...))]
     [(_ mod ...) #'(bounce #:except () mod ...)]))
+
+(define-syntax (bounce-meta stx)
+  (syntax-case stx ()
+    [(_  mod ...)
+     (with-syntax ([(mod ...) ((make-syntax-introducer) #'(mod ...))])
+       #'(begin (begin (require (for-syntax mod))
+                       (provide (for-syntax (all-from-out mod))))
+                ...))]))

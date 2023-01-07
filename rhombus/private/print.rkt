@@ -11,6 +11,7 @@
           [rhombus-display display])
          println
          displayln
+         print_to_string
          (rename-out
           [current-output-port current_output_port]
           [current-error-port current_error_port]))
@@ -37,6 +38,11 @@
 (define (displayln v [op (current-output-port)])
   (rhombus-display v op)
   (newline op))
+
+(define (print_to_string v)
+  (define op (open-output-string))
+  (rhombus-print v op)
+  (get-output-string op))
 
 (define (do-print v op mode)
   (let loop ([v v] [mode mode])

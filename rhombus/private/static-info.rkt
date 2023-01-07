@@ -26,7 +26,8 @@
            extract-static-infos
            unwrap-static-infos
            static-info-lookup
-           static-infos-intersect))
+           static-infos-intersect
+           make-static-infos))
 
 (provide define-static-info-syntax
          define-static-info-syntax/maybe)
@@ -113,6 +114,8 @@
     [(_ id) #'(begin)]
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
 
+(define-for-syntax (make-static-infos static-infos)
+  (static-info (syntax->list static-infos)))
 
 (define-for-syntax (static-infos-intersect as bs)
   (let ([bs (syntax->list bs)])

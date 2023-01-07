@@ -18,7 +18,8 @@
          (submod "srcloc-object.rkt" for-static-info))
 
 (provide Syntax
-         (for-space rhombus/annot Syntax))
+         (for-space rhombus/annot Syntax)
+         Identifier)
 
 (module+ for-builtin
   (provide syntax-method-table))
@@ -31,6 +32,9 @@
 
 (define-annotation-syntax Syntax
   (identifier-annotation #'Syntax #'syntax? syntax-static-infos))
+
+(define-syntax Identifier
+  (identifier-annotation #'Identifier #'identifier? syntax-static-infos))
 
 (define-simple-name-root Syntax
   literal
@@ -322,7 +326,7 @@
 (define relocate_span_method
   (lambda (stx)
     (let ([relocate_span (lambda (ctx-stxes)
-                      (relocate_span stx ctx-stxes))])
+                           (relocate_span stx ctx-stxes))])
       relocate_span)))
 
 (define syntax-method-table
