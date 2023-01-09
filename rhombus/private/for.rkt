@@ -205,6 +205,8 @@
            (begin
              binder
              (begin
+               (lhs-i.committer-id tmp-id lhs-i.data)
+               ...
                (lhs-i.binder-id tmp-id lhs-i.data)
                (define-static-info-syntax/maybe lhs-i.bind-id lhs-i.bind-static-info ...)
                ...)

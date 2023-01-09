@@ -7,6 +7,7 @@
 
 (provide literal-infoer
          ;; useful for other binding patterns:
+         literal-commit-nothing
          literal-bind-nothing)
 
 (define-syntax (literal-infoer stx)
@@ -17,6 +18,7 @@
                    #'static-infos
                    #'()
                    #'literal-matcher
+                   #'literal-commit-nothing
                    #'literal-bind-nothing
                    #'datum)]))
 
@@ -26,6 +28,11 @@
      #'(IF (equal-always? arg-id (quote datum))
            success
            fail)]))
+
+(define-syntax (literal-commit-nothing stx)
+  (syntax-parse stx
+    [(_ arg-id datum)
+     #'(begin)]))
 
 (define-syntax (literal-bind-nothing stx)
   (syntax-parse stx

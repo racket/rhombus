@@ -73,6 +73,7 @@
               (~and static-infos ((:identifier _) ...))
               (~and bind-infos ((bind-id:identifier (~and bind-uses (bind-use ...)) (~and bind-static-info (:identifier _)) ...) ...))
               matcher-id:identifier
+              committer-id:identifier
               binder-id:identifier
               data)))
 
@@ -88,12 +89,13 @@
                             data)))
 
   ;; puts pieces together into a `:binding-info`
-  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id binder-id data)
+  (define (binding-info annotation-str name-id static-infos bind-infos matcher-id committer-id binder-id data)
     (datum->syntax #f (list annotation-str
                             name-id
                             static-infos
                             bind-infos
                             matcher-id
+                            committer-id
                             binder-id
                             data)))
 
@@ -121,6 +123,7 @@
                    #'static-infos
                    #'((id (0) . static-infos))
                    #'identifier-succeed
+                   #'identifier-commit
                    #'identifier-bind
                    #'id)]))
 
@@ -128,6 +131,11 @@
   (syntax-parse stx
     [(_ arg-id bind-id IF success fail)
      #'(IF #t success fail)]))
+
+(define-syntax (identifier-commit stx)
+  (syntax-parse stx
+    [(_ arg-id bind-id)
+     #'(begin)]))
 
 (define-syntax (identifier-bind stx)
   (syntax-parse stx

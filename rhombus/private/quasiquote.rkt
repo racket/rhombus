@@ -841,6 +841,7 @@
                      #'()
                      #'((id (id-depth)) ... (sid (sid-depth)) ...)
                      #'syntax-matcher
+                     #'syntax-committer
                      #'syntax-binder
                      #'(pattern repack tmp-ids (id ...) id-refs (sid ...) sid-refs)))]))
 
@@ -857,6 +858,11 @@
                  success
                  fail))
            fail)]))
+
+(define-syntax (syntax-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (pattern repack (tmp-id ...) (id ...) (id-ref ...) (sid ...) (sid-ref ...)))
+     #'(begin)]))
 
 (define-syntax (syntax-binder stx)
   (syntax-parse stx

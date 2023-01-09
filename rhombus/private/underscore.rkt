@@ -37,6 +37,7 @@
                    #'static-infos
                    #'()
                    #'always-succeed
+                   #'nothing-commit
                    #'nothing-bind
                    #'())]))
 
@@ -44,6 +45,10 @@
   (syntax-parse stx
     [(_ _ _ IF success fail)
      #'(IF #t success fail)]))
+
+(define-syntax (nothing-commit stx)
+  (syntax-parse stx
+    [(_ _ _) #'(begin)]))
 
 (define-syntax (nothing-bind stx)
   (syntax-parse stx

@@ -29,6 +29,7 @@
                    #'() ; mutable => don't claim input's static info
                    #'((id (0)))
                    #'mutable-identifier-succeed
+                   #'mutable-commit
                    #'mutable-bind
                    #'[id mutable-id])]))
 
@@ -37,15 +38,19 @@
     [(_ arg-id [bind-id mutable-id] IF success fail)
      #'(begin
          (define mutable-id arg-id)
+         (set! mutable-id mutable-id)
          (IF #t success fail))]))
+
+(define-syntax (mutable-commit stx)
+  (syntax-parse stx
+    [(_ arg-id [bind-id mutable-id])
+     #'(begin)]))
 
 (define-syntax (mutable-bind stx)
   (syntax-parse stx
     [(_ arg-id [bind-id mutable-id])
-     #'(begin
-         (begin (set! mutable-id mutable-id))
-         (define-syntax bind-id
-           (mutable-variable #'mutable-id)))]))
+     #'(define-syntax bind-id
+         (mutable-variable #'mutable-id))]))
 
 (begin-for-syntax
   (struct mutable-variable (id)

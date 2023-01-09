@@ -340,13 +340,14 @@
                        #'left.static-infos
                        #'left.bind-infos
                        #'check-predicate-matcher
+                       #'commit-nothing-new
                        #'bind-nothing-new
-                       #'(predicate left.matcher-id left.binder-id left.data))
+                       #'(predicate left.matcher-id left.committer-id left.binder-id left.data))
          #'left)]))
 
 (define-syntax (check-predicate-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (predicate left-matcher-id left-binder-id left-data) IF success fail)
+    [(_ arg-id (predicate left-matcher-id left-committer-id left-binder-id left-data) IF success fail)
      #'(IF (predicate arg-id)
            (left-matcher-id
             arg-id
@@ -356,9 +357,14 @@
             fail)
            fail)]))
 
+(define-syntax (commit-nothing-new stx)
+  (syntax-parse stx
+    [(_ arg-id (predicate left-matcher-id left-committer-id left-binder-id left-data))
+     #'(left-committer-id arg-id left-data)]))
+
 (define-syntax (bind-nothing-new stx)
   (syntax-parse stx
-    [(_ arg-id (predicate left-matcher-id left-binder-id left-data))
+    [(_ arg-id (predicate left-matcher-id left-committer-id left-binder-id left-data))
      #'(left-binder-id arg-id left-data)]))
 
 (define-syntax Any (identifier-annotation #'Any #'(lambda (x) #t) #'()))

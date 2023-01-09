@@ -28,6 +28,7 @@
                          #,(if (syntax-e #'try-next)
                                #`(nested-bindings who try-next failure . tail)
                                #`(begin
+                                   (arg.committer-id arg-id arg.data)
                                    (arg.binder-id arg-id arg.data)
                                    (begin
                                      (define-static-info-syntax/maybe arg.bind-id arg.bind-static-info ...)

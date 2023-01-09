@@ -132,6 +132,7 @@
                    #'static-infos
                    #'()
                    #'empty-set-matcher
+                   #'literal-commit-nothing
                    #'literal-bind-nothing
                    #'datum)]))
 
@@ -252,12 +253,13 @@
                    #'composite-info.static-infos
                    #'composite-info.bind-infos
                    #'set-matcher
+                   #'set-committer
                    #'set-binder
-                   #'(keys rest-tmp composite-info.matcher-id composite-info.binder-id composite-info.data))]))
+                   #'(keys rest-tmp composite-info.matcher-id composite-info.committer-id composite-info.binder-id composite-info.data))]))
 
 (define-syntax (set-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-data)
+    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
      #`(IF (set? arg-id)
@@ -282,9 +284,14 @@
   (define h (set-ht s))
   (set (hash-remove* (if (immutable? h) h (hash-map/copy h values #:kind 'immutable)) ks)))
 
+(define-syntax (set-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+     #`(composite-committer-id 'set composite-data)]))
+
 (define-syntax (set-binder stx)
   (syntax-parse stx
-    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-data))
+    [(_ arg-id (keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
      #`(composite-binder-id 'set composite-data)]))
 
 

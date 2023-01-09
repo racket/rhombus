@@ -248,4 +248,10 @@ begin:
     '$(x.y) ... ...'
     ~prints_like '2 4 6'
 
+// make sure that repetitions work with `let`
+check:
+  let [index, ...]: [1, 2, 3]
+  [index, ...]
+  ~is [1, 2, 3]
+
 

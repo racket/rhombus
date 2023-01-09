@@ -490,7 +490,8 @@
                                                                       [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
                                                                       [rest-info::binding-info #'rest-impl.info])
                                                     #`((rest-tmp rest-info #,(fcase-rest-arg fc) #f)
-                                                       ((rest-info.binder-id rest-tmp rest-info.data))
+                                                       ((rest-info.committer-id rest-tmp rest-info.data)
+                                                        (rest-info.binder-id rest-tmp rest-info.data))
                                                        ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
                                                         ...)))]
                                                  [else
@@ -503,7 +504,8 @@
                                                                       [kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)]
                                                                       [kwrest-info::binding-info #'kwrest-impl.info])
                                                     #`((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f)
-                                                       ((kwrest-info.binder-id kwrest-tmp kwrest-info.data))
+                                                       ((kwrest-info.committer-id kwrest-tmp kwrest-info.data)
+                                                        (kwrest-info.binder-id kwrest-tmp kwrest-info.data))
                                                        ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
                                                         ...)))]
                                                  [else
@@ -519,6 +521,7 @@
                                       maybe-match-rest
                                       maybe-match-kwrest
                                       (begin
+                                        (arg-info.committer-id this-arg-id arg-info.data) ...
                                         (arg-info.binder-id this-arg-id arg-info.data) ...
                                         (begin
                                           (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)

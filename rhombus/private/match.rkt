@@ -117,6 +117,7 @@
                    #'static-infos
                    #'()
                    #'else-matcher
+                   #'else-committer
                    #'else-binder
                    #'(ok? bind-id))]))
 
@@ -126,6 +127,11 @@
      #'(IF ok?
            success
            fail)]))
+
+(define-syntax (else-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (ok? bind-id))
+     #'(begin)]))
 
 (define-syntax (else-binder stx)
   (syntax-parse stx

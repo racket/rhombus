@@ -30,13 +30,15 @@
 (module+ for-class
   (provide (for-syntax make-binding-prefix-operator)))
 
-(define-simple-name-root bind
-  macro
-  rule
-  infoer
-  matcher
-  binder
-  only)
+(define-name-root bind
+  #:fields
+  (macro
+   rule
+   infoer
+   matcher
+   committer
+   binder
+   only))
 
 (define-name-root only
   #:fields
@@ -91,8 +93,9 @@
                                               (group unpacked-uses)
                                               (group unpacked-static-infos))) ...))
                 (group chain-to-matcher)
+                (group chain-to-committer)
                 (group chain-to-binder)
-                (group (parsed (b.matcher-id b.binder-id b.data)))))]))
+                (group (parsed (b.matcher-id b.committer-id b.binder-id b.data)))))]))
 
 (define-for-syntax (pack stx)
   (syntax-parse (unpack-term stx 'bind_meta.pack #f)
@@ -113,6 +116,7 @@
              (group static-infos)
              (group bind-ids)
              (group matcher-id:identifier)
+             (group committer-id:identifier)
              (group binder-id:identifier)
              (group data))
      #:with (parens (group (parens (group bind-id) (group bind-uses) (group bind-static-infos))) ...) #'bind-ids
@@ -125,6 +129,7 @@
                    (pack-static-infos #'static-infos 'bind_meta.pack)
                    #'((bind-id packed-bind-uses . packed-bind-static-infos) ...)
                    #'matcher-id
+                   #'committer-id
                    #'binder-id
                    #'data)]
     [_ (raise-syntax-error 'bind_meta.pack_info
@@ -264,7 +269,7 @@
                    #:datum-literals (parsed group parens)
                    #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id binder-id data)))
+                               (group (parsed (matcher-id committer-id binder-id data)))
                                (group IF-bridge)
                                (group success ...)
                                (group (parsed (if-bridge IF fail)))))
@@ -277,6 +282,23 @@
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
 
+(define-syntax chain-to-committer
+  ;; depends on `IF` like `if-bridge` does
+  (let ([parse (lambda (rhombus stx)
+                 (syntax-parse stx
+                   #:datum-literals (parsed group parens)
+                   #:literals (if-bridge)
+                   [(_ (parens (group arg-id:identifier)
+                               (group (parsed (matcher-id committer-id binder-id data)))))
+                    #:with rhombus rhombus
+                    #`(committer-id arg-id data)]))])
+    (make-expression+definition-transformer
+     (expression-transformer
+      #'chain-to-committer
+      (lambda (stx) (values (parse #'rhombus-body stx) #'())))
+     (definition-transformer
+       (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
+
 (define-syntax chain-to-binder
   ;; depends on `IF` like `if-bridge` does
   (let ([parse (lambda (rhombus stx)
@@ -284,17 +306,17 @@
                    #:datum-literals (parsed group parens)
                    #:literals (if-bridge)
                    [(_ (parens (group arg-id:identifier)
-                               (group (parsed (matcher-id binder-id data)))))
+                               (group (parsed (matcher-id committer-id binder-id data)))))
                     #:with rhombus rhombus
                     #`(binder-id arg-id data)]))])
     (make-expression+definition-transformer
      (expression-transformer
-      #'chain-to-matcher
+      #'chain-to-binder
       (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
 
-(define-syntax binder
+(define-for-syntax binder-or-committer
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
@@ -305,6 +327,9 @@
          (list
           #`(define-syntax builder-id
               (binder-rhs #,stx)))]))))
+
+(define-syntax binder binder-or-committer)
+(define-syntax committer binder-or-committer)
 
 (begin-for-syntax
   (define-syntax (binder-rhs stx)

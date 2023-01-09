@@ -111,7 +111,8 @@
  a syntax object that is suitable to pack---which means that it encodes
  information about identifiers to be boound as well as furtyher
  ``continuations'' in the form of a matcher transformer defined with
- @rhombus(bind.matcher) and binder transformer defined with
+ @rhombus(bind.matcher), a committer transformer defined with
+ @rhombus(bind.committer), and binder transformer defined with
  @rhombus(bind.binder).
 
  See @secref("bind-macro-protocol") for more explanation and for
@@ -142,6 +143,7 @@
       (#,(@rhombus(var_static_key, ~var)), #,(@rhombus(var_static_value, ~var))), ...),
      ...),
     #,(@rhombus(matcher_id, ~var)),
+    #,(@rhombus(committer_id, ~var)),
     #,(@rhombus(binder_id, ~var)),
     #,(@rhombus(data, ~var)))'
    )
@@ -170,12 +172,14 @@
  expression (in the case of @rhombus(0)) or repetition at a certain depth
  (in the case of @rhombus(k, ~var) greater than @rhombus(0)).
 
- The @rhombus(matcher_id) and @rhombus(binder_id) identifiers provide
+ The @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
+ @rhombus(binder_id, ~var) identifiers provide
  the ``continuation'' of the binder's expansion to generate a matching
  expression and a definition sequence.
 
- The @rhombus(data) term is propoagated to the use of
- @rhombus(matcher_id) and @rhombus(binder_id), providing a communication
+ The @rhombus(data, ~var) term is propoagated to the use of
+ @rhombus(matcher_id, ~var), @rhombus(committer_id, ~var), and
+ @rhombus(binder_id, ~var), providing a communication
  channel from an infoer to a matcher and binder.
  
  The representation of packed information as a syntax object is
@@ -245,6 +249,31 @@
 }
 
 @doc(
+  defn.macro '«bind.committer '$identifier($id_pattern, $data_pattern)':
+                 $body
+                 ...»'
+){
+
+ Defines @rhombus(identifier) as the committer ``continuation'' of a
+ binding form's expansion. The result is an sequence of definitions for
+ intermediate variables, where
+ @rhombus(id_pattern) holds the value that was matched by a matcher. If
+ the matcher included any additional bindings around the success branch,
+ then those bindings are in the environment of the definitions generated
+ by this binder. The term matched to @rhombus(data_pattern) is whatever
+ data the infoer included at the end of its result.
+
+ The definitions produced by a committer should not use identifiers
+ supplied by a user of the binding form, because those names will not be
+ adjusted by @rhombus(let). Instead, those definitions should be deferred
+ to the binder function's result.
+
+ See @secref("bind-macro-protocol") for more explanation and for
+ examples.
+
+}
+
+@doc(
   defn.macro '«bind.binder '$identifier($id_pattern, $data_pattern)':
                  $body
                  ...»'
@@ -255,9 +284,15 @@
  the variables that are bound by the expander form, where
  @rhombus(id_pattern) holds the value that was matched by a matcher. If
  the matcher included any additional bindings around the success branch,
- then those bindings are in the enviornment of the definitions generated
- by this binder. The term matched to @rhombus(data_pattern) is whatever
+ then those bindings are in the environment of the definitions generated
+ by this binder, and any intermediate definitions from the commiitter are
+ also in the environment. The term matched to @rhombus(data_pattern) is whatever
  data the infoer included at the end of its result.
+
+ The definitions produced by a binder should not refer to each other,
+ because they may be adjusted by @rhombus(let) expansion. Bindings that
+ need to be referenced by generated bindings should be in the committer
+ function's output.
 
  See @secref("bind-macro-protocol") for more explanation and for
  examples.

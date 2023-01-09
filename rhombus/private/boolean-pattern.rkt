@@ -48,6 +48,7 @@
                    #'(lhs-static-info ... . rhs.static-infos)
                    #'(lhs-bind-info ... . rhs.bind-infos)
                    #'and-matcher
+                   #'and-committer
                    #'and-binder
                    #'(lhs rhs))]))
 
@@ -57,6 +58,13 @@
      #'(lhs.matcher-id arg-id lhs.data IF
                        (rhs.matcher-id arg-id rhs.data IF success fail)
                        fail)]))
+
+(define-syntax (and-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (lhs::binding-info rhs::binding-info))
+     #'(begin
+         (lhs.committer-id arg-id lhs.data)
+         (rhs.committer-id arg-id rhs.data))]))
 
 (define-syntax (and-binder stx)
   (syntax-parse stx
@@ -97,6 +105,7 @@
                    #'()
                    #'()
                    #'or-matcher
+                   #'or-committer
                    #'or-binder
                    #'(lhs rhs finish))]))
 
@@ -108,10 +117,12 @@
            (let ()
              (lhs.matcher-id arg-id lhs.data block-if
                              (lambda ()
+                               (lhs.committer-id arg-id lhs.data)
                                (lhs.binder-id arg-id lhs.data)
                                (void))
                              (rhs.matcher-id arg-id rhs.data block-if
                                              (lambda ()
+                                               (rhs.committer-id arg-id rhs.data)
                                                (rhs.binder-id arg-id rhs.data)
                                                (void))
                                              #f))))
@@ -121,6 +132,11 @@
   (if (let () a)
       (let () b)
       (let () c)))
+
+(define-syntax (or-committer stx)
+  (syntax-parse stx
+    [(_ arg-id (lhs rhs finish-id))
+     #'(begin)]))
 
 (define-syntax (or-binder stx)
   (syntax-parse stx
