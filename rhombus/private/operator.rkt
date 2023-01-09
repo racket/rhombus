@@ -77,28 +77,32 @@
   (define (build-prefix-function name arg rhs start end ret-predicate)
     (syntax-parse #`(group #,arg)
       [arg::binding
-       (build-function no-adjustments
-                       name
-                       #'(#f) #'(arg) #'(arg.parsed) #'(#f)
-                       #'#f #'#f
-                       #'#f #'#f
-                       ret-predicate
-                       rhs
-                       start end)]))
+       (define-values (proc arity)
+         (build-function no-adjustments
+                         name
+                         #'(#f) #'(arg) #'(arg.parsed) #'(#f)
+                         #'#f #'#f
+                         #'#f #'#f
+                         ret-predicate
+                         rhs
+                         start end))
+       proc]))
 
   (define (build-infix-function name left right rhs start end ret-predicate)
     (syntax-parse #`(group #,left)
       [left::binding
        (syntax-parse #`(group #,right)
          [right::binding
-          (build-function no-adjustments
-                          name
-                          #'(#f #f) #'(left right) #'(left.parsed right.parsed) #'(#f #f)
-                          #'#f #'#f
-                          #'#f #'#f
-                          ret-predicate
-                          rhs
-                          start end)])]))
+          (define-values (proc arity)
+            (build-function no-adjustments
+                            name
+                            #'(#f #f) #'(left right) #'(left.parsed right.parsed) #'(#f #f)
+                            #'#f #'#f
+                            #'#f #'#f
+                            ret-predicate
+                            rhs
+                            start end))
+          proc])]))
 
   (define (generate-prefix form-id g name arg prec rhs ret-predicate ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])

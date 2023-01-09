@@ -88,8 +88,12 @@
                                       in-expression-space
                                       #'rule-rhs))])))
    (entry-point-transformer
+    ;; parse rule
     (lambda (stx adjustments)
-      (parse-rule stx adjustments)))
+      (parse-rule stx adjustments))
+    ;; extract arity
+    (lambda (stx)
+      1))
    (expression-transformer
     #'rule
     (lambda (stx)

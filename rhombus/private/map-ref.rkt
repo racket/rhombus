@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/syntax-local
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "statically-str.rkt")
          "expression.rkt"
          "parse.rkt"
          (submod "map.rkt" for-build)
@@ -28,7 +29,7 @@
                   map-in
                   (rhombus-local-expand map-in)))
   (define who '|[]|)
-  (define not-static "specialization not statically known")
+  (define (not-static) (string-append "specialization not known" statically-str))
   (syntax-parse stxes
     #:datum-literals (brackets op)
     #:literals (:=)
@@ -37,7 +38,7 @@
      #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                              (if more-static?
-                                 (raise-syntax-error who not-static map-in)
+                                 (raise-syntax-error who (not-static) map-in)
                                  #'map-set!)))
      (define e (datum->syntax (quote-syntax here)
                               (list map-set!-id map #'(rhombus-expression index) #'rhs.parsed)
@@ -49,7 +50,7 @@
      (define (build-ref map index map-static-info)
        (define map-ref-id (or (map-static-info #'#%map-ref)
                               (if more-static?
-                                  (raise-syntax-error who not-static map-in)
+                                  (raise-syntax-error who (not-static) map-in)
                                   #'map-ref)))
        (define e (datum->syntax (quote-syntax here)
                                 (list map-ref-id map index)

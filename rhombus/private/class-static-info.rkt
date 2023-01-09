@@ -5,13 +5,19 @@
                      enforest/hier-name-parse
                      "class-parse.rkt")
          (submod "dot.rkt" for-dot-provider)
+         "entry-point.rkt"
          "call-result-key.rkt"
+         "function-arity-key.rkt"
+         "function-arity.rkt"
          "static-info.rkt")
 
 (provide (for-syntax build-class-static-infos))
 
 (define-for-syntax (build-class-static-infos exposed-internal-id
                                              super
+                                             given-constructor-rhs
+                                             constructor-keywords constructor-defaults
+                                             constructor-private-keywords constructor-private-defaults
                                              names)
   (with-syntax ([(name constructor-name name-instance
                        internal-name-instance make-internal-name
@@ -20,7 +26,15 @@
                  names])
     (append
      (list
-      #'(define-static-info-syntax constructor-name (#%call-result ((#%dot-provider name-instance)))))
+      #`(define-static-info-syntax constructor-name
+          (#%call-result ((#%dot-provider name-instance)))
+          (#%function-arity #,(if given-constructor-rhs
+                                  (syntax-parse given-constructor-rhs
+                                    [(_ e-arity::entry-point-arity)
+                                     (syntax->datum #'e-arity.parsed)])
+                                  (summarize-arity constructor-keywords
+                                                   constructor-defaults
+                                                   #f #f)))))
      (if exposed-internal-id
          (list
           #`(define-static-info-syntax make-internal-name

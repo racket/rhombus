@@ -31,7 +31,7 @@
   (define (check-reducer-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::reducer-form form]
-      [_ (raise-result-error (proc-name proc) rhombus-realm "Reducer_Syntax" form)]))
+      [_ (raise-result-error* (proc-name proc) rhombus-realm "Reducer_Syntax" form)]))
 
   (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
   

@@ -160,7 +160,7 @@ check:
       private implements Adder
       private override total(): x
     Sum(20).total
-  ~raises "no such public field or method"
+  ~raises values("no such field or method", "static")
 
 // implement an interface both privately and publicly => public
 check:

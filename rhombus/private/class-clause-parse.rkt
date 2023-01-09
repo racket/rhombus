@@ -12,6 +12,7 @@
          "interface-clause.rkt"
          (only-in "annotation.rkt" :: -:)
          (submod "annotation.rkt" for-class)
+         "entry-point.rkt"
          "parens.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
@@ -19,6 +20,7 @@
          "var-decl.rkt"
          (only-in "assign.rkt" :=)
          (only-in "function.rkt" fun)
+         (submod "function.rkt" for-method)
          (only-in "implicit.rkt" #%body)
          (only-in "begin.rkt"
                   [begin rhombus-begin]))
@@ -220,12 +222,14 @@
                                                     (car (generate-temporaries #'(id)))
                                                     #'rhs
                                                     #'maybe-ret
-                                                    (and (pair? (syntax-e #'maybe-ret))
+                                                    (and (or (pair? (syntax-e #'maybe-ret))
+                                                             (syntax-e #'e-arity.parsed))
                                                          (car (generate-temporaries #'(id))))
                                                     body
                                                     replace
                                                     disposition
-                                                    kind)
+                                                    kind
+                                                    (extract-arity #'rhs))
                                       (hash-ref options 'methods null)))]
     [((~and tag (~or abstract abstract-property abstract-override abstract-override-property))
       id rhs maybe-ret)
@@ -240,15 +244,27 @@
                                                     '#:abstract
                                                     #'rhs
                                                     #'maybe-ret
-                                                    (and (pair? (syntax-e #'maybe-ret))
+                                                    (and (or (pair? (syntax-e #'maybe-ret))
+                                                             (syntax-e #'e-arity.parsed))
                                                          (car (generate-temporaries #'(id))))
                                                     'abstract
                                                     replace
                                                     'abstract
-                                                    kind)
+                                                    kind
+                                                    (extract-arity #'rhs))
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+
+(define-for-syntax (extract-arity rhs)
+  (syntax-parse rhs
+    [(_ e-arity::entry-point-arity)
+     (and (syntax-e #'e-arity.parsed)
+          (let ([a (syntax->datum #'e-arity.parsed)])
+            (if (exact-integer? a)
+                (* 2 a)
+                (cons (* 2 (car a)) (cdr a)))))]
+    [_ #f]))
 
 (define-for-syntax (class-clause-accum forms)
   ;; early processing of a clause to accumulate information of `class-data`;
@@ -267,16 +283,23 @@
     v))
 
 (define-for-syntax (class-clause-extract who accum key)
-  (define (method id vis)
+  (define (method id rhs vis)
     (case key
       [(method_names) (list id)]
+      [(method_arities) (list (extract-arity rhs))]
       [(method_visibilities) (list vis)]
       [else null]))
-  (define (property id vis)
+  (define (property id rhs vis)
     (case key
       [(property_names) (list id)]
+      [(property_arities) (list (extract-arity rhs))]
       [(property_visibilities) (list vis)]
       [else null]))
+  (define (extract-arity e)
+    (syntax-parse e
+      [(_ e-arity::entry-point-arity)
+       (syntax->datum #'e-arity.parsed)]
+      [_ #f]))
   (for/list ([a (in-list (reverse (syntax->list accum)))]
              #:do [(define v
                      (syntax-parse a
@@ -303,19 +326,19 @@
                        [((~literal internal) id) (case key
                                                    [(internal_names) (list #'id)]
                                                    [else null])]
-                       [((~literal method) id . _) (method #'id 'public)]
-                       [((~literal override) id . _) (method #'id 'public)]
-                       [((~literal private) id . _) (method #'id 'private)]
-                       [((~literal private-override) id . _) (method #'id 'private)]
-                       [((~literal final) id . _) (method #'id 'public)]
-                       [((~literal final-override) id . _) (method #'id 'public)]
-                       [((~literal property) id . _) (property #'id 'public)]
-                       [((~literal override-property) id . _) (property #'id 'public)]
-                       [((~literal final-property) id . _) (property #'id 'public)]
-                       [((~literal final-overrode-property) id . _) (property #'id 'public)]
-                       [((~literal private-property) id . _) (property #'id 'private)]
-                       [((~literal private-override-property) id . _) (property #'id 'private)]
-                       [((~literal private-override-property) id . _) (property #'id 'private)]
+                       [((~literal method) id rhs . _) (method #'id #'rhs 'public)]
+                       [((~literal override) id rhs . _) (method #'id #'rhs 'public)]
+                       [((~literal private) id rhs . _) (method #'id #'rhs 'private)]
+                       [((~literal private-override) id rhs . _) (method #'id #'rhs 'private)]
+                       [((~literal final) id rhs . _) (method #'id #'rhs 'public)]
+                       [((~literal final-override) id rhs . _) (method #'id #'rhs 'public)]
+                       [((~literal property) id rhs . _) (property #'id #'rhs 'public)]
+                       [((~literal override-property) id rhs . _) (property #'id #'rhs 'public)]
+                       [((~literal final-property) id rhs . _) (property #'id #'rhs 'public)]
+                       [((~literal final-overrode-property) id rhs . _) (property #'id #'rhs 'public)]
+                       [((~literal private-property) id rhs . _) (property #'id #'rhs 'private)]
+                       [((~literal private-override-property) id rhs . _) (property #'id #'rhs 'private)]
+                       [((~literal private-override-property) id rhs . _) (property #'id #'rhs 'private)]
                        [((~literal constructor) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
                        [((~literal expression) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
                        [((~literal binding) . _) (if (eq? key 'uses_default_binding) '(#f) null)]
@@ -325,32 +348,56 @@
     e))
 
 (define-for-syntax (method-shape-extract shapes private-methods private-properties key)
+  (define (unwrap a) (if (vector? a) (vector-ref a 0) a))
+  (define (unshift-arity a) (and a (if (integer? a)
+                                       (quotient a 2)
+                                       (cons (quotient (car a) 2) (cdr a)))))
   (case key
     [(method_names)
      (append
       private-methods
-      (for/list ([m (in-vector shapes)]
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
                  #:unless (pair? m))
         (datum->syntax #f (if (box? m) (unbox m) m))))]
+    [(method_arities)
+     (append
+      (for/list ([m (in-list private-methods)])
+        #f)
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
+                 #:unless (pair? m))
+        (unshift-arity (and (vector? ma) (vector-ref ma 1)))))]
     [(method_visibilities)
      (append
       (for/list ([m (in-list private-methods)])
         'private)
-      (for/list ([m (in-vector shapes)]
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
                  #:unless (pair? m))
         'public))]
     [(property_names)
      (append
       private-properties
-      (for ([m (in-vector shapes)]
+      (for ([ma (in-vector shapes)]
+            #:do [(define m (unwrap ma))]
             #:when (pair? m))
         (let ([m (car m)])
           (datum->syntax #f (if (box? m) (unbox m) m)))))]
+    [(property_arities)
+     (append
+      (for/list ([m (in-list private-methods)])
+        #f)
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
+                 #:when (pair? m))
+        (unshift-arity (and (vector? ma) (vector-ref ma 1)))))]
     [(property_visibilities)
      (append
       (for/list ([m (in-list private-properties)])
         'private)
-      (for/list ([m (in-vector shapes)]
+      (for/list ([ma (in-vector shapes)]
+                 #:do [(define m (unwrap ma))]
                  #:when (pair? m))
         'public))]))
 
@@ -505,8 +552,8 @@
     #:description "method declaration"
     #:attributes (id rhs maybe-ret)
     (pattern (~seq id:identifier (tag::parens arg ...) ret::maybe-ret)
-             #:attr rhs #'(group fun (tag arg ...)
-                                 (block (group (parsed (void)))))
+             #:attr rhs #'(block (group fun (tag arg ...)
+                                        (block (group (parsed (void))))))
              #:attr maybe-ret #'ret.seq)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:attr rhs #'#f
@@ -520,7 +567,7 @@
                    (~and rhs (_::block . _)))
              #:attr form (wrap-class-clause #`(#,mode id
                                                (block
-                                                (group fun
+                                                (group fun/read-only-property
                                                        (alts
                                                         (block (group (parens) rhs))
                                                         (block (group (parens (group ignored))
@@ -533,7 +580,7 @@
                             (~and rhs (_::block . _))))))
              #:attr form (wrap-class-clause #`(#,mode id
                                                (block
-                                                (group fun
+                                                (group fun/read-only-property
                                                        (alts
                                                         (block (group (parens) rhs))
                                                         (block (group (parens (group ignored))
@@ -561,7 +608,11 @@
     #:description "proper declaration"
     #:attributes (id rhs maybe-ret)
     (pattern (~seq id:identifier ret::maybe-ret)
-             #:attr rhs #'#f
+             #:attr rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed (void))))))
+                                                  (block (group (parens (group _)) (block (group (parsed (void)))))))))
+             #:attr maybe-ret #'ret.seq)
+    (pattern (~seq (alts (block id:identifier ret::maybe-ret)))
+             #:attr rhs #'(block (group fun (parens) (block (group (parsed (void))))))
              #:attr maybe-ret #'ret.seq)))
 
 (define-syntax constructor

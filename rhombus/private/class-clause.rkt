@@ -27,7 +27,7 @@
   (define (check-class-clause-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::class-clause-form form]
-      [_ (raise-result-error (proc-name proc) rhombus-realm "Class_Clause_Syntax" form)]))
+      [_ (raise-result-error* (proc-name proc) rhombus-realm "Class_Clause_Syntax" form)]))
 
   (define in-class-clause-space (make-interned-syntax-introducer/add 'rhombus/class_clause))
 

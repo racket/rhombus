@@ -10,7 +10,7 @@ check:
       method get_color():
         color
     Posn(1, 2).color
-  ~raises "no such public field"
+  ~raises values("no such field or method", "static")
 
 check:
   ~eval

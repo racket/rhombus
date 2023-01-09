@@ -60,6 +60,8 @@ normally bound to implement function calls.
   keyword-value pairs are passed into the function as additional keyword
   arguments.
 
+ See also @rhombus(use_static).
+
  @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
 
 @examples(

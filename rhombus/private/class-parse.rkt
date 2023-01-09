@@ -59,7 +59,7 @@
                     fields ; (list (list symbol accessor-id mutator-id static-infos constructor-arg) ...)
                     all-fields ; #f or (list a-field ...), includes private fields; see below for a-field
                     inherited-field-count ; number of fields that are inherited
-                    method-shapes ; vector of shaped-symbol; see below
+                    method-shapes ; vector of shape; see below
                     method-vtable ; syntax-object vector of function identifiers or #'#:abstract
                     method-map    ; hash of symbol -> index; inverse of `method-names`, could be computed on demand
                     method-result ; hash of symbol -> identifier-or-#f; identifier has compile-time binding to predicate and static infos
@@ -76,6 +76,10 @@
                              private-interfaces)) ; (list identifier ...)
 
 (define (class-internal-desc-ref v) (and (class-internal-desc? v) v))
+
+;; A shaped is either
+;;  - shaped-symbol
+;;  - (vector shaped-symbol arity) where arity can be a list that includes keyword info
 
 ;; A shaped-symbol is one of the following, where a symbol is the method's external name:
 ;;  - symbol: final method
@@ -111,10 +115,11 @@
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override
                          disposition ; 'abstract, 'final, 'private
-                         kind))      ; 'method, 'property
+                         kind        ; 'method, 'property
+                         arity))     ; #f, integer, or (list integer required-list allowed-list)
 
 ;; used for a table produced by `extract-method-tables`
-(struct mindex (index final? property?))
+(struct mindex (index final? property? arity))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 

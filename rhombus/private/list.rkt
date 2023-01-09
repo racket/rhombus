@@ -40,7 +40,7 @@
   (provide list-method-table))
 
 (module+ for-implicit
-  (provide (for-syntax set-#%call-id!)))
+  (provide (for-syntax set-#%call-ids!)))
 
 (module+ for-compound-repetition
   (provide (for-syntax list-static-infos)))
@@ -99,14 +99,18 @@
    ;; so bad, but but we can avoid a `list?` check in `apply`,
    ;; and we can expose more static information this way
    (lambda (stx)
+     (define (normal-call? tag)
+       (define id (datum->syntax tag '#%call))
+       (or (free-identifier=? #%call-id id)
+           (free-identifier=? static-#%call-id id)))
      (syntax-parse stx
        #:datum-literals (parens group op)
        #:literals (rhombus... &)
        [(form-id (tag::parens _ ... _ (group (op rhombus...))) . tail)
-        (free-identifier=? #%call-id (datum->syntax #'tag '#%call))
+        #:when (normal-call? #'tag)
         (parse-list-expression stx)]
        [(form-id (tag::parens _ ... (group (op &) _ ...)) . tail)
-        (free-identifier=? #%call-id (datum->syntax #'tag '#%call))
+        #:when (normal-call? #'tag)
         (parse-list-expression stx)]
        [(_ . tail)
         (values #'list #'tail)]))
@@ -350,4 +354,7 @@
 
 (begin-for-syntax
   (define #%call-id #f)
-  (define (set-#%call-id! id) (set! #%call-id id)))
+  (define static-#%call-id #f)
+  (define (set-#%call-ids! id static-id)
+    (set! #%call-id id)
+    (set! static-#%call-id static-id)))

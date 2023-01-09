@@ -4,6 +4,7 @@
                      (only-in racket/set set-intersect set-union)
                      racket/syntax
                      syntax/parse
+                     shrubbery/property
                      "srcloc.rkt"
                      "consistent.rkt"
                      "with-syntax.rkt"
@@ -39,7 +40,8 @@
          (submod "dot.rkt" for-dot-provider)
          "dot-parse.rkt"
          "realm.rkt"
-         "compound-repetition.rkt")
+         "compound-repetition.rkt"
+         "function-arity.rkt")
 
 (provide fun
          Function
@@ -61,6 +63,9 @@
 
 (module+ for-builtin
   (provide function-method-table))
+
+(module+ for-method
+  (provide fun/read-only-property))
 
 (define-name-root Function
   #:fields
@@ -86,14 +91,17 @@
         [else #f])))))
 
 (begin-for-syntax
-  (define-syntax-class :non-...-binding
+  (define-syntax-class :non-...
+    #:attributes ()
     (pattern form
              #:when (syntax-parse #'form
                       #:datum-literals (group op)
                       #:literals (& ~&)
                       [(group (op (~literal rhombus...))) #f]
                       [(group (op (~or & ~&)) . _) #f]
-                      [_ #t])
+                      [_ #t])))
+  (define-syntax-class :non-...-binding
+    (pattern form::non-...
              #:with arg::binding #'form
              #:with parsed #'arg.parsed))
   
@@ -113,6 +121,16 @@
     (pattern arg::non-...-binding
              #:attr kw #'#f
              #:attr parsed #'arg.parsed))
+
+  ;; used when just extracting an arity:
+  (define-syntax-class :kw-arity-arg
+    #:attributes [kw]
+    #:datum-literals (op block group)
+    #:literals (rhombus...)
+    (pattern (group kw:keyword . _))
+    (pattern (group kw:keyword))
+    (pattern arg::non-...
+             #:attr kw #'#f))
   
   (define-syntax-class :kw-opt-binding
     #:attributes [kw parsed default]
@@ -142,6 +160,27 @@
              #:attr kw #'#f
              #:attr parsed #'arg.parsed)
     (pattern ::kw-binding
+             #:attr default #'#f))
+
+  ;; used when just extracting an arity:
+  (define-syntax-class :kw-opt-arity-arg
+    #:attributes [kw default]
+    #:datum-literals (op block group)
+    #:literals (rhombus...)
+    (pattern (group kw:keyword (block (group _::not-equal ...+ _::equal _ ...+)))
+             #:with default #'#t)
+    (pattern (group kw:keyword (block (group _ ...+ (b-tag::block . _))))
+             #:with default #'#t)
+    (pattern (group kw:keyword _::equal _ ...+)
+             #:with default #'#t)
+    (pattern (group _::not-equal ...+ _::equal _ ...+)
+             #:with default #'#t
+             #:attr kw #'#f)
+    (pattern (group a ...+ (b-tag::block . _))
+             #:with (~not (_:keyword)) #'(a ...)
+             #:with default #'#t
+             #:attr kw #'#f)
+    (pattern ::kw-arity-arg
              #:attr default #'#f))
 
   (define-syntax-class :not-block
@@ -197,6 +236,30 @@
               (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
                     (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
               ...)))
+  
+  ;; used when just extracting an arity:
+  (define-splicing-syntax-class :pos-arity-rest
+    #:attributes [rest?]
+    #:datum-literals (group op)
+    #:literals (& rhombus...)
+    (pattern (~seq (group (op &) _ ...))
+             #:attr rest? #'#t)
+    (pattern (~seq _::non-... (group (op rhombus...)))
+             #:attr rest? #'#t))
+  (define-splicing-syntax-class :kwp-arity-rest
+    #:attributes [kwrest?]
+    #:datum-literals (group op)
+    #:literals (~&)
+    (pattern (~seq (group (op ~&) _ ...))
+             #:attr kwrest? #'#t))
+  (define-splicing-syntax-class :maybe-rest-arity-arg
+    #:attributes [rest? kwrest?]
+    #:datum-literals (group op)
+    #:literals (& ~& rhombus...)
+    (pattern (~seq
+              (~alt (~optional ::pos-arity-rest #:defaults ([rest? #'#f]))
+                    (~optional ::kwp-arity-rest #:defaults ([kwrest? #'#f])))
+              ...)))
 
   (struct entry-point+expression+definition-transformer (cbl exp def)
     #:property prop:entry-point-transformer (lambda (self) (entry-point+expression+definition-transformer-cbl self))
@@ -208,13 +271,17 @@
 (define-syntax fun
   (make-entry-point+expression+definition-transformer
    (entry-point-transformer
+    ;; parse function:
     (lambda (stx adjustments)
       (define-values (term tail) (parse-anonymous-function stx adjustments #t))
       (syntax-parse tail
         [() term]
         [_ (raise-syntax-error #f
                                "unexpected extra terms"
-                               tail)])))
+                               tail)]))
+    ;; extract arity:
+    (lambda (stx)
+      (parse-anonymous-function-arity stx)))
    (expression-transformer
     #'fun
     (lambda (stx)
@@ -232,43 +299,55 @@
          (define names (syntax->list #'(name.name ...)))
          (define the-name (car names))
          (check-consistent stx names "name")
+         (define-values (proc arity)
+           (build-case-function no-adjustments
+                                the-name
+                                #'((arg.kw ...) ...)
+                                #'((arg ...) ...) #'((arg.parsed ...) ...)
+                                #'(rest.arg ...) #'(rest.parsed ...)
+                                #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                                #'(ret.predicate ...)
+                                #'(rhs ...)
+                                #'form-id #'alts-tag))
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.static-infos ...))
+          the-name (syntax->list #'(ret.static-infos ...)) arity
           (list
-           #`(define #,the-name
-               #,(build-case-function no-adjustments
-                                      the-name
-                                      #'((arg.kw ...) ...)
-                                      #'((arg ...) ...) #'((arg.parsed ...) ...)
-                                      #'(rest.arg ...) #'(rest.parsed ...)
-                                      #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                                      #'(ret.predicate ...)
-                                      #'(rhs ...)
-                                      #'form-id #'alts-tag))))]
+           #`(define #,the-name #,proc)))]
         [(form-id name-seq::dotted-identifier-sequence (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
                   ret::ret-annotation
                   (~and rhs (_::block body ...)))
          #:with name::dotted-identifier #'name-seq
+         (define-values (proc arity)
+           (build-function no-adjustments
+                           #'name.name
+                           #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
+                           #'rest.arg #'rest.parsed
+                           #'rest.kwarg #'rest.kwparsed
+                           #'ret.predicate
+                           #'rhs
+                           #'form-id #'parens-tag))
          (maybe-add-function-result-definition
-          #'name.name (list #'ret.static-infos)
+          #'name.name (list #'ret.static-infos) arity
           (list
-           #`(define name.name
-               #,(build-function no-adjustments
-                                 #'name.name
-                                 #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
-                                 #'rest.arg #'rest.parsed
-                                 #'rest.kwarg #'rest.kwparsed
-                                 #'ret.predicate
-                                 #'rhs
-                                 #'form-id #'parens-tag))))]
+           #`(define name.name #,proc)))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or (_::parens _ ...)
                  (_::alts (block (group (parens _ ...) . _)) ...+))
             . _)
          (syntax-parse #`(group . #,stx)
            [e::expression
-            (list #'e.parsed)])])))))
+            (list #'(#%expression e.parsed))])])))))
 
+(define-syntax fun/read-only-property
+  (entry-point-transformer
+   ;; parse function:
+   (lambda (stx adjustments)
+     (define-values (term tail) (parse-anonymous-function stx adjustments #t))
+     term)
+   ;; extract arity:
+   (lambda (stx)
+     1)))
+  
 (define-for-syntax (parse-anonymous-function stx adjustments for-entry?)
   (syntax-parse stx
     #:datum-literals (group block alts)
@@ -277,21 +356,24 @@
                              (~and rhs (_::block body ...))))
                ...+)
               . tail)
-     (values
-      (build-case-function adjustments
-                           (get-local-name #'form-id)
-                           #'((arg.kw ...) ...)
-                           #'((arg ...) ...) #'((arg.parsed ...) ...)
-                           #'(rest.arg ...) #'(rest.parsed ...)
-                           #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                           #'(ret.predicate ...)
-                           #'(rhs ...)
-                           #'form-id #'alts-tag)
-      #'tail)]
+     (define-values (proc arity)
+       (build-case-function adjustments
+                            (get-local-name #'form-id)
+                            #'((arg.kw ...) ...)
+                            #'((arg ...) ...) #'((arg.parsed ...) ...)
+                            #'(rest.arg ...) #'(rest.parsed ...)
+                            #'(rest.kwarg ...) #'(rest.kwparsed ...)
+                            #'(ret.predicate ...)
+                            #'(rhs ...)
+                            #'form-id #'alts-tag))
+     (values (if arity
+                 (wrap-static-info proc #'#%function-arity arity)
+                 proc)
+             #'tail)]
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
               (~and rhs (_::block body ...))
               . tail)
-     (define fun
+     (define-values (fun arity)
        (build-function adjustments
                        (get-local-name #'form-id)
                        #'(arg.kw ...) #'(arg ...) #'(arg.parsed ...) #'(arg.default ...)
@@ -300,10 +382,31 @@
                        #'ret.predicate
                        #'rhs
                        #'form-id #'parens-tag))
-     (values (if (pair? (syntax-e #'ret.static-infos))
-                 (wrap-static-info fun #'#%call-result #'ret.static-infos)
-                 fun)
+     (values (let* ([fun (if (pair? (syntax-e #'ret.static-infos))
+                             (wrap-static-info fun #'#%call-result #'ret.static-infos)
+                             fun)]
+                    [fun (if arity
+                             (wrap-static-info fun #'#%function-arity arity)
+                             fun)])
+               fun)
              #'tail)]))
+
+(define-for-syntax (parse-anonymous-function-arity stx)
+  (syntax-parse stx
+    #:datum-literals (group block alts)
+    [(form-id (alts-tag::alts
+               (block (group (_::parens arg::kw-arity-arg ... rest::maybe-rest-arity-arg)
+                             . _))
+               ...+))
+     (union-arity-summaries
+      (for/list ([arg-kws (in-list (syntax->list #'((arg.kw ...) ...)))]
+                 [rest? (in-list (syntax->list #'(rest.rest? ...)))]
+                 [kw-rest? (in-list (syntax->list #'(rest.kwrest? ...)))])
+        (define kws (syntax->list arg-kws))
+        (summarize-arity arg-kws (datum->syntax #f (map (lambda (x) #f) kws)) (syntax-e rest?) (syntax-e kw-rest?))))]
+    [(form-id (parens-tag::parens arg::kw-opt-arity-arg ... rest::maybe-rest-arity-arg) . _)
+     (summarize-arity #'(arg.kw ...) #'(arg.default ...) (syntax-e #'rest.rest?) (syntax-e #'rest.kwrest?))]
+    [_ #f]))
 
 (begin-for-syntax
   (define (get-local-name who)
@@ -382,15 +485,18 @@
           (define (adjust-args args)
             (append (entry-point-adjustments-prefix-arguments adjustments)
                     args))
-          (relocate
-           (span-srcloc start end)
-           (if (syntax-e kwrest-arg)
-               #`(lambda/kwrest
-                  #,(adjust-args #'(arg-form ... ...))
-                  maybe-rest-tmp* ... maybe-kwrest-tmp ...
-                  #,body)
-               #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
-                   #,body)))))))
+          (define arity (summarize-arity kws defaults (syntax-e rest-arg) (syntax-e kwrest-arg)))               
+          (values
+           (relocate
+            (span-srcloc start end)
+            (if (syntax-e kwrest-arg)
+                #`(lambda/kwrest
+                   #,(adjust-args #'(arg-form ... ...))
+                   maybe-rest-tmp* ... maybe-kwrest-tmp ...
+                   #,body)
+                #`(lambda #,(adjust-args #'(arg-form ... ... . maybe-rest-tmp))
+                    #,body)))
+           arity)))))
 
   (define (build-case-function adjustments
                                function-name
@@ -441,105 +547,110 @@
               #,(arity->mask-syntax pos-arity)
               '#,required-kws
               '#,allowed-kws))]))
-    (relocate
-     (span-srcloc start end)
-     (reduce-keyword-arity
-      #`(case-lambda/kwrest
-         #,@(for/list ([n+same (in-list n+sames)])
-              (define n (car n+same))
-              (define same (cdr n+same))
-              (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
-                                                        (cons 'try-next
-                                                              (fcase-pos fcase-args (find-matching-case n same))))]
-                            [(maybe-rest-tmp ...) (if (negative? n)
-                                                      #'(#:rest rest-tmp)
-                                                      #'())]
-                            [maybe-rest-tmp-use (if (negative? n)
-                                                    #'rest-tmp
-                                                    #'null)]
-                            [(maybe-kwrest-tmp ...) (if kws?
-                                                        #'(#:kwrest kwrest-tmp)
-                                                        #'())]
-                            [maybe-kwrest-tmp-use (if kws?
-                                                      #'kwrest-tmp
-                                                      #''#hashalw())])
-                #`[(#,@(entry-point-adjustments-prefix-arguments adjustments) pos-arg-id ...)
-                   maybe-rest-tmp ... maybe-kwrest-tmp ...
-                   #,(let loop ([same same])
-                       (cond
-                         [(null? same)
-                          #`(cases-failure '#,function-name maybe-rest-tmp-use maybe-kwrest-tmp-use pos-arg-id ...)]
-                         [else
-                          (define fc (car same))
-                          (define-values (this-args wrap-adapted-arguments)
-                            (adapt-arguments-for-count fc n #'(pos-arg-id ...) #'rest-tmp
-                                                       (and kws? #'kwrest-tmp)
-                                                       #'try-next))
-                          (with-syntax-parse ([(arg ...) (fcase-args fc)]
-                                              [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
-                                              [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
-                                              [(arg-info::binding-info ...) #'(arg-impl.info ...)]
-                                              [(this-arg-id ...) this-args]
-                                              [pred (fcase-pred fc)]
-                                              [rhs (fcase-rhs fc)]
-                                              [(maybe-match-rest (maybe-bind-rest-seq ...) (maybe-bind-rest ...))
-                                               (cond
-                                                 [(syntax-e (fcase-rest-arg fc))
-                                                  (define rest-parsed (fcase-rest-arg-parsed fc))
-                                                  (with-syntax-parse ([rest::binding-form rest-parsed]
-                                                                      [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
-                                                                      [rest-info::binding-info #'rest-impl.info])
-                                                    #`((rest-tmp rest-info #,(fcase-rest-arg fc) #f)
-                                                       ((rest-info.committer-id rest-tmp rest-info.data)
-                                                        (rest-info.binder-id rest-tmp rest-info.data))
-                                                       ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
-                                                        ...)))]
-                                                 [else
-                                                  #'(#f () ())])]
-                                              [(maybe-match-kwrest (maybe-bind-kwrest-seq ...) (maybe-bind-kwrest ...))
-                                               (cond
-                                                 [(syntax-e (fcase-kwrest-arg fc))
-                                                  (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
-                                                  (with-syntax-parse ([kwrest::binding-form kwrest-parsed]
-                                                                      [kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)]
-                                                                      [kwrest-info::binding-info #'kwrest-impl.info])
-                                                    #`((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f)
-                                                       ((kwrest-info.committer-id kwrest-tmp kwrest-info.data)
-                                                        (kwrest-info.binder-id kwrest-tmp kwrest-info.data))
-                                                       ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
-                                                        ...)))]
-                                                 [else
-                                                  #'(#f () ())])])
-                            #`(let ([try-next (lambda () #,(loop (cdr same)))])
-                                #,(wrap-adapted-arguments
-                                   #`(nested-bindings
-                                      #,function-name
-                                      try-next
-                                      argument-binding-failure
-                                      (this-arg-id arg-info arg #f)
-                                      ...
-                                      maybe-match-rest
-                                      maybe-match-kwrest
-                                      (begin
-                                        (arg-info.committer-id this-arg-id arg-info.data) ...
-                                        (arg-info.binder-id this-arg-id arg-info.data) ...
-                                        (begin
-                                          (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
-                                          ...)
-                                        ...
-                                        maybe-bind-rest-seq ...
-                                        maybe-bind-rest ...
-                                        maybe-bind-kwrest-seq ...
-                                        maybe-bind-kwrest ...
-                                        #,((entry-point-adjustments-wrap-body adjustments)
-                                           ((if (syntax-e (fcase-rest-arg fc)) arity-at-least values)
-                                            (length (fcase-args fc)))
-                                           #`(add-annotation-check
-                                              #,function-name
-                                              pred
-                                              (rhombus-body-expression rhs))))))))]))]))))))
+    (define arity (if (null? allowed-kws)
+                      (arity->mask-syntax pos-arity)
+                      `(,(arity->mask-syntax pos-arity) ,required-kws ,allowed-kws)))
+    (values
+     (relocate
+      (span-srcloc start end)
+      (reduce-keyword-arity
+       #`(case-lambda/kwrest
+          #,@(for/list ([n+same (in-list n+sames)])
+               (define n (car n+same))
+               (define same (cdr n+same))
+               (with-syntax ([(try-next pos-arg-id ...) (generate-temporaries
+                                                         (cons 'try-next
+                                                               (fcase-pos fcase-args (find-matching-case n same))))]
+                             [(maybe-rest-tmp ...) (if (negative? n)
+                                                       #'(#:rest rest-tmp)
+                                                       #'())]
+                             [maybe-rest-tmp-use (if (negative? n)
+                                                     #'rest-tmp
+                                                     #'null)]
+                             [(maybe-kwrest-tmp ...) (if kws?
+                                                         #'(#:kwrest kwrest-tmp)
+                                                         #'())]
+                             [maybe-kwrest-tmp-use (if kws?
+                                                       #'kwrest-tmp
+                                                       #''#hashalw())])
+                 #`[(#,@(entry-point-adjustments-prefix-arguments adjustments) pos-arg-id ...)
+                    maybe-rest-tmp ... maybe-kwrest-tmp ...
+                    #,(let loop ([same same])
+                        (cond
+                          [(null? same)
+                           #`(cases-failure '#,function-name maybe-rest-tmp-use maybe-kwrest-tmp-use pos-arg-id ...)]
+                          [else
+                           (define fc (car same))
+                           (define-values (this-args wrap-adapted-arguments)
+                             (adapt-arguments-for-count fc n #'(pos-arg-id ...) #'rest-tmp
+                                                        (and kws? #'kwrest-tmp)
+                                                        #'try-next))
+                           (with-syntax-parse ([(arg ...) (fcase-args fc)]
+                                               [(arg-parsed::binding-form ...) (fcase-arg-parseds fc)]
+                                               [(arg-impl::binding-impl ...) #'((arg-parsed.infoer-id () arg-parsed.data) ...)]
+                                               [(arg-info::binding-info ...) #'(arg-impl.info ...)]
+                                               [(this-arg-id ...) this-args]
+                                               [pred (fcase-pred fc)]
+                                               [rhs (fcase-rhs fc)]
+                                               [(maybe-match-rest (maybe-bind-rest-seq ...) (maybe-bind-rest ...))
+                                                (cond
+                                                  [(syntax-e (fcase-rest-arg fc))
+                                                   (define rest-parsed (fcase-rest-arg-parsed fc))
+                                                   (with-syntax-parse ([rest::binding-form rest-parsed]
+                                                                       [rest-impl::binding-impl #'(rest.infoer-id () rest.data)]
+                                                                       [rest-info::binding-info #'rest-impl.info])
+                                                     #`((rest-tmp rest-info #,(fcase-rest-arg fc) #f)
+                                                        ((rest-info.committer-id rest-tmp rest-info.data)
+                                                         (rest-info.binder-id rest-tmp rest-info.data))
+                                                        ((define-static-info-syntax/maybe rest-info.bind-id rest-info.bind-static-info ...)
+                                                         ...)))]
+                                                  [else
+                                                   #'(#f () ())])]
+                                               [(maybe-match-kwrest (maybe-bind-kwrest-seq ...) (maybe-bind-kwrest ...))
+                                                (cond
+                                                  [(syntax-e (fcase-kwrest-arg fc))
+                                                   (define kwrest-parsed (fcase-kwrest-arg-parsed fc))
+                                                   (with-syntax-parse ([kwrest::binding-form kwrest-parsed]
+                                                                       [kwrest-impl::binding-impl #'(kwrest.infoer-id () kwrest.data)]
+                                                                       [kwrest-info::binding-info #'kwrest-impl.info])
+                                                     #`((kwrest-tmp kwrest-info #,(fcase-kwrest-arg fc) #f)
+                                                        ((kwrest-info.committer-id kwrest-tmp kwrest-info.data)
+                                                         (kwrest-info.binder-id kwrest-tmp kwrest-info.data))
+                                                        ((define-static-info-syntax/maybe kwrest-info.bind-id kwrest-info.bind-static-info ...)
+                                                         ...)))]
+                                                  [else
+                                                   #'(#f () ())])])
+                             #`(let ([try-next (lambda () #,(loop (cdr same)))])
+                                 #,(wrap-adapted-arguments
+                                    #`(nested-bindings
+                                       #,function-name
+                                       try-next
+                                       argument-binding-failure
+                                       (this-arg-id arg-info arg #f)
+                                       ...
+                                       maybe-match-rest
+                                       maybe-match-kwrest
+                                       (begin
+                                         (arg-info.committer-id this-arg-id arg-info.data) ...
+                                         (arg-info.binder-id this-arg-id arg-info.data) ...
+                                         (begin
+                                           (define-static-info-syntax/maybe arg-info.bind-id arg-info.bind-static-info ...)
+                                           ...)
+                                         ...
+                                         maybe-bind-rest-seq ...
+                                         maybe-bind-rest ...
+                                         maybe-bind-kwrest-seq ...
+                                         maybe-bind-kwrest ...
+                                         #,((entry-point-adjustments-wrap-body adjustments)
+                                            ((if (syntax-e (fcase-rest-arg fc)) arity-at-least values)
+                                             (length (fcase-args fc)))
+                                            #`(add-annotation-check
+                                               #,function-name
+                                               pred
+                                               (rhombus-body-expression rhs))))))))]))])))))
+     arity))
 
-  (define (maybe-add-function-result-definition name static-infoss defns)
+  (define (maybe-add-function-result-definition name static-infoss arity defns)
     (define (same-expression? a b)
       (cond
         [(identifier? a) (and (identifier? b)
@@ -550,15 +661,22 @@
                         (same-expression? (car a) (car b))
                         (same-expression? (cdr a) (cdr b)))]
         [else (equal? a b)]))
-    (cond
-      [(and (pair? static-infoss)
-            (pair? (syntax-e (car static-infoss)))
-            (for/and ([static-infos (in-list (cdr static-infoss))])
-              (same-expression? (car static-infoss) static-infos)))
-       (cons
-        #`(define-static-info-syntax #,name (#%call-result #,(car static-infoss)))
-        defns)]
-      [else defns]))
+    (define result-info?
+      (and (pair? static-infoss)
+           (pair? (syntax-e (car static-infoss)))
+           (for/and ([static-infos (in-list (cdr static-infoss))])
+             (same-expression? (car static-infoss) static-infos))))
+    (if (or result-info? arity)
+        (cons #`(define-static-info-syntax #,name
+                  #,@(append
+                      (if result-info?
+                          (list #`(#%call-result #,(car static-infoss)))
+                          null)
+                      (if arity
+                          (list #`(#%function-arity #,arity))
+                          null)))
+              defns)
+        defns))
 
   ;; returns (listof (cons n (listof fcase)))
   ;; where `n` is the argument count, and a negative
@@ -718,41 +836,58 @@
     (pattern exp
              #:attr kw #'#f)))
 
-(define-for-syntax (parse-function-call rator-in extra-args stxes #:repetition? [repetition? #f])
+(define-for-syntax (parse-function-call rator-in extra-args stxes
+                                        #:static? [static? #f]
+                                        #:repetition? [repetition? #f]
+                                        #:rator-stx [rator-stx #f]
+                                        #:rator-kind [rator-kind (if repetition? 'repetition 'function)]
+                                        #:rator-arity [rator-arity #f])
+  (define (generate extra-rands rands rsts dots kwrsts tail)
+    (syntax-parse stxes
+      [(_ args . _)
+       (generate-call rator-in #'args extra-rands rands rsts dots kwrsts tail
+                      #:static? static?
+                      #:repetition? repetition?
+                      #:rator-stx rator-stx
+                      #:rator-kind rator-kind
+                      #:rator-arity rator-arity)]))
   (syntax-parse stxes
     #:datum-literals (group op)
     #:literals (& ~& rhombus...)
-    [(_ (head::parens rand ...) . tail)
+    [(_ (~and args (_::parens rand ...)) . tail)
      #:when (complex-argument-splice? #'(rand ...))
-     (values (complex-argument-splice-call rator-in #'head extra-args #'(rand ...) #:repetition? repetition?)
+     (values (complex-argument-splice-call rator-in #'args extra-args #'(rand ...)
+                                           #:static? static?
+                                           #:repetition? repetition?
+                                           #:rator-stx rator-stx
+                                           #:rator-kind rator-kind
+                                           #:rator-arity rator-arity)
              #'tail)]
-    [(_ (head::parens rand ...
-                      (group (op &) rst ...)
-                      (group (op ~&) kwrst ...))
+    [(_ (_::parens rand ...
+                   (group (op &) rst ...)
+                   (group (op ~&) kwrst ...))
         . tail)
-     (generate-call rator-in #'head extra-args #'(rand ...) #'(group rst ...) #f
-                    #'(group kwrst ...) #t
-                    #'tail
-                    #:repetition? repetition?)]
-    [(_ (head::parens rand ...
-                      rep (group (op (~and dots rhombus...)))
-                      (group (op ~&) kwrst ...))
+     (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tail)]
+    [(_ (_::parens rand ...
+                   rep (group (op (~and dots rhombus...)))
+                   (group (op ~&) kwrst ...))
         . tail)
-     (generate-call rator-in #'head #'(rand ...) #'rep #'dots
-                    #'(group kwrst ...)
-                    #'tail
-                    #:repetition? repetition?)]
-    [(_ (head::parens rand ... (group (op &) rst ...)) . tail)
-     (generate-call rator-in #'head extra-args #'(rand ...) #'(group rst ...) #f #f #'tail #:repetition? repetition?)]
-    [(_ (head::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
-     (generate-call rator-in #'head extra-args #'(rand ...) #'rep #'dots #f #'tail #:repetition? repetition?)]
-    [(_ (head::parens rand ... (group (op ~&) kwrst ...)) . tail)
-     (generate-call rator-in #'head extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail #:repetition? repetition?)]
-    [(_ (head::parens rand ...) . tail)
-     (generate-call rator-in #'head extra-args #'(rand ...) #f #f #f #'tail #:repetition? repetition?)]))
+     (generate #'(rand ...) #'rep #'dots #'(group kwrst ...) #'tail)]
+    [(_ (_::parens rand ... (group (op &) rst ...)) . tail)
+     (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tail)]
+    [(_ (_::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
+     (generate extra-args #'(rand ...) #'rep #'dots #f #'tail)]
+    [(_ (_::parens rand ... (group (op ~&) kwrst ...)) . tail)
+     (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
+    [(_ (_::parens rand ...) . tail)
+     (generate extra-args #'(rand ...) #f #f #f #'tail)]))
 
-(define-for-syntax (generate-call rator-in head extra-rands rands rsts dots kwrsts tail
-                                  #:repetition? repetition?)
+(define-for-syntax (generate-call rator-in args-stx extra-rands rands rsts dots kwrsts tail
+                                  #:static? static?
+                                  #:repetition? repetition?
+                                  #:rator-stx rator-stx
+                                  #:rator-kind rator-kind
+                                  #:rator-arity rator-arity)
   (values
    (with-syntax-parse ([(rand::kw-argument ...) rands])
      (handle-repetition
@@ -762,37 +897,36 @@
       rsts dots
       kwrsts
       (lambda (rator args rest-args kwrest-args rator-static-info)
+        (define kws (syntax->list #'(rand.kw ...)))
+        (when static?
+          (when (or (not kwrsts) (not rsts))
+            (let ([a (or rator-arity
+                         (rator-static-info #'#%function-arity))])
+              (when a
+                (let ([a (if (syntax? a) (syntax->datum a) a)])
+                  (check-arity rator-stx rator-in a (length extra-rands) kws rsts kwrsts rator-kind))))))
         (define num-rands (length (syntax->list #'(rand.kw ...))))
-        (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw (in-list (syntax->list #'(rand.kw ...)))]
+        (with-syntax-parse ([((arg-form ...) ...) (for/list ([kw kws]
                                                              [arg (in-list args)])
                                                     (if (syntax-e kw)
                                                         (list kw arg)
-                                                        (list arg)))])
-          (define e
+                                                        (list arg)))]
+                            [(head . _) args-stx])
+          (define es
             (cond
-              [kwrsts
-               (datum->syntax (quote-syntax here)
-                              (list (append (list #'keyword-apply/map rator)
-                                            extra-rands
-                                            (syntax->list #'(arg-form ... ...))
-                                            (list rest-args))
-                                    kwrest-args)
-                              (span-srcloc rator head)
-                              head)]
-              [rsts
-               (datum->syntax (quote-syntax here)
-                              (append (list #'apply rator)
-                                      extra-rands
-                                      (syntax->list #'(arg-form ... ...))
-                                      (list rest-args))
-                              (span-srcloc rator head)
-                              head)]
-              [else (datum->syntax (quote-syntax here)
-                                   (cons rator
-                                         (append extra-rands
-                                                 #'(arg-form ... ...)))
-                                   (span-srcloc rator head)
-                                   head)]))
+              [kwrsts (list (append (list #'keyword-apply/map rator)
+                                    extra-rands
+                                    (syntax->list #'(arg-form ... ...))
+                                    (list rest-args))
+                            kwrest-args)]
+              [rsts (append (list #'apply rator)
+                            extra-rands
+                            (syntax->list #'(arg-form ... ...))
+                            (list rest-args))]
+              [else (cons rator
+                          (append extra-rands
+                                  (syntax->list #'(arg-form ... ...))))]))
+          (define e (datum->syntax #'here es (span-srcloc rator-in args-stx)))
           (define result-static-infos (or (rator-static-info #'#%call-result)
                                           #'()))
           (define all-result-static-infos (or (let loop ([r (rator-static-info #'#%call-results-at-arities)])
@@ -885,8 +1019,12 @@
        (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
       [(_ . gs) (loop #'gs)])))
 
-(define-for-syntax (complex-argument-splice-call rator head extra-args gs-stx
-                                                 #:repetition? repetition?)
+(define-for-syntax (complex-argument-splice-call rator args-stx extra-args gs-stx
+                                                 #:static? static?
+                                                 #:repetition? repetition?
+                                                 #:rator-stx rator-stx
+                                                 #:rator-kind rator-kind
+                                                 #:rator-arity rator-arity)
   (define (gen-id) (car (generate-temporaries '(arg))))
   (let loop ([gs-stx gs-stx]
              [rev-args '()])
@@ -904,7 +1042,7 @@
              #,(let ([lists? (for/or ([arg (in-list args)])
                                (eq? 'list (cadr arg)))])
                  (define-values (term ignored-tail)
-                   (generate-call rator head
+                   (generate-call rator args-stx
                                   (append
                                    extra-arg-ids
                                    (if lists?
@@ -938,7 +1076,11 @@
                                       [(null? (cdr kwss)) #`(group (parsed #,(car kwss)))]
                                       [else #`(group (parsed (merge-keyword-argument-maps #,@kwss)))]))
                                   #'#f
-                                  #:repetition? repetition?))
+                                  #:static? static?
+                                  #:repetition? repetition?
+                                  #:rator-stx rator-stx
+                                  #:rator-kind rator-kind
+                                  #:rator-arity rator-arity))
                  term))]
       [(((~and tag group) (op &) rand ...+) . gs)
        (loop #'gs

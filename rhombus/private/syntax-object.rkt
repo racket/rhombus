@@ -86,7 +86,7 @@
     [(op o) #'o]
     [_ ctx-stx-in]))
 
-(define (do-make who v tail? group?)
+(define (do-make who v ctx-stx tail? group?)
   ;; assume that any syntax objects are well-formed, while list structure
   ;; needs to be validated
   (define (invalid)
@@ -167,12 +167,12 @@
       [(syntax? v) (or (unpack-term v #f #f)
                        (invalid))]
       [else v]))
-  (datum->syntax #f (if group? (group v) (loop v tail?))))
+  (datum->syntax ctx-stx (if group? (group v) (loop v tail?))))
 
-(define (make v)
-  (do-make 'Syntax.make v #t #f))
+(define (make v [ctx-stx #f])
+  (do-make 'Syntax.make v ctx-stx #t #f))
 
-(define (make_group v)
+(define (make_group v [ctx-stx #f])
   (unless (and (pair? v)
                (list? v))
     (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
@@ -181,13 +181,13 @@
                                         [(null? es) null]
                                         [else
                                          (define ds (cdr es))
-                                         (cons (do-make 'Syntax.make_group (car es) (null? ds) #f)
+                                         (cons (do-make 'Syntax.make_group (car es) ctx-stx (null? ds) #f)
                                                (loop ds))])))))
 
-(define (make_sequence v)
+(define (make_sequence v [ctx-stx #f])
   (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
   (pack-multi (for/list ([e (in-list v)])
-                (do-make 'Syntax.make_sequence e #t #t))))
+                (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
 
 (define (unwrap v)
   (cond

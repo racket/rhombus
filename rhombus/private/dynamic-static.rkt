@@ -17,7 +17,11 @@
                 (lambda (stx)
                   (syntax-parse stx
                     [(form-id)
-                     #`((define-syntax #,(datum->syntax #'form-id '|.|) (make-|.| #,more-static?))
-                        (define-syntax #,(datum->syntax #'form-id '#%ref) (make-#%ref #,more-static?)))]))))])
+                     #`((define-syntax #,(datum->syntax #'form-id '|.|)
+                          (make-rename-transformer (quote-syntax #,(if more-static? #'static-|.| #'|.|))))
+                        (define-syntax #,(datum->syntax #'form-id '#%ref)
+                          (make-rename-transformer (quote-syntax #,(if more-static? #'static-#%ref #'#%ref))))
+                        (define-syntax #,(datum->syntax #'form-id '#%call)
+                          (make-rename-transformer (quote-syntax #,(if more-static? #'static-#%call #'#%call)))))]))))])
     (values (mk #f)
             (mk #t))))

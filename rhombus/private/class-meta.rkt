@@ -87,8 +87,8 @@
         (class-desc-id (class-describe-data-desc info))])]
     [(extends implements implements_visibilities internal_names
               uses_default_constructor uses_default_binding uses_default_annotation
-              method_names method_visibilities
-              property_names property_visibilities)
+              method_names method_arities method_visibilities
+              property_names property_arities property_visibilities)
      (cond
        [(class-expand-data? info)
         (define r (class-clause-extract who (class-expand-data-accum-stx info) key))

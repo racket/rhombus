@@ -125,7 +125,11 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
        | srcloc.source +& ":" +& srcloc.line
        | loc_where[0])
         +& ": failed\n"
-        +& "  got:      " +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
+        +& "  got: "
+        +& (match mode
+            | #'~is_a: "     "
+            | ~else: "")
+        +& (if exn_msg | "exception " | "") +& (if exn_msg | exn_msg | values_str(got))
         +&  "\n"
         +& "  expected: " +& (match mode
                               | #'~completes: "completion"

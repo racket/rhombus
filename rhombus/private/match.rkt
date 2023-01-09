@@ -39,20 +39,21 @@
                                         (~and else-rhs (block . _)))))
                  . tail)
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
+        (define-values (proc arity)
+          (build-case-function no-adjustments
+                               #'match
+                               (l1falses #'(b ...))
+                               #'((b) ... (ignored))
+                               #`((b.parsed) ... (#,(binding-form
+                                                     #'else-infoer
+                                                     #'(#t ignored))))
+                               (falses #'(b ...)) (falses #'(b ...))
+                               (falses #'(b ...)) (falses #'(b ...))
+                               (falses #'(b ...))
+                               #'(clause.rhs ... else-rhs)
+                               #'form-id #'alts-tag))
         (values
-         #`(#,(build-case-function no-adjustments
-                                   #'match
-                                   (l1falses #'(b ...))
-                                   #'((b) ... (ignored))
-                                   #`((b.parsed) ... (#,(binding-form
-                                                         #'else-infoer
-                                                         #'(#t ignored))))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...))
-                                   #'(clause.rhs ... else-rhs)
-                                   #'form-id #'alts-tag)
-            (rhombus-expression (group in ...)))
+         #`(#,proc (rhombus-expression (group in ...)))
          #'tail)]
        [(form-id in ...+ (alts-tag::alts
                           (block (group bind ...
@@ -60,21 +61,22 @@
                           ...)
                  . tail)
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
+        (define-values (proc arity)
+          (build-case-function no-adjustments
+                               #'match
+                               (l1falses #'(b ...))
+                               #'((b) ... (unmatched))
+                               #`((b.parsed) ... (#,(binding-form
+                                                     #'else-infoer
+                                                     #'(#f unmatched))))
+                               (falses #'(b ...)) (falses #'(b ...))
+                               (falses #'(b ...)) (falses #'(b ...))
+                               (falses #'(b ...))
+                               #`(rhs ... (parsed
+                                           (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
+                               #'form-id #'alts-tag))
         (values
-         #`(#,(build-case-function no-adjustments
-                                   #'match
-                                   (l1falses #'(b ...))
-                                   #'((b) ... (unmatched))
-                                   #`((b.parsed) ... (#,(binding-form
-                                                         #'else-infoer
-                                                         #'(#f unmatched))))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...)) (falses #'(b ...))
-                                   (falses #'(b ...))
-                                   #`(rhs ... (parsed
-                                               (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
-                                   #'form-id #'alts-tag)
-            (rhombus-expression (group in ...)))
+         #`(#,proc (rhombus-expression (group in ...)))
          #'tail)]
        [(form-id in ...+ (block-tag::block) . tail)
         (values

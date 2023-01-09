@@ -72,8 +72,8 @@
         (interface-desc-id (interface-describe-data-desc info))])]
     [(extends internal_names
               uses_default_annotation
-              method_names method_visibilities
-              property_names property_visibilities)
+              method_names method_arities method_visibilities
+              property_names property_arities property_visibilities)
      (cond
        [(interface-expand-data? info)
         (define r (class-clause-extract who (interface-expand-data-accum-stx info) key))

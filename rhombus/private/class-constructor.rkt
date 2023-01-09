@@ -42,7 +42,6 @@
                        [private-field-desc ...])
                  names])
     (define (build-field-init id) #`(#%plain-app #,id))
-    (define (show v) (log-error "= ~s" v) v)
     (append
      (if (syntax-e #'name-defaults)
          (list

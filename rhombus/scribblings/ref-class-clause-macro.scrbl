@@ -249,6 +249,18 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
   a @rhombus(#'methods_names) list that categorizes each methods's visibility:
   @rhombus(#'public) or @rhombus(#'private).}
 
+ @item{@rhombus(#'method_arities): A list of arity representations in
+  parallel to a @rhombus(#'methods_names) list. An arity represenation can
+  be an integer, in which case each bit set in the integer represents a
+  number of arguments accepted by the method, and no keyword argument are
+  accepted. An arity represenation can be a list, in which case the first
+  element is an integer (like an integer by itself), the second element is
+  a list of required keywords for arguments, and the last element is either
+  a list of allowed keywords or @rhombus(#false) if all keywords are
+  accepted.  An arity representation can be @rhombus(#false) if no information
+  about accepted arguments is available. Keep in mind that when a subclass
+  overrides a method, it is not limited to the existing method's arity.}
+
  @item{@rhombus(#'property_names): A list of identifiers for properties
   declared for the class in the order of the property declarations.  The list
   does not include properties that will be inherited from a superclass or
@@ -258,6 +270,12 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
  @item{@rhombus(#'property_visibilities): A list of symbols in parallel to
   a @rhombus(#'property_names) list that categorizes each property's visibility:
   @rhombus(#'public) or @rhombus(#'private).}
+
+ @item{@rhombus(#'property_arities): A list of arity representations in
+  parallel to a @rhombus(#'property_names) list. An arity representation
+  is @rhombus(1) if the property does not support assignent, @rhombus(3)
+  if it does support assignment, or @rhombus(#false) if the property's
+  support for assignments is unknown.}
 
  @item{@rhombus(#'uses_default_constructor): A boolean indicating
   whether the class name in an expression position refers to a default
@@ -273,7 +291,7 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
 
 )
 
-Reocgnized keys for properties:
+Reocgnized keys for interfaces:
 
 @itemlist(
 
@@ -288,9 +306,13 @@ Reocgnized keys for properties:
 
  @item{@rhombus(#'method_names): The same as for classes.}
 
+ @item{@rhombus(#'method_arities): The same as for classes.}
+
  @item{@rhombus(#'method_visibilities): The same as for classes.}
 
  @item{@rhombus(#'property_names): The same as for classes.}
+
+ @item{@rhombus(#'property_arities): The same as for classes.}
 
  @item{@rhombus(#'property_visibilities): The same as for classes.}
 

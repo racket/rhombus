@@ -207,7 +207,7 @@ check:
       method m0(): [y, x]
     def p = Posn(1, 2)
     p.m0
-  ~raises "method must be called for static mode"
+  ~raises values("method must be called", "static")
 
 check:
   ~eval
@@ -244,7 +244,7 @@ check:
   class Posn(x, y):
     private field q = 1
   (Posn(1, 2)).q
-  ~raises "no such public field or method"
+  ~raises values("no such field or method", "static")
 
 check:
   ~eval
@@ -260,6 +260,25 @@ check:
     private field q: 1
   (Posn(1, 2)).q
   ~raises "no such field"
+
+check:
+  use_static
+  class Posn(x, y):
+    nonfinal
+    method m() :: Posn: Posn(1, 2)
+  Posn.m(Posn(1, 2)).x
+  ~is 1
+
+check:
+  use_static
+  class Posn(x, y):
+    nonfinal
+    method m() :: Posn : Posn(0, 0)
+  class Posn3D(z):
+    extends Posn
+    method n(): super.m().x
+  Posn3D(1, 2, 3).n()
+  ~is 0
 
 check:
   class Posn(x, y):
@@ -286,7 +305,7 @@ check:
     class Posn3D(z):
       extends Posn
     "ok"
-  ~raises "no such public field or method"
+  ~raises values("no such field or method", "static")
 
 check:
   class Posn(x, y):

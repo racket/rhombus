@@ -664,4 +664,4 @@ check:
     property | me2 :: CPosn: this
              | me2 := other: "no"
   (CPosn(1, 2).me2 := 10).x
-  ~raises "static operator not supported"
+  ~raises values("no such field or method", "static")

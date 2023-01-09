@@ -2,10 +2,12 @@
 (require (for-syntax racket/base
                      syntax/parse
                      enforest/syntax-local
+                     shrubbery/property
                      "srcloc.rkt"
                      "tag.rkt"
                      "class-parse.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "statically-str.rkt")
          "class-method.rkt"
          "class-method-result.rkt"
          (submod "dot.rkt" for-dot-provider)
@@ -21,14 +23,16 @@
          "name-root.rkt"
          "parse.rkt"
          (submod "function.rkt" for-call)
-         (for-syntax "class-transformer.rkt"))
+         (for-syntax "class-transformer.rkt")
+         (only-in (submod "implicit.rkt" for-dynamic-static)
+                  static-#%call))
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
 
                      make-handle-class-instance-dot))
 
-(define-for-syntax (build-class-dot-handling method-mindex method-vtable final?
+(define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
                                              has-private? method-private exposed-internal-id
                                              expression-macro-rhs intro constructor-given-name
                                              names)
@@ -40,7 +44,7 @@
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable #'name-ref final?))
+      (method-static-entries method-mindex method-vtable method-results #'name-ref final?))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids])
       (append
@@ -95,7 +99,7 @@
                                                                               ...))))))
             null))))))
 
-(define-for-syntax (build-interface-dot-handling method-mindex method-vtable
+(define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results 
                                                  internal-name
                                                  expression-macro-rhs
                                                  names)
@@ -104,7 +108,7 @@
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable #'name-ref #f))
+      (method-static-entries method-mindex method-vtable method-results #'name-ref #f))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids])
       (append
@@ -130,7 +134,7 @@
                 (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
            null)))))
 
-(define-for-syntax (method-static-entries method-mindex method-vtable name-ref-id final?)
+(define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id final?)
   (for/fold ([names '()] [ids '()] [defns '()])
             ([(name mix) (in-hash method-mindex)])
     (cond
@@ -143,10 +147,14 @@
                (list* #`(define #,proc-id
                           (make-method-accessor '#,name #,name-ref-id #,(mindex-index mix)))
                       #`(define-syntax #,stx-id
-                          (make-method-accessor-transformer (quote-syntax #,stx-id)
+                          (make-method-accessor-transformer '#,name
+                                                            (quote-syntax #,stx-id)
                                                             (quote-syntax #,name-ref-id)
                                                             #,(mindex-index mix)
-                                                            (quote-syntax #,proc-id)))
+                                                            (quote-syntax #,proc-id)
+                                                            #,(let ([ids (hash-ref method-results name #f)])
+                                                                (and ids
+                                                                     #`(quote-syntax #,(car ids))))))
                       defns))]
       [else
        (values (cons name names)
@@ -162,33 +170,52 @@
       (apply (method-ref ref obj idx) obj args)))
    name))
 
-(define-for-syntax (make-method-accessor-transformer id name-ref-id idx proc-id)
+(define-for-syntax (make-method-accessor-transformer name id name-ref-id idx proc-id ret-info-id)
   (expression-transformer
    id
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (op)
-       [(_ (~and args (tag::parens self arg ...)) . tail)
+       [(rator-id (~and args (tag::parens self arg ...)) . tail)
         (define obj-id #'this)
         (define rator #`(method-ref #,name-ref-id #,obj-id #,idx))
+        (define r (and ret-info-id
+                       (syntax-local-method-result ret-info-id)))
         (define-values (call new-tail)
-          (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))))
-        (values #`(let ([#,obj-id (rhombus-expression self)])
-                    #,call)
+          (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))
+                               #:static? (free-identifier=? (datum->syntax #'tag '#%call)
+                                                            #'static-#%call)
+                               #:rator-stx (datum->syntax #f name #'rator-id)
+                               #:rator-arity (and r (method-result-arity r))))
+        (values (let ([call #`(let ([#,obj-id (rhombus-expression self)])
+                                #,call)])
+                  (if r
+                      (wrap-static-info* call (method-result-static-infos r))
+                      call))
                 #'tail)]
+       [(head (tag::parens) . _)
+        #:when (free-identifier=? (datum->syntax #'tag '#%call)
+                                  #'static-#%call)
+        (raise-syntax-error #f
+                            (string-append "wrong number of arguments in function call" statically-str)
+                            (datum->syntax #f name #'head))]
        [(_ . tail)
         (values proc-id #'tail)]))))
 
 (define-for-syntax (class-expression-transformer id make-id)
+  (define (re head id)
+    (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
+                                                (symbol->string (syntax-e head)))))
   (make-expression+repetition-transformer
    id
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values make-id #'tail)]))
+       [(head . tail) (values (re #'head make-id)
+                           #'tail)]))
    (lambda (stx)
      (syntax-parse stx
-       [(_ . tail) (values (identifier-repetition-use make-id)
-                           #'tail)]))))
+       [(head . tail) (values (identifier-repetition-use (re #'head make-id))
+                              #'tail)]))))
 
 (define-for-syntax (desc-method-shapes desc)
   (if (class-desc? desc)
@@ -262,7 +289,7 @@
                                  static-infos))
     (success (wrap-static-info* full-e all-static-infos)
              new-tail))
-  (define (do-method pos/id* ret-info-id nonfinal? property?)
+  (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity)
     (define-values (args new-tail)
       (if property?
           (syntax-parse tail
@@ -286,18 +313,22 @@
         [else (vector-ref (syntax-e (desc-method-vtable desc)) pos/id*)]))
     (cond
       [args
-       (define-values (rator obj-e wrap)
+       (define-values (rator obj-e arity wrap)
          (cond
            [(identifier? pos/id)
-            (values pos/id form1 (lambda (e) e))]
+            (values pos/id form1 #f (lambda (e) e))]
            [else
             (define obj-id #'obj)
+            (define r (and ret-info-id
+                           (syntax-local-method-result ret-info-id)))
             (define static-infos
               (or (and ret-info-id
-                       (method-result-static-infos (syntax-local-method-result ret-info-id)))
+                       (method-result-static-infos r))
                   #'()))
             (values #`(method-ref #,(desc-ref-id desc) #,obj-id #,pos/id)
                     obj-id
+                    (or shape-arity
+                        (and r (method-result-arity r)))
                     (lambda (e)
                       (define call-e #`(let ([#,obj-id #,form1])
                                          #,e))
@@ -305,15 +336,19 @@
                           (wrap-static-info* call-e static-infos)
                           call-e)))]))
        (define-values (call-stx empty-tail)
-         (parse-function-call rator (list obj-e) #`(#,obj-e #,args)))
+         (parse-function-call rator (list obj-e) #`(#,obj-e #,args)
+                              #:rator-stx field-id
+                              #:static? more-static?
+                              #:rator-arity arity
+                              #:rator-kind (if property? 'property 'method)))
        (success (wrap call-stx)
                 new-tail)]
       [else
        (when (and more-static?
                   (not property?))
          (raise-syntax-error #f
-                             "method must be called for static mode"
-                             (no-srcloc #`(#,form1 #,dot #,field-id))))
+                             (string-append "method must be called" statically-str)
+                             field-id))
        (cond
          [(identifier? pos/id)
           (success #`(curry-method #,pos/id #,form1) new-tail)]
@@ -328,12 +363,15 @@
     [(hash-ref (desc-method-map desc) (syntax-e field-id) #f)
      => (lambda (pos)
           (define shape (vector-ref (desc-method-shapes desc) pos))
+          (define shape-symbol (and shape (if (vector? shape) (vector-ref shape 0) shape)))
+          (define shape-arity (and shape (vector? shape) (vector-ref shape 1)))
           (do-method pos
                      (hash-ref (desc-method-result desc) (syntax-e field-id) #f)
                      ;; non-final?
-                     (or (box? shape) (and (pair? shape) (box? (car shape))))
+                     (or (box? shape-symbol) (and (pair? shape-symbol) (box? (car shape-symbol))))
                      ;; property?
-                     (pair? shape)))]
+                     (pair? shape-symbol)
+                     shape-arity))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
@@ -342,15 +380,15 @@
                          id/property
                          (car (syntax-e id/property))))
           (define property? (pair? (syntax-e id/property)))
-          (do-method id #f #f property?))]
+          (do-method id #f #f property? #f))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
      => (lambda (id/fld)
           (if (identifier? id/fld)
-              (do-method id/fld #f #f #f)
+              (do-method id/fld #f #f #f #f)
               (do-field id/fld)))]
     [more-static?
      (raise-syntax-error #f
-                         "no such public field or method"
+                         (string-append "no such field or method" statically-str)
                          field-id)]
     [else (failure)]))
 

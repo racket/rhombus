@@ -27,7 +27,7 @@
   (define (check-interface-clause-result form proc)
     (syntax-parse (if (syntax? form) form #'#f)
       [_::interface-clause-form form]
-      [_ (raise-result-error (proc-name proc) rhombus-realm "Interface_Clause_Syntax" form)]))
+      [_ (raise-result-error* (proc-name proc) rhombus-realm "Interface_Clause_Syntax" form)]))
 
   (define in-interface-clause-space (make-interned-syntax-introducer/add 'rhombus/interface_clause))
 

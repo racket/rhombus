@@ -68,7 +68,19 @@ begin:
   check:
     Posn3D(0, 0, 0).is_origin
     ~is #true
-    
+
+check:
+  use_static
+  class Posn(x, y):
+    nonfinal
+    property | p: 0
+             | p := x: #void
+  class Posn3D(z):
+    extends Posn
+    method n(): super.p := 1
+  Posn3D(1, 2, 3).n()
+  ~is #void
+
 check:
   ~eval
   class Posn(x, y):

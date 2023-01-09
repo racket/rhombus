@@ -14,6 +14,7 @@ begin:
      method constructives(): ('$$(i.lookup(#'field_constructives))')
      method methods(): ('$$(i.lookup(#'method_names))')
      method mvisibilities(): ('$$(i.lookup(#'method_visibilities))')
+     method marities(): ('$$(i.lookup(#'method_arities))')
      method defaults(): ('$(i.lookup(#'uses_default_constructor))
                           $(i.lookup(#'uses_default_binding))
                           $(i.lookup(#'uses_default_annotation))')'
@@ -21,6 +22,7 @@ begin:
     ~info: i
     'method supers(): ('$$(interface_meta.Info.lookup(i, #'extends))')
      method methods(): ('$$(i.lookup(#'method_names))')
+     method arities(): ('$$(i.lookup(#'method_arities))')
      method visibilities(): ('$$(i.lookup(#'method_visibilities))')'
   defn.macro 'def_describe $name $key':
     '«expr.macro '$name $('$')id': values('('$('$$')(class_meta.describe(id).lookup(#'$key))')', '')»'
@@ -37,6 +39,7 @@ begin:
   def_describe dfield_constructives field_constructives
   def_describe dfield_mutabilities field_mutabilities
   def_describe dmethods method_names
+  def_describe darities method_arities
   expr.macro 'dctr $name': values('$(class_meta.describe(name).lookup(#'uses_default_constructor))', '')
   expr.macro 'dbind $name': values('$(class_meta.describe(name).lookup(#'uses_default_binding))', '')
   expr.macro 'dann $name': values('$(class_meta.describe(name).lookup(#'uses_default_annotation))', '')
@@ -76,10 +79,12 @@ begin:
       p.constructives() ~prints_like 'required absent'
       p.methods() ~prints_like 'get_color'
       p.mvisibilities() ~prints_like 'public'
+      p.marities() ~prints_like '1'
       p.defaults() ~prints_like '#true; #true; #true'
       p0.supers() ~prints_like 'Pointy'
       p0.methods() ~prints_like 'get_extent'
       p0.visibilities() ~prints_like 'public'
+      p0.arities() ~prints_like '1'
       
     begin:
       check:
@@ -92,6 +97,7 @@ begin:
         dfield_constructives Posn ~prints_like 'required required'
         dfield_mutabilities Posn ~prints_like 'immutable immutable'
         dmethods Posn ~prints_like 'is_origin'
+        darities Posn ~prints_like '1'
         dinternals Posn ~prints_like ''
       check:
         dname Posn3D ~prints_like 'Posn3D'
@@ -105,7 +111,7 @@ begin:
         dmethods Posn3D ~prints_like 'is_origin get_color
                                         $$('names supers intfs internals fields keywords')
                                         $$('mutables visibilities constructives')
-                                        $$('methods mvisibilities defaults')'
+                                        $$('methods mvisibilities marities defaults')'
       check:
         dname Posn0D ~prints_like 'Posn0D'
         dsuper Posn0D ~prints_like ''
@@ -116,7 +122,7 @@ begin:
         dfield_constructives Posn0D ~prints_like ''
         dfield_mutabilities Posn0D ~prints_like ''
         dmethods Posn0D ~prints_like 'get_extent
-                                        $$('supers methods visibilities')'
+                                        $$('supers methods arities visibilities')'
 
   begin:
     interface Pointy:
@@ -174,7 +180,7 @@ begin:
       dmethods Posn3D ~prints_like 'here get_color
                                       $$('names supers intfs internals fields keywords')
                                       $$('mutables visibilities constructives')
-                                      $$('methods mvisibilities defaults')'
+                                      $$('methods mvisibilities marities defaults')'
       dctr Posn3D ~is #true
       dbind Posn3D ~is #true
       dann Posn3D ~is #true
@@ -191,7 +197,7 @@ begin:
       dmethods _Posn3D ~prints_like 'get_size here get_color
                                        $$('names supers intfs internals fields keywords')
                                        $$('mutables visibilities constructives')
-                                       $$('methods mvisibilities defaults')'
+                                       $$('methods mvisibilities marities defaults')'
     check:
       dname Posn4D ~prints_like 'Posn4D'
       dsuper Posn4D ~prints_like 'Posn3D'
@@ -205,7 +211,7 @@ begin:
       dmethods Posn4D ~prints_like 'here get_color
                                       $$('names supers intfs internals fields keywords')
                                       $$('mutables visibilities constructives')
-                                      $$('methods mvisibilities defaults')'
+                                      $$('methods mvisibilities marities defaults')'
     check:
       dname _Posn4D ~prints_like 'Posn4D'
       dsuper _Posn4D ~prints_like 'Posn3D'
@@ -219,7 +225,7 @@ begin:
       dmethods _Posn4D ~prints_like 'here get_color
                                        $$('names supers intfs internals fields keywords')
                                        $$('mutables visibilities constructives')
-                                       $$('methods mvisibilities defaults')'
+                                       $$('methods mvisibilities marities defaults')'
 
 // Make sure that introduced names can be referenced directly
 

@@ -25,7 +25,10 @@
          #%braces)
 
 (module+ for-dynamic-static
-  (provide (for-syntax make-#%ref)))
+  (provide #%ref
+           static-#%ref
+           #%call
+           static-#%call))
 
 (define-syntax #%body
   (expression-prefix-operator
@@ -121,16 +124,19 @@
              (syntax-parse (car args)
                [r::repetition (values #'r.parsed #'tail)])]))]))))
 
-(define-syntax #%call
+(define-for-syntax (make-#%call static?)
   (make-expression+repetition-infix-operator
    #'#%call
    '((default . stronger))
    'macro
    (lambda (rator stxes)
-     (parse-function-call rator '() stxes))
+     (parse-function-call rator '() stxes #:static? static?))
    (lambda (rator stxes)
      (parse-function-call rator '() stxes #:repetition? #t))
    'left))
+
+(define-syntax #%call (make-#%call #f))
+(define-syntax static-#%call (make-#%call #t))
 
 (define-syntax #%brackets
   (make-expression+binding+repetition-prefix-operator
@@ -167,6 +173,8 @@
 
 (define-syntax #%ref
   (make-#%ref #f))
+(define-syntax static-#%ref
+  (make-#%ref #t))
 
 (define-syntax #%braces
   (make-expression+binding+repetition-prefix-operator
@@ -190,4 +198,5 @@
                 #'tail)]))))
 
 (begin-for-syntax
-  (set-#%call-id! (quote-syntax #%call)))
+  (set-#%call-ids! (quote-syntax #%call)
+                   (quote-syntax static-#%call)))

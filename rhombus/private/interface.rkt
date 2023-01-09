@@ -21,6 +21,7 @@
          (submod "annotation-syntax.rkt" for-class)
          "interface-clause.rkt"
          "interface-clause-parse.rkt"
+         "class-top-level.rkt"
          "class-together-parse.rkt"
          "dotted-sequence-parse.rkt"
          (for-syntax "class-transformer.rkt")
@@ -181,38 +182,40 @@
                                               (temporary "~a-ref" #:name internal-name)
                                               #'name-ref)])
            (define defns
-             (append
-              (if (eq? (syntax-local-context) 'top-level)
-                  ;; forward declaration for methods:
-                  (list #'(define-syntaxes (name?) (values)))
-                  null)
-              (build-methods method-results
-                             added-methods method-mindex method-names method-private
-                             #'(name name-instance name?
-                                     []
-                                     []
-                                     []
-                                     []
-                                     []
-                                     []
-                                     [super-name ...]))
-              (build-interface-property internal-name
-                                        #'(name prop:name name? name-ref
-                                                prop:internal-name internal-name? internal-name-ref))
-              (build-interface-dot-handling method-mindex method-vtable
-                                            internal-name
-                                            expression-macro-rhs
-                                            #'(name name-instance name-ref
-                                                    internal-name-instance internal-name-ref
-                                                    [export ...]))
-              (build-interface-desc parent-names options
-                                    method-mindex method-names method-vtable method-results method-private
-                                    internal-name
-                                    #'(name prop:name name-ref
-                                            prop:internal-name internal-name? internal-name-ref))
+             (reorder-for-top-level
+              (append
+               (if (eq? (syntax-local-context) 'top-level)
+                   ;; forward declaration for methods:
+                   (list #'(define-syntaxes (name?) (values)))
+                   null)
+               (build-methods method-results
+                              added-methods method-mindex method-names method-private
+                              #'(name name-instance name?
+                                      []
+                                      []
+                                      []
+                                      []
+                                      []
+                                      []
+                                      [super-name ...]))
+               (build-interface-property internal-name
+                                         #'(name prop:name name? name-ref
+                                                 prop:internal-name internal-name? internal-name-ref))
+               (build-interface-dot-handling method-mindex method-vtable method-results
+                                             internal-name
+                                             expression-macro-rhs
+                                             #'(name name-instance name-ref
+                                                     internal-name-instance internal-name-ref
+                                                     [export ...]))
+               (build-interface-desc parent-names options
+                                     method-mindex method-names method-vtable method-results method-private
+                                     internal-name
+                                     #'(name prop:name name-ref
+                                             prop:internal-name internal-name? internal-name-ref))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
-                                     method-results)))
+                                     method-results
+                                     #f))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-name names)

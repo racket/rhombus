@@ -529,6 +529,7 @@
 
   grammar property_decl:
     $identifier $maybe_res_ann
+    Z| $identifier $maybe_res_ann
 ){
 
  These @tech{class clauses} and @tech{interface clauses} are recognized
@@ -546,11 +547,7 @@
  @rhombus(fun). A @rhombus(maybe_res_ann) applies to the immediate method
  implementation as well as overriding implementations in subclasses; a
  result annotation within an @tech{entry point}, in contrast, does not
- apply to subclasses. To enable that propagation, a
- @rhombus(maybe_res_ann) is scoped differently than argument annotations
- of the both of a method: the environment of a @rhombus(maybe_res_ann) is
- the same as the @rhombus(class) or @rhombus(interace) form, and not the
- body block of the @rhombus(class) or @rhombus(interace) form.
+ apply to subclasses.
 
  A @rhombus(property, ~class_clause) clause declares or overrides a
  @tech{property}, which is like a method in that using the property evaluates a
@@ -584,11 +581,14 @@
  @rhombus(property, ~intf_clause) declation can be just an identifier, or
  it can omit a body block. In that case, @rhombus(method, ~intf_clause), @rhombus(override, ~intf_clause),
  or @rhombus(property, ~intf_clause) is treated as if
- @rhombus(abstract, ~intf_clause) is added before. An abstract method or property
- declaration does not include a body or implementation. An
- abstract method declaration can include arguments with annotations, but
- they are unused and ``advisory'' in the sense that they do not impose
- any checked requirements on overriding implementations of the method.
+ @rhombus(abstract, ~intf_clause) is added before. If arguments are declared for
+ an abstract method, they determine the method's expectations
+ for static argument-count checking (see @rhombus(use_static)), but they
+ do not impose constraints on overriding implementations.
+ When a @rhombus(property_decl) uses the single-case @litchar{|} form,
+ it declares the property as not supporting assignment; that declaration
+ is not enforced on implementations of the property, but it affects
+ static resolution of a property assignment.
 
 }
 

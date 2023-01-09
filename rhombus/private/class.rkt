@@ -484,7 +484,7 @@
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
-               (build-class-dot-handling method-mindex method-vtable final?
+               (build-class-dot-handling method-mindex method-vtable method-results final?
                                          has-private? method-private exposed-internal-id
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
                                          #'(name constructor-name name-instance name-ref
@@ -500,6 +500,11 @@
                                                  [export ...]))
                (build-class-static-infos exposed-internal-id
                                          super
+                                         given-constructor-rhs
+                                         (append super-keywords constructor-public-keywords)
+                                         (append super-defaults constructor-public-defaults)
+                                         (append super-keywords constructor-private-keywords)
+                                         (append super-defaults constructor-private-defaults)
                                          #'(name constructor-name name-instance
                                                  internal-name-instance make-internal-name
                                                  [name-field ...]
@@ -528,7 +533,8 @@
                                          ([field-name field-argument maybe-set-name-field!] ...)))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
-                                     method-results))))
+                                     method-results
+                                     final?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
