@@ -607,11 +607,12 @@
   (define-splicing-syntax-class :property-decl
     #:description "proper declaration"
     #:attributes (id rhs maybe-ret)
+    #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret)
              #:attr rhs #'(block (group fun (alts (block (group (parens) (block (group (parsed (void))))))
                                                   (block (group (parens (group _)) (block (group (parsed (void)))))))))
              #:attr maybe-ret #'ret.seq)
-    (pattern (~seq (alts (block id:identifier ret::maybe-ret)))
+    (pattern (~seq (_::alts (_::block (group id:identifier ret::maybe-ret))))
              #:attr rhs #'(block (group fun (parens) (block (group (parsed (void))))))
              #:attr maybe-ret #'ret.seq)))
 

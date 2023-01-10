@@ -156,6 +156,16 @@ static check:
 
 static check:
   class Posn(x, y):
+    nonfinal
+    abstract property | p
+  class Posn3D(z):
+    extends Posn
+    nonfinal
+    method n(): this.p := 1
+  ~raises "property does not support assignment"
+
+static check:
+  class Posn(x, y):
     constructor (z):
       super(z+1, z-1)
   fun (): Posn(1, 2)
