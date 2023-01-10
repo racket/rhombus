@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse))
+                     syntax/parse/pre))
 
 ;; The `rhombus-forwarding-sequence` form handles definitions that are
 ;; only visible to later terms (as created with Rhombus `let`, say,

@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "tag.rkt")
          "parse.rkt"
          "entry-point.rkt"

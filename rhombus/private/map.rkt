@@ -2,7 +2,7 @@
 (require racket/unsafe/undefined
          (for-syntax racket/base
                      racket/syntax
-                     syntax/parse
+                     syntax/parse/pre
                      "srcloc.rkt"
                      "with-syntax.rkt"
                      "tag.rkt"

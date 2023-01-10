@@ -1,5 +1,5 @@
 #lang racket/base
-(require syntax/parse
+(require syntax/parse/pre
          "pack.rkt")
 
 (provide unpack-uses

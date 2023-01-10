@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          racket/provide-syntax)
 
 ;; The `property` form is useful for defining a new structure-type

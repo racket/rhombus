@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      enforest/transformer-result
                      "srcloc.rkt"
                      "pack.rkt")

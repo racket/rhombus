@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      (only-in "class-parse.rkt"
                               added-method))
          "interface-clause.rkt"

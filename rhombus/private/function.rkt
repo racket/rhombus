@@ -1,10 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
                      (only-in racket/function normalize-arity)
-                     (only-in racket/set set-intersect set-union)
                      racket/syntax
-                     syntax/parse
+                     syntax/parse/pre
                      shrubbery/property
+                     "hash-set.rkt"
                      "srcloc.rkt"
                      "consistent.rkt"
                      "with-syntax.rkt"
@@ -529,11 +529,11 @@
     (define allowed-kws
       (cond
         [(ormap syntax-e kwrest-args) #f]
-        [else (sort (filter keyword? (apply set-union '() (syntax->datum kwss-stx))) keyword<?)]))
+        [else (sort (filter keyword? (set->list (list->set (apply append (syntax->datum kwss-stx))))) keyword<?)]))
     (define required-kws
       (cond
         [(pair? kwss)
-         (sort (filter keyword? (apply set-intersect (syntax->datum kwss-stx))) keyword<?)]
+         (sort (filter keyword? (set->list (apply set-intersect (map list->set (syntax->datum kwss-stx))))) keyword<?)]
         [else '()]))
     (define kws? (not (null? allowed-kws)))
     (define reduce-keyword-arity

@@ -1,11 +1,11 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      (for-syntax racket/base
-                                 syntax/parse)
+                                 syntax/parse/pre)
                      "syntax-rhs.rkt"
                      "srcloc.rkt")
-         syntax/parse
+         syntax/parse/pre
          "syntax-rhs.rkt"
          "definition.rkt"
          "expression.rkt"

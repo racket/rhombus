@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "srcloc.rkt")
          "expression.rkt"
          "compound-repetition.rkt")
@@ -13,7 +13,7 @@
 
 (begin-for-syntax
   (require (for-syntax racket/base
-                       syntax/parse))
+                       syntax/parse/pre))
   (define-syntax (prefix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier

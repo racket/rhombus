@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      racket/stxparam-exptime
                      enforest/syntax-local
                      "class-parse.rkt"

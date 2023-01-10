@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base)
-         syntax/parse)
+         syntax/parse/pre)
 
 (provide define-syntax-class-mixin
          define-composed-splicing-syntax-class)

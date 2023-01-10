@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          (only-in (submod "annotation.rkt" for-class)
                   define-annotation-syntax
                   define-annotation-constructor)

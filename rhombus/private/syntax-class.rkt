@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "introducer.rkt")
-         syntax/parse
+         syntax/parse/pre
          "operator-parse.rkt"
          "name-root.rkt"
          "definition.rkt")

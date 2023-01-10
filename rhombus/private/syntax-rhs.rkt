@@ -1,9 +1,8 @@
 #lang racket/base
-(require syntax/parse
+(require syntax/parse/pre
          (for-syntax racket/base
-                     syntax/parse
-                     "srcloc.rkt"
-                     "parse.rkt")
+                     syntax/parse/pre
+                     "srcloc.rkt")
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"

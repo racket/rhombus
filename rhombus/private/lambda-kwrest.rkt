@@ -7,17 +7,16 @@
          (for-syntax arity->mask-syntax))
 
 (require (only-in racket/list drop)
-         (only-in racket/set subset?)
+         "hash-set.rkt"
          (only-in racket/unsafe/undefined unsafe-undefined)
          (for-syntax racket/base
                      (only-in racket/function normalize-arity)
                      racket/list
-                     racket/match
-                     (only-in racket/set set-intersect set-union)
+                     "hash-set.rkt"
                      (only-in racket/syntax generate-temporary)
                      (only-in syntax/name syntax-local-infer-name)
-                     syntax/parse
-                     (only-in syntax/parse [attribute @])
+                     syntax/parse/pre
+                     (only-in syntax/parse/pre [attribute @])
                      (only-in syntax/parse/lib/function-header formals-no-rest)))
 
 ;; ---------------------------------------------------------
@@ -105,10 +104,12 @@
       #:do [(define cs (flatten arity))]
       #:with [(s:id ... . {~or r:id ()}) ...]
       (for/list ([c (in-list cs)])
-        (match c
-          [(? exact-nonnegative-integer? n) (generate-temporaries (make-list n 's))]
-          [(arity-at-least n) (append (generate-temporaries (make-list n 's))
-                                      (generate-temporary 'r))]))])
+        (cond
+          [(exact-nonnegative-integer? c) (generate-temporaries (make-list c 's))]
+          [else
+           (define n (arity-at-least-value c))
+           (append (generate-temporaries (make-list n 's))
+                   (generate-temporary 'r))]))])
 
   (define (arity->mask-syntax a)
     #`#,(let loop ([a (normalize-arity a)])
@@ -130,10 +131,11 @@
           ...+)
        #:with name:id (or (syntax-local-infer-name stx) #'proc)
        #:attr kw-mand-error
-       (match (@ s.mand-kws)
-         ['() #f]
-         [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
-         [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
+       (let ([kws (@ s.mand-kws)])
+         (cond
+           [(null? kws) #f]
+           [(null? (cdr kws)) #`(raise-required-keyword-not-supplied 'name '#,(car kws))]
+           [else #`(raise-required-keywords-not-supplied 'name '#,kws)]))
        #:attr pos-arity-mask-stx (arity->mask-syntax (@ pos-arity))
        #:attr kw-mand-arity (and (pair? (@ s.mand-kws)) #`'#,(@ s.mand-kws))
        #:attr kw-allowed-arity (and (pair? (@ s.mand-kws)) #`'#,(@ allowed-kws))
@@ -178,17 +180,17 @@
              (define mand-kws
                (cond
                  [(pair? (@ c.s.mand-kws))
-                  (sort (apply set-intersect (@ c.s.mand-kws)) keyword<?)]
+                  (sort (set->list (apply set-intersect (map list->set (@ c.s.mand-kws)))) keyword<?)]
                  [else '()]))
              (define overall-kws
                (and (andmap values (@ c.allowed-kws))
-                    (sort (apply set-union '() (@ c.allowed-kws)) keyword<?)))
+                    (sort (set->list (list->set (apply append (@ c.allowed-kws)))) keyword<?)))
              (define reduce-kws? (or (pair? mand-kws) overall-kws))]
        #:attr kw-mand-error
-       (match mand-kws
-         ['() #f]
-         [(list kw) #`(raise-required-keyword-not-supplied 'name '#,kw)]
-         [kws #`(raise-required-keywords-not-supplied 'name '#,kws)])
+       (cond
+         [(null? mand-kws) #f]
+         [(null? (cdr mand-kws)) #`(raise-required-keyword-not-supplied 'name '#,(car mand-kws))]
+         [else #`(raise-required-keywords-not-supplied 'name '#,mand-kws)])
        #:attr pos-arity-mask-stx (arity->mask-syntax pos-arity)
        #:attr kw-mand-arity (and reduce-kws? #`'#,mand-kws)
        #:attr kw-allowed-arity (and reduce-kws? #`'#,overall-kws)
@@ -202,7 +204,8 @@
                                (<= c.s.pos-mand-N-stx N c.s.pos-all-N-stx)}
                            (hash-has-keys? kwhash '({~? c.s.kwp.mand-kw} ...))
                            {~? 'c.kwr
-                               (subset? (hash-keys kwhash) '({~? c.s.kwp.kw} ...))})
+                               (subset? (list->set (hash-keys kwhash))
+                                        (list->set '({~? c.s.kwp.kw} ...)))})
                       (let*
                           ({~? [c.r (drop lst (min N c.s.pos-all-N-stx))]}
                            {~? [c.kwr (hash-remove* kwhash '({~? c.s.kwp.kw} ...))]}

@@ -1,13 +1,16 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
-                     syntax/boundmap
+                     syntax/parse/pre
+                     (rename-in syntax/private/boundmap
+                                [make-module-identifier-mapping make-free-identifier-mapping]
+                                [module-identifier-mapping-get free-identifier-mapping-get]
+                                [module-identifier-mapping-put! free-identifier-mapping-put!])
                      "operator-parse.rkt"
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
                      "syntax-rhs.rkt"
                      (for-syntax racket/base
-                                 syntax/parse))
+                                 syntax/parse/pre))
          "parse.rkt"
          "definition.rkt"
          "function.rkt"

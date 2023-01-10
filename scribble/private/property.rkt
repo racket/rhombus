@@ -1,5 +1,5 @@
 #lang racket/base
-(require syntax/parse)
+(require syntax/parse/pre)
 
 (provide term-identifiers-syntax-property
          group-identifiers-syntax-property)

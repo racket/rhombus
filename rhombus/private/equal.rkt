@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          "expression+binding.rkt")
 
 (provide (rename-out [rhombus= =]))

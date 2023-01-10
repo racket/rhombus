@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          rhombus/private/parse
          rhombus/private/forwarding-sequence
          (prefix-in doc: scribble/doclang2)

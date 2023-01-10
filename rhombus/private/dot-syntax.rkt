@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      enforest/proc-name
                      "pack.rkt")
          "name-root.rkt"

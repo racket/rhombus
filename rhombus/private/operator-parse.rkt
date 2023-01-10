@@ -1,5 +1,5 @@
 #lang racket/base
-(require syntax/parse)
+(require syntax/parse/pre)
 
 (provide :operator
          :operator-or-identifier)

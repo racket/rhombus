@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          "definition.rkt"
          (submod "dot.rkt" for-dynamic-static)
          (submod "implicit.rkt" for-dynamic-static))

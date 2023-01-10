@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "pack.rkt")
-         syntax/parse
+         syntax/parse/pre
          syntax/strip-context
          racket/syntax-srcloc
          shrubbery/property

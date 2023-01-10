@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse))
+                     syntax/parse/pre))
 
 (provide rhombus-together
          (for-syntax wrap-for-together))

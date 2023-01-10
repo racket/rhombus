@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (provide call_capturing_exn
          call_capturing_values

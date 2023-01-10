@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      enforest/syntax-local
                      shrubbery/property
                      "srcloc.rkt"

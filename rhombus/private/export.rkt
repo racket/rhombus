@@ -3,7 +3,7 @@
                      racket/provide-transform
                      racket/phase+space
                      racket/symbol
-                     syntax/parse
+                     syntax/parse/pre
                      enforest
                      enforest/operator
                      enforest/property

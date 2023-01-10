@@ -1,12 +1,10 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      shrubbery/print
                      "operator-parse.rkt"
-                     "srcloc.rkt"
-                     "expression.rkt")
-         (for-meta 2 racket/base syntax/parse "expression.rkt")
-         syntax/parse
+                     "srcloc.rkt")
+         syntax/parse/pre
          "parse.rkt"
          "expression.rkt"
          "binding.rkt"

@@ -5,7 +5,7 @@
                   dont-stop?
                   dont-stop-val)
          scribble/racket
-         syntax/parse
+         syntax/parse/pre
          racket/list
          shrubbery/property
          (only-in scribble/core

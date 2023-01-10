@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      racket/symbol
                      enforest
                      enforest/operator
@@ -9,7 +9,7 @@
                      enforest/syntax-local
                      enforest/name-parse
                      enforest/proc-name
-                     syntax/modcollapse
+                     syntax/private/modcollapse-noctc
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "introducer.rkt"

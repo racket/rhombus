@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "srcloc.rkt"
                      "annotation-string.rkt"
                      "tag.rkt")

@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "typeset_meta.rhm"
                      "property.rkt"
                      rhombus/private/pack)

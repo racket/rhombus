@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          "setmap-parse.rkt"
          "map.rkt"
          (submod "map.rkt" for-build)

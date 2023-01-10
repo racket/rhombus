@@ -1,4 +1,5 @@
-#lang racket
+#lang racket/base
+(require (for-syntax racket/base))
 
 ;; export identifiers that otherwise have no default-space binding from `rhombus`
 

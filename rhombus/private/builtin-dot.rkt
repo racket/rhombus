@@ -1,4 +1,4 @@
-#lang racket
+#lang racket/base
 
 (require (submod "dot.rkt" for-builtin)
          (submod "map.rkt" for-builtin)

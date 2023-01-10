@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      racket/symbol
                      (prefix-in enforest: enforest/name-root)
                      enforest/syntax-local

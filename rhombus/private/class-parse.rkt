@@ -1,5 +1,5 @@
 #lang racket/base
-(require syntax/parse
+(require syntax/parse/pre
          "tag.rkt"
          "introducer.rkt"
          (for-template

@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
-         syntax/parse
+                     syntax/parse/pre)
+         syntax/parse/pre
          syntax/stx
          "operator.rkt"
          (submod "operator.rkt" for-parse)

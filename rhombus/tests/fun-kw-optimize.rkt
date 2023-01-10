@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require syntax/modread
-         syntax/parse)
+         syntax/parse/pre)
 (module+ test
   (require rackunit))
 

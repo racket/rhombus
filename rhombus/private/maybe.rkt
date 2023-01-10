@@ -1,6 +1,6 @@
-#lang racket
+#lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          (submod "annotation.rkt" for-class))
 
 (provide Maybe)

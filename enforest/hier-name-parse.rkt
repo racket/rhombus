@@ -1,5 +1,5 @@
 #lang racket/base
-(require syntax/parse
+(require syntax/parse/pre
          "name-parse.rkt"
          "syntax-local.rkt"
          (submod "name-root.rkt" for-parse))

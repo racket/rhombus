@@ -1,7 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
-         syntax/parse
+                     syntax/parse/pre)
+         syntax/parse/pre
          (submod "quasiquote.rkt" convert)
          (submod "syntax-class.rkt" for-syntax-class-syntax)
          "definition.rkt"

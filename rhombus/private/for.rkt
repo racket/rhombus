@@ -2,7 +2,7 @@
 (require (for-syntax racket/base
                      racket/syntax-srcloc
                      syntax/srcloc
-                     syntax/parse
+                     syntax/parse/pre
                      "tag.rkt"
                      "srcloc.rkt")
          "expression.rkt"

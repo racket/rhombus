@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      shrubbery/property
-                     "statically-str.rkt"))
+                     "statically-str.rkt"
+                     "hash-set.rkt"))
 
 (provide (for-syntax summarize-arity
                      union-arity-summaries
@@ -51,13 +52,6 @@
     [(null? as) #f]
     [(= 1 (length as)) (car as)]
     [else
-     (define (list->set l) (for/hasheq ([v (in-list l)]) (values v #t)))
-     (define (set->list s) (sort (for/list ([v (in-hash-keys s)]) v) keyword<?))
-     (define (set-intersect a b) (for/hasheq ([k (in-hash-keys b)]
-                                              #:when (hash-ref a k #f))
-                                   (values b #t)))
-     (define (set-union a b) (for/fold ([a a]) ([k (in-hash-keys b)])
-                               (hash-set a k #t)))
      (define (normalize a)
        (if (pair? a)
            (list (car a) (list->set (cadr a)) (and (caddr a) (list->set (caddr a))))
@@ -68,8 +62,8 @@
            (list (bitwise-ior (car new-a) (car a))
                  (set-intersect (cadr new-a) (cadr a))
                  (and (caddr new-a) (caddr a) (set-union (caddr new-a) (caddr a)))))))
-     (define required-kws (set->list (cadr norm-a)))
-     (define allowed-kws (and (caddr norm-a) (set->list (caddr norm-a))))
+     (define required-kws (sort (set->list (cadr norm-a)) keyword<?))
+     (define allowed-kws (and (caddr norm-a) (sort (set->list (caddr norm-a)) keyword<?)))
      (if (and (null? required-kws)
               (null? allowed-kws))
          (car norm-a)

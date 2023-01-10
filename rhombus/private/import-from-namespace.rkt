@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      racket/phase+space
                      "import-cover.rkt")
          "space-in.rkt")

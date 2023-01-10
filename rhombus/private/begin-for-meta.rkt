@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "parse.rkt")
          (for-meta 2 racket/base)
          "definition.rkt")

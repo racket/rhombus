@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      enforest/name-parse
                      "pack.rkt"
                      "static-info-pack.rkt")
