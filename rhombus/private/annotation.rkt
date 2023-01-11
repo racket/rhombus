@@ -12,11 +12,11 @@
                      "srcloc.rkt"
                      "name-path-op.rkt"
                      "pack.rkt"
-                     "misuse.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "realm.rkt"
                      "keyword-sort.rkt")
+         "annotation-operator.rkt"
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -77,10 +77,7 @@
            raise-annotation-failure))
 
 (begin-for-syntax
-  (property annotation-prefix-operator prefix-operator
-            #:property prop:procedure (make-raise-misuse "annotation"))
-  (property annotation-infix-operator infix-operator
-            #:property prop:procedure (make-raise-misuse "annotation"))
+  ;; see also "annotation-property.rkt"
 
   (property annotation (predicate-stx static-infos))
 
@@ -275,7 +272,7 @@
 (define-for-syntax (make-annotation-apply-operator name checked?)
   (make-expression+binding-infix-operator
    name
-   '((default . weaker))
+   `((default . weaker))
    'macro
    'none
    ;; expression
@@ -386,6 +383,16 @@
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
+
+;; not exported, but referenced by `:annotation-seq` so that
+;; annotation parsing terminates appropriately
+(define-annotation-syntax ::
+  (annotation-infix-operator
+   #'::
+   `((default . stronger))
+   'macro
+   (lambda (stx) (error "should not get here"))
+   'none))
 
 (define (raise-::-annotation-failure val ctc)
   (raise-annotation-failure ':: val ctc))

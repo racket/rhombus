@@ -8,6 +8,7 @@
                      "statically-str.rkt")
          "definition.rkt"
          "expression.rkt"
+         "expression+annotation.rkt"
          "static-info.rkt"
          "dot-provider-key.rkt"
          "repetition.rkt"
@@ -58,7 +59,7 @@
              #:attr id #'ref-id.val)))
 
 (define-for-syntax (make-|.| more-static?)
-  (make-expression+repetition-infix-operator
+  (make-expression+repetition+annotation-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
    'macro
@@ -100,6 +101,14 @@
                         (extract-static-infos expr)))))
            (values rep
                    tail)]))))
+   ;; annotation, declared explicitly to create a syntax error
+   ;; for something like `"a" :: String.length()`
+   (lambda (form1 tail)
+     (syntax-parse tail
+       [(name . _)
+        (raise-syntax-error #f
+                            "not an annotation operator"
+                            #'name)]))
    'left))
 
 (define-for-syntax (parse-dot-provider tail finish)
