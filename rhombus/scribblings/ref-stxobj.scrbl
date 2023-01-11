@@ -179,6 +179,11 @@ Metadata for a syntax object can include a source location and the raw
  Only allowed within a @rhombus('') form, escapes so that the value of
  @rhombus(expr) is used in place of the @rhombus($) or @rhombus($$) form.
 
+ The @rhombus(expr) must be either a single term or a sequence of
+ @rhombus(.)-separated identifiers. To escape only an identifier (or
+ @rhombus(.)-separated identifier sequence) with an unescaped @rhombus(.)
+ afterward, use parentheses around the identifier (or sequence).
+
 }
 
 

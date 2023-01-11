@@ -10,22 +10,26 @@ export:
  check
 
 meta:
-  syntax.class result_mode
-  | '~is'
-  | '~is_a'
-  | '~prints_like'
-  | '~raises'
-  | '~matches'
-  syntax.class result  
-  | '$(mode :: result_mode): $body':
-      ~attr [suffix, ...]: []
-  | '$(mode :: result_mode) $g ...':
-      ~attr body: '$g ...'
-      ~attr [suffix, ...]: []
-  | '~completes':
-      ~attr [mode, ...]: ['~completes']
-      ~attr body: '#void'
-      ~attr [suffix, ...]: ['#void']
+  syntax.class result_mode:
+    ~term
+    ~pattern
+    | '~is'
+    | '~is_a'
+    | '~prints_like'
+    | '~raises'
+    | '~matches'
+  syntax.class result:
+    ~sequence
+    ~pattern
+    | '$(mode :: result_mode): $body':
+        ~attr [suffix, ...]: []
+    | '$(mode :: result_mode) $g ...':
+        ~attr body: '$g ...'
+        ~attr [suffix, ...]: []
+    | '~completes':
+        ~attr mode: '~completes'
+        ~attr body: '#void'
+        ~attr [suffix, ...]: ['#void']
 
 expr.macro '«located '$w' $tail ...»':
   values('[#' $w, $(w.srcloc())]',
@@ -43,10 +47,10 @@ expr.macro
                        fun():
                          eval_test(Syntax.literal '$result1
                                                    ...
-                                                   $(result2.suffix)
+                                                   $result2.suffix
                                                    ...'),
-                       fun(): $(result2.body),
-                       located '$(result2.mode) ...')',
+                       fun(): $result2.body,
+                       located '$result2.mode')',
            '')
 // normal block
 | 'check:
@@ -58,28 +62,28 @@ expr.macro
                        fun ():
                          $result1
                          ...
-                         $(result2.suffix)
+                         $result2.suffix
                          ...,
-                       matcher($(result2.mode) ..., : $(result2.body)),
-                       #'$(result2.mode) ...)',
+                       matcher($result2.mode, : $result2.body),
+                       #'$result2.mode)',
            '')
 // single lines in block
 | 'check: $result1 ... $(result2 :: result); ...':
     ~op_stx: check_id
     values('begin:
               check_same(located'$(check_id)',
-                         fun (): $result1 ...; $(result2.suffix); ...,
-                         matcher($(result2.mode) ..., : $(result2.body)),
-                         located'$(result2.mode) ...')
+                         fun (): $result1 ...; $result2.suffix; ...,
+                         matcher($result2.mode, : $result2.body),
+                         located'$result2.mode')
               ...',
            '')
 // single line
 | 'check $result1 ... $(result2 :: result)':
     ~op_stx: check_id
     values('check_same(located'$(check_id)',
-                       fun (): $result1 ...; $(result2.suffix); ...,
-                       matcher($(result2.mode) ..., : $(result2.body)),
-                       #'$(result2.mode) ...)',
+                       fun (): $result1 ...; $result2.suffix; ...,
+                       matcher($result2.mode, : $result2.body),
+                       #'$result2.mode)',
            '')
 
 expr.macro

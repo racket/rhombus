@@ -20,6 +20,7 @@
          "repetition.rkt"
          "op-literal.rkt"
          "static-info.rkt"
+         (only-in "implicit.rkt" #%parens) ; for `parens` in `:esc`
          (for-template "parens.rkt")
          (submod "syntax-object.rkt" for-quasiquote)
          (only-in "annotation.rkt"
@@ -41,14 +42,24 @@
     (pattern ((~datum op) (~var name (:... in-space))))
     (pattern ((~datum group) ((~datum op) (~var name (:... in-space)))))
     (pattern ((~datum block) ((~datum group) ((~datum op) (~var name (:... in-space)))))))
-  (define-splicing-syntax-class (tail-repetition in-space)
+  (define-splicing-syntax-class (:esc dotted?)
+    #:attributes (term)
+    #:datum-literals (op |.|)
+    (pattern (~seq a0:identifier (~seq (~and dot-op (op |.|)) a:identifier) ...+)
+             #:when dotted?
+             #:attr term #'(parens (group a0 (~@ dot-op a) ...)))
+    (pattern (~seq term)))
+  (define-splicing-syntax-class (:tail-repetition in-space dotted?)
+    #:attributes (name term)
     #:datum-literals (op)
-    (pattern (~seq (op (~var _ (:$ in-space))) e:identifier (op (~var name (:... in-space))))))
-  (define-splicing-syntax-class (block-tail-repetition in-space)
+    (pattern (~seq (op (~var _ (:$ in-space))) (~var e (:esc dotted?)) (op (~var name (:... in-space))))
+             #:attr term #'e.term))
+  (define-splicing-syntax-class (:block-tail-repetition in-space dotted?)
+    #:attributes (name term)
     #:datum-literals (op)
-    (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) e:identifier)
-                   ((~datum group) (op (~var name (:... in-space)))))))
-
+    (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) (~var e (:esc dotted?)))
+                   ((~datum group) (op (~var name (:... in-space)))))
+             #:attr term #'e.term))
   (struct pattern-variable (id val-id depth unpack*-id)))
 
 (define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth splice? attributes)
@@ -134,18 +145,18 @@
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
       [(group
-        (op (~var $-id (:$ in-space))) esc)
+        (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape?)))
        #:when (and (zero? depth) (not as-tail?) (not splice?))
        ;; Special case: a group whose content is an escape; the escape
        ;; defaults to "group" mode instead of "term" mode
-       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-group-escape #'$-id #'esc e))]
+       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-group-escape #'$-id #'esc.term e))]
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
-        (group (op (~var $-id (:$ in-space))) esc))
+        (group (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape?))))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
-       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc e splice?))]
+       #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc.term e splice?))]
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
@@ -215,22 +226,22 @@
                   sidrs
                   vars
                   can-be-empty?)]))]
-           [((~var op (tail-repetition in-space)))
+           [((~var op (:tail-repetition in-space tail-any-escape?)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
-                            (identifier? #'op.e))
+                            (identifier? #'op.term))
                         (not splice?))
-            (define-values (id new-idrs new-sidrs new-vars) (handle-tail-escape #'op.name #'op.e e))
+            (define-values (id new-idrs new-sidrs new-vars) (handle-tail-escape #'op.name #'op.term e))
             (loop #'() #f #f #f
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
                   (append new-vars (or pend-vars '()) vars)
                   ps really-can-be-empty? #f id depth)]
-           [((~var op (block-tail-repetition in-space)))
+           [((~var op (:block-tail-repetition in-space tail-any-escape?)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
-                            (identifier? #'op.e)))
-            (define-values (id new-idrs new-sidrs new-vars) (handle-block-tail-escape #'op.name #'op.e e))
+                            (identifier? #'op.term)))
+            (define-values (id new-idrs new-sidrs new-vars) (handle-block-tail-escape #'op.name #'op.term e))
             (loop #'() #f #f #f
                   (append new-idrs (or pend-idrs '()) idrs)
                   (append new-sidrs (or pend-sidrs '()) sidrs)
@@ -261,14 +272,14 @@
                       (append new-pend-sidrs sidrs)
                       (append new-pend-vars vars)
                       (cons (quote-syntax ...) ps) can-be-empty? #f #f depth))]
-           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $$)))) esc . n-gs)
+           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $$)))) (~var esc (:esc tail-any-escape?)) . n-gs)
             #:when (or flatten-escape
                        (not (free-identifier=? #'$-id #'$$)))
             (cond
               [(zero? depth)
                (define flatten? (and flatten-escape
                                      (free-identifier=? #'$-id #'$$)))
-               (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id #'esc e))
+               (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id #'esc.term e))
                (define adj-new-idrs
                  (cond
                    [flatten? (map flatten-escape new-idrs)]
