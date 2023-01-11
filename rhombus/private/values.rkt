@@ -4,12 +4,15 @@
          "binding.rkt"
          "reducer.rkt"
          "parse.rkt"
+         "static-info.rkt"
+         "function-arity-key.rkt"
          (rename-in "equal.rkt"
                     [= rhombus=]))
 
 (provide values
          (for-space rhombus/bind values)
-         (for-space rhombus/reducer values))
+         (for-space rhombus/reducer values)
+         (for-space rhombus/statinfo values))
 
 (define-binding-syntax values
   (binding-prefix-operator
@@ -35,3 +38,6 @@
            ([id (rhombus-expression (group rhs ...))] ...)
            (begin)
            ()]]))))
+
+(define-static-info-syntax values
+  (#%function-arity -1))

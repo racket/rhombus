@@ -1,5 +1,12 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    List(l, ...)
+    List.length(l)
+    List.cons(a, d)
+
 check:
   List.length([1, 2, 3])
   ~is 3
@@ -65,6 +72,9 @@ begin:
     def lst :: NonemptyList.of(List) = dynamic([[1, 2, 3]])
     lst.first.length()
     ~is 3
+  check:
+    List.cons(1, [2, 3])
+    ~is [1, 2, 3]
 
 begin:
   check:

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "name-root.rkt"
          "expression.rkt"
          "expression+binding.rkt"
@@ -16,6 +17,7 @@
 (define-syntax (define-primitive-class stx)
   (syntax-parse stx
     [(_ Name name
+        #:constructor-static-info (constructor-static-info ...)
         (~and creation (~or #:new #:existing))
         (~and mode (~or #:transparent #:opaque #:translucent))
         #:fields
@@ -60,7 +62,8 @@
            #'((#%dot-provider instance)))
          
          #,#'(define-static-info-syntax name
-               (#%call-result #,name-static-infos))
+               (#%call-result #,name-static-infos)
+               (constructor-static-info ...))
 
          #,(if (or transparent? translucent?)
                #`(define-annotation-syntax Name
@@ -77,8 +80,8 @@
                           'macro
                           (lambda (stx)
                             (syntax-parse stx
-                              [(_ . tail)
-                               (values #'name #'tail)]))
+                              [(head . tail)
+                               (values (relocate-id #'head #'name) #'tail)]))
                           (make-composite-binding-transformer Name-str
                                                               #'name?
                                                               (list #'name-field

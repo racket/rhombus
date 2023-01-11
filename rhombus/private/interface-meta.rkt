@@ -37,6 +37,7 @@
     lookup))
 
 (define-primitive-class Info interface-data
+  #:constructor-static-info ()
   #:new
   #:opaque
   #:fields

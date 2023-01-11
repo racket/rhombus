@@ -10,6 +10,7 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
+         "function-arity-key.rkt"
          "composite.rkt"
          "name-root.rkt"
          "dot-parse.rkt")
@@ -86,4 +87,8 @@
          stx)]))))
 
 (define-static-info-syntax make-vector
-  (#%call-result #,array-static-infos))
+  (#%call-result #,array-static-infos)
+  (#%function-arity 6))
+
+(define-static-info-syntax vector-length
+  (#%function-arity 2))

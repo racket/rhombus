@@ -85,8 +85,10 @@ forms like @rhombus(expr.macro) available. Normally,
 prefix would have to be used for all Rhombus forms in compile-time
 code—even for things like @rhombus(values) and @rhombus(''). In addition,
 a macro defined with @rhombus(expr.macro) receives all remaining terms
-in the enclosing group as input, and it must return two values: the
+in the enclosing group as input, and it should return two values: the
 expanded expression and the remaining terms that have not been consumed.
+(Returning a single value is allowed, and it's the same as returning
+an empty sequence for the remaining terms.)
 
 For example, the @rhombus(!) macro can be equivalently written like this:
 
@@ -150,7 +152,7 @@ side before it’s left-hand side:
 
 Declaring @rhombus(~parsed_right) affects a @rhombus(expr.macro) macro
 in a second way: the macro will receive only the left (if any) and right
-arguments, and will not receieve or return the tail of the ennclosing
+arguments, and will not receieve or return the tail of the enclosing
 group. In other words, declaring @rhombus(~parse_right) uses the same
 argument and return protocol as a rule-based macro, but the template
 part can be implemented by arbitrary compile-time expressions.

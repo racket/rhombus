@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "statically-str.rkt")
          "parse.rkt"
          "parens.rkt")
 
@@ -10,10 +11,8 @@
 (define-for-syntax (dot-parse-dispatch k)
   (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
     (define (ary n n-k no-k)
-      (define (bad)
-        (raise-syntax-error #f
-                            (format "expected parentheses afterward with ~a arguments" n)
-                            field-stx))
+      (define (bad msg)
+        (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
         #:datum-literals ()
         [((_::parens g ...) . new-tail)
@@ -26,11 +25,11 @@
                        #'new-tail)]
            [else
             (if more-static?
-                (bad)
+                (bad (string-append "wrong number of arguments in method call" statically-str))
                 (values (no-k) tail))])]
         [_
          (if more-static?
-             (bad)
+             (bad "expected parentheses afterward")
              (values (no-k) tail))]))
 
     (define (0ary id)

@@ -14,6 +14,7 @@
          "tag.rkt"
          "dot-parse.rkt"
          "static-info.rkt"
+         "define-arity.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info))
 
@@ -169,10 +170,10 @@
       [else v]))
   (datum->syntax ctx-stx (if group? (group v) (loop v tail?))))
 
-(define (make v [ctx-stx #f])
+(define/arity (make v [ctx-stx #f])
   (do-make 'Syntax.make v ctx-stx #t #f))
 
-(define (make_group v [ctx-stx #f])
+(define/arity (make_group v [ctx-stx #f])
   (unless (and (pair? v)
                (list? v))
     (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
@@ -184,12 +185,12 @@
                                          (cons (do-make 'Syntax.make_group (car es) ctx-stx (null? ds) #f)
                                                (loop ds))])))))
 
-(define (make_sequence v [ctx-stx #f])
+(define/arity (make_sequence v [ctx-stx #f])
   (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
   (pack-multi (for/list ([e (in-list v)])
                 (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
 
-(define (unwrap v)
+(define/arity (unwrap v)
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.unwrap rhombus-realm "Syntax" v)]
@@ -201,28 +202,28 @@
          (syntax->list unpacked)
          u)]))
 
-(define (unwrap_group v)
+(define/arity (unwrap_group v)
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.unwrap_group rhombus-realm "Syntax" v)]
     [else
      (syntax->list (unpack-tail v 'Syntax.unwrap_group #f))]))
 
-(define (unwrap_sequence v)
+(define/arity (unwrap_sequence v)
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.unwrap_sequence rhombus-realm "Syntax" v)]
     [else
      (syntax->list (unpack-multi-tail v 'Syntax.unwrap_sequence #f))]))
 
-(define (strip v)
+(define/arity (strip v)
   (cond
     [(not (syntax? v))
      (raise-argument-error* 'Syntax.strip rhombus-realm "Syntax" v)]
     [else
      (strip-context v)]))
 
-(define (relocate stx ctx-stx-in)
+(define/arity (relocate stx ctx-stx-in)
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" stx))
   (unless (syntax? ctx-stx-in) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" ctx-stx-in))
   (define ctx-stx (relevant-source-syntax ctx-stx-in))
@@ -253,8 +254,8 @@
                       (relocate stx ctx-stx))])
       relocate)))
 
-(define (relocate_span stx ctx-stxes-in
-                       #:keep_raw_interior [keep-raw-interior? #f])
+(define/arity (relocate_span stx ctx-stxes-in)
+  (define keep-raw-interior? #f) ; expose this as an option?
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Syntax" stx))
   (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))
   (define (combine-raw a b) (if (null? a) b (if (null? b) a (cons a b))))

@@ -1,5 +1,14 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    Syntax.make(t, [ctx])
+    Syntax.make_group(t, [ctx])
+    Syntax.make_sequence(t, [ctx])
+    Syntax.unwrap(stx)
+    Syntax.unwrap_sequence(stx)
+
 check:
   Syntax.make(1)
   ~prints_like '1'

@@ -19,6 +19,7 @@
          "ref-result-key.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
+         "function-arity-key.rkt"
          "composite.rkt"
          "parse.rkt"
          "realm.rkt"
@@ -209,7 +210,8 @@
         [else #f])))))
 
 (define-static-info-syntax Map
-  (#%call-result #,map-static-info))
+  (#%call-result #,map-static-info)
+  (#%function-arity -1))
 
 (define-reducer-syntax Map
   (reducer-transformer
@@ -445,3 +447,12 @@
                             "not a map for splicing"
                             "value" v))
   v)
+
+(define-static-info-syntaxes (hash-count hash-values)
+  (#%function-arity 2))
+
+(define-static-info-syntaxes (hash-keys)
+  (#%function-arity 6))
+
+(define-static-info-syntaxes (hash-has-key?)
+  (#%function-arity 4))

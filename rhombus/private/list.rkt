@@ -12,6 +12,7 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
+         "function-arity-key.rkt"
          (rename-in "ellipsis.rkt"
                     [... rhombus...])
          (only-in "rest-marker.rkt"
@@ -23,7 +24,8 @@
          "parse.rkt"
          "dot-parse.rkt"
          "realm.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "define-arity.rkt")
 
 (provide List
          (for-space rhombus/annot List)
@@ -61,15 +63,15 @@
    #'List.cons
    (make-composite-binding-transformer "cons" #'list? (list #'car #'cdr) (list #'() list-static-infos))))
 
-(define (List.cons a d)
+(define/arity (List.cons a d)
   (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))
   (cons a d))
 
-(define (first l)
+(define/arity (first l)
   (unless (list? l) (raise-argument-error* 'List.first rhombus-realm "List" l))
   (car l))
 
-(define (rest l)
+(define/arity (rest l)
   (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
   (cdr l))
 
@@ -78,6 +80,9 @@
     (raise-argument-error* 'List.iota rhombus-realm "NonnegativeInteger" n))
   (for/list ([i (in-range n)])
     i))
+
+(define-static-info-syntax length
+  (#%function-arity 2))
 
 (define-name-root List
   #:fields
@@ -196,10 +201,12 @@
   v)
 
 (define-static-info-syntax list
-  (#%call-result #,list-static-infos))
+  (#%call-result #,list-static-infos)
+  (#%function-arity -1))
 
 (define-static-info-syntax iota
-  (#%call-result #,list-static-infos))
+  (#%call-result #,list-static-infos)
+  (#%function-arity 2))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))

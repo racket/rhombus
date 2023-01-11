@@ -18,6 +18,7 @@
          "reducer.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
+         "function-arity-key.rkt"
          "parse.rkt"
          "literal.rkt"
          "realm.rkt"
@@ -25,6 +26,7 @@
          "dot-parse.rkt"
          "parens.rkt"
          "composite.rkt"
+         "define-arity.rkt"
          (only-in "lambda-kwrest.rkt" hash-remove*)
          (only-in "rest-marker.rkt" &)
          (rename-in "ellipsis.rkt"
@@ -83,7 +85,7 @@
       (hash-set! (set-ht s) v #t)
       (hash-remove! (set-ht s) v)))
 
-(define (set-count s)
+(define/arity #:name Set.length (set-count s)
   (hash-count (set-ht s)))
 
 (define-syntax set-instance
@@ -316,7 +318,8 @@
     #`()))
 
 (define-static-info-syntax Set
-  (#%call-result #,set-static-info))
+  (#%call-result #,set-static-info)
+  (#%function-arity -1))
 
 (define (MutableSet . vals)
   (define ht (make-hashalw))

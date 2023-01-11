@@ -1,0 +1,57 @@
+#lang rhombus/and_meta
+
+export:
+  rename:
+    static_arity_check as check
+
+// An `arg` is either an identifier (doesn't matter what),
+// or `[id]` for an optional argument. Use `...` after
+// an argument when any number are allowed. Currently
+// assumes that no keyword arguments are accepted.
+
+expr.macro 'static_arity_check:
+              $dotted_id ... ($arg, ...)
+              ...':
+  'begin:
+     one_check:
+       $dotted_id ... ($arg, ...)
+     ...'
+
+expr.macro 'one_check:
+              $dotted_id ... ($arg, ...)':
+  'begin:
+     check:
+       ~eval
+       use_static
+       $dotted_id ... (~bad_keyword: 10, '$arg', ...)
+       ~raises values("keyword argument not recognized by called function", "static")
+     $(match '$arg; ...'
+       | '$arg; ...; $last; $('...')':
+           'check_wrong_fewer:
+              $dotted_id ... ($arg, ...)'
+       | '$arg; ...':
+           'begin:
+              check_wrong_fewer:
+                $dotted_id ... ($arg, ...)
+              check_wrong_count:
+                $dotted_id ... ($arg, ..., one more)')'
+
+expr.macro
+| 'check_wrong_fewer:
+     $dotted_id ... ()': '#void'
+| 'check_wrong_fewer:
+     $dotted_id ... ($arg, ..., [$opt_arg])':
+    'check_wrong_fewer:
+       $dotted_id ... ($arg, ...)'
+| 'check_wrong_fewer:
+     $dotted_id ... ($arg, ..., $last)':
+    'check_wrong_count:
+       $dotted_id ... ($arg, ...)'
+
+expr.macro 'check_wrong_count:
+              $dotted_id ... ($arg, ...)':
+  'check:
+     ~eval
+     use_static
+     $dotted_id ... ('$arg', ...)
+     ~raises "wrong number of arguments in function call"'

@@ -1,5 +1,12 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    Path(s)
+    Path.bytes(p)
+    Path.string(p)
+
 check:
   use_static
   def p = Path("x")

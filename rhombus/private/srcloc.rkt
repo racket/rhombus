@@ -7,6 +7,7 @@
          no-srcloc*
          span-srcloc
          relocate
+         relocate-id
          respan-empty
          respan
          with-syntax-error-respan)
@@ -33,6 +34,10 @@
 
 (define (relocate srcloc stx)
   (datum->syntax stx (syntax-e stx) srcloc (if (syntax? srcloc) srcloc stx)))
+
+(define (relocate-id head id)
+  (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
+                                              (symbol->string (syntax-e head)))))
 
 ;; If the tail is empty, give it a source location
 ;; that matches the end of `op-stx`

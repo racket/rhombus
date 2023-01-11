@@ -30,6 +30,7 @@
            make-static-infos))
 
 (provide define-static-info-syntax
+         define-static-info-syntaxes
          define-static-info-syntax/maybe)
 
 (begin-for-syntax
@@ -108,6 +109,13 @@
     [(_ id:identifier rhs ...)
      #`(define-syntax #,(in-static-info-space #'id)
          (static-info (list (quasisyntax rhs) ...)))]))
+
+(define-syntax (define-static-info-syntaxes stx)
+  (syntax-parse stx
+    [(_ (id:identifier ...) rhs ...)
+     #'(begin
+         (define-static-info-syntax id rhs ...)
+         ...)]))
 
 (define-syntax (define-static-info-syntax/maybe stx)
   (syntax-parse stx

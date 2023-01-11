@@ -4,7 +4,10 @@
          shrubbery/write
          (submod "set.rkt" for-ref)
          "adjust-name.rkt"
-         "printer-property.rkt")
+         "printer-property.rkt"
+         "define-arity.rkt"
+         "function-arity-key.rkt"
+         "static-info.rkt")
 
 (provide (rename-out
           [rhombus-print print]
@@ -14,7 +17,18 @@
          print_to_string
          (rename-out
           [current-output-port current_output_port]
-          [current-error-port current_error_port]))
+          [current-error-port current_error_port])
+
+         (for-space rhombus/statinfo
+                    (rename-out
+                     [rhombus-print print]
+                     [rhombus-display display])
+                    println
+                    displayln
+                    print_to_string
+                    (rename-out
+                     [current-output-port current_output_port]
+                     [current-error-port current_error_port])))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
@@ -25,21 +39,21 @@
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
 
-(define (rhombus-print v [op (current-output-port)])
+(define/arity #:name print (rhombus-print v [op (current-output-port)])
   (do-print v op 'print))
 
-(define (rhombus-display v [op (current-output-port)])
+(define/arity #:name display (rhombus-display v [op (current-output-port)])
   (do-print v op 'display))
 
-(define (println v [op (current-output-port)])
+(define/arity (println v [op (current-output-port)])
   (rhombus-print v op)
   (newline op))
 
-(define (displayln v [op (current-output-port)])
+(define/arity (displayln v [op (current-output-port)])
   (rhombus-display v op)
   (newline op))
 
-(define (print_to_string v)
+(define/arity (print_to_string v)
   (define op (open-output-string))
   (rhombus-print v op)
   (get-output-string op))
@@ -198,3 +212,6 @@
   #:property prop:custom-write
   (lambda (r op mode)
     (racket-print (racket-print-redirect-val r) op mode)))
+
+(define-static-info-syntaxes (current-output-port current-error-port)
+  (#%function-arity 6))

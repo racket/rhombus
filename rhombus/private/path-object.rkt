@@ -3,7 +3,9 @@
                      syntax/parse/pre)
          "class-primitive.rkt"
          "dot-parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "function-arity-key.rkt"
+         "define-arity.rkt")
 
 (provide Path
          (for-space rhombus/annot Path))
@@ -26,16 +28,17 @@
                                                c)]))])
     Path))
 
-(define (path-bytes s)
+(define/arity #:name Path.bytes (path-bytes s)
   (bytes->immutable-bytes (path->bytes s)))
 
-(define (path-string s)
+(define/arity #:name Path.string (path-string s)
   (string->immutable-string (path->string s)))
 
 (define path-bytes/method (method1 path-bytes))
 (define path-string/method (method1 path-string))
 
 (define-primitive-class Path path
+  #:constructor-static-info (#%function-arity 2)
   #:existing
   #:translucent
   #:fields

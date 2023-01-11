@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     syntax/stx)
+                     syntax/stx
+                     "srcloc.rkt")
          "composite.rkt"
          "expression.rkt"
          "binding.rkt"
@@ -9,6 +10,7 @@
          "static-info.rkt"
          "reducer.rkt"
          "call-result-key.rkt"
+         "function-arity-key.rkt"
          "name-root.rkt"
          (submod "dot.rkt" for-dot-provider)
          "parse.rkt"
@@ -39,7 +41,7 @@
    #'Pair
    (lambda (stx)
      (syntax-parse stx
-       [(head . tail) (values (syntax/loc #'head cons) #'tail)]))))
+       [(head . tail) (values (relocate-id #'head #'cons) #'tail)]))))
 
 (define-name-root Pair
   #:space rhombus/bind
@@ -82,4 +84,5 @@
       e))
 
 (define-static-info-syntax cons
-  (#%call-result #,pair-static-infos))
+  (#%call-result #,pair-static-infos)
+  (#%function-arity 4))

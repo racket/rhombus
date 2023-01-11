@@ -1,5 +1,10 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    Srcloc(f, l, c, p, s)
+
 check:
   use_static
   def s = Srcloc("here", 1, 2, 3, 4)

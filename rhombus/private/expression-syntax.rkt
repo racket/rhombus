@@ -74,8 +74,13 @@
                            (proc #`(parsed #,form) stx)
                            proc)))
        (lambda (tail)
-         (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
+         (define-values (form new-tail)
+           (call-with-values
+            (lambda () (syntax-parse tail
+                         [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
+            (case-lambda
+              [(form new-tail) (values form new-tail)]
+              [(form) (values form #'(group))])))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))

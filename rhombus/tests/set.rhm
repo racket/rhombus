@@ -1,5 +1,11 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    Set(k, ...)
+    Set.length(m)
+
 check:
   Set.length({10, 20})
   ~is 2
@@ -7,9 +13,8 @@ check:
 // FIXME
 #//
 check:
-  ~exn
   Set.length([1, 2, 3])
-  values("contract violation", "expected: Set")
+  ~raises values("contract violation", "expected: Set")
 
 begin:
   use_static

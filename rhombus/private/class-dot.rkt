@@ -203,18 +203,15 @@
         (values proc-id #'tail)]))))
 
 (define-for-syntax (class-expression-transformer id make-id)
-  (define (re head id)
-    (syntax-raw-property (relocate head id) (or (syntax-raw-property head)
-                                                (symbol->string (syntax-e head)))))
   (make-expression+repetition-transformer
    id
    (lambda (stx)
      (syntax-parse stx
-       [(head . tail) (values (re #'head make-id)
+       [(head . tail) (values (relocate-id #'head make-id)
                            #'tail)]))
    (lambda (stx)
      (syntax-parse stx
-       [(head . tail) (values (identifier-repetition-use (re #'head make-id))
+       [(head . tail) (values (identifier-repetition-use (relocate-id #'head make-id))
                               #'tail)]))))
 
 (define-for-syntax (desc-method-shapes desc)

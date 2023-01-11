@@ -1,5 +1,14 @@
 #lang rhombus
 
+begin:
+  import "static_arity.rhm"
+  static_arity.check:
+    Map(k, ...)
+    Map.length(m)
+    Map.keys(m, [try_sort])
+    Map.values(m)
+    Map.has_key(m, k)
+
 check:
   {"a": 1, #'~b: 2}
   ~is Map(["a", 1], [#'~b, 2])

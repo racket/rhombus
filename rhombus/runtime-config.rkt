@@ -93,6 +93,14 @@
                      (rhombus (string-append (regexp-replace* #rx"vector" (substring msg (caar m) (cdar m)) "array")
                                              (substring msg (cdar m)))))]
                [else (values msg msg-realm)])]
+            [(racket)
+             (define (rhombus s) (values s 'rhombus/primitive))
+             (cond
+               [(regexp-match-positions #rx"^arity mismatch;\n the expected number of arguments does not match the given number" msg)
+                => (lambda (m)
+                     (rhombus (string-append "wrong number of arguments in function call"
+                                             (substring msg (cdar m)))))]
+               [else (values msg msg-realm)])]
             [else (values msg msg-realm)]))
         (values new-who new-who-realm new-msg new-msg-realm))]
      [else #f])))
