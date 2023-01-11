@@ -125,7 +125,7 @@
   @item{each @rhombus(rule_pattern) is matched to the entire remainder
    of a group where the macro is used; and},
 
-  @item{a body can returns two values: an expansion for the consumed part
+  @item{a body can return two values: an expansion for the consumed part
    of the input group, and a tail for the unconsumed part; if a single
    value is returned, the tail is assumed to be empty.}
 
