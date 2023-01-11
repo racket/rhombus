@@ -8,7 +8,10 @@
 (begin-for-syntax
   (rhombus-definition (group use_static)))
 
-(bounce #:except (|.| #%ref)
+(bounce #:except (|.| #%ref #%call)
         "../meta.rkt")
 (provide (for-syntax |.|
-                     #%ref))
+                     (for-space rhombus/impo |.|)
+                     (for-space rhombus/expo |.|)
+                     #%ref
+                     #%call))

@@ -37,7 +37,8 @@
 
 (module+ for-meta
   (provide (for-syntax export-modifier
-                       in-export-space)))
+                       in-export-space)
+           define-export-syntax))
 
 (begin-for-syntax
   (property export-prefix-operator prefix-operator)

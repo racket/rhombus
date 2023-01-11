@@ -13,8 +13,7 @@
          "static-info.rkt"
          "realm.rkt"
          "error.rkt"
-         "name-root-ref.rkt"
-         "dotted-sequence-parse.rkt")
+         "name-root-ref.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)

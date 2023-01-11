@@ -55,7 +55,8 @@
 (module+ for-meta
   (provide (for-syntax import-modifier
                        import-modifier-block
-                       in-import-space)))
+                       in-import-space)
+           define-import-syntax))
 
 (begin-for-syntax
   (property import-prefix-operator prefix-operator)

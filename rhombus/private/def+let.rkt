@@ -12,7 +12,6 @@
          "annotation.rkt"
          "call-result-key.rkt"
          "static-info.rkt"
-         "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt"
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
