@@ -3,7 +3,7 @@
                      syntax/parse/pre)
          "expression.rkt")
 
-(provide $ $$)
+(provide $ $&)
 
 (define-syntax $
   (expression-prefix-operator
@@ -17,9 +17,9 @@
                             "misuse outside of a pattern or template"
                             #'op)]))))
 
-(define-syntax $$
+(define-syntax $&
   (expression-prefix-operator
-   (quote-syntax $$)
+   (quote-syntax $&)
    '((default . stronger))
    'macro
    (lambda (stx)

@@ -29,7 +29,7 @@
 (provide #%quotes
          syntax_term
          $
-         $$)
+         $&)
 
 (module+ convert
   (begin-for-syntax
@@ -272,13 +272,13 @@
                       (append new-pend-sidrs sidrs)
                       (append new-pend-vars vars)
                       (cons (quote-syntax ...) ps) can-be-empty? #f #f depth))]
-           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $$)))) (~var esc (:esc tail-any-escape?)) . n-gs)
+           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $&)))) (~var esc (:esc tail-any-escape?)) . n-gs)
             #:when (or flatten-escape
-                       (not (free-identifier=? #'$-id #'$$)))
+                       (not (free-identifier=? #'$-id #'$&)))
             (cond
               [(zero? depth)
                (define flatten? (and flatten-escape
-                                     (free-identifier=? #'$-id #'$$)))
+                                     (free-identifier=? #'$-id #'$&)))
                (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id #'esc.term e))
                (define adj-new-idrs
                  (cond

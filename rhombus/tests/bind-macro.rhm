@@ -4,11 +4,11 @@ import:
 
 // define a binding operator
 
-bind.rule '$$ $n':
+bind.rule '$& $n':
   ~parsed_right
   '$n :: Integer'
 
-fun apply_interest($$ n):
+fun apply_interest($& n):
   n * 1.05
 
 check:
