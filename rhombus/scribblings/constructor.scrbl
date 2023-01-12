@@ -46,7 +46,7 @@ corresponding identifier.
 
 Keyword and optional arguments tweak the default constructor that is
 implemented for a class, but a @rhombus(constructor, ~class_clause)
-clauses replaces the constrictor completely. The syntax of
+clauses replaces the constructor completely. The syntax of
 @rhombus(constructor, ~class_clause) is like a @rhombus(fun) expression
 form, but with @rhombus(constructor, ~class_clause) in place of
 @rhombus(fun). In the body of a constructor, @rhombus(super) refers to a
