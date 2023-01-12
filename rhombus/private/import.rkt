@@ -29,7 +29,8 @@
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
-                  [/ rhombus/]))
+                  [/ rhombus/])
+         "dotted-sequence-parse.rkt")
 
 (provide import
 
@@ -412,7 +413,7 @@
   (define open-all-spaces? (not only-space-sym))
   (syntax-parse im
     #:datum-literals (import-root map)
-    [(import-root id (map orig-id [key val] ...) lookup-id)
+    [(import-root id (map orig-id _ [key val] ...) lookup-id)
      (define prefix (extract-prefix #'id r-parsed))
      (define bound-prefix (string-append (symbol->immutable-string (syntax-e #'id))
                                          "."))
@@ -428,12 +429,13 @@
                                                                         (syntax-e dotted-id)))]
                                     #:do [(define str (symbol->immutable-string sym))]
                                     #:when (and (> (string-length str) (string-length bound-prefix))
-                                                (string=? bound-prefix (substring str 0 (string-length bound-prefix)))))
+                                                (string=? bound-prefix (substring str 0 (string-length bound-prefix))))
+                                    #:do [(define ext-id (intro (datum->syntax #'lookup-id sym #'id)))]
+                                    #:when (identifier-extension-binding? ext-id (intro #'lookup-id)))
          (define field-sym (string->symbol
                             (substring
                              (symbol->immutable-string sym)
                              (string-length bound-prefix))))
-         (define ext-id (intro (datum->syntax #'lookup-id sym #'id)))
          (define id+spaces (hash-ref ht field-sym null))
          (cond
            [(ormap (lambda (id+space)

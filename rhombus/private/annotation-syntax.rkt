@@ -35,14 +35,14 @@
 
 (define-operator-definition-transformer+only rule rule-only
   'rule
-  in-annotation-space
+  rhombus/annot
   #'make-annotation-prefix-operator
   #'make-annotation-infix-operator
   #'annotation-prefix+infix-operator)
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
-  in-annotation-space
+  rhombus/annot
   #'make-annotation-prefix-operator
   #'make-annotation-infix-operator
   #'annotation-prefix+infix-operator)

@@ -65,12 +65,12 @@
                             ;; data accumulated from parsed clauses:
                             ()))
      (define interface-data-stx #f)
-     (cond
-       [(null? (syntax-e body))
-        #`((interface-annotation+finish #,finish-data ()))]
-       [else
-        #`((rhombus-mixed-nested-forwarding-sequence (interface-annotation+finish #,finish-data) rhombus-class
-                                                     (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body))))])]))
+     #`(#,(cond
+            [(null? (syntax-e body))
+             #`(interface-annotation+finish #,finish-data ())]
+            [else
+             #`(rhombus-mixed-nested-forwarding-sequence (interface-annotation+finish #,finish-data) rhombus-class
+                                                         (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body)))]))]))
 
 (define-syntax interface-body-step
   (lambda (stx)

@@ -12,11 +12,15 @@
 (provide expo)
 
 (define-simple-name-root expo
-  macro
-  modifier)
+  modifier
+  only)
 
-(define-identifier-syntax-definition-transformer modifier
-  (lambda (x) x)
+(define-name-root only
+  #:fields
+  ([modifier modifier-only]))
+
+(define-identifier-syntax-definition-transformer+only modifier modifier-only
+  rhombus/expo
   #'make-export-modifier)
 
 (define-for-syntax (make-import-modifier proc)

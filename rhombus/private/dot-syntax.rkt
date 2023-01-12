@@ -17,14 +17,19 @@
   macro_more_static
   only)
 
+(define-name-root only
+  #:fields
+  ([macro macro-only]
+   [macro_more_static macro_more_static-only]))
+
 (define-for-syntax provider_key #'#%dot-provider)
 
-(define-identifier-syntax-definition-transformer macro
-  (lambda (x) x)
+(define-identifier-syntax-definition-transformer+only macro macro-only
+  rhombus/dot
   #'make-dot-provider-transformer)
 
-(define-identifier-syntax-definition-transformer macro_more_static
-  (lambda (x) x)
+(define-identifier-syntax-definition-transformer+only macro_more_static macro_more_static-only
+  rhombus/dot
   #'make-dot-provider-more-static-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)

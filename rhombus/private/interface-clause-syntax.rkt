@@ -21,7 +21,7 @@
   ([macro macro-only]))
 
 (define-identifier-syntax-definition-transformer+only macro macro-only
-  in-interface-clause-space
+  rhombus/interface_clause
   #:extra [#:info interface-data-static-infos]
   #'make-interface-clause-transformer)
 

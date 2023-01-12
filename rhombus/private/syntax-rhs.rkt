@@ -33,7 +33,7 @@
 ;; now that we're in the right phase for the right-hand side of the definition
 (define-for-syntax (parse-one-macro-definition pre-parsed adjustments)
   (define kind (syntax-parse pre-parsed
-                 [(_ _ _ kind . _) (syntax-e #'kind)]))
+                 [(_ _ _ _ kind . _) (syntax-e #'kind)]))
   (define (macro-clause self-id left-ids tail-pattern rhs)
     (define-values (pattern idrs sidrs vars can-be-empty?)
       (if (eq? kind 'rule)
@@ -72,6 +72,7 @@
     #:datum-literals (pre-parsed infix prefix nofix)
     ;; infix protocol
     [(pre-parsed name
+                 _
                  infix
                  _
                  opt
@@ -106,6 +107,7 @@
                               #'(tag rhs ...))]))]
     ;; prefix protocol
     [(pre-parsed name
+                 _
                  prefix
                  _
                  opt
@@ -139,6 +141,7 @@
                               #'(tag rhs ...))]))]
     ;; nofix protocol
     [(pre-parsed name
+                 _
                  nofix
                  _
                  opt

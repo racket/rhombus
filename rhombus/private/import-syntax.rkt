@@ -12,10 +12,15 @@
 (provide impo)
 
 (define-simple-name-root impo
-  modifier)
+  modifier
+  only)
 
-(define-identifier-syntax-definition-transformer modifier
-  (lambda (x) x)
+(define-name-root only
+  #:fields
+  ([modifier modifier-only]))
+
+(define-identifier-syntax-definition-transformer+only modifier modifier-only
+  rhombus/impo
   #'make-import-modifier)
 
 (define-for-syntax (make-import-modifier proc)

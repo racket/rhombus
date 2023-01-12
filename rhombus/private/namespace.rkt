@@ -23,20 +23,21 @@
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports name.name)))]
+            (define-name-root-for-exports name.name name.extends)))]
        [(form-id name-seq::dotted-identifier-sequence
                  ((~and tag block) form ...))
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports name.name)
+            (define-name-root-for-exports name.name name.extends)
             #,(syntax-local-introduce
                #`(rhombus-nested form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx
-    [(_ name ex ...)
+    [(_ name extends ex ...)
      #:with fields (parse-exports #'(combine-out ex ...))
      #'(define-name-root name
+         #:extends extends
          #:fields
          fields)]))
 
@@ -71,20 +72,23 @@
                                          #:do [(define intro (if space-sym
                                                                  (make-interned-syntax-introducer/add space-sym)
                                                                  (lambda (x) x)))]
-                                         #:when (extensible-name-root? (list (intro int-id)))
+                                         #:when (extensible-name-root (list (intro int-id)))
                                          [sym (in-list (syntax-bound-symbols (intro int-id)))])
                 (define str (symbol->immutable-string sym))
                 (cond
                   [(and (> (string-length str) (string-length prefix))
                         (string=? prefix (substring str 0 (string-length prefix))))
-                   (define old (hash-ref ht sym #f))
                    (define id (datum->syntax (intro int-id) sym int-id))
-                   (when (and old
-                              (not (free-identifier=? (intro old) id)))
-                     (raise-syntax-error #f
-                                         "duplicate export name with different bindings"
-                                         id))
-                   (hash-set ht sym id)]
+                   (cond
+                     [(identifier-extension-binding? id (intro int-id))
+                      (define old (hash-ref ht sym #f))
+                      (when (and old
+                                 (not (free-identifier=? (intro old) id)))
+                        (raise-syntax-error #f
+                                            "duplicate export name with different bindings"
+                                            id))
+                      (hash-set ht sym id)]
+                     [else ht])]
                   [else ht]))]))]
         [(all-from-out mod-path)
          (raise-syntax-error #f

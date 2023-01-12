@@ -77,7 +77,7 @@
                                        stx
                                        (syntax->list #'(q.g ...))
                                        (syntax->list #'(rhs ...))
-                                       in-expression-space
+                                       'rhombus/expr
                                        #'rules-rhs))]
          [(form-id q::operator-syntax-quote
                    (~and rhs (block body ...)))
@@ -85,7 +85,7 @@
            (parse-operator-definition 'rule
                                       #'q.g
                                       #'rhs
-                                      in-expression-space
+                                      'rhombus/expr
                                       #'rule-rhs))])))
    (entry-point-transformer
     ;; parse rule

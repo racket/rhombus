@@ -13,13 +13,15 @@
                      make-name-root-ref
                      name-root-ref-root
                      portal-syntax->lookup
+                     portal-syntax->extends
                      replace-head-dotted-name
                      import-root-ref
-                     extensible-name-root?))
+                     extensible-name-root))
 
 (define-for-syntax (make-name-root-ref in-space
                                        #:binding-ref [binding-ref #f]
-                                       #:non-portal-ref [non-portal-ref #f])
+                                       #:non-portal-ref [non-portal-ref #f]
+                                       #:binding-extension-combine [binding-extension-combine (lambda (id prefix) id)])
   (lambda (v)
     (define (make self-id get)
       (enforest:name-root
@@ -66,7 +68,10 @@
                                                           (name-root-ref-root v binding-ref))))
                                (relocate-field form-id field-id id)))]))
                    (if binding-end?
-                       (relocate-field form-id field-id (build-name (cdar (reverse gets)) field-id))
+                       (let ([prefix (cdar (reverse gets))])
+                         (binding-extension-combine
+                          (relocate-field form-id field-id (build-name prefix field-id))
+                          prefix))
                        ;; try again with the shallowest to report an error
                        (let ([get (caar gets)])
                          (get form-id what field-id)))))
@@ -155,7 +160,7 @@
                                        name)]
                   [else #f])]
                [else #f])))]
-    [(map self-id [key val] ...)
+    [(map self-id _ [key val] ...)
      (define keys (syntax->list #'(key ...)))
      (define vals (syntax->list #'(val ...)))
      (make #'self-id
@@ -170,6 +175,12 @@
                                                   what
                                                   (syntax-e who-stx))
                                           name)))))]
+    [_ #f]))
+
+(define-for-syntax (portal-syntax->extends portal-stx)
+  (syntax-parse portal-stx
+    #:datum-literals (import map)
+    [(map _ extends . _) #'extends]
     [_ #f]))
 
 (define-for-syntax (relocate-field root-id field-id new-field-id)
@@ -212,11 +223,11 @@
                                                                    (syntax-local-introduce (datum->syntax #f 'empty)))
                                                                   #'parsed-r
                                                                   'remove))]
-    [(map _ [key val] ...)
+    [(map _ _ [key val] ...)
      portal-stx]
     [_ #f]))
 
-(define-for-syntax (extensible-name-root? ids)
+(define-for-syntax (extensible-name-root ids)
   (let loop ([ids ids] [portal-stx #f] [prev-who #f])
     (define id
       (cond
@@ -241,4 +252,5 @@
               [(map . _) #t]
               [_ #f])]
            [else
-            (loop (cdr ids) (portal-syntax-content v) id)]))))
+            (loop (cdr ids) (portal-syntax-content v) id)])
+         id)))

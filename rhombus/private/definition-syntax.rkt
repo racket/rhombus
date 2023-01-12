@@ -6,8 +6,6 @@
                      "pack.rkt")
          "name-root.rkt"
          "definition.rkt"
-         (only-in "expression.rkt"
-                  in-expression-space)
          "syntax.rkt"
          "parse.rkt")
 
@@ -26,7 +24,7 @@
 ;; ----------------------------------------
 
 (define-identifier-syntax-definition-transformer+only macro macro-only
-  in-expression-space
+  rhombus/expr
   #'make-definition-transformer)
 
 (define-for-syntax (make-definition-transformer proc)
@@ -46,11 +44,11 @@
 ;; ----------------------------------------
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro
-  (lambda (x) x)
+  #f
   #'make-definition-sequence-transformer)
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro-only
-  in-expression-space
+  rhombus/expr
   #'make-definition-sequence-transformer)
 
 (define-for-syntax (make-definition-sequence-transformer proc)

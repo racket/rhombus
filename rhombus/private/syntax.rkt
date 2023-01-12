@@ -9,6 +9,7 @@
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
                      "syntax-rhs.rkt"
+                     "introducer.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "parse.rkt"
@@ -151,16 +152,20 @@
                                        (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
 
   (define-splicing-syntax-class :operator-or-identifier-or-$
+    #:attributes (name extends)
     #:description "operator-macro pattern"
     #:datum-literals (op parens group quotes)
     (pattern (~seq op-name::operator-or-identifier)
              #:when (not (free-identifier=? (in-binding-space #'op-name.name) #'$
                                             (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
-             #:attr name #'op-name.name)
+             #:attr name #'op-name.name
+             #:attr extends #'#f)
     (pattern (~seq (parens (group seq::dotted-operator-or-identifier-sequence)))
              #:with id::dotted-operator-or-identifier #'seq
-             #:attr name #'id.name)
-    (pattern (~seq (op _::$+1) (parens (group (quotes (group (op (~and name $)))))))))
+             #:attr name #'id.name
+             #:attr extends #'id.extends)
+    (pattern (~seq (op _::$+1) (parens (group (quotes (group (op (~and name $)))))))
+             #:attr extends #'#f))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
@@ -193,6 +198,7 @@
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
           #`(pre-parsed op-name.name
+                        op-name.extends
                         infix
                         #,kind
                         opt
@@ -213,6 +219,7 @@
        (syntax-parse rhs
          [((~and tag block) opt::macro-prefix-operator-options rhs ...)
           #`(pre-parsed op-name.name
+                        op-name.extends
                         prefix
                         #,kind
                         opt
@@ -228,6 +235,7 @@
        (syntax-parse rhs
          [((~and tag block) opt::self-prefix-operator-options rhs ...)
           #`(pre-parsed op-name.name
+                        op-name.extends
                         nofix
                         #,kind
                         opt
@@ -241,24 +249,31 @@
   (syntax-parse pre-parsed
     [(_ name . _) #'name]))
 
+(define-for-syntax (pre-parsed-extends pre-parsed)
+  (syntax-parse pre-parsed
+    [(_ _ extends . _) #'extends]))
+
 ;; single-case macro definition:
-(define-for-syntax (parse-operator-definition kind g rhs in-space compiletime-id
+(define-for-syntax (parse-operator-definition kind g rhs space-sym compiletime-id
                                               #:allowed [allowed '(prefix infix)])
   (define p ((parse-one-macro-definition kind allowed) g rhs))
   (define op (pre-parsed-name p))
   (if compiletime-id
-      #`(define-syntax #,(in-space op) (#,compiletime-id #,p))
+      (build-syntax-definition/maybe-extension space-sym op
+                                               (pre-parsed-extends p)
+                                               #`(#,compiletime-id #,p))
       p))
 
 ;; multi-case macro definition:
-(define-for-syntax (parse-operator-definitions kind stx gs rhss in-space compiletime-id
+(define-for-syntax (parse-operator-definitions kind stx gs rhss space-sym compiletime-id
                                                #:allowed [allowed '(prefix infix)])
   (define ps (map (parse-one-macro-definition kind allowed)
                   gs rhss))
   (check-consistent stx (map pre-parsed-name ps) "operator")
   (if compiletime-id
-      #`(define-syntax #,(in-space (pre-parsed-name (car ps)))
-          (#,compiletime-id #,stx #,@ps))
+      (build-syntax-definition/maybe-extension space-sym (pre-parsed-name (car ps))
+                                               (pre-parsed-extends (car ps))
+                                               #`(#,compiletime-id #,stx #,@ps))
       ps))
 
 ;; An operator definition transformer involves a phase-0 binding for
@@ -269,14 +284,14 @@
     #:literals (syntax quote)
     [(_ id
         'protocol
-        in-space-expr
+        space
         #'make-prefix-id
         #'make-infix-id
         #'prefix+infix-id)
      #`(begin
          (define-syntax id
            (make-operator-definition-transformer-runtime 'protocol
-                                                         in-space-expr
+                                                         'space
                                                          #'compiletime-id))
          (begin-for-syntax
            (define-syntax compiletime-id
@@ -289,26 +304,26 @@
     #:literals (syntax quote)
     [(_ id only-id
         'protocol
-        in-space-expr
+        space
         #'make-prefix-id
         #'make-infix-id
         #'prefix+infix-id)
      #'(begin
          (define-operator-definition-transformer id
            'protocol
-           (lambda (x) x)
+           #f
            #'make-prefix-id
            #'make-infix-id
            #'prefix+infix-id)
          (define-operator-definition-transformer only-id
            'protocol
-           in-space-expr
+           space
            #'make-prefix-id
            #'make-infix-id
            #'prefix+infix-id))]))
 
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
-                                                                 in-space
+                                                                 space-sym
                                                                  compiletime-id)
   (definition-transformer
     (lambda (stx)
@@ -323,14 +338,14 @@
                                            stx
                                            (syntax->list #'(q.g ...))
                                            (syntax->list #'(rhs ...))
-                                           in-space
+                                           space-sym
                                            compiletime-id))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (block body ...)))
          (list (parse-operator-definition (template->macro protocol)
                                           #'q.g
                                           #'rhs
-                                          in-space
+                                          space-sym
                                           compiletime-id))]))))
 
 (begin-for-syntax
@@ -377,11 +392,11 @@
 (define-syntax (define-identifier-syntax-definition-transformer stx)
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id #:multi (in-space-expr ...)
+    [(_ id #:multi (space ...)
         #:extra [extra-kw extra-static-infos]
         #'make-transformer-id)
      #`(begin
-         (define-syntax id (make-identifier-syntax-definition-transformer-runtime (list in-space-expr ...)
+         (define-syntax id (make-identifier-syntax-definition-transformer-runtime '(space ...)
                                                                                   #'compiletime-id
                                                                                   (syntax-e #'extra-kw)))
          (begin-for-syntax
@@ -392,39 +407,39 @@
      #'(define-identifier-syntax-definition-transformer id #:multi m
          #:extra [#f #f]
          #'make-transformer-id)]
-    [(_ id in-space-expr
+    [(_ id space
         #:extra extra
         #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi (in-space-expr) #:extra extra #'make-transformer-id)]
-    [(_ id in-space-expr
+     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra extra #'make-transformer-id)]
+    [(_ id space
         #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi (in-space-expr) #:extra [#f #f] #'make-transformer-id)]))
+     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra [#f #f] #'make-transformer-id)]))
 
 (define-syntax (define-identifier-syntax-definition-transformer+only stx)
   (syntax-parse stx
     #:literals (syntax)
     [(_ id only-id
-        in-space-expr
+        space
         #'make-transformer-id)
      #'(define-identifier-syntax-definition-transformer+only id only-id
-         in-space-expr
+         space
          #:extra [#f #f]
          #'make-transformer-id)]
     [(_ id only-id
-        in-space-expr
+        space
         #:extra extra
         #'make-transformer-id)
      #'(begin
          (define-identifier-syntax-definition-transformer id
-           (lambda (x) x)
+           #f
            #:extra extra
            #'make-transformer-id)
          (define-identifier-syntax-definition-transformer only-id
-           in-space-expr
+           space
            #:extra extra
            #'make-transformer-id))]))
 
-(define-for-syntax (make-identifier-syntax-definition-transformer-runtime in-spaces
+(define-for-syntax (make-identifier-syntax-definition-transformer-runtime space-syms
                                                                           compiletime-id
                                                                           extra-kw)
   (definition-transformer
@@ -440,10 +455,10 @@
                              body ...)))
          (define p (parse-transformer-definition #'q.g #'(tag body ...)))
          (define name (pre-parsed-name p))
-         (list #`(define-syntaxes #,(for/list ([in-space (in-list in-spaces)])
-                                      (in-space name))
+         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
+                                      ((space->introducer space-sym) name))
                    (let ([#,name (#,compiletime-id #,p self-id extra-id)])
-                     (values #,@(for/list ([in-space (in-list in-spaces)])
+                     (values #,@(for/list ([space-sym (in-list space-syms)])
                                   name)))))]))))
 
 (begin-for-syntax
@@ -458,16 +473,16 @@
 (define-syntax (define-identifier-syntax-definition-sequence-transformer stx)
   (syntax-parse stx
     #:literals (syntax)
-    [(_ id in-space-expr
+    [(_ id space
         #'make-transformer-id)
      #`(begin
-         (define-syntax id (make-identifier-syntax-definition-sequence-transformer-runtime in-space-expr
+         (define-syntax id (make-identifier-syntax-definition-sequence-transformer-runtime 'space
                                                                                            #'compiletime-id))
          (begin-for-syntax
            (define-syntax compiletime-id
              (make-identifier-syntax-definition-sequence-transformer-compiletime #'make-transformer-id))))]))
 
-(define-for-syntax (make-identifier-syntax-definition-sequence-transformer-runtime in-space
+(define-for-syntax (make-identifier-syntax-definition-sequence-transformer-runtime space-sym
                                                                                    compiletime-id)
   (definition-transformer
     (lambda (stx)
@@ -479,7 +494,7 @@
                                        #:defaults ([self-id #'self]))
                             body ...)))
         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
-        (list #`(define-syntax #,(in-space (pre-parsed-name p))
+        (list #`(define-syntax #,((space->introducer space-sym) (pre-parsed-name p))
                   (#,compiletime-id #,p q.gs self-id)))]))))
 
 (begin-for-syntax

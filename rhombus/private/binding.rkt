@@ -13,7 +13,8 @@
          "static-info.rkt"
          "realm.rkt"
          "error.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "dotted-sequence-parse.rkt")
 
 (begin-for-syntax
   (provide (property-out binding-prefix-operator)
@@ -32,7 +33,9 @@
            :binding-info
            binding-info
 
-           in-binding-space))
+           in-binding-space
+
+           binding-extension-combine))
 
 (provide define-binding-syntax
          raise-binding-failure)
@@ -112,7 +115,11 @@
       [_::binding-info form]
       [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
 
-  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind)))
+  (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
+
+  (define extension-syntax-property-key (gensym 'extension))
+  (define (binding-extension-combine id prefix)
+    (syntax-property id extension-syntax-property-key prefix)))
 
 (define-syntax (identifier-infoer stx)
   (syntax-parse stx
@@ -124,20 +131,29 @@
                    #'identifier-succeed
                    #'identifier-commit
                    #'identifier-bind
-                   #'id)]))
+                   (let ([prefix (syntax-property #'id extension-syntax-property-key)])
+                     (if prefix
+                         #`[id #,prefix]
+                         #'id)))]))
 
 (define-syntax (identifier-succeed stx)
   (syntax-parse stx
-    [(_ arg-id bind-id IF success fail)
+    [(_ arg-id bind-id* IF success fail)
      #'(IF #t success fail)]))
 
 (define-syntax (identifier-commit stx)
   (syntax-parse stx
-    [(_ arg-id bind-id)
+    [(_ arg-id bind-id*)
      #'(begin)]))
 
 (define-syntax (identifier-bind stx)
   (syntax-parse stx
+    [(_ arg-id [bind-id prefix-id])
+     (define l (build-definitions/maybe-extension #f #'bind-id #'prefix-id
+                                                  #'arg-id))
+     (if (= 1 (length l))
+         (car l)
+         #`(begin #,@l))]
     [(_ arg-id bind-id)
      #'(define bind-id arg-id)]))
 

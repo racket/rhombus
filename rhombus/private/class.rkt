@@ -93,12 +93,12 @@
                                       (field.ann-seq ...)]
                             ;; data accumulated from parsed clauses:
                             ()))
-     (cond
-       [(null? (syntax-e body))
-        #`((class-annotation+finish #,finish-data ()))]
-       [else
-        #`((rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
-                                                     (class-body-step #,finish-data . #,(syntax-local-introduce body))))])]))
+     #`(#,(cond
+            [(null? (syntax-e body))
+             #`(class-annotation+finish #,finish-data ())]
+            [else
+             #`(rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
+                                                         (class-body-step #,finish-data . #,(syntax-local-introduce body)))]))]))
 
 (define-syntax class-body-step
   (lambda (stx)

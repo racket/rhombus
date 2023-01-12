@@ -3,15 +3,14 @@
                      syntax/parse/pre
                      enforest/name-root
                      "srcloc.rkt"
-                     "introducer.rkt")
-         "dot.rkt")
+                     "introducer.rkt"))
 
 (provide define-simple-name-root
          define-name-root)
 
 (define-syntax-rule (define-simple-name-root id content ...)
   ;; portal syntax with this shape is recognized by "name-root-ref.rkt"
-  (#%require (portal id (map id [content content] ...))))
+  (#%require (portal id (map id #f [content content] ...))))
 
 (define-syntax (define-name-root stx)
   (syntax-parse stx
@@ -22,6 +21,8 @@
                             #:defaults ([root-rename #'#f]))
                  (~optional (~seq #:space space)
                             #:defaults ([space #'#f]))
+                 (~optional (~seq #:extends extends)
+                            #:defaults ([extends #'#f]))
                  (~optional (~seq #:orig-id orig-id)
                             #:defaults ([orig-id #'#f])))
         ...)
@@ -48,4 +49,4 @@
                             #'id)
      #'(begin
          root-def ...
-         (#%require (portal space-id (map the-orig-id norm-content ... root-spec ...))))]))
+         (#%require (portal space-id (map the-orig-id extends norm-content ... root-spec ...))))]))

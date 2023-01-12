@@ -55,14 +55,14 @@
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
-  in-binding-space
+  rhombus/bind
   #'make-binding-prefix-operator
   #'make-binding-infix-operator
   #'prefix+infix)
 
 (define-operator-definition-transformer+only rule rule-only
   'rule
-  in-binding-space
+  rhombus/bind
   #'make-binding-prefix-operator
   #'make-binding-infix-operator
   #'prefix+infix)

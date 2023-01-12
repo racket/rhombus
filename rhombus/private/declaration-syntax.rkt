@@ -16,7 +16,7 @@
   macro)
 
 (define-identifier-syntax-definition-transformer macro
-  (lambda (x) x)
+  #f
   #'make-declaration-transformer)
 
 (define-for-syntax (make-declaration-transformer proc)

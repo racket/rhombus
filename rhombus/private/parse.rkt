@@ -115,7 +115,8 @@
     (make-name-root-ref in-binding-space
                         #:binding-ref (lambda (v)
                                         (or (binding-prefix-operator-ref v)
-                                            (binding-infix-operator-ref v)))))
+                                            (binding-infix-operator-ref v)))
+                        #:binding-extension-combine binding-extension-combine))
 
   ;; Form in a binding context:
   (define-enforest

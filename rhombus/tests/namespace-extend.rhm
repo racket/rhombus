@@ -159,3 +159,39 @@ check:
   def toplevel.greeting = "hi"
   toplevel.greeting
   ~is "hi"
+
+// Make sure extension of a namespace doesn't get
+// treated as extension of a shadowing namespace
+check:
+  ~eval
+  namespace N
+  def N.y = 10
+  begin:
+    namespace N
+    import: .N as n
+    n.y
+  ~raises "identifier not provided"
+
+// Same, for macro
+check:
+  ~eval
+  import rhombus/meta open
+  namespace N
+  expr.rule '(N.z) 0': '1'
+  begin:
+    namespace N
+    import: .N as n
+    n.z 0
+  ~raises "identifier not provided"
+
+//No shadowing => extension is visible
+check:
+  ~eval
+  import rhombus/meta open
+  namespace N
+  def N.y = 10
+  expr.rule '(N.z) 0': '1'
+  begin:
+    import: .N as n
+    [n.y, n.z 0]
+  ~is [10, 1]

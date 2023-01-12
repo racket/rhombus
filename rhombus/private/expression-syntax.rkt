@@ -29,14 +29,14 @@
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
-  in-expression-space
+  rhombus/expr
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
   #'expression-prefix+infix-operator)
 
 (define-operator-definition-transformer+only rule rule-only
   'rule
-  in-expression-space
+  rhombus/expr
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
   #'expression-prefix+infix-operator)

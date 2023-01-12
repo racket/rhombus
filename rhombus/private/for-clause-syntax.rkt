@@ -20,7 +20,7 @@
   ([macro macro-only]))
 
 (define-identifier-syntax-definition-transformer+only macro macro-only
-  in-for-clause-space
+  rhombus/for_clause
   #'make-for-clause-transformer)
 
 (define-for-syntax (make-for-clause-transformer proc)

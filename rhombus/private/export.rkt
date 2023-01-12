@@ -20,6 +20,7 @@
          "name-root-ref.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
+         "dotted-sequence-parse.rkt"
          (submod "module-path.rkt" for-import-export))
 
 (provide export
@@ -163,7 +164,7 @@
               (append
                (list (make-export phase space int-id))
                (cond
-                 [(extensible-name-root? (list int-id))
+                 [(extensible-name-root (list int-id))
                   ;; also export any extensions
                   (define prefix (format "~a." (symbol->string (syntax-e int-id))))
                   (define intro (if space
@@ -172,7 +173,8 @@
                   (for/list ([sym (in-list (syntax-bound-symbols (intro int-id)))]
                              #:do [(define str (symbol->immutable-string sym))]
                              #:when (and (> (string-length str) (string-length prefix))
-                                         (string=? prefix (substring str 0 (string-length prefix))))
+                                         (string=? prefix (substring str 0 (string-length prefix)))
+                                         (identifier-extension-binding? (datum->syntax (intro int-id) sym) (intro int-id)))
                              #:when (or (not space)
                                         (identifier-distinct-binding (datum->syntax (intro int-id) sym)
                                                                      (datum->syntax int-id sym)
@@ -294,10 +296,10 @@
                      (syntax-parse i
                        #:datum-literals (parsed map)
                        [(parsed mod-path parsed-r) #`(all-from-out #,(relocate #'name.name #'mod-path))]
-                       [(map _ [key val] ...) #`(rename-out #,@(for/list ([key (in-list (syntax->list #'(key ...)))]
-                                                                          [val (in-list (syntax->list #'(val ...)))]
-                                                                          #:when (syntax-e key))
-                                                                 #`[#,val #,key]))]))
+                       [(map _ _ [key val] ...) #`(rename-out #,@(for/list ([key (in-list (syntax->list #'(key ...)))]
+                                                                            [val (in-list (syntax->list #'(val ...)))]
+                                                                            #:when (syntax-e key))
+                                                                   #`[#,val #,key]))]))
                    (unless (null? (syntax-e #'name.tail))
                      (raise-syntax-error #f
                                          "unexpected after `.`"

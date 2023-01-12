@@ -33,17 +33,18 @@
   ([macro both_macro-only]))
 
 (define-identifier-syntax-definition-transformer+only macro macro-only
-  in-class-clause-space
+  rhombus/class_clause
   #:extra [#:info class-data-static-infos]
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
-  #:multi (in-class-clause-space in-interface-clause-space)
+  #f
   #:extra [#:info #'()]
   #'make-class-and-interface-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro-only
-  (lambda (x) x)
+  #:multi (rhombus/class_clause
+           rhombus/interface_clause)
   #:extra [#:info #'()]
   #'make-class-and-interface-clause-transformer)
 

@@ -311,8 +311,8 @@
                                 #'form-id #'alts-tag))
          (maybe-add-function-result-definition
           the-name (syntax->list #'(ret.static-infos ...)) arity
-          (list
-           #`(define #,the-name #,proc)))]
+          (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
+                                             proc))]
         [(form-id name-seq::dotted-identifier-sequence (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest)
                   ret::ret-annotation
                   (~and rhs (_::block body ...)))
@@ -328,8 +328,8 @@
                            #'form-id #'parens-tag))
          (maybe-add-function-result-definition
           #'name.name (list #'ret.static-infos) arity
-          (list
-           #`(define name.name #,proc)))]
+          (build-definitions/maybe-extension #f #'name.name #'name.extends
+                                             proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
         [(_ (~or (_::parens _ ...)
                  (_::alts (block (group (parens _ ...) . _)) ...+))
