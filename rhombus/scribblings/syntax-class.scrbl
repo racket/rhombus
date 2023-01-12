@@ -17,7 +17,7 @@
 
 As shown in @secref("syntax"), a variable can be bound in a syntax
 pattern via @rhombus($), parentheses, @rhombus(::), and a
-@deftech{syntax class} name to specify the kind of syntax the pattern
+@tech{syntax class} name to specify the kind of syntax the pattern
 variable can match. The syntax classes @rhombus(Term, ~stxclass),
 @rhombus(Group, ~stxclass), and @rhombus(Multi, ~stxclass) are built in,
 among others.

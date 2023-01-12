@@ -129,7 +129,7 @@ expr.macro
 | 'rhombus ($(forms :: Group)) $main_tail ...':
     values('#{typeset-rhombus}($(escape_group(forms)))',
            '$main_tail ...')
-| 'rhombus ($forms, $(kw_stx :: Keyw)) $main_tail ...':
+| 'rhombus ($forms, $(kw_stx :: Keyword)) $main_tail ...':
     def kw = Syntax.unwrap(kw_stx)
     if (kw === #'~var
           || kw === #'~datum

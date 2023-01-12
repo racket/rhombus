@@ -1,0 +1,99 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/base.rkt").pregexp
+
+// an example use of `sublanguage.enforest`
+
+export:
+  rx
+  any
+  #{#%literal} #{#%comp} #{#%parens}
+  || * ? ^ $
+  names: #{#%juxtapose}
+
+sublanguage.enforest example/rx:
+  ~syntax_class Pattern
+  ~rule rule
+  ~macro macro
+  ~only_macro only_macro
+  ~macro_result: fun (stx, who):
+                   unless (stx is_a Syntax
+                             && (stx -: Syntax).unwrap() is_a String)
+                   | Syntax.error("bad result", stx)
+                   stx
+  ~identifier_transformer: fun (id): no_identifier(id)
+  ~desc "regexp"
+
+expr.macro '«rx '$(pat :: Pattern)' $tail ...»':
+  'pregexp($pat.parsed)'
+
+rule 'any': '"."'
+
+only_macro '#{#%literal} $(s :: String) $tail ...':
+  import lib("racket/base.rkt").#{regexp-quote}
+  values('$(#{regexp-quote}(s.unwrap()))',
+         '$tail ...')
+
+only_macro '#{#%parens} ($(p :: Pattern)) $tail ...':
+  values(p.parsed,
+         '$tail ...')
+
+only_macro '$left #{#%call} ($(p :: Pattern)) $tail ...':
+  values('$(left.unwrap() ++ p.parsed.unwrap())',
+         '$tail ...')
+
+only_macro '$left || $right':
+  ~parsed_right
+  ~weaker_than: ~other
+  '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
+
+only_macro '$left #{#%juxtapose} $right':
+  ~parsed_right
+  ~weaker_than: ~other
+  ~stronger_than: ||
+  '$(left.unwrap() ++ right.unwrap())'
+
+only_macro '$left * $tail ...':
+  values('$(left.unwrap() ++ "*")',
+         '$tail ...')
+
+only_macro '$left + $tail ...':
+  values('$(left.unwrap() ++ "+")',
+         '$tail ...')
+
+only_macro '$left ? $tail ...':
+  values('$(left.unwrap() ++ "?")',
+         '$tail ...')
+
+only_macro
+| '$left #{#%comp} {$(min :: Integer), _} $tail ...':
+    values('$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")',
+           '$tail ...')
+| '$left #{#%comp} {$(min :: Integer), $(max :: Integer)} $tail ...':
+    values('$(left.unwrap() ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")',
+           '$tail ...')
+| '$left #{#%comp} {$(count :: Integer)} $tail ...':
+    values('$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")',
+           '$tail ...')
+
+macro
+| '^ $right':
+    ~parsed_right
+    '$("^" +& right.unwrap())'
+
+only_macro
+| '$left $('$')':
+    ~same_as: ^
+    '$(left.unwrap() +& "$")'
+
+meta:
+  fun no_identifier(id):
+    Syntax.error("no identifiers allowed", id)
+
+check:
+  rx'^ ("Hello" || "Hi") " "? ("Here"||"There") $'
+  ~completes
+
+check:
+  rx'(^ "Hello" || "Hi"{1, 22} || "At("any*")") $'
+  ~completes

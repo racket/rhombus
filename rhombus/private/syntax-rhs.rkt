@@ -53,10 +53,14 @@
               #`(values #,(convert-rule-template rhs ids)
                         (tail-rule-template (multi (group (op $) tail (op rhombus...))))))
             #`(rhombus-body-expression #,rhs)))
-      #`[#,pattern
-         (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
-           (let-syntax ([sid sid-ref] ...)
-             #,body))]))
+      (with-syntax ([(left-id-static ...) (map in-static-info-space (syntax->list #'(left-id ...)))])
+        #`[#,pattern
+           (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
+             (define-syntax left-id-static (make-static-infos syntax-static-infos))
+             ...
+             (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
+             (let-syntax ([sid sid-ref] ...)
+               #,body))])))
   (define (convert-rule-template block ids)
     (syntax-parse block
       #:datum-literals (block group quotes op)
@@ -94,6 +98,9 @@
                 (define right-id (extract-pattern-id #'tail-pattern))
                 (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args left #,right-id self-id)
+                    (define-syntax #,(in-static-info-space #'left) (make-static-infos syntax-static-infos))
+                    (define-syntax #,(in-static-info-space right-id) (make-static-infos syntax-static-infos))
+                    (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
                     #,(adjust-result
                        adjustments
                        1
@@ -128,6 +135,8 @@
                 (define arg-id (extract-pattern-id #'tail-pattern))
                 (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args #,arg-id self-id)
+                    (define-syntax #,(in-static-info-space arg-id) (make-static-infos syntax-static-infos))
+                    (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
                     #,(adjust-result
                        adjustments
                        1

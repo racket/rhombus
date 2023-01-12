@@ -39,7 +39,7 @@
     #,(dots)
 ){
 
- Defines a syntax class that can be used in syntax patterns with
+ Defines a @deftech{syntax class} that can be used in syntax patterns with
  @rhombus(::). The @rhombus(~pattern) subform is optional in the sense
  that pattern alternatives can be inlined directly in the
  @rhombus(syntax.class) form, but the @rhombus(~pattern) subform makes

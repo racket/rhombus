@@ -274,7 +274,7 @@
        #:datum-literals (block)
        [(_ (block (group name::name ...) ...)
            . tail)
-        (values #`(combine-out name.name ... ...)
+        (values #`(combine-out (all-spaces-out name.name) ... ...)
                 #'tail)]))))
 
 (define-export-syntax all_from

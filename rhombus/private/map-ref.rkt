@@ -12,6 +12,8 @@
          "static-info.rkt"
          (only-in "assign.rkt"
                   :=)
+         (only-in "string.rkt"
+                  +&)
          (submod "set.rkt" for-ref)
          (submod "set.rkt" for-build)
          "repetition.rkt"
@@ -105,7 +107,7 @@
 (define-syntax ++
   (expression-infix-operator
    (quote-syntax ++)
-   null
+   `((,#'+& . same))
    'automatic
    (lambda (form1-in form2 stx)
      (define form1 (rhombus-local-expand form1-in))

@@ -16,7 +16,12 @@
 (provide (rename-out [rhombus-syntax syntax]))
 
 (define-simple-name-root rhombus-syntax
-  class)
+  class
+  only)
+
+(define-name-root only
+  #:fields
+  [class only-class])
 
 ;; should this be in "definition.rkt"?
 (define-syntax parsed-defn
@@ -127,7 +132,7 @@
                    (block body ...)))
      (generate #'pat #'(body ...))]))
 
-(define-for-syntax (generate-syntax-class stx class-name kind-kw-stx alts description)
+(define-for-syntax (generate-syntax-class stx define-syntax-id class-name kind-kw-stx alts description)
   (define-values (kind splicing?)
     (let ([kind (string->symbol (keyword->string (syntax-e kind-kw-stx)))])
       (cond
@@ -146,7 +151,7 @@
       #:description #,(if description #`(rhombus-body #,@description) #f)
       #:datum-literals (block group quotes)
       #,@patterns)
-   #`(define-syntax #,(in-syntax-class-space class-name)
+   #`(#,define-syntax-id #,(in-syntax-class-space class-name)
        (rhombus-syntax-class '#,kind #'#,class-name '#,attributes #,splicing?))))
 
 (define-for-syntax (intersect-attributes stx attributess)
@@ -177,14 +182,14 @@
      (for/list ([(sym depth) (in-hash ht)])
        (cons sym depth))]))
 
-(define-syntax class
+(define-for-syntax (make-class-definer define-class-id )
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (alts group quotes block)
         ;; Classname and patterns shorthand
         [(form-id class-name (alts alt ...))
-         (generate-syntax-class stx #'class-name #'#:sequence (syntax->list #'(alt ...)) #f)]
+         (generate-syntax-class stx define-class-id #'class-name #'#:sequence (syntax->list #'(alt ...)) #f)]
         ;; Specify patterns with "pattern"
         [(form-id class-name
                   (block
@@ -197,6 +202,9 @@
                                     #:defaults ([kind-kw #'#:sequence])))
                    ...
                    (group #:pattern (alts alt ...))))
-         (generate-syntax-class stx #'class-name #'kind-kw (syntax->list #'(alt ...)) (attribute class-desc))]
+         (generate-syntax-class stx define-class-id #'class-name #'kind-kw (syntax->list #'(alt ...)) (attribute class-desc))]
         [_
          (raise-syntax-error #f "expected alternatives" stx)]))))
+
+(define-syntax class (make-class-definer #'define-syntax))
+(define-syntax only-class (make-class-definer #'define-syntax-class-syntax))

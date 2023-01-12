@@ -208,7 +208,9 @@ Metadata for a syntax object can include a source location and the raw
   syntax.class Id
   syntax.class Op
   syntax.class Id_Op
-  syntax.class Keyw
+  syntax.class Keyword
+  syntax.class String
+  syntax.class Integer
   syntax.class Group
   syntax.class Multi
   syntax.class Block

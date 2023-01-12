@@ -22,4 +22,5 @@
         "export-syntax.rkt"
         "syntax-error.rkt"
         "parsed.rkt"
-        "syntax-meta-value.rkt")
+        "syntax-meta-value.rkt"
+        "sublanguage-syntax.rkt")

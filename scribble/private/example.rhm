@@ -27,14 +27,14 @@ expr.macro 'examples($form, ...)':
         [['~hidden', [repl, ...]], &split(rest)]
     | ['~error: $repl', &rest]:
         [['~repl', forms]]
-    | ['$(kw :: Keyw) $_ ...', &rest]:
+    | ['$(kw :: Keyword) $_ ...', &rest]:
         Syntax.error("misplaced or unrecognized keyword", self, kw)
     | [form, ...]:
         [['~repl', [form, ...]]]
   fun find_kw(forms, want_kw, was_found):
     match forms
     | []: #false
-    | ['$(kw :: Keyw): $(eval_expr :: Group)', &rest]:
+    | ['$(kw :: Keyword): $(eval_expr :: Group)', &rest]:
         cond
         | kw.unwrap() == want_kw:
             when was_found

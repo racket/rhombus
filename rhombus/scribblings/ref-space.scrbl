@@ -1,7 +1,5 @@
 #lang scribble/rhombus/manual
-@(import: 
-    "common.rhm" open 
-    "macro.rhm")
+@(import: "common.rhm" open )
 
 @title{Identifier Spaces}
 
@@ -31,3 +29,7 @@ Expressions, definitions, and declarations use the same space,
 @rhombus(rhombus/expr, ~datum), since those contexts tend to overlap.
 Most other contexts have their own spaces, even though some of them also
 overlap with expression positions, such as class and interface clauses.
+
+The @rhombus(sublanguage.enforest) and @rhombus(sublanguage.transform)
+forms effectively create a new space along with its associated parser
+driver and macro-definitions forms.
