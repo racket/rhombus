@@ -200,6 +200,7 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar stx_bind:    
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class: $attrib_identifier
     $other_stx_bind
 ){
 
@@ -224,10 +225,14 @@ Metadata for a syntax object can include a source location and the raw
  operator consistent of three terms.
 
  When the @rhombus(::, ~syntax_binding) operator is used to
- associate a syntax class with an identifier, the @rhombus(syntax_class)
+ associate a @tech{syntax class} with an identifier, the @rhombus(syntax_class)
  can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
- @rhombus(Group, ~stxclass), among other built-in classes, or it can be a
- class defined with @rhombus(syntax.class).
+ @rhombus(Group, ~stxclass), among other predefined classes, or it can be a
+ class defined with @rhombus(syntax.class). If a @rhombus(attrib_identifier)
+ is supplied in addition, then the bound @rhombus(identifier) corresponds
+ to the syntax class's attribute for a match; otherwise, @rhombus(identifier)
+ refers to the matched input, and it can be combined with @rhombus(.)
+ to access attributes (if any) of the syntax class.
 
  Other syntax pattern binding forms can be defined with
  @rhombus(syntax_binding.macro). }
@@ -270,12 +275,13 @@ Metadata for a syntax object can include a source location and the raw
 @doc(
   syntax_binding.macro '_'
   syntax_binding.macro '$identifier :: $syntax_class'
+  syntax_binding.macro '$identifier :: $syntax_class: $attrib_identifier'
   syntax_binding.macro '#{#%parens} ($stx_bind)'
   syntax_binding.macro '«#{#%quotes} '$stx_bind'»'
 ){
 
- The built-in syntax pattern binding forms that are recognized by
- @rhombus($, ~bind).
+ Predefined syntax pattern binding forms for use with
+ @rhombus($, ~bind) within a syntax pattern as a binding.
 
 }
 

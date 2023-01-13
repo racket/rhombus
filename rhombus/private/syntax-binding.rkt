@@ -44,8 +44,8 @@
 
   (define-enforest
     #:syntax-class :syntax-binding
-    #:desc "syntax pattern binding"
-    #:operator-desc "syntax pattern binding operator"
+    #:desc "syntax binding"
+    #:operator-desc "syntax binding operator"
     #:in-space in-syntax-binding-space
     #:name-path-op name-path-op
     #:name-root-ref name-root-ref

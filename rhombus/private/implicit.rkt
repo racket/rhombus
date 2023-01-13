@@ -16,6 +16,7 @@
          "parens.rkt")
 
 (provide #%body
+         #%block
          #%literal
          #%parens
          ;; `#%quotes` provided by "quasiquote.rkt"
@@ -40,6 +41,24 @@
        [(_ (~and head ((~and tag (~datum block)) . body)) . tail)
         (values (datum->syntax #f (cons (datum->syntax #'here 'rhombus-body #'tag #'tag) #'body) #'tag)
                 #'tail)]))))
+
+(define-syntax #%block
+  (make-expression+binding-prefix-operator
+   #'#%block
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ b)
+        (raise-syntax-error #f
+                            "misplaced;\n not allowed as an expression by itself"
+                            #'b)]))
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ b)
+        (raise-syntax-error #f
+                            "misplaced;\n not allowed as a binding by itself"
+                            #'b)]))))
 
 (define-syntax #%literal
   (make-expression+binding+repetition-prefix-operator

@@ -27,10 +27,20 @@
 
 @examples(
   ~eval: macro_eval
-  syntax_binding.macro 'dots':
-    '«'$('...')'»'
-  match Syntax.make_group(['...', '...', '...'])
-  | '$dots ...': "all dots"
+  ~repl:
+    syntax_binding.macro 'dots':
+      '«'$('...')'»'
+    match Syntax.make_group(['...', '...', '...'])
+    | '$dots ...': "all dots"
+  ~repl:
+    syntax.class Wrapped
+    | '($content)'
+    | '[$content]'
+    | '{$content}'
+    syntax_binding.macro 'wrapped $id':
+      '$id :: Wrapped: content'
+    match '{x} [y] (z)'
+    | '$(wrapped a) ...': [a, ...]
 )
 
 }

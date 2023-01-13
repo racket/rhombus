@@ -47,3 +47,14 @@ begin:
     | '$dots ...': "all dots"
     | ~else: "not all dots"
     ~is "not all dots"
+
+check:
+  syntax.class Wrapped
+  | '($content)'
+  | '[$content]'
+  | '{$content}'
+  syntax_binding.macro 'wrapped $id':
+    '$id :: Wrapped: content'
+  match '{x} [y] (z)'
+  | '$(wrapped a) ...': [a, ...]
+  ~prints_like ['x', 'y', 'z']
