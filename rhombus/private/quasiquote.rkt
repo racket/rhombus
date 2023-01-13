@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      shrubbery/print
                      "operator-parse.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "tag.rkt")
          syntax/parse/pre
          "parse.rkt"
          "expression.rkt"
@@ -24,12 +25,18 @@
          (for-template "parens.rkt")
          (submod "syntax-object.rkt" for-quasiquote)
          (only-in "annotation.rkt"
-                  ::))
+                  ::)
+         "syntax-binding.rkt")
 
 (provide #%quotes
          syntax_term
          $
-         $&)
+         $&
+         (for-space rhombus/syntax_binding
+                    _
+                    #%parens
+                    #%quotes
+                    ::))
 
 (module+ convert
   (begin-for-syntax
@@ -42,22 +49,27 @@
     (pattern ((~datum op) (~var name (:... in-space))))
     (pattern ((~datum group) ((~datum op) (~var name (:... in-space)))))
     (pattern ((~datum block) ((~datum group) ((~datum op) (~var name (:... in-space)))))))
-  (define-splicing-syntax-class (:esc dotted?)
+  (define-splicing-syntax-class (:esc dotted? any-id?)
     #:attributes (term)
     #:datum-literals (op |.|)
     (pattern (~seq a0:identifier (~seq (~and dot-op (op |.|)) a:identifier) ...+)
              #:when dotted?
              #:attr term #'(parens (group a0 (~@ dot-op a) ...)))
-    (pattern (~seq term)))
+    (pattern (~seq term)
+             #:when (or any-id?
+                        (not (identifier? #'term))
+                        (not (syntax-binding-id? #'term))
+                        (free-identifier=? (in-syntax-binding-space #'_)
+                                           (in-syntax-binding-space #'term)))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
     #:datum-literals (op)
-    (pattern (~seq (op (~var _ (:$ in-space))) (~var e (:esc dotted?)) (op (~var name (:... in-space))))
+    (pattern (~seq (op (~var _ (:$ in-space))) (~var e (:esc dotted? #f)) (op (~var name (:... in-space))))
              #:attr term #'e.term))
   (define-splicing-syntax-class (:block-tail-repetition in-space dotted?)
     #:attributes (name term)
     #:datum-literals (op)
-    (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) (~var e (:esc dotted?)))
+    (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) (~var e (:esc dotted? #f)))
                    ((~datum group) (op (~var name (:... in-space)))))
              #:attr term #'e.term))
   (struct pattern-variable (id val-id depth unpack*-id)))
@@ -145,7 +157,7 @@
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
       [(group
-        (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape?)))
+        (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #f)))
        #:when (and (zero? depth) (not as-tail?) (not splice?))
        ;; Special case: a group whose content is an escape; the escape
        ;; defaults to "group" mode instead of "term" mode
@@ -153,7 +165,7 @@
        #:when p
        (values p new-idrs new-sidrs new-vars #f)]
       [((~and tag (~or parens brackets braces quotes multi block))
-        (group (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape?))))
+        (group (op (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #f))))
        #:when (and (zero? depth) (not as-tail?))
        ;; Analogous special case, but for blocks (maybe within an `alts`), etc.
        #:do [(define-values (p new-idrs new-sidrs new-vars) (handle-multi-escape #'$-id #'esc.term e splice?))]
@@ -272,7 +284,7 @@
                       (append new-pend-sidrs sidrs)
                       (append new-pend-vars vars)
                       (cons (quote-syntax ...) ps) can-be-empty? #f #f depth))]
-           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $&)))) (~var esc (:esc tail-any-escape?)) . n-gs)
+           [(((~datum op) (~and $-id (~or (~var _ (:$ in-space)) (~literal $&)))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             #:when (or flatten-escape
                        (not (free-identifier=? #'$-id #'$&)))
             (cond
@@ -301,6 +313,127 @@
       [_
        (values e null null null #f)])))
 
+
+(define-syntax-binding-syntax _
+  (syntax-binding-prefix-operator
+   #'_
+   null
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id . tail)
+        (values #`(#,(syntax/loc #'form-id _) () () ())
+                #'tail)]))))
+
+(define-syntax-binding-syntax #%parens
+  (syntax-binding-prefix-operator
+   #'#%parens
+   null
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (parens g::syntax-binding) . tail)
+        (values #'g.parsed
+                #'tail)]))))
+
+(define-syntax-binding-syntax #%quotes
+  (syntax-binding-prefix-operator
+   #'#%quotes
+   null
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (quotes group)
+       [(_ (quotes (group t)) . tail)
+        (values (if (eq? (current-syntax-binding-kind) 'term)
+                    #'((~datum t) () () ())
+                    #'#f)
+                #'tail)]))))
+
+(define-syntax-binding-syntax ::
+  (syntax-binding-infix-operator
+   #'::
+   null
+   'macro
+   (lambda (form1 stx)
+     (syntax-parse stx
+       [(colons stx-class:identifier . tail)
+        (unless (identifier? form1)
+          (raise-syntax-error #f
+                              "preceding term must be an identifier"
+                              #'colons))
+        (values
+         (with-syntax ([id form1])
+           (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
+           (define (compat pack* unpack*)
+             (define sc (rhombus-syntax-class-class rsc))
+             (define temp0-id (car (generate-temporaries (list #'id))))
+             (define temp-id (car (generate-temporaries (list #'id))))
+             (define-values (attribute-bindings attribute-mappings)
+               (for/lists (bindings mappings)
+                   ([name+depth (in-list (rhombus-syntax-class-attributes rsc))]
+                    [temp-attr (in-list (generate-temporaries (map car (rhombus-syntax-class-attributes rsc))))])
+                 (define name (car name+depth))
+                 (define depth (cdr name+depth))
+                 (define id-with-attr
+                   (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
+                 (values #`[#,temp-attr (pack-term*
+                                         (syntax #,(let loop ([t id-with-attr] [depth depth])
+                                                     (if (zero? depth)
+                                                         t
+                                                         (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
+                                         #,depth)]
+                         (cons name (cons temp-attr depth)))))
+             (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
+             #`[#,(if sc
+                      #`(~var #,temp0-id #,sc)
+                      temp0-id)
+                #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
+                #,(list #`[id (make-pattern-variable-syntax
+                               (quote-syntax id)
+                               (quote-syntax #,temp-id)
+                               (quote-syntax #,unpack*)
+                               #,pack-depth
+                               #,(rhombus-syntax-class-splicing? rsc)
+                               (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
+                                                          (list #`(quote #,(car b))
+                                                                #`(syntax-class-attribute (quote-syntax #,(cadr b))
+                                                                                          #,(cddr b)))))))])
+                #,(list (list #'id temp-id pack-depth unpack*))])
+           (define (incompat)
+             (raise-syntax-error #f
+                                 "syntax class incompatible with this context"
+                                 #'stx-class))
+           (define kind (current-syntax-binding-kind))
+           (cond
+             [(not (rhombus-syntax-class? rsc))
+              (raise-syntax-error #f
+                                  "not bound as a syntax class"
+                                  #'stx-class)]
+             [(eq? (rhombus-syntax-class-kind rsc) 'term)
+              (cond
+                [(not (eq? kind 'term)) #'#f]
+                [else (compat #'pack-term* #'unpack-term*)])]
+             [(eq? (rhombus-syntax-class-kind rsc) 'group)
+              (cond
+                [(eq? kind 'term) (incompat)]
+                [(not (eq? kind 'group)) #'#f]
+                [else (compat #'pack-group* #'unpack-group* )])]
+             [(eq? (rhombus-syntax-class-kind rsc) 'multi)
+              (cond
+                [(or (eq? kind 'multi) (eq? kind 'block))
+                 (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
+                [else (incompat)])]
+             [(eq? (rhombus-syntax-class-kind rsc) 'block)
+              (cond
+                [(eq? kind 'block)
+                 (compat #'pack-block* #'unpack-multi-as-term*)]
+                [else (incompat)])]
+             [else
+              (error "unrecognized kind" kind)]))
+         #'tail)]))
+   'none))
+
 (define-for-syntax (convert-pattern e
                                     #:as-tail? [as-tail? #f]
                                     #:splice? [splice? #f]
@@ -313,106 +446,41 @@
       [(braces) #'_::braces]
       [(brackets) #'_::brackets]
       [else #`(~datum #,d)]))
-  (define (handle-escape $-id e in-e pack* unpack* context-syntax-class kind)
-    (syntax-parse e
-      #:datum-literals (parens op group quotes)
-      [(~var _ (:_ in-binding-space))
-       ;; match anything
-       (values #'_ null null null)]
-      [_:identifier
-       #:with (tag . _) in-e
-       (let* ([temps (generate-temporaries (list e e))]
+  (define (handle-escape $-id e in-e kind)
+    (define parsed
+      (parameterize ([current-syntax-binding-kind kind])
+        (syntax-parse #`(#,group-tag #,e)
+          [esc::syntax-binding #'esc.parsed])))
+    (syntax-parse parsed
+      [#f (values #f #f #f #f)]
+      [id:identifier
+       (define-values (pack* unpack*)
+         (case kind
+           [(term) (values #'pack-term* #'unpack-term*)]
+           [(group) (values #'pack-group* #'unpack-group*)]
+           [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
+       (let* ([temps (generate-temporaries (list #'id #'id))]
               [temp1 (car temps)]
               [temp2 (cadr temps)])
          (values temp1
                  (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
-                 (list #`[#,e (make-pattern-variable-syntax (quote-syntax e)
-                                                            (quote-syntax #,temp2)
-                                                            (quote-syntax #,unpack*)
-                                                            0
-                                                            #f
-                                                            (hasheq))])
-                 (list (pattern-variable e temp2 0 unpack*))))]
-      [(parens (group id:identifier (op colons) stx-class:identifier))
-       #:when (free-identifier=? #':: (in-binding-space #'colons))
-       (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
-       (define (compat pack* unpack*)
-         (define sc (rhombus-syntax-class-class rsc))
-         (define temp0-id (car (generate-temporaries (list #'id))))
-         (define temp-id (car (generate-temporaries (list #'id))))
-         (define-values (attribute-bindings attribute-mappings)
-           (for/lists (bindings mappings)
-                      ([name+depth (in-list (rhombus-syntax-class-attributes rsc))]
-                       [temp-attr (in-list (generate-temporaries (map car (rhombus-syntax-class-attributes rsc))))])
-             (define name (car name+depth))
-             (define depth (cdr name+depth))
-             (define id-with-attr
-               (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
-             (values #`[#,temp-attr (pack-term*
-                                     (syntax #,(let loop ([t id-with-attr] [depth depth])
-                                                 (if (zero? depth)
-                                                     t
-                                                     (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
-                                     #,depth)]
-                     (cons name (cons temp-attr depth)))))
-         (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
-         (values (if sc
-                     #`(~var #,temp0-id #,sc)
-                     temp0-id)
-                 (cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
-                 (list #`[id (make-pattern-variable-syntax
-                              (quote-syntax id)
-                              (quote-syntax #,temp-id)
-                              (quote-syntax #,unpack*)
-                              #,pack-depth
-                              #,(rhombus-syntax-class-splicing? rsc)
-                              (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
-                                                         (list #`(quote #,(car b))
-                                                               #`(syntax-class-attribute (quote-syntax #,(cadr b))
-                                                                                         #,(cddr b)))))))])
-                 (list (pattern-variable #'id temp-id pack-depth unpack*))))
-       (define (incompat)
-         (raise-syntax-error #f
-                             "syntax class incompatible with this context"
-                             in-e
-                             #'stx-class))
-       (cond
-         [(not (rhombus-syntax-class? rsc))
-          (raise-syntax-error #f
-                              "not bound as a syntax class"
-                              in-e
-                              #'stx-class)]
-         [(eq? (rhombus-syntax-class-kind rsc) 'term)
-          (cond
-            [(not (eq? kind 'term))
-             (values #f #f #f #f)]
-            [else (compat pack* unpack*)])]
-         [(eq? (rhombus-syntax-class-kind rsc) 'group)
-          (cond
-            [(eq? kind 'term) (incompat)]
-            [(not (eq? kind 'group)) (values #f #f #f #f)]
-            [else (compat pack* unpack*)])]
-         [(eq? (rhombus-syntax-class-kind rsc) 'multi)
-          (cond
-            [(eq? kind 'multi) (compat pack* unpack*)]
-            [else (incompat)])]
-         [(eq? (rhombus-syntax-class-kind rsc) 'block)
-          (cond
-            [(and (eq? kind 'multi) (syntax-parse in-e
-                                      [(head . _) (memq (syntax-e #'head) '(block alts))]))
-             (compat #'pack-block* #'unpack-multi-as-term*)]
-            [else (incompat)])]
-         [else
-          (error "unrecognized kind" kind)])]
-      [(quotes (group (op name))) (if (eq? kind 'term)
-                                      (values #'((~datum op) (~datum name)) null null null)
-                                      (values #f #f #f #f))]
-      [(parens (group (quotes (group (op name))))) (if (eq? kind 'term)
-                                                       (values #'((~datum op) (~datum name)) null null null)
-                                                       (values #f #f #f #f))]
-      [_ (raise-syntax-error #f "invalid pattern escape" e)]))
-  (define (handle-escape/match-head $-id e in-e pack* unpack* context-syntax-class kind splice?)
-    (define-values (p idrs sidrs vars) (handle-escape $-id e in-e pack* unpack* context-syntax-class kind))
+                 (list #`[id (make-pattern-variable-syntax (quote-syntax id)
+                                                           (quote-syntax #,temp2)
+                                                           (quote-syntax #,unpack*)
+                                                           0
+                                                           #f
+                                                           (hasheq))])
+                 (list (pattern-variable #'id temp2 0 unpack*))))]
+      [(pat idrs sidrs vars)
+       (values #'pat
+               (syntax->list #'idrs)
+               (syntax->list #'sidrs)
+               (for/list ([var (in-list (syntax->list #'vars))])
+                 (syntax-parse var
+                   [(id temp-id depth unpack*)
+                    (pattern-variable #'id #'temp-id (syntax-e #'depth) #'unpack*)])))]))
+  (define (handle-escape/match-head $-id e in-e kind splice?)
+    (define-values (p idrs sidrs vars) (handle-escape $-id e in-e kind))
     (if p
         (values (if splice? ;; splicing `multi` means match any head
                     p
@@ -434,13 +502,19 @@
                     #`(~literal #,d))
                   ;; handle-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape $-id e in-e #'pack-term* #'unpack-term* #'Term 'term))
+                    (handle-escape $-id e in-e 'term))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
-                    (handle-escape/match-head $-id e in-e #'pack-group* #'unpack-group* #'Group 'group #f))
+                    (handle-escape/match-head $-id e in-e 'group #f))
                   ;; handle-multi-escape:
                   (lambda ($-id e in-e splice?)
-                    (handle-escape/match-head $-id e in-e #'pack-tagged-multi* #'unpack-multi-as-term* #'Multi 'multi splice?))
+                    (define kind
+                      (syntax-parse in-e
+                        [(head . _) (if (memq (syntax-e #'head) '(block alts))
+                                        'block
+                                        'multi)]
+                        [_ 'multi]))
+                    (handle-escape/match-head $-id e in-e kind splice?))
                   ;; adjust-escape-siblings
                   (lambda (idrs)
                     idrs)

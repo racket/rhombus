@@ -1,0 +1,49 @@
+#lang rhombus/and_meta
+
+check:
+  syntax_binding.macro 'g $x':
+    '$x :: Group'
+  match 'x: 2 3'
+  |  '$_: $(g v)': v
+  ~prints_like '2 3'
+  
+check:
+  syntax_binding.macro 'g $x':
+    '$x'
+  match 'x: 2 3'
+  |  '$_: $(g v)': v
+  ~prints_like '2 3'
+
+begin:
+  syntax_binding.macro 'g':
+    '('?')'
+  check:
+    match '1 ? 2'
+    |  '1 $g 2': "yes"
+    ~is "yes"
+  check:
+    match '1 ! 2'
+    |  '1 $g 2': "yes"
+    | ~else: "no"
+    ~is "no"
+
+begin:
+  syntax_binding.macro 'g':
+    '('exact')'
+  check:
+    match '1 exact 2'
+    |  '1 $g 2': "yes"
+    ~is "yes"
+
+begin:
+  syntax_binding.macro 'dots':
+    '«'$('...')'»'
+  check:
+    match Syntax.make_group(['...', '...', '...'])
+    | '$dots ...': "all dots"
+    ~is "all dots"                 
+  check:
+    match Syntax.make_group(['!', '...', '...'])
+    | '$dots ...': "all dots"
+    | ~else: "not all dots"
+    ~is "not all dots"

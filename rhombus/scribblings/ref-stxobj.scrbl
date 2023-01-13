@@ -4,6 +4,7 @@
     "macro.rhm")
 
 @(def dots = @rhombus(...))
+@(def dots_bind = @rhombus(..., ~bind))
 
 @title(~tag: "stxobj"){Syntax Objects}
 
@@ -132,12 +133,12 @@ Metadata for a syntax object can include a source location and the raw
  Matches a syntax object consistent with @rhombus(term,~var)s. A
  @rhombus($, ~bind) within @rhombus(form) escapes to an binding that
  is matched against the corresponding portion of a candidate syntax
- object. A @rhombus(..., ~bind) following a subpattern matches any number
+ object. A @dots_bind following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
  are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
- @rhombus(..., ~bind) can appear before the end of a sequence, and
- multiple @rhombus(..., ~bind) can be used in the same group; when matching
- is ambiguous, matching prefers earlier @rhombus(..., ~bind) repetitions to
+ @dots_bind can appear before the end of a sequence, and
+ multiple @dots_bind can be used in the same group; when matching
+ is ambiguous, matching prefers earlier @dots_bind repetitions to
  later ones.
 
  @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
@@ -188,20 +189,48 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  bind.macro '$ $identifier'
-  bind.macro '$ ($identifier :: $syntax_class)'
+  bind.macro '$ $stx_pat_bind_term'
+
+  grammar stx_pat_bind_term:
+    $identifier
+    #,(@rhombus(_, ~syntax_binding))
+    '$term'
+    ($ stx_bind)
+    $other_stx_bind_term
+
+  grammar stx_bind:    
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class
+    $other_stx_bind
 ){
 
- Only allowed within a @rhombus('', ~bind) binding pattern, escapes so that
- @rhombus(identifier) is bound to the corresponding portion of the syntax
- object that matches the @rhombus('', ~bind) form. If @rhombus(identifier)
- is @rhombus(_), then no identifier is bond to matching syntax.
+ Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
+ syntax binding pattern. Typically, the binding pattern has an
+ @rhombus(identifier) that is not bound as a syntax pattern binding
+ oerator; the @rhombus(identifier) is bound to the corresponding portion
+ of the syntax object that matches the @rhombus('', ~bind) form.
 
- The @rhombus(syntax_class) can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass),
- or @rhombus(Group, ~stxclass), among other built-in classes, or it can be a class defined
- with @rhombus(syntax.class).
+ A @rhombus(_, ~syntax_binding) as a syntax pattern binding
+ matches any input, like an identifier does, but without binding an
+ identifier.
 
-}
+ An escape that contains a @rhombus('')-quoted term matches the term
+ literally. A quoted escape is most useful for matching a literal
+ @rhombus($, ~datum) or @rhombus(..., ~datum) so that it is not treated
+ as an escape or binding repetition.
+
+ A parenthesized escape is the same as the escape itself. Parentheses
+ are needed to use the @rhombus(::) operator, since an @rhombus($, ~bind)
+ escape must be followed by a single term, and a use of the @rhombus(::)
+ operator consistent of three terms.
+
+ When the @rhombus(::, ~syntax_binding) operator is used to
+ associate a syntax class with an identifier, the @rhombus(syntax_class)
+ can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
+ @rhombus(Group, ~stxclass), among other built-in classes, or it can be a
+ class defined with @rhombus(syntax.class).
+
+ Other syntax pattern binding forms can be defined with
+ @rhombus(syntax_binding.macro). }
 
 @doc(
   syntax.class Term
@@ -238,6 +267,17 @@ Metadata for a syntax object can include a source location and the raw
 
 }
 
+@doc(
+  syntax_binding.macro '_'
+  syntax_binding.macro '$identifier :: $syntax_class'
+  syntax_binding.macro '#{#%parens} ($stx_bind)'
+  syntax_binding.macro '«#{#%quotes} '$stx_bind'»'
+){
+
+ The built-in syntax pattern binding forms that are recognized by
+ @rhombus($, ~bind).
+
+}
 
 @doc(
   expr.macro '«Syntax.literal '$term ...; ...'»'

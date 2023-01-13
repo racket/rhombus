@@ -79,8 +79,8 @@
               (~optional (~seq #:enforest-step enforest-step)
                          #:defaults ([enforest-step #'enforest-step]))
               (~optional (~seq #:relative-precedence relative-precedence))
-              (~optional (~seq #:syntax-class form)
-                         #:defaults ([form #':form]))
+              (~optional (~seq #:syntax-class form-class)
+                         #:defaults ([form-class #':form]))
               (~optional (~seq #:prefix-more-syntax-class prefix-op+form+tail)
                          #:defaults ([prefix-op+form+tail #':prefix-op+form+tail]))
               (~optional (~seq #:infix-more-syntax-class infix-op+form+tail)
@@ -115,7 +115,7 @@
                          #:defaults ([-juxtapose-implicit-name #'juxtapose-implicit-name])))
         ...)
      #'(begin
-         (define-syntax-class form
+         (define-syntax-class form-class
            (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))
 
          ;; For reentering the enforestation loop within a group, stopping when

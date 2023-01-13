@@ -144,7 +144,8 @@ expr.macro
           || kw === #'~for_clause
           || kw === #'~class_clause
           || kw === #'~intf_clause
-          || kw === #'~entry_point)
+          || kw === #'~entry_point
+          || kw === #'~syntax_binding)
     | values('#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))',
              '$main_tail ...')
     | Syntax.error("invalid space", kw)
