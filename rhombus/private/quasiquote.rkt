@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
-                     "operator-parse.rkt"
                      "srcloc.rkt"
                      "tag.rkt")
          syntax/parse/pre
@@ -13,30 +12,24 @@
          "pack.rkt"
          "empty-group.rkt"
          "syntax-class.rkt"
-         "operator-parse.rkt"
          (submod "syntax-class.rkt" for-quasiquote)
-         (only-in "underscore.rkt"
-                  [_ rhombus-_])
          "dollar.rkt"
          "repetition.rkt"
          "op-literal.rkt"
          "static-info.rkt"
-         (only-in "implicit.rkt" #%parens) ; for `parens` in `:esc`
+         (only-in "implicit.rkt" #%parens) ; for implicit `parens` in `:esc`
          (for-template "parens.rkt")
          (submod "syntax-object.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::)
-         "syntax-binding.rkt")
+         "pattern-variable.rkt"
+         "syntax-binding.rkt"
+         "syntax-binding-primitive.rkt")
 
 (provide #%quotes
          syntax_term
          $
-         $&
-         (for-space rhombus/syntax_binding
-                    _
-                    #%parens
-                    #%quotes
-                    ::))
+         $&)
 
 (module+ convert
   (begin-for-syntax
@@ -73,72 +66,6 @@
                    ((~datum group) (op (~var name (:... in-space)))))
              #:attr term #'e.term))
   (struct pattern-variable (id val-id depth unpack*-id)))
-
-(define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth splice? attributes)
-  (define (lookup-attribute stx var-id attr-id want-repet?)
-    (define attr (hash-ref attributes (syntax->datum attr-id) #f))
-    (unless (and attr (eq? want-repet? (not (eqv? 0 (+ depth
-                                                       (if splice? -1 0)
-                                                       (syntax-class-attribute-depth attr))))))
-      (raise-syntax-error #f
-                          (format
-                           (string-append (if attr
-                                              (if want-repet?
-                                                  "attribute is not a repetition\n"
-                                                  "attribute is a repetition\n")
-                                              "attribute not found\n")
-                                          "  pattern: ~a\n"
-                                          "  attribute: ~a")
-                           (syntax-e var-id)
-                           (syntax-e attr-id))
-                          stx))
-    attr)
-  (define expr-handler
-    (lambda (stx fail)
-      (syntax-parse stx
-        #:datum-literals (op |.|)
-        [(var-id (op |.|) attr-id . tail)
-         (define attr (lookup-attribute stx #'var-id #'attr-id #f))
-         (values (wrap-static-info* (syntax-class-attribute-id attr)
-                                    syntax-static-infos)
-                 #'tail)]
-        [_ (fail)])))
-  (define id-handler
-    (lambda (stx)
-      (syntax-parse stx
-        [(_ . tail) (values (wrap-static-info* temp-id syntax-static-infos) #'tail)])))
-  (cond
-    [(eq? depth 0) (if (eq? 0 (hash-count attributes))
-                       (expression-transformer
-                        name-id
-                        id-handler)
-                       (expression-transformer
-                        name-id
-                        (lambda (stx)
-                          (expr-handler stx
-                                        (lambda ()
-                                          (id-handler stx))))))]
-    [else (make-repetition
-           name-id
-           #`(#,unpack* #'$ #,temp-id #,depth)
-           syntax-static-infos
-           #:depth depth
-           #:repet-handler (lambda (stx next)
-                             (syntax-parse stx
-                               #:datum-literals (op |.|)
-                               [(var-id (~and dot-op (op |.|)) attr-id . tail)
-                                (define attr (lookup-attribute stx #'var-id #'attr-id #t))
-                                (values (make-repetition-info #'(var-id dot-op attr-id)
-                                                              (string->symbol
-                                                               (format "~a.~a" (syntax-e #'var-id) (syntax-e #'attr-id)))
-                                                              (syntax-class-attribute-id attr)
-                                                              (+ (syntax-class-attribute-depth attr) depth (if splice? -1 0))
-                                                              #'0
-                                                              syntax-static-infos
-                                                              #f)
-                                        #'tail)]
-                               [_ (next)]))
-           #:expr-handler expr-handler)]))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
@@ -312,127 +239,6 @@
        (values (make-literal #'id) null null null #f)]
       [_
        (values e null null null #f)])))
-
-
-(define-syntax-binding-syntax _
-  (syntax-binding-prefix-operator
-   #'_
-   null
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id . tail)
-        (values #`(#,(syntax/loc #'form-id _) () () ())
-                #'tail)]))))
-
-(define-syntax-binding-syntax #%parens
-  (syntax-binding-prefix-operator
-   #'#%parens
-   null
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(_ (parens g::syntax-binding) . tail)
-        (values #'g.parsed
-                #'tail)]))))
-
-(define-syntax-binding-syntax #%quotes
-  (syntax-binding-prefix-operator
-   #'#%quotes
-   null
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (quotes group)
-       [(_ (quotes (group t)) . tail)
-        (values (if (eq? (current-syntax-binding-kind) 'term)
-                    #'((~datum t) () () ())
-                    #'#f)
-                #'tail)]))))
-
-(define-syntax-binding-syntax ::
-  (syntax-binding-infix-operator
-   #'::
-   null
-   'macro
-   (lambda (form1 stx)
-     (syntax-parse stx
-       [(colons stx-class:identifier . tail)
-        (unless (identifier? form1)
-          (raise-syntax-error #f
-                              "preceding term must be an identifier"
-                              #'colons))
-        (values
-         (with-syntax ([id form1])
-           (define rsc (syntax-local-value (in-syntax-class-space #'stx-class) (lambda () #f)))
-           (define (compat pack* unpack*)
-             (define sc (rhombus-syntax-class-class rsc))
-             (define temp0-id (car (generate-temporaries (list #'id))))
-             (define temp-id (car (generate-temporaries (list #'id))))
-             (define-values (attribute-bindings attribute-mappings)
-               (for/lists (bindings mappings)
-                   ([name+depth (in-list (rhombus-syntax-class-attributes rsc))]
-                    [temp-attr (in-list (generate-temporaries (map car (rhombus-syntax-class-attributes rsc))))])
-                 (define name (car name+depth))
-                 (define depth (cdr name+depth))
-                 (define id-with-attr
-                   (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
-                 (values #`[#,temp-attr (pack-term*
-                                         (syntax #,(let loop ([t id-with-attr] [depth depth])
-                                                     (if (zero? depth)
-                                                         t
-                                                         (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
-                                         #,depth)]
-                         (cons name (cons temp-attr depth)))))
-             (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
-             #`[#,(if sc
-                      #`(~var #,temp0-id #,sc)
-                      temp0-id)
-                #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
-                #,(list #`[id (make-pattern-variable-syntax
-                               (quote-syntax id)
-                               (quote-syntax #,temp-id)
-                               (quote-syntax #,unpack*)
-                               #,pack-depth
-                               #,(rhombus-syntax-class-splicing? rsc)
-                               (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
-                                                          (list #`(quote #,(car b))
-                                                                #`(syntax-class-attribute (quote-syntax #,(cadr b))
-                                                                                          #,(cddr b)))))))])
-                #,(list (list #'id temp-id pack-depth unpack*))])
-           (define (incompat)
-             (raise-syntax-error #f
-                                 "syntax class incompatible with this context"
-                                 #'stx-class))
-           (define kind (current-syntax-binding-kind))
-           (cond
-             [(not (rhombus-syntax-class? rsc))
-              (raise-syntax-error #f
-                                  "not bound as a syntax class"
-                                  #'stx-class)]
-             [(eq? (rhombus-syntax-class-kind rsc) 'term)
-              (cond
-                [(not (eq? kind 'term)) #'#f]
-                [else (compat #'pack-term* #'unpack-term*)])]
-             [(eq? (rhombus-syntax-class-kind rsc) 'group)
-              (cond
-                [(eq? kind 'term) (incompat)]
-                [(not (eq? kind 'group)) #'#f]
-                [else (compat #'pack-group* #'unpack-group* )])]
-             [(eq? (rhombus-syntax-class-kind rsc) 'multi)
-              (cond
-                [(or (eq? kind 'multi) (eq? kind 'block))
-                 (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
-                [else (incompat)])]
-             [(eq? (rhombus-syntax-class-kind rsc) 'block)
-              (cond
-                [(eq? kind 'block)
-                 (compat #'pack-block* #'unpack-multi-as-term*)]
-                [else (incompat)])]
-             [else
-              (error "unrecognized kind" kind)]))
-         #'tail)]))
-   'none))
 
 (define-for-syntax (convert-pattern e
                                     #:as-tail? [as-tail? #f]

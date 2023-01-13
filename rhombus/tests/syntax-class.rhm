@@ -335,3 +335,21 @@ begin:
   check:
     two_terms.average
     ~prints_like '33'
+
+// check that dotted syntax-class names work
+begin:
+  namespace N:
+    export Arithmetic
+    syntax.class Arithmetic
+    | '$x + $y'
+
+  check:
+    match '1+2'
+    | '$(exp :: N.Arithmetic)': exp.x
+    ~prints_like '1'
+
+  check:
+    match '1+2'
+    | '$(exp :: N.Arithmetic)': exp.y
+    ~prints_like '2'
+

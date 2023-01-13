@@ -54,6 +54,7 @@
         "cond.rkt"
         "match.rkt"
         "quasiquote.rkt"
+        "syntax-binding-primitive.rkt"
         "rest-marker.rkt"
         "ellipsis.rkt"
         "apostrophe.rkt"
