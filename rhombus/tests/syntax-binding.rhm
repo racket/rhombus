@@ -1,5 +1,66 @@
 #lang rhombus/and_meta
 
+begin:
+  check:
+    match '1 exact 2'
+    |  '1 $('exact') 2': "yes"
+    ~is "yes"
+
+begin:
+  check:
+    match '1 exact 2'
+    |  '1 $('exact') 2': "yes"
+    ~is "yes"
+
+check:
+  def '($('1 2 3'))' = '(1 2 3)'
+  ~completes
+
+check:
+  def ': ($('1 2 3'))' = ': (1 2 3)'
+  ~completes
+
+check:
+  def '$(b && '1')' = '1'
+  b
+  ~prints_like '1'
+
+check:
+  def '$('($b)' && '(1)')' = '(1)'
+  b
+  ~prints_like '1'
+
+check:
+  def '$('(1)' && '($b)')' = '(1)'
+  b
+  ~prints_like '1'
+
+check:
+  def '($(a && '1 2 3'))' = '(1 2 3)'
+  a
+  ~prints_like '1 2 3'
+
+check:
+  def '$('1' || '2')' = '1' ~completes
+  def '$('1' || '2')' = '2' ~completes
+  def '$('1' || '2') ...' = '1 2 1' ~completes
+  def '$('1' || '2') ...' = '1 2 1 3' ~raises "does not satisfy annotation"
+
+begin:
+  def a = "top a"
+  check:
+    match '1'
+    | '$('1' && a)': a
+    ~prints_like '1'
+  check:
+    match '2'
+    | '$('1' || a)': a
+    ~is "top a"
+  check:
+    match '2'
+    | '$(a || '1')': a
+    ~is "top a"
+  
 check:
   syntax_binding.macro 'g $x':
     '$x :: Group'

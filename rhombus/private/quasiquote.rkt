@@ -24,7 +24,8 @@
                   ::)
          "pattern-variable.rkt"
          "syntax-binding.rkt"
-         "syntax-binding-primitive.rkt")
+         "syntax-binding-primitive.rkt"
+         (submod "syntax-binding-primitive.rkt" for-quasiquote))
 
 (provide #%quotes
          syntax_term
@@ -267,23 +268,9 @@
     (syntax-parse parsed
       [#f (values #f #f #f #f)]
       [id:identifier
-       (define-values (pack* unpack*)
-         (case kind
-           [(term) (values #'pack-term* #'unpack-term*)]
-           [(group) (values #'pack-group* #'unpack-group*)]
-           [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
-       (let* ([temps (generate-temporaries (list #'id #'id))]
-              [temp1 (car temps)]
-              [temp2 (cadr temps)])
-         (values temp1
-                 (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
-                 (list #`[id (make-pattern-variable-syntax (quote-syntax id)
-                                                           (quote-syntax #,temp2)
-                                                           (quote-syntax #,unpack*)
-                                                           0
-                                                           #f
-                                                           (hasheq))])
-                 (list (pattern-variable #'id temp2 0 unpack*))))]
+       (identifier-as-pattern-syntax #'id kind
+                                     #:result values
+                                     #:pattern-variable pattern-variable)]
       [(pat idrs sidrs vars)
        (values #'pat
                (syntax->list #'idrs)
@@ -423,20 +410,27 @@
              (define-values (pattern idrs sidrs vars can-be-empty?)
                (convert-pattern e
                                 #:splice? (and (eq? pat-kind 'group)
-                                               (memq kind '(multi term)))
-                                #:splice-pattern (and (eq? kind 'multi)
-                                                      (lambda (e)
-                                                        #`((~datum multi) ((~datum group) . #,e))))))
+                                               (memq kind '(multi block term)))
+                                #:splice-pattern (cond
+                                                   [(eq? kind 'multi)
+                                                    (lambda (e)
+                                                      #`(_ ((~datum group) . #,e)))]
+                                                   [(eq? kind 'block)
+                                                    (lambda (e)
+                                                      #`((~datum block) ((~datum group) . #,e)))]
+                                                   [else #f])))
              #`(#,pattern #,idrs #,sidrs #,(map pattern-variable->list vars))]))
-        (call-with-quoted-expression #'(form-id qs)
-                                     in-binding-space
-                                     (build 'term)
-                                     (build 'group)
-                                     (build 'multi)
-                                     (lambda (e)
-                                       (if (eq? (current-syntax-binding-kind) 'term)
-                                           #`((~datum #,e) () () ())
-                                           #'#f)))]))))
+        (define-values (r empty-tail)
+          (call-with-quoted-expression #'(form-id qs)
+                                       in-binding-space
+                                       (build 'term)
+                                       (build 'group)
+                                       (build 'multi)
+                                       (lambda (e)
+                                         (if (eq? (current-syntax-binding-kind) 'term)
+                                             #`((~datum #,e) () () ())
+                                             #'#f))))
+        (values r #'tail)]))))
 
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]

@@ -209,6 +209,8 @@ Metadata for a syntax object can include a source location and the raw
   grammar stx_bind:    
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class: $attrib_identifier
+    $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
+    $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
     $other_stx_bind
 ){
 
@@ -290,6 +292,28 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $(y :: Wrapped: content) + 3': y
 )
 
+ The @rhombus(&&, ~syntax_binding) and @rhombus(||, ~syntax_binding)
+ operators combine matches, where @rhombus(&&, ~syntax_binding) binds all
+ variables from its arguments and @rhombus(||, ~syntax_binding) binds
+ none of them. The @rhombus(&&, ~syntax_binding) binding matches whether
+ its left- and right-hand bindings would both independetly match, and
+ @rhombus(||, ~syntax_binding) matches when either its left- and
+ right-hand binding (or both) would match. Independent matching for
+ @rhombus(&&, ~syntax_binding) means that in a term context,
+ combinding a variable binding with a splcing multi-term binding will
+ @emph{not} enable a multi-term splicing match for the variable; instead, the
+ pattern will fail to match a multi-term splice.
+
+@examples(
+  def '$(a && '($_ $_ $_)') done' = '(1 2 3) done'
+  a
+  def '$('1' || '2') ...' = '1 2 2 1 1'
+  def '$(b && '$_ $_ $_')' = '1 2 3' // b in group context
+  b
+  ~error:
+    def '$(b && '$_ $_ $_') done' = '1 2 3 done' // b in term context
+)
+
  Other syntax pattern binding forms can be defined with
  @rhombus(syntax_binding.macro).
 
@@ -336,6 +360,8 @@ Metadata for a syntax object can include a source location and the raw
   syntax_binding.macro '$identifier :: $syntax_class: $attrib_identifier'
   syntax_binding.macro '#{#%parens} ($stx_bind)'
   syntax_binding.macro '«#{#%quotes} '$term ...; ...'»'
+  syntax_binding.macro '$stx_bind && $stx_bind'
+  syntax_binding.macro '$stx_bind || $stx_bind'
 ){
 
  Predefined syntax pattern binding forms for use with

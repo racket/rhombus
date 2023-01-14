@@ -19,10 +19,35 @@
                     #%parens
                     ::
                     &&
+                    \|\|
                     #%block))
+
+(module+ for-quasiquote
+  (provide (for-syntax identifier-as-pattern-syntax)))
 
 ;; `#%quotes` is impemented in 'quasiquote.rkt", because it recurs as
 ;; nested quasiquote matching
+
+(define-for-syntax (identifier-as-pattern-syntax id kind
+                                                 #:result [result list]
+                                                 #:pattern-variable [pattern-variable list])
+  (define-values (pack* unpack*)
+    (case kind
+      [(term) (values #'pack-term* #'unpack-term*)]
+      [(group) (values #'pack-group* #'unpack-group*)]
+      [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
+  (let* ([temps (generate-temporaries (list id id))]
+         [temp1 (car temps)]
+         [temp2 (cadr temps)])
+    (result temp1
+            (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
+            (list #`[#,id (make-pattern-variable-syntax (quote-syntax #,id)
+                                                        (quote-syntax #,temp2)
+                                                        (quote-syntax #,unpack*)
+                                                        0
+                                                        #f
+                                                        (hasheq))])
+            (list (pattern-variable id temp2 0 unpack*)))))
 
 (define-syntax-binding-syntax _
   (syntax-binding-prefix-operator
@@ -164,20 +189,53 @@
            (values (build #'stx-class-hier.name #f) #'tail)])]))
    'none))
 
+(define-for-syntax (normalize-id form)
+  (if (identifier? form)
+      (identifier-as-pattern-syntax form (current-syntax-binding-kind))
+      form))
+
+(define-for-syntax (norm-seq pat like-pat)
+  (syntax-parse pat
+    [((~datum ~seq) . _) pat]
+    [_ (syntax-parse like-pat
+         [((~datum ~seq) . _) #`(~seq #,pat)]
+         [_ pat])]))
+
 (define-syntax-binding-syntax &&
   (syntax-binding-infix-operator
    #'&&
    null
    'automatic
    (lambda (form1 form2 stx)
-     (syntax-parse form1
+     (syntax-parse (normalize-id form1)
+       [#f #'#f]
        [(pat1 (idr1 ...) (sidr1 ...) (var1 ...))
-        (syntax-parse form2
+        (syntax-parse (normalize-id form2)
+          [#f #'#f]
           [(pat2 idrs2 sidrs2 vars2)
-           #`((~and pat1 pa2)
-              (idr1 ... idrs2)
-              (sidr1 ... sidrs2)
-              (var1 ... vars2))])]))
+           #`((~and #,(norm-seq #'pat1 #'pat2) #,(norm-seq #'pat2 #'pat1))
+              (idr1 ... . idrs2)
+              (sidr1 ... . sidrs2)
+              (var1 ... . vars2))])]))
+   'left))
+
+(define-syntax-binding-syntax \|\|
+  (syntax-binding-infix-operator
+   #'\|\|
+   null
+   'automatic
+   (lambda (form1 form2 stx)
+     (syntax-parse (normalize-id form1)
+       [#f #'#f]
+       [(pat1 idrs1 sidrs1 vars1)
+        (syntax-parse (normalize-id form2)
+          [#f #'#f]
+          [(pat2 idrs2 sidrs2 vars2)
+           #`((~or #,(norm-seq #'pat1 #'pat2)
+                   #,(norm-seq #'pat2 #'pat1))
+              ()
+              ()
+              ())])]))
    'left))
 
 (define-syntax-binding-syntax #%block
