@@ -115,7 +115,20 @@ check:
   | '[$content]'
   | '{$content}'
   syntax_binding.macro 'wrapped $id':
-    '$id :: Wrapped: content'
+    '_ :: Wrapped: content ~as $id'
   match '{x} [y] (z)'
   | '$(wrapped a) ...': [a, ...]
   ~prints_like ['x', 'y', 'z']
+
+begin:
+  fun get_area_code('$('+ 1' || '') ($code) $_ - $_'):
+    code
+  check:
+    get_area_code('+ 1 (801) 555 - 1212')
+    ~prints_like '801'
+  check:
+    get_area_code('(801) 555 - 1212')
+    ~prints_like '801'
+  check:
+    get_area_code('+ 65 (801) 555 - 1212')
+    ~raises "argument does not satisfy annotation"

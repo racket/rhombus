@@ -208,7 +208,8 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar stx_bind:    
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class: $attrib_identifier
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class:
+      $attrib_identifier ~as $ext_identifier
     $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
     $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
     $other_stx_bind
@@ -269,15 +270,18 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $b + $('...')': b
 )
 
- When the @rhombus(::, ~syntax_binding) operator is used to
- associate a @tech{syntax class} with an identifier, the @rhombus(syntax_class)
- can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
- @rhombus(Group, ~stxclass), among other predefined classes, or it can be a
- class defined with @rhombus(syntax.class). If @rhombus(attrib_identifier)
- is supplied, then the bound @rhombus(identifier) corresponds
- to the syntax class's attribute for a match; otherwise, @rhombus(identifier)
- refers to the matched input, and it can be combined with @rhombus(.)
- to access attributes (if any) of the syntax class.
+ When the @rhombus(::, ~syntax_binding) operator is used to associate a
+ @tech{syntax class} with an identifier, the @rhombus(syntax_class) can
+ be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
+ @rhombus(Group, ~stxclass), among other predefined classes, or it can be
+ a class defined with @rhombus(syntax.class). The @rhombus(identifier)
+ refers to the matched input, and it is a repetition if the syntax class
+ has classification @rhombus(~sequence); the identifier can be combined
+ with @rhombus(.) to access attributes (if any) of the syntax class. In
+ addition, for each @rhombus(attrib_identifier ~as ext_identifier) that
+ is supplied, then @rhombus(ext_identifier) is also bound directly to the
+ to the named attribute. If @rhombus(identifier) is @rhombus(_, ~syntax_binding),
+ then it is not bound.
 
 @examples(
   ~defn:
@@ -289,7 +293,7 @@ Metadata for a syntax object can include a source location and the raw
     match '1 + (2) + 3'
     | '1 + $(y :: Wrapped) + 3': [y, y.content]
     match '1 + (2) + 3'
-    | '1 + $(y :: Wrapped: content) + 3': y
+    | '1 + $(_ :: Wrapped: content ~as c) + 3': c
 )
 
  The @rhombus(&&, ~syntax_binding) and @rhombus(||, ~syntax_binding)
@@ -357,7 +361,8 @@ Metadata for a syntax object can include a source location and the raw
 @doc(
   syntax_binding.macro '_'
   syntax_binding.macro '$identifier :: $syntax_class'
-  syntax_binding.macro '$identifier :: $syntax_class: $attrib_identifier'
+  syntax_binding.macro '$identifier :: $syntax_class:
+                          $attrib_identifier ~as $ext_identifier; ...'
   syntax_binding.macro '#{#%parens} ($stx_bind)'
   syntax_binding.macro '«#{#%quotes} '$term ...; ...'»'
   syntax_binding.macro '$stx_bind && $stx_bind'

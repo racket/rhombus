@@ -13,23 +13,79 @@
     class Posn(x, y)
 )
 
-@title(~tag: "syntax-classes"){Syntax Classes}
+@title(~tag: "syntax-classes"){Syntax Patterns and Classes}
 
 As shown in @secref("syntax"), a variable can be bound in a syntax
-pattern via @rhombus($), parentheses, @rhombus(::), and a
-@tech{syntax class} name to specify the kind of syntax the pattern
-variable can match. The syntax classes @rhombus(Term, ~stxclass),
-@rhombus(Group, ~stxclass), and @rhombus(Multi, ~stxclass) are built in,
-among others.
+pattern by escaping from the pattern with @rhombus($, ~bind). A
+@rhombus($, ~bind) can also be followed by a more complex escape. We
+have seen the use of the @rhombus(::, ~syntax_binding) operator, for
+example. It takes a pattern variable and a @tech{syntax class} name to
+specify the kind of syntax the pattern variable can match. The syntax
+classes @rhombus(Term, ~stxclass), @rhombus(Group, ~stxclass), and
+@rhombus(Multi, ~stxclass) are built in, among others.
 
 @demo(
   ~defn:
     def '$(x :: Term)' = '1'
 )
 
-Rhombus also supports user-defined syntax classes via
-@rhombus(syntax.class). Use the @rhombus(syntax.class) form with a block
-that contains @rhombus(~pattern) with pattern alternatives:
+Quotes create a syntax pattern, and they work nested inside an escape to
+create a nested pattern. Nesting immediately within an
+@rhombus($, ~syntax_binding) escape allows matching a literal
+@rhombus($, ~datum) or @rhombus(..., ~datum), analogous to the way those
+literals can be included when constructing syntax.
+
+@demo(
+  ~defn:
+    fun get_amt('$('$') $amt'): // matches `$` followed by any term
+      amt
+  ~repl:
+    def price_tag = '$('$') 17'
+    price_tag
+    get_amt(price_tag)
+    ~error:
+      get_amt('€ 17')
+)
+
+Nested patterns are more useful with operators like
+@rhombus(||, ~syntax_binding) and @rhombus(&&, ~syntax_binding), which
+take two syntax bindings and ensure that at least one matches or that
+both match, respectively. In particular, combining
+@rhombus(&&, ~syntax_binding) with an identifier can give a name to a
+nested match.
+
+@demo(
+  ~defn:
+    :
+      // matches a parenthesized `*` term and names it `mult`
+      fun get_mult('1 + $(mult && '($_ * $_)')'):
+        mult
+  ~repl:
+    get_mult('1 + (2 * 3)')
+    ~error:
+      get_mult('1 + (2 / 3)')
+)
+
+When a multi-term syntax pattern is used in a @rhombus($, ~bind) escape
+in a term context, the multi-term pattern is spliced into the enclosing
+group pattern. The @rhombus(||, ~syntax_binding) operator can try
+spliced sequences that have different lengths.
+
+@demo(
+  ~defn:
+    // matches an optional `+ 1` at the front
+    fun get_area_code('$('+ 1' || '') ($code) $_ - $_'):
+      code
+  ~repl:
+    get_area_code('+ 1 (801) 555 - 1212')
+    get_area_code('(801) 555 - 1212')
+)
+
+Although Rhombus supports new binding operators through
+@rhombus(syntax_binding.macro), syntax classes provide a better way to
+organize most syntax abstractions. To define a new syntax class, use the
+@rhombus(syntax.class) form with a block that contains
+@rhombus(~pattern) with pattern alternatives:
 
 @demo(
   ~defn:
@@ -39,9 +95,8 @@ that contains @rhombus(~pattern) with pattern alternatives:
      | '$x - $y'
 )
 
-Equivalently, use a shorthand syntax that omits the use of
-@rhombus(~pattern) and inlines alternatives into the immediate
-@rhombus(syntax.class) form:
+An equivalent shorthand omits the use of @rhombus(~pattern) and inlines
+alternatives into the immediate @rhombus(syntax.class) form:
 
 @demo(
   ~defn:
@@ -51,7 +106,7 @@ Equivalently, use a shorthand syntax that omits the use of
 )
 
 Defining a syntax class in this way makes it available for use in syntax
-patterns, such as in @rhombus(match). The syntax class must be defined
+patterns, such as in @rhombus(def) or @rhombus(match). The syntax class must be defined
 at the same phase as the referencing pattern. To define a syntax class
 for use in a macro definition, place it inside a
 @rhombus(meta) block.
@@ -112,4 +167,6 @@ alternative of a syntax class.
 )
 
 In other words, the attributes of a syntax class are defined by the intersection 
-of all escaped pattern variables found in the pattern alternatives. 
+of all escaped pattern variables found in the pattern alternatives. That's more
+flexible than @rhombus(||, ~syntax_binding), which does not bind identifiers
+from either of its arguments.

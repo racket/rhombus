@@ -16,7 +16,7 @@ begin:
 
   check:
     match '1+2'
-    | '$(expy :: Arithmetic: y)': expy
+    | '$(_ :: Arithmetic: y ~as expy)': expy
     ~prints_like '2'
 
 check:
@@ -74,7 +74,7 @@ begin:
 
   check:
     match 'a (1, 2, 3) z'
-    | '$(f :: Foo: x)': [f, ...]
+    | '$(whole :: Foo: x ~as f)': [f, ...]
     ~prints_like ['1', '2', '3']
 
 begin:
@@ -362,3 +362,20 @@ begin:
     match '1+2'
     | '$(exp :: N.Arithmetic)': exp.y
     ~prints_like '2'
+
+// empty pattern is a special case
+begin:
+  syntax.class Maybe:
+    ~pattern
+    | '1'
+    | ''
+
+  check:
+    def '$(x :: Maybe) 2' = '2'
+    [x, ...]
+    ~is []
+
+  check:
+    def '$(x :: Maybe) 2' = '1 2'
+    [x, ...]
+    ~prints_like ['1']

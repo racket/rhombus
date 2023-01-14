@@ -58,10 +58,13 @@
         [else
          (syntax-parse pat
            [(_ g) #'g]
-           [(_) (raise-syntax-error #f
+           [(_)
+            (if (and (eq? kind 'term) splicing?)
+                #'(group)
+                (raise-syntax-error #f
                                     "no groups in pattern"
                                     orig-stx
-                                    pat)]
+                                    pat))]
            [_ (raise-syntax-error #f
                                   "multiple groups in pattern"
                                   orig-stx

@@ -98,3 +98,7 @@ check:
   ~eval
   def '(0, $('1; 2'))' = '(0, 1, 2)'
   ~raises "multi-group pattern incompatible with group context"
+
+check:
+  '1 $&('')'
+  ~prints_like '1'

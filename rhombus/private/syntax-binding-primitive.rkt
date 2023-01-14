@@ -77,13 +77,16 @@
    null
    'macro
    (lambda (form1 stx)
-     (unless (identifier? form1)
+     (unless (or (identifier? form1)
+                 (syntax-parse form1
+                   [(underscore () () ())
+                    (free-identifier=? #'underscore #'_)]))
        (raise-syntax-error #f
-                           "preceding term must be an identifier"
+                           "preceding term must be an identifier or `_`"
                            (syntax-parse stx
                              [(colons . _) #'colons])))
-     (define (build stx-class only-attribute-name)
-       (with-syntax ([id form1])
+     (define (build stx-class open-attributes)
+       (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
          (define rsc (syntax-local-value (in-syntax-class-space stx-class) (lambda () #f)))
          (define (compat pack* unpack*)
            (define sc (rhombus-syntax-class-class rsc))
@@ -93,9 +96,7 @@
              (for/lists (bindings mappings) ([name+depth (in-list (rhombus-syntax-class-attributes rsc))]
                                              [temp-attr (in-list (generate-temporaries
                                                                   (map car (rhombus-syntax-class-attributes rsc))))]
-                                             #:do [(define name (car name+depth))]
-                                             #:when (or (not only-attribute-name)
-                                                        (eq? name (syntax-e only-attribute-name))))
+                                             #:do [(define name (car name+depth))])
                (define depth (cdr name+depth))
                (define id-with-attr
                  (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
@@ -106,43 +107,61 @@
                                                        (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
                                        #,depth)]
                        (cons name (cons temp-attr depth)))))
-           (cond
-             [only-attribute-name
-              (unless (pair? attribute-bindings)
-                (raise-syntax-error #f
-                                    "not an attribute of the syntax class"
-                                    only-attribute-name))
-              (define temp-attr (cadar attribute-mappings))
-              (define depth (cddar attribute-mappings))
-              #`(#,(if sc
-                       #`(~var #,temp0-id #,sc)
-                       temp0-id)
-                 #,attribute-bindings
-                 #,(list #`[id (make-pattern-variable-syntax
-                                (quote-syntax id)
-                                (quote-syntax #,temp-attr)
-                                (quote-syntax #,unpack*)
-                                #,depth
-                                #f
-                                #hasheq())])
-                 #,(list (list #'id temp-attr depth unpack*)))]
-             [else
-              (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
-              #`(#,(if sc
-                       #`(~var #,temp0-id #,sc)
-                       temp0-id)
-                 #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
-                 #,(list #`[id (make-pattern-variable-syntax
-                                (quote-syntax id)
-                                (quote-syntax #,temp-id)
-                                (quote-syntax #,unpack*)
-                                #,pack-depth
-                                #,(rhombus-syntax-class-splicing? rsc)
-                                (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
-                                                           (list #`(quote #,(car b))
-                                                                 #`(syntax-class-attribute (quote-syntax #,(cadr b))
-                                                                                           #,(cddr b)))))))])
-                 #,(list (list #'id temp-id pack-depth unpack*)))]))
+           (define found-attributes
+             (and open-attributes
+                  (for/hasheq ([attr-mapping (in-list attribute-mappings)])
+                    (values (car attr-mapping)
+                            (cdr attr-mapping)))))
+           (when open-attributes
+             (for ([(name field+bind) (in-hash open-attributes)])
+               (unless (hash-ref found-attributes name #f)
+                 (raise-syntax-error #f
+                                     "not an attribute of the syntax class"
+                                     (car field+bind)))))
+           (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
+           #`(#,(if sc
+                    #`(~var #,temp0-id #,sc)
+                    temp0-id)
+              #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
+              #,(append
+                 (if (identifier? form1)
+                     (list #`[id (make-pattern-variable-syntax
+                                  (quote-syntax id)
+                                  (quote-syntax #,temp-id)
+                                  (quote-syntax #,unpack*)
+                                  #,pack-depth
+                                  #,(rhombus-syntax-class-splicing? rsc)
+                                  (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
+                                                             (list #`(quote #,(car b))
+                                                                   #`(syntax-class-attribute (quote-syntax #,(cadr b))
+                                                                                             #,(cddr b)))))))])
+                     null)
+                 (if (not open-attributes)
+                     null
+                     (for/list ([name (in-list (hash-keys open-attributes #t))])
+                       (define field+bind (hash-ref open-attributes name))
+                       (define temp-attr+depth (hash-ref found-attributes name))
+                       (define temp-attr (car temp-attr+depth))
+                       (define depth (cdr temp-attr+depth))
+                       #`[#,(cdr field+bind) (make-pattern-variable-syntax
+                                              (quote-syntax #,(cdr field+bind))
+                                              (quote-syntax #,temp-attr)
+                                              (quote-syntax unpack-term*)
+                                              #,depth
+                                              #f
+                                              #hasheq())])))
+              #,(append
+                 (if (identifier? form1)
+                     (list (list #'id temp-id pack-depth unpack*))
+                     null)
+                 (if (not open-attributes)
+                     null
+                     (for/list ([name (in-list (hash-keys open-attributes #t))])
+                       (define field+bind (hash-ref open-attributes name))
+                       (define temp-attr+depth (hash-ref found-attributes name))
+                       (define temp-attr (car temp-attr+depth))
+                       (define depth (cdr temp-attr+depth))
+                       (list (cdr field+bind) temp-attr depth #'unpack-term*))))))
          (define (incompat)
            (raise-syntax-error #f
                                "syntax class incompatible with this context"
@@ -162,7 +181,7 @@
             (cond
               [(eq? kind 'term) (incompat)]
               [(not (eq? kind 'group)) (retry)]
-              [else (compat #'pack-group* #'unpack-group* )])]
+              [else (compat #'pack-group* #'unpack-group*)])]
            [(eq? (rhombus-syntax-class-kind rsc) 'multi)
             (cond
               [(or (eq? kind 'multi) (eq? kind 'block))
@@ -181,10 +200,14 @@
         #:with tail #'stx-class-hier.tail
         (syntax-parse #'tail
           #:datum-literals (group)
-          [((_::block (group field:identifier)))
-           (values (build #'stx-class-hier.name #'field) #'())]
+          [((_::block (group field:identifier #:as bind:identifier) ...))
+           (values (build #'stx-class-hier.name
+                          (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
+                                       [bind (in-list (syntax->list #'(bind ...)))])
+                            (values (syntax-e field) (cons field bind))))
+                   #'())]
           [((_::block . _))
-           (raise-syntax-error #f "expected an attribute identifier in block" stx)]
+           (raise-syntax-error #f "expected `attribute ~as identifier` sequence in block" stx)]
           [_
            (values (build #'stx-class-hier.name #f) #'tail)])]))
    'none))

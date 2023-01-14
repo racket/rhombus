@@ -133,7 +133,8 @@
        [(multi-syntax? r)
         (define l (syntax->list r))
         (cond
-          [(= 2 (length l)) (cdr (syntax->list (cadr l)))]
+          [(null? (cdr l)) null]
+          [(null? (cddr l)) (cdr (syntax->list (cadr l)))]
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
        [(group-syntax? r) (cdr (syntax->list r))]
        [(or (null? r) (pair? r)) (cannot-coerce-list who r)]

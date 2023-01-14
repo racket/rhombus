@@ -402,15 +402,29 @@
             [(and (eq? pat-kind 'term)
                   (not (eq? kind 'term)))
              #'#f]
+            [(and (eq? kind 'group)
+                  (eq? pat-kind 'multi)
+                  (syntax-parse e [(_) #t] [_ #f]))
+             ;; defer special case to term context
+             #'#f]
             [else
-             (when (and (memq kind '(term group)) (eq? pat-kind 'multi))
-               (raise-syntax-error #f
-                                   (format "multi-group pattern incompatible with ~a context" kind)
-                                   #'qs))
+             (define-values (use-e splice?)
+               (cond
+                 [(and (eq? pat-kind 'multi)
+                       (memq kind '(term group)))
+                  ;; empty multi-group term is a special case that we can splice
+                  ;; into a term context
+                  (syntax-parse e
+                    [(_) (values #'(group) #t)]
+                    [else
+                     (raise-syntax-error #f
+                                         (format "multi-group pattern incompatible with ~a context" kind)
+                                         #'qs)])]
+                 [else (values e (and (eq? pat-kind 'group)
+                                      (memq kind '(multi block term))))]))
              (define-values (pattern idrs sidrs vars can-be-empty?)
-               (convert-pattern e
-                                #:splice? (and (eq? pat-kind 'group)
-                                               (memq kind '(multi block term)))
+               (convert-pattern use-e
+                                #:splice? splice?
                                 #:splice-pattern (cond
                                                    [(eq? kind 'multi)
                                                     (lambda (e)
