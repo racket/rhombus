@@ -130,16 +130,24 @@ Metadata for a syntax object can include a source location and the raw
   bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
- Matches a syntax object consistent with @rhombus(term,~var)s. A
- @rhombus($, ~bind) within @rhombus(form) escapes to an binding that
- is matched against the corresponding portion of a candidate syntax
- object. A @dots_bind following a subpattern matches any number
+ Matches a syntax object consistent with @rhombus(term,~var)s.
+
+ A @rhombus($, ~bind) within @rhombus(term) followed by another term
+ escapes to a syntax binding that is matched against the corresponding
+ portion of a candidate syntax object.
+ A @dots_bind in @rhombus(term,~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
  are bound as @tech{repetitions}. Unlike binding forms such as @rhombus(List),
  @dots_bind can appear before the end of a sequence, and
  multiple @dots_bind can be used in the same group; when matching
  is ambiguous, matching prefers earlier @dots_bind repetitions to
  later ones.
+
+ A @rhombus($, ~bind) or @dots_bind as the only @rhombus(term) matches
+ each of those literally. To match @rhombus($, ~datum) or
+ @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
+ use @rhombus($, ~bind) to escape to a nested pattern, such as
+ @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')).
 
  @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
 
@@ -177,7 +185,7 @@ Metadata for a syntax object can include a source location and the raw
   expr.macro '$& $expr'
 ){
 
- Only allowed within a @rhombus('') form, escapes so that the value of
+ Only allowed within a @rhombus('') expression form, escapes so that the value of
  @rhombus(expr) is used in place of the @rhombus($) or @rhombus($&) form.
 
  The @rhombus(expr) must be either a single term or a sequence of
@@ -194,8 +202,8 @@ Metadata for a syntax object can include a source location and the raw
   grammar stx_pat_bind_term:
     $identifier
     #,(@rhombus(_, ~syntax_binding))
-    '$term'
     ($ stx_bind)
+    '$term ...; ...'
     $other_stx_bind_term
 
   grammar stx_bind:    
@@ -210,32 +218,82 @@ Metadata for a syntax object can include a source location and the raw
  oerator; the @rhombus(identifier) is bound to the corresponding portion
  of the syntax object that matches the @rhombus('', ~bind) form.
 
+@examples(
+  match '1 + 2 + 3'
+  | '$x + $y + $z': [x, y, z]
+)
+
  A @rhombus(_, ~syntax_binding) as a syntax pattern binding
  matches any input, like an identifier does, but without binding an
  identifier.
 
- An escape that contains a @rhombus('')-quoted term matches the term
- literally. A quoted escape is most useful for matching a literal
- @rhombus($, ~datum) or @rhombus(..., ~datum) so that it is not treated
- as an escape or binding repetition.
+@examples(
+  match '1 + 2 + 3'
+  | '$_ + $y + $_': y
+)
 
  A parenthesized escape is the same as the escape itself. Parentheses
  are needed to use the @rhombus(::) operator, since an @rhombus($, ~bind)
  escape must be followed by a single term, and a use of the @rhombus(::)
  operator consistent of three terms.
 
+@examples(
+  match '1 + 2 + 3'
+  | '$(_) + $((y)) + $(((_)))': y
+  match '1 + 2 + 3'
+  | '1 + $(y :: Term) + 3': y
+)
+
+ An escape that contains a @rhombus('')-quoted term matches the term as
+ a nested syntax-object pattern. In a term context, a multi-term escape is
+ spliced into the enclosing group. (This implicit splicing is why no
+ syntax-binding analog to the @rhombus($&) template form is needed.) One
+ use of a quoted escape is to match a literal @rhombus($, ~datum) or
+ @rhombus(..., ~datum) so that it is not treated as an escape or binding
+ repetition in an enclosing pattern.
+
+@examples(
+  ~repl:
+    match '1 + 2 + 3'
+    | '1 + $('2') + $c': c
+    match '1 + 2 + 3'
+    | '1 $('+ 2 +') $c': c
+    match '1 + 2 + 3'
+    | '$a $('+ $b') ...': [a, b, ...]
+  ~repl:
+    def dots = '...'
+    dots
+    match '1 + 2 + $dots'
+    | '1 + $b + $('...')': b
+)
+
  When the @rhombus(::, ~syntax_binding) operator is used to
  associate a @tech{syntax class} with an identifier, the @rhombus(syntax_class)
  can be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
  @rhombus(Group, ~stxclass), among other predefined classes, or it can be a
- class defined with @rhombus(syntax.class). If a @rhombus(attrib_identifier)
- is supplied in addition, then the bound @rhombus(identifier) corresponds
+ class defined with @rhombus(syntax.class). If @rhombus(attrib_identifier)
+ is supplied, then the bound @rhombus(identifier) corresponds
  to the syntax class's attribute for a match; otherwise, @rhombus(identifier)
  refers to the matched input, and it can be combined with @rhombus(.)
  to access attributes (if any) of the syntax class.
 
+@examples(
+  ~defn:
+    syntax.class Wrapped:
+      ~term
+      ~pattern
+      | '($content)'
+  ~repl:
+    match '1 + (2) + 3'
+    | '1 + $(y :: Wrapped) + 3': [y, y.content]
+    match '1 + (2) + 3'
+    | '1 + $(y :: Wrapped: content) + 3': y
+)
+
  Other syntax pattern binding forms can be defined with
- @rhombus(syntax_binding.macro). }
+ @rhombus(syntax_binding.macro).
+
+}
 
 @doc(
   syntax.class Term
@@ -277,7 +335,7 @@ Metadata for a syntax object can include a source location and the raw
   syntax_binding.macro '$identifier :: $syntax_class'
   syntax_binding.macro '$identifier :: $syntax_class: $attrib_identifier'
   syntax_binding.macro '#{#%parens} ($stx_bind)'
-  syntax_binding.macro '«#{#%quotes} '$stx_bind'»'
+  syntax_binding.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
  Predefined syntax pattern binding forms for use with

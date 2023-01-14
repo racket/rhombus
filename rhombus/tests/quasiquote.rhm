@@ -50,3 +50,51 @@ begin:
   check:
     '0 $&[z, ...] ...'
     ~prints_like '0 1 2 3 4 5'
+
+check:
+  def '...': '...'
+  ~completes
+
+check:
+  def '$('...')': '...'
+  ~completes
+
+check:
+  def '1 $x 3' = '1 2 3'
+  x
+  ~prints_like '2'
+
+check:
+  def '1 $('$x') 3' = '1 2 3'
+  x
+  ~prints_like '2'
+
+check:
+  def '1 $('$x 3') 4' = '1 2 3 4'
+  x
+  ~prints_like '2'
+
+check:
+  def '1 $('$x ...') 4' = '1 2 3 4'
+  [x, ...]
+  ~prints_like ['2', '3']
+
+check:
+  def '$('a b $x')' = 'a b c'
+  x
+  ~prints_like 'c'
+
+check:
+  def '$('a b $x'); ...' = 'a b c; a b d'
+  [x, ...]
+  ~prints_like ['c', 'd']
+
+check:
+  ~eval
+  def '0 $('1; 2')' = '0 1; 2'
+  ~raises "multi-group pattern incompatible with term context"
+
+check:
+  ~eval
+  def '(0, $('1; 2'))' = '(0, 1, 2)'
+  ~raises "multi-group pattern incompatible with group context"

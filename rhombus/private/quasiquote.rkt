@@ -29,7 +29,9 @@
 (provide #%quotes
          syntax_term
          $
-         $&)
+         $&
+         (for-space rhombus/syntax_binding
+                    #%quotes))
 
 (module+ convert
   (begin-for-syntax
@@ -65,7 +67,12 @@
     (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) (~var e (:esc dotted? #f)))
                    ((~datum group) (op (~var name (:... in-space)))))
              #:attr term #'e.term))
-  (struct pattern-variable (id val-id depth unpack*-id)))
+  (struct pattern-variable (id val-id depth unpack*-id))
+  (define (pattern-variable->list pv)
+    (list (pattern-variable-id pv)
+          (pattern-variable-val-id pv)
+          (pattern-variable-depth pv)
+          (pattern-variable-unpack*-id pv))))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
@@ -394,6 +401,43 @@
                     ;; because that won't be an input
                     (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t))))
 
+(define-syntax-binding-syntax #%quotes
+  (syntax-binding-prefix-operator
+   #'#%quotes
+   null
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id qs . tail)
+        (define ((build pat-kind) e)
+          (define kind (current-syntax-binding-kind))
+          (cond
+            [(and (eq? pat-kind 'term)
+                  (not (eq? kind 'term)))
+             #'#f]
+            [else
+             (when (and (memq kind '(term group)) (eq? pat-kind 'multi))
+               (raise-syntax-error #f
+                                   (format "multi-group pattern incompatible with ~a context" kind)
+                                   #'qs))
+             (define-values (pattern idrs sidrs vars can-be-empty?)
+               (convert-pattern e
+                                #:splice? (and (eq? pat-kind 'group)
+                                               (memq kind '(multi term)))
+                                #:splice-pattern (and (eq? kind 'multi)
+                                                      (lambda (e)
+                                                        #`((~datum multi) ((~datum group) . #,e))))))
+             #`(#,pattern #,idrs #,sidrs #,(map pattern-variable->list vars))]))
+        (call-with-quoted-expression #'(form-id qs)
+                                     in-binding-space
+                                     (build 'term)
+                                     (build 'group)
+                                     (build 'multi)
+                                     (lambda (e)
+                                       (if (eq? (current-syntax-binding-kind) 'term)
+                                           #`((~datum #,e) () () ())
+                                           #'#f)))]))))
+
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]
                                      #:rhombus-expression [rhombus-expression #'rhombus-expression]
@@ -630,7 +674,7 @@
       [_
        #`(#,generic-unpack*-id #,$-name #,e #,depth-stx)])))
 
-(define-for-syntax (call-with-quoted-expression stx in-space single-k multi-k literal-k)
+(define-for-syntax (call-with-quoted-expression stx in-space single-k group-k multi-k literal-k)
   (syntax-parse stx
     #:datum-literals (quotes group op)
     [(_ (quotes (group (~and special (op (~or (~var _ (:... in-space)) (~var _ (:$ in-space))))))) . tail)
@@ -638,6 +682,10 @@
              #'tail)]
     [(_ (quotes (group t)) . tail)
      (values (single-k #'t)
+             #'tail)]
+    [(_ (quotes g) . tail)
+     #:when group-k
+     (values (group-k #'g)
              #'tail)]
     [(_ ((~and tag quotes) . args) . tail)
      (values (multi-k (datum->syntax #f (cons (syntax-property (datum->syntax #f 'multi) 'raw "")
@@ -669,12 +717,14 @@
      (call-with-quoted-expression stx
                                   in-expression-space
                                   convert-template
+                                  #f
                                   convert-template
                                   (lambda (e) #`(quote-syntax #,e))))
    (lambda (stx)
      (call-with-quoted-expression stx
                                   in-binding-space
                                   (convert-pattern/generate-match #'repack-as-term)
+                                  #f
                                   (convert-pattern/generate-match #'repack-as-multi)
                                   (lambda (e) (binding-form
                                                #'syntax-infoer
@@ -684,11 +734,14 @@
                                                   repack-as-term
                                                   ()
                                                   ()
+                                                  ()
+                                                  ()
                                                   ())))))
    (lambda (stx)
      (call-with-quoted-expression stx
                                   in-expression-space
                                   convert-repetition-template
+                                  #f
                                   convert-repetition-template
                                   (lambda (e) (make-repetition-info stx
                                                                     #'template

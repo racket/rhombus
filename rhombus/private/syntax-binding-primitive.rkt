@@ -17,9 +17,12 @@
 (provide (for-space rhombus/syntax_binding
                     _
                     #%parens
-                    #%quotes
                     ::
+                    &&
                     #%block))
+
+;; `#%quotes` is impemented in 'quasiquote.rkt", because it recurs as
+;; nested quasiquote matching
 
 (define-syntax-binding-syntax _
   (syntax-binding-prefix-operator
@@ -41,20 +44,6 @@
      (syntax-parse stx
        [(_ (parens g::syntax-binding) . tail)
         (values #'g.parsed
-                #'tail)]))))
-
-(define-syntax-binding-syntax #%quotes
-  (syntax-binding-prefix-operator
-   #'#%quotes
-   null
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals (quotes group)
-       [(_ (quotes (group t)) . tail)
-        (values (if (eq? (current-syntax-binding-kind) 'term)
-                    #'((~datum t) () () ())
-                    #'#f)
                 #'tail)]))))
 
 (define-syntax-binding-syntax ::
@@ -174,6 +163,22 @@
           [_
            (values (build #'stx-class-hier.name #f) #'tail)])]))
    'none))
+
+(define-syntax-binding-syntax &&
+  (syntax-binding-infix-operator
+   #'&&
+   null
+   'automatic
+   (lambda (form1 form2 stx)
+     (syntax-parse form1
+       [(pat1 (idr1 ...) (sidr1 ...) (var1 ...))
+        (syntax-parse form2
+          [(pat2 idrs2 sidrs2 vars2)
+           #`((~and pat1 pa2)
+              (idr1 ... idrs2)
+              (sidr1 ... sidrs2)
+              (var1 ... vars2))])]))
+   'left))
 
 (define-syntax-binding-syntax #%block
   (syntax-binding-prefix-operator
