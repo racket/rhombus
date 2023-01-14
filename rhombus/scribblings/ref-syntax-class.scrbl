@@ -9,14 +9,19 @@
 @title{Syntax Classes}
 
 @doc(
-  defn.macro '«syntax.class $name
+  defn.macro '«syntax.class $name $maybe_args
                | $clause
                | ...»'
-  defn.macro '«syntax.class $name:
+  defn.macro '«syntax.class $name $maybe_args:
                 $option; ...
                 ~pattern
                 | $clause
                 | ...»'
+  grammar maybe_args:
+    ($identifier_binding, ...)
+    ($identifier_binding, ..., & $rest_identifier)
+    #,(epsilon)
+
   grammar option:
     ~description: $body; ...
     $kind
@@ -40,7 +45,15 @@
 ){
 
  Defines a @deftech{syntax class} that can be used in syntax patterns with
- @rhombus(::). The @rhombus(~pattern) subform is optional in the sense
+ @rhombus(::, ~syntax_binding). A syntax class can optionally have arguments, in which
+ case every use of the syntax class with @rhombus(::, ~syntax_binding) must supply
+ arguments; an @rhombus(identifier_binding) is like a @rhombus(kwopt_binding, ~var) for
+ @rhombus(fun), but each binding must be a plain @rhombus(identifier) (i.e., annotations
+ and general pattern matching are not supported). Identifiers bound as arguments
+ are visible in @rhombus(clause) bodies.
+
+ Syntax forms matched by the syntax class are described by @rhombus(clause) alternatives.
+ The @rhombus(~pattern) subform is optional in the sense
  that pattern alternatives can be inlined directly in the
  @rhombus(syntax.class) form, but the @rhombus(~pattern) subform makes
  room for additional @rhombus(option)s. Each @rhombus(option) alternative

@@ -102,11 +102,13 @@ normally bound to implement function calls.
     $binding: $default_body; ...
     $keyword: $binding = $default_expr
     $keyword: $binding: $default_body; ...
+    $keyword
     $keyword = $default_expr
   
   grammar kw_binding:
     $binding
     $keyword: $binding
+    $keyword
   
   grammar maybe_res_ann:
     :: $annotation

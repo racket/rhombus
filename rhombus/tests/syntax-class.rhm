@@ -379,3 +379,24 @@ begin:
     def '$(x :: Maybe) 2' = '1 2'
     [x, ...]
     ~prints_like ['1']
+
+begin:
+  syntax.class House(material)
+  | '< < > >':
+      ~attr stuff: Syntax.make(material +& "!")
+  check:
+    def '$(x :: House("straw"))' = '< < > >'
+    x.stuff
+    ~prints_like '"straw!"'
+
+check:
+  ~eval
+  syntax.class House(material) | '< < > >'
+  def '$(x :: House)' = #false
+  ~raises "syntax class expects arguments"
+
+check:
+  ~eval
+  syntax.class Horse | '!!!'
+  def '$(x :: Horse(1))' = #false
+  ~raises "syntax class does not expect arguments"

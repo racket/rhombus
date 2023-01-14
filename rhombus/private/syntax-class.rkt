@@ -32,7 +32,7 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
-  (struct rhombus-syntax-class (kind class attributes splicing?))
+  (struct rhombus-syntax-class (kind class attributes splicing? arity))
 
   (struct syntax-class-attribute (id depth)))
 
@@ -42,13 +42,13 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-syntax-class-space #'name) rhs))]))
 
-(define-syntax Term (rhombus-syntax-class 'term #f null #f))
-(define-syntax Id (rhombus-syntax-class 'term #'identifier null #f))
-(define-syntax Op (rhombus-syntax-class 'term #':operator null #f))
-(define-syntax Id_Op (rhombus-syntax-class 'term #':operator-or-identifier null #f))
-(define-syntax-class-syntax Keyword (rhombus-syntax-class 'term #'keyword null #f))
-(define-syntax-class-syntax String (rhombus-syntax-class 'term #'string null #f))
-(define-syntax-class-syntax Integer (rhombus-syntax-class 'term #'exact-integer null #f))
-(define-syntax Group (rhombus-syntax-class 'group #f null #f))
-(define-syntax Multi (rhombus-syntax-class 'multi #f null #f))
-(define-syntax Block (rhombus-syntax-class 'block #f null #f))
+(define-syntax Term (rhombus-syntax-class 'term #f null #f #f))
+(define-syntax Id (rhombus-syntax-class 'term #'identifier null #f #f))
+(define-syntax Op (rhombus-syntax-class 'term #':operator null #f #f))
+(define-syntax Id_Op (rhombus-syntax-class 'term #':operator-or-identifier null #f #f))
+(define-syntax-class-syntax Keyword (rhombus-syntax-class 'term #'keyword null #f #f))
+(define-syntax-class-syntax String (rhombus-syntax-class 'term #'string null #f #f))
+(define-syntax-class-syntax Integer (rhombus-syntax-class 'term #'exact-integer null #f #f))
+(define-syntax Group (rhombus-syntax-class 'group #f null #f #f))
+(define-syntax Multi (rhombus-syntax-class 'multi #f null #f #f))
+(define-syntax Block (rhombus-syntax-class 'block #f null #f #f))

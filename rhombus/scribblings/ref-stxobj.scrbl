@@ -207,12 +207,20 @@ Metadata for a syntax object can include a source location and the raw
     $other_stx_bind_term
 
   grammar stx_bind:    
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class:
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class $maybe_args
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class $maybe_args:
       $attrib_identifier ~as $ext_identifier
     $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
     $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
     $other_stx_bind
+
+  grammar maybe_args:
+    ($arg, ...)
+    #,(epsilon)
+
+  grammar arg:
+    $arg_expr
+    $keyword: $arg_expr  
 ){
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
@@ -274,7 +282,9 @@ Metadata for a syntax object can include a source location and the raw
  @tech{syntax class} with an identifier, the @rhombus(syntax_class) can
  be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
  @rhombus(Group, ~stxclass), among other predefined classes, or it can be
- a class defined with @rhombus(syntax.class). The @rhombus(identifier)
+ a class defined with @rhombus(syntax.class). A class defined with
+ @rhombus(syntax.class) may expect arguments, which must be supplied
+ after the syntax class name. The @rhombus(identifier) before @rhombus(::, ~syntax_binding)
  refers to the matched input, and it is a repetition if the syntax class
  has classification @rhombus(~sequence); the identifier can be combined
  with @rhombus(.) to access attributes (if any) of the syntax class. In

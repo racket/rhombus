@@ -12,7 +12,8 @@
          "pattern-variable.rkt"
          "syntax-binding.rkt"
          "name-root-ref.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         (submod "function.rkt" for-call))
 
 (provide (for-space rhombus/syntax_binding
                     _
@@ -71,6 +72,32 @@
         (values #'g.parsed
                 #'tail)]))))
 
+(begin-for-syntax
+  (define-splicing-syntax-class :syntax-class-args
+    (pattern (~seq (~and args (_::parens . _))))
+    (pattern (~seq)
+             #:attr args #'#f))
+  (define (parse-syntax-class-args stx-class rator-in arity class-args)
+    (cond
+      [(not arity)
+       (when (syntax-e class-args)
+         (raise-syntax-error #f
+                             "syntax class does not expect arguments"
+                             stx-class))
+       rator-in]
+      [(not (syntax-e class-args))
+       (raise-syntax-error #f
+                           "syntax class expects arguments"
+                           stx-class)]
+      [else
+       (define-values (call empty-tail)
+         (parse-function-call rator-in '() #`(#,stx-class #,class-args)
+                              #:static? #t
+                              #:rator-stx stx-class
+                              #:rator-kind '|syntax class|
+                              #:rator-arity arity))
+       call])))
+
 (define-syntax-binding-syntax ::
   (syntax-binding-infix-operator
    #'::
@@ -85,11 +112,15 @@
                            "preceding term must be an identifier or `_`"
                            (syntax-parse stx
                              [(colons . _) #'colons])))
-     (define (build stx-class open-attributes)
+     (define (build stx-class class-args open-attributes)
        (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
          (define rsc (syntax-local-value (in-syntax-class-space stx-class) (lambda () #f)))
          (define (compat pack* unpack*)
            (define sc (rhombus-syntax-class-class rsc))
+           (define sc-call (parse-syntax-class-args stx-class
+                                                    sc
+                                                    (rhombus-syntax-class-arity rsc)
+                                                    class-args))
            (define temp0-id (car (generate-temporaries (list #'id))))
            (define temp-id (car (generate-temporaries (list #'id))))
            (define-values (attribute-bindings attribute-mappings)
@@ -120,7 +151,7 @@
                                      (car field+bind)))))
            (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
            #`(#,(if sc
-                    #`(~var #,temp0-id #,sc)
+                    #`(~var #,temp0-id #,sc-call)
                     temp0-id)
               #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
               #,(append
@@ -200,16 +231,17 @@
         #:with tail #'stx-class-hier.tail
         (syntax-parse #'tail
           #:datum-literals (group)
-          [((_::block (group field:identifier #:as bind:identifier) ...))
+          [((args::syntax-class-args _::block (group field:identifier #:as bind:identifier) ...))
            (values (build #'stx-class-hier.name
+                          #'args.args
                           (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
                                        [bind (in-list (syntax->list #'(bind ...)))])
                             (values (syntax-e field) (cons field bind))))
                    #'())]
           [((_::block . _))
            (raise-syntax-error #f "expected `attribute ~as identifier` sequence in block" stx)]
-          [_
-           (values (build #'stx-class-hier.name #f) #'tail)])]))
+          [(args::syntax-class-args . tail)
+           (values (build #'stx-class-hier.name #'args.args #f) #'tail)])]))
    'none))
 
 (define-for-syntax (normalize-id form)

@@ -851,11 +851,15 @@
                       #:rator-stx rator-stx
                       #:rator-kind rator-kind
                       #:rator-arity rator-arity)]))
+  (define (check-complex-allowed)
+    (when (eq? rator-kind '|syntax class|)
+      (raise-syntax-error #f "syntax class call cannot have splicing arguments" rator-stx)))
   (syntax-parse stxes
     #:datum-literals (group op)
     #:literals (& ~& rhombus...)
     [(_ (~and args (_::parens rand ...)) . tail)
      #:when (complex-argument-splice? #'(rand ...))
+     (check-complex-allowed)
      (values (complex-argument-splice-call rator-in #'args extra-args #'(rand ...)
                                            #:static? static?
                                            #:repetition? repetition?
@@ -867,17 +871,22 @@
                    (group (op &) rst ...)
                    (group (op ~&) kwrst ...))
         . tail)
+     (check-complex-allowed)
      (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tail)]
     [(_ (_::parens rand ...
                    rep (group (op (~and dots rhombus...)))
                    (group (op ~&) kwrst ...))
         . tail)
+     (check-complex-allowed)
      (generate #'(rand ...) #'rep #'dots #'(group kwrst ...) #'tail)]
     [(_ (_::parens rand ... (group (op &) rst ...)) . tail)
+     (check-complex-allowed)
      (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tail)]
     [(_ (_::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
+     (check-complex-allowed)
      (generate extra-args #'(rand ...) #'rep #'dots #f #'tail)]
     [(_ (_::parens rand ... (group (op ~&) kwrst ...)) . tail)
+     (check-complex-allowed)
      (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
     [(_ (_::parens rand ...) . tail)
      (generate extra-args #'(rand ...) #f #f #f #'tail)]))

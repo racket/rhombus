@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "tag.rkt")
          syntax/parse/pre
          (submod "quasiquote.rkt" convert)
          (submod "syntax-class.rkt" for-syntax-class-syntax)
@@ -9,9 +10,14 @@
          "parse.rkt"
          "parsed.rkt"
          "pack.rkt"
+         "parens.rkt"
          (only-in "def+let.rkt" def)
          (rename-in "ellipsis.rkt"
-                    [... rhombus...]))
+                    [... rhombus...])
+         (rename-in "equal.rkt"
+                    [= rhombus=])
+         "rest-marker.rkt"
+         "function-arity.rkt")
 
 (provide (rename-out [rhombus-syntax syntax]))
 
@@ -135,7 +141,8 @@
                    (block body ...)))
      (generate #'pat #'(body ...))]))
 
-(define-for-syntax (generate-syntax-class stx define-syntax-id class-name kind-kw-stx alts description)
+(define-for-syntax (generate-syntax-class stx define-syntax-id class-name class-formals class-arity
+                                          kind-kw-stx alts description)
   (define-values (kind splicing?)
     (let ([kind (string->symbol (keyword->string (syntax-e kind-kw-stx)))])
       (cond
@@ -150,12 +157,14 @@
                            #'define-splicing-syntax-class
                            #'define-syntax-class))
   (list
-   #`(#,define-class #,class-name
+   #`(#,define-class #,(if (syntax-e class-formals)
+                           #`(#,class-name . #,class-formals)
+                           class-name)
       #:description #,(if description #`(rhombus-body #,@description) #f)
       #:datum-literals (block group quotes)
       #,@patterns)
    #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-       (rhombus-syntax-class '#,kind #'#,class-name '#,attributes #,splicing?))))
+       (rhombus-syntax-class '#,kind #'#,class-name '#,attributes #,splicing? '#,class-arity))))
 
 (define-for-syntax (intersect-attributes stx attributess)
   (cond
@@ -185,16 +194,75 @@
      (for/list ([(sym depth) (in-hash ht)])
        (cons sym depth))]))
 
+(begin-for-syntax
+  (define (kw->symbol kw-stx)
+    (datum->syntax kw-stx
+                   (string->symbol
+                    (keyword->string
+                     (syntax-e kw-stx)))
+                   kw-stx))
+
+  (define-splicing-syntax-class :class-arg
+    #:attributes ([formal 1] kw def?)
+    #:datum-literals (group op)
+    #:literals (rhombus=)
+    (pattern (group id:identifier)
+             #:attr [formal 1] (list #'id)
+             #:attr kw #'#f
+             #:attr def? #'#f)
+    (pattern (group kw:keyword)
+             #:attr [formal 1] (list #'kw (kw->symbol #'kw))
+             #:attr def? #'#f)
+    (pattern (group kw:keyword (_::block (group id:identifier)))
+             #:attr [formal 1] (list #'kw #'id)
+             #:attr def? #'#f)
+    (pattern (group id:identifier = rhs ...+)
+             #:attr [formal 1] (list #`[id (rhombus-expression (#,group-tag rhs ...))])
+             #:attr kw #'#f
+             #:attr def? #'#t)
+    (pattern (group id:identifier (tag::block body ...+))
+             #:attr [formal 1] (list #`[id (rhombus-body-at tag body ...)])
+             #:attr kw #'#f
+             #:attr def? #'#t)
+    (pattern (group kw:keyword = rhs ...+)
+             #:attr [formal 1] (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (#,group-tag rhs ...))])
+             #:attr def? #'#f)
+    (pattern (group kw:keyword (_::block (group id:identifier = rhs ...+)))
+             #:attr [formal 1] (list #'kw #`[id (rhombus-expression (#,group-tag rhs ...))])
+             #:attr def? #'#t)
+    (pattern (group kw:keyword (_::block (group id:identifier (tag::block body ...+))))
+             #:attr [formal 1] (list #'kw #`[id (rhombus-body-at tag body ...)])
+             #:attr def? #'#t))
+
+  (define-splicing-syntax-class :class-args
+    #:attributes (formals arity)
+    #:datum-literals (group)
+    #:literals (&)
+    (pattern (~seq)
+             #:attr formals #'#f
+             #:attr arity #'#f)
+    (pattern (~seq (_::parens arg::class-arg ... (group & id:identifier))) 
+             #:attr formals #'(arg.formal ... ... . id)
+             #:attr arity (datum->syntax
+                           #f
+                           (summarize-arity #'(arg.kw ...) #'(arg.def? ...) #t #f)))
+    (pattern (~seq (_::parens arg::class-arg ...))
+             #:attr formals #'(arg.formal ... ...)
+             #:attr arity (datum->syntax
+                           #f
+                           (summarize-arity #'(arg.kw ...) #'(arg.def? ...) #f #f)))))
+
 (define-for-syntax (make-class-definer define-class-id )
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (alts group quotes block)
         ;; Classname and patterns shorthand
-        [(form-id class-name (alts alt ...))
-         (generate-syntax-class stx define-class-id #'class-name #'#:sequence (syntax->list #'(alt ...)) #f)]
+        [(form-id class-name args::class-args (alts alt ...))
+         (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
+                                #'#:sequence (syntax->list #'(alt ...)) #f)]
         ;; Specify patterns with "pattern"
-        [(form-id class-name
+        [(form-id class-name args::class-args
                   (block
                    (~alt (~optional (group #:description (block class-desc ...)))
                          (~optional (group (~and kind-kw (~or* #:term
@@ -205,7 +273,8 @@
                                     #:defaults ([kind-kw #'#:sequence])))
                    ...
                    (group #:pattern (alts alt ...))))
-         (generate-syntax-class stx define-class-id #'class-name #'kind-kw (syntax->list #'(alt ...)) (attribute class-desc))]
+         (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
+                                #'kind-kw (syntax->list #'(alt ...)) (attribute class-desc))]
         [_
          (raise-syntax-error #f "expected alternatives" stx)]))))
 

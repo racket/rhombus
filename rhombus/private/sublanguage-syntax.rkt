@@ -108,9 +108,9 @@
                          #:with a::infix-more #'r
                          #:attr parsed #'a.parsed
                          #:attr tail (pack-tail #'a.tail)))
-              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f))
-              (define-syntax prefix-more-class-name (rhombus-syntax-class 'group #':prefix-more* '((parsed . 0) (tail . 0)) #f))
-              (define-syntax infix-more-class-name (rhombus-syntax-class 'group #':infix-more* '((parsed . 0) (tail . 0)) #f))
+              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f #f))
+              (define-syntax prefix-more-class-name (rhombus-syntax-class 'group #':prefix-more* '((parsed . 0) (tail . 0)) #f #f))
+              (define-syntax infix-more-class-name (rhombus-syntax-class 'group #':infix-more* '((parsed . 0) (tail . 0)) #f #f))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))
             (maybe-skip
@@ -179,7 +179,7 @@
                 #:name-root-ref-root name-root-ref-root
                 #:transformer-ref new-transformer-ref
                 #:check-result (rhombus-body-at check-at check-form ...))
-              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f))
+              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f #f))
               (define make-transformer (make-make-transformer new-transformer)))
             (maybe-skip
              (define-identifier-syntax-definition-transformer define-macro
