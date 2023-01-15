@@ -221,7 +221,7 @@ The @rhombus(fruit) binding form assumes (without directly checking)
 that its argument is an identifier, and its infoer discards static
 information. Binding forms normally need to accomodate other, nested
 binding forms, instead. A @rhombus(bind.macro) transformer with
-@rhombus(parsed_right) receives already-parsed sub-bindings as
+@rhombus(~parsed) receives already-parsed sub-bindings as
 arguments, and the infoer function can use @rhombus(bind_meta.get_info) on
 a parsed binding form to call its internal infoer function. The result
 is packed static information, which can be unpacked into a tuple syntax
@@ -245,8 +245,7 @@ form. A builder must be used in tail position, and it's
 @demo(
   ~eval: bind_eval
   ~defn:
-    bind.macro '$a <&> $b':
-      ~parsed_right
+    bind.macro '$a <&> $(~parsed b)':
       bind_meta.pack('(anding_infoer,
                        ($a, $b))')
 

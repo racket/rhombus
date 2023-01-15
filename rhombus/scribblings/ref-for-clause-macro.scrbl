@@ -10,23 +10,20 @@
 @title{For Clause Macros}
 
 @doc(
-  defn.macro 'for_clause.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'for_clause.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+  defn.macro '«for_clause.macro '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
+  defn.macro '«for_clause.macro
+               | '$defined_name $pattern ...':
+                   $option; ...
+                   $body
+                   ...
+               | ...»'
 ){
 
- Defines an @rhombus(identifier, ~var), @rhombus(operator, ~var),
- @rhombus(identifier_path, ~var), or @rhombus(operator_path, ~var) as a
- @rhombus(for) clause form, where @rhombus(rule_pattern) and form is the
- same as for @rhombus(defn.macro). The macro pattern is matched to an
- entire group in a definition context.
+ Similar to @rhombus(defn.macro), but defines a name as a clause form
+ for use within a @rhombus(for) body.
 
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro

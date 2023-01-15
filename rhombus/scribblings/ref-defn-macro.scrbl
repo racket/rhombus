@@ -8,12 +8,12 @@
 @title{Definition Macros}
 
 @doc(
-  defn.macro '«defn.macro '$identifier_or_path $pattern ...':
+  defn.macro '«defn.macro '$defined_name $pattern ...':
                  $option; ...
                  $body
                  ...»'
 
-  grammar identifier_or_operator:
+  grammar defined_name:
     $identifier
     ($identifier_path)
   grammar option:
@@ -32,8 +32,8 @@
  is only one option currently, either the @rhombus(~op_stx) option is
  present or not. The @rhombus(~op_stx) option, if present, binds an
  identifier for a use of the macro (which cannot be matched directly in
- the @rhombus(rule_pattern), since that position is used for the name
- that @rhombus(expr.rule) binds).
+ the @rhombus(pattern), since that position is used for the name
+ that @rhombus(defn.macro) binds).
 
  See @secref("namespaces") for information about
  @rhombus(identifier_path).
@@ -56,13 +56,13 @@
 }
 
 @doc(
-  defn.macro '«defn.sequence_macro '$identifier_or_operator $pattern ...
+  defn.macro '«defn.sequence_macro '$defined_name $pattern ...
                                     $pattern
                                     ...':
                  $option; ...
                  $body
                  ...»'
-  grammar identifier_or_operator:
+  grammar defined_name:
     $identifier
     $operator
     ($identifier_path)    
@@ -73,10 +73,10 @@
 
  Similar to @rhombus(defn.macro), but defines a macro for a definition
  context that is matched against all of the remiaining groups in the
- context, so the pattern is a block pattern.
+ context, so the pattern is a multi-group pattern.
 
- The macro result is two values: a parenthesized block of groups to
- splice in place of the sequence-macro use, and a parenthesized block of
+ The macro result is two values: a sequence of groups to
+ splice in place of the sequence-macro use, and a sequence of
  groups that represent the tail of the definition context that was not consumed.
 
  See @secref("namespaces") for information about

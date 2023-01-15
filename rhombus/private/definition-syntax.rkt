@@ -19,7 +19,7 @@
 (define-name-root only
   #:fields
   ([macro macro-only]
-   [rule sequence_macro-only]))
+   [sequence_macro sequence_macro-only]))
 
 ;; ----------------------------------------
 

@@ -111,12 +111,6 @@
     (~alt (~optional (group #:op_stx ~! (_::block (group self-id:identifier)))
                      #:defaults ([self-id #'self]))))
 
-  (define-syntax-class-mixin parsed-right-options
-    #:datum-literals (op block group
-                         opt_stx)
-    (~alt (~optional (group (~and parsed-right? #:parsed_right))
-                     #:defaults ([parsed-right? #'#f]))))
-
   (define-composed-splicing-syntax-class :prefix-operator-options
     operator-options)
 
@@ -126,8 +120,7 @@
   
   (define-composed-splicing-syntax-class :macro-prefix-operator-options
     operator-options
-    self-options
-    parsed-right-options)
+    self-options)
 
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (op block group)
@@ -143,8 +136,7 @@
   (define-composed-splicing-syntax-class :macro-infix-operator-options
     operator-options
     infix-operator-options
-    self-options
-    parsed-right-options)
+    self-options)
 
   (define-syntax-class :$+1
     (pattern $-id
@@ -154,23 +146,28 @@
   (define-splicing-syntax-class :operator-or-identifier-or-$
     #:attributes (name extends)
     #:description "operator-macro pattern"
-    #:datum-literals (op parens group quotes)
+    #:datum-literals (op group)
     (pattern (~seq op-name::operator-or-identifier)
              #:when (not (free-identifier=? (in-binding-space #'op-name.name) #'$
                                             (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
              #:attr name #'op-name.name
              #:attr extends #'#f)
-    (pattern (~seq (parens (group seq::dotted-operator-or-identifier-sequence)))
+    (pattern (~seq (_::parens (group seq::dotted-operator-or-identifier-sequence)))
              #:with id::dotted-operator-or-identifier #'seq
              #:attr name #'id.name
              #:attr extends #'id.extends)
-    (pattern (~seq (op _::$+1) (parens (group (quotes (group (op (~and name $)))))))
+    (pattern (~seq (op _::$+1) (_::parens (group (_::quotes (group (op (~and name $)))))))
              #:attr extends #'#f))
+
+  (define-syntax-class :parsed-identifier
+    #:datum-literals (group)
+    (pattern id:identifier)
+    (pattern (_::parens (group #:parsed id:identifier))))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
-    #:datum-literals (op parens group)
-    (pattern (_::quotes (~and g (group (op _::$+1) _:identifier _::operator-or-identifier-or-$ . _))))
+    #:datum-literals (op group)
+    (pattern (_::quotes (~and g (group (op _::$+1) _::parsed-identifier _::operator-or-identifier-or-$ . _))))
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
@@ -180,21 +177,37 @@
                    [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
 
   (define (convert-assc assc)
-    #`'#,(string->symbol (keyword->string (syntax-e assc)))))
+    #`'#,(string->symbol (keyword->string (syntax-e assc))))
+
+  (define (check-parsed-right-form form-id tail-pattern)
+    (syntax-parse tail-pattern
+      #:datum-literals (op group)
+      [((~and op-stx (op _::$+1))
+        (~and parens-stx (_::parens (group #:parsed right:identifier)))
+        . tail)
+       (syntax-parse #'tail
+         [() (void)]
+         [(more . _)
+          (raise-syntax-error (syntax-e form-id)
+                              "no further pattern allowed after a `~parsed` escape"
+                              #'more)])
+       #t]
+      [_ #f])))
 
 ;; parse one case (possibly the only case) in a macro definition
-(define-for-syntax (parse-one-macro-definition kind allowed)
+(define-for-syntax (parse-one-macro-definition form-id kind allowed)
   (lambda (g rhs)
     (syntax-parse g
-      #:datum-literals (group op parens quotes)
+      #:datum-literals (group op)
       ;; infix protocol
-      [(group (op _::$+1) left:identifier
+      [(group (op _::$+1) left::parsed-identifier
               op-name::operator-or-identifier-or-$
               . tail-pattern)
        (unless (memq 'infix allowed)
-         (raise-syntax-error #f
+         (raise-syntax-error (syntax-e form-id)
                              "infix pattern is not allowed"
                              g))
+       (define parsed-right? (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
          [((~and tag block) opt::macro-infix-operator-options rhs ...)
           #`(pre-parsed op-name.name
@@ -204,18 +217,19 @@
                         opt
                         #,(convert-prec #'opt.prec)
                         #,(convert-assc #'opt.assc)
-                        opt.parsed-right?
+                        #,parsed-right?
                         [tail-pattern
                          opt.self-id
-                         left
+                         left.id
                          (tag rhs ...)])])]
       ;; prefix protocol
       [(group op-name::operator-or-identifier-or-$
               . tail-pattern)
        (unless (memq 'prefix allowed)
-         (raise-syntax-error #f
+         (raise-syntax-error (syntax-e form-id)
                              "prefix pattern is not allowed"
                              g))
+       (define parsed-right? (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
          [((~and tag block) opt::macro-prefix-operator-options rhs ...)
           #`(pre-parsed op-name.name
@@ -225,24 +239,9 @@
                         opt
                         #,(convert-prec #'opt.prec)
                         #f
-                        opt.parsed-right?
+                        #,parsed-right?
                         [tail-pattern
                          opt.self-id
-                         (tag rhs ...)])])]
-      ;; nofix protocol - no longer supported
-      #;
-      [op-name::operator-or-identifier-or-$
-       (syntax-parse rhs
-         [((~and tag block) opt::self-prefix-operator-options rhs ...)
-          #`(pre-parsed op-name.name
-                        op-name.extends
-                        nofix
-                        #,kind
-                        opt
-                        #,(convert-prec #'opt.prec)
-                        #f
-                        #f
-                        [opt.self-id
                          (tag rhs ...)])])])))
 
 (define-for-syntax (pre-parsed-name pre-parsed)
@@ -254,9 +253,9 @@
     [(_ _ extends . _) #'extends]))
 
 ;; single-case macro definition:
-(define-for-syntax (parse-operator-definition kind g rhs space-sym compiletime-id
+(define-for-syntax (parse-operator-definition form-id kind g rhs space-sym compiletime-id
                                               #:allowed [allowed '(prefix infix)])
-  (define p ((parse-one-macro-definition kind allowed) g rhs))
+  (define p ((parse-one-macro-definition form-id kind allowed) g rhs))
   (define op (pre-parsed-name p))
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym op
@@ -265,9 +264,9 @@
       p))
 
 ;; multi-case macro definition:
-(define-for-syntax (parse-operator-definitions kind stx gs rhss space-sym compiletime-id
+(define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
                                                #:allowed [allowed '(prefix infix)])
-  (define ps (map (parse-one-macro-definition kind allowed)
+  (define ps (map (parse-one-macro-definition form-id kind allowed)
                   gs rhss))
   (check-consistent stx (map pre-parsed-name ps) "operator")
   (if compiletime-id
@@ -329,12 +328,13 @@
     (lambda (stx)
       (define (template->macro protocol) (if (eq? protocol 'template) 'macro protocol))
       (syntax-parse (replace-head-dotted-name stx)
-        #:datum-literals (parens group block alts op)
+        #:datum-literals (group block alts op)
         [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                       (~and rhs (block body ...))))
                                         ...+))
          (define kind (template->macro protocol))
-         (list (parse-operator-definitions kind
+         (list (parse-operator-definitions #'form-id
+                                           kind
                                            stx
                                            (syntax->list #'(q.g ...))
                                            (syntax->list #'(rhs ...))
@@ -342,7 +342,8 @@
                                            compiletime-id))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (block body ...)))
-         (list (parse-operator-definition (template->macro protocol)
+         (list (parse-operator-definition #'form-id
+                                          (template->macro protocol)
                                           #'q.g
                                           #'rhs
                                           space-sym
@@ -354,7 +355,7 @@
                                                                        prefix+infix-id)
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts op)
+        #:datum-literals (group block alts op)
         [(form-id pre-parsed)
          (parse-operator-definition-rhs #'pre-parsed
                                         make-prefix-id
@@ -445,7 +446,7 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts op)
+        #:datum-literals (group block alts op)
         [(form-id q::identifier-syntax-quote
                   (~and rhs (tag::block
                              (~optional (group #:op_stx (_::block (group self-id:identifier)))
@@ -487,7 +488,7 @@
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (parens group block alts op)
+       #:datum-literals (group block alts op)
        [(form-id q::identifier-sequence-syntax-quote
                  (~and rhs (tag::block
                             (~optional (group #:op_stx (_::block (group self-id:identifier)))

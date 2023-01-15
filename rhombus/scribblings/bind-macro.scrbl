@@ -15,8 +15,7 @@ as a prefix operator to constrain a pattern to number inputs:
     import:
       rhombus/meta open
 
-    bind.rule '$$$ $n':
-      ~parsed_right
+    bind.rule '$$$ $(~parsed n)':
       '$n :: Number'
   ~repl:
     def $$$salary = 100.0

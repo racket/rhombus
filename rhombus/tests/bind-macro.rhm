@@ -4,8 +4,7 @@ import:
 
 // define a binding operator
 
-bind.rule '$& $n':
-  ~parsed_right
+bind.rule '$& $(~parsed n)':
   '$n :: Integer'
 
 fun apply_interest($& n):
@@ -16,8 +15,7 @@ check:
   ~is 7.3500000000000005
 
 // define <> as revese-cons pattern
-bind.only.macro '$a <> $b':
-  ~parsed_right
+bind.only.macro '$a <> $(~parsed b)':
   bind_meta.pack('(build_reverse_cons_infoer,
                    ($a, $b))')
 
@@ -81,7 +79,7 @@ bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
            $b_binder($b_part_id, $b_data)'
 
 // an expression operator that's consistent with the pattern
-expr.rule '$a <> $b': ~parsed_right; 'Pair.cons($b, $a)'
+expr.rule '$a <> $(~parsed b)': 'Pair.cons($b, $a)'
 
 def rx <> (ry :: Integer) = "2" <> 1
 

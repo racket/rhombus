@@ -6,15 +6,16 @@
 @title{Dot Providers}
 
 @doc(
-  defn.macro '«dot.macro '$identifier_or_operator $pattern ...':
-                           $body
-                           ...»'
+  defn.macro '«dot.macro '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
 ){
 
  Similar to @rhombus(defn.macro), but binds a @tech{dot provider} that
  is normally referenced indirectly via @tech{static information},
  instead of directly. The @rhombus(pattern) sequence after the leading
- @rhombus(identifier_or_operator) should match a sequence of three
+ @rhombus(defined_name) should match a sequence of three
  terms: a parsed left-hand expression, a @rhombus(.) term, and a
  right-hand identifier.
 
@@ -29,13 +30,14 @@
 }
 
 @doc(
-  defn.macro '«dot.macro_more_static '$identifier_or_operator $pattern ...':
-                                        $body
-                                        ...»'
+  defn.macro '«dot.macro_more_static '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
 ){
 
  Like @rhombus(dot.macro), but the @rhombus(pattern) sequence after
- the leading @rhombus(identifier_or_operator) should match a sequence
+ the leading @rhombus(defined_name) should match a sequence
  of at least four terms: a boolean literal indicating whether
  the @rhombus(.) is in static mode (see @rhombus(use_static)), a
  parsed left-hand expression, a @rhombus(.) term, and a right-hand

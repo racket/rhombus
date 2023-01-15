@@ -10,25 +10,23 @@
 @title{Class and Interface Clause Macros}
 
 @doc(
-  defn.macro 'class_clause.macro $rule_pattern:
+  defn.macro '«class_clause.macro '$defined_name $pattern ...':
                 $option; ...
                 $body
-                ...'
-  defn.macro 'class_clause.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+                ...»'
+  defn.macro '«class_clause.macro
+               | '$defined_name $pattern ...':
+                   $option; ...
+                   $body
+                   ...
+               | ...»'
   grammar option:
     ~op_stx: $identifier
     ~info: $identifier
 ){
 
- Defines an @rhombus(identifier, ~var) or @rhombus(operator_path, ~var)
- as a @rhombus(class) clause form, where @rhombus(rule_pattern) and form
- is the same as for @rhombus(defn.macro). The macro pattern is matched to
- an entire group in a definition context.
+ Like @rhombus(defn.macro), but defines a name as a clause form for use
+ within a @rhombus(class) body.
 
  The compile-time @rhombus(body) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
@@ -61,16 +59,16 @@
 }
 
 @doc(
-  defn.macro 'interface_clause.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'interface_clause.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+  defn.macro '«interface_clause.macro '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
+  defn.macro '«interface_clause.macro
+               | '$defined_name $pattern ...':
+                   $option; ...
+                   $body
+                   ...
+               | ...»'
 ){
 
 Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
@@ -78,16 +76,16 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
 }
 
 @doc(
-  defn.macro 'class_and_interface_clause.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'class_and_interface_clause.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+  defn.macro '«class_and_interface_clause.macro '$defined_name $pattern ...':
+                 $option; ...
+                 $body
+                 ...»'
+  defn.macro '«class_and_interface_clause.macro
+               | '$defined_name $pattern ...':
+                   $option; ...
+                   $body
+                   ...
+               | ...»'
 ){
 
  Like @rhombus(class_clause.macro), but defines for use both in

@@ -42,13 +42,11 @@ only_macro '$left #{#%call} ($(p :: Pattern)) $tail ...':
   values('$(left.unwrap() ++ p.parsed.unwrap())',
          '$tail ...')
 
-only_macro '$left || $right':
-  ~parsed_right
+only_macro '$left || $(~parsed right)':
   ~weaker_than: ~other
   '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
 
-only_macro '$left #{#%juxtapose} $right':
-  ~parsed_right
+only_macro '$left #{#%juxtapose} $(~parsed right)':
   ~weaker_than: ~other
   ~stronger_than: ||
   '$(left.unwrap() ++ right.unwrap())'
@@ -77,8 +75,7 @@ only_macro
            '$tail ...')
 
 macro
-| '^ $right':
-    ~parsed_right
+| '^ $(~parsed right)':
     '$("^" +& right.unwrap())'
 
 only_macro

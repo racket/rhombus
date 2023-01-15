@@ -37,7 +37,8 @@
       adjustments
       (parse-operator-definitions-rhs
        stx
-       (parse-operator-definitions 'rule
+       (parse-operator-definitions #'form-id
+                                   'rule
                                    #:allowed '(prefix)
                                    stx
                                    (map no-srcloc (syntax->list #'((tag ignore . pat) ...)))
@@ -53,7 +54,8 @@
      (expose-arity
       adjustments
       (parse-operator-definition-rhs
-       (parse-operator-definition 'rule
+       (parse-operator-definition #'form-id
+                                  'rule
                                   #:allowed '(prefix)
                                   (no-srcloc #'(tag ignore . pat))
                                   #'rhs
@@ -73,7 +75,8 @@
                                                        (~and rhs (block body ...))))
                                          ...+))
           (list
-           (parse-operator-definitions 'rule
+           (parse-operator-definitions #'form-id
+                                       'rule
                                        stx
                                        (syntax->list #'(q.g ...))
                                        (syntax->list #'(rhs ...))
@@ -82,7 +85,8 @@
          [(form-id q::operator-syntax-quote
                    (~and rhs (block body ...)))
           (list
-           (parse-operator-definition 'rule
+           (parse-operator-definition #'form-id
+                                      'rule
                                       #'q.g
                                       #'rhs
                                       'rhombus/expr

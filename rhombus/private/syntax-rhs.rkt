@@ -13,6 +13,7 @@
          "op-literal.rkt"
          "pack.rkt"
          "entry-point.rkt"
+         "parens.rkt"
          (only-in "static-info.rkt"
                   in-static-info-space
                   make-static-infos)
@@ -70,10 +71,10 @@
       [(block (group e)) (raise-syntax-error 'template "invalid result template" #'e)]))
   (define (extract-pattern-id tail-pattern)
     (syntax-parse tail-pattern
-      #:datum-literals (op)
-      [((op (~var _ (:$ in-binding-space))) id:identifier) #'id]))
+      #:datum-literals (op group)
+      [((op (~var _ (:$ in-binding-space))) (_::parens (group #:parsed id:identifier))) #'id]))
   (syntax-parse pre-parsed
-    #:datum-literals (pre-parsed infix prefix nofix)
+    #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol
     [(pre-parsed name
                  _
@@ -147,30 +148,7 @@
                [else
                 (macro-clause #'self-id '()
                               #'tail-pattern
-                              #'(tag rhs ...))]))]
-    ;; nofix protocol
-    [(pre-parsed name
-                 _
-                 nofix
-                 _
-                 opt
-                 prec
-                 #f
-                 #f
-                 [self-id
-                  (tag rhs ...)])
-     (parsed 'prefix
-             #'name
-             #'opt
-             #'prec
-             #f
-             #f
-             #`[_ (let ([self-id self])
-                    (values #,(if (eq? kind 'rule)
-                                  (convert-rule-template #'(tag rhs ...)
-                                                         (list #'self-id))
-                                  #`(rhombus-body-at tag rhs ...))
-                            tail))])]))
+                              #'(tag rhs ...))]))]))
 
 (define-syntax (rule-template stx)
   (syntax-parse stx
@@ -246,7 +224,7 @@
             [i (in-naturals)])
         (when (parsed-parsed-right? p)
           (raise-syntax-error #f
-                              (format "multiple ~a cases not allowed with a 'parsed_right' case"
+                              (format "multiple ~a cases not allowed with a `~parsed` case"
                                       what)
                               orig-stx))
         (unless (zero? i)

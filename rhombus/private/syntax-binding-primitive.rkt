@@ -21,6 +21,7 @@
                     ::
                     &&
                     \|\|
+                    #%literal
                     #%block))
 
 (module+ for-quasiquote
@@ -292,6 +293,21 @@
               ()
               ())])]))
    'left))
+
+(define-syntax-binding-syntax #%literal
+  (syntax-binding-prefix-operator
+   #'#%literal
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ x . _)
+        (raise-syntax-error #f
+                            (format "misplaced ~a within a syntax binding"
+                                    (if (keyword? (syntax-e #'x))
+                                        "keyword"
+                                        "literal"))
+                            #'x)]))))
 
 (define-syntax-binding-syntax #%block
   (syntax-binding-prefix-operator

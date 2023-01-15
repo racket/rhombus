@@ -133,27 +133,28 @@ pattern.
 
 Whether pattern-based or not, an infix-operator macro’s left-hand input
 is parsed. A prefix or infix macro’s right-hand input is not parsed by
-default. To trigger parsing for a right-hand argument, include
-@rhombus(~parsed_right) as a declaration at the start of the macro body.
-Often, in that case, you might as well use @rhombus(operator), but
+default. To trigger parsing for a right-hand argument, wrap the pattern
+binding with parentheses and the keyword @rhombus(~parsed). You can also
+wrap the left-hand variable with @rhombus(~parsed), but that's redundant,
+because the left-hand argument is always parsed first. With both arguments
+as parsed, you might as well use @rhombus(operator) in many cases, but
 macros provide control over evaluator order. For example, this
 @rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
 side before it’s left-hand side:
 
 @demo(
   ~defn:
-    rule '$a +<= $b':
-      ~parsed_right
+    rule '$a +<= $(~parsed b)':
       '$b + $a'
   ~repl:
     1 +<= 2
     ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
 )
 
-Declaring @rhombus(~parsed_right) affects a @rhombus(expr.macro) macro
+Declaring @rhombus(~parsed) affects a @rhombus(expr.macro) macro
 in a second way: the macro will receive only the left (if any) and right
-arguments, and will not receieve or return the tail of the enclosing
-group. In other words, declaring @rhombus(~parse_right) uses the same
+arguments, and will not receive or return the tail of the enclosing
+group. In other words, declaring @rhombus(~parsed) uses the same
 argument and return protocol as a rule-based macro, but the template
 part can be implemented by arbitrary compile-time expressions.
 
@@ -164,8 +165,7 @@ prefix and infix, you can use an alt-block with @rhombus(expr.rule) or
 prefix blocks or multiple infix blocks, where the each block’s pattern
 is tried in order; in that case, only the first prefix block (if any)
 and first infix block (if any) can have precedence and associativity
-declarations that apply to all cases, and none of the cases can use
-@rhombus(~parsed_right).
+declarations that apply to all cases.
 
 
 @close_eval(macro_eval)

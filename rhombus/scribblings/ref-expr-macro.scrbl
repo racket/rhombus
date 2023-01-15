@@ -19,17 +19,19 @@
                    '$template'
                | ...»'
   grammar rule_pattern:
-    '$identifier_or_operator $pattern ...'
-    '$ $term_pattern $identifier_or_operator $pattern ...'
-  grammar identifier_or_operator:
+    '$defined_name $pattern ...'
+    '$defined_name #,(dollar)(~parsed $right_identifier)'
+    '$ $left_pattern $defined_name $pattern ...'
+    '$ $left_pattern $defined_name #,(dollar)(~parsed right_identifier)'
+  grammar defined_name:
     $identifier
     $operator
     #,(dollar)('#,(dollar)')
     ($identifier_path)
     ($operator_path)
-  grammar term_pattern:
-    $term_identifier
-    ($term_identifier :: $syntax_class)
+  grammar left_pattern:
+    identifier
+    (~parsed $identifier)
   grammar option:
     ~stronger_than: $identifier_or_operator ...
     ~weaker_than: $identifier_or_operator ...
@@ -38,30 +40,56 @@
     ~same_on_right_as: $identifier_or_operator ...
     ~associativity: $assoc
     ~op_stx: $identifier
-    ~parsed_right
   grammar assoc:
     ~left
     ~right
     ~none
 ){
 
- Defines @rhombus(identifier), @rhombus(operator), @rhombus($),
- @rhombus(identifier_path), or @rhombus(operator_path) as a pattern-based
- macro whose expansion is described by a @rhombus(template) that can
- refer to pattern variables bound in the @rhombus(rule_pattern). A
- @rhombus(rule_pattern) is matched to a portion of its enclosing group,
- and need not extend to the end of the group to match. A defined
- @rhombus(operator) cannot be @rhombus($), but the form @rhombus($('$'))
- can be used to define @rhombus($).
+ Defines the name (which is an operator or identifier) within
+ @rhombus(defined_name) as a pattern-based macro whose expansion is
+ described by a @rhombus(template) that can refer to pattern variables
+ bound in the @rhombus(rule_pattern). The @rhombus(operator) within
+ @rhombus(defined_name) cannot be @rhombus($), but the form
+ @rhombus($('$')) can be used to define @rhombus($).
 
- Each @rhombus(rule_pattern) starts with @rhombus(''). Within
- @rhombus(''), either the first term is an identifier or operator to be
- defined as a prefix macro, or a single @rhombus($, ~bind) escape is
- followed by the identifier or operator to be defined as an infix macro.
+ A @rhombus(rule_pattern) is matched to a portion of its enclosing
+ group. Within the @rhombus('') of each @rhombus(rule_pattern), either
+ the first term is the name to be defined as a prefix macro, or the first
+ term is a single @rhombus($, ~bind) escape followed by the name to be
+ defined as an infix macro.
+
+ In the case of a prefix macro, the left-hand @rhombus($, ~bind) escape
+ can be an identifier or one that is wrapped with parentheses and
+ @rhombus(~parsed). Declaring @rhombus(~parsed) is redundant, because the
+ left-hand side must always be parsed to discover an infix operator, but
+ it is allowed for cosistency with the right-hand side. The right-hand
+ side of the macro (for either a prefix or infix form) can be an
+ arbitrary pattern or a @rhombus(~parsed) escape:
+
+@itemlist(
+
+ @item{When the right-hand side is represented by an arbitrary pattern,
+  the pattern can match any sequence of terms after the macro name in its
+  enclosing group. The match need not extend to the end of the group (in
+  which case the group might continue with an infix operator).}
+  
+ @item{When @rhombus(~parsed) is used for the the right-hand side, then
+  the macro is applied with an already-parsed term after the macro name in
+  a use of the macro. That parse heeds precedence and associativity
+  declarations for other macros and for operators defined with
+  @rhombus(operator).}
+
+)
 
  Using @litchar{|} alternatives, a single definition can have any number
- of prefix and infix variants (presumably) distinguished by patterns that
- are tried in order.
+ of @rhombus(rule_pattern)s. The patterns describe any number of prefix
+ and infix variants that are (presumably) distinguished by patterns that
+ are tried in order. The name to define must be the same across all
+ @rhombus(rule_pattern)s. If @rhombus(~parsed) is used for the the
+ right-hand side in a @rhombus(rule_pattern) of an infix or prefix form,
+ then it must be the only infix or prefix @rhombus(rule_pattern) among
+ the alternatives.
 
  The body after each @rhombus(rule_pattern) must be an immediate
  @rhombus('') template, and any @rhombus($) escape within the template
@@ -71,22 +99,19 @@
  compile-time expressions are not allowed; use @rhombus(expr.macro),
  instead, to enable compile-time expressions.
 
- Before the body of a @rhombus(rule_pattern), operator
+ Before the @rhombus(template) body of a @rhombus(rule_pattern),
  @rhombus(option) keywords can appear. The options
  @rhombus(~weaker_than), @rhombus(~stronger_than), @rhombus(~same_as),
  @rhombus(~same_on_left_as), and @rhombus(~same_on_right_as) declare
- an operator's precedence relative to other operators. The
- @rhombus(~associativity) option is allowed only with a infix-operator
+ an name's precedence relative to other names. The
+ @rhombus(~associativity) option is allowed only with an infix
  @rhombus(rule_pattern). The @rhombus(~op_stx) option binds an
- identifier or operator for a use of the macro (which cannot be
+ identifier or operator as it appears in a use of the macro (which cannot be
  matched directly in the @rhombus(rule_pattern), since that position
- is used for the name that @rhombus(expr.rule) binds). If the
- @rhombus(~parsed_right) option is present, then the
- @rhombus(rule_pattern) should match a single term after the macro
- name, and it will match an already-parsed term after the macro name
- in a use of the macro. In a defined with @litchar{|} alternatives,
+ is used for the name that @rhombus(expr.rule) binds).
+ In a defined with @litchar{|} alternatives,
  most @rhombus(option)s are allowed only in the first case, but
- @rhombus(~op_stx) is allowed in each case.
+ @rhombus(~op_stx) is allowed and separate in each case.
 
  See @secref("namespaces") for information on @rhombus(identifier_path)
  and @rhombus(operator_path).
@@ -119,15 +144,17 @@
 
 @itemlist(
   
-  @item{with arbitrary compile-time code in the body after each
-   @rhombus(rule_pattern),},
+ @item{with arbitrary compile-time code in the body after each
+  @rhombus(rule_pattern),},
   
-  @item{each @rhombus(rule_pattern) is matched to the entire remainder
-   of a group where the macro is used; and},
+ @item{for each @rhombus(rule_pattern) without @rhombus(~parsed) for its
+  right-hand side, the pattern must match to the entire remainder of a
+  group where the macro is used; and},
 
-  @item{a body can return two values: an expansion for the consumed part
-   of the input group, and a tail for the unconsumed part; if a single
-   value is returned, the tail is assumed to be empty.}
+ @item{the body after a @rhombus(rule_pattern) without a right-hand
+  @rhombus(~parsed) can return two values: an expansion for the consumed
+  part of the input group, and a tail for the unconsumed part; if a single
+  value is returned, the tail is assumed to be empty.}
 
 )
 
