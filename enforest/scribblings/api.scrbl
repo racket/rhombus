@@ -75,7 +75,7 @@ types and one macro:
       enforest-step function.}
 
    @item{@racket[#:enforest-step]: the name to bind as an enforest-step function
-      (defaults to a fresh name), with continues an enforestation. It
+      (defaults to a fresh name), which continues an enforestation. It
       takes two arguments, which is the list of renaming terms in a
       group and the current operator. The result is two values: a
       parsed form and the remaining sequence of terms (starting with
@@ -102,9 +102,11 @@ types and one macro:
       @racket['unbound] (one of the operators is not bound).}
 
    @item{@racket[#:prefix-more-syntax-class] and @racket[#:infix-more-syntax-class]:
-      names of syntax classes (defaulting to fresh names) that match
-      an operator name followed by a sequence of terms and steps an
-      enforestation. A match has a @racket[parsed] attribute for the parsed
+      names of syntax classes (defaulting to fresh names) that take
+      an operator-name argument and match a group that's intended to represent
+      the tail of a group. The syntax class continues
+      enforestation based on the precedence and associatvity of the given operator.
+      A match has a @racket[parsed] attribute for the parsed
       result and a @racket[tail] attribute for the remaining terms.}
 
     @item{@racket[#:desc] and @racket[#:operator-desc]: strings used in error reporting

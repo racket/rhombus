@@ -121,17 +121,17 @@
          ;; For reentering the enforestation loop within a group, stopping when
          ;; the group ends or when an operator with weaker precedence than `op`
          ;; is found
-         (define-syntax-class prefix-op+form+tail
-           (pattern (op-name::name . in-tail)
-                    #:do [(define op (prefix-operator-ref (syntax-local-value* (in-space #'op-name.name)
-                                                                               prefix-operator-ref)))
+         (define-syntax-class (prefix-op+form+tail op-name)
+           (pattern ((~datum group) . in-tail)
+                    #:with op-name::name/group op-name
+                    #:do [(define op (lookup-operator 'prefix-op+form+tail 'prefix (in-space #'op-name.name) prefix-operator-ref))
                           (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
-         (define-syntax-class infix-op+form+tail
-           (pattern (op-name::name . in-tail)
-                    #:do [(define op (infix-operator-ref (syntax-local-value* (in-space #'op-name.name)
-                                                                              infix-operator-ref)))
+         (define-syntax-class (infix-op+form+tail op-name)
+           (pattern ((~datum group) . in-tail)
+                    #:with op-name::name/group op-name
+                    #:do [(define op (lookup-operator 'infix-op+form+tail 'infix (in-space #'op-name.name) infix-operator-ref))
                           (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
                     #:attr tail (transform-out new-tail)))
@@ -398,3 +398,11 @@
     (if (and left-op right-op)
         (relative-precedence left-op right-op)
         'unbound)))
+
+(define (lookup-operator who what id ref)
+  (define op (syntax-local-value* id ref))
+  (unless op
+    (raise-syntax-error who
+                        (format "not bound as ~a operator" what)
+                        id))
+  op)

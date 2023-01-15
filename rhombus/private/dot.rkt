@@ -135,7 +135,7 @@
           #:literals (:=)
           [((op :=) . tail)
            #:when (not repetition?)
-           #:with e::infix-op+expression+tail #'(:= . tail)
+           #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
            (values #`(dot-assign-by-name #,form1 '#,field-id e.parsed)
                    #'e.tail)]
           [else

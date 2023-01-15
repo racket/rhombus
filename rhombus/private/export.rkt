@@ -327,7 +327,8 @@
         (values (apply-modifiers (syntax->list #'(mod ...))
                                  form1)
                 #'tail)]
-       [e::export-infix-op+form+tail
+       [(_ . tail)
+        #:with (~var e (:export-infix-op+form+tail #'#%juxtapose)) #'(group . tail)
         (values #`(combine-out #,form1
                                e.parsed)
                 #'e.tail)]))

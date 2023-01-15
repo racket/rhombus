@@ -23,7 +23,7 @@
         (values #`(in-naturals #,form1)
                 #'())]
        [(_ . more)
-        #:with rhs::infix-op+expression+tail #'(.. . more)
+        #:with (~var rhs (:infix-op+expression+tail #'..)) #'(group . more)
         (values #`(in-range #,form1 rhs.parsed)
                 #'rhs.tail)]))
    'none))

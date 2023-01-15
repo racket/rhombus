@@ -426,7 +426,7 @@
                    #:datum-literals (op)
                    #:literals (:=)
                    [((op :=) . rhs)
-                    #:with e::infix-op+expression+tail #'(:= . rhs)
+                    #:with (~var e (:infix-op+expression+tail #':=)) #'(group . rhs)
                     (define-values (call new-tail)
                       (parse-function-call impl (list #'id #'e.parsed) #'(method-id (parens))
                                            #:static? static?
@@ -472,7 +472,7 @@
        #:literals (:=)
        [(head (op :=) . tail)
         #:when (syntax-e maybe-mutator-id)
-        #:with e::infix-op+expression+tail #'(:= . tail)
+        #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
            (values (no-srcloc
@@ -511,7 +511,7 @@
              #:datum-literals (op)
              #:literals (:=)
              [(head (op :=) . tail)
-              #:with e::infix-op+expression+tail #'(:= . tail)
+              #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (when (and r (eqv? 2 (method-result-arity r)))

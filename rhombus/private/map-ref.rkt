@@ -37,7 +37,7 @@
     #:literals (:=)
     [(_ ((~and head brackets) index) (op :=) . rhs+tail)
      #:when (not repetition?)
-     #:with rhs::infix-op+expression+tail #'(:= . rhs+tail)
+     #:with (~var rhs (:infix-op+expression+tail #':=)) #'(group . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                              (if more-static?
                                  (raise-syntax-error who (not-static) map-in)

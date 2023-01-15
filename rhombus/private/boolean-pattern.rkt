@@ -19,15 +19,11 @@
   (binding-infix-operator
    #'&&
    (list (cons #'\|\| 'stronger))
-   'macro
-   (lambda (lhs stx)
-     (syntax-parse stx
-       [rhs::infix-op+binding+tail
-        #:with lhs-parsed lhs
-        (values (binding-form
-                 #'and-infoer
-                 #'(lhs-parsed rhs.parsed))
-                #'rhs.tail)]))
+   'automatic
+   (lambda (lhs rhs stx)
+     (binding-form
+      #'and-infoer
+      #`(#,lhs #,rhs)))
    'left))
 
 (define-for-syntax (make-and-binding lhs rhs)
@@ -80,15 +76,11 @@
   (binding-infix-operator
    #'\|\|
    null
-   'macro
-   (lambda (lhs stx)
-     (syntax-parse stx
-       [rhs::infix-op+binding+tail
-        #:with lhs-parsed lhs
-        (values (binding-form
-                 #'or-infoer
-                 #'(lhs-parsed rhs.parsed))
-                #'rhs.tail)]))
+   'automatic
+   (lambda (lhs rhs stx)
+     (binding-form
+      #'or-infoer
+      #`(#,lhs #,rhs)))
    'left))
 
 (define-syntax (or-infoer stx)

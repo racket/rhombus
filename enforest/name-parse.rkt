@@ -1,8 +1,16 @@
 #lang racket/base
 (require syntax/parse/pre)
 
-(provide :name)
+(provide :name
+         :name/group)
 
 (define-syntax-class :name
+  #:attributes (name)
   (pattern ((~datum op) name))
   (pattern name:identifier))
+
+(define-syntax-class :name/group
+  #:attributes (name)
+  #:datum-literals (group)
+  (pattern (group ::name))
+  (pattern ::name))

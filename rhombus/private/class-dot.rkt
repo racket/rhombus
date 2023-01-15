@@ -256,7 +256,7 @@
         #:literals (:=)
         [((op :=) . tail)
          #:when (syntax-e (field-desc-mutator-id fld))
-         #:with e::infix-op+expression+tail #'(:= . tail)
+         #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
          (values (field-desc-mutator-id fld)
                  #'e.parsed
                  #'e.tail)]
@@ -293,7 +293,7 @@
             #:datum-literals (op)
             #:literals (:=)
             [((op :=) . tail)
-             #:with e::infix-op+expression+tail #'(:= . tail)
+             #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
              (values #`(#,(no-srcloc #'parens) (group (parsed e.parsed)))
                      #'e.tail)]
             [_ (values #'(parens) tail)])

@@ -116,7 +116,7 @@
 
   (define-syntax-class :annotation-seq
     (pattern stxes
-             #:with c::annotation-infix-op+form+tail #'(:: . stxes)
+             #:with (~var c (:annotation-infix-op+form+tail #'::)) #'(group . stxes)
              #:attr parsed #'c.parsed
              #:attr tail #'c.tail))
 
