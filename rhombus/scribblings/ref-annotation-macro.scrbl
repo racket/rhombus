@@ -86,5 +86,25 @@
 
 }
 
+@doc(
+  syntax.class annot_meta.Group:
+    ~group
+    ~attr parsed
+  syntax.class annot_meta.AfterPrefixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+  syntax.class annot_meta.AfterInfixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+){
+
+ @provided_meta()
+
+ Analogous to @rhombus(expr_meta.Group, ~stxclass), etc., but for annotations.
+
+}
+
 
 @«macro.close_eval»(macro_eval)

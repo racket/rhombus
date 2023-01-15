@@ -3,7 +3,9 @@
                      syntax/parse/pre
                      enforest/transformer-result
                      "srcloc.rkt"
-                     "pack.rkt")
+                     "pack.rkt"
+                     (submod "syntax-class.rkt" for-syntax-class)
+                     (for-syntax racket/base))
          "name-root.rkt"
          "syntax.rkt"
          "expression.rkt"
@@ -11,7 +13,8 @@
          "wrap-expression.rkt"
          (for-syntax "name-root.rkt"))
 
-(provide expr)
+(provide expr
+         (for-syntax expr_meta))
 
 (module+ for-define
   (provide (for-syntax make-expression-infix-operator
@@ -21,6 +24,12 @@
   macro
   rule
   only)
+
+(begin-for-syntax
+  (define-simple-name-root expr_meta
+    Group
+    AfterPrefixGroup
+    AfterInfixGroup))
 
 (define-name-root only
   #:fields
@@ -40,6 +49,12 @@
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
   #'expression-prefix+infix-operator)
+
+(begin-for-syntax
+  (define-operator-syntax-classes
+    Group :expression
+    AfterPrefixGroup :prefix-op+expression+tail
+    AfterInfixGroup :infix-op+expression+tail))
 
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information

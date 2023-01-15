@@ -172,4 +172,58 @@
 }
 
 
+@doc(
+  syntax.class expr_meta.Group:
+    ~group
+    ~attr parsed
+  syntax.class expr_meta.AfterPrefixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+  syntax.class expr_meta.AfterInfixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+){
+
+ @provided_meta()
+
+ Syntax classes that match by parsing expressions. The @rhombus(parsed)
+ field in each case is an opaque syntax object that represents the parsed
+ expression form.
+
+ The @rhombus(expr_meta.AfterPrefixGroup) and
+ @rhombus(expr_meta.AfterInfixGroup) syntax classes expect an operator
+ name that is bound as a prefix or infix operator, respectively. Parsing
+ procedes as if immediately after the given operator---stopping when an
+ infix operator of weaker precencence is encountered, for example. The
+ result is in both a @rhombus(parsed) field and a @rhombus(tail) field
+ that contains the remaining unparsed input.
+
+@examples(
+  ~eval: macro_eval
+  ~defn:
+    :
+      // an infix `choose` that works without a right-hand side
+      // expression, and that has precendence between `+` and `*`
+      expr.macro '$left choose $tail ...':
+        ~weaker_than: *
+        ~stronger_than: +
+        match '$tail ...'
+        | '': values('factorial($left)', '')
+        | '$(right :: expr_meta.AfterInfixGroup('choose'))':
+             values('factorial($left)/factorial($right)', right.tail)
+      fun | factorial(0) : 1 | factorial(n): n*factorial(n-1)
+  ~repl:
+    4 choose
+    4 choose 2
+    4 choose 2 + 1
+    4 choose 1*2
+    (4 choose 1) * 2
+)
+
+
+}
+
+
 @«macro.close_eval»(macro_eval)

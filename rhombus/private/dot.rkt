@@ -137,7 +137,7 @@
            #:when (not repetition?)
            #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
            (values #`(dot-assign-by-name #,form1 '#,field-id e.parsed)
-                   #'e.tail)]
+                   #'e.raw_tail)]
           [else
            (values #`(dot-lookup-by-name #,form1 '#,field-id)
                    tail)])))

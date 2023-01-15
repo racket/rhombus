@@ -310,4 +310,24 @@
 
 }
 
+@doc(
+  syntax.class bind_meta.Group:
+    ~group
+    ~attr parsed
+  syntax.class bind_meta.AfterPrefixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+  syntax.class bind_meta.AfterInfixGroup(op_name):
+    ~group
+    ~attr parsed
+    ~attr tail
+){
+
+ @provided_meta()
+
+ Analogous to @rhombus(expr_meta.Group, ~stxclass), etc., but for bindings.
+
+}
+
 @«macro.close_eval»(macro_eval)

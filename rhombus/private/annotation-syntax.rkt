@@ -4,7 +4,8 @@
                      enforest/transformer-result
                      enforest/proc-name
                      "pack.rkt"
-                     "static-info-pack.rkt")
+                     "static-info-pack.rkt"
+                     (submod "syntax-class.rkt" for-syntax-class))
          "definition.rkt"
          (submod "annotation.rkt" for-class)
          "syntax.rkt"
@@ -31,7 +32,10 @@
 
 (begin-for-syntax
   (define-simple-name-root annot_meta
-    pack_predicate))
+    pack_predicate
+    Group
+    AfterPrefixGroup
+    AfterInfixGroup))
 
 (define-operator-definition-transformer+only rule rule-only
   'rule
@@ -46,6 +50,12 @@
   #'make-annotation-prefix-operator
   #'make-annotation-infix-operator
   #'annotation-prefix+infix-operator)
+
+(begin-for-syntax
+  (define-operator-syntax-classes
+    Group :annotation
+    AfterPrefixGroup :prefix-op+annotation+tail
+    AfterInfixGroup :infix-op+annotation+tail))
 
 (begin-for-syntax
   (struct annotation-prefix+infix-operator (prefix infix)

@@ -29,12 +29,23 @@
   (provide (for-syntax rhombus-syntax-class in-syntax-class-space)
            define-syntax-class-syntax))
 
+(module+ for-syntax-class
+  (provide (for-syntax make-syntax-class)
+           define-operator-syntax-classes))
+
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
   (struct rhombus-syntax-class (kind class attributes splicing? arity))
 
-  (struct syntax-class-attribute (id depth)))
+  (struct syntax-class-attribute (id depth))
+
+  (define (make-syntax-class pat
+                             #:kind [kind 'term]
+                             #:arity [arity #f]
+                             #:fields [fields null]
+                             #:splicing? [splicing? #f])
+    (rhombus-syntax-class kind pat fields splicing? arity)))
 
 (define-syntax (define-syntax-class-syntax stx)
   (syntax-parse stx
@@ -42,13 +53,31 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-syntax-class-space #'name) rhs))]))
 
-(define-syntax Term (rhombus-syntax-class 'term #f null #f #f))
-(define-syntax Id (rhombus-syntax-class 'term #'identifier null #f #f))
-(define-syntax Op (rhombus-syntax-class 'term #':operator null #f #f))
-(define-syntax Id_Op (rhombus-syntax-class 'term #':operator-or-identifier null #f #f))
-(define-syntax-class-syntax Keyword (rhombus-syntax-class 'term #'keyword null #f #f))
-(define-syntax-class-syntax String (rhombus-syntax-class 'term #'string null #f #f))
-(define-syntax-class-syntax Integer (rhombus-syntax-class 'term #'exact-integer null #f #f))
-(define-syntax Group (rhombus-syntax-class 'group #f null #f #f))
-(define-syntax Multi (rhombus-syntax-class 'multi #f null #f #f))
-(define-syntax Block (rhombus-syntax-class 'block #f null #f #f))
+(define-syntax Term (make-syntax-class #f))
+(define-syntax Id (make-syntax-class #'identifier))
+(define-syntax Op (make-syntax-class #':operator))
+(define-syntax Id_Op (make-syntax-class #':operator-or-identifier))
+(define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
+(define-syntax-class-syntax String (make-syntax-class #'string))
+(define-syntax-class-syntax Integer (make-syntax-class #'exact-integer))
+(define-syntax Group (make-syntax-class #f #:kind 'group))
+(define-syntax Multi (make-syntax-class #f #:kind 'multi))
+(define-syntax Block (make-syntax-class #f #:kind 'block))
+
+(define-syntax-rule (define-operator-syntax-classes
+                      Group :form
+                      AfterPrefixGroup :prefix-op+form+tail
+                      AfterInfixGroup :infix-op+form+tail)
+  (begin
+    (define-syntax Group (make-syntax-class #':form
+                                            #:kind 'group
+                                            #:fields '((parsed . 0))))
+    (define-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
+                                                       #:kind 'group
+                                                       #:arity 2
+                                                       #:fields '((parsed . 0) (tail . 0))))
+    (define-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
+                                                      #:kind 'group
+                                                      #:arity 2
+                                                      #:fields '((parsed . 0) (tail . 0))))))
+

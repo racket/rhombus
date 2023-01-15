@@ -47,7 +47,7 @@
                               (span-srcloc map #'head)
                               #'head))
      (values e
-             #'rhs.tail)]
+             #'rhs.raw_tail)]
     [(_ ((~and head brackets) index) . tail)
      (define (build-ref map index map-static-info)
        (define map-ref-id (or (map-static-info #'#%map-ref)

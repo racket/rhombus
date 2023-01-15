@@ -264,7 +264,7 @@
     [(group _:operator-macro-head (quotes (group (~var id (target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name)))) #'id.name]
-    [(group (~or rhombus-syntax) (op |.|) class (~var id (identifier-target space-name))) #'id.name]
+    [(group (~or rhombus-syntax) (op |.|) class (~var id (identifier-target space-name)) . _) #'id.name]
     [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
@@ -274,8 +274,8 @@
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (def fun operator :: |.| grammar specsubform)
-    #:datum-literals (parens group op quotes)
+    #:literals (def fun operator :: |.| grammar specsubform rhombus-syntax)
+    #:datum-literals (parens group op quotes class)
     [(group (~or fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
@@ -295,6 +295,9 @@
      vars]
     [(group _:specsubform-head (quotes g))
      (extract-pattern-metavariables #'g vars)]
+    [(group rhombus-syntax _ class (~var id (identifier-target space-name)) (parens g ...) . _)
+     (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
+       (extract-binding-metavariables g vars))]
     [(group grammar id b)
      (extract-pattern-metavariables #'(group b) (add-metavariable vars #'id))]
     [_ vars]))
@@ -408,8 +411,9 @@
          #`(group #,@(subst #'id.name) e ...))]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
      #`(paragraph plain #,def-id-as-def)]
-    [(group rhombus-syntax . _)
-     #`(paragraph plain #,def-id-as-def)]
+    [(group rhombus-syntax _ _ (~var id (identifier-target space-name)) e ...)
+     (rb #:at stx
+         #`(group #,@(subst #'id.name) e ...))]
     [(group _:specsubform-head (quotes g))
      (rb #:at #'g #:pattern? #t #'g)]
     [(group grammar id (block g ...))
@@ -521,7 +525,7 @@
     [(group (~or def fun) id:identifier (parens . _) . _) "function"]
     [(group (~or def) (quotes . _) . _) "expression"]
     [(group operator . _) "operator"]
-    [(group rhombus-syntax . _) "syntax-class"]
+    [(group rhombus-syntax . _) "syntax class"]
     [(group interface . _) "interface"]
     [_ "value"]))
 

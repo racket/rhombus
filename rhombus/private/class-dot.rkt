@@ -259,7 +259,7 @@
          #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
          (values (field-desc-mutator-id fld)
                  #'e.parsed
-                 #'e.tail)]
+                 #'e.raw_tail)]
         [_
          (values accessor-id
                  #f
@@ -295,7 +295,7 @@
             [((op :=) . tail)
              #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
              (values #`(#,(no-srcloc #'parens) (group (parsed e.parsed)))
-                     #'e.tail)]
+                     #'e.raw_tail)]
             [_ (values #'(parens) tail)])
           (syntax-parse tail
             #:datum-literals (op)

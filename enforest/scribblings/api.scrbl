@@ -107,7 +107,9 @@ types and one macro:
       the tail of a group. The syntax class continues
       enforestation based on the precedence and associatvity of the given operator.
       A match has a @racket[parsed] attribute for the parsed
-      result and a @racket[tail] attribute for the remaining terms.}
+      result and a @racket[tail] attribute for the remaining terms in
+      a group; a @racket[raw_tail] attribute is also available, which is the
+      same as @racket[tail] but without a @racket[group] tag.}
 
     @item{@racket[#:desc] and @racket[#:operator-desc]: strings used in error reporting
       to refer to a form or an operator for a form. The defaults are

@@ -12,6 +12,7 @@
                      "name-path-op.rkt"
                      "pack.rkt"
                      (submod "syntax-class.rkt" for-quasiquote)
+                     (submod "syntax-class.rkt" for-syntax-class)
                      (for-syntax racket/base)
                      "realm.rkt"
                      "parse.rkt")
@@ -96,9 +97,17 @@
                 #:infix-operator-ref new-infix-operator-ref
                 #:check-result (rhombus-body-at check-at check-form ...)
                 #:make-identifier-form (rhombus-body-at id-at make-identifier-form ...))
-              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f #f))
-              (define-syntax prefix-more-class-name (rhombus-syntax-class 'group #':prefix-more '((parsed . 0) (tail . 0)) #f 2))
-              (define-syntax infix-more-class-name (rhombus-syntax-class 'group #':infix-more '((parsed . 0) (tail . 0)) #f 2))
+              (define-syntax class-name (make-syntax-class #':base
+                                                           #:kind 'group
+                                                           #:fields '((parsed . 0))))
+              (define-syntax prefix-more-class-name (make-syntax-class #':prefix-more
+                                                                       #:kind 'group
+                                                                       #:fields '((parsed . 0) (tail_as_group . 0))
+                                                                       #:arity 2))
+              (define-syntax infix-more-class-name (make-syntax-class #':infix-more
+                                                                      #:kind 'group
+                                                                      #:fields '((parsed . 0) (tail_as_group . 0))
+                                                                      #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))
             (maybe-skip

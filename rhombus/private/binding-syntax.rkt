@@ -7,6 +7,7 @@
                      "pack.rkt"
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
+                     (submod "syntax-class.rkt" for-syntax-class)
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "name-root.rkt"
@@ -51,7 +52,10 @@
     pack_info
     unpack
     unpack_info
-    get_info))
+    get_info
+    Group
+    AfterPrefixGroup
+    AfterInfixGroup))
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
@@ -66,6 +70,12 @@
   #'make-binding-prefix-operator
   #'make-binding-infix-operator
   #'prefix+infix)
+
+(begin-for-syntax
+  (define-operator-syntax-classes
+    Group :binding
+    AfterPrefixGroup :prefix-op+binding+tail
+    AfterInfixGroup :infix-op+binding+tail))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)

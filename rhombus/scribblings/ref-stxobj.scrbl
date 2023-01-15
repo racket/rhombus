@@ -10,7 +10,7 @@
 
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
  multi-group sequence with binding scopes and other metadata on
- individual terms, and metadata potentially on individual groups. See
+ individual terms, and metadata potentially on individual syntax.cls. See
  @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top")
  for information on shrubbery notation, and specifically
  @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
@@ -334,16 +334,16 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax.class Term
-  syntax.class Id
-  syntax.class Op
-  syntax.class Id_Op
-  syntax.class Keyword
-  syntax.class String
-  syntax.class Integer
-  syntax.class Group
-  syntax.class Multi
-  syntax.class Block
+  syntax.class Term: ~term
+  syntax.class Id: ~term
+  syntax.class Op: ~term
+  syntax.class Id_Op: ~term
+  syntax.class Keyword: ~term
+  syntax.class String: ~term
+  syntax.class Integer: ~term
+  syntax.class Group: ~group
+  syntax.class Multi: ~multi
+  syntax.class Block: ~block
 ){
 
  Syntax classes, all of which imply a single-term match except for
