@@ -85,17 +85,17 @@ Although Rhombus supports new binding operators through
 @rhombus(syntax_binding.macro), syntax classes provide a better way to
 organize most syntax abstractions. To define a new syntax class, use the
 @rhombus(syntax.class) form with a block that contains
-@rhombus(~pattern) with pattern alternatives:
+@rhombus(pattern) with pattern alternatives:
 
 @demo(
   ~defn:
     syntax.class Arithmetic:
-     ~pattern
+     pattern
      | '$x + $y'
      | '$x - $y'
 )
 
-An equivalent shorthand omits the use of @rhombus(~pattern) and inlines
+An equivalent shorthand omits the use of @rhombus(pattern) and inlines
 alternatives into the immediate @rhombus(syntax.class) form:
 
 @demo(

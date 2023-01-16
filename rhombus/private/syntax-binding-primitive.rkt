@@ -140,6 +140,11 @@
                                            ;; a list and then convert back when the tail is used as a new tail in a
                                            ;; template
                                            #`(pack-tail* (syntax #,id-with-attr) 0)]
+                                          [(not (or (free-identifier=? unpack*-id #'unpack-tail-list*)
+                                                    (free-identifier=? unpack*-id #'unpack-multi-tail-list*)))
+                                           ;; assume depth-compatible value checked on binding side, and
+                                           ;; let `attribute` unpack syntax repetitions
+                                           #`(pack-nothing* (attribute #,id-with-attr) #,depth)]
                                           [else
                                            #`(#,(cond
                                                   [(free-identifier=? unpack*-id #'unpack-tail-list*)

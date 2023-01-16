@@ -11,25 +11,25 @@ export:
 
 meta:
   syntax.class result_mode:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '~is'
     | '~is_a'
     | '~prints_like'
     | '~raises'
     | '~matches'
   syntax.class result:
-    ~sequence
-    ~pattern
+    kind: ~sequence
+    pattern
     | '$(mode :: result_mode): $body':
-        ~attr [suffix, ...]: []
+        field [suffix, ...]: []
     | '$(mode :: result_mode) $g ...':
-        ~attr body: '$g ...'
-        ~attr [suffix, ...]: []
+        field body: '$g ...'
+        field [suffix, ...]: []
     | '~completes':
-        ~attr mode: '~completes'
-        ~attr body: '#void'
-        ~attr [suffix, ...]: ['#void']
+        field mode: '~completes'
+        field body: '#void'
+        field [suffix, ...]: ['#void']
 
 expr.macro '«located '$w' $tail ...»':
   values('[#' $w, $(w.srcloc())]',

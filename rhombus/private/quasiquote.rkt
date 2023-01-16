@@ -314,6 +314,8 @@
                   ;; deepen-escape
                   (lambda (idr)
                     (syntax-parse idr
+                      #:literals (pack-nothing*)
+                      [(id (pack-nothing* _ _)) idr]
                       [(id (pack (_ stx) depth))
                        #`(id (pack (syntax (stx (... ...))) #,(add1 (syntax-e #'depth))))]))
                   ;; deepen-syntax-escape

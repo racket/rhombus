@@ -21,4 +21,14 @@
      meta_label
      names
      all_from
-     NonemptyList)
+     NonemptyList
+
+     pattern
+     description
+     kind
+     error_mode
+     fields
+
+     matching_also
+     matching_when
+     matching_unless)

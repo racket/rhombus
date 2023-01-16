@@ -21,6 +21,8 @@
                      [(intf_clause) 'rhombus/interface_clause]
                      [(entry_point) 'rhombus/entry_point]
                      [(syntax_binding) 'rhombus/syntax_binding]
+                     [(syntax_class_clause) 'rhombus/syntax_class_clause]
+                     [(pattern_clause) 'rhombus/pattern_clause]
                      [(#f) 'rhombus/expr]
                      [else #f]))
      (if space

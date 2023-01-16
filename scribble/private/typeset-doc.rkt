@@ -21,6 +21,10 @@
                   in-repetition-space)
          (only-in (submod rhombus/private/syntax-class for-quasiquote)
                   in-syntax-class-space)
+         (only-in (submod rhombus/private/syntax-class-clause for-class)
+                  in-syntax-class-clause-space)
+         (only-in (submod rhombus/private/pattern-clause for-class)
+                  in-pattern-clause-space)
          (only-in (submod rhombus/private/reducer for-class)
                   in-reducer-space)
          (only-in (submod rhombus/private/for-clause for-class)
@@ -39,7 +43,8 @@
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
                   decl defn expr impo expo annot repet bind reducer for_clause
-                  class_clause interface_clause entry_point syntax_binding)
+                  class_clause interface_clause entry_point syntax_binding
+                  syntax_class_clause pattern_clause)
          (only-in "rhombus.rhm"
                   rhombusblock_etc
                   [rhombus one-rhombus])
@@ -226,11 +231,11 @@
   (define-splicing-syntax-class identifier-macro-head
     #:literals (def defn expr decl bind impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
-                 syntax_binding |.|)
+                 syntax_binding syntax_class_clause pattern_clause |.|)
     #:datum-literals (op modifier macro rule)
     (pattern (~seq (~or defn decl expr annot repet bind reducer expo modpath
                         for_clause class_clause interface_clause entry_point
-                        syntax_binding)
+                        syntax_binding syntax_class_clause pattern_clause)
                    (op |.|) macro))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq (~or impo expo) (op |.|) modifier))
@@ -460,7 +465,8 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point rhombus-syntax)
+    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause
+                     entry_point syntax_class_clause pattern_clause rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
@@ -473,13 +479,15 @@
     [(group interface_clause . _) in-interface-clause-space]
     [(group entry_point . _) in-entry-point-space]
     [(group syntax_binding . _) in-syntax-binding-space]
+    [(group syntax_class_clause . _) in-syntax-class-clause-space]
+    [(group pattern_clause . _) in-pattern-clause-space]
     [(group rhombus-syntax . _) in-syntax-class-space]
     [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
     #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point
-                     bind syntax_binding rhombus-syntax)
+                     bind syntax_binding syntax_class_clause pattern_clause rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
@@ -492,6 +500,8 @@
     [(group interface_clause . _) 'intf_clause]
     [(group entry_point . _) 'entry_point]
     [(group syntax_binding . _) 'syntax_binding]
+    [(group syntax_class_clause . _) 'syntax_class_clause]
+    [(group pattern_clause . _) 'pattern_clause]
     [(group bind . _) 'bind]
     [(group rhombus-syntax . _) 'stxclass]
     [_ #f]))
@@ -501,7 +511,7 @@
     #:literals (defn decl expr impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
                  bind grammar operator rhombus-syntax
-                 syntax_binding interface)
+                 syntax_binding syntax_class_clause pattern_clause interface)
     #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
@@ -518,6 +528,8 @@
     [(group interface_clause . _) "interface clause"]
     [(group entry_point . _) "entry point"]
     [(group syntax_binding . _) "syntax binding"]
+    [(group syntax_class_clause . _) "syntax class clause"]
+    [(group pattern_clause  . _) "pattern clause"]
     [(group bind . _) "binding operator"]
     ;; after expr, bind, etc. so that expr.subspecform gets "expression" not #f
     [(group _:specsubform-head . _) #f]

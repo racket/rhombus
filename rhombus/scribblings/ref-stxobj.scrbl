@@ -296,8 +296,8 @@ Metadata for a syntax object can include a source location and the raw
 @examples(
   ~defn:
     syntax.class Wrapped:
-      ~term
-      ~pattern
+      kind: ~term
+      pattern
       | '($content)'
   ~repl:
     match '1 + (2) + 3'

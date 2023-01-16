@@ -64,6 +64,7 @@
 
          pack-element*
          unpack-element*
+         pack-nothing*
 
          repack-as-term
          repack-as-multi
@@ -231,6 +232,8 @@
   (let unpack* ([r r] [depth depth])
     (cond
       [(eqv? depth 0) (unpack r (syntax-e qs) qs)]
+      [(not (list? r))
+       (raise-argument-error* (syntax-e qs) rhombus-realm "List" r)]
       [else (for/list ([r (in-list r)])
               (unpack* r (sub1 depth)))])))
 
@@ -274,6 +277,9 @@
 
 (define (unpack-element* qs r depth)
   (unpack* qs r depth (lambda (r name qs) r)))
+
+;; like `pack-elment*`, but assumming the right shape already
+(define (pack-nothing* r depth) r)
 
 ;; An extra layer of unpacking to convert to a list
 (define (unpack-multi-group* qs r depth)

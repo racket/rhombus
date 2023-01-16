@@ -26,12 +26,12 @@ meta:
         [#'lib, str]
 
   syntax.class Option:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '~lang':
-        ~attr form: '~lang'
+        field form: '~lang'
     | '~no_declare':
-        ~attr form: '#{#:no-declare}'
+        field form: '#{#:no-declare}'
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   '$(parsed(['defmodule',

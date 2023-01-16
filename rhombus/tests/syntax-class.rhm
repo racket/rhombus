@@ -42,11 +42,30 @@ begin:
     | '$(exp :: Arithmetic)': exp.y
     ~prints_like '2'
 
+check:
+  syntax.class Arithmetic:
+    fields: x y
+    pattern
+    | '$x $op $y'
+  match '1+2'
+  | '$(exp :: Arithmetic)': [exp.x, exp.y]
+  ~prints_like ['1', '2']
+
+check:
+  ~eval
+  syntax.class Arithmetic:
+    fields: x y
+    pattern
+    | '$x $op $y'
+  match '1+2'
+  | '$(exp :: Arithmetic)': exp.op
+  ~raises "attribute not found"
+
 begin:
   syntax.class Arithmetic
   | '$x + $y':
-      ~attr sum: Syntax.make(Syntax.unwrap(x) + Syntax.unwrap(y))
-      ~attr [num, ...]: [x, y]
+      field sum: Syntax.make(Syntax.unwrap(x) + Syntax.unwrap(y))
+      field [num, ...]: [x, y]
 
   check:
     match '1+2'
@@ -105,8 +124,8 @@ begin:
       rhombus/meta open
     meta:
       syntax.class Arithmetic:
-        ~description: "an expression with addition or subtraction"
-        ~pattern
+        description: "an expression with addition or subtraction"
+        pattern
         | '$x + $y'
         | '$x - $y'
     expr.macro 'right_operand $(e :: Arithmetic)':
@@ -140,8 +159,8 @@ check:
 
 begin:
   syntax.class Foo:
-    ~sequence
-    ~pattern
+    kind: ~sequence
+    pattern
     | '$x + $y'
   check:
     match '0 + 1 + 2'
@@ -150,8 +169,8 @@ begin:
 
 begin:
   syntax.class Foo:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '($x + $y)'
   check:
     match '0 + (1 + 2)'
@@ -161,15 +180,15 @@ begin:
 check:
   ~eval
   syntax.class Foo:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '$x + $y'
   ~raises "not a single-term pattern"
 
 begin:
   syntax.class Foo:
-    ~group
-    ~pattern
+    kind: ~group
+    pattern
     | '$x + $y'
   check:
     match '(1 + 2)'
@@ -178,8 +197,8 @@ begin:
 
 begin:
   syntax.class Foo:
-    ~group
-    ~pattern
+    kind: ~group
+    pattern
     | '$g'
   check:
     match '(1 + 2)'
@@ -190,8 +209,8 @@ begin:
   check:
     ~eval
     syntax.class Foo:
-      ~group
-      ~pattern
+      kind: ~group
+      pattern
       | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
@@ -199,8 +218,8 @@ begin:
 
 begin:
   syntax.class Foo:
-    ~multi
-    ~pattern
+    kind: ~multi
+    pattern
     | '$x + $y
        $z - $w'
   check:
@@ -216,8 +235,8 @@ begin:
 
 begin:
   syntax.class Foo:
-    ~block
-    ~pattern
+    kind: ~block
+    pattern
     | ': $x + $y
          $z - $w'
   check:
@@ -229,16 +248,16 @@ begin:
 check:
   ~eval
   syntax.class Foo:
-    ~block
-    ~pattern
+    kind: ~block
+    pattern
     | '($x + $y,
         $z - $w)'
   ~raises "not a block pattern"
 
 begin:
   syntax.class Foo:
-    ~multi
-    ~pattern
+    kind: ~multi
+    pattern
     | '($x, $y)'
   check:
     match '((1 + 2, 3 - 4))'
@@ -257,8 +276,8 @@ begin:
 
 begin:
   syntax.class Foo:
-    ~multi
-    ~pattern
+    kind: ~multi
+    pattern
     | '$x'
   check:
     match '(1 + 2, 3 - 4)'
@@ -269,23 +288,73 @@ begin:
     | ': $(f :: Foo)': f
     ~prints_like '1 + 2; 3 - 4; 5 / 6'
 
+begin:
+  syntax.class Foo:
+    pattern
+    | '$x $y':
+        matching_when y.unwrap() == 1
+        field case: '1'
+    | '$x $y':
+        matching_unless y.unwrap() == 5
+        field case: '2'
+    | '$x $y':
+        field case: '3'
+  check:
+    def '$(f :: Foo)': 'a 1'
+    [f.x, f.y, f.case]
+    ~prints_like ['a', '1', '1']
+  check:
+    def '$(f :: Foo)': 'b 100'
+    [f.x, f.y, f.case]
+    ~prints_like ['b', '100', '2']
+  check:
+    def '$(f :: Foo)': 'c 5'
+    [f.x, f.y, f.case]
+    ~prints_like ['c', '5', '3']
+   
+begin:
+  syntax.class Foo:
+    pattern
+    | '$x $y':
+        matching_also '(1 + 1)': y
+        field case: '1'
+        field z: '0'
+    | '$x $y':
+        matching_also '(1 + $z)': y
+        field case: '2'
+    | '$x $y':
+        field case: '3'
+        field z: 'no'
+  check:
+    def '$(f :: Foo)': 'a 1'
+    [f.x, f.y, f.case, f.z]
+    ~prints_like ['a', '1', '3', 'no']
+  check:
+    def '$(f :: Foo)': 'b (1 * 1)'
+    [f.x, f.y, f.case, f.z]
+    ~prints_like ['b', '(1 * 1)', '3', 'no']
+  check:
+    def '$(f :: Foo)': 'b (1 + 4)'
+    [f.x, f.y, f.case, f.z]
+    ~prints_like ['b', '(1 + 4)', '2', '4']
+   
 check:
   syntax.class Option:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '~lang':
-        ~attr form: '~lang'
+        field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form, ...]
   ~prints_like ['~lang', '~lang']
 
 check:
   syntax.class Option:
-    ~pattern
+    pattern
     | '~lang':
-        ~attr form: '~lang'
+        field form: '~lang'
     | '~lang ~and':
-        ~attr form: '~and'
+        field form: '~and'
   match '(~lang, ~lang ~and)'
   | '($(o :: Option), ...)': [o.form, ...]
   ~prints_like ['~lang', '~and']
@@ -293,10 +362,10 @@ check:
 check:
   ~eval
   syntax.class Option:
-    ~term
-    ~pattern
+    kind: ~term
+    pattern
     | '~lang':
-        ~attr form: '~lang'
+        field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
   ~raises "attribute is a repetition"
@@ -304,9 +373,9 @@ check:
 check:
   ~eval
   syntax.class Option:
-    ~pattern
+    pattern
     | '~lang':
-        ~attr form: '~lang'
+        field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
   ~raises "attribute is a repetition"
@@ -314,25 +383,23 @@ check:
 begin:
   syntax.class NTerms
   | '~one $a':
-      ~attr b:
-        '0'
-      ~attr c:
-        '0'
+      field b = '0'
+      field c = '0'
       def sum:
         Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-      ~attr average:
+      field average:
         '$(sum / 2)'
   | '~two $a $b':
-      ~attr c:
+      field c:
         '0'
       def sum:
         Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-      ~attr average:
+      field average:
         '$(sum / 2)'
   | '~three $a $b $c':
       def sum:
         Syntax.unwrap(a) + Syntax.unwrap(b) + Syntax.unwrap(c)
-      ~attr average:
+      field average:
         '$(sum / 2)'
 
   def '$(two_terms :: NTerms)' = '~two 24 42'
@@ -366,7 +433,7 @@ begin:
 // empty pattern is a special case
 begin:
   syntax.class Maybe:
-    ~pattern
+    pattern
     | '1'
     | ''
 
@@ -383,7 +450,7 @@ begin:
 begin:
   syntax.class House(material)
   | '< < > >':
-      ~attr stuff: Syntax.make(material +& "!")
+      field stuff: Syntax.make(material +& "!")
   check:
     def '$(x :: House("straw"))' = '< < > >'
     x.stuff
@@ -400,3 +467,50 @@ check:
   syntax.class Horse | '!!!'
   def '$(x :: Horse(1))' = #false
   ~raises "syntax class does not expect arguments"
+
+// field value does not have to be syntax
+check:
+  syntax.class Foo:
+    pattern
+    | '$x':
+        field [y, ...] = [1, #'~q, 3]
+  match 'x'
+  | '$(f :: Foo)': [f.y, ...]
+  ~is [1, #'~q, 3]    
+
+// a field used both as a non-syntax and a sytax field
+begin:
+  syntax.class Foo:
+    pattern
+    | '$x':
+        field [y, ...] = [1, #'~q, 3]
+    | '$x $y ...'
+  check:
+    match 'x'
+    | '$(f :: Foo)': [f.y, ...]
+    ~is [1, #'~q, 3]
+  check:
+    match 'x 1 2 3'
+    | '$(f :: Foo)': [f.y, ...]
+    ~prints_like ['1', '2', '3']
+  check:
+    match 'x'
+    | '$(f :: Foo)': '($f.y, ...)'
+    ~prints_like '(1, ~q, 3)'
+
+// mixing tail and non-tail modes for a field is allowed,
+// even though it disables optimization for the tail case
+begin:
+  syntax.class Foo:
+    kind: ~group
+    pattern
+    | '$x ($y + 1) ...'
+    | '$x $y ...'
+  check:
+    match 'x (1 + 1) (2 + 1) 3'
+    | '$(f :: Foo)': [f.y, ...]
+    ~prints_like ['(1 + 1)', '(2 + 1)', '3']
+  check:
+    match 'x (1 + 1) (2 + 1) (3 + 1)'
+    | '$(f :: Foo)': [f.y, ...]
+    ~prints_like ['1', '2', '3']
