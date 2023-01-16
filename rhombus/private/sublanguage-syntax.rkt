@@ -99,14 +99,16 @@
                 #:make-identifier-form (rhombus-body-at id-at make-identifier-form ...))
               (define-syntax class-name (make-syntax-class #':base
                                                            #:kind 'group
-                                                           #:fields '((parsed . 0))))
+                                                           #:fields #'((parsed parsed 0 unpack-term*))))
               (define-syntax prefix-more-class-name (make-syntax-class #':prefix-more
                                                                        #:kind 'group
-                                                                       #:fields '((parsed . 0) (tail_as_group . 0))
+                                                                       #:fields '((parsed parsed 0 unpack-term*)
+                                                                                  (tail tail tail unpack-tail-list*))
                                                                        #:arity 2))
               (define-syntax infix-more-class-name (make-syntax-class #':infix-more
                                                                       #:kind 'group
-                                                                      #:fields '((parsed . 0) (tail_as_group . 0))
+                                                                      #:fields '((parsed parsed 0 unpack-term*)
+                                                                                 (tail tail tail unpack-tail-list*))
                                                                       #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))
@@ -176,7 +178,7 @@
                 #:name-root-ref-root name-root-ref-root
                 #:transformer-ref new-transformer-ref
                 #:check-result (rhombus-body-at check-at check-form ...))
-              (define-syntax class-name (rhombus-syntax-class 'group #':base '((parsed . 0)) #f #f))
+              (define-syntax class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
               (define make-transformer (make-make-transformer new-transformer)))
             (maybe-skip
              (define-identifier-syntax-definition-transformer define-macro

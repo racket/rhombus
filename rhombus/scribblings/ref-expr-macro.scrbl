@@ -179,11 +179,11 @@
   syntax.class expr_meta.AfterPrefixGroup(op_name):
     ~group
     ~attr parsed
-    ~attr tail
+    ~attr tail ...
   syntax.class expr_meta.AfterInfixGroup(op_name):
     ~group
     ~attr parsed
-    ~attr tail
+    ~attr tail ...
 ){
 
  @provided_meta()
@@ -212,7 +212,7 @@
         match '$tail ...'
         | '': values('factorial($left)', '')
         | '$(right :: expr_meta.AfterInfixGroup('choose'))':
-             values('factorial($left)/factorial($right)', right.tail)
+             values('factorial($left)/factorial($right)', '$right.tail ...')
       fun | factorial(0) : 1 | factorial(n): n*factorial(n-1)
   ~repl:
     4 choose

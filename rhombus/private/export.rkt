@@ -331,7 +331,7 @@
         #:with (~var e (:export-infix-op+form+tail #'#%juxtapose)) #'(group . tail)
         (values #`(combine-out #,form1
                                e.parsed)
-                #'e.raw_tail)]))
+                #'e.tail)]))
    'left))
 
 (define-export-syntax |.|

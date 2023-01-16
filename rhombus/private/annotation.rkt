@@ -118,7 +118,7 @@
     (pattern stxes
              #:with (~var c (:annotation-infix-op+form+tail #'::)) #'(group . stxes)
              #:attr parsed #'c.parsed
-             #:attr tail #'c.raw_tail))
+             #:attr tail #'c.tail))
 
   (define-splicing-syntax-class :inline-annotation
     #:datum-literals (op)

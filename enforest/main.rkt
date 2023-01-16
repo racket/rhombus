@@ -127,16 +127,14 @@
                     #:do [(define op (lookup-operator 'prefix-op+form+tail 'prefix (in-space #'op-name.name) prefix-operator-ref))
                           (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
-                    #:attr raw_tail (transform-out new-tail)
-                    #:attr tail (datum->syntax #f (cons 'group #'raw_tail))))
+                    #:attr tail (transform-out new-tail)))
          (define-syntax-class (infix-op+form+tail op-name)
            (pattern ((~datum group) . in-tail)
                     #:with op-name::name/group op-name
                     #:do [(define op (lookup-operator 'infix-op+form+tail 'infix (in-space #'op-name.name) infix-operator-ref))
                           (define-values (form new-tail) (enforest-step (transform-in #'in-tail) op #'op-name.name #t))]
                     #:attr parsed (transform-out form)
-                    #:attr raw_tail (transform-out new-tail)
-                    #:attr tail (datum->syntax #f (cons 'group #'raw_tail))))
+                    #:attr tail (transform-out new-tail)))
 
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
                                                    in-space

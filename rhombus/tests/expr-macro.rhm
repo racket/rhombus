@@ -72,3 +72,29 @@ check:
 check:
   1 weirdly 5 + 7
   ~is -1
+
+begin:
+  expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail ~as tail))':
+    '$([tail, ...]
+         +& '[$tail ...]'
+         +& [right.tail, ...]
+         +& '$right.tail ...')'
+  check:
+    go(3 + 4)
+    ~is ("['+', '4']"
+           +& "'[+ 4]'"
+           +& "['+', '4']"
+           +& "'+ 4'")
+
+begin:
+  expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail ~as tail), ...)':
+    '$([[tail, ...], ...]
+         +& '[[$tail ...], ...]'
+         +& [[right.tail, ...], ...]
+         +& '[[$right.tail ...], ...]')'
+  check:
+    go(3 + 4, 5 + 8)
+    ~is ("[['+', '4'], ['+', '8']]"
+           +& "'[[+ 4], [+ 8]]'"
+           +& "[['+', '4'], ['+', '8']]"
+           +& "'[[+ 4], [+ 8]]'")

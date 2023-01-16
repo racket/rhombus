@@ -317,11 +317,11 @@
   syntax.class bind_meta.AfterPrefixGroup(op_name):
     ~group
     ~attr parsed
-    ~attr tail
+    ~attr tail ...
   syntax.class bind_meta.AfterInfixGroup(op_name):
     ~group
     ~attr parsed
-    ~attr tail
+    ~attr tail ...
 ){
 
  @provided_meta()

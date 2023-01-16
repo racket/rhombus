@@ -5,7 +5,8 @@
          syntax/parse/pre
          "operator-parse.rkt"
          "name-root.rkt"
-         "definition.rkt")
+         "definition.rkt"
+         "pack.rkt")
 
 (provide Term
          Id
@@ -23,8 +24,10 @@
   (begin-for-syntax
     (provide in-syntax-class-space
              (struct-out rhombus-syntax-class)
-             (struct-out syntax-class-attribute))))
-                       
+             (struct-out pattern-variable)
+             pattern-variable->list
+             syntax-list->pattern-variable)))
+
 (module+ for-syntax-class-syntax
   (provide (for-syntax rhombus-syntax-class in-syntax-class-space)
            define-syntax-class-syntax))
@@ -38,12 +41,25 @@
 
   (struct rhombus-syntax-class (kind class attributes splicing? arity))
 
-  (struct syntax-class-attribute (id depth))
+  ;; use to represent parsed pattern variables and attributes in syntax classes:
+  (struct pattern-variable (sym val-id depth unpack*-id))
+
+  (define (pattern-variable->list pv)
+    (list (pattern-variable-sym pv)
+          (pattern-variable-val-id pv)
+          (pattern-variable-depth pv)
+          (pattern-variable-unpack*-id pv)))
+  (define (syntax-list->pattern-variable pv)
+    (define l (syntax->list pv))
+    (pattern-variable (syntax-e (car l))
+                      (cadr l)
+                      (syntax-e (caddr l))
+                      (list-ref l 3)))
 
   (define (make-syntax-class pat
                              #:kind [kind 'term]
                              #:arity [arity #f]
-                             #:fields [fields null]
+                             #:fields [fields #'()]
                              #:splicing? [splicing? #f])
     (rhombus-syntax-class kind pat fields splicing? arity)))
 
@@ -71,13 +87,15 @@
   (begin
     (define-syntax Group (make-syntax-class #':form
                                             #:kind 'group
-                                            #:fields '((parsed . 0))))
+                                            #:fields #'((parsed parsed 0 unpack-term*))))
     (define-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
                                                        #:kind 'group
                                                        #:arity 2
-                                                       #:fields '((parsed . 0) (tail . 0))))
+                                                       #:fields #'((parsed parsed 0 unpack-term*)
+                                                                   (tail tail tail unpack-tail-list*))))
     (define-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
                                                       #:kind 'group
                                                       #:arity 2
-                                                      #:fields '((parsed . 0) (tail . 0))))))
+                                                       #:fields #'((parsed parsed 0 unpack-term*)
+                                                                   (tail tail tail unpack-tail-list*))))))
 

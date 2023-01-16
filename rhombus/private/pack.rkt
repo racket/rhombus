@@ -55,7 +55,9 @@
          pack-multi-tail*
          unpack-multi-tail*
 
+         pack-tail-list*
          unpack-tail-list*
+         pack-multi-tail-list*
          unpack-multi-tail-list*
          unpack-list-tail*
          unpack-multi-list-tail*
@@ -306,6 +308,12 @@
 (define (unpack-multi-tail-list* qs r depth)
   (unpack* qs r (sub1 depth) (lambda (r name qs)
                                (syntax->list (unpack-multi-tail r (syntax-e qs) qs)))))
+
+(define (pack-tail-list* stxes depth)
+  (pack* stxes (sub1 depth) pack-tail))
+
+(define (pack-multi-tail-list* stxes depth)
+  (pack* stxes (sub1 depth) pack-multi-tail))
 
 ;; similar to `unpack-tail*`, but each leaf is a plain list of terms
 (define (unpack-list-tail* qs r depth)

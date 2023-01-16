@@ -4,6 +4,7 @@
                      "tag.rkt")
          syntax/parse/pre
          (submod "quasiquote.rkt" convert)
+         (submod "syntax-class.rkt" for-quasiquote)
          (submod "syntax-class.rkt" for-syntax-class-syntax)
          "definition.rkt"
          "name-root.rkt"
@@ -104,14 +105,14 @@
           [(group #:attr attr::attribute-lhs (block in-block ...))
            (values
             (cons #`(group def attr.id (block in-block ...)) body-forms)
-            (cons (pattern-variable #'attr.id #'attr.id (syntax-e #'attr.depth) (quote-syntax unpack-element*)) attrs))]
+            (cons (pattern-variable (syntax-e #'attr.id) #'attr.id (syntax-e #'attr.depth) (quote-syntax unpack-element*)) attrs))]
           [other
            (values (cons #'other body-forms) attrs)])))
     (define all-attrs (append vars explicit-attrs))
     (with-syntax ([((attr ...) ...)
                    (map (lambda (var)
                           #`(#:attr
-                             (#,(pattern-variable-id var) #,(pattern-variable-depth var))
+                             (#,(pattern-variable-sym var) #,(pattern-variable-depth var))
                              (#,(pattern-variable-unpack*-id var)
                               (quote-syntax dots)
                               #,(pattern-variable-val-id var)
@@ -129,10 +130,7 @@
                                       body-form ...
                                       (group (parsed (values #,@(map pattern-variable-val-id explicit-attrs))))))]
                          attr ... ...)
-              (map (lambda (attr)
-                     (cons (syntax-e (pattern-variable-id attr))
-                           (pattern-variable-depth attr)))
-                   all-attrs))))
+              all-attrs)))
   (syntax-parse stx
     #:datum-literals (alts group quotes block)
     [(block (group (~and pat (quotes . _))))
@@ -164,7 +162,11 @@
       #:datum-literals (block group quotes)
       #,@patterns)
    #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-       (rhombus-syntax-class '#,kind #'#,class-name '#,attributes #,splicing? '#,class-arity))))
+      (rhombus-syntax-class '#,kind
+                            #'#,class-name
+                            (quote-syntax #,(map pattern-variable->list attributes))
+                            #,splicing?
+                            '#,class-arity))))
 
 (define-for-syntax (intersect-attributes stx attributess)
   (cond
@@ -173,26 +175,46 @@
     [else
      ;; start with initial set
      (define ht0
-       (for/hasheq ([name+depth (in-list (car attributess))])
-         (values (car name+depth) (cdr name+depth))))
+       (for/hasheq ([var (in-list (car attributess))])
+         (values (pattern-variable-sym var) var)))
      ;; intersect by pruning set
      (define ht
        (for/fold ([ht0 ht0]) ([attributes (in-list (cdr attributess))])
-         (for/fold ([ht #hasheq()]) ([name+depth (in-list attributes)])
-           (if (hash-ref ht0 (car name+depth) #f)
-               (hash-set ht (car name+depth) (cdr name+depth))
+         (for/fold ([ht #hasheq()]) ([var (in-list attributes)])
+           (define prev-var (hash-ref ht0 (pattern-variable-sym var) #f))
+           (if prev-var
+               (hash-set ht
+                         (pattern-variable-sym var)
+                         (intersect-var stx var prev-var))
                ht))))
-     ;; check consistent depths
-     (for* ([attributes (in-list attributess)]
-            [name+depth (in-list attributes)])
-       (unless (eqv? (cdr name+depth) (hash-ref ht (car name+depth) (cdr name+depth)))
-         (raise-syntax-error #f
-                             "attribute at different repetition depths in different clauses"
-                             stx
-                             (car name+depth))))
-     ;; convert back to list of pairs
-     (for/list ([(sym depth) (in-hash ht)])
-       (cons sym depth))]))
+     ;; convert back to list
+     (hash-values ht #t)]))
+
+
+(define-for-syntax (intersect-var stx a b)
+  (unless (eqv? (pattern-variable-depth a) (pattern-variable-depth b))
+    (raise-syntax-error #f
+                        "attribute with different depths in different clauses"
+                        stx
+                        (pattern-variable-sym a)))
+  ;; keeping the same unpack, if possible, enables optimizations for
+  ;; tail repetitions; otherwise, the term is sufficiently normalized
+  ;; by matching that we can just use `unpack-term*`
+  (if (free-identifier=? (pattern-variable-unpack*-id a) (pattern-variable-unpack*-id b))
+      a
+      (let ([special? (lambda (unpack*-id)
+                        (or (free-identifier=? unpack*-id #'unpack-tail-list*)
+                            (free-identifier=? unpack*-id #'unpack-multi-tail-list*)))])
+        (cond
+          [(or (special? (pattern-variable-unpack*-id a))
+               (special? (pattern-variable-unpack*-id b)))
+           (raise-syntax-error #f
+                               "attribute with incompatible tail modes in different clauses"
+                               stx
+                               (pattern-variable-sym a))]
+          [else
+           (struct-copy pattern-variable a
+                        [unpack*-id #'unpack-term*])]))))
 
 (begin-for-syntax
   (define (kw->symbol kw-stx)

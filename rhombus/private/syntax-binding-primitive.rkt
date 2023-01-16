@@ -48,8 +48,8 @@
                                                         (quote-syntax #,unpack*)
                                                         0
                                                         #f
-                                                        (hasheq))])
-            (list (pattern-variable id temp2 0 unpack*)))))
+                                                        #'())])
+            (list (pattern-variable (syntax-e id) temp2 0 unpack*)))))
 
 (define-syntax-binding-syntax _
   (syntax-binding-prefix-operator
@@ -124,32 +124,46 @@
                                                     class-args))
            (define temp0-id (car (generate-temporaries (list #'id))))
            (define temp-id (car (generate-temporaries (list #'id))))
-           (define-values (attribute-bindings attribute-mappings)
-             (for/lists (bindings mappings) ([name+depth (in-list (rhombus-syntax-class-attributes rsc))]
-                                             [temp-attr (in-list (generate-temporaries
-                                                                  (map car (rhombus-syntax-class-attributes rsc))))]
-                                             #:do [(define name (car name+depth))])
-               (define depth (cdr name+depth))
+           (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
+                          (syntax-list->pattern-variable l)))
+           (define-values (attribute-bindings attribute-vars)
+             (for/lists (bindings descs) ([var (in-list vars)]
+                                          [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))])
+               (define name (pattern-variable-sym var))
+               (define depth (pattern-variable-depth var))
+               (define unpack*-id (pattern-variable-unpack*-id var))
                (define id-with-attr
                  (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
-               (values #`[#,temp-attr (pack-term*
-                                       (syntax #,(let loop ([t id-with-attr] [depth depth])
-                                                   (if (zero? depth)
-                                                       t
-                                                       (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
-                                       #,depth)]
-                       (cons name (cons temp-attr depth)))))
+               (values #`[#,temp-attr #,(cond
+                                          [(eq? depth 'tail)
+                                           ;; bridge from a primitive syntax class, where we don't want to convert to
+                                           ;; a list and then convert back when the tail is used as a new tail in a
+                                           ;; template
+                                           #`(pack-tail* (syntax #,id-with-attr) 0)]
+                                          [else
+                                           #`(#,(cond
+                                                  [(free-identifier=? unpack*-id #'unpack-tail-list*)
+                                                   #'pack-tail-list*]
+                                                  [(free-identifier=? unpack*-id #'unpack-multi-tail-list*)
+                                                   #'pack-multi-tail-list*]
+                                                  [else #'pack-term*])
+                                              (syntax #,(let loop ([t id-with-attr] [depth depth])
+                                                          (if (zero? depth)
+                                                              t
+                                                              (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
+                                              #,depth)])]
+                       (pattern-variable name temp-attr (if (eq? depth 'tail) 1 depth) unpack*-id))))
            (define found-attributes
              (and open-attributes
-                  (for/hasheq ([attr-mapping (in-list attribute-mappings)])
-                    (values (car attr-mapping)
-                            (cdr attr-mapping)))))
+                  (for/hasheq ([var (in-list attribute-vars)])
+                    (values (pattern-variable-sym var) var))))
            (when open-attributes
              (for ([(name field+bind) (in-hash open-attributes)])
+               (define field (car field+bind))
                (unless (hash-ref found-attributes name #f)
                  (raise-syntax-error #f
                                      "not an attribute of the syntax class"
-                                     (car field+bind)))))
+                                     field))))
            (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
            #`(#,(if sc
                     #`(~var #,temp0-id #,sc-call)
@@ -163,25 +177,20 @@
                                   (quote-syntax #,unpack*)
                                   #,pack-depth
                                   #,(rhombus-syntax-class-splicing? rsc)
-                                  (hasheq #,@(apply append (for/list ([b (in-list attribute-mappings)])
-                                                             (list #`(quote #,(car b))
-                                                                   #`(syntax-class-attribute (quote-syntax #,(cadr b))
-                                                                                             #,(cddr b)))))))])
+                                  (quote-syntax #,(map pattern-variable->list attribute-vars)))])
                      null)
                  (if (not open-attributes)
                      null
                      (for/list ([name (in-list (hash-keys open-attributes #t))])
                        (define field+bind (hash-ref open-attributes name))
-                       (define temp-attr+depth (hash-ref found-attributes name))
-                       (define temp-attr (car temp-attr+depth))
-                       (define depth (cdr temp-attr+depth))
+                       (define var (hash-ref found-attributes name))
                        #`[#,(cdr field+bind) (make-pattern-variable-syntax
                                               (quote-syntax #,(cdr field+bind))
-                                              (quote-syntax #,temp-attr)
-                                              (quote-syntax unpack-term*)
-                                              #,depth
+                                              (quote-syntax #,(pattern-variable-val-id var))
+                                              (quote-syntax #,(pattern-variable-unpack*-id var))
+                                              #,(pattern-variable-depth var)
                                               #f
-                                              #hasheq())])))
+                                              #'())])))
               #,(append
                  (if (identifier? form1)
                      (list (list #'id temp-id pack-depth unpack*))
@@ -190,10 +199,8 @@
                      null
                      (for/list ([name (in-list (hash-keys open-attributes #t))])
                        (define field+bind (hash-ref open-attributes name))
-                       (define temp-attr+depth (hash-ref found-attributes name))
-                       (define temp-attr (car temp-attr+depth))
-                       (define depth (cdr temp-attr+depth))
-                       (list (cdr field+bind) temp-attr depth #'unpack-term*))))))
+                       (define var (hash-ref found-attributes name))
+                       (cons (cdr field+bind) (cdr (pattern-variable->list var))))))))
          (define (incompat)
            (raise-syntax-error #f
                                "syntax class incompatible with this context"
@@ -232,14 +239,14 @@
         #:with tail #'stx-class-hier.tail
         (syntax-parse #'tail
           #:datum-literals (group)
-          [((args::syntax-class-args _::block (group field:identifier #:as bind:identifier) ...))
+          [(args::syntax-class-args (_::block (group field:identifier #:as bind:identifier) ...))
            (values (build #'stx-class-hier.name
                           #'args.args
                           (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
                                        [bind (in-list (syntax->list #'(bind ...)))])
                             (values (syntax-e field) (cons field bind))))
                    #'())]
-          [((_::block . _))
+          [(args::syntax-class-args (_::block . _))
            (raise-syntax-error #f "expected `attribute ~as identifier` sequence in block" stx)]
           [(args::syntax-class-args . tail)
            (values (build #'stx-class-hier.name #'args.args #f) #'tail)])]))

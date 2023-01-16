@@ -25,5 +25,5 @@
        [(_ . more)
         #:with (~var rhs (:infix-op+expression+tail #'..)) #'(group . more)
         (values #`(in-range #,form1 rhs.parsed)
-                #'rhs.raw_tail)]))
+                #'rhs.tail)]))
    'none))

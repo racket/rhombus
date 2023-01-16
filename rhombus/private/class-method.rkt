@@ -434,7 +434,7 @@
                                            #:rator-kind 'property
                                            #:rator-arity shape-arity))
                     (values call
-                            #'e.raw_tail)]
+                            #'e.tail)]
                    [_
                     (define-values (call new-tail)
                       (parse-function-call impl (list #'id) #'(method-id (parens))
@@ -481,7 +481,7 @@
                                          (list maybe-mutator-id #'obj-id id)
                                          #'head
                                          #'head)))
-                   #'e.raw_tail)])]
+                   #'e.tail)])]
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
@@ -519,7 +519,7 @@
                                     (string-append "property does not support assignment" statically-str)
                                     id))
               (values #`(#,rator id e.parsed)
-                      #'e.raw_tail)]
+                      #'e.tail)]
              [(head . tail)
               (define call #`(#,rator obj-id))
               (define r (and (syntax-e result-id)

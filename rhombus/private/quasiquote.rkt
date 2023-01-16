@@ -37,8 +37,7 @@
 (module+ convert
   (begin-for-syntax
     (provide convert-pattern
-             convert-template
-             (struct-out pattern-variable))))
+             convert-template)))
 
 (begin-for-syntax
   (define-syntax-class (list-repetition in-space)
@@ -67,13 +66,7 @@
     #:datum-literals (op)
     (pattern (~seq ((~datum group) (op (~var _ (:$ in-space))) (~var e (:esc dotted? #f)))
                    ((~datum group) (op (~var name (:... in-space)))))
-             #:attr term #'e.term))
-  (struct pattern-variable (id val-id depth unpack*-id))
-  (define (pattern-variable->list pv)
-    (list (pattern-variable-id pv)
-          (pattern-variable-val-id pv)
-          (pattern-variable-depth pv)
-          (pattern-variable-unpack*-id pv))))
+             #:attr term #'e.term)))
 
 (define-for-syntax (convert-syntax e make-datum make-literal
                                    handle-escape handle-group-escape handle-multi-escape
@@ -278,7 +271,7 @@
                (for/list ([var (in-list (syntax->list #'vars))])
                  (syntax-parse var
                    [(id temp-id depth unpack*)
-                    (pattern-variable #'id #'temp-id (syntax-e #'depth) #'unpack*)])))]))
+                    (pattern-variable (syntax-e #'id) #'temp-id (syntax-e #'depth) #'unpack*)])))]))
   (define (handle-escape/match-head $-id e in-e kind splice?)
     (define-values (p idrs sidrs vars) (handle-escape $-id e in-e kind))
     (if p
@@ -326,8 +319,8 @@
                   ;; deepen-syntax-escape
                   (lambda (sidr)
                     (syntax-parse sidr
-                      [(id (make-pattern-variable-syntax self-id temp-id unpack* depth splice? ht))
-                       #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) splice? ht))]))
+                      [(id (make-pattern-variable-syntax self-id temp-id unpack* depth splice? attrs))
+                       #`(id (make-pattern-variable-syntax self-id temp-id unpack* #,(add1 (syntax-e #'depth)) splice? attrs))]))
                   ;; handle-tail-escape:
                   (lambda (name e in-e)
                     (syntax-parse e
@@ -343,8 +336,8 @@
                                                                             (quote-syntax unpack-tail-list*)
                                                                             1
                                                                             #f
-                                                                            (hasheq))])
-                                 (list (pattern-variable e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
+                                                                            #'())])
+                                 (list (pattern-variable (syntax-e e) temp-id 1 (quote-syntax unpack-tail-list*)))))]))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
                     (let ([temp0-id (car (generate-temporaries (list e)))]
@@ -356,8 +349,8 @@
                                                                          (quote-syntax unpack-multi-tail-list*)
                                                                          1
                                                                          #f
-                                                                         (hasheq))])
-                              (list (pattern-variable e temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
+                                                                         #'())])
+                              (list (pattern-variable (syntax-e e) temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
