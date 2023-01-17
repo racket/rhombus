@@ -22,7 +22,7 @@
     #,(epsilon)
 
   grammar class_clause:
-    #,(@rhombus(pattern, ~syntax_class_clause)) | $pattern_case | ...
+    #,(@rhombus(matching, ~syntax_class_clause)) | $pattern_case | ...
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
@@ -34,7 +34,7 @@
 
   grammar pattern_body:
     #,(@rhombus(field, ~pattern_clause)) $field_decl
-    #,(@rhombus(matching_also, ~pattern_clause)) $matching_decl
+    #,(@rhombus(matching, ~pattern_clause)) $matching_decl
     #,(@rhombus(matching_when, ~pattern_clause)) $when_rhs
     #,(@rhombus(matching_unless, ~pattern_clause)) $unless_rhs
     $body
@@ -50,12 +50,12 @@
 
  Syntax forms matched by the syntax class are described by
  @rhombus(pattern_case) alternatives. The
- @rhombus(pattern, ~syntax_class_clause) clause is optional in the sense
+ @rhombus(matching, ~syntax_class_clause) clause is optional in the sense
  that pattern alternatives can be inlined directly in the
- @rhombus(syntax.class) form, but the @rhombus(pattern) subform makes
- room for additional options as clauses. Each kind of
+ @rhombus(syntax.class) form, but the @rhombus(matching, ~syntax_class_clause)
+ clause form makes room for additional options as clauses. Each kind of
  @rhombus(class_clause) alternative can be supplied at most once, and
- @rhombus(pattern) is required.
+ @rhombus(matching, ~syntax_class_clause) is required.
 
  An optional @rhombus(description,  ~syntax_class_clause) clause
  provides a description of the syntax class which is used to produce
@@ -103,7 +103,7 @@
  @item{the @rhombus(syntax_pattern) at the start of the
   @rhombus(pattern_case) matches;}
 
- @item{every @rhombus(matching_also, ~pattern_clause) match within the
+ @item{every @rhombus(matching, ~pattern_clause) match within the
   @rhombus(pattern_case) body also matches;}
 
  @item{every @rhombus(matching_when, ~pattern_clause) clause within the
@@ -117,8 +117,8 @@
 )
 
  Every pattern variable in the initial @rhombus(syntax_pattern) of a
- @rhombus(pattern_case) as well as evey variable in every
- @rhombus(matching_when, ~pattern_clause) is a candiate field name, as
+ @rhombus(pattern_case) as well as evey variable in every nested
+ @rhombus(matching, ~pattern_clause) is a candiate field name, as
  long as it is also a candiate in all other @rhombus(syntax_pattern)s
  within the syntax class. In addition, names declared with
  @rhombus(field, ~pattern_clause) are also candidates. A field must have
@@ -130,7 +130,7 @@
  The body of a @rhombus(pattern_case) can include other definitions and
  expressions. Those definitions and expressions can use pattern variables
  bound in the main @rhombus(syntax_pattern) of the case as well as any
- preceding @rhombus(matching_when, ~pattern_clause) or a field
+ preceding nested @rhombus(matching, ~pattern_clause) clause or a field
  declared by a preceding @rhombus(field, ~pattern_clause). Consecutive
  definitions and expressions within a @rhombus(pattern_case) form a
  definition context, but separated sets of definitions and expressions
@@ -178,7 +178,7 @@
 
 
 @doc(
-  syntax_class_clause.macro 'pattern
+  syntax_class_clause.macro 'matching
                              | $pattern_case
                              | ...'
 
@@ -308,10 +308,10 @@
 }
 
 @doc(
-  pattern_clause.macro '«matching_also '$pattern':
+  pattern_clause.macro '«matching '$pattern':
                            $body
                            ...»'
-  pattern_clause.macro '«matching_also '$pattern' = $expr»'
+  pattern_clause.macro '«matching '$pattern' = $expr»'
 
 ){
 

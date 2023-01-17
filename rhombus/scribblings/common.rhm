@@ -29,7 +29,7 @@ fun see_implicit(what, when, context, ~is_infix = #false):
 
 
 fun provided_meta():
- @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expmod).}}
+ @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expo).}}
 
 // suppressed a label, but `examples` now does that, anyway, so maybe
 // we'll end up removing this alias:

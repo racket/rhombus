@@ -16,7 +16,9 @@
          "syntax-binding.rkt"
          "name-root-ref.rkt"
          "parens.rkt"
-         (submod "function.rkt" for-call))
+         (submod "function.rkt" for-call)
+         (only-in "import.rkt" as open)
+         (submod  "import.rkt" for-meta))
 
 (provide (for-space rhombus/syntax_binding
                     _
@@ -174,8 +176,8 @@
              (cond
                [(not open-attributes-spec) #f]
                [(hash? open-attributes-spec)
-                (for ([(name field+bind) (in-hash open-attributes-spec)])
-                  (define field (car field+bind))
+                (for ([(name field+binds) (in-hash open-attributes-spec)])
+                  (define field (caar field+binds))
                   (unless (hash-ref found-attributes name #f)
                     (raise-syntax-error #f
                                         "not an attribute of the syntax class"
@@ -184,7 +186,7 @@
                [else
                 (for/hasheq ([name (in-hash-keys found-attributes)])
                   (define id (datum->syntax open-attributes-spec name open-attributes-spec))
-                  (values name (cons id id)))]))
+                  (values name (list (cons id id))))]))
            (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
            (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
            #`(#,(if sc
@@ -212,8 +214,8 @@
                      null)
                  (if (not open-attributes)
                      null
-                     (for/list ([name (in-list (hash-keys open-attributes #t))])
-                       (define field+bind (hash-ref open-attributes name))
+                     (for*/list ([name (in-list (hash-keys open-attributes #t))]
+                                 [field+bind (in-list (hash-ref open-attributes name))])
                        (define var (hash-ref found-attributes name))
                        #`[#,(cdr field+bind) (make-pattern-variable-syntax
                                               (quote-syntax #,(cdr field+bind))
@@ -228,8 +230,8 @@
                      null)
                  (if (not open-attributes)
                      null
-                     (for/list ([name (in-list (hash-keys open-attributes #t))])
-                       (define field+bind (hash-ref open-attributes name))
+                     (for*/list ([name (in-list (hash-keys open-attributes #t))]
+                                 [field+bind (in-list (hash-ref open-attributes name))])
                        (define var (hash-ref found-attributes name))
                        (cons (cdr field+bind) (cdr (pattern-variable->list var))))))))
          (define (incompat)
@@ -263,16 +265,34 @@
      (define (parse-open-block stx tail)
        (syntax-parse tail
          #:datum-literals (group)
-         [((_::block (group field:identifier #:as bind:identifier) ...))
-          (values (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
-                               [bind (in-list (syntax->list #'(bind ...)))])
-                    (values (syntax-e field) (cons field bind)))
-                  #'())]
-         [((_::block (group (~and kw #:open))))
-          (values #'kw
-                  #'())]
-         [((_::block . _))
-          (raise-syntax-error #f "expected `~open` or `attribute ~as identifier` sequence in block" stx)]
+         [((_::block g ...))
+          (values
+           (for/fold ([open #hasheq()]) ([g (in-list (syntax->list #'(g ...)))])
+             (syntax-parse g
+               #:datum-literals (group)
+               [(group id:identifier)
+                (free-identifier=? (in-import-space #'id) (in-import-space #'open))
+                (when (syntax? open)
+                  (raise-syntax-error #f "redundant opening clause" stx #'id))
+                (when (and (hash? open) ((hash-count open) . > . 0))
+                  (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'id))
+                #'id]
+               [(group field:identifier as:identifier bind:identifier)
+                (free-identifier=? (in-import-space #'id) (in-import-space #'as))
+                (when (syntax? open)
+                  (raise-syntax-error #f "specific field not allowed after opening clause" stx #'field))
+                (define key (syntax-e #'field))
+                (hash-set open key (cons (cons #'field #'bind) (hash-ref open key null)))]
+               [(group field:identifier ...)
+                (when (syntax? open)
+                  (raise-syntax-error #f "specific field not allowed after opening clause" stx
+                                      (car (syntax-e #'(field ...)))))
+                (for/fold ([open open]) ([field (in-list (syntax->list #'(field ...)))])
+                  (define key (syntax-e field))
+                  (hash-set open key (cons (cons field field) (hash-ref open key null))))]
+               [_
+                (raise-syntax-error #f "bad exposure clause" stx g)]))
+           #'())]
          [_ (values #f tail)]))
      (syntax-parse stx
        #:datum-literals (group)

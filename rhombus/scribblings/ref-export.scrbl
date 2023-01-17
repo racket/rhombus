@@ -37,9 +37,9 @@
  @rhombus(export_clause).
  
  An @rhombus(export_item) can be an identifier, operator, other export
- form, such as @rhombus(all_from, ~expmod).
+ form, such as @rhombus(all_from, ~expo).
  It can also be a sequence @rhombus(export_item)s within a
- group, since @rhombus(#{#%juxtapose}, ~expmod) is defined as an
+ group, since @rhombus(#{#%juxtapose}, ~expo) is defined as an
  export form.
 
  Similar to @rhombus(import), an @rhombus(export_item) can be modified
@@ -58,7 +58,7 @@
 
 @doc(
   expo.macro 'all_from($module_path)'
-  expo.macro 'all_from(#,(@rhombus(., ~expmod)) $identifier_path)'
+  expo.macro 'all_from(#,(@rhombus(., ~expo)) $identifier_path)'
 ){
 
  With @rhombus(module_path), exports all bindings imported without a
@@ -69,7 +69,7 @@
  @rhombus(lib) forms, and in a @rhombus(lib) form, an implicit
  @filepath{.rhm} suffix is made explicit.
 
- With @rhombus(#,(@rhombus(., ~expmod)) identifier_path), exports
+ With @rhombus(#,(@rhombus(., ~expo)) identifier_path), exports
  the content of the specified @tech{namespace} or module import (i.e.,
  the content that would be accessed with a prefix in the exporting
  context). See @secref("namespaces") for information on
@@ -78,11 +78,11 @@
 
 @doc(
   expo.macro 'rename:
-                $int_identifier_or_operator #,(@rhombus(as, ~expmod)) $ext_identifier_or_operator
+                $int_identifier_or_operator #,(@rhombus(as, ~expo)) $ext_identifier_or_operator
                 ...'
 ){
 
- For each @rhombus(as, ~expmod) group, exports
+ For each @rhombus(as, ~expo) group, exports
  @rhombus(int_identifier_or_operator) bound locally so that it's
  imported as @rhombus(ext_identifier_or_operator).
 
@@ -97,7 +97,7 @@
  Exports all @rhombus(identifier_or_operator)s.
 
  Most @rhombus(identifier_or_operator)s can be exported directly
- without using @rhombus(names, ~impmod), but the @rhombus(names, ~impmod)
+ without using @rhombus(names, ~impo), but the @rhombus(names, ~impo)
  form disambiguates in the case of an @rhombus(identifier_or_operator) that is
  itself bound as an export form or modifier.
 
@@ -109,7 +109,7 @@
 
  Exports the union of bindings described by the two @rhombus(export)s.
 
- @see_implicit(@rhombus(#{#%juxtapose}, ~expmod), "an export", "export", ~is_infix: #true)
+ @see_implicit(@rhombus(#{#%juxtapose}, ~expo), "an export", "export", ~is_infix: #true)
 
 }
 
@@ -117,7 +117,7 @@
   expo.macro 'as'
 ){
 
- Invalid by itself, and intended for use with @rhombus(rename, ~expmod).
+ Invalid by itself, and intended for use with @rhombus(rename, ~expo).
 
 }
 
@@ -161,7 +161,7 @@
   expo.macro '$identifier_path . ($operator)'
 ){
 
-  In an export clause, @rhombus(., ~expmod) can be used only to form a
+  In an export clause, @rhombus(., ~expo) can be used only to form a
   and @rhombus(identifier_path, ~var) or @rhombus(operator_path, ~var)
   as described for @rhombus(export). It can also be used to form an
   @rhombus(identifier_path, ~var) for @rhombus(all_from).
@@ -173,8 +173,8 @@
   modpath.macro '$identifier / $collection_module_path'
 ){
 
- Like the @rhombus(/, ~impmod) operator for @rhombus(import) module
- paths, used for module paths in @rhombus(all_from, ~expmod).
+ Like the @rhombus(/, ~impo) operator for @rhombus(import) module
+ paths, used for module paths in @rhombus(all_from, ~expo).
 
 }
 
@@ -183,8 +183,8 @@
   modpath.macro 'lib($string)'
 ){
 
- Like the @rhombus(lib, ~impmod) form for @rhombus(import), used for
- module paths in @rhombus(all_from, ~expmod).
+ Like the @rhombus(lib, ~impo) form for @rhombus(import), used for
+ module paths in @rhombus(all_from, ~expo).
 
 }
 
@@ -193,8 +193,8 @@
   modpath.macro 'file($string)'
 ){
 
- Like the @rhombus(file, ~impmod) form for @rhombus(import), used for
- module paths in @rhombus(all_from, ~expmod).
+ Like the @rhombus(file, ~impo) form for @rhombus(import), used for
+ module paths in @rhombus(all_from, ~expo).
 
 }
 
@@ -203,7 +203,7 @@
   modpath.macro '$module_path ! $identifier'
 ){
 
- Like the @rhombus(!, ~impmod) operator for @rhombus(import) to access a
- submodule, used for module paths in @rhombus(all_from, ~expmod).
+ Like the @rhombus(!, ~impo) operator for @rhombus(import) to access a
+ submodule, used for module paths in @rhombus(all_from, ~expo).
 
 }

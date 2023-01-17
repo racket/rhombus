@@ -7,7 +7,7 @@
          "parse.rkt")
 
 (provide (for-space rhombus/syntax_class_clause
-                    pattern
+                    matching
                     description
                     kind
                     error_mode
@@ -29,7 +29,7 @@
                                  #'orig-stx))]))
       (syntax-parse clause
         [(#:pattern _ alts)
-         (check "pattern")
+         (check "matching")
          (hash-set options '#:pattern (syntax->list #'alts))]
         [(#:description _ e)
          (check "description")
@@ -46,7 +46,7 @@
   (define alts (hash-ref options '#:pattern #f))
   (unless alts
     (raise-syntax-error #f
-                        "missing pattern alternatives"
+                        "missing alternatives for matching"
                         stx))
   (values alts
           (hash-ref options '#:kind '#:sequence)
@@ -54,7 +54,7 @@
           (hash-ref options '#:fields #f)
           (eq? (hash-ref options '#:error-mode #f) '#:opaque)))
 
-(define-syntax-class-clause-syntax pattern
+(define-syntax-class-clause-syntax matching
   (syntax-class-clause-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -101,4 +101,3 @@
 
 (define-syntax-class-clause-syntax kind (make-kw-clause '#:kind '(#:term #:sequence #:group #:multi #:block) "kind"))
 (define-syntax-class-clause-syntax error_mode (make-kw-clause '#:error-mode '(#:opaque #:transparent) "error mode"))
-

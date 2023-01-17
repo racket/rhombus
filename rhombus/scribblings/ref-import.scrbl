@@ -26,15 +26,15 @@
   grammar module_path:
     $collection_module_path
     $string
-    #,(@rhombus(lib, ~impmod))($string)
-    #,(@rhombus(file, ~impmod))($string)
-    $module_path #,(@rhombus(!, ~impmod)) $identifier
-    #,(@rhombus(., ~impmod)) $identifier
-    $module_path #,(@rhombus(., ~impmod)) $identifier
+    #,(@rhombus(lib, ~impo))($string)
+    #,(@rhombus(file, ~impo))($string)
+    $module_path #,(@rhombus(!, ~impo)) $identifier
+    #,(@rhombus(., ~impo)) $identifier
+    $module_path #,(@rhombus(., ~impo)) $identifier
 
   grammar collection_module_path:
     $identifier
-    $identifier #,(@rhombus(/, ~impmod)) $collection_module_path
+    $identifier #,(@rhombus(/, ~impo)) $collection_module_path
 
 ){
 
@@ -74,8 +74,8 @@
 
  A @rhombus(module_path) clause can be be adjusted through one or more
  @rhombus(import_modifier)s. The set of modifiers is extensible, but
- includes @rhombus(as, ~impmod), @rhombus(rename, ~impmod), and
- @rhombus(expose, ~impmod).
+ includes @rhombus(as, ~impo), @rhombus(rename, ~impo), and
+ @rhombus(expose, ~impo).
 
  A @rhombus(module_path) references a module in one of several possible
  forms:
@@ -83,7 +83,7 @@
  @itemlist(
 
  @item{@rhombus(collection_module_path): refers to an installed
-   collection library, where the @rhombus(/, ~impmod) operator acts as a path
+   collection library, where the @rhombus(/, ~impo) operator acts as a path
    separator. Each @rhombus(identifier) in the path is constrained to
    contain only characters allowed in a @rhombus(string) module path, with
    the additional constraint that @litchar{.} is disallowed. A module path
@@ -98,25 +98,25 @@
    digits must form a number that is not the ASCII value of a letter,
    digit, @litchar{-}, @litchar{+}, or @litchar{_}.},
 
- @item{@rhombus(#,(@rhombus(lib, ~impmod))(string)): refers to an installed collection library,
+ @item{@rhombus(#,(@rhombus(lib, ~impo))(string)): refers to an installed collection library,
    where @rhombus(string) is the library name. The same constraints apply
    to @rhombus(string) as when @rhombus(string) is used as a relative path
    by itself, with the additional constraint that @litchar{.} and
    @litchar{..} directory indicators are disallowed. When @rhombus(string)
    does not end with a file suffix, @filepath{.rhm} is added.},
 
- @item{@rhombus(#,(@rhombus(file, ~impmod))(string)): refers to a file through a
+ @item{@rhombus(#,(@rhombus(file, ~impo))(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
 
- @item{@rhombus(module_path #,(@rhombus(!, ~impmod)) identifier):
+ @item{@rhombus(module_path #,(@rhombus(!, ~impo)) identifier):
   refers to submodule of another module. The submodule name
   @rhombus(identifier) is used as the default import prefix.},
 
- @item{@rhombus(#,(@rhombus(., ~impmod))identifier): refers to a namespace
+ @item{@rhombus(#,(@rhombus(., ~impo))identifier): refers to a namespace
   @rhombus(identifier), which might be predefined like @rhombus(List), or
   might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
- @item{@rhombus(module_path#,(@rhombus(.,~impmod))identifier): a shorthand for importing only
+ @item{@rhombus(module_path#,(@rhombus(.,~impo))identifier): a shorthand for importing only
   @rhombus(identifier) from @rhombus(module_path) path and then importing
   with @rhombus(.identifier). The last @rhombus(identifier) in a dotted
   sequence is allowed to be an export that is not a namespace, in which
@@ -142,9 +142,9 @@
   impo.macro '$collection_module_path . $identifier'
 ){
 
-  As an module-path operator, a prefix @rhombus(., ~impmod) refers
+  As an module-path operator, a prefix @rhombus(., ~impo) refers
   to an import prefix or a namespace @rhombus(identifier) in the enclosing
-  environment, and an infix @rhombus(., ~impmod) refers to an
+  environment, and an infix @rhombus(., ~impo) refers to an
   @rhombus(identifier) provided by @rhombus(collection_module_path).
 
 }
@@ -208,14 +208,14 @@
 ){
 
  Modifies an @rhombus(import) clause so that the listed
- @rhombus(identifier)s are imported without a prefix. The exose
+ @rhombus(identifier)s are imported without a prefix. The exposed
  identifiers remain accessible though the import's prefix, too.
 
 }
 
 @doc(
   impo.modifier 'rename:
-                   $identifier #,(@rhombus(as, ~impmod)) $local_identifier
+                   $identifier #,(@rhombus(as, ~impo)) $local_identifier
                    ...'
 ){
 
@@ -258,7 +258,7 @@
 
  This modifier is valid only for module paths that refer to modules,
  as opposed to @rhombus(namespace) bindings, and it is not currently
- supported for module paths that use the @rhombus(., ~impmod) operator.
+ supported for module paths that use the @rhombus(., ~impo) operator.
 
 }
 
@@ -272,7 +272,7 @@
 
  This modifier is valid only for module fies that refer to modules,
  as opposed to @rhombus(namespace) bindings, and it is not currently
- supported for module paths that use the @rhombus(., ~impmod) operator
+ supported for module paths that use the @rhombus(., ~impo) operator
 
 }
 

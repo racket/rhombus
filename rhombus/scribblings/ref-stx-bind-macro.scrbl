@@ -38,7 +38,7 @@
     | '[$content]'
     | '{$content}'
     syntax_binding.macro 'wrapped $id':
-      '_ :: Wrapped: content ~as $id'
+      '_ :: Wrapped: content as $id'
     match '{x} [y] (z)'
     | '$(wrapped a) ...': [a, ...]
 )

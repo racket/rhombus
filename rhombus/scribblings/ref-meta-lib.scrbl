@@ -14,7 +14,7 @@ using the @rhombusmodname(rhombus/meta) module (usually with no prefix).
 
 The @rhombusmodname(rhombus/meta) module provides bindings like
 @rhombus(defn.macro), @rhombus(expr.macro), @rhombus(expr.rule), and
-it also re-exports all of @rhombusmodname(rhombus) as @rhombus(meta, ~impmod)
+it also re-exports all of @rhombusmodname(rhombus) as @rhombus(meta, ~impo)
 for use in compile-time expressions.
 
 The @rhombusmodname(rhombus/and_meta) module provides all of the

@@ -15,7 +15,7 @@
  greater. Defintions inside a @rhombus(meta) block can be
  referenced in macro implementations, for example.
 
- See also the @rhombus(meta, ~impmod) import modifier.
+ See also the @rhombus(meta, ~impo) import modifier.
 
 @examples(
   ~eval: macro.make_for_meta_eval()

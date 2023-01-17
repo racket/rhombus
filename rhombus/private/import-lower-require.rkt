@@ -66,8 +66,8 @@
                   (cond
                     [(hash-ref renames true-orig #f)
                      => (lambda (old-orig)
-                          (values (hash-set renames true-orig (if (box? old-orig)
-                                                                  (box bind-s)
+                          (values (hash-set renames true-orig (if (expose? old-orig)
+                                                                  (expose bind-s)
                                                                   bind-s))
                                   (hash-set (hash-remove revnames orig) bind true-orig)
                                   (hash-remove syms orig)

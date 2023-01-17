@@ -134,8 +134,8 @@ expr.macro
     if (kw === #'~var
           || kw === #'~datum
           || kw === #'~bind
-          || kw === #'~impmod
-          || kw === #'~expmod
+          || kw === #'~impo
+          || kw === #'~expo
           || kw === #'~modpath
           || kw === #'~annot
           || kw === #'~repet

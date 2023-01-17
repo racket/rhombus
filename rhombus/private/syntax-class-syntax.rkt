@@ -35,11 +35,11 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        ;; Classname and patterns shorthand
+        ;; immediate-patterns shorthand
         [(form-id class-name args::class-args (_::alts alt ...))
          (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
                                 '#:sequence (syntax->list #'(alt ...)) #f #f #f #f)]
-        ;; Specify patterns with "pattern"
+        ;; Patterns within `matching`
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
                   (_::block clause::syntax-class-clause ...))
@@ -62,12 +62,12 @@
 
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
   (syntax-parse tail
-    ;; immediate patterns shorthand
+    ;; immediate-patterns shorthand
     [((_::alts alt ...))
      (generate-syntax-class orig-stx #f name #'#f #'#f
                             '#:sequence (syntax->list #'(alt ...)) #f #f #f
                             expected-kind)]
-    ;; Specify patterns with "pattern"
+    ;; patterns within `matching`
     [((_::block clause::syntax-class-clause ...))
      (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
        (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))

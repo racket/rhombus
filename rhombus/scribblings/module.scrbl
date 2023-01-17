@@ -103,7 +103,7 @@ Unlike Racket, imported bindings must accessed using a prefix name and
 then @litchar{.}, at least by default. The prefix is inferred from a module
 path by taking its last component and removing any extension, so
 that’s why the import of @rhombus("f2c.rhm") leads to the @rhombus(f2c) prefix. To
-supply an explicit prefix, use the @rhombus(as, ~impmod) modifier:
+supply an explicit prefix, use the @rhombus(as, ~impo) modifier:
 
 @rhombusblock(
   import:
@@ -112,7 +112,7 @@ supply an explicit prefix, use the @rhombus(as, ~impmod) modifier:
   convert.fahrenheit_to_celsius(convert.fahrenheit_freezing)
 )
 
-Use the @rhombus(open, ~impmod) modifier to import without a prefix, but
+Use the @rhombus(open, ~impo) modifier to import without a prefix, but
 this kind of ``namespace dumping'' is considered bad style in most
 cases:
 
@@ -123,7 +123,7 @@ cases:
   fahrenheit_to_celsius(fahrenheit_freezing)
 )
 
-Module paths are written with a @rhombus(/, ~impmod) separator as in Racket, and the
+Module paths are written with a @rhombus(/, ~impo) separator as in Racket, and the
 last path element is the one that determines the default import
 prefix.
 
@@ -136,11 +136,11 @@ prefix.
 
 @aside{The use of @litchar{.} with an import name as a hierarchical reference is not
 the same as the @rhombus(.) operator described in the next section. We stick with
-@rhombus(/, ~impmod) for module paths to avoid overloading @litchar{.} further.}
+@rhombus(/, ~impo) for module paths to avoid overloading @litchar{.} further.}
 
 Unlike Racket, the default file suffix for unquoted module paths is
 @filepath{.rhm}. To reference a Racket module, use a
-@rhombus(lib, ~impmod) path with a @filepath{.rkt} suffix.
+@rhombus(lib, ~impo) path with a @filepath{.rkt} suffix.
 
 @rhombusblock(
   import:

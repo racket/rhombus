@@ -365,7 +365,8 @@ Metadata for a syntax object can include a source location and the raw
 @doc(
   syntax_binding.macro '$identifier :: $syntax_class $maybe_args'
   syntax_binding.macro '$identifier :: $syntax_class $maybe_args:
-                          $field_opens'
+                          $field_expose
+                          ...'
 
   grammar syntax_class:
     $identifier
@@ -380,14 +381,14 @@ Metadata for a syntax object can include a source location and the raw
     $arg_expr
     $keyword: $arg_expr
 
-  grammar field_opens:
-    ~open
-    $attrib_identifier ~as $ext_identifier; ...
+  grammar field_expose:
+    #,(@rhombus(open, ~impo))
+    $field_identifier #,(@rhombus(as, ~impo)) $pattern_identifier; ...
+    $field_identifier ....
 ){
 
  Syntax binding operator that binds @rhombus(identifier) for a match to
  @rhombus(syntax_class).
- 
 
  The @rhombus(syntax_class) can be a predefined class such as
  @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
@@ -404,25 +405,31 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(identifier) is @rhombus(_, ~syntax_binding), then it is not
  bound.
 
- A block supplied after @rhombus(syntax_class) unpacks fields of the For
- each @rhombus(attrib_identifier ~as ext_identifier) that is supplied,
- then @rhombus(ext_identifier) is also bound directly to the to the named
- field. Supplying if @rhombus(~open) is a shorthand for listing every
- field to bind using its own name.
+ A block supplied after @rhombus(syntax_class) exposes fields of match
+ as directly bound pattern identifier. For each
+ @rhombus(field_identifier #,(@rhombus(as, ~impo)) pattern_identifier)
+ that is supplied, then @rhombus(pattern_identifier) is bound directly to
+ the to the named field's value. Suppling just an
+ @rhombus(field_identifier) binds using the same identifier. Supplying
+ @rhombus(open, ~impo) is a shorthand for listing every field to bind
+ using its own name, and it cannot appear multiple times or be combined
+ with expose clauses for individual fields.
 
 @examples(
   ~defn:
     syntax.class Wrapped:
       kind: ~term
-      pattern
+      matching
       | '($content)'
   ~repl:
     match '1 + (2) + 3'
     | '1 + $(y :: Wrapped) + 3': [y, y.content]
     match '1 + (2) + 3'
-    | '1 + $(_ :: Wrapped: content ~as c) + 3': c
+    | '1 + $(_ :: Wrapped: content) + 3': content
     match '1 + (2) + 3'
-    | '1 + $(_ :: Wrapped: ~open) + 3': content
+    | '1 + $(_ :: Wrapped: content as c) + 3': c
+    match '1 + (2) + 3'
+    | '1 + $(_ :: Wrapped: open) + 3': content
 )
 
 }

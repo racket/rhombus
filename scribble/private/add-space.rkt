@@ -9,8 +9,8 @@
     [else
      (define space (case space-name
                      [(bind) 'rhombus/bind]
-                     [(impmod) 'rhombus/impo]
-                     [(expmod) 'rhombus/expo]
+                     [(impo) 'rhombus/impo]
+                     [(expo) 'rhombus/expo]
                      [(modpath) 'rhombus/modpath]
                      [(annot) 'rhombus/annot]
                      [(repet) 'rhombus/repet]

@@ -27,7 +27,7 @@ meta:
 
   syntax.class Option:
     kind: ~term
-    pattern
+    matching
     | '~lang':
         field form: '~lang'
     | '~no_declare':
