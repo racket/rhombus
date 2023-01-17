@@ -12,7 +12,7 @@
 
 (provide (for-space rhombus/pattern_clause
                     field
-                    matching
+                    matching_also
                     matching_when
                     matching_unless))
 
@@ -37,7 +37,7 @@
        [(_ field::field-lhs (op rhombus=) rhs ...)
         #`(#:field field.id field.depth (rhombus-expression (#,group-tag rhs ...)))]))))
 
-(define-pattern-clause-syntax matching
+(define-pattern-clause-syntax matching_also
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx

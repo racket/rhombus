@@ -211,6 +211,8 @@ Metadata for a syntax object can include a source location and the raw
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
     $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
+    #,(@rhombus(matching, ~syntax_binding)) $pattern_case
+    #,(@rhombus(matching, ~syntax_binding)) | $pattern_case | ...
     $other_stx_bind
 ){
 
@@ -269,13 +271,17 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $b + $('...')': b
 )
 
- When the @rhombus(::, ~syntax_binding) operator is used to associate a
+ The @rhombus(::, ~syntax_binding) operator is used to associate a
  @tech{syntax class} with an identifier. See
  @rhombus(::, ~syntax_binding) for more information.
 
  The @rhombus(&&, ~syntax_binding) and @rhombus(||, ~syntax_binding)
  operators combine matches. See @rhombus(&&, ~syntax_binding) and
  @rhombus(||, ~syntax_binding) for more information.
+
+ The @rhombus(matching, ~syntax_binding) form is a shorthand for using
+ @rhombus(::, ~syntax_binding) with an inline @rhombus(syntax.class) form.
+ See @rhombus(matching, ~syntax_binding) for more information.
 
  Other syntax pattern binding forms can be defined with
  @rhombus(syntax_binding.macro).
@@ -387,8 +393,8 @@ Metadata for a syntax object can include a source location and the raw
     $field_identifier ....
 ){
 
- Syntax binding operator that binds @rhombus(identifier) for a match to
- @rhombus(syntax_class).
+ Syntax binding operator for use within @rhombus($, ~bind) that binds
+ @rhombus(identifier) for a match to @rhombus(syntax_class).
 
  The @rhombus(syntax_class) can be a predefined class such as
  @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
@@ -419,8 +425,7 @@ Metadata for a syntax object can include a source location and the raw
   ~defn:
     syntax.class Wrapped:
       kind: ~term
-      matching
-      | '($content)'
+      matching '($content)'
   ~repl:
     match '1 + (2) + 3'
     | '1 + $(y :: Wrapped) + 3': [y, y.content]
@@ -430,6 +435,48 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $(_ :: Wrapped: content as c) + 3': c
     match '1 + (2) + 3'
     | '1 + $(_ :: Wrapped: open) + 3': content
+  ~repl:
+    match '(hello there)'
+    | '$(whole :: (syntax.class:
+                     kind: ~term
+                     matching '($content)'))':
+        [whole, whole.content]
+)
+
+}
+
+@doc(
+  syntax_binding.macro 'matching
+                        | $pattern_case
+                        | ...'
+  syntax_binding.macro 'matching $pattern_case'
+){
+
+ Syntax binding operator for use within @rhombus($, ~bind) that is an
+ inline form of the @rhombus(matching, ~syntax_class_clause) form in
+ @rhombus(syntax.class). It is a shorthand for writing a inline
+ @rhombus(~sequence) syntax class and exposing its fields.
+
+@examples(
+  ~defn:
+    fun simplify(e):
+      match e
+      | '($e)': simplify(e)
+      | '0 + $e': simplify(e)
+      | '$e + 0': simplify(e)
+      | '$(matching '$a + $b - $c':
+             matching_when same(simplify(b), simplify(c)))':
+          simplify(a)
+      | '$(matching '$a - $b + $c':
+             matching_when same(simplify(b), simplify(c)))':
+          simplify(a)
+      | ~else: e
+
+    fun same(b, c):
+      b.unwrap() == c.unwrap()
+  ~repl:
+    simplify('(1 + (2 + 0) - 2)')
+    simplify('1 + 2 + 2')
 )
 
 }

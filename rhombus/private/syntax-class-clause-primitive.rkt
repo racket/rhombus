@@ -59,7 +59,11 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ (_::alts b ...))
-        #`(#:pattern #,stx (b ...))]))))
+        #`(#:pattern #,stx (b ...))]
+       [(_ (~and pat (_::quotes . _)))
+        #`(#:pattern #,stx ((block (group pat))))]
+       [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
+        #`(#:pattern #,stx ((block (group pat b))))]))))
 
 (define-syntax-class-clause-syntax description
   (syntax-class-clause-transformer

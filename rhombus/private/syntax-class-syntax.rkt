@@ -17,11 +17,13 @@
          "parsed.rkt"
          "pack.rkt"
          "parens.rkt"
-         (only-in "def+let.rkt" def)
          (rename-in "ellipsis.rkt"
                     [... rhombus...]))
 
 (provide (rename-out [rhombus-syntax syntax]))
+
+(module+ for-matching-clause
+  (provide (for-syntax parse-matching-clause)))
 
 (define-simple-name-root rhombus-syntax
   class
@@ -74,6 +76,17 @@
      (generate-syntax-class orig-stx #f name #'#f #'#f
                             kind-kw pattern-alts class-desc fields-ht opaque? expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
+
+(define-for-syntax (parse-matching-clause stx inline-id expected-kind)
+  (syntax-parse stx
+    [(_ (_::alts alt ...))
+     (generate-syntax-class stx #f inline-id #'#f #'#f
+                            '#:sequence (syntax->list #'(alt ...)) #f #f #f
+                            expected-kind)]
+    [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
+     (generate-syntax-class stx #f inline-id #'#f #'#f
+                            '#:sequence (list #'(block (group pat b))) #f #f #f
+                            expected-kind)]))
 
 ;; if `define-syntax-id` is #f, returns a `rhombus-syntax-class` value directly,
 ;; and `class/inline-name` is actually a name to extend for attribute names
@@ -290,11 +303,13 @@
                                        (loop (cddr body)))]
                                 [(eq? (syntax-e (car body)) '#:attr)
                                  (with-syntax ([[name depth] (cadr body)])
-                                   (define id.name (datum->syntax inline-name
-                                                                  (string->symbol (format "~a.~a"
-                                                                                          (syntax-e inline-name)
-                                                                                          (syntax-e #'name)))
-                                                                  #'name))
+                                   (define id.name (if inline-name
+                                                       (datum->syntax inline-name
+                                                                      (string->symbol (format "~a.~a"
+                                                                                              (syntax-e inline-name)
+                                                                                              (syntax-e #'name)))
+                                                                      #'name)
+                                                       #'name))
                                    (cons #`(~bind ([#,id.name depth] #,(caddr body)))
                                          (loop (cdddr body))))]
                                 [else (error "unhandled pattern body" body)])))]))))

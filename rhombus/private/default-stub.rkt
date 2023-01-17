@@ -28,5 +28,6 @@
      error_mode
      fields
 
+     matching_also
      matching_when
      matching_unless)

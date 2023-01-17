@@ -14,58 +14,27 @@
                   ::)
          "pattern-variable.rkt"
          "syntax-binding.rkt"
+         "syntax-binding-identifier.rkt"
          "name-root-ref.rkt"
          "parens.rkt"
          (submod "function.rkt" for-call)
          (only-in "import.rkt" as open)
-         (submod  "import.rkt" for-meta))
+         (submod  "import.rkt" for-meta)
+         (submod "syntax-class-syntax.rkt" for-matching-clause))
 
 (provide (for-space rhombus/syntax_binding
-                    _
                     #%parens
                     ::
+                    matching
                     &&
                     \|\|
                     #%literal
                     #%block))
 
-(module+ for-quasiquote
-  (provide (for-syntax identifier-as-pattern-syntax)))
-
-;; `#%quotes` is impemented in 'quasiquote.rkt", because it recurs as
-;; nested quasiquote matching
-
-(define-for-syntax (identifier-as-pattern-syntax id kind
-                                                 #:result [result list]
-                                                 #:pattern-variable [pattern-variable list])
-  (define-values (pack* unpack*)
-    (case kind
-      [(term) (values #'pack-term* #'unpack-term*)]
-      [(group) (values #'pack-group* #'unpack-group*)]
-      [(multi block) (values #'pack-tagged-multi* #'unpack-multi-as-term*)]))
-  (let* ([temps (generate-temporaries (list id id))]
-         [temp1 (car temps)]
-         [temp2 (cadr temps)])
-    (result temp1
-            (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
-            (list #`[#,id (make-pattern-variable-syntax (quote-syntax #,id)
-                                                        (quote-syntax #,temp2)
-                                                        (quote-syntax #,unpack*)
-                                                        0
-                                                        #f
-                                                        #'())])
-            (list (pattern-variable (syntax-e id) temp2 0 unpack*)))))
-
-(define-syntax-binding-syntax _
-  (syntax-binding-prefix-operator
-   #'_
-   null
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id . tail)
-        (values #`(#,(syntax/loc #'form-id _) () () ())
-                #'tail)]))))
+;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
+;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
+;; matched literally, and plain identifiers are implemented in
+;; "syntax-binding-identifier.rkt"
 
 (define-syntax-binding-syntax #%parens
   (syntax-binding-prefix-operator
@@ -104,6 +73,146 @@
                               #:rator-arity arity))
        call])))
 
+
+(define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
+                                               form1 match-id)
+  (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
+    (define (compat pack* unpack*)
+      (define sc (rhombus-syntax-class-class rsc))
+      (define sc-call (parse-syntax-class-args stx-class
+                                               sc
+                                               (rhombus-syntax-class-arity rsc)
+                                               class-args))
+      (define temp-id (car (generate-temporaries (list #'id))))
+      (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
+                     (syntax-list->pattern-variable l)))
+      (define-values (attribute-bindings attribute-vars)
+        (for/lists (bindings descs) ([var (in-list vars)]
+                                     [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))])
+          (define name (pattern-variable-sym var))
+          (define depth (pattern-variable-depth var))
+          (define unpack*-id (pattern-variable-unpack*-id var))
+          (define id-with-attr
+            (datum->syntax match-id (string->symbol (format "~a.~a" (syntax-e match-id) name))))
+          (values #`[#,temp-attr #,(cond
+                                     [(eq? depth 'tail)
+                                      ;; bridge from a primitive syntax class, where we don't want to convert to
+                                      ;; a list and then convert back when the tail is used as a new tail in a
+                                      ;; template
+                                      #`(pack-tail* (syntax #,id-with-attr) 0)]
+                                     [(not (or (free-identifier=? unpack*-id #'unpack-tail-list*)
+                                               (free-identifier=? unpack*-id #'unpack-multi-tail-list*)))
+                                      ;; assume depth-compatible value checked on binding side, and
+                                      ;; let `attribute` unpack syntax repetitions
+                                      #`(pack-nothing* (attribute #,id-with-attr) #,depth)]
+                                     [else
+                                      #`(#,(cond
+                                             [(free-identifier=? unpack*-id #'unpack-tail-list*)
+                                              #'pack-tail-list*]
+                                             [(free-identifier=? unpack*-id #'unpack-multi-tail-list*)
+                                              #'pack-multi-tail-list*]
+                                             [else #'pack-term*])
+                                         (syntax #,(let loop ([t id-with-attr] [depth depth])
+                                                     (if (zero? depth)
+                                                         t
+                                                         (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
+                                         #,depth)])]
+                  (pattern-variable name temp-attr (if (eq? depth 'tail) 1 depth) unpack*-id))))
+      (define found-attributes
+        (and open-attributes-spec
+             (for/hasheq ([var (in-list attribute-vars)])
+               (values (pattern-variable-sym var) var))))
+      (define open-attributes
+        (cond
+          [(not open-attributes-spec) #f]
+          [(hash? open-attributes-spec)
+           (for ([(name field+binds) (in-hash open-attributes-spec)])
+             (define field (caar field+binds))
+             (unless (hash-ref found-attributes name #f)
+               (raise-syntax-error #f
+                                   "not an attribute of the syntax class"
+                                   field)))
+           open-attributes-spec]
+          [else
+           (for/hasheq ([name (in-hash-keys found-attributes)])
+             (define id (datum->syntax open-attributes-spec name open-attributes-spec))
+             (values name (list (cons id id))))]))
+      (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
+      (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
+      #`(#,(if sc
+               (if (identifier? sc)
+                   #`(~var #,match-id #,sc-call)
+                   #`(~and #,(if dotted-bind?
+                                 #`(~seq #,match-id (... ...))
+                                 match-id)
+                           #,sc)) ; inline syntax class
+               match-id)
+         #,(cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
+                                                     #`(#,match-id (... ...))
+                                                     match-id))
+                               #,pack-depth)]
+                 attribute-bindings)
+         #,(append
+            (if (identifier? form1)
+                (list #`[id (make-pattern-variable-syntax
+                             (quote-syntax id)
+                             (quote-syntax #,temp-id)
+                             (quote-syntax #,unpack*)
+                             #,pack-depth
+                             #,(rhombus-syntax-class-splicing? rsc)
+                             (quote-syntax #,(map pattern-variable->list attribute-vars)))])
+                null)
+            (if (not open-attributes)
+                null
+                (for*/list ([name (in-list (hash-keys open-attributes #t))]
+                            [field+bind (in-list (hash-ref open-attributes name))])
+                  (define var (hash-ref found-attributes name))
+                  #`[#,(cdr field+bind) (make-pattern-variable-syntax
+                                         (quote-syntax #,(cdr field+bind))
+                                         (quote-syntax #,(pattern-variable-val-id var))
+                                         (quote-syntax #,(pattern-variable-unpack*-id var))
+                                         #,(pattern-variable-depth var)
+                                         #f
+                                         #'())])))
+         #,(append
+            (if (identifier? form1)
+                (list (list #'id temp-id pack-depth unpack*))
+                null)
+            (if (not open-attributes)
+                null
+                (for*/list ([name (in-list (hash-keys open-attributes #t))]
+                            [field+bind (in-list (hash-ref open-attributes name))])
+                  (define var (hash-ref found-attributes name))
+                  (cons (cdr field+bind) (cdr (pattern-variable->list var))))))))
+    (define (incompat)
+      (raise-syntax-error #f
+                          "syntax class incompatible with this context"
+                          stx-class))
+    (define (retry) #'#f)
+    (define kind (current-syntax-binding-kind))
+    (cond
+      [(eq? (rhombus-syntax-class-kind rsc) 'term)
+       (cond
+         [(not (eq? kind 'term)) (retry)]
+         [else (compat #'pack-term* #'unpack-term*)])]
+      [(eq? (rhombus-syntax-class-kind rsc) 'group)
+       (cond
+         [(eq? kind 'term) (incompat)]
+         [(not (eq? kind 'group)) (retry)]
+         [else (compat #'pack-group* #'unpack-group*)])]
+      [(eq? (rhombus-syntax-class-kind rsc) 'multi)
+       (cond
+         [(or (eq? kind 'multi) (eq? kind 'block))
+          (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
+         [else (incompat)])]
+      [(eq? (rhombus-syntax-class-kind rsc) 'block)
+       (cond
+         [(eq? kind 'block)
+          (compat #'pack-block* #'unpack-multi-as-term*)]
+         [else (incompat)])]
+      [else
+       (error "unrecognized kind" kind)])))
+
 (define-syntax-binding-syntax ::
   (syntax-binding-infix-operator
    #'::
@@ -118,150 +227,12 @@
                            "preceding term must be an identifier or `_`"
                            (syntax-parse stx
                              [(colons . _) #'colons])))
-     (define temp0-id (car (generate-temporaries (list form1))))
      (define (lookup-syntax-class stx-class)
        (define rsc (syntax-local-value* (in-syntax-class-space stx-class) syntax-class-ref))
        (or rsc
            (raise-syntax-error #f
                                "not bound as a syntax class"
                                stx-class)))
-     (define (build stx-class rsc class-args open-attributes-spec)
-       (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
-         (define (compat pack* unpack*)
-           (define sc (rhombus-syntax-class-class rsc))
-           (define sc-call (parse-syntax-class-args stx-class
-                                                    sc
-                                                    (rhombus-syntax-class-arity rsc)
-                                                    class-args))
-           (define temp-id (car (generate-temporaries (list #'id))))
-           (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
-                          (syntax-list->pattern-variable l)))
-           (define-values (attribute-bindings attribute-vars)
-             (for/lists (bindings descs) ([var (in-list vars)]
-                                          [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))])
-               (define name (pattern-variable-sym var))
-               (define depth (pattern-variable-depth var))
-               (define unpack*-id (pattern-variable-unpack*-id var))
-               (define id-with-attr
-                 (datum->syntax temp0-id (string->symbol (format "~a.~a" (syntax-e temp0-id) name))))
-               (values #`[#,temp-attr #,(cond
-                                          [(eq? depth 'tail)
-                                           ;; bridge from a primitive syntax class, where we don't want to convert to
-                                           ;; a list and then convert back when the tail is used as a new tail in a
-                                           ;; template
-                                           #`(pack-tail* (syntax #,id-with-attr) 0)]
-                                          [(not (or (free-identifier=? unpack*-id #'unpack-tail-list*)
-                                                    (free-identifier=? unpack*-id #'unpack-multi-tail-list*)))
-                                           ;; assume depth-compatible value checked on binding side, and
-                                           ;; let `attribute` unpack syntax repetitions
-                                           #`(pack-nothing* (attribute #,id-with-attr) #,depth)]
-                                          [else
-                                           #`(#,(cond
-                                                  [(free-identifier=? unpack*-id #'unpack-tail-list*)
-                                                   #'pack-tail-list*]
-                                                  [(free-identifier=? unpack*-id #'unpack-multi-tail-list*)
-                                                   #'pack-multi-tail-list*]
-                                                  [else #'pack-term*])
-                                              (syntax #,(let loop ([t id-with-attr] [depth depth])
-                                                          (if (zero? depth)
-                                                              t
-                                                              (loop #`(#,t #,(quote-syntax ...)) (sub1 depth)))))
-                                              #,depth)])]
-                       (pattern-variable name temp-attr (if (eq? depth 'tail) 1 depth) unpack*-id))))
-           (define found-attributes
-             (and open-attributes-spec
-                  (for/hasheq ([var (in-list attribute-vars)])
-                    (values (pattern-variable-sym var) var))))
-           (define open-attributes
-             (cond
-               [(not open-attributes-spec) #f]
-               [(hash? open-attributes-spec)
-                (for ([(name field+binds) (in-hash open-attributes-spec)])
-                  (define field (caar field+binds))
-                  (unless (hash-ref found-attributes name #f)
-                    (raise-syntax-error #f
-                                        "not an attribute of the syntax class"
-                                        field)))
-                open-attributes-spec]
-               [else
-                (for/hasheq ([name (in-hash-keys found-attributes)])
-                  (define id (datum->syntax open-attributes-spec name open-attributes-spec))
-                  (values name (list (cons id id))))]))
-           (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
-           (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
-           #`(#,(if sc
-                    (if (identifier? sc)
-                        #`(~var #,temp0-id #,sc-call)
-                        #`(~and #,(if dotted-bind?
-                                      #`(~seq #,temp0-id (... ...))
-                                      temp0-id)
-                                #,sc)) ; inline syntax class
-                    temp0-id)
-              #,(cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
-                                                          #`(#,temp0-id (... ...))
-                                                          temp0-id))
-                                    #,pack-depth)]
-                      attribute-bindings)
-              #,(append
-                 (if (identifier? form1)
-                     (list #`[id (make-pattern-variable-syntax
-                                  (quote-syntax id)
-                                  (quote-syntax #,temp-id)
-                                  (quote-syntax #,unpack*)
-                                  #,pack-depth
-                                  #,(rhombus-syntax-class-splicing? rsc)
-                                  (quote-syntax #,(map pattern-variable->list attribute-vars)))])
-                     null)
-                 (if (not open-attributes)
-                     null
-                     (for*/list ([name (in-list (hash-keys open-attributes #t))]
-                                 [field+bind (in-list (hash-ref open-attributes name))])
-                       (define var (hash-ref found-attributes name))
-                       #`[#,(cdr field+bind) (make-pattern-variable-syntax
-                                              (quote-syntax #,(cdr field+bind))
-                                              (quote-syntax #,(pattern-variable-val-id var))
-                                              (quote-syntax #,(pattern-variable-unpack*-id var))
-                                              #,(pattern-variable-depth var)
-                                              #f
-                                              #'())])))
-              #,(append
-                 (if (identifier? form1)
-                     (list (list #'id temp-id pack-depth unpack*))
-                     null)
-                 (if (not open-attributes)
-                     null
-                     (for*/list ([name (in-list (hash-keys open-attributes #t))]
-                                 [field+bind (in-list (hash-ref open-attributes name))])
-                       (define var (hash-ref found-attributes name))
-                       (cons (cdr field+bind) (cdr (pattern-variable->list var))))))))
-         (define (incompat)
-           (raise-syntax-error #f
-                               "syntax class incompatible with this context"
-                               stx-class))
-         (define (retry) #'#f)
-         (define kind (current-syntax-binding-kind))
-         (cond
-           [(eq? (rhombus-syntax-class-kind rsc) 'term)
-            (cond
-              [(not (eq? kind 'term)) (retry)]
-              [else (compat #'pack-term* #'unpack-term*)])]
-           [(eq? (rhombus-syntax-class-kind rsc) 'group)
-            (cond
-              [(eq? kind 'term) (incompat)]
-              [(not (eq? kind 'group)) (retry)]
-              [else (compat #'pack-group* #'unpack-group*)])]
-           [(eq? (rhombus-syntax-class-kind rsc) 'multi)
-            (cond
-              [(or (eq? kind 'multi) (eq? kind 'block))
-               (compat #'pack-tagged-multi* #'unpack-multi-as-term*)]
-              [else (incompat)])]
-           [(eq? (rhombus-syntax-class-kind rsc) 'block)
-            (cond
-              [(eq? kind 'block)
-               (compat #'pack-block* #'unpack-multi-as-term*)]
-              [else (incompat)])]
-           [else
-            (error "unrecognized kind" kind)])))
      (define (parse-open-block stx tail)
        (syntax-parse tail
          #:datum-literals (group)
@@ -294,6 +265,7 @@
                 (raise-syntax-error #f "bad exposure clause" stx g)]))
            #'())]
          [_ (values #f tail)]))
+     (define match-id (car (generate-temporaries (list form1))))
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and sc (_::parens (group . rest))) . tail)
@@ -305,10 +277,10 @@
                                                            (syntax-e #'sc-hier.name))
                                                        #'sc
                                                        (current-syntax-binding-kind)
-                                                       temp0-id
+                                                       match-id
                                                        #'sc-hier.tail))
         (if rsc
-            (values (build #'sc rsc #'#f open-attributes)
+            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id)
                     end-tail)
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
@@ -318,12 +290,32 @@
           #:datum-literals ()
           [(args::syntax-class-args . args-tail)
            (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
-           (values (build #'stx-class-hier.name
-                          (lookup-syntax-class #'stx-class-hier.name)
-                          #'args.args
-                          open-attributes)
+           (values (build-syntax-class-pattern #'stx-class-hier.name
+                                               (lookup-syntax-class #'stx-class-hier.name)
+                                               #'args.args
+                                               open-attributes
+                                               form1
+                                               match-id)
                    tail)])]))
    'none))
+
+(define-syntax-binding-syntax matching
+  (syntax-binding-prefix-operator
+   #'matching
+   null
+   'macro
+   (lambda (stx)
+     (define match-id (car (generate-temporaries '(matching))))
+     (define pat (parse-matching-clause stx match-id (current-syntax-binding-kind)))
+     (values (if pat
+                 (build-syntax-class-pattern stx
+                                             pat
+                                             #'#f
+                                             (syntax-parse stx [(form-id . _) #'form-id])
+                                             #f
+                                             match-id)
+                 #'#f)
+             #'()))))
 
 (define-for-syntax (normalize-id form)
   (if (identifier? form)

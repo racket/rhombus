@@ -23,6 +23,7 @@
 
   grammar class_clause:
     #,(@rhombus(matching, ~syntax_class_clause)) | $pattern_case | ...
+    #,(@rhombus(matching, ~syntax_class_clause)) $pattern_case
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
@@ -34,7 +35,7 @@
 
   grammar pattern_body:
     #,(@rhombus(field, ~pattern_clause)) $field_decl
-    #,(@rhombus(matching, ~pattern_clause)) $matching_decl
+    #,(@rhombus(matching_also, ~pattern_clause)) $matching_decl
     #,(@rhombus(matching_when, ~pattern_clause)) $when_rhs
     #,(@rhombus(matching_unless, ~pattern_clause)) $unless_rhs
     $body
@@ -103,7 +104,7 @@
  @item{the @rhombus(syntax_pattern) at the start of the
   @rhombus(pattern_case) matches;}
 
- @item{every @rhombus(matching, ~pattern_clause) match within the
+ @item{every @rhombus(matching_also, ~pattern_clause) match within the
   @rhombus(pattern_case) body also matches;}
 
  @item{every @rhombus(matching_when, ~pattern_clause) clause within the
@@ -181,6 +182,7 @@
   syntax_class_clause.macro 'matching
                              | $pattern_case
                              | ...'
+  syntax_class_clause.macro 'matching $pattern_case'
 
   grammar pattern_case:
     $syntax_pattern
@@ -189,6 +191,10 @@
 
  Describes patterns that match a syntax class. See
  @rhombus(syntax.class).
+
+ A @rhombus(matching, ~syntax_class_clause) class with only a
+ @rhombus(pattern_case) is a shorthand for writing the
+ @rhombus(pattern_case) in a single @litchar{|} alternative.
 
 }
 
@@ -308,11 +314,10 @@
 }
 
 @doc(
-  pattern_clause.macro '«matching '$pattern':
+  pattern_clause.macro '«matching_also '$pattern':
                            $body
                            ...»'
-  pattern_clause.macro '«matching '$pattern' = $expr»'
-
+  pattern_clause.macro '«matching_also '$pattern' = $expr»'
 ){
 
  Constrains a pattern case to match only when an addition pattern

@@ -24,15 +24,15 @@
                   ::)
          "pattern-variable.rkt"
          "syntax-binding.rkt"
-         "syntax-binding-primitive.rkt"
-         (submod "syntax-binding-primitive.rkt" for-quasiquote))
+         "syntax-binding-identifier.rkt")
 
 (provide #%quotes
          syntax_term
          $
          $&
          (for-space rhombus/syntax_binding
-                    #%quotes))
+                    #%quotes
+                    _))
 
 (module+ convert
   (begin-for-syntax
@@ -440,6 +440,17 @@
                                              #`((~datum #,e) () () ())
                                              #'#f))))
         (values r #'tail)]))))
+
+(define-syntax-binding-syntax _
+  (syntax-binding-prefix-operator
+   #'_
+   null
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id . tail)
+        (values #`(#,(syntax/loc #'form-id _) () () ())
+                #'tail)]))))
 
 (define-for-syntax (convert-template e
                                      #:check-escape [check-escape (lambda (e) (void))]

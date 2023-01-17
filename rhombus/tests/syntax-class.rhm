@@ -326,11 +326,11 @@ begin:
   syntax.class Foo:
     matching
     | '$x $y':
-        matching '(1 + 1)': y
+        matching_also '(1 + 1)': y
         field case: '1'
         field z: '0'
     | '$x $y':
-        matching '(1 + $z)': y
+        matching_also '(1 + $z)': y
         field case: '2'
     | '$x $y':
         field case: '3'
