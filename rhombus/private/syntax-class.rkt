@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/property
                      "introducer.rkt")
          syntax/parse/pre
          "operator-parse.rkt"
@@ -24,12 +25,17 @@
   (begin-for-syntax
     (provide in-syntax-class-space
              (struct-out rhombus-syntax-class)
+             syntax-class-ref
+             (property-out syntax-class-parser)
+             syntax-class-parser-ref
+             syntax-class-parser-proc
              (struct-out pattern-variable)
              pattern-variable->list
              syntax-list->pattern-variable)))
 
 (module+ for-syntax-class-syntax
-  (provide (for-syntax rhombus-syntax-class in-syntax-class-space)
+  (provide (for-syntax rhombus-syntax-class
+                       in-syntax-class-space)
            define-syntax-class-syntax))
 
 (module+ for-syntax-class
@@ -40,8 +46,12 @@
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
   (struct rhombus-syntax-class (kind class attributes splicing? arity))
+  (define (syntax-class-ref v) (and (rhombus-syntax-class? v) v))
 
-  ;; use to represent parsed pattern variables and attributes in syntax classes:
+  ;; used to communicate `syntax.parse` as a anonymous-class form
+  (property syntax-class-parser (proc))
+
+  ;; used to represent parsed pattern variables and attributes in syntax classes:
   (struct pattern-variable (sym val-id depth unpack*-id))
 
   (define (pattern-variable->list pv)

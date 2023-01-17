@@ -2,10 +2,13 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
+                     enforest/syntax-local
                      "name-path-op.rkt")
          syntax/parse/pre
          "pack.rkt"
          "syntax-class.rkt"
+         (only-in "expression.rkt"
+                  in-expression-space)
          (submod "syntax-class.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::)
@@ -113,16 +116,21 @@
                            "preceding term must be an identifier or `_`"
                            (syntax-parse stx
                              [(colons . _) #'colons])))
-     (define (build stx-class class-args open-attributes)
+     (define temp0-id (car (generate-temporaries (list form1))))
+     (define (lookup-syntax-class stx-class)
+       (define rsc (syntax-local-value* (in-syntax-class-space stx-class) syntax-class-ref))
+       (or rsc
+           (raise-syntax-error #f
+                               "not bound as a syntax class"
+                               stx-class)))
+     (define (build stx-class rsc class-args open-attributes-spec)
        (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
-         (define rsc (syntax-local-value (in-syntax-class-space stx-class) (lambda () #f)))
          (define (compat pack* unpack*)
            (define sc (rhombus-syntax-class-class rsc))
            (define sc-call (parse-syntax-class-args stx-class
                                                     sc
                                                     (rhombus-syntax-class-arity rsc)
                                                     class-args))
-           (define temp0-id (car (generate-temporaries (list #'id))))
            (define temp-id (car (generate-temporaries (list #'id))))
            (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
                           (syntax-list->pattern-variable l)))
@@ -159,21 +167,39 @@
                                               #,depth)])]
                        (pattern-variable name temp-attr (if (eq? depth 'tail) 1 depth) unpack*-id))))
            (define found-attributes
-             (and open-attributes
+             (and open-attributes-spec
                   (for/hasheq ([var (in-list attribute-vars)])
                     (values (pattern-variable-sym var) var))))
-           (when open-attributes
-             (for ([(name field+bind) (in-hash open-attributes)])
-               (define field (car field+bind))
-               (unless (hash-ref found-attributes name #f)
-                 (raise-syntax-error #f
-                                     "not an attribute of the syntax class"
-                                     field))))
+           (define open-attributes
+             (cond
+               [(not open-attributes-spec) #f]
+               [(hash? open-attributes-spec)
+                (for ([(name field+bind) (in-hash open-attributes-spec)])
+                  (define field (car field+bind))
+                  (unless (hash-ref found-attributes name #f)
+                    (raise-syntax-error #f
+                                        "not an attribute of the syntax class"
+                                        field)))
+                open-attributes-spec]
+               [else
+                (for/hasheq ([name (in-hash-keys found-attributes)])
+                  (define id (datum->syntax open-attributes-spec name open-attributes-spec))
+                  (values name (cons id id)))]))
            (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
+           (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
            #`(#,(if sc
-                    #`(~var #,temp0-id #,sc-call)
+                    (if (identifier? sc)
+                        #`(~var #,temp0-id #,sc-call)
+                        #`(~and #,(if dotted-bind?
+                                      #`(~seq #,temp0-id (... ...))
+                                      temp0-id)
+                                #,sc)) ; inline syntax class
                     temp0-id)
-              #,(cons #`[#,temp-id (#,pack* (syntax #,temp0-id) #,pack-depth)] attribute-bindings)
+              #,(cons #`[#,temp-id (#,pack* (syntax #,(if dotted-bind?
+                                                          #`(#,temp0-id (... ...))
+                                                          temp0-id))
+                                    #,pack-depth)]
+                      attribute-bindings)
               #,(append
                  (if (identifier? form1)
                      (list #`[id (make-pattern-variable-syntax
@@ -213,10 +239,6 @@
          (define (retry) #'#f)
          (define kind (current-syntax-binding-kind))
          (cond
-           [(not (rhombus-syntax-class? rsc))
-            (raise-syntax-error #f
-                                "not bound as a syntax class"
-                                stx-class)]
            [(eq? (rhombus-syntax-class-kind rsc) 'term)
             (cond
               [(not (eq? kind 'term)) (retry)]
@@ -238,23 +260,49 @@
               [else (incompat)])]
            [else
             (error "unrecognized kind" kind)])))
+     (define (parse-open-block stx tail)
+       (syntax-parse tail
+         #:datum-literals (group)
+         [((_::block (group field:identifier #:as bind:identifier) ...))
+          (values (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
+                               [bind (in-list (syntax->list #'(bind ...)))])
+                    (values (syntax-e field) (cons field bind)))
+                  #'())]
+         [((_::block (group (~and kw #:open))))
+          (values #'kw
+                  #'())]
+         [((_::block . _))
+          (raise-syntax-error #f "expected `~open` or `attribute ~as identifier` sequence in block" stx)]
+         [_ (values #f tail)]))
      (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (~and sc (_::parens (group . rest))) . tail)
+        #:with (~var sc-hier (:hier-name-seq in-expression-space name-path-op name-root-ref)) #'rest
+        #:do [(define parser (syntax-local-value* (in-expression-space #'sc-hier.name) syntax-class-parser-ref))]
+        #:when parser
+        (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
+        (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)
+                                                           (syntax-e #'sc-hier.name))
+                                                       #'sc
+                                                       (current-syntax-binding-kind)
+                                                       temp0-id
+                                                       #'sc-hier.tail))
+        (if rsc
+            (values (build #'sc rsc #'#f open-attributes)
+                    end-tail)
+            ;; shortcut for kind mismatch
+            (values #'#f #'()))]
        [(_ . rest)
         #:with (~var stx-class-hier (:hier-name-seq in-syntax-class-space name-path-op name-root-ref)) #'rest
-        #:with tail #'stx-class-hier.tail
-        (syntax-parse #'tail
-          #:datum-literals (group)
-          [(args::syntax-class-args (_::block (group field:identifier #:as bind:identifier) ...))
+        (syntax-parse #'stx-class-hier.tail
+          #:datum-literals ()
+          [(args::syntax-class-args . args-tail)
+           (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
            (values (build #'stx-class-hier.name
+                          (lookup-syntax-class #'stx-class-hier.name)
                           #'args.args
-                          (for/hasheq ([field (in-list (syntax->list #'(field ...)))]
-                                       [bind (in-list (syntax->list #'(bind ...)))])
-                            (values (syntax-e field) (cons field bind))))
-                   #'())]
-          [(args::syntax-class-args (_::block . _))
-           (raise-syntax-error #f "expected `attribute ~as identifier` sequence in block" stx)]
-          [(args::syntax-class-args . tail)
-           (values (build #'stx-class-hier.name #'args.args #f) #'tail)])]))
+                          open-attributes)
+                   tail)])]))
    'none))
 
 (define-for-syntax (normalize-id form)

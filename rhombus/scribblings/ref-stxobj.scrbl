@@ -206,21 +206,12 @@ Metadata for a syntax object can include a source location and the raw
     '$term ...; ...'
     $other_stx_bind_term
 
-  grammar stx_bind:    
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class $maybe_args
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class $maybe_args:
-      $attrib_identifier ~as $ext_identifier
+  grammar stx_bind:
+    $stx_pat_bind_term
+    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
     $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
     $other_stx_bind
-
-  grammar maybe_args:
-    ($arg, ...)
-    #,(epsilon)
-
-  grammar arg:
-    $arg_expr
-    $keyword: $arg_expr  
 ){
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
@@ -279,54 +270,12 @@ Metadata for a syntax object can include a source location and the raw
 )
 
  When the @rhombus(::, ~syntax_binding) operator is used to associate a
- @tech{syntax class} with an identifier, the @rhombus(syntax_class) can
- be @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
- @rhombus(Group, ~stxclass), among other predefined classes, or it can be
- a class defined with @rhombus(syntax.class). A class defined with
- @rhombus(syntax.class) may expect arguments, which must be supplied
- after the syntax class name. The @rhombus(identifier) before @rhombus(::, ~syntax_binding)
- refers to the matched input, and it is a repetition if the syntax class
- has classification @rhombus(~sequence); the identifier can be combined
- with @rhombus(.) to access attributes (if any) of the syntax class. In
- addition, for each @rhombus(attrib_identifier ~as ext_identifier) that
- is supplied, then @rhombus(ext_identifier) is also bound directly to the
- to the named attribute. If @rhombus(identifier) is @rhombus(_, ~syntax_binding),
- then it is not bound.
-
-@examples(
-  ~defn:
-    syntax.class Wrapped:
-      kind: ~term
-      pattern
-      | '($content)'
-  ~repl:
-    match '1 + (2) + 3'
-    | '1 + $(y :: Wrapped) + 3': [y, y.content]
-    match '1 + (2) + 3'
-    | '1 + $(_ :: Wrapped: content ~as c) + 3': c
-)
+ @tech{syntax class} with an identifier. See
+ @rhombus(::, ~syntax_binding) for more information.
 
  The @rhombus(&&, ~syntax_binding) and @rhombus(||, ~syntax_binding)
- operators combine matches, where @rhombus(&&, ~syntax_binding) binds all
- variables from its arguments and @rhombus(||, ~syntax_binding) binds
- none of them. The @rhombus(&&, ~syntax_binding) binding matches whether
- its left- and right-hand bindings would both independetly match, and
- @rhombus(||, ~syntax_binding) matches when either its left- and
- right-hand binding (or both) would match. Independent matching for
- @rhombus(&&, ~syntax_binding) means that in a term context,
- combinding a variable binding with a splcing multi-term binding will
- @emph{not} enable a multi-term splicing match for the variable; instead, the
- pattern will fail to match a multi-term splice.
-
-@examples(
-  def '$(a && '($_ $_ $_)') done' = '(1 2 3) done'
-  a
-  def '$('1' || '2') ...' = '1 2 2 1 1'
-  def '$(b && '$_ $_ $_')' = '1 2 3' // b in group context
-  b
-  ~error:
-    def '$(b && '$_ $_ $_') done' = '1 2 3 done' // b in term context
-)
+ operators combine matches. See @rhombus(&&, ~syntax_binding) and
+ @rhombus(||, ~syntax_binding) for more information.
 
  Other syntax pattern binding forms can be defined with
  @rhombus(syntax_binding.macro).
@@ -334,16 +283,16 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax.class Term: ~term
-  syntax.class Id: ~term
-  syntax.class Op: ~term
-  syntax.class Id_Op: ~term
-  syntax.class Keyword: ~term
-  syntax.class String: ~term
-  syntax.class Integer: ~term
-  syntax.class Group: ~group
-  syntax.class Multi: ~multi
-  syntax.class Block: ~block
+  syntax.class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Id: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Integer: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax.class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
+  syntax.class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
+  syntax.class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block
 ){
 
  Syntax classes, all of which imply a single-term match except for
@@ -370,17 +319,111 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   syntax_binding.macro '_'
-  syntax_binding.macro '$identifier :: $syntax_class'
-  syntax_binding.macro '$identifier :: $syntax_class:
-                          $attrib_identifier ~as $ext_identifier; ...'
   syntax_binding.macro '#{#%parens} ($stx_bind)'
   syntax_binding.macro '«#{#%quotes} '$term ...; ...'»'
-  syntax_binding.macro '$stx_bind && $stx_bind'
-  syntax_binding.macro '$stx_bind || $stx_bind'
 ){
 
  Predefined syntax pattern binding forms for use with
  @rhombus($, ~bind) within a syntax pattern as a binding.
+ See @rhombus($, ~bind).
+
+}
+
+@doc(
+  syntax_binding.macro '$stx_bind && $stx_bind'
+  syntax_binding.macro '$stx_bind || $stx_bind'
+){
+
+
+ Syntax binding operators that combine matches:
+ @rhombus(&&, ~syntax_binding) matches whether its left- and right-hand
+ bindings would both independetly match, and
+ @rhombus(||, ~syntax_binding) matches when either its left- and
+ right-hand binding (or both) would match.
+
+ A @rhombus(&&, ~syntax_binding) binds all variables from its arguments,
+ while @rhombus(||, ~syntax_binding) binds none of them.
+
+ Independent matching for @rhombus(&&, ~syntax_binding) means that in a
+ term context, combinding a variable binding with a splcing multi-term
+ binding will @emph{not} enable a multi-term splicing match for the
+ variable; instead, the pattern will fail to match a multi-term splice.
+
+@examples(
+  def '$(a && '($_ $_ $_)') done' = '(1 2 3) done'
+  a
+  def '$('1' || '2') ...' = '1 2 2 1 1'
+  def '$(b && '$_ $_ $_')' = '1 2 3' // b in group context
+  b
+  ~error:
+    def '$(b && '$_ $_ $_') done' = '1 2 3 done' // b in term context
+)
+
+}
+
+
+@doc(
+  syntax_binding.macro '$identifier :: $syntax_class $maybe_args'
+  syntax_binding.macro '$identifier :: $syntax_class $maybe_args:
+                          $field_opens'
+
+  grammar syntax_class:
+    $identifier
+    (syntax.class | $pattern_case | ...)
+    (syntax.class: $class_clause; ...)
+
+  grammar maybe_args:
+    ($arg, ...)
+    #,(epsilon)
+
+  grammar arg:
+    $arg_expr
+    $keyword: $arg_expr
+
+  grammar field_opens:
+    ~open
+    $attrib_identifier ~as $ext_identifier; ...
+){
+
+ Syntax binding operator that binds @rhombus(identifier) for a match to
+ @rhombus(syntax_class).
+ 
+
+ The @rhombus(syntax_class) can be a predefined class such as
+ @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
+ @rhombus(Group, ~stxclass), among others, it can be a class defined with
+ @rhombus(syntax.class), or it can be an parenthesized inline
+ @rhombus(syntax.class) form that omits the class name. A class defined
+ with @rhombus(syntax.class) may expect arguments, which must be supplied
+ after the syntax class name.
+
+ The @rhombus(identifier) before @rhombus(::, ~syntax_binding) refers to
+ the matched input, and it is a repetition if the syntax class has
+ classification @rhombus(~sequence). The identifier can be combined with
+ @rhombus(.) to access fields (if any) of the syntax class. If
+ @rhombus(identifier) is @rhombus(_, ~syntax_binding), then it is not
+ bound.
+
+ A block supplied after @rhombus(syntax_class) unpacks fields of the For
+ each @rhombus(attrib_identifier ~as ext_identifier) that is supplied,
+ then @rhombus(ext_identifier) is also bound directly to the to the named
+ field. Supplying if @rhombus(~open) is a shorthand for listing every
+ field to bind using its own name.
+
+@examples(
+  ~defn:
+    syntax.class Wrapped:
+      kind: ~term
+      pattern
+      | '($content)'
+  ~repl:
+    match '1 + (2) + 3'
+    | '1 + $(y :: Wrapped) + 3': [y, y.content]
+    match '1 + (2) + 3'
+    | '1 + $(_ :: Wrapped: content ~as c) + 3': c
+    match '1 + (2) + 3'
+    | '1 + $(_ :: Wrapped: ~open) + 3': content
+)
 
 }
 

@@ -31,14 +31,14 @@
   #:fields
   [class only-class])
 
-(define-for-syntax (make-class-definer define-class-id )
+(define-for-syntax (make-class-definer define-class-id)
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         ;; Classname and patterns shorthand
         [(form-id class-name args::class-args (_::alts alt ...))
          (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
-                                '#:sequence (syntax->list #'(alt ...)) #f #f #f)]
+                                '#:sequence (syntax->list #'(alt ...)) #f #f #f #f)]
         ;; Specify patterns with "pattern"
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
@@ -46,42 +46,85 @@
          (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
            (extract-clauses stx (syntax->list #'(clause.parsed ...))))
          (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
-                                kind-kw pattern-alts class-desc fields-ht opaque?)]))))
+                                kind-kw pattern-alts class-desc fields-ht opaque? #f)]))))
 
-(define-syntax class (make-class-definer #'define-syntax))
+(begin-for-syntax
+  (struct definition+syntax-class-parser (def pars)
+    #:property prop:definition-transformer (lambda (self) (definition+syntax-class-parser-def self))
+    #:property prop:syntax-class-parser (lambda (self) (definition+syntax-class-parser-pars self))))
+
+(define-syntax class (definition+syntax-class-parser
+                       (make-class-definer #'define-syntax)
+                       (syntax-class-parser
+                        (lambda (who stx expected-kind name tail)
+                          (parse-anonymous-syntax-class who stx expected-kind name tail)))))
 (define-syntax only-class (make-class-definer #'define-syntax-class-syntax))
 
-(define-for-syntax (generate-syntax-class stx define-syntax-id class-name class-formals class-arity
-                                          kind-kw alts description-expr fields-ht opaque?)
+(define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
+  (syntax-parse tail
+    ;; immediate patterns shorthand
+    [((_::alts alt ...))
+     (generate-syntax-class orig-stx #f name #'#f #'#f
+                            '#:sequence (syntax->list #'(alt ...)) #f #f #f
+                            expected-kind)]
+    ;; Specify patterns with "pattern"
+    [((_::block clause::syntax-class-clause ...))
+     (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
+       (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))
+     (generate-syntax-class orig-stx #f name #'#f #'#f
+                            kind-kw pattern-alts class-desc fields-ht opaque? expected-kind)]
+    [_ (raise-syntax-error who "bad syntax" orig-stx)]))
+
+;; if `define-syntax-id` is #f, returns a `rhombus-syntax-class` value directly,
+;; and `class/inline-name` is actually a name to extend for attribute names
+(define-for-syntax (generate-syntax-class stx define-syntax-id class/inline-name class-formals class-arity
+                                          kind-kw alts description-expr fields-ht opaque? expected-kind)
   (define-values (kind splicing?)
     (let ([kind (string->symbol (keyword->string kind-kw))])
       (cond
         [(eq? kind 'sequence) (values 'term #t)]
         [else (values kind #f)])))
-  (define-values (patterns attributes)
-    (for/lists (patterns attributess
-                         #:result (values patterns (intersect-attributes stx attributess fields-ht)))
-        ([alt-stx (in-list alts)])
-      (generate-pattern-and-attributes stx alt-stx kind splicing?)))
-  (define define-class (if splicing?
-                           #'define-splicing-syntax-class
-                           #'define-syntax-class))
-  (list
-   #`(#,define-class #,(if (syntax-e class-formals)
-                           #`(#,class-name . #,class-formals)
-                           class-name)
-      #:description #,(or description-expr #f)
-      #:datum-literals (block group quotes)
-      #:attributes #,(for/list ([var attributes])
-                       #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
-      #,@(if opaque? '(#:opaque) '())
-      #,@patterns)
-   #`(#,define-syntax-id #,(in-syntax-class-space class-name)
-      (rhombus-syntax-class '#,kind
-                            #'#,class-name
-                            (quote-syntax #,(map pattern-variable->list attributes))
-                            #,splicing?
-                            '#,class-arity))))
+  (cond
+    [(and (or (eq? expected-kind 'block)
+              (eq? expected-kind 'multi)
+              (eq? expected-kind 'group))
+          (eq? kind 'term))
+     ;; shortcut to avoid redundant parsing when it's not going to work out
+     #f]
+    [else
+     (define-values (patterns attributes)
+       (for/lists (patterns attributess
+                            #:result (values patterns (intersect-attributes stx attributess fields-ht)))
+           ([alt-stx (in-list alts)])
+         (generate-pattern-and-attributes stx alt-stx kind splicing?)))
+     (cond
+       [(not define-syntax-id)
+        (rhombus-syntax-class kind
+                              (syntax-class-body->inline patterns class/inline-name)
+                              (datum->syntax #f (map pattern-variable->list attributes))
+                              splicing?
+                              (syntax->datum class-arity))]
+       [else
+        (define class-name class/inline-name)
+        (define define-class (if splicing?
+                                 #'define-splicing-syntax-class
+                                 #'define-syntax-class))
+        (list
+         #`(#,define-class #,(if (syntax-e class-formals)
+                                 #`(#,class-name . #,class-formals)
+                                 class-name)
+            #:description #,(or description-expr #f)
+            #:datum-literals (block group quotes)
+            #:attributes #,(for/list ([var attributes])
+                             #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
+            #,@(if opaque? '(#:opaque) '())
+            #,@patterns)
+         #`(#,define-syntax-id #,(in-syntax-class-space class-name)
+            (rhombus-syntax-class '#,kind
+                                  #'#,class-name
+                                  (quote-syntax #,(map pattern-variable->list attributes))
+                                  #,splicing?
+                                  '#,class-arity)))])]))
 
 ;; ----------------------------------------
 
@@ -225,6 +268,36 @@
                        #,@pattern-body
                        attr ... ...)
             all-attrs)))
+
+;; converts a `pattern` clause for `syntax-case` into a pattern suitable
+;; for directly inlinding into a larger pattern
+(define-for-syntax (syntax-class-body->inline patterns inline-name)
+  #`(~or #,@(for/list ([pattern (in-list patterns)])
+              (syntax-parse pattern
+                [(_ pat body ...)
+                 #`(~and pat
+                         #,@(let loop ([body (syntax->list #'(body ...))])
+                              (cond
+                                [(null? body) '()]
+                                [(eq? (syntax-e (car body)) '#:do)
+                                 (cons #`(~do . #,(cadr body))
+                                       (loop (cddr body)))]
+                                [(eq? (syntax-e (car body)) '#:with)
+                                 (cons #`(~parse #,(cadr body) #,(caddr body))
+                                       (loop (cdddr body)))]
+                                [(eq? (syntax-e (car body)) '#:when)
+                                 (cons #`(~fail #:unless #,(cadr body))
+                                       (loop (cddr body)))]
+                                [(eq? (syntax-e (car body)) '#:attr)
+                                 (with-syntax ([[name depth] (cadr body)])
+                                   (define id.name (datum->syntax inline-name
+                                                                  (string->symbol (format "~a.~a"
+                                                                                          (syntax-e inline-name)
+                                                                                          (syntax-e #'name)))
+                                                                  #'name))
+                                   (cons #`(~bind ([#,id.name depth] #,(caddr body)))
+                                         (loop (cdddr body))))]
+                                [else (error "unhandled pattern body" body)])))]))))
 
 ;; ----------------------------------------
 
