@@ -90,13 +90,13 @@ organize most syntax abstractions. To define a new syntax class, use the
 @demo(
   ~defn:
     syntax.class Arithmetic:
-      matching
+      pattern
       | '$x + $y'
       | '$x - $y'
 )
 
-An equivalent shorthand omits the use of @rhombus(matching) and inlines
-alternatives into the immediate @rhombus(syntax.class) form:
+An equivalent shorthand omits the use of @rhombus(pattern, ~syntax_class_clause)
+and inlines alternatives into the immediate @rhombus(syntax.class) form:
 
 @demo(
   ~defn:

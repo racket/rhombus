@@ -20,12 +20,12 @@
          (submod "function.rkt" for-call)
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
-         (submod "syntax-class-syntax.rkt" for-matching-clause))
+         (submod "syntax-class-syntax.rkt" for-pattern-clause))
 
 (provide (for-space rhombus/syntax_binding
                     #%parens
                     ::
-                    matching
+                    pattern
                     &&
                     \|\|
                     #%literal
@@ -299,14 +299,14 @@
                    tail)])]))
    'none))
 
-(define-syntax-binding-syntax matching
+(define-syntax-binding-syntax pattern
   (syntax-binding-prefix-operator
-   #'matching
+   #'pattern
    null
    'macro
    (lambda (stx)
-     (define match-id (car (generate-temporaries '(matching))))
-     (define pat (parse-matching-clause stx match-id (current-syntax-binding-kind)))
+     (define match-id (car (generate-temporaries '(pattern))))
+     (define pat (parse-pattern-clause stx match-id (current-syntax-binding-kind)))
      (values (if pat
                  (build-syntax-class-pattern stx
                                              pat

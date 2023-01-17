@@ -12,7 +12,7 @@ export:
 meta:
   syntax.class result_mode:
     kind: ~term
-    matching
+    pattern
     | '~is'
     | '~is_a'
     | '~prints_like'
@@ -20,7 +20,7 @@ meta:
     | '~matches'
   syntax.class result:
     kind: ~sequence
-    matching
+    pattern
     | '$(mode :: result_mode): $body':
         field [suffix, ...]: []
     | '$(mode :: result_mode) $g ...':

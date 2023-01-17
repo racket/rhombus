@@ -22,8 +22,8 @@
 
 (provide (rename-out [rhombus-syntax syntax]))
 
-(module+ for-matching-clause
-  (provide (for-syntax parse-matching-clause)))
+(module+ for-pattern-clause
+  (provide (for-syntax parse-pattern-clause)))
 
 (define-simple-name-root rhombus-syntax
   class
@@ -41,7 +41,7 @@
         [(form-id class-name args::class-args (_::alts alt ...))
          (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
                                 '#:sequence (syntax->list #'(alt ...)) #f #f #f #f)]
-        ;; Patterns within `matching`
+        ;; Patterns within `pattern`
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
                   (_::block clause::syntax-class-clause ...))
@@ -69,7 +69,7 @@
      (generate-syntax-class orig-stx #f name #'#f #'#f
                             '#:sequence (syntax->list #'(alt ...)) #f #f #f
                             expected-kind)]
-    ;; patterns within `matching`
+    ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...))
      (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
        (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))
@@ -77,7 +77,7 @@
                             kind-kw pattern-alts class-desc fields-ht opaque? expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
 
-(define-for-syntax (parse-matching-clause stx inline-id expected-kind)
+(define-for-syntax (parse-pattern-clause stx inline-id expected-kind)
   (syntax-parse stx
     [(_ (_::alts alt ...))
      (generate-syntax-class stx #f inline-id #'#f #'#f

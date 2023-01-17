@@ -55,7 +55,7 @@ begin:
 check:
   syntax.class Arithmetic:
     fields: x y
-    matching
+    pattern
     | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': [exp.x, exp.y]
@@ -65,7 +65,7 @@ check:
   ~eval
   syntax.class Arithmetic:
     fields: x y
-    matching
+    pattern
     | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
@@ -135,7 +135,7 @@ begin:
     meta:
       syntax.class Arithmetic:
         description: "an expression with addition or subtraction"
-        matching
+        pattern
         | '$x + $y'
         | '$x - $y'
     expr.macro 'right_operand $(e :: Arithmetic)':
@@ -170,7 +170,7 @@ check:
 begin:
   syntax.class Foo:
     kind: ~sequence
-    matching
+    pattern
     | '$x + $y'
   check:
     match '0 + 1 + 2'
@@ -180,7 +180,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~term
-    matching
+    pattern
     | '($x + $y)'
   check:
     match '0 + (1 + 2)'
@@ -191,14 +191,14 @@ check:
   ~eval
   syntax.class Foo:
     kind: ~term
-    matching
+    pattern
     | '$x + $y'
   ~raises "not a single-term pattern"
 
 begin:
   syntax.class Foo:
     kind: ~group
-    matching
+    pattern
     | '$x + $y'
   check:
     match '(1 + 2)'
@@ -208,7 +208,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~group
-    matching
+    pattern
     | '$g'
   check:
     match '(1 + 2)'
@@ -220,7 +220,7 @@ begin:
     ~eval
     syntax.class Foo:
       kind: ~group
-      matching
+      pattern
       | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
@@ -229,7 +229,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~multi
-    matching
+    pattern
     | '$x + $y
        $z - $w'
   check:
@@ -246,7 +246,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~block
-    matching
+    pattern
     | ': $x + $y
          $z - $w'
   check:
@@ -259,7 +259,7 @@ check:
   ~eval
   syntax.class Foo:
     kind: ~block
-    matching
+    pattern
     | '($x + $y,
         $z - $w)'
   ~raises "not a block pattern"
@@ -267,7 +267,7 @@ check:
 begin:
   syntax.class Foo:
     kind: ~multi
-    matching
+    pattern
     | '($x, $y)'
   check:
     match '((1 + 2, 3 - 4))'
@@ -287,7 +287,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~multi
-    matching
+    pattern
     | '$x'
   check:
     match '(1 + 2, 3 - 4)'
@@ -300,12 +300,12 @@ begin:
 
 begin:
   syntax.class Foo:
-    matching
+    pattern
     | '$x $y':
-        matching_when y.unwrap() == 1
+        match_when y.unwrap() == 1
         field case: '1'
     | '$x $y':
-        matching_unless y.unwrap() == 5
+        match_unless y.unwrap() == 5
         field case: '2'
     | '$x $y':
         field case: '3'
@@ -324,13 +324,13 @@ begin:
    
 begin:
   syntax.class Foo:
-    matching
+    pattern
     | '$x $y':
-        matching_also '(1 + 1)': y
+        match_def '(1 + 1)': y
         field case: '1'
         field z: '0'
     | '$x $y':
-        matching_also '(1 + $z)': y
+        match_def '(1 + $z)': y
         field case: '2'
     | '$x $y':
         field case: '3'
@@ -351,7 +351,7 @@ begin:
 check:
   syntax.class Option:
     kind: ~term
-    matching
+    pattern
     | '~lang':
         field form: '~lang'
   match '(~lang, ~lang)'
@@ -360,7 +360,7 @@ check:
 
 check:
   syntax.class Option:
-    matching
+    pattern
     | '~lang':
         field form: '~lang'
     | '~lang ~and':
@@ -373,7 +373,7 @@ check:
   ~eval
   syntax.class Option:
     kind: ~term
-    matching
+    pattern
     | '~lang':
         field form: '~lang'
   match '(~lang, ~lang)'
@@ -383,7 +383,7 @@ check:
 check:
   ~eval
   syntax.class Option:
-    matching
+    pattern
     | '~lang':
         field form: '~lang'
   match '(~lang, ~lang)'
@@ -443,7 +443,7 @@ begin:
 // empty pattern is a special case
 begin:
   syntax.class Maybe:
-    matching
+    pattern
     | '1'
     | ''
 
@@ -481,7 +481,7 @@ check:
 // field value does not have to be syntax
 check:
   syntax.class Foo:
-    matching
+    pattern
     | '$x':
         field [y, ...] = [1, #'~q, 3]
   match 'x'
@@ -491,7 +491,7 @@ check:
 // a field used both as a non-syntax and a sytax field
 begin:
   syntax.class Foo:
-    matching
+    pattern
     | '$x':
         field [y, ...] = [1, #'~q, 3]
     | '$x $y ...'
@@ -513,7 +513,7 @@ begin:
 begin:
   syntax.class Foo:
     kind: ~group
-    matching
+    pattern
     | '$x ($y + 1) ...'
     | '$x $y ...'
   check:
@@ -529,10 +529,10 @@ begin:
 begin:
   fun m(stx):
     def '$(f2 :: (syntax.class:
-                    matching
+                    pattern
                     | '9 $x $_'
                     | '8 $x':
-                        matching_when #true)); ...' = stx  
+                        match_when #true)); ...' = stx  
     [f2.x, ...]
   check:
     m('8 1')
@@ -551,10 +551,10 @@ begin:
 begin:
   fun m(stx):
     def '$(f2 :: (syntax.class:
-                    matching
+                    pattern
                     | '9 $x $_'
                     | '8 $x':
-                        matching_when #true):
+                        match_when #true):
              open); ...' = stx  
     [x, ...]
   check:

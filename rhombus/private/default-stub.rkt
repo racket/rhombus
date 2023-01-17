@@ -23,11 +23,12 @@
      all_from
      NonemptyList
 
+     pattern
      description
      kind
      error_mode
      fields
 
-     matching_also
-     matching_when
-     matching_unless)
+     match_def
+     match_when
+     match_unless)

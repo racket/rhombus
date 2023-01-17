@@ -12,9 +12,9 @@
 
 (provide (for-space rhombus/pattern_clause
                     field
-                    matching_also
-                    matching_when
-                    matching_unless))
+                    match_def
+                    match_when
+                    match_unless))
 
 (begin-for-syntax
   (define-syntax-class :field-lhs
@@ -37,7 +37,7 @@
        [(_ field::field-lhs (op rhombus=) rhs ...)
         #`(#:field field.id field.depth (rhombus-expression (#,group-tag rhs ...)))]))))
 
-(define-pattern-clause-syntax matching_also
+(define-pattern-clause-syntax match_def
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -48,14 +48,14 @@
        [(_ (~and pat (_::quotes p ...)) (op rhombus=) rhs ...)
         #`(#:also pat (rhombus-expression (#,group-tag rhs ...)))]))))
 
-(define-pattern-clause-syntax matching_when
+(define-pattern-clause-syntax match_when
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ rhs ...)
         #`(#:when (rhombus-expression (#,group-tag rhs ...)))]))))
 
-(define-pattern-clause-syntax matching_unless
+(define-pattern-clause-syntax match_unless
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx
