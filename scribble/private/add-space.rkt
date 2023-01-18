@@ -20,7 +20,7 @@
                      [(class_clause) 'rhombus/class_clause]
                      [(intf_clause) 'rhombus/interface_clause]
                      [(entry_point) 'rhombus/entry_point]
-                     [(syntax_binding) 'rhombus/syntax_binding]
+                     [(syntax_binding) 'rhombus/unquote_bind]
                      [(syntax_class_clause) 'rhombus/syntax_class_clause]
                      [(pattern_clause) 'rhombus/pattern_clause]
                      [(#f) 'rhombus/expr]

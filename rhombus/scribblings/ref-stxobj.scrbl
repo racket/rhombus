@@ -71,9 +71,9 @@ Metadata for a syntax object can include a source location and the raw
    3 + 4'
 )
 
- A @rhombus($) as a @rhombus(term,~var) escapes a following expression
- whose value replaces the @rhombus($) term and expression. The value
- is normally a syntax objects, but except for lists, other kinds of values are coerced
+ A @rhombus($) as a @rhombus(term,~var) unquotes (i.e., escapes) the expression
+ afteward; the value of that expression replaces the @rhombus($) term and expression. The value
+ is normally a syntax object, but except for lists, other kinds of values are coerced
  to a syntax object. Nested @rhombus('') forms are allowed around
  @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
 
@@ -132,8 +132,8 @@ Metadata for a syntax object can include a source location and the raw
 
  Matches a syntax object consistent with @rhombus(term,~var)s.
 
- A @rhombus($, ~bind) within @rhombus(term) followed by another term
- escapes to a syntax binding that is matched against the corresponding
+ A @rhombus($, ~bind) within @rhombus(term)
+ escapes to a subsequent unquoted binding that is matched against the corresponding
  portion of a candidate syntax object.
  A @dots_bind in @rhombus(term,~var) following a subpattern matches any number
  of instances of the preceding subpattern, and escapes in the pattern
@@ -201,24 +201,24 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar stx_pat_bind_term:
     $identifier
-    #,(@rhombus(_, ~syntax_binding))
+    #,(@rhombus(_, ~unquote_bind))
     ($ stx_bind)
     '$term ...; ...'
     $other_stx_bind_term
 
   grammar stx_bind:
     $stx_pat_bind_term
-    $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class_spec
-    $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
-    $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
-    #,(@rhombus(pattern, ~syntax_binding)) $pattern_cases
+    $identifier #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
+    $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
+    $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
+    #,(@rhombus(pattern, ~unquote_bind)) $pattern_cases
     $other_stx_bind
 ){
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
- syntax binding pattern. Typically, the binding pattern has an
- @rhombus(identifier) that is not bound as a syntax pattern binding
- oerator; the @rhombus(identifier) is bound to the corresponding portion
+ unquoted binding pattern. Typically, the unquoted pattern has an
+ @rhombus(identifier) that is not bound as a unquote binding
+ oerator; the @rhombus(identifier) is then bound to the corresponding portion
  of the syntax object that matches the @rhombus('', ~bind) form.
 
 @examples(
@@ -226,7 +226,7 @@ Metadata for a syntax object can include a source location and the raw
   | '$x + $y + $z': [x, y, z]
 )
 
- A @rhombus(_, ~syntax_binding) as a syntax pattern binding
+ A @rhombus(_, ~unquote_bind) as a syntax pattern binding
  matches any input, like an identifier does, but without binding an
  identifier.
 
@@ -270,20 +270,20 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $b + $('...')': b
 )
 
- The @rhombus(::, ~syntax_binding) operator is used to associate a
+ The @rhombus(::, ~unquote_bind) operator is used to associate a
  @tech{syntax class} with an identifier. See
- @rhombus(::, ~syntax_binding) for more information.
+ @rhombus(::, ~unquote_bind) for more information.
 
- The @rhombus(&&, ~syntax_binding) and @rhombus(||, ~syntax_binding)
- operators combine matches. See @rhombus(&&, ~syntax_binding) and
- @rhombus(||, ~syntax_binding) for more information.
+ The @rhombus(&&, ~unquote_bind) and @rhombus(||, ~unquote_bind)
+ operators combine matches. See @rhombus(&&, ~unquote_bind) and
+ @rhombus(||, ~unquote_bind) for more information.
 
- The @rhombus(pattern, ~syntax_binding) form is a shorthand for using
- @rhombus(::, ~syntax_binding) with an inline @rhombus(syntax.class) form.
- See @rhombus(pattern, ~syntax_binding) for more information.
+ The @rhombus(pattern, ~unquote_bind) form is a shorthand for using
+ @rhombus(::, ~unquote_bind) with an inline @rhombus(syntax.class) form.
+ See @rhombus(pattern, ~unquote_bind) for more information.
 
  Other syntax pattern binding forms can be defined with
- @rhombus(syntax_binding.macro).
+ @rhombus(unquote_bind.macro).
 
 }
 
@@ -323,9 +323,9 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax_binding.macro '_'
-  syntax_binding.macro '#{#%parens} ($stx_bind)'
-  syntax_binding.macro '«#{#%quotes} '$term ...; ...'»'
+  unquote_bind.macro '_'
+  unquote_bind.macro '#{#%parens} ($stx_bind)'
+  unquote_bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
  Predefined syntax pattern binding forms for use with
@@ -335,21 +335,21 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax_binding.macro '$stx_bind && $stx_bind'
-  syntax_binding.macro '$stx_bind || $stx_bind'
+  unquote_bind.macro '$stx_bind && $stx_bind'
+  unquote_bind.macro '$stx_bind || $stx_bind'
 ){
 
 
- Syntax binding operators that combine matches:
- @rhombus(&&, ~syntax_binding) matches whether its left- and right-hand
+ Unquote binding operators for use with @rhombus($, ~bind) that combine matches:
+ @rhombus(&&, ~unquote_bind) matches whether its left- and right-hand
  bindings would both independetly match, and
- @rhombus(||, ~syntax_binding) matches when either its left- and
+ @rhombus(||, ~unquote_bind) matches when either its left- and
  right-hand binding (or both) would match.
 
- A @rhombus(&&, ~syntax_binding) binds all variables from its arguments,
- while @rhombus(||, ~syntax_binding) binds none of them.
+ A @rhombus(&&, ~unquote_bind) binds all variables from its arguments,
+ while @rhombus(||, ~unquote_bind) binds none of them.
 
- Independent matching for @rhombus(&&, ~syntax_binding) means that in a
+ Independent matching for @rhombus(&&, ~unquote_bind) means that in a
  term context, combinding a variable binding with a splcing multi-term
  binding will @emph{not} enable a multi-term splicing match for the
  variable; instead, the pattern will fail to match a multi-term splice.
@@ -368,10 +368,10 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  syntax_binding.macro '$identifier :: $syntax_class $maybe_args'
-  syntax_binding.macro '$identifier :: $syntax_class $maybe_args:
-                          $field_expose
-                          ...'
+  unquote_bind.macro '$identifier :: $syntax_class $maybe_args'
+  unquote_bind.macro '$identifier :: $syntax_class $maybe_args:
+                        $field_expose
+                        ...'
 
   grammar syntax_class:
     $identifier
@@ -392,7 +392,7 @@ Metadata for a syntax object can include a source location and the raw
     $field_identifier ....
 ){
 
- Syntax binding operator for use within @rhombus($, ~bind) that binds
+ Unquote binding operator for use with @rhombus($, ~bind) that binds
  @rhombus(identifier) for a match to @rhombus(syntax_class).
 
  The @rhombus(syntax_class) can be a predefined class such as
@@ -403,11 +403,11 @@ Metadata for a syntax object can include a source location and the raw
  with @rhombus(syntax.class) may expect arguments, which must be supplied
  after the syntax class name.
 
- The @rhombus(identifier) before @rhombus(::, ~syntax_binding) refers to
+ The @rhombus(identifier) before @rhombus(::, ~unquote_bind) refers to
  the matched input, and it is a repetition if the syntax class has
  classification @rhombus(~sequence). The identifier can be combined with
  @rhombus(.) to access fields (if any) of the syntax class. If
- @rhombus(identifier) is @rhombus(_, ~syntax_binding), then it is not
+ @rhombus(identifier) is @rhombus(_, ~unquote_bind), then it is not
  bound.
 
  A block supplied after @rhombus(syntax_class) exposes fields of match
@@ -445,10 +445,10 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax_binding.macro 'pattern $pattern_cases'
+  unquote_bind.macro 'pattern $pattern_cases'
 ){
 
- Syntax binding operator for use within @rhombus($, ~bind) that is like
+ Unquote binding operator for use with @rhombus($, ~bind) that is like
  the @rhombus(pattern, ~bind) binding form---which, in turn, has the
  same syntax and matching rules as a
  @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax.class).

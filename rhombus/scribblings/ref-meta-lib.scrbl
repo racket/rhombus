@@ -35,6 +35,6 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-for-clause-macro.scrbl")
 @include_section("ref-class-clause-macro.scrbl")
 @include_section("ref-static-info.scrbl")
-@include_section("ref-stx-bind-macro.scrbl")
+@include_section("ref-unquote-bind-macro.scrbl")
 @include_section("ref-stxobj-meta.scrbl")
 @include_section("ref-sublanguage.scrbl")

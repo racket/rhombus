@@ -46,8 +46,8 @@
 ){
 
  Defines a @deftech{syntax class} that can be used in syntax patterns with
- @rhombus(::, ~syntax_binding). A syntax class can optionally have arguments, in which
- case every use of the syntax class with @rhombus(::, ~syntax_binding) must supply
+ @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
+ case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
  arguments; an @rhombus(identifier_binding) is like a @rhombus(kwopt_binding, ~var) for
  @rhombus(fun), but each binding must be a plain @rhombus(identifier) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments

@@ -7,14 +7,23 @@
 
 @(def dollar: @rhombus($))
 
-@title{Syntax Binding Macros}
+@title{Unquote Binding Macros}
+
+@deftech{Unquote binding} forms are similar to normal binding forms, but
+they appear only under @rhombus($, ~bind) within a syntax binding
+pattern. Unquote binding forms are distinct from normal binding forms
+because they must match syntax objects; some operators wotk in both
+contexts but have different meanings, such as
+@rhombus(::, ~unquote_bind) and @rhombus(#', ~unquote_bind) for unquote
+bindings versus @rhombus(::, ~bind) and
+@rhombus(#', ~bind) for normal bindings.
 
 @doc(
-  defn.macro 'syntax_binding.macro $rule_pattern:
+  defn.macro 'unquote_bind.macro $rule_pattern:
                 $option; ...
                 $body
                 ...'
-  defn.macro 'syntax_binding.macro
+  defn.macro 'unquote_bind.macro
               | $rule_pattern:
                   $option; ...
                   $body
@@ -23,12 +32,12 @@
 ){
 
  Like @rhombus(expr.macro), but for binding an operator that works
- within a @rhombus($, ~bind) escape for a syntax-pattern binding.
+ within a @rhombus($, ~bind) escape for a syntax pattern.
 
 @examples(
   ~eval: macro_eval
   ~repl:
-    syntax_binding.macro 'dots':
+    unquote_bind.macro 'dots':
       '«'$('...')'»'
     match Syntax.make_group(['...', '...', '...'])
     | '$dots ...': "all dots"
@@ -37,7 +46,7 @@
     | '($content)'
     | '[$content]'
     | '{$content}'
-    syntax_binding.macro 'wrapped $id':
+    unquote_bind.macro 'wrapped $id':
       '_ :: Wrapped: content as $id'
     match '{x} [y] (z)'
     | '$(wrapped a) ...': [a, ...]

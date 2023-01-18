@@ -42,16 +42,26 @@
       (syntax-parse stx
         ;; immediate-patterns shorthand
         [(form-id class-name args::class-args (_::alts alt ...))
-         (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
-                                #f (syntax->list #'(alt ...)) #f #f #f #f)]
+         (build-syntax-class stx (syntax->list #'(alt ...))
+                             #:define-class-id define-class-id
+                             #:class/inline-name #'class-name
+                             #:class-formals #'args.formals
+                             #:class-arity #'args.arity)]
         ;; Patterns within `pattern`
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
                   (_::block clause::syntax-class-clause ...))
          (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
            (extract-clauses stx (syntax->list #'(clause.parsed ...))))
-         (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
-                                kind-kw pattern-alts class-desc fields-ht opaque? #f)]))))
+         (build-syntax-class stx pattern-alts
+                             #:define-class-id define-class-id
+                             #:class/inline-name #'class-name
+                             #:class-formals #'args.formals
+                             #:class-arity #'args.arity
+                             #:kind-kw kind-kw
+                             #:description-expr class-desc
+                             #:fields fields-ht
+                             #:opaque? opaque?)]))))
 
 (begin-for-syntax
   (struct definition+syntax-class-parser (def pars)
@@ -65,40 +75,52 @@
                           (parse-anonymous-syntax-class who stx expected-kind name tail)))))
 (define-syntax only-class (make-class-definer #'define-syntax-class-syntax))
 
+;; returns a `rhombus-syntax-class`
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
   (syntax-parse tail
     ;; immediate-patterns shorthand
     [((_::alts alt ...))
-     (generate-syntax-class orig-stx #f name #'#f #'#f
-                            #f (syntax->list #'(alt ...)) #f #f #f
-                            expected-kind)]
+     (build-syntax-class orig-stx (syntax->list #'(alt ...))
+                         #:class/inline-name name
+                         #:expected-kind expected-kind)]
     ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...))
      (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
        (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))
-     (generate-syntax-class orig-stx #f name #'#f #'#f
-                            kind-kw pattern-alts class-desc fields-ht opaque? expected-kind)]
+     (build-syntax-class orig-stx pattern-alts
+                         #:class/inline-name name
+                         #:kind-kw kind-kw
+                         #:description-expr class-desc
+                         #:fields fields-ht
+                         #:opaque? opaque?
+                         #:expected-kind expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
 
-(define-for-syntax (parse-pattern-clause stx inline-id expected-kind)
-  (syntax-parse stx
-    [(_ (_::alts alt ...))
-     (generate-syntax-class stx #f inline-id #'#f #'#f
-                            #f (syntax->list #'(alt ...)) #f #f #f
-                            expected-kind)]
-    [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
-     (generate-syntax-class stx #f inline-id #'#f #'#f
-                            #f (list #'(block (group pat b))) #f #f #f
-                            expected-kind)]
-    [(_ (~and pat (_::quotes . _)))
-     (generate-syntax-class stx #f inline-id #'#f #'#f
-                            #f (list #'(block (group pat))) #f #f #f
-                            expected-kind)]))
+;; returns a `rhombus-syntax-class`
+(define-for-syntax (parse-pattern-clause stx expected-kind)
+  (define alts
+    (syntax-parse stx
+      [(_ (_::alts alt ...))
+       (syntax->list #'(alt ...))]
+      [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
+       (list #'(block (group pat b)))]
+      [(_ (~and pat (_::quotes . _)))
+       (list #'(block (group pat)))]))
+  (build-syntax-class stx alts #:expected-kind expected-kind))
 
-;; if `define-syntax-id` is #f, returns a `rhombus-syntax-class` value directly,
-;; and `class/inline-name` is actually a name to extend for attribute names
-(define-for-syntax (generate-syntax-class stx define-syntax-id class/inline-name class-formals class-arity
-                                          kind-kw alts description-expr fields-ht opaque? expected-kind)
+;; returns a `rhombus-syntax-class` if `define-syntax-id` is #f, otherwise
+;; returns a list of definitions
+(define-for-syntax (build-syntax-class stx
+                                       alts
+                                       #:define-class-id [define-syntax-id #f]
+                                       #:class/inline-name [class/inline-name #f]
+                                       #:class-formals [class-formals #'#f]
+                                       #:class-arity [class-arity #'#f]
+                                       #:kind-kw [kind-kw #f]
+                                       #:description-expr [description-expr #f]
+                                       #:fields [fields-ht #f]
+                                       #:opaque? [opaque? #f]
+                                       #:expected-kind [expected-kind #f])
   (define-values (kind splicing?)
     (let ([kind (cond
                   [kind-kw (string->symbol (keyword->string kind-kw))]
@@ -114,13 +136,13 @@
      ;; shortcut to avoid redundant parsing when it's not going to work out
      #f]
     [else
-     (define-values (patterns attributes)
-       (for/lists (patterns attributess
-                            #:result (values patterns (intersect-attributes stx attributess fields-ht)))
-           ([alt-stx (in-list alts)])
-         (generate-pattern-and-attributes stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
+     (define-values (patterns attributess)
+       (for/lists (patterns a<ttributess) ([alt-stx (in-list alts)])
+         (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
+     (define attributes (intersect-attributes stx attributess fields-ht))
      (cond
        [(not define-syntax-id)
+        ;; return a `rhombus-syntax-class` directly
         (rhombus-syntax-class kind
                               (syntax-class-body->inline patterns class/inline-name)
                               (datum->syntax #f (map pattern-variable->list attributes))
@@ -132,6 +154,7 @@
                                  #'define-splicing-syntax-class
                                  #'define-syntax-class))
         (list
+         ;; return a list of definitions
          #`(#,define-class #,(if (syntax-e class-formals)
                                  #`(#,class-name . #,class-formals)
                                  class-name)
@@ -186,8 +209,13 @@
              #:attr id #'a.id
              #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
-(define-for-syntax (generate-pattern-and-attributes orig-stx stx kind splicing?
-                                                    #:keep-attr-id? [keep-attr-id? #f])
+;; Returns two values:
+;;   * a `pattern` form suitable to use in `define-syntax-class`
+;;   * a list of `pattern-variable`s that represent fields (i.e., attributes)
+;;     of the syntax class
+;; The first result has a restricted form that is recognized by `syntax-class-body->inline`
+(define-for-syntax (parse-pattern-cases orig-stx stx kind splicing?
+                                        #:keep-attr-id? [keep-attr-id? #f])
   (define-values (pat body)
     (syntax-parse stx
       #:datum-literals (group)

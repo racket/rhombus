@@ -14,8 +14,8 @@
          (only-in "annotation.rkt"
                   ::)
          "pattern-variable.rkt"
-         "syntax-binding.rkt"
-         "syntax-binding-identifier.rkt"
+         "unquote-binding.rkt"
+         "unquote-binding-identifier.rkt"
          "name-root-ref.rkt"
          "parens.rkt"
          (submod "function.rkt" for-call)
@@ -23,7 +23,7 @@
          (submod  "import.rkt" for-meta)
          (submod "syntax-class-syntax.rkt" for-pattern-clause))
 
-(provide (for-space rhombus/syntax_binding
+(provide (for-space rhombus/unquote_bind
                     #%parens
                     ::
                     pattern
@@ -36,16 +36,16 @@
 ;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
 ;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
 ;; matched literally, and plain identifiers are implemented in
-;; "syntax-binding-identifier.rkt"
+;; "unquote-binding-identifier.rkt"
 
-(define-syntax-binding-syntax #%parens
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax #%parens
+  (unquote-binding-prefix-operator
    #'#%parens
    null
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(_ (parens g::syntax-binding) . tail)
+       [(_ (parens g::unquote-binding) . tail)
         (values #'g.parsed
                 #'tail)]))))
 
@@ -75,9 +75,115 @@
                               #:rator-arity arity))
        call])))
 
+(define-unquote-binding-syntax ::
+  (unquote-binding-infix-operator
+   #'::
+   null
+   'macro
+   (lambda (form1 stx)
+     (unless (or (identifier? form1)
+                 (syntax-parse form1
+                   [(underscore () () ())
+                    (free-identifier=? #'underscore #'_)]))
+       (raise-syntax-error #f
+                           "preceding term must be an identifier or `_`"
+                           (syntax-parse stx
+                             [(colons . _) #'colons])))
+     (define (lookup-syntax-class stx-class)
+       (define rsc (syntax-local-value* (in-syntax-class-space stx-class) syntax-class-ref))
+       (or rsc
+           (raise-syntax-error #f
+                               "not bound as a syntax class"
+                               stx-class)))
+     (define (parse-open-block stx tail)
+       (syntax-parse tail
+         #:datum-literals (group)
+         [((_::block g ...))
+          (values
+           (for/fold ([open #hasheq()]) ([g (in-list (syntax->list #'(g ...)))])
+             (syntax-parse g
+               #:datum-literals (group)
+               [(group id:identifier)
+                (free-identifier=? (in-import-space #'id) (in-import-space #'open))
+                (when (syntax? open)
+                  (raise-syntax-error #f "redundant opening clause" stx #'id))
+                (when (and (hash? open) ((hash-count open) . > . 0))
+                  (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'id))
+                #'id]
+               [(group field:identifier as:identifier bind:identifier)
+                (free-identifier=? (in-import-space #'id) (in-import-space #'as))
+                (when (syntax? open)
+                  (raise-syntax-error #f "specific field not allowed after opening clause" stx #'field))
+                (define key (syntax-e #'field))
+                (hash-set open key (cons (cons #'field #'bind) (hash-ref open key null)))]
+               [(group field:identifier ...)
+                (when (syntax? open)
+                  (raise-syntax-error #f "specific field not allowed after opening clause" stx
+                                      (car (syntax-e #'(field ...)))))
+                (for/fold ([open open]) ([field (in-list (syntax->list #'(field ...)))])
+                  (define key (syntax-e field))
+                  (hash-set open key (cons (cons field field) (hash-ref open key null))))]
+               [_
+                (raise-syntax-error #f "bad exposure clause" stx g)]))
+           #'())]
+         [_ (values #f tail)]))
+     (define match-id (car (generate-temporaries (list form1))))
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (~and sc (_::parens (group . rest))) . tail)
+        #:with (~var sc-hier (:hier-name-seq in-expression-space name-path-op name-root-ref)) #'rest
+        #:do [(define parser (syntax-local-value* (in-expression-space #'sc-hier.name) syntax-class-parser-ref))]
+        #:when parser
+        (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
+        (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)
+                                                           (syntax-e #'sc-hier.name))
+                                                       #'sc
+                                                       (current-unquote-binding-kind)
+                                                       match-id
+                                                       #'sc-hier.tail))
+        (if rsc
+            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id)
+                    end-tail)
+            ;; shortcut for kind mismatch
+            (values #'#f #'()))]
+       [(_ . rest)
+        #:with (~var stx-class-hier (:hier-name-seq in-syntax-class-space name-path-op name-root-ref)) #'rest
+        (syntax-parse #'stx-class-hier.tail
+          #:datum-literals ()
+          [(args::syntax-class-args . args-tail)
+           (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
+           (values (build-syntax-class-pattern #'stx-class-hier.name
+                                               (lookup-syntax-class #'stx-class-hier.name)
+                                               #'args.args
+                                               open-attributes
+                                               form1
+                                               match-id)
+                   tail)])]))
+   'none))
+
+(define-unquote-binding-syntax pattern
+  (unquote-binding-prefix-operator
+   #'pattern
+   null
+   'macro
+   (lambda (stx)
+     (define inline-id #f)
+     (define rsc (parse-pattern-clause stx (current-unquote-binding-kind)))
+     (values (if rsc
+                 (build-syntax-class-pattern stx
+                                             rsc
+                                             #'#f
+                                             (syntax-parse stx [(form-id . _) #'form-id])
+                                             #f
+                                             inline-id)
+                 #'#f)
+             #'()))))
+
 (begin-for-syntax
   (struct open-attrib (sym bind-id var)))
 
+;; used for `::` and for `pattern`, returns a parsed binding form that takes advantage
+;; of a syntax class --- possibly an inlined syntax class and/or one with exposed fields
 (define-for-syntax (build-syntax-class-pattern stx-class rsc class-args open-attributes-spec
                                                form1 match-id)
   (with-syntax ([id (if (identifier? form1) form1 #'wildcard)])
@@ -200,7 +306,7 @@
                           "syntax class incompatible with this context"
                           stx-class))
     (define (retry) #'#f)
-    (define kind (current-syntax-binding-kind))
+    (define kind (current-unquote-binding-kind))
     (cond
       [(eq? (rhombus-syntax-class-kind rsc) 'term)
        (cond
@@ -224,113 +330,9 @@
       [else
        (error "unrecognized kind" kind)])))
 
-(define-syntax-binding-syntax ::
-  (syntax-binding-infix-operator
-   #'::
-   null
-   'macro
-   (lambda (form1 stx)
-     (unless (or (identifier? form1)
-                 (syntax-parse form1
-                   [(underscore () () ())
-                    (free-identifier=? #'underscore #'_)]))
-       (raise-syntax-error #f
-                           "preceding term must be an identifier or `_`"
-                           (syntax-parse stx
-                             [(colons . _) #'colons])))
-     (define (lookup-syntax-class stx-class)
-       (define rsc (syntax-local-value* (in-syntax-class-space stx-class) syntax-class-ref))
-       (or rsc
-           (raise-syntax-error #f
-                               "not bound as a syntax class"
-                               stx-class)))
-     (define (parse-open-block stx tail)
-       (syntax-parse tail
-         #:datum-literals (group)
-         [((_::block g ...))
-          (values
-           (for/fold ([open #hasheq()]) ([g (in-list (syntax->list #'(g ...)))])
-             (syntax-parse g
-               #:datum-literals (group)
-               [(group id:identifier)
-                (free-identifier=? (in-import-space #'id) (in-import-space #'open))
-                (when (syntax? open)
-                  (raise-syntax-error #f "redundant opening clause" stx #'id))
-                (when (and (hash? open) ((hash-count open) . > . 0))
-                  (raise-syntax-error #f "opening clause not allowed after specific fields" stx #'id))
-                #'id]
-               [(group field:identifier as:identifier bind:identifier)
-                (free-identifier=? (in-import-space #'id) (in-import-space #'as))
-                (when (syntax? open)
-                  (raise-syntax-error #f "specific field not allowed after opening clause" stx #'field))
-                (define key (syntax-e #'field))
-                (hash-set open key (cons (cons #'field #'bind) (hash-ref open key null)))]
-               [(group field:identifier ...)
-                (when (syntax? open)
-                  (raise-syntax-error #f "specific field not allowed after opening clause" stx
-                                      (car (syntax-e #'(field ...)))))
-                (for/fold ([open open]) ([field (in-list (syntax->list #'(field ...)))])
-                  (define key (syntax-e field))
-                  (hash-set open key (cons (cons field field) (hash-ref open key null))))]
-               [_
-                (raise-syntax-error #f "bad exposure clause" stx g)]))
-           #'())]
-         [_ (values #f tail)]))
-     (define match-id (car (generate-temporaries (list form1))))
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(_ (~and sc (_::parens (group . rest))) . tail)
-        #:with (~var sc-hier (:hier-name-seq in-expression-space name-path-op name-root-ref)) #'rest
-        #:do [(define parser (syntax-local-value* (in-expression-space #'sc-hier.name) syntax-class-parser-ref))]
-        #:when parser
-        (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
-        (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)
-                                                           (syntax-e #'sc-hier.name))
-                                                       #'sc
-                                                       (current-syntax-binding-kind)
-                                                       match-id
-                                                       #'sc-hier.tail))
-        (if rsc
-            (values (build-syntax-class-pattern #'sc rsc #'#f open-attributes form1 match-id)
-                    end-tail)
-            ;; shortcut for kind mismatch
-            (values #'#f #'()))]
-       [(_ . rest)
-        #:with (~var stx-class-hier (:hier-name-seq in-syntax-class-space name-path-op name-root-ref)) #'rest
-        (syntax-parse #'stx-class-hier.tail
-          #:datum-literals ()
-          [(args::syntax-class-args . args-tail)
-           (define-values (open-attributes tail) (parse-open-block stx #'args-tail))
-           (values (build-syntax-class-pattern #'stx-class-hier.name
-                                               (lookup-syntax-class #'stx-class-hier.name)
-                                               #'args.args
-                                               open-attributes
-                                               form1
-                                               match-id)
-                   tail)])]))
-   'none))
-
-(define-syntax-binding-syntax pattern
-  (syntax-binding-prefix-operator
-   #'pattern
-   null
-   'macro
-   (lambda (stx)
-     (define inline-id #f)
-     (define rsc (parse-pattern-clause stx inline-id (current-syntax-binding-kind)))
-     (values (if rsc
-                 (build-syntax-class-pattern stx
-                                             rsc
-                                             #'#f
-                                             (syntax-parse stx [(form-id . _) #'form-id])
-                                             #f
-                                             inline-id)
-                 #'#f)
-             #'()))))
-
 (define-for-syntax (normalize-id form)
   (if (identifier? form)
-      (identifier-as-pattern-syntax form (current-syntax-binding-kind))
+      (identifier-as-unquote-binding form (current-unquote-binding-kind))
       form))
 
 (define-for-syntax (norm-seq pat like-pat)
@@ -340,8 +342,8 @@
          [((~datum ~seq) . _) #`(~seq #,pat)]
          [_ pat])]))
 
-(define-syntax-binding-syntax &&
-  (syntax-binding-infix-operator
+(define-unquote-binding-syntax &&
+  (unquote-binding-infix-operator
    #'&&
    null
    'automatic
@@ -358,8 +360,8 @@
               (var1 ... . vars2))])]))
    'left))
 
-(define-syntax-binding-syntax \|\|
-  (syntax-binding-infix-operator
+(define-unquote-binding-syntax \|\|
+  (unquote-binding-infix-operator
    #'\|\|
    null
    'automatic
@@ -377,8 +379,8 @@
               ())])]))
    'left))
 
-(define-syntax-binding-syntax #%literal
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax #%literal
+  (unquote-binding-prefix-operator
    #'#%literal
    '((default . stronger))
    'macro
@@ -392,8 +394,8 @@
                                         "literal"))
                             #'x)]))))
 
-(define-syntax-binding-syntax #%block
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax #%block
+  (unquote-binding-prefix-operator
    #'#%body
    '((default . stronger))
    'macro
@@ -404,14 +406,14 @@
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
 
-(define-syntax-binding-syntax |#'|
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax |#'|
+  (unquote-binding-prefix-operator
    #'|#'|
    '((default . stronger))
    'macro
    (lambda (stxes)
      (cond
-       [(eq? 'term (current-syntax-binding-kind))
+       [(eq? 'term (current-unquote-binding-kind))
         (syntax-parse stxes
           [(_ id:identifier . tail)
            (values #'((~datum id) () () ())

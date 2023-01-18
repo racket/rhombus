@@ -20,7 +20,7 @@
         "dot-syntax.rkt"
         "import-syntax.rkt"
         "export-syntax.rkt"
-        "syntax-binding-syntax.rkt"
+        "unquote-binding-syntax.rkt"
         "syntax-class-clause-syntax.rkt"
         "pattern-clause-syntax.rkt"
         "syntax-error.rkt"

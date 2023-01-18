@@ -62,21 +62,21 @@ begin:
     ~is "top a"
   
 check:
-  syntax_binding.macro 'g $x':
+  unquote_bind.macro 'g $x':
     '$x :: Group'
   match 'x: 2 3'
   |  '$_: $(g v)': v
   ~prints_like '2 3'
   
 check:
-  syntax_binding.macro 'g $x':
+  unquote_bind.macro 'g $x':
     '$x'
   match 'x: 2 3'
   |  '$_: $(g v)': v
   ~prints_like '2 3'
 
 begin:
-  syntax_binding.macro 'g':
+  unquote_bind.macro 'g':
     '('?')'
   check:
     match '1 ? 2'
@@ -89,7 +89,7 @@ begin:
     ~is "no"
 
 begin:
-  syntax_binding.macro 'g':
+  unquote_bind.macro 'g':
     '('exact')'
   check:
     match '1 exact 2'
@@ -97,7 +97,7 @@ begin:
     ~is "yes"
 
 begin:
-  syntax_binding.macro 'dots':
+  unquote_bind.macro 'dots':
     '«'$('...')'»'
   check:
     match Syntax.make_group(['...', '...', '...'])
@@ -114,7 +114,7 @@ check:
   | '($content)'
   | '[$content]'
   | '{$content}'
-  syntax_binding.macro 'wrapped $id':
+  unquote_bind.macro 'wrapped $id':
     '_ :: Wrapped: content as $id'
   match '{x} [y] (z)'
   | '$(wrapped a) ...': [a, ...]

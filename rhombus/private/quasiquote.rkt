@@ -23,14 +23,14 @@
          (only-in "annotation.rkt"
                   ::)
          "pattern-variable.rkt"
-         "syntax-binding.rkt"
-         "syntax-binding-identifier.rkt")
+         "unquote-binding.rkt"
+         "unquote-binding-identifier.rkt")
 
 (provide #%quotes
          syntax_term
          $
          $&
-         (for-space rhombus/syntax_binding
+         (for-space rhombus/unquote_bind
                     #%quotes
                     _))
 
@@ -56,9 +56,9 @@
     (pattern (~seq term)
              #:when (or any-id?
                         (not (identifier? #'term))
-                        (not (syntax-binding-id? #'term))
-                        (free-identifier=? (in-syntax-binding-space #'_)
-                                           (in-syntax-binding-space #'term)))))
+                        (not (unquote-binding-id? #'term))
+                        (free-identifier=? (in-unquote-binding-space #'_)
+                                           (in-unquote-binding-space #'term)))))
   (define-splicing-syntax-class (:tail-repetition in-space dotted?)
     #:attributes (name term)
     #:datum-literals (op)
@@ -258,15 +258,15 @@
       [else #`(~datum #,d)]))
   (define (handle-escape $-id e in-e kind)
     (define parsed
-      (parameterize ([current-syntax-binding-kind kind])
+      (parameterize ([current-unquote-binding-kind kind])
         (syntax-parse #`(#,group-tag #,e)
-          [esc::syntax-binding #'esc.parsed])))
+          [esc::unquote-binding #'esc.parsed])))
     (syntax-parse parsed
       [#f (values #f #f #f #f)]
       [id:identifier
-       (identifier-as-pattern-syntax #'id kind
-                                     #:result values
-                                     #:pattern-variable pattern-variable)]
+       (identifier-as-unquote-binding #'id kind
+                                      #:result values
+                                      #:pattern-variable pattern-variable)]
       [(pat idrs sidrs vars)
        (values #'pat
                (syntax->list #'idrs)
@@ -384,8 +384,8 @@
                     ;; because that won't be an input
                     (values #`((~datum #,tag) . #,ps) idrs sidrs vars #t))))
 
-(define-syntax-binding-syntax #%quotes
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax #%quotes
+  (unquote-binding-prefix-operator
    #'#%quotes
    null
    'macro
@@ -393,7 +393,7 @@
      (syntax-parse stx
        [(form-id qs . tail)
         (define ((build pat-kind) e)
-          (define kind (current-syntax-binding-kind))
+          (define kind (current-unquote-binding-kind))
           (cond
             [(and (eq? pat-kind 'term)
                   (not (eq? kind 'term)))
@@ -437,13 +437,13 @@
                                  (build 'group)
                                  (build 'multi)
                                  (lambda (e)
-                                   (if (eq? (current-syntax-binding-kind) 'term)
+                                   (if (eq? (current-unquote-binding-kind) 'term)
                                        #`((~datum #,e) () () ())
                                        #'#f))))
         (values r #'tail)]))))
 
-(define-syntax-binding-syntax _
-  (syntax-binding-prefix-operator
+(define-unquote-binding-syntax _
+  (unquote-binding-prefix-operator
    #'_
    null
    'macro

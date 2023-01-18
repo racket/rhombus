@@ -145,7 +145,7 @@ expr.macro
           || kw === #'~class_clause
           || kw === #'~intf_clause
           || kw === #'~entry_point
-          || kw === #'~syntax_binding
+          || kw === #'~unquote_bind
           || kw === #'~syntax_class_clause
           || kw === #'~pattern_clause)
     | values('#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))',

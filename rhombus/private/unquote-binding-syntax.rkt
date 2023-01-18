@@ -5,13 +5,13 @@
                      "pack.rkt"
                      "realm.rkt"
                      (submod "class-meta.rkt" for-static-info))
-         "syntax-binding.rkt"
+         "unquote-binding.rkt"
          "name-root.rkt"
          "syntax.rkt")
 
-(provide syntax_binding)
+(provide unquote_bind)
 
-(define-simple-name-root syntax_binding
+(define-simple-name-root unquote_bind
   macro
   only)
 
@@ -21,13 +21,13 @@
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
-  rhombus/syntax_binding
-  #'make-syntax-binding-prefix-operator
-  #'make-syntax-binding-infix-operator
-  #'syntax-binding-prefix+infix-operator)
+  rhombus/unquote_bind
+  #'make-unquote-binding-prefix-operator
+  #'make-unquote-binding-infix-operator
+  #'unquote-binding-prefix+infix-operator)
 
-(define-for-syntax (make-syntax-binding-prefix-operator name prec protocol proc)
-  (syntax-binding-prefix-operator
+(define-for-syntax (make-unquote-binding-prefix-operator name prec protocol proc)
+  (unquote-binding-prefix-operator
    name
    prec
    protocol
@@ -43,8 +43,8 @@
                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
                  proc)))))
 
-(define-for-syntax (make-syntax-binding-infix-operator name prec protocol proc assc)
-  (syntax-binding-prefix-operator
+(define-for-syntax (make-unquote-binding-infix-operator name prec protocol proc assc)
+  (unquote-binding-prefix-operator
    name
    prec
    protocol
@@ -71,5 +71,5 @@
   (unless (syntax? binds)
     (raise-result-error* (proc-name proc) rhombus-realm "Syntax" binds))
   (values (syntax-parse (unpack-group binds proc binds)
-            [esc::syntax-binding #'esc.parsed])
+            [esc::unquote-binding #'esc.parsed])
           tail))

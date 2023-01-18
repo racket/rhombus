@@ -18,7 +18,7 @@
 As shown in @secref("syntax"), a variable can be bound in a syntax
 pattern by escaping from the pattern with @rhombus($, ~bind). A
 @rhombus($, ~bind) can also be followed by a more complex escape. We
-have seen the use of the @rhombus(::, ~syntax_binding) operator, for
+have seen the use of the @rhombus(::, ~unquote_bind) operator, for
 example. It takes a pattern variable and a @tech{syntax class} name to
 specify the kind of syntax the pattern variable can match. The syntax
 classes @rhombus(Term, ~stxclass), @rhombus(Group, ~stxclass), and
@@ -31,7 +31,7 @@ classes @rhombus(Term, ~stxclass), @rhombus(Group, ~stxclass), and
 
 Quotes create a syntax pattern, and they work nested inside an escape to
 create a nested pattern. Nesting immediately within an
-@rhombus($, ~syntax_binding) escape allows matching a literal
+@rhombus($, ~unquote_bind) escape allows matching a literal
 @rhombus($, ~datum) or @rhombus(..., ~datum), analogous to the way those
 literals can be included when constructing syntax.
 
@@ -48,10 +48,10 @@ literals can be included when constructing syntax.
 )
 
 Nested patterns are more useful with operators like
-@rhombus(||, ~syntax_binding) and @rhombus(&&, ~syntax_binding), which
+@rhombus(||, ~unquote_bind) and @rhombus(&&, ~unquote_bind), which
 take two syntax bindings and ensure that at least one matches or that
 both match, respectively. In particular, combining
-@rhombus(&&, ~syntax_binding) with an identifier can give a name to a
+@rhombus(&&, ~unquote_bind) with an identifier can give a name to a
 nested match.
 
 @demo(
@@ -68,7 +68,7 @@ nested match.
 
 When a multi-term syntax pattern is used in a @rhombus($, ~bind) escape
 in a term context, the multi-term pattern is spliced into the enclosing
-group pattern. The @rhombus(||, ~syntax_binding) operator can try
+group pattern. The @rhombus(||, ~unquote_bind) operator can try
 spliced sequences that have different lengths.
 
 @demo(
@@ -82,7 +82,7 @@ spliced sequences that have different lengths.
 )
 
 Although Rhombus supports new binding operators through
-@rhombus(syntax_binding.macro), syntax classes provide a better way to
+@rhombus(unquote_bind.macro), syntax classes provide a better way to
 organize most syntax abstractions. To define a new syntax class, use the
 @rhombus(syntax.class) form with a block that contains
 @rhombus(pattern) with pattern alternatives:
@@ -168,5 +168,5 @@ alternative of a syntax class.
 
 In other words, the attributes of a syntax class are defined by the intersection 
 of all escaped pattern variables found in the pattern alternatives. That's more
-flexible than @rhombus(||, ~syntax_binding), which does not bind identifiers
+flexible than @rhombus(||, ~unquote_bind), which does not bind identifiers
 from either of its arguments.

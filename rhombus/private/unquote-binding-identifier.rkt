@@ -3,13 +3,13 @@
                      syntax/parse/pre)
          "pack.rkt"
          "pattern-variable.rkt"
-         "syntax-binding.rkt")
+         "unquote-binding.rkt")
 
-(provide (for-syntax identifier-as-pattern-syntax))
+(provide (for-syntax identifier-as-unquote-binding))
 
-(define-for-syntax (identifier-as-pattern-syntax id kind
-                                                 #:result [result list]
-                                                 #:pattern-variable [pattern-variable list])
+(define-for-syntax (identifier-as-unquote-binding id kind
+                                                  #:result [result list]
+                                                  #:pattern-variable [pattern-variable list])
   (define-values (pack* unpack*)
     (case kind
       [(term) (values #'pack-term* #'unpack-term*)]

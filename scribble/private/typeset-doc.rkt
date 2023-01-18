@@ -35,15 +35,15 @@
                   in-interface-clause-space)
          (only-in (submod rhombus/private/entry-point for-class)
                   in-entry-point-space)
-         (only-in rhombus/private/syntax-binding
-                  in-syntax-binding-space)
+         (only-in rhombus/private/unquote-binding
+                  in-unquote-binding-space)
          (only-in rhombus
                   def fun operator interface :: |.| $
                   [= rhombus-=]
                   [syntax rhombus-syntax])
          (only-in rhombus/meta
                   decl defn expr impo expo annot repet bind reducer for_clause
-                  class_clause interface_clause entry_point syntax_binding
+                  class_clause interface_clause entry_point unquote_bind
                   syntax_class_clause pattern_clause)
          (only-in "rhombus.rhm"
                   rhombusblock_etc
@@ -219,10 +219,10 @@
 (begin-for-syntax
   (define-splicing-syntax-class operator-macro-head
     #:literals (def fun expr impo expo modpath bind annot repet
-                 syntax_binding |.|)
+                 unquote_bind |.|)
     #:datum-literals (op macro rule)
     (pattern (~seq (~or expr bind annot repet expo impo modpath
-                        syntax_binding)
+                        unquote_bind)
                    (op |.|)
                    macro))
     (pattern (~seq (~or expo impo) (op |.|) modifier))
@@ -231,11 +231,11 @@
   (define-splicing-syntax-class identifier-macro-head
     #:literals (def defn expr decl bind impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
-                 syntax_binding syntax_class_clause pattern_clause |.|)
+                 unquote_bind syntax_class_clause pattern_clause |.|)
     #:datum-literals (op modifier macro rule)
     (pattern (~seq (~or defn decl expr annot repet bind reducer expo modpath
                         for_clause class_clause interface_clause entry_point
-                        syntax_binding syntax_class_clause pattern_clause)
+                        unquote_bind syntax_class_clause pattern_clause)
                    (op |.|) macro))
     (pattern (~seq (~or expr bind annot) (op |.|) rule))
     (pattern (~seq (~or impo expo) (op |.|) modifier))
@@ -478,7 +478,7 @@
     [(group class_clause . _) in-class-clause-space]
     [(group interface_clause . _) in-interface-clause-space]
     [(group entry_point . _) in-entry-point-space]
-    [(group syntax_binding . _) in-syntax-binding-space]
+    [(group unquote_bind . _) in-unquote-binding-space]
     [(group syntax_class_clause . _) in-syntax-class-clause-space]
     [(group pattern_clause . _) in-pattern-clause-space]
     [(group rhombus-syntax . _) in-syntax-class-space]
@@ -487,7 +487,7 @@
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
     #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point
-                     bind syntax_binding syntax_class_clause pattern_clause rhombus-syntax)
+                     bind unquote_bind syntax_class_clause pattern_clause rhombus-syntax)
     #:datum-literals (parens group op)
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
@@ -499,7 +499,7 @@
     [(group class_clause . _) 'class_clause]
     [(group interface_clause . _) 'intf_clause]
     [(group entry_point . _) 'entry_point]
-    [(group syntax_binding . _) 'syntax_binding]
+    [(group unquote_bind . _) 'unquote_bind]
     [(group syntax_class_clause . _) 'syntax_class_clause]
     [(group pattern_clause . _) 'pattern_clause]
     [(group bind . _) 'bind]
@@ -511,7 +511,7 @@
     #:literals (defn decl expr impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
                  bind grammar operator rhombus-syntax
-                 syntax_binding syntax_class_clause pattern_clause interface)
+                 unquote_bind syntax_class_clause pattern_clause interface)
     #:datum-literals (parens group op quotes modifier macro)
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
@@ -527,7 +527,7 @@
     [(group class_clause . _) "class clause"]
     [(group interface_clause . _) "interface clause"]
     [(group entry_point . _) "entry point"]
-    [(group syntax_binding . _) "syntax binding"]
+    [(group unquote_bind . _) "unquote binding"]
     [(group syntax_class_clause . _) "syntax class clause"]
     [(group pattern_clause  . _) "pattern clause"]
     [(group bind . _) "binding operator"]
