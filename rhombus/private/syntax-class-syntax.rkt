@@ -1,9 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "tag.rkt"
+                     "attribute-name.rkt")
          syntax/parse/pre
+         (only-in "binding.rkt" in-binding-space)
          (submod "quasiquote.rkt" convert)
+         (submod "quasiquote.rkt" shape-dispatch)
          (submod "syntax-class.rkt" for-quasiquote)
          (submod "syntax-class.rkt" for-syntax-class-syntax)
          "syntax-class-clause.rkt"
@@ -40,7 +43,7 @@
         ;; immediate-patterns shorthand
         [(form-id class-name args::class-args (_::alts alt ...))
          (generate-syntax-class stx define-class-id #'class-name #'args.formals #'args.arity
-                                '#:sequence (syntax->list #'(alt ...)) #f #f #f #f)]
+                                #f (syntax->list #'(alt ...)) #f #f #f #f)]
         ;; Patterns within `pattern`
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
@@ -67,7 +70,7 @@
     ;; immediate-patterns shorthand
     [((_::alts alt ...))
      (generate-syntax-class orig-stx #f name #'#f #'#f
-                            '#:sequence (syntax->list #'(alt ...)) #f #f #f
+                            #f (syntax->list #'(alt ...)) #f #f #f
                             expected-kind)]
     ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...))
@@ -81,11 +84,15 @@
   (syntax-parse stx
     [(_ (_::alts alt ...))
      (generate-syntax-class stx #f inline-id #'#f #'#f
-                            '#:sequence (syntax->list #'(alt ...)) #f #f #f
+                            #f (syntax->list #'(alt ...)) #f #f #f
                             expected-kind)]
     [(_ (~and pat (_::quotes . _)) (~and b (_::block . _)))
      (generate-syntax-class stx #f inline-id #'#f #'#f
-                            '#:sequence (list #'(block (group pat b))) #f #f #f
+                            #f (list #'(block (group pat b))) #f #f #f
+                            expected-kind)]
+    [(_ (~and pat (_::quotes . _)))
+     (generate-syntax-class stx #f inline-id #'#f #'#f
+                            #f (list #'(block (group pat))) #f #f #f
                             expected-kind)]))
 
 ;; if `define-syntax-id` is #f, returns a `rhombus-syntax-class` value directly,
@@ -93,7 +100,9 @@
 (define-for-syntax (generate-syntax-class stx define-syntax-id class/inline-name class-formals class-arity
                                           kind-kw alts description-expr fields-ht opaque? expected-kind)
   (define-values (kind splicing?)
-    (let ([kind (string->symbol (keyword->string kind-kw))])
+    (let ([kind (cond
+                  [kind-kw (string->symbol (keyword->string kind-kw))]
+                  [else (infer-pattern-kind alts)])])
       (cond
         [(eq? kind 'sequence) (values 'term #t)]
         [else (values kind #f)])))
@@ -109,7 +118,7 @@
        (for/lists (patterns attributess
                             #:result (values patterns (intersect-attributes stx attributess fields-ht)))
            ([alt-stx (in-list alts)])
-         (generate-pattern-and-attributes stx alt-stx kind splicing?)))
+         (generate-pattern-and-attributes stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
      (cond
        [(not define-syntax-id)
         (rhombus-syntax-class kind
@@ -135,11 +144,37 @@
          #`(#,define-syntax-id #,(in-syntax-class-space class-name)
             (rhombus-syntax-class '#,kind
                                   #'#,class-name
-                                  (quote-syntax #,(map pattern-variable->list attributes))
+                                  (quote-syntax #,(for/list ([var (in-list attributes)])
+                                                    (pattern-variable->list var #:keep-id? #f)))
                                   #,splicing?
                                   '#,class-arity)))])]))
 
 ;; ----------------------------------------
+
+(define-for-syntax (infer-pattern-kind alts)
+  (for/fold ([kind 'term]) ([alt (in-list alts)])
+    (cond
+      [(eq? kind 'multi) 'multi]
+      [else
+       (syntax-parse alt
+         [(block (group pat . _) . _)
+          (define-values (new-kind tail)
+            (quoted-shape-dispatch #'(pattern pat)
+                                   in-binding-space
+                                   (lambda (e) 'term)
+                                   (lambda (e) 'sequence)
+                                   (lambda (e)
+                                     (syntax-parse e
+                                       #:datum-literals (multi)
+                                       [(multi)
+                                        ;; special case: empty sequence can be spliced
+                                        'sequence]
+                                       [else 'multi]))
+                                   (lambda (e) 'term)))
+          (cond
+            [(and (eq? kind 'sequence) (eq? new-kind 'term)) kind]
+            [else new-kind])]
+         [else kind])])))
 
 (begin-for-syntax
   (define-syntax-class :attribute-lhs
@@ -151,7 +186,8 @@
              #:attr id #'a.id
              #:attr depth #`#,(+ 1 (syntax-e #'a.depth)))))
 
-(define-for-syntax (generate-pattern-and-attributes orig-stx stx kind splicing?)
+(define-for-syntax (generate-pattern-and-attributes orig-stx stx kind splicing?
+                                                    #:keep-attr-id? [keep-attr-id? #f])
   (define-values (pat body)
     (syntax-parse stx
       #:datum-literals (group)
@@ -246,7 +282,7 @@
                                                                   #f
                                                                   #'()))] '#:do
                                (accum-do))
-                        (cons (pattern-variable (syntax-e #'id) #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*))
+                        (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*))
                               rev-attrs))]
                  [(#:also (_ pat-g ...) rhs)
                   (define-values (p idrs sidrs vars can-be-empty?)
@@ -270,7 +306,10 @@
   (with-syntax ([((attr ...) ...)
                  (map (lambda (var)
                         #`(#:attr
-                           (#,(pattern-variable-sym var) #,(pattern-variable-depth var))
+                           [#,(if keep-attr-id?
+                                  (pattern-variable-id var)
+                                  (pattern-variable-sym var))
+                            #,(pattern-variable-depth var)]
                            (#,(pattern-variable-unpack*-id var)
                             (quote-syntax dots)
                             #,(pattern-variable-val-id var)
@@ -289,29 +328,25 @@
               (syntax-parse pattern
                 [(_ pat body ...)
                  #`(~and pat
-                         #,@(let loop ([body (syntax->list #'(body ...))])
+                         #,@(let loop ([body (syntax->list #'(body ...))]
+                                       [bind-counter 0])
                               (cond
                                 [(null? body) '()]
                                 [(eq? (syntax-e (car body)) '#:do)
                                  (cons #`(~do . #,(cadr body))
-                                       (loop (cddr body)))]
+                                       (loop (cddr body) bind-counter))]
                                 [(eq? (syntax-e (car body)) '#:with)
                                  (cons #`(~parse #,(cadr body) #,(caddr body))
-                                       (loop (cdddr body)))]
+                                       (loop (cdddr body) bind-counter))]
                                 [(eq? (syntax-e (car body)) '#:when)
                                  (cons #`(~fail #:unless #,(cadr body))
-                                       (loop (cddr body)))]
+                                       (loop (cddr body)
+                                             bind-counter))]
                                 [(eq? (syntax-e (car body)) '#:attr)
                                  (with-syntax ([[name depth] (cadr body)])
-                                   (define id.name (if inline-name
-                                                       (datum->syntax inline-name
-                                                                      (string->symbol (format "~a.~a"
-                                                                                              (syntax-e inline-name)
-                                                                                              (syntax-e #'name)))
-                                                                      #'name)
-                                                       #'name))
+                                   (define id.name (compose-attr-name inline-name (syntax-e #'name) #'name bind-counter))
                                    (cons #`(~bind ([#,id.name depth] #,(caddr body)))
-                                         (loop (cdddr body))))]
+                                         (loop (cdddr body) (add1 bind-counter))))]
                                 [else (error "unhandled pattern body" body)])))]))))
 
 ;; ----------------------------------------

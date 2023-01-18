@@ -1,13 +1,6 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@(import:
-    rhombus/meta open
-    meta:
-      lib("scribble/private/typeset_meta.rhm") open)
-@// A hack to typeset alts as an alternative:
-@(meta.bridge Z: Transformer(fun (stx): 'hspace(1)'))
-
 @title{Classes and Interfaces}
 
 @doc(

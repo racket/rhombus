@@ -65,6 +65,7 @@
         "syntax-class-syntax.rkt"
         "syntax-class-clause-primitive.rkt"
         "pattern-clause-primitive.rkt"
+        "pattern-binding.rkt"
         "for.rkt"
         "range.rkt"
         "parameterize.rkt"

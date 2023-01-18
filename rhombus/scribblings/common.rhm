@@ -8,6 +8,8 @@ import:
   meta_label:
     rhombus open
     rhombus/meta open
+  meta:
+    lib("scribble/private/typeset_meta.rhm") open
 
 export:
   all_from(rhombus/meta)
@@ -19,6 +21,7 @@ export:
   provided_meta
   demo
   epsilon
+  Z
  
 fun see_implicit(what, when, context, ~is_infix = #false):
  @scribble.elem{The @what form is implicitly used when @when is
@@ -38,3 +41,6 @@ defn.macro 'demo($form, ...)':
   'manual.examples(~label: #false, $form, ...)'
 
 def epsilon = "ϵ"
+
+// A hack to typeset alts as an alternative:
+meta.bridge Z: Transformer(fun (stx): 'scribble.hspace(1)')

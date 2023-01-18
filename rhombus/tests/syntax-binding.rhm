@@ -132,3 +132,9 @@ begin:
   check:
     get_area_code('+ 65 (801) 555 - 1212')
     ~raises "argument does not satisfy annotation"
+
+check:
+  match 'goodbye'
+  | '$(#'hello)': '"hi"'
+  | '$(#'goodbye)': '"bye"'
+  ~prints_like '"bye"'

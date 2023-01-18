@@ -52,19 +52,21 @@
   (property syntax-class-parser (proc))
 
   ;; used to represent parsed pattern variables and attributes in syntax classes:
-  (struct pattern-variable (sym val-id depth unpack*-id))
+  (struct pattern-variable (sym id val-id depth unpack*-id))
 
-  (define (pattern-variable->list pv)
+  (define (pattern-variable->list pv #:keep-id? [keep-id? #t])
     (list (pattern-variable-sym pv)
+          (and keep-id? (pattern-variable-id pv))
           (pattern-variable-val-id pv)
           (pattern-variable-depth pv)
           (pattern-variable-unpack*-id pv)))
   (define (syntax-list->pattern-variable pv)
     (define l (syntax->list pv))
     (pattern-variable (syntax-e (car l))
-                      (cadr l)
-                      (syntax-e (caddr l))
-                      (list-ref l 3)))
+                      (let ([id (cadr l)]) (and (syntax-e id) id))
+                      (caddr l)
+                      (syntax-e (list-ref l 3))
+                      (list-ref l 4)))
 
   (define (make-syntax-class pat
                              #:kind [kind 'term]
@@ -97,15 +99,15 @@
   (begin
     (define-syntax Group (make-syntax-class #':form
                                             #:kind 'group
-                                            #:fields #'((parsed parsed 0 unpack-term*))))
+                                            #:fields #'((parsed #f parsed 0 unpack-term*))))
     (define-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
                                                        #:kind 'group
                                                        #:arity 2
-                                                       #:fields #'((parsed parsed 0 unpack-term*)
-                                                                   (tail tail tail unpack-tail-list*))))
+                                                       #:fields #'((parsed #f parsed 0 unpack-term*)
+                                                                   (tail #f tail tail unpack-tail-list*))))
     (define-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
                                                       #:kind 'group
                                                       #:arity 2
-                                                       #:fields #'((parsed parsed 0 unpack-term*)
-                                                                   (tail tail tail unpack-tail-list*))))))
+                                                       #:fields #'((parsed #f parsed 0 unpack-term*)
+                                                                   (tail #f tail tail unpack-tail-list*))))))
 

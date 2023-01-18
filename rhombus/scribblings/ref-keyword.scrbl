@@ -8,6 +8,8 @@ keywords exist as values, and the @rhombus(#') operator can
 produce a keyword value. Keywords are always interned, and they are
 equal by @rhombus(==) only when they are equal by @rhombus(===).
 
+See also @rhombus(#'), which works for keywords as well as symbols.
+
 @doc(
   annot.macro 'Keyword'
 ){

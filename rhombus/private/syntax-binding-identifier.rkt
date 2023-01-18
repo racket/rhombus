@@ -26,4 +26,4 @@
                                                         0
                                                         #f
                                                         #'())])
-            (list (pattern-variable (syntax-e id) temp2 0 unpack*)))))
+            (list (pattern-variable (syntax-e id) id temp2 0 unpack*)))))

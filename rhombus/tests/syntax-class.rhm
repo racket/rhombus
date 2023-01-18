@@ -563,3 +563,46 @@ begin:
   check:
     m('8 1; 9 2 3')
     ~prints_like ['1', '2']
+
+// check interaction of macro introduction and pattern variables
+begin:
+  import rhombus/meta open
+  check:
+    expr.macro 'matcher $ex':
+      '«match '1 2'
+        | (pattern '$('$')x $('$')$ex'): x»'
+    matcher x
+    ~prints_like '1'
+  check:
+    expr.macro 'matcher $ex':
+      '«match '1 2'
+        | (pattern '$('$')x $('$')$ex'): $ex»'
+    matcher x
+    ~prints_like '2'  
+  check:
+    expr.macro 'matcher $ex':
+      '«match '1 2'
+        | (pattern '$('$')$ex $('$')x'): x»'
+    matcher x
+    ~prints_like '2'
+  check:
+    expr.macro 'matcher $ex':
+      '«match '1 2'
+        | (pattern '$('$')$ex $('$')x'): $ex»'
+    matcher x
+    ~prints_like '1'
+
+// infer ~multi mode
+check:
+  syntax.class C
+  | '$a; $b'
+  def '$(c :: C)': '1; 2'
+  [c.a, c.b]
+  ~prints_like ['1', '2']
+
+// should infer ~term mode, but is there a way to tell?
+check:
+  syntax.class C
+  | 'a'
+  def '1 $(c :: C) 3': '1 a 3'
+  ~completes

@@ -39,6 +39,9 @@
     (provide convert-pattern
              convert-template)))
 
+(module+ shape-dispatch
+  (provide (for-syntax quoted-shape-dispatch)))
+
 (begin-for-syntax
   (define-syntax-class (list-repetition in-space)
     (pattern ((~datum op) (~var name (:... in-space))))
@@ -269,9 +272,7 @@
                (syntax->list #'idrs)
                (syntax->list #'sidrs)
                (for/list ([var (in-list (syntax->list #'vars))])
-                 (syntax-parse var
-                   [(id temp-id depth unpack*)
-                    (pattern-variable (syntax-e #'id) #'temp-id (syntax-e #'depth) #'unpack*)])))]))
+                 (syntax-list->pattern-variable var)))]))
   (define (handle-escape/match-head $-id e in-e kind splice?)
     (define-values (p idrs sidrs vars) (handle-escape $-id e in-e kind))
     (if p
@@ -339,7 +340,7 @@
                                                                             1
                                                                             #f
                                                                             #'())])
-                                 (list (pattern-variable (syntax-e e) temp-id 1 (quote-syntax unpack-tail-list*)))))]))
+                                 (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
                     (let ([temp0-id (car (generate-temporaries (list e)))]
@@ -352,7 +353,7 @@
                                                                          1
                                                                          #f
                                                                          #'())])
-                              (list (pattern-variable (syntax-e e) temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
+                              (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)
                     ;; `pat` matches a `group` form that's supposed to be under `tag`,
@@ -430,15 +431,15 @@
                                                    [else #f])))
              #`(#,pattern #,idrs #,sidrs #,(map pattern-variable->list vars))]))
         (define-values (r empty-tail)
-          (call-with-quoted-expression #'(form-id qs)
-                                       in-binding-space
-                                       (build 'term)
-                                       (build 'group)
-                                       (build 'multi)
-                                       (lambda (e)
-                                         (if (eq? (current-syntax-binding-kind) 'term)
-                                             #`((~datum #,e) () () ())
-                                             #'#f))))
+          (quoted-shape-dispatch #'(form-id qs)
+                                 in-binding-space
+                                 (build 'term)
+                                 (build 'group)
+                                 (build 'multi)
+                                 (lambda (e)
+                                   (if (eq? (current-syntax-binding-kind) 'term)
+                                       #`((~datum #,e) () () ())
+                                       #'#f))))
         (values r #'tail)]))))
 
 (define-syntax-binding-syntax _
@@ -688,7 +689,7 @@
       [_
        #`(#,generic-unpack*-id #,$-name #,e #,depth-stx)])))
 
-(define-for-syntax (call-with-quoted-expression stx in-space single-k group-k multi-k literal-k)
+(define-for-syntax (quoted-shape-dispatch stx in-space single-k group-k multi-k literal-k)
   (syntax-parse stx
     #:datum-literals (quotes group op)
     [(_ (quotes (group (~and special (op (~or (~var _ (:... in-space)) (~var _ (:$ in-space))))))) . tail)
@@ -727,43 +728,46 @@
    #'#%quotes
    '((default . stronger))
    'macro
+   ;; expression
    (lambda (stx)
-     (call-with-quoted-expression stx
-                                  in-expression-space
-                                  convert-template
-                                  #f
-                                  convert-template
-                                  (lambda (e) #`(quote-syntax #,e))))
+     (quoted-shape-dispatch stx
+                            in-expression-space
+                            convert-template
+                            #f
+                            convert-template
+                            (lambda (e) #`(quote-syntax #,e))))
+   ;; binding
    (lambda (stx)
-     (call-with-quoted-expression stx
-                                  in-binding-space
-                                  (convert-pattern/generate-match #'repack-as-term)
-                                  #f
-                                  (convert-pattern/generate-match #'repack-as-multi)
-                                  (lambda (e) (binding-form
-                                               #'syntax-infoer
-                                               #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
-                                                  #,(syntax-parse e
-                                                      [((~datum op) id) #`((~datum op) (~literal id))])
-                                                  repack-as-term
-                                                  ()
-                                                  ()
-                                                  ()
-                                                  ()
-                                                  ())))))
+     (quoted-shape-dispatch stx
+                            in-binding-space
+                            (convert-pattern/generate-match #'repack-as-term)
+                            #f
+                            (convert-pattern/generate-match #'repack-as-multi)
+                            (lambda (e) (binding-form
+                                         #'syntax-infoer
+                                         #`(#,(string-append "'" (shrubbery-syntax->string e) "'")
+                                            #,(syntax-parse e
+                                                [((~datum op) id) #`((~datum op) (~literal id))])
+                                            repack-as-term
+                                            ()
+                                            ()
+                                            ()
+                                            ()
+                                            ())))))
+   ;; repetition
    (lambda (stx)
-     (call-with-quoted-expression stx
-                                  in-expression-space
-                                  convert-repetition-template
-                                  #f
-                                  convert-repetition-template
-                                  (lambda (e) (make-repetition-info stx
-                                                                    #'template
-                                                                    #`(quote-syntax #,e)
-                                                                    0
-                                                                    0
-                                                                    #'()
-                                                                    #t))))))
+     (quoted-shape-dispatch stx
+                            in-expression-space
+                            convert-repetition-template
+                            #f
+                            convert-repetition-template
+                            (lambda (e) (make-repetition-info stx
+                                                              #'template
+                                                              #`(quote-syntax #,e)
+                                                              0
+                                                              0
+                                                              #'()
+                                                              #t))))))
 
 (define-syntax syntax_term
   (make-expression+binding-prefix-operator

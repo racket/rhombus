@@ -99,16 +99,16 @@
                 #:make-identifier-form (rhombus-body-at id-at make-identifier-form ...))
               (define-syntax class-name (make-syntax-class #':base
                                                            #:kind 'group
-                                                           #:fields #'((parsed parsed 0 unpack-term*))))
+                                                           #:fields #'((parsed parsed parsed 0 unpack-term*))))
               (define-syntax prefix-more-class-name (make-syntax-class #':prefix-more
                                                                        #:kind 'group
-                                                                       #:fields '((parsed parsed 0 unpack-term*)
-                                                                                  (tail tail tail unpack-tail-list*))
+                                                                       #:fields '((parsed #f 0 unpack-term*)
+                                                                                  (tail #f tail tail unpack-tail-list*))
                                                                        #:arity 2))
               (define-syntax infix-more-class-name (make-syntax-class #':infix-more
                                                                       #:kind 'group
-                                                                      #:fields '((parsed parsed 0 unpack-term*)
-                                                                                 (tail tail tail unpack-tail-list*))
+                                                                      #:fields '((parsed #f 0 unpack-term*)
+                                                                                 (tail #f tail tail unpack-tail-list*))
                                                                       #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))

@@ -312,16 +312,16 @@
 
 @doc(
   syntax.class bind_meta.Group:
-    ~group
-    ~attr parsed
+    kind: ~group
+    field parsed
   syntax.class bind_meta.AfterPrefixGroup(op_name):
-    ~group
-    ~attr parsed
-    ~attr tail ...
+    kind: ~group
+    field parsed
+    field [tail, ...]
   syntax.class bind_meta.AfterInfixGroup(op_name):
-    ~group
-    ~attr parsed
-    ~attr tail ...
+    kind: ~group
+    field parsed
+    field [tail, ...]
 ){
 
  @provided_meta()

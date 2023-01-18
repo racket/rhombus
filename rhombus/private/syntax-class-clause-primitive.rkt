@@ -49,7 +49,7 @@
                         "missing a pattern clause"
                         stx))
   (values alts
-          (hash-ref options '#:kind '#:sequence)
+          (hash-ref options '#:kind #f)
           (hash-ref options '#:description #f)
           (hash-ref options '#:fields #f)
           (eq? (hash-ref options '#:error-mode #f) '#:opaque)))

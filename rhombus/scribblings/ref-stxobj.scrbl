@@ -211,8 +211,7 @@ Metadata for a syntax object can include a source location and the raw
     $identifier #,(@rhombus(::, ~syntax_binding)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~syntax_binding)) $stx_bind
     $stx_bind #,(@rhombus(||, ~syntax_binding)) $stx_bind
-    #,(@rhombus(pattern, ~syntax_binding)) $pattern_case
-    #,(@rhombus(pattern, ~syntax_binding)) | $pattern_case | ...
+    #,(@rhombus(pattern, ~syntax_binding)) $pattern_cases
     $other_stx_bind
 ){
 
@@ -446,42 +445,14 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax_binding.macro 'pattern
-                        | $pattern_case
-                        | ...'
-  syntax_binding.macro 'pattern $pattern_case'
+  syntax_binding.macro 'pattern $pattern_cases'
 ){
 
- Syntax binding operator for use within @rhombus($, ~bind) that has the
+ Syntax binding operator for use within @rhombus($, ~bind) that is like
+ the @rhombus(pattern, ~bind) binding form---which, in turn, has the
  same syntax and matching rules as a
- @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax.class),
- but with all fields exposed. In particular, a @rhombus(pattern_case) can
- have a block with @rhombus(match_def, ~pattern_clause),
- @rhombus(match_when, ~pattern_clause), and
- @rhombus(match_unless, ~pattern_clause) clauses that refine the match.
- See @rhombus(syntax.class) for more information.
-
-@examples(
-  ~defn:
-    fun simplify(e):
-      match e
-      | '($e)': simplify(e)
-      | '0 + $e': simplify(e)
-      | '$e + 0': simplify(e)
-      | '$(pattern '$a + $b - $c':
-             match_when same(simplify(b), simplify(c)))':
-          simplify(a)
-      | '$(pattern '$a - $b + $c':
-             match_when same(simplify(b), simplify(c)))':
-          simplify(a)
-      | ~else: e
-
-    fun same(b, c):
-      b.unwrap() == c.unwrap()
-  ~repl:
-    simplify('(1 + (2 + 0) - 2)')
-    simplify('1 + 2 + 2')
-)
+ @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax.class).
+ See @rhombus(pattern, ~bind).
 
 }
 

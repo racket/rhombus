@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 @(import: 
-    "common.rhm" open 
+    "common.rhm" open
     "macro.rhm")
 
 @(def dots: @rhombus(..., ~bind))
@@ -22,13 +22,17 @@
     #,(epsilon)
 
   grammar class_clause:
-    #,(@rhombus(pattern, ~syntax_class_clause)) | $pattern_case | ...
-    #,(@rhombus(pattern, ~syntax_class_clause)) $pattern_case
+    #,(@rhombus(pattern, ~syntax_class_clause)) $pattern_cases
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
     #,(@rhombus(fields, ~syntax_class_clause)): $identifier ...; ...
-                 
+
+  grammar pattern_cases:
+    $pattern_case
+    Z| $pattern_case
+     | ...
+
   grammar pattern_case:
     $syntax_pattern
     $syntax_pattern: $pattern_body; ...
@@ -73,7 +77,7 @@
  the context within a
  pattern where a syntax class can be used, and it determines the kind
  of match that each pattern specifies. See @rhombus(kind, ~syntax_class_clause)
- for details.
+ for details. The default is inferred from the shapes for @rhombus(pattern_case)s.
 
  A @rhombus(fields, ~syntax_class_clause) declaration limits the set of pattern variables that
  are accessible from the class, where variables used in all
@@ -179,25 +183,58 @@
 
 
 @doc(
-  syntax_class_clause.macro 'pattern
-                             | $pattern_case
-                             | ...'
-  syntax_class_clause.macro 'pattern $pattern_case'
+  syntax_class_clause.macro 'pattern $pattern_cases'
+  bind.macro 'pattern $pattern_cases'
+
+  grammar pattern_cases:
+    $pattern_case
+    Z| $pattern_case
+     | ...
 
   grammar pattern_case:
     $syntax_pattern
     $syntax_pattern: $pattern_body; ...
 ){
 
- Describes patterns that match a syntax class. See
- @rhombus(syntax.class).
-
- A @rhombus(pattern, ~syntax_class_clause) class with only a
+ The @rhombus(pattern, ~syntax_class_clause) clause form in
+ @rhombus(syntax.class) describes the patterns that the class matches;
+ see @rhombus(syntax.class) for more information. A
+ @rhombus(pattern, ~syntax_class_clause) class with only a
  @rhombus(pattern_case) is a shorthand for writing the
  @rhombus(pattern_case) in a single @litchar{|} alternative.
 
-}
+ The binding variant of @rhombus(pattern , ~syntax_class_clause) (for
+ direct use in a binding context) has the same syntax and matching rules
+ as a @rhombus(pattern, ~syntax_class_clause) form in
+ @rhombus(syntax.class), but with all fields exposed. In particular, a
+ @rhombus(pattern_case) can have a block with
+ @rhombus(match_def, ~pattern_clause),
+ @rhombus(match_when, ~pattern_clause), and
+ @rhombus(match_unless, ~pattern_clause) clauses that refine the match.
 
+@examples(
+  ~defn:
+    fun simplify(e):
+      match e
+      | '($e)': simplify(e)
+      | '0 + $e': simplify(e)
+      | '$e + 0': simplify(e)
+      | (pattern '$a + $b - $c':
+           match_when same(simplify(b), simplify(c))):
+          simplify(a)
+      | (pattern '$a - $b + $c':
+           match_when same(simplify(b), simplify(c))):
+          simplify(a)
+      | ~else: e
+  ~defn:
+    fun same(b, c):
+      b.unwrap() == c.unwrap()
+  ~repl:
+    simplify('(1 + (2 + 0) - 2)')
+    simplify('1 + 2 + 2')
+)
+
+}
 
 @doc(
   syntax_class_clause.macro 'fields:
@@ -349,3 +386,4 @@
  See @rhombus(syntax.class).
 
 }
+
