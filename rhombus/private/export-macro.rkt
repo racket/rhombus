@@ -6,14 +6,17 @@
                      "pack.rkt")
          "name-root.rkt"
          (submod "export.rkt" for-meta)
+         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
 (provide expo)
 
-(define-simple-name-root expo
-  modifier
-  only)
+(define-name-root expo
+  #:root (space-syntax rhombus/expo)
+  #:fields
+  (modifier
+   only))
 
 (define-name-root only
   #:fields

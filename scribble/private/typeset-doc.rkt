@@ -8,6 +8,8 @@
          "defining-element.rkt"
          shrubbery/print
          racket/list
+         (only-in rhombus/private/space
+                  in-space-space)
          (only-in (submod rhombus/private/import for-meta)
                   in-import-space)
          (only-in (submod rhombus/private/export for-meta)
@@ -42,7 +44,7 @@
                   [= rhombus-=]
                   syntax_class)
          (only-in rhombus/meta
-                  decl defn expr impo expo annot repet bind reducer for_clause
+                  space decl defn expr impo expo annot repet bind reducer for_clause
                   class_clause interface_clause entry_point unquote_bind
                   syntax_class_clause pattern_clause)
          (only-in "rhombus.rhm"
@@ -257,8 +259,10 @@
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
-    #:literals (def fun interface operator :: defn |.| grammar syntax_class $)
-    #:datum-literals (parens group op modifier class class_clause interface_clause quotes)
+    #:literals (def fun interface operator :: |.| grammar syntax_class space $)
+    #:datum-literals (parens group op modifier class class_clause interface_clause quotes
+                             enforest transform)
+    [(group (~or space) _ _ (~var id (identifier-target space-name))) #'id.name]
     [(group (~or fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
     [(group (~or def interface) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
@@ -268,6 +272,7 @@
     [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name)))) #'id.name]
     [(group syntax_class (~var id (identifier-target space-name)) . _) #'id.name]
+    [(group space (op |.|) (~or enforest transform) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
     [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
@@ -277,8 +282,9 @@
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (def fun operator :: |.| grammar specsubform syntax_class)
+    #:literals (space def fun operator :: |.| grammar specsubform syntax_class)
     #:datum-literals (parens group op quotes class)
+    [(group (~or space) . _) vars]
     [(group (~or fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
@@ -389,7 +395,7 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def fun interface syntax_class operator |.| |$| grammar)
+    #:literals (space def fun interface syntax_class operator |.| |$| grammar)
     #:datum-literals (parens group op quotes)
     [(group (~and tag (~or def fun interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
@@ -415,6 +421,9 @@
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
      #`(paragraph plain #,def-id-as-def)]
     [(group syntax_class (~var id (identifier-target space-name)) e ...)
+     (rb #:at stx
+         #`(group #,@(subst #'id.name) e ...))]
+    [(group space _ _ (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group #,@(subst #'id.name) e ...))]
     [(group _:specsubform-head (quotes g))
@@ -463,9 +472,10 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause
-                     entry_point syntax_class_clause pattern_clause syntax_class)
+    #:literals (space impo expo modpath annot repet reducer for_clause class_clause interface_clause
+                      entry_point syntax_class_clause pattern_clause syntax_class)
     #:datum-literals (parens group op)
+    [(group space . _) in-space-space]
     [(group impo . _) in-import-space]
     [(group expo . _) in-export-space]
     [(group modpath . _) in-module-path-space]
@@ -484,9 +494,10 @@
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point
+    #:literals (space impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point
                      bind unquote_bind syntax_class_clause pattern_clause syntax_class)
     #:datum-literals (parens group op)
+    [(group space . _) 'space]
     [(group impo . _) 'impmod]
     [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
     [(group modpath . _) 'modpath]
@@ -506,11 +517,12 @@
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (defn decl expr impo expo modpath annot repet reducer
+    #:literals (space defn decl expr impo expo modpath annot repet reducer
                  for_clause class_clause interface_clause entry_point
                  bind grammar operator syntax_class
                  unquote_bind syntax_class_clause pattern_clause interface)
     #:datum-literals (parens group op quotes modifier macro)
+    [(group space . _) "space"]
     [(group decl . _) "declaration"]
     [(group defn . _) "definition"]
     [(group expr . _) "expression"]

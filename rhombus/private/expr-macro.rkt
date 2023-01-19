@@ -9,6 +9,7 @@
          "name-root.rkt"
          "macro-macro.rkt"
          "expression.rkt"
+         "space.rkt"
          "parse.rkt"
          "wrap-expression.rkt"
          (for-syntax "name-root.rkt"))
@@ -20,15 +21,18 @@
   (provide (for-syntax make-expression-infix-operator
                        make-expression-prefix-operator)))
 
-(define-simple-name-root expr
-  macro
-  only)
+(define-name-root expr
+  #:root (space-syntax rhombus/expr)
+  #:fields
+  (macro
+   only))
 
 (begin-for-syntax
-  (define-simple-name-root expr_meta
-    Group
-    AfterPrefixGroup
-    AfterInfixGroup))
+  (define-name-root expr_meta
+    #:fields
+    (Group
+     AfterPrefixGroup
+     AfterInfixGroup)))
 
 (define-name-root only
   #:fields

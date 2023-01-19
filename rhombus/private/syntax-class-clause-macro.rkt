@@ -5,13 +5,16 @@
                      "pack.rkt")
          "name-root.rkt"
          "syntax-class-clause.rkt"
+         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
 (provide syntax_class_clause)
 
-(define-simple-name-root syntax_class_clause
-  macro)
+(define-name-root syntax_class_clause
+  #:root (space-syntax rhombus/syntax_class_clause)
+  #:fields
+  (macro))
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/syntax_class_clause

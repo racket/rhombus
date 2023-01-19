@@ -9,15 +9,18 @@
          "class-clause.rkt"
          (submod "class-clause.rkt" for-class)
          (submod "interface-clause.rkt" for-interface)
+         "space.rkt"
          "name-root.rkt"
          "macro-macro.rkt")
 
 (provide class_clause
          class_and_interface_clause)
 
-(define-simple-name-root class_clause
-  macro
-  only)
+(define-name-root class_clause
+  #:root (space-syntax rhombus/class_clause)
+  #:fields
+  (macro
+   only))
 
 (define-name-root class_and_interface_clause
   #:fields

@@ -14,6 +14,7 @@
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
+         "space.rkt"
          "macro-macro.rkt"
          "binding.rkt"
          (for-syntax
@@ -32,6 +33,7 @@
   (provide (for-syntax make-binding-prefix-operator)))
 
 (define-name-root bind
+  #:root (space-syntax rhombus/bind)
   #:fields
   (macro
    infoer
@@ -45,15 +47,16 @@
   ([macro macro-only]))
 
 (begin-for-syntax
-  (define-simple-name-root bind_meta
-    pack
-    pack_info
-    unpack
-    unpack_info
-    get_info
-    Group
-    AfterPrefixGroup
-    AfterInfixGroup))
+  (define-name-root bind_meta
+    #:fields
+    (pack
+     pack_info
+     unpack
+     unpack_info
+     get_info
+     Group
+     AfterPrefixGroup
+     AfterInfixGroup)))
 
 (define-operator-definition-transformer+only macro macro-only
   'macro

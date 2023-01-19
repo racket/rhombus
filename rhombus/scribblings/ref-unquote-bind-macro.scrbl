@@ -19,6 +19,16 @@ bindings versus @rhombus(::, ~bind) and
 @rhombus(#', ~bind) for normal bindings.
 
 @doc(
+  space.enforest unquote_bind
+){
+
+ The @tech{space} for bindings of identifiers and operator that implement
+ @rhombus($, ~bind) escape patterns.
+
+}
+
+
+@doc(
   defn.macro 'unquote_bind.macro $macro_patterns'
 ){
 

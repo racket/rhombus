@@ -10,6 +10,16 @@
 @title{Class and Interface Clause Macros}
 
 @doc(
+  space.transform class_clause
+  space.transform interface_clause
+){
+
+ The @tech{spaces} for bindings of identifiers that implement
+ @rhombus(class) and @rhombus(interface) clauses, respectively.
+
+}
+
+@doc(
   defn.macro '«class_clause.macro '$defined_name $pattern ...':
                 $option; ...
                 $body
@@ -101,8 +111,8 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
 
  Like @rhombus(class_clause.macro), @rhombus(interface_clause.macro),
  and @rhombus(class_and_interface_clause.macro), but the identifier is
- bound only in the @rhombus(rhombus/class, ~datum) space,
- @rhombus(rhombus/interface, ~datum) space, or both @tech{spaces},
+ bound only in the @rhombus(class, ~space) space,
+ @rhombus(interface, ~space) space, or both @tech{spaces},
  respectively.
 
 }

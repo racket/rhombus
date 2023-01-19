@@ -10,6 +10,16 @@
 @title{Annotation Macros}
 
 @doc(
+  space.enforest annot
+){
+
+ The @tech{space} for bindings of identifiers and operators that can be
+ used in annotation, such as after @rhombus(::).
+
+}
+
+
+@doc(
   defn.macro 'annot.macro $macro_patterns'
 ){
 

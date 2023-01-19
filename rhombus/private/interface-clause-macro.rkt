@@ -7,14 +7,17 @@
                      (submod "interface-meta.rkt" for-static-info))
          "interface-clause.rkt"
          (submod "interface-clause.rkt" for-interface)
+         "space.rkt"
          "name-root.rkt"
          "macro-macro.rkt")
 
 (provide interface_clause)
 
-(define-simple-name-root interface_clause
-  macro
-  only)
+(define-name-root interface_clause
+  #:root (space-syntax rhombus/interface_clause)
+  #:fields
+  (macro
+   only))
 
 (define-name-root only
   #:fields

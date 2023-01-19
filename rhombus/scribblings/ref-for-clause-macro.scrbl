@@ -10,6 +10,15 @@
 @title{For Clause Macros}
 
 @doc(
+  space.transform for_clause
+){
+
+ The @tech{space} for bindings of identifiers that implement
+ @rhombus(for) clauses.
+
+}
+
+@doc(
   defn.macro '«for_clause.macro '$defined_name $pattern ...':
                  $option; ...
                  $body
@@ -47,7 +56,7 @@
 ){
 
  Like @rhombus(for_clause.macro), but the identifier or operator is bound
- only in the @rhombus(rhombus/for_clause, ~datum) @tech{space}.
+ only in the @rhombus(for_clause, ~space) @tech{space}.
 
 }
 

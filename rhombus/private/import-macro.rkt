@@ -6,14 +6,17 @@
                      "pack.rkt")
          "name-root.rkt"
          (submod "import.rkt" for-meta)
+         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
 (provide impo)
 
-(define-simple-name-root impo
-  modifier
-  only)
+(define-name-root impo
+  #:root (space-syntax rhombus/impo)
+  #:fields
+  (modifier
+   only))
 
 (define-name-root only
   #:fields

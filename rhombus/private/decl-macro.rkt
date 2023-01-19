@@ -6,14 +6,17 @@
                      "pack.rkt")
          "name-root.rkt"
          "declaration.rkt"
+         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt"
          "implicit.rkt")
 
 (provide decl)
 
-(define-simple-name-root decl
-  macro)
+(define-name-root decl
+  #:root (space-syntax rhombus/expr)
+  #:fields
+  (macro))
 
 (define-identifier-syntax-definition-transformer macro
   #f

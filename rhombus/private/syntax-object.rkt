@@ -37,19 +37,20 @@
 (define-syntax Identifier
   (identifier-annotation #'Identifier #'identifier? syntax-static-infos))
 
-(define-simple-name-root Syntax
-  literal
-  literal_group
-  make
-  make_group
-  make_sequence
-  unwrap
-  unwrap_group
-  unwrap_sequence
-  strip
-  relocate
-  relocate_span
-  [srcloc get-srcloc])
+(define-name-root Syntax
+  #:fields
+  (literal
+   literal_group
+   make
+   make_group
+   make_sequence
+   unwrap
+   unwrap_group
+   unwrap_sequence
+   strip
+   relocate
+   relocate_span
+   [srcloc get-srcloc]))
 
 (define-syntax literal
   (expression-transformer

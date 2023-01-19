@@ -6,14 +6,17 @@
                      "realm.rkt"
                      (submod "class-meta.rkt" for-static-info))
          "unquote-binding.rkt"
+         "space.rkt"
          "name-root.rkt"
          "macro-macro.rkt")
 
 (provide unquote_bind)
 
-(define-simple-name-root unquote_bind
-  macro
-  only)
+(define-name-root unquote_bind
+  #:root (space-syntax rhombus/unquote_bind)
+  #:fields
+  (macro
+   only))
 
 (define-name-root only
   #:fields

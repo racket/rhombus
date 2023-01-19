@@ -5,13 +5,16 @@
                      "pack.rkt")
          "name-root.rkt"
          "pattern-clause.rkt"
+         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
 (provide pattern_clause)
 
-(define-simple-name-root pattern_clause
-  macro)
+(define-name-root pattern_clause
+  #:root (space-syntax rhombus/pattern_clause)
+  #:fields
+  (macro))
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/pattern_clause

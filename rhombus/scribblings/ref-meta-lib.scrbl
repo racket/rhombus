@@ -25,8 +25,8 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 
 @local_table_of_contents()
 
-@include_section("ref-space.scrbl")
 @include_section("ref-meta.scrbl")
+@include_section("ref-space.scrbl")
 @include_section("ref-defn-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
@@ -37,4 +37,3 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-static-info.scrbl")
 @include_section("ref-unquote-bind-macro.scrbl")
 @include_section("ref-stxobj-meta.scrbl")
-@include_section("ref-sublanguage.scrbl")

@@ -14,17 +14,22 @@
                      (submod "syntax-class-primitive.rkt" for-quasiquote)
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base)
+                     "name-root.rkt"
+                     "space.rkt"
                      "realm.rkt"
                      "parse.rkt")
+         "meta.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
          "definition.rkt"
+         "space.rkt"
          "parens.rkt"
          "macro-macro.rkt")
 
-(provide sublanguage)
+(provide space)
 
-(define-name-root sublanguage
+(define-name-root space
+  #:root (space-syntax rhombus/space)
   #:fields (enforest
             transform))
 
@@ -49,31 +54,50 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ space::space_name (_::block
-                               (~alt
-                                (~optional (group #:syntax_class class-name:identifier)
-                                           #:defaults ([class-name #'Class]))
-                                (~optional (group #:syntax_class_prefix_more prefix-more-class-name:identifier)
-                                           #:defaults ([prefix-more-class-name #'PrefixMore]))
-                                (~optional (group #:syntax_class_infix_more infix-more-class-name:identifier)
-                                           #:defaults ([infix-more-class-name #'InfixMore]))
-                                (~optional (group #:macro define-macro:identifier)
-                                           #:defaults ([define-macro #'SKIP]))
-                                (~optional (group #:only_macro define-only-macro:identifier)
-                                           #:defaults ([define-only-macro #'SKIP]))
-                                (~optional (group #:desc desc:string)
-                                           #:defaults ([desc #'"form"]))
-                                (~optional (group #:operator_desc desc-operator:string)
-                                           #:defaults ([desc-operator #'"operator"]))
-                                (~optional (group #:macro_result (check-at::block check-form ...))
-                                           #:defaults ([check-at #'block]
-                                                       [(check-form 1) (list #'(group (parsed check-syntax)))]))
-                                (~optional (group #:identifier_transformer (id-at::block make-identifier-form ...))
-                                           #:defaults ([id-at #'block]
-                                                       [(make-identifier-form 1) (list #'(group (parsed values)))])))
-                               ...))
-         #'((begin-for-syntax
-              (define in-new-space (make-interned-syntax-introducer/add 'space.name))
+        [(_  name:identifier
+             (_::block
+              (group #:space_path space-path::space_name)
+              (~alt
+               (~optional (group #:macro define-macro:identifier)
+                          #:defaults ([define-macro #'SKIP]))
+               (~optional (group #:only_macro define-only-macro:identifier)
+                          #:defaults ([define-only-macro #'SKIP])))
+              ...
+              (group #:meta_namespace meta-name:identifier
+                     (_::block
+                      (~alt
+                       (~optional (group #:syntax_class class-name:identifier)
+                                  #:defaults ([class-name #'Class]))
+                       (~optional (group #:syntax_class_prefix_more prefix-more-class-name:identifier)
+                                  #:defaults ([prefix-more-class-name #'PrefixMore]))
+                       (~optional (group #:syntax_class_infix_more infix-more-class-name:identifier)
+                                  #:defaults ([infix-more-class-name #'InfixMore]))
+                       (~optional (group #:desc desc:string)
+                                  #:defaults ([desc #'"form"]))
+                       (~optional (group #:operator_desc desc-operator:string)
+                                  #:defaults ([desc-operator #'"operator"]))
+                       (~optional (group #:macro_result (check-at::block check-form ...))
+                                  #:defaults ([check-at #'block]
+                                              [(check-form 1) (list #'(group (parsed check-syntax)))]))
+                       (~optional (group #:identifier_transformer (id-at::block make-identifier-form ...))
+                                  #:defaults ([id-at #'block]
+                                              [(make-identifier-form 1) (list #'(group (parsed values)))])))
+                      ...))))
+         #`((define-name-root name
+              #:root (space-syntax space-path.name)
+              #:fields
+              #,(filter-missing
+                 #`([define-macro _define-macro]
+                    [define-only-macro _define-only-macro])))
+            (begin-for-syntax
+              (define-name-root meta-name
+                #:root (space-syntax space-path.name)
+                #:fields
+                #,(filter-missing
+                   #`([class-name _class-name]
+                      [prefix-more-class-name _prefix-more-class-name]
+                      [infix-more-class-name _infix-more-class-name])))
+              (define in-new-space (make-interned-syntax-introducer/add 'space-path.name))
               (property new-prefix-operator prefix-operator)
               (property new-infix-operator infix-operator)
               (struct new-prefix+infix-operator (prefix infix)
@@ -93,32 +117,34 @@
                 #:infix-operator-ref new-infix-operator-ref
                 #:check-result (rhombus-body-at check-at check-form ...)
                 #:make-identifier-form (rhombus-body-at id-at make-identifier-form ...))
-              (define-syntax class-name (make-syntax-class #':base
-                                                           #:kind 'group
-                                                           #:fields #'((parsed parsed parsed 0 unpack-term*))))
-              (define-syntax prefix-more-class-name (make-syntax-class #':prefix-more
+              (define-syntax _class-name (make-syntax-class #':base
+                                                            #:kind 'group
+                                                            #:fields #'((parsed parsed parsed 0 unpack-term*))))
+              (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
+                                                                        #:kind 'group
+                                                                        #:fields '((parsed #f 0 unpack-term*)
+                                                                                   (tail #f tail tail unpack-tail-list*))
+                                                                        #:arity 2))
+              (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
                                                                        #:kind 'group
                                                                        #:fields '((parsed #f 0 unpack-term*)
                                                                                   (tail #f tail tail unpack-tail-list*))
                                                                        #:arity 2))
-              (define-syntax infix-more-class-name (make-syntax-class #':infix-more
-                                                                      #:kind 'group
-                                                                      #:fields '((parsed #f 0 unpack-term*)
-                                                                                 (tail #f tail tail unpack-tail-list*))
-                                                                      #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))
             (maybe-skip
-             (define-operator-definition-transformer define-macro
+             define-macro
+             (define-operator-definition-transformer _define-macro
                'macro
                #f
                #'make-prefix-operator
                #'make-infix-operator
                #'new-prefix+infix-operator))
             (maybe-skip
-             (define-operator-definition-transformer define-only-macro
+             define-only-macro
+             (define-operator-definition-transformer _define-only-macro
                'macro
-               space.name
+               space-path.name
                #'make-prefix-operator
                #'make-infix-operator
                #'new-prefix+infix-operator)))]))))
@@ -126,29 +152,53 @@
 (define-syntax SKIP 'placeholder)
 (define-syntax (maybe-skip stx)
   (syntax-parse stx
-    [(_ (_ (~literal SKIP) . _)) #'(begin)]
-    [(_ def) #'def]))
+    [(_ (~literal SKIP) . _) #'(begin)]
+    [(_ _ def) #'def]))
+
+(define-for-syntax (filter-missing flds)
+  (for/list ([fld (in-list (syntax->list flds))]
+             #:when (syntax-parse fld
+                      [[#f . _] #f]
+                      [_ #t]))
+    fld))
 
 (define-syntax transform
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_ space::space_name (_::block
-                               (~alt
-                                (~optional (group #:syntax_class class-name)
-                                           #:defaults ([class-name #'Class]))
-                                (~optional (group #:macro define-macro:identifier)
-                                           #:defaults ([define-macro #'SKIP]))
-                                (~optional (group #:only_macro define-only-macro:identifier)
-                                           #:defaults ([define-only-macro #'SKIP]))
-                                (~optional (group #:macro_result (check-at::block check-form ...))
-                                           #:defaults ([check-at #'block]
-                                                       [(check-form 1) (list #'(group (parsed check-syntax)))]))
-                                (~optional (group #:desc desc:string)
-                                           #:defaults ([desc #'"form"])))
-                               ...))
-         #'((begin-for-syntax
+        [(_ space::space_name
+            (_::block
+             (group #:space_path space-path::space_name)
+             (~alt
+              (~optional (group #:macro define-macro:identifier)
+                         #:defaults ([define-macro #'SKIP]))
+              (~optional (group #:only_macro define-only-macro:identifier)
+                         #:defaults ([define-only-macro #'SKIP])))
+             ...)
+            (group #:meta_namespace meta-name:identifier
+                   (_::block
+                    (~alt
+                     (~optional (group #:syntax_class class-name)
+                                #:defaults ([class-name #'Class]))
+                     (~optional (group #:macro_result (check-at::block check-form ...))
+                                #:defaults ([check-at #'block]
+                                            [(check-form 1) (list #'(group (parsed check-syntax)))]))
+                     (~optional (group #:desc desc:string)
+                                #:defaults ([desc #'"form"])))
+                    ...)))
+         #'((define-name-root name
+              #:root (space-syntax space-path.name)
+              #:fields
+              #,(filter-missing
+                 #`([define-macro _define-macro]
+                    [define-only-macro _define-only-macro])))
+            (begin-for-syntax
+              (define-name-root meta-name
+                #:root (space-syntax space-path.name)
+                #:fields
+                #,(filter-missing
+                   #`([class-name _class-name])))
               (define in-new-space (make-interned-syntax-introducer/add 'space.name))
               (property new-transformer transformer)
               (define-transform
@@ -160,14 +210,16 @@
                 #:name-root-ref-root name-root-ref-root
                 #:transformer-ref new-transformer-ref
                 #:check-result (rhombus-body-at check-at check-form ...))
-              (define-syntax class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
+              (define-syntax _class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
               (define make-transformer (make-make-transformer new-transformer)))
             (maybe-skip
-             (define-identifier-syntax-definition-transformer define-macro
+             define-macro
+             (define-identifier-syntax-definition-transformer _define-macro
                #f
                #'make-transformer))
             (maybe-skip
-             (define-identifier-syntax-definition-transformer define-macro-only
+             define-macro-only
+             (define-identifier-syntax-definition-transformer _define-macro-only
                space.name
                #'make-transformer)))]))))
 

@@ -88,7 +88,7 @@ check:
 check:
   import:
     .n.exint:
-      only_space: rhombus/annot
+      only_space: annot
   def exint = 11
   exint
   ~is 11
@@ -96,13 +96,13 @@ check:
 check:
   import:
     .n.exint:
-      only_space: rhombus/annot
+      only_space: annot
   11 :: exint
   ~is 11
 
 check:
   import:
     .n.exint as ex_int:
-      only_space: rhombus/annot
+      only_space: annot
   11 :: ex_int
   ~is 11

@@ -70,7 +70,7 @@
   (definition-transformer
     (lambda (stxes)
       (parse-class stxes #t))))
-      
+
 (define-for-syntax (parse-class stxes [for-together? #f])
   (syntax-parse stxes
     #:datum-literals (group block)

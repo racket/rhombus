@@ -8,6 +8,7 @@
          "name-root.rkt"
          "quasiquote.rkt"
          "static-info.rkt"
+         "space.rkt"
          "parse.rkt"
          "wrap-expression.rkt"
          "parens.rkt"
@@ -21,27 +22,30 @@
 (provide statinfo
          (for-syntax statinfo_meta))
 
-(define-simple-name-root statinfo
-  macro
-  only)
+(define-name-root statinfo
+  #:root (space-syntax rhombus/statinfo)
+  #:fields
+  (macro
+   only))
 
 (define-name-root only
   #:fields
   ([macro macro-only]))
 
 (begin-for-syntax
-  (define-simple-name-root statinfo_meta
-    pack
-    unpack
-    wrap
-    lookup
-    
-    call_result_key
-    ref_result_key
-    map_ref_key
-    map_set_key
-    map_append_key
-    dot_provider_key))
+  (define-name-root statinfo_meta
+    #:fields
+    (pack
+     unpack
+     wrap
+     lookup
+     
+     call_result_key
+     ref_result_key
+     map_ref_key
+     map_set_key
+     map_append_key
+     dot_provider_key)))
 
 (define-for-syntax (make-static-info-macro-macro in-space)
   (definition-transformer

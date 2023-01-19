@@ -10,6 +10,16 @@
 @title{Binding Macros}
 
 @doc(
+  space.enforest bind
+){
+
+ The @tech{space} for bindings of identifiers and operators that can be
+ used in binding positions such as the left-hand side of @rhombus(def)
+ or the formal arguments of @rhombus(fun).
+
+}
+
+@doc(
   defn.macro 'bind.macro $macro_patterns'
 ){
 
@@ -276,7 +286,7 @@
 ){
 
  Like @rhombus(bind.macro), but the identifier
- or operator is bound only in the @rhombus(rhombus/bind, ~datum)
+ or operator is bound only in the @rhombus(bind, ~space)
  @tech{space}.
 
 }

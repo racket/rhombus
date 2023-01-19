@@ -3,6 +3,8 @@
                      syntax/parse/pre)
          "name-root.rkt"
          "definition.rkt"
+         "space.rkt"
+         "definition+space.rkt"
          (submod "class.rkt" for-together)
          (submod "interface.rkt" for-together)
          (only-in "class-together-parse.rkt"
@@ -15,7 +17,9 @@
 
 (define-name-root class
   #:root
-  class-transformer
+  (space+definition-transformer
+   (space-syntax rhombus/class)
+   class-transformer)
   #:fields
   (together))
 

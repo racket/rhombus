@@ -8,6 +8,7 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class))
          "definition.rkt"
          (submod "annotation.rkt" for-class)
+         "space.rkt"
          "macro-macro.rkt"
          "wrap-expression.rkt"
          "name-root.rkt"
@@ -20,20 +21,23 @@
 (module+ for-class
   (provide (for-syntax make-annotation-prefix-operator)))
 
-(define-simple-name-root annot
-  macro
-  only)
+(define-name-root annot
+  #:root (space-syntax rhombus/annot)
+  #:fields
+  (macro
+   only))
 
 (define-name-root only
   #:fields
   ([macro macro-only]))
 
 (begin-for-syntax
-  (define-simple-name-root annot_meta
-    pack_predicate
-    Group
-    AfterPrefixGroup
-    AfterInfixGroup))
+  (define-name-root annot_meta
+    #:fields
+    (pack_predicate
+     Group
+     AfterPrefixGroup
+     AfterInfixGroup)))
 
 (define-operator-definition-transformer+only macro macro-only
   'macro

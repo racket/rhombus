@@ -8,6 +8,7 @@
                      enforest/property
                      enforest/syntax-local
                      enforest/name-parse
+                     enforest/hier-name-parse
                      enforest/proc-name
                      syntax/private/modcollapse-noctc
                      "srcloc.rkt"
@@ -22,6 +23,7 @@
          "definition.rkt"
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
+         "space.rkt"
          "parens.rkt"
          "import-lower-require.rkt"
          "import-from-namespace.rkt"
@@ -746,49 +748,48 @@
                        (list* #'except-in req #'(name.name ... ...))
                        req)]))))
 
-(begin-for-syntax
-  (define-splicing-syntax-class :space-name
-    #:datum-literals (op)
-    #:literals (rhombus/)
-    #:attributes (name)
-    (pattern (~seq #:default)
-             #:attr name #'#f)
-    (pattern (~seq head:identifier (~seq (op rhombus/) id:identifier) ...)
-             #:do [(define ids (syntax->list #'(id ...)))]
-             #:attr name (if (null? ids)
-                             #'head
-                             (datum->syntax
-                              #f
-                              (string->symbol
-                               (apply string-append
-                                      (cons
-                                       (symbol->string (syntax-e #'head))
-                                       (let loop ([ids ids])
-                                         (if (null? ids)
-                                             '()
-                                             (list* "/" (symbol->string (syntax-e (car ids)))
-                                                    (cdr ids))))))))))))
+(define-for-syntax (parse-space-names stx gs)
+  (apply
+   append
+   (for/list ([g (in-list (syntax->list gs))])
+     (let loop ([g g])
+       (syntax-parse g
+         [() null]
+         [(#:default . rest)
+          (cons #f (loop #'rest))]
+         [(~var h (:hier-name-seq in-space-space name-path-op name-root-ref))
+          (define sp (syntax-local-value* (in-space-space #'h.name)
+                                          (lambda (v)
+                                            (name-root-ref-root v space-name-ref))))
+          (unless (space-name? sp)
+            (raise-syntax-error #f
+                                "not bound as a space"
+                                stx
+                                #'h.name))
+          (cons (space-name-symbol sp)
+                (loop #'h.tail))])))))
 
 (define-import-syntax only_space
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (_::block (group name::space-name ...) ...))
-        (datum->syntax req
-                       (list* #'only-spaces-in req #'(name.name ... ...))
-                       req)]))))
+       [(_ (_::block (group . g) ...))
+        (with-syntax ([(name ...) (parse-space-names stx #'(g ...))])
+          (datum->syntax req
+                         (list* #'only-spaces-in req #'(name ...))
+                         req))]))))
 
 (define-import-syntax except_space
   (import-modifier-block
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
-       [(_ (_::block (group name::space-name ...) ...))
-        (datum->syntax req
-                       (list* #'except-spaces-in req #'(name.name ... ...))
-                       req)]))))
-
+       [(_ (_::block (group . g) ...))
+        (with-syntax ([(name ...) (parse-space-names stx #'(g ...))])
+          (datum->syntax req
+                         (list* #'except-spaces-in req #'(name ...))
+                         req))]))))
 
 (define-import-syntax open
   (import-modifier

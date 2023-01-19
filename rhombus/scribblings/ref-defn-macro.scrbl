@@ -8,6 +8,14 @@
 @title{Definition Macros}
 
 @doc(
+  space.transform defn
+){
+
+  Alias for the @rhombus(expr, ~space) @tech{space}.
+
+}
+
+@doc(
   defn.macro '«defn.macro '$defined_name $pattern ...':
                  $option; ...
                  $body
@@ -104,7 +112,7 @@
 ){
 
  Like @rhombus(defn.macro) or @rhombus(defn.sequence_macro), but the
- identifier is bound only in the @rhombus(rhombus/expr, ~datum)
+ identifier is bound only in the @rhombus(expr, ~datum)
  @tech{space}.
 
 }

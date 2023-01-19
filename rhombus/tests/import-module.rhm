@@ -94,7 +94,7 @@ check:
   import:
     lib("rhombus/tests/example-c.rhm"):
       open
-      only_space: rhombus/annot
+      only_space: annot
   def exint = 11
   exint
   ~is 11
@@ -103,13 +103,13 @@ check:
   import:
     lib("rhombus/tests/example-c.rhm"):
       open
-      only_space: rhombus/annot
+      only_space: annot
   11 :: exint
   ~is 11
 
 check:
   import:
     lib("rhombus/tests/example-c.rhm") as ex_c:
-      only_space: rhombus/annot
+      only_space: annot
   11 :: ex_c.exint
   ~is 11

@@ -6,6 +6,14 @@
 @title{Dot Providers}
 
 @doc(
+  space.transform dot
+){
+
+ The @tech{space} for bindings of identifiers as @tech{dot providers}.
+
+}
+
+@doc(
   defn.macro '«dot.macro '$defined_name $pattern ...':
                  $option; ...
                  $body
@@ -65,7 +73,7 @@
 ){
 
  Like @rhombus(dot.macro) and @rhombus(dot.macro_more_static), but the
- identifier is bound only in the @rhombus(rhombus/dot, ~datum)
+ identifier is bound only in the @rhombus(dot, ~space)
  @tech{space}.
 
 }

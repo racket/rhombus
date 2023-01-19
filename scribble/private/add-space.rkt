@@ -8,6 +8,7 @@
      (quote-syntax never-bound)]
     [else
      (define space (case space-name
+                     [(space) 'rhombus/space]
                      [(bind) 'rhombus/bind]
                      [(impo) 'rhombus/impo]
                      [(expo) 'rhombus/expo]

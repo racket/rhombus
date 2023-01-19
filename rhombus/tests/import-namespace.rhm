@@ -110,7 +110,7 @@ check:
   import:
     .n:
       open
-      only_space: rhombus/annot
+      only_space: annot
   def exint = 11
   exint
   ~is 11
@@ -119,14 +119,14 @@ check:
   import:
     .n:
       open
-      only_space: rhombus/annot
+      only_space: annot
   11 :: exint
   ~is 11
 
 check:
   import:
     .n as ex_c:
-      only_space: rhombus/annot
+      only_space: annot
   11 :: ex_c.exint
   ~is 11
 
@@ -134,7 +134,7 @@ begin:
   namespace n2:
     import:
       .n open:
-        except_space: rhombus/bind
+        except_space: bind
     export: exint
     bind.only.macro 'exint': '(_ :: PositiveInteger)'                            
   check:

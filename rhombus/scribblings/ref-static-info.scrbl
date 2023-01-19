@@ -6,6 +6,16 @@
 @title{Static Information}
 
 @doc(
+  space.transform statinfo
+){
+
+ The @tech{space} for bindings of identifiers that provide static
+ information.
+
+}
+
+
+@doc(
   defn.macro '«statinfo.macro '$identifier': 
                 $body
                 ...»'
@@ -145,6 +155,6 @@
 ){
 
  Like @rhombus(statinfo.macro), but the identifier is bound only in the
- @rhombus(rhombus/statinfo, ~datum) @tech{space}.
+ @rhombus(statinfo, ~space) @tech{space}.
 
 }

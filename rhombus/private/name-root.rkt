@@ -5,12 +5,7 @@
                      "srcloc.rkt"
                      "introducer.rkt"))
 
-(provide define-simple-name-root
-         define-name-root)
-
-(define-syntax-rule (define-simple-name-root id content ...)
-  ;; portal syntax with this shape is recognized by "name-root-ref.rkt"
-  (#%require (portal id (map id #f [content content] ...))))
+(provide define-name-root)
 
 (define-syntax (define-name-root stx)
   (syntax-parse stx
@@ -49,4 +44,5 @@
                             #'id)
      #'(begin
          root-def ...
+         ;; portal syntax with this shape is recognized by "name-root-ref.rkt"
          (#%require (portal space-id (map the-orig-id extends norm-content ... root-spec ...))))]))

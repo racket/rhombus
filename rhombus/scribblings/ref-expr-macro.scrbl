@@ -10,6 +10,15 @@
 @title{Expression Macros}
 
 @doc(
+  space.enforest expr
+){
+
+ The @tech{space} for bindings of identifiers and operators that can be
+ used in expression, definition, and declaration positions.
+
+}
+
+@doc(
   defn.macro 'macro $macro_patterns'
   expr.macro 'macro $macro_patterns'
   entry_point.macro 'macro $macro_patterns'
@@ -208,7 +217,7 @@
 ){
 
  Like @rhombus(expr.macro), but the identifier or operator is bound only
- in the @rhombus(rhombus/expr, ~datum) @tech{space}.
+ in the @rhombus(expr, ~space) @tech{space}.
 
 }
 
