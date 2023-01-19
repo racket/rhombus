@@ -101,14 +101,13 @@ For example, the @rhombus(!) macro can be equivalently written like this:
 )
 
 Returning a single value is allowed, and is the same as returning an
-empty sequence for the remaining terms, which is useful when
-@rhombus($(~end)) is needed only to indicate that no further terms are
-allowed in the group. Two return values are allowed only when the
-pattern ends with
+empty sequence for the remaining terms. Two return values are allowed
+only when the pattern ends with
 @rhombus($ #,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind))) or
-when a @rhombus($(~end)) pseudo-escape is added to the end of the
-pattern. Adding a @rhombus($(~end)) pseudo-escape while returning one
-value can be useful to disallow additional terms after the matched
+when a @rhombus(#,(@rhombus($, ~bind))(~end)) or
+@rhombus(#,(@rhombus($, ~bind)) ~end) pseudo-escape is added to the end
+of the pattern. Adding an @rhombus(~end) pseudo-escape while returning
+one value can be useful to disallow additional terms after the matched
 pattern.
 
 Since an @rhombus(expr.macro) implementation can use arbitrary
@@ -159,8 +158,8 @@ side before it’s left-hand side:
 )
 
 Declaring @rhombus(~parsed) affects a @rhombus(expr.macro) macro in a
-second way: the macro will receive only the left (if any) and right
-arguments, and will not receive and cannot return the tail of the
+second way: the macro will match only the left (if any) and right
+arguments, and will not receive (and cannot return) the tail of the
 enclosing group.
 
 In the same way that @rhombus(operator) supports operators that are both

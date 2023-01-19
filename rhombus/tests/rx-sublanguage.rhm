@@ -2,17 +2,23 @@
 import:
   lib("racket/base.rkt").pregexp
 
-// an example use of `sublanguage.enforest`
+// An example use of `sublanguage.enforest`
 
 export:
+  // The main form:
   rx
+  // Operators for use inside `rx'...'`:
   any
-  #{#%literal} #{#%comp} #{#%parens}
   || * ? ^ $
-  names: #{#%juxtapose}
+  // Implicit operators, like the one before a literal string;
+  // we use `names` here so that these names are not
+  // misinterpreted as implicits in the `export` sublangauge!
+  names: #{#%literal} #{#%comp} #{#%parens} #{#%juxtapose}
 
+// Instantiate enforestation and macro machinery for the
+// regexp sublanguage:
 sublanguage.enforest example/rx:
-  ~syntax_class Pattern
+  ~syntax_class Regexp
   ~macro macro
   ~only_macro only_macro
   ~macro_result: fun (stx, who):
@@ -20,32 +26,46 @@ sublanguage.enforest example/rx:
                              && (stx -: Syntax).unwrap() is_a String)
                    | Syntax.error("bad result", stx)
                    stx
-  ~identifier_transformer: fun (id): no_identifier(id)
+  ~identifier_transformer: fun (id):
+                             Syntax.error("identifier not allowed", id)
   ~desc "regexp"
 
-expr.macro '«rx '$(pat :: Pattern)' $tail ...»':
+expr.macro '«rx '$(pat :: Regexp)'»':
   'pregexp($pat.parsed)'
+
+// Note that `macro` and `only_macro` were defined above by
+// `sublangauge.enforest`, so the folowing macros define
+// operators for use within `rx'...'`
 
 macro 'any': '"."'
 
+// `#{#%literal}` is implicitly added before literals, like strings,
+// that do not have an operator before
 only_macro '#{#%literal} $(s :: String)':
   import lib("racket/base.rkt").#{regexp-quote}
   '$(#{regexp-quote}(s.unwrap()))'
 
-only_macro '#{#%parens} ($(p :: Pattern))':
+// `#{#%parens}` is implicitly added before parentheses
+// that do not have a parsed term or operator before
+only_macro '#{#%parens} ($(p :: Regexp))':
   p.parsed
 
-only_macro '$left #{#%call} ($(p :: Pattern))':
+// `#{#%juxtapose}` is implicitly added after something that's
+// parsed and before a non-operator
+only_macro '$left #{#%juxtapose} $(~parsed right)':
+  ~weaker_than: ~other
+  ~stronger_than: ||
+  '$(left.unwrap() ++ right.unwrap())'
+
+// `#{#%call}` is implicitly added between a parsed term
+// and parentheses; we want just the same thing
+// as juxtaposition here, though
+only_macro '$left #{#%call} ($(p :: Regexp))':
   '$(left.unwrap() ++ p.parsed.unwrap())'
 
 only_macro '$left || $(~parsed right)':
   ~weaker_than: ~other
   '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
-
-only_macro '$left #{#%juxtapose} $(~parsed right)':
-  ~weaker_than: ~other
-  ~stronger_than: ||
-  '$(left.unwrap() ++ right.unwrap())'
 
 only_macro '$left *':
   '$(left.unwrap() ++ "*")'
@@ -56,6 +76,8 @@ only_macro '$left +':
 only_macro '$left ?':
   '$(left.unwrap() ++ "?")'
 
+// `#{#%call}` is implicitly added between a parsed term
+// and curly braces
 only_macro
 | '$left #{#%comp} {$(min :: Integer), _}':
     '$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")'
@@ -73,9 +95,7 @@ only_macro
     ~same_as: ^
     '$(left.unwrap() +& "$")'
 
-meta:
-  fun no_identifier(id):
-    Syntax.error("no identifiers allowed", id)
+// Example regexps
 
 check:
   rx'^ ("Hello" || "Hi") " "? ("Here"||"There") $'
