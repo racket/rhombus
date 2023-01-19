@@ -18,7 +18,7 @@
          "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "annotation.rkt" for-class)
-         (submod "annotation-syntax.rkt" for-class)
+         (submod "annot-macro.rkt" for-class)
          "interface-clause.rkt"
          "interface-clause-parse.rkt"
          "class-top-level.rkt"

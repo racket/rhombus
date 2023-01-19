@@ -4,20 +4,20 @@
                      "srcloc.rkt"
                      "pack.rkt")
          "name-root.rkt"
-         "pattern-clause.rkt"
-         "syntax.rkt"
+         "syntax-class-clause.rkt"
+         "macro-macro.rkt"
          "parse.rkt")
 
-(provide pattern_clause)
+(provide syntax_class_clause)
 
-(define-simple-name-root pattern_clause
+(define-simple-name-root syntax_class_clause
   macro)
 
 (define-identifier-syntax-definition-transformer macro
-  rhombus/pattern_clause
-  #'make-pattern-clause-transformer)
+  rhombus/syntax_class_clause
+  #'make-syntax-class-clause-transformer)
 
-(define-for-syntax (make-pattern-clause-transformer proc)
-  (pattern-clause-transformer
+(define-for-syntax (make-syntax-class-clause-transformer proc)
+  (syntax-class-clause-transformer
    (lambda (req stx)
      (error "TBD"))))

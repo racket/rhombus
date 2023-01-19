@@ -7,7 +7,7 @@
                      (submod "class-meta.rkt" for-static-info))
          "unquote-binding.rkt"
          "name-root.rkt"
-         "syntax.rkt")
+         "macro-macro.rkt")
 
 (provide unquote_bind)
 

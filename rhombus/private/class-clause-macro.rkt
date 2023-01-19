@@ -10,7 +10,7 @@
          (submod "class-clause.rkt" for-class)
          (submod "interface-clause.rkt" for-interface)
          "name-root.rkt"
-         "syntax.rkt")
+         "macro-macro.rkt")
 
 (provide class_clause
          class_and_interface_clause)

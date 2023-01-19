@@ -6,8 +6,8 @@
                      "srcloc.rkt"
                      "class-parse.rkt")
          "binding.rkt"
-         "binding-syntax.rkt"
-         (submod "binding-syntax.rkt" for-class)
+         "bind-macro.rkt"
+         (submod "bind-macro.rkt" for-class)
          "composite.rkt"
          "parens.rkt"
          (submod "boolean-pattern.rkt" for-class)

@@ -19,7 +19,7 @@
                   in-annotation-space)
          (only-in rhombus/private/repetition
                   in-repetition-space)
-         (only-in (submod rhombus/private/syntax-class for-quasiquote)
+         (only-in (submod rhombus/private/syntax-class-primitive for-quasiquote)
                   in-syntax-class-space)
          (only-in (submod rhombus/private/syntax-class-clause for-class)
                   in-syntax-class-clause-space)

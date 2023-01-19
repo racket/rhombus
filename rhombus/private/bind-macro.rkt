@@ -7,14 +7,14 @@
                      "pack.rkt"
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
-                     (submod "syntax-class.rkt" for-syntax-class)
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base
                                  syntax/parse/pre))
          "name-root.rkt"
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
-         "syntax.rkt"
+         "macro-macro.rkt"
          "binding.rkt"
          (for-syntax
           "quasiquote.rkt"

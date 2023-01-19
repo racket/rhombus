@@ -4,10 +4,10 @@
                      enforest/transformer-result
                      "srcloc.rkt"
                      "pack.rkt"
-                     (submod "syntax-class.rkt" for-syntax-class)
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base))
          "name-root.rkt"
-         "syntax.rkt"
+         "macro-macro.rkt"
          "expression.rkt"
          "parse.rkt"
          "wrap-expression.rkt"

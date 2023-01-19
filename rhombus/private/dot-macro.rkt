@@ -6,7 +6,7 @@
          "name-root.rkt"
          (for-syntax "name-root.rkt")
          (submod "dot.rkt" for-dot-provider)
-         "syntax.rkt"
+         "macro-macro.rkt"
          "parse.rkt"
          "wrap-expression.rkt")
 

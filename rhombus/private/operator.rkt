@@ -10,7 +10,7 @@
          "compound-repetition.rkt"
          "dotted-sequence-parse.rkt"
          "parse.rkt"
-         "syntax.rkt"
+         "macro-macro.rkt"
          "definition.rkt"
          "static-info.rkt"
          (submod "function.rkt" for-build)

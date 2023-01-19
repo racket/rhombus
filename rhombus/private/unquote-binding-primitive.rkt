@@ -7,10 +7,10 @@
                      "attribute-name.rkt")
          syntax/parse/pre
          "pack.rkt"
-         "syntax-class.rkt"
+         "syntax-class-primitive.rkt"
          (only-in "expression.rkt"
                   in-expression-space)
-         (submod "syntax-class.rkt" for-quasiquote)
+         (submod "syntax-class-primitive.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::)
          "pattern-variable.rkt"
@@ -21,7 +21,7 @@
          (submod "function.rkt" for-call)
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
-         (submod "syntax-class-syntax.rkt" for-pattern-clause))
+         (submod "syntax-class.rkt" for-pattern-clause))
 
 (provide (for-space rhombus/unquote_bind
                     #%parens

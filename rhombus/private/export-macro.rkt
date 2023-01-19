@@ -6,7 +6,7 @@
                      "pack.rkt")
          "name-root.rkt"
          (submod "export.rkt" for-meta)
-         "syntax.rkt"
+         "macro-macro.rkt"
          "parse.rkt")
 
 (provide expo)

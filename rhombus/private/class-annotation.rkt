@@ -9,7 +9,7 @@
                      "class-parse.rkt")
          "annotation.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "annotation-syntax.rkt" for-class)
+         (submod "annot-macro.rkt" for-class)
          "parens.rkt"
          (for-syntax "class-transformer.rkt")
          (submod "dot.rkt" for-dot-provider))

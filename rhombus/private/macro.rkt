@@ -3,21 +3,21 @@
                      syntax/parse/pre
                      (for-syntax racket/base
                                  syntax/parse/pre)
-                     "syntax-rhs.rkt"
+                     "macro-rhs.rkt"
                      "srcloc.rkt"
                      "tag.rkt")
          syntax/parse/pre
-         "syntax-rhs.rkt"
+         "macro-rhs.rkt"
          "definition.rkt"
          "expression.rkt"
          "entry-point.rkt"
-         "syntax.rkt"
+         "macro-macro.rkt"
          "pack.rkt"
          "parse.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
          "parens.rkt"
-         (submod "expression-syntax.rkt" for-define))
+         (submod "expr-macro.rkt" for-define))
 
 (provide macro)
 

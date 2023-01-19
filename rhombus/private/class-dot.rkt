@@ -14,7 +14,7 @@
          "parens.rkt"
          "static-info.rkt"
          "expression.rkt"
-         (only-in (submod "expression-syntax.rkt" for-define)
+         (only-in (submod "expr-macro.rkt" for-define)
                   make-expression-prefix-operator)
          (only-in (submod "repetition.rkt")
                   make-expression+repetition-transformer

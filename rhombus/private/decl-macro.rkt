@@ -6,7 +6,7 @@
                      "pack.rkt")
          "name-root.rkt"
          "declaration.rkt"
-         "syntax.rkt"
+         "macro-macro.rkt"
          "parse.rkt"
          "implicit.rkt")
 

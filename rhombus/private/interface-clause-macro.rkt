@@ -8,7 +8,7 @@
          "interface-clause.rkt"
          (submod "interface-clause.rkt" for-interface)
          "name-root.rkt"
-         "syntax.rkt")
+         "macro-macro.rkt")
 
 (provide interface_clause)
 

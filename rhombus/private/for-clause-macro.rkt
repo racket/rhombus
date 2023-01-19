@@ -7,7 +7,7 @@
          "for-clause.rkt"
          (submod "for-clause.rkt" for-class)
          "name-root.rkt"
-         "syntax.rkt")
+         "macro-macro.rkt")
 
 (provide for_clause)
 

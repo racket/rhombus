@@ -11,8 +11,8 @@
                      "introducer.rkt"
                      "name-path-op.rkt"
                      "pack.rkt"
-                     (submod "syntax-class.rkt" for-quasiquote)
-                     (submod "syntax-class.rkt" for-syntax-class)
+                     (submod "syntax-class-primitive.rkt" for-quasiquote)
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base)
                      "realm.rkt"
                      "parse.rkt")
@@ -20,7 +20,7 @@
          "name-root-ref.rkt"
          "definition.rkt"
          "parens.rkt"
-         "syntax.rkt")
+         "macro-macro.rkt")
 
 (provide sublanguage)
 

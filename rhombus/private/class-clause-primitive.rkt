@@ -4,7 +4,7 @@
                      enforest/hier-name-parse
                      "name-path-op.rkt"
                      "class-parse.rkt"
-                     (only-in "rule.rkt" macro)
+                     (only-in "macro.rkt" macro)
                      "consistent.rkt")
          "class+interface.rkt"
          "class-clause.rkt"

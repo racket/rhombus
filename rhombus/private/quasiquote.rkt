@@ -11,8 +11,8 @@
          "expression+binding.rkt"
          "pack.rkt"
          "empty-group.rkt"
-         "syntax-class.rkt"
-         (submod "syntax-class.rkt" for-quasiquote)
+         "syntax-class-primitive.rkt"
+         (submod "syntax-class-primitive.rkt" for-quasiquote)
          "dollar.rkt"
          "repetition.rkt"
          "op-literal.rkt"

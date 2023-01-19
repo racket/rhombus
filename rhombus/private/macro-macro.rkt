@@ -8,7 +8,7 @@
                      "operator-parse.rkt"
                      "consistent.rkt"
                      "syntax-class-mixin.rkt"
-                     "syntax-rhs.rkt"
+                     "macro-rhs.rkt"
                      "introducer.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre))

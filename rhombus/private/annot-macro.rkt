@@ -5,10 +5,10 @@
                      enforest/proc-name
                      "pack.rkt"
                      "static-info-pack.rkt"
-                     (submod "syntax-class.rkt" for-syntax-class))
+                     (submod "syntax-class-primitive.rkt" for-syntax-class))
          "definition.rkt"
          (submod "annotation.rkt" for-class)
-         "syntax.rkt"
+         "macro-macro.rkt"
          "wrap-expression.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")
