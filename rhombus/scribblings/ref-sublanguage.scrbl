@@ -14,8 +14,6 @@
     ~syntax_class $identifier
     ~syntax_class_prefix_more $identifier
     ~syntax_class_infix_more $identifier
-    ~rule $identifier
-    ~only_rule $identifier
     ~macro $identifier
     ~only_macro $identifier
     ~macro_result: $filter_expr
@@ -66,17 +64,11 @@
   when reaching an infix operator in the group whose precedence is weaker
   than the starting one.}
 
- @item{@rhombus(~rule): names an identifier to be bound to a
-  macro-definition form analogous to @rhombus(expr.rule), but for defining
+ @item{@rhombus(~macro): names an identifier to be bound to a
+  macro-definition form analogous to @rhombus(expr.macro), but for defining
   rule-based macros for the sublanguage.}
 
- @item{@rhombus(~only_rule): names an identifier like @rhombus(~rule), but
-  analogous to @rhombus(expr.only.rule).}
-
- @item{@rhombus(~macro): names an identifier like @rhombus(~rule), but
-  analogous to @rhombus(expr.macro).}
-
- @item{@rhombus(~only_macro): names an identifier like @rhombus(~rule), but
+ @item{@rhombus(~only_macro): names an identifier like @rhombus(~macro), but
   analogous to @rhombus(expr.only.macro).}
 
  @item{@rhombus(~macro_result): supplies a compile-time function that is

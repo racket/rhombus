@@ -22,7 +22,7 @@ have a binding in the default space. Otherwise, local binding of the
 same identifier name can lead to ambigious references. So, binding an
 identifier with @rhombus(def) and then @rhombus(bind.only.macro) is a
 good way to give an identifier meaning in both expression and binding
-contexts, but using only @rhombus(expr.only.rule) plus
+contexts, but using only @rhombus(expr.only.macro) plus
 @rhombus(bind.only.macro) tends to be a bad idea.
 
 Expressions, definitions, and declarations use the same space,

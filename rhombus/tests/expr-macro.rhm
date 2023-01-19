@@ -6,8 +6,8 @@ fun
 | factorial(0): 1
 | factorial(n): n*factorial(n-1)
 
-expr.macro '$a *! $tail ...':
-  values('(factorial($a))', '$tail ...')
+expr.macro '$a *!':
+  '(factorial($a))'
 
 check:
   10*!
@@ -16,7 +16,7 @@ check:
 // a macro with an identifier name that does a weird
 // thing with the result tail
 
-expr.macro 'prefix_plus $a $b $c ...':
+expr.macro 'prefix_plus $a $b $c ... $(~end)':
   values(a, '+ $b $c ...')
 
 check:
@@ -25,12 +25,12 @@ check:
 
 // another way to write that
 
-expr.macro 'also_prefix_plus $e ...':
+expr.macro 'also_prefix_plus $e ... $(~end)':
   match '$e ...'
   | '$a $b $c ...':
       values(a, '+ $b $c ...')
   | ~else:
-      values('"this is terrible error reporting"', '()')
+      Syntax.error("bad syntax", '$e ...')
 
 check:
   also_prefix_plus 7 9
@@ -38,7 +38,7 @@ check:
 
 // an identifier macro
 
-expr.rule 'just_five': '"five"'
+expr.macro 'just_five': '"five"'
 
 check:
   just_five ++ " is the result"
@@ -46,7 +46,7 @@ check:
 
 // mixin infix and prefix with multiple matching cases
 
-rule
+macro
 | 'weirdly coconut':
     ~stronger_than: +
     '"donut"'

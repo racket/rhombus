@@ -196,13 +196,13 @@ check:
       fun (y, x):
         _Posn(x, y)
     binding:
-      rule
+      macro
       | '()($y, $x)':
           '_Posn($x, $y)'
       | '()($v)':
           '_Posn($v, 0)'
     annotation:
-      rule
+      macro
       | '().of($x, $y)':
           '_Posn.of($y, $x)'
       | '()': '_Posn'    
@@ -451,7 +451,7 @@ check:
     extends Posn
     internal _Posn3D
     binding:
-      rule '()($x, $y ..., $z)': 'Posn($x, ~y: $y ...) && _Posn3D($z)'
+      macro '()($x, $y ..., $z)': 'Posn($x, ~y: $y ...) && _Posn3D($z)'
   def p = Posn3D(1, ~y: 2, 3)
   def Posn(a2, ~y: b2) = p
   def Posn3D(a3, b3, c3) = p
@@ -466,19 +466,19 @@ check:
     nonfinal
     internal _Posn
     binding:
-      rule '()(X $x, Y $y)': '_Posn($x, ~y: $y)'
+      macro '()(X $x, Y $y)': '_Posn($x, ~y: $y)'
   class Posn3D(z):
     extends Posn
     nonfinal
     internal _Posn3D
     binding:
-      rule '()[$x, $y ..., $z]': 'Posn(X $x, Y $y ...) && _Posn3D($z)'
+      macro '()[$x, $y ..., $z]': 'Posn(X $x, Y $y ...) && _Posn3D($z)'
   class Posn4D(w):
     extends Posn3D
     nonfinal
     internal _Posn4D
     binding:
-      rule '()($x, ~y: $y, $z, $w)': 'Posn3D[$x, $y, $z] && _Posn4D($w)'
+      macro '()($x, ~y: $y, $z, $w)': 'Posn3D[$x, $y, $z] && _Posn4D($w)'
   def p = Posn4D(1, ~y: 2, 3, 6)
   def Posn(X a2, Y b2) = p
   def Posn3D[a3, b3, c3] = p
@@ -517,8 +517,8 @@ check:
     extends Posn
     internal _Posn3D
     annotation:
-      rule | '().of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
-           | '()': '_Posn3D'
+      macro | '().of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
+            | '()': '_Posn3D'
   def p = Posn3D(1, ~y: "2", #'three)
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
@@ -532,22 +532,22 @@ check:
     nonfinal
     internal _Posn
     annotation:
-      rule | '() $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
-           | '()': '_Posn'
+      macro | '() $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
+            | '()': '_Posn'
   class Posn3D(z):
     extends Posn
     nonfinal
     internal _Posn3D
     annotation:
-      rule | '() $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
-           | '()': '_Posn3D'
+      macro | '() $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
+            | '()': '_Posn3D'
   class Posn4D(w):
     extends Posn3D
     nonfinal
     internal _Posn4D
     annotation:
-      rule | '() $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
-           | '()': '_Posn4D'
+      macro | '() $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
+            | '()': '_Posn4D'
   def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
   p :: Posn.of(X Integer, Y String)

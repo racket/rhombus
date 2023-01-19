@@ -25,9 +25,9 @@ begin:
      method arities(): ('$&(i.lookup(#'method_arities))')
      method visibilities(): ('$&(i.lookup(#'method_visibilities))')'
   defn.macro 'def_describe $name $key':
-    '«expr.macro '$name $('$')id': values('('$('$&')(class_meta.describe(id).lookup(#'$key))')', '')»'
+    '«expr.macro '$name $('$')id': '('$('$&')(class_meta.describe(id).lookup(#'$key))')'»'
   defn.macro 'def_idescribe $name $key':
-    '«expr.macro '$name $('$')id': values('('$('$&')(interface_meta.describe(id).lookup(#'$key))')', '')»'
+    '«expr.macro '$name $('$')id': '('$('$&')(interface_meta.describe(id).lookup(#'$key))')'»'
   def_describe dname name
   def_describe dsuper extends
   def_describe dinterfaces implements
@@ -40,13 +40,13 @@ begin:
   def_describe dfield_mutabilities field_mutabilities
   def_describe dmethods method_names
   def_describe darities method_arities
-  expr.macro 'dctr $name': values('$(class_meta.describe(name).lookup(#'uses_default_constructor))', '')
-  expr.macro 'dbind $name': values('$(class_meta.describe(name).lookup(#'uses_default_binding))', '')
-  expr.macro 'dann $name': values('$(class_meta.describe(name).lookup(#'uses_default_annotation))', '')
+  expr.macro 'dctr $name': '$(class_meta.describe(name).lookup(#'uses_default_constructor))'
+  expr.macro 'dbind $name': '$(class_meta.describe(name).lookup(#'uses_default_binding))'
+  expr.macro 'dann $name': '$(class_meta.describe(name).lookup(#'uses_default_annotation))'
   def_idescribe diname name
   def_idescribe disuper extends
   def_idescribe dimethods method_names
-  expr.macro 'diann $name': values('$(interface_meta.describe(name).lookup(#'uses_default_annotation))', '')
+  expr.macro 'diann $name': '$(interface_meta.describe(name).lookup(#'uses_default_annotation))'
   
   begin:
     interface Pointy

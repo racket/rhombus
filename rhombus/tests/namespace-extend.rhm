@@ -74,11 +74,17 @@ check:
   | root.Posn(x, y): [y, x]
   ~is [2, 1]
 
-expr.rule '$left (root.(^^^)) $right':
+macro '$left (root.(^^^)) $right':
+  '[[$left, $right]]'
+expr.macro '$left (root.(^^^^)) $right':
   '[[$left, $right]]'
 
 check:
   1 root.(^^^) 2
+  ~is [[1, 2]]
+
+check:
+  1 root.(^^^^) 2
   ~is [[1, 2]]
 
 check:
@@ -190,7 +196,7 @@ check:
   import rhombus/meta open
   namespace N
   def N.y = 10
-  expr.rule '(N.z) 0': '1'
+  expr.macro '(N.z) 0': '1'
   begin:
     import: .N as n
     [n.y, n.z 0]

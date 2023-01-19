@@ -11,7 +11,7 @@ Macros extend the syntax available for expressions, bindings,
 definitions, and more. Each kind of macro extension has a different
 protocol and a different form for defining a macro. In the case of
 expressions, a macro receives the sequence of terms starting with the
-macro operator/identifier within a group. A @deftech{rule} macro
+macro operator/identifier within a group. A macro
 consumes only the tokens that its pattern matches, and it’s right-hand
 side is an immediate template expression that produces the macro
 expansion. A general form of macro is implemented with arbitrary
@@ -27,14 +27,14 @@ wraps as a zero-argument function
     import:
       rhombus/meta open
 
-    expr.rule 'thunk: $body':
+    expr.macro 'thunk: $body':
       'fun (): $body'
   ~repl:
     thunk: 1 + "oops"
     (thunk: 1 + 3)()
 )
 
-The @rhombus(expr.rule) form expects @rhombus('') to create a pattern
+The @rhombus(expr.macro) form expects @rhombus('') to create a pattern
 that matches a sequence of terms. Either the first or second term within
 the pattern is an @emph{unescaped} identifier or operator to be defined;
 conceptually, it’s unescaped because the macro matches a sequence of
@@ -43,15 +43,15 @@ in the pattern is an unescaped identifier or operator, a prefix macro is
 defined; otherwise, the second term must be unescaped, and an infix
 macro is defined.
 
-The @rhombus(expr.rule) form must be imported from
-@rhombusmodname(rhombus/meta), but @rhombus(rule) is available in just
+The @rhombus(expr.macro) form must be imported from
+@rhombusmodname(rhombus/meta), but @rhombus(macro) is available in just
 @rhombusmodname(rhombus):
 
 @demo(
   ~defn:
     :
       // no import needed      
-      rule 'thunk: $body':
+      macro 'thunk: $body':
         'fun (): $body'
   ~repl:
     (thunk: 1 + 3)()
@@ -65,7 +65,7 @@ this:
 @demo(
   ~eval: macro_eval
   ~defn:
-    rule '$a !':
+    macro '$a !':
       'factorial($a)'
   ~defn:
     fun
@@ -75,20 +75,21 @@ this:
     10! + 1
 )
 
-The @rhombus(expr.rule) or @rhombus(def) form is a shorthand for a more
-general @rhombus(expr.macro) macro form. With @rhombus(expr.macro), the
+With @rhombus(expr.macro) (but not @rhombus(macro)), the
 macro implementation after @rhombus(:) is compile-time code. Importing
 @rhombusmodname(rhombus/meta) imports all of the same bindings as
 @rhombusmodname(rhombus) into the compile-time phase, in addition to making
 forms like @rhombus(expr.macro) available. Normally,
 @rhombusmodname(rhombus/meta) should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time
-code—even for things like @rhombus(values) and @rhombus(''). In addition,
-a macro defined with @rhombus(expr.macro) receives all remaining terms
-in the enclosing group as input, and it should return two values: the
-expanded expression and the remaining terms that have not been consumed.
-(Returning a single value is allowed, and it's the same as returning
-an empty sequence for the remaining terms.)
+code—even for things like @rhombus(values) and @rhombus('').
+
+A macro defined with @rhombus(expr.macro) matches any prefix of terms in
+the enclosing group. By using @rhombus(..., ~bind), it can consume all
+remaining terms in the group. In that case, the macro may want to
+consume some of them, but return others back to the group to be parsed
+normally, so the macro can return two values: the expanded expression
+and the remaining terms that have not been consumed.
 
 For example, the @rhombus(!) macro can be equivalently written like this:
 
@@ -98,6 +99,17 @@ For example, the @rhombus(!) macro can be equivalently written like this:
     expr.macro '$a ! $tail ...':
       values('factorial($a)', '$tail ...')
 )
+
+Returning a single value is allowed, and is the same as returning an
+empty sequence for the remaining terms, which is useful when
+@rhombus($(~end)) is needed only to indicate that no further terms are
+allowed in the group. Two return values are allowed only when the
+pattern ends with
+@rhombus($ #,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind))) or
+when a @rhombus($(~end)) pseudo-escape is added to the end of the
+pattern. Adding a @rhombus($(~end)) pseudo-escape while returning one
+value can be useful to disallow additional terms after the matched
+pattern.
 
 Since an @rhombus(expr.macro) implementation can use arbitrary
 compile-time code, it can inspect the input syntax objects in more way
@@ -118,18 +130,13 @@ don't do this:
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a ! $(tail :: Term) ...':
+    expr.macro '$a ! $(tail :: Term) ... $(~end)':
       values('factorial($a)', '$tail ...')
   ~repl:
     :
       // changing to 2000 `!`s or so makes parsing take noticeably long:
       0 ! ! ! ! ! ! ! ! ! ! ! !
 )
-
-Note that the @rhombus(..., ~bind) operator is not treated specially
-at the end of the pattern of a rule macro, because there’s implicitly
-a @rhombus($tail ..., ~bind) added to the end of every rule-macro
-pattern.
 
 Whether pattern-based or not, an infix-operator macro’s left-hand input
 is parsed. A prefix or infix macro’s right-hand input is not parsed by
@@ -144,28 +151,25 @@ side before it’s left-hand side:
 
 @demo(
   ~defn:
-    rule '$a +<= $(~parsed b)':
+    macro '$a +<= $(~parsed b)':
       '$b + $a'
   ~repl:
     1 +<= 2
     ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
 )
 
-Declaring @rhombus(~parsed) affects a @rhombus(expr.macro) macro
-in a second way: the macro will receive only the left (if any) and right
-arguments, and will not receive or return the tail of the enclosing
-group. In other words, declaring @rhombus(~parsed) uses the same
-argument and return protocol as a rule-based macro, but the template
-part can be implemented by arbitrary compile-time expressions.
+Declaring @rhombus(~parsed) affects a @rhombus(expr.macro) macro in a
+second way: the macro will receive only the left (if any) and right
+arguments, and will not receive and cannot return the tail of the
+enclosing group.
 
 In the same way that @rhombus(operator) supports operators that are both
-prefix and infix, you can use an alt-block with @rhombus(expr.rule) or
-@rhombus(expr.macro) to create a prefix-and-infix macro. Furthermore, an
-@rhombus(expr.rule) or @rhombus(expr.macro) form can have multiple
-prefix blocks or multiple infix blocks, where the each block’s pattern
-is tried in order; in that case, only the first prefix block (if any)
-and first infix block (if any) can have precedence and associativity
-declarations that apply to all cases.
+prefix and infix, you can use an alt-block with @rhombus(expr.macro) to
+create a prefix-and-infix macro. Furthermore, an @rhombus(expr.macro)
+form can have multiple prefix blocks or multiple infix blocks, where the
+each block’s pattern is tried in order; in that case, only the first
+prefix block (if any) and first infix block (if any) can have precedence
+and associativity declarations that apply to all cases.
 
 
 @close_eval(macro_eval)

@@ -193,7 +193,7 @@ begin:
     namespace M:
       export pi_ish
       def three = 3
-      rule 'pi_ish': 'three'
+      macro 'pi_ish': 'three'
     [[i, M.pi_ish], ...]
     ~is [[1, 3], [2, 3], [3, 3]]
 

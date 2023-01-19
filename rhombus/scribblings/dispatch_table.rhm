@@ -7,7 +7,7 @@ import:
 export:
   dispatch_table
 
-expr.rule
+expr.macro
 | 'maybe_rhombus()': '""'
 | 'maybe_rhombus($args)': 'rhombus($args)'
 
@@ -49,22 +49,21 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
   def [name_str, ...]: for List:
                          each name: [name, ...]
                          "" +& name.unwrap()
-  values('«begin:
-             rhombus_typeset '$id':
-               '@racketvarfont("" +& #'$id)'
-             ...
-             [
-               @elem{The @rhombus(.) operator can be used on a @($what) expression as
-                   equivalent to calling @($who) functions:},
-               @nested(
-                 ~style: #'inset,
-                 @tabular(
-                   ~sep: @elem{@hspace(1)is@hspace(1)},
-                   [
-                     [@elem{@rhombus($lhs)@racketfont{.@($name_str)}@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
-                     ...
-                   ]
-                 )
-               )
-             ]»',
-         '')
+  '«begin:
+      rhombus_typeset '$id':
+        '@racketvarfont("" +& #'$id)'
+      ...
+      [
+        @elem{The @rhombus(.) operator can be used on a @($what) expression as
+            equivalent to calling @($who) functions:},
+        @nested(
+          ~style: #'inset,
+          @tabular(
+            ~sep: @elem{@hspace(1)is@hspace(1)},
+            [
+              [@elem{@rhombus($lhs)@racketfont{.@($name_str)}@maybe_rhombus($lhs_rest ...)}, @rhombus($rhs)],
+              ...
+            ]
+          )
+        )
+      ]»'

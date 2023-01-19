@@ -5,7 +5,7 @@
 
 @title(~tag: "bind-macro"){Binding and Annotation Macros}
 
-Macros can extend binding-position syntax, too, via @rhombus(bind.rule) and
+Macros can extend binding-position syntax, too, via
 @rhombus(bind.macro). In the simplest case, a binding operator is implemented
 by expanding to other binding operators, like this definition of @rhombus($$$)
 as a prefix operator to constrain a pattern to number inputs:
@@ -15,7 +15,7 @@ as a prefix operator to constrain a pattern to number inputs:
     import:
       rhombus/meta open
 
-    bind.rule '$$$ $(~parsed n)':
+    bind.macro '$$$ $(~parsed n)':
       '$n :: Number'
   ~repl:
     def $$$salary = 100.0
@@ -37,7 +37,7 @@ annotations.
 @rhombusblock(
   use_static
 
-  annot.rule 'PosnList': 'List.of(Posn)'
+  annot.macro 'PosnList': 'List.of(Posn)'
 
   fun nth_x(ps -: PosnList, n):
     ps[n].x

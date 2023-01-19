@@ -19,20 +19,11 @@ bindings versus @rhombus(::, ~bind) and
 @rhombus(#', ~bind) for normal bindings.
 
 @doc(
-  defn.macro 'unquote_bind.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'unquote_bind.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+  defn.macro 'unquote_bind.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro), but for binding an operator that works
- within a @rhombus($, ~bind) escape for a syntax pattern.
+ Like @rhombus(expr.macro), but for binding an identifier or operator
+ that works within a @rhombus($, ~bind) escape for a syntax pattern.
 
 @examples(
   ~eval: macro_eval
@@ -42,7 +33,7 @@ bindings versus @rhombus(::, ~bind) and
     match Syntax.make_group(['...', '...', '...'])
     | '$dots ...': "all dots"
   ~repl:
-    syntax.class Wrapped
+    syntax_class Wrapped
     | '($content)'
     | '[$content]'
     | '{$content}'

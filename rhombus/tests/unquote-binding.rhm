@@ -110,7 +110,7 @@ begin:
     ~is "not all dots"
 
 check:
-  syntax.class Wrapped
+  syntax_class Wrapped
   | '($content)'
   | '[$content]'
   | '{$content}'

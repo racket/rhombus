@@ -4,7 +4,8 @@
                      (for-syntax racket/base
                                  syntax/parse/pre)
                      "syntax-rhs.rkt"
-                     "srcloc.rkt")
+                     "srcloc.rkt"
+                     "tag.rkt")
          syntax/parse/pre
          "syntax-rhs.rkt"
          "definition.rkt"
@@ -12,12 +13,13 @@
          "entry-point.rkt"
          "syntax.rkt"
          "pack.rkt"
+         "parse.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
          "parens.rkt"
          (submod "expression-syntax.rkt" for-define))
 
-(provide rule)
+(provide macro)
 
 (begin-for-syntax
   (struct definition+entry-point+expression-transformer (def cbl exp)
@@ -27,7 +29,7 @@
   (define (make-definition+entry-point+expression-transformer def cbl exp)
     (definition+entry-point+expression-transformer def cbl exp)))
 
-(define-for-syntax (parse-rule stx adjustments)
+(define-for-syntax (parse-macro stx adjustments)
   (syntax-parse stx
     #:datum-literals (parens group block alts op)
     [(form-id ((~and alts-tag alts) (block (group (_::quotes ((~and tag group) (_::parens) . pat))
@@ -65,43 +67,51 @@
        #f
        #:adjustments adjustments))]))
 
-(define-syntax rule
+(define-syntax macro
   (make-definition+entry-point+expression-transformer
    (definition-transformer
      (lambda (stx)
        (syntax-parse stx
-         #:datum-literals (parens group block alts op)
-         [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
-                                                       (~and rhs (block body ...))))
-                                         ...+))
+         #:datum-literals (parens group block alts quotes op)
+         [(form-id (_::alts (_::block (group (_::quotes (group) (_::parens) . pat) (_::block . _)))
+                         ...+))
+          ;; found () in place of a defined name, so parse as an expression
+          #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+         [(form-id (_::quotes (group (_::parens) . _))
+                   (_::block . _))
+          ;; another expression case
+          #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
+         [(form-id (_::alts (_::block (group q::operator-syntax-quote
+                                             (~and rhs (_::block body ...))))
+                            ...+))
           (list
            (parse-operator-definitions #'form-id
                                        'rule
                                        stx
                                        (syntax->list #'(q.g ...))
                                        (syntax->list #'(rhs ...))
-                                       'rhombus/expr
+                                       #f
                                        #'rules-rhs))]
          [(form-id q::operator-syntax-quote
-                   (~and rhs (block body ...)))
+                   (~and rhs (_::block body ...)))
           (list
            (parse-operator-definition #'form-id
                                       'rule
                                       #'q.g
                                       #'rhs
-                                      'rhombus/expr
+                                      #f
                                       #'rule-rhs))])))
    (entry-point-transformer
-    ;; parse rule
+    ;; parse macro
     (lambda (stx adjustments)
-      (parse-rule stx adjustments))
+      (parse-macro stx adjustments))
     ;; extract arity
     (lambda (stx)
       1))
    (expression-transformer
-    #'rule
+    #'macro
     (lambda (stx)
-      (values (parse-rule stx no-adjustments)
+      (values (parse-macro stx no-adjustments)
               #'())))))
 
 (define (wrap-prefix name precedence protocol proc)

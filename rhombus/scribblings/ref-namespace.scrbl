@@ -15,7 +15,7 @@ A namespace is extended though definition forms that use a
 @litchar{.}-separated sequence of identifiers as the name to bind. Where
 operators are allowed, the operator to define can be a
 @litchar{.}-separated sequence of identifiers followed by a @litchar{.}
-and a parenthesized operator. When using a form like @rhombus(expr.rule)
+and a parenthesized operator. When using a form like @rhombus(expr.macro)
 to extends a namespace, the @litchar{.}-separated sequence must be
 surrounded by pair of parentheses.
 

@@ -3,5 +3,5 @@
 export: exint
 
 def exint = 10
-bind.only.rule 'exint': '(_ :: Integer)'
-annot.only.rule 'exint': 'Integer'
+bind.only.macro 'exint': '(_ :: Integer)'
+annot.only.macro 'exint': 'Integer'

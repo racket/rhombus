@@ -52,49 +52,49 @@ check:
 
 check:
   // special syntax to define `$` as a prefix operator
-  expr.rule '$('$') $x': '1 + $x'
+  expr.macro '$('$') $x': '1 + $x'
   $10
   ~is 11
 
 check:
   // special syntax to `$` as an infix operator
-  expr.rule '$x $('$') $y': '[$x, $y]'
+  expr.macro '$x $('$') $y': '[$x, $y]'
   1 $ 2
   ~is [1, 2]
 
 check:
   ~eval
   import: rhombus/meta open
-  expr.rule '$1 + $2': '0'
+  expr.macro '$1 + $2': '0'
   ~raises "expected operator-macro pattern"
 
 check:
   ~eval
   import: rhombus/meta open
-  expr.rule '$x $ $x': '0'
+  expr.macro '$x $ $x': '0'
   ~raises "expected operator-macro pattern"
 
 check:
   //  macro that acts as a template form
-  expr.rule '$x =+= $y': '('$('$')$x + $('$')$y')'
+  expr.macro '$x =+= $y': '('$('$')$x + $('$')$y')'
   def a = '3'
   def b = '4'
   a =+= b
   ~prints_like '3 + 4'
 
 check:
-  // phase-0 binding of `$` does not affect `expr.rule` use
+  // phase-0 binding of `$` does not affect `macro` use
   operator ($ b): b
-  expr.rule '$x + $y': '[$x, $y]'
+  macro '$x + $y': '[$x, $y]'
   (1+2)
   ~is [1, 2]
 
 check:
   ~eval
   import: rhombus/meta open
-  // phase-1 binding of `$` makes `expr.rule` bind `$`
+  // phase-1 binding of `$` makes `macro` bind `$`
   meta:  
     operator ($ b): b
-  expr.rule '$x + $y': '[$x, $y]'
+  macro '$x + $y': '[$x, $y]'
   (1+2)
   ~is 3

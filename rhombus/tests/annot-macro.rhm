@@ -4,7 +4,7 @@ import:
 
 class Posn(x, y)
 
-annot.only.macro 'AlsoPosn': values('Posn', '')
+annot.only.macro 'AlsoPosn': 'Posn'
 check:
   Posn(1, 2) :: AlsoPosn
   ~is Posn(1, 2)
@@ -13,8 +13,8 @@ check:
   "no" :: AlsoPosn
   ~raises "value does not satisfy annotation"
 
-bind.only.macro 'AlsoPosn ($x, $y) $tail ...':
-  values('Posn($x, $y)', '$tail ...')
+bind.only.macro 'AlsoPosn ($x, $y)':
+  'Posn($x, $y)'
 
 def AlsoPosn(also_x, also_y) = Posn(10, 20)
 check:

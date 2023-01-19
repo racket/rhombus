@@ -34,7 +34,6 @@
 (define-name-root bind
   #:fields
   (macro
-   rule
    infoer
    matcher
    committer
@@ -43,8 +42,7 @@
 
 (define-name-root only
   #:fields
-  ([macro macro-only]
-   [rule rule-only]))
+  ([macro macro-only]))
 
 (begin-for-syntax
   (define-simple-name-root bind_meta
@@ -64,13 +62,6 @@
   #'make-binding-infix-operator
   #'prefix+infix)
 
-(define-operator-definition-transformer+only rule rule-only
-  'rule
-  rhombus/bind
-  #'make-binding-prefix-operator
-  #'make-binding-infix-operator
-  #'prefix+infix)
-
 (begin-for-syntax
   (define-operator-syntax-classes
     Group :binding
@@ -84,7 +75,7 @@
 
 (define-for-syntax (unpack stx)
   (syntax-parse (unpack-term stx 'bind_meta.unpack #f)
-    [((~datum parsed) b::binding-form)
+    [((~datum parsed) b::binding-form)<
      (pack-term #'(parens (group chain-to-infoer)
                           (group (parsed (b.infoer-id b.data)))))]))
 

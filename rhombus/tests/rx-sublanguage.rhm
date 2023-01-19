@@ -13,7 +13,6 @@ export:
 
 sublanguage.enforest example/rx:
   ~syntax_class Pattern
-  ~rule rule
   ~macro macro
   ~only_macro only_macro
   ~macro_result: fun (stx, who):
@@ -27,20 +26,17 @@ sublanguage.enforest example/rx:
 expr.macro '«rx '$(pat :: Pattern)' $tail ...»':
   'pregexp($pat.parsed)'
 
-rule 'any': '"."'
+macro 'any': '"."'
 
-only_macro '#{#%literal} $(s :: String) $tail ...':
+only_macro '#{#%literal} $(s :: String)':
   import lib("racket/base.rkt").#{regexp-quote}
-  values('$(#{regexp-quote}(s.unwrap()))',
-         '$tail ...')
+  '$(#{regexp-quote}(s.unwrap()))'
 
-only_macro '#{#%parens} ($(p :: Pattern)) $tail ...':
-  values(p.parsed,
-         '$tail ...')
+only_macro '#{#%parens} ($(p :: Pattern))':
+  p.parsed
 
-only_macro '$left #{#%call} ($(p :: Pattern)) $tail ...':
-  values('$(left.unwrap() ++ p.parsed.unwrap())',
-         '$tail ...')
+only_macro '$left #{#%call} ($(p :: Pattern))':
+  '$(left.unwrap() ++ p.parsed.unwrap())'
 
 only_macro '$left || $(~parsed right)':
   ~weaker_than: ~other
@@ -51,28 +47,22 @@ only_macro '$left #{#%juxtapose} $(~parsed right)':
   ~stronger_than: ||
   '$(left.unwrap() ++ right.unwrap())'
 
-only_macro '$left * $tail ...':
-  values('$(left.unwrap() ++ "*")',
-         '$tail ...')
+only_macro '$left *':
+  '$(left.unwrap() ++ "*")'
 
-only_macro '$left + $tail ...':
-  values('$(left.unwrap() ++ "+")',
-         '$tail ...')
+only_macro '$left +':
+  '$(left.unwrap() ++ "+")'
 
-only_macro '$left ? $tail ...':
-  values('$(left.unwrap() ++ "?")',
-         '$tail ...')
+only_macro '$left ?':
+  '$(left.unwrap() ++ "?")'
 
 only_macro
-| '$left #{#%comp} {$(min :: Integer), _} $tail ...':
-    values('$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")',
-           '$tail ...')
-| '$left #{#%comp} {$(min :: Integer), $(max :: Integer)} $tail ...':
-    values('$(left.unwrap() ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")',
-           '$tail ...')
-| '$left #{#%comp} {$(count :: Integer)} $tail ...':
-    values('$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")',
-           '$tail ...')
+| '$left #{#%comp} {$(min :: Integer), _}':
+    '$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")'
+| '$left #{#%comp} {$(min :: Integer), $(max :: Integer)}':
+    '$(left.unwrap() ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
+| '$left #{#%comp} {$(count :: Integer)}':
+    '$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")'
 
 macro
 | '^ $(~parsed right)':

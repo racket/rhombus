@@ -846,7 +846,7 @@
  identifier behave like a constructor, perhaps instantiating some default
  class. There is no @rhombus(binding, ~class_clause) for interfaces,
  because @rhombus(interface) does not otherwise define an interfeace name
- for binding, and so @rhombus(bind.rule) or @rhombus(bind.macro) can be
+ for binding, and so @rhombus(bind.macro) can be
  used alongside @rhombus(interface) with the same interface name.
 
 }

@@ -84,23 +84,23 @@ spliced sequences that have different lengths.
 Although Rhombus supports new binding operators through
 @rhombus(unquote_bind.macro), syntax classes provide a better way to
 organize most syntax abstractions. To define a new syntax class, use the
-@rhombus(syntax.class) form with a block that contains
+@rhombus(syntax_class) form with a block that contains
 @rhombus(pattern) with pattern alternatives:
 
 @demo(
   ~defn:
-    syntax.class Arithmetic:
+    syntax_class Arithmetic:
       pattern
       | '$x + $y'
       | '$x - $y'
 )
 
 An equivalent shorthand omits the use of @rhombus(pattern, ~syntax_class_clause)
-and inlines alternatives into the immediate @rhombus(syntax.class) form:
+and inlines alternatives into the immediate @rhombus(syntax_class) form:
 
 @demo(
   ~defn:
-    syntax.class Arithmetic
+    syntax_class Arithmetic
     | '$x + $y'
     | '$x - $y'
 )
@@ -115,7 +115,7 @@ for use in a macro definition, place it inside a
   ~eval: sc_eval
   ~defn:
     meta:
-      syntax.class Arithmetic
+      syntax_class Arithmetic
       | '$x + $y'
       | '$x - $y'
 )
@@ -130,7 +130,7 @@ so a pattern variable annotated with a syntax class is bound to a
   ~eval: sc_eval
   ~defn:    
     expr.macro 'add_one_to_expr $(expr :: Arithmetic)':
-      values('$expr ... + 1', '')
+      '$expr ... + 1'
   ~repl:
     add_one_to_expr 1 + 1
     add_one_to_expr 1 - 2
@@ -145,7 +145,7 @@ from a pattern variable using dot notation.
   ~eval: sc_eval
   ~defn:
     expr.macro 'right_operand $(expr :: Arithmetic)':
-      values(expr.y, '')
+      expr.y
   ~eval:
     right_operand 2 + 3
     right_operand 8 - 4
@@ -157,7 +157,7 @@ alternative of a syntax class.
 @demo(
   ~eval: sc_eval
   ~defn:
-    syntax.class Arithmetic
+    syntax_class Arithmetic
     | '$x + $y + $z'
     | '$x - $y'
   ~repl:

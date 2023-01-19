@@ -15,7 +15,7 @@
                     pattern))
 
 ;; the `pattern` form for a binding context is here;
-;; the `pattern` form for `syntax.class` is in "syntax-class-clause-primitive.rkt";
+;; the `pattern` form for `syntax_class` is in "syntax-class-clause-primitive.rkt";
 ;; the `pattern` form for `$` is in "unquote-binding-primitive.rkt"
 
 (define-binding-syntax pattern

@@ -126,10 +126,9 @@ fun relocate_expansion(e, context):
 // ----------------------------------------
 
 expr.macro
-| 'rhombus ($(forms :: Group)) $main_tail ...':
-    values('#{typeset-rhombus}($(escape_group(forms)))',
-           '$main_tail ...')
-| 'rhombus ($forms, $(kw_stx :: Keyword)) $main_tail ...':
+| 'rhombus ($(forms :: Group))':
+    '#{typeset-rhombus}($(escape_group(forms)))'
+| 'rhombus ($forms, $(kw_stx :: Keyword))':
     def kw = Syntax.unwrap(kw_stx)
     if (kw === #'~var
           || kw === #'~datum
@@ -148,8 +147,7 @@ expr.macro
           || kw === #'~unquote_bind
           || kw === #'~syntax_class_clause
           || kw === #'~pattern_clause)
-    | values('#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))',
-             '$main_tail ...')
+    | '#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))'
     | Syntax.error("invalid space", kw)
 
 expr.macro 'rhombusblock_etc $tail ...':
@@ -158,7 +156,7 @@ expr.macro 'rhombusblock_etc $tail ...':
     match fin_tail
     | ': $_':
         def [opt, ...] = options
-        values('#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))', '')
+        '#{typeset-rhombusblock}($opt, ..., $(escape_term(fin_tail)))'
     | ~else: Syntax.error("expected a block", '$me $tail ...')
   fun check_options(options):
     match options
@@ -174,4 +172,4 @@ expr.macro 'rhombusblock_etc $tail ...':
   | ~else: finish([], '$tail ...')
 
 expr.macro 'rhombusblock ($args)':
-  values('#{typeset-rhombusblock}($(escape_term(': $args')))', '')
+  '#{typeset-rhombusblock}($(escape_term(': $args')))'

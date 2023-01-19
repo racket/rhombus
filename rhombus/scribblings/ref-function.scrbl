@@ -268,7 +268,7 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
  concept. Its corresponding run-time representation is normally a function,
  but an entry point may need to be manipulated statically, such as adding
  an extra argument to make it serve as a method.
- Besides @rhombus(fun, ~entry_point), the @rhombus(rule, ~entry_point) form is
+ Besides @rhombus(fun, ~entry_point), the @rhombus(macro, ~entry_point) form is
  also bound as entry point.
 
 }

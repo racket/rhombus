@@ -4,7 +4,7 @@
                      enforest/hier-name-parse
                      "name-path-op.rkt"
                      "class-parse.rkt"
-                     (only-in "rule.rkt" rule)
+                     (only-in "rule.rkt" macro)
                      "consistent.rkt")
          "class+interface.rkt"
          "class-clause.rkt"
@@ -108,12 +108,12 @@
                          pattern)
                    (~and (_::block . _)
                          template-block))
-        (wrap-class-clause #`(#,key (block (named-rule rule #,stx pattern template-block))))]
+        (wrap-class-clause #`(#,key (block (named-macro macro #,stx pattern template-block))))]
        [(form-name (~and rhs (_::alts
                               (_::block (group (_::quotes . _)
                                                (_::block . _)))
                               ...)))
-        (wrap-class-clause #`(#,key (block (named-rule rule #,stx rhs))))]
+        (wrap-class-clause #`(#,key (block (named-macro macro #,stx rhs))))]
        [(form-name (~and (_::block . _)
                          a-block))
         (wrap-class-clause #`(#,key a-block))]))))

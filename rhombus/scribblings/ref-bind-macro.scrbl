@@ -10,53 +10,25 @@
 @title{Binding Macros}
 
 @doc(
-  defn.macro '«bind.rule $rule_pattern:
-                 $option; ...
-                 '$template'»'
-  defn.macro '«bind.rule
-               | $rule_pattern:
-                   $option; ...
-                   '$template'
-               | ...»'
+  defn.macro 'bind.macro $macro_patterns'
 ){
 
- Defines @rhombus(identifier) or @rhombus(operator) as a binding form,
- which is implemented pattern-based macro whose expansion is described
- by a @rhombus(template) that can refer to pattern variables bound in
- the @rhombus(rule_pattern). The @rhombus(rule_pattern) and
- @rhombus(template) forms are the same as for @rhombus(expr.rule).
+ Like @rhombus(expr.macro), but defines an identifier or operator as a
+ binding form. The result of the macro expansion can be a low-level
+ binding description created with @rhombus(bind_meta.pack).
 
 @examples(
   ~eval: macro_eval
-  bind.rule 'many $ann as $id':
+  bind.macro 'many $ann as $id':
     '$id && [_ :: $ann, $('...')]'
   def many Integer as tickets: [1, 2, 3]
   tickets
   ~error: def many String as names: "oops"
 )
 
-}
+ See @secref("bind-macro-protocol") for examples using the low-level
+ protocol.
 
-
-@doc(
-  defn.macro 'bind.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'bind.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
-){
-
- Like @rhombus(expr.macro), but the first result of the transformer
- can be a low-level binding description created with
- @rhombus(bind_meta.pack).
-
- See @secref("bind-macro-protocol") for examples.
- 
 }
 
 @doc(
@@ -300,25 +272,24 @@
 }
 
 @doc(
-  defn.macro 'bind.only.rule $rule_decl'
-  defn.macro 'bind.only.macro $macro_decl'
+  defn.macro 'bind.only.macro $macro_patterns'
 ){
 
- Like @rhombus(bind.rule) and @rhombus(bind.macro), but the identifier
+ Like @rhombus(bind.macro), but the identifier
  or operator is bound only in the @rhombus(rhombus/bind, ~datum)
  @tech{space}.
 
 }
 
 @doc(
-  syntax.class bind_meta.Group:
+  syntax_class bind_meta.Group:
     kind: ~group
     field parsed
-  syntax.class bind_meta.AfterPrefixGroup(op_name):
+  syntax_class bind_meta.AfterPrefixGroup(op_name):
     kind: ~group
     field parsed
     field [tail, ...]
-  syntax.class bind_meta.AfterInfixGroup(op_name):
+  syntax_class bind_meta.AfterInfixGroup(op_name):
     kind: ~group
     field parsed
     field [tail, ...]

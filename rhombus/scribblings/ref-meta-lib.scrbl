@@ -8,12 +8,12 @@
 @docmodule(~lang, ~no_declare, rhombus/and_meta)
 
 Simple pattern-based expression macros can be written using
-@rhombus(rule) without importing any additional libraries besides
+@rhombus(macro) without importing any additional libraries besides
 @rhombusmodname(rhombus), but implementing others forms of macros requires
 using the @rhombusmodname(rhombus/meta) module (usually with no prefix).
 
 The @rhombusmodname(rhombus/meta) module provides bindings like
-@rhombus(defn.macro), @rhombus(expr.macro), @rhombus(expr.rule), and
+@rhombus(defn.macro), @rhombus(expr.macro), and @rhombus(bind.macro), and
 it also re-exports all of @rhombusmodname(rhombus) as @rhombus(meta, ~impo)
 for use in compile-time expressions.
 

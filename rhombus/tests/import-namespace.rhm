@@ -3,8 +3,8 @@
 namespace n:
   export: exint
   def exint = 10
-  bind.only.rule 'exint': '(_ :: Integer)'
-  annot.only.rule 'exint': 'Integer'
+  bind.only.macro 'exint': '(_ :: Integer)'
+  annot.only.macro 'exint': 'Integer'
 
 check:
   import: .n as ex_c
@@ -15,7 +15,7 @@ check:
 
 check:
   def n.exstr = "11"
-  annot.only.rule '(n.exstr)': 'String'
+  annot.only.macro '(n.exstr)': 'String'
   import: .n as ex_c
   def ex_c.exint = 10
   [10 :: ex_c.exint,
@@ -82,8 +82,8 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.only.rule 'exint': '(_ :: Integer)'
-      annot.only.rule 'exint': 'Integer'
+      bind.only.macro 'exint': '(_ :: Integer)'
+      annot.only.macro 'exint': 'Integer'
     import:
       .n:
         open
@@ -98,8 +98,8 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.only.rule 'exint': '(_ :: Integer)'
-      annot.only.rule 'exint': 'Integer'
+      bind.only.macro 'exint': '(_ :: Integer)'
+      annot.only.macro 'exint': 'Integer'
     import:
       .n as ex_c:
         only_space: ~default
@@ -136,7 +136,7 @@ begin:
       .n open:
         except_space: rhombus/bind
     export: exint
-    bind.only.rule 'exint': '(_ :: PositiveInteger)'                            
+    bind.only.macro 'exint': '(_ :: PositiveInteger)'                            
   check:
     import .n2 as ex_c
     def ex_c.exint = 10

@@ -173,7 +173,8 @@
             #:when (and (zero? depth)
                         (or tail-any-escape?
                             (identifier? #'op.term))
-                        (not splice?))
+                        (or (not splice?)
+                            as-tail?))
             (define-values (id new-idrs new-sidrs new-vars) (handle-tail-escape #'op.name #'op.term e))
             (loop #'() #f #f #f
                   (append new-idrs (or pend-idrs '()) idrs)

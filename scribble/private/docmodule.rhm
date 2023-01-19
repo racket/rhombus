@@ -25,7 +25,7 @@ meta:
     | 'lib($str)':
         [#'lib, str]
 
-  syntax.class Option:
+  syntax_class Option:
     kind: ~term
     pattern
     | '~lang':

@@ -61,10 +61,6 @@
                                            #:defaults ([define-macro #'SKIP]))
                                 (~optional (group #:only_macro define-only-macro:identifier)
                                            #:defaults ([define-only-macro #'SKIP]))
-                                (~optional (group #:rule define-rule:identifier)
-                                           #:defaults ([define-rule #'SKIP]))
-                                (~optional (group #:only_rule define-only-rule:identifier)
-                                           #:defaults ([define-only-rule #'SKIP]))
                                 (~optional (group #:desc desc:string)
                                            #:defaults ([desc #'"form"]))
                                 (~optional (group #:operator_desc desc-operator:string)
@@ -122,20 +118,6 @@
             (maybe-skip
              (define-operator-definition-transformer define-only-macro
                'macro
-               space.name
-               #'make-prefix-operator
-               #'make-infix-operator
-               #'new-prefix+infix-operator))
-            (maybe-skip
-             (define-operator-definition-transformer define-rule
-               'rule
-               #f
-               #'make-prefix-operator
-               #'make-infix-operator
-               #'new-prefix+infix-operator))
-            (maybe-skip
-             (define-operator-definition-transformer define-only-rule
-               'rule
                space.name
                #'make-prefix-operator
                #'make-infix-operator

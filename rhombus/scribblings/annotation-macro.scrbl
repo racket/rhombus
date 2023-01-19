@@ -21,25 +21,25 @@ macro can use lower-level machinery to explicitly produce static
 information or manipulate static information produced by subannotation
 forms.
 
-The @rhombus(annot.rule) or @rhombus(annot.macro) form
+The @rhombus(annot.macro) form
 defines an annotation. In the simplest case, the expansion of an
 annotation can be another annotation:
 
 @demo(
   ~eval: ann_eval
   ~defn:
-    annot.rule 'AlsoPosn': 'Posn'
+    annot.macro 'AlsoPosn': 'Posn'
   ~repl:
     Posn(1, 2) :: AlsoPosn
 )
 
-Note that @rhombus(annot.rule) defines only an annotation. To make
-@rhombus(AlsoPosn) also a binding operator, you can use @rhombus(bind.rule):
+Note that @rhombus(annot.macro) defines only an annotation. To make
+@rhombus(AlsoPosn) also a binding operator, you can use @rhombus(bind.macro):
 
 @demo(
   ~eval: ann_eval
   ~defn:
-    bind.rule 'AlsoPosn ($x, $y)':
+    bind.macro 'AlsoPosn ($x, $y)':
       'Posn($x, $y)'
   ~repl:
     def AlsoPosn(x, y): Posn(1, 2)
@@ -56,9 +56,8 @@ binding form or constructor:
 @demo(
   ~eval: ann_eval
   ~defn:
-    annot.macro 'IsPosn $tail ...':
-      values(annot_meta.pack_predicate('fun (x): x is_a Posn'),
-             '$tail ...')
+    annot.macro 'IsPosn':
+      annot_meta.pack_predicate('fun (x): x is_a Posn')
   ~repl:
     fun get_x(p :: IsPosn): Posn.x(p)
     get_x(Posn(1, 2))
@@ -82,11 +81,10 @@ refers to a @rhombus(vector_dot_provider) that we will define:
 @demo(
   ~eval: ann_eval
   ~defn:
-    annot.macro 'Vector $tail ...':
-      values(annot_meta.pack_predicate('fun (x): x is_a Posn',
-                                       '(($(statinfo_meta.dot_provider_key),
-                                          vector_dot_provider))'),
-             '$tail ...')
+    annot.macro 'Vector':
+      annot_meta.pack_predicate('fun (x): x is_a Posn',
+                                '(($(statinfo_meta.dot_provider_key),
+                                   vector_dot_provider))')
 )
 
 A dot-provider transformer is defined using @rhombus(dot.macro). A
@@ -128,10 +126,9 @@ by using @rhombus(statinfo_meta.wrap):
   ~defn:
     expr.macro 'or_zero $p $tail ...':
       def expansion: '$p || Posn(0,0)'
-      values(statinfo_meta.wrap(expansion,
-                                '(($(statinfo_meta.dot_provider_key),
-                                   vector_dot_provider))'),
-             '$tail ...')
+      statinfo_meta.wrap(expansion,
+                         '(($(statinfo_meta.dot_provider_key),
+                            vector_dot_provider))')
   ~repl:
     or_zero(Posn(3, 4)).magnitude
     or_zero(#false).magnitude

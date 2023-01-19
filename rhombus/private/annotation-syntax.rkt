@@ -21,14 +21,12 @@
   (provide (for-syntax make-annotation-prefix-operator)))
 
 (define-simple-name-root annot
-  rule
   macro
   only)
 
 (define-name-root only
   #:fields
-  ([macro macro-only]
-   [rule rule-only]))
+  ([macro macro-only]))
 
 (begin-for-syntax
   (define-simple-name-root annot_meta
@@ -36,13 +34,6 @@
     Group
     AfterPrefixGroup
     AfterInfixGroup))
-
-(define-operator-definition-transformer+only rule rule-only
-  'rule
-  rhombus/annot
-  #'make-annotation-prefix-operator
-  #'make-annotation-infix-operator
-  #'annotation-prefix+infix-operator)
 
 (define-operator-definition-transformer+only macro macro-only
   'macro

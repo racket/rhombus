@@ -324,15 +324,14 @@
 (define-for-syntax (make-operator-definition-transformer-runtime protocol
                                                                  space-sym
                                                                  compiletime-id)
+  (define kind protocol)
   (definition-transformer
     (lambda (stx)
-      (define (template->macro protocol) (if (eq? protocol 'template) 'macro protocol))
       (syntax-parse (replace-head-dotted-name stx)
         #:datum-literals (group block alts op)
         [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
                                                       (~and rhs (block body ...))))
                                         ...+))
-         (define kind (template->macro protocol))
          (list (parse-operator-definitions #'form-id
                                            kind
                                            stx
@@ -343,7 +342,7 @@
         [(form-id q::operator-syntax-quote
                   (~and rhs (block body ...)))
          (list (parse-operator-definition #'form-id
-                                          (template->macro protocol)
+                                          kind
                                           #'q.g
                                           #'rhs
                                           space-sym

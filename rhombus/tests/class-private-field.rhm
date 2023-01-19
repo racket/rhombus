@@ -146,11 +146,11 @@ check:
     constructor (x, y):
       super(x, "red", y)
     binding:
-      rule | '(){$x, $y}': '_Posn($x, _, $y)'
-           | '()[$c]{$x, $y}': '_Posn($x, $c, $y)'
+      macro | '(){$x, $y}': '_Posn($x, _, $y)'
+            | '()[$c]{$x, $y}': '_Posn($x, $c, $y)'
     annotation:
-      rule | '() $dot of{$x, $y}': '_Posn.of($x, Any, $y)'
-           | '()' : '_Posn'
+      macro | '() $dot of{$x, $y}': '_Posn.of($x, Any, $y)'
+            | '()' : '_Posn'
   class Posn3D(private weight, z):
     nonfinal
     extends Posn

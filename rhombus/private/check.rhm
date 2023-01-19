@@ -10,7 +10,7 @@ export:
  check
 
 meta:
-  syntax.class result_mode:
+  syntax_class result_mode:
     kind: ~term
     pattern
     | '~is'
@@ -18,7 +18,7 @@ meta:
     | '~prints_like'
     | '~raises'
     | '~matches'
-  syntax.class result:
+  syntax_class result:
     kind: ~sequence
     pattern
     | '$(mode :: result_mode): $body':
@@ -31,9 +31,8 @@ meta:
         field body: '#void'
         field [suffix, ...]: ['#void']
 
-expr.macro '«located '$w' $tail ...»':
-  values('[#' $w, $(w.srcloc())]',
-         '$tail ...')
+expr.macro '«located '$w'»':
+  '[#' $w, $(w.srcloc())]'
 
 expr.macro
 // `~eval` case
@@ -43,59 +42,53 @@ expr.macro
      ...
      $(result2 :: result)':
     ~op_stx: check_id
-    values('check_same(located '$(check_id)',
-                       fun():
-                         eval_test(Syntax.literal '$result1
-                                                   ...
-                                                   $result2.suffix
-                                                   ...'),
-                       fun(): $result2.body,
-                       located '$result2.mode')',
-           '')
+    'check_same(located '$(check_id)',
+                fun():
+                  eval_test(Syntax.literal '$result1
+                                            ...
+                                            $result2.suffix
+                                            ...'),
+                fun(): $result2.body,
+                located '$result2.mode')'
 // normal block
 | 'check:
      $result1
      ...
      $(result2 :: result)':
     ~op_stx: check_id
-    values('check_same(located'$(check_id)',
-                       fun ():
-                         $result1
-                         ...
-                         $result2.suffix
-                         ...,
-                       matcher($result2.mode, : $result2.body),
-                       #'$result2.mode)',
-           '')
+    'check_same(located'$(check_id)',
+                fun ():
+                  $result1
+                  ...
+                  $result2.suffix
+                  ...,
+                matcher($result2.mode, : $result2.body),
+                #'$result2.mode)'
 // single lines in block
 | 'check: $result1 ... $(result2 :: result); ...':
     ~op_stx: check_id
-    values('begin:
-              check_same(located'$(check_id)',
-                         fun (): $result1 ...; $result2.suffix; ...,
-                         matcher($result2.mode, : $result2.body),
-                         located'$result2.mode')
-              ...',
-           '')
+    'begin:
+       check_same(located'$(check_id)',
+                  fun (): $result1 ...; $result2.suffix; ...,
+                  matcher($result2.mode, : $result2.body),
+                  located'$result2.mode')
+       ...'
 // single line
 | 'check $result1 ... $(result2 :: result)':
     ~op_stx: check_id
-    values('check_same(located'$(check_id)',
-                       fun (): $result1 ...; $result2.suffix; ...,
-                       matcher($result2.mode, : $result2.body),
-                       #'$result2.mode)',
-           '')
+    'check_same(located'$(check_id)',
+                fun (): $result1 ...; $result2.suffix; ...,
+                matcher($result2.mode, : $result2.body),
+                #'$result2.mode)'
 
 expr.macro
 | 'matcher(~matches, : $binding)':
-    values('fun | (): (fun | ($binding): #true | (&_): #false)
-                | (x): $("" +& '$binding')',
-           '')
+    'fun | (): (fun | ($binding): #true | (&_): #false)
+         | (x): $("" +& '$binding')'
 | 'matcher(~is_a, : $ann)':
-    values('fun | (): (fun (x): x is_a ($ann))
-                | (x): $("" +& '$ann')',
-           '')
-| 'matcher($_, : $body)': values('fun (): $body', '')
+    'fun | (): (fun (x): x is_a ($ann))
+         | (x): $("" +& '$ann')'
+| 'matcher($_, : $body)': 'fun (): $body'
 
 fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
   def [mode, srcloc]:

@@ -1,6 +1,6 @@
 #lang rhombus
 
-rule 'expect: $a; $b': 'check: $a; ~prints_like: $b'
+macro 'expect: $a; $b': 'check: $a; ~prints_like: $b'
 
 expect:
   '@x'

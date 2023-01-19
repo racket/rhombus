@@ -10,25 +10,16 @@
 @title{Annotation Macros}
 
 @doc(
-  defn.macro '«annot.rule $rule_pattern:
-                 $option; ...
-                 '$template'»'
-  defn.macro '«annot.rule
-               | $rule_pattern:
-                   $option; ...
-                   '$template'
-               | ...»'
+  defn.macro 'annot.macro $macro_patterns'
 ){
 
- Defines an @rhombus(identifier, ~var) or @rhombus(operator, ~var) as an annotation form,
- which is implemented pattern-based macro whose expansion is described
- by a @rhombus(template) that can refer to pattern variables bound in
- the @rhombus(rule_pattern). The @rhombus(rule_pattern) and
- @rhombus(template) forms are the same as for @rhombus(expr.rule).
+ Like @rhombus(expr.macro), but defines an identifier or operator as an
+ annotation form. The result of the macro expansion can be a result
+ created with @rhombus(annot_meta.pack_predicate).
 
 @examples(
   ~eval: macro_eval
-  annot.rule 'two_of($ann)':
+  annot.macro 'two_of($ann)':
     'matching(List(_ :: $ann, _ :: $ann))'
   [1, 2] :: two_of(Number)
   ~error: [1, 2, 3] :: two_of(Number)
@@ -37,24 +28,6 @@
 
 }
 
-
-@doc(
-  defn.macro 'annot.macro $rule_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'annot.macro
-              | $rule_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
-){
-
- Like @rhombus(expr.macro), but producing an annotation like
- @rhombus(annot.rule), instead of an expression.
- 
-}
 
 @doc(
   fun annot_meta.pack_predicate(fun_stx:: Syntax,
@@ -77,27 +50,26 @@
 
 
 @doc(
-  defn.macro 'annot.only.rule $rule_decl'
-  defn.macro 'annot.only.macro $rule_decl'
+  defn.macro 'annot.only.macro $macro_patterns'
 ){
 
- Like @rhombus(annot.rule) and @rhombus(annot.macro), but the identifier
+ Like @rhombus(annot.macro), but the identifier
  or operator is bound only in the @rhombus(rhombus/annot, ~datum) @tech{space}.
 
 }
 
 @doc(
-  syntax.class annot_meta.Group:
-    ~group
-    ~attr parsed
-  syntax.class annot_meta.AfterPrefixGroup(op_name):
-    ~group
-    ~attr parsed
-    ~attr tail
-  syntax.class annot_meta.AfterInfixGroup(op_name):
-    ~group
-    ~attr parsed
-    ~attr tail
+  syntax_class annot_meta.Group:
+    kind: ~group
+    field parsed
+  syntax_class annot_meta.AfterPrefixGroup(op_name):
+    kind: ~group
+    field parsed
+    field [tail, ...]
+  syntax_class annot_meta.AfterInfixGroup(op_name):
+    kind: ~group
+    field parsed
+    field [tail, ...]
 ){
 
  @provided_meta()

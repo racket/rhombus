@@ -279,7 +279,7 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(||, ~unquote_bind) for more information.
 
  The @rhombus(pattern, ~unquote_bind) form is a shorthand for using
- @rhombus(::, ~unquote_bind) with an inline @rhombus(syntax.class) form.
+ @rhombus(::, ~unquote_bind) with an inline @rhombus(syntax_class) form.
  See @rhombus(pattern, ~unquote_bind) for more information.
 
  Other syntax pattern binding forms can be defined with
@@ -288,16 +288,16 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax.class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Id: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Integer: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax.class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
-  syntax.class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
-  syntax.class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block
+  syntax_class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Id: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Integer: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
+  syntax_class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
+  syntax_class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block
 ){
 
  Syntax classes, all of which imply a single-term match except for
@@ -375,8 +375,8 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar syntax_class:
     $identifier
-    (syntax.class | $pattern_case | ...)
-    (syntax.class: $class_clause; ...)
+    (syntax_class | $pattern_case | ...)
+    (syntax_class: $class_clause; ...)
 
   grammar maybe_args:
     ($arg, ...)
@@ -398,9 +398,9 @@ Metadata for a syntax object can include a source location and the raw
  The @rhombus(syntax_class) can be a predefined class such as
  @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
  @rhombus(Group, ~stxclass), among others, it can be a class defined with
- @rhombus(syntax.class), or it can be an parenthesized inline
- @rhombus(syntax.class) form that omits the class name. A class defined
- with @rhombus(syntax.class) may expect arguments, which must be supplied
+ @rhombus(syntax_class), or it can be an parenthesized inline
+ @rhombus(syntax_class) form that omits the class name. A class defined
+ with @rhombus(syntax_class) may expect arguments, which must be supplied
  after the syntax class name.
 
  The @rhombus(identifier) before @rhombus(::, ~unquote_bind) refers to
@@ -422,7 +422,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @examples(
   ~defn:
-    syntax.class Wrapped:
+    syntax_class Wrapped:
       kind: ~term
       pattern '($content)'
   ~repl:
@@ -436,7 +436,7 @@ Metadata for a syntax object can include a source location and the raw
     | '1 + $(_ :: Wrapped: open) + 3': content
   ~repl:
     match '(hello there)'
-    | '$(whole :: (syntax.class:
+    | '$(whole :: (syntax_class:
                      kind: ~term
                      pattern '($content)'))':
         [whole, whole.content]
@@ -451,7 +451,7 @@ Metadata for a syntax object can include a source location and the raw
  Unquote binding operator for use with @rhombus($, ~bind) that is like
  the @rhombus(pattern, ~bind) binding form---which, in turn, has the
  same syntax and matching rules as a
- @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax.class).
+ @rhombus(pattern, ~syntax_class_clause) form in @rhombus(syntax_class).
  See @rhombus(pattern, ~bind).
 
 }

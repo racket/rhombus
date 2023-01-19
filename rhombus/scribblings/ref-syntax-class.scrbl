@@ -9,10 +9,10 @@
 @title{Syntax Classes}
 
 @doc(
-  defn.macro 'syntax.class $name $maybe_args
+  defn.macro 'syntax_class $name $maybe_args
               | $pattern_case
               | ...'
-  defn.macro 'syntax.class $name $maybe_args:
+  defn.macro 'syntax_class $name $maybe_args:
                 $class_clause
                 ...'
 
@@ -57,7 +57,7 @@
  @rhombus(pattern_case) alternatives. The
  @rhombus(pattern, ~syntax_class_clause) clause is optional in the sense
  that pattern alternatives can be inlined directly in the
- @rhombus(syntax.class) form, but the @rhombus(pattern, ~syntax_class_clause)
+ @rhombus(syntax_class) form, but the @rhombus(pattern, ~syntax_class_clause)
  clause form makes room for additional options as clauses. Each kind of
  @rhombus(class_clause) alternative can be supplied at most once, and
  @rhombus(pattern, ~syntax_class_clause) is required.
@@ -152,17 +152,17 @@
 @examples(
   ~eval: macro.make_for_meta_eval()
   meta:
-    syntax.class Arithmetic
+    syntax_class Arithmetic
     | '$x + $y'
     | '$x - $y'
   expr.macro 'doubled_operands $(e :: Arithmetic)':
-    values('$(e.x) * 2 + $(e.y) * 2', '')
+    '$(e.x) * 2 + $(e.y) * 2'
   doubled_operands 3 + 5
   expr.macro 'add_one_to_expression $(e :: Arithmetic)':
-    values('$e ... + 1', '')
+    '$e ... + 1'
   add_one_to_expression 2 + 2
   meta:
-    syntax.class NTerms
+    syntax_class NTerms
     | '~one $a':
         field b = '0'
         field average = '$(Syntax.unwrap(a) / 2)'
@@ -171,11 +171,11 @@
           Syntax.unwrap(a) + Syntax.unwrap(b)
         field average = '$(sum / 2)'
   expr.macro 'second_term $(e :: NTerms)':
-    values(e.b, '')
+    e.b
   second_term ~two 1 2
   second_term ~one 3
   expr.macro 'average $(e :: NTerms)':
-    values(e.average, '')
+    e.average
   average ~two 24 42
 )
 
@@ -197,8 +197,8 @@
 ){
 
  The @rhombus(pattern, ~syntax_class_clause) clause form in
- @rhombus(syntax.class) describes the patterns that the class matches;
- see @rhombus(syntax.class) for more information. A
+ @rhombus(syntax_class) describes the patterns that the class matches;
+ see @rhombus(syntax_class) for more information. A
  @rhombus(pattern, ~syntax_class_clause) class with only a
  @rhombus(pattern_case) is a shorthand for writing the
  @rhombus(pattern_case) in a single @litchar{|} alternative.
@@ -206,7 +206,7 @@
  The binding variant of @rhombus(pattern , ~syntax_class_clause) (for
  direct use in a binding context) has the same syntax and matching rules
  as a @rhombus(pattern, ~syntax_class_clause) form in
- @rhombus(syntax.class), but with all fields exposed. In particular, a
+ @rhombus(syntax_class), but with all fields exposed. In particular, a
  @rhombus(pattern_case) can have a block with
  @rhombus(match_def, ~pattern_clause),
  @rhombus(match_when, ~pattern_clause), and
@@ -243,7 +243,7 @@
 ){
 
  Limits the set of fields that are provided by a syntax class to the
- listed @rhombus(identifier)s. See @rhombus(syntax.class).
+ listed @rhombus(identifier)s. See @rhombus(syntax_class).
 
 }
 
@@ -256,7 +256,7 @@
 ){
 
  Configures a syntax class's description for error reporting. See
- @rhombus(syntax.class).
+ @rhombus(syntax_class).
 
 }
 
@@ -270,7 +270,7 @@
 ){
 
  Configures the way that failures to match a syntax class are reported.
- See @rhombus(syntax.class).
+ See @rhombus(syntax_class).
 
 }
 
@@ -316,7 +316,7 @@
  With @rhombus(~term), each pattern case must match only a single term,
  and with @rhombus(~block), each pattern case must be a block pattern.
 
- See also @rhombus(syntax.class).
+ See also @rhombus(syntax_class).
 
 }
 
@@ -336,7 +336,7 @@
 ){
 
  Similar to @rhombus(def), but restricted to defining a plain identifier
- or a simple list repetition within a @rhombus(syntax.class) pattern
+ or a simple list repetition within a @rhombus(syntax_class) pattern
  case, and adds a field (or, at least, a cadndidate field) to the pattern
  case.
 
@@ -346,7 +346,7 @@
  syntax template, a non-sytax value is converted to syntax at that point.
  Otherwise, the field can be used directly to access non-syntax values.
 
- See also @rhombus(syntax.class).
+ See also @rhombus(syntax_class).
 
 }
 
@@ -362,7 +362,7 @@
  pattern variables of @rhombus(pattern) to the set of (candidate) syntax
  class fields.
 
- See @rhombus(syntax.class).
+ See @rhombus(syntax_class).
 
 }
 
@@ -383,7 +383,7 @@
  @rhombus(match_when, ~pattern_clause) or a false value in the case of
  @rhombus(match_unless, ~pattern_clause).
 
- See @rhombus(syntax.class).
+ See @rhombus(syntax_class).
 
 }
 

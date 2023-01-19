@@ -17,7 +17,8 @@
          (only-in "static-info.rkt"
                   in-static-info-space
                   make-static-infos)
-         (submod "syntax-object.rkt" for-quasiquote))
+         (submod "syntax-object.rkt" for-quasiquote)
+         "realm.rkt")
 
 (provide (for-syntax parse-operator-definition-rhs
                      parse-operator-definitions-rhs
@@ -33,11 +34,29 @@
 ;; finish parsing one case (possibly the only case) in a macro definition,
 ;; now that we're in the right phase for the right-hand side of the definition
 (define-for-syntax (parse-one-macro-definition pre-parsed adjustments)
-  (define kind (syntax-parse pre-parsed
-                 [(_ _ _ _ kind . _) (syntax-e #'kind)]))
-  (define (macro-clause self-id left-ids tail-pattern rhs)
+  (define-values (who kind)
+    (syntax-parse pre-parsed
+      [(_ name _ _ kind . _) (values #'name (syntax-e #'kind))]))
+  (define (macro-clause self-id left-ids tail-pattern-in rhs)
+    (define-values (tail-pattern implicit-tail?)
+      (cond
+        [(eq? kind 'rule) (values tail-pattern-in #t)]
+        [else
+         (syntax-parse tail-pattern-in
+           #:datum-literals (op group)
+           [(pat ... (op (~var _ (:$ in-binding-space))) _:identifier  (op (~var _ (:... in-binding-space))))
+            ;; recognize where a tail match would be redundant and always be empty;
+            ;; this is kind of an optimization, but one that's intended to be guaranteed;
+            ;; note that this enables returning two values from the macro, instead
+            ;; of just one
+            (values tail-pattern-in #f)]
+           [(pat ... (op (~var _ (:$ in-binding-space))) #:end)
+            (values #`(pat ...) #f)]
+           [(pat ... (op (~var _ (:$ in-binding-space))) (_::parens (group #:end)))
+            (values #`(pat ...) #f)]
+           [_ (values tail-pattern-in #t)])]))
     (define-values (pattern idrs sidrs vars can-be-empty?)
-      (if (eq? kind 'rule)
+      (if implicit-tail?
           (convert-pattern #`(group (op $) _ #,@tail-pattern (op $) tail (op rhombus...))
                            #:splice? #t
                            #:splice-pattern values)
@@ -49,11 +68,16 @@
                   [((sid sid-ref) ...) sidrs]
                   [(left-id ...) left-ids])
       (define body
-        (if (eq? kind 'rule)
-            (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ...))))])
-              #`(values #,(convert-rule-template rhs ids)
-                        (tail-rule-template (multi (group (op $) tail (op rhombus...))))))
-            #`(rhombus-body-expression #,rhs)))
+        (cond
+          [(eq? kind 'rule)
+           (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ...))))])
+             #`(values #,(convert-rule-template rhs ids)
+                       (tail-rule-template (multi (group (op $) tail (op rhombus...))))))]
+          [implicit-tail?
+           #`(values (single-valued '#,who (lambda () (rhombus-body-expression #,rhs)))
+                     (tail-rule-template (multi (group (op $) tail (op rhombus...)))))]
+          [else
+           #`(rhombus-body-expression #,rhs)]))
       (with-syntax ([(left-id-static ...) (map in-static-info-space (syntax->list #'(left-id ...)))])
         #`[#,pattern
            (let ([id id-ref] ... [#,self-id self] [left-id left] ...)
@@ -299,3 +323,10 @@
                                              (let ([p-id id-ref] ...)
                                                (let-syntax ([s-id sid-ref] ...)
                                                  #,body))])))))
+
+(define (single-valued who thunk)
+  (call-with-values
+   thunk
+   (case-lambda
+     [(v) v]
+     [args (apply raise-result-arity-error* who rhombus-realm 1 #f args)])))

@@ -463,8 +463,8 @@ match '1 2 3'
 match '([{1 + 2}])'
 | '([{ $g }])': g
 
-// the `rule` form defines a simple pattern-based expression macro:
-rule 'thunk: $body':
+// the `macro` form defines a simple pattern-based expression macro:
+macro 'thunk: $body':
   'fun (): $body'
 
 def delayed_area = thunk: s.area()
@@ -477,14 +477,11 @@ expr.macro 'find_matching_name $expr ... : $id ...':
   def [name, ...]: Function.map(fun(id): "" +& id,
                                 [id, ...])
   // build a result conditional
-  values('begin:
-            def val = $expr ...
-            cond
-            | val == $id: $name
-            | ...',
-         // also need to return an empty tail, meaning
-         // that nothing else can be afterward in the group
-         '')
+  'begin:
+     def val = $expr ...
+     cond
+     | val == $id: $name
+     | ...'
 
 begin:
   def x = 1

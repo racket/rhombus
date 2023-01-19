@@ -21,9 +21,8 @@ check:
 fun nested_pt_x(pt :: matching(Posn(Posn(_, _), _))):
   pt.x.x
 
-annot.macro 'ListOf ($contract ...) $tail ...':
-  values('matching([_ :: ($contract ...), $('...')])',
-         '$tail ...')
+annot.macro 'ListOf ($contract ...)':
+  'matching([_ :: ($contract ...), $('...')])'
 
 fun get_pts_x2(pts -: ListOf(Posn)):
   pts[0].x

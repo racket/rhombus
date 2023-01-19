@@ -22,7 +22,6 @@
 
 (define-simple-name-root expr
   macro
-  rule
   only)
 
 (begin-for-syntax
@@ -33,18 +32,10 @@
 
 (define-name-root only
   #:fields
-  ([macro macro-only]
-   [rule rule-only]))
+  ([macro macro-only]))
 
 (define-operator-definition-transformer+only macro macro-only
   'macro
-  rhombus/expr
-  #'make-expression-prefix-operator
-  #'make-expression-infix-operator
-  #'expression-prefix+infix-operator)
-
-(define-operator-definition-transformer+only rule rule-only
-  'rule
   rhombus/expr
   #'make-expression-prefix-operator
   #'make-expression-infix-operator
