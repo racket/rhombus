@@ -6,7 +6,7 @@
          lex/comment-dont-stop-status?)
 
 (struct comment-tracked (status line column last-line pending stack) #:prefab)
-(struct pending-comment (line column so-far stack) #:prefab)
+(struct pending-comment (line column so-far stack bar?) #:prefab)
 
 ;; wraps `lex/status` to track group comments
 (define (lex/comment/status in pos status racket-lexer/status)
@@ -56,14 +56,15 @@
              (hash-set (if (hash? type) type (hash 'type type)) 'comment? #t)
              type))
        (values tok new-type paren start-pos end-pos backup new-status))
-     (define (finish-plain pending new-stack)
+     (define (finish-plain pending new-stack new-stack-for-end)
        (cond
          [(not pending) (finish pending new-stack)]
          [(memq (pending-comment-so-far pending) '(own-line in-line))
+          (define name (and (token? tok)
+                            (token-name tok)))
           (define (pending-new-column #:so-far [so-far 'running])
-            (pending-comment line column so-far stack))
-          (case (and (token? tok)
-                     (token-name tok))
+            (pending-comment line column so-far stack (eq? name 'bar-operator)))
+          (case name
             [(bar-operator)
              ;; comment token's column doesn't matter
              (finish (pending-new-column #:so-far 'running-bar) new-stack)]
@@ -83,7 +84,7 @@
           (cond
             [(or (eqv? line (comment-tracked-last-line status))
                  (not-line-sensitive?)
-                 (pair? new-stack)
+                 (pair? new-stack-for-end)
                  (lex-nested-status? inner-status))
              ;; same line or in nested => continue comment, usually
              (case (and (token? tok)
@@ -102,12 +103,17 @@
                     (finish pending new-stack))]
                [else
                 (finish pending new-stack)])]
-            [(and (column . <= . (pending-comment-column pending))
+            [(and (<= (+ column (if (and (not (pending-comment-bar? pending))
+                                         (token? tok)
+                                         (eq? (token-name tok) 'bar-operator))
+                                    0.5
+                                    0))
+                      (pending-comment-column pending))
                   (not (not-line-sensitive?)))
              (finish #f (pending-comment-stack pending))]
             [else
              (finish pending new-stack)])]))
-     (define (ends-only-pending? pending new-stack)
+     (define (ends-only-pending? pending new-stack-for-end)
        ;; Duplicates some of `finish-plain`, peeking ahead for what the function
        ;; will do with `pending` in the case that `tok` is a 'group-comment
        (cond
@@ -116,42 +122,47 @@
           (cond
             [(or (eqv? line (comment-tracked-last-line status))
                  (not-line-sensitive?)
-                 (pair? new-stack)
+                 (pair? new-stack-for-end)
                  (lex-nested-status? inner-status))
              #f]
             [(and (column . <= . (pending-comment-column pending))
                   (not (not-line-sensitive?)))
              #t]
             [else #f])]))
-     (define new-stack
+     (define-values (new-stack-for-end new-stack)
+       ;; `new-stack-for-end` is for detecting whether the current commend should end
        (case (and (token? tok) (token-name tok))
-         [(opener at-opener s-exp) (cons (token-e tok) stack)]
-         [(closer at-closer) (if (pair? stack) (cdr stack) '())]
-         [else stack]))
+         [(opener at-opener s-exp)
+          (values stack (cons (token-e tok) stack))]
+         [(closer at-closer)
+          (define new-stack (if (pair? stack) (cdr stack) '()))
+          (values new-stack new-stack)]
+         [else (values stack stack)]))
      (cond
        [(and (token? tok)
              (eq? 'group-comment (token-name tok))
              (or (not pending)
                  ;; does it end the current pending comment, while
                  ;; also starting this new one?
-                 (ends-only-pending? pending new-stack)))
+                 (ends-only-pending? pending new-stack-for-end)))
         (finish (pending-comment line
                                  column
                                  (if (or (not status)
                                          (eq? line (comment-tracked-last-line status)))
                                      'own-line
                                      'in-line)
-                                 stack)
+                                 stack
+                                 #f)
                 '()
                 #:comment? pending)]
        [(lex-nested-status? new-inner-status)
-        (finish-plain pending new-stack)]
+        (finish-plain pending new-stack new-stack-for-end)]
        [else
         (case (token-name tok)
           [(comment whitespace)
            (finish pending new-stack #:whitespace? #t)]
           [else
-           (finish-plain pending new-stack)])])]))
+           (finish-plain pending new-stack new-stack-for-end)])])]))
 
 (define (lex/comment-nested-status? status)
   (or (lex-nested-status? status)

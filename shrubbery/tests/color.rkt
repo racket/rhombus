@@ -145,6 +145,25 @@ ok
 three
 »
 
+#//
+^a^
+^| x^
+(the end)
+
+a
+| x
+#//
+^| y^
+| z
+(the end)
+
+a
+| x
+| y
+#//
+^| z^
+(the end)
+
 INPUT
 )
 ;; ^#// #{#(1 @;(1 2) 3)}^
