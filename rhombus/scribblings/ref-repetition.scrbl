@@ -6,7 +6,7 @@
 
 @title{Repetitions}
 
-A @deftech{repetition} represents a sequence of values and can be used
+A @deftech{repetition} represents a sequence of values, and it can be used
 in designated repetition positions (in much the same way that
 expressions appear in expression positions and bindings in binding
 positions). For example, a repetition can be used at the end of a list
@@ -85,6 +85,11 @@ to match a repetition of depth 2:
 In other words, unless otherwise documented, the depth of a repetition
 formed by combining repetitions is the maximum of the depths of the
 combined repetitions, so @rhombus(z+y) is a repetition of depth 2.
+
+When an identifier is bound as a repetition, it is bound in the
+@rhombus(repet, ~space) space, but also in the @rhombus(expr, ~space).
+The @rhombus(expr, ~space) binding reports an error, but the intent of
+the binding is to shadow any existing expression binding for the identifier.
 
 @doc(
   bind.macro '...',

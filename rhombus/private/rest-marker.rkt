@@ -1,30 +1,18 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
-         "expression.rkt")
+         "provide.rkt"
+         "placeholder.rkt")
 
-(provide & ~&)
+(provide (for-spaces (#f
+                      rhombus/bind)
+                     &
+                     ~&))
 
-(define-syntax &
-  (expression-prefix-operator
-   (quote-syntax &)
-   '((default . weaker))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(op . _)
-        (raise-syntax-error #f
-          "misuse outside of function parameters, a call, or a constructor"
-          #'op)]))))
-
-(define-syntax ~&
-  (expression-prefix-operator
-   (quote-syntax ~&)
-   '((default . weaker))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(op . _)
-        (raise-syntax-error #f
-          "misuse outside of function parameters or a function call"
-          #'op)]))))
+(define-placeholder-syntax &
+  "misuse outside of a call or a constructor"
+  "misuse outside of a function formal argument or constructor pattern")
+  
+(define-placeholder-syntax ~&
+  "misuse outside of a call or a constructor"
+  "misuse outside of a function formal argument or constructor pattern")

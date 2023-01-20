@@ -4,7 +4,7 @@
                      "srcloc.rkt")
          "name-root.rkt"
          "expression.rkt"
-         "expression+binding.rkt"
+         "binding.rkt"
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
@@ -67,29 +67,29 @@
 
          #,(if (or transparent? translucent?)
                #`(define-annotation-syntax Name
-                   (identifier-annotation #'Name #'name? name-static-infos))
+                   (identifier-annotation #'name? name-static-infos))
                #'(begin))
 
+         #,@(cond
+              [(or transparent?
+                   translucent?)
+               #`((define-syntax Name
+                    (expression-transformer
+                     (lambda (stx)
+                       (syntax-parse stx
+                         [(head . tail)
+                          (values (relocate-id #'head #'name) #'tail)]))))
+                  (define-binding-syntax Name
+                    (binding-transformer
+                     (make-composite-binding-transformer Name-str
+                                                         #'name?
+                                                         (list #'name-field
+                                                               ...)
+                                                         (list #'field-static-info
+                                                               ...)))))]
+              [else null])
+
          (define-name-root Name
-           #:root #,(cond
-                      [(or transparent?
-                           translucent?)
-                       #`(make-expression+binding-prefix-operator
-                          #'Name
-                          '((default . stronger))
-                          'macro
-                          (lambda (stx)
-                            (syntax-parse stx
-                              [(head . tail)
-                               (values (relocate-id #'head #'name) #'tail)]))
-                          (make-composite-binding-transformer Name-str
-                                                              #'name?
-                                                              (list #'name-field
-                                                                    ...)
-                                                              (list #'field-static-info
-                                                                    ...)))]
-                      [else
-                       #`(identifier-annotation #'Name #'name? #'())])
            #:fields
            ([prop prop-proc]
             ...

@@ -25,7 +25,8 @@
  instead of directly. The @rhombus(pattern) sequence after the leading
  @rhombus(defined_name) should match a sequence of three
  terms: a parsed left-hand expression, a @rhombus(.) term, and a
- right-hand identifier.
+ right-hand identifier. The @rhombus(defined_name) is bound in the
+ @rhombus(dot, ~space) @tech{space}.
 
  The result must be either @rhombus(#false) or a syntax object. A
  @rhombus(#false) result means that static resolution failed, in which
@@ -65,15 +66,4 @@
  in static and dynamic modes (e.g., to require parentheses after the
  right-hand name to form a method-like call).
  
-}
-
-@doc(
-  defn.macro 'dot.only.macro $macro_decl'
-  defn.macro 'dot.only.macro_more_static $macro_decl'
-){
-
- Like @rhombus(dot.macro) and @rhombus(dot.macro_more_static), but the
- identifier is bound only in the @rhombus(dot, ~space)
- @tech{space}.
-
 }

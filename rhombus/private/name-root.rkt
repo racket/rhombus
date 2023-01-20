@@ -3,46 +3,27 @@
                      syntax/parse/pre
                      enforest/name-root
                      "srcloc.rkt"
-                     "introducer.rkt"))
+                     "introducer.rkt")
+         "name-root-space.rkt")
 
 (provide define-name-root)
 
 (define-syntax (define-name-root stx)
   (syntax-parse stx
     [(_ id (~alt (~once (~seq #:fields (content ...)))
-                 (~optional (~seq #:root root-rhs)
-                            #:defaults ([root-rhs #'#f]))
-                 (~optional (~seq #:root-as-rename root-rename)
-                            #:defaults ([root-rename #'#f]))
-                 (~optional (~seq #:space space)
-                            #:defaults ([space #'#f]))
                  (~optional (~seq #:extends extends)
                             #:defaults ([extends #'#f]))
                  (~optional (~seq #:orig-id orig-id)
                             #:defaults ([orig-id #'#f])))
         ...)
-     #:do [(define in-space
-             (let ([space (syntax-e #'space)])
-               (if space
-                   (make-interned-syntax-introducer/add space)
-                   (lambda (id) id))))]
-     #:with root-id (in-space (car (generate-temporaries #'(id))))
-     #:with space-id (in-space #'id)
-     #:with (root-def ...) (if (syntax-e #'root-rhs)
-                               #'[(define-syntax root-id root-rhs)]
-                               #'[])
-     #:with (root-spec ...) (cond
-                              [(syntax-e #'root-rhs) #'([#f root-id])]
-                              [(syntax-e #'root-rename) #'([#f root-rename])]
-                              [else #'()])
      #:with (norm-content ...) (for/list ([c (in-list (syntax->list #'(content ...)))])
                                  (syntax-parse c
                                    [_:identifier #`[#,c #,c]]
                                    [(_:identifier _:identifier) c]))
+     #:with space-id (in-name-root-space #'id)
      #:with the-orig-id (if (syntax-e #'orig-id)
                             #'orig-id
-                            #'id)
+                            #'space-id)
      #'(begin
-         root-def ...
          ;; portal syntax with this shape is recognized by "name-root-ref.rkt"
-         (#%require (portal space-id (map the-orig-id extends norm-content ... root-spec ...))))]))
+         (#%require (portal space-id (map the-orig-id extends norm-content ...))))]))

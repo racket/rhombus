@@ -2,7 +2,6 @@
 (require (for-syntax racket/base
                      racket/provide-transform
                      racket/phase+space
-                     racket/symbol
                      syntax/parse/pre
                      enforest
                      enforest/operator
@@ -12,12 +11,17 @@
                      enforest/hier-name-parse
                      enforest/proc-name
                      enforest/syntax-local
-                     "name-path-op.rkt"
                      "srcloc.rkt"
+                     "name-path-op.rkt"
                      "introducer.rkt"
                      "realm.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "id-binding.rkt")
+         "enforest.rkt"
+         "all-spaces-out.rkt"
          "name-root-ref.rkt"
+         "name-root-space.rkt"
+         "definition.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
          "dotted-sequence-parse.rkt"
@@ -56,15 +60,12 @@
   (define (make-identifier-export id)
     #`(all-spaces-out #,id))
 
-  (define-enforest
+  (define-rhombus-enforest
     #:syntax-class :export
     #:infix-more-syntax-class :export-infix-op+form+tail
     #:desc "export"
     #:operator-desc "export operator"
     #:in-space in-export-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref export-prefix-operator-ref
     #:infix-operator-ref export-infix-operator-ref
     #:check-result check-export-result
@@ -79,13 +80,10 @@
            (transformer (lambda (stx)
                           ((transformer-proc mod) (transform-in ex) stx))))))
 
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class (:export-modifier req)
     #:desc "export modifier"
     #:in-space in-export-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-export-modifier-ref transform-in req))
 
   (define-syntax-class :modified-export
@@ -110,77 +108,6 @@
           (raise-syntax-error #f
                               "not an export modifier"
                               #'form)])])))
-
-(define-syntax all-spaces-out
-  (make-provide-transformer
-   (lambda (stx phase+spaces)
-     (define phases (if (null? phase+spaces)
-                        (list 0)
-                        (hash-keys
-                         (for/hash ([p+s (in-list phase+spaces)])
-                           (values (phase+space-phase p+s) #t)))))
-     (apply
-      append
-      (for/list ([stx (in-list (cdr (syntax->list stx)))])
-        (define-values (id out-id)
-          (syntax-parse stx
-            [[id out-id] (values #'id #'out-id)]
-            [id (values #'id #'id)]))
-        (define (make-export phase space id [as-sym (syntax-e out-id)])
-          (export id
-                  as-sym
-                  (phase+space phase space)
-                  #f ; not protected
-                  stx))
-        (define (adjust-prefix sym prefix)
-          (if (eq? (syntax-e id) (syntax-e out-id))
-              sym
-              (string->symbol (string-append
-                               (symbol->immutable-string (syntax-e out-id))
-                               "."
-                               (substring (symbol->immutable-string sym) (string-length prefix))))))
-        (apply
-         append
-         (for/list ([phase (in-list phases)])
-           (define space+ids
-             (for*/list ([sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
-                         [(intro) (in-value (if sym
-                                                (make-interned-syntax-introducer sym)
-                                                (lambda (x) x)))]
-                         [(space-id) (in-value (intro id))]
-                         #:when (and (identifier-binding space-id)
-                                     (or (not sym)
-                                         (not (free-identifier=? id space-id)))))
-               (cons sym space-id)))
-           (when (null? space+ids)
-             (raise-syntax-error 'export
-                                 "identifier is not defined or imported"
-                                 id))
-           (apply
-            append
-            (for/list ([space+id (in-list space+ids)])
-              (define space (car space+id))
-              (define int-id (cdr space+id))
-              (append
-               (list (make-export phase space int-id))
-               (cond
-                 [(extensible-name-root (list int-id))
-                  ;; also export any extensions
-                  (define prefix (format "~a." (symbol->string (syntax-e int-id))))
-                  (define intro (if space
-                                    (make-interned-syntax-introducer space)
-                                    (lambda (x) x)))
-                  (for/list ([sym (in-list (syntax-bound-symbols (intro int-id)))]
-                             #:do [(define str (symbol->immutable-string sym))]
-                             #:when (and (> (string-length str) (string-length prefix))
-                                         (string=? prefix (substring str 0 (string-length prefix)))
-                                         (identifier-extension-binding? (datum->syntax (intro int-id) sym) (intro int-id)))
-                             #:when (or (not space)
-                                        (identifier-distinct-binding (datum->syntax (intro int-id) sym)
-                                                                     (datum->syntax int-id sym)
-                                                                     phase)))
-                    (make-export phase space (datum->syntax int-id sym int-id) (adjust-prefix sym prefix)))]
-                 [else null])))))))))))
 
 (define-syntax export
   (nestable-declaration-transformer
@@ -207,7 +134,7 @@
 
   (define-syntax-class :renaming
     #:datum-literals (group)
-    (pattern (group . (~var int (:hier-name-seq values name-path-op name-root-ref)))
+    (pattern (group . (~var int (:hier-name-seq in-name-root-space values name-path-op name-root-ref)))
              #:with (_::as-id ext::name) #'int.tail
              #:attr int-name #'int.name
              #:attr ext-name #'ext.name)))
@@ -286,11 +213,11 @@
      (parameterize ([current-module-path-context 'export])
        (syntax-parse stx
          #:datum-literals (parens group op |.|)
-         [(_ (parens (group (op |.|) . (~var name (:hier-name-seq values name-path-op name-root-ref))))
+         [(_ (parens (group (op |.|) . (~var name (:hier-name-seq in-name-root-space values name-path-op name-root-ref))))
              . tail)
           (values
            (cond
-             [(syntax-local-value* #'name.name import-root-ref)
+             [(syntax-local-value* (in-name-root-space #'name.name) import-root-ref)
               => (lambda (i)
                    (define form
                      (syntax-parse i

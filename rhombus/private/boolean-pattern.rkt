@@ -17,8 +17,8 @@
 
 (define-binding-syntax &&
   (binding-infix-operator
-   #'&&
-   (list (cons #'\|\| 'stronger))
+   (bind-quote &&)
+   (list (cons (bind-quote \|\|) 'stronger))
    'automatic
    (lambda (lhs rhs stx)
      (binding-form
@@ -74,7 +74,7 @@
 
 (define-binding-syntax \|\|
   (binding-infix-operator
-   #'\|\|
+   (bind-quote \|\|)
    null
    'automatic
    (lambda (lhs rhs stx)

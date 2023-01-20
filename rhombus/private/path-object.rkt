@@ -1,14 +1,18 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "provide.rkt"
          "class-primitive.rkt"
          "dot-parse.rkt"
          "realm.rkt"
          "function-arity-key.rkt"
          "define-arity.rkt")
 
-(provide Path
-         (for-space rhombus/annot Path))
+(provide (for-spaces (rhombus/namespace
+                      #f
+                      rhombus/bind
+                      rhombus/annot)
+                     Path))
 
 (module+ for-builtin
   (provide path-method-table))

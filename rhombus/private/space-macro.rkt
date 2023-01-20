@@ -19,6 +19,8 @@
                      "space.rkt"
                      "realm.rkt"
                      "parse.rkt")
+         "enforest.rkt"
+         "space-provide.rkt"
          "meta.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
@@ -27,12 +29,10 @@
          "parens.rkt"
          "macro-macro.rkt")
 
-(provide space)
-
-(define-name-root space
-  #:root (space-syntax rhombus/space)
-  #:fields (enforest
-            transform))
+(define+provide-space space rhombus/space
+  #:fields
+  (enforest
+   transform))
 
 (begin-for-syntax
   (define (id->string s) (symbol->immutable-string (syntax-e s)))
@@ -60,9 +60,7 @@
               (group #:space_path space-path::space_name)
               (~alt
                (~optional (group #:macro define-macro:identifier)
-                          #:defaults ([define-macro #'SKIP]))
-               (~optional (group #:only_macro define-only-macro:identifier)
-                          #:defaults ([define-only-macro #'SKIP])))
+                          #:defaults ([define-macro #'SKIP])))
               ...
               (group #:meta_namespace meta-name:identifier
                      (_::block
@@ -84,15 +82,14 @@
                                   #:defaults ([id-at #'block]
                                               [(make-identifier-form 1) (list #'(group (parsed values)))])))
                       ...))))
-         #`((define-name-root name
-              #:root (space-syntax space-path.name)
+         #`((define-space-syntax name
+              (space-syntax space-path.name))
+            (define-name-root name
               #:fields
               #,(filter-missing
-                 #`([define-macro _define-macro]
-                    [define-only-macro _define-only-macro])))
+                 #`([define-macro _define-macro])))
             (begin-for-syntax
               (define-name-root meta-name
-                #:root (space-syntax space-path.name)
                 #:fields
                 #,(filter-missing
                    #`([class-name _class-name]
@@ -104,16 +101,13 @@
               (struct new-prefix+infix-operator (prefix infix)
                 #:property prop:new-prefix-operator (lambda (self) (new-prefix+infix-operator-prefix self))
                 #:property prop:new-infix-operator (lambda (self) (new-prefix+infix-operator-infix self)))
-              (define-enforest
+              (define-rhombus-enforest
                 #:syntax-class :base
                 #:prefix-more-syntax-class :prefix-more
                 #:infix-more-syntax-class :infix-more
                 #:desc (quote desc)
                 #:operator-desc (quote desc-operator)
                 #:in-space in-new-space
-                #:name-path-op name-path-op
-                #:name-root-ref name-root-ref
-                #:name-root-ref-root name-root-ref-root
                 #:prefix-operator-ref new-prefix-operator-ref
                 #:infix-operator-ref new-infix-operator-ref
                 #:check-result (rhombus-body-at check-at check-form ...)
@@ -136,14 +130,6 @@
             (maybe-skip
              define-macro
              (define-operator-definition-transformer _define-macro
-               'macro
-               #f
-               #'make-prefix-operator
-               #'make-infix-operator
-               #'new-prefix+infix-operator))
-            (maybe-skip
-             define-only-macro
-             (define-operator-definition-transformer _define-only-macro
                'macro
                space-path.name
                #'make-prefix-operator
@@ -173,9 +159,7 @@
              (group #:space_path space-path::space_name)
              (~alt
               (~optional (group #:macro define-macro:identifier)
-                         #:defaults ([define-macro #'SKIP]))
-              (~optional (group #:only_macro define-only-macro:identifier)
-                         #:defaults ([define-only-macro #'SKIP])))
+                         #:defaults ([define-macro #'SKIP])))
              ...)
             (group #:meta_namespace meta-name:identifier
                    (_::block
@@ -192,8 +176,7 @@
               #:root (space-syntax space-path.name)
               #:fields
               #,(filter-missing
-                 #`([define-macro _define-macro]
-                    [define-only-macro _define-only-macro])))
+                 #`([define-macro _define-macro])))
             (begin-for-syntax
               (define-name-root meta-name
                 #:root (space-syntax space-path.name)
@@ -202,13 +185,10 @@
                    #`([class-name _class-name])))
               (define in-new-space (make-interned-syntax-introducer/add 'space.name))
               (property new-transformer transformer)
-              (define-transform
+              (define-rhombus-transform
                 #:syntax-class :base
                 #:desc desc
                 #:in-space in-new-space
-                #:name-path-op name-path-op
-                #:name-root-ref name-root-ref
-                #:name-root-ref-root name-root-ref-root
                 #:transformer-ref new-transformer-ref
                 #:check-result (rhombus-body-at check-at check-form ...))
               (define-syntax _class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
@@ -216,11 +196,6 @@
             (maybe-skip
              define-macro
              (define-identifier-syntax-definition-transformer _define-macro
-               #f
-               #'make-transformer))
-            (maybe-skip
-             define-macro-only
-             (define-identifier-syntax-definition-transformer _define-macro-only
                space.name
                #'make-transformer)))]))))
 

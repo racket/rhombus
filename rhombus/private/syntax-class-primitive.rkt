@@ -4,22 +4,23 @@
                      enforest/property
                      "introducer.rkt")
          syntax/parse/pre
+         "provide.rkt"
          "operator-parse.rkt"
          "name-root.rkt"
          "definition.rkt"
          "pack.rkt")
 
-(provide Term
-         Id
-         Op
-         Id_Op
-         (for-space rhombus/stxclass
+(provide (for-space rhombus/stxclass
+                    Term
+                    Id
+                    Op
+                    Id_Op
+                    Group
+                    Block
+                    Multi
                     Keyword
                     String
-                    Integer)
-         Group
-         Block
-         Multi)
+                    Integer))
 
 (module+ for-quasiquote
   (begin-for-syntax
@@ -31,6 +32,7 @@
              syntax-class-parser-proc
              (struct-out pattern-variable)
              pattern-variable->list
+             list->pattern-variable
              syntax-list->pattern-variable)))
 
 (module+ for-syntax-class-syntax
@@ -60,6 +62,8 @@
           (pattern-variable-val-id pv)
           (pattern-variable-depth pv)
           (pattern-variable-unpack*-id pv)))
+  (define (list->pattern-variable l)
+    (apply pattern-variable l))
   (define (syntax-list->pattern-variable pv)
     (define l (syntax->list pv))
     (pattern-variable (syntax-e (car l))
@@ -81,16 +85,16 @@
      (quasisyntax/loc stx
        (define-syntax #,(in-syntax-class-space #'name) rhs))]))
 
-(define-syntax Term (make-syntax-class #f))
-(define-syntax Id (make-syntax-class #'identifier))
-(define-syntax Op (make-syntax-class #':operator))
-(define-syntax Id_Op (make-syntax-class #':operator-or-identifier))
+(define-syntax-class-syntax Term (make-syntax-class #f))
+(define-syntax-class-syntax Id (make-syntax-class #'identifier))
+(define-syntax-class-syntax Op (make-syntax-class #':operator))
+(define-syntax-class-syntax Id_Op (make-syntax-class #':operator-or-identifier))
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
 (define-syntax-class-syntax Integer (make-syntax-class #'exact-integer))
-(define-syntax Group (make-syntax-class #f #:kind 'group))
-(define-syntax Multi (make-syntax-class #f #:kind 'multi))
-(define-syntax Block (make-syntax-class #f #:kind 'block))
+(define-syntax-class-syntax Group (make-syntax-class #f #:kind 'group))
+(define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
+(define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
 
 (define-syntax-rule (define-operator-syntax-classes
                       Group :form
@@ -108,6 +112,6 @@
     (define-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
                                                       #:kind 'group
                                                       #:arity 2
-                                                       #:fields #'((parsed #f parsed 0 unpack-parsed*)
-                                                                   (tail #f tail tail unpack-tail-list*))))))
+                                                      #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                  (tail #f tail tail unpack-tail-list*))))))
 

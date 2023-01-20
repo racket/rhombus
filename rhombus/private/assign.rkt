@@ -7,11 +7,11 @@
          "expression.rkt")
 
 (provide :=
-         mutable)
+         (for-space rhombus/bind
+                    mutable))
 
-(define-syntax mutable
+(define-binding-syntax mutable
   (binding-transformer
-   #'mutable
    (lambda (stx)
      (syntax-parse stx
        [(_ id:identifier . new-tail)
@@ -59,7 +59,7 @@
 
 (define-syntax :=
   (expression-infix-operator
-   #':=
+   (expr-quote :=)
    '((default . weaker))
    'automatic
    (lambda (form1 form2 self-stx)

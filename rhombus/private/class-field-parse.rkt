@@ -7,17 +7,28 @@
           "assign.rkt"
           (submod "equal.rkt" for-parse)
           "parse.rkt"
-          (only-in "class-clause-parse.rkt" private)))
+          (only-in "class-clause-primitive.rkt" private)
+          (submod "class-clause.rkt" for-class)
+          "binding.rkt"))
 
 (provide :constructor-field
          parse-field-annotations)
 
+(define-syntax-class :private
+  (pattern id:identifier
+           #:when (free-identifier=? (in-class-clause-space #'id)
+                                     (class-clause-quote private))))
+(define-syntax-class :mutable
+  (pattern id:identifier
+           #:when (free-identifier=? (in-binding-space #'id)
+                                     (bind-quote mutable))))
+
 (define-syntax-class :id-field
+  #:attributes (name private mutable ann-seq default)
   #:datum-literals (group op)
-  #:literals (mutable private)
-  (pattern (group (~optional (~and private (~var private))
+  (pattern (group (~optional private::private
                              #:defaults ([private #'#f]))
-                  (~optional (~and mutable (~var mutable))
+                  (~optional mutable::mutable
                              #:defaults ([mutable #'#f]))
                   name:identifier
                   ann::not-equal ...
@@ -28,9 +39,9 @@
                               #'c.seq
                               #'#f)
            #:attr default #`((rhombus-expression (#,group-tag default-form ...))))
-  (pattern (group (~optional (~and private (~var private))
+  (pattern (group (~optional private::private
                              #:defaults ([private #'#f]))
-                  (~optional (~and mutable (~var mutable))
+                  (~optional mutable::mutable
                              #:defaults ([mutable #'#f]))
                   name:identifier
                   ann ...
@@ -40,9 +51,9 @@
                               #'c.seq
                               #'#f)
            #:attr default #`((rhombus-body-at block-tag default-form ...)))
-  (pattern (group (~optional (~and private (~var private))
+  (pattern (group (~optional private::private
                              #:defaults ([private #'#f]))
-                  (~optional (~and mutable (~var mutable))
+                  (~optional mutable::mutable
                              #:defaults ([mutable #'#f]))
                   name:identifier
                   (~optional c::unparsed-inline-annotation))
@@ -53,7 +64,6 @@
 
 (define-syntax-class :constructor-field
   #:datum-literals (group op)
-  #:literals (mutable)
   (pattern idf::id-field
            #:attr ann-seq #'idf.ann-seq
            #:attr name #'idf.name

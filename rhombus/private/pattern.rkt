@@ -6,7 +6,8 @@
                   pattern
                   #%parens)
          (only-in "quasiquote.rkt"
-                  #%quotes
+                  #%quotes)
+         (only-in "dollar.rkt"
                   $)
          "parse.rkt"
          "parens.rkt")
@@ -19,10 +20,7 @@
 ;; the `pattern` form for `$` is in "unquote-binding-primitive.rkt"
 
 (define-binding-syntax pattern
-  (binding-prefix-operator
-   #'pattern
-   `((default . weaker))
-   'macro
+  (binding-transformer
    (lambda (stx)
      (define (expand s tail)
        (syntax-parse #`(group #%quotes

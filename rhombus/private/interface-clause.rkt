@@ -4,10 +4,9 @@
                      enforest/transformer
                      enforest/property
                      enforest/proc-name
-                     "name-path-op.rkt"
                      "introducer.rkt"
                      "realm.rkt")
-         "name-root-ref.rkt")
+         "enforest.rkt")
 
 (provide define-interface-clause-syntax)
 
@@ -39,13 +38,10 @@
            (transformer (lambda (stx)
                           ((transformer-proc cc) stx class-data))))))
 
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class (:interface-clause intf-data)
     #:desc "interface clause"
     #:in-space in-interface-clause-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-interface-clause-transformer-ref intf-data)
     #:check-result check-interface-clause-result))
 

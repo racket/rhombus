@@ -4,30 +4,21 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "pack.rkt")
+         "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
-         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
-(provide defn)
-
-(define-name-root defn
-  #:root (space-syntax rhombus/expr)
+(define+provide-space defn #f
   #:fields
   (macro
-   sequence_macro
-   only))
-
-(define-name-root only
-  #:fields
-  ([macro macro-only]
-   [sequence_macro sequence_macro-only]))
+   sequence_macro))
 
 ;; ----------------------------------------
 
-(define-identifier-syntax-definition-transformer+only macro macro-only
-  rhombus/expr
+(define-identifier-syntax-definition-transformer macro
+  #f
   #'make-definition-transformer)
 
 (define-for-syntax (make-definition-transformer proc)
@@ -48,10 +39,6 @@
 
 (define-identifier-syntax-definition-sequence-transformer sequence_macro
   #f
-  #'make-definition-sequence-transformer)
-
-(define-identifier-syntax-definition-sequence-transformer sequence_macro-only
-  rhombus/expr
   #'make-definition-sequence-transformer)
 
 (define-for-syntax (make-definition-sequence-transformer proc)

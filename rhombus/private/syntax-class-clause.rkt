@@ -3,9 +3,8 @@
                      syntax/parse/pre
                      enforest/transformer
                      enforest/property
-                     "name-path-op.rkt"
                      "introducer.rkt")
-         "name-root-ref.rkt")
+         "enforest.rkt")
 
 (provide define-syntax-class-clause-syntax)
 
@@ -24,9 +23,6 @@
     #:syntax-class :syntax-class-clause
     #:desc "syntax class clause"
     #:in-space in-syntax-class-clause-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref syntax-class-clause-transformer-ref))
 
 (define-syntax (define-syntax-class-clause-syntax stx)

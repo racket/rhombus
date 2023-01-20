@@ -16,16 +16,17 @@
          "expression.rkt"
          (only-in (submod "expr-macro.rkt" for-define)
                   make-expression-prefix-operator)
-         (only-in (submod "repetition.rkt")
-                  make-expression+repetition-transformer
+         (only-in "repetition.rkt"
+                  in-repetition-space
+                  repetition-transformer
                   identifier-repetition-use)
          "assign.rkt"
+         "op-literal.rkt"
          "name-root.rkt"
          "parse.rkt"
          (submod "function.rkt" for-call)
          (for-syntax "class-transformer.rkt")
-         (only-in (submod "implicit.rkt" for-dynamic-static)
-                  static-#%call))
+         "is-static.rkt")
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
@@ -33,10 +34,11 @@
                      make-handle-class-instance-dot))
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
-                                             has-private? method-private exposed-internal-id
+                                             has-private? method-private exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
+                                             export-of?
                                              names)
-  (with-syntax ([(name constructor-name name-instance name-ref
+  (with-syntax ([(name constructor-name name-instance name-ref name-of
                        make-internal-name internal-name-instance
                        [public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
@@ -51,23 +53,29 @@
        method-defns
        (append
         (list
+         (cond
+           [expression-macro-rhs
+            #`(define-syntax name
+                (wrap-class-transformer name
+                                        #,(intro expression-macro-rhs)
+                                        make-expression-prefix-operator
+                                        "class"))]
+           [(and constructor-given-name
+                 (not (free-identifier=? #'name constructor-given-name)))
+            #`(define-syntax name
+                no-constructor-transformer)]
+           [else
+            #`(define-syntaxes (name #,(in-repetition-space #'name))
+                (class-expression-transformers (quote-syntax name) (quote-syntax constructor-name)))])
          #`(define-name-root name
-             #:root
-             #,(cond
-                 [expression-macro-rhs
-                  #`(wrap-class-transformer name
-                                            #,(intro expression-macro-rhs)
-                                            make-expression-prefix-operator
-                                            "class")]
-                 [(and constructor-given-name
-                       (not (free-identifier=? #'name constructor-given-name)))
-                  #`no-constructor-transformer]
-                 [else #`(class-expression-transformer (quote-syntax name) (quote-syntax constructor-name))])
              #:fields ([public-field-name public-name-field]
                        ...
                        [method-name method-id]
                        ...
-                       ex ...))
+                       ex ...
+                       #,@(if export-of?
+                              #`([of name-of])
+                              null)))
          #'(define-dot-provider-syntax name-instance
              (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
                                                                        #hasheq()
@@ -78,15 +86,16 @@
                              (define id (if (pair? id/prop) (car id/prop) id/prop))
                              (list sym id id/prop))])
               (list
+               #`(define-syntaxes (#,exposed-internal-id #,(in-repetition-space exposed-internal-id))
+                   (class-expression-transformers (quote-syntax name) (quote-syntax make-internal-name)))
                #`(define-name-root #,exposed-internal-id
-                   #:root (class-expression-transformer (quote-syntax name) (quote-syntax make-internal-name))
                    #:fields ([field-name name-field]
                              ...
                              [method-name method-id]
                              ...
                              [private-method-name private-method-id]
                              ...
-                             ex ...))
+                             [of #,internal-of-id]))
                #`(define-dot-provider-syntax internal-name-instance
                    (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
                                                                              (hasheq
@@ -114,15 +123,15 @@
       (append
        method-defns
        (list
-        #`(define-name-root name
-            #:root
+        #`(define-syntax name
             #,(cond
-                 [expression-macro-rhs
-                  #`(wrap-class-transformer name
-                                            #,((make-syntax-introducer) expression-macro-rhs)
-                                            make-expression-prefix-operator
-                                            "interface")]
-                 [else #'no-constructor-transformer])
+                [expression-macro-rhs
+                 #`(wrap-class-transformer name
+                                           #,((make-syntax-introducer) expression-macro-rhs)
+                                           make-expression-prefix-operator
+                                           "interface")]
+                [else #'no-constructor-transformer]))
+        #`(define-name-root name
             #:fields ([method-name method-id]
                       ...
                       ex ...))
@@ -172,7 +181,6 @@
 
 (define-for-syntax (make-method-accessor-transformer name id name-ref-id idx proc-id ret-info-id)
   (expression-transformer
-   id
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (op)
@@ -183,8 +191,7 @@
                        (syntax-local-method-result ret-info-id)))
         (define-values (call new-tail)
           (parse-function-call rator (list obj-id) #`(#,obj-id (tag arg ...))
-                               #:static? (free-identifier=? (datum->syntax #'tag '#%call)
-                                                            #'static-#%call)
+                               #:static? (is-static-call-context? #'tag)
                                #:rator-stx (datum->syntax #f name #'rator-id)
                                #:rator-arity (and r (method-result-arity r))))
         (values (let ([call #`(let ([#,obj-id (rhombus-expression self)])
@@ -194,25 +201,25 @@
                       call))
                 #'tail)]
        [(head (tag::parens) . _)
-        #:when (free-identifier=? (datum->syntax #'tag '#%call)
-                                  #'static-#%call)
+        #:when (is-static-call-context? #'tag)
         (raise-syntax-error #f
                             (string-append "wrong number of arguments in function call" statically-str)
                             (datum->syntax #f name #'head))]
        [(_ . tail)
         (values proc-id #'tail)]))))
 
-(define-for-syntax (class-expression-transformer id make-id)
-  (make-expression+repetition-transformer
-   id
-   (lambda (stx)
-     (syntax-parse stx
-       [(head . tail) (values (relocate-id #'head make-id)
-                           #'tail)]))
-   (lambda (stx)
-     (syntax-parse stx
-       [(head . tail) (values (identifier-repetition-use (relocate-id #'head make-id))
-                              #'tail)]))))
+(define-for-syntax (class-expression-transformers id make-id)
+  (values
+   (expression-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        [(head . tail) (values (relocate-id #'head make-id)
+                               #'tail)])))
+   (repetition-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        [(head . tail) (values (identifier-repetition-use (relocate-id #'head make-id))
+                               #'tail)])))))
 
 (define-for-syntax (desc-method-shapes desc)
   (if (class-desc? desc)
@@ -252,9 +259,7 @@
     (define accessor-id (field-desc-accessor-id fld))
     (define-values (op-id assign-rhs new-tail)
       (syntax-parse tail
-        #:datum-literals (op)
-        #:literals (:=)
-        [((op :=) . tail)
+        [(_:::=-expr . tail)
          #:when (syntax-e (field-desc-mutator-id fld))
          #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
          (values (field-desc-mutator-id fld)
@@ -290,9 +295,7 @@
     (define-values (args new-tail)
       (if property?
           (syntax-parse tail
-            #:datum-literals (op)
-            #:literals (:=)
-            [((op :=) . tail)
+            [(_:::=-expr . tail)
              #:with (~var e (:infix-op+expression+tail #':=)) #'(group  . tail)
              (values #`(#,(no-srcloc #'parens) (group (parsed e.parsed)))
                      #'e.tail)]
@@ -391,6 +394,5 @@
 
 (define-for-syntax no-constructor-transformer
   (expression-transformer
-   #'no-constructor
    (lambda (stx)
      (raise-syntax-error #f "cannot be used as an expression" stx))))

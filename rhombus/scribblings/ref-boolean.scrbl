@@ -116,7 +116,7 @@
 
 
 @doc(
-  operator (! v):: Boolean
+  operator (! v) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(v) is @rhombus(#false),

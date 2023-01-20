@@ -3,7 +3,7 @@
                      syntax/parse/pre
                      enforest/hier-name-parse
                      "class-parse.rkt")
-         "class-clause-primitive.rkt"
+         (submod "class-clause-primitive.rkt" for-class)
          (submod "annotation.rkt" for-class)
          "entry-point.rkt"
          "parens.rkt")
@@ -16,23 +16,7 @@
                      class-clause-accum
                      class-clause-extract
                      method-shape-extract)
-         rhombus-class
-         extends
-         implements
-         internal
-         constructor
-         expression
-         binding
-         annotation
-         final
-         nonfinal
-         authentic
-         field
-         method
-         property
-         override
-         private
-         abstract)
+         rhombus-class)
 
 (module+ for-interface
   (provide (for-syntax parse-method-clause
@@ -64,17 +48,6 @@
                          "expected a single entry point in block body"
                          b)]))
 
-(begin-for-syntax
-  (define-literal-set clause-forms
-    (extends implements private-implements
-             constructor expression final nonfinal authentic binding annotation
-             method property private override abstract internal
-             final-override private-override
-             override-property final-property final-override-property
-             private-property private-override-property
-             abstract-property
-             abstract-override abstract-override-property)))
-
 (define-for-syntax (parse-annotation-options orig-stx forms)
   (syntax-parse forms
     #:context orig-stx
@@ -86,14 +59,13 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literal-sets (clause-forms)
-              [(extends id)
+              [(#:extends id)
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
                (hash-set options 'extends #'id)]
-              [(internal id)
+              [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(annotation block)
+              [(#:annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
@@ -119,41 +91,40 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literal-sets (clause-forms)
-              [(extends id) ; checked in `parse-annotation-options`
+              [(#:extends id) ; checked in `parse-annotation-options`
                (hash-set options 'extends #'id)]
-              [(implements id ...)
+              [(#:implements id ...)
                (add-implements options 'public-implements #'(id ...))]
-              [(private-implements id ...)
+              [(#:private-implements id ...)
                (add-implements options 'private-implements #'(id ...))]
-              [(internal id)
+              [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(constructor id rhs)
+              [(#:constructor id rhs)
                (when (hash-has-key? options 'constructor-rhs)
                  (raise-syntax-error #f "multiple constructor clauses" orig-stx clause))
                (define rhs-options (hash-set options 'constructor-rhs #'rhs))
                (if (syntax-e #'id)
                    (hash-set rhs-options 'constructor-name #'id)
                    rhs-options)]
-              [(expression rhs)
+              [(#:expression rhs)
                (when (hash-has-key? options 'expression-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
                (hash-set options 'expression-rhs (extract-rhs #'rhs))]
-              [(binding block)
+              [(#:binding block)
                (when (hash-has-key? options 'binding-rhs)
                  (raise-syntax-error #f "multiple binding clauses" orig-stx clause))
                (hash-set options 'binding-rhs (extract-rhs #'block))]
-              [(annotation block) ; checked in `parse-annotation-options`
+              [(#:annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
-              [(nonfinal)
+              [(#:nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))
                (hash-set options 'final? #f)]
-              [(authentic)
+              [(#:authentic)
                (when (hash-has-key? options 'authentic?)
                  (raise-syntax-error #f "multiple authenticity clause" orig-stx clause))
                (hash-set options 'authentic? #t)]
-              [(field id rhs-id ann-seq blk form-id mode)
+              [(#:field id rhs-id ann-seq blk form-id mode)
                (with-syntax ([(predicate annotation-str static-infos)
                               (syntax-parse #'ann-seq
                                 [#f (list #'#f #'#f #'())]
@@ -172,26 +143,25 @@
 
 (define-for-syntax (parse-method-clause orig-stx options clause)
   (syntax-parse clause
-    #:literal-sets (clause-forms)
-    [((~and tag (~or method override private final final-override private-override
-                     property override-property
-                     final-property final-override-property
-                     private-property private-override-property))
+    [((~and tag (~or #:method #:override #:private #:final #:final-override #:private-override
+                     #:property #:override-property
+                     #:final-property #:final-override-property
+                     #:private-property #:private-override-property))
       id rhs maybe-ret)
      (define-values (body replace disposition kind)
        (case (syntax-e #'tag)
-         [(method) (values 'method 'method 'abstract 'method)]
-         [(override) (values 'method 'override 'abstract 'method)]
-         [(private) (values 'method 'method 'private 'method)]
-         [(private-override) (values 'method 'override 'private 'method)]
-         [(final) (values 'method 'method 'final 'method)]
-         [(final-override) (values 'method 'override 'final 'method)]
-         [(property) (values 'method 'method 'abstract 'property)]
-         [(override-property) (values 'method 'override 'abstract 'property)]
-         [(final-property) (values 'method 'method 'final 'property)]
-         [(final-override-property) (values 'method 'override 'final 'property)]
-         [(private-property) (values 'method 'method 'private 'property)]
-         [(private-override-property) (values 'method 'override 'private 'property)]
+         [(#:method) (values 'method 'method 'abstract 'method)]
+         [(#:override) (values 'method 'override 'abstract 'method)]
+         [(#:private) (values 'method 'method 'private 'method)]
+         [(#:private-override) (values 'method 'override 'private 'method)]
+         [(#:final) (values 'method 'method 'final 'method)]
+         [(#:final-override) (values 'method 'override 'final 'method)]
+         [(#:property) (values 'method 'method 'abstract 'property)]
+         [(#:override-property) (values 'method 'override 'abstract 'property)]
+         [(#:final-property) (values 'method 'method 'final 'property)]
+         [(#:final-override-property) (values 'method 'override 'final 'property)]
+         [(#:private-property) (values 'method 'method 'private 'property)]
+         [(#:private-override-property) (values 'method 'override 'private 'property)]
          [else (error "method kind not handled" #'tag)]))
      (hash-set options 'methods (cons (added-method #'id
                                                     (car (generate-temporaries #'(id)))
@@ -206,14 +176,14 @@
                                                     kind
                                                     (extract-arity #'rhs))
                                       (hash-ref options 'methods null)))]
-    [((~and tag (~or abstract abstract-property abstract-override abstract-override-property))
+    [((~and tag (~or #:abstract #:abstract-property #:abstract-override #:abstract-override-property))
       id rhs maybe-ret)
      (define-values (replace kind)
        (case (syntax-e #'tag)
-         [(abstract) (values 'method 'method)]
-         [(abstract-property) (values 'method 'property)]
-         [(abstract-override) (values 'override 'method)]
-         [(abstract-override-property) (values 'override 'property)]
+         [(#:abstract) (values 'method 'method)]
+         [(#:abstract-property) (values 'method 'property)]
+         [(#:abstract-override) (values 'override 'method)]
+         [(#:abstract-override-property) (values 'override 'property)]
          [else (error "method kind not handled" #'tag)]))
      (hash-set options 'methods (cons (added-method #'id
                                                     '#:abstract
@@ -243,19 +213,11 @@
 
 (define-for-syntax (class-clause-accum forms)
   ;; early processing of a clause to accumulate information of `class-data`;
-  ;; keep only things that are useful to report to clause macros
-  (for/list ([form (in-list (syntax->list forms))]
-             #:do [(define v
-                     (syntax-parse form
-                       [(_ (_ e) _)
-                        (define form #'e)
-                        (syntax-parse form
-                          #:literals (extends)
-                          [(extends id) form]
-                          [(implements id ...) form]
-                          [_ #f])]))]
-             #:when v)
-    v))
+  ;; in principle, keep only things that are useful to report to clause macros,
+  ;; but for now we just keep everything
+  (for/list ([form (in-list (syntax->list forms))])
+    (syntax-parse form
+      [(_ (_ e) _) #'e])))
 
 (define-for-syntax (class-clause-extract who accum key)
   (define (method id rhs vis)
@@ -278,46 +240,46 @@
   (for/list ([a (in-list (reverse (syntax->list accum)))]
              #:do [(define v
                      (syntax-parse a
-                       [((~literal extends) id) (if (eq? key 'extends)
-                                                    (list #'id)
-                                                    null)]
-                       [((~literal implements) id ...) (case key
-                                                         [(implements)
-                                                          (syntax->list #'(id ...))]
-                                                         [(implements_visibilities)
-                                                          '(public)]
-                                                         [else null])]
-                       [((~literal private-implements) id ...) (case key
-                                                                 [(implements)
-                                                                  (syntax->list #'(id ...))]
-                                                                 [(implements_visibilities)
-                                                                  '(private)]
-                                                                 [else null])]
-                       [((~literal field) id rhs-id ann-seq blk form-id mode)
+                       [(#:extends id) (if (eq? key 'extends)
+                                           (list #'id)
+                                           null)]
+                       [(#:implements id ...) (case key
+                                                [(implements)
+                                                 (syntax->list #'(id ...))]
+                                                [(implements_visibilities)
+                                                 '(public)]
+                                                [else null])]
+                       [(#:private-implements id ...) (case key
+                                                        [(implements)
+                                                         (syntax->list #'(id ...))]
+                                                        [(implements_visibilities)
+                                                         '(private)]
+                                                        [else null])]
+                       [(#:field id rhs-id ann-seq blk form-id mode)
                         (case key
                           [(field-names) (list #'id)]
                           [(field-visibilities) (list #'mode)]
                           [else null])]
-                       [((~literal internal) id) (case key
-                                                   [(internal_names) (list #'id)]
-                                                   [else null])]
-                       [((~literal method) id rhs . _) (method #'id #'rhs 'public)]
-                       [((~literal override) id rhs . _) (method #'id #'rhs 'public)]
-                       [((~literal private) id rhs . _) (method #'id #'rhs 'private)]
-                       [((~literal private-override) id rhs . _) (method #'id #'rhs 'private)]
-                       [((~literal final) id rhs . _) (method #'id #'rhs 'public)]
-                       [((~literal final-override) id rhs . _) (method #'id #'rhs 'public)]
-                       [((~literal property) id rhs . _) (property #'id #'rhs 'public)]
-                       [((~literal override-property) id rhs . _) (property #'id #'rhs 'public)]
-                       [((~literal final-property) id rhs . _) (property #'id #'rhs 'public)]
-                       [((~literal final-overrode-property) id rhs . _) (property #'id #'rhs 'public)]
-                       [((~literal private-property) id rhs . _) (property #'id #'rhs 'private)]
-                       [((~literal private-override-property) id rhs . _) (property #'id #'rhs 'private)]
-                       [((~literal private-override-property) id rhs . _) (property #'id #'rhs 'private)]
-                       [((~literal constructor) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
-                       [((~literal expression) . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
-                       [((~literal binding) . _) (if (eq? key 'uses_default_binding) '(#f) null)]
-                       [((~literal annotation) . _) (if (eq? key 'uses_default_annotation) '(#f) null)]
+                       [(#:internal id) (case key
+                                          [(internal_names) (list #'id)]
+                                          [else null])]
+                       [(#:method id rhs . _) (method #'id #'rhs 'public)]
+                       [(#:override id rhs . _) (method #'id #'rhs 'public)]
+                       [(#:private id rhs . _) (method #'id #'rhs 'private)]
+                       [(#:private-override id rhs . _) (method #'id #'rhs 'private)]
+                       [(#:final id rhs . _) (method #'id #'rhs 'public)]
+                       [(#:final-override id rhs . _) (method #'id #'rhs 'public)]
+                       [(#:property id rhs . _) (property #'id #'rhs 'public)]
+                       [(#:override-property id rhs . _) (property #'id #'rhs 'public)]
+                       [(#:final-property id rhs . _) (property #'id #'rhs 'public)]
+                       [(#:final-overrode-property id rhs . _) (property #'id #'rhs 'public)]
+                       [(#:private-property id rhs . _) (property #'id #'rhs 'private)]
+                       [(#:private-override-property id rhs . _) (property #'id #'rhs 'private)]
+                       [(#:private-override-property id rhs . _) (property #'id #'rhs 'private)]
+                       [(#:constructor . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
+                       [(#:expression . _) (if (eq? key 'uses_default_constructor) '(#f) null)]
+                       [(#:binding . _) (if (eq? key 'uses_default_binding) '(#f) null)]
+                       [(#:annotation . _) (if (eq? key 'uses_default_annotation) '(#f) null)]
                        [_ null]))]
              [e (in-list v)])
     e))

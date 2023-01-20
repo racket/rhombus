@@ -1,25 +1,29 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "provide.rkt"
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt"
          "literal.rkt")
 
-(provide |#'|)
+(provide (for-spaces (#f
+                      rhombus/bind)
+                     |#'|))
+
+;; see also "unquote-binding-primitive.rkt"
 
 (define-syntax |#'|
-  (make-expression+binding-prefix-operator
-   #'|#'|
-   '((default . stronger))
-   'macro
+  (expression-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens quotes group)
        [(form-name q . tail)
         (check-quotable #'form-name #'q)
         (values (syntax/loc stx (quote q))
-                #'tail)]))
+                #'tail)]))))
+
+(define-binding-syntax |#'|
+  (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens quotes group)

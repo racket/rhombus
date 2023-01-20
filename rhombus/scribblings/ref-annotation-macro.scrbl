@@ -24,7 +24,8 @@
 ){
 
  Like @rhombus(expr.macro), but defines an identifier or operator as an
- annotation form. The result of the macro expansion can be a result
+ annotation form in the @rhombus(annot, ~space) @tech{space}.
+ The result of the macro expansion can be a result
  created with @rhombus(annot_meta.pack_predicate).
 
 @examples(
@@ -58,15 +59,6 @@
 
 }
 
-
-@doc(
-  defn.macro 'annot.only.macro $macro_patterns'
-){
-
- Like @rhombus(annot.macro), but the identifier
- or operator is bound only in the @rhombus(rhombus/annot, ~datum) @tech{space}.
-
-}
 
 @doc(
   syntax_class annot_meta.Group:

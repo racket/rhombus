@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      "srcloc.rkt")
          "expression.rkt"
+         "repetition.rkt"
          "compound-repetition.rkt")
 
 (provide define-prefix
@@ -13,7 +14,8 @@
 
 (begin-for-syntax
   (require (for-syntax racket/base
-                       syntax/parse/pre))
+                       syntax/parse/pre
+                       "expression-space.rkt"))
   (define-syntax (prefix stx)
     (syntax-parse stx
       [(_ name:identifier prim:identifier
@@ -28,7 +30,8 @@
           (~optional (~seq #:stronger-than (stronger-op ...))
                      #:defaults ([(stronger-op 1) '()])))
        #`(make-expression&repetition-prefix-operator
-          (quote-syntax name)
+          (expr-quote name)
+          (repet-quote name)
           (list (cons (quote-syntax weaker-op)
                       'weaker)
                 ...
@@ -65,7 +68,8 @@
           (~optional (~seq #:associate assoc)
                      #:defaults ([assoc #''left])))
        #`(make-expression&repetition-infix-operator
-          (quote-syntax name)
+          (expr-quote name)
+          (repet-quote name)
           (list (cons (quote-syntax weaker-op)
                       'weaker)
                 ...
@@ -89,9 +93,11 @@
 (define-syntax (define-infix stx)
   (syntax-parse stx
     [(_ name spec ...)
-     #'(define-syntax name (infix name spec ...))]))
+     #`(define-syntaxes (name #,(in-repetition-space #'name))
+         (infix name spec ...))]))
 
 (define-syntax (define-prefix stx)
   (syntax-parse stx
     [(_ name spec ...)
-     #'(define-syntax name (prefix name spec ...))]))
+     #`(define-syntaxes (name #,(in-repetition-space #'name))
+         (prefix name spec ...))]))

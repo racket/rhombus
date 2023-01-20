@@ -6,6 +6,7 @@
          syntax/strip-context
          racket/syntax-srcloc
          shrubbery/property
+         "provide.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
          "pack.rkt"
@@ -18,9 +19,11 @@
          (submod "dot.rkt" for-dot-provider)
          (submod "srcloc-object.rkt" for-static-info))
 
-(provide Syntax
-         (for-space rhombus/annot Syntax)
-         Identifier)
+(provide (for-spaces (rhombus/namespace
+                      rhombus/annot)
+                     Syntax)
+         (for-space rhombus/annot
+                    Identifier))
 
 (module+ for-builtin
   (provide syntax-method-table))
@@ -32,10 +35,10 @@
   #'((#%dot-provider syntax-instance)))
 
 (define-annotation-syntax Syntax
-  (identifier-annotation #'Syntax #'syntax? syntax-static-infos))
+  (identifier-annotation #'syntax? syntax-static-infos))
 
-(define-syntax Identifier
-  (identifier-annotation #'Identifier #'identifier? syntax-static-infos))
+(define-annotation-syntax Identifier
+  (identifier-annotation #'identifier? syntax-static-infos))
 
 (define-name-root Syntax
   #:fields
@@ -54,7 +57,6 @@
 
 (define-syntax literal
   (expression-transformer
-   #'Syntax.literal
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens quotes group)
@@ -66,7 +68,6 @@
 
 (define-syntax literal_group
   (expression-transformer
-   #'Syntax.literal_group
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (parens quotes group)
@@ -209,7 +210,7 @@
      (raise-argument-error* 'Syntax.unwrap_group rhombus-realm "Syntax" v)]
     [else
      (syntax->list (unpack-tail v 'Syntax.unwrap_group #f))]))
-
+  
 (define/arity (unwrap_sequence v)
   (cond
     [(not (syntax? v))

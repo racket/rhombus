@@ -9,7 +9,8 @@
                      enforest/hier-name-parse
                      "introducer.rkt"
                      "annotation-string.rkt"
-                     "name-path-op.rkt")
+                     "name-path-op.rkt"
+                     (for-syntax racket/base))
          "static-info.rkt"
          "realm.rkt"
          "error.rkt"
@@ -34,6 +35,7 @@
            binding-info
 
            in-binding-space
+           bind-quote
 
            binding-extension-combine))
 
@@ -82,8 +84,8 @@
   (property binding-prefix-operator prefix-operator)
   (property binding-infix-operator infix-operator)
 
-  (define (binding-transformer name proc)
-    (binding-prefix-operator name '((default . stronger)) 'macro proc))
+  (define (binding-transformer proc)
+    (binding-prefix-operator (quote-syntax unused) '((default . stronger)) 'macro proc))
 
   ;; puts pieces together into a `:binding-form`
   (define (binding-form infoer-id data)
@@ -116,6 +118,9 @@
       [_ (raise-result-error (proc-name proc) "binding-info-result?" form)]))
 
   (define in-binding-space (make-interned-syntax-introducer/add 'rhombus/bind))
+  (define-syntax (bind-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/bind) #'id))]))
 
   (define extension-syntax-property-key (gensym 'extension))
   (define (binding-extension-combine id prefix)

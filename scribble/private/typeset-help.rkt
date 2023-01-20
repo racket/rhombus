@@ -38,7 +38,10 @@
      (define field (car fields))
      (define p (identifier-binding-portal-syntax root #f))
      (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
-     (define dest (and lookup (lookup #f "identifier" field)))
+     (define intro (if space-name
+                       (make-interned-syntax-introducer space-name)
+                       (lambda (x) x)))
+     (define dest (and lookup (lookup #f "identifier" field intro)))
      (define raw (format "~a.~a"
                          (or (syntax-raw-property root)
                              (syntax-e root))
@@ -57,7 +60,7 @@
         (or (resolve-name-ref space-name named-dest (cdr fields))
             (add-rest named-dest))]
        [else
-        (define id (datum->syntax root (string->symbol raw)))
+        (define id (intro (datum->syntax root (string->symbol raw))))
         (and (identifier-binding id #f)
              (let ([named-id (syntax-raw-property
                               (datum->syntax id (syntax-e id)

@@ -1,18 +1,20 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "provide.rkt"
+         "expression.rkt"
          "binding.rkt"
          "reducer.rkt"
          "parse.rkt"
          "static-info.rkt"
          "function-arity-key.rkt"
-         (rename-in "equal.rkt"
-                    [= rhombus=]))
+         (submod "equal.rkt" for-parse))
 
-(provide values
-         (for-space rhombus/bind values)
-         (for-space rhombus/reducer values)
-         (for-space rhombus/statinfo values))
+(provide (for-spaces (#f
+                      rhombus/bind
+                      rhombus/reducer
+                      rhombus/statinfo)
+                     values))
 
 (define-binding-syntax values
   (binding-prefix-operator
@@ -24,20 +26,19 @@
        [(head . _)
         (raise-syntax-error #f
                             (string-append "not allowed as a pattern (except as a non-nested"
-                                           " pattern by forms that specifically recognize it")
+                                           " pattern by forms that specifically recognize it)")
                             #'head)]))))
 
 (define-reducer-syntax values
   (reducer-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:literals (rhombus=)
        #:datum-literals (group op)
-       [(_ (parens (group id:identifier (op rhombus=) rhs ...) ...))
+       [(_ (parens (group id:identifier _::equal rhs ...) ...))
         #'[begin
-           ([id (rhombus-expression (group rhs ...))] ...)
-           (begin)
-           ()]]))))
+            ([id (rhombus-expression (group rhs ...))] ...)
+            (begin)
+            ()]]))))
 
 (define-static-info-syntax values
   (#%function-arity -1))

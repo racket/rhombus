@@ -20,10 +20,5 @@
          [temp2 (cadr temps)])
     (result temp1
             (list #`[#,temp2 (#,pack* (syntax #,temp1) 0)])
-            (list #`[#,id (make-pattern-variable-syntax (quote-syntax #,id)
-                                                        (quote-syntax #,temp2)
-                                                        (quote-syntax #,unpack*)
-                                                        0
-                                                        #f
-                                                        #'())])
+            (list (make-pattern-variable-bind id temp2 unpack* 0 #f null))
             (list (pattern-variable (syntax-e id) id temp2 0 unpack*)))))

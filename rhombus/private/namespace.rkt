@@ -71,16 +71,17 @@
               (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
                                          #:do [(define intro (if space-sym
                                                                  (make-interned-syntax-introducer/add space-sym)
-                                                                 (lambda (x) x)))]
-                                         #:when (extensible-name-root (list (intro int-id)))
+                                                                 (lambda (x) x)))
+                                               (define name-root-id  (extensible-name-root (list int-id)))]
+                                         #:when name-root-id
                                          [sym (in-list (syntax-bound-symbols (intro int-id)))])
                 (define str (symbol->immutable-string sym))
                 (cond
                   [(and (> (string-length str) (string-length prefix))
                         (string=? prefix (substring str 0 (string-length prefix))))
-                   (define id (datum->syntax (intro int-id) sym int-id))
+                   (define id (intro (datum->syntax int-id sym int-id)))
                    (cond
-                     [(identifier-extension-binding? id (intro int-id))
+                     [(identifier-extension-binding? id name-root-id)
                       (define old (hash-ref ht sym #f))
                       (when (and old
                                  (not (free-identifier=? (intro old) id)))

@@ -201,11 +201,10 @@ check:
           '_Posn($x, $y)'
       | '()($v)':
           '_Posn($v, 0)'
-    annotation:
-      macro
-      | '().of($x, $y)':
-          '_Posn.of($y, $x)'
-      | '()': '_Posn'    
+    annotation 'Posn': '_Posn'
+    annot.macro 'of($x, $y)':
+      '_Posn.of($y, $x)'
+    export: of
   def p = Posn(0, 2)
   def Posn(yy, xx) = p
   def Posn(a) = p    
@@ -517,8 +516,9 @@ check:
     extends Posn
     internal _Posn3D
     annotation:
-      macro | '().of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
-            | '()': '_Posn3D'
+      macro | '()': '_Posn3D'
+    annot.macro 'of($x, $y ..., $z)': 'Posn.of($x, ~y: $y ...) && _Posn3D.of($z)'
+    export: of
   def p = Posn3D(1, ~y: "2", #'three)
   p :: Posn
   p :: Posn.of(Integer, ~y: String)
@@ -532,22 +532,25 @@ check:
     nonfinal
     internal _Posn
     annotation:
-      macro | '() $dot of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
-            | '()': '_Posn'
+      macro | '()': '_Posn'
+    annot.macro 'of(X $x, Y $y)': '_Posn.of($x, ~y: $y)'
+    export: of
   class Posn3D(z):
     extends Posn
     nonfinal
     internal _Posn3D
     annotation:
-      macro | '() $dot of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
-            | '()': '_Posn3D'
+      macro | '()': '_Posn3D'
+    annot.macro 'of[$x, $y ..., $z]': 'Posn.of(X $x, Y $y ...) && _Posn3D.of($z)'
+    export: of
   class Posn4D(w):
     extends Posn3D
     nonfinal
     internal _Posn4D
     annotation:
-      macro | '() $dot of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
-            | '()': '_Posn4D'
+      macro | '()': '_Posn4D'
+    annot.macro 'of($x, ~y: $y, $z, $w)': 'Posn3D.of[$x, $y, $z] && _Posn4D.of($w)'
+    export: of
   def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
   p :: Posn.of(X Integer, Y String)

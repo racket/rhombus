@@ -4,9 +4,9 @@
                      syntax/stx
                      enforest
                      enforest/transformer
-                     enforest/sequence
                      "srcloc.rkt"
                      "name-path-op.rkt")
+         "enforest.rkt"
          "name-root-ref.rkt"
          "forwarding-sequence.rkt"
          "declaration.rkt"
@@ -48,63 +48,48 @@
 
 (begin-for-syntax
   ;; Form at the top of a module:
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class :declaration
     #:desc "declaration"
     #:in-space in-expression-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref declaration-transformer-ref
     #:check-result check-declaration-result)
 
   ;; Form at the top of a module or in a `nested` block:
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class :nestable-declaration
     #:desc "nestable declaration"
     #:in-space in-expression-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref nestable-declaration-transformer-ref
     #:check-result check-nestable-declaration-result)
 
   ;; Form in a definition context:
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class :definition
     #:predicate definition?
     #:desc "definition"
     #:in-space in-expression-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref definition-transformer-ref
     #:check-result check-definition-result)
 
   ;; Form in a definition context that can consume extra groups:
-  (define-sequence-transform
+  (define-rhombus-sequence-transform
     #:syntax-class :definition-sequence
     #:apply-transformer apply-definition-sequence-transformer
     #:predicate definition-sequence?
     #:desc "definition sequence"
     #:in-space in-expression-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref definition-sequence-transformer-ref
     #:check-result check-definition-result)
 
   ;; Form in an expression context:
-  (define-enforest
+  (define-rhombus-enforest
     #:syntax-class :expression
     #:prefix-more-syntax-class :prefix-op+expression+tail
     #:infix-more-syntax-class :infix-op+expression+tail
     #:desc "expression"
     #:operator-desc "expression operator"
     #:in-space in-expression-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref expression-prefix-operator-ref
     #:infix-operator-ref expression-infix-operator-ref
     #:check-result check-expression-result
@@ -112,28 +97,25 @@
     #:relative-precedence expression-relative-precedence)
 
   (define name-root-binding-ref
-    (make-name-root-ref in-binding-space
-                        #:binding-ref (lambda (v)
+    (make-name-root-ref #:binding-ref (lambda (v)
                                         (or (binding-prefix-operator-ref v)
                                             (binding-infix-operator-ref v)))
                         #:binding-extension-combine binding-extension-combine))
 
   ;; Form in a binding context:
-  (define-enforest
+  (define-rhombus-enforest
     #:syntax-class :binding
     #:prefix-more-syntax-class :prefix-op+binding+tail
     #:infix-more-syntax-class :infix-op+binding+tail
     #:desc "binding"
     #:operator-desc "binding operator"
     #:in-space in-binding-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-binding-ref
-    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref binding-prefix-operator-ref
     #:infix-operator-ref binding-infix-operator-ref
     #:check-result check-binding-result
     #:make-identifier-form make-identifier-binding
-    #:relative-precedence binding-relative-precedence))
+    #:relative-precedence binding-relative-precedence
+    #:name-root-ref name-root-binding-ref))
 
 ;; For a module top level, interleaves expansion and enforestation:
 (define-syntax (rhombus-top stx)

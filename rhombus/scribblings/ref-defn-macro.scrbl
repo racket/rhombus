@@ -29,12 +29,13 @@
 ){
 
  Defines @rhombus(identifier) or @rhombus(identifier_path) as a macro
- that can be used in a definition context, where the compile-time
+ in the @rhombus(expr, ~space) @tech{space}. The macro can be used
+ in a definition context, where the compile-time
  @rhombus(body) block returns the expansion result. The macro pattern is
  matched to an entire group in a definition context.
 
- The expansion result must be a parenthesized block, and the groups of
- the block are inlined in place of the definition-macro use.
+ The expansion result must be a sequence of groups that are inlined in
+ place of the definition-macro use.
 
  The @rhombus(option)s in the macro body must be distinct; since there
  is only one option currently, either the @rhombus(~op_stx) option is
@@ -104,17 +105,6 @@
     def seq_y: 10
     seq_x
 )
-}
-
-@doc(
-  defn.macro 'defn.only.macro $macro_decl'
-  defn.macro 'defn.only.sequence_macro $macro_decl'
-){
-
- Like @rhombus(defn.macro) or @rhombus(defn.sequence_macro), but the
- identifier is bound only in the @rhombus(expr, ~datum)
- @tech{space}.
-
 }
 
 @«macro.close_eval»(macro_eval)

@@ -235,12 +235,13 @@
                (if (syntax-e #'rest-repetition?)
                    (with-syntax ([(depth ...) (for/list ([uses (syntax->list #'(rest.bind-uses ...))])
                                                 (add1 (uses->depth uses)))]
-                                 [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids])
-                     #'((define-syntax rest.bind-id
-                          (make-repetition (quote-syntax rest.bind-id)
-                                           (quote-syntax rest-seq-tmp-id)
-                                           (quote-syntax (rest.bind-static-info ... . down-static-infos))
-                                           #:depth depth))
+                                 [(rest-seq-tmp-id ...) #'rest-seq-tmp-ids]
+                                 [(rep-bind-id ...) (in-repetition-space #'(rest.bind-id ...))])
+                     #'((define-syntaxes (rest.bind-id rep-bind-id)
+                          (make-expression+repetition (quote-syntax rest.bind-id)
+                                                      (quote-syntax rest-seq-tmp-id)
+                                                      (quote-syntax (rest.bind-static-info ... . down-static-infos))
+                                                      #:depth depth))
                         ...))
                    #'((rest.binder-id rest-tmp-id rest.data)))]))]))
 

@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      shrubbery/print
                      "infer-name.rkt"
                      "tag.rkt"
@@ -13,6 +14,8 @@
          "call-result-key.rkt"
          "static-info.rkt"
          "forwarding-sequence.rkt"
+         (only-in "values.rkt"
+                  [values rhombus-values])
          (submod "equal.rkt" for-parse)
          (only-in "equal.rkt"
                   [= rhombus=]))
@@ -31,11 +34,15 @@
       (check-context stx)
       (syntax-parse stx
         #:datum-literals (parens group block alts)
-        [(form-id (~optional (~literal values)) (parens g ...) (~and rhs (block body ...)))
+        [(form-id (~optional op::name) (parens g ...) (~and rhs (block body ...)))
+         #:when (or (not (attribute op))
+                    (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
                                    #'(g ...) #'(rhombus-body-expression rhs)
                                    wrap-definition)]
-        [(form-id (~optional (~literal values)) (parens g ...) _::equal rhs ...+)
+        [(form-id (~optional op::name) (parens g ...) _::equal rhs ...+)
+         #:when (or (not (attribute op))
+                    (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
                                    #'(g ...) #`(rhombus-expression (#,group-tag rhs ...))
                                    wrap-definition)]

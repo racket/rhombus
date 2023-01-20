@@ -4,10 +4,10 @@ import:
 
 // define a binding operator
 
-bind.macro '$& $(~parsed n)':
+bind.macro '$$ $(~parsed n)':
   '$n :: Integer'
 
-fun apply_interest($& n):
+fun apply_interest($$ n):
   n * 1.05
 
 check:
@@ -15,7 +15,7 @@ check:
   ~is 7.3500000000000005
 
 // define <> as revese-cons pattern
-bind.only.macro '$a <> $(~parsed b)':
+bind.macro '$a <> $(~parsed b)':
   bind_meta.pack('(build_reverse_cons_infoer,
                    ($a, $b))')
 

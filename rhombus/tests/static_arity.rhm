@@ -1,4 +1,8 @@
 #lang rhombus/and_meta
+import:
+  meta:
+    rhombus/meta:
+      expose: expr
 
 export:
   rename:
@@ -26,7 +30,7 @@ expr.macro 'one_check:
        $dotted_id ... (~bad_keyword: 10, '$arg', ...)
        ~raises values("keyword argument not recognized by called function", "static")
      $(match '$arg; ...'
-       | '$arg; ...; $last; $('...')':
+       | '$arg; ...; $last; $(bound_as expr: '...')':
            'check_wrong_fewer:
               $dotted_id ... ($arg, ...)'
        | '$arg; ...':

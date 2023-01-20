@@ -1,13 +1,21 @@
 #lang racket/base
 (require racket/symbol
          racket/keyword
+         "provide.rkt"
          "define-operator.rkt"
-         (prefix-in rhombus: "print.rkt"))
+         (only-in "arithmetic.rkt"
+                  ==
+                  ===)
+         (only-in (submod "print.rkt" for-string)
+                  [display rhombus:display]))
 
-(provide +&)
+(provide (for-spaces (#f
+                      rhombus/repet)
+
+                     +&))
 
 (define-infix +& append-as-strings
-  #:stronger-than (===))
+  #:stronger-than (== ===))
 
 (define (append-as-strings a b)
   (string-append-immutable (to-string a)

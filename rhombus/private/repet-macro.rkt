@@ -1,14 +1,12 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "space-provide.rkt"
          "repetition.rkt"
          "space.rkt"
          "name-root.rkt")
 
-(provide repet)
-
-(define-name-root repet
-  #:root (space-syntax rhombus/repet)
+(define+provide-space repet rhombus/repet
   #:fields
   (macro))
 

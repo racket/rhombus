@@ -3,11 +3,12 @@
                      syntax/parse/pre)
          (submod "annotation.rkt" for-class))
 
-(provide Maybe)
+(provide (for-space rhombus/annot
+                    Maybe))
 
-(define-syntax Maybe
+(define-annotation-syntax Maybe
   (annotation-prefix-operator
-   #'Maybe
+   (annot-quote Maybe)
    '((default . stronger))
    'macro
    (lambda (stx)

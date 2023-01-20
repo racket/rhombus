@@ -27,11 +27,13 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 
 @include_section("ref-meta.scrbl")
 @include_section("ref-space.scrbl")
+@include_section("ref-namespace-macro.scrbl")
 @include_section("ref-defn-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
 @include_section("ref-annotation-macro.scrbl")
 @include_section("ref-dot-provider.scrbl")
+@include_section("ref-repet-macro.scrbl")
 @include_section("ref-for-clause-macro.scrbl")
 @include_section("ref-class-clause-macro.scrbl")
 @include_section("ref-static-info.scrbl")

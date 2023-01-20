@@ -6,7 +6,7 @@
                      enforest/sequence
                      enforest/property
                      enforest/proc-name
-                     "introducer.rkt"))
+                     "expression-space.rkt"))
 
 (begin-for-syntax
   (provide (property-out definition-transformer)

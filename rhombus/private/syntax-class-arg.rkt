@@ -3,11 +3,11 @@
                      syntax/parse/pre
                      "tag.rkt")
          "parens.rkt"
+         "binding.rkt"
          "parse.rkt"
          "function-arity.rkt"
          "rest-marker.rkt"
-         (rename-in "equal.rkt"
-                    [= rhombus=]))
+         "op-literal.rkt")
 
 (provide (for-syntax :class-args))
 
@@ -22,7 +22,6 @@
   (define-splicing-syntax-class :class-arg
     #:attributes ([formal 1] kw def?)
     #:datum-literals (group op)
-    #:literals (rhombus=)
     (pattern (group id:identifier)
              #:attr [formal 1] (list #'id)
              #:attr kw #'#f
@@ -33,7 +32,7 @@
     (pattern (group kw:keyword (_::block (group id:identifier)))
              #:attr [formal 1] (list #'kw #'id)
              #:attr def? #'#f)
-    (pattern (group id:identifier rhombus= rhs ...+)
+    (pattern (group id:identifier _::=-bind rhs ...+)
              #:attr [formal 1] (list #`[id (rhombus-expression (#,group-tag rhs ...))])
              #:attr kw #'#f
              #:attr def? #'#t)
@@ -41,10 +40,10 @@
              #:attr [formal 1] (list #`[id (rhombus-body-at tag body ...)])
              #:attr kw #'#f
              #:attr def? #'#t)
-    (pattern (group kw:keyword rhombus= rhs ...+)
+    (pattern (group kw:keyword _::=-bind rhs ...+)
              #:attr [formal 1] (list #'kw #`[#,(kw->symbol #'kw) (rhombus-expression (#,group-tag rhs ...))])
              #:attr def? #'#f)
-    (pattern (group kw:keyword (_::block (group id:identifier rhombus= rhs ...+)))
+    (pattern (group kw:keyword (_::block (group id:identifier _::=-bind rhs ...+)))
              #:attr [formal 1] (list #'kw #`[id (rhombus-expression (#,group-tag rhs ...))])
              #:attr def? #'#t)
     (pattern (group kw:keyword (_::block (group id:identifier (tag::block body ...+))))
@@ -54,11 +53,10 @@
   (define-splicing-syntax-class :class-args
     #:attributes (formals arity)
     #:datum-literals (group)
-    #:literals (&)
     (pattern (~seq)
              #:attr formals #'#f
              #:attr arity #'#f)
-    (pattern (~seq (_::parens arg::class-arg ... (group & id:identifier))) 
+    (pattern (~seq (_::parens arg::class-arg ... (group (~var _ (:& in-binding-space)) id:identifier))) 
              #:attr formals #'(arg.formal ... ... . id)
              #:attr arity (datum->syntax
                            #f

@@ -38,8 +38,8 @@
                          #:defaults ([name-path-op #'name-path-op]))
               (~optional (~seq #:name-root-ref name-root-ref)
                          #:defaults ([name-root-ref #'name-root-ref]))
-              (~optional (~seq #:name-root-ref-root name-root-ref-root)
-                         #:defaults ([name-root-ref-root #'name-root-ref-root]))
+              (~optional (~seq #:in-name-root-space in-name-root-space)
+                         #:defaults ([in-name-root-space #'values]))
               (~optional (~seq #:transformer-ref transformer-ref)
                          #:defaults ([transformer-ref #'transformer-ref]))
               (~optional (~seq #:check-result check-result)
@@ -47,15 +47,14 @@
         ...)
      #`(begin
          (define-syntax-class form
-           (pattern ((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref)))
+           (pattern ((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
                     #:attr id head-id
                     #:attr tail #'hname.tail))
          (define (apply-transformer head-id head-tail tail-tail)
-           (define t (syntax-local-value* (in-space head-id) (lambda (v)
-                                                               (name-root-ref-root v transformer-ref))))
+           (define t (syntax-local-value* (in-space head-id) transformer-ref))
            (apply-sequence-transformer t head-id
                                        (datum->syntax #f (cons head-id head-tail))
                                        tail-tail
@@ -63,7 +62,7 @@
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e
-                       [((~datum group) . (~var hname (:hier-name-seq values name-path-op name-root-ref)))
+                       [((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
                        [_ #f])))

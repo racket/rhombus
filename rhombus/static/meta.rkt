@@ -10,8 +10,15 @@
 
 (bounce #:except (|.| #%ref #%call)
         "../meta.rkt")
-(provide (for-syntax |.|
-                     (for-space rhombus/impo |.|)
-                     (for-space rhombus/expo |.|)
+(bounce-meta #:only (|.|)
+             #:spaces (rhombus/impo rhombus/expo)
+             "../meta.rkt")
+(provide (for-syntax
+          (for-space #f
+                     |.|
                      #%ref
-                     #%call))
+                     #%call)
+          (for-space rhombus/repet
+                     |.|
+                     #%ref
+                     #%call)))

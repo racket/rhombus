@@ -217,18 +217,21 @@
   (define (hide stx)
     (term-identifiers-syntax-property stx 'typeset-space-name 'hide))
   (define (as-mod stx)
-    (term-identifiers-syntax-property stx 'typeset-space-name 'impmod))
+    (term-identifiers-syntax-property stx 'typeset-space-name 'impo))
   (syntax-parse c
     #:datum-literals (group)
     [((~and tag group) c ...)
      #`(tag #,@(let loop ([cs #'(c ...)])
+                 (define (free=? a b space)
+                   (free-identifier=? a ((make-interned-syntax-introducer space) b)))
                  (syntax-parse cs
                    #:datum-literals (group op |.| open as)
-                   #:literals (rhombus-/ rhombus-file rhombus-lib)
                    [(id:identifier) (list (hide #'id))]
                    [(mp (~and mod open)) (list (hide #'mp) (as-mod #'mod))]
                    [(mp (~and mod as) id:identifier) (list (hide #'mp) (as-mod #'mod) (hide #'id))]
-                   [(id:identifier (~and slash (op rhombus-/)) . cs)
+                   [(id:identifier (~and slash (op use-/)) . cs)
+                    #:when (or (free=? #'use-/ #'rhombus-/ 'rhombus/impo)
+                               (free=? #'use-/ #'rhombus-/ 'rhombus/modpath))
                     (list (hide #'id)
                           (as-mod #'slash)
                           (loop #'cs))]
@@ -239,11 +242,15 @@
                    [((~and dot (op |.|)) . cs)
                     (list* (as-mod #'dot)
                            (loop #'cs))]
-                   [((~and id rhombus-file) str . cs)
+                   [(id:identifier str . cs)
+                    #:when (or (free=? #'id #'rhombus-file 'rhombus/impo)
+                               (free=? #'id #'rhombus-file 'rhombus/modpath))
                     (list* (as-mod #'id)
                            #'str
                            (loop #'cs))]
-                   [((~and id rhombus-lib) str . cs)
+                   [(id:identifier str . cs)
+                    #:when (or (free=? #'id #'rhombus-lib 'rhombus/impo)
+                               (free=? #'id #'rhombus-lib 'rhombus/modpath))
                     (list* (as-mod #'id)
                            #'str
                            (loop #'cs))]

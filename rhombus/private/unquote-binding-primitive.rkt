@@ -2,10 +2,12 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
+                     enforest/name-parse
                      enforest/syntax-local
                      "name-path-op.rkt"
                      "attribute-name.rkt")
          syntax/parse/pre
+         enforest/name-parse
          "pack.rkt"
          "syntax-class-primitive.rkt"
          (only-in "expression.rkt"
@@ -13,10 +15,14 @@
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          (only-in "annotation.rkt"
                   ::)
+         (only-in "repetition.rkt"
+                  in-repetition-space)
          "pattern-variable.rkt"
          "unquote-binding.rkt"
          "unquote-binding-identifier.rkt"
+         "name-root-space.rkt"
          "name-root-ref.rkt"
+         "space.rkt"
          "parens.rkt"
          (submod "function.rkt" for-call)
          (only-in "import.rkt" as open)
@@ -31,7 +37,7 @@
                     \|\|
                     #%literal
                     #%block
-                    |#'|))
+                    bound_as))
 
 ;; `#%quotes` is implemented in "quasiquote.rkt" because it recurs as
 ;; nested quasiquote matching, `_` is in "quasiquote.rkt" so it can be
@@ -40,7 +46,7 @@
 
 (define-unquote-binding-syntax #%parens
   (unquote-binding-prefix-operator
-   #'#%parens
+   (in-unquote-binding-space #'#%parens)
    null
    'macro
    (lambda (stx)
@@ -77,7 +83,7 @@
 
 (define-unquote-binding-syntax ::
   (unquote-binding-infix-operator
-   #'::
+   (in-unquote-binding-space #'::)
    null
    'macro
    (lambda (form1 stx)
@@ -131,8 +137,8 @@
      (syntax-parse stx
        #:datum-literals (group)
        [(_ (~and sc (_::parens (group . rest))) . tail)
-        #:with (~var sc-hier (:hier-name-seq in-expression-space name-path-op name-root-ref)) #'rest
-        #:do [(define parser (syntax-local-value* (in-expression-space #'sc-hier.name) syntax-class-parser-ref))]
+        #:with (~var sc-hier (:hier-name-seq in-name-root-space in-expression-space name-path-op name-root-ref)) #'rest
+        #:do [(define parser (syntax-local-value* #'sc-hier.name syntax-class-parser-ref))]
         #:when parser
         (define-values (open-attributes end-tail) (parse-open-block stx #'tail))
         (define rsc ((syntax-class-parser-proc parser) (or (syntax-property #'sc-hier.name 'rhombus-dotted-name)
@@ -147,7 +153,7 @@
             ;; shortcut for kind mismatch
             (values #'#f #'()))]
        [(_ . rest)
-        #:with (~var stx-class-hier (:hier-name-seq in-syntax-class-space name-path-op name-root-ref)) #'rest
+        #:with (~var stx-class-hier (:hier-name-seq in-name-root-space in-syntax-class-space name-path-op name-root-ref)) #'rest
         (syntax-parse #'stx-class-hier.tail
           #:datum-literals ()
           [(args::syntax-class-args . args-tail)
@@ -163,7 +169,7 @@
 
 (define-unquote-binding-syntax pattern
   (unquote-binding-prefix-operator
-   #'pattern
+   (in-unquote-binding-space #'pattern)
    null
    'macro
    (lambda (stx)
@@ -274,27 +280,19 @@
                  attribute-bindings)
          #,(append
             (if (identifier? form1)
-                (list #`[id (make-pattern-variable-syntax
-                             (quote-syntax id)
-                             (quote-syntax #,temp-id)
-                             (quote-syntax #,unpack*)
-                             #,pack-depth
-                             #,(rhombus-syntax-class-splicing? rsc)
-                             (quote-syntax #,(for/list ([var (in-list attribute-vars)])
-                                               (pattern-variable->list var #:keep-id? #f))))])
+                (list (make-pattern-variable-bind #'id temp-id unpack*
+                                                  pack-depth
+                                                  (rhombus-syntax-class-splicing? rsc)
+                                                  (for/list ([var (in-list attribute-vars)])
+                                                    (pattern-variable->list var #:keep-id? #f))))
                 null)
             (if (not open-attributes)
                 null
                 (for/list ([oa (in-list open-attributes)])
                   (define bind-id (open-attrib-bind-id oa))
                   (define var (open-attrib-var oa))
-                  #`[#,bind-id (make-pattern-variable-syntax
-                                (quote-syntax #,bind-id)
-                                (quote-syntax #,(pattern-variable-val-id var))
-                                (quote-syntax #,(pattern-variable-unpack*-id var))
-                                #,(pattern-variable-depth var)
-                                #f
-                                #'())])))
+                  (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack*-id var)
+                                              (pattern-variable-depth var) #f null))))
          #,(append
             (if (identifier? form1)
                 (list (list #'id #'id temp-id pack-depth unpack*))
@@ -347,7 +345,7 @@
 
 (define-unquote-binding-syntax &&
   (unquote-binding-infix-operator
-   #'&&
+   (in-unquote-binding-space #'&&)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -365,7 +363,7 @@
 
 (define-unquote-binding-syntax \|\|
   (unquote-binding-infix-operator
-   #'\|\|
+   (in-unquote-binding-space #'\|\|)
    null
    'automatic
    (lambda (form1 form2 stx)
@@ -384,7 +382,7 @@
 
 (define-unquote-binding-syntax #%literal
   (unquote-binding-prefix-operator
-   #'#%literal
+   (in-unquote-binding-space #'#%literal)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -399,7 +397,7 @@
 
 (define-unquote-binding-syntax #%block
   (unquote-binding-prefix-operator
-   #'#%body
+   (in-unquote-binding-space #'#%body)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -409,16 +407,38 @@
                             "not allowed as a syntax binding by itself"
                             #'b)]))))
 
-(define-unquote-binding-syntax |#'|
+(define-unquote-binding-syntax bound_as
   (unquote-binding-prefix-operator
-   #'|#'|
+   (in-unquote-binding-space #'bound_as)
    '((default . stronger))
    'macro
    (lambda (stxes)
      (cond
-       [(eq? 'term (current-unquote-binding-kind))
+       [(eq? (current-unquote-binding-kind) 'term)
         (syntax-parse stxes
-          [(_ id:identifier . tail)
-           (values #'((~datum id) () () ())
-                   #'tail)])]
+          #:datum-literals (group)
+          [(_ space ... (_::block (group (_::quotes (group bound::name)))))
+           #:with (~var sp (:hier-name-seq in-name-root-space in-space-space name-path-op name-root-ref)) #'(space ...)
+           (define sn (syntax-local-value* (in-space-space #'sp.name) space-name-ref))
+           (unless sn
+             (raise-syntax-error #f
+                                 "not a space name"
+                                 stxes
+                                 #'sp.name))
+           (values #`((~var _ (:free=-in-space
+                               (quote-syntax #,(if (space-name-symbol sn)
+                                                   ((make-interned-syntax-introducer (space-name-symbol sn)) #'bound.name 'add)
+                                                   #'bound.name))
+                               '#,(space-name-symbol sn)))
+                      ()
+                      ()
+                      ())
+                   #'())])]
        [else (values #'#f #'())]))))
+
+(define-syntax-class (:free=-in-space bound-id space-sym)
+  #:datum-literals (group)
+  (pattern t::name
+           #:when (free-identifier=? bound-id (if space-sym
+                                                  ((make-interned-syntax-introducer space-sym) #'t.name 'add)
+                                                  #'t.name))))

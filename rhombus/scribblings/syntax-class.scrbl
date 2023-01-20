@@ -129,8 +129,8 @@ so a pattern variable annotated with a syntax class is bound to a
 @demo(
   ~eval: sc_eval
   ~defn:    
-    expr.macro 'add_one_to_expr $(expr :: Arithmetic)':
-      '$expr ... + 1'
+    expr.macro 'add_one_to_expr $(a :: Arithmetic)':
+      '$a ... + 1'
   ~repl:
     add_one_to_expr 1 + 1
     add_one_to_expr 1 - 2
@@ -144,8 +144,8 @@ from a pattern variable using dot notation.
 @demo(
   ~eval: sc_eval
   ~defn:
-    expr.macro 'right_operand $(expr :: Arithmetic)':
-      expr.y
+    expr.macro 'right_operand $(a :: Arithmetic)':
+      a.y
   ~eval:
     right_operand 2 + 3
     right_operand 8 - 4
@@ -161,9 +161,9 @@ alternative of a syntax class.
     | '$x + $y + $z'
     | '$x - $y'
   ~repl:
-    def '$(expr :: Arithmetic)' = '1 + 2 + 3'
-    expr.y
-    ~error: expr.z
+    def '$(a :: Arithmetic)' = '1 + 2 + 3'
+    a.y
+    ~error: a.z
 )
 
 In other words, the attributes of a syntax class are defined by the intersection 

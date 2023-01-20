@@ -3,6 +3,7 @@
                      (only-in racket/function normalize-arity)
                      racket/syntax
                      syntax/parse/pre
+                     enforest/name-parse
                      shrubbery/property
                      "hash-set.rkt"
                      "srcloc.rkt"
@@ -10,8 +11,10 @@
                      "with-syntax.rkt"
                      "tag.rkt")
          racket/unsafe/undefined
+         "provide.rkt"
          "parens.rkt"
          "expression.rkt"
+         "expression+definition.rkt"
          "binding.rkt"
          "definition.rkt"
          "entry-point.rkt"
@@ -23,10 +26,10 @@
          "function-arity-key.rkt"
          "static-info.rkt"
          "annotation.rkt"
-         (rename-in "ellipsis.rkt"
-                    [... rhombus...])
          "repetition.rkt"
          "rest-marker.rkt"
+         "op-literal.rkt"
+         (submod "ellipsis.rkt" for-parse)
          (only-in "list.rkt" List)
          (only-in (submod "list.rkt" for-binding)
                   parse-list-expression)
@@ -43,9 +46,12 @@
          "compound-repetition.rkt"
          "function-arity.rkt")
 
-(provide fun
-         Function
-         (for-space rhombus/annot Function))
+(provide (for-spaces (#f
+                      rhombus/entry_point)
+                     fun)
+         (for-spaces (rhombus/namespace
+                      rhombus/annot)
+                     Function))
 
 (module+ for-build
   (provide (for-syntax :kw-binding
@@ -80,7 +86,7 @@
 (define-for-syntax (wrap-function-static-info expr)
   (wrap-static-info* expr function-static-infos))
 
-(define-annotation-syntax Function (identifier-annotation #'Function #'procedure? #'()))
+(define-annotation-syntax Function (identifier-annotation #'procedure? #'()))
 
 (define-syntax function-instance
   (dot-provider-more-static
@@ -95,10 +101,9 @@
     #:attributes ()
     (pattern form
              #:when (syntax-parse #'form
-                      #:datum-literals (group op)
-                      #:literals (& ~&)
-                      [(group (op (~literal rhombus...))) #f]
-                      [(group (op (~or & ~&)) . _) #f]
+                      #:datum-literals (group)
+                      [(group _::...-bind) #f]
+                      [(group (~or _::&-bind _::~&-bind) . _) #f]
                       [_ #t])))
   (define-syntax-class :non-...-binding
     (pattern form::non-...
@@ -110,8 +115,7 @@
 
   (define-syntax-class :kw-binding
     #:attributes [kw parsed]
-    #:datum-literals (op block group)
-    #:literals (rhombus...)
+    #:datum-literals (block group)
     (pattern (group kw:keyword (block (group a ...+)))
              #:with arg::binding #'(group a ...)
              #:attr parsed #'arg.parsed)
@@ -125,8 +129,7 @@
   ;; used when just extracting an arity:
   (define-syntax-class :kw-arity-arg
     #:attributes [kw]
-    #:datum-literals (op block group)
-    #:literals (rhombus...)
+    #:datum-literals (block group)
     (pattern (group kw:keyword . _))
     (pattern (group kw:keyword))
     (pattern arg::non-...
@@ -134,8 +137,7 @@
   
   (define-syntax-class :kw-opt-binding
     #:attributes [kw parsed default]
-    #:datum-literals (op block group)
-    #:literals (rhombus...)
+    #:datum-literals (block group)
     (pattern (group kw:keyword (block (group a::not-equal ...+ _::equal e ...+)))
              #:with arg::binding #'(group a ...)
              #:with default #'(group e ...)
@@ -165,8 +167,7 @@
   ;; used when just extracting an arity:
   (define-syntax-class :kw-opt-arity-arg
     #:attributes [kw default]
-    #:datum-literals (op block group)
-    #:literals (rhombus...)
+    #:datum-literals (block group)
     (pattern (group kw:keyword (block (group _::not-equal ...+ _::equal _ ...+)))
              #:with default #'#t)
     (pattern (group kw:keyword (block (group _ ...+ (b-tag::block . _))))
@@ -191,47 +192,41 @@
     (pattern (braces . _)))
 
   (define-splicing-syntax-class :ret-annotation
-    #:datum-literals (block group op)
-    #:literals (:: -:)
-    (pattern (~seq (op ::) ctc0::not-block ctc::not-block ...)
+    #:datum-literals (block group)
+    (pattern (~seq op::name ctc0::not-block ctc::not-block ...)
+             #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'::)))]
+             #:when (or check?
+                        (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'-:)))
              #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
              #:with c-parsed::annotation-form #'c.parsed
              #:attr static-infos #'c-parsed.static-infos
-             #:attr predicate #'c-parsed.predicate)
-    (pattern (~seq (op -:) ctc0::not-block ctc::not-block ...)
-             #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
-             #:with c-parsed::annotation-form #'c.parsed
-             #:attr static-infos #'c-parsed.static-infos
-             #:attr predicate #'#f)
+             #:attr predicate (if check? #'c-parsed.predicate #'#f))
     (pattern (~seq)
              #:attr static-infos #'()
              #:attr predicate #'#f))
 
   (define-splicing-syntax-class :pos-rest
     #:attributes [arg parsed]
-    #:datum-literals (group op)
-    #:literals (& rhombus...)
-    (pattern (~seq (group (op &) a ...))
-      #:with arg::non-...-binding #'(group a ...)
-      #:with parsed #'arg.parsed)
-    (pattern (~seq e::non-...-binding (~and ooo (group (op rhombus...))))
-      #:with (::pos-rest)
-      #'((group (op &) List (parens e ooo)))))
+    #:datum-literals (group)
+    (pattern (~seq (group _::&-bind a ...))
+             #:with arg::non-...-binding #'(group a ...)
+             #:with parsed #'arg.parsed)
+    (pattern (~seq e::non-...-binding (~and ooo (group _::...-bind)))
+             #:with (::pos-rest)
+             #'((group & List (parens e ooo)))))
 
   (define-splicing-syntax-class :kwp-rest
     #:attributes [kwarg kwparsed]
-    #:datum-literals (group op)
-    #:literals (~&)
-    (pattern (~seq (group (op ~&) a ...))
-      #:with kwarg::non-...-binding #'(group a ...)
-      #:with kwparsed #'kwarg.parsed
-      #:attr arg #'#f
-      #:attr parsed #'#f))
+    #:datum-literals (group)
+    (pattern (~seq (group _::~&-bind a ...))
+             #:with kwarg::non-...-binding #'(group a ...)
+             #:with kwparsed #'kwarg.parsed
+             #:attr arg #'#f
+             #:attr parsed #'#f))
 
   (define-splicing-syntax-class :maybe-arg-rest
     #:attributes [arg parsed kwarg kwparsed]
-    #:datum-literals (group op)
-    #:literals (& ~& rhombus...)
+    #:datum-literals (group)
     (pattern (~seq
               (~alt (~optional ::pos-rest #:defaults ([arg #'#f] [parsed #'#f]))
                     (~optional ::kwp-rest #:defaults ([kwarg #'#f] [kwparsed #'#f])))
@@ -240,50 +235,27 @@
   ;; used when just extracting an arity:
   (define-splicing-syntax-class :pos-arity-rest
     #:attributes [rest?]
-    #:datum-literals (group op)
-    #:literals (& rhombus...)
-    (pattern (~seq (group (op &) _ ...))
+    #:datum-literals (group)
+    (pattern (~seq (group _::&-bind _ ...))
              #:attr rest? #'#t)
-    (pattern (~seq _::non-... (group (op rhombus...)))
+    (pattern (~seq _::non-... (group _::...-bind))
              #:attr rest? #'#t))
   (define-splicing-syntax-class :kwp-arity-rest
     #:attributes [kwrest?]
-    #:datum-literals (group op)
-    #:literals (~&)
-    (pattern (~seq (group (op ~&) _ ...))
+    #:datum-literals (group)
+    (pattern (~seq (group _::~&-bind _ ...))
              #:attr kwrest? #'#t))
   (define-splicing-syntax-class :maybe-rest-arity-arg
     #:attributes [rest? kwrest?]
-    #:datum-literals (group op)
-    #:literals (& ~& rhombus...)
+    #:datum-literals (group)
     (pattern (~seq
               (~alt (~optional ::pos-arity-rest #:defaults ([rest? #'#f]))
                     (~optional ::kwp-arity-rest #:defaults ([kwrest? #'#f])))
-              ...)))
-
-  (struct entry-point+expression+definition-transformer (cbl exp def)
-    #:property prop:entry-point-transformer (lambda (self) (entry-point+expression+definition-transformer-cbl self))
-    #:property prop:expression-prefix-operator (lambda (self) (entry-point+expression+definition-transformer-exp self))
-    #:property prop:definition-transformer (lambda (self) (entry-point+expression+definition-transformer-def self)))
-  (define (make-entry-point+expression+definition-transformer cbl exp def)
-    (entry-point+expression+definition-transformer cbl exp def)))
+              ...))))
 
 (define-syntax fun
-  (make-entry-point+expression+definition-transformer
-   (entry-point-transformer
-    ;; parse function:
-    (lambda (stx adjustments)
-      (define-values (term tail) (parse-anonymous-function stx adjustments #t))
-      (syntax-parse tail
-        [() term]
-        [_ (raise-syntax-error #f
-                               "unexpected extra terms"
-                               tail)]))
-    ;; extract arity:
-    (lambda (stx)
-      (parse-anonymous-function-arity stx)))
+  (make-expression+definition-transformer
    (expression-transformer
-    #'fun
     (lambda (stx)
       (parse-anonymous-function stx no-adjustments #f)))
    (definition-transformer
@@ -337,6 +309,20 @@
          (syntax-parse #`(group . #,stx)
            [e::expression
             (list #'(#%expression e.parsed))])])))))
+
+(define-entry-point-syntax fun
+  (entry-point-transformer
+   ;; parse function:
+   (lambda (stx adjustments)
+     (define-values (term tail) (parse-anonymous-function stx adjustments #t))
+     (syntax-parse tail
+       [() term]
+       [_ (raise-syntax-error #f
+                              "unexpected extra terms"
+                              tail)]))
+   ;; extract arity:
+   (lambda (stx)
+     (parse-anonymous-function-arity stx))))
 
 (define-syntax fun/read-only-property
   (entry-point-transformer
@@ -831,7 +817,7 @@
 (begin-for-syntax
   (define-syntax-class :kw-argument
     #:attributes (kw exp)
-    #:datum-literals (op block group)
+    #:datum-literals (block group)
     (pattern (group kw:keyword (block exp)))
     (pattern exp
              #:attr kw #'#f)))
@@ -855,8 +841,7 @@
     (when (eq? rator-kind '|syntax class|)
       (raise-syntax-error #f "syntax class call cannot have splicing arguments" rator-stx)))
   (syntax-parse stxes
-    #:datum-literals (group op)
-    #:literals (& ~& rhombus...)
+    #:datum-literals (group)
     [(_ (~and args (_::parens rand ...)) . tail)
      #:when (complex-argument-splice? #'(rand ...))
      (check-complex-allowed)
@@ -868,24 +853,24 @@
                                            #:rator-arity rator-arity)
              #'tail)]
     [(_ (_::parens rand ...
-                   (group (op &) rst ...)
-                   (group (op ~&) kwrst ...))
+                   (group _::&-expr rst ...)
+                   (group _::~&-expr kwrst ...))
         . tail)
      (check-complex-allowed)
      (generate extra-args #'(rand ...) #'(group rst ...) #f #'(group kwrst ...) #t #'tail)]
     [(_ (_::parens rand ...
-                   rep (group (op (~and dots rhombus...)))
-                   (group (op ~&) kwrst ...))
+                   rep (group (~var dots (:... in-expression-space)))
+                   (group _::&-expr kwrst ...))
         . tail)
      (check-complex-allowed)
-     (generate #'(rand ...) #'rep #'dots #'(group kwrst ...) #'tail)]
-    [(_ (_::parens rand ... (group (op &) rst ...)) . tail)
+     (generate #'(rand ...) #'rep #'dots.name #'(group kwrst ...) #'tail)]
+    [(_ (_::parens rand ... (group _::&-expr rst ...)) . tail)
      (check-complex-allowed)
      (generate extra-args #'(rand ...) #'(group rst ...) #f #f #'tail)]
-    [(_ (_::parens rand ... rep (group (op (~and dots rhombus...)))) . tail)
+    [(_ (_::parens rand ... rep (group (~var dots (:... in-expression-space)))) . tail)
      (check-complex-allowed)
-     (generate extra-args #'(rand ...) #'rep #'dots #f #'tail)]
-    [(_ (_::parens rand ... (group (op ~&) kwrst ...)) . tail)
+     (generate extra-args #'(rand ...) #'rep #'dots.name #f #'tail)]
+    [(_ (_::parens rand ... (group _::~&-expr kwrst ...)) . tail)
      (check-complex-allowed)
      (generate extra-args #'(rand ...) #f #f #'(group kwrst ...) #'tail)]
     [(_ (_::parens rand ...) . tail)
@@ -1010,21 +995,19 @@
   ;; or `~&` that's not at the very end?
   (define (not-kw-splice-only? gs-stx)
     (syntax-parse gs-stx
-      #:datum-literals (group op)
-      #:literals (~&)
-      [((group (op ~&) rand ...+)) #f]
+      #:datum-literals (group)
+      [((group _::~&-expr rand ...+)) #f]
       [() #f]
       [_ #t]))
   (let loop ([gs-stx gs-stx])
     (syntax-parse gs-stx
-      #:datum-literals (group op)
-      #:literals (& ~& rhombus...)
+      #:datum-literals (group)
       [() #f]
-      [((group (op &) rand ...+) . gs)
+      [((group _::&-expr rand ...+) . gs)
        (or (loop #'gs) (not-kw-splice-only? #'gs))]
-      [(g0 (group (op rhombus...)) . gs)
+      [(g0 (group _::...-expr) . gs)
        (or (loop #'gs) (not-kw-splice-only? #'gs))]
-      [((group (op (~and splice ~&)) rand ...+) . gs)
+      [((group _::~&-expr rand ...+) . gs)
        (or (loop #'(g . gs))  (pair? (syntax-e #'gs)))]
       [(_ . gs) (loop #'gs)])))
 
@@ -1038,8 +1021,7 @@
   (let loop ([gs-stx gs-stx]
              [rev-args '()])
     (syntax-parse gs-stx
-      #:datum-literals (group op)
-      #:literals (& ~& rhombus...)
+      #:datum-literals (group)
       [()
        (define args (reverse rev-args))
        (define extra-arg-ids (generate-temporaries extra-args))
@@ -1091,16 +1073,16 @@
                                   #:rator-kind rator-kind
                                   #:rator-arity rator-arity))
                  term))]
-      [(((~and tag group) (op &) rand ...+) . gs)
+      [(((~and tag group) _::&-expr rand ...+) . gs)
        (loop #'gs
              (cons (list (gen-id) 'list #'(rhombus-expression (tag rand ...)) #f)
                    rev-args))]
-      [(g0 (group (op (~and dots rhombus...))) . gs)
+      [(g0 (group (~var dots (:... in-expression-space))) . gs)
        (define-values (new-gs extras) (consume-extra-ellipses #'gs))
        (loop new-gs
-             (cons (list (gen-id) 'list (repetition-as-list #'dots #'g0 1 extras))
+             (cons (list (gen-id) 'list (repetition-as-list #'dots.name #'g0 1 extras))
                    rev-args))]
-      [(((~and tag group) (op ~&) rand ...+) . gs)
+      [(((~and tag group) _::~&-expr rand ...+) . gs)
        (loop #'gs
              (cons (list (gen-id) 'kws #'(rhombus-expression (tag rand ...)))
                    rev-args))]

@@ -19,13 +19,13 @@
 
 (define-syntax (define-composed-splicing-syntax-class stx)
   (syntax-case stx ()
-    [(_ id mixin-id ...)
+    [(_ head mixin-id ...)
      (with-syntax ([(((literal-id ...) (alt ...) (attr ...)) ...)
                     (map syntax-local-value (syntax->list #'(mixin-id ...)))])
        (with-syntax ([(unique-literal-id ...)
                       (hash-values (for/hash ([literal-id (in-list (syntax->list #'(literal-id ... ...)))])
                                      (values (syntax-e literal-id) literal-id)))])
-         #`(define-splicing-syntax-class id
+         #`(define-splicing-syntax-class head
              #:datum-literals (unique-literal-id ...)
              (pattern (~seq (~alt alt ... ...) (... ...))
                       attr ... ...))))]))

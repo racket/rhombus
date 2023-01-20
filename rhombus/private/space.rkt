@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
-                     "introducer.rkt"))
+                     "introducer.rkt"
+                     (for-syntax racket/base)))
 
 (provide (for-syntax space-syntax)
          define-space-syntax)
@@ -11,11 +12,15 @@
   (provide (property-out space-name)
            space-name-ref
            space-name-symbol
-           in-space-space)
+           in-space-space
+           space-quote)
 
   (property space-name (symbol))
 
   (define in-space-space (make-interned-syntax-introducer/add 'rhombus/space))
+  (define-syntax (space-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/space) #'id))]))
 
   (define-syntax-rule (space-syntax sym)
     (space-name 'sym)))

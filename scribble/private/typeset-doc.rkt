@@ -10,6 +10,9 @@
          racket/list
          (only-in rhombus/private/space
                   in-space-space)
+         (only-in rhombus/private/name-root-space
+                  in-name-root-space
+                  name-root-quote)
          (only-in (submod rhombus/private/import for-meta)
                   in-import-space)
          (only-in (submod rhombus/private/export for-meta)
@@ -17,10 +20,14 @@
          (only-in (submod rhombus/private/module-path for-meta)
                   in-module-path-space
                   modpath)
+         (only-in rhombus/private/binding
+                  in-binding-space)
          (only-in (submod rhombus/private/annotation for-class)
                   in-annotation-space)
          (only-in rhombus/private/repetition
                   in-repetition-space)
+         (only-in (for-syntax rhombus/private/class-parse)
+                  in-class-desc-space)
          (only-in (submod rhombus/private/syntax-class-primitive for-quasiquote)
                   in-syntax-class-space)
          (only-in (submod rhombus/private/syntax-class-clause for-class)
@@ -42,7 +49,7 @@
          (only-in rhombus
                   def fun operator interface :: |.| $
                   [= rhombus-=]
-                  syntax_class)
+                  syntax_class class)
          (only-in rhombus/meta
                   space decl defn expr impo expo annot repet bind reducer for_clause
                   class_clause interface_clause entry_point unquote_bind
@@ -102,13 +109,12 @@
                          (define def-name (extract-defined form space-name))
                          (when def-name
                            (define def-id (if (identifier? def-name)
-                                              def-name
-                                              (car (syntax-e def-name))))
-                           (define s-def-id (introducer def-id))
-                           (unless (identifier-binding s-def-id #f)
+                                              (introducer def-name)
+                                              (in-name-root-space (car (syntax-e def-name)))))
+                           (unless (identifier-binding def-id #f)
                              (raise-syntax-error 'doc
                                                  "identifier to document has no for-label binding"
-                                                 s-def-id)))
+                                                 def-id)))
                          def-name))
      (define def-id-as-defs (for/fold ([rev-as-defs '()] [seen #hash()] #:result (reverse rev-as-defs))
                                       ([def-name (in-list def-names)]
@@ -120,8 +126,8 @@
                                          seen)]
                                 [else
                                  (define def-id (if (identifier? def-name)
-                                                    def-name
-                                                    (car (syntax-e def-name))))
+                                                    (introducer def-name)
+                                                    (in-name-root-space (car (syntax-e def-name)))))
                                  (define str-id (if (identifier? def-name)
                                                     #f
                                                     (cadr (syntax->list def-name))))
@@ -136,7 +142,7 @@
                                             (#,(if (hash-ref seen seen-key #f)
                                                    #'make-redef-id
                                                    #'make-def-id)
-                                             (quote-syntax #,(introducer def-id))
+                                             (quote-syntax #,def-id)
                                              (quote-syntax #,str-id)
                                              (quote #,space-name)))
                                         rev-as-defs)
@@ -219,35 +225,58 @@
      #`(parsed (racketvarfont #,(symbol->string (syntax-e id)))))))
 
 (begin-for-syntax
+  (define-syntax-rule (def-space :sp sp)
+    (define-syntax-class :sp
+      (pattern id:identifier
+               #:when (free-identifier=? (in-name-root-space #'id) (name-root-quote sp)))))
+  (def-space :decl decl)
+  (def-space :defn defn)
+  (def-space :expr expr)
+  (def-space :bind bind)
+  (def-space :annot annot)
+  (def-space :repet repet)
+  (def-space :reducer reducer)
+  (def-space :expo expo)
+  (def-space :impo impo)
+  (def-space :modpath modpath)
+  (def-space :for_clause for_clause)
+  (def-space :class_clause class_clause)
+  (def-space :interface_clause interface_clause)
+  (def-space :entry_point entry_point)
+  (def-space :unquote_bind unquote_bind)
+  (def-space :syntax_class_clause syntax_class_clause)
+  (def-space :pattern_clause pattern_clause)
+  (def-space :space space)
+
   (define-splicing-syntax-class operator-macro-head
-    #:literals (def fun expr impo expo modpath bind annot repet
-                 unquote_bind |.|)
-    #:datum-literals (op macro)
-    (pattern (~seq (~or expr bind annot repet expo impo modpath
-                        unquote_bind)
+    #:literals (def fun)
+    #:datum-literals (op macro modifier |.|)
+    (pattern (~seq (~or _::expr _::bind _::annot _::repet
+                        _::expo _::impo _::modpath
+                        _::unquote_bind)
                    (op |.|)
                    macro))
-    (pattern (~seq (~or expo impo) (op |.|) modifier))
+    (pattern (~seq (~or _::expo _::impo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:literals (def defn expr decl bind impo expo modpath annot repet reducer
-                 for_clause class_clause interface_clause entry_point
-                 unquote_bind syntax_class_clause pattern_clause |.|)
-    #:datum-literals (op modifier macro)
-    (pattern (~seq (~or defn decl expr annot repet bind reducer expo modpath
-                        for_clause class_clause interface_clause entry_point
-                        unquote_bind syntax_class_clause pattern_clause)
+    #:datum-literals (op modifier macro |.|)
+    (pattern (~seq (~or _::defn _::decl _::expr _::annot _::repet _::bind _::reducer _::expo _::modpath
+                        _::for_clause _::class_clause _::interface_clause _::entry_point
+                        _::unquote_bind _::syntax_class_clause _::pattern_clause)
                    (op |.|) macro))
-    (pattern (~seq (~or impo expo) (op |.|) modifier))
+    (pattern (~seq (~or _::impo _::expo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class specsubform-head
-    #:literals (specsubform |.|)
+    #:literals (specsubform)
+    #:datum-literals (|.|)
     (pattern (~seq _ (op |.|) specsubform))
     (pattern specsubform))
   (define-splicing-syntax-class (identifier-target space-name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
-             #:do [(define target+remains (resolve-name-ref space-name (add-space #'root space-name) (syntax->list #'(field ...))))]
+             #:do [(define target+remains (resolve-name-ref space-name
+                                                            (in-name-root-space #'root)
+                                                            (syntax->list #'(field ...))))]
              #:when target+remains
              #:attr name (datum->syntax #f (list #'root (car target+remains))))
     (pattern (~seq name:identifier)))
@@ -259,10 +288,11 @@
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
-    #:literals (def fun interface operator :: |.| grammar syntax_class space $)
-    #:datum-literals (parens group op modifier class class_clause interface_clause quotes
-                             enforest transform)
-    [(group (~or space) _ _ (~var id (identifier-target space-name))) #'id.name]
+    #:literals (def fun interface operator grammar syntax_class)
+    #:datum-literals (|.| $ parens group op
+                          modifier class class_clause interface_clause quotes
+                          enforest transform)
+    [(group _::space _ _ (~var id (identifier-target space-name))) #'id.name]
     [(group (~or fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
     [(group (~or def interface) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
@@ -272,19 +302,26 @@
     [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name)))) #'id.name]
     [(group syntax_class (~var id (identifier-target space-name)) . _) #'id.name]
-    [(group space (op |.|) (~or enforest transform) (~var id (identifier-target space-name)) . _) #'id.name]
+    [(group _::space (op |.|) (~or enforest transform) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
-    [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
+    [_
+     (syntax-parse stx
+       #:literals (fun)
+       #:datum-literals ($ parens group op)
+       [(group fun (~var id (identifier-target space-name)) (parens . _) . _)
+        (log-error ">> ok")]
+       [_ (log-error "no")])
+     (raise-syntax-error 'doc "unknown definition form" stx)]))
 
 (define-for-syntax (add-metavariable vars id)
   (hash-set vars (syntax-e id) (or (hash-ref vars (syntax-e id) #f) id)))
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (space def fun operator :: |.| grammar specsubform syntax_class)
+    #:literals (def fun operator grammar specsubform syntax_class)
     #:datum-literals (parens group op quotes class)
-    [(group (~or space) . _) vars]
+    [(group (~or _::space) . _) vars]
     [(group (~or fun) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
@@ -395,8 +432,8 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (space def fun interface syntax_class operator |.| |$| grammar)
-    #:datum-literals (parens group op quotes)
+    #:literals (def fun interface syntax_class operator |$| grammar)
+    #:datum-literals (parens group op quotes |.|)
     [(group (~and tag (~or def fun interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
@@ -423,7 +460,7 @@
     [(group syntax_class (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group #,@(subst #'id.name) e ...))]
-    [(group space _ _ (~var id (identifier-target space-name)) e ...)
+    [(group _::space _ _ (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group #,@(subst #'id.name) e ...))]
     [(group _:specsubform-head (quotes g))
@@ -472,75 +509,75 @@
       
 (define-for-syntax (extract-introducer stx)
   (syntax-parse stx
-    #:literals (space impo expo modpath annot repet reducer for_clause class_clause interface_clause
-                      entry_point syntax_class_clause pattern_clause syntax_class)
+    #:literals (syntax_class interface class)
     #:datum-literals (parens group op)
-    [(group space . _) in-space-space]
-    [(group impo . _) in-import-space]
-    [(group expo . _) in-export-space]
-    [(group modpath . _) in-module-path-space]
-    [(group annot . _) in-annotation-space]
-    [(group repet . _) in-repetition-space]
-    [(group reducer . _) in-reducer-space]
-    [(group for_clause . _) in-for-clause-space]
-    [(group class_clause . _) in-class-clause-space]
-    [(group interface_clause . _) in-interface-clause-space]
-    [(group entry_point . _) in-entry-point-space]
-    [(group unquote_bind . _) in-unquote-binding-space]
-    [(group syntax_class_clause . _) in-syntax-class-clause-space]
-    [(group pattern_clause . _) in-pattern-clause-space]
+    [(group _::space . _) in-space-space]
+    [(group _::impo . _) in-import-space]
+    [(group _::expo . _) in-export-space]
+    [(group _::modpath . _) in-module-path-space]
+    [(group _::bind . _) in-binding-space]
+    [(group _::annot . _) in-annotation-space]
+    [(group _::repet . _) in-repetition-space]
+    [(group _::reducer . _) in-reducer-space]
+    [(group _::for_clause . _) in-for-clause-space]
+    [(group _::class_clause . _) in-class-clause-space]
+    [(group _::interface_clause . _) in-interface-clause-space]
+    [(group _::entry_point . _) in-entry-point-space]
+    [(group _::unquote_bind . _) in-unquote-binding-space]
+    [(group _::syntax_class_clause . _) in-syntax-class-clause-space]
+    [(group _::pattern_clause . _) in-pattern-clause-space]
+    [(group interface . _) in-class-desc-space]
+    [(group class . _) in-class-desc-space]
     [(group syntax_class . _) in-syntax-class-space]
     [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
-    #:literals (space impo expo modpath annot repet reducer for_clause class_clause interface_clause entry_point
-                     bind unquote_bind syntax_class_clause pattern_clause syntax_class)
+    #:literals (syntax_class class interface)
     #:datum-literals (parens group op)
-    [(group space . _) 'space]
-    [(group impo . _) 'impmod]
-    [(group expo . _) 'expmod] ; one space currently used for both exports and modifiers
-    [(group modpath . _) 'modpath]
-    [(group annot . _) 'annot]
-    [(group repet . _) 'repet]
-    [(group reducer . _) 'reducer]
-    [(group for_clause . _) 'for_clause]
-    [(group class_clause . _) 'class_clause]
-    [(group interface_clause . _) 'intf_clause]
-    [(group entry_point . _) 'entry_point]
-    [(group unquote_bind . _) 'unquote_bind]
-    [(group syntax_class_clause . _) 'syntax_class_clause]
-    [(group pattern_clause . _) 'pattern_clause]
-    [(group bind . _) 'bind]
+    [(group _::space . _) 'space]
+    [(group _::impo . _) 'impo]
+    [(group _::expo . _) 'expo] ; one space currently used for both exports and modifiers
+    [(group _::modpath . _) 'modpath]
+    [(group _::annot . _) 'annot]
+    [(group _::repet . _) 'repet]
+    [(group _::reducer . _) 'reducer]
+    [(group _::for_clause . _) 'for_clause]
+    [(group _::class_clause . _) 'class_clause]
+    [(group _::interface_clause . _) 'intf_clause]
+    [(group _::entry_point . _) 'entry_point]
+    [(group _::unquote_bind . _) 'unquote_bind]
+    [(group _::syntax_class_clause . _) 'syntax_class_clause]
+    [(group _::pattern_clause . _) 'pattern_clause]
+    [(group _::bind . _) 'bind]
+    [(group interface . _) 'class]
+    [(group class . _) 'class]
     [(group syntax_class . _) 'stxclass]
     [_ #f]))
 
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
-    #:literals (space defn decl expr impo expo modpath annot repet reducer
-                 for_clause class_clause interface_clause entry_point
-                 bind grammar operator syntax_class
-                 unquote_bind syntax_class_clause pattern_clause interface)
+    #:literals (def fun operator syntax_class interface grammar class)
     #:datum-literals (parens group op quotes modifier macro)
-    [(group space . _) "space"]
-    [(group decl . _) "declaration"]
-    [(group defn . _) "definition"]
-    [(group expr . _) "expression"]
-    [(group impo . _) "import modifier"]
-    [(group modpath . _) "module path"]
-    [(group expo _ modifier . _) "export modifier"]
-    [(group expo _ macro . _) "export"]
-    [(group annot . _) "annotation"]
-    [(group repet . _) "repetition"]
-    [(group reducer . _) "reducer"]
-    [(group for_clause . _) "for clause"]
-    [(group class_clause . _) "class clause"]
-    [(group interface_clause . _) "interface clause"]
-    [(group entry_point . _) "entry point"]
-    [(group unquote_bind . _) "unquote binding"]
-    [(group syntax_class_clause . _) "syntax class clause"]
-    [(group pattern_clause  . _) "pattern clause"]
-    [(group bind . _) "binding operator"]
+    [(group _::space . _) "space"]
+    [(group _::decl . _) "declaration"]
+    [(group _::defn . _) "definition"]
+    [(group _::expr . _) "expression"]
+    [(group _::impo . _) "import modifier"]
+    [(group _::modpath . _) "module path"]
+    [(group _::expo _ modifier . _) "export modifier"]
+    [(group _::expo _ macro . _) "export"]
+    [(group _::annot . _) "annotation"]
+    [(group _::repet . _) "repetition"]
+    [(group _::reducer . _) "reducer"]
+    [(group _::for_clause . _) "for clause"]
+    [(group _::class_clause . _) "class clause"]
+    [(group _::interface_clause . _) "interface clause"]
+    [(group _::entry_point . _) "entry point"]
+    [(group _::unquote_bind . _) "unquote binding"]
+    [(group _::syntax_class_clause . _) "syntax class clause"]
+    [(group _::pattern_clause  . _) "pattern clause"]
+    [(group _::bind . _) "binding operator"]
     ;; after expr, bind, etc. so that expr.subspecform gets "expression" not #f
     [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
@@ -548,6 +585,7 @@
     [(group (~or def) (quotes . _) . _) "expression"]
     [(group operator . _) "operator"]
     [(group syntax_class . _) "syntax class"]
+    [(group class . _) "class"]
     [(group interface . _) "interface"]
     [_ "value"]))
 

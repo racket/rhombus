@@ -11,9 +11,12 @@ types and one macro:
 
   @itemlist[
 
-        @item{@racket[proc]: a transformer procedure, which takes a syntactic list
-        of tokens and returns two values: a new head identifier or
-        operator token, and a new tail syntactic list of tokens.}
+        @item{@racket[proc]: a transformer procedure, which takes an introducer
+        funciton and a syntactic list of tokens and returns two values: a new
+        head identifier or operator token, and a new tail syntactic list of
+        tokens. The introducer function corresponds to the space that is
+        otherwise used to lookup identifiers, which the transformer procedure
+        might take into account.}
 
       ]
 
@@ -108,8 +111,7 @@ types and one macro:
       enforestation based on the precedence and associatvity of the given operator.
       A match has a @racket[parsed] attribute for the parsed
       result and a @racket[tail] attribute for the remaining terms in
-      a group; a @racket[raw_tail] attribute is also available, which is the
-      same as @racket[tail] but without a @racket[group] tag.}
+      a group.}
 
     @item{@racket[#:desc] and @racket[#:operator-desc]: strings used in error reporting
       to refer to a form or an operator for a form. The defaults are
@@ -135,15 +137,6 @@ types and one macro:
       compile-time value and extracts an instance of
       @racket[name-root], used only on the compile-time value of an
       identifier that is followed by the @racket[#:name-path-op]
-      operator.}
-
-    @item{@racket[#:name-root-ref-root]: a function that takes a
-      compile-time value and extracts another compile-time value, used
-      before the @racket[#:prefix-operator-ref] and
-      @racket[#:infix-operator-ref] procedures, but not before the
-      @racket[#:name-root-ref] procedure; the intent is that this
-      function might convert something that would produce a name-root
-      value into something that can instead produce an infix or prefix
       operator.}
 
     @item{@racket[#:check-result]: a function that takes the result of an
@@ -228,8 +221,7 @@ and macro:
       name-root identifier for hierarhical name references. The
       default is @racket['|.|].}
 
-    @item{@racket[#:name-root-ref] and @racket[#:name-root-ref-root]:
-      analogous to @racket[define-enforest].}
+    @item{@racket[#:name-root-ref]: analogous to @racket[define-enforest].}
 
     @item{@racket[#:check-result]: a function that takes the result of an
       transformer and checks whether the result is suitable for the

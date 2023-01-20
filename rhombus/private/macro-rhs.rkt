@@ -7,6 +7,7 @@
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"
                   [... rhombus...])
+         "dollar.rkt"
          "parse.rkt"
          "srcloc.rkt"
          "binding.rkt"
@@ -43,16 +44,16 @@
         [(eq? kind 'rule) (values tail-pattern-in #t)]
         [else
          (syntax-parse tail-pattern-in
-           #:datum-literals (op group)
-           [(pat ... (op (~var _ (:$ in-binding-space))) _:identifier  (op (~var _ (:... in-binding-space))))
+           #:datum-literals (group)
+           [(pat ... _::$-bind _:identifier _::...-bind)
             ;; recognize where a tail match would be redundant and always be empty;
             ;; this is kind of an optimization, but one that's intended to be guaranteed;
             ;; note that this enables returning two values from the macro, instead
             ;; of just one
             (values tail-pattern-in #f)]
-           [(pat ... (op (~var _ (:$ in-binding-space))) #:end)
+           [(pat ... _::$-bind #:end)
             (values #`(pat ...) #f)]
-           [(pat ... (op (~var _ (:$ in-binding-space))) (_::parens (group #:end)))
+           [(pat ... _::$-bind (_::parens (group #:end)))
             (values #`(pat ...) #f)]
            [_ (values tail-pattern-in #t)])]))
     (define-values (pattern idrs sidrs vars can-be-empty?)
@@ -65,12 +66,12 @@
                            #:splice? #t
                            #:splice-pattern values)))
     (with-syntax ([((id id-ref) ...) idrs]
-                  [((sid sid-ref) ...) sidrs]
+                  [(((sid ...) sid-ref) ...) sidrs]
                   [(left-id ...) left-ids])
       (define body
         (cond
           [(eq? kind 'rule)
-           (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ...))))])
+           (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...))))])
              #`(values #,(convert-rule-template rhs ids)
                        (tail-rule-template (multi (group (op $) tail (op rhombus...))))))]
           [implicit-tail?
@@ -84,7 +85,7 @@
              (define-syntax left-id-static (make-static-infos syntax-static-infos))
              ...
              (define-syntax #,(in-static-info-space #'self-id) (make-static-infos syntax-static-infos))
-             (let-syntax ([sid sid-ref] ...)
+             (let-syntaxes ([(sid ...) sid-ref] ...)
                #,body))])))
   (define (convert-rule-template block ids)
     (syntax-parse block
@@ -95,8 +96,8 @@
       [(block (group e)) (raise-syntax-error 'template "invalid result template" #'e)]))
   (define (extract-pattern-id tail-pattern)
     (syntax-parse tail-pattern
-      #:datum-literals (op group)
-      [((op (~var _ (:$ in-binding-space))) (_::parens (group #:parsed id:identifier))) #'id]))
+      #:datum-literals (group)
+      [(_::$-bind (_::parens (group #:parsed id:identifier))) #'id]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol
@@ -202,10 +203,13 @@
 
 ;; combine previously parsed cases (possibly the only case) in a macro
 ;; definition that are all either prefix or infix
-(define-for-syntax (build-cases ps prefix? make-id adjustments)
+(define-for-syntax (build-cases ps prefix? make-id space-sym adjustments)
   (define p (car ps))
   #`(#,make-id
-     (quote-syntax #,(parsed-name p))
+     (quote-syntax #,(let ([name (parsed-name p)])
+                       (if space-sym
+                           ((make-interned-syntax-introducer space-sym) name 'add)
+                           name)))
      #,(parsed-prec-stx p)
      #,(if (parsed-parsed-right? p)
            #''automatic
@@ -227,16 +231,18 @@
 
 ;; single-case macro definition:
 (define-for-syntax (parse-operator-definition-rhs pre-parsed
+                                                  space-sym
                                                   make-prefix-id make-infix-id
                                                   #:adjustments [adjustments no-adjustments])
   (define p (parse-one-macro-definition pre-parsed adjustments))
   (define op (parsed-name p))
   (define prefix? (eq? 'prefix (parsed-fixity p)))
   (define make-id (if prefix? make-prefix-id make-infix-id))
-  (build-cases (list p) prefix? make-id adjustments))
+  (build-cases (list p) prefix? make-id space-sym adjustments))
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions-rhs orig-stx pre-parseds
+                                                   space-sym
                                                    make-prefix-id make-infix-id prefix+infix-id
                                                    #:adjustments [adjustments no-adjustments])
   (define ps (map (lambda (p) (parse-one-macro-definition p adjustments)) pre-parseds))
@@ -263,11 +269,11 @@
   (check-fixity-consistent "prefix" "precedence" prefixes)
   (check-fixity-consistent "infix" "precedence and associativity" infixes)
   (cond
-    [(null? prefixes) (build-cases infixes #f make-infix-id adjustments)]
-    [(null? infixes) (build-cases prefixes #t make-prefix-id adjustments)]
+    [(null? prefixes) (build-cases infixes #f make-infix-id space-sym adjustments)]
+    [(null? infixes) (build-cases prefixes #t make-prefix-id space-sym adjustments)]
     [else #`(#,prefix+infix-id
-             #,(build-cases prefixes #t make-prefix-id adjustments)
-             #,(build-cases infixes #f make-infix-id adjustments))]))
+             #,(build-cases prefixes #t make-prefix-id space-sym adjustments)
+             #,(build-cases infixes #f make-infix-id space-sym adjustments))]))
 
 (define-for-syntax (adjust-result adjustments arity b)
   ((entry-point-adjustments-wrap-body adjustments) arity b))
@@ -289,7 +295,7 @@
                                                                              #:splice? #t
                                                                              #:splice-pattern values))
      (with-syntax ([((p-id id-ref) ...) idrs]
-                   [((s-id sid-ref) ...) sidrs] )
+                   [(((s-id ...) sid-ref) ...) sidrs])
        #`(#,make-transformer-id
           (let ([id (lambda (tail #,@tail-ids self #,@(if (syntax-e extra-id) (list #'extra) null))
                       (define #,self-id self)
@@ -301,7 +307,7 @@
                       (syntax-parse (insert-multi-front-group #,self-id tail)
                         [#,pattern
                          (let ([p-id id-ref] ...)
-                           (let-syntax ([s-id sid-ref] ...)
+                           (let-syntaxes ([(s-id ...) sid-ref] ...)
                              #,(wrap-for-tail
                                 #`(rhombus-body-expression rhs))))]))])
             id)))]))
@@ -317,11 +323,11 @@
                                       (define-values (pattern idrs sidrs vars can-be-empty?)
                                         (convert-pattern #`(multi . #,gs-stx)))
                                       (with-syntax ([((p-id id-ref) ...) idrs]
-                                                    [((s-id sid-ref) ...) sidrs])
+                                                    [(((s-id ...) sid-ref) ...) sidrs])
                                         #`(syntax-parse tail-id
                                             [#,pattern
                                              (let ([p-id id-ref] ...)
-                                               (let-syntax ([s-id sid-ref] ...)
+                                               (let-syntaxes ([(s-id ...) sid-ref] ...)
                                                  #,body))])))))
 
 (define (single-valued who thunk)

@@ -1,30 +1,18 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
-         "expression.rkt")
+         "provide.rkt"
+         "placeholder.rkt")
 
-(provide $ $&)
+(provide (for-spaces (#f
+                      rhombus/bind)
+                     $
+                     $&))
 
-(define-syntax $
-  (expression-prefix-operator
-   (quote-syntax $)
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(op . _)
-        (raise-syntax-error #f
-                            "misuse outside of a pattern or template"
-                            #'op)]))))
+(define-placeholder-syntax $
+  "misuse outside of a template"
+  "misuse outside of a pattern")
 
-(define-syntax $&
-  (expression-prefix-operator
-   (quote-syntax $&)
-   '((default . stronger))
-   'macro
-   (lambda (stx)
-     (syntax-parse stx
-       [(op . _)
-        (raise-syntax-error #f
-                            "misuse outside of a template"
-                            #'op)]))))
+(define-placeholder-syntax $&
+  "misuse outside of a template"
+  "misuse outside of a pattern")

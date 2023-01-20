@@ -12,6 +12,7 @@
          "static-info.rkt"
          (only-in "assign.rkt"
                   :=)
+         "op-literal.rkt"
          (only-in "string.rkt"
                   +&)
          (submod "set.rkt" for-ref)
@@ -34,8 +35,7 @@
   (define (not-static) (string-append "specialization not known" statically-str))
   (syntax-parse stxes
     #:datum-literals (brackets op)
-    #:literals (:=)
-    [(_ ((~and head brackets) index) (op :=) . rhs+tail)
+    [(_ ((~and head brackets) index) _:::=-expr . rhs+tail)
      #:when (not repetition?)
      #:with (~var rhs (:infix-op+expression+tail #':=)) #'(group . rhs+tail)
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
@@ -106,8 +106,8 @@
 
 (define-syntax ++
   (expression-infix-operator
-   (quote-syntax ++)
-   `((,#'+& . same))
+   (expr-quote ++)
+   `((,(expr-quote +&) . same))
    'automatic
    (lambda (form1-in form2 stx)
      (define form1 (rhombus-local-expand form1-in))

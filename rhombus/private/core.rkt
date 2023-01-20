@@ -4,7 +4,7 @@
                      shrubbery/print
                      (only-in "ellipsis.rkt"
                               [... rhombus...])
-                     (only-in "quasiquote.rkt" $)
+                     (only-in "dollar.rkt" $)
                      "rest-marker.rkt")
          racket/interaction-info
          "builtin-dot.rkt"
@@ -17,13 +17,18 @@
          #%top-interaction
          #%top
          (for-syntax
-          (rename-out [rhombus... ...])
-          $
-          &
-          ~&))
+          (for-space #f
+                     (rename-out [rhombus... ...])
+                     $
+                     &
+                     ~&)
+          (for-space rhombus/bind
+                     (rename-out [rhombus... ...])
+                     $
+                     &
+                     ~&)))
 
-(bounce "default-stub.rkt"
-        "implicit.rkt"
+(bounce "implicit.rkt"
         "underscore.rkt"
         "arithmetic.rkt"
         "string.rkt"
@@ -31,6 +36,7 @@
         "maybe.rkt"
         "dynamic-static.rkt"
         "class.rkt"
+        "class-clause-primitive.rkt"
         "interface.rkt"
         "class-together.rkt"
         "def+let.rkt"
@@ -54,6 +60,7 @@
         "cond.rkt"
         "match.rkt"
         "quasiquote.rkt"
+        "dollar.rkt"
         "unquote-binding-primitive.rkt"
         "rest-marker.rkt"
         "ellipsis.rkt"

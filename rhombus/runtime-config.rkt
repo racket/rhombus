@@ -7,7 +7,7 @@
          shrubbery/parse
          shrubbery/print
          "private/set.rkt"
-         (prefix-in rhombus: "private/print.rkt")
+         (prefix-in rhombus: (submod "private/print.rkt" for-runtime))
          (submod "private/print.rkt" redirect))
 
 (current-interaction-info '#((submod rhombus reader)

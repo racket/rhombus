@@ -8,45 +8,49 @@
                      enforest/syntax-local
                      enforest/property
                      enforest/proc-name
+                     enforest/name-parse
                      enforest/operator
                      "srcloc.rkt"
-                     "name-path-op.rkt"
                      "pack.rkt"
                      "introducer.rkt"
                      "annotation-string.rkt"
                      "realm.rkt"
-                     "keyword-sort.rkt")
+                     "keyword-sort.rkt"
+                     (for-syntax racket/base))
+         "provide.rkt"
+         "enforest.rkt"
          "annotation-operator.rkt"
          "definition.rkt"
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt"
          "name-root.rkt"
          "name-root-ref.rkt"
          "static-info.rkt"
          "parse.rkt"
          "realm.rkt")
 
-(provide ::
-         -:
-         is_a
-         matching
-
-         Any
-         Boolean
-         Integer
-         PositiveInteger
-         NegativeInteger
-         NonnegativeInteger
-         Number
-         Real
-         String
-         Bytes
-         Symbol
-         Keyword
-         Void
-
+(provide is_a
+         (for-spaces (#f
+                      rhombus/bind)
+                     ::
+                     -:)
          (for-space rhombus/annot
+
+                    Any
+                    Boolean
+                    Integer
+                    PositiveInteger
+                    NegativeInteger
+                    NonnegativeInteger
+                    Number
+                    Real
+                    String
+                    Bytes
+                    Symbol
+                    Keyword
+                    Void
+
+                    matching
                     #%parens
                     #%literal))
 
@@ -58,6 +62,7 @@
              identifier-annotation
              
              in-annotation-space
+             annot-quote
 
              check-annotation-result
 
@@ -83,6 +88,10 @@
 
   (define in-annotation-space (make-interned-syntax-introducer/add 'rhombus/annot))
 
+  (define-syntax (annot-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/annot) #'id))]))
+
   (define (raise-not-a-annotation id)
     (raise-syntax-error #f
                         "not bound as an annotation"
@@ -99,16 +108,13 @@
                            stx))
     stx)
 
-  (define-enforest
+  (define-rhombus-enforest
     #:enforest enforest-annotation
     #:syntax-class :annotation
     #:infix-more-syntax-class :annotation-infix-op+form+tail
     #:desc "annotation"
     #:operator-desc "annotation operator"
     #:in-space in-annotation-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref annotation-prefix-operator-ref
     #:infix-operator-ref annotation-infix-operator-ref
     #:check-result check-annotation-result
@@ -121,26 +127,21 @@
              #:attr tail #'c.tail))
 
   (define-splicing-syntax-class :inline-annotation
-    #:datum-literals (op)
-    #:literals (:: -:)
-    (pattern (~seq (op ::) ctc ...)
+    (pattern (~seq op::name ctc ...)
+             #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (bind-quote ::)))]
+             #:when (or check?
+                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
              #:with c::annotation #'(group ctc ...)
              #:with c-parsed::annotation-form #'c.parsed
-             #:attr predicate #'c-parsed.predicate
+             #:attr predicate (if check? #'c-parsed.predicate #'#f)
              #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-             #:attr static-infos #'c-parsed.static-infos)
-    (pattern (~seq (op -:) ctc ...)
-             #:with c::annotation #'(group ctc ...)
-             #:with c-parsed::annotation-form #'c.parsed
-             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-             #:attr predicate #'#f
              #:attr static-infos #'c-parsed.static-infos))
 
   (define-splicing-syntax-class :unparsed-inline-annotation
-    #:datum-literals (op)
-    #:literals (:: -:)
     #:attributes (seq)
-    (pattern (~seq (~and o (op ::)) ctc ...)
+    (pattern (~seq o::name ctc ...)
+             #:when (or (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
+                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
              #:attr seq #'(o ctc ...))
     (pattern (~seq (~and o (op -:)) ctc ...)
              #:attr seq #'(o ctc ...)))
@@ -151,10 +152,10 @@
   (define (annotation-form predicate static-infos)
     #`(#,predicate #,static-infos))
   
-  (define (identifier-annotation name predicate-stx static-infos)
+  (define (identifier-annotation predicate-stx static-infos)
     (define packed #`(#,predicate-stx #,static-infos))
     (annotation-prefix-operator
-     name
+     (quote-syntax ignored)
      '((default . stronger))
      'macro
      (lambda (stx)
@@ -241,41 +242,24 @@
 
 (define-syntax (define-annotation-constructor stx)
   (syntax-parse stx
-    [(_ name
+    [(_ (name of-name)
         binds
         predicate-stx static-infos
         sub-n kws predicate-maker info-maker
         (~optional (~seq #:parse-of parse-annotation-of-id)
                    #:defaults ([parse-annotation-of-id #'parse-annotation-of])))
-     (cond
-       [(eq? (syntax-local-context) 'module)
-        #'(begin
-            (begin-for-syntax
-              (define-values (root-proc of-proc)
-                (let binds
-                    (annotation-constructor #'name predicate-stx static-infos
-                                            sub-n 'kws predicate-maker info-maker
-                                            parse-annotation-of-id))))
-            (define-name-root name
-              #:space rhombus/annot
-              #:fields (of)
-              #:root root-proc)
-            (define-syntax of of-proc))]
-       [else
-        ;; internal definition context cannot bind portal syntax
-        #`(define-syntax #,(in-annotation-space #'name)
-            (let binds
-                (annotation-of-constructor #'name predicate-stx static-infos
-                                           sub-n 'kws predicate-maker info-maker
-                                           parse-annotation-of-id)))])]))
+     #:with annot-name (in-annotation-space #'name)
+     #'(define-syntaxes (annot-name of-name)
+         (let binds
+             (annotation-constructor #'annot-<name predicate-stx static-infos
+                                     sub-n 'kws predicate-maker info-maker
+                                     parse-annotation-of-id)))]))
 
-(define-for-syntax (make-annotation-apply-operator name checked?)
-  (make-expression+binding-infix-operator
+(define-for-syntax (make-annotation-apply-expression-operator name checked?)
+  (expression-infix-operator
    name
    `((default . weaker))
    'macro
-   'none
-   ;; expression
    (lambda (form tail)
      (syntax-parse tail
        [(op . t::annotation-seq)
@@ -290,7 +274,13 @@
               form)
           #'c-parsed.static-infos)
          #'t.tail)]))
-   ;; binding
+   'none))
+
+(define-for-syntax (make-annotation-apply-binding-operator name checked?)
+  (binding-infix-operator
+   name
+   `((default . weaker))
+   'macro
    (lambda (form tail)
      (syntax-parse tail
        [(op . t::annotation-seq)
@@ -304,17 +294,22 @@
              c-parsed.static-infos
              left.infoer-id
              left.data))
-         #'t.tail)]))))
+         #'t.tail)]))
+   'none))
 
 (define-syntax ::
-  (make-annotation-apply-operator #':: #t))
+  (make-annotation-apply-expression-operator (expr-quote ::) #t))
+(define-binding-syntax ::
+  (make-annotation-apply-binding-operator (bind-quote ::) #t))
 
 (define-syntax -:
-  (make-annotation-apply-operator #'-: #f))
+  (make-annotation-apply-expression-operator (expr-quote -:) #f))
+(define-binding-syntax -:
+  (make-annotation-apply-binding-operator (bind-quote -:) #f))
 
 (define-syntax is_a
   (expression-infix-operator
-   #'is_a
+   (expr-quote is_a)
    '((default . weaker))
    'macro
    (lambda (form tail)
@@ -364,31 +359,31 @@
     [(_ arg-id (predicate left-matcher-id left-committer-id left-binder-id left-data))
      #'(left-binder-id arg-id left-data)]))
 
-(define-syntax Any (identifier-annotation #'Any #'(lambda (x) #t) #'()))
-(define-syntax Boolean (identifier-annotation #'Boolean #'boolean? #'()))
-(define-syntax Integer (identifier-annotation #'Integer #'exact-integer? #'()))
-(define-syntax PositiveInteger (identifier-annotation #'PositiveInteger #'exact-positive-integer? #'()))
-(define-syntax NegativeInteger (identifier-annotation #'NegativeInteger #'exact-negative-integer? #'()))
-(define-syntax NonnegativeInteger (identifier-annotation #'NonnegativeInteger #'exact-nonnegative-integer? #'()))
-(define-syntax Number (identifier-annotation #'Number #'number? #'()))
-(define-syntax Real (identifier-annotation #'Real #'real? #'()))
-(define-syntax String (identifier-annotation #'String #'string? #'()))
-(define-syntax Bytes (identifier-annotation #'Bytes #'bytes? #'()))
-(define-syntax Symbol (identifier-annotation #'Symbol #'symbol? #'()))
-(define-syntax Keyword (identifier-annotation #'Keyword #'keyword? #'()))
-(define-syntax Void (identifier-annotation #'Void #'void? #'()))
-
 (define-syntax (define-annotation-syntax stx)
   (syntax-parse stx
     [(_ id:identifier rhs)
      #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
 
+(define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
+(define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
+(define-annotation-syntax Integer (identifier-annotation #'exact-integer? #'()))
+(define-annotation-syntax PositiveInteger (identifier-annotation #'exact-positive-integer? #'()))
+(define-annotation-syntax NegativeInteger (identifier-annotation #'exact-negative-integer? #'()))
+(define-annotation-syntax NonnegativeInteger (identifier-annotation #'exact-nonnegative-integer? #'()))
+(define-annotation-syntax Number (identifier-annotation #'number? #'()))
+(define-annotation-syntax Real (identifier-annotation #'real? #'()))
+(define-annotation-syntax String (identifier-annotation #'string? #'()))
+(define-annotation-syntax Bytes (identifier-annotation #'bytes? #'()))
+(define-annotation-syntax Symbol (identifier-annotation #'symbol? #'()))
+(define-annotation-syntax Keyword (identifier-annotation #'keyword? #'()))
+(define-annotation-syntax Void (identifier-annotation #'void? #'()))
+
 ;; not exported, but referenced by `:annotation-seq` so that
 ;; annotation parsing terminates appropriately
 (define-annotation-syntax ::
   (annotation-infix-operator
-   #'::
+   (annot-quote ::)
    `((default . stronger))
    'macro
    (lambda (stx) (error "should not get here"))
@@ -414,9 +409,9 @@
      rhombus-realm)
     (current-continuation-marks))))
 
-(define-syntax matching
+(define-annotation-syntax matching
   (annotation-prefix-operator
-   #'matching
+   (annot-quote matching)
    '((default . stronger))
    'macro
    (lambda (stx)
@@ -441,7 +436,7 @@
 
 (define-annotation-syntax #%parens
   (annotation-prefix-operator
-   #'%parens
+   (annot-quote %parens)
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -459,7 +454,7 @@
 
 (define-annotation-syntax #%literal
   (annotation-prefix-operator
-   #'%literal
+   (annot-quote %literal)
    '((default . stronger))
    'macro
    (lambda (stxes)

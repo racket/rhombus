@@ -14,7 +14,8 @@
          "static-info.rkt"
          "realm.rkt")
 
-(provide class_meta)
+(provide (for-space rhombus/namespace
+                    class_meta))
 
 (module+ for-class
   (provide class-expand-data))

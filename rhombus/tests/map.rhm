@@ -116,38 +116,38 @@ begin:
     ~is [{1: #true, 2: #true, 3: #true}, {4: #true, 5: #true}]
 
 check:
-  def {"x": y}  = {"x": 1}
+  def {"x": y} = {"x": 1}
   y
   ~is 1
 
 check:
-  def Map{"x": y}  = {"x": 1}
+  def Map{"x": y} = {"x": 1}
   y
   ~is 1
 
 check:
-  def Map(["x", y])  = {"x": 1}
+  def Map(["x", y]) = {"x": 1}
   y
   ~is 1
 
 check:
-  def {"x": y}  = {"x": 1, "y": 2}
+  def {"x": y} = {"x": 1, "y": 2}
   y
   ~is 1
 
 check:
-  def Map{"x": y}  = {"x": 1, "y": 2}
+  def Map{"x": y} = {"x": 1, "y": 2}
   y
   ~is 1
 
 check:
   def ex = "x"
-  def {ex +& "y": y}  = {"xy": 1}
+  def {ex +& "y": y} = {"xy": 1}
   y
   ~is 1
 
 check:
-  def {"x": x, "y": y}  = {"x": 1, "y": 2}
+  def {"x": x, "y": y} = {"x": 1, "y": 2}
   [x, y]
   ~is [1, 2]
 

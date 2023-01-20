@@ -19,6 +19,19 @@ and a parenthesized operator. When using a form like @rhombus(expr.macro)
 to extends a namespace, the @litchar{.}-separated sequence must be
 surrounded by pair of parentheses.
 
+A namespace contains binding that are any any @tech{space}, while the
+namespace name itself is bound in the @rhombus(namespace, ~space) space. In a
+given context, a dotted reference through a namespace takes precedence
+over interpreting the namespace identifier instead in the context's
+space. For example, if @rhombus(p) is bound as a variable whose value
+has an @rhombus(x) field, and if @rhombus(p) is also bound to a
+namespace that exports a @rhombus(x) in the expression space, then
+@rhombus(p.x) in an expression position refers to the export from the
+@rhombus(p) namespace and not the @rhombus(x) field of the @rhombus(p)
+object. If the namespace @rhombus(p) exports only @rhombus(x) bindings
+in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
+@rhombus(p.x) refers to the @rhombus(x) field of the @rhombus(p) object.
+
 Forms that can extend a namespace typically refer to these non-terminals
 as part of their grammar:
 
@@ -52,7 +65,9 @@ as part of their grammar:
  determine exports for the @rhombus(identifier_path) immediately after
  @rhombus(namespace). An exported @rhombus(name, ~var) can be reached using
  @rhombus(identifier_path#,(rhombus(.))#,(rhombus(name, ~var))). The name
- @rhombus(identifier_path) also works with @rhombus(import).
+ @rhombus(identifier_path) also works with @rhombus(import). The @rhombus(identfier)
+ at the end of @rhombus(identifier_path) is bound in the @rhombus(namespace, ~space)
+ @tech{space}.
 
 @examples(
   namespace math:

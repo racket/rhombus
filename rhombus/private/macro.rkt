@@ -7,9 +7,11 @@
                      "srcloc.rkt"
                      "tag.rkt")
          syntax/parse/pre
+         "provide.rkt"
          "macro-rhs.rkt"
          "definition.rkt"
          "expression.rkt"
+         "expression+definition.rkt"
          "entry-point.rkt"
          "macro-macro.rkt"
          "pack.rkt"
@@ -19,15 +21,9 @@
          "parens.rkt"
          (submod "expr-macro.rkt" for-define))
 
-(provide macro)
-
-(begin-for-syntax
-  (struct definition+entry-point+expression-transformer (def cbl exp)
-    #:property prop:definition-transformer (lambda (self) (definition+entry-point+expression-transformer-def self))
-    #:property prop:entry-point-transformer (lambda (self) (definition+entry-point+expression-transformer-cbl self))
-    #:property prop:expression-prefix-operator (lambda (self) (definition+entry-point+expression-transformer-exp self)))
-  (define (make-definition+entry-point+expression-transformer def cbl exp)
-    (definition+entry-point+expression-transformer def cbl exp)))
+(provide (for-spaces (#f
+                      rhombus/entry_point)
+                     macro))
 
 (define-for-syntax (parse-macro stx adjustments)
   (syntax-parse stx
@@ -45,8 +41,9 @@
                                    stx
                                    (map no-srcloc (syntax->list #'((tag ignore . pat) ...)))
                                    (syntax->list #'(rhs ...))
-                                   (lambda (x) x)
+                                   #f
                                    #f)
+       '#f
        #'wrap-prefix
        #f
        #f
@@ -61,14 +58,19 @@
                                   #:allowed '(prefix)
                                   (no-srcloc #'(tag ignore . pat))
                                   #'rhs
-                                  (lambda (x) x)
+                                  #f
                                   #f)
+       '#f
        #'wrap-prefix
        #f
        #:adjustments adjustments))]))
 
 (define-syntax macro
-  (make-definition+entry-point+expression-transformer
+  (make-expression+definition-transformer
+   (expression-transformer
+    (lambda (stx)
+      (values (parse-macro stx no-adjustments)
+              #'())))
    (definition-transformer
      (lambda (stx)
        (syntax-parse stx
@@ -90,7 +92,7 @@
                                        stx
                                        (syntax->list #'(q.g ...))
                                        (syntax->list #'(rhs ...))
-                                       #f
+                                       '#f
                                        #'rules-rhs))]
          [(form-id q::operator-syntax-quote
                    (~and rhs (_::block body ...)))
@@ -99,20 +101,17 @@
                                       'rule
                                       #'q.g
                                       #'rhs
-                                      #f
-                                      #'rule-rhs))])))
-   (entry-point-transformer
-    ;; parse macro
-    (lambda (stx adjustments)
-      (parse-macro stx adjustments))
-    ;; extract arity
-    (lambda (stx)
-      1))
-   (expression-transformer
-    #'macro
-    (lambda (stx)
-      (values (parse-macro stx no-adjustments)
-              #'())))))
+                                      '#f
+                                      #'rule-rhs))])))))
+
+(define-entry-point-syntax macro
+  (entry-point-transformer
+   ;; parse macro
+   (lambda (stx adjustments)
+     (parse-macro stx adjustments))
+   ;; extract arity
+   (lambda (stx)
+     1)))
 
 (define (wrap-prefix name precedence protocol proc)
   (lambda (stx)
@@ -131,6 +130,7 @@
     (syntax-parse stx
       [(_ orig-stx pre-parsed ...)
        (parse-operator-definitions-rhs #'orig-stx (syntax->list #'(pre-parsed ...))
+                                       '#f
                                        #'make-expression-prefix-operator
                                        #'make-expression-infix-operator
                                        #'expression-prefix+infix-operator)]))
@@ -138,5 +138,6 @@
     (syntax-parse stx
       [(_ pre-parsed)
        (parse-operator-definition-rhs #'pre-parsed
+                                      '#f
                                       #'make-expression-prefix-operator
                                       #'make-expression-infix-operator)])))

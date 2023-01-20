@@ -55,7 +55,8 @@
  @rhombus(operator), it cannot be @rhombus($), but the form
  @rhombus($('$')) can be used to define @rhombus($). A
  @rhombus(defined_name) cannot be @rhombus(()) for a @rhombus(macro)
- defintition.
+ defintition. The @rhombus(defined_name) is bound in the
+ @rhombus(expr, ~space) @tech{space}.
 
  As an expression or @tech{entry point}, @rhombus(macro) is a shorthand
  for a function that expects a syntax object to match, as explained

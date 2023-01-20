@@ -3,8 +3,7 @@
          "introducer.rkt"
          (only-in "class-parse.rkt"
                   in-class-desc-space)
-         (for-template "name-root-ref.rkt"
-                       "expression.rkt"))
+         (for-template "expression.rkt"))
 
 (provide (struct-out interface-desc)
          (struct-out interface-internal-desc)
@@ -36,9 +35,7 @@
                                      #:results [results (lambda (all pruned) pruned)])
   (define intfs
     (for/list ([name (in-list names)])
-      (or (syntax-local-value* (in-class-desc-space name)
-                               (lambda (v)
-                                 (name-root-ref-root v interface-noninternal-desc-ref)))
+      (or (syntax-local-value* (in-class-desc-space name) interface-noninternal-desc-ref)
           (raise-syntax-error #f "not an interface name" stxes name))))
   (results
    intfs

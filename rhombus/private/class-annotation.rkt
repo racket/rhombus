@@ -21,9 +21,9 @@
 
 (define-for-syntax (build-class-annotation-form super annotation-rhs
                                                 super-constructor-fields
-                                                exposed-internal-id intro
+                                                exposed-internal-id internal-of-id intro
                                                 names)
-  (with-syntax ([(name name-instance name?
+  (with-syntax ([(name name-instance name? name-of
                        internal-name-instance
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        field-keywords public-field-keywords super-field-keywords)
@@ -31,14 +31,14 @@
     (with-syntax ([core-ann-name (if annotation-rhs
                                      (car (generate-temporaries #'(name)))
                                      #'name)])
-      (define (make-ann-def id no-super? name-fields keywords name-instance-stx)
+      (define (make-ann-def id of-id no-super? name-fields keywords name-instance-stx)
         (define len (length (syntax->list name-fields)))
         (with-syntax ([(constructor-name-field ...) name-fields]
                       [(field-keyword ...) keywords]
                       [(super-name-field ...) (if no-super? '() #'super-name-fields)]
                       [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)]
                       [name-instance name-instance-stx])
-          #`(define-annotation-constructor #,id
+          #`(define-annotation-constructor (#,id #,of-id)
               ([accessors (list (quote-syntax super-name-field) ...
                                 (quote-syntax constructor-name-field) ...)])
               (quote-syntax name?)
@@ -51,7 +51,7 @@
        (if exposed-internal-id
            (list
             (begin
-              (make-ann-def exposed-internal-id #t #'constructor-name-fields #'field-keywords
+              (make-ann-def exposed-internal-id internal-of-id #t #'constructor-name-fields #'field-keywords
                             #'internal-name-instance)))
            null)
        (cond
@@ -64,7 +64,7 @@
                                        "class")))]
          [else
           (list
-           (make-ann-def #'name #f #'constructor-public-name-fields #'public-field-keywords
+           (make-ann-def #'name #'name-of #f #'constructor-public-name-fields #'public-field-keywords
                          #'name-instance))])))))
 
 (define-for-syntax (make-curried-annotation-of-tranformer super-annotation-id)

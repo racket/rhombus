@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/stx)
+         "provide.rkt"
          "expression.rkt"
          "binding.rkt"
          (submod "annotation.rkt" for-class)
@@ -15,9 +16,11 @@
          "name-root.rkt"
          "dot-parse.rkt")
 
-(provide Array
-         (for-space rhombus/bind Array)
-         (for-space rhombus/annot Array))
+(provide (for-spaces (rhombus/namespace
+                      #f
+                      rhombus/bind
+                      rhombus/annot)
+                     Array))
 
 (module+ for-builtin
   (provide array-method-table))
@@ -34,15 +37,16 @@
 (define-name-root Array
   #:fields
   ([make make-vector]
-   [length vector-length])
-  #:root
+   [length vector-length]
+   of))
+
+(define-syntax Array
   (expression-transformer
-   #'Array
    (lambda (stx)
      (syntax-parse stx
        [(_ . tail) (values #'vector #'tail)]))))
 
-(define-annotation-constructor Array
+(define-annotation-constructor (Array of)
   () #'vector? array-static-infos
   1
   (#f)

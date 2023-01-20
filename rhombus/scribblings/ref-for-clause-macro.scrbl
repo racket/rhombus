@@ -31,7 +31,8 @@
                | ...»'
 ){
 
- Similar to @rhombus(defn.macro), but defines a name as a clause form
+ Similar to @rhombus(defn.macro), but defines a name in the
+ @rhombus(for_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(for) body.
 
  The compile-time @rhombus(body) block returns the expansion result. The
@@ -48,15 +49,6 @@
     each_in_three i
     i
 )
-
-}
-
-@doc(
-  defn.macro 'for_clause.only.macro $macro_decl'
-){
-
- Like @rhombus(for_clause.macro), but the identifier or operator is bound
- only in the @rhombus(for_clause, ~space) @tech{space}.
 
 }
 

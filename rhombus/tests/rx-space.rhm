@@ -23,7 +23,6 @@ export:
 space.enforest regexp:
   ~space_path my/space
   ~macro macro
-  ~only_macro only_macro
   ~meta_namespace regexp_meta:
     ~syntax_class Group
     ~macro_result: fun (stx, who):
@@ -42,18 +41,18 @@ regexp.macro 'any': '"."'
 
 // `#{#%literal}` is implicitly added before literals, like strings,
 // that do not have an operator before
-regexp.only_macro '#{#%literal} $(s :: String)':
+regexp.macro '#{#%literal} $(s :: String)':
   import lib("racket/base.rkt").#{regexp-quote}
   '$(#{regexp-quote}(s.unwrap()))'
 
 // `#{#%parens}` is implicitly added before parentheses
 // that do not have a parsed term or operator before
-regexp.only_macro '#{#%parens} ($(p :: regexp_meta.Group))':
+regexp.macro '#{#%parens} ($(p :: regexp_meta.Group))':
   p.parsed
 
 // `#{#%juxtapose}` is implicitly added after something that's
 // parsed and before a non-operator
-regexp.only_macro '$left #{#%juxtapose} $(~parsed right)':
+regexp.macro '$left #{#%juxtapose} $(~parsed right)':
   ~weaker_than: ~other
   ~stronger_than: ||
   '$(left.unwrap() ++ right.unwrap())'
@@ -61,25 +60,25 @@ regexp.only_macro '$left #{#%juxtapose} $(~parsed right)':
 // `#{#%call}` is implicitly added between a parsed term
 // and parentheses; we want just the same thing
 // as juxtaposition here, though
-regexp.only_macro '$left #{#%call} ($(p :: regexp_meta.Group))':
+regexp.macro '$left #{#%call} ($(p :: regexp_meta.Group))':
   '$(left.unwrap() ++ p.parsed.unwrap())'
 
-regexp.only_macro '$left || $(~parsed right)':
+regexp.macro '$left || $(~parsed right)':
   ~weaker_than: ~other
   '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
 
-regexp.only_macro '$left *':
+regexp.macro '$left *':
   '$(left.unwrap() ++ "*")'
 
-regexp.only_macro '$left +':
+regexp.macro '$left +':
   '$(left.unwrap() ++ "+")'
 
-regexp.only_macro '$left ?':
+regexp.macro '$left ?':
   '$(left.unwrap() ++ "?")'
 
 // `#{#%call}` is implicitly added between a parsed term
 // and curly braces
-regexp.only_macro
+regexp.macro
 | '$left #{#%comp} {$(min :: Integer), _}':
     '$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")'
 | '$left #{#%comp} {$(min :: Integer), $(max :: Integer)}':
@@ -91,7 +90,7 @@ regexp.macro
 | '^ $(~parsed right)':
     '$("^" +& right.unwrap())'
 
-regexp.only_macro
+regexp.macro
 | '$left $('$')':
     ~same_as: ^
     '$(left.unwrap() +& "$")'

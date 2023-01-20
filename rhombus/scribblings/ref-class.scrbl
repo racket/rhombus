@@ -63,27 +63,31 @@
     $other_class_clause
 ){
 
- Binds @rhombus(identifier_path) as a class name, which serves several roles:
+ Binds @rhombus(identifier_path) as a class name in several @tech{spaces}:
 
 @itemlist(
 
- @item{a constructor function or form, which by default is a function that
+ @item{in the @rhombus(expr, ~space) space,
+  a constructor function or form, which by default is a function that
   takes as many arguments
   as the supplied non-@rhombus(private, ~class_clause) @rhombus(field_spec)s
   in parentheses, and it returns an instance of the class;},
 
- @item{an annotation, which is satisfied by any instance of the class,
+ @item{in the @rhombus(annot, ~space) space,
+  an annotation, which is satisfied by any instance of the class,
   and an annotation constructor @rhombus(identifier_path.of), which by
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause) @rhombus(field_spec)s in
   parentheses;},
 
- @item{a binding-pattern constructor, which by default takes as many
+ @item{in the @rhombus(bind, ~space) space,
+  a binding-pattern constructor, which by default takes as many
   patterns as the supplied non-@rhombus(private, ~class_clause)
   @rhombus(field_spec)s in parentheses and matches an instance of the
   class where the fields match the corresponding patterns;},
 
- @item{a @tech{namespace} to access exported bindings as well as a
+ @item{in the @rhombus(namespace, ~space) space,
+  a @tech{namespace} to access exported bindings as well as a
   function
   @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
@@ -91,8 +95,11 @@
   and a field accessor
   @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, and field in the class
-  (including inherited methods, properties, and fields).}
+  (including inherited methods, properties, and fields); and}
 
+ @item{in the @rhombus(class, ~space) space, a representation of the
+  class for reference as a superclass.}
+ 
 )
 
  Fields, methods, and properties declared in a class can be accessed
@@ -738,11 +745,14 @@
  @rhombus(constructor, ~class_clause), the second two forms are shorthand
  for using a @rhombus(fun) @tech{entry point}. For each of
  @rhombus(expression, ~class_clause),
- @rhombus(binding, ~class_clause), and @rhombus(binding, ~class_clause),
+ @rhombus(binding, ~class_clause), and @rhombus(annotation, ~class_clause),
  the @rhombus(pattern) and @rhombus(template) shorthands are similar to
- using a @rhombus(rule) entry point, but an @rhombus(identifer) must be
+ using a @rhombus(macro, ~entry_point) entry point, but an @rhombus(identifer) must be
  presented instead of @rhombus(()) for the pattern, and @rhombus(identifer)
- must match the name of the class being defined.
+ must match the name of the class being defined. When @rhombus(annotation, ~class_clause)
+ is not present, in addition to the class name being bound as a default annotation,
+ an @rhombus(of, ~datum) annotation constructor is exported as a field
+ of the class.
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form with an empty @rhombus(maybe_name), then a use of new class's
@@ -791,7 +801,7 @@
  When a @rhombus(class) has a @rhombus(expression, ~class_clause) form,
  then a use of new class's @rhombus(identifier_path, ~var) as an
  expression invokes the @tech{entry point} (typically a
- @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. This macro replaces the default meaning of the
  @rhombus(identifier_path, ~var) as a reference to the constructor.
@@ -799,7 +809,7 @@
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
  then a use of new class's @rhombus(identifier_path, ~var) as a
  binding-pattern constructor invokes the @tech{entry point} (typically a
- @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. There is no @rhombus(super) for custom binding
  patterns; instead, use @rhombus(internal, ~class_clause) to bind an
@@ -817,7 +827,7 @@
  When a @rhombus(class) has an @rhombus(annotation, ~class_clause) form,
  then a use of new class's @rhombus(identifier_path, ~var) in a
  annotation invokes the @tech{entry point} (typically a
- @rhombus(rule, ~entry_point) form) in the block after
+ @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. Similar to custom binding forms, a custom
  annotation form normally needs an internal annotation name bound with
@@ -827,6 +837,9 @@
  Use the @rhombus(&&, ~annot) annotation operator to combine the internal
  annotation with a superclass annotation. When a superclass has a custom
  annotation form, then a class must have a custom annotation form, too.
+ Typically, an @rhombus(of, ~datum) annotation is also defined and
+ exported from the class's namespace to go along with the customization
+ of the class name as an annotation.
 
 }
 

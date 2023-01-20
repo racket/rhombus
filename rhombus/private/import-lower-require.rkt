@@ -4,6 +4,7 @@
                      racket/phase+space
                      enforest/transformer
                      "import-cover.rkt")
+         "name-root-space.rkt"
          "space-in.rkt")
 
 ;; Convert a subset of `racket` require clauses to `#%require` clauses,
@@ -345,14 +346,12 @@
             #`(for-meta #,phase-shift
                         #,@(make-ins #f))))
        (if prefix-id
-           (for/list ([phase+space (in-list r-phase+spaces)]
-                      #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
-             (define phase (phase+space-phase phase+space))
-             (define space (phase+space-space phase+space))
-             (define s-prefix-id (if space
-                                     ((make-interned-syntax-introducer space) prefix-id)
-                                     prefix-id))
-             (define portal-id s-prefix-id)
+           (for/list ([phase (in-hash-keys
+                              (for/hasheqv ([phase+space(in-list r-phase+spaces)]
+                                            #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
+                                (values (phase+space-phase phase+space) #t)))])
+             (define s-prefix-id prefix-id)
+             (define portal-id (in-name-root-space s-prefix-id))
              (list
               #`(for-meta #,(and phase phase-shift (+ phase-shift phase))
                           (portal #,portal-id ([import #,mod-path
@@ -361,8 +360,6 @@
                                                #,s-prefix-id
                                                #,(prefix-intro s-prefix-id))))))
            null)))
-    ;; in a local-binding context, use `define-syntax` instead of `#%require`
-    ;; for `s-prefix-id`, since a `#%require` will be lifted
     (values
      (if module?
          #`(#%require #,@(map car reqs+defss))

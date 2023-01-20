@@ -4,11 +4,11 @@
                      enforest/name-parse
                      "pack.rkt"
                      "static-info-pack.rkt")
+         "space-provide.rkt"
          "definition.rkt"
          "name-root.rkt"
          "quasiquote.rkt"
          "static-info.rkt"
-         "space.rkt"
          "parse.rkt"
          "wrap-expression.rkt"
          "parens.rkt"
@@ -19,18 +19,12 @@
          "ref-result-key.rkt"
          "dot-provider-key.rkt")
 
-(provide statinfo
-         (for-syntax statinfo_meta))
+(provide (for-syntax (for-space rhombus/namespace
+                                statinfo_meta)))
 
-(define-name-root statinfo
-  #:root (space-syntax rhombus/statinfo)
+(define+provide-space statinfo rhombus/statinfo
   #:fields
-  (macro
-   only))
-
-(define-name-root only
-  #:fields
-  ([macro macro-only]))
+  (macro))
 
 (begin-for-syntax
   (define-name-root statinfo_meta
@@ -57,8 +51,6 @@
               (convert-static-info 'name.name (rhombus-body-at body-tag body ...))))]))))
 
 (define-syntax macro
-  (make-static-info-macro-macro (lambda (x) x)))
-(define-syntax macro-only
   (make-static-info-macro-macro in-static-info-space))
    
 (define-for-syntax (convert-static-info who stx)

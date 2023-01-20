@@ -4,7 +4,7 @@ begin:
   import "static_arity.rhm"
   static_arity.check:
     List(l, ...)
-    List.length(l)
+    List.length(lst)
     List.cons(a, d)
 
 check:
@@ -75,6 +75,9 @@ begin:
   check:
     List.cons(1, [2, 3])
     ~is [1, 2, 3]
+  check:
+    List.cons(1, [2, 3]).length()
+    ~is 3
 
 begin:
   check:

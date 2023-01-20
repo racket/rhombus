@@ -3,16 +3,13 @@
                      syntax/parse/pre
                      "srcloc.rkt"
                      "pack.rkt")
+         "space-provide.rkt"
          "name-root.rkt"
          "syntax-class-clause.rkt"
-         "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
-(provide syntax_class_clause)
-
-(define-name-root syntax_class_clause
-  #:root (space-syntax rhombus/syntax_class_clause)
+(define+provide-space syntax_class_clause rhombus/syntax_class_clause
   #:fields
   (macro))
 

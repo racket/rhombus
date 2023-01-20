@@ -38,23 +38,7 @@
 
 ;; the `class` form is provided by "class-together.rkt"
 (provide this
-         super
-         extends
-         implements
-         internal
-         constructor
-         expression
-         binding
-         annotation
-         final
-         nonfinal
-         authentic
-         field
-         method
-         property
-         override
-         private
-         abstract)
+         super)
 
 (module+ for-together
   (provide (for-syntax class-transformer)
@@ -151,6 +135,8 @@
          (extract-internal-ids options
                                #'scope-stx #'base-stx
                                #'orig-stx))
+       (define internal-of-id (and internal-id
+                                   (car (generate-temporaries '(internal-of)))))
 
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
@@ -171,7 +157,9 @@
                      [internal-name-instance (and internal-id
                                                   (intro (datum->syntax #f (string->symbol
                                                                             (format "~a-internal-instance" (syntax-e #'name))))))]
+                     [internal-of internal-of-id]
                      [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
+                     [name-of (intro (datum->syntax #'name (string->symbol (format "~a-of" (syntax-e #'name))) #'name))]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
@@ -182,16 +170,16 @@
               #,@(top-level-declare #'(name? . constructor-name-fields))
               #,@(build-class-annotation-form super annotation-rhs
                                               super-constructor-fields
-                                              exposed-internal-id intro
-                                              #'(name name-instance name?
+                                              exposed-internal-id internal-of-id intro
+                                              #'(name name-instance name? name-of
                                                       internal-name-instance
                                                       constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
                                                       constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
-                         full-name name name?
-                         name-instance internal-name-instance
+                         full-name name name? name-of
+                         name-instance internal-name-instance internal-of
                          constructor-field-names
                          constructor-field-keywords
                          constructor-field-defaults
@@ -206,8 +194,8 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    full-name name name?
-                    name-instance internal-name-instance
+                    full-name name name? name-of
+                    name-instance internal-name-instance internal-of
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
@@ -485,9 +473,10 @@
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
                (build-class-dot-handling method-mindex method-vtable method-results final?
-                                         has-private? method-private exposed-internal-id
+                                         has-private? method-private exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
-                                         #'(name constructor-name name-instance name-ref
+                                         (not annotation-rhs)
+                                         #'(name constructor-name name-instance name-ref name-of
                                                  make-internal-name internal-name-instance
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
                                                  [public-name-field ...] [name-field ...]

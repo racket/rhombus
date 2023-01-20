@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      racket/phase+space
-                     "import-cover.rkt")
+                     "import-cover.rkt"
+                     "id-binding.rkt")
          "space-in.rkt")
 
 ;; Implements a subset of `racket` require to adjust a mapping of keys
@@ -191,7 +192,7 @@
                       (make-interned-syntax-introducer space-sym)
                       (lambda (x mode) x)))
     (define id (intro id-in 'add))
-    (if (and (identifier-binding id)
+    (if (and (identifier-binding* id)
              (not (ormap (lambda (id+space)
                            (free-identifier=? (car id+space) id))
                          id+spaces)))

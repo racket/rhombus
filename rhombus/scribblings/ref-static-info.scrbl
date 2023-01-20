@@ -26,7 +26,9 @@
  This static information applies to a use of @rhombus(identifier) in the
  expression space. The static information produced by the
  @rhombus(body) block must be in unpacked form (i.e.,
- @rhombus(statinfo_meta.pack) is applied automatically).
+ @rhombus(statinfo_meta.pack) is applied automatically). The
+ @rhombus(identifier) is bound in the @rhombus(statinfo, ~space)
+ @tech{space}.
 
  See @secref("annotation-macro") for an example.
 
@@ -147,14 +149,5 @@
 )
 
  See @secref("annotation-macro") for examples using some of these keys.
-
-}
-
-@doc(
-  defn.macro 'statinfo.only.macro $macro_decl'
-){
-
- Like @rhombus(statinfo.macro), but the identifier is bound only in the
- @rhombus(statinfo, ~space) @tech{space}.
 
 }

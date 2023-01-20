@@ -230,5 +230,5 @@ check:
     property foo :: Foo
   interface Bar:
     extends Foo
-    override propetry foo :: Bar
+    override property foo :: Bar
   ~completes

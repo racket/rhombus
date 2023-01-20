@@ -28,10 +28,9 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (internal annotation)
-              [(internal id)
+              [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
-              [(annotation block)
+              [(#:annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
@@ -50,17 +49,16 @@
           (define clause (car clauses))
           (define new-options
             (syntax-parse clause
-              #:literals (internal extends expression annotation)
-              [(internal id) ; checked in `parse-annotation-options`
+              [(#:internal id) ; checked in `parse-annotation-options`
                (hash-set options 'internals (cons #'id (hash-ref options 'internals #'id)))]
-              [(extends id ...)
+              [(#:extends id ...)
                (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
                                                   (hash-ref options 'extends '())))]
-              [(expression rhs)
+              [(#:expression rhs)
                (when (hash-has-key? options 'expression-macro-rhs)
                  (raise-syntax-error #f "multiple expression macro clauses" orig-stx clause))
                (hash-set options 'expression-macro-rhs (extract-rhs #'rhs))]
-              [(annotation block) ; checked in `parse-annotation-options`
+              [(#:annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
               [_
                (parse-method-clause orig-stx options clause)]))

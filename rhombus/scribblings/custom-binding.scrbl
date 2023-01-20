@@ -1,9 +1,10 @@
 #lang scribble/rhombus/manual
 @(import:
     "util.rhm" open
-    "common.rhm" open)
+    "common.rhm" open
+    "macro.rhm")
 
-@(def method_eval: make_rhombus_eval())
+@(def method_eval: macro.make_macro_eval())
 
 @title(~tag: "custom-binding"){Binding and Annotation}
 
@@ -29,7 +30,9 @@ consistent with that choice, we should also customize the binding, so
 that @rhombus(Sandwich(top, bottom)) would match instead of
 @rhombus(Sandwich([top, bottom])). Similarly,
 @rhombus(Sandwich.of(String)) would be preferable to
-@rhombus(Sandwich.of(List.of(String))).
+@rhombus(Sandwich.of(List.of(String))), which requires adding an
+@rhombus(of, ~datum) annotation form that is exported from
+@rhombus(Sandwhich) as a namespace.
 
 The customization shown below defines @rhombus(_Sandwich) with
 @rhombus(internal, ~class_clause) so that it can be used in the binding
@@ -37,7 +40,7 @@ and annotation expansion:
 
 @demo(
   ~eval: method_eval
-  ~defn:
+  ~defn:    
     class Sandwich(ingredients):
       nonfinal
       internal _Sandwich
@@ -45,11 +48,10 @@ and annotation expansion:
         super([ingredient, ...])
       binding 'Sandwich($ingredient, ...)':
         '_Sandwich([$ingredient, ...])'
-      annotation
-      | 'Sandwich $dot of($ingredient)':
-          '_Sandwich.of(List.of($ingredient))'
-      | 'Sandwich':
-          '_Sandwich'
+      annotation 'Sandwich': '_Sandwich'
+      annot.macro 'of($ingredient)':
+        '_Sandwich.of(List.of($ingredient))'
+      export: of
   ~repl:
     def blt: Sandwich("bacon", "lettuce", "tomato")
     def Sandwich(top, _, _): blt
@@ -82,11 +84,10 @@ operator or @rhombus(&&, ~annot) annotation operator.
         super(ingredient, ...)(inches)
       binding 'Sub($pre, ..., ~inches: $inches, $post, ...)':
         'Sandwich($pre, ..., $post, ...) && _Sub($inches)'
-      annotation
-      | 'Sub $dot of($ingredient)':
-          '_Sub && Sandwich.of($ingredient)'
-      | 'Sub':
-          '_Sub'
+      annotation 'Sub': '_Sub'
+      annot.macro 'of($ingredient)':
+        '_Sub && Sandwich.of($ingredient)'
+      export: of
   ~repl:
     def blt: Sub("bacon", "lettuce", "tomato",
                  ~inches: 6)

@@ -7,9 +7,10 @@
          (only-in "rest-marker.rkt" &)
          "static-info.rkt"
          "repetition.rkt"
+         "expression.rkt"
          "compound-repetition.rkt"
-         (rename-in "ellipsis.rkt"
-                    [... rhombus...]))
+         (submod "ellipsis.rkt" for-parse)
+         "op-literal.rkt")
 
 (provide (for-syntax parse-setmap-content
                      build-setmap
@@ -95,12 +96,11 @@
            [(and (pair? (cdr elems))
                  (syntax-parse (cadr elems)
                    #:datum-literals (group op)
-                   #:literals (rhombus...)
-                   [(group (op (~and dots-op rhombus...)))
+                   [(group (op (~var dots-op (:... in-expression-space))))
                     (when no-splice
                       (raise-syntax-error #f
                                           (format "repetition splicing is not supported on ~a" no-splice)
-                                          #'dots-op))
+                                          #'dots-op.name))
                     #t]
                    [_ #f]))
             ;; repetition
@@ -108,7 +108,6 @@
             (define-values (ignored-gs extra-ellipses) (consume-extra-ellipses (cddr elems)))
             (syntax-parse elem
               #:datum-literals (block braces parens group op)
-              #:literals (&)
               [(group key-e ... (block val))
                #:when (not (eq? init-shape 'set))
                (assert-map)
@@ -133,12 +132,11 @@
             (define elem (car elems))
             (syntax-parse elem
               #:datum-literals (block braces parens group op)
-              #:literals (&)
-              [(group (op (~and and-op &)) new-rst ...)
+              [(group (~var and-op (:& in-expression-space)) new-rst ...)
                (when no-splice
                  (raise-syntax-error #f
                                      (format "& rest is not supported on ~a" no-splice)
-                                     #'and-op))
+                                     #'and-op.name))
                (loop (cdr elems)
                      shape
                      '()

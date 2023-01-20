@@ -130,7 +130,10 @@ Metadata for a syntax object can include a source location and the raw
   bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
- Matches a syntax object consistent with @rhombus(term,~var)s.
+ Matches a syntax object consistent with @rhombus(term, ~var)s.
+ Identifiers and operators are matched symbolically (unrelatd to
+ binding), and other atomic terms are matched using @rhombus(==) on
+ unwrapped syntax objects.
 
  A @rhombus($, ~bind) within @rhombus(term)
  escapes to a subsequent unquoted binding that is matched against the corresponding
@@ -148,6 +151,10 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(..., ~datum) literally within a larger sequence of @rhombus(term)s,
  use @rhombus($, ~bind) to escape to a nested pattern, such as
  @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')).
+
+ To match identifier or operators based on binding insteda of
+ symbolically, use @rhombus($, ~bind) to escape, and then use
+ @rhombus(bound_as, ~unquote_bind) within the escape.
 
  @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
 
@@ -455,6 +462,40 @@ Metadata for a syntax object can include a source location and the raw
  See @rhombus(pattern, ~bind).
 
 }
+
+@doc(
+  unquote_bind.macro '«bound_as $space: '$identifier_or_operator'»'
+){
+
+ Unquote binding operator for use with @rhombus($, ~bind). It matches a
+ syntax object for an identifier or operator, where the identifier or
+ operator's binding is the same as @rhombus(identifier_or_operator) in
+ the @tech{space} identified by @rhombus(space) (e.g.,
+ @rhombus(expr, ~space)).
+
+@examples(
+  ~defn:
+    import:
+      rhombus/meta open
+      rhombus:
+        rename: + as plus
+        expose: plus
+  ~defn:
+    fun simplify(stx):
+      match stx
+      | '$(a :: Integer) $(bound_as expr: '+') $(b :: Integer)':
+          '$(a.unwrap() + b.unwrap())'
+      | ~else:
+          stx
+  ~repl:
+    simplify('1 + 2')
+    simplify('1 plus 2')
+    simplify('1 * 2')
+)
+
+}
+
+
 
 @doc(
   expr.macro '«Syntax.literal '$term ...; ...'»'

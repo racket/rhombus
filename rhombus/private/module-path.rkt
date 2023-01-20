@@ -10,6 +10,7 @@
                      "introducer.rkt"
                      "name-path-op.rkt"
                      "realm.rkt")
+         "provide.rkt"
          (only-in "implicit.rkt"
                   #%literal)
          (only-in "arithmetic.rkt"
@@ -25,9 +26,9 @@
 (provide (for-space rhombus/modpath
                     #%literal
                     (rename-out [rhombus/ /]
-                                [rhombus-! !]))
-         (rename-out [rhombus-file file]
-                     [rhombus-lib lib]))
+                                [rhombus-! !]
+                                [rhombus-file file]
+                                [rhombus-lib lib])))
 
 (module+ for-import-export
   (provide (for-syntax make-module-path-literal-operator
@@ -44,7 +45,8 @@
 
 (module+ for-meta
   (provide (for-syntax in-module-path-space)
-           modpath))
+           (for-space rhombus/namespace
+                      modpath)))
 
 (begin-for-syntax
   (property module-path-prefix-operator prefix-operator)
@@ -168,7 +170,7 @@
                            str))
      str)))
 
-(define-syntax rhombus-file
+(define-module-path-syntax rhombus-file
   (make-module-path-file-operator module-path-prefix-operator))
 
 (define-for-syntax (make-module-path-lib-operator prefix-operator)
@@ -184,7 +186,7 @@
                            str))
      new-str)))
 
-(define-syntax rhombus-lib
+(define-module-path-syntax rhombus-lib
   (make-module-path-lib-operator module-path-prefix-operator))
 
 (define-for-syntax (make-module-path-submod-operator infix-operator)

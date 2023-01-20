@@ -32,7 +32,6 @@
                     [(super-field-static-infos ...) (if no-super? '() #'super-field-static-infoss)]
                     [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)])
         #`(binding-transformer
-           (quote-syntax name)
            (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
                                                (quote-syntax name?)
                                                #:static-infos (quote-syntax ((#%dot-provider name-instance)))

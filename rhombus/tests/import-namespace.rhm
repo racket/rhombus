@@ -3,8 +3,8 @@
 namespace n:
   export: exint
   def exint = 10
-  bind.only.macro 'exint': '(_ :: Integer)'
-  annot.only.macro 'exint': 'Integer'
+  bind.macro 'exint': '(_ :: Integer)'
+  annot.macro 'exint': 'Integer'
 
 check:
   import: .n as ex_c
@@ -15,7 +15,7 @@ check:
 
 check:
   def n.exstr = "11"
-  annot.only.macro '(n.exstr)': 'String'
+  annot.macro '(n.exstr)': 'String'
   import: .n as ex_c
   def ex_c.exint = 10
   [10 :: ex_c.exint,
@@ -64,14 +64,14 @@ check:
   import:
     .n:
       open
-      only_space: ~default
+      only_space: expr
   exint
   ~is 10
 
 check:
   import:
     .n as ex_c:
-      only_space: ~default
+      only_space: expr
   ex_c.exint
   ~is 10
 
@@ -82,12 +82,12 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.only.macro 'exint': '(_ :: Integer)'
-      annot.only.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Integer)'
+      annot.macro 'exint': 'Integer'
     import:
       .n:
         open
-        only_space: ~default
+        only_space: expr
     10 :: exint
   ~raises "not bound as an annotation"
 
@@ -98,11 +98,11 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.only.macro 'exint': '(_ :: Integer)'
-      annot.only.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Integer)'
+      annot.macro 'exint': 'Integer'
     import:
       .n as ex_c:
-        only_space: ~default
+        only_space: expr
     10 :: ex_c.exint
   ~raises "not bound as an annotation"
 
@@ -136,7 +136,7 @@ begin:
       .n open:
         except_space: bind
     export: exint
-    bind.only.macro 'exint': '(_ :: PositiveInteger)'                            
+    bind.macro 'exint': '(_ :: PositiveInteger)'                            
   check:
     import .n2 as ex_c
     def ex_c.exint = 10

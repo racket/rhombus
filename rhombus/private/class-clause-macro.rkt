@@ -5,6 +5,7 @@
                      "pack.rkt"
                      "realm.rkt"
                      (submod "class-meta.rkt" for-static-info))
+         "space-provide.rkt"
          "class+interface.rkt"
          "class-clause.rkt"
          (submod "class-clause.rkt" for-class)
@@ -13,39 +14,23 @@
          "name-root.rkt"
          "macro-macro.rkt")
 
-(provide class_clause
-         class_and_interface_clause)
+(provide (for-space rhombus/namespace
+                    class_and_interface_clause))
 
-(define-name-root class_clause
-  #:root (space-syntax rhombus/class_clause)
+(define+provide-space class_clause rhombus/class_clause
   #:fields
-  (macro
-   only))
+  (macro))
 
 (define-name-root class_and_interface_clause
   #:fields
-  ([macro both_macro]
-   [only both_only]))
+  ([macro both_macro]))
 
-(define-name-root only
-  #:fields
-  ([macro macro-only]))
-
-(define-name-root both_only
-  #:fields
-  ([macro both_macro-only]))
-
-(define-identifier-syntax-definition-transformer+only macro macro-only
+(define-identifier-syntax-definition-transformer macro
   rhombus/class_clause
   #:extra [#:info class-data-static-infos]
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
-  #f
-  #:extra [#:info #'()]
-  #'make-class-and-interface-clause-transformer)
-
-(define-identifier-syntax-definition-transformer both_macro-only
   #:multi (rhombus/class_clause
            rhombus/interface_clause)
   #:extra [#:info #'()]

@@ -1,11 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "provide.rkt"
          "name-root.rkt"
          "definition.rkt"
+         "expression.rkt"
          "space.rkt"
-         "definition+space.rkt"
          (submod "class.rkt" for-together)
+         "interface.rkt"
          (submod "interface.rkt" for-together)
          (only-in "class-together-parse.rkt"
                   rhombus-together)
@@ -13,15 +15,19 @@
          "parse.rkt"
          "parens.rkt")
 
-(provide class)
+(provide (for-spaces (rhombus/namespace
+                      rhombus/space
+                      #f)
+                     class))
 
+(define-space-syntax class
+  (space-syntax rhombus/class))
+  
 (define-name-root class
-  #:root
-  (space+definition-transformer
-   (space-syntax rhombus/class)
-   class-transformer)
   #:fields
   (together))
+
+(define-syntax class class-transformer)
 
 (define-syntax together
   (definition-transformer
@@ -32,10 +38,11 @@
                         (for/list ([defn (in-list (syntax->list #'(defn ...)))])
                           (syntax-parse defn
                             #:datum-literals (group block)
-                            #:literals (class interface)
-                            [((~and tag group) (~and id class) . rest)
+                            [((~and tag group) id . rest)
+                             #:when (free-identifier=? #'id #'class)
                              #`(tag #,(datum->syntax #'here 'class_for_together #'id #'id) . rest)]
-                            [((~and tag group) (~and id interface) . rest)
+                            [((~and tag group) id . rest)
+                             #:when (free-identifier=? #'id #'interface)
                              #`(tag #,(datum->syntax #'here 'interface_for_together #'id #'id) . rest)]
                             [_
                              (raise-syntax-error #f
@@ -52,6 +59,3 @@
      #`(begin
          defn ... ...
          last-defn ...)]))
-
-                  
-              

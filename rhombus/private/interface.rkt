@@ -36,8 +36,7 @@
 (provide interface)
 
 (module+ for-together
-  (provide interface
-           interface_for_together))
+  (provide interface_for_together))
 
 (define-syntax interface
   (definition-transformer
@@ -244,8 +243,7 @@
      (if internal-name
          (with-syntax ([internal-name internal-name])
            (list
-            #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name)
-                                                                             (quote-syntax internal-name?)
+            #`(define-annotation-syntax internal-name (identifier-annotation (quote-syntax internal-name?)
                                                                              (quote-syntax ((#%dot-provider internal-name-instance)))))))
          null)
      (if annotation-rhs
@@ -256,8 +254,7 @@
                                       make-annotation-prefix-operator
                                       "interface")))
          (list
-          #`(define-annotation-syntax name (identifier-annotation (quote-syntax name)
-                                                                  (quote-syntax name?)
+          #`(define-annotation-syntax name (identifier-annotation (quote-syntax name?)
                                                                   (quote-syntax ((#%dot-provider name-instance))))))))))
   
 (define-for-syntax (build-interface-desc parent-names options

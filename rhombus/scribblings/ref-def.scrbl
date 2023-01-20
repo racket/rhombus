@@ -19,6 +19,9 @@
  with a binding operator, such as a pattern form or @rhombus(::) for
  annotations.
 
+ An identifier is bound in the @rhombus(expr, ~space) @tech{space}, and most
+ binding operators also create bindings in the @rhombus(expr, ~space) space.
+
 @examples(
   ~repl:
     def pi = 3.14

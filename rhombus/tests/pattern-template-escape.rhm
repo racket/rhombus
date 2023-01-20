@@ -91,10 +91,13 @@ check:
 
 check:
   ~eval
-  import: rhombus/meta open
-  // phase-1 binding of `$` makes `macro` bind `$`
-  meta:  
+  import:
+    rhombus/meta open
+    meta: rhombus/meta open
+  // phase-1 bindings of `$` makes `macro` bind `$`
+  meta:
     operator ($ b): b
+    bind.macro '$('$')': 'no'
   macro '$x + $y': '[$x, $y]'
   (1+2)
   ~is 3

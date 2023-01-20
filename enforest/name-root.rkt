@@ -15,12 +15,12 @@
 
 (property name-root (proc))
   
-(define (apply-name-root op-stx lxc stxes)
+(define (apply-name-root op-stx lxc in-space stxes)
   (define proc (name-root-proc lxc))
   (call-as-transformer
    op-stx
    (lambda (in out)
-     (define-values (target tail) (proc (in stxes)))
+     (define-values (target tail) (proc in-space (in stxes)))
      (unless (or (identifier? target)
                  (and (syntax? target)
                       (pair? (syntax-e target))

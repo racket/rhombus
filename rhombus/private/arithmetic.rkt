@@ -2,48 +2,60 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      "srcloc.rkt")
+         "provide.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "define-operator.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
          (only-in "dot.rkt"
-                  |.|)
-         (only-in "repetition.rkt"
-                  expression+repetition-prefix+infix-operator))
+                  |.|))
 
-(provide (rename-out [rhombus+ +]
-                     [rhombus- -]
-                     [rhombus* *]
-                     [rhombus/ /]
-                     [rhombus< <]
-                     [rhombus<= <=]
-                     [rhombus>= >=]
-                     [rhombus> >])
-         .=
+(provide (for-spaces (#f
+                      rhombus/repet)
 
-         sqrt cos sin tan log exp expt acos asin atan
-         floor ceiling round
-         (for-space rhombus/statinfo
-                    sqrt cos sin tan log exp expt acos asin atan
-                    floor ceiling round)
+                     (rename-out [rhombus+ +]
+                                 [rhombus- -]
+                                 [rhombus* *]
+                                 [rhombus/ /]
+                                 [rhombus< <]
+                                 [rhombus<= <=]
+                                 [rhombus>= >=]
+                                 [rhombus> >])
+                     .=
 
-         !
-         &&
-         \|\|
+                     !
+                     &&
+                     \|\|
 
-         ==
-         !=
+                     ==
+                     !=
 
-         ===)
+                     ===)
+
+         (for-spaces (#f
+                      rhombus/statinfo)
+                     sqrt cos sin tan log exp expt acos asin atan
+                     floor ceiling round))
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus* rhombus/)
   #:same-as (rhombus-))
 
+(define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
+  (prefix rhombus- - #:weaker-than (rhombus* rhombus/)))
+(define-values-for-syntax (minus-expr-infix minus-repet-infix)
+  (infix rhombus- - #:weaker-than (rhombus* rhombus/)))
+
 (define-syntax rhombus-
-  (expression+repetition-prefix+infix-operator
-   (prefix rhombus- - #:weaker-than (rhombus* rhombus/))
-   (infix rhombus- - #:weaker-than (rhombus* rhombus/))))
+  (expression-prefix+infix-operator
+   minus-expr-prefix
+   minus-expr-infix))
+
+(define-repetition-syntax rhombus-
+  (repetition-prefix+infix-operator
+   minus-repet-prefix
+   minus-repet-infix))
 
 (define-infix rhombus* *
   #:same-on-left-as (rhombus/))
@@ -94,3 +106,4 @@
 
 (define-static-info-syntaxes (log atan)
   (#%function-arity 6))
+

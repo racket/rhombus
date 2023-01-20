@@ -14,7 +14,6 @@
 
 (define-syntax rhombus-if
   (expression-transformer
-   #'rhombus-if
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts)
@@ -36,7 +35,6 @@
 
 (define-syntax rhombus-cond
   (expression-transformer
-   #'rhombus-cond
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (alts block group)
@@ -75,13 +73,11 @@
 
 (define-syntax rhombus-when
   (expression-transformer
-   #'rhombus-when
    (lambda (stx)
      (parse-when stx #'when))))
 
 (define-syntax rhombus-unless
   (expression-transformer
-   #'rhombus-unless
    (lambda (stx)
      (parse-when stx #'unless))))
 

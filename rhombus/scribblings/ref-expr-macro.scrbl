@@ -58,16 +58,6 @@
 
 
 @doc(
-  defn.macro 'expr.only.macro $macro_patterns'
-){
-
- Like @rhombus(expr.macro), but the identifier or operator is bound only
- in the @rhombus(expr, ~space) @tech{space}.
-
-}
-
-
-@doc(
   syntax_class expr_meta.Group:
     kind: ~group
     field parsed

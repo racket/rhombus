@@ -4,7 +4,9 @@
                      enforest/operator
                      enforest/property
                      enforest/proc-name
-                     "introducer.rkt"))
+                     "introducer.rkt"
+                     "expression-space.rkt"
+                     (for-syntax racket/base)))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -13,14 +15,14 @@
            expression-transformer
 
            make-identifier-expression
-                     
+
            check-expression-result
            
            in-expression-space
+           expr-quote
+           out-of-expression-space
 
            (struct-out expression-prefix+infix-operator)))
-
-(provide define-expression-syntax)
 
 (module+ for-top-expand
   (provide (for-syntax check-unbound-identifier-early!)))
@@ -29,8 +31,8 @@
   (property expression-prefix-operator prefix-operator)
   (property expression-infix-operator infix-operator)
 
-  (define (expression-transformer name proc)
-    (expression-prefix-operator name '((default . stronger)) 'macro proc))
+  (define (expression-transformer proc)
+    (expression-prefix-operator (quote-syntax unused) '((default . stronger)) 'macro proc))
 
   (define early-unbound? #f)
   (define (check-unbound-identifier-early!)
@@ -52,13 +54,9 @@
     (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
     form)
 
-  (define in-expression-space (make-interned-syntax-introducer/add 'rhombus/expr)))
-
-(define-syntax (define-expression-syntax stx)
-  (syntax-parse stx
-    [(_ name:id rhs)
-     (quasisyntax/loc stx
-       (define-syntax #,(in-expression-space #'name) rhs))]))
+  (define-syntax (expr-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax id)])))
 
 (begin-for-syntax
   (struct expression-prefix+infix-operator (prefix infix)

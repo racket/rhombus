@@ -4,15 +4,16 @@
                      enforest/transformer
                      enforest/property
                      enforest/proc-name
-                     "name-path-op.rkt"
                      "introducer.rkt"
-                     "realm.rkt")
-         "name-root-ref.rkt")
+                     "realm.rkt"
+                     (for-syntax racket/base))
+         "enforest.rkt")
 
 (provide define-class-clause-syntax)
 
 (module+ for-class
-  (provide (for-syntax in-class-clause-space)))
+  (provide (for-syntax in-class-clause-space
+                       class-clause-quote)))
 
 (begin-for-syntax
   (provide (property-out class-clause-transformer)
@@ -30,6 +31,9 @@
       [_ (raise-result-error* (proc-name proc) rhombus-realm "Class_Clause_Syntax" form)]))
 
   (define in-class-clause-space (make-interned-syntax-introducer/add 'rhombus/class_clause))
+  (define-syntax (class-clause-quote stx)
+    (syntax-case stx ()
+      [(_ id) #`(quote-syntax #,((make-interned-syntax-introducer 'rhombus/class_clause) #'id))]))
 
   (define (make-class-clause-transformer-ref class-data)
     ;; "accessor" closes over `class-data`:
@@ -39,13 +43,10 @@
            (transformer (lambda (stx)
                           ((transformer-proc cc) stx class-data))))))
 
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class (:class-clause class-data)
     #:desc "class clause"
     #:in-space in-class-clause-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref (make-class-clause-transformer-ref class-data)
     #:check-result check-class-clause-result))
 

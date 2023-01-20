@@ -6,7 +6,9 @@
                      "srcloc.rkt")
          "expression.rkt"
          (only-in "repetition.rkt"
-                  expression+repetition-prefix+infix-operator)
+                  in-repetition-space
+                  repet-quote
+                  repetition-prefix+infix-operator)
          "compound-repetition.rkt"
          "dotted-sequence-parse.rkt"
          "parse.rkt"
@@ -20,14 +22,15 @@
 ;; operator definition and generates a combination of a transformer and
 ;; a function
 
-(provide (rename-out [rhombus-operator operator]))
+(provide (rename-out
+          [rhombus-operator operator]))
 
 (begin-for-syntax
   
   (define-splicing-syntax-class :prefix-case
     (pattern (~seq (parens (~and g (group op-name-seq::dotted-operator-or-identifier-sequence arg)))
                    ret::ret-annotation
-                   ((~and tag block) options::prefix-operator-options
+                   ((~and tag block) (~var options (:prefix-operator-options '#f))
                                      body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:attr name #'op-name.name
@@ -39,7 +42,7 @@
   (define-splicing-syntax-class :infix-case
     (pattern (~seq (parens (~and g (group left op-name-seq::dotted-operator-or-identifier-sequence right)))
                    ret::ret-annotation
-                   ((~and tag block) options::infix-operator-options
+                   ((~and tag block) (~var options (:infix-operator-options '#f))
                                      body ...))
              #:with op-name::dotted-operator-or-identifier #'op-name-seq
              #:attr name #'op-name.name
@@ -52,7 +55,8 @@
   (define (make-prefix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-prefix-operator
-         (quote-syntax #,name)
+         (expr-quote #,name)
+         (repet-quote #,name)
          #,(convert-prec prec)
          'automatic
          (lambda (arg self-stx)
@@ -64,7 +68,8 @@
   (define (make-infix name op-proc prec assc static-infos)
     (with-syntax ([op-proc op-proc])
       #`(make-expression&repetition-infix-operator
-         (quote-syntax #,name)
+         (expr-quote #,name)
+         (repet-quote #,name)
          #,(convert-prec prec)
          'automatic
          (lambda (left right self-stx)
@@ -109,7 +114,7 @@
       (list
        #`(define op-proc
            #,(build-prefix-function name arg rhs form-id g ret-predicate))
-       #`(define-syntax #,name
+       #`(define-syntaxes (#,name #,(in-repetition-space name))
            #,(make-prefix name #'op-proc prec ret-static-infos)))))
 
   (define (generate-infix form-id g name left right prec assc rhs ret-predicate ret-static-infos)
@@ -117,7 +122,7 @@
       (list
        #`(define op-proc
            #,(build-infix-function name left right rhs form-id g ret-predicate))
-       #`(define-syntax #,name
+       #`(define-syntaxes (#,name #,(in-repetition-space name))
            #,(make-infix name #'op-proc prec assc ret-static-infos)))))
     
   (define (generate-prefix+infix stx
@@ -130,10 +135,14 @@
            #,(build-prefix-function p-name p-arg p-rhs p-g p-g p-ret-predicate))
        #`(define i-op-proc
            #,(build-infix-function i-name i-left i-right i-rhs i-g i-g i-ret-predicate))
-       #`(define-syntax #,p-name
-           (expression+repetition-prefix+infix-operator
-            #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)
-            #,(make-infix i-name #'i-op-proc i-prec i-assc i-ret-static-infos)))))))
+       #`(define-syntaxes (#,p-name #,(in-repetition-space i-name))
+           (let-values ([(prefix-expr prefix-repet)
+                         #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)]
+                        [(infix-expr infix-repet)
+                         #,(make-infix i-name #'i-op-proc i-prec i-assc i-ret-static-infos)])
+             (values
+              (expression-prefix+infix-operator prefix-expr infix-expr)
+              (repetition-prefix+infix-operator prefix-repet infix-repet))))))))
 
 (define-syntax rhombus-operator
   (definition-transformer

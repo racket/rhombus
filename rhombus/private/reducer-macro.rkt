@@ -1,14 +1,19 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         "provide.rkt"
          "reducer.rkt"
          "space.rkt"
          "name-root.rkt")
 
-(provide reducer)
+(provide (for-spaces (rhombus/namespace
+                      rhombus/space)
+                     reducer))
+
+(define-space-syntax reducer
+  (space-syntax rhombus/reducer))
 
 (define-name-root reducer
-  #:root (space-syntax rhombus/reducer)
   #:fields
   (macro))
 

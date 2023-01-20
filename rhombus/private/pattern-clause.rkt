@@ -3,9 +3,8 @@
                      syntax/parse/pre
                      enforest/transformer
                      enforest/property
-                     "name-path-op.rkt"
                      "introducer.rkt")
-         "name-root-ref.rkt")
+         "enforest.rkt")
 
 (provide define-pattern-clause-syntax)
 
@@ -26,9 +25,6 @@
     #:desc "pattern clause"
     #:predicate pattern-clause?
     #:in-space in-pattern-clause-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref pattern-clause-transformer-ref))
 
 (define-syntax (define-pattern-clause-syntax stx)

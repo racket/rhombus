@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      "interface-parse.rkt")
+         "provide.rkt"
          "printer-property.rkt"
          "name-root.rkt"
          (submod "annotation.rkt" for-class)
@@ -9,9 +10,10 @@
          "class-dot.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax))
 
-(provide Printable
-         (for-space rhombus/class Printable)
-         (for-space rhombus/annot Printable))
+(provide (for-spaces (rhombus/namespace
+                      rhombus/class
+                      rhombus/annot)
+                     Printable))
 
 (define-values (prop:Printable Printable? Printable-ref)
   (make-struct-type-property 'Printable
@@ -61,7 +63,7 @@
    [display display-mthod]))
 
 (define-annotation-syntax Printable
-  (identifier-annotation #'printer-interface #'Printable-public? #'((#%dot-provider printer-instance))))
+  (identifier-annotation #'Printable-public? #'((#%dot-provider printer-instance))))
 
 (define-dot-provider-syntax printer-instance
   (dot-provider-more-static (make-handle-class-instance-dot #'Printable #hasheq() #hasheq())))

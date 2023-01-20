@@ -6,18 +6,24 @@
                      "operator-parse.rkt"
                      "tag.rkt"
                      "statically-str.rkt")
+         "provide.rkt"
          "definition.rkt"
          "expression.rkt"
-         "expression+annotation.rkt"
+         (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "dot-provider-key.rkt"
          "repetition.rkt"
          "compound-repetition.rkt"
          "realm.rkt"
          "parse.rkt"
-         "assign.rkt")
+         "assign.rkt"
+         "op-literal.rkt")
 
-(provide |.|)
+(provide (for-spaces (#f
+                      rhombus/repet
+                      rhombus/annot)
+
+                     |.|))
 
 (module+ for-dot-provider
   (begin-for-syntax
@@ -37,8 +43,10 @@
   (provide set-builtin->accessor-ref!))
 
 (module+ for-dynamic-static
-  (provide |.|
-           static-|.|))
+  (provide (for-spaces (#f
+                        rhombus/repet)
+                       |.|
+                       static-|.|)))
 
 (begin-for-syntax
   (property dot-provider (handler))
@@ -58,12 +66,11 @@
     (pattern (~var ref-id (:static-info #'#%dot-provider))
              #:attr id #'ref-id.val)))
 
-(define-for-syntax (make-|.| more-static?)
-  (make-expression+repetition+annotation-infix-operator
+(define-for-syntax (make-|.|-expression more-static?)
+  (expression-infix-operator
    (quote-syntax |.|)
    '((default . stronger))
    'macro
-   ;; expression
    (lambda (form1 tail)
      (parse-dot-provider
       tail
@@ -76,7 +83,13 @@
           (build-dot-access form1 dp-id
                             more-static? #:repetition? #f
                             dot dot-name field-id tail)))))
-   ;; repetition
+   'left))
+
+(define-for-syntax (make-|.|-repetition more-static?)
+  (repetition-infix-operator
+   (quote-syntax |.|)
+   '((default . stronger))
+   'macro
    (lambda (form1 tail)
      (parse-dot-provider
       tail
@@ -101,8 +114,22 @@
                         (extract-static-infos expr)))))
            (values rep
                    tail)]))))
-   ;; annotation, declared explicitly to create a syntax error
-   ;; for something like `"a" :: String.length()`
+   'left))
+
+
+(define-syntax |.| (make-|.|-expression #f))
+(define-syntax static-|.| (make-|.|-expression #t))
+
+(define-repetition-syntax |.| (make-|.|-repetition #f))
+(define-repetition-syntax static-|.| (make-|.|-repetition #t))
+
+;; annotation, declared explicitly to create a syntax error
+;; for something like `"a" :: String.length()`   
+(define-annotation-syntax |.|
+  (annotation-infix-operator
+   (quote-syntax |.|)
+   '((default . stronger))
+   'macro
    (lambda (form1 tail)
      (syntax-parse tail
        [(name . _)
@@ -132,8 +159,7 @@
                             field-id)
         (syntax-parse tail
           #:datum-literals (op)
-          #:literals (:=)
-          [((op :=) . tail)
+          [(_:::=-expr . tail)
            #:when (not repetition?)
            #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
            (values #`(dot-assign-by-name #,form1 '#,field-id e.parsed)
@@ -155,10 +181,6 @@
                (values e tail)
                (generic))))]
     [else (generic)]))
-
-
-(define-syntax |.| (make-|.| #f))
-(define-syntax static-|.| (make-|.| #t))
 
 (define-syntax (define-dot-provider-syntax stx)
   (syntax-parse stx

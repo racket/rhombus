@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre)
+         rhombus/all-spaces-out
          rhombus/private/parse
          rhombus/private/forwarding-sequence
          (prefix-in doc: scribble/doclang2)
@@ -18,9 +19,9 @@
          (except-out (all-from-out scribble/base)
                      base:verbatim
                      include-section)
-         verbatim
-         pkg
-         include_section
+         (all-spaces-out verbatim
+                         pkg
+                         include_section)
          (all-from-out "private/rhombus.rhm"
                        "private/rhombus_typeset.rhm"
                        "private/include.rhm"))

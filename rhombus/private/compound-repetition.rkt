@@ -15,23 +15,27 @@
                      build-compound-repetition))
 
 (begin-for-syntax
-  (define (make-expression&repetition-prefix-operator name prec protocol exp)
+  (define (make-expression&repetition-prefix-operator expr-name repet-name prec protocol exp)
     (define rep
       (lambda (form stx)
         (build-compound-repetition stx
                                    (list form)
                                    (lambda (form) (values (exp form stx)
                                                           #'())))))
-    (make-expression+repetition-prefix-operator name prec protocol exp rep))
+    (values
+     (expression-prefix-operator expr-name prec protocol exp)
+     (repetition-prefix-operator repet-name prec protocol rep)))
 
-  (define (make-expression&repetition-infix-operator name prec protocol exp assc)
+  (define (make-expression&repetition-infix-operator expr-name repet-name prec protocol exp assc)
     (define rep
       (lambda (form1 form2 stx)
         (build-compound-repetition stx
                                    (list form1 form2)
                                    (lambda (form1 form2) (values (exp form1 form2 stx)
                                                                  #'())))))
-    (make-expression+repetition-infix-operator name prec protocol exp rep assc))
+    (values
+     (expression-infix-operator expr-name prec protocol exp assc)
+     (repetition-infix-operator repet-name prec protocol rep assc)))
 
   (define (repetition-depth form)
     (with-syntax-parse ([rep::repetition-info form])

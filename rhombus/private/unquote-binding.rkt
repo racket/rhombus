@@ -6,9 +6,8 @@
                      enforest/transformer
                      enforest/property
                      enforest/syntax-local
-                     "introducer.rkt"
-                     "name-path-op.rkt")
-         "name-root-ref.rkt")
+                     "introducer.rkt")
+         "enforest.rkt")
 
 (begin-for-syntax
   (provide (property-out unquote-binding-prefix-operator)
@@ -42,14 +41,11 @@
 
   (define current-unquote-binding-kind (make-parameter 'term))
 
-  (define-enforest
+  (define-rhombus-enforest
     #:syntax-class :unquote-binding
-    #:desc "syntax binding"
-    #:operator-desc "syntax binding operator"
+    #:desc "unquote binding"
+    #:operator-desc "unquote binding operator"
     #:in-space in-unquote-binding-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:prefix-operator-ref unquote-binding-prefix-operator-ref
     #:infix-operator-ref unquote-binding-infix-operator-ref
     #:make-identifier-form make-identifier-unquote-binding)

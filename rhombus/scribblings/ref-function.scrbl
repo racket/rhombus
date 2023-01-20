@@ -125,7 +125,8 @@ normally bound to implement function calls.
 
 ){
 
- Binds @rhombus(identifier_path) as a function, or when
+ Binds @rhombus(identifier_path) as a function in the @rhombus(expr, ~space)
+ @tech{space}, or when
  @rhombus(identifier_path) is not supplied, serves as an expression that
  produces a function value.
 

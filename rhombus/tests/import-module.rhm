@@ -60,33 +60,35 @@ check:
   import:
     lib("rhombus/tests/example-c.rhm"):
       open
-      only_space: ~default
+      only_space: expr
   exint
   ~is 10
 
 check:
   import:
     lib("rhombus/tests/example-c.rhm") as ex_c:
-      only_space: ~default
+      only_space: expr
   ex_c.exint
   ~is 10
 
 check:
   ~eval
+  import rhombus/meta: expose: expr
   begin:
     import:
       lib("rhombus/tests/example-c.rhm"):
         open
-        only_space: ~default
+        only_space: expr
     10 :: exint
   ~raises "not bound as an annotation"
 
 check:
   ~eval
+  import rhombus/meta: expose: expr
   begin:
     import:
       lib("rhombus/tests/example-c.rhm") as ex_c:
-        only_space: ~default
+        only_space: expr
     10 :: ex_c.exint
   ~raises "not bound as an annotation"
 

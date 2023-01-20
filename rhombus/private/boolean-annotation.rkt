@@ -14,8 +14,8 @@
 
 (define-annotation-syntax &&
   (annotation-infix-operator
-   #'&&
-   (list (cons #'\|\| 'stronger))
+   (annot-quote &&)
+   (list (cons (annot-quote \|\|) 'stronger))
    'automatic
    (lambda (lhs rhs stx)
      (with-syntax-parse ([l::annotation-form lhs]
@@ -30,7 +30,7 @@
 
 (define-annotation-syntax \|\|
   (annotation-infix-operator
-   #'\|\|
+   (annot-quote \|\|)
    null
    'automatic
    (lambda (lhs rhs stx)

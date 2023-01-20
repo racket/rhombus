@@ -10,6 +10,15 @@
 @title{Class and Interface Clause Macros}
 
 @doc(
+  space.transform class
+){
+
+ The @tech{space} for class and interface names as bound by
+ @rhombus(class) and @rhombus(interface).
+
+}
+
+@doc(
   space.transform class_clause
   space.transform interface_clause
 ){
@@ -35,7 +44,8 @@
     ~info: $identifier
 ){
 
- Like @rhombus(defn.macro), but defines a name as a clause form for use
+ Like @rhombus(defn.macro), but defines a name in the
+ @rhombus(class_clause, ~space) @tech{space} as a clause form for use
  within a @rhombus(class) body.
 
  The compile-time @rhombus(body) block returns the expansion result. The
@@ -81,7 +91,8 @@
                | ...»'
 ){
 
-Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
+Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses and binding
+in the @rhombus(interface_clause, ~space) @tech{space}.
 
 }
 
@@ -99,21 +110,9 @@ Like @rhombus(class_clause.macro), but for @rhombus(interface) clauses.
 ){
 
  Like @rhombus(class_clause.macro), but defines for use both in
- @rhombus(class) clauses and @rhombus(interface) clauses.
-
-}
-
-@doc(
-  defn.macro 'class_clause.only.macro $macro_decl'
-  defn.macro 'interface_clause.only.macro $macro_decl'
-  defn.macro 'class_and_interface_clause.only.macro $macro_impl'
-){
-
- Like @rhombus(class_clause.macro), @rhombus(interface_clause.macro),
- and @rhombus(class_and_interface_clause.macro), but the identifier is
- bound only in the @rhombus(class, ~space) space,
- @rhombus(interface, ~space) space, or both @tech{spaces},
- respectively.
+ @rhombus(class) clauses and @rhombus(interface) clauses by
+ binding in both the the @rhombus(class_clause, ~space) and
+ @rhombus(interface_clause, ~space) @tech{spaces}.
 
 }
 

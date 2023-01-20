@@ -2,39 +2,38 @@
 (require racket/symbol
          racket/keyword
          shrubbery/write
+         "provide.rkt"
          (submod "set.rkt" for-ref)
          "adjust-name.rkt"
          "printer-property.rkt"
          "define-arity.rkt"
          "function-arity-key.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         "expression.rkt")
 
-(provide (rename-out
-          [rhombus-print print]
-          [rhombus-display display])
-         println
-         displayln
-         print_to_string
-         (rename-out
-          [current-output-port current_output_port]
-          [current-error-port current_error_port])
-
-         (for-space rhombus/statinfo
-                    (rename-out
-                     [rhombus-print print]
-                     [rhombus-display display])
-                    println
-                    displayln
-                    print_to_string
-                    (rename-out
-                     [current-output-port current_output_port]
-                     [current-error-port current_error_port])))
+(provide (for-spaces (#f
+                      rhombus/statinfo)
+                     (rename-out
+                      [rhombus-print print]
+                      [rhombus-display display])
+                     println
+                     displayln
+                     print_to_string
+                     (rename-out
+                      [current-output-port current_output_port]
+                      [current-error-port current_error_port])))
 
 (module+ redirect
   (provide (struct-out racket-print-redirect)))
 
 (module+ for-class
   (provide prop:print-field-shapes))
+
+(module+ for-string
+  (provide (rename-out [do-display display])))
+
+(module+ for-runtime
+  (provide (rename-out [do-print print])))
 
 (define-values (prop:print-field-shapes print-field-shapes? print-field-shapes-ref)
   (make-struct-type-property 'print-field-shapes))
@@ -46,19 +45,22 @@
   (do-print v op 'display))
 
 (define/arity (println v [op (current-output-port)])
-  (rhombus-print v op)
+  (do-print v op 'print)
   (newline op))
 
 (define/arity (displayln v [op (current-output-port)])
-  (rhombus-display v op)
+  (do-print v op 'display)
   (newline op))
 
 (define/arity (print_to_string v)
   (define op (open-output-string))
-  (rhombus-print v op)
+  (do-print v op 'print)
   (get-output-string op))
 
-(define (do-print v op mode)
+(define (do-display v op)
+  (do-print v op 'display))
+
+(define (do-print v op [mode 'print])
   (let loop ([v v] [mode mode])
     (define (display?) (eq? mode 'display))
     (define (print v) (loop v 'print))

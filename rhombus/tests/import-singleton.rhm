@@ -3,8 +3,8 @@
 namespace n:
   export: exint
   def exint = 10
-  bind.only.macro 'exint': '(_ :: Integer)'
-  annot.only.macro 'exint': 'Integer'
+  bind.macro 'exint': '(_ :: Integer)'
+  annot.macro 'exint': 'Integer'
 
 check:
   ~eval
@@ -59,14 +59,14 @@ check:
 check:
   import:
     .n.exint:
-      only_space: ~default
+      only_space: expr
   exint
   ~is 10
 
 check:
   import:
     .n.exint as ex_int:
-      only_space: ~default
+      only_space: expr
   ex_int
   ~is 10
 
@@ -77,11 +77,11 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.only.macro 'exint': '(_ :: Integer)'
-      annot.only.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Integer)'
+      annot.macro 'exint': 'Integer'
     import:
       .n.exint:
-        only_space: ~default
+        only_space: expr
     10 :: exint
   ~raises "not bound as an annotation"
 

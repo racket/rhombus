@@ -24,7 +24,8 @@
 ){
 
  Like @rhombus(expr.macro), but defines an identifier or operator as a
- binding form. The result of the macro expansion can be a low-level
+ binding form in the @rhombus(bind, ~space) @tech{space}.
+ The result of the macro expansion can be a low-level
  binding description created with @rhombus(bind_meta.pack).
 
 @examples(
@@ -281,15 +282,6 @@
 
 }
 
-@doc(
-  defn.macro 'bind.only.macro $macro_patterns'
-){
-
- Like @rhombus(bind.macro), but the identifier
- or operator is bound only in the @rhombus(bind, ~space)
- @tech{space}.
-
-}
 
 @doc(
   syntax_class bind_meta.Group:

@@ -95,8 +95,8 @@
                          #:defaults ([name-path-op #'name-path-op]))
               (~optional (~seq #:name-root-ref name-root-ref)
                          #:defaults ([name-root-ref #'name-root-ref]))
-              (~optional (~seq #:name-root-ref-root name-root-ref-root)
-                         #:defaults ([name-root-ref-root #'name-root-ref-root]))
+              (~optional (~seq #:in-name-root-space in-name-root-space)
+                         #:defaults ([in-name-root-space #'values]))
               (~optional (~seq #:prefix-operator-ref prefix-operator-ref)
                          #:defaults ([prefix-operator-ref #'prefix-operator-ref]))
               (~optional (~seq #:infix-operator-ref infix-operator-ref)
@@ -140,9 +140,8 @@
                     #:attr tail (transform-out new-tail)))
 
          (define enforest-step (make-enforest-step form-kind-str operator-kind-str
-                                                   in-space
-                                                   name-path-op prefix-operator-ref infix-operator-ref
-                                                   name-root-ref name-root-ref-root
+                                                   in-space prefix-operator-ref infix-operator-ref
+                                                   name-path-op in-name-root-space name-root-ref 
                                                    check-result
                                                    make-identifier-form
                                                    make-operator-form
@@ -171,9 +170,8 @@
          (loop form tail)]))))
 
 (define (make-enforest-step form-kind-str operator-kind-str
-                            in-space
-                            name-path-op prefix-operator-ref infix-operator-ref
-                            name-root-ref name-root-ref-root
+                            in-space prefix-operator-ref infix-operator-ref
+                            name-path-op in-name-root-space name-root-ref
                             check-result
                             make-identifier-form
                             make-operator-form
@@ -191,30 +189,29 @@
        ((syntax-parse stxes
           [() (raise-syntax-error #f (format "missing ~a" form-kind-str) stxes)]
           [(head::name . tail)
-           (define head-id (in-space #'head.name))
            (define name-path? (starts-like-name-path? #'head #'tail))
-           (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (and name-path?
-                                                               (name-root-ref v))
-                                                          (name-root-ref-root
-                                                           v
-                                                           (lambda (v)
-                                                             (or (prefix-operator-ref v)
-                                                                 (infix-operator-ref v))))))))
            (cond
-             [(name-root? v)
-              (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?)]
-             [(prefix-operator? v)
-              (dispatch-prefix-operator v #'tail stxes head-id)]
-             [(infix-operator? v)
-              (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
-             [(identifier? #'head)
-              (enforest-step (make-identifier-form #'head) #'tail current-op current-op-stx stop-on-unbound?)]
+             [(and name-path?
+                   (syntax-local-value* (in-name-root-space #'head.name) name-root-ref))
+              => (lambda (v)
+                   (define-values (head tail) (apply-name-root #'head.name v in-space stxes))
+                   (enforest-step (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?))]
              [else
-              (if make-operator-form
-                  (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx stop-on-unbound?)
-                  (raise-unbound-operator #'head.name))])]
+              (define head-id (in-space #'head.name))
+              (define v (syntax-local-value* head-id (lambda (v)
+                                                       (or (prefix-operator-ref v)
+                                                           (infix-operator-ref v)))))
+              (cond
+                [(prefix-operator? v)
+                 (dispatch-prefix-operator v #'tail stxes head-id)]
+                [(infix-operator? v)
+                 (raise-syntax-error #f "infix operator without preceding argument" #'head.name)]
+                [(identifier? #'head)
+                 (enforest-step (make-identifier-form #'head) #'tail current-op current-op-stx stop-on-unbound?)]
+                [else
+                 (if make-operator-form
+                     (enforest-step (make-operator-form #'head.name) #'tail current-op current-op-stx stop-on-unbound?)
+                     (raise-unbound-operator #'head.name))])])]
           [(((~datum parsed) inside) . tail)
            (enforest-step #'inside #'tail current-op current-op-stx stop-on-unbound?)]
           [(head . _)
@@ -251,31 +248,30 @@
        ((syntax-parse stxes
           [() (values init-form stxes)]
           [(head::name . tail)
-           (define head-id (in-space #'head.name))
            (define name-path? (starts-like-name-path? #'head #'tail))
-           (define v (syntax-local-value* head-id
-                                          (lambda (v) (or (and name-path?
-                                                               (name-root-ref v))
-                                                          (name-root-ref-root
-                                                           v
-                                                           (lambda (v)
-                                                             (or (infix-operator-ref v)
-                                                                 (prefix-operator-ref v))))))))
            (cond
-             [(name-root? v)
-              (define-values (head tail) (apply-name-root head-id v stxes))
-              (enforest-step init-form (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?)]
-             [(infix-operator? v)
-              (dispatch-infix-operator v #'tail stxes head-id)]
-             [(prefix-operator? v)
-              (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
-             [stop-on-unbound? (values init-form stxes)]
-             [(identifier? #'head)
-              (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
+             [(and name-path?
+                   (syntax-local-value* (in-name-root-space #'head.name) name-root-ref))
+              => (lambda (v)
+                   (define-values (head tail) (apply-name-root #'head.name v in-space stxes))
+                   (enforest-step init-form (datum->syntax #f (cons head tail)) current-op current-op-stx stop-on-unbound?))]
              [else
-              (if make-operator-form
-                  (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)
-                  (raise-unbound-operator #'head.name))])]
+              (define head-id (in-space #'head.name))
+              (define v (syntax-local-value* head-id (lambda (v)
+                                                       (or (infix-operator-ref v)
+                                                           (prefix-operator-ref v)))))
+              (cond
+                [(infix-operator? v)
+                 (dispatch-infix-operator v #'tail stxes head-id)]
+                [(prefix-operator? v)
+                 (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
+                [stop-on-unbound? (values init-form stxes)]
+                [(identifier? #'head)
+                 (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
+                [else
+                 (if make-operator-form
+                     (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)
+                     (raise-unbound-operator #'head.name))])])]
           [((~and head ((~datum parsed) . _)) . _)
            (dispatch-infix-implicit juxtapose-implicit-name #'head #'head)]
           [(head . _)

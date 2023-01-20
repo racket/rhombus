@@ -2,10 +2,10 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      syntax/stx)
+         "provide.rkt"
          "composite.rkt"
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt"
          (submod "annotation.rkt" for-class)
          "static-info.rkt"
          "reducer.rkt"
@@ -13,10 +13,8 @@
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "function-arity-key.rkt"
-         (rename-in "ellipsis.rkt"
-                    [... rhombus...])
-         (only-in "rest-marker.rkt"
-                  &)
+         "op-literal.rkt"
+         (submod "ellipsis.rkt" for-parse)
          "repetition.rkt"
          "compound-repetition.rkt"
          "name-root.rkt"
@@ -27,11 +25,15 @@
          "parens.rkt"
          "define-arity.rkt")
 
-(provide List
-         (for-space rhombus/annot List)
-         (for-space rhombus/reducer List)
-
-         (for-space rhombus/annot NonemptyList))
+(provide (for-spaces (rhombus/namespace
+                      #f
+                      rhombus/bind
+                      rhombus/annot
+                      rhombus/reducer)
+                     List)
+         (for-spaces (rhombus/namespace
+                      rhombus/annot)
+                     NonemptyList))
 
 (module+ for-binding
   (provide (for-syntax parse-list-binding
@@ -60,10 +62,9 @@
 
 (define-binding-syntax List.cons
   (binding-transformer
-   #'List.cons
    (make-composite-binding-transformer "cons" #'list? (list #'car #'cdr) (list #'() list-static-infos))))
 
-(define/arity (List.cons a d)
+(define (List.cons a d)
   (unless (list? d) (raise-argument-error* 'List.cons rhombus-realm "List" d))
   (cons a d))
 
@@ -75,13 +76,17 @@
   (unless (and (pair? l) (list? l)) (raise-argument-error* 'List.rest rhombus-realm "NonemptyList" l))
   (cdr l))
 
-(define (iota n)
-  (unless (exact-nonnegative-integer? n)
-    (raise-argument-error* 'List.iota rhombus-realm "NonnegativeInteger" n))
-  (for/list ([i (in-range n)])
-    i))
+(define iota
+  (lambda (n)
+    (unless (exact-nonnegative-integer? n)
+      (raise-argument-error* 'List.iota rhombus-realm "NonnegativeInteger" n))
+    (for/list ([i (in-range n)])
+      i)))
 
 (define-static-info-syntax length
+  (#%function-arity 2))
+
+(define-static-info-syntax reverse
   (#%function-arity 2))
 
 (define-name-root List
@@ -93,16 +98,15 @@
    [empty null]
    reverse
    iota
-   repet)
-  #:root
-  (make-expression+binding-prefix-operator
-   #'List
-   '((default . stronger))
-   'macro
-   ;; expression - special cases optimize for `...` and `&`;
-   ;; letting it expand instead to `(apply list ....)` is not
-   ;; so bad, but but we can avoid a `list?` check in `apply`,
-   ;; and we can expose more static information this way
+   repet
+   of))
+
+(define-syntax List
+  (expression-transformer
+   ;; special cases optimize for `...` and `&`; letting it expand
+   ;; instead to `(apply list ....)` is not so bad, but but we can
+   ;; avoid a `list?` check in `apply`, and we can expose more static
+   ;; information this way
    (lambda (stx)
      (define (normal-call? tag)
        (define id (datum->syntax tag '#%call))
@@ -110,22 +114,23 @@
            (free-identifier=? static-#%call-id id)))
      (syntax-parse stx
        #:datum-literals (parens group op)
-       #:literals (rhombus... &)
-       [(form-id (tag::parens _ ... _ (group (op rhombus...))) . tail)
+       [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
         #:when (normal-call? #'tag)
         (parse-list-expression stx)]
-       [(form-id (tag::parens _ ... (group (op &) _ ...)) . tail)
+       [(form-id (tag::parens _ ... (group _::&-expr _ ...)) . tail)
         #:when (normal-call? #'tag)
         (parse-list-expression stx)]
        [(_ . tail)
-        (values #'list #'tail)]))
-   ;; binding
+        (values #'list #'tail)]))))
+
+(define-binding-syntax List
+  (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id ((~and tag (~datum parens)) arg ...) . tail)
         (parse-list-binding stx)]))))
 
-(define-annotation-constructor List
+(define-annotation-constructor (List of)
   ()
   #'list? list-static-infos
   1
@@ -139,7 +144,11 @@
 (define (nonempty-list? l)
   (and (pair? l) (list? l)))
 
-(define-annotation-constructor NonemptyList
+(define-name-root NonemptyList
+  #:fields
+  ([of NonemptyList.of]))
+
+(define-annotation-constructor (NonemptyList NonemptyList.of)
   ()
   #'nonempty-list? list-static-infos
   1
@@ -178,12 +187,11 @@
            ((lambda (v) (cons v accum)))
            #,list-static-infos]]))))
 
-(define-syntax repet
+(define-repetition-syntax repet
   (repetition-transformer
-   #'List
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (op |.| parens group repet)
+       #:datum-literals (parens group repet)
        [(form-id (~and args (parens g)) . tail)
         (define name (syntax-e #'form-id))
         (values (make-repetition-info #'(form-id args)
@@ -207,6 +215,10 @@
 (define-static-info-syntax iota
   (#%call-result #,list-static-infos)
   (#%function-arity 2))
+
+(define-static-info-syntax List.cons
+  (#%call-result #,list-static-infos)
+  (#%function-arity 4))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))
@@ -234,9 +246,8 @@
      #`(#,form-id (parens . #,args) . #,tail)
      rest-arg))
   (syntax-parse stx
-    #:datum-literals (group op)
-    #:literals (& rhombus...)
-    [(form-id (_ arg ... (group (op &) rest-arg ...)) . tail)
+    #:datum-literals (group)
+    [(form-id (_ arg ... (group _::&-bind rest-arg ...)) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
@@ -245,7 +256,7 @@
      (generate-binding #'form-id pred args #'tail #'(group rest-arg ...)
                        (if (null? args) #'values #'cdr)
                        #f)]
-    [(form-id (_ arg ... rest-arg (group (op rhombus...))) . tail)
+    [(form-id (_ arg ... rest-arg (group _::...-bind)) . tail)
      (define args (syntax->list #'(arg ...)))
      (define len (length args))
      (define pred #`(lambda (v)
@@ -264,17 +275,15 @@
 
 (define-for-syntax (parse-list-form stx #:repetition? repetition?)
   (syntax-parse stx
-    #:datum-literals (group op)
-    #:literals (& rhombus...)
+    #:datum-literals (group)
     [(form-id (tag arg ...) . tail)
      ;; a list of syntax, (cons 'splice syntax), and (cons 'seq syntax):
      (define content
        (let loop ([gs-stx #'(arg ...)] [accum '()])
          (syntax-parse gs-stx
            #:datum-literals (group op)
-           #:literals (& rhombus...)
            [() (reverse accum)]
-           [((group (op &) rand ...+) . gs)
+           [((group _::&-expr rand ...+) . gs)
             (define e (let ([g #'(group rand ...)])
                         (if repetition?
                             (syntax-parse g
@@ -282,7 +291,7 @@
                             (syntax-parse g
                               [e::expression #'e.parsed]))))
             (loop #'gs (cons (list 'splice e) accum))]
-           [(rep-arg (group (op rhombus...)) . gs)
+           [(rep-arg (group _::...-expr) . gs)
             (define-values (new-gs extras) (consume-extra-ellipses #'gs))
             (define e (syntax-parse #'rep-arg
                         [rep::repetition

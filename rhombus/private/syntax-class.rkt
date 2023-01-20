@@ -61,10 +61,10 @@
     #:property prop:syntax-class-parser (lambda (self) (definition+syntax-class-parser-pars self))))
 
 (define-syntax syntax_class (definition+syntax-class-parser
-                              (make-class-definer #'define-syntax)
-                              (syntax-class-parser
-                               (lambda (who stx expected-kind name tail)
-                                 (parse-anonymous-syntax-class who stx expected-kind name tail)))))
+                                         (make-class-definer #'define-syntax)
+                                         (syntax-class-parser
+                                          (lambda (who stx expected-kind name tail)
+                                            (parse-anonymous-syntax-class who stx expected-kind name tail)))))
 
 ;; returns a `rhombus-syntax-class`
 (define-for-syntax (parse-anonymous-syntax-class who orig-stx expected-kind name tail)
@@ -263,10 +263,10 @@
 
   (define (bindings->defns idrs sidrs)
     (with-syntax ([([val-id val-rhs] ...) idrs]
-                  [([stx-id stx-rhs] ...) sidrs])
+                  [([(stx-id ...) stx-rhs] ...) sidrs])
       #'[(define val-id val-rhs)
          ...
-         (define-syntax stx-id stx-rhs)
+         (define-syntaxes (stx-id ...) stx-rhs)
          ...]))
   
   (define-values (pattern-body all-attrs)
@@ -290,16 +290,12 @@
                (syntax-parse #'c.parsed
                  [(#:field id depth rhs)
                   #:with (tmp-id) (generate-temporaries #'(id))
+                  #:with (pat-ids pat-rhs) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
+                                                                       (syntax-e #'depth) #f null)
                   (loop (cdr body)
                         null
                         (list* #'[(define tmp-id rhs)
-                                  (define-syntax id
-                                    (make-pattern-variable-syntax (quote-syntax id)
-                                                                  (quote-syntax tmp-id)
-                                                                  (quote-syntax unpack-element*)
-                                                                  depth
-                                                                  #f
-                                                                  #'()))] '#:do
+                                  (define-syntaxes pat-ids pat-rhs)] '#:do
                                (accum-do))
                         (cons (pattern-variable (syntax-e #'id) #'id #'tmp-id (syntax-e #'depth) (quote-syntax unpack-element*))
                               rev-attrs))]

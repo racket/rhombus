@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/property
-                     enforest/syntax-local)
+                     enforest/syntax-local
+                     "introducer.rkt")
          "expression.rkt"
          "name-root-ref.rkt")
 
@@ -36,8 +37,8 @@
 (begin-for-syntax
   (property static-info (stxs))
 
-  (define in-static-info-space (make-interned-syntax-introducer 'rhombus/statinfo))
-    
+  (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
+
   (define (wrap-static-info expr key-id val-stx)
     (quasisyntax/loc expr
       (begin (quote-syntax (#,key-id #,val-stx))
@@ -51,9 +52,9 @@
   (define-syntax-class (:static-info key-id)
     #:literals (begin quote-syntax)
     (pattern id:identifier
-             #:do [(define v (syntax-local-value* (in-static-info-space #'id)
-                                                  (lambda (v)
-                                                    (name-root-ref-root v static-info-ref))))
+             #:do [(define v (syntax-local-value* (in-static-info-space
+                                                   (out-of-expression-space #'id))
+                                                  static-info-ref))
                    (define val (and v
                                     (for/or ([form (in-list (static-info-stxs v))])
                                       (syntax-parse form
@@ -79,8 +80,7 @@
       #:literals (begin quote-syntax)
       [id:identifier
        (define v (syntax-local-value* (in-static-info-space #'id)
-                                      (lambda (v)
-                                        (name-root-ref-root v static-info-ref))))
+                                      static-info-ref))
        (if v
            (static-info-stxs v)
            null)]

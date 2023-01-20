@@ -4,10 +4,9 @@
                      enforest/transformer
                      enforest/property
                      enforest/proc-name
-                     "name-path-op.rkt"
                      "introducer.rkt"
                      "realm.rkt")
-         "name-root-ref.rkt")
+         "enforest.rkt")
 
 (provide define-reducer-syntax)
 
@@ -35,13 +34,10 @@
 
   (define in-reducer-space (make-interned-syntax-introducer/add 'rhombus/reducer))
   
-  (define-transform
+  (define-rhombus-transform
     #:syntax-class :reducer
     #:desc "reducer"
     #:in-space in-reducer-space
-    #:name-path-op name-path-op
-    #:name-root-ref name-root-ref
-    #:name-root-ref-root name-root-ref-root
     #:transformer-ref reducer-transformer-ref
     #:check-result check-reducer-result))
 

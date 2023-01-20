@@ -7,7 +7,9 @@
   (define the-id (car ids))
   (for ([another-id (in-list (cdr ids))])
     (unless (free-identifier=? the-id another-id)
-      (raise-syntax-error who
+      (raise-syntax-error (if (keyword? who)
+                              (string->symbol (keyword->string who))
+                              who)
                           (format "case ~a does not match initial case ~a"
                                   what
                                   what)

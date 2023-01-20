@@ -8,43 +8,40 @@
                      "static-info-pack.rkt"
                      "uses-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     (only-in "repetition.rkt" in-repetition-space)
                      (for-syntax racket/base
                                  syntax/parse/pre))
+         "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
-         "space.rkt"
          "macro-macro.rkt"
          "binding.rkt"
          (for-syntax
           "quasiquote.rkt"
-          (submod "quasiquote.rkt" convert))
+          (submod "quasiquote.rkt" convert)
+          "op-literal.rkt"
+          "binding.rkt")
          "parse.rkt"
          ;; for `matcher` and `binder`:
          (for-syntax "parse.rkt")
          ;; for `bind_meta`:
          (for-syntax "name-root.rkt"))
 
-(provide bind
-         (for-syntax bind_meta))
+(provide (for-syntax (for-space rhombus/namespace
+                                bind_meta)))
 
 (module+ for-class
   (provide (for-syntax make-binding-prefix-operator)))
 
-(define-name-root bind
-  #:root (space-syntax rhombus/bind)
+(define+provide-space bind rhombus/bind
   #:fields
   (macro
    infoer
    matcher
    committer
-   binder
-   only))
-
-(define-name-root only
-  #:fields
-  ([macro macro-only]))
+   binder))
 
 (begin-for-syntax
   (define-name-root bind_meta
@@ -58,7 +55,7 @@
      AfterPrefixGroup
      AfterInfixGroup)))
 
-(define-operator-definition-transformer+only macro macro-only
+(define-operator-definition-transformer macro
   'macro
   rhombus/bind
   #'make-binding-prefix-operator
@@ -180,9 +177,9 @@
           (define-values (converted-info-pattern info-idrs info-sidrs info-vars info-can-be-empty?) (convert-pattern #'info-pattern))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((info-id info-id-ref) ...) info-idrs]
-                        [((info-sid info-sid-ref) ...) info-sidrs]
+                        [(((info-sid ...) info-sid-ref) ...) info-sidrs]
                         [((data-id data-id-ref) ...) data-idrs]
-                        [((data-sid data-sid-ref) ...) data-sidrs])
+                        [(((data-sid ...) data-sid-ref) ...) data-sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ info data)
@@ -193,8 +190,10 @@
                          (let ([arg-id #'arg-id]
                                [info-id info-id-ref] ...
                                [data-id data-id-ref] ...)
-                           (let-syntax ([info-sid info-sid-ref] ...
-                                        [data-sid data-sid-ref] ...)
+                           (let-syntaxes ([(info-sid ...) info-sid-ref]
+                                          ...
+                                          [(data-sid ...) data-sid-ref]
+                                          ...)
                              (pack-info
                               (rhombus-body-at block-tag body ...))))])])])))])])))
 
@@ -215,24 +214,23 @@
       [(_ orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (op parens group block quotes)
-         #:literals ($)
          [(form-id (quotes (group builder-id:identifier
-                                  (parens (group (op $) arg-id:identifier)
+                                  (parens (group _::$-bind arg-id:identifier)
                                           data-pattern
-                                          (group (op $) IF-id:identifier)
-                                          (group (op $) success-id:identifier)
-                                          (group (op $) fail-id:identifier))))
+                                          (group _::$-bind IF-id:identifier)
+                                          (group _::$-bind success-id:identifier)
+                                          (group _::$-bind fail-id:identifier))))
                    ((~and block-tag block) body ...))
           (define-values (converted-pattern idrs sidrs vars can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((id id-ref) ...) idrs]
-                        [((sid sid-ref) ...) sidrs])
+                        [(((sid ...) sid-ref) ...) sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ arg-id data IF success fail)
                    (syntax-parse #'(group data)
                      [#,converted-pattern
                       (let ([id id-ref] ... [arg-id #'arg-id])
-                        (let-syntax ([sid sid-ref] ...)
+                        (let-syntaxes ([(sid ...) sid-ref] ...)
                           (let ([IF-id #'if-bridge])
                             (let ([success-id #'(parsed success)]
                                   ;; putting `if-bridge` in `fail-id`
@@ -261,7 +259,6 @@
                                              stx)])]))])
     (make-expression+definition-transformer
      (expression-transformer
-      #'if-bridge
       (lambda (stx) (values (parse stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse stx)))))))
@@ -281,7 +278,6 @@
                     #'(matcher-id arg-id data IF (rhombus (group success ...)) fail)]))])
     (make-expression+definition-transformer
      (expression-transformer
-      #'chain-to-matcher
       (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
@@ -298,7 +294,6 @@
                     #`(committer-id arg-id data)]))])
     (make-expression+definition-transformer
      (expression-transformer
-      #'chain-to-committer
       (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
@@ -315,7 +310,6 @@
                     #`(binder-id arg-id data)]))])
     (make-expression+definition-transformer
      (expression-transformer
-      #'chain-to-binder
       (lambda (stx) (values (parse #'rhombus-body stx) #'())))
      (definition-transformer
        (lambda (stx) (list (parse #'rhombus-body-sequence stx)))))))
@@ -341,14 +335,13 @@
       [(_ orig-stx)
        (syntax-parse #'orig-stx
          #:datum-literals (op parens group block quotes)
-         #:literals ($)
          [(form-id (quotes (group builder-id:identifier
-                                  (parens (group (op $) arg-id:identifier)
+                                  (parens (group _::$-bind arg-id:identifier)
                                           data-pattern)))
                    ((~and block-tag block) body ...))
           (define-values (converted-data-pattern data-idrs data-sidrs data-vars data-can-be-empty?) (convert-pattern #'data-pattern))
           (with-syntax ([((data-id data-id-ref) ...) data-idrs]
-                        [((data-sid data-sid-ref) ...) data-sidrs])
+                        [(((data-sid ...) data-sid-ref) ...) data-sidrs])
             #`(lambda (stx)
                 (syntax-parse stx
                   [(_ arg-id data)
@@ -356,7 +349,7 @@
                      [#,converted-data-pattern
                       (let ([arg-id #'arg-id]
                             [data-id data-id-ref] ...)
-                        (let-syntax ([data-sid data-sid-ref] ...)
+                        (let-syntaxes ([(data-sid ...) data-sid-ref] ...)
                           (unwrap-block
                            (rhombus-body-at block-tag body ...))))])])))])])))
 

@@ -11,6 +11,7 @@
          racket/stxparam
          "expression.rkt"
          "parse.rkt"
+         "expression.rkt"
          "entry-point.rkt"
          "class-this.rkt"
          "class-method-result.rkt"
@@ -19,9 +20,9 @@
          (submod "dot.rkt" for-dot-provider)
          "assign.rkt"
          "parens.rkt"
+         "op-literal.rkt"
          (submod "function.rkt" for-call)
-         (only-in (submod "implicit.rkt" for-dynamic-static)
-                  static-#%call)
+         "is-static.rkt"
          "realm.rkt")
 
 (provide (for-syntax extract-method-tables
@@ -351,7 +352,6 @@
 
 (define-syntax this
   (expression-transformer
-   #'this
    (lambda (stxs)
      (syntax-parse stxs
        [(head . tail)
@@ -372,7 +372,6 @@
 
 (define-syntax super
   (expression-transformer
-   #'this
    (lambda (stxs)
      (define c-or-id+dp+supers (syntax-parameter-value #'this-id))
      (cond
@@ -417,15 +416,12 @@
               (define shape+arity (vector-ref (super-method-shapes super) pos))
               (define shape (if (vector? shape+arity) (vector-ref shape+arity 0) shape+arity))
               (define shape-arity (and (vector? shape+arity) (vector-ref shape+arity 1)))
-              (define static? (free-identifier=? (datum->syntax #'dot-op '#%call)
-                                                 #'static-#%call))
+              (define static? (is-static-call-context? #'dot-op))
               (cond
                 [(pair? shape)
                  ;; a property
                  (syntax-parse #'tail
-                   #:datum-literals (op)
-                   #:literals (:=)
-                   [((op :=) . rhs)
+                   [( _:::=-expr . rhs)
                     #:with (~var e (:infix-op+expression+tail #':=)) #'(group . rhs)
                     (define-values (call new-tail)
                       (parse-function-call impl (list #'id #'e.parsed) #'(method-id (parens))
@@ -465,12 +461,9 @@
 
 (define-for-syntax (make-field-syntax id static-infos accessor-id maybe-mutator-id)
   (expression-transformer
-   id
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (op)
-       #:literals (:=)
-       [(head (op :=) . tail)
+       [(head _:::=-expr . tail)
         #:when (syntax-e maybe-mutator-id)
         #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
@@ -500,7 +493,6 @@
   (cond
     [(eq? kind 'property)
      (expression-transformer
-      id
       (lambda (stx)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
@@ -508,9 +500,7 @@
                              index/id
                              #`(vector-ref (prop-methods-ref obj-id) #,index/id)))
            (syntax-parse stx
-             #:datum-literals (op)
-             #:literals (:=)
-             [(head (op :=) . tail)
+             [(head _:::=-expr . tail)
               #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
@@ -528,7 +518,6 @@
                       #'tail)])])))]
     [else
      (expression-transformer
-      id
       (lambda (stx)
         (syntax-parse stx
           [(head (~and args (tag::parens arg ...)) . tail)
@@ -541,8 +530,7 @@
                              (syntax-local-method-result result-id)))
               (define-values (call new-tail)
                 (parse-function-call rator (list #'id) #'(head args)
-                                     #:static? (free-identifier=? (datum->syntax #'tag '#%call)
-                                                                  #'static-#%call)
+                                     #:static? (is-static-call-context? #'tag)
                                      #:rator-stx #'head
                                      #:rator-arity (and r (method-result-arity r))
                                      #:rator-kind 'method))

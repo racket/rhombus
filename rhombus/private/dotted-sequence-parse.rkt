@@ -82,6 +82,10 @@
              #:attr name #'id.name
              #:attr extends #'id.extends)))
 
+(begin-for-syntax
+  (struct extension-rename-transformer (id extends-id)
+    #:property prop:rename-transformer 0))
+
 (define-for-syntax (build-definitions/maybe-extension space-sym name-in extends rhs)
   (define name ((space->introducer space-sym) name-in))
   (cond
@@ -90,11 +94,8 @@
      (list
       #`(define #,tmp (let ([#,name #,rhs])
                         #,name))
-      #`(define-name-root #,name
-          #:space #,space-sym
-          #:root (make-rename-expression-transformer (quote-syntax #,name) (quote-syntax #,tmp))
-          #:extends #,extends
-          #:fields ()))]
+      #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+                                                            (quote-syntax #,extends))))]
     [else
      (list
       #`(define #,name #,rhs))]))
@@ -103,27 +104,18 @@
   (define name ((space->introducer space-sym) name-in))
   (cond
     [(syntax-e extends)
-     #`(define-name-root #,name
-         #:space #,space-sym
-         #:root #,rhs
-         #:extends #,extends
-         #:fields ())]
+     (define tmp ((space->introducer space-sym) (car (generate-temporaries (list name)))))
+     #`(begin
+         (define-syntax #,tmp (let ([#,name #,rhs])
+                                #,name))
+         (define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+                                                             (quote-syntax #,extends))))]
     [else
      #`(define-syntax #,name #,rhs)]))
 
-(define-for-syntax (make-rename-expression-transformer name rhs)
-  (expression-transformer
-   name
-   (lambda (stx)
-     (syntax-parse stx
-       [(head . tail) (values (relocate-id #'head rhs)
-                              #'tail)]))))
-
 (define-for-syntax (identifier-extension-binding? id prefix)
   (define v (syntax-local-value* id (lambda (v)
-                                      (and (portal-syntax? v)
+                                      (and (extension-rename-transformer? v)
                                            v))))
-  (and (portal-syntax? v)
-       (let ([extends (portal-syntax->extends (portal-syntax-content v))])
-         (and (identifier? extends)
-              (free-identifier=? prefix extends)))))
+  (and v
+       (free-identifier=? prefix (extension-rename-transformer-extends-id v))))

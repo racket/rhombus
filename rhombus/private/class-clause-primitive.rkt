@@ -2,53 +2,52 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
+                     enforest/name-parse
                      "name-path-op.rkt"
                      "class-parse.rkt"
                      (only-in "macro.rkt" macro)
                      "consistent.rkt")
-         "class+interface.rkt"
+         "provide.rkt"
          "class-clause.rkt"
+         (submod "class-clause.rkt" for-class)
+         "interface-clause.rkt"
          (only-in "annotation.rkt" :: -:)
          (submod "annotation.rkt" for-class)
+         "binding.rkt"
+         "expression.rkt"
          "parens.rkt"
          "name-root-ref.rkt"
+         "name-root-space.rkt"
          "var-decl.rkt"
          (only-in "assign.rkt" :=)
          (only-in "function.rkt" fun)
          (submod "function.rkt" for-method)
-         (only-in "implicit.rkt" #%body))
+         (only-in "implicit.rkt" #%body)
+         "op-literal.rkt")
 
-(provide (for-syntax wrap-class-clause)
-         rhombus-class
-         extends
-         implements
-         internal
-         constructor
-         expression
-         binding
-         annotation
-         final
-         nonfinal
-         authentic
-         field
-         method
-         property
-         override
-         private
-         abstract
+(provide (for-space rhombus/class_clause
+                    implements
+                    binding
+                    nonfinal
+                    authentic
+                    field
+                    constructor)
+         (for-spaces (rhombus/class_clause
+                      rhombus/interface_clause)
+                     extends
+                     internal
+                     expression
+                     annotation
+                     final
+                     method
+                     property
+                     override
+                     private
+                     abstract))
 
-         final-override
-         final-property
-         final-override-property
-         abstract-property
-         abstract-override
-         abstract-override-property
-         private-implements
-         private-override
-         private-property
-         private-override-property
-         override-property)
-
+(module+ for-class
+  (provide (for-syntax wrap-class-clause)
+           rhombus-class))
 
 (define-syntax rhombus-class 'placeholder)
 
@@ -67,39 +66,47 @@
            (let loop ([line line])
              (syntax-parse line
                [() null]
-               [(~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref))
+               [(~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref))
                 (cons #'id.name (loop #'id.tail))])))))
 
-(define-syntax extends
-  (make-class+interface-clause-transformer
-   ;; class clause
+(define-class-clause-syntax extends
+  (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
        [(_ (~seq form ...))
-        #:with (~var id (:hier-name-seq in-class-desc-space name-path-op name-root-ref)) #'(form ...)
+        #:with (~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref)) #'(form ...)
         #:with () #'id.tail
-        (wrap-class-clause #'(extends id.name))]))
-   ;; interface clause
+        (wrap-class-clause #'(#:extends id.name))]))))
+
+(define-interface-clause-syntax extends
+  (interface-clause-transformer
    (lambda (stx data)
      (define names (parse-multiple-names stx))
-     (wrap-class-clause #`(extends . #,names)))))
+     (wrap-class-clause #`(#:extends . #,names)))))
 
-(define-syntax implements
+(define-class-clause-syntax implements
   (class-clause-transformer
    (lambda (stx data)
      (define names (parse-multiple-names stx))
-     (wrap-class-clause #`(implements . #,names)))))
+     (wrap-class-clause #`(#:implements . #,names)))))
 
-(define-syntax internal
-  (make-class+interface-clause-transformer
+(define-class-clause-syntax internal
+  (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
        [(_ name:identifier)
-        (wrap-class-clause #'(internal name))]))))
+        (wrap-class-clause #'(#:internal name))]))))
+
+(define-interface-clause-syntax internal
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ name:identifier)
+        (wrap-class-clause #'(#:internal name))]))))
 
 (define-for-syntax (make-macro-clause-transformer
                     key
-                    #:clause-transformer [clause-transformer make-class+interface-clause-transformer])
+                    #:clause-transformer [clause-transformer class-clause-transformer])
   (clause-transformer
    (lambda (stx data)
      (syntax-parse stx
@@ -118,24 +125,27 @@
                          a-block))
         (wrap-class-clause #`(#,key a-block))]))))
 
-(define-syntax binding
-  (make-macro-clause-transformer #'binding
-                                 #:clause-transformer class-clause-transformer))
+(define-class-clause-syntax binding
+  (make-macro-clause-transformer #'#:binding))
 
-(define-syntax annotation
-  (make-macro-clause-transformer #'annotation))
+(define-class-clause-syntax annotation
+  (make-macro-clause-transformer #'#:annotation))
 
-(define-syntax nonfinal
+(define-interface-clause-syntax annotation
+  (make-macro-clause-transformer #'#:annotation
+                                 #:clause-transformer interface-clause-transformer))
+
+(define-class-clause-syntax nonfinal
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_) (wrap-class-clause #`(nonfinal))]))))
+       [(_) (wrap-class-clause #`(#:nonfinal))]))))
 
-(define-syntax authentic
+(define-class-clause-syntax authentic
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       [(_) (wrap-class-clause #`(authentic))]))))
+       [(_) (wrap-class-clause #`(#:authentic))]))))
 
 (begin-for-syntax
   (define-splicing-syntax-class (:field mode)
@@ -146,11 +156,11 @@
              #:attr ann-seq (if (attribute c)
                                 #'c.seq
                                 #'#f)
-             #:attr form (wrap-class-clause #`(field id
-                                                     tmp-id ann-seq d.blk form-id
-                                                     #,mode)))))
+             #:attr form (wrap-class-clause #`(#:field id
+                                               tmp-id ann-seq d.blk form-id
+                                               #,mode)))))
 
-(define-syntax field
+(define-class-clause-syntax field
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
@@ -163,13 +173,13 @@
 (begin-for-syntax
   (define-splicing-syntax-class :maybe-ret
     #:attributes (seq)
-    #:literals (:: -:)
-    #:datum-literals (op)
-    (pattern (~seq (~and o (op (~or :: -:))) ret ...)
+    (pattern (~seq (~and o op::name) ret ...)
+             #:when (or (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
+                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
              #:attr seq #'(o ret ...))
     (pattern (~seq)
              #:attr seq #'()))
-  (define-splicing-syntax-class (:method mode)
+  (define-splicing-syntax-class (:method-impl mode)
     #:description "method implementation"
     #:attributes (form)
     #:datum-literals (group)
@@ -185,7 +195,7 @@
                                                           (~and body (_::block . _))))
                           ...+)))
              #:do [(define a-ids (syntax->list #'(a-id ...)))
-                   (check-consistent #:who (syntax-e mode) #'alts a-ids "name")]
+                   (check-consistent #:who mode #'alts a-ids "name")]
              #:attr id (car a-ids)
              #:with (ret0 ...) (let ([retss (syntax->list #'(ret.seq ...))])
                                  (if (for/and ([rets (in-list (cdr retss))])
@@ -207,11 +217,10 @@
     (pattern (~seq id:identifier ret::maybe-ret)
              #:attr rhs #'#f
              #:attr maybe-ret #'ret.seq))
-  (define-splicing-syntax-class (:property mode)
+  (define-splicing-syntax-class (:property-impl mode)
     #:description "property implementation"
     #:attributes (form)
-    #:datum-literals (group op)
-    #:literals (:=)
+    #:datum-literals (group)
     (pattern (~seq id:identifier ret::maybe-ret
                    (~and rhs (_::block . _)))
              #:attr form (wrap-class-clause #`(#,mode id
@@ -242,10 +251,10 @@
                                                (~and body1 (_::block . _))))
                           (btag2::block
                            ((~and gtag2 group) a-id2:identifier
-                                               (op :=)
+                                               _:::=-expr
                                                assign-rhs ...+
                                                (~and body2 (_::block . _)))))))
-             #:do [(check-consistent #:who (syntax-e mode) #'alts (list #'a-id1 #'a-id2) "name")]
+             #:do [(check-consistent #:who mode #'alts (list #'a-id1 #'a-id2) "name")]
              #:attr form (wrap-class-clause #`(#,mode a-id1
                                                (block (group fun
                                                              (atag
@@ -265,17 +274,17 @@
              #:attr rhs #'(block (group fun (parens) (block (group (parsed (void))))))
              #:attr maybe-ret #'ret.seq)))
 
-(define-syntax constructor
+(define-class-clause-syntax constructor
   (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
        #:datum-literals (group)
        [(_ id:identifier (~and args (_::parens . _)) ret ...
            (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor id (block (group fun args ret ... rhs))))]
+        (wrap-class-clause #`(#:constructor id (block (group fun args ret ... rhs))))]
        [(_ (~and args (_::parens . _)) ret ...
            (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor #f (block (group fun args ret ... rhs))))]
+        (wrap-class-clause #`(#:constructor #f (block (group fun args ret ... rhs))))]
        [(_ (~and rhs (_::alts
                       (_::block id:identifier (group (_::parens . _) ret ...
                                                      (_::block . _)))
@@ -284,127 +293,139 @@
         (for ([idx (in-list (syntax->list #'(idx ...)))])
           (unless (bound-identifier=? idx #'id0)
             (raise-syntax-error #f "inconsistent name identifier" stx idx)))
-        (wrap-class-clause #`(constructor id0 (block (group fun rhs))))]
+        (wrap-class-clause #`(#:constructor id0 (block (group fun rhs))))]
        [(_ (~and rhs (_::alts
                       (_::block (group (_::parens . _) ret ...
                                        (_::block . _)))
                       ...+)))
-        (wrap-class-clause #`(constructor #f (block (group fun rhs))))]
+        (wrap-class-clause #`(#:constructor #f (block (group fun rhs))))]
        [(_ id:identifier (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor id rhs))]
+        (wrap-class-clause #`(#:constructor id rhs))]
        [(_ (~and rhs (_::block . _)))
-        (wrap-class-clause #`(constructor #f rhs))]))))
+        (wrap-class-clause #`(#:constructor #f rhs))]))))
 
-(define-syntax expression
-  (make-macro-clause-transformer #'expression))
+(define-class-clause-syntax expression
+  (make-macro-clause-transformer #'#:expression))
 
-(define-syntax final
-  (make-class+interface-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:literals (override method property)
-       [(_ override method (~var m (:method #'final-override))) #'m.form]
-       [(_ method (~var m (:method #'final))) #'m.form]
-       [(_ override property (~var m (:property #'final-override-property))) #'m.form]
-       [(_ property (~var m (:property #'final-property))) #'m.form]
-       [(_ override (~var m (:method #'final-override))) #'m.form]
-       [(_ override property (~var m (:property #'final-override-property))) #'m.form]
-       [(_ (~var m (:method #'final))) #'m.form]))))
-(define-syntax final-override 'placeholder)
-(define-syntax final-property 'placeholder)
-(define-syntax final-override-property 'placeholder)
+(define-interface-clause-syntax expression
+  (make-macro-clause-transformer #'#:expression
+                                 #:clause-transformer interface-clause-transformer))
 
-(define-syntax method
-  (make-class+interface-clause-transformer
-   ;; class clause
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~var m (:method #'method))) #'m.form]))
-   ;; interface clause
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~var m (:method #'method))) #'m.form]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
+(begin-for-syntax
+  (define-syntax-rule (define-clause-form-syntax-class id form-id)
+    (define-syntax-class id
+      (pattern f:identifier
+               #:when (free-identifier=? (in-class-clause-space #'f)
+                                         (class-clause-quote form-id)))))
+  (define-clause-form-syntax-class :method method)
+  (define-clause-form-syntax-class :property property)
+  (define-clause-form-syntax-class :override override)
+  (define-clause-form-syntax-class :implements implements))
 
-(define-syntax property
-  (make-class+interface-clause-transformer
-   ;; class clause
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~var m (:property #'property))) #'m.form]))
-   ;; interface clause
-   (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~var m (:property #'property))) #'m.form]
-       [(_ decl::property-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]))))
+(define-for-syntax (parse-final stx data)
+  (syntax-parse stx
+    [(_ _::override _::method (~var m (:method-impl #'#:final-override))) #'m.form]
+    [(_ _::method (~var m (:method-impl #'#:final))) #'m.form]
+    [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
+    [(_ _::property (~var m (:property-impl #'#:final-property))) #'m.form]
+    [(_ _::override (~var m (:method-impl #'#:final-override))) #'m.form]
+    [(_ _::override _::property (~var m (:property-impl #'#:final-override-property))) #'m.form]
+    [(_ (~var m (:method-impl #'#:final))) #'m.form]))
 
-(define-syntax override
-  (make-class+interface-clause-transformer
-   ;; class clause
-   (lambda (stx data)
-     (syntax-parse stx
-       #:literals (method)
-       [(_ method (~var m (:method #'override))) #'m.form]
-       [(_ property (~var m (:property #'override-property))) #'m.form]
-       [(_ (~var m (:method #'override))) #'m.form]))
-   (lambda (stx data)
-     (syntax-parse stx
-       #:literals (method)
-       [(_ method (~var m (:method #'override))) #'m.form]
-       [(_ method decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
-       [(_ property (~var m (:property #'override-property))) #'m.form]
-       [(_ property decl::property-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
-       [(_ (~var m (:method #'override))) #'m.form]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]))))
-(define-syntax override-property 'placeholder)
+(define-class-clause-syntax final
+  (class-clause-transformer parse-final))
 
-(define-syntax private
-  (make-class+interface-clause-transformer
-   ;; class clause
+(define-interface-clause-syntax final
+  (interface-clause-transformer parse-final))
+
+(define-class-clause-syntax method
+  (class-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       #:literals (implements method override property)
-       [(_ (~and tag implements) form ...)
-        (wrap-class-clause #`(private-implements . #,(parse-multiple-names #'(tag form ...))))]
-       [(_ method (~var m (:method #'private))) #'m.form]
-       [(_ override (~var m (:method #'private-override))) #'m.form]
-       [(_ override method (~var m (:method #'private-override))) #'m.form]
-       [(_ property (~var m (:property #'private-property))) #'m.form]
-       [(_ override property (~var m (:property #'private-override-property))) #'m.form]
+       [(_ (~var m (:method-impl #'#:method))) #'m.form]))))
+
+(define-interface-clause-syntax method
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ (~var m (:method-impl #'#:method))) #'m.form]
+       [(_ decl::method-decl) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))))
+
+(define-class-clause-syntax property
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ (~var m (:property-impl #'#:property))) #'m.form]))))
+  
+(define-interface-clause-syntax property
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ (~var m (:property-impl #'#:property))) #'m.form]
+       [(_ decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs decl.maybe-ret))]))))
+
+(define-class-clause-syntax override
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
+       [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
+       [(_ (~var m (:method-impl #'#:override))) #'m.form]))))
+  
+(define-interface-clause-syntax override
+  (interface-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ _::method (~var m (:method-impl #'#:override))) #'m.form]
+       [(_ _::method decl::method-decl) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+       [(_ _::property (~var m (:property-impl #'#:override-property))) #'m.form]
+       [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs decl.maybe-ret))]
+       [(_ (~var m (:method-impl #'#:override))) #'m.form]
+       [(_ decl::method-decl) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]))))
+
+(define-class-clause-syntax private
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_ tag::implements form ...)
+        (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
+       [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
+       [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
+       [(_ _::override method (~var m (:method-impl #'#:private-override))) #'m.form]
+       [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
+       [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
-       [(_ (~var m (:method #'private))) #'m.form]))
-   ;; interface clause
+       [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
+  
+(define-interface-clause-syntax private
+  (interface-clause-transformer
    (lambda (stx data)
      (syntax-parse stx
-       #:literals (method)
-       [(_ method (~var m (:method #'private))) #'m.form]
-       [(_ (~var m (:method #'private))) #'m.form]))))
-(define-syntax private-implements 'placeholder)
-(define-syntax private-override 'placeholder)
-(define-syntax private-property 'placeholder)
-(define-syntax private-override-property 'placeholder)
+       [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
+       [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
 
-(define-syntax abstract
-  (make-class+interface-clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:literals (method override property)
-       [(_ method decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]
-       [(_ property decl::property-decl) (wrap-class-clause #'(abstract-property decl.id decl.rhs decl.maybe-ret))]
-       [(_ override decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
-       [(_ override method decl::method-decl) (wrap-class-clause #'(abstract-override decl.id decl.rhs decl.maybe-ret))]
-       [(_ override property decl::property-decl) (wrap-class-clause #'(abstract-override-property decl.id decl.rhs decl.maybe-ret))]
-       [(_ decl::method-decl) (wrap-class-clause #'(abstract decl.id decl.rhs decl.maybe-ret))]))))
-(define-syntax abstract-property 'placeholder)
-(define-syntax abstract-override 'placeholder)
-(define-syntax abstract-override-property 'placeholder)
+(define-for-syntax (parse-abstract-clause stx data)
+  (syntax-parse stx
+    [(_ _::method decl::method-decl) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::property decl::property-decl) (wrap-class-clause #'(#:abstract-property decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::override decl::method-decl) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::override _::method decl::method-decl) (wrap-class-clause #'(#:abstract-override decl.id decl.rhs decl.maybe-ret))]
+    [(_ _::override _::property decl::property-decl) (wrap-class-clause #'(#:abstract-override-property decl.id decl.rhs decl.maybe-ret))]
+    [(_ decl::method-decl) (wrap-class-clause #'(#:abstract decl.id decl.rhs decl.maybe-ret))]))
 
+(define-class-clause-syntax abstract
+  (class-clause-transformer parse-abstract-clause))
+(define-interface-clause-syntax abstract
+  (interface-clause-transformer parse-abstract-clause))
 
 (define-for-syntax (same-return-signature? a b)
   (cond
     [(identifier? a)
      (and (identifier? b)
-          (free-identifier=? a b))]
+          ;; This is stronger than we'd like, but
+          ;; `free-identifier=?` is too weak, because it doesn't
+          ;; check all spaces
+          (bound-identifier=? a b))]
     [(identifier? b) #f]
     [(syntax? a)
      (same-return-signature? (syntax-e a) b)]

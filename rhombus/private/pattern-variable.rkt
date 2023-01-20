@@ -7,16 +7,48 @@
          "parse.rkt"
          "expression.rkt"
          "binding.rkt"
-         "expression+binding.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          "dollar.rkt"
          "repetition.rkt"
          "static-info.rkt"
          (submod "syntax-object.rkt" for-quasiquote))
 
-(provide (for-syntax make-pattern-variable-syntax))
+(provide (for-syntax make-pattern-variable-bind
+                     deepen-pattern-variable-bind
+                     extract-pattern-variable-bind-id-and-depth))
 
-(define-for-syntax (make-pattern-variable-syntax name-id temp-id unpack* depth splice? attributes)
+(define-for-syntax (make-pattern-variable-bind name-id temp-id unpack* depth splice? attrib-lists)
+  (define no-repetition?
+    (and (eqv? 0 depth)
+         (for/and ([a (in-list attrib-lists)])
+           (eqv? 0 (pattern-variable-depth (list->pattern-variable a))))))
+  (define ids (if no-repetition?
+                  (list name-id)
+                  (list name-id (in-repetition-space name-id))))
+  #`[#,ids (make-pattern-variable-syntaxes
+             (quote-syntax #,name-id)
+             (quote-syntax #,temp-id)
+             (quote-syntax #,unpack*)
+             #,depth
+             #,splice?
+             (quote-syntax #,attrib-lists)
+             #,no-repetition?)])
+
+(define-for-syntax (deepen-pattern-variable-bind sidr)
+  (syntax-parse sidr
+    [(ids (make-pattern-variable-syntaxes self-id temp-id unpack* depth splice? attrs expr?))
+     (define new-ids
+       (syntax-parse #'ids
+         [(id) #`(id #,(in-repetition-space #'id))]
+         [_ #'ids]))
+     #`(#,new-ids (make-pattern-variable-syntaxes self-id temp-id unpack* #,(add1 (syntax-e #'depth)) splice? attrs #f))]))
+
+(define-for-syntax (extract-pattern-variable-bind-id-and-depth sids sid-ref)
+  (list (car (syntax-e sids))
+        (syntax-parse sid-ref
+          [(make-pattern-variable-syntaxes _ _ _ depth . _) #'depth])))
+
+(define-for-syntax (make-pattern-variable-syntaxes name-id temp-id unpack* depth splice? attributes no-repetition?)
   (define (lookup-attribute stx var-id attr-id want-repet?)
     (define attr (for/or ([var (in-list (syntax->list attributes))])
                    (and (eq? (syntax-e attr-id) (syntax-e (car (syntax-e var))))
@@ -55,20 +87,16 @@
       (syntax-parse stx
         [(_ . tail) (values (wrap-static-info* temp-id syntax-static-infos) #'tail)])))
   (cond
-    [(and (eqv? 0 depth)
-          (for/and ([a (in-list (syntax->list attributes))])
-            (eqv? 0 (pattern-variable-depth (syntax-list->pattern-variable a)))))
+    [no-repetition?
      (if (null? (syntax-e attributes))
          (expression-transformer
-          name-id
           id-handler)
          (expression-transformer
-          name-id
           (lambda (stx)
             (expr-handler stx
                           (lambda ()
                             (id-handler stx))))))]
-    [else (make-repetition
+    [else (make-expression+repetition
            name-id
            #`(#,unpack* #'$ #,temp-id #,depth)
            syntax-static-infos

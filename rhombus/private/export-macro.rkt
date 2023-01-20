@@ -4,25 +4,18 @@
                      enforest/proc-name
                      "srcloc.rkt"
                      "pack.rkt")
+         "space-provide.rkt"
          "name-root.rkt"
          (submod "export.rkt" for-meta)
          "space.rkt"
          "macro-macro.rkt"
          "parse.rkt")
 
-(provide expo)
-
-(define-name-root expo
-  #:root (space-syntax rhombus/expo)
+(define+provide-space expo rhombus/expo
   #:fields
-  (modifier
-   only))
+  (modifier))
 
-(define-name-root only
-  #:fields
-  ([modifier modifier-only]))
-
-(define-identifier-syntax-definition-transformer+only modifier modifier-only
+(define-identifier-syntax-definition-transformer modifier
   rhombus/expo
   #'make-export-modifier)
 
