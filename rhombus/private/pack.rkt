@@ -65,6 +65,8 @@
          pack-element*
          unpack-element*
          pack-nothing*
+         pack-parsed*
+         unpack-parsed*
 
          repack-as-term
          repack-as-multi
@@ -280,6 +282,16 @@
 
 ;; like `pack-elment*`, but assumming the right shape already
 (define (pack-nothing* r depth) r)
+
+;; `stx` comes from Racket, so it should be in `parsed`
+(define (pack-parsed stx)
+  #`(parsed #,stx))
+
+(define (pack-parsed* r depth)
+  (pack* r depth pack-parsed))
+
+(define (unpack-parsed* qs r depth)
+  (unpack-element* qs r depth))
 
 ;; An extra layer of unpacking to convert to a list
 (define (unpack-multi-group* qs r depth)

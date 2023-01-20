@@ -98,3 +98,23 @@ begin:
            +& "'[[+ 4], [+ 8]]'"
            +& "[['+', '4'], ['+', '8']]"
            +& "'[[+ 4], [+ 8]]'")
+
+
+begin:
+  expr.macro '$left ignored $tail ...':
+    ~weaker_than: *
+    ~stronger_than: +
+    match '$tail ...'
+    | '$(right :: expr_meta.AfterInfixGroup('ignored'))':
+        values('$right.parsed',
+               '$right.tail ...')
+
+  check:
+    5 ignored 2
+    ~is 2
+  check:
+    5 ignored 2*2
+    ~is 4
+  check:
+    5 ignored 2 + 3
+    ~is 5

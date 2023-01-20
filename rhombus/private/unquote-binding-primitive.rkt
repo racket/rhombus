@@ -212,7 +212,8 @@
                                       ;; template
                                       #`(pack-tail* (syntax #,id-with-attr) 0)]
                                      [(not (or (free-identifier=? unpack*-id #'unpack-tail-list*)
-                                               (free-identifier=? unpack*-id #'unpack-multi-tail-list*)))
+                                               (free-identifier=? unpack*-id #'unpack-multi-tail-list*)
+                                               (free-identifier=? unpack*-id #'unpack-parsed*)))
                                       ;; assume depth-compatible value checked on binding side, and
                                       ;; let `attribute` unpack syntax repetitions
                                       #`(pack-nothing* (attribute #,id-with-attr) #,depth)]
@@ -222,6 +223,8 @@
                                               #'pack-tail-list*]
                                              [(free-identifier=? unpack*-id #'unpack-multi-tail-list*)
                                               #'pack-multi-tail-list*]
+                                             [(free-identifier=? unpack*-id #'unpack-parsed*)
+                                              #'pack-parsed*]
                                              [else #'pack-term*])
                                          (syntax #,(let loop ([t id-with-attr] [depth depth])
                                                      (if (zero? depth)
