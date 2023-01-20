@@ -14,6 +14,7 @@
                      (submod "syntax-class-primitive.rkt" for-quasiquote)
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base)
+                     "implicit.rkt" ;; needed for `$%body`
                      "name-root.rkt"
                      "space.rkt"
                      "realm.rkt"
@@ -77,7 +78,7 @@
                        (~optional (group #:operator_desc desc-operator:string)
                                   #:defaults ([desc-operator #'"operator"]))
                        (~optional (group #:macro_result (check-at::block check-form ...))
-                                  #:defaults ([check-at #'block]
+                                  #:defaults ([check-at #'block] ; implicitly references `#%body`
                                               [(check-form 1) (list #'(group (parsed check-syntax)))]))
                        (~optional (group #:identifier_transformer (id-at::block make-identifier-form ...))
                                   #:defaults ([id-at #'block]
@@ -122,13 +123,13 @@
                                                             #:fields #'((parsed parsed parsed 0 unpack-term*))))
               (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
                                                                         #:kind 'group
-                                                                        #:fields '((parsed #f 0 unpack-term*)
-                                                                                   (tail #f tail tail unpack-tail-list*))
+                                                                        #:fields #'((parsed parsed #f 0 unpack-term*)
+                                                                                    (tail #f tail tail unpack-tail-list*))
                                                                         #:arity 2))
               (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
                                                                        #:kind 'group
-                                                                       #:fields '((parsed #f 0 unpack-term*)
-                                                                                  (tail #f tail tail unpack-tail-list*))
+                                                                       #:fields #'((parsed parsed #f 0 unpack-term*)
+                                                                                   (tail #f tail tail unpack-tail-list*))
                                                                        #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator)))

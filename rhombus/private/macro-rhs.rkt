@@ -248,7 +248,7 @@
             [i (in-naturals)])
         (when (parsed-parsed-right? p)
           (raise-syntax-error #f
-                              (format "multiple ~a cases not allowed with a `~parsed` case"
+                              (format "multiple ~a cases not allowed with a `~~parsed` case"
                                       what)
                               orig-stx))
         (unless (zero? i)
