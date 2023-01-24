@@ -16,7 +16,7 @@
                      [(modpath) 'rhombus/modpath]
                      [(annot) 'rhombus/annot]
                      [(repet) 'rhombus/repet]
-                     [(stxclass) 'rhombus/syntax/class]
+                     [(stxclass) 'rhombus/stxclass]
                      [(reducer) 'rhombus/reducer]
                      [(for_clause) 'rhombus/for_clause]
                      [(class_clause) 'rhombus/class_clause]

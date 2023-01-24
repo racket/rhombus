@@ -38,7 +38,12 @@ check:
 check:
   match '1; 2 4; 3'
   | '$a; ...': '$a ...'
-  ~raises "multi-term syntax not allowed in term context"
+  ~prints_like '1 2 4 3'
+
+check:
+  match '1; 2 4; 3'
+  | '$a': '1 + $a'
+  ~raises "multi-group syntax not allowed in group context"
 
 check:
   match '(1) (2 + 7, 14) (3)'
@@ -49,3 +54,28 @@ check:
   match '1 + 2'
   | '$a + $b': '($a)'
   ~prints_like '(1)'
+
+check:
+  def [none, ...] = []
+  'x; $none ...; y'
+  ~raises "generated an empty group"
+  
+check:
+  def none = []
+  'x; $none; y'
+  ~raises "cannot coerce empty list to group syntax"
+
+check:
+  def none = '1; 2'
+  'x; $none; y'
+  ~raises "multi-group syntax not allowed in group context"
+
+check:
+  def none = ''
+  'x; $none; y'
+  ~raises "multi-group syntax not allowed in group context"
+
+check:
+  def '$tail ...' = ''
+  '1 + $tail ...'
+  ~prints_like '1 +'

@@ -16,7 +16,6 @@
 
 (provide (for-syntax
           :$ :$-expr :$-bind
-          :$& :$&-expr :$&-bind
           :... :...-expr :...-bind
           :_ :_-expr :_-bind
           :& :&-expr :&-bind
@@ -47,7 +46,6 @@
                  #:attr name #'op.name])))
 
   (define-literal-class :$ :$-expr :$-bind $ "an escape operator")
-  (define-literal-class :$& :$&-expr :$&-bind $& "a splicing escape operator")
   (define-literal-class :... :...-expr :...-bind rhombus... "an ellipsis operator")
   (define-literal-class :_ :_-expr :_-bind rhombus_ "a wildcard operator")
   (define-literal-class :& :&-expr :&-bind & "a splice operator")

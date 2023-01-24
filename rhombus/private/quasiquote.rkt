@@ -88,8 +88,7 @@
                                    #:as-tail? [as-tail? #f]
                                    #:splice? [splice? #f]
                                    #:splice-pattern [splice-pattern #f]
-                                   #:allow-fltten? [allow-flatten? #f]
-                                   #:flatten-escape [flatten-escape #f])
+                                   #:allow-fltten? [allow-flatten? #f])
   (let convert ([e e] [empty-ok? splice?] [depth 0] [as-tail? as-tail?] [splice? splice?])
     (syntax-parse e
       #:datum-literals (parens brackets braces block quotes multi group alts)
@@ -222,23 +221,15 @@
                       (append new-pend-sidrs sidrs)
                       (append new-pend-vars vars)
                       (cons (quote-syntax ...) ps) can-be-empty? #f #f depth))]
-           [(((~datum op) (~or (~var _ (:$ in-space)) (~var splice (:$& in-space)))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
-            #:when (or flatten-escape
-                       (not (attribute splice)))
+           [(((~datum op) (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
               [(zero? depth)
-               (define flatten? (and flatten-escape
-                                     (attribute splice)))
                (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id.name #'esc.term e))
-               (define adj-new-idrs
-                 (cond
-                   [flatten? (map flatten-escape new-idrs)]
-                   [else new-idrs]))
-               (loop #'n-gs adj-new-idrs new-sidrs new-vars
+               (loop #'n-gs new-idrs new-sidrs new-vars
                      (append (or pend-idrs '()) idrs)
                      (append (or pend-sidrs '()) sidrs)
                      (append (or pend-vars '()) vars)
-                     (if flatten? (list* (quote-syntax ...) pat ps) (cons pat ps))
+                     (cons pat ps)
                      really-can-be-empty? #f #f depth)]
               [else
                (simple2 gs (sub1 depth))])]
@@ -470,7 +461,7 @@
                     (lambda ($-id e in-e)
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values id (list #`[#,id (pending-unpack #,e unpack-term* (quote-syntax #,$-id))]) null null))
+                      (values #`(#,(quote-syntax ~@) . #,id) (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
                     ;; handle-group-escape:
                     (lambda ($-id e in-e)
                       (check-escape e)
@@ -490,9 +481,6 @@
                     ;; deepen-escape
                     (lambda (idr)
                       (deepen-template-escape idr))
-                    #:flatten-escape
-                    (lambda (idr)
-                      (flatten-template-escape idr))
                     ;; deepen-syntax-escape
                     (lambda (sidr)
                       (error "should have no sidrs for template"))
@@ -578,12 +566,6 @@
      #`[id-pat (unpacking depth #,(sub1 (syntax-e #'k)) . u)]]
     [(id-pat (converter depth (qs t) . args))
      #`[(id-pat (... ...)) (converter #,(add1 (syntax-e #'depth)) (qs (t (... ...)))) . args]]))
-
-(define-for-syntax (flatten-template-escape idr)
-  (syntax-parse idr
-    #:literals (pending-unpack unpack-term*)
-    [[id-pat (pending-unpack e unpack-term* . u)]
-     #`[(id-pat (... ...)) (pending-unpack e unpack-term-list* . u)]]))
 
 (define-for-syntax (adjust-template-sibling-depths idrs)
   ;; under `...`, so expose any unexposed repetitions

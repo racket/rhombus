@@ -128,7 +128,12 @@
        [(= 2 (length l)) (cadr l)]
        [else (raise-error who "multi-group syntax not allowed in group context" r)])]
     [(group-syntax? r) r]
-    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+    [(null? r) (cannot-coerce-empty-list who r)]
+    [(list? r) (datum->syntax
+                at-stx
+                (cons group-blank
+                      (for/list ([e (in-list r)])
+                        (unpack-term e who at-stx))))]
     [else (datum->syntax at-stx (list group-blank r))]))
 
 (define (unpack-term-list r who at-stx)
@@ -142,10 +147,10 @@
           [(null? (cddr l)) (cdr (syntax->list (cadr l)))]
           [else (raise-error who "multi-group syntax not allowed in group context" r)])]
        [(group-syntax? r) (cdr (syntax->list r))]
-       [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
        [else (list r)])]
-    [(list? r) r]
-    [else (expected-list-or-syntax who "expected a list or syntax object" r)]))
+    [(list? r) (for/list ([e (in-list r)])
+                 (unpack-term e who at-stx))]
+    [else (list (datum->syntax at-stx r))]))
 
 ;; `r` is a sequence of groups
 (define (pack-multi r)
@@ -164,7 +169,12 @@
   (cond
     [(multi-syntax? r) (cdr (syntax->list r))]
     [(group-syntax? r) (list r)]
-    [(or (null? r) (pair? r)) (cannot-coerce-list who r)]
+    [(null? r) null]
+    [(list? r)
+     ;; unpack assuming a list of elements instead of a list of groups;
+     ;; this means that we don't really have a multi-group splicing form,
+     ;; but it avoid ambiguity
+     (list (unpack-group r who at-stx))]
     [else (list (datum->syntax at-stx (list group-blank r)))]))
 
 ;; assumes that `tail` is a syntax list of terms, and wraps it with `multi`;
@@ -252,8 +262,7 @@
 (define (pack-group* stx depth)
   (pack* stx depth pack-group))
 
-;; "Unpacks" to a `group` form, which is really more about coercsions and
-;; is asymmetric to `pack-group*`
+;; "Unpacks" to a `group` form, which is really more about coercsions
 (define (unpack-group* qs r depth)
   (unpack* qs r depth unpack-group))
 
@@ -333,9 +342,10 @@
 (define (pack-multi-tail-list* stxes depth)
   (pack* stxes (sub1 depth) pack-multi-tail))
 
-;; similar to `unpack-tail*`, but each leaf is a plain list of terms
+;; similar to `unpack-tail*`, but each leaf is a plain list of term splices
 (define (unpack-list-tail* qs r depth)
-  (unpack-term* qs r (add1 depth)))
+  (unpack* qs r depth (lambda (r name qs)
+                        (apply append (unpack-term-list* qs r 1)))))
 
 ;; similar to `unpack-multi-tail*`, but each leaf is a plain list of groups
 (define (unpack-multi-list-tail* qs r depth)
@@ -377,6 +387,14 @@
                           rhombus-realm
                           "cannot coerce list to syntax"
                           "list" r))
+
+(define (cannot-coerce-empty-list who r)
+  (raise-arguments-error* (cond
+                            [(syntax? who) (syntax-e who)]
+                            [(procedure? who) (proc-name who)]
+                            [else who])
+                          rhombus-realm
+                          "cannot coerce empty list to group syntax"))
 
 (define (cannot-coerce-pair who r)
   (raise-arguments-error* (if (syntax? who) (syntax-e who) who) rhombus-realm

@@ -83,28 +83,29 @@ Metadata for a syntax object can include a source location and the raw
   '« x '$(1 + 2)' z »'
 )
 
- A @rhombus($&) escape is similar to @rhombus($), but the result of the
- expression after @rhombus($&) can be a list, in which case and the
- elements of the list are spliced in place of the @rhombus($&) term and
- expression witin the enclosing group. If the result is a syntax object,
- it can be a single-term syntax object or a group syntax object; in the
- latter case, the group terms are spliced in place of the
+ The result of the expression after @rhombus($) can be a list, in which
+ case and the elements of the list are spliced in place of the
+ @rhombus($) term and expression witin the enclosing group. If the result
+ is a syntax object, it can be a single-term syntax object or a group
+ syntax object; in the latter case, the group terms are spliced in place
+ of the escape.
 
 @examples(
-  'x $&[1, 2, 3] z'
-  'x $&('1 2 3') z'
+  'x $[1, 2, 3] z'
+  'x $('1 2 3') z'
 )
 
  A @dots as a @rhombus(term,~var) must follow a
  @rhombus(term,~var) that includes at least one escape, and each of those
  escapes must contain a @tech{repetition} instead of an expression. The
  preceding term is replaced as many times as the repetition supplies
- values.
+ values, where each value is inserted or spliced into the enclosing sequence.
 
 @examples(
   def [x, ...] = [1, 2, 3]
   '(1 + $x) ...'
-  '0 $&('+ $x') ...'
+  '0 $('+ $x') ...'
+  '0 $['+', x] ...'
 )
 
  Multiple escapes can appear in the term before @dots, in which the
@@ -152,7 +153,7 @@ Metadata for a syntax object can include a source location and the raw
  use @rhombus($, ~bind) to escape to a nested pattern, such as
  @rhombus(#,(@rhombus($, ~bind))('#,(@rhombus($))')).
 
- To match identifier or operators based on binding insteda of
+ To match identifier or operators based on binding instead of
  symbolically, use @rhombus($, ~bind) to escape, and then use
  @rhombus(bound_as, ~unquote_bind) within the escape.
 
@@ -189,11 +190,10 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   expr.macro '$ $expr'
-  expr.macro '$& $expr'
 ){
 
  Only allowed within a @rhombus('') expression form, escapes so that the value of
- @rhombus(expr) is used in place of the @rhombus($) or @rhombus($&) form.
+ @rhombus(expr) is used in place of the @rhombus($) form.
 
  The @rhombus(expr) must be either a single term or a sequence of
  @rhombus(.)-separated identifiers. To escape only an identifier (or
@@ -256,8 +256,7 @@ Metadata for a syntax object can include a source location and the raw
 
  An escape that contains a @rhombus('')-quoted term matches the term as
  a nested syntax-object pattern. In a term context, a multi-term escape is
- spliced into the enclosing group. (This implicit splicing is why no
- syntax-binding analog to the @rhombus($&) template form is needed.) One
+ spliced into the enclosing group. One
  use of a quoted escape is to match a literal @rhombus($, ~datum) or
  @rhombus(..., ~datum) so that it is not treated as an escape or binding
  repetition in an enclosing pattern.

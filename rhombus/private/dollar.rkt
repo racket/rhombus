@@ -6,13 +6,8 @@
 
 (provide (for-spaces (#f
                       rhombus/bind)
-                     $
-                     $&))
+                     $))
 
 (define-placeholder-syntax $
-  "misuse outside of a template"
-  "misuse outside of a pattern")
-
-(define-placeholder-syntax $&
   "misuse outside of a template"
   "misuse outside of a pattern")
