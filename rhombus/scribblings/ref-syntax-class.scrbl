@@ -63,7 +63,7 @@
  @rhombus(pattern, ~syntax_class_clause) is required.
 
  An optional @rhombus(description,  ~syntax_class_clause) clause
- provides a description of the syntax class which is used to produce
+ provides a description of the syntax class, which is used to produce
  clearer error messages when a term is rejected by the syntax class. The
  result of the @rhombus(block) block must be a string or
  @rhombus(#false), where @rhombus(#false) is equivalent to not specifying
@@ -77,7 +77,8 @@
  the context within a
  pattern where a syntax class can be used, and it determines the kind
  of match that each pattern specifies. See @rhombus(kind, ~syntax_class_clause)
- for details. The default is inferred from the shapes for @rhombus(pattern_case)s.
+ for details. The default is inferred from the shapes for @rhombus(pattern_case)s as
+ either @rhombus(~term), @rhombus(~sequence), or @rhombus(~multi).
 
  A @rhombus(fields, ~syntax_class_clause) declaration limits the set of pattern variables that
  are accessible from the class, where variables used in all
@@ -142,12 +143,8 @@
  can refer only to definitions in earlier sets.
 
  A variable bound with a syntax class (within a syntax pattern) can be
- used without dot notation. In that case, the result for
- @rhombus(~sequence) mode is a sequence of syntax objects
- corresponding to the entire match of a @rhombus(syntax_pattern); use
- @rhombus(...) after a @rhombus($)-escaped reference to the variable
- in a syntax template. For other modes, the variable represents a
- single syntax object representing matched syntax.
+ used without dot notation. The variable is bound to a syntax object
+ corresponding to the entire match of a @rhombus(syntax_pattern).
 
 @examples(
   ~eval: macro.make_for_meta_eval()
@@ -155,11 +152,11 @@
     syntax_class Arithmetic
     | '$x + $y'
     | '$x - $y'
-  expr.macro 'doubled_operands $(e :: Arithmetic)':
-    '$(e.x) * 2 + $(e.y) * 2'
+  expr.macro 'doubled_operands $(a :: Arithmetic)':
+    '$a.x * 2 + $a.y * 2'
   doubled_operands 3 + 5
-  expr.macro 'add_one_to_expression $(e :: Arithmetic)':
-    '$e ... + 1'
+  expr.macro 'add_one_to_expression $(a :: Arithmetic)':
+    '$a + 1'
   add_one_to_expression 2 + 2
   meta:
     syntax_class NTerms

@@ -35,7 +35,7 @@ check:
   | '$x + $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp
-  ~raises "cannot use repetition binding as an expression"
+  ~prints_like '1 + 2'
 
 begin:
   syntax_class Arithmetic
@@ -449,13 +449,13 @@ begin:
 
   check:
     def '$(x :: Maybe) 2' = '2'
-    [x, ...]
-    ~is []
+    x
+    ~prints_like ''
 
   check:
     def '$(x :: Maybe) 2' = '1 2'
-    [x, ...]
-    ~prints_like ['1']
+    x
+    ~prints_like '1'
 
 begin:
   syntax_class House(material)

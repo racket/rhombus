@@ -262,7 +262,7 @@
              (define id (or (pattern-variable-id var)
                             (datum->syntax open-attributes-spec (pattern-variable-sym var) open-attributes-spec)))
              (open-attrib (syntax-e id) id var))]))
-      (define pack-depth (if (rhombus-syntax-class-splicing? rsc) 1 0))
+      (define pack-depth 0)
       (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
       (define instance-id (or match-id (car (generate-temporaries '(inline)))))
       #`(#,(if sc
@@ -282,7 +282,7 @@
             (if (identifier? form1)
                 (list (make-pattern-variable-bind #'id temp-id unpack*
                                                   pack-depth
-                                                  (rhombus-syntax-class-splicing? rsc)
+                                                  #f
                                                   (for/list ([var (in-list attribute-vars)])
                                                     (pattern-variable->list var #:keep-id? #f))))
                 null)
@@ -312,6 +312,8 @@
       [(eq? (rhombus-syntax-class-kind rsc) 'term)
        (cond
          [(not (eq? kind 'term)) (retry)]
+         [(rhombus-syntax-class-splicing? rsc)
+          (compat #'pack-tail* #'unpack-group*)]
          [else (compat #'pack-term* #'unpack-term*)])]
       [(eq? (rhombus-syntax-class-kind rsc) 'group)
        (cond
