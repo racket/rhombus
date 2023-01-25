@@ -148,32 +148,33 @@
                     (append (or pend-sidrs '()) sidrs)
                     (append (or pend-vars '()) vars)
                     (list* p1 p0 ps) really-can-be-empty? #f #f depth)]))
+         (define (finish ps idrs sidrs vars can-be-empty?)
+           (cond
+             [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
+              (handle-maybe-empty-alts #'tag ps idrs sidrs vars)]
+             [(and can-be-empty? (eq? (syntax-e #'tag) 'group) (not empty-ok?))
+              (handle-maybe-empty-group #'tag ps idrs sidrs vars)]
+             [else
+              (values
+               (if splice?
+                   (if splice-pattern
+                       (splice-pattern ps)
+                       (quasisyntax/loc e (~seq . #,ps)))
+                   (quasisyntax/loc e (#,(make-datum #'tag) . #,ps)))
+               idrs
+               sidrs
+               vars
+               can-be-empty?)]))
          (syntax-parse gs
            [()
-            (let ([ps (let ([ps (reverse ps)])
-                        (if tail
-                            (append ps tail)
-                            ps))]
-                  [idrs (append (or pend-idrs '()) idrs)]
-                  [sidrs (append (or pend-sidrs '()) sidrs)]
-                  [vars (append (or pend-vars '()) vars)]
-                  [can-be-empty? really-can-be-empty?])
-              (cond
-                [(and can-be-empty? (eq? (syntax-e #'tag) 'alts))
-                 (handle-maybe-empty-alts #'tag ps idrs sidrs vars)]
-                [(and can-be-empty? (eq? (syntax-e #'tag) 'group) (not empty-ok?))
-                 (handle-maybe-empty-group #'tag ps idrs sidrs vars)]
-                [else
-                 (values
-                  (if splice?
-                      (if splice-pattern
-                          (splice-pattern ps)
-                          (quasisyntax/loc e (~seq . #,ps)))
-                      (quasisyntax/loc e (#,(make-datum #'tag) . #,ps)))
-                  idrs
-                  sidrs
-                  vars
-                  can-be-empty?)]))]
+            (finish (let ([ps (reverse ps)])
+                      (if tail
+                          (append ps tail)
+                          ps))
+                    (append (or pend-idrs '()) idrs)
+                    (append (or pend-sidrs '()) sidrs)
+                    (append (or pend-vars '()) vars)
+                    really-can-be-empty?)]
            [((~var op (:tail-repetition in-space tail-any-escape?)))
             #:when (and (zero? depth)
                         (or tail-any-escape?
@@ -224,13 +225,23 @@
            [(((~datum op) (~var $-id (:$ in-space))) (~var esc (:esc tail-any-escape? #t)) . n-gs)
             (cond
               [(zero? depth)
-               (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id.name #'esc.term e))
-               (loop #'n-gs new-idrs new-sidrs new-vars
-                     (append (or pend-idrs '()) idrs)
-                     (append (or pend-sidrs '()) sidrs)
-                     (append (or pend-vars '()) vars)
-                     (cons pat ps)
-                     really-can-be-empty? #f #f depth)]
+               (define tail? (and (null? (syntax-e #'n-gs))
+                                  (or (and (not tail) (not splice?)) as-tail?)))
+               (define-values (pat new-idrs new-sidrs new-vars) (handle-escape #'$-id.name #'esc.term e tail?))
+               (cond
+                 [tail?
+                  (finish (append (reverse ps) pat)
+                          (append new-idrs (or pend-idrs '()) idrs)
+                          (append new-sidrs (or pend-sidrs '()) sidrs)
+                          (append new-vars (or pend-vars '()) vars)
+                          #f)]
+                 [else
+                  (loop #'n-gs new-idrs new-sidrs new-vars
+                        (append (or pend-idrs '()) idrs)
+                        (append (or pend-sidrs '()) sidrs)
+                        (append (or pend-vars '()) vars)
+                        (cons pat ps)
+                        really-can-be-empty? #f #f depth)])]
               [else
                (simple2 gs (sub1 depth))])]
            [(g . _)
@@ -293,8 +304,17 @@
                   (lambda (d)
                     #`(~literal #,d))
                   ;; handle-escape:
-                  (lambda ($-id e in-e)
-                    (handle-escape $-id e in-e 'term))
+                  (lambda ($-id e in-e tail?)
+                    (let-values ([(p new-idrs new-sidrs new-vars)
+                                  (if tail?
+                                      (handle-escape $-id e in-e 'group)
+                                      (values #f #f #f #f))])
+                      (if p
+                          (with-syntax ([(tmp) (generate-temporaries '(tail))])
+                            (values #`(~and tmp (~parse #,p (cons 'group #'tmp)))
+                                    new-idrs new-sidrs new-vars))
+                          (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'term)])
+                            (values (if tail? (list p) p) new-idrs new-sidrs new-vars)))))
                   ;; handle-group-escape:
                   (lambda ($-id e in-e)
                     (handle-escape/match-head $-id e in-e 'group #f))
@@ -458,10 +478,11 @@
                                     #`(#,(quote-syntax ...) #,d)
                                     d))
                     ;; handle-escape:
-                    (lambda ($-id e in-e)
+                    (lambda ($-id e in-e tail?)
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
-                      (values #`(#,(quote-syntax ~@) . #,id) (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
+                      (values (if tail? id #`(#,(quote-syntax ~@) . #,id))
+                              (list #`[#,id (pending-unpack #,e unpack-term-list* (quote-syntax #,$-id))]) null null))
                     ;; handle-group-escape:
                     (lambda ($-id e in-e)
                       (check-escape e)

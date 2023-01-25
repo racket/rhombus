@@ -118,3 +118,13 @@ begin:
   check:
     5 ignored 2 + 3
     ~is 5
+
+check:
+  expr.macro 'quote $x $(~end)': '('$x')'
+  quote 1 + 2
+  ~prints_like '1 + 2'
+
+check:
+  expr.macro 'quote $x': '($x)'
+  quote 1 + 2
+  ~is 3

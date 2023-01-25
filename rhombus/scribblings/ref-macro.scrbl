@@ -84,8 +84,7 @@
 
  @item{When the right-hand side is represented by an arbitrary pattern,
   the pattern can match any sequence of terms after the macro name in its
-  enclosing group. The match need not extend to the end of the group (in
-  which case the group might continue with an infix operator).}
+  enclosing group.}
   
  @item{When @rhombus(~parsed) is used for the the right-hand side, then
   the macro is applied with an already-parsed term after the macro name in
@@ -94,6 +93,12 @@
   @rhombus(operator).}
 
 )
+
+ In either case, a match need not extend to the end of the group, and
+ the end of the right-hand side of the pattern does not count as the end
+ of the group where, say, a @rhombus(Group, ~stxclass) pattern can
+ appear. In a use of the pacro, the enclosing group might continue, such
+ as with an infix operator.
 
  Using @litchar{|} alternatives, a single definition can have any number
  of @rhombus(macro_pattern)s. The patterns describe any number of prefix

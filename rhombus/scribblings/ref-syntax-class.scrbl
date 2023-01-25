@@ -299,7 +299,7 @@
 
  @item{@rhombus(~group): each pattern case represents a @tech{group},
   and the syntax class can be used in the same places as
-  @rhombus(Group, ~stxclass) (i.e., alone within its group).}
+  @rhombus(Group, ~stxclass) (i.e., at the end of an enclosing group).}
 
  @item{@rhombus(~multi): each pattern case represents multiple groups, and the
   syntax class can be used in the same way at the

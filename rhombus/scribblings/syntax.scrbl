@@ -131,7 +131,7 @@ parsed as an expression. For example, a pattern variable @rhombus(y) by
 itself cannot be matched to a sequence @rhombus(2 + 3):
 
 @demo(
-  ~error: def '$x + $y' = '1 + 2 + 3'
+  ~error: def '1 + $y + 4' = '1 + 2 + 3 + 4'
 )
 
 Having pattern variables always stand for individual terms turns out to
@@ -169,6 +169,15 @@ stands for a match to all the groups.
     body
 )
 
+As a further generalization, when an escaped variable is at the end of
+its group in a pattern, it stands for a match to remaing terms in group.
+
+@demo(
+  ~repl:
+    def '1 + $y' = '1 + 2 + 3 + 4'
+    y
+)
+
 These multi-term and multi-group syntax objects can be spliced into
 similar positions in templates, where an escape is by itself within its
 group or by itself in a multi-group position.
@@ -191,24 +200,23 @@ brackets context, for example.
   '[$x]'
 )
 
-As a further generalization, a multi-term, single-group syntax object
-can be spliced in place of any term escape.
+A multi-term, single-group syntax object can be spliced in place of any
+term escape, even if it is not at the end of the group.
 
 @demo(
   ~repl:
     def '$x' = '1 + 2 + 3'
-    '0 + $x'
+    '0 + $x + 4'
 )
 
-This splicing rule applies only for escapes in templates, and not for
-patterns. Also, a multi-group syntax object will not splice multiple
+A multi-group syntax object will not splice multiple
 groups in place of a group escape, because that turns out to create
 ambiguitites among group and term contexts. Meanwhile, a single-term
 syntax object can be used as a group syntax object, a single-group
 syntax object can be used as a multi-group syntax object, and a
 single-term syntax object can be used as a multi-group syntax object.
 
-Sometimes, a pattern variable that is alone within its group needs to
+Sometimes, a pattern variable that is at the end of a group is meant to
 match a single term and not a group of terms. To match a single term in
 a group context, annotate the pattern variable with the
 @rhombus(Term, ~stxclass) syntax class using the @rhombus(::) operator.

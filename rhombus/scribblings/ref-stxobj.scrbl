@@ -311,9 +311,9 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(Block, ~stxclass).
 
  The @rhombus(Group, ~stxclass) syntax class can be used only for a
- pattern identifier that is the sole term of its group in a pattern. The
- identifier is bound to a match for the entire group as a group syntax
- object.
+ pattern identifier that is at the end of its group in a pattern. The
+ identifier is bound to a match for the entire tail of the group as a
+ group syntax object.
 
  The @rhombus(Multi, ~stxclass) syntax class can be used only for a
  pattern identifier that is the sole term where a sequence of groups is

@@ -31,26 +31,29 @@
               | ...'
 ){
 
- Like @rhombus(macro), but
+ Like @rhombus(macro), but arbitrary compile-time code can appear in the
+ body after each @rhombus(macro_pattern).
+
+ In addition, a @rhombus(macro_pattern) can end with
+ @rhombus(#,(@rhombus($, ~bind))(~end)) or
+ @rhombus(#,(@rhombus($, ~bind)) ~end) escape, which stands for
+ the end of the enclosing group where the macro is used:
 
 @itemlist(
 
- @item{arbitrary compile-time code can appear in the body after each
-  @rhombus(macro_pattern);}
-  
- @item{a @rhombus(macro_pattern) can end with
-  @rhombus(#,(@rhombus($, ~bind))(~end)) or
-  @rhombus(#,(@rhombus($, ~bind)) ~end) pseudo-escape to indicate that the
-  enclosing group must have no additional terms besides those matched in
-  the pattern; and},
+ @item{the enclosing group must have no additional terms besides those
+  matched in the pattern before the @rhombus(~end) escape;}
 
- @item{when a @rhombus(macro_pattern) ends with
-  @rhombus(#,(@rhombus($, ~bind)) #,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind))),
-  @rhombus(#,(@rhombus($, ~bind))(~end)), or
-  @rhombus(#,(@rhombus($, ~bind)) ~end), the body afterward can return two
-  values: an expansion for the consumed part of the input match, and a
-  tail for the unconsumed part; if a single value is returned, the tail is
-  assumed to be empty.}
+ @item{the position before @rhombus(~end) counts as being at the end of
+  the pattern's group, which means the immediately preceding pattern is
+  in a group context; in particular, a simple escape like
+  @rhombus($, ~bind)@rhombus(identifier, ~var) matches the entire rest of
+  the enclosing group at the macro use; and}
+
+ @item{the @rhombus(body) after the pattern can return two values: an
+  expansion for the consumed part of the input match, and a tail for the
+  unconsumed part; returning a single value is the same as return an empty
+  tail.}
 
 )
 

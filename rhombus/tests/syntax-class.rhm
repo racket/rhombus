@@ -217,13 +217,23 @@ begin:
 
 begin:
   check:
-    ~eval
     syntax_class Foo:
       kind: ~group
       pattern
       | '$x + $y'
     match '0 + 1 + 2'
     | '0 + $(f :: Foo)': [f.x, f.y]
+    ~prints_like ['1', '2']
+
+begin:
+  check:
+    ~eval
+    syntax_class Foo:
+      kind: ~group
+      pattern
+      | '$x + $y'
+    match '0 + 1 + 2 + 3'
+    | '0 + $(f :: Foo) + 3': [f.x, f.y]
     ~raises "syntax class incompatible with this context"
 
 begin:
