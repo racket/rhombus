@@ -1,31 +1,22 @@
 #lang racket/base
 
-(provide add-space)
+(provide full-space-name
+         add-space)
 
-(define (add-space stx space-name)
+(define (full-space-name space-name)
+  (case space-name
+    [(#f var datum hide) space-name]
+    [else (string->symbol (string-append "rhombus/" (symbol->string space-name)))]))
+
+(define (add-space stx space-name/full)
   (cond
-    [(eq? space-name 'hide)
+    [(eq? space-name/full 'hide)
      (quote-syntax never-bound)]
     [else
-     (define space (case space-name
-                     [(space) 'rhombus/space]
-                     [(namespace) 'rhombus/namespace]
-                     [(bind) 'rhombus/bind]
-                     [(impo) 'rhombus/impo]
-                     [(expo) 'rhombus/expo]
-                     [(modpath) 'rhombus/modpath]
-                     [(annot) 'rhombus/annot]
-                     [(repet) 'rhombus/repet]
-                     [(stxclass) 'rhombus/stxclass]
-                     [(reducer) 'rhombus/reducer]
-                     [(for_clause) 'rhombus/for_clause]
-                     [(class_clause) 'rhombus/class_clause]
-                     [(intf_clause) 'rhombus/interface_clause]
-                     [(entry_point) 'rhombus/entry_point]
-                     [(unquote_bind) 'rhombus/unquote_bind]
-                     [(syntax_class_clause) 'rhombus/syntax_class_clause]
-                     [(pattern_clause) 'rhombus/pattern_clause]
-                     [else #f]))
+     (define space
+       (case space-name/full
+         [(#f var datum) #f]
+         [else space-name/full]))
      (if space
          ((make-interned-syntax-introducer space) stx 'add)
          stx)]))

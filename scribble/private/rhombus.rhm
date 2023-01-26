@@ -143,13 +143,13 @@ expr.macro
           || kw === #'~reducer
           || kw === #'~for_clause
           || kw === #'~class_clause
-          || kw === #'~intf_clause
+          || kw === #'~interface_clause
           || kw === #'~entry_point
           || kw === #'~unquote_bind
           || kw === #'~syntax_class_clause
           || kw === #'~pattern_clause)
     | '#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))'
-    | Syntax.error("invalid space", kw)
+    | Syntax.error("invalid space", kw_stx)
 
 expr.macro 'rhombusblock_etc $tail ...':
   ~op_stx: me

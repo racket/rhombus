@@ -26,19 +26,20 @@ meta:
         [#'lib, str]
 
   syntax_class Option:
-    kind: ~term
     pattern
     | '~lang':
-        field form: '~lang'
+        field [form, ...]: ['~lang']
     | '~no_declare':
-        field form: '#{#:no-declare}'
+        field [form, ...]: ['#{#:no-declare}']
+    | '~use_sources: $modpath; ...':
+        field [form, ...]: ['#{#:use-sources}', [translate_mod(modpath), ...]]
 
 decl.macro 'docmodule ($(option :: Option), ..., $mod ...)':
   '$(parsed(['defmodule',
              #'#{#:require-form},
              unparsed('fun (mod): @rhombus(import: #,(mod))'),
              translate_mod('$mod ...'),
-             option.form, ...]))'
+             option.form, ..., ...]))'
   
 expr.macro 'rhombusmodname ($mod ...) $tail ...':
   values(parsed(['racketmodname', translate_mod('$mod ...')]),

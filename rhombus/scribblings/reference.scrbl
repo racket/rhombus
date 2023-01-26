@@ -2,7 +2,9 @@
 
 @title(~style: #'toc){Core Rhombus Reference}
 
-@docmodule(~lang, rhombus)
+@docmodule(~lang,
+           ~use_sources: rhombus/private/core,
+           rhombus)
 
 @local_table_of_contents()
 

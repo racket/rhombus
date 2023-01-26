@@ -192,6 +192,8 @@ Metadata for a syntax object can include a source location and the raw
   expr.macro '$ $expr'
 ){
 
+@provided_also_meta()
+
  Only allowed within a @quotes expression form, escapes so that the value of
  @rhombus(expr) is used in place of the @rhombus($) form.
 
@@ -221,6 +223,8 @@ Metadata for a syntax object can include a source location and the raw
     #,(@rhombus(pattern, ~unquote_bind)) $pattern_cases
     $other_stx_bind
 ){
+
+@provided_also_meta()
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
  unquoted binding pattern. Typically, the unquoted pattern has an
@@ -299,49 +303,23 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  syntax_class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Id: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Integer: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
-  syntax_class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
-  syntax_class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block
+  unquote_bind.macro '_'
+  unquote_bind.macro '#{#%parens} ($stx_bind)'
 ){
 
- Syntax classes, all of which imply a single-term match except for
- @rhombus(Group, ~stxclass), @rhombus(Multi, ~stxclass), and
- @rhombus(Block, ~stxclass).
+@provided_also_meta()
 
- The @rhombus(Group, ~stxclass) syntax class can be used only for a
- pattern identifier that is at the end of its group in a pattern. The
- identifier is bound to a match for the entire tail of the group as a
- group syntax object.
-
- The @rhombus(Multi, ~stxclass) syntax class can be used only for a
- pattern identifier that is the sole term where a sequence of groups is
- allowed, such as in the body of a block. The identifier is bound to a
- match for the entire sequence of groups.
-
- The @rhombus(Block, ~stxclass) syntax class can be used only for a
- pattern identifier that is the sole term of a block. The identifier is
- bound to a match for the entire block as a single term (i.e., as a
- single-term syntax object that has a block term, and not as a
- multi-group syntax object).
+ For use within a @rhombus($, ~bind) escape within a syntax pattern. See
+ @rhombus($, ~bind).
 
 }
 
 @doc(
-  unquote_bind.macro '_'
-  unquote_bind.macro '#{#%parens} ($stx_bind)'
   unquote_bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
- Predefined syntax pattern binding forms for use with
- @rhombus($, ~bind) within a syntax pattern as a binding.
- See @rhombus($, ~bind).
+ For use within a @rhombus($, ~bind) escape for a nested binding
+ pattern. See @rhombus($, ~bind).
 
 }
 
@@ -402,6 +380,8 @@ Metadata for a syntax object can include a source location and the raw
     $field_identifier #,(@rhombus(as, ~impo)) $pattern_identifier; ...
     $field_identifier ....
 ){
+
+@provided_also_meta()
 
  Unquote binding operator for use with @rhombus($, ~bind) that binds
  @rhombus(identifier) for a match to @rhombus(syntax_class).

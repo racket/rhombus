@@ -2,50 +2,16 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      (prefix-in typeset-meta: "typeset_meta.rhm")
-                     shrubbery/property
-                     "add-space.rkt")
+                     shrubbery/property)
          "typeset-help.rkt"
          "defining-element.rkt"
          shrubbery/print
          racket/list
-         (only-in rhombus/private/space
-                  in-space-space)
          (only-in rhombus/private/name-root-space
                   in-name-root-space
                   name-root-quote)
-         (only-in (submod rhombus/private/import for-meta)
-                  in-import-space)
-         (only-in (submod rhombus/private/export for-meta)
-                  in-export-space)
          (only-in (submod rhombus/private/module-path for-meta)
-                  in-module-path-space
                   modpath)
-         (only-in rhombus/private/binding
-                  in-binding-space)
-         (only-in (submod rhombus/private/annotation for-class)
-                  in-annotation-space)
-         (only-in rhombus/private/repetition
-                  in-repetition-space)
-         (only-in (for-syntax rhombus/private/class-parse)
-                  in-class-desc-space)
-         (only-in (submod rhombus/private/syntax-class-primitive for-quasiquote)
-                  in-syntax-class-space)
-         (only-in (submod rhombus/private/syntax-class-clause for-class)
-                  in-syntax-class-clause-space)
-         (only-in (submod rhombus/private/pattern-clause for-class)
-                  in-pattern-clause-space)
-         (only-in (submod rhombus/private/reducer for-class)
-                  in-reducer-space)
-         (only-in (submod rhombus/private/for-clause for-class)
-                  in-for-clause-space)
-         (only-in (submod rhombus/private/class-clause for-class)
-                  in-class-clause-space)
-         (only-in (submod rhombus/private/interface-clause for-interface)
-                  in-interface-clause-space)
-         (only-in (submod rhombus/private/entry-point for-class)
-                  in-entry-point-space)
-         (only-in rhombus/private/unquote-binding
-                  in-unquote-binding-space)
          (only-in rhombus
                   def fun operator interface :: |.| $
                   [= rhombus-=]
@@ -99,10 +65,14 @@
                  (brackets content-group ...))))
      (define forms (map (lambda (stx) (datum->syntax #f (syntax-e stx)))
                         (syntax->list #'((group-tag form ...) ...))))
-     (define introducers (for/list ([form (in-list forms)])
-                           (extract-introducer form)))
      (define space-names (for/list ([form (in-list forms)])
                            (extract-space-name form)))
+     (define introducers (for/list ([space-name (in-list space-names)])
+                           (if space-name
+                               (let ([intro (make-interned-syntax-introducer space-name)])
+                                 (lambda (x)
+                                   (intro x 'add)))
+                               values)))
      (define def-names (for/list ([form (in-list forms)]
                                   [space-name (in-list space-names)]
                                   [introducer (in-list introducers)])
@@ -186,6 +156,9 @@
   (define str+space (if str-id-e
                         (list str-id-e space)
                         space))
+  ;; FIXME: current `#:space` arguments should really be `#:suffix`,
+  ;; and supply just the space with `#:space`; waiting a little while
+  ;; to let Racket releases include that functionality
   (define (make-content defn?)
     (racketidfont
      (make-id-element id str defn? #:space str+space)))
@@ -506,53 +479,29 @@
                      (loop (cdr ts)))]
               [_ (cons (car ts) (loop (cdr ts)))])])))
      #`(g #,@new-ts)]))
-      
-(define-for-syntax (extract-introducer stx)
-  (syntax-parse stx
-    #:literals (syntax_class interface class)
-    #:datum-literals (parens group op)
-    [(group _::space . _) in-space-space]
-    [(group _::impo . _) in-import-space]
-    [(group _::expo . _) in-export-space]
-    [(group _::modpath . _) in-module-path-space]
-    [(group _::bind . _) in-binding-space]
-    [(group _::annot . _) in-annotation-space]
-    [(group _::repet . _) in-repetition-space]
-    [(group _::reducer . _) in-reducer-space]
-    [(group _::for_clause . _) in-for-clause-space]
-    [(group _::class_clause . _) in-class-clause-space]
-    [(group _::interface_clause . _) in-interface-clause-space]
-    [(group _::entry_point . _) in-entry-point-space]
-    [(group _::unquote_bind . _) in-unquote-binding-space]
-    [(group _::syntax_class_clause . _) in-syntax-class-clause-space]
-    [(group _::pattern_clause . _) in-pattern-clause-space]
-    [(group interface . _) in-class-desc-space]
-    [(group class . _) in-class-desc-space]
-    [(group syntax_class . _) in-syntax-class-space]
-    [_ values]))
 
 (define-for-syntax (extract-space-name stx)
   (syntax-parse stx
     #:literals (syntax_class class interface)
     #:datum-literals (parens group op)
-    [(group _::space . _) 'space]
-    [(group _::impo . _) 'impo]
-    [(group _::expo . _) 'expo] ; one space currently used for both exports and modifiers
-    [(group _::modpath . _) 'modpath]
-    [(group _::annot . _) 'annot]
-    [(group _::repet . _) 'repet]
-    [(group _::reducer . _) 'reducer]
-    [(group _::for_clause . _) 'for_clause]
-    [(group _::class_clause . _) 'class_clause]
-    [(group _::interface_clause . _) 'intf_clause]
-    [(group _::entry_point . _) 'entry_point]
-    [(group _::unquote_bind . _) 'unquote_bind]
-    [(group _::syntax_class_clause . _) 'syntax_class_clause]
-    [(group _::pattern_clause . _) 'pattern_clause]
-    [(group _::bind . _) 'bind]
-    [(group interface . _) 'class]
-    [(group class . _) 'class]
-    [(group syntax_class . _) 'stxclass]
+    [(group _::space . _) 'rhombus/space]
+    [(group _::impo . _) 'rhombus/impo]
+    [(group _::expo . _) 'rhombus/expo] ; one space currently used for both exports and modifiers
+    [(group _::modpath . _) 'rhombus/modpath]
+    [(group _::annot . _) 'rhombus/annot]
+    [(group _::repet . _) 'rhombus/repet]
+    [(group _::reducer . _) 'rhombus/reducer]
+    [(group _::for_clause . _) 'rhombus/for_clause]
+    [(group _::class_clause . _) 'rhombus/class_clause]
+    [(group _::interface_clause . _) 'rhombus/interface_clause]
+    [(group _::entry_point . _) 'rhombus/entry_point]
+    [(group _::unquote_bind . _) 'rhombus/unquote_bind]
+    [(group _::syntax_class_clause . _) 'rhombus/syntax_class_clause]
+    [(group _::pattern_clause . _) 'rhombus/pattern_clause]
+    [(group _::bind . _) 'rhombus/bind]
+    [(group interface . _) 'rhombus/class]
+    [(group class . _) 'rhombus/class]
+    [(group syntax_class . _) 'rhombus/stxclass]
     [_ #f]))
 
 (define-for-syntax (extract-kind-str stx)

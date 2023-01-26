@@ -4,8 +4,15 @@
                      shrubbery/print
                      (only-in "ellipsis.rkt"
                               [... rhombus...])
+                     (only-in "quasiquote.rkt"
+                              [_ rhombus_])
+                     (only-in "unquote-binding-primitive.rkt"
+                              #%parens
+                              ::)
                      (only-in "dollar.rkt" $)
-                     "rest-marker.rkt")
+                     "rest-marker.rkt"
+                     (only-space-in rhombus/stxclass
+                                    "syntax-class-primitive.rkt"))
          racket/interaction-info
          "builtin-dot.rkt"
          "bounce.rkt"
@@ -26,7 +33,25 @@
                      (rename-out [rhombus... ...])
                      $
                      &
-                     ~&)))
+                     ~&)
+          (for-space rhombus/unquote_bind
+                     (rename-out [rhombus_ _])
+                     #%parens
+                     ::)
+          (for-space rhombus/stxclass
+                     ;; Why doesn't
+                     ;;   (all-from-out "syntax-class-primitive.rkt")
+                     ;; work here?
+                     Term
+                     Id
+                     Op
+                     Id_Op
+                     Group
+                     Block
+                     Multi
+                     Keyword
+                     String
+                     Integer)))
 
 (bounce "implicit.rkt"
         "underscore.rkt"

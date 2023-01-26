@@ -307,34 +307,34 @@
     $export
 
   grammar interface_clause:
-    #,(@rhombus(method, ~intf_clause)) $method_impl
-    #,(@rhombus(override, ~intf_clause)) $method_impl
-    #,(@rhombus(final, ~intf_clause)) $method_impl
-    #,(@rhombus(private, ~intf_clause)) $method_impl
-    #,(@rhombus(abstract, ~intf_clause)) $method_decl
-    #,(@rhombus(property, ~intf_clause)) $property_impl
-    #,(@rhombus(extends, ~intf_clause)) $extends_decl
-    #,(@rhombus(internal, ~intf_clause)) $identifier
-    #,(@rhombus(expression, ~intf_clause)) $expression_decl
-    #,(@rhombus(annotation, ~intf_clause)) $annotation_decl
+    #,(@rhombus(method, ~interface_clause)) $method_impl
+    #,(@rhombus(override, ~interface_clause)) $method_impl
+    #,(@rhombus(final, ~interface_clause)) $method_impl
+    #,(@rhombus(private, ~interface_clause)) $method_impl
+    #,(@rhombus(abstract, ~interface_clause)) $method_decl
+    #,(@rhombus(property, ~interface_clause)) $property_impl
+    #,(@rhombus(extends, ~interface_clause)) $extends_decl
+    #,(@rhombus(internal, ~interface_clause)) $identifier
+    #,(@rhombus(expression, ~interface_clause)) $expression_decl
+    #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
     $other_interface_clause
 
 ){
 
  Similar to @rhombus(class) for defining classes, but defines an
  interface, which has no fields but can have multiple superinterfaces. A
- @rhombus(method, ~intf_clause),
- @rhombus(property, ~intf_clause), or @rhombus(override, ~intf_clause)
+ @rhombus(method, ~interface_clause),
+ @rhombus(property, ~interface_clause), or @rhombus(override, ~interface_clause)
  clause is allowed to have just a
- name or omit the body, in which case @rhombus(abstract, ~intf_clause)
+ name or omit the body, in which case @rhombus(abstract, ~interface_clause)
  implicitly prefixes the declaration.
 
  The body of an @rhombus(interface) form has @deftech{interface clauses}
  that are similar to @tech{class clauses}, but declared separately and
  sometimes with different syntax. For example,
- @rhombus(extends, ~intf_clause) as an interface clause supports multiple
+ @rhombus(extends, ~interface_clause) as an interface clause supports multiple
  superinterface names instead of just one, and
- @rhombus(extends, ~intf_clause) can appear multiple times in an
+ @rhombus(extends, ~interface_clause) can appear multiple times in an
  @rhombus(interface) body.
 
  Interfaces cannot be instantiated. They are implemented by classes via
@@ -343,7 +343,7 @@
  instances satisfy the interface as an annotation.
 
  Typically, an interface declares methods and properties with
- @rhombus(abstract, ~intf_clause) to be implemented by classes that
+ @rhombus(abstract, ~interface_clause) to be implemented by classes that
  implement the interface. However, an interface can define method and property
  implementations; those implementations are inherited by classes that implement the
  interface or any subinterface that extends the interface. An interface can
@@ -354,7 +354,7 @@
  @rhombus(#,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause))),
  its instances do not satisfy the interface as an annotation. If the
  privately implemented interface has an internal name declared with
- @rhombus(internal, ~intf_clause), however, instances satisfy the
+ @rhombus(internal, ~interface_clause), however, instances satisfy the
  internal name as an annotation. Methods and properties of a privately implemented
  instance can be accessed only with static @rhombus(.) via the
  internal-name annotation. As long as a method or property belongs to only privately
@@ -455,12 +455,12 @@
   class_clause.macro 'final #,(@rhombus(property, ~class_clause)) $property_impl'
   class_clause.macro 'final #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'final $method_impl'
-  interface_clause.macro 'final #,(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'final #,(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'final #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause)) $property_impl'
+  interface_clause.macro 'final #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'final #,(@rhombus(property, ~interface_clause)) $property_impl'
+  interface_clause.macro 'final #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause)) $property_impl'
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
@@ -504,10 +504,10 @@
   interface_clause.macro 'property $property_impl'
   interface_clause.macro 'override $method_impl'
   interface_clause.macro 'override $method_decl'
-  interface_clause.macro 'override #,(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'override #,(@rhombus(method, ~intf_clause)) $method_decl'
-  interface_clause.macro 'override #,(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'override #,(@rhombus(property, ~intf_clause)) $property_decl'
+  interface_clause.macro 'override #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'override #,(@rhombus(method, ~interface_clause)) $method_decl'
+  interface_clause.macro 'override #,(@rhombus(property, ~interface_clause)) $property_impl'
+  interface_clause.macro 'override #,(@rhombus(property, ~interface_clause)) $property_decl'
 
   grammar method_impl:
     $identifier $maybe_res_ann: $entry_point
@@ -577,11 +577,11 @@
  call of the method). An argument that has the same name as a field,
  method, or property shadows the field, method, or property.
 
- In an interface, a @rhombus(method, ~intf_clause), @rhombus(override, ~intf_clause), or
- @rhombus(property, ~intf_clause) declation can be just an identifier, or
- it can omit a body block. In that case, @rhombus(method, ~intf_clause), @rhombus(override, ~intf_clause),
- or @rhombus(property, ~intf_clause) is treated as if
- @rhombus(abstract, ~intf_clause) is added before. If arguments are declared for
+ In an interface, a @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause), or
+ @rhombus(property, ~interface_clause) declation can be just an identifier, or
+ it can omit a body block. In that case, @rhombus(method, ~interface_clause), @rhombus(override, ~interface_clause),
+ or @rhombus(property, ~interface_clause) is treated as if
+ @rhombus(abstract, ~interface_clause) is added before. If arguments are declared for
  an abstract method, they determine the method's expectations
  for static argument-count checking (see @rhombus(use_static)), but they
  do not impose constraints on overriding implementations.
@@ -603,11 +603,11 @@
   class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'private #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_impl'
   interface_clause.macro 'private $method_impl'
-  interface_clause.macro 'private #,(@rhombus(method, ~intf_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(property, ~intf_clause)) $property_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) #,(@rhombus(method, ~intf_clause))  $method_impl'
-  interface_clause.macro 'private #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause))  $property_impl'
+  interface_clause.macro 'private #,(@rhombus(method, ~interface_clause)) $method_impl'
+  interface_clause.macro 'private #,(@rhombus(property, ~interface_clause)) $property_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) $method_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(method, ~interface_clause))  $method_impl'
+  interface_clause.macro 'private #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause))  $property_impl'
 ){
 
  A @tech{class clause} that declares interfaces that are privately
@@ -639,15 +639,15 @@
   class_clause.macro 'abstract #,(@rhombus(property, ~class_clause)) $property_decl'
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) #,(@rhombus(property, ~class_clause)) $property_decl'
   interface_clause.macro 'abstract $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(method, ~intf_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(override, ~intf_clause)) $method_decl'
-  interface_clause.macro 'abstract #,(@rhombus(property, ~intf_clause)) $property_decl'
-  interface_clause.macro 'abstract #,(@rhombus(override, ~intf_clause)) #,(@rhombus(property, ~intf_clause))  $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(method, ~interface_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) $method_decl'
+  interface_clause.macro 'abstract #,(@rhombus(property, ~interface_clause)) $property_decl'
+  interface_clause.macro 'abstract #,(@rhombus(override, ~interface_clause)) #,(@rhombus(property, ~interface_clause))  $property_decl'
 ){
 
  A @tech{class clause} or @tech{interface clause} that declares a method
- or property without an implementation. See @rhombus(method, ~intf_clause) for the
- shape of @rhombus(method_decl), and see @rhombus(property, ~intf_clause) for the
+ or property without an implementation. See @rhombus(method, ~interface_clause) for the
+ shape of @rhombus(method_decl), and see @rhombus(property, ~interface_clause) for the
  shape of @rhombus(property_decl).
 
  When a class has an abstract method or property,
@@ -855,7 +855,7 @@
 
  There is no @rhombus(constructor, ~class_clause) for interfaces, since
  interfaces cannot be instantiated directly, but an
- @rhombus(expression, ~intf_clause) clause can make an interface
+ @rhombus(expression, ~interface_clause) clause can make an interface
  identifier behave like a constructor, perhaps instantiating some default
  class. There is no @rhombus(binding, ~class_clause) for interfaces,
  because @rhombus(interface) does not otherwise define an interfeace name

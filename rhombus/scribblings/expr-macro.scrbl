@@ -26,7 +26,7 @@ wraps as a zero-argument function
   ~defn:
     import:
       rhombus/meta open
-
+  ~defn:
     expr.macro 'thunk: $body':
       'fun (): $body'
   ~repl:
@@ -34,18 +34,21 @@ wraps as a zero-argument function
     (thunk: 1 + 3)()
 )
 
-The @rhombus(expr.macro) form is followed by @quotes to describe a pattern
+An @rhombus(expr.macro) form starts with @quotes to describe a pattern
 that matches a sequence of terms. Either the first or second term within
 the pattern is an @emph{unescaped} identifier or operator to be defined;
 conceptually, it’s unescaped because the macro matches a sequence of
 terms that use that identifier or operator literally. If the first term
 in the pattern is an unescaped identifier or operator, a prefix macro is
 defined; otherwise, the second term must be unescaped, and an infix
-macro is defined.
+macro is defined. The above macro definition starts with an unescaped
+@rhombus(thunk), so it defined the @rhombus(thunk) macro.
 
 The @rhombus(expr.macro) form must be imported from
-@rhombusmodname(rhombus/meta), but @rhombus(macro) is available in just
-@rhombusmodname(rhombus):
+@rhombusmodname(rhombus/meta), but a @rhombus(macro) is
+available in just @rhombusmodname(rhombus). The @rhombus(macro) form
+is more limited, because it's body must be a template written with @quotes,
+instead of an arbitrary compile-time expression.
 
 @demo(
   ~defn:
@@ -98,7 +101,7 @@ the same way as for @rhombus(operator).
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a !':
+    macro '$a !':
       ~weaker_than: *
       'factorial($a)'
   ~repl:
@@ -141,14 +144,14 @@ sequence of shrubbery terms after the operator. That kind of operator might not
 be infix in the sense of the @rhombus(+) operator, which expects two
 expressions, but infix in the sense of the @rhombus(.) operator, which
 expects an expression on the left but a plain identifier on the right.
-To similarly match just an identifier in a macro pattern,
+For example, to match just an identifier in a macro pattern,
 annotate a pattern variable with @rhombus(::, ~unquote_bind) and
 @rhombus(Id, ~stxclass):
 
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a is_name $(b :: Id)':
+    macro '$a is_name $(b :: Id)':
       ~stronger_than: ~other
       '$a == #'$b'
   ~repl:
@@ -187,9 +190,9 @@ a macro uses to appear at the end of a group.
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$e EOM $()':
+    macro '$e EOM $()':
       ~weaker_than: ~other
-      e
+      '$e'
   ~repl:
     1 + 2 EOM
     ~error:
@@ -213,7 +216,7 @@ and reify the tail as a fresh list---so don't do this:
 )
 
 In the same way that @rhombus(operator) supports operators that are both
-prefix and infix, you can use a @vbar alternatives with @rhombus(expr.macro) to
+prefix and infix, you can use @vbar alternatives with @rhombus(expr.macro) to
 create a prefix-and-infix macro. Furthermore, an @rhombus(expr.macro)
 form can have multiple prefix blocks or multiple infix blocks, where the
 each block’s pattern is tried in order; in that case, only the first

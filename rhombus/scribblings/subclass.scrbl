@@ -71,7 +71,7 @@ needed in an interface.
     s is_a Dance
 )
 
-Interfaces can @rhombus(extend, ~intf_clause) other interfaces. Unlike
+Interfaces can @rhombus(extend, ~interface_clause) other interfaces. Unlike
 classes extending at one most superclass, interfaces can extend any
 number of superinterfaces.
 

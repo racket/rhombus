@@ -3,7 +3,8 @@
 
 @title(~style: #'toc){Rhombus Meta and Macros Reference}
 
-@docmodule(rhombus/meta)
+@docmodule(~use_sources: lib("rhombus/private/core-meta"),
+           rhombus/meta)
 
 @docmodule(~lang, ~no_declare, rhombus/and_meta)
 

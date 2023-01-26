@@ -35,7 +35,7 @@ itself remains quoted.
   '1 + $('$') 2'
 )
 
-@aside{Nested @quotes does not increase the quoting level, unlike
+@aside{Nesting @quotes does not increase the quoting level, unlike
  Racket quasiquotation.}
 
 Like @rhombus($), @rhombus(...) is treated specially within a @(quotes)-quoted term (except,
@@ -50,27 +50,14 @@ those items is used in one replication.
   ~defn:
     def [seq, ...] = ['1', '2', '3']
   ~repl:
+    '$seq ...'
     '(hi $seq) ...'
-)
-
-There’s a subtlety here: could @rhombus(seq) have zero elements? If so,
-replicating the @rhombus(hi) form zero times within a group would leave
-an empty group, but a shrubbery never has an empty group. To manage this
-gap, a @rhombus($) replication to a group with zero terms generates a
-multi-group syntax object with zero groups. Attempting to generate a group
-with no terms within a larger sequence with multiple groups is an error.
-
-@demo(
-  ~repl:
-    def [seq, ...] = []
-    '(hi $seq) ...'
-    ~error: 'x; (hi $seq) ...; y'
 )
 
 When @rhombus(...) is the only term in a group, and when that group follows
 another, then @rhombus(...) replicates the preceding group. For example,
-putting @rhombus(...) after a @litchar{,} in parentheses means that it follows a the
-group before the @litchar{,}, which effectively replicates that group with its
+putting @rhombus(...) after a @comma in parentheses means that it follows a the
+group before the @comma, which effectively replicates that group with its
 separating comma:
 
 @demo(
@@ -79,7 +66,7 @@ separating comma:
     '(hi $seq, ...)'
 )
 
-Along the same lines, @rhombus(...) just after a @litchar{|} can replicate a preceding
+Along the same lines, @rhombus(...) just after a @vbar can replicate a preceding
 @litchar{|} block:
 
 @demo(
@@ -170,7 +157,7 @@ stands for a match to all the groups.
 )
 
 As a further generalization, when an escaped variable is at the end of
-its group in a pattern, it stands for a match to remaing terms in group.
+its group in a pattern, it stands for a match to remaining terms in group.
 
 @demo(
   ~repl:
@@ -211,7 +198,7 @@ term escape, even if it is not at the end of the group.
 
 A multi-group syntax object will not splice multiple
 groups in place of a group escape, because that turns out to create
-ambiguitites among group and term contexts. Meanwhile, a single-term
+ambiguities among group and term contexts. Meanwhile, a single-term
 syntax object can be used as a group syntax object, a single-group
 syntax object can be used as a multi-group syntax object, and a
 single-term syntax object can be used as a multi-group syntax object.
@@ -229,7 +216,10 @@ a group context, annotate the pattern variable with the
     ~error: def '$(x :: Term)' = '1 + 2'
 )
 
-Use the @rhombus(Group,~stxclass) syntax class to match a single group
-instead of a multi-group sequence.
+You can similarly use the @rhombus(Group,~stxclass) syntax class to
+match a single group instead of a multi-group sequence. There are
+several other predefined syntax classes, such as @rhombus(Id, ~stxclass)
+to match an identifier, @rhombus(String, ~stxclass) to match a string
+literal, and @rhombus(Integer, ~stxclass) to match an integer literal.
 
 @close_eval(syntax_eval)

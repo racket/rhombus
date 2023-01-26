@@ -129,6 +129,8 @@ positions.
   bind.macro '& list_binding'
 ){
 
+@provided_also_meta()
+
  The @rhombus(&) expression operator and binding operator can only be
  used in places where its specifically recognized, normally either to
  reference or bind the ``rest'' of a data structure. The @rhombus(List)
@@ -148,6 +150,8 @@ positions.
   expr.macro '~& map_expr'
   bind.macro '~& map_binding'
 ){
+
+@provided_also_meta()
 
  The @rhombus(~&) expression operator and binding operator can only be
  used in places where its specifically recognized, normally to bind the

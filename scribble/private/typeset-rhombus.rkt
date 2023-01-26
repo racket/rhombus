@@ -27,9 +27,10 @@
 
 (define (typeset-rhombus stx
                          #:space [space-name-in #f])
-  (define space-name (if (keyword? space-name-in)
-                         (string->symbol (keyword->string space-name-in))
-                         space-name-in))
+  (define space-name (full-space-name
+                      (if (keyword? space-name-in)
+                          (string->symbol (keyword->string space-name-in))
+                          space-name-in)))
   ;; "pretty" prints to a single line, currently assuming that the input was
   ;; originally on a single line
   (define (id-space-name* id) (id-space-name id space-name))
@@ -424,7 +425,7 @@
        (content? v)))
 
 (define (id-space-name id [default-name #f])
-  (or (syntax-property id 'typeset-space-name) default-name))
+  (or (full-space-name (syntax-property id 'typeset-space-name)) default-name))
 
 (define (initial-name-ref elems space-name)
   (define (dotted-elems? elems)
@@ -447,7 +448,7 @@
      (define target+rest (resolve-name-ref space-name
                                            (add-space (car elems)
                                                       (if (pair? (cdr elems))
-                                                          'namespace
+                                                          'rhombus/namespace
                                                           space-name))
                                            dotted-elems))
      (define target (and target+rest (car target+rest)))
@@ -458,7 +459,7 @@
         (cons (datum->syntax target
                              (element tt-style
                                (make-id-element (add-space id (if (pair? (cdr elems))
-                                                                  'namespace
+                                                                  'rhombus/namespace
                                                                   space-name))
                                                 (shrubbery-syntax->string target)
                                                 #f

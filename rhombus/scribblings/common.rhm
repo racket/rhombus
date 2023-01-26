@@ -19,6 +19,7 @@ export:
   all_from("dispatch_table.rhm")
   see_implicit
   provided_meta
+  provided_also_meta
   demo
   epsilon
   Z
@@ -26,19 +27,23 @@ export:
   brackets
   braces
   quotes
+  comma
   colon
   vbar
 
 fun see_implicit(what, when, context, ~is_infix = #false):
- @scribble.elem{The @what form is implicitly used when @when is
-                used in @(if is_infix | @scribble.elem{after another @context} | "")
-                a@(if context == "expression" | "n" | "")
-                @context position.
-                See also @scribble.secref("implicit").}
+  @scribble.elem{The @what form is implicitly used when @when is
+                 used in @(if is_infix | @scribble.elem{after another @context} | "")
+                 a@(if context == "expression" | "n" | "")
+                 @context position.
+                 See also @scribble.secref("implicit").}
 
 
 fun provided_meta():
- @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expo).}}
+  @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expo).}}
+
+fun provided_also_meta():
+  @scribble.elem{@scribble.smaller{Provided both normally and as @scribble.rhombus(meta, ~expo).}}
 
 // suppressed a label, but `examples` now does that, anyway, so maybe
 // we'll end up removing this alias:
@@ -58,5 +63,6 @@ def parens = @open_close("(", ")")
 def brackets = @open_close("[", "]")
 def braces = @open_close("{", "}")
 def quotes = @open_close("'", "'")
+def comma = @manual.litchar(",")
 def colon = @manual.litchar(":")
 def vbar = @manual.litchar{|}
