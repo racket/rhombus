@@ -9,7 +9,7 @@ The @rhombus(Array) constructor is similar to @rhombus(List), but it
 creates an array, which has a fixed length at the time that it’s created
 and offers constant-time access to any element of the array. Like a
 list, and array is a map. Unlike a list, an array is mutable, so
-@litchar{[}...@litchar{]} for indexing can be combined with @rhombus(:=)
+@brackets for indexing can be combined with @rhombus(:=)
 for assignment.
 
 @demo(

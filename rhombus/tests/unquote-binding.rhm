@@ -62,14 +62,14 @@ begin:
     ~is "top a"
   
 check:
-  unquote_bind.macro 'g $x':
+  unquote_bind.macro 'g $(x :: Term)':
     '$x :: Group'
   match 'x: 2 3'
   |  '$_: $(g v)': v
   ~prints_like '2 3'
   
 check:
-  unquote_bind.macro 'g $x':
+  unquote_bind.macro 'g $(x :: Term)':
     '$x'
   match 'x: 2 3'
   |  '$_: $(g v)': v
@@ -114,7 +114,7 @@ check:
   | '($content)'
   | '[$content]'
   | '{$content}'
-  unquote_bind.macro 'wrapped $id':
+  unquote_bind.macro 'wrapped $(id :: Id)':
     '_ :: Wrapped: content as $id'
   match '{x} [y] (z)'
   | '$(wrapped a) ...': [a, ...]

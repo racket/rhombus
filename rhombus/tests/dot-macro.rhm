@@ -25,8 +25,8 @@ check:
   vec.magnitude
   ~is 5
 
-expr.macro 'or_zero $p':
-  statinfo_meta.wrap('$p || Posn(0,0)',
+expr.macro 'or_zero ($p)':
+  statinfo_meta.wrap('($p) || Posn(0,0)',
                      '(($(statinfo_meta.dot_provider_key),
                         vector_dot_provider))')
 

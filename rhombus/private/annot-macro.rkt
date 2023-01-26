@@ -5,7 +5,8 @@
                      enforest/proc-name
                      "pack.rkt"
                      "static-info-pack.rkt"
-                     (submod "syntax-class-primitive.rkt" for-syntax-class))
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     "tail-returner.rkt")
          "space-provide.rkt"
          "definition.rkt"
          (submod "annotation.rkt" for-class)
@@ -63,8 +64,11 @@
    prec
    protocol
    (lambda (form1 tail)
-     (define-values (form new-tail) (syntax-parse tail
-                                      [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)]))
+     (define-values (form new-tail)
+       (tail-returner
+        proc
+        (syntax-parse tail
+          [(head . tail) (proc #`(parsed #,form1) (pack-tail #'tail) #'head)])))
      (check-transformer-result (parse-annotation-macro-result form proc)
                                (unpack-tail new-tail proc #f)
                                proc))
@@ -76,8 +80,11 @@
    prec
    protocol
    (lambda (tail)
-     (define-values (form new-tail) (syntax-parse tail
-                                      [(head . tail) (proc (pack-tail #'tail) #'head)]))
+     (define-values (form new-tail)
+       (tail-returner
+        proc
+        (syntax-parse tail
+          [(head . tail) (proc (pack-tail #'tail) #'head)])))
      (check-transformer-result (parse-annotation-macro-result form proc)
                                (unpack-tail new-tail proc #f)
                                proc))))

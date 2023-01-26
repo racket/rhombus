@@ -45,15 +45,22 @@
 ;; "unquote-binding-identifier.rkt"
 
 (define-unquote-binding-syntax #%parens
-  (unquote-binding-prefix-operator
-   (in-unquote-binding-space #'#%parens)
-   null
-   'macro
+  (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(_ (parens g::unquote-binding) . tail)
         (values #'g.parsed
-                #'tail)]))))
+                #'tail)]
+       [(_ (parens) . tail)
+        ;; empty parentheses match an empty group, which
+        ;; is only useful for matching an empty group tail
+        (case (current-unquote-binding-kind)
+          [(group)
+           (values #`((group) () () ())
+                   #'tail)]
+          [(term)
+           (raise-syntax-error #f "incompatible with this context" #'self)]
+          [else (values #'#f #'())])]))))
 
 (begin-for-syntax
   (define-splicing-syntax-class :syntax-class-args
@@ -168,10 +175,7 @@
    'none))
 
 (define-unquote-binding-syntax pattern
-  (unquote-binding-prefix-operator
-   (in-unquote-binding-space #'pattern)
-   null
-   'macro
+  (unquote-binding-transformer
    (lambda (stx)
      (define inline-id #f)
      (define rsc (parse-pattern-clause stx (current-unquote-binding-kind)))
@@ -383,10 +387,7 @@
    'left))
 
 (define-unquote-binding-syntax #%literal
-  (unquote-binding-prefix-operator
-   (in-unquote-binding-space #'#%literal)
-   '((default . stronger))
-   'macro
+  (unquote-binding-transformer
    (lambda (stxes)
      (syntax-parse stxes
        [(_ x . _)
@@ -398,10 +399,7 @@
                             #'x)]))))
 
 (define-unquote-binding-syntax #%block
-  (unquote-binding-prefix-operator
-   (in-unquote-binding-space #'#%body)
-   '((default . stronger))
-   'macro
+  (unquote-binding-transformer
    (lambda (stxes)
      (syntax-parse stxes
        [(_ b)
@@ -410,10 +408,7 @@
                             #'b)]))))
 
 (define-unquote-binding-syntax bound_as
-  (unquote-binding-prefix-operator
-   (in-unquote-binding-space #'bound_as)
-   '((default . stronger))
-   'macro
+  (unquote-binding-transformer
    (lambda (stxes)
      (cond
        [(eq? (current-unquote-binding-kind) 'term)

@@ -67,14 +67,9 @@ expr.macro 'examples($form, ...)':
      $(if eval | #void | 'close_eval(eval)')
      content'
 
-expr.macro 'examples_stanza $parens':
-  ~op_stx: me
-  match parens
-  | '($_)':
-      parsed(['#{typeset-examples}', parens])
-  | ~else:
-      Syntax.error("expected forms", '$me $parens')
-
+expr.macro 'examples_stanza $(parens && '($_)')':
+  parsed(['#{typeset-examples}', parens])
+  
 fun make_rhombus_eval():
   #{make-rhombus-eval}()
 

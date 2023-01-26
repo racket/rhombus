@@ -13,10 +13,15 @@ check:
   10*!
   ~is 3628800
 
+check:
+  10*! + 1
+  ~is 3628801
+
+
 // a macro with an identifier name that does a weird
 // thing with the result tail
 
-expr.macro 'prefix_plus $a $b $c ... $(~end)':
+expr.macro 'prefix_plus $a $b $c ...':
   values(a, '+ $b $c ...')
 
 check:
@@ -25,7 +30,7 @@ check:
 
 // another way to write that
 
-expr.macro 'also_prefix_plus $e ... $(~end)':
+expr.macro 'also_prefix_plus $e ...':
   match '$e ...'
   | '$a $b $c ...':
       values(a, '+ $b $c ...')
@@ -54,7 +59,7 @@ macro
     '"banana"'
 | '$a weirdly $b + $c':
     '$a + $b - $c'
-| '$a weirdly $b':
+| '$a weirdly $(b :: Term)':
     '$a + $b'
 
 check:
@@ -64,6 +69,9 @@ check:
   weirdly coconut
   ~is "donut"
 check:
+  weirdly coconut ++ "tree"
+  ~is "donuttree"
+check:
   weirdly ++ "none"
   ~is "banananone"
 check:
@@ -72,6 +80,9 @@ check:
 check:
   1 weirdly 5 + 7
   ~is -1
+check:
+  1 weirdly 5 * 7
+  ~is 42
 
 begin:
   expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail))':
@@ -120,11 +131,11 @@ begin:
     ~is 5
 
 check:
-  expr.macro 'quote $x $(~end)': '('$x')'
+  expr.macro 'quote $(x :: Group) $()': '('$x')'
   quote 1 + 2
   ~prints_like '1 + 2'
 
 check:
-  expr.macro 'quote $x': '($x)'
+  expr.macro 'quote $(x :: Group) $()': '($x)'
   quote 1 + 2
   ~is 3

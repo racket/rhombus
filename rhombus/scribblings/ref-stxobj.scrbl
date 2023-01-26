@@ -19,7 +19,7 @@ A @deftech{syntax object} encapsulates a shrubbery term, group, or
  and wraps it as a syntax object, so that it can accumulate binding
  scopes or hold other metadata.
 
-An quoted sequence of terms using @rhombus('') is parsed as an
+An quoted sequence of terms using @quotes is parsed as an
  implicit use of the @rhombus(#{#%quotes}) form, which is normally
  bound to create a syntax object. For example, @rhombus('1.000')
  is a syntax object that wraps the number @rhombus(1.0).
@@ -61,7 +61,7 @@ Metadata for a syntax object can include a source location and the raw
  the result is a group syntax object. The general case is a
  multi-group syntax object.
 
- @see_implicit(@rhombus(#{#%quotes}), @rhombus(''), "expression")
+ @see_implicit(@rhombus(#{#%quotes}), @quotes, "expression")
 
 @examples(
   '1'
@@ -74,7 +74,7 @@ Metadata for a syntax object can include a source location and the raw
  A @rhombus($) as a @rhombus(term,~var) unquotes (i.e., escapes) the expression
  afteward; the value of that expression replaces the @rhombus($) term and expression. The value
  is normally a syntax object, but except for lists, other kinds of values are coerced
- to a syntax object. Nested @rhombus('') forms are allowed around
+ to a syntax object. Nested @quotes forms are allowed around
  @rhombus($) and do @emph{not} change whether the @rhombus($) escapes.
 
 @examples(
@@ -157,7 +157,7 @@ Metadata for a syntax object can include a source location and the raw
  symbolically, use @rhombus($, ~bind) to escape, and then use
  @rhombus(bound_as, ~unquote_bind) within the escape.
 
- @see_implicit(@rhombus(#{#%quotes}, ~bind), @rhombus(''), "binding")
+ @see_implicit(@rhombus(#{#%quotes}, ~bind), @quotes, "binding")
 
 @examples(
   match '1 + 2'
@@ -192,7 +192,7 @@ Metadata for a syntax object can include a source location and the raw
   expr.macro '$ $expr'
 ){
 
- Only allowed within a @rhombus('') expression form, escapes so that the value of
+ Only allowed within a @quotes expression form, escapes so that the value of
  @rhombus(expr) is used in place of the @rhombus($) form.
 
  The @rhombus(expr) must be either a single term or a sequence of
@@ -254,7 +254,12 @@ Metadata for a syntax object can include a source location and the raw
   | '1 + $(y :: Term) + 3': y
 )
 
- An escape that contains a @rhombus('')-quoted term matches the term as
+ Empty parentheses as an escape, @rhombus(#,(@rhombus($, ~bind))()),
+ serve as a group pattern that is only useful as a group tail, where it
+ matches an empty tail. This escape is primariy intended for use with
+ macro-definition forms like @rhombus(macro).
+
+ An escape that contains a @(quotes)-quoted term matches the term as
  a nested syntax-object pattern. In a term context, a multi-term escape is
  spliced into the enclosing group. One
  use of a quoted escape is to match a literal @rhombus($, ~datum) or
@@ -501,12 +506,12 @@ Metadata for a syntax object can include a source location and the raw
   expr.macro 'Syntax.literal ($term ..., ...)'
 ){
 
- Similar to a plain @rhombus('') form, but @rhombus($) escapes or
+ Similar to a plain @quotes form, but @rhombus($) escapes or
  @dots repetitions are not
  recognized in the @rhombus(term)s, so that the @rhombus(term)s are
  all treated as literal terms to be quoted.
 
- There's no difference in result between using @rhombus('') or
+ There's no difference in result between using @quotes or
  @rhombus(()) after @rhombus(literal_syntax)---only a difference in
  notation used to describe the syntax object, such as using @litchar{;}
  versus @litchar{,} to separate groups.
@@ -529,7 +534,7 @@ Metadata for a syntax object can include a source location and the raw
   expr.macro 'Syntax.literal_group ($term ...)'
 ){
 
- Similar to a plain @rhombus('') form that has multiple terms in one
+ Similar to a plain @quotes form that has multiple terms in one
  group, but like @rhombus(Syntax.literal) in that there are no
  escapes. Unlike @rhombus(Syntax.literal), the @rhombus(term)s must
  form a single group, and the result is always a group syntax object.

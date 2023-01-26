@@ -34,28 +34,14 @@
  Like @rhombus(macro), but arbitrary compile-time code can appear in the
  body after each @rhombus(macro_pattern).
 
- In addition, a @rhombus(macro_pattern) can end with
- @rhombus(#,(@rhombus($, ~bind))(~end)) or
- @rhombus(#,(@rhombus($, ~bind)) ~end) escape, which stands for
- the end of the enclosing group where the macro is used:
-
-@itemlist(
-
- @item{the enclosing group must have no additional terms besides those
-  matched in the pattern before the @rhombus(~end) escape;}
-
- @item{the position before @rhombus(~end) counts as being at the end of
-  the pattern's group, which means the immediately preceding pattern is
-  in a group context; in particular, a simple escape like
-  @rhombus($, ~bind)@rhombus(identifier, ~var) matches the entire rest of
-  the enclosing group at the macro use; and}
-
- @item{the @rhombus(body) after the pattern can return two values: an
-  expansion for the consumed part of the input match, and a tail for the
-  unconsumed part; returning a single value is the same as return an empty
-  tail.}
-
-)
+ If a @rhombus(macro_pattern) ends with
+ @rhombus(#,(@rhombus($, ~bind))()) or
+ @rhombus($#,(@rhombus(identifier, ~var)) ..., ~bind), then a match
+ covers all subsequent terms in the enclosing group of a use of the
+ macro. In that case, the @rhombus(body) after the pattern can return two
+ values: an expansion for the consumed part of the input match, and a
+ tail for the unconsumed part. Returning a single value is the same as
+ return an empty tail.
 
 }
 

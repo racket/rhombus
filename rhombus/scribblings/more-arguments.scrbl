@@ -14,7 +14,7 @@
 @title(~tag: "more-arguments"){More Function Arguments}
 
 As we saw in @secref("functions_optional"), by using optional arguments
-and @litchar{|} clauses, you can define a function that accepts a
+and @vbar clauses, you can define a function that accepts a
 varying number of arguments. When using only those features, however,
 the allowed number of arguments is still a fixed set of small numbers.
 To define or call a function that accepts any number of arguments, use

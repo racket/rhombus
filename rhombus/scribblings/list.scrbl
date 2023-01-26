@@ -13,7 +13,7 @@
 
 @title(~tag: "list"){Lists}
 
-A @litchar{[}...@litchar{]} form as an expression creates a list:
+A @brackets form as an expression creates a list:
 
 @demo(
   ~eval: list_eval
@@ -58,7 +58,7 @@ list is immutable.
     classify("1")
 )
 
-As pattern, @litchar{[}...@litchar{]} matches a list, and list elements
+As pattern, @brackets matches a list, and list elements
 can be matched with specific subpatterns. The @rhombus(List, ~bind) binding
 operator works the same in bindings, too.
 
@@ -71,7 +71,7 @@ operator works the same in bindings, too.
     are_three_sorted([1, 3, 2])
 )
 
-The last element in a @litchar{[}...@litchar{]} binding pattern can be
+The last element in a @brackets binding pattern can be
 @rhombus(..., ~bind), which means zero or more repetitions of the preceding
 pattern.
 
@@ -90,7 +90,7 @@ Each variable in a pattern preceding @rhombus(..., ~bind) is bound as a
 @tech{repetition}, which cannot be used like a plain variable.
 Instead, a repetition variable must be used in an expression form that
 supports using repetitions, typically with before @rhombus(...). For
-example, a @litchar{[}...@litchar{]} or @rhombus(List) expression (as
+example, a @brackets or @rhombus(List) expression (as
 opposed to binding) supports @rhombus(...) in place of an element,
 in which case the preceding element form is treated as a repetition
 that supplies elements for the new list.
@@ -121,7 +121,7 @@ be used multiple times.
     [groceries, ..., groceries, ...]
 )
 
-Instead of using @rhombus(...) in @litchar{[}...@litchar{]}
+Instead of using @rhombus(...) in @brackets
 or @rhombus(List) to bind or use a repetition, use @rhombus(&) to bind
 or reference a plain list value whose elements are the rest of the list.
 
@@ -137,7 +137,7 @@ or reference a plain list value whose elements are the rest of the list.
 )
 
 
-When @litchar{[}...@litchar{]} appears after an expression, then instead
+When @brackets appears after an expression, then instead
 of forming a list, it accesses an element of an @tech{map} value.
 Lists are maps that are indexed by natural numbers starting with
 @rhombus(0):
@@ -149,7 +149,7 @@ Lists are maps that are indexed by natural numbers starting with
     others[1]
 )
 
-Indexing with @litchar{[}...@litchar{]} is sensitive to binding-based
+Indexing with @brackets is sensitive to binding-based
 static information in the same way as @rhombus(.). For example, a
 function’s argument can use a binding pattern that indicates a list of
 @rhombus(Posn)s, and then @rhombus(.) can be used after

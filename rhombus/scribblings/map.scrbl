@@ -29,7 +29,7 @@ which case it accepts keys paired with values in two-item lists:
     ~error: neighborhood["clara"]
 )
 
-Curly braces @litchar("{")...@litchar("}") can be used as a shorthand
+Curly braces @braces can be used as a shorthand
 for writing @rhombus(Map(#,(@elem{...}))). Within curly braces, the key and value
 are joined by @litchar{:}. (If a key expression needs to use @litchar{:}
 itself, the expression will have to be in parentheses.)
@@ -44,7 +44,7 @@ itself, the expression will have to be in parentheses.)
 )
 
 You can also put @rhombus(Map) in from of
-@litchar("{")...@litchar("}"), but that makes more sense with map
+@braces, but that makes more sense with map
 constructors other than the @rhombus(Map) default.
 
 To functionally extend a map, use the @rhombus(++) append operator:
@@ -120,9 +120,9 @@ using @litchar{[}...@litchar{]} with @rhombus(:=) just like an array.
     locations["alice"]
 )
 
-In a map @litchar("{")...@litchar("}") pattern, a @rhombus(&) form binds
+In a map @braces pattern, a @rhombus(&) form binds
 to map for the ``rest'' of the map, analogous to the way @rhombus(&)
-binds with lists. In a map @litchar("{")...@litchar("}") expression,
+binds with lists. In a map @braces expression,
 @rhombus(&) splices in the content of another map, similar to the way
 @rhombus(&) works for list construction.
 

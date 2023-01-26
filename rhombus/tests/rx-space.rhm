@@ -52,7 +52,7 @@ regexp.macro '#{#%parens} ($(p :: regexp_meta.Group))':
 
 // `#{#%juxtapose}` is implicitly added after something that's
 // parsed and before a non-operator
-regexp.macro '$left #{#%juxtapose} $(~parsed right)':
+regexp.macro '$left #{#%juxtapose} $right':
   ~weaker_than: ~other
   ~stronger_than: ||
   '$(left.unwrap() ++ right.unwrap())'
@@ -63,7 +63,7 @@ regexp.macro '$left #{#%juxtapose} $(~parsed right)':
 regexp.macro '$left #{#%call} ($(p :: regexp_meta.Group))':
   '$(left.unwrap() ++ p.parsed.unwrap())'
 
-regexp.macro '$left || $(~parsed right)':
+regexp.macro '$left || $right':
   ~weaker_than: ~other
   '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
 
@@ -87,7 +87,7 @@ regexp.macro
     '$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")'
 
 regexp.macro
-| '^ $(~parsed right)':
+| '^ $right':
     '$("^" +& right.unwrap())'
 
 regexp.macro

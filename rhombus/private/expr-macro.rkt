@@ -5,7 +5,8 @@
                      "srcloc.rkt"
                      "pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     (for-syntax racket/base))
+                     (for-syntax racket/base)
+                     "tail-returner.rkt")
          "space-provide.rkt"
          "name-root.rkt"
          "macro-macro.rkt"
@@ -61,12 +62,10 @@
                            proc)))
        (lambda (form1 tail)
          (define-values (form new-tail)
-           (call-with-values
-            (lambda () (syntax-parse tail
-                         [(head . tail) (proc (parsed-argument form1) (pack-tail #'tail #:after #'head) #'head)]))
-            (case-lambda
-              [(form new-tail) (values form new-tail)]
-              [(form) (values form #'(group))])))
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (parsed-argument form1) (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))
@@ -84,12 +83,10 @@
                            proc)))
        (lambda (tail)
          (define-values (form new-tail)
-           (call-with-values
-            (lambda () (syntax-parse tail
-                         [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
-            (case-lambda
-              [(form new-tail) (values form new-tail)]
-              [(form) (values form #'(group))])))
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))

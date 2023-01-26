@@ -578,25 +578,25 @@ begin:
 begin:
   import rhombus/meta open
   check:
-    expr.macro 'matcher $ex':
+    expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern '$('$')x $('$')$ex'): x»'
     matcher x
     ~prints_like '1'
   check:
-    expr.macro 'matcher $ex':
+    expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern '$('$')x $('$')$ex'): $ex»'
     matcher x
     ~prints_like '2'  
   check:
-    expr.macro 'matcher $ex':
+    expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern '$('$')$ex $('$')x'): x»'
     matcher x
     ~prints_like '2'
   check:
-    expr.macro 'matcher $ex':
+    expr.macro 'matcher $(ex :: Term)':
       '«match '1 2'
         | (pattern '$('$')$ex $('$')x'): $ex»'
     matcher x

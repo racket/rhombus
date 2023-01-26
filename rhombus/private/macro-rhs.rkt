@@ -2,15 +2,19 @@
 (require syntax/parse/pre
          (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "srcloc.rkt")
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"
                   [... rhombus...])
+         (only-in "unquote-binding-primitive.rkt"
+                  #%parens)
          "dollar.rkt"
          "parse.rkt"
          "srcloc.rkt"
          "binding.rkt"
+         "unquote-binding.rkt"
          "op-literal.rkt"
          "pack.rkt"
          "entry-point.rkt"
@@ -32,6 +36,18 @@
                          ;; or a clause over #'self and maybe #'left otherwise
                          impl)))
 
+(define-unquote-binding-syntax _Term
+  (unquote-binding-transformer
+   (lambda (stx)
+     (cond
+       [(eq? 'term (current-unquote-binding-kind))
+        (syntax-parse stx
+          [(form-id . tail)
+           (values #`(#,(syntax/loc #'form-id _) () () ())
+                   #'tail)])]
+       [else (values #'#f
+                     #'())]))))
+
 ;; finish parsing one case (possibly the only case) in a macro definition,
 ;; now that we're in the right phase for the right-hand side of the definition
 (define-for-syntax (parse-one-macro-definition pre-parsed adjustments)
@@ -40,28 +56,31 @@
       [(_ name _ _ kind . _) (values #'name (syntax-e #'kind))]))
   (define (macro-clause self-id left-ids tail-pattern-in rhs)
     (define-values (tail-pattern implicit-tail?)
-      (cond
-        [(eq? kind 'rule) (values tail-pattern-in #t)]
-        [else
-         (syntax-parse tail-pattern-in
-           #:datum-literals (group)
-           [(pat ... _::$-bind _:identifier _::...-bind)
-            ;; recognize where a tail match would be redundant and always be empty;
-            ;; this is kind of an optimization, but one that's intended to be guaranteed;
-            ;; note that this enables returning two values from the macro, instead
-            ;; of just one
-            (values tail-pattern-in #f)]
-           [(pat ... _::$-bind #:end)
-            (values #`(pat ...) #f)]
-           [(pat ... _::$-bind (_::parens (group #:end)))
-            (values #`(pat ...) #f)]
-           [_ (values tail-pattern-in #t)])]))
+      (syntax-parse tail-pattern-in
+        #:datum-literals (group)
+        [(pat ... _::$-bind (tag::parens))
+         ;; a "nothing" group pattern means no further tail
+         #:when (free-identifier=? (in-unquote-binding-space (datum->syntax #'tag '#%parens))
+                                   (in-unquote-binding-space #'#%parens))
+         (values #'(pat ...) #f)]
+        [(pat ... _::$-bind _:identifier _::...-bind)
+         ;; recognize where a tail match would be redundant and always be empty;
+         ;; this is kind of an optimization, but one that's intended to be guaranteed;
+         ;; note that this enables returning two values from the macro, instead
+         ;; of just one
+         (values tail-pattern-in #f)]
+        [_ (values tail-pattern-in #t)]))
+    (syntax-parse tail-pattern
+      [(dots::...-bind . _) (raise-syntax-error #f
+                                                "misplaced repetition"
+                                                #'dots)]
+      [_ (void)])
     (define-values (pattern idrs sidrs vars can-be-empty?)
       (if implicit-tail?
-          (convert-pattern #`(group (op $) _ #,@tail-pattern (op $) tail (op rhombus...))
+          (convert-pattern #`(group (op $) _Term #,@tail-pattern (op $) tail (op rhombus...))
                            #:splice? #t
                            #:splice-pattern values)
-          (convert-pattern #`(group (op $) _ . #,tail-pattern)
+          (convert-pattern #`(group (op $) _Term . #,tail-pattern)
                            #:as-tail? #t
                            #:splice? #t
                            #:splice-pattern values)))
@@ -72,8 +91,10 @@
         (cond
           [(eq? kind 'rule)
            (let ([ids (cons self-id (append left-ids (syntax->list #'(id ... sid ... ...))))])
-             #`(values #,(convert-rule-template rhs ids)
-                       (tail-rule-template (multi (group (op $) tail (op rhombus...))))))]
+             (if implicit-tail?
+                 #`(values #,(convert-rule-template rhs ids)
+                           (tail-rule-template (multi (group (op $) tail (op rhombus...)))))
+                 (convert-rule-template rhs ids)))]
           [implicit-tail?
            #`(values (single-valued '#,who (lambda () (rhombus-body-expression #,rhs)))
                      (tail-rule-template (multi (group (op $) tail (op rhombus...)))))]
@@ -94,10 +115,6 @@
        ;; delay further conversion until after pattern variables are bound
        #`(rule-template template #,ids)]
       [(block (group e)) (raise-syntax-error 'template "invalid result template" #'e)]))
-  (define (extract-pattern-id tail-pattern)
-    (syntax-parse tail-pattern
-      #:datum-literals (group)
-      [(_::$-bind (_::parens (group #:parsed id:identifier))) #'id]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol
@@ -108,7 +125,7 @@
                  opt
                  prec
                  assc
-                 parsed-right?
+                 parsed-right-id
                  [tail-pattern
                   self-id
                   left
@@ -118,10 +135,10 @@
              #'opt
              #'prec
              #'assc
-             (syntax-e #'parsed-right?)
+             (and (syntax-e #'parsed-right-id) #t)
              (cond
-               [(syntax-e #'parsed-right?)
-                (define right-id (extract-pattern-id #'tail-pattern))
+               [(syntax-e #'parsed-right-id)
+                (define right-id #'parsed-right-id)
                 (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args left #,right-id self-id)
                     (define-syntax #,(in-static-info-space #'left) (make-static-infos syntax-static-infos))
@@ -146,7 +163,7 @@
                  opt
                  prec
                  #f
-                 parsed-right?
+                 parsed-right-id
                  [tail-pattern
                   self-id
                   (tag rhs ...)])
@@ -155,10 +172,10 @@
              #'opt
              #'prec
              #f
-             (syntax-e #'parsed-right?)
+             (and (syntax-e #'parsed-right-id) #t)
              (cond
-               [(syntax-e #'parsed-right?)
-                (define arg-id (extract-pattern-id #'tail-pattern))
+               [(syntax-e #'parsed-right-id)
+                (define arg-id #'parsed-right-id)
                 (define extra-args (entry-point-adjustments-prefix-arguments adjustments))
                 #`(lambda (#,@extra-args #,arg-id self-id)
                     (define-syntax #,(in-static-info-space arg-id) (make-static-infos syntax-static-infos))
@@ -254,7 +271,7 @@
             [i (in-naturals)])
         (when (parsed-parsed-right? p)
           (raise-syntax-error #f
-                              (format "multiple ~a cases not allowed with a `~~parsed` case"
+                              (format "multiple ~a cases not allowed with parsed patterns"
                                       what)
                               orig-stx))
         (unless (zero? i)

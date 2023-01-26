@@ -31,8 +31,8 @@
   (property unquote-binding-prefix-operator prefix-operator)
   (property unquote-binding-infix-operator infix-operator)
 
-  (define (unquote-binding-transformer name proc)
-    (unquote-binding-prefix-operator name '((default . stronger)) 'macro proc))
+  (define (unquote-binding-transformer proc)
+    (unquote-binding-prefix-operator (quote-syntax ignored) '((default . stronger)) 'macro proc))
 
   (define (make-identifier-unquote-binding id)
     id)

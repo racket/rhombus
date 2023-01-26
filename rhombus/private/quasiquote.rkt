@@ -451,10 +451,7 @@
         (values r #'tail)]))))
 
 (define-unquote-binding-syntax _
-  (unquote-binding-prefix-operator
-   #'_
-   null
-   'macro
+  (unquote-binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)

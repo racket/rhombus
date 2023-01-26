@@ -163,15 +163,16 @@
     (pattern (~seq (op _::$+1) (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
              #:attr extends #'#f))
 
-  (define-syntax-class :parsed-identifier
+  (define-syntax-class :identifier-for-parsed
+    #:attributes (id)
+    #:description "identifier for a parsed sequence"
     #:datum-literals (group)
-    (pattern id:identifier)
-    (pattern (_::parens (group #:parsed id:identifier))))
+    (pattern id:identifier))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
     #:datum-literals (op group)
-    (pattern (_::quotes (~and g (group (op _::$+1) _::parsed-identifier _::operator-or-identifier-or-$ . _))))
+    (pattern (_::quotes (~and g (group (op _::$+1) _::identifier-for-parsed _::operator-or-identifier-or-$ . _))))
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
@@ -186,16 +187,7 @@
   (define (check-parsed-right-form form-id tail-pattern)
     (syntax-parse tail-pattern
       #:datum-literals (op group)
-      [((~and op-stx (op _::$+1))
-        (~and parens-stx (_::parens (group #:parsed right:identifier)))
-        . tail)
-       (syntax-parse #'tail
-         [() (void)]
-         [(more . _)
-          (raise-syntax-error (syntax-e form-id)
-                              "no further pattern allowed after a `~parsed` escape"
-                              #'more)])
-       #t]
+      [((~and op-stx (op _::$+1)) right::identifier-for-parsed) #'right.id]
       [_ #f])))
 
 ;; parse one case (possibly the only case) in a macro definition
@@ -204,14 +196,14 @@
     (syntax-parse g
       #:datum-literals (group op)
       ;; infix protocol
-      [(group (op _::$+1) left::parsed-identifier
+      [(group (op _::$+1) left::identifier-for-parsed
               op-name::operator-or-identifier-or-$
               . tail-pattern)
        (unless (memq 'infix allowed)
          (raise-syntax-error (syntax-e form-id)
                              "infix pattern is not allowed"
                              g))
-       (define parsed-right? (check-parsed-right-form form-id #'tail-pattern))
+       (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
          [((~and tag block) (~var opt (:macro-infix-operator-options space-sym)) rhs ...)
           #`(pre-parsed op-name.name
@@ -221,7 +213,7 @@
                         opt
                         #,(convert-prec #'opt.prec)
                         #,(convert-assc #'opt.assc)
-                        #,parsed-right?
+                        #,parsed-right-id
                         [tail-pattern
                          opt.self-id
                          left.id
@@ -233,7 +225,7 @@
          (raise-syntax-error (syntax-e form-id)
                              "prefix pattern is not allowed"
                              g))
-       (define parsed-right? (check-parsed-right-form form-id #'tail-pattern))
+       (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
          [((~and tag block) (~var opt (:macro-prefix-operator-options space-sym)) rhs ...)
           #`(pre-parsed op-name.name
@@ -243,7 +235,7 @@
                         opt
                         #,(convert-prec #'opt.prec)
                         #f
-                        #,parsed-right?
+                        #,parsed-right-id
                         [tail-pattern
                          opt.self-id
                          (tag rhs ...)])])])))

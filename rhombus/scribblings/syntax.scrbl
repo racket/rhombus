@@ -7,7 +7,7 @@
 
 @title(~tag: "syntax"){Syntax Objects}
 
-The @rhombus('') form produces a syntax object. The syntax object holds
+The @quotes form produces a syntax object. The syntax object holds
 an unparsed shrubbery, not a parsed Rhombus expression.
 
 @demo(
@@ -19,7 +19,7 @@ an unparsed shrubbery, not a parsed Rhombus expression.
   ~error: '1' + 2
 )
 
-The @rhombus('') form is more precisely a quasiquoting operator. The
+Within the @quotes, the
 @rhombus($) operator unquotes the immediately following term. That is,
 the term after @rhombus($) is a Rhombus expression whose value replaces
 the @rhombus($) and its argument within the quoted form.
@@ -35,10 +35,10 @@ itself remains quoted.
   '1 + $('$') 2'
 )
 
-@aside{Nested @rhombus('') does not increase the quoting level, unlike
+@aside{Nested @quotes does not increase the quoting level, unlike
  Racket quasiquotation.}
 
-Like @rhombus($), @rhombus(...) is treated specially within a @rhombus('')-quoted term (except,
+Like @rhombus($), @rhombus(...) is treated specially within a @(quotes)-quoted term (except,
 like @rhombus($), when it’s the only thing in the term). When @rhombus(...) immediately
 follows a term that includes at least one @rhombus($), the
 form after that @rhombus($) must refer to a repetition. Then,
@@ -91,7 +91,7 @@ Along the same lines, @rhombus(...) just after a @litchar{|} can replicate a pre
 In other words, @rhombus(...) in various places within a quoted shrubbery
 works the way you’d expect it to work.
 
-When @rhombus('') is used in a binding position, it constructs a pattern that
+When @quotes is used in a binding position, it constructs a pattern that
 matches syntax objects, and it binds variables that are escaped in the
 pattern with @rhombus($).
 
@@ -123,8 +123,8 @@ to form a repetition of matches:
  must thread potentially long sequences into and out of macro
  transformers.}
 
-A @rhombus($)-escaped variable in a @rhombus('') pattern matches one
-term among other terms in the group. Keep in mind that @rhombus('')
+A @rhombus($)-escaped variable in a @quotes pattern matches one
+term among other terms in the group. Keep in mind that @quotes
 creates syntax objects containing shrubberies that are not yet parsed,
 so a variable will @emph{not} be matched to a multi-term sequence that would be
 parsed as an expression. For example, a pattern variable @rhombus(y) by

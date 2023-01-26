@@ -15,8 +15,8 @@ macro operator/identifier within a group. A macro
 consumes only the tokens that its pattern matches, and it’s right-hand
 side is an immediate template expression that produces the macro
 expansion. A general form of macro is implemented with arbitrary
-compile-time computation, and it can return terms that the macro does
-not consume.
+compile-time computation, and it can return terms that the macro's
+pattern matches but that the macro does not consume.
 
 For example, here's a @rhombus(thunk) macro that expects a block and
 wraps as a zero-argument function
@@ -34,7 +34,7 @@ wraps as a zero-argument function
     (thunk: 1 + 3)()
 )
 
-The @rhombus(expr.macro) form expects @rhombus('') to create a pattern
+The @rhombus(expr.macro) form is followed by @quotes to describe a pattern
 that matches a sequence of terms. Either the first or second term within
 the pattern is an @emph{unescaped} identifier or operator to be defined;
 conceptually, it’s unescaped because the macro matches a sequence of
@@ -82,14 +82,89 @@ macro implementation after @rhombus(:) is compile-time code. Importing
 forms like @rhombus(expr.macro) available. Normally,
 @rhombusmodname(rhombus/meta) should be imported without a prefix, otherwise a
 prefix would have to be used for all Rhombus forms in compile-time
-code—even for things like @rhombus(values) and @rhombus('').
+code—even for things like @rhombus(values) and @(quotes).
 
-A macro defined with @rhombus(expr.macro) matches any prefix of terms in
-the enclosing group. By using @rhombus(..., ~bind), it can consume all
-remaining terms in the group. In that case, the macro may want to
-consume some of them, but return others back to the group to be parsed
-normally, so the macro can return two values: the expanded expression
-and the remaining terms that have not been consumed.
+Whether defined by @rhombus(macro) or @rhombus(expr.macro), an
+infix/postfix macro’s left-hand input is always parsed before the
+macro's pattern is potentially matched, and an infix/postfix macro's
+pattern must always have just @rhombus($, ~bind) followed by an
+identifier for its left-hand side. The pattern variable is bound to an
+opaque representation of the parsed form. In the definition of
+@rhombus(!) above, the pattern variable @rhombus(a) stands for a parsed
+form, and not just a single shrubbery term. The form is parsed according
+to declared precedence relationships; specify precence for a macro in
+the same way as for @rhombus(operator).
+
+@demo(
+  ~eval: macro_eval
+  ~defn:
+    expr.macro '$a !':
+      ~weaker_than: *
+      'factorial($a)'
+  ~repl:
+    2*2!
+    (2*2)!
+    2*(2!)
+)
+
+Since an @rhombus(expr.macro) implementation can use arbitrary
+compile-time code, it can inspect the input syntax objects in more way
+than just pattern matching. However, already-parsed terms will be
+opaque. Currently, there’s no way for a transformer to inspect a parsed
+Rhombus expression (except by escaping to Racket). When the parsed
+expression is injected back into an unparsed shrubbery, as happens in
+@rhombus('factorial($a)'), it will later simply parse as itself.
+
+Whether an infix or prefix macro’s right-side is parsed depends on the
+shape of the macro pattern, and specifically whether the defined
+operator or identifier is followed by just @rhombus($, ~bind) and an
+identifier. If so, the right-hand side of a macro's input is parsed,
+analogous to the left-hand side of an infix/postfix macro; the identifier
+pattern variable stands for an opaque parsed form. With both arguments
+as parsed, you might as well use @rhombus(operator) in many cases, but
+macros provide control over evaluation order. For example, this
+@rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
+side before it’s left-hand side:
+
+@demo(
+  ~defn:
+    macro '$a +<= $b':
+      '$b + $a'
+  ~repl:
+    1 +<= 2
+    ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
+)
+
+If the infix/prefix operator in a macro pattern is not followed by just
+@rhombus($, ~bind) and an identifier, then it matches an unparsed
+sequence of shrubbery terms after the operator. That kind of operator might not
+be infix in the sense of the @rhombus(+) operator, which expects two
+expressions, but infix in the sense of the @rhombus(.) operator, which
+expects an expression on the left but a plain identifier on the right.
+To similarly match just an identifier in a macro pattern,
+annotate a pattern variable with @rhombus(::, ~unquote_bind) and
+@rhombus(Id, ~stxclass):
+
+@demo(
+  ~eval: macro_eval
+  ~defn:
+    expr.macro '$a is_name $(b :: Id)':
+      ~stronger_than: ~other
+      '$a == #'$b'
+  ~repl:
+    #'apple is_name apple
+    #'banana is_name apple
+    #'banana is_name apple || #'banana is_name banana
+)
+
+As illustrated by the last @rhombus(is_name) example, additional terms
+can be in the group after a sequence that matches a macro's pattern. Expression
+parsing continues with those additional terms. A macro can use a
+@rhombus(..., ~bind) repetition to match all remaining terms in the
+group, instead. In that case, the macro may want to consume some of them, but
+return others back to the group to be parsed normally. The macro can
+return two values: the expanded expression and the remaining terms that
+have not been consumed.
 
 For example, the @rhombus(!) macro can be equivalently written like this:
 
@@ -100,36 +175,36 @@ For example, the @rhombus(!) macro can be equivalently written like this:
       values('factorial($a)', '$tail ...')
 )
 
-Returning a single value is allowed, and is the same as returning an
+Returning a single value is allowed, and that's the same as returning an
 empty sequence for the remaining terms. Two return values are allowed
-only when the pattern ends with
-@rhombus($ #,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind))) or
-when a @rhombus(#,(@rhombus($, ~bind))(~end)) or
-@rhombus(#,(@rhombus($, ~bind)) ~end) pseudo-escape is added to the end
-of the pattern. Adding an @rhombus(~end) pseudo-escape while returning
-one value can be useful to disallow additional terms after the matched
-pattern.
-
-Since an @rhombus(expr.macro) implementation can use arbitrary
-compile-time code, it can inspect the input syntax objects in more way
-than just pattern matching. However, already-parsed terms will be
-opaque. When the macro transformer for @rhombus(!) is called,
-@rhombus(a) will be bound to a syntax object representing a parsed
-Rhombus expression, as opposed to an unparsed shrubbery. Currently,
-there’s no way for a transformer to inspect a parsed Rhombus expression
-(except by escaping to Racket). When the parsed expression is injected
-back into an unparsed shrubbery, as happens in
-@rhombus('factorial($a)'), it will later simply parse as itself.
-
-Changing the @rhombus(tail) pattern to @rhombus((tail :: Term)) would
-disable the special treatment of @rhombus(..., ~bind) at the end of a
-pattern and template sequence and reify the tail as a fresh list---so
-don't do this:
+only when the macro pattern ends with
+@rhombus(#,(@rhombus($, ~bind))#,(@rhombus(identifier, ~var)) #,(@rhombus(..., ~bind)))
+or with @rhombus(#,(@rhombus($, ~bind))()), where @rhombus(#,(@rhombus($, ~bind))())
+means that the pattern is required to match to the end of a group. In some
+cases,  @rhombus(#,(@rhombus($, ~bind))()) can be useful to constrain
+a macro uses to appear at the end of a group.
 
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a ! $(tail :: Term) ... $(~end)':
+    expr.macro '$e EOM $()':
+      ~weaker_than: ~other
+      e
+  ~repl:
+    1 + 2 EOM
+    ~error:
+      1 + 2 EOM 3 * 4
+)
+
+In our latest definition of @rhombus(!), changing the @rhombus(tail)
+pattern to @rhombus((tail :: Term)) would disable the special treatment
+of @rhombus(..., ~bind) at the end of a pattern and template sequence
+and reify the tail as a fresh list---so don't do this:
+
+@demo(
+  ~eval: macro_eval
+  ~defn:
+    expr.macro '$a ! $(tail :: Term) ... $()':
       values('factorial($a)', '$tail ...')
   ~repl:
     :
@@ -137,38 +212,12 @@ don't do this:
       0 ! ! ! ! ! ! ! ! ! ! ! !
 )
 
-Whether pattern-based or not, an infix-operator macro’s left-hand input
-is parsed. A prefix or infix macro’s right-hand input is not parsed by
-default. To trigger parsing for a right-hand argument, wrap the pattern
-binding with parentheses and the keyword @rhombus(~parsed). You can also
-wrap the left-hand variable with @rhombus(~parsed), but that's redundant,
-because the left-hand argument is always parsed first. With both arguments
-as parsed, you might as well use @rhombus(operator) in many cases, but
-macros provide control over evaluator order. For example, this
-@rhombus(+<=) operator is like @rhombus(+), but evaluates its right-hand
-side before it’s left-hand side:
-
-@demo(
-  ~defn:
-    macro '$a +<= $(~parsed b)':
-      '$b + $a'
-  ~repl:
-    1 +<= 2
-    ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
-)
-
-Declaring @rhombus(~parsed) affects a @rhombus(expr.macro) macro in a
-second way: the macro will match only the left (if any) and right
-arguments, and will not receive (and cannot return) the tail of the
-enclosing group.
-
 In the same way that @rhombus(operator) supports operators that are both
-prefix and infix, you can use an alt-block with @rhombus(expr.macro) to
+prefix and infix, you can use a @vbar alternatives with @rhombus(expr.macro) to
 create a prefix-and-infix macro. Furthermore, an @rhombus(expr.macro)
 form can have multiple prefix blocks or multiple infix blocks, where the
 each block’s pattern is tried in order; in that case, only the first
 prefix block (if any) and first infix block (if any) can have precedence
 and associativity declarations that apply to all cases.
-
 
 @close_eval(macro_eval)

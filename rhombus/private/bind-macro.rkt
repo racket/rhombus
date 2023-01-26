@@ -10,7 +10,8 @@
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (only-in "repetition.rkt" in-repetition-space)
                      (for-syntax racket/base
-                                 syntax/parse/pre))
+                                 syntax/parse/pre)
+                     "tail-returner.rkt")
          "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
@@ -373,8 +374,11 @@
    protocol
    (if (eq? protocol 'macro)
        (lambda (form1 tail)
-         (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)]))
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (wrap-parsed form1) (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (extract-binding form proc)
                                    (unpack-tail new-tail proc #f)
                                    proc))
@@ -390,8 +394,11 @@
    protocol
    (if (eq? protocol 'macro)
        (lambda (tail)
-         (define-values (form new-tail) (syntax-parse tail
-                                          [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
+         (define-values (form new-tail)
+           (tail-returner
+            proc
+            (syntax-parse tail
+              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)])))
          (check-transformer-result (extract-binding form proc)
                                    (unpack-tail new-tail proc #f)
                                    proc))

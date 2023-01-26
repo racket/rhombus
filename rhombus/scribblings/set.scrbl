@@ -7,9 +7,9 @@
 
 @title(~tag: "set"){Sets}
 
-When @litchar("{")...@litchar("}") is used with elements that do not
-have @rhombus(:) to separate a key and value, then @litchar("{")...@litchar("}") creates a set. (If
-a set-element expression uses @rhombus(:), then it will need to be in
+When @braces is used with elements that do not
+have @colon to separate a key and value, then @braces creates a set. (If
+a set-element expression uses @colon, then it will need to be in
 parentheses to avoid being parsed as a key–value pair.) A set can serve
 as a map, where the set's elements act as keys and each key's value is
 @rhombus(#true). There's a @rhombus(Set) constructor that's analogous to
@@ -31,19 +31,19 @@ set. The @rhombus(++) operator effectively unions sets.
     friends["david"]
 )
 
-Using @rhombus(Set) explicitly before @litchar("{")...@litchar("}")
-disables the special treatment of @rhombus(:) to indicate a map, and
-each element within @litchar("{")...@litchar("}") is simply an
+Using @rhombus(Set) explicitly before @braces
+disables the special treatment of @colon to indicate a map, and
+each element within @braces is simply an
 expression. The @rhombus(Set) constructor can also be used like a
-function with @litchar("(")...@litchar(")") instead of
-@litchar("{")...@litchar("}").
+function with @parens instead of
+@braces.
 
 @rhombus(Set.of) and @rhombus(MutableSet) work as you'd expect. When
-@litchar{[}...@litchar{]} with @rhombus(:=) is used to modify a mutable
+@brackets with @rhombus(:=) is used to modify a mutable
 set, the ``key'' is removed from the set if the assigned value is
 @rhombus(#false), otherwise the ``key'' is added to the set.
 
-Within a set construction using @litchar("{")...@litchar("}"), a
+Within a set construction using @braces, a
 @rhombus(&) form splice a set into the constructed set, analogous to the
 way @rhombus(&) works for list constructions.
 
