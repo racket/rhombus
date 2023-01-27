@@ -7,6 +7,7 @@
          "expression.rkt"
          "binding.rkt"
          "parse.rkt"
+         "else-clause.rkt"
          (submod "function.rkt" for-build)
          "realm.rkt"
          "parens.rkt"
@@ -16,9 +17,10 @@
 
 (begin-for-syntax
   (define-syntax-class :pattern-clause
-    #:datum-literals (block group)
-    (pattern (block (group bind ...
-                           (~and rhs (block . _))))))
+    #:attributes ([bind 1] rhs)
+    #:datum-literals (group)
+    (pattern (_::block (group bind ...
+                              (~and rhs (_::block . _))))))
 
   (define (falses l-stx)
     (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
@@ -30,13 +32,11 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts block group)
+       #:datum-literals (block group)
        [(form-id in ...+ (alts-tag::alts
                           clause::pattern-clause
                           ...
-                          (block (group #:else
-                                        (~and else-rhs (block . _)))))
-                 . tail)
+                          e::else-clause))
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (define-values (proc arity)
           (build-case-function no-adjustments
@@ -49,17 +49,15 @@
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...))
-                               #'(clause.rhs ... else-rhs)
+                               #'(clause.rhs ... (parsed e.parsed))
                                #'form-id #'alts-tag))
         (values
          #`(#,proc (rhombus-expression (group in ...)))
-         #'tail)]
+         #'())]
        [(form-id in ...+ (alts-tag::alts
-                          (block (group bind ...
-                                        (~and rhs (block . _))))
-                          ...)
-                 . tail)
-        #:with (b::binding ...) (no-srcloc* #`((#,group-tag bind ...) ...))
+                          clause::pattern-clause
+                          ...))
+        #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (define-values (proc arity)
           (build-case-function no-adjustments
                                #'match
@@ -71,18 +69,18 @@
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...)) (falses #'(b ...))
                                (falses #'(b ...))
-                               #`(rhs ... (parsed
-                                           (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
+                               #`(clause.rhs ... (parsed
+                                                  (match-fallthrough 'form-id unmatched #,(syntax-srcloc (respan stx)))))
                                #'form-id #'alts-tag))
         (values
          #`(#,proc (rhombus-expression (group in ...)))
-         #'tail)]
-       [(form-id in ...+ (block-tag::block) . tail)
+         #'())]
+       [(form-id in ...+ (block-tag::block))
         (values
          #`((match-fallthrough 'form-id (rhombus-expression (group in ...)) #,(syntax-srcloc (respan stx)))
             (rhombus-expression (group in ...)))
-         #'tail)]
-       [(form-id in ...+ (_::alts clause ...) . tail)
+         #'())]
+       [(form-id in ...+ (_::alts clause ...))
         (for ([c (in-list (syntax->list #'(clause ...)))])
           (syntax-parse c
             [(c::pattern-clause ...) (void)]

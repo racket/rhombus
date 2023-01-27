@@ -122,6 +122,7 @@
 }
 
 @doc(
+  expo.modifier 'except $export'
   expo.modifier 'except:
                   $export
                   ...'

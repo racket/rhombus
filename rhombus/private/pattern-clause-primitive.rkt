@@ -48,12 +48,16 @@
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ rhs ...)
+       [(_ (tag::block g ...))
+        #`(#:when (rhombus-body-at tag g ...))]
+       [(_ rhs ...+)
         #`(#:when (rhombus-expression (#,group-tag rhs ...)))]))))
 
 (define-pattern-clause-syntax match_unless
   (pattern-clause-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(_ rhs ...)
+       [(_ (tag::block g ...))
+        #`(#:when (not (rhombus-body-at tag g ...)))]
+       [(_ rhs ...+)
         #`(#:when (not (rhombus-expression (#,group-tag rhs ...))))]))))

@@ -725,6 +725,10 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block)
+       [(_ int::name _::as-id ext::name)
+        (datum->syntax req
+                       (list* #'rename-in req #'([int.name ext.name]))
+                       req)]
        [(_ (_::block (group int::name _::as-id ext::name)
                      ...))
         (datum->syntax req
@@ -736,6 +740,10 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
+       [(_ name::name)
+        (datum->syntax req
+                       (list* #'only-in req #'(name.name))
+                       req)]
        [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'only-in req #'(name.name ... ...))
@@ -746,6 +754,10 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
+       [(_ name::name)
+        (datum->syntax req
+                       (list* #'except-in req #'(name.name))
+                       req)]
        [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'except-in req #'(name.name ... ...))
@@ -771,24 +783,29 @@
 (define-import-syntax only_space
   (import-modifier-block
    (lambda (req stx)
-     (syntax-parse stx
-       #:datum-literals (block group)
-       [(_ (_::block (group . g) ...))
-        (with-syntax ([(name ...) (parse-space-names stx #'(g ...))])
-          (datum->syntax req
-                         (list* #'only-spaces-in req #'(name ...))
-                         req))]))))
+     (with-syntax ([(name ...)
+                    (syntax-parse stx
+                      #:datum-literals (block group)
+                      [(_ (_::block (group . g) ...))
+                       (parse-space-names stx #'(g ...))]
+                      [(_  . g)
+                       (parse-space-names stx #'(g))])])
+       (datum->syntax req
+                      (list* #'only-spaces-in req #'(name ...))
+                      req)))))
 
 (define-import-syntax except_space
   (import-modifier-block
    (lambda (req stx)
-     (syntax-parse stx
-       #:datum-literals (block group)
-       [(_ (_::block (group . g) ...))
-        (with-syntax ([(name ...) (parse-space-names stx #'(g ...))])
-          (datum->syntax req
-                         (list* #'except-spaces-in req #'(name ...))
-                         req))]))))
+     (with-syntax ([(name ...)
+                    (syntax-parse stx
+                      #:datum-literals (block group)
+                      [(_ (_::block (group . g) ...))
+                       (parse-space-names stx #'(g ...))]
+                      [(_ . g) (parse-space-names stx #'(g))])])
+       (datum->syntax req
+                      (list* #'except-spaces-in req #'(name ...))
+                      req)))))
 
 (define-import-syntax open
   (import-modifier
@@ -805,6 +822,10 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
+       [(_ name::name)
+        (datum->syntax req
+                       (list* #'expose-in req #'(name.name))
+                       req)]
        [(_ (_::block (group name::name ...) ...))
         (datum->syntax req
                        (list* #'expose-in req #'(name.name ... ...))

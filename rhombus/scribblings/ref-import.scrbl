@@ -202,6 +202,7 @@
 }
 
 @doc(
+  impo.modifier 'expose $identifier'
   impo.modifier 'expose:
                    $identifier ...
                    ...'
@@ -214,6 +215,7 @@
 }
 
 @doc(
+  impo.modifier 'rename $identifier #,(@rhombus(as, ~impo)) $local_identifier'
   impo.modifier 'rename:
                    $identifier #,(@rhombus(as, ~impo)) $local_identifier
                    ...'
@@ -227,6 +229,7 @@
 }
 
 @doc(
+  impo.modifier 'only $identifier'
   impo.modifier 'only:
                    $identifier ...
                    ...'
@@ -238,6 +241,7 @@
 }
 
 @doc(
+  impo.modifier 'except $identifier'
   impo.modifier 'except:
                      $identifier ...
                      ...'
@@ -278,7 +282,9 @@
 
 @doc(
   ~literal: /
+  impo.modifier 'only_space $space'
   impo.modifier 'only_space: $space ...'
+  impo.modifier 'except_space $space'
   impo.modifier 'except_space: $space ...'
   grammar space:
     ~default

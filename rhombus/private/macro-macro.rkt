@@ -85,34 +85,42 @@
       (add! same 'same-on-right))
     (datum->syntax #f prec))
 
+  (define-splicing-syntax-class :ops/others
+    #:attributes ([name 1])
+    (pattern (_::block (group o::op/other ...) ...)
+             #:attr [name 1] (syntax->list #'(o.name ... ...)))
+    (pattern (n::op/other ...)
+             #:attr [name 1] (syntax->list #'(n.name ...))))
+
   (define-syntax-class-mixin operator-options
-    #:datum-literals (op block group
+    #:datum-literals (op group
                          stronger_than
                          weaker_than
                          same_as
                          same_on_left_as
                          same_on_right_as)
-    (~alt (~optional (group #:stronger_than ~! (block (group stronger::op/other ...) ...))
+    (~alt (~optional (group #:stronger_than ~! stronger::ops/others)
                      #:defaults ([(stronger.name 2) '()]))
-          (~optional (group #:weaker_than ~! (block (group weaker::op/other ...) ...))
+          (~optional (group #:weaker_than ~! weaker::ops/others)
                      #:defaults ([(weaker.name 2) '()]))
-          (~optional (group #:same_as ~! (block (group same::op/other ...) ...))
+          (~optional (group #:same_as ~! (_::block same::ops/others))
                      #:defaults ([(same.name 2) '()]))
-          (~optional (group #:same_on_left_as ~! (block (group same-on-left::op/other ...) ...))
+          (~optional (group #:same_on_left_as ~! same-on-left::ops/others)
                      #:defaults ([(same-on-left.name 2) '()]))
-          (~optional (group #:same_on_right_as ~! (block (group same-on-right::op/other ...) ...))
+          (~optional (group #:same_on_right_as ~! same-on-right::ops/others)
                      #:defaults ([(same-on-right.name 2) '()])))
     #:attr prec (combine-prec space-sym
-                              (syntax->list #'(stronger.name ... ...))
-                              (syntax->list #'(weaker.name ... ...))
-                              (syntax->list #'(same.name ... ...))
-                              (syntax->list #'(same-on-left.name ... ...))
-                              (syntax->list #'(same-on-right.name ... ...))))
+                              (syntax->list #'(stronger.name ...))
+                              (syntax->list #'(weaker.name ...))
+                              (syntax->list #'(same.name ...))
+                              (syntax->list #'(same-on-left.name ...))
+                              (syntax->list #'(same-on-right.name ...))))
 
   (define-syntax-class-mixin self-options
     #:datum-literals (op block group
                          opt_stx)
-    (~alt (~optional (group #:op_stx ~! (_::block (group self-id:identifier)))
+    (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
+                                             (_::block (group self-id:identifier))))
                      #:defaults ([self-id #'self]))))
 
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
@@ -129,8 +137,9 @@
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (op block group)
     (~alt (~optional (group #:associativity ~!
-                            (block (group (~and assc
-                                                (~or #:right #:left #:none)))))
+                            (~or (_::block (group (~and assc
+                                                        (~or #:right #:left #:none))))
+                                 (~and assc (~or #:right #:left #:none))))
                      #:defaults ([assc #'#:left]))))
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)

@@ -72,11 +72,8 @@
 (define-class-clause-syntax extends
   (class-clause-transformer
    (lambda (stx data)
-     (syntax-parse stx
-       [(_ (~seq form ...))
-        #:with (~var id (:hier-name-seq in-name-root-space in-class-desc-space name-path-op name-root-ref)) #'(form ...)
-        #:with () #'id.tail
-        (wrap-class-clause #'(#:extends id.name))]))))
+     (define names (parse-multiple-names stx))
+     (wrap-class-clause #`(#:extends . #,names)))))
 
 (define-interface-clause-syntax extends
   (interface-clause-transformer

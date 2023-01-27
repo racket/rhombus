@@ -3,6 +3,7 @@
                      syntax/parse/pre)
          "expression.rkt"
          "parse.rkt"
+         "else-clause.rkt"
          (only-in "underscore.rkt"
                   [_ rhombus-_])
          "error.rkt")
@@ -41,16 +42,14 @@
        [(form-id (alts
                   (block (group pred ... ((~and tag block) rhs ...)))
                   ...
-                  (block (group (~or #:else (~literal rhombus-_))
-                                ((~and else-tag block) else-rhs ...))))
+                  e::else-clause)
                  . tail)
         (values
          #'(cond
              [(rhombus-expression (group pred ...))
               (rhombus-body-at tag rhs ...)]
              ...
-             [else
-              (rhombus-body-at else-tag else-rhs ...)])
+             [else e.parsed])
          #'tail)]
        [(form-id (alts
                   (block (group pred ... ((~and tag block) rhs ...)))

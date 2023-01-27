@@ -249,7 +249,7 @@
   syntax_class_clause.macro 'description:
                                $body;
                                ...'
-  syntax_class_clause.macro 'description: $expr'
+  syntax_class_clause.macro 'description $expr'
 ){
 
  Configures a syntax class's description for error reporting. See

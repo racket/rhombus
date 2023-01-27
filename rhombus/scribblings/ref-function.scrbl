@@ -276,48 +276,6 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  defn.macro 'operator ($operator_path $binding) $maybe_res_ann:
-                $body
-                ...',
-  defn.macro 'operator ($binding $operator_path $binding) $maybe_res_ann:
-                $body
-                ...',
-  defn.macro 'operator
-              | ($operator_path $binding) $maybe_res_ann:
-                  $body
-                  ...
-              | ($binding $operator_path $binding) $maybe_res_ann:
-                  $body
-                  ...',
-
-){
-
- Binds @rhombus(operator_path) as an operator, either prefix or infix.
- The @rhombus(maybe_res_ann) parts are the same as in @rhombus(fun)
- definitions. The operator is also a @tech{repetition} operator,
- in which case its arguments must be repetitions, and the depth of the
- resulting repetition is the maximum of the argument repetition depths.
-
- When an operator definition includes both a prefix and infix variant
- with @litchar{|}, the variants can be in either order.
-
- See @secref("namespaces") for information on @rhombus(operator_path).
-
-@examples(
-  operator (x ^^^ y):
-    x +& y +& x
-  "a" ^^^ "b"
-  operator (x List.(^^^) y):
-    x ++ y ++ x
-  begin:
-    import: .List open
-    [1, 2] ^^^ [3]
-)
-
-}
-
-
-@doc(
   fun Function.map(f :: Function, args :: List, ...) :: List,
 ){
 

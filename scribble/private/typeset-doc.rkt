@@ -278,14 +278,7 @@
     [(group _::space (op |.|) (~or enforest transform) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group _:specsubform-head . _) #f]
     [(group grammar . _) #f]
-    [_
-     (syntax-parse stx
-       #:literals (fun)
-       #:datum-literals ($ parens group op)
-       [(group fun (~var id (identifier-target space-name)) (parens . _) . _)
-        (log-error ">> ok")]
-       [_ (log-error "no")])
-     (raise-syntax-error 'doc "unknown definition form" stx)]))
+    [_ (raise-syntax-error 'doc "unknown definition form" stx)]))
 
 (define-for-syntax (add-metavariable vars id)
   (hash-set vars (syntax-e id) (or (hash-ref vars (syntax-e id) #f) id)))

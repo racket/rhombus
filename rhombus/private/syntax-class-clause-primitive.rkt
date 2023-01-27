@@ -70,7 +70,9 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ (tag::block e ...+))
-        #`(#:description #,stx (rhombus-body-at tag e ...))]))))
+        #`(#:description #,stx (rhombus-body-at tag e ...))]
+       [(_ e ...)
+        #`(#:description #,stx (rhombus-expression e ...))]))))
 
 (define-syntax-class-clause-syntax fields
   (syntax-class-clause-transformer

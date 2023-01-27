@@ -33,7 +33,7 @@
               | $clause_test_expr:
                   $clause_result_body
                   ...
-              | ...',
+              | ...'
   decl.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
@@ -42,6 +42,12 @@
               | ~else:
                   $clause_result_body
                   ...'
+  decl.macro 'cond
+              | $clause_test_expr:
+                  $clause_result_body
+                  ...
+              | ...
+              | ~else $clause_result_expr'
 ){
 
  Tries the @rhombus(clause_test_expr)s in sequence, and as soon as one

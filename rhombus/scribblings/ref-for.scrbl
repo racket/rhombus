@@ -26,10 +26,10 @@
         $body
         ...
       ...
-    #,(@rhombus(keep_when, ~for_clause)) $expr
-    #,(@rhombus(skip_when, ~for_clause)) $expr
-    #,(@rhombus(break_when, ~for_clause)) $expr
-    #,(@rhombus(final_when, ~for_clause)) $expr
+    #,(@rhombus(keep_when, ~for_clause)) $expr_or_block
+    #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
+    #,(@rhombus(break_when, ~for_clause)) $expr_or_block
+    #,(@rhombus(final_when, ~for_clause)) $expr_or_block
     $other_for_clause
     $body
 ){
@@ -173,9 +173,13 @@
                       $body
                       ...'
   for_clause.macro 'keep_when $expr'
+  for_clause.macro 'keep_when: $body; ...'
   for_clause.macro 'skip_when $expr'
+  for_clause.macro 'skip_when: $body; ...'
   for_clause.macro 'break_when $expr'
+  for_clause.macro 'break_when: $body; ...'
   for_clause.macro 'final_when $expr'
+  for_clause.macro 'final_when: $body; ...'
 ){
 
  The primitive clause forms that are recognized by @rhombus(for).

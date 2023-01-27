@@ -6,7 +6,7 @@
 @title(~tag: "mutable-vars"){Mutable Variables}
 
 Variables are immutable unless they are declared with the
-@rhombus(mutable) binding operator. The @rhombus(:=) infix operator
+@rhombus(mutable, ~bind) binding operator. The @rhombus(:=) infix operator
 assigns to a mutable variable.
 
 @demo(

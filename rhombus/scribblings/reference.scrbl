@@ -13,6 +13,7 @@
 @include_section("ref-import.scrbl")
 @include_section("ref-export.scrbl")
 @include_section("ref-function.scrbl")
+@include_section("ref-operator.scrbl")
 @include_section("ref-class.scrbl")
 @include_section("ref-mutable.scrbl")
 

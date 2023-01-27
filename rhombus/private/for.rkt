@@ -120,21 +120,14 @@
                                                           (syntax->list #'(rhs-blk ...)))
                           . bodys))]
             [(group prim-for-clause (~and kw (~or #:keep_when #:skip_when #:break_when #:final_when))
-                    expr ...)
+                    rhs)
              #:with new-kw (case (syntax-e #'kw)
-                       [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
-                       [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
-                       [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
-                       [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
-                       [else #'kw])
-             ;; assert: empty rev-bodys and rev-clauses
-             (when (null? (syntax-e #'(expr ...)))
-               (raise-syntax-error #f
-                                   (format "missing expression after `~~~a`"
-                                           (keyword->string (syntax-e #'kw)))
-                                   #'orig
-                                   #'kw))
-             #`(new-kw (rhombus-expression (#,group-tag expr ...))
+                             [(#:keep_when) (datum->syntax #'kw '#:when #'kw #'kw)]
+                             [(#:skip_when) (datum->syntax #'kw '#:unless #'kw #'kw)]
+                             [(#:break_when) (datum->syntax #'kw '#:break #'kw #'kw)]
+                             [(#:final_when) (datum->syntax #'kw '#:final #'kw #'kw)]
+                             [else #'kw])
+             #`(new-kw rhs
                        #:splice (for-clause-step orig state . bodys))]
             [body0::for-clause
              #:with f::for-clause-form #'body0.parsed
@@ -277,34 +270,34 @@
                             "needs a binding followed by a block, or it needs a block of bindings (each with a block)"
                             stx)]))))
 
+(define-for-syntax (parse-when stx kw)
+  (syntax-parse stx
+    #:datum-literals ()
+    [(form-id (tag::block g ...))
+     #`[(#,group-tag prim-for-clause #,kw (rhombus-body-at tag g ...))]]
+    [(form-id expr ...+)
+     #`[(#,group-tag prim-for-clause #,kw (rhombus-expression (#,group-tag expr ...)))]]
+    [(form-id)
+     (raise-syntax-error #f
+                         "missing expression"
+                         #'stx)]))
+
 (define-for-clause-syntax keep_when
   (for-clause-transformer
    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals ()
-       [(form-id expr ...+)
-        #`[(#,group-tag prim-for-clause #:keep_when expr ...)]]))))
+     (parse-when stx '#:keep_when))))
 
 (define-for-clause-syntax skip_when
   (for-clause-transformer
    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals ()
-       [(form-id expr ...+)
-        #`[(#,group-tag prim-for-clause #:skip_when expr ...)]]))))
+     (parse-when stx '#:skip_when))))
 
 (define-for-clause-syntax break_when
   (for-clause-transformer
    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals ()
-       [(form-id expr ...+)
-        #`[(#,group-tag prim-for-clause #:break_when expr ...)]]))))
+     (parse-when stx '#:break_when))))
 
 (define-for-clause-syntax final_when
   (for-clause-transformer
    (lambda (stx)
-     (syntax-parse stx
-       #:datum-literals ()
-       [(form-id expr ...+)
-        #`[(#,group-tag prim-for-clause #:final_when expr ...)]]))))
+     (parse-when stx '#:final_when))))

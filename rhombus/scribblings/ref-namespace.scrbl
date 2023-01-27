@@ -46,6 +46,7 @@ as part of their grammar:
 ){}
 
 @doc(
+  defn.macro 'namespace $identifier_path'
   defn.macro 'namespace $identifier_path:
                 $body_or_export
                 ...'

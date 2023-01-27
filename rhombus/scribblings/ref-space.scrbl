@@ -49,7 +49,6 @@ driver and macro-definitions forms.
 
   grammar option:
     ~macro $identifier
-    ~only_macro $identifier
 
   grammar meta_option:
     ~syntax_class $identifier
@@ -112,9 +111,6 @@ driver and macro-definitions forms.
  @item{@rhombus(~macro): names an identifier to be bound to a
   macro-definition form analogous to @rhombus(expr.macro), but for defining
   rule-based macros for the sublanguage.}
-
- @item{@rhombus(~only_macro): names an identifier like @rhombus(~macro), but
-  analogous to @rhombus(expr.only.macro).}
 
  @item{@rhombus(~macro_result): supplies a compile-time function that is
   applied to two arguments: the result of any macro defined for the

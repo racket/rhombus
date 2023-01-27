@@ -170,7 +170,9 @@
      (syntax-parse stx
        #:datum-literals (block)
        [(_ (block e::export ...))
-        #`(except-out #,ex e.parsed ...)]))))
+        #`(except-out #,ex e.parsed ...)]
+       [(_ e::export)
+        #`(except-out #,ex e.parsed)]))))
      
 (define-export-syntax meta
   (export-modifier

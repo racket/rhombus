@@ -17,6 +17,12 @@
               | ~else:
                   $result_body
                   ...'
+  decl.macro 'match $target_expr
+              | $binding:
+                  $result_body
+                  ...
+              | ...
+              | ~else $result_expr'
 ){
 
  Tries matching the result of @rhombus(target_expr) against each

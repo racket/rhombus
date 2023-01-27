@@ -314,7 +314,7 @@
     #,(@rhombus(abstract, ~interface_clause)) $method_decl
     #,(@rhombus(property, ~interface_clause)) $property_impl
     #,(@rhombus(extends, ~interface_clause)) $extends_decl
-    #,(@rhombus(internal, ~interface_clause)) $identifier
+    #,(@rhombus(internal, ~interface_clause)) $internal_decl
     #,(@rhombus(expression, ~interface_clause)) $expression_decl
     #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
     $other_interface_clause
@@ -414,6 +414,7 @@
 
 @doc(
   class_clause.macro 'extends $identifier_path'
+  class_clause.macro 'extends: $identifier_path'
   interface_clause.macro 'extends $identifier_path'
   interface_clause.macro 'extends: $identifier_path ...; ...'
 ){
@@ -693,8 +694,10 @@
 }
 
 @doc(  
-  class_clause.macro 'internal $identifier',
+  class_clause.macro 'internal $identifier'
+  class_clause.macro 'internal: $identifier'
   interface_clause.macro 'internal $identifier'
+  interface_clause.macro 'internal: $identifier'
 ){
 
  A @tech{class clause} or @tech{interface clause} recognized by
