@@ -1,145 +1,137 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse
-                     racket/symbol
-                     enforest
-                     enforest/property
-                     enforest/operator
-                     enforest/transformer
-                     enforest/transformer-result
-                     enforest/proc-name
-                     "introducer.rkt"
-                     "name-path-op.rkt"
-                     "pack.rkt"
-                     (submod "syntax-class-primitive.rkt" for-quasiquote)
-                     (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     (for-syntax racket/base)
-                     "implicit.rkt" ;; needed for `$%body`
-                     "name-root.rkt"
-                     "space.rkt"
-                     "realm.rkt"
-                     "parse.rkt")
-         "enforest.rkt"
+                     "space-meta-macro.rkt"
+                     "expose.rkt")
          "space-provide.rkt"
-         "meta.rkt"
          "name-root.rkt"
-         "name-root-ref.rkt"
-         "definition.rkt"
+         "declaration.rkt"
          "space.rkt"
          "parens.rkt"
-         "macro-macro.rkt")
+         "parse.rkt"
+         "macro-macro.rkt"
+         "space-clause.rkt"
+         "forwarding-sequence.rkt"
+         (submod "space-clause-primitive.rkt" for-space-macro)
+         (submod "namespace.rkt" for-exports))
+
+(provide (for-space rhombus/space
+                    space_clause)
+         (for-syntax
+          (for-space rhombus/space
+                     space_meta_clause)))
 
 (define+provide-space space rhombus/space
   #:fields
   (enforest
    transform))
 
-(begin-for-syntax
-  (define (id->string s) (symbol->immutable-string (syntax-e s)))
-
-  (define-splicing-syntax-class :space_name
-    #:attributes (name)
-    #:datum-literals (/ op)
-    (pattern (~seq root:identifier (~seq (op /) part:identifier) ...+)
-             #:attr name (datum->syntax
-                          #f
-                          (string->symbol
-                           (apply string-append
-                                  (id->string #'root)
-                                  (map id->string
-                                       (syntax->list #'((~@ / part) ...)))))))
-    (pattern (~seq name:identifier))))
+(define-space-syntax space_clause
+  (space-syntax rhombus/space_clause))
 
 (define-syntax enforest
-  (definition-transformer
+  (declaration-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(_  name:identifier
-             (_::block
-              (group #:space_path space-path::space_name)
-              (~alt
-               (~optional (group #:macro define-macro:identifier)
-                          #:defaults ([define-macro #'SKIP])))
-              ...
-              (group #:meta_namespace meta-name:identifier
-                     (_::block
-                      (~alt
-                       (~optional (group #:syntax_class class-name:identifier)
-                                  #:defaults ([class-name #'Class]))
-                       (~optional (group #:syntax_class_prefix_more prefix-more-class-name:identifier)
-                                  #:defaults ([prefix-more-class-name #'PrefixMore]))
-                       (~optional (group #:syntax_class_infix_more infix-more-class-name:identifier)
-                                  #:defaults ([infix-more-class-name #'InfixMore]))
-                       (~optional (group #:desc desc:string)
-                                  #:defaults ([desc #'"form"]))
-                       (~optional (group #:operator_desc desc-operator:string)
-                                  #:defaults ([desc-operator #'"operator"]))
-                       (~optional (group #:macro_result (check-at::block check-form ...))
-                                  #:defaults ([check-at #'block] ; implicitly references `#%body`
-                                              [(check-form 1) (list #'(group (parsed check-syntax)))]))
-                       (~optional (group #:identifier_transformer (id-at::block make-identifier-form ...))
-                                  #:defaults ([id-at #'block]
-                                              [(make-identifier-form 1) (list #'(group (parsed values)))])))
-                      ...))))
-         #`((define-space-syntax name
-              (space-syntax space-path.name))
-            (define-name-root name
-              #:fields
-              #,(filter-missing
-                 #`([define-macro _define-macro])))
-            (begin-for-syntax
-              (define-name-root meta-name
-                #:fields
-                #,(filter-missing
-                   #`([class-name _class-name]
-                      [prefix-more-class-name _prefix-more-class-name]
-                      [infix-more-class-name _infix-more-class-name])))
-              (define in-new-space (make-interned-syntax-introducer/add 'space-path.name))
-              (property new-prefix-operator prefix-operator)
-              (property new-infix-operator infix-operator)
-              (struct new-prefix+infix-operator (prefix infix)
-                #:property prop:new-prefix-operator (lambda (self) (new-prefix+infix-operator-prefix self))
-                #:property prop:new-infix-operator (lambda (self) (new-prefix+infix-operator-infix self)))
-              (define-rhombus-enforest
-                #:syntax-class :base
-                #:prefix-more-syntax-class :prefix-more
-                #:infix-more-syntax-class :infix-more
-                #:desc (quote desc)
-                #:operator-desc (quote desc-operator)
-                #:in-space in-new-space
-                #:prefix-operator-ref new-prefix-operator-ref
-                #:infix-operator-ref new-infix-operator-ref
-                #:check-result (rhombus-body-at check-at check-form ...)
-                #:make-identifier-form (rhombus-body-at id-at make-identifier-form ...))
-              (define-syntax _class-name (make-syntax-class #':base
-                                                            #:kind 'group
-                                                            #:fields #'((parsed parsed parsed 0 unpack-term*))))
-              (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
-                                                                        #:kind 'group
-                                                                        #:fields #'((parsed parsed #f 0 unpack-term*)
-                                                                                    (tail #f tail tail unpack-tail-list*))
-                                                                        #:arity 2))
-              (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
-                                                                       #:kind 'group
-                                                                       #:fields #'((parsed parsed #f 0 unpack-term*)
-                                                                                   (tail #f tail tail unpack-tail-list*))
-                                                                       #:arity 2))
-              (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
-              (define make-infix-operator (make-make-infix-operator new-infix-operator)))
-            (maybe-skip
-             define-macro
-             (define-operator-definition-transformer _define-macro
-               'macro
-               space-path.name
-               #'make-prefix-operator
-               #'make-infix-operator
-               #'new-prefix+infix-operator)))]))))
+        [(_  name:identifier (_::block . clauses))
+         (define data #`[#,stx base-stx #,(syntax-local-introduce #'scope-stx)
+                         name enforest-meta define-operator-definition-transformer])
+         #`((rhombus-mixed-nested-forwarding-sequence (enforest-finish #,data) rhombus-space-clause
+                                                      (enforest-body-step . #,(syntax-local-introduce #'clauses))))]))))
 
-(define-syntax SKIP 'placeholder)
+(define-syntax transform
+  (declaration-transformer
+    (lambda (stx)
+      (syntax-parse stx
+        #:datum-literals (group)
+        [(_  name:identifier (_::block . clauses))
+         (define data #`[#,stx base-stx #,(syntax-local-introduce #'scope-stx)
+                         name transform-meta define-identifier-syntax-definition-transformer*])
+         #`((rhombus-mixed-nested-forwarding-sequence (enforest-finish #,data) rhombus-space-clause
+                                                      (enforest-body-step . #,(syntax-local-introduce #'clauses))))]))))
+
+(define-syntax enforest-body-step
+  (lambda (stx)
+    ;; parse the first form as a space clause, if possible, otherwise assume
+    ;; an expression or definition
+    (syntax-parse stx
+      [(_ form . rest)
+       #:with clause::space-clause (syntax-local-introduce #'form)
+       (syntax-parse (syntax-local-introduce #'clause.parsed)
+         #:datum-literals (group parsed)
+         [((group (parsed p)) ...)
+          #`(begin p ... (enforest-body-step . rest))]
+         [(form ...)
+          #`(enforest-body-step form ... . rest)])]
+      [(_ form . rest)
+       #`(rhombus-top-step
+          enforest-body-step
+          #f
+          ()
+          form . rest)]
+      [(_) #'(begin)])))
+
+(define-syntax enforest-finish
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ [orig-stx
+           base-stx scope-stx
+           name
+           enforest-meta
+           define-operator-definition-transformer]
+          exports
+          option
+          ...)
+       (define options (parse-space-clause-options #'orig-stx #'(option ...)))
+       (define space-path-name (hash-ref options '#:space_path #f))
+       (unless space-path-name
+         (raise-syntax-error #f "space path must be declared" #'orig-stx))
+       (define meta-namespace (hash-ref options '#:meta_namespace #f))
+       (unless meta-namespace
+         (raise-syntax-error #f "meta namespace must be declared" #'orig-stx))
+       (define define-macro (hash-ref options '#:export_macro #f))
+       (define exs (parse-exports #'(combine-out . exports)))
+       (check-distinct-exports (exports->names exs) define-macro #'orig-stx)
+       ;; The expansion here mostly sets up a bridge. The interesting
+       ;; part is generated by `enforest-meta` at the end.
+       #`(begin
+           (define-space-syntax name
+             (space-syntax #,space-path-name))
+           (define-name-root name
+             #:fields
+             (#,@(filter-missing
+                  #`([#,define-macro _define-macro]))
+              . #,exs))
+           (maybe-skip
+            define-macro
+            (define-operator-definition-transformer _define-macro
+              'macro
+              #,space-path-name
+              #'make-prefix-operator
+              #'make-infix-operator
+              #'make-prefix+infix-operator))
+           (begin-for-syntax
+             (enforest-meta
+              #,(car meta-namespace)
+              [name base-stx scope-stx
+                    #,space-path-name make-prefix-operator make-infix-operator make-prefix+infix-operator]
+              #,(cdr meta-namespace))))])))
+
+(define-syntax-rule (define-identifier-syntax-definition-transformer* name
+                      _define-macro
+                      protocol
+                      space-path-name
+                      make-prefix-operator
+                      ignored-make-infix-operator
+                      ignored-new-prefix+infix-operator)
+  (define-identifier-syntax-definition-transformer _define-macro
+    space-path-name
+    make-prefix-operator))
+
 (define-syntax (maybe-skip stx)
   (syntax-parse stx
-    [(_ (~literal SKIP) . _) #'(begin)]
+    [(_ #f . _) #'(begin)]
     [(_ _ def) #'def]))
 
 (define-for-syntax (filter-missing flds)
@@ -149,107 +141,10 @@
                       [_ #t]))
     fld))
 
-(define-syntax transform
-  (definition-transformer
-    (lambda (stx)
-      (syntax-parse stx
-        #:datum-literals (group)
-        [(_ space::space_name
-            (_::block
-             (group #:space_path space-path::space_name)
-             (~alt
-              (~optional (group #:macro define-macro:identifier)
-                         #:defaults ([define-macro #'SKIP])))
-             ...)
-            (group #:meta_namespace meta-name:identifier
-                   (_::block
-                    (~alt
-                     (~optional (group #:syntax_class class-name)
-                                #:defaults ([class-name #'Class]))
-                     (~optional (group #:macro_result (check-at::block check-form ...))
-                                #:defaults ([check-at #'block]
-                                            [(check-form 1) (list #'(group (parsed check-syntax)))]))
-                     (~optional (group #:desc desc:string)
-                                #:defaults ([desc #'"form"])))
-                    ...)))
-         #'((define-name-root name
-              #:root (space-syntax space-path.name)
-              #:fields
-              #,(filter-missing
-                 #`([define-macro _define-macro])))
-            (begin-for-syntax
-              (define-name-root meta-name
-                #:root (space-syntax space-path.name)
-                #:fields
-                #,(filter-missing
-                   #`([class-name _class-name])))
-              (define in-new-space (make-interned-syntax-introducer/add 'space.name))
-              (property new-transformer transformer)
-              (define-rhombus-transform
-                #:syntax-class :base
-                #:desc desc
-                #:in-space in-new-space
-                #:transformer-ref new-transformer-ref
-                #:check-result (rhombus-body-at check-at check-form ...))
-              (define-syntax _class-name (rhombus-syntax-class 'group #':base #'((parsed parsed 0 unpack-term*)) #f #f))
-              (define make-transformer (make-make-transformer new-transformer)))
-            (maybe-skip
-             define-macro
-             (define-identifier-syntax-definition-transformer _define-macro
-               space.name
-               #'make-transformer)))]))))
-
-(define-for-syntax ((make-make-prefix-operator new-prefix-operator) name prec protocol proc)
-  (new-prefix-operator
-   name
-   prec
-   protocol
-   (cond
-     [(eq? protocol 'automatic) proc]
-     [else
-      (procedure-rename
-       (lambda (tail)
-         (finish (lambda () (syntax-parse tail
-                              [(head . tail) (proc (pack-tail #'tail #:after #'head) #'head)]))
-                 proc))
-       (object-name proc))])))
-
-(define-for-syntax ((make-make-infix-operator new-infix-operator) name prec protocol proc assc)
-  (new-infix-operator
-   name
-   prec
-   protocol
-   (cond
-     [(eq? protocol 'automatic) proc]
-     [else
-      (procedure-rename
-       (lambda (form1 tail)
-         (finish
-          (lambda () (syntax-parse tail
-                       [(head . tail) (proc form1 (pack-tail #'tail #:after #'head) #'head)]))
-          proc))
-       (object-name proc))])
-   assc))
-
-(define-for-syntax ((make-make-transformer new-transformer) proc)
-  (new-transformer
-   (lambda (stx)
-     (define r (syntax-parse stx
-                 [(head . tail) (proc (pack-tail #'tail) #'head)]))
-     (check-syntax r proc)
-     r)))
-
-(define-for-syntax (finish thunk proc)
-  (define-values (form new-tail)
-    (call-with-values
-     thunk
-     (case-lambda
-       [(form new-tail) (values form new-tail)]
-       [(form) (values form #'(group))])))
-  (values form
-          (unpack-tail new-tail proc #f)))
-
-(define-for-syntax (check-syntax form proc)
-  (unless (syntax? form)
-    (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
-  form)
+(define-for-syntax (check-distinct-exports ex-ht define-macro orig-stx)
+  (when (and (syntax-e define-macro)
+             (hash-ref ex-ht (syntax-e define-macro) #f))
+    (raise-syntax-error #f
+                        "exported name conflicts with macro definer name"
+                        orig-stx
+                        (hash-ref ex-ht (syntax-e define-macro) #f))))

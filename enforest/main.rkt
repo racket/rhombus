@@ -114,7 +114,11 @@
               (~optional (~seq #:juxtapose-implicit-name -juxtapose-implicit-name)
                          #:defaults ([-juxtapose-implicit-name #'juxtapose-implicit-name])))
         ...)
+     #:with (tl-decl ...) (if (eq? (syntax-local-context) 'top-level)
+                              #`((define-syntaxes (enforest enforest-step) (values)))
+                              #'())
      #'(begin
+         tl-decl ...
          (define-syntax-class form-class
            #:attributes (parsed)
            (pattern ((~datum group) . tail) #:attr parsed (transform-out (enforest (transform-in #'tail)))))

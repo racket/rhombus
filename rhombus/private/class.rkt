@@ -10,7 +10,8 @@
                      "class-parse.rkt"
                      (submod "class-meta.rkt" for-class)
                      "class-field-parse.rkt"
-                     "interface-parse.rkt")
+                     "interface-parse.rkt"
+                     "expose.rkt")
          racket/unsafe/undefined
          "forwarding-sequence.rkt"
          "definition.rkt"

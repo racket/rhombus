@@ -26,4 +26,8 @@
         "syntax-error.rkt"
         "parsed.rkt"
         "syntax-meta-value.rkt"
-        "space-macro.rkt")
+        "space-macro.rkt"
+        "space-clause-primitive.rkt")
+
+(bounce-meta "space-meta-clause-primitive.rkt")
+

@@ -13,7 +13,8 @@
 (provide namespace)
 
 (module+ for-exports
-  (provide (for-syntax parse-exports)))
+  (provide (for-syntax parse-exports
+                       exports->names)))
 
 (define-syntax namespace
   (definition-transformer
@@ -105,3 +106,10 @@
                              ex)])))
   (for/list ([(key val) (in-hash ht)])
     #`[#,key #,val]))
+
+(define-for-syntax (exports->names exports-stx)
+  (for/hasheq ([ex (in-list (if (syntax? exports-stx) (syntax->list exports-stx) exports-stx))])
+    (define id (syntax-parse ex
+                 [(id ext-id) #'ext-id]
+                 [_ ex]))
+    (values (syntax-e id) id)))

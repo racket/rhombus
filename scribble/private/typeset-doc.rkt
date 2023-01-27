@@ -19,7 +19,9 @@
          (only-in rhombus/meta
                   space decl defn expr impo expo annot repet bind reducer for_clause
                   class_clause interface_clause entry_point unquote_bind
-                  syntax_class_clause pattern_clause)
+                  syntax_class_clause pattern_clause space_clause
+                  ;; for-syntax:
+                  space_meta_clause)
          (only-in "rhombus.rhm"
                   rhombusblock_etc
                   [rhombus one-rhombus])
@@ -202,6 +204,11 @@
     (define-syntax-class :sp
       (pattern id:identifier
                #:when (free-identifier=? (in-name-root-space #'id) (name-root-quote sp)))))
+  (define-syntax-rule (def-space+1 :sp sp)
+    (define-syntax-class :sp
+      (pattern id:identifier
+               #:when (free-identifier=? (in-name-root-space #'id) (name-root-quote sp)
+                                         (+ 1 (syntax-local-phase-level))))))
   (def-space :decl decl)
   (def-space :defn defn)
   (def-space :expr expr)
@@ -220,6 +227,8 @@
   (def-space :syntax_class_clause syntax_class_clause)
   (def-space :pattern_clause pattern_clause)
   (def-space :space space)
+  (def-space :space_clause space_clause)
+  (def-space+1 :space_meta_clause space_meta_clause)
 
   (define-splicing-syntax-class operator-macro-head
     #:literals (def fun)
@@ -235,7 +244,8 @@
     #:datum-literals (op modifier macro |.|)
     (pattern (~seq (~or _::defn _::decl _::expr _::annot _::repet _::bind _::reducer _::expo _::modpath
                         _::for_clause _::class_clause _::interface_clause _::entry_point
-                        _::unquote_bind _::syntax_class_clause _::pattern_clause)
+                        _::unquote_bind _::syntax_class_clause _::pattern_clause
+                        _::space_clause _::space_meta_clause)
                    (op |.|) macro))
     (pattern (~seq (~or _::impo _::expo) (op |.|) modifier))
     (pattern (~seq def)))
@@ -491,6 +501,8 @@
     [(group _::unquote_bind . _) 'rhombus/unquote_bind]
     [(group _::syntax_class_clause . _) 'rhombus/syntax_class_clause]
     [(group _::pattern_clause . _) 'rhombus/pattern_clause]
+    [(group _::space_clause . _) 'rhombus/space_clause]
+    [(group _::space_meta_clause . _) 'rhombus/space_meta_clause]
     [(group _::bind . _) 'rhombus/bind]
     [(group interface . _) 'rhombus/class]
     [(group class . _) 'rhombus/class]
@@ -519,6 +531,8 @@
     [(group _::unquote_bind . _) "unquote binding"]
     [(group _::syntax_class_clause . _) "syntax class clause"]
     [(group _::pattern_clause  . _) "pattern clause"]
+    [(group _::space_clause  . _) "space clause"]
+    [(group _::space_meta_clause  . _) "space meta clause"]
     [(group _::bind . _) "binding operator"]
     ;; after expr, bind, etc. so that expr.subspecform gets "expression" not #f
     [(group _:specsubform-head . _) #f]

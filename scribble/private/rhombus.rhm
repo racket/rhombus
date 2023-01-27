@@ -147,7 +147,9 @@ expr.macro
           || kw === #'~entry_point
           || kw === #'~unquote_bind
           || kw === #'~syntax_class_clause
-          || kw === #'~pattern_clause)
+          || kw === #'~pattern_clause
+          || kw === #'~space_clause
+          || kw === #'~space_meta_clause)
     | '#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))'
     | Syntax.error("invalid space", kw_stx)
 

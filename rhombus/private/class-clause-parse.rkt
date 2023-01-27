@@ -2,7 +2,8 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/hier-name-parse
-                     "class-parse.rkt")
+                     "class-parse.rkt"
+                     "expose.rkt")
          (submod "class-clause-primitive.rkt" for-class)
          (submod "annotation.rkt" for-class)
          "entry-point.rkt"
@@ -35,11 +36,6 @@
           (expose internal-id)
           (map expose extra-internal-ids)))
 
-(define-for-syntax (make-expose scope-stx base-stx)
-  (let ([intro (make-syntax-delta-introducer scope-stx base-stx)])
-    (lambda (stx)
-      (intro stx 'remove))))
-
 (define-for-syntax (extract-rhs b)
   (syntax-parse b
     [(_::block g) #'g]
@@ -61,7 +57,7 @@
             (syntax-parse clause
               [(#:extends id)
                (when (hash-has-key? options 'extends)
-                 (raise-syntax-error #f "multiple extension clauses" orig-stx clause))
+                 (raise-syntax-error #f "multiple extension clauses" orig-stx #'id))
                (hash-set options 'extends #'id)]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
