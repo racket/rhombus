@@ -45,19 +45,130 @@ check:
   ~is #true
 
 // defining an operator that is both prefix and infix
+begin:
+  operator
+  | (** exponent):
+      2 ** exponent
+  | (base ** exponent):
+      if exponent == 0
+      | 1
+      | base * (base ** (exponent-1))
 
-operator
-| (** exponent):
-    2 ** exponent
-| (base ** exponent):
-    if exponent == 0
-    | 1
-    | base * (base ** (exponent-1))
+  check:
+    3 ** 8 ~is 6561
+    ** 10 ~is 1024
+
+// defining an operator that is both prefix and postfix
+begin:
+  operator
+  | (** exponent):
+      expt(2, exponent)
+  | (base **):
+      base * base
+
+  check:
+    3 ** ~is 9
+    ** 10 ~is 1024
+
+// multi-case prefix operator
+begin:
+  operator
+  | (** (a :: Integer)): "" +& a
+  | (** (a :: String)): a
+
+  check:
+    ** 10 ~is "10"
+    ** "apple" ~is "apple"
+    ** #'sym ~raises "no matching case for arguments"
+
+// multi-case infix operator
+begin:
+  operator
+  | (0 ** a): 0
+  | (1 ** a): a
+
+  check:
+    1 ** 10 ~is 10
+    0 ** "apple" ~is 0
+    2 ** 10 ~raises "no matching case for arguments"
+
+// multi-case prefix and infix
+begin:
+  operator
+  | (** (a :: Integer)): "" +& a
+  | (** (a :: String)): a
+  | (0 ** a): 0
+  | (1 ** a): a
+
+  check:
+    ** 10 ~is "10"
+    ** "apple" ~is "apple"
+    ** #'sym ~raises "no matching case for arguments"
+    1 ** 10 ~is 10
+    0 ** "apple" ~is 0
+    2 ** 10 ~raises "no matching case for arguments"
 
 check:
-  3 ** 8
-  ~is 6561
+  ~eval
+  operator
+  | (0 ** a): 0
+  | (1 **): 1
+  ~raises "combination of infix and postfix cases not allowed"
 
 check:
-  ** 10
-  ~is 1024
+  ~eval
+  operator
+  | (0 ** a): 0
+  | (** a): 0
+  | (1 **): 1
+  ~raises "combination of infix and postfix cases not allowed"
+
+check:
+  ~eval
+  operator
+  | (** **): 0
+  ~raises "expected non-operator"
+
+check:
+  ~eval
+  operator
+  | (0 ** a): 0
+  | (1 ??): 1
+  ~raises "case operator does not match initial case operator"
+
+check:
+  ~eval
+  operator
+  | (0 ** a): 0
+  | (1 ** b):
+      ~weaker_than: +
+      1
+  ~raises "precedence option not allowed after first infix case"
+
+check:
+  ~eval
+  operator
+  | (0 **): 0
+  | (1 **):
+      ~weaker_than: +
+      1
+  ~raises "precedence option not allowed after first postfix case"
+
+check:
+  ~eval
+  operator
+  | (** 0): 0
+  | (** 1):
+      ~weaker_than: +
+      1
+  ~raises "precedence option not allowed after first prefix case"
+
+check:
+  ~eval
+  operator
+  | (0 ** a): 0
+  | (1 ** b):
+      ~associativity: ~left
+      1
+  ~raises "associativity option not allowed after first infix case"
+

@@ -329,7 +329,7 @@
                 (raise-syntax-error #f
                                     (format
                                      (string-append 
-                                      "combination of ~as at same precedence, but only in the other order,"
+                                      "combination of ~as at same precedence, but only in the other order;\n"
                                       " needs explicit parenthesization\n"
                                       "  earlier operator: ~a")
                                      operator-kind-str
@@ -341,7 +341,7 @@
                 (raise-syntax-error #f
                                     (format
                                      (string-append 
-                                      "combination of ~as without declared relative precedence"
+                                      "combination of ~as without declared relative precedence;\n"
                                       " needs explicit parenthesization\n"
                                       "  other operator: ~a")
                                      operator-kind-str

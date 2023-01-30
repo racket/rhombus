@@ -9,7 +9,8 @@
                      "srcloc.rkt"
                      "consistent.rkt"
                      "with-syntax.rkt"
-                     "tag.rkt")
+                     "tag.rkt"
+                     "same-expression.rkt")
          racket/unsafe/undefined
          "provide.rkt"
          "parens.rkt"
@@ -637,16 +638,6 @@
      arity))
 
   (define (maybe-add-function-result-definition name static-infoss arity defns)
-    (define (same-expression? a b)
-      (cond
-        [(identifier? a) (and (identifier? b)
-                              (free-identifier=? a b))]
-        [(syntax? a) (same-expression? (syntax-e a) b)]
-        [(syntax? b) (same-expression? a (syntax-e b))]
-        [(pair? a) (and (pair? b)
-                        (same-expression? (car a) (car b))
-                        (same-expression? (cdr a) (cdr b)))]
-        [else (equal? a b)]))
     (define result-info?
       (and (pair? static-infoss)
            (pair? (syntax-e (car static-infoss)))

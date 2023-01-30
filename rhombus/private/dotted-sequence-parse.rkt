@@ -19,6 +19,7 @@
            :dotted-operator-or-identifier
            build-definitions/maybe-extension
            build-syntax-definition/maybe-extension
+           build-syntax-definitions/maybe-extension
            identifier-extension-binding?))
 
 ;; A dotted identifier as a bindig form does not go though `:dotted-identifier-sequence`.
@@ -112,6 +113,24 @@
                                                              (quote-syntax #,extends))))]
     [else
      #`(define-syntax #,name #,rhs)]))
+
+(define-for-syntax (build-syntax-definitions/maybe-extension space-syms name-in extends rhs)
+  (define names (for/list ([space-sym (in-list space-syms)])
+                  ((space->introducer space-sym) name-in)))
+  (cond
+    [(syntax-e extends)
+     (define tmps (for/list ([space-sym (in-list space-syms)])
+                    ((space->introducer space-sym) (car (generate-temporaries (list name-in))))))
+     (cons
+      #`(define-syntaxes #,tmps (let-values ([#,names #,rhs])
+                                 (values #,@names)))
+      (for/list ([name (in-list names)]
+                 [tmp (in-list tmps)])
+        #`(define-syntax #,name (extension-rename-transformer (quote-syntax #,tmp)
+                                                              (quote-syntax #,extends)))))]
+    [else
+     (list
+      #`(define-syntaxes #,names #,rhs))]))
 
 (define-for-syntax (identifier-extension-binding? id prefix)
   (define v (syntax-local-value* id (lambda (v)

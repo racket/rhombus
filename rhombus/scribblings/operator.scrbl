@@ -13,7 +13,7 @@
 
 @title(~tag: "operator"){Operators}
 
-The @rhombus(operator) form defines a prefix or infix operator for
+The @rhombus(operator) form defines a prefix, infix, or postfix operator for
 expressions, similar to a function definition:
 
 @demo(
@@ -28,6 +28,11 @@ expressions, similar to a function definition:
       Posn(x, x)
   ~repl:
     <<>> 3
+  ~defn:
+    operator (x <<<>>>):
+      Posn(x, x)
+  ~repl:
+    4 <<<>>>
 )
 
 An ``operator'' name does not have to be a shrubbery operator. It can be
@@ -43,7 +48,7 @@ an identifier:
 
 The @rhombus(operator) form must be followed by parentheses and then a
 block. Inside the parentheses, there must be exactly two or three terms,
-and the next-to-last term must be an operator or identifier to define.
+and the first, middle, or last term must be an operator or identifier to define.
 The arguments can be described by binding patterns, but in that case,
 they may need parentheses around the pattern to ensure that they form a
 single term in next to the operator being defined:
@@ -59,7 +64,8 @@ single term in next to the operator being defined:
 
 An operator can be defined for both infix and prefix behavior in much
 the same way that functions can be defined to accept one or two
-arguments:
+arguments, and there can be multiple cases with different binding
+patterns for infix, prefix, or both:
 
 @demo(
   ~eval: op_eval
@@ -69,10 +75,18 @@ arguments:
         Posn(x, y)
     | (<> (x ::Integer)):
         Posn(x, x)
+    | (<> "origin"):
+        Posn(0, 0)
   ~repl:
     1 <> 2
     <> 3
+    <> "origin"
 )
+
+A combination of prefix and postfix is also allowed, but infix and
+postfix cannot be mixed. For the unusual case of infix plus postfix, you
+would have to resort to more general parsing tools, as we'll see in
+@secref("expr-macro").
 
 Operator precedence is declared in relationship to other operators when
 the operator is defined. With no precedence defined, @rhombus(<>) cannot
@@ -115,7 +129,10 @@ grouped on lines however is convenient.
 
 Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
 @rhombus(~stronger_than), or @rhombus(~same_as) to declare a precedence
-relationship for operators not otherwise mentioned.
+relationship for operators not otherwise mentioned. When multiple cases
+for an operator are provided using @vbar, then only the first case for
+prefix, infix, or postfix can have options. Precedence for prefix and
+infix/postfix are independent.
 
 An operator can be exported the same as identifiers:
 
@@ -134,9 +151,9 @@ operator after @rhombus(.) in parentheses:
   1 posn.(<>) 2
 )
 
-If the point of an operator is terseness, an import prefix may defeat
-the point. Using a library that supplies operators may be one reason to
-import with a leading @rhombus(=) to avoid a prefix on the imports. To
+If the point of an operator is terseness, however, an import prefix may
+defeat the point. Using a library that supplies operators may be one
+reason to expose an imported name. To
 selectively make an operator accessible without it import’s prefix, use
 the @rhombus(expose) import modifier:
 

@@ -34,6 +34,7 @@
 
                      :prefix-operator-options
                      :infix-operator-options
+                     :postfix-operator-options
                      convert-prec
                      convert-assc))
 
@@ -86,6 +87,8 @@
     (datum->syntax #f prec))
 
   (define-splicing-syntax-class :ops/others
+    #:description "operator, identifier, or `~other`"
+    #:opaque
     #:attributes ([name 1])
     (pattern (_::block (group o::op/other ...) ...)
              #:attr [name 1] (syntax->list #'(o.name ... ...)))
@@ -140,7 +143,7 @@
                             (~or (_::block (group (~and assc
                                                         (~or #:right #:left #:none))))
                                  (~and assc (~or #:right #:left #:none))))
-                     #:defaults ([assc #'#:left]))))
+                     #:defaults ([assc #'()]))))
 
   (define-composed-splicing-syntax-class (:infix-operator-options space-sym)
     operator-options
@@ -150,6 +153,9 @@
     operator-options
     infix-operator-options
     self-options)
+
+  (define-composed-splicing-syntax-class (:postfix-operator-options space-sym)
+    operator-options)
 
   (define-syntax-class :$+1
     (pattern $-id
@@ -191,7 +197,9 @@
                    [(op . spec) #`(cons (quote-syntax op) 'spec)]))))
 
   (define (convert-assc assc)
-    #`'#,(string->symbol (keyword->string (syntax-e assc))))
+    (if (null? (syntax-e assc))
+        #''left
+        #`'#,(string->symbol (keyword->string (syntax-e assc)))))
 
   (define (check-parsed-right-form form-id tail-pattern)
     (syntax-parse tail-pattern
