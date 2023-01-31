@@ -1,0 +1,25 @@
+#lang rhombus
+
+begin:
+  use_static
+  def v:
+    try:
+      eval('fun')
+      ~catch x:
+        x
+  check:
+    (v :: Exn.Fail.Syntax).exprs[0].unwrap()
+    ~prints_like ['fun']  
+  check:
+    def e :: Exn.Fail.Syntax = v
+    e.exprs[0].unwrap()
+    ~prints_like ['fun']
+  check:
+    Exn.Fail.Syntax.exprs(v)[0].unwrap()
+    ~prints_like ['fun']
+
+  check:
+    def v = Exn.Fail.Read("hi", Continuation.current_marks() , [Srcloc(1, 2, 3, 4, 5)])
+    match v
+    | Exn.Fail.Read(a, b, srcs): srcs[0].line
+    ~is 2

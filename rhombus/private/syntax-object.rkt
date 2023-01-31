@@ -23,7 +23,8 @@
                       rhombus/annot)
                      Syntax)
          (for-space rhombus/annot
-                    Identifier))
+                    Identifier
+                    Operator))
 
 (module+ for-builtin
   (provide syntax-method-table))
@@ -39,6 +40,15 @@
 
 (define-annotation-syntax Identifier
   (identifier-annotation #'identifier? syntax-static-infos))
+
+(define-annotation-syntax Operator
+  (identifier-annotation #'is-operator? syntax-static-infos))
+(define (is-operator? s)
+  (and (syntax? s)
+       (syntax-parse s
+         #:datum-literals (op)
+         [(op _) #t]
+         [_ #f])))
 
 (define-name-root Syntax
   #:fields

@@ -7,7 +7,15 @@
   annot.macro 'Boolean'
 ){
 
-  Matches @rhombus(#true) or @rhombus(#false)
+  Matches @rhombus(#true) or @rhombus(#false).
+
+}
+
+@doc(
+  annot.macro 'False'
+){
+
+  Matches only @rhombus(#false).
 
 }
 

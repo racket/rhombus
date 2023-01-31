@@ -1,0 +1,96 @@
+#lang rhombus
+
+check:
+  try:
+    1/0
+    ~catch x :: Exn.Fail:
+      "fail"
+  ~is "fail"
+
+check:
+  try:
+    1/0
+    ~catch
+    | x :: Integer:
+        "done"      
+    | x :: Exn.Fail:
+        "fail"
+  ~is "fail"
+
+begin:
+  def mutable n = 0;
+  check:
+    try:
+      ~initially:
+        n := n + 1
+      "ok"
+      ~finally:
+        n := n + 100
+    ~is "ok"
+  check:
+    n ~is 101
+
+check:
+  Continuation.prompt:
+    2
+    ~catch (x): 10
+  ~is 2
+
+check:
+  Continuation.prompt:
+    2 + (Continuation.escape(100))
+    ~catch x: x+1
+  ~is 101
+
+check:
+  def outer = Continuation.make_prompt_tag(#'outer)
+  Continuation.prompt outer:
+    Continuation.prompt:  
+      2 + (Continuation.escape(~tag: outer, 100))
+      ~catch x: error("oops")
+    ~catch x: [x]
+  ~is [100]
+
+check:
+  Continuation.prompt:
+    2 + (Continuation.escape("there"))
+    ~catch
+    | x :: Integer: x+1
+    | x :: String: "hi " ++ x
+  ~is "hi there"
+
+check:
+  Continuation.prompt:
+    2 + (Continuation.escape(1, 2))
+    ~catch
+    | x :: Integer: x+1
+    | (x, y): [x, y]
+  ~is [1, 2]
+
+check:
+  Continuation.prompt:
+    2 + (Continuation.escape(0))
+    ~catch:
+      fun (x :: Integer): x+1
+  ~is 1
+
+check:
+  def mutable saved = #false
+  Continuation.prompt:
+    1 + (Continuation.capture k:
+           saved := k
+           0)
+  Continuation.prompt:
+    3 + saved(4)
+  ~is 8
+
+check:
+  def mutable saved = #false
+  def tag = Continuation.make_prompt_tag(#'demo)
+  Continuation.prompt tag:
+    1 + (Continuation.capture tag k:
+           saved := k
+           0)
+  Continuation.prompt:
+    3 + saved(4)
+  ~is 8

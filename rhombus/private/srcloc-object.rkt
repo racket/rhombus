@@ -18,7 +18,7 @@
   (provide (for-syntax srcloc-static-infos)))
 
 (define-primitive-class Srcloc srcloc
-  #:constructor-static-info (#%function-arity 32)
+  #:constructor-static-info ()
   #:existing
   #:transparent
   #:fields

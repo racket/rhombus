@@ -42,7 +42,7 @@
 (define path-string/method (method1 path-string))
 
 (define-primitive-class Path path
-  #:constructor-static-info (#%function-arity 2)
+  #:constructor-static-info ()
   #:existing
   #:translucent
   #:fields

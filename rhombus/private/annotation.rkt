@@ -49,6 +49,7 @@
                     Symbol
                     Keyword
                     Void
+                    False
 
                     matching
                     #%parens
@@ -378,6 +379,7 @@
 (define-annotation-syntax Symbol (identifier-annotation #'symbol? #'()))
 (define-annotation-syntax Keyword (identifier-annotation #'keyword? #'()))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
+(define-annotation-syntax False (identifier-annotation #'not #'()))
 
 ;; not exported, but referenced by `:annotation-seq` so that
 ;; annotation parsing terminates appropriately

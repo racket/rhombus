@@ -3,7 +3,9 @@
                      shrubbery/property
                      racket/syntax-srcloc)
          (only-in rhombus/private/name-root-ref
-                  portal-syntax->lookup))
+                  portal-syntax->lookup)
+         (only-in rhombus/private/name-root-space
+                  in-name-root-space))
 
 (provide (for-syntax
           resolve-name-ref
@@ -36,7 +38,7 @@
     [(null? fields) #f]
     [else
      (define field (car fields))
-     (define p (identifier-binding-portal-syntax root #f))
+     (define p (identifier-binding-portal-syntax (in-name-root-space root) #f))
      (define lookup (and p (portal-syntax->lookup p (lambda (self-id lookup) lookup))))
      (define intro (if space-name
                        (make-interned-syntax-introducer space-name)

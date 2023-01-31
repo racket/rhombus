@@ -100,6 +100,8 @@
         "pattern-clause-primitive.rkt"
         "for.rkt"
         "range.rkt"
+        "control.rkt"
+        "exn-object.rkt"
         "parameterize.rkt"
         "boolean-pattern.rkt"
         "boolean-annotation.rkt"

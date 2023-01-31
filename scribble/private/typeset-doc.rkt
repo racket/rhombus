@@ -271,12 +271,12 @@
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
-    #:literals (def fun interface operator grammar syntax_class)
+    #:literals (def fun interface operator grammar syntax_class class)
     #:datum-literals (|.| $ parens group op
-                          modifier class class_clause interface_clause quotes
+                          modifier class_clause interface_clause quotes
                           enforest transform)
     [(group _::space _ _ (~var id (identifier-target space-name))) #'id.name]
-    [(group (~or fun) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
+    [(group (~or fun class) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
     [(group (~or def interface) (~var id (identifier-target space-name)) . _) #'id.name]
     [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
     [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
@@ -295,10 +295,10 @@
 
 (define-for-syntax (extract-metavariables stx vars space-name)
   (syntax-parse stx
-    #:literals (def fun operator grammar specsubform syntax_class)
-    #:datum-literals (parens group op quotes class)
+    #:literals (def fun class operator grammar specsubform syntax_class)
+    #:datum-literals (parens group op quotes)
     [(group (~or _::space) . _) vars]
-    [(group (~or fun) (~var id (identifier-target space-name)) (parens g ...) . _)
+    [(group (~or fun class) (~var id (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
     [(group (~or def) (~var id (identifier-target space-name)) . _) vars]
@@ -408,9 +408,9 @@
        (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
         (group (parsed #,def-id-as-def)))))
   (syntax-parse stx
-    #:literals (def fun interface syntax_class operator |$| grammar)
+    #:literals (def fun class interface syntax_class operator |$| grammar)
     #:datum-literals (parens group op quotes |.|)
-    [(group (~and tag (~or def fun interface)) (~var id (identifier-target space-name)) e ...)
+    [(group (~and tag (~or def fun class interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
     [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)

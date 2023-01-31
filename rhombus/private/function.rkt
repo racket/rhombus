@@ -74,6 +74,9 @@
 (module+ for-method
   (provide fun/read-only-property))
 
+(module+ for-function-parse
+  (provide (for-syntax parse-anonymous-function)))
+
 (define-name-root Function
   #:fields
   (map))
@@ -335,7 +338,7 @@
    (lambda (stx)
      1)))
   
-(define-for-syntax (parse-anonymous-function stx adjustments for-entry?)
+(define-for-syntax (parse-anonymous-function stx [adjustments no-adjustments] [for-entry? #f])
   (syntax-parse stx
     #:datum-literals (group block alts)
     [(form-id (alts-tag::alts

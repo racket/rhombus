@@ -189,6 +189,14 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  annot.macro 'Operator'
+){
+
+  Matches a syntax object that contains a single operator term.
+
+}
+
+@doc(
   expr.macro '$ $expr'
 ){
 

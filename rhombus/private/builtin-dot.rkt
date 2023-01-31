@@ -9,7 +9,8 @@
          (submod "pair.rkt" for-builtin)
          (submod "function.rkt" for-builtin)
          (submod "path-object.rkt" for-builtin)
-         (submod "srcloc-object.rkt" for-builtin))
+         (submod "srcloc-object.rkt" for-builtin)
+         (submod "exn-object.rkt" for-builtin))
 
 (set-builtin->accessor-ref!
  (lambda (v)
@@ -23,4 +24,5 @@
      [(procedure? v) function-method-table]
      [(path? v) path-method-table]
      [(srcloc? v) srcloc-method-table]
+     [(exn? v) (get-exn-method-table v)]
      [else #f])))

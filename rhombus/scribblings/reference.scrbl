@@ -24,6 +24,8 @@
 @include_section("ref-for.scrbl")
 @include_section("ref-begin.scrbl")
 @include_section("ref-parameter.scrbl")
+@include_section("ref-exn.scrbl")
+@include_section("ref-control.scrbl")
 
 @include_section("ref-implicit.scrbl")
 @include_section("ref-dynamic-static.scrbl")
