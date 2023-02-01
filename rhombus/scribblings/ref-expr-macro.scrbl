@@ -78,22 +78,20 @@
   ~eval: macro_eval
   ~defn:
     :
-      // an infix `choose` that works without a right-hand side
-      // expression, and that has precendence between `+` and `*`
-      expr.macro '$left choose $tail ...':
-        ~weaker_than: *
-        ~stronger_than: +
-        match '$tail ...'
-        | '': values('factorial($left)', '')
-        | '$(right :: expr_meta.AfterInfixGroup('choose'))':
-             values('factorial($left)/factorial($right)', '$right.tail ...')
-      fun | factorial(0) : 1 | factorial(n): n*factorial(n-1)
+      // an infix `no_fail` that works without a right-hand side
+      // expression, and that has weak precendence
+      expr.macro
+      | '$left no_fail $()':
+          ~weaker_than: ~other
+          'try: $left; ~catch _: #false'
+      | '$left no_fail $(right :: expr_meta.AfterInfixGroup('no_fail')) $()':
+           values('try: $left; ~catch _: $right.parsed', '$right.tail ...')
   ~repl:
-    4 choose
-    4 choose 2
-    4 choose 2 + 1
-    4 choose 1*2
-    (4 choose 1) * 2
+    1/0 no_fail
+    1/0 no_fail 0
+    1/0 no_fail 0 + 1
+    1+0 no_fail 0 + 1
+    (1+0 no_fail 0) + 1
 )
 
 

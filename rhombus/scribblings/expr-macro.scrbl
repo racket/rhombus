@@ -61,25 +61,24 @@ instead of an arbitrary compile-time expression.
 )
 
 A postfix macro can be implemented as an infix operator that consumes no
-additional terms after the operator. For example, a postfix @rhombus(!)
-might be defined (shadowing the normal @rhombus(!) for ``not'') like
-this:
+additional terms after the operator. For example, a postfix
+@rhombus(no_fail) might be defined like this:
 
 @demo(
   ~eval: macro_eval
   ~defn:
-    macro '$a !':
-      'factorial($a)'
-  ~defn:
-    fun
-    | factorial(0): 1
-    | factorial(n): n*factorial(n-1)
+    macro '$left no_fail':
+      'try:
+         $left
+         ~catch _: #false'
   ~repl:
-    10! + 1
+    "hello" no_fail
+    sqrt("hello") no_fail
+    sqrt("hello") no_fail || "undefined"
 )
 
 With @rhombus(expr.macro) (but not @rhombus(macro)), the
-macro implementation after @rhombus(:) is compile-time code. Importing
+macro implementation after @colon is compile-time code. Importing
 @rhombusmodname(rhombus/meta) imports all of the same bindings as
 @rhombusmodname(rhombus) into the compile-time phase, in addition to making
 forms like @rhombus(expr.macro) available. Normally,
@@ -93,7 +92,7 @@ macro's pattern is potentially matched, and an infix/postfix macro's
 pattern must always have just @rhombus($, ~bind) followed by an
 identifier for its left-hand side. The pattern variable is bound to an
 opaque representation of the parsed form. In the definition of
-@rhombus(!) above, the pattern variable @rhombus(a) stands for a parsed
+@rhombus(no_fail) above, the pattern variable @rhombus(left) stands for a parsed
 form, and not just a single shrubbery term. The form is parsed according
 to declared precedence relationships; specify precence for a macro in
 the same way as for @rhombus(operator).
@@ -101,13 +100,13 @@ the same way as for @rhombus(operator).
 @demo(
   ~eval: macro_eval
   ~defn:
-    macro '$a !':
-      ~weaker_than: *
-      'factorial($a)'
+    macro '$left no_fail':
+      ~weaker_than: /
+      'try:
+         $left
+         ~catch _: #false'
   ~repl:
-    2*2!
-    (2*2)!
-    2*(2!)
+    1/0 no_fail
 )
 
 Since an @rhombus(expr.macro) implementation can use arbitrary
@@ -116,7 +115,7 @@ than just pattern matching. However, already-parsed terms will be
 opaque. Currently, there’s no way for a transformer to inspect a parsed
 Rhombus expression (except by escaping to Racket). When the parsed
 expression is injected back into an unparsed shrubbery, as happens in
-@rhombus('factorial($a)'), it will later simply parse as itself.
+@rhombus('try: $left'), it will later simply parse as itself.
 
 Whether an infix or prefix macro’s right-side is parsed depends on the
 shape of the macro pattern, and specifically whether the defined
@@ -131,8 +130,8 @@ side before it’s left-hand side:
 
 @demo(
   ~defn:
-    macro '$a +<= $b':
-      '$b + $a'
+    macro '$left +<= $right':
+      '$right + $left'
   ~repl:
     1 +<= 2
     ~error: (1+"oops") +<= (2+"ouch")  // complains about "ouch", not "oops"
@@ -151,9 +150,9 @@ annotate a pattern variable with @rhombus(::, ~unquote_bind) and
 @demo(
   ~eval: macro_eval
   ~defn:
-    macro '$a is_name $(b :: Id)':
+    macro '$left is_name $(name :: Id)':
       ~stronger_than: ~other
-      '$a == #'$b'
+      '$left == #'$name'
   ~repl:
     #'apple is_name apple
     #'banana is_name apple
@@ -169,13 +168,13 @@ return others back to the group to be parsed normally. The macro can
 return two values: the expanded expression and the remaining terms that
 have not been consumed.
 
-For example, the @rhombus(!) macro can be equivalently written like this:
+For example, the @rhombus(no_fail) macro can be equivalently written like this:
 
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a ! $tail ...':
-      values('factorial($a)', '$tail ...')
+    expr.macro '$left no_fail $tail ...':
+      values('try: $left; ~catch _: #false', '$tail ...')
 )
 
 Returning a single value is allowed, and that's the same as returning an
@@ -190,16 +189,16 @@ a macro uses to appear at the end of a group.
 @demo(
   ~eval: macro_eval
   ~defn:
-    macro '$e EOM $()':
+    macro '$left EOM $()':
       ~weaker_than: ~other
-      '$e'
+      '$left'
   ~repl:
     1 + 2 EOM
     ~error:
       1 + 2 EOM 3 * 4
 )
 
-In our latest definition of @rhombus(!), changing the @rhombus(tail)
+In our latest definition of @rhombus(no_fail), changing the @rhombus(tail)
 pattern to @rhombus((tail :: Term)) would disable the special treatment
 of @rhombus(..., ~bind) at the end of a pattern and template sequence
 and reify the tail as a fresh list---so don't do this:
@@ -207,12 +206,12 @@ and reify the tail as a fresh list---so don't do this:
 @demo(
   ~eval: macro_eval
   ~defn:
-    expr.macro '$a ! $(tail :: Term) ... $()':
-      values('factorial($a)', '$tail ...')
+    expr.macro '$left no_fail $(tail :: Term) ... $()':
+      values('try: $left; ~catch _: #false', '$tail ...')
   ~repl:
     :
-      // changing to 2000 `!`s or so makes parsing take noticeably long:
-      0 ! ! ! ! ! ! ! ! ! ! ! !
+      // changing to 2000 `no_fail`s or so makes parsing take noticeably long:
+      0 no_fail no_fail no_fail no_fail no_fail no_fail no_fail
 )
 
 In the same way that @rhombus(operator) supports operators that are both
