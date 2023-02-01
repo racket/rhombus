@@ -33,10 +33,27 @@
          option ...
          #:name-path-op name-path-op
          #:in-name-root-space in-name-root-space
-         #:name-root-ref name-root-ref)]
+         #:name-root-ref name-root-ref
+         #:lookup-space-description lookup-space-description)]
       [(_ option ...)
        (define-enforest
          option ...
          #:name-path-op name-path-op
          #:in-name-root-space in-name-root-space
-         #:name-root-ref name-root-ref)])))
+         #:name-root-ref name-root-ref
+         #:lookup-space-description lookup-space-description)])))
+
+(define-for-syntax (lookup-space-description space-sym)
+  (case space-sym
+    [(#f) "expressions, definitions, and declarations"]
+    [(rhombus/repet) "repetitions"]
+    [(rhombus/annot) "annotations"]
+    [(rhombus/bind) "bindings"]
+    [(rhombus/stxclass) "syntax classes"]
+    [(rhombus/unquote_binding) "unquote binding"]
+    [(rhombus/namespace) "namespaces"]
+    [(rhombus/class) "classes and interfaces"]
+    [(rhombus/for_clause) "for clauses"]
+    [(rhombus/class_clause) "class clauses"]
+    [(rhombus/interface_clause) "interface clauses"]
+    [else #f]))

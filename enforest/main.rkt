@@ -112,7 +112,9 @@
               (~optional (~seq #:select-infix-implicit -select-infix-implicit)
                          #:defaults ([-select-infix-implicit #'select-infix-implicit]))
               (~optional (~seq #:juxtapose-implicit-name -juxtapose-implicit-name)
-                         #:defaults ([-juxtapose-implicit-name #'juxtapose-implicit-name])))
+                         #:defaults ([-juxtapose-implicit-name #'juxtapose-implicit-name]))
+              (~optional (~seq #:lookup-space-description lookup-space-description)
+                         #:defaults ([lookup-space-description #'lookup-space-description])))
         ...)
      #:with (tl-decl ...) (if (eq? (syntax-local-context) 'top-level)
                               #`((define-syntaxes (enforest enforest-step) (values)))
@@ -149,7 +151,8 @@
                                                    check-result
                                                    make-identifier-form
                                                    make-operator-form
-                                                   -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name))
+                                                   -select-prefix-implicit -select-infix-implicit -juxtapose-implicit-name
+                                                   lookup-space-description))
          (define enforest (make-enforest enforest-step))
 
          (~? (define relative-precedence (make-relative-precedence
@@ -179,11 +182,15 @@
                             check-result
                             make-identifier-form
                             make-operator-form
-                            select-prefix-implicit select-infix-implicit juxtapose-implicit-name)
+                            select-prefix-implicit select-infix-implicit juxtapose-implicit-name
+                            lookup-space-description)
   (define (raise-unbound-operator op-stx)
     (raise-syntax-error #f
                         (string-append "unbound " operator-kind-str)
-                        op-stx))
+                        op-stx
+                        #f
+                        null
+                        (information-about-bindings op-stx lookup-space-description)))
   
   ;; Takes 3 or 4 arguments, depending on whether a preceding expression is available
   (define enforest-step
@@ -352,7 +359,8 @@
           (define-values (op op-stx) (lookup-infix-implicit implicit-name init-form context-stx head-stx in-space
                                                             infix-operator-ref
                                                             operator-kind-str form-kind-str
-                                                            stop-on-unbound?))
+                                                            stop-on-unbound?
+                                                            lookup-space-description))
           (cond
             [(not op) ; => `stop-on-unbound?`
              (values init-form stxes)]

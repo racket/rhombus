@@ -101,17 +101,17 @@
                       AfterPrefixGroup :prefix-op+form+tail
                       AfterInfixGroup :infix-op+form+tail)
   (begin
-    (define-syntax Group (make-syntax-class #':form
-                                            #:kind 'group
-                                            #:fields #'((parsed #f parsed 0 unpack-parsed*))))
-    (define-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
-                                                       #:kind 'group
-                                                       #:arity 2
-                                                       #:fields #'((parsed #f parsed 0 unpack-parsed*)
-                                                                   (tail #f tail tail unpack-tail-list*))))
-    (define-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
-                                                      #:kind 'group
-                                                      #:arity 2
-                                                      #:fields #'((parsed #f parsed 0 unpack-parsed*)
-                                                                  (tail #f tail tail unpack-tail-list*))))))
+    (define-syntax-class-syntax Group (make-syntax-class #':form
+                                                         #:kind 'group
+                                                         #:fields #'((parsed #f parsed 0 unpack-parsed*))))
+    (define-syntax-class-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
+                                                                   #:kind 'group
+                                                                   #:arity 2
+                                                                   #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                               (tail #f tail tail unpack-tail-list*))))
+    (define-syntax-class-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
+                                                                   #:kind 'group
+                                                                   #:arity 2
+                                                                   #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                               (tail #f tail tail unpack-tail-list*))))))
 

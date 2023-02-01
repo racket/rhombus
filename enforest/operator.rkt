@@ -36,6 +36,9 @@
            lookup-infix-implicit
            lookup-prefix-implicit
 
+           information-about-bindings
+           lookup-space-description
+
            apply-prefix-direct-operator
            apply-infix-direct-operator
            apply-prefix-transformer-operator
@@ -144,7 +147,8 @@
                         adj-form))
   (values op op-stx))
 
-(define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind stop-on-unbound?)
+(define (lookup-infix-implicit adjacent-name prev-form adj-context adj-form in-space operator-ref operator-kind form-kind
+                               stop-on-unbound? lookup-space-description)
   (define op-stx (datum->syntax adj-context adjacent-name))
   (define op (syntax-local-value* (in-space op-stx) operator-ref))
   (unless op
@@ -163,7 +167,10 @@
                             adjacent-name
                             #;
                             operator-kind)
-                           prev-form)]
+                           prev-form
+                           #f
+                           null
+                           (information-about-bindings prev-form lookup-space-description))]
       [(not stop-on-unbound?)
        (raise-syntax-error #f
                            (format
@@ -179,6 +186,27 @@
                             operator-kind)
                            adj-form)]))
   (values op op-stx))
+
+
+(define (information-about-bindings id lookup-space-description)
+  (let ([syms (append
+               (if (identifier-binding id)
+                   (list #f)
+                   null)
+               (for/list ([sym (in-list (syntax-local-module-interned-scope-symbols))]
+                          #:when (identifier-distinct-binding ((make-interned-syntax-introducer sym) id 'add)
+                                                              id))
+                 sym))])
+    (if (null? syms)
+        ""
+        (apply string-append
+               "\n  bound in spaces:"
+               (for/list ([sym (in-list syms)])
+                 (format "\n   ~a" (or (lookup-space-description sym)
+                                       (format "space with path ~s" sym))))))))
+
+(define (lookup-space-description space-sym)
+  #f)
 
 (define (apply-prefix-direct-operator op form stx checker)
   (call-as-transformer
