@@ -42,6 +42,7 @@
                     PositiveInteger
                     NegativeInteger
                     NonnegativeInteger
+                    Flonum
                     Number
                     Real
                     String
@@ -372,6 +373,7 @@
 (define-annotation-syntax PositiveInteger (identifier-annotation #'exact-positive-integer? #'()))
 (define-annotation-syntax NegativeInteger (identifier-annotation #'exact-negative-integer? #'()))
 (define-annotation-syntax NonnegativeInteger (identifier-annotation #'exact-nonnegative-integer? #'()))
+(define-annotation-syntax Flonum (identifier-annotation #'flonum? #'()))
 (define-annotation-syntax Number (identifier-annotation #'number? #'()))
 (define-annotation-syntax Real (identifier-annotation #'real? #'()))
 (define-annotation-syntax String (identifier-annotation #'string? #'()))

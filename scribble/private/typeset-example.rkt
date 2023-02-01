@@ -63,6 +63,10 @@
                          #`((list (quote #:error)
                                   #,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...)))
                             (tag form ...))]
+                        [(group #:fake (block ((~and tag group) form ...)
+                                              ((~and tag2 group) answer ...)))
+                         #`(#,(rb #`(#,(syntax-raw-prefix-property #'tag "") form ...))
+                            (tag2 answer ...))]
                         [_ #`(#,(rb form) #,form)]))])
        #'(examples
           #:eval (rhombus-expression eval-expr)

@@ -83,11 +83,11 @@
  namespaces.
 
 @examples(
-  namespace math:
+  namespace geometry:
     export: pi
     def pi: 3.14
-  def math.tau: 2 * math.pi
-  math.tau
+  def geometry.tau: 2 * geometry.pi
+  geometry.tau
 )
 
 }

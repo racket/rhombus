@@ -1,7 +1,7 @@
 #lang rhombus
 import:
   lib("racket/math.rkt").sqr
-  lib("math/main.rkt") as math
+  lib("math/main.rkt") as more_math
 
 use_static
 
@@ -9,11 +9,11 @@ use_static
 // Positional Rest with &
 
 check:
-  sqrt(& [25]) ~is 5
-  expt(& [2, 3]) ~is 8
+  math.sqrt(& [25]) ~is 5
+  math.expt(& [2, 3]) ~is 8
   List(& [5, 6, 7, 8]) ~is [5, 6, 7, 8]
-  sqrt(25, & []) ~is 5
-  expt(2, & [3]) ~is 8
+  math.sqrt(25, & []) ~is 5
+  math.expt(2, & [3]) ~is 8
   List(5, 6, & [7, 8]) ~is [5, 6, 7, 8]
 
 fun prlist(& xs :: List): xs
@@ -106,7 +106,7 @@ begin:
 
 begin:
   fun avg(a, & bs):
-    (a + math.sum(bs)) / (1 + List.length(bs))
+    (a + more_math.sum(bs)) / (1 + List.length(bs))
   check avg(1, 5) ~is 3
   check avg(7, 9) ~is 8
   check avg(-2, 4) ~is 1
@@ -157,11 +157,11 @@ check:
 
 fun
 | krpythag(~& {#'~a: a, #'~b: b, & Map.empty}):
-    sqrt(sqr(a) + (sqr(b)))
+    math.sqrt(sqr(a) + (sqr(b)))
 | krpythag(~& {#'~a: a, #'~c: c, & Map.empty}):
-    sqrt(sqr(c) - (sqr(a)))
+    math.sqrt(sqr(c) - (sqr(a)))
 | krpythag(~& {#'~b: b, #'~c: c, & Map.empty}):
-    sqrt(sqr(c) - (sqr(b)))
+    math.sqrt(sqr(c) - (sqr(b)))
 | krpythag(~& {#'~a: a, #'~b: b, #'~c: c, & Map.empty}):
     sqr(a) + sqr(b) == sqr(c)
 
@@ -177,9 +177,9 @@ check :
   krpythag(~b: 24, ~& {#'~a: 7}) ~is 25
 
 fun
-| pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
-| pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
-| pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
+| pythag(~a: a, ~b: b): math.sqrt(sqr(a) + (sqr(b)))
+| pythag(~a: a, ~c: c): math.sqrt(sqr(c) - (sqr(a)))
+| pythag(~b: b, ~c: c): math.sqrt(sqr(c) - (sqr(b)))
 | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
 
 check:
@@ -219,7 +219,7 @@ fun
 | triangle_area(~base, ~height): (1/2) * base * height
 | triangle_area(~side1, ~side2, ~side3):
     def s = (1/2) * (side1 + side2 + side3)
-    sqrt(s * (s - side1) * (s - side2) * (s - side3))
+    math.sqrt(s * (s - side1) * (s - side2) * (s - side3))
 
 fun
 | shape_area(~type: "rectangle", ~& props): rectangle_area(~& props)
@@ -239,7 +239,7 @@ check:
 
 begin:
   def [x, ...] = [2, 3]
-  check expt(x, ...) ~is 8
+  check math.expt(x, ...) ~is 8
   check List(x, ...) ~is [2, 3]
 
 fun rrlist(x, ...):

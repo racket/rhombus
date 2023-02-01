@@ -56,6 +56,7 @@
 (bounce "implicit.rkt"
         "underscore.rkt"
         "arithmetic.rkt"
+        "math.rkt"
         "string.rkt"
         "dot.rkt"
         "maybe.rkt"

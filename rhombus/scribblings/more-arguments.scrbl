@@ -55,7 +55,7 @@ at the total number of spliced arguments matches the number that the
 function expects.
 
 @demo(
-  expt(& [2, 10])
+  math.expt(& [2, 10])
 )
 
 The @rhombus(add) function could also be written with @rhombus(&) for

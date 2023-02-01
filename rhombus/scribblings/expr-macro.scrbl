@@ -73,8 +73,8 @@ additional terms after the operator. For example, a postfix
          ~catch _: #false'
   ~repl:
     "hello" no_fail
-    sqrt("hello") no_fail
-    sqrt("hello") no_fail || "undefined"
+    math.sqrt("hello") no_fail
+    math.sqrt("hello") no_fail || "undefined"
 )
 
 With @rhombus(expr.macro) (but not @rhombus(macro)), the

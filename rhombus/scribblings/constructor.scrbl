@@ -63,7 +63,7 @@ class without a superclass.
       | (~x: x, ~y: y):
           super(~x: x, ~y: x)
       | (~r: r, ~θ: θ):
-          super(~x: r*cos(θ), ~y: r*sin(θ))
+          super(~x: r*math.cos(θ), ~y: r*math.sin(θ))
   ~repl:
     Posn()
     Posn(~x: 1, ~y: 2)
@@ -107,7 +107,7 @@ that the @rhombus(Posn) constructor supports.
       | (~x: x, ~y: y, ~z: z):
           super(~x: x, ~y: x)(~z: z)
       | (~r: r, ~θ: θ, ~φ: φ):
-          super(~r: r*cos(φ), ~θ: θ)(~z: r*sin(φ))
+          super(~r: r*math.cos(φ), ~θ: θ)(~z: r*math.sin(φ))
   ~repl:
     Posn3D()
     Posn3D(~x: 1, ~y: 2, ~z: 3)

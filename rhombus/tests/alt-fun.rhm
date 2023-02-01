@@ -5,7 +5,7 @@ import:
   lib("racket/base.rkt").#{object-name} as object_name
   lib("racket/base.rkt").#{procedure-arity} as procedure_arity
   lib("racket/base.rkt").#{procedure-keywords} as procedure_keywords
-  lib("math/main.rkt") as math
+  lib("math/main.rkt") as more_math
 
 class Posn(x, y)
 
@@ -141,7 +141,7 @@ begin:
   check f([], [1]) ~is 0
 
 fun
-| distance(x, y): sqrt(x*x + y*y)
+| distance(x, y): math.sqrt(x*x + y*y)
 | distance(x1, y1, x2, y2): distance(x2 - x1, y2 - y1)
 
 check: distance(3, 4); ~is 5
@@ -149,7 +149,7 @@ check: distance(10, 5, 18, 20); ~is 17
 
 fun
 | avg(a :: Number, & bs -: List.of(Number)):
-    (a + math.sum(bs)) / (1 + List.length(bs))
+    (a + more_math.sum(bs)) / (1 + List.length(bs))
 | avg(a :: Posn, & bs -: List.of(Posn)):
     Posn(avg(a.x, & map(Posn.x, bs)),
          avg(a.y, & map(Posn.y, bs)))
@@ -163,9 +163,9 @@ check: avg(Posn(0, 0), Posn(1, 3), Posn(2, 0)); ~is Posn(1, 1)
 // Alt Functions with Keywords
 
 fun
-| pythag(~a: a, ~b: b): sqrt(sqr(a) + (sqr(b)))
-| pythag(~a: a, ~c: c): sqrt(sqr(c) - (sqr(a)))
-| pythag(~b: b, ~c: c): sqrt(sqr(c) - (sqr(b)))
+| pythag(~a: a, ~b: b): math.sqrt(sqr(a) + (sqr(b)))
+| pythag(~a: a, ~c: c): math.sqrt(sqr(c) - (sqr(a)))
+| pythag(~b: b, ~c: c): math.sqrt(sqr(c) - (sqr(b)))
 | pythag(~a: a, ~b: b, ~c: c): sqr(a) + sqr(b) == sqr(c)
 
 check pythag(~a: 3, ~b: 4) ~is 5

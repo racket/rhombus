@@ -14,13 +14,13 @@ dot.macro 'vector_dot_provider $left $dot $right':
   | 'angle': 'vector_angle($left)'
   | 'magnitude': 'vector_magnitude($left)'
 
-fun vector_angle(Posn(x, y)): atan(y, x)
-fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
+fun vector_angle(Posn(x, y)): math.atan(y, x)
+fun vector_magnitude(Posn(x, y)): math.sqrt(x*x + y*y)
 
 let vec :: Vector: Posn(3, 4)
 check:
   vec.angle
-  ~is atan(4, 3)
+  ~is math.atan(4, 3)
 check:
   vec.magnitude
   ~is 5

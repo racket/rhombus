@@ -28,7 +28,15 @@
 ){
 
  Matches real numbers (as opposed to imaginary numbers like the result
- of @rhombus(sqrt(-1))).
+ of @rhombus(math.sqrt(-1))).
+
+}
+
+@doc(
+  annot.macro 'Flonum'
+){
+
+ Matches real numbers that are represented as floating-point numbers.
 
 }
 
@@ -70,38 +78,65 @@
 }
 
 @doc(
-  fun sqrt(x :: Number) :: Number
-  fun cos(x :: Number) :: Number
-  fun sin(x :: Number) :: Number
-  fun tan(x :: Number) :: Number
-  fun acos(x :: Number) :: Number
-  fun asin(x :: Number) :: Number
-  fun atan(x :: Number) :: Number
-  fun atan(y :: Number, x :: Number) :: Number
-  fun log(x :: Number) :: Number
-  fun exp(x :: Number) :: Number
-  fun expt(base :: Number, power :: Number) :: Number
-  fun floor(x :: Number) :: Number
-  fun ceiling(x :: Number) :: Number
-  fun round(x :: Number) :: Number
+  fun math.abs(x :: Real) :: Real
+  fun math.max(x :: Real) :: Real
+  fun math.min(x :: Real) :: Real
+  fun math.floor(x :: Real) :: Real
+  fun math.ceiling(x :: Real) :: Real
+  fun math.round(x :: Real) :: Real
+  fun math.sqrt(x :: Number) :: Number
+  fun math.log(x :: Number) :: Number
+  fun math.exp(x :: Number) :: Number
+  fun math.expt(base :: Number, power :: Number) :: Number
+  fun math.cos(x :: Number) :: Number
+  fun math.sin(x :: Number) :: Number
+  fun math.tan(x :: Number) :: Number
+  fun math.acos(x :: Number) :: Number
+  fun math.asin(x :: Number) :: Number
+  fun math.atan(x :: Number) :: Number
+  fun math.atan(y :: Number, x :: Number) :: Number
 ){
 
  The usual functions on numbers.
 
 @examples(
-  sqrt(4)
-  cos(3.14)
-  sin(3.14)
-  tan(3.14 / 4)
-  acos(1)
-  asin(1)
-  atan(0.5)
-  atan(1, 2)
-  log(2.718)
-  exp(1)
-  floor(1.5)
-  ceiling(1.5)
-  round(1.5)
+  math.abs(-1.5)
+  math.min(1, 2)
+  math.max(1, 2)
+  math.floor(1.5)
+  math.ceiling(1.5)
+  math.round(1.5)
+  math.sqrt(4)
+  math.cos(3.14)
+  math.sin(3.14)
+  math.tan(3.14 / 4)
+  math.acos(1)
+  math.asin(1)
+  math.atan(0.5)
+  math.atan(1, 2)
+  math.log(2.718)
+  math.exp(1)
+)
+
+}
+
+@doc(
+  fun math.random() :: Real
+  fun math.random(n :: PositiveInteger) :: NonnegativeInteger
+){
+
+ Returns a random number between @rhombus(0.0) (inclusive) and
+ @rhombus(1.0) (exclusive) when called with 0 arguments, and returns an
+ integer between 0 (inclusive) and @rhombus(n) (exclusive) when called
+ with @rhombus(n).
+
+@examples(
+  ~fake:
+    math.random()
+    0.5348255534758128
+  ~fake:
+    math.random(17)
+    13
 )
 
 }

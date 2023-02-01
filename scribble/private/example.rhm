@@ -27,6 +27,8 @@ expr.macro 'examples($form, ...)':
         [['~hidden', [repl, ...]], &split(rest)]
     | ['~error: $repl', &rest]:
         [['~repl', forms]]
+    | ['~fake: $repl', &rest]:
+        [['~repl', forms]]
     | ['$(kw :: Keyword) $_ ...', &rest]:
         Syntax.error("misplaced or unrecognized keyword", self, kw)
     | [form, ...]:

@@ -31,12 +31,7 @@
                      ==
                      !=
 
-                     ===)
-
-         (for-spaces (#f
-                      rhombus/statinfo)
-                     sqrt cos sin tan log exp expt acos asin atan
-                     floor ceiling round))
+                     ===))
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus* rhombus/)
@@ -96,14 +91,3 @@
 (define-eql-infix === eq?)
 
 (define (not-equal-always? a b) (not (equal-always? a b)))
-
-(define-static-info-syntaxes (sqrt cos sin tan exp acos asin
-                                   floor ceiling round)
-  (#%function-arity 2))
-
-(define-static-info-syntaxes (expt)
-  (#%function-arity 4))
-
-(define-static-info-syntaxes (log atan)
-  (#%function-arity 6))
-

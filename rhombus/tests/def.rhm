@@ -8,7 +8,7 @@ begin:
   check:
     def (((ππ))) = π * π
     ππ
-    ~is expt(3.14, 2)
+    ~is math.expt(3.14, 2)
 
 check:
   def (ma, mb, mc):

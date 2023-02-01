@@ -61,9 +61,9 @@ without parentheses for arguments.
   ~defn:
     class Posn(x, y):
       property angle :: Real:
-        atan(y, x)
+        math.atan(y, x)
       property magnitude :: Real:
-        sqrt(x*x + y*y)
+        math.sqrt(x*x + y*y)
   ~repl:
     Posn(3, 4).magnitude
     Posn(4, 4).angle
@@ -85,13 +85,13 @@ method argument.
     class Posn(mutable x, mutable y):
       property
       | angle :: Real:
-          atan(y, x)
+          math.atan(y, x)
       | angle := new_angle :: Real:
           def m = magnitude
-          x := m * cos(new_angle)
-          y := m * sin(new_angle)
+          x := m * math.cos(new_angle)
+          y := m * math.sin(new_angle)
       property magnitude :: Real:
-        sqrt(x*x + y*y)
+        math.sqrt(x*x + y*y)
         
   ~repl:
     def p = Posn(4, 4)

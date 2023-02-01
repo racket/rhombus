@@ -9,12 +9,12 @@ check:
 
 check:
   operator (x mod y):
-    x - floor(x / y) * y
+    x - math.floor(x / y) * y
   10 mod 3
   ~is 1
 
 operator (;«x mod y»):
-  x - floor(x / y) * y
+  x - math.floor(x / y) * y
 
 check:
   10 mod 3
@@ -62,7 +62,7 @@ begin:
 begin:
   operator
   | (** exponent):
-      expt(2, exponent)
+      math.expt(2, exponent)
   | (base **):
       base * base
 

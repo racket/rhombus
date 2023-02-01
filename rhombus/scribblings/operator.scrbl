@@ -41,7 +41,7 @@ an identifier:
 @demo(
   ~defn:
     operator (x mod y):
-      x - floor(x / y) * y
+      x - math.floor(x / y) * y
   ~repl:
     10 mod 3
 )

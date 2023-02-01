@@ -102,8 +102,8 @@ identifier to the right of the dot. The dot provider associated with
       | 'angle': 'vector_angle($left)'
       | 'magnitude': 'vector_magnitude($left)'
   ~defn:
-    fun vector_angle(Posn(x, y)): atan(y, x)
-    fun vector_magnitude(Posn(x, y)): sqrt(x*x + y*y)
+    fun vector_angle(Posn(x, y)): math.atan(y, x)
+    fun vector_magnitude(Posn(x, y)): math.sqrt(x*x + y*y)
   )
 
 With those pieces in place, a binding using @rhombus(:: Vector) creates

@@ -35,7 +35,7 @@ check:
   ~is #true
 
 check:
-  expt(2, 100) == expt(2, 100)
+  math.expt(2, 100) == math.expt(2, 100)
   ~is #true
 
 check:

@@ -27,7 +27,7 @@ name with @rhombus(.).
 @demo(
   ~eval: ns_eval
   ~defn:
-    namespace math:
+    namespace geometry:
       export:
         tau
         Complex
@@ -35,9 +35,9 @@ name with @rhombus(.).
       def tau = 2 * pi
       class Complex(real, imag)
   ~repl:
-    math.tau
-    ~error: math.pi
-    math.Complex(0, math.tau)
+    geometry.tau
+    ~error: geometry.pi
+    geometry.Complex(0, geometry.tau)
 )
 
 A name defined with @rhombus(namespace) can be used with @rhombus(import),
@@ -50,11 +50,11 @@ generally, such as a block created with @rhombus(begin) or
   ~eval: ns_eval
   ~repl:
     begin:
-      import: .math open
+      import: .geometry open
       Complex(0, tau)
   ~defn:
     def also_pi:
-      import: .math open
+      import: .geometry open
       tau / 2
   ~repl:
     also_pi
@@ -68,17 +68,17 @@ existing namespace or by nesting @rhombus(namespace) forms.
   ~defn:
     namespace subject:
       export:
-        math
+        geometry
         english
       namespace english:
         def greeting = "Hello"
         export: greeting
   ~repl:
     subject.english.greeting
-    subject.math.tau
+    subject.geometry.tau
     begin:
       import: .subject open
-      math.tau             
+      geometry.tau             
 )
 
 A @rhombus(., ~impo) can be used in an @rhombus(import) form as a shorthand to
@@ -92,17 +92,17 @@ reach a nested binding without making intemediate bindings visible.
 )
 
 An existing namespace can be extended by using a dotted name in a
-definition, such as defining @rhombus(math.e) in a context where
-@rhombus(math) is a namespace. The extension does not mutate the
+definition, such as defining @rhombus(geometry.e) in a context where
+@rhombus(geometry) is a namespace. The extension does not mutate the
 namespace; it merely extends the bindings that are available in the
 scope of the extending definition.
 
 @demo(
   ~eval: ns_eval
   begin:
-    def math.e = 2.71
-    math.e
-  ~error: math.e
+    def geometry.e = 2.71
+    geometry.e
+  ~error: geometry.e
 )
 
 When a namespace is exported, any extensions of the namespace visible

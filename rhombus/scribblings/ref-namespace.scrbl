@@ -71,13 +71,13 @@ as part of their grammar:
  @tech{space}.
 
 @examples(
-  namespace math:
+  namespace geometry:
     export: pi tau
     def pi: 3.14
     def tau: 6.28
-  math.pi
+  geometry.pi
   begin:
-    import: .math open
+    import: .geometry open
     [pi, tau]
 )
 
