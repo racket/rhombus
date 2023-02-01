@@ -9,9 +9,7 @@
          "class-dot.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax))
 
-(provide (for-spaces (rhombus/namespace
-                      rhombus/class
-                      rhombus/annot)
+(provide (for-spaces (rhombus/class)
                      Equatable))
 
 (define-values (prop:Equatable Equatable? Equatable-ref)
@@ -59,35 +57,6 @@
                   (hasheq 'equal_recur 0 'hash_recur 1)
                   #hasheq()
                   #t))
-
-(define-name-root Equatable
-  #:fields
-  ([equal_recur equal-recur-method]
-   [hash_recur hash-recur-method]))
-
-(define-annotation-syntax Equatable
-  (identifier-annotation #'Equatable-public? #'((#%dot-provider equatable-instance))))
-
-(define-dot-provider-syntax equatable-instance
-  (dot-provider-more-static (make-handle-class-instance-dot #'Equatable #hasheq() #hasheq())))
-
-(define (get-equatable who v)
-  (define vt (Equatable-public-ref v #false))
-  (unless vt
-    (raise-argument-error* who rhombus-realm "Equatable" v))
-  vt)
-
-(define equal-recur-method
-  (let ([equal_recur
-         (lambda (this other recur)
-           ((vector-ref (get-equatable 'equal_recur this) 0) this other recur))])
-    equal_recur))
-  
-(define hash-recur-method
-  (let ([hash_recur
-         (lambda (this recur)
-           ((vector-ref (get-equatable 'hash_recur this) 1) this recur))])
-    hash_recur))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))
