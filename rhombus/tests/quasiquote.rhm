@@ -107,3 +107,8 @@ check:
 check:
   '1 $('')'
   ~prints_like '1'
+
+check:
+  def g = ''
+  '3 + (1, $g $g)'
+  ~raises "generated an empty group"

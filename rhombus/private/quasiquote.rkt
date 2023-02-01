@@ -127,8 +127,8 @@
                                  [idrs '()]  ; list of #`[#,id #,rhs] for definitions
                                  [sidrs '()] ; list of #`[(#,id ...) #,rhs] for syntax definitions
                                  [vars '()]  ; list of `[,id . ,depth] for visible subset of `idrs` and `sidrs`
-                                 [ps '()] [can-be-empty? #t] [pend-is-rep? #f] [tail #f] [depth depth])
-         (define really-can-be-empty? (and can-be-empty? (or pend-is-rep? (not pend-idrs))))
+                                 [ps '()] [can-be-empty? #t] [pend-is-splice? #f] [tail #f] [depth depth])
+         (define really-can-be-empty? (and can-be-empty? (or pend-is-splice? (not pend-idrs))))
          (define (simple gs a-depth)
            (syntax-parse gs
              [(g . gs)
@@ -234,14 +234,14 @@
                           (append new-idrs (or pend-idrs '()) idrs)
                           (append new-sidrs (or pend-sidrs '()) sidrs)
                           (append new-vars (or pend-vars '()) vars)
-                          #f)]
+                          really-can-be-empty?)]
                  [else
                   (loop #'n-gs new-idrs new-sidrs new-vars
                         (append (or pend-idrs '()) idrs)
                         (append (or pend-sidrs '()) sidrs)
                         (append (or pend-vars '()) vars)
                         (cons pat ps)
-                        really-can-be-empty? #f #f depth)])]
+                        really-can-be-empty? #t #f depth)])]
               [else
                (simple2 gs (sub1 depth))])]
            [(g . _)
