@@ -114,7 +114,7 @@
       [(block (group (quotes template)))
        ;; delay further conversion until after pattern variables are bound
        #`(rule-template template #,ids)]
-      [(block (group e)) (raise-syntax-error 'template "invalid result template" #'e)]))
+      [(block (group e)) (raise-syntax-error 'template "result must be a template expression" #'e)]))
   (syntax-parse pre-parsed
     #:datum-literals (pre-parsed infix prefix)
     ;; infix protocol
@@ -208,9 +208,9 @@
                                                         [(quotes (group (op _))) #t]
                                                         [else #f]))
                                             (raise-syntax-error 'template
-                                                                (string-append
-                                                                 "expected an identifier bound by the pattern\n"
-                                                                 " or a literal-operator syntax object")
+                                                                (if (identifier? e)
+                                                                    "expected an identifier that is bound by the pattern"
+                                                                    "expected an identifier or a syntax object containing an operator")
                                                                 e)))))]))
 
 (define-syntax (tail-rule-template stx)

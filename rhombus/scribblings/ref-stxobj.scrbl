@@ -55,6 +55,8 @@ Metadata for a syntax object can include a source location and the raw
   repet.macro '«#{#%quotes} '$term ...; ...'»'
 ){
 
+@provided_also_meta()
+
  Constructs a syntax object. When a single @rhombus(term) is present,
  the result is a single-term syntax object. When a single
  @rhombus(term ...) group is present with multiple @rhombus(term)s,
@@ -130,6 +132,8 @@ Metadata for a syntax object can include a source location and the raw
 @doc(
   bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
+
+@provided_also_meta()
 
  Matches a syntax object consistent with @rhombus(term, ~var)s.
  Identifiers and operators are matched symbolically (unrelatd to
@@ -325,6 +329,8 @@ Metadata for a syntax object can include a source location and the raw
 @doc(
   unquote_bind.macro '«#{#%quotes} '$term ...; ...'»'
 ){
+
+@provided_also_meta()
 
  For use within a @rhombus($, ~bind) escape for a nested binding
  pattern. See @rhombus($, ~bind).

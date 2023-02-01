@@ -5,14 +5,17 @@
                      (only-in "ellipsis.rkt"
                               [... rhombus...])
                      (only-in "quasiquote.rkt"
-                              [_ rhombus_])
+                              [_ rhombus_]
+                              #%quotes)
                      (only-in "unquote-binding-primitive.rkt"
                               #%parens
                               ::)
                      (only-in "dollar.rkt" $)
                      "rest-marker.rkt"
                      (only-space-in rhombus/stxclass
-                                    "syntax-class-primitive.rkt"))
+                                    "syntax-class-primitive.rkt")
+                     (only-in "implicit.rkt"
+                              #%parens))
          racket/interaction-info
          "builtin-dot.rkt"
          "bounce.rkt"
@@ -24,20 +27,30 @@
          #%top-interaction
          #%top
          (for-syntax
+          ;; anything exported in the default space needs
+          ;; to be exported in all of its spaces
           (for-space #f
                      (rename-out [rhombus... ...])
                      $
                      &
-                     ~&)
+                     ~&
+                     #%quotes
+                     #%parens)
           (for-space rhombus/bind
                      (rename-out [rhombus... ...])
                      $
                      &
-                     ~&)
+                     ~&
+                     #%quotes
+                     #%parens)
           (for-space rhombus/unquote_bind
                      (rename-out [rhombus_ _])
+                     #%quotes
                      #%parens
                      ::)
+          (for-space rhombus/repet
+                     #%quotes
+                     #%parens)
           (for-space rhombus/stxclass
                      ;; Why doesn't
                      ;;   (all-from-out "syntax-class-primitive.rkt")

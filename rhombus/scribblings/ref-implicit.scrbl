@@ -88,6 +88,8 @@ Here are all of the implicit forms:
   annot.macro '#{#%parens} ($annotation)'
 ){
 
+@provided_also_meta()
+
  Produces the same value as @rhombus(expr), same binding as
  @rhombus(binding), and so on. Multiple expression, bindings, etc.,
  are disallowed.
