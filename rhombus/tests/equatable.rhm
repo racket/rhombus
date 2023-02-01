@@ -1,0 +1,40 @@
+#lang rhombus
+
+use_static
+
+class AnythingGoes():
+  implements Equatable
+  override equal_recur(other, recur): #true
+  override hash_recur(recur): 0
+
+class NoGo():
+  implements Equatable
+  override equal_recur(other, recur): #false
+  override hash_recur(recur): 0
+
+class Fail():
+  implements Equatable
+  override equal_recur(other, recur): error("failure")
+  override hash_recur(recur): error("failure")
+
+check AnythingGoes() == AnythingGoes() ~is #true
+// TODO: hide methods `equal_recur` and `hash_recur`,
+//       then test that they can't be called directly
+
+check AnythingGoes() == NoGo() ~is #false
+check NoGo() == AnythingGoes()  ~is #false
+
+check NoGo() == NoGo() ~is #false
+begin:
+  let ng: NoGo()
+  check ng == ng ~is #true
+
+check AnythingGoes() == Fail() ~is #false
+check Fail() == AnythingGoes() ~is #false
+check NoGo() == Fail() ~is #false
+check Fail() == NoGo() ~is #false
+check Fail() == Fail() ~raises "failure"
+begin:
+  let f: Fail()
+  check f == f ~is #true
+

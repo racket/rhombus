@@ -25,10 +25,10 @@
 
 
 (define (bounce-to-equal-mode-proc this other recur mode)
-  (equals-internal-method this other))
+  (equal-recur-internal-method this other recur))
 
 (define (bounce-to-hash-mode-proc this recur mode)
-  (hashCode-internal-method this))
+  (hash-recur-internal-method this recur))
 
 (define bounced-equal+hash-implementation
   (list bounce-to-equal-mode-proc bounce-to-hash-mode-proc))
@@ -40,9 +40,10 @@
                   #'()
                   #'prop:Equatable
                   #'Equatable-ref
-                  (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
+                  (vector-immutable (box-immutable 'equal_recur)
+                                    (box-immutable 'hash_recur))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equals 0 'hashCode 1)
+                  (hasheq 'equal_recur 0 'hash_recur 1)
                   #hasheq()
                   #t))
 
@@ -52,16 +53,17 @@
                   #'()
                   #'prop:Equatable-public
                   #'Equatable-public-ref
-                  (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
+                  (vector-immutable (box-immutable 'equal_recur)
+                                    (box-immutable 'hash_recur))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equals 0 'hashCode 1)
+                  (hasheq 'equal_recur 0 'hash_recur 1)
                   #hasheq()
                   #t))
 
 (define-name-root Equatable
   #:fields
-  ([equals equals-method]
-   [hashCode hashCode-method]))
+  ([equal_recur equal-recur-method]
+   [hash_recur hash-recur-method]))
 
 (define-annotation-syntax Equatable
   (identifier-annotation #'Equatable-public? #'((#%dot-provider equatable-instance))))
@@ -75,18 +77,20 @@
     (raise-argument-error* who rhombus-realm "Equatable" v))
   vt)
 
-(define equals-method
-  (let ([equals (lambda (this other)
-                  ((vector-ref (get-equatable 'equals this) 0) this other))])
-    equals))
+(define equal-recur-method
+  (let ([equal_recur
+         (lambda (this other recur)
+           ((vector-ref (get-equatable 'equal_recur this) 0) this other recur))])
+    equal_recur))
   
-(define hashCode-method
-  (let ([hashCode (lambda (this)
-                 ((vector-ref (get-equatable 'hashCode this) 1) this))])
-    hashCode))
+(define hash-recur-method
+  (let ([hash_recur
+         (lambda (this recur)
+           ((vector-ref (get-equatable 'hash_recur this) 1) this recur))])
+    hash_recur))
 
-(define (equals-internal-method v op)
-  ((vector-ref (Equatable-ref v) 0) v op))
+(define (equal-recur-internal-method this other recur)
+  ((vector-ref (Equatable-ref this) 0) this other recur))
 
-(define (hashCode-internal-method v op)
-  ((vector-ref (Equatable-ref v) 1) v op))
+(define (hash-recur-internal-method this recur)
+  ((vector-ref (Equatable-ref this) 1) this recur))
