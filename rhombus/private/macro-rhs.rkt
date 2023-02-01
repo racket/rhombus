@@ -271,7 +271,7 @@
             [i (in-naturals)])
         (when (parsed-parsed-right? p)
           (raise-syntax-error #f
-                              (format "multiple ~a cases not allowed with parsed patterns"
+                              (format "multiple ~a cases not allowed;\n at least one pattern matches a parsed right-hand argument"
                                       what)
                               orig-stx))
         (unless (zero? i)
