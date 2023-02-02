@@ -34,6 +34,11 @@
                      :expression
                      :binding
 
+                     declaration?
+                     nestable-declaration?
+                     definition?
+                     definition-sequence?
+
                      ;; for continuing enforestation of expressions or bindings:
                      :prefix-op+expression+tail
                      :infix-op+expression+tail
@@ -50,6 +55,7 @@
   ;; Form at the top of a module:
   (define-rhombus-transform
     #:syntax-class :declaration
+    #:predicate declaration?
     #:desc "declaration"
     #:in-space in-expression-space
     #:transformer-ref declaration-transformer-ref
@@ -58,6 +64,7 @@
   ;; Form at the top of a module or in a `nested` block:
   (define-rhombus-transform
     #:syntax-class :nestable-declaration
+    #:predicate nestable-declaration?
     #:desc "nestable declaration"
     #:in-space in-expression-space
     #:transformer-ref nestable-declaration-transformer-ref

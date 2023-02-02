@@ -42,7 +42,8 @@
 
 (module+ for-syntax-class
   (provide (for-syntax make-syntax-class)
-           define-operator-syntax-classes))
+           define-operator-syntax-classes
+           define-transformer-syntax-class))
 
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
@@ -115,3 +116,9 @@
                                                                    #:fields #'((parsed #f parsed 0 unpack-parsed*)
                                                                                (tail #f tail tail unpack-tail-list*))))))
 
+(define-syntax-rule (define-transformer-syntax-class
+                      Group :form)
+  (begin
+    (define-syntax-class-syntax Group (make-syntax-class #':form
+                                                         #:kind 'group
+                                                         #:fields #'((parsed #f parsed 0 unpack-parsed*))))))

@@ -81,7 +81,7 @@
 ){
 
  Similar to @rhombus(defn.macro), but defines a macro for a definition
- context that is matched against all of the remiaining groups in the
+ context that is matched against all of the remaining groups in the
  context, so the pattern is a multi-group pattern.
 
  The macro result is two values: a sequence of groups to
@@ -106,5 +106,36 @@
     seq_x
 )
 }
+
+@doc(
+  syntax_class defn_meta.IsGroup:
+    kind: ~group
+){
+
+ @provided_meta()
+
+ Syntax class that matches only groups that start with an identifier
+ that is bound as a definition form.
+
+ Unlike @rhombus(expr_meta.Group), @rhombus(defn_meta.IsGroup) does not
+ parse the definition form, because the form normally needs to be parsed
+ within a definition context. This syntax class can be used to
+ distinguish definitions from other forms that need to be treated
+ differently in some context.
+
+}
+
+@doc(
+  syntax_class defn_meta.IsSequenceStartGroup:
+    kind: ~group
+){
+
+ @provided_meta()
+
+ Syntax class that matches only groups that starts with an identifier
+ that is bound as a definition-sequence form.
+
+}
+
 
 @«macro.close_eval»(macro_eval)

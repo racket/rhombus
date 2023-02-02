@@ -6,11 +6,11 @@
 @title{Export}
 
 @doc(
-  decl.macro 'export:
-                $export_clause
-                ...'
+  decl.nestable_macro 'export:
+                         $export_clause
+                         ...'
 
-  decl.macro 'export $export_clause'
+  decl.nestable_macro 'export $export_clause'
 
   grammar export_clause:
     apple
@@ -31,7 +31,7 @@
     $operator_path
 ){
 
- Exports from the enclosing module. An @rhombus(export) form with a
+ Exports from the enclosing module or namespace. An @rhombus(export) form with a
  single immediate @rhombus(export_clause) is shorthand for an
  @rhombus(export) form that has a block containing the single
  @rhombus(export_clause).

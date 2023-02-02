@@ -67,6 +67,7 @@
          pack-nothing*
          pack-parsed*
          unpack-parsed*
+         unpack-parsed-list*
 
          repack-as-term
          repack-as-multi
@@ -301,6 +302,9 @@
 
 (define (unpack-parsed* qs r depth)
   (unpack-element* qs r depth))
+
+(define (unpack-parsed-list* qs r depth)
+  (unpack-term-list* qs r depth))
 
 ;; An extra layer of unpacking to convert to a list
 (define (unpack-multi-group* qs r depth)

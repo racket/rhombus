@@ -241,12 +241,14 @@
     (pattern (~seq (~or _::expo _::impo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class identifier-macro-head
-    #:datum-literals (op modifier macro |.|)
+    #:datum-literals (op modifier macro nestable_macro |.|)
     (pattern (~seq (~or _::defn _::decl _::expr _::annot _::repet _::bind _::reducer _::expo _::modpath
                         _::for_clause _::class_clause _::interface_clause _::entry_point
                         _::unquote_bind _::syntax_class_clause _::pattern_clause
                         _::space_clause _::space_meta_clause)
                    (op |.|) macro))
+    (pattern (~seq (~or _::decl)
+                   (op |.|) nestable_macro))
     (pattern (~seq (~or _::impo _::expo) (op |.|) modifier))
     (pattern (~seq def)))
   (define-splicing-syntax-class specsubform-head
@@ -512,8 +514,9 @@
 (define-for-syntax (extract-kind-str stx)
   (syntax-parse stx
     #:literals (def fun operator syntax_class interface grammar class)
-    #:datum-literals (parens group op quotes modifier macro)
+    #:datum-literals (parens group op quotes modifier macro nestable_macro)
     [(group _::space . _) "space"]
+    [(group _::decl _ nestable_macro . _) "nestable declaration"]
     [(group _::decl . _) "declaration"]
     [(group _::defn . _) "definition"]
     [(group _::expr . _) "expression"]

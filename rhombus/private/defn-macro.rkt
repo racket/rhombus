@@ -3,7 +3,11 @@
                      syntax/parse/pre
                      enforest/proc-name
                      "srcloc.rkt"
-                     "pack.rkt")
+                     "pack.rkt"
+                     "name-root.rkt"
+                     (submod "syntax-class-primitive.rkt" for-syntax-class)
+                     (submod "syntax-class-primitive.rkt" for-syntax-class-syntax)
+                     (for-syntax racket/base))
          "space-provide.rkt"
          "name-root.rkt"
          "definition.rkt"
@@ -14,6 +18,9 @@
   #:fields
   (macro
    sequence_macro))
+
+(provide (for-syntax (for-space rhombus/namespace
+                                defn_meta)))
 
 ;; ----------------------------------------
 
@@ -49,3 +56,31 @@
          [(head . h-tail) (proc (pack-tail #'h-tail) (pack-multi tail) #'head)]))
      (values (unpack-definitions defns proc)
              (unpack-multi new-tail proc #f)))))
+
+;; ----------------------------------------
+
+(begin-for-syntax
+  (define-name-root defn_meta
+    #:fields
+    (IsGroup
+     IsSequenceStartGroup)))
+
+(begin-for-syntax
+  (define-syntax-class :is_definition
+    #:attributes ()
+    (pattern g
+             #:when (definition? #'g)))
+  (define-syntax-class :is_definition_sequence
+    #:attributes ()
+    (pattern g
+             #:when (definition-sequence? #'(g))))
+  
+  (define-syntax-class-syntax IsGroup
+    (make-syntax-class #':is_definition
+                       #:kind 'group
+                       #:fields #'()))
+  
+  (define-syntax-class-syntax IsSequenceStartGroup
+    (make-syntax-class #':is_definition_sequence
+                       #:kind 'group
+                       #:fields #'())))

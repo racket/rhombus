@@ -30,6 +30,7 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-space.scrbl")
 @include_section("ref-namespace-macro.scrbl")
 @include_section("ref-defn-macro.scrbl")
+@include_section("ref-decl-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
 @include_section("ref-annotation-macro.scrbl")
