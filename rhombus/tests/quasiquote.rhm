@@ -91,6 +91,28 @@ check:
 
 check:
   ~eval
+  'x $'
+  ~raises "misplaced escape"
+
+check:
+  ~eval
+  'x
+   $'
+  ~raises "misplaced escape"
+
+check:
+  ~eval
+  '... x'
+  ~raises "misplaced repetition"
+
+check:
+  ~eval
+  '...
+   x'
+  ~raises "misplaced repetition"
+
+check:
+  ~eval
   def '0 $('1; 2') 3' = '0 1; 2'
   ~raises "multi-group pattern incompatible with term context"
 

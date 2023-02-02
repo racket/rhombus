@@ -244,6 +244,10 @@
                         really-can-be-empty? #t #f depth)])]
               [else
                (simple2 gs (sub1 depth))])]
+           [(((~datum op) (~var $-id (:$ in-space))))
+            (raise-syntax-error #f
+                                "misplaced escape"
+                                #'$-id.name)]
            [(g . _)
             (simple gs depth)]))]
       [((~and tag op) op-name)
