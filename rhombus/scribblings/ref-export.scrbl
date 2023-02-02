@@ -208,3 +208,14 @@
  submodule, used for module paths in @rhombus(all_from, ~expo).
 
 }
+
+@doc(
+  modpath.macro 'self'
+  modpath.macro 'parent'
+){
+
+ Like the @rhombus(self, ~impo) and @rhombus(parent, ~impo)
+ @rhombus(import) forms, used for module paths in
+ @rhombus(all_from, ~expo).
+
+}

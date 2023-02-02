@@ -45,6 +45,8 @@
                     (rename-out [rhombus/ /]
                                 [rhombus-file file]
                                 [rhombus-lib lib]
+                                [rhombus-self self]
+                                [rhombus-parent parent]
                                 [rhombus-! !]
                                 [rhombus. |.|])
                     as
@@ -71,7 +73,6 @@
   (struct import-prefix+infix-operator (prefix infix)
     #:property prop:import-prefix-operator (lambda (self) (import-prefix+infix-operator-prefix self))
     #:property prop:import-infix-operator (lambda (self) (import-prefix+infix-operator-infix self)))
-
 
   (property import-modifier transformer)
   (property import-modifier-block transformer)
@@ -123,7 +124,8 @@
     (let extract ([r r] [accum null])
       (syntax-parse r
         #:datum-literals (rename-in only-in except-in expose-in rhombus-prefix-in for-meta for-label
-                                    only-space-in only-spaces-in except-spaces-in)
+                                    only-space-in only-spaces-in except-spaces-in
+                                    submod)
         [#f (reverse accum)]
         [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
          (extract #'mp accum)]
@@ -165,6 +167,8 @@
                         mp
                         (string->symbol (path->string (path-replace-suffix name #"")))))]
          [(submod _ id) #'id]
+         [(submod ".") (datum->syntax mp 'self)]
+         [(submod "..") (datum->syntax mp 'parent)]
          [_ (raise-syntax-error 'import
                                 "don't know how to extract default prefix"
                                 mp)])]
@@ -670,6 +674,13 @@
 
 (define-import-syntax rhombus-!
   (make-module-path-submod-operator import-infix-operator))
+
+(define-import-syntax rhombus-self
+  (make-module-path-submod-same-operator import-prefix-operator))
+
+(define-import-syntax rhombus-parent
+  (make-module-path-submod-up-operator import-prefix-operator))
+
 
 (define-for-syntax infix-path-dot
   (import-infix-operator

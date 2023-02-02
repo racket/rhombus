@@ -31,6 +31,8 @@
     $module_path #,(@rhombus(!, ~impo)) $identifier
     #,(@rhombus(., ~impo)) $identifier
     $module_path #,(@rhombus(., ~impo)) $identifier
+    #,(@rhombus(self, ~impo))
+    #,(@rhombus(parent, ~impo))
 
   grammar collection_module_path:
     $identifier
@@ -123,6 +125,14 @@
   case the dotted form is a shorthand for just importing
   @rhombus(identifier) from @rhombus(module_path).}
 
+ @item{@rhombus(self, ~impo): refers to the enclosing module itself,
+  usually combined with @rhombus(!, ~impo) to refer to a submodule of the
+  enclosing module.}
+
+ @item{@rhombus(parent, ~impo): refers to the parent of the enclosing
+  submodule, somtimes combined with @rhombus(!, ~impo) to refer to a
+  sibling submodule.}
+
 )
 
 }
@@ -178,6 +188,17 @@
  Refers to a submodule name @rhombus(identifier) of the module
  referenced by @rhombus(module_path). See @rhombus(import) for more
  information.
+
+}
+
+@doc(
+  impo.macro 'self'
+  impo.macro 'parent'
+){
+
+ Refers to the module itself to reference a submodule of the enclosing
+ module, or refers to the paren module of a submodule. See
+ @rhombus(import) for more information.
 
 }
 

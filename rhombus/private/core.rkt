@@ -98,6 +98,7 @@
         "begin.rkt"
         "cond.rkt"
         "match.rkt"
+        "submodule.rkt"
         "quasiquote.rkt"
         "dollar.rkt"
         "unquote-binding-primitive.rkt"

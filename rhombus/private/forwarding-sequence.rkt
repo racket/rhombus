@@ -70,17 +70,22 @@
        (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx . forms)
              (cons #'form accum))]
       [(_ ctx mode orig base-ctx add-ctx remove-ctx form . forms)
-       (define exp-form (local-expand #'form
-                                      (syntax-local-context)
-                                      (list #'rhombus-forward
-                                            #'define-values
-                                            #'define-syntaxes
-                                            ;; etc.
-                                            #'begin
-                                            #'provide
-                                            #'#%require
-                                            #'begin-for-syntax)
-                                      #f))
+       (define exp-form (syntax-parse #'form
+                          #:literals (module module*)
+                          [(module . _) #'form]
+                          [(module* . _) #'form]
+                          [else
+                           (local-expand #'form
+                                         (syntax-local-context)
+                                         (list #'rhombus-forward
+                                               #'define-values
+                                               #'define-syntaxes
+                                               ;; etc.
+                                               #'begin
+                                               #'provide
+                                               #'#%require
+                                               #'begin-for-syntax)
+                                         #f)]))
        (syntax-parse exp-form
          #:literals (begin define-values define-syntaxes rhombus-forward #%require provide #%provide quote-syntax)
          [(rhombus-forward . sub-forms)

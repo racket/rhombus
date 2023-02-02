@@ -27,6 +27,8 @@
                     #%literal
                     (rename-out [rhombus/ /]
                                 [rhombus-! !]
+                                [rhombus-self self]
+                                [rhombus-parent parent]
                                 [rhombus-file file]
                                 [rhombus-lib lib])))
 
@@ -36,6 +38,8 @@
                        make-module-path-file-operator
                        make-module-path-lib-operator
                        make-module-path-submod-operator
+                       make-module-path-submod-same-operator
+                       make-module-path-submod-up-operator
 
                        :module-path
 
@@ -104,7 +108,10 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ a . tail)
-        (unless (module-path? (syntax->datum #'a))
+        (define d (syntax->datum #'a))
+        (unless (and (module-path? d)
+                     (not (equal? d "."))
+                     (not (equal? d "..")))
           (raise-syntax-error (current-module-path-context)
                               "not a valid module path"
                               #'a))
@@ -199,18 +206,60 @@
        (raise-syntax-error (current-module-path-context)
                            "not a valid submodule prefix"
                            mp))
-     (syntax-parse stx
-       #:datum-literals ()
-       [(form-id id:identifier . tail)
-        (values (datum->syntax #'id
-                               (list #'submod mp #'id)
-                               (span-srcloc #'form-id #'tag)
-                               #'form-id)
-                #'tail)]))
+     (let ([mp (convert-symbol-module-path mp)])
+       (syntax-parse stx
+         #:datum-literals ()
+         [(form-id id:identifier . tail)
+          (values (datum->syntax #'id
+                                 (syntax-parse mp
+                                   #:datum-literals (submod)
+                                   [(submod base path ...)
+                                    (syntax->list #'(submod base path ... id))]
+                                   [else
+                                    (list #'submod mp #'id)])
+                                 (span-srcloc #'form-id #'tag)
+                                 #'form-id)
+                  #'tail)])))
    'left))
 
 (define-module-path-syntax rhombus-!
   (make-module-path-submod-operator module-path-infix-operator))
+
+(define-for-syntax (make-module-path-submod-same-operator prefix-operator)
+  (prefix-operator
+   #'rhombus-self
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals ()
+       [(form-id . tail)
+        (values (datum->syntax #'form-id
+                               (list #'submod ".")
+                               #'form-id
+                               #'form-id)
+                #'tail)]))))
+
+(define-module-path-syntax rhombus-self
+  (make-module-path-submod-same-operator module-path-prefix-operator))
+
+(define-for-syntax (make-module-path-submod-up-operator prefix-operator)
+  (prefix-operator
+   #'rhombus-parent
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals ()
+       [(form-id . tail)
+        (values (datum->syntax #'form-id
+                               (list #'submod "..")
+                               #'form-id
+                               #'form-id)
+                #'tail)]))))
+
+(define-module-path-syntax rhombus-parent
+  (make-module-path-submod-up-operator module-path-prefix-operator))
 
 ;; Defines a fake meta namespace that would be exposed if we allowed
 ;; new module-path forms, needed to document the built-in ones
