@@ -27,10 +27,10 @@
 
 (define-for-syntax (parse-macro stx adjustments)
   (syntax-parse stx
-    #:datum-literals (parens group block alts op)
-    [(form-id ((~and alts-tag alts) (block (group (_::quotes ((~and tag group) (_::parens) . pat))
-                                                  (~and rhs (block body ...))))
-                                    ...+))
+    #:datum-literals (group)
+    [(form-id (alts-tag::alts (_::block (group (_::quotes ((~and tag group) (_::parens) . pat))
+                                               (~and rhs (_::block body ...))))
+                              ...+))
      (expose-arity
       adjustments
       (parse-operator-definitions-rhs
@@ -49,7 +49,7 @@
        #f
        #:adjustments adjustments))]
     [(form-id (_::quotes ((~and tag group) (_::parens) . pat))
-              (~and rhs (block body ...)))
+              (~and rhs (_::block body ...)))
      (expose-arity
       adjustments
       (parse-operator-definition-rhs
@@ -74,7 +74,7 @@
    (definition-transformer
      (lambda (stx)
        (syntax-parse stx
-         #:datum-literals (parens group block alts quotes op)
+         #:datum-literals (group)
          [(form-id (_::alts (_::block (group (_::quotes (group) (_::parens) . pat) (_::block . _)))
                          ...+))
           ;; found () in place of a defined name, so parse as an expression

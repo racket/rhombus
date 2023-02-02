@@ -120,8 +120,7 @@
                               (syntax->list #'(same-on-right.name ...))))
 
   (define-syntax-class-mixin self-options
-    #:datum-literals (op block group
-                         opt_stx)
+    #:datum-literals (group)
     (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
                                              (_::block (group self-id:identifier))))
                      #:defaults ([self-id #'self]))))
@@ -138,7 +137,7 @@
     self-options)
 
   (define-syntax-class-mixin infix-operator-options
-    #:datum-literals (op block group)
+    #:datum-literals (group)
     (~alt (~optional (group #:associativity ~!
                             (~or (_::block (group (~and assc
                                                         (~or #:right #:left #:none))))
@@ -158,7 +157,10 @@
     operator-options)
 
   (define-syntax-class :$+1
-    (pattern $-id
+    #:description "unquote operator"
+    #:opaque
+    #:datum-literals (op)
+    (pattern (op $-id)
              #:when (free-identifier=? (bind-quote $) (in-binding-space #'$-id)
                                        (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
 
@@ -175,7 +177,7 @@
              #:with id::dotted-operator-or-identifier #'seq
              #:attr name #'id.name
              #:attr extends #'id.extends)
-    (pattern (~seq (op _::$+1) (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
+    (pattern (~seq _::$+1 (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
              #:attr extends #'#f))
 
   (define-syntax-class :identifier-for-parsed
@@ -187,7 +189,7 @@
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
     #:datum-literals (op group)
-    (pattern (_::quotes (~and g (group (op _::$+1) _::identifier-for-parsed _::operator-or-identifier-or-$ . _))))
+    (pattern (_::quotes (~and g (group _::$+1 _::identifier-for-parsed _::operator-or-identifier-or-$ . _))))
     (pattern (_::quotes (~and g (group _::operator-or-identifier-or-$ . _)))))
 
   (define (convert-prec prec)
@@ -204,7 +206,7 @@
   (define (check-parsed-right-form form-id tail-pattern)
     (syntax-parse tail-pattern
       #:datum-literals (op group)
-      [((~and op-stx (op _::$+1)) right::identifier-for-parsed) #'right.id]
+      [((~and op-stx _::$+1) right::identifier-for-parsed) #'right.id]
       [_ #f])))
 
 ;; parse one case (possibly the only case) in a macro definition
@@ -213,7 +215,7 @@
     (syntax-parse g
       #:datum-literals (group op)
       ;; infix protocol
-      [(group (op _::$+1) left::identifier-for-parsed
+      [(group _::$+1 left::identifier-for-parsed
               op-name::operator-or-identifier-or-$
               . tail-pattern)
        (unless (memq 'infix allowed)
@@ -222,7 +224,7 @@
                              g))
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
-         [((~and tag block) (~var opt (:macro-infix-operator-options space-sym)) rhs ...)
+         [(tag::block (~var opt (:macro-infix-operator-options space-sym)) rhs ...)
           #`(pre-parsed op-name.name
                         op-name.extends
                         infix
@@ -244,7 +246,7 @@
                              g))
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
-         [((~and tag block) (~var opt (:macro-prefix-operator-options space-sym)) rhs ...)
+         [(tag::block (~var opt (:macro-prefix-operator-options space-sym)) rhs ...)
           #`(pre-parsed op-name.name
                         op-name.extends
                         prefix
@@ -319,10 +321,10 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse (replace-head-dotted-name stx)
-        #:datum-literals (group block alts op)
-        [(form-id ((~and alts-tag alts) (block (group q::operator-syntax-quote
-                                                      (~and rhs (block body ...))))
-                                        ...+))
+        #:datum-literals (group)
+        [(form-id (alts-tag::alts (_::block (group q::operator-syntax-quote
+                                                   (~and rhs (_::block body ...))))
+                                  ...+))
          (list (parse-operator-definitions #'form-id
                                            kind
                                            stx
@@ -331,7 +333,7 @@
                                            space-sym
                                            compiletime-id))]
         [(form-id q::operator-syntax-quote
-                  (~and rhs (block body ...)))
+                  (~and rhs (_::block body ...)))
          (list (parse-operator-definition #'form-id
                                           kind
                                           #'q.g
@@ -346,7 +348,7 @@
                                                                        space-sym)
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (group block alts op)
+        #:datum-literals (group)
         [(form-id pre-parsed)
          (parse-operator-definition-rhs #'pre-parsed
                                         space-sym
@@ -363,7 +365,7 @@
 
 (begin-for-syntax
   (define-syntax-class :identifier-syntax-quote
-    #:datum-literals (op)
+    #:datum-literals ()
     (pattern (_::quotes g::identifier-definition-group)))
 
   (define-syntax-class :identifier-definition-group
@@ -371,7 +373,7 @@
     (pattern (group _:identifier . _)))
   
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
-    #:datum-literals (op block group)
+    #:datum-literals (group)
     (pattern (_::quotes g::identifier-definition-group
                         . gs))))
 
@@ -415,7 +417,7 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (group block alts op)
+        #:datum-literals (group)
         [(form-id q::identifier-syntax-quote
                   (~and rhs (tag::block
                              (~optional (group #:op_stx (_::block (group self-id:identifier)))
@@ -457,7 +459,7 @@
   (definition-transformer
     (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (group block alts op)
+       #:datum-literals (group)
        [(form-id q::identifier-sequence-syntax-quote
                  (~and rhs (tag::block
                             (~optional (group #:op_stx (_::block (group self-id:identifier)))

@@ -143,6 +143,11 @@
 (module configure-runtime racket/base
   (require rhombus/runtime-config))
 
+(module configure-expand racket/base
+  (require rhombus/expand-config)
+  (provide enter-parameterization
+           exit-parameterization))
+
 (define-syntax (rhombus-module-begin stx)
   (error-syntax->string-handler
    (lambda (s len)

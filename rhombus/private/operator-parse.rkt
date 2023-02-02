@@ -5,10 +5,13 @@
          :operator-or-identifier)
 
 (define-syntax-class :operator
+  #:attributes (name)
   #:description "an operator"
+  #:opaque
   (pattern ((~datum op) name)))
 
 (define-syntax-class :operator-or-identifier
-  #:description "an identifier or operator"
-  (pattern ((~datum op) name))
+  #:attributes (name)
+  (pattern o::operator
+           #:attr name #'o.name)
   (pattern name:identifier))

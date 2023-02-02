@@ -29,18 +29,21 @@
       (define-syntax-class (id in-space)
         #:attributes (name)
         #:description desc
+        #:opaque
         [pattern op::name
                  #:when (free-identifier=? (in-space #'orig-id) (in-space #'op.name))
                  #:attr name #'op.name])
       (define-syntax-class id-expr
         #:attributes (name)
         #:description desc
+        #:opaque
         [pattern op::name
                  #:when (free-identifier=? (expr-quote orig-id) #'op.name)
                  #:attr name #'op.name])
       (define-syntax-class id-bind
         #:attributes (name)
         #:description desc
+        #:opaque
         [pattern op::name
                  #:when (free-identifier=? (bind-quote orig-id) (in-binding-space #'op.name))
                  #:attr name #'op.name])))

@@ -8,7 +8,6 @@ export:
   // The main form:
   rx
 
-/*
   // Operators for use inside `rx'...'`:
   any
   || * ? ^ $
@@ -16,7 +15,6 @@ export:
   // we use `names` here so that these names are not
   // misinterpreted as implicits in the `export` sublangauge!
   names: #{#%literal} #{#%comp} #{#%parens} #{#%juxtapose}
-*/
 
 // Instantiate enforestation and macro machinery for the
 // regexp sublanguage:
@@ -27,10 +25,9 @@ space.enforest regexp:
     description "regexp"
     parse_syntax_class Group
     parse_checker: fun (stx, who):
-                     unless (stx is_a Syntax
-                               && (stx -: Syntax).unwrap() is_a String)
-                     | Syntax.error("bad result", stx)
-                     stx
+                     match stx
+                     | '$(s :: String)': stx
+                     | _: Syntax.error("bad result", stx)
     identifier_parser: fun (id):
                          Syntax.error("identifier not allowed", id)
 

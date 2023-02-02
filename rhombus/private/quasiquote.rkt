@@ -115,7 +115,7 @@
        (define-values (p new-idrs new-sidrs new-vars can-be-empty?) (convert #'g #t depth as-tail? #f))
        (if can-be-empty?
            (handle-maybe-empty-sole-group #'tag p new-idrs new-sidrs new-vars)
-           (values (quasisyntax/loc e (#,(make-datum #'tag) #,p))
+           (values (no-srcloc #`(#,(make-datum #'tag) #,p))
                    new-idrs
                    new-sidrs
                    new-vars
@@ -160,7 +160,7 @@
                    (if splice-pattern
                        (splice-pattern ps)
                        (quasisyntax/loc e (~seq . #,ps)))
-                   (quasisyntax/loc e (#,(make-datum #'tag) . #,ps)))
+                   (no-srcloc #`(#,(make-datum #'tag) . #,ps)))
                idrs
                sidrs
                vars
@@ -247,7 +247,7 @@
            [(g . _)
             (simple gs depth)]))]
       [((~and tag op) op-name)
-       (values (quasisyntax/loc e (#,(make-datum #'tag) #,(make-literal #'op-name))) null null null #f)]
+       (values (no-srcloc #`(#,(make-datum #'tag) #,(make-literal #'op-name))) null null null #f)]
       [id:identifier
        (values (make-literal #'id) null null null #f)]
       [_

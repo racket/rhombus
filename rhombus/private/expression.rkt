@@ -6,7 +6,8 @@
                      enforest/proc-name
                      "introducer.rkt"
                      "expression-space.rkt"
-                     (for-syntax racket/base)))
+                     (for-syntax racket/base)
+                     "realm.rkt"))
 
 (begin-for-syntax
   (provide (property-out expression-prefix-operator)
@@ -51,7 +52,7 @@
     id)
 
   (define (check-expression-result form proc)
-    (unless (syntax? form) (raise-result-error (proc-name proc) "syntax?" form))
+    (unless (syntax? form) (raise-result-error* (proc-name proc) rhombus-realm "Syntax" form))
     form)
 
   (define-syntax (expr-quote stx)
