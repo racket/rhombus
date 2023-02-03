@@ -341,6 +341,10 @@
                             (opcase-prec (car ins)) (binary-opcase-assc (car ins))
                             (map opcase-rhs ins)
                             (map opcase-ret-predicate ins) (intersect-static-infos (map opcase-ret-static-infos ins)))]
+           [(and (null? pres) (null? ins))
+            (generate-postfix #'form-id (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
+                              (map unary-opcase-arg posts) (opcase-prec (car posts)) (map opcase-rhs posts)
+                              (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))]
            [(pair? ins)
             (generate-prefix+infix stx
                                    (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))

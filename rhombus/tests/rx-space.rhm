@@ -11,6 +11,7 @@ export:
   // Operators for use inside `rx'...'`:
   any
   || * ? ^ $
+
   // Implicit operators, like the one before a literal string;
   // we use `names` here so that these names are not
   // misinterpreted as implicits in the `export` sublangauge!

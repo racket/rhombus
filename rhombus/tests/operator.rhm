@@ -108,6 +108,17 @@ begin:
     0 ** "apple" ~is 0
     2 ** 10 ~raises "no matching case for arguments"
 
+
+// multi-case postfix
+check:
+  operator
+  | (0 !):
+      ~stronger_than: * /
+      1
+  | (n !): n * (n-1)!
+  10!
+  ~is 3628800
+
 check:
   ~eval
   operator
