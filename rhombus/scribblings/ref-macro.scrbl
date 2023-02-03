@@ -20,10 +20,10 @@
      | ...
 
   grammar macro_pattern:
-    '$defined_name $ $right_identifier'
+    '$defined_name $ $right_parsed_id'
     '$defined_name $pattern ...'
-    '$ $left_identifier $defined_name $ $right_identifier'
-    '$ $left_identifier $defined_name $pattern ...'
+    '$ $left_parsed_id $defined_name $ $right_parsed_id'
+    '$ $left_parsed_id $defined_name $pattern ...'    
   grammar defined_name:
     $identifier
     $operator
@@ -31,6 +31,9 @@
     ($identifier_path)
     ($operator_path)
     ()
+  grammar parsed_id:
+    $identifier
+    ($parsed_id)
   grammar option:
     ~stronger_than $other ...
     ~stronger_than: $other ...; ...
@@ -90,10 +93,10 @@
 @itemlist(
 
  @item{When the right-hand side is @rhombus($, ~bind) followed by an
-  identifier, then the macro is applied with an already-parsed term after
-  the macro name in a use of the macro. That parse heeds precedence and
-  associativity declarations for other macros and for operators defined
-  with @rhombus(operator).}
+  identifier (optionally parenthesized), then the macro is applied with an
+  already-parsed term after the macro name in a use of the macro. That
+  parse heeds precedence and associativity declarations for other macros
+  and for operators defined with @rhombus(operator).}
 
  @item{Otherwise, the right-hand side is an arbitrary pattern that is
   matched to a sequence of terms after the macro name in its enclosing

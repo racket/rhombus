@@ -21,6 +21,9 @@
          (for-syntax "parse.rkt")
          "op-literal.rkt"
          "binding.rkt"
+         (only-in "unquote-binding-primitive.rkt"
+                  #%parens)
+         "unquote-binding.rkt"
          "dotted-sequence-parse.rkt"
          "parens.rkt")
 
@@ -183,8 +186,13 @@
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)
     #:description "identifier for a parsed sequence"
-    #:datum-literals (group)
-    (pattern id:identifier))
+    #:datum-literals (group parens)
+    (pattern id:identifier)
+    (pattern (tag::parens (group parsed::identifier-for-parsed))
+             #:when (free-identifier=? (in-unquote-binding-space #'#%parens)
+                                       (in-unquote-binding-space (datum->syntax #'tag '#%parens))
+                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))
+             #:attr id #'parsed.id))
 
   (define-splicing-syntax-class :operator-syntax-quote
     #:description "operator-macro pattern"
