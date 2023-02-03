@@ -10,12 +10,12 @@
 @rhombus([#,(@rhombus(expr, ~var)), ...]), which creates list containing the values of the
 @rhombus(expr, ~var)s as elements. More precisely, a use of square
 brackets without a preceding expression implicitly uses the
-@rhombus(#{#%brackets}) form, which (despite its name) is normally bound to
+@rhombus(#%brackets) form, which (despite its name) is normally bound to
 construct a list.
 
 A list works with map-referencing square brackets to access a list
 element by position (in time proportional to the position) via
-@rhombus(#{#%ref}). A list also works with the @rhombus(++) operator
+@rhombus(#%ref). A list also works with the @rhombus(++) operator
 to append lists.
 
 @dispatch_table(
@@ -29,8 +29,8 @@ to append lists.
 
 @doc(
   fun List(v :: Any, ...) :: List
-  expr.macro '#{#%brackets} [$expr_or_splice, ...]'
-  repet.macro '#{#%brackets} [$repet_or_splice, ...]'
+  expr.macro '#%brackets [$expr_or_splice, ...]'
+  repet.macro '#%brackets [$repet_or_splice, ...]'
 
   grammar expr_or_splice:
     $expr
@@ -50,18 +50,18 @@ to append lists.
  @rhombus(expr_or_splice)s. A @rhombus(&) or @dots_expr form
  can appear within @rhombus([]) to splice a @tech{repetition} or existing list
  into the constructed list, the same as in a function call (see
- @rhombus(#{#%call})). List constructions can also serve as
+ @rhombus(#%call)). List constructions can also serve as
  repetitions, where @rhombus(repet_or_splice) is like
  @rhombus(expr_or_splice), but with repetitions in place of expressions.
 
- @see_implicit(@rhombus(#{#%brackets}), @rhombus([]), "expression")
+ @see_implicit(@rhombus(#%brackets), @rhombus([]), "expression")
 
 @examples(
   def lst = List(1, 2, 3)
   lst
   lst[0]
   lst ++ [4, 5]
-  #{#%brackets} [1, 2, 3]
+  #%brackets [1, 2, 3]
 )
 
 }
@@ -69,8 +69,8 @@ to append lists.
 @doc(
   bind.macro 'List($binding, ...)'
   bind.macro 'List($binding, ..., $rest)'
-  bind.macro '#{#%brackets} [$binding, ...]'
-  bind.macro '#{#%brackets} [$binding, ..., $rest]'
+  bind.macro '#%brackets [$binding, ...]'
+  bind.macro '#%brackets [$binding, ..., $rest]'
   grammar rest:
     $repetition_binding #,(@litchar{,}) $ellipsis
     & $list_binding
@@ -83,7 +83,7 @@ to append lists.
  @rhombus(binding)s, where the @rhombus(rest) (if present) matches the
  rest of the list.
 
- @see_implicit(@rhombus(#{#%brackets}, ~bind), @rhombus([]), "binding")
+ @see_implicit(@rhombus(#%brackets, ~bind), @rhombus([]), "binding")
 
 @examples(
   def List(1, x, y): [1, 2, 3]

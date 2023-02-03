@@ -10,7 +10,7 @@ Immutable sets can be constructed using the syntax
 @rhombus({#,(@rhombus(val_expr, ~var)), ...}),
 which creates a set containing the values of the @rhombus(value_expr, ~var)s.
 More precisely, a use of curly braces with no preceding expression is
-parsed as an implicit use of the @rhombus(#{#%braces}) form.
+parsed as an implicit use of the @rhombus(#%braces) form.
 
 To check for membership in a set, use square brackets after a map
 expression with an expression for a value, and the result is a boolean
@@ -19,7 +19,7 @@ with a combination of square brackets and the @rhombus(:=) operator, where
 a @rhombus(#false) result on the right-hand side of @rhombus(:=) removes an
 element from a set, and any other right-hand side result causes the value
 to be included in the set. These uses of square brackets are implemented by
-@rhombus(#{#%ref}).
+@rhombus(#%ref).
 
 @dispatch_table(
   "set"
@@ -48,7 +48,7 @@ to be included in the set. These uses of square brackets are implemented by
 
  Constructs an immutable set containing given values, equivalent to
  using @rhombus({expr_or_splice, ...}) to form a set (see
- @rhombus(#{#%braces})).
+ @rhombus(#%braces)).
 
  Note that @rhombus(Set{}) and @rhombus(Set()) produce an empty set
  while @rhombus({}) does not, since @rhombus({}) produces an empty map

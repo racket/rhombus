@@ -4,7 +4,7 @@
 @title{Arrays}
 
 An expression followed by a square-bracketed sequence of expressions
-is parsed as an implicit use of the @rhombus(#{#%ref}) form, which is
+is parsed as an implicit use of the @rhombus(#%ref) form, which is
 normally bound to implement an array reference or assignment, as well
 as other operations.
 

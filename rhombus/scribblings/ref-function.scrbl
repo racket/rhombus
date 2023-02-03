@@ -7,7 +7,7 @@
 @title(~tag: "ref-function"){Functions}
 
 An expression followed by a parenthesized sequence of expressions is
-parsed as an implicit use of the @rhombus(#{#%call}) form, which is
+parsed as an implicit use of the @rhombus(#%call) form, which is
 normally bound to implement function calls.
 
 @dispatch_table(
@@ -26,8 +26,8 @@ normally bound to implement function calls.
 
 
 @doc(
-  expr.macro '$fun_expr #{#%call} ($arg, ...)'
-  repet.macro '$fun_expr #{#%call} ($repet_arg, ...)'
+  expr.macro '$fun_expr #%call ($arg, ...)'
+  repet.macro '$fun_expr #%call ($repet_arg, ...)'
 
   grammar arg:
     $arg_expr
@@ -62,11 +62,11 @@ normally bound to implement function calls.
 
  See also @rhombus(use_static).
 
- @see_implicit(@rhombus(#{#%call}), @rhombus(()), "expression", ~is_infix: #true)
+ @see_implicit(@rhombus(#%call), @rhombus(()), "expression", ~is_infix: #true)
 
 @examples(
   List.length([1, 2, 3])
-  List.length #{#%call} ([1, 2, 3])
+  List.length #%call ([1, 2, 3])
 )
 
 }

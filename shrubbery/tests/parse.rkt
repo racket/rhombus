@@ -148,3 +148,5 @@
 (check-fail "1.2e5.0x" #rx"read error")
 (check-fail "1.2.3" #rx"read error")
 (check-fail "1.2.3." #rx"read error")
+
+(check-fail "~#%call" #rx"read error")

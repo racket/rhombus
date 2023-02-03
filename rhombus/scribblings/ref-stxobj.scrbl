@@ -20,7 +20,7 @@ A @deftech{syntax object} encapsulates a shrubbery term, group, or
  scopes or hold other metadata.
 
 An quoted sequence of terms using @quotes is parsed as an
- implicit use of the @rhombus(#{#%quotes}) form, which is normally
+ implicit use of the @rhombus(#%quotes) form, which is normally
  bound to create a syntax object. For example, @rhombus('1.000')
  is a syntax object that wraps the number @rhombus(1.0).
 
@@ -51,8 +51,8 @@ Metadata for a syntax object can include a source location and the raw
 )
 
 @doc(
-  expr.macro '«#{#%quotes} '$term ...; ...'»'
-  repet.macro '«#{#%quotes} '$term ...; ...'»'
+  expr.macro '«#%quotes '$term ...; ...'»'
+  repet.macro '«#%quotes '$term ...; ...'»'
 ){
 
 @provided_also_meta()
@@ -63,7 +63,7 @@ Metadata for a syntax object can include a source location and the raw
  the result is a group syntax object. The general case is a
  multi-group syntax object.
 
- @see_implicit(@rhombus(#{#%quotes}), @quotes, "expression")
+ @see_implicit(@rhombus(#%quotes), @quotes, "expression")
 
 @examples(
   '1'
@@ -130,7 +130,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  bind.macro '«#{#%quotes} '$term ...; ...'»'
+  bind.macro '«#%quotes '$term ...; ...'»'
 ){
 
 @provided_also_meta()
@@ -161,7 +161,7 @@ Metadata for a syntax object can include a source location and the raw
  symbolically, use @rhombus($, ~bind) to escape, and then use
  @rhombus(bound_as, ~unquote_bind) within the escape.
 
- @see_implicit(@rhombus(#{#%quotes}, ~bind), @quotes, "binding")
+ @see_implicit(@rhombus(#%quotes, ~bind), @quotes, "binding")
 
 @examples(
   match '1 + 2'
@@ -316,7 +316,7 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   unquote_bind.macro '_'
-  unquote_bind.macro '#{#%parens} ($stx_bind)'
+  unquote_bind.macro '#%parens ($stx_bind)'
 ){
 
 @provided_also_meta()
@@ -327,7 +327,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  unquote_bind.macro '«#{#%quotes} '$term ...; ...'»'
+  unquote_bind.macro '«#%quotes '$term ...; ...'»'
 ){
 
 @provided_also_meta()

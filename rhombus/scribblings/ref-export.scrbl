@@ -39,7 +39,7 @@
  An @rhombus(export_item) can be an identifier, operator, other export
  form, such as @rhombus(all_from, ~expo).
  It can also be a sequence @rhombus(export_item)s within a
- group, since @rhombus(#{#%juxtapose}, ~expo) is defined as an
+ group, since @rhombus(#%juxtapose, ~expo) is defined as an
  export form.
 
  Similar to @rhombus(import), an @rhombus(export_item) can be modified
@@ -104,12 +104,12 @@
 }
 
 @doc(
-  expo.macro '$export #{#%juxtapose} $export'
+  expo.macro '$export #%juxtapose $export'
 ){
 
  Exports the union of bindings described by the two @rhombus(export)s.
 
- @see_implicit(@rhombus(#{#%juxtapose}, ~expo), "an export", "export", ~is_infix: #true)
+ @see_implicit(@rhombus(#%juxtapose, ~expo), "an export", "export", ~is_infix: #true)
 
 }
 

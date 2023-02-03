@@ -25,7 +25,7 @@
  @rhombus(identifier) must be bound with @rhombus(mutable, ~bind).
 
  The @rhombus(:=) operator is also recognized by other forms, such as
- @rhombus(.) and @rhombus(#{#%ref}), for changing mutable components of
+ @rhombus(.) and @rhombus(#%ref), for changing mutable components of
  some values.
 
 @examples(

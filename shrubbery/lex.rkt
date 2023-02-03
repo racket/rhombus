@@ -107,15 +107,18 @@
                 boolean
                 void-const
                 special-number
-                (:: "#" escopchar (:* any-char)))]
+                (:: "#" escopchar (:* any-char))
+                identifier)]
 
   [exponent-marker e]
   [sign (char-set "+-")]
   
   [script (:: "#!" (:or #\space #\/) (:* (:~ #\newline) (:: #\\ #\newline)))]
   
-  [identifier (:: (:or alphabetic "_" emoji)
-                  (:* (:or alphabetic numeric "_" emoji)))]
+  [plain-identifier (:: (:or alphabetic "_" emoji)
+                        (:* (:or alphabetic numeric "_" emoji)))]
+  [identifier (:: (:or "#%" "")
+                  plain-identifier)]
   [opchar (:or (:- symbolic one-char-emoji)
                (:- punctuation (:or "," ";" "#" "\\" "_" "@" "\"" "'"
                                     "(" ")" "[" "]" "{" "}" "«" "»")))]
@@ -128,7 +131,7 @@
                 "|" ":"
                 (:: (:* any-char) (:or "//" "/*") (:* any-char)))]
 
-  [keyword (:: "~" identifier)]
+  [keyword (:: "~" plain-identifier)]
   [bad-keyword (:: "~")]
   
   ;; disallows a number that starts +, -, or "."

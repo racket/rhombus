@@ -7,7 +7,7 @@
   defn.macro 'use_static'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#{#%ref}), and @rhombus(#{#%parens})
+ (Re-)defines @rhombus(.), @rhombus(#%ref), and @rhombus(#%parens)
  to require certain static information and consistency with static
  information:
 
@@ -17,12 +17,12 @@
   the access can be resolved statically, otherwise the @rhombus(.) form is
   a syntax error.}
 
- @item{A static @rhombus(#{#%ref}) looks up a value only when
+ @item{A static @rhombus(#%ref) looks up a value only when
   the lookup operator can be specialized statically (e.g., to a
   @tech{list} or @tech{map} lookup), otherwise the lookup form is an
   error.}
 
- @item{A static @rhombus(#{#%parens}) does not require static
+ @item{A static @rhombus(#%parens) does not require static
   information about functions and methods for calls, but it reports an
   error when the number of supplied arguments is inconsistent with static
   information that is available for the called function or method.
@@ -57,7 +57,7 @@
   defn.macro 'use_dynamic'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#{#%ref}), and @rhombus(#{#%parens})
+ (Re-)defines @rhombus(.), @rhombus(#%ref), and @rhombus(#%parens)
  to their default bindings, which allow either static or dynamic
  resolution of a component access or lookup specialization with no
  complains about argument ismatches.

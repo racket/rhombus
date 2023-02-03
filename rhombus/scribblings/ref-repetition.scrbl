@@ -25,7 +25,7 @@ add @rhombus(1) to each element of @rhombus(x):
 
 When @rhombus(+) is used as a repetition operator, then it expects a
 repetition for both arguments, but a literal value like @rhombus(1)
-works as a repetition via @rhombus(#{#%literal}).
+works as a repetition via @rhombus(#%literal).
 
 A repetition has a @italic{depth}, and each repetition context expects a
 repetition of a particular depth, typically based on how many
@@ -135,7 +135,7 @@ positions.
  used in places where its specifically recognized, normally either to
  reference or bind the ``rest'' of a data structure. The @rhombus(List)
  constructor, @rhombus(Map) constructor, @rhombus(fun) form, and the
- @rhombus(#{#%call}) form are among the places that recognize
+ @rhombus(#%call) form are among the places that recognize
  @rhombus(&).
 
 @examples(
@@ -156,7 +156,7 @@ positions.
  The @rhombus(~&) expression operator and binding operator can only be
  used in places where its specifically recognized, normally to bind the
  ``rest'' of a map with keywords as keys. The @rhombus(fun) and
- @rhombus(#{#%call}) forms are among the places that recognize
+ @rhombus(#%call) forms are among the places that recognize
  @rhombus(~&).
 
 @examples(

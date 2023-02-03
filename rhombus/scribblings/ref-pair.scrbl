@@ -9,7 +9,7 @@ its ``rest'' is a list.
 
 A list works with map-referencing square brackets to access a list
 element by position (in time proportional to the position) via
-@rhombus(#{#%ref}). A list also works with the @rhombus(++) operator
+@rhombus(#%ref). A list also works with the @rhombus(++) operator
 to append lists.
 
 @dispatch_table(

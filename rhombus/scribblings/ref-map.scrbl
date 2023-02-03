@@ -13,13 +13,13 @@ the corresponding values of the @rhombus(value_expr, ~var)s. Note
 that using @litchar{,} in place of @litchar{:} creates a set with
 separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
-implicit use of the @rhombus(#{#%braces}) form.
+implicit use of the @rhombus(#%braces) form.
 
 To access a mapping, use square brackets after a map expression with an
 expression for the key within square brackets. Mutable maps can be
 updated with a combination of square brackets and the @rhombus(:=)
 operator. These uses of square brackets are implemented by
-@rhombus(#{#%ref}).
+@rhombus(#%ref).
 
 @dispatch_table(
   "map"
@@ -31,12 +31,12 @@ operator. These uses of square brackets are implemented by
 )
 
 @doc(
-  expr.macro '#{#%braces} {$key_val_or_splice, ...}'
+  expr.macro '#%braces {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
     $key_repetition: $val_repetition #,(@litchar{,}) $ellipses
     & $map_expr
-  expr.macro '#{#%braces} {$expr_or_splice, ...+}'
+  expr.macro '#%braces {$expr_or_splice, ...+}'
   grammar expr_or_splice:
     $elem_expr
     $elem_repetitions #,(@litchar{,}) $ellipses
@@ -46,8 +46,8 @@ operator. These uses of square brackets are implemented by
     $ellipses #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots_expr)
-  repet.macro '#{#%braces} {$key_val_or_splice_repet, ...}'
-  repet.macro '#{#%braces} {$repet_or_splice, ...+}'
+  repet.macro '#%braces {$key_val_or_splice_repet, ...}'
+  repet.macro '#%braces {$repet_or_splice, ...+}'
 ){
 
  Constructs either a map or a set, depending on whether
@@ -71,13 +71,13 @@ operator. These uses of square brackets are implemented by
  replace one earlier in the sequence. This ordering applies to mappings
  or elements spliced via @dots_expr and @rhombus(&), too.
  
- @see_implicit(@rhombus(#{#%braces}), @rhombus({}), "expression")
+ @see_implicit(@rhombus(#%braces), @rhombus({}), "expression")
 
 @examples(
   {1, 2, 3}
   {"a": 1, "b": 2}
-  #{#%braces} {1, 2, 3}
-  #{#%braces} {"a": 1, "b": 2}
+  #%braces {1, 2, 3}
+  #%braces {"a": 1, "b": 2}
   {1, 2, & {3, 4}}
   {"a": 1, "b": 2, & {"c": 3, "d": 4}}
 )
@@ -85,9 +85,9 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  expr.macro '$expr #{#%ref} [$at_expr]'
-  expr.macro '$expr #{#%ref} [$at_expr] := $rhs_expr'
-  repet.macro '$repetition #{#%ref} [$at_repetition]'
+  expr.macro '$expr #%ref [$at_expr]'
+  expr.macro '$expr #%ref [$at_expr] := $rhs_expr'
+  repet.macro '$repetition #%ref [$at_repetition]'
 ){
 
  Without @rhombus(:=), accesses the element of the map, array, list, or
@@ -101,11 +101,11 @@ operator. These uses of square brackets are implemented by
 
  See also @rhombus(use_static).
 
- @see_implicit(@rhombus(#{#%ref}), @rhombus([]), "expression or repetition", ~is_infix: #true)
+ @see_implicit(@rhombus(#%ref), @rhombus([]), "expression or repetition", ~is_infix: #true)
 
 @examples(
   {"a": 1, "b": 2}["a"]
-  {"a": 1, "b": 2} #{#%ref} ["a"]
+  {"a": 1, "b": 2} #%ref ["a"]
 )
 
 }
@@ -139,13 +139,13 @@ operator. These uses of square brackets are implemented by
 }
 
 @doc(
-  bind.macro '#{#%braces} {$key_expr: $val_binding, ...}'
-  bind.macro '#{#%braces} {$key_expr: $val_binding, ..., map_rest}'
+  bind.macro '#%braces {$key_expr: $val_binding, ...}'
+  bind.macro '#%braces {$key_expr: $val_binding, ..., map_rest}'
   grammar map_rest:
     & $map_binding
     $rest_key_binding: $rest_val_binding #,(@litchar{,}) $ellipsis
-  bind.macro '#{#%braces} {$expr, ...}'
-  bind.macro '#{#%braces} {$expr, ..., set_rest}'
+  bind.macro '#%braces {$expr, ...}'
+  bind.macro '#%braces {$expr, ..., set_rest}'
   grammar map_rest:
     & $set_binding
     $rest_binding #,(@litchar{,}) $ellipsis
@@ -160,7 +160,7 @@ operator. These uses of square brackets are implemented by
 
  See @rhombus(Map, ~bind) and @rhombus(Set, ~bind) for more information.
 
- @see_implicit(@rhombus(#{#%braces}, ~bind), @rhombus({}), "binding") 
+ @see_implicit(@rhombus(#%braces, ~bind), @rhombus({}), "binding") 
 
 @examples(
   def {"x": x, "y": y}: Map{"x": 1, "y": 2}

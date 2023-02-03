@@ -1,6 +1,8 @@
 #lang scribble/rhombus/manual
 @(import: "grammar.rhm" open)
 
+@(def notecol = italic)
+
 @title(~tag: "lexeme-parsing"){Lexeme Parsing}
 
 The tokens used for grouping and indentation are distinct lexemes:
@@ -13,24 +15,25 @@ Other lexemes are described by the grammar in the table below, where a
 star (★) in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
-Numbers are supported directly in in simple forms---decimal integers,
+@deftech{Numbers} are supported directly in in simple forms---decimal integers,
 decimal floating point, and hexadecimal integers---in all cases allowing
 @litchar{_}s between digits. A @litchar("#{")...@litchar("}") escape
 provides access to the full Racket S-expression number grammar. Special
 floating-point values use a @litchar{#} notation: @litchar{#inf},
 @litchar{#neginf}, and @litchar{#nan}.
 
-Boolean literals are Racket-style @litchar{#true} and @litchar{#false}.
-The void value is @litchar{#void}.
+@deftech{Boolean literals} are Racket-style @litchar{#true} and @litchar{#false}.
+The @deftech{void} value is @litchar{#void}.
 
-Identifiers are formed from Unicode alphanumeric characters plus @litchar{_}
+@deftech{Identifiers} are formed from Unicode alphanumeric characters plus @litchar{_}
 and emoji sequences, where the initial character must not be a numeric character
 (unless that numeric character starts an emoji sequence, as in @litchar{1}
-followed by U+FE0F and U+20E3). An
-identifier prefixed with @litchar{~} forms a keyword, analogous to prefixing an
-identifier with @litchar{#:} in Racket.
+followed by U+FE0F and U+20E3). An identifier can also be prefixed with @litchar{#%};
+such identifiers are intended for use for ``internal'' names that are not normally
+visible. An identifier prefixed with @litchar{~} (and without @litchar{#%})
+forms a @deftech{keyword}, analogous to prefixing an identifier with @litchar{#:} in Racket.
 
-Operators are formed from Unicode symbolic and punctuation characters
+@deftech{Operators} are formed from Unicode symbolic and punctuation characters
 other than the ones listed above as distinct lexemes (plus a few more,
 like @litchar{"}, @litchar{'}, and single-character emoji sequences), but @litchar{|} or @litchar{:} is
 also allowed in an operator name as long as it is not by itself, and
@@ -46,7 +49,7 @@ that can create ambiguities with comments.
 
 Implicit in the grammar is the usual convention of choosing the largest
 possible match at the start of a stream. Not reflected in the grammar is
-a set of delimiter requirements: numbers, @litchar{#true}, and
+a set of @deftech{delimiter} requirements: numbers, @litchar{#true}, and
 @litchar{#false} must be followed by a delimiter. For example,
 @litchar{1x} is a lexical error, because the @litchar{x} after
 @litchar{1} is not a delimiter. Non-alphanumeric characters other than
@@ -69,7 +72,7 @@ When a @litchar("#{")...@litchar("}") escape describes an identifier
 S-expression, it is an identifier in the same sense as a
 shrubbery-notation identifier. the same holds for numbers, booleans,
 strings, byte strings, and keywords. A @litchar("#{")...@litchar("}")
-escape must _not_ describe a pair, because pairs are used to represent a
+escape must @emph{not} describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
 ill-formed representations.
 
@@ -82,20 +85,23 @@ but the table below describes the shape of @litchar("@") forms.
 
 @tabular(
   [
-    [is_lex, @nonterm{identifier}, bis, bseq(@nonterm{alpha}, kleenestar(@nonterm{alphanum})), ""],
+    [is_lex, @nonterm{identifier}, bis, @nonterm{plainident}, ""],
+    ["", "", bor, @bseq(@litchar{#%}, @nonterm{plainident}), ""],
     empty_line,
-    [no_lex, @nonterm{alpha}, bis, @elem{@italic{alphabetic Unicode character or} @litchar{_}}, ""],
-    ["", "", bor, @elem{@italic{Unicode emoji sequence}}, ""],
+    [is_lex, @nonterm{plainident}, bis, bseq(@nonterm{alpha}, kleenestar(@nonterm{alphanum})), ""],
+    empty_line,
+    [no_lex, @nonterm{alpha}, bis, @elem{@notecol{alphabetic Unicode character or} @litchar{_}}, ""],
+    ["", "", bor, @elem{@notecol{Unicode emoji sequence}}, ""],
     empty_line,
     [no_lex, @nonterm{alphanum}, bis, @nonterm{alpha}, ""],
-    ["", "", bor, @italic{numeric Unicode character}, ""],
+    ["", "", bor, @notecol{numeric Unicode character}, ""],
     empty_line,
-    [is_lex, @nonterm{keyword}, bis, bseq(@litchar{~}, @nonterm{alpha}), ""],
+    [is_lex, @nonterm{keyword}, bis, bseq(@litchar{~}, @nonterm{plainident}), ""],
     empty_line,
     [is_lex, @nonterm{operator}, bis, bseq(kleenestar(@nonterm{opchar}), @nonterm{tailopchar}),
-     @elem{@italic{not} @litchar{|}, @litchar{:}, @litchar{~},  @italic{...}}],
-    ["", "", bor, kleeneplus(@litchar{.}), @elem{@italic{... or containing} @litchar{//} @italic{...}}],
-    ["", "", bor, kleeneplus(@litchar{+}), @elem{@italic{... or containing} @litchar{/*}}],
+     @elem{@notecol{not} @litchar{|}, @litchar{:}, @litchar{~},  @notecol{...}}],
+    ["", "", bor, kleeneplus(@litchar{.}), @elem{@notecol{... or containing} @litchar{//} @notecol{...}}],
+    ["", "", bor, kleeneplus(@litchar{+}), @elem{@notecol{... or containing} @litchar{/*}}],
     ["", "", bor, kleeneplus(@litchar{-}), ""],
     ["", "", bor, bseq(@litchar{#}, @nonterm{hashopchar}), ""],
     empty_line,
@@ -172,7 +178,7 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
     [is_lex, @nonterm{string}, bis, bseq(@litchar{"}, kleenestar(@nonterm{strelem}), @litchar{"}), ""],
     empty_line,
-    [no_lex, @nonterm{strelem}, bis, @italic{like Racket, but no literal newline}, @elem{@litchar{\U} ≤ 6 digits}],
+    [no_lex, @nonterm{strelem}, bis, @italic{like Racket, but no literal newline}, @notecol{@litchar{\U} ≤ 6 digits}],
     empty_line,
     [is_lex, @nonterm{bytestring}, bis, bseq(@litchar{#"}, kleenestar(@nonterm{bytestrelem}), @litchar{"}), ""],
     empty_line,
@@ -183,8 +189,8 @@ but the table below describes the shape of @litchar("@") forms.
     [no_lex, @nonterm{racket}, bis, @italic{any non-pair Racket S-expression}, ""],
     empty_line,
     [is_lex, @nonterm{comment}, bis, bseq(@litchar{//}, kleenestar(@nonterm{nonnlchar})), ""],
-    ["", "", bor, bseq(@litchar{/*}, kleenestar(@nonterm{anychar}), @litchar{*/}), "nesting allowed"],
-    ["", "", bor, bseq(@litchar("@//"), kleenestar(@nonterm{nonnlchar})), @elem{only within @nonterm{text}}],
+    ["", "", bor, bseq(@litchar{/*}, kleenestar(@nonterm{anychar}), @litchar{*/}), notecol{nesting allowed}],
+    ["", "", bor, bseq(@litchar("@//"), kleenestar(@nonterm{nonnlchar})), @elem{@notcol{only within} @nonterm{text}}],
     ["", "", bor, bseq(@litchar("@//"), @nonterm{atopen}, kleenestar(@nonterm{anychar}), @nonterm{atopen}), @elem{only within @nonterm{text}}],
     ["", "", bor, bseq(@litchar{#! }, kleenestar(@nonterm{nonnlchar}), kleenestar(@nonterm{continue})), ""],
     empty_line,
@@ -195,11 +201,11 @@ but the table below describes the shape of @litchar("@") forms.
     [is_lex, @nonterm{atexpression}, bis, bseq(@litchar("@"),
                                                @nonterm{command},
                                                boptional(@nonterm{arguments}),
-                                               kleenestar(@nonterm{text})), "no space between parts"],
-    ["", "", bor, bseq(@litchar("@"), kleenestar(@nonterm{text})), "no space between parts"],
-    ["", "", bor, bseq(@litchar("@"), @nonterm{splice}), "no space between parts"],
+                                               kleenestar(@nonterm{text})), @notecol{no space between parts}],
+    ["", "", bor, bseq(@litchar("@"), kleenestar(@nonterm{text})), @notecol{no space between parts}],
+    ["", "", bor, bseq(@litchar("@"), @nonterm{splice}), @notecol{no space between parts}],
     empty_line,
-    [no_lex, @nonterm{command}, bis, @bseq(@kleenestar(@nonterm{prefix}), @nonterm{identifier}), "no space between parts"],
+    [no_lex, @nonterm{command}, bis, @bseq(@kleenestar(@nonterm{prefix}), @nonterm{identifier}), @notecol{no space between parts}],
     ["", "", bor, @nonterm{keyword}, ""],
     ["", "", bor, @nonterm{operator}, ""],
     ["", "", bor, @nonterm{number}, ""],
@@ -213,20 +219,20 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
     [no_lex, @nonterm{splice}, bor, bseq(@litchar{(«}, @nonterm{group}, @litchar{»)}), ""],
     empty_line,
-    [no_lex, @nonterm{prefix}, bis, @bseq(@nonterm{identifier}, @nonterm{operator}), "no space between parts"],
+    [no_lex, @nonterm{prefix}, bis, @bseq(@nonterm{identifier}, @nonterm{operator}), @notecol{no space between parts}],
     empty_line,
     [no_lex, @nonterm{arguments}, bis, bseq(@litchar{(}, @kleenestar(@nonterm{group}), @litchar{)}),
-     @italic{optional @litchar{,}-separated}],
+     @notecol{optional @litchar{,}-separated}],
     empty_line,
     [no_lex, @nonterm{text}, bis, bseq(@nonterm{atopen}, @nonterm{text}, @nonterm{atclose}),
-     @elem{@italic{escapes in} @nonterm{text}}],
+     @elem{@notecol{escapes in} @nonterm{text}}],
     empty_line,
     [no_lex, @nonterm{atopen}, bis, @litchar("{"), ""],
     ["", "", bor, bseq(@litchar{|}, kleenestar(@nonterm{asciisym}), @litchar("{")), ""],
     empty_line,
     [no_lex, @nonterm{atclose}, bis, @litchar("}"), ""],
     ["", "", bor, bseq(@litchar("}"), kleenestar(@nonterm{asciisym}), @litchar{|}),
-     @italic{flips opener chars}],
+     @notecol{flips opener chars}],
     
   ]
 )

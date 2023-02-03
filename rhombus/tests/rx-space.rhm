@@ -2,7 +2,7 @@
 import:
   lib("racket/base.rkt").pregexp
 
-// An example use of `sublanguage.enforest`
+// An example use of `space.enforest`
 
 export:
   // The main form:
@@ -15,7 +15,7 @@ export:
   // Implicit operators, like the one before a literal string;
   // we use `names` here so that these names are not
   // misinterpreted as implicits in the `export` sublangauge!
-  names: #{#%literal} #{#%comp} #{#%parens} #{#%juxtapose}
+  names: #%literal #%comp #%parens #%juxtapose
 
 // Example regexps
 submodule test:
@@ -50,51 +50,55 @@ expr.macro '«rx '$(pat :: regexp_meta.Group)'»':
 
 regexp.macro 'any': '"."'
 
-// `#{#%literal}` is implicitly added before literals, like strings,
+// `#%literal` is implicitly added before literals, like strings,
 // that do not have an operator before
-regexp.macro '#{#%literal} $(s :: String)':
+regexp.macro '#%literal $(s :: String)':
   import lib("racket/base.rkt").#{regexp-quote}
   '$(#{regexp-quote}(s.unwrap()))'
 
-// `#{#%parens}` is implicitly added before parentheses
+// `#%parens` is implicitly added before parentheses
 // that do not have a parsed term or operator before
-regexp.macro '#{#%parens} ($(p :: regexp_meta.Group))':
+regexp.macro '#%parens ($(p :: regexp_meta.Group))':
   p.parsed
 
-// `#{#%juxtapose}` is implicitly added after something that's
+// `#%juxtapose` is implicitly added after something that's
 // parsed and before a non-operator
-regexp.macro '$left #{#%juxtapose} $right':
+regexp.macro '$left #%juxtapose $right':
   ~weaker_than: ~other
   ~stronger_than: ||
   '$(left.unwrap() ++ right.unwrap())'
 
-// `#{#%call}` is implicitly added between a parsed term
+// `#%call` is implicitly added between a parsed term
 // and parentheses; we want just the same thing
 // as juxtaposition here, though
-regexp.macro '$left #{#%call} ($(p :: regexp_meta.Group))':
+regexp.macro '$left #%call ($(p :: regexp_meta.Group))':
   '$(left.unwrap() ++ p.parsed.unwrap())'
 
 regexp.macro '$left || $right':
   ~weaker_than: ~other
   '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
 
+meta:
+  fun atomic(s):
+    "(?:" ++ s ++ ")"
+
 regexp.macro '$left *':
-  '$(left.unwrap() ++ "*")'
+  '$(atomic(left.unwrap()) ++ "*")'
 
 regexp.macro '$left +':
-  '$(left.unwrap() ++ "+")'
+  '$(atomic(left.unwrap()) ++ "+")'
 
 regexp.macro '$left ?':
   '$(left.unwrap() ++ "?")'
 
-// `#{#%call}` is implicitly added between a parsed term
+// `#%comp` is implicitly added between a parsed term
 // and curly braces
 regexp.macro
-| '$left #{#%comp} {$(min :: Integer), _}':
+| '$left #%comp {$(min :: Integer), _}':
     '$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")'
-| '$left #{#%comp} {$(min :: Integer), $(max :: Integer)}':
+| '$left #%comp {$(min :: Integer), $(max :: Integer)}':
     '$(left.unwrap() ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
-| '$left #{#%comp} {$(count :: Integer)}':
+| '$left #%comp {$(count :: Integer)}':
     '$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")'
 
 regexp.macro
