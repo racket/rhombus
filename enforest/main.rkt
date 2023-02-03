@@ -352,7 +352,7 @@
                                       " needs explicit parenthesization\n"
                                       "  other operator: ~a")
                                      operator-kind-str
-                                     (syntax-e (operator-name current-op)))
+                                     (syntax-e current-op-stx))
                                     op-stx)])]))
 
         (define (dispatch-infix-implicit implicit-name context-stx head-stx)
