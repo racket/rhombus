@@ -107,7 +107,7 @@ but the table below describes the shape of @litchar("@") forms.
     empty_line,
     [no_lex, @nonterm{opchar}, bis, @elem{@italic{symbolic Unicode character not in} @nonterm{special}}, ""],
     ["", "", bor, @elem{@italic{punctuation Unicode character not in} @nonterm{special}}, ""],
-    ["", "", bor, @elem{@italic{one} @litchar{:} @litchar{|}}, ""],
+    ["", "", bor, @elem{@italic{one of} @litchar{:} @litchar{|}}, ""],
     empty_line,
     [no_lex, @nonterm{tailopchar}, bis, @elem{@italic{anything in} @nonterm{opchar} @italic{except}
                                               @litchar{+}, @litchar{-}, @litchar{.}, @litchar{/}}, ""],

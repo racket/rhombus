@@ -51,38 +51,55 @@ check:
 
 // mixin infix and prefix with multiple matching cases
 
-macro
-| 'weirdly coconut':
-    ~stronger_than: +
-    '"donut"'
-| 'weirdly':
-    '"banana"'
-| '$a weirdly $b + $c':
-    '$a + $b - $c'
-| '$a weirdly $(b :: Term)':
-    '$a + $b'
+begin:
+  macro
+  | 'weirdly coconut':
+      ~stronger_than: +
+      '"donut"'
+  | 'weirdly':
+      '"banana"'
+  | '$a weirdly $b + $c':
+      '$a + $b - $c'
+  | '$a weirdly $(b :: Term)':
+      '$a + $b'
 
-check:
-  weirdly
-  ~is "banana"
-check:
-  weirdly coconut
-  ~is "donut"
-check:
-  weirdly coconut ++ "tree"
-  ~is "donuttree"
-check:
-  weirdly ++ "none"
-  ~is "banananone"
-check:
-  1 weirdly 5
-  ~is 6
-check:
-  1 weirdly 5 + 7
-  ~is -1
-check:
-  1 weirdly 5 * 7
-  ~is 42
+  check:
+    weirdly
+    ~is "banana"
+  check:
+    weirdly coconut
+    ~is "donut"
+  check:
+    weirdly coconut ++ "tree"
+    ~is "donuttree"
+  check:
+    weirdly ++ "none"
+    ~is "banananone"
+  check:
+    1 weirdly 5
+    ~is 6
+  check:
+    1 weirdly 5 + 7
+    ~is -1
+  check:
+    1 weirdly 5 * 7
+    ~is 42
+
+begin:
+  macro listly:
+    ~stronger_than: +&
+    match
+    | '$a listly $b':
+        '[$a, $b]'
+    | 'listly $c':
+        '[$c]'
+
+  check:
+    1 listly 5 +& 7
+    ~is "[1, 5]7"
+  check:
+    listly 1
+    ~is [1]
 
 begin:
   expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail))':
@@ -161,3 +178,26 @@ begin:
       '$a + $b'
     1 op 2 * 4
     ~is 12
+
+check:
+  ~eval
+  macro
+  | 'prefix': 'ok'
+  | 'preeefix': 'oops'
+  ~raises "case operator does not match the initial case operator"
+
+check:
+  ~eval
+  macro prefix:
+    match
+    | 'prefix': 'ok'
+    | 'preeefix': 'oops'
+  ~raises "case operator does not match the declared operator"
+
+check:
+  ~eval
+  macro prefix:
+    ~associativity: ~left
+    match
+    | 'prefix': 'ok'
+  ~raises "associativity specified without infix cases"

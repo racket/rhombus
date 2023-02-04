@@ -22,18 +22,51 @@ check:
 
 // with precedence and associativity
 
-operator (a ++* b):
-  ~weaker_than: *
-  ~associativity: ~right
-  (a + b) * b
+begin:
+  operator (a ++* b):
+    ~weaker_than: *
+    ~associativity: ~right
+    (a + b) * b
 
-check:
-  3 ++* 4 * 2 ++* 5
-  ~is 4420
-
-check:
-  3 ++* ((4 * 2) ++* 5)
-  ~is 4420
+  check:
+    3 ++* 4 * 2 ++* 5 ~is 4420
+    3 ++* ((4 * 2) ++* 5) ~is 4420
+  
+begin:
+  operator ++* :
+    ~weaker_than: *
+    ~associativity: ~right
+    match
+    | (a ++* b):
+        (a + b) * b
+  
+  check:
+    3 ++* 4 * 2 ++* 5 ~is 4420
+    3 ++* ((4 * 2) ++* 5) ~is 4420
+  
+begin:
+  operator ++* :
+    ~weaker_than: *
+    match
+    | (a ++* b):
+        ~associativity: ~right
+        (a + b) * b
+  
+  check:
+    3 ++* 4 * 2 ++* 5 ~is 4420
+    3 ++* ((4 * 2) ++* 5) ~is 4420
+  
+begin:
+  operator ++* :
+    ~associativity: ~right
+    match
+    | (a ++* b):
+        ~weaker_than: *
+        (a + b) * b
+  
+  check:
+    3 ++* 4 * 2 ++* 5 ~is 4420
+    3 ++* ((4 * 2) ++* 5) ~is 4420
   
 // defining a prefix operator
 
@@ -145,7 +178,15 @@ check:
   operator
   | (0 ** a): 0
   | (1 ??): 1
-  ~raises "case operator does not match initial case operator"
+  ~raises "case operator does not match the initial case operator"
+
+check:
+  ~eval
+  operator ** :
+    match
+    | (0 ** a): 0
+    | (1 ??): 1
+  ~raises "case operator does not match the declared operator"
 
 check:
   ~eval
@@ -176,10 +217,18 @@ check:
 
 check:
   ~eval
+  operator ** :
+    ~associativity: ~none
+    match
+    | (** 0): 0
+    | (** 1): 1
+  ~raises "associativity specified without infix cases"
+
+check:
+  ~eval
   operator
   | (0 ** a): 0
   | (1 ** b):
       ~associativity: ~left
       1
   ~raises "associativity option not allowed after first infix case"
-

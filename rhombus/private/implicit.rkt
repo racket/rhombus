@@ -7,7 +7,7 @@
          "binding.rkt"
          "repetition.rkt"
          "parse.rkt"
-         (submod "function.rkt" for-call)
+         (submod "function-parse.rkt" for-call)
          (submod "map-ref.rkt" for-ref)
          (submod "list.rkt" for-binding)
          (submod "list.rkt" for-implicit)

@@ -24,7 +24,7 @@
          "name-root-ref.rkt"
          "space.rkt"
          "parens.rkt"
-         (submod "function.rkt" for-call)
+         (submod "function-parse.rkt" for-call)
          (only-in "import.rkt" as open)
          (submod  "import.rkt" for-meta)
          (submod "syntax-class.rkt" for-pattern-clause))

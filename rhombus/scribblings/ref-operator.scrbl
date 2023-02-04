@@ -8,9 +8,14 @@
 
 @doc(
   defn.macro 'operator $op_case'
-  defn.macro 'operator
+  defn.macro 'operator 
               | $op_case
               | ...'
+  defn.macro 'operator $op_or_id_path:
+                $option; ...
+                match
+                | $op_case
+                | ...'
 
   grammar op_case:  
     ($op_or_id_path $binding_term) $implementation
@@ -76,37 +81,68 @@
  postfix). The prefix cases and infix/postfix cases can be mixed in any
  order, but when the operator is used as a prefix or infix/postfix
  operator, cases are tried in the relative order that they are written.
+ Similar to the @rhombus(form) form, multiple cases can be placed under
+ @rhombus(match) within a block, with the advantage that a result
+ annotation can be written once for all cases.
 
- At the start of the operator body, @rhombus(option)s can declare
+ At the start of an operator body, @rhombus(option)s can declare
  precedence and, in the case of an infix operator, an associativity for
  the operator. Each @rhombus(option) keyword can appear at most once. In
  a precedence specification, @rhombus(~other) stands for any operator not
  otherwise mentioned. When multiple cases are povided using @vbar, then
  only the first prefix case and the first infix/postfix case can supply
- options.
+ options; alternatively, when cases are nested under @rhombus(match),
+ then options that apply to all cases can be written before
+ @rhombus(match). Options can appear both before @rhombus(match) and in
+ individual clauses, as long as all precedence and all associatvity
+ options are in one or the other.
 
 @examples(
-  ~repl:
+  ~defn:
     operator (x ^^^ y):
       x +& y +& x
+  ~repl:
     "a" ^^^ "b"
     1 ^^^ 2
-  ~repl:  
+  ~defn:  
     operator (x wings y):
       x +& y +& x
+  ~repl:
     "a" wings "b"
-  ~repl:      
+  ~defn:      
     operator ((x :: String) ^^^ (y :: String)):
       x +& y +& x
+  ~repl:
     "a" ^^^ "b"
     ~error:
       1 ^^^ 2
-  ~repl:      
+  ~defn:      
     operator (x List.(^^^) y):
       x ++ y ++ x
+  ~repl:
     begin:
       import: .List open
       [1, 2] ^^^ [3]
+  ~defn:
+    operator
+    | (x ^^^ y):
+        x +& y +& x
+    | (^^^ y):
+        "--" +& y +& "--"
+  ~repl:
+    "a" ^^^ "b"
+    ^^^ "b"
+  ~defn:
+    operator ^^^ :
+      ~weaker_than: +
+      match
+      | (x ^^^ y):
+          x +& y +& x
+      | (^^^ y):
+          "--" +& y +& "--"
+  ~repl:
+    1 ^^^ 2 + 3
+    ^^^ 4 + 5
 )
 
 }

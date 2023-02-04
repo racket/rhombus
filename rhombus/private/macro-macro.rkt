@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      (rename-in syntax/private/boundmap
                                 [make-module-identifier-mapping make-free-identifier-mapping]
                                 [module-identifier-mapping-get free-identifier-mapping-get]
@@ -14,9 +15,9 @@
                                  syntax/parse/pre))
          "parse.rkt"
          "definition.rkt"
-         "function.rkt"
          "name-root-ref.rkt"
          "dollar.rkt"
+         (only-in "match.rkt" match)
          ;; because we generate compile-time code:
          (for-syntax "parse.rkt")
          "op-literal.rkt"
@@ -34,10 +35,12 @@
          (for-syntax parse-operator-definition
                      parse-operator-definitions
                      :operator-syntax-quote
+                     :match+1
 
                      :prefix-operator-options
                      :infix-operator-options
                      :postfix-operator-options
+                     :all-operator-options
                      convert-prec
                      convert-assc))
 
@@ -159,6 +162,18 @@
   (define-composed-splicing-syntax-class (:postfix-operator-options space-sym)
     operator-options)
 
+  (define-composed-splicing-syntax-class (:all-operator-options space-sym)
+    operator-options
+    infix-operator-options)
+  
+  (define-syntax-class :match+1
+    #:description "match form"
+    #:opaque
+    #:attributes ()
+    (pattern name::name
+             #:when (free-identifier=? (quote-syntax match) #'name.name
+                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
+
   (define-syntax-class :$+1
     #:description "unquote operator"
     #:opaque
@@ -182,6 +197,20 @@
              #:attr extends #'id.extends)
     (pattern (~seq _::$+1 (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
              #:attr extends #'#f))
+
+  (define-syntax-class :operator-or-dotted-identifier
+    #:attributes (name extends)
+    #:description "operator-macro pattern"
+    #:datum-literals (op group)
+    (pattern op-name::operator-or-identifier
+             #:when (not (free-identifier=? (in-binding-space #'op-name.name) (bind-quote $)
+                                            (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
+             #:attr name #'op-name.name
+             #:attr extends #'#f)
+    (pattern (_::parens (group seq::dotted-operator-or-identifier-sequence))
+             #:with id::dotted-operator-or-identifier #'seq
+             #:attr name #'id.name
+             #:attr extends #'id.extends))
 
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)
@@ -218,8 +247,16 @@
       [_ #f])))
 
 ;; parse one case (possibly the only case) in a macro definition
-(define-for-syntax (parse-one-macro-definition form-id kind allowed space-sym)
+(define-for-syntax (parse-one-macro-definition form-id kind allowed space-sym
+                                               [main-prec #'()] [main-assc #'()])
   (lambda (g rhs)
+    (define (combine-main prec main-prec what)
+      (cond
+        [(null? (syntax-e main-prec)) prec]
+        [(null? (syntax-e prec)) main-prec]
+        [else (raise-syntax-error #f
+                                  (format "cannot specify ~a in individual case" what)
+                                  rhs)]))
     (syntax-parse g
       #:datum-literals (group op)
       ;; infix protocol
@@ -238,8 +275,8 @@
                         infix
                         #,kind
                         opt
-                        #,(convert-prec #'opt.prec)
-                        #,(convert-assc #'opt.assc)
+                        #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
+                        #,(convert-assc (combine-main #'opt.assc main-assc "associativity"))
                         #,parsed-right-id
                         [tail-pattern
                          opt.self-id
@@ -260,8 +297,8 @@
                         prefix
                         #,kind
                         opt
-                        #,(convert-prec #'opt.prec)
-                        #f
+                        #,(convert-prec (combine-main #'opt.prec main-prec "precedence"))
+                        #,main-assc
                         #,parsed-right-id
                         [tail-pattern
                          opt.self-id
@@ -288,13 +325,19 @@
 
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
+                                               main-name main-extends main-prec main-assc
                                                #:allowed [allowed '(prefix infix)])
-  (define ps (map (parse-one-macro-definition form-id kind allowed space-sym)
+  (define ps (map (parse-one-macro-definition form-id kind allowed space-sym
+                                              main-prec main-assc)
                   gs rhss))
-  (check-consistent stx (map pre-parsed-name ps) "operator")
+  (check-consistent stx
+                    (let ([names (map pre-parsed-name ps)])
+                      (if main-name (cons main-name names) names))
+                    #:has-main? main-name
+                    "operator")
   (if compiletime-id
-      (build-syntax-definition/maybe-extension space-sym (pre-parsed-name (car ps))
-                                               (pre-parsed-extends (car ps))
+      (build-syntax-definition/maybe-extension space-sym (or main-name (pre-parsed-name (car ps)))
+                                               (or main-extends (pre-parsed-extends (car ps)))
                                                #`(#,compiletime-id #,stx #,@ps))
       ps))
 
@@ -339,7 +382,26 @@
                                            (syntax->list #'(q.g ...))
                                            (syntax->list #'(rhs ...))
                                            space-sym
-                                           compiletime-id))]
+                                           compiletime-id
+                                           #f #f
+                                           #'() #'()))]
+        [(form-id main-op::operator-or-dotted-identifier
+                  (_::block
+                   ~!
+                   (~var main-options (:all-operator-options space-sym))
+                   (group _::match+1
+                          (alts-tag::alts (_::block (group q::operator-syntax-quote
+                                                           (~and rhs (_::block body ...))))
+                                          ...+))))
+         (list (parse-operator-definitions #'form-id
+                                           kind
+                                           stx
+                                           (syntax->list #'(q.g ...))
+                                           (syntax->list #'(rhs ...))
+                                           space-sym
+                                           compiletime-id
+                                           #'main-op.name #'main-op.extends
+                                           #'main-options.prec #'main-options.assc))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (_::block body ...)))
          (list (parse-operator-definition #'form-id

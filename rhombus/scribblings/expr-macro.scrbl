@@ -215,11 +215,13 @@ and reify the tail as a fresh list---so don't do this:
 )
 
 In the same way that @rhombus(operator) supports operators that are both
-prefix and infix, you can use @vbar alternatives with @rhombus(expr.macro) to
-create a prefix-and-infix macro. Furthermore, an @rhombus(expr.macro)
-form can have multiple prefix blocks or multiple infix blocks, where the
-each block’s pattern is tried in order; in that case, only the first
-prefix block (if any) and first infix block (if any) can have precedence
-and associativity declarations that apply to all cases.
+prefix and infix, you can use @vbar alternatives with
+@rhombus(expr.macro) to create a prefix-and-infix macro. Furthermore, an
+@rhombus(expr.macro) form can have multiple prefix blocks or multiple
+infix blocks, where the each block’s pattern is tried in order; in that
+case, only the first prefix block (if any) and first infix block (if
+any) can have precedence and associativity declarations that apply to
+all cases---or precedence can be written before all alternatives by
+nesting the alternatives under @rhombus(match), as in @rhombus(operator).
 
 @close_eval(macro_eval)

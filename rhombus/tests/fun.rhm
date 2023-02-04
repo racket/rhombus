@@ -80,3 +80,52 @@ check:
   def known_posn = on_diag(2)
   known_posn.x
   ~is 2
+
+// `match` variant
+
+fun size2 :: Integer:
+  match
+  | size2("wrong"):
+      "oops"
+  | size2(n :: Integer):
+      n
+  | size2(p :: Posn):
+      p.x + p.y
+  | size2(a, b):
+      a+b
+
+check:
+  size2(10) ~is 10
+  size2(Posn(1, 2)) ~is 3
+  size2("wrong") ~raises "does not satisfy annotation"
+
+begin:
+  use_static
+  fun flip :: Posn:
+    match
+    | flip(Posn(x, y)):
+        Posn(y,x)
+    | flip(x):
+        Posn(0, x)
+  check:
+    flip(Posn(1, 2)) ~is Posn(2, 1)
+    flip(Posn(1, 2)).y ~is 1
+    flip(9) ~is Posn(0, 9)
+
+check:
+  fun size3:
+    match
+    | size3(_): "not yet implemented"
+  size3(10)
+  ~is "not yet implemented"
+
+begin:
+  def long_form_one = (fun:
+                         match
+                         | (): 1)
+  def longer_form_one = (fun :: Integer:
+                           match
+                           | (): 1)
+  check:
+    long_form_one() ~is 1
+    longer_form_one() ~is 1

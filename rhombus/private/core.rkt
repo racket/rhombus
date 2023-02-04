@@ -11,6 +11,7 @@
                               #%parens
                               ::)
                      (only-in "dollar.rkt" $)
+                     (only-in "match.rkt" match)
                      "rest-marker.rkt"
                      (only-space-in rhombus/stxclass
                                     "syntax-class-primitive.rkt")
@@ -35,7 +36,8 @@
                      &
                      ~&
                      #%quotes
-                     #%parens)
+                     #%parens
+                     match)
           (for-space rhombus/bind
                      (rename-out [rhombus... ...])
                      $

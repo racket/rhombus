@@ -4,6 +4,7 @@
                      (for-syntax racket/base
                                  syntax/parse/pre)
                      "macro-rhs.rkt"
+                     "operator-parse.rkt"
                      "srcloc.rkt"
                      "tag.rkt")
          syntax/parse/pre
@@ -42,7 +43,9 @@
                                    (map no-srcloc (syntax->list #'((tag ignore . pat) ...)))
                                    (syntax->list #'(rhs ...))
                                    #f
-                                   #f)
+                                   #f
+                                   #f #f
+                                   #'() #'())
        '#f
        #'wrap-prefix
        #f
@@ -75,8 +78,8 @@
      (lambda (stx)
        (syntax-parse stx
          #:datum-literals (group)
-         [(form-id (_::alts (_::block (group (_::quotes (group) (_::parens) . pat) (_::block . _)))
-                         ...+))
+         [(form-id (_::alts (_::block (group (_::quotes (group (_::parens) . pat)) (_::block . _)))
+                            ...+))
           ;; found () in place of a defined name, so parse as an expression
           #`((#%expression (rhombus-expression (#,group-tag . #,stx))))]
          [(form-id (_::quotes (group (_::parens) . _))
@@ -93,7 +96,27 @@
                                        (syntax->list #'(q.g ...))
                                        (syntax->list #'(rhs ...))
                                        '#f
-                                       #'rules-rhs))]
+                                       #'rules-rhs
+                                       #f #f
+                                       #'() #'()))]
+         [(form-id main-op::operator-or-identifier
+                   (_::block
+                    ~!
+                    (~var main-options (:all-operator-options #f))
+                    (group _::match+1
+                           (_::alts (_::block (group q::operator-syntax-quote
+                                                     (~and rhs (_::block body ...))))
+                                    ...+))))
+          (list
+           (parse-operator-definitions #'form-id
+                                       'rule
+                                       stx
+                                       (syntax->list #'(q.g ...))
+                                       (syntax->list #'(rhs ...))
+                                       '#f
+                                       #'rules-rhs
+                                       #'main-op.name #'#f
+                                       #'main-options.prec #'main-options.assc))]
          [(form-id q::operator-syntax-quote
                    (~and rhs (_::block body ...)))
           (list

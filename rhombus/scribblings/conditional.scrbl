@@ -96,7 +96,7 @@ There’s no @rhombus(~else) for this fused form, but @rhombus(_, ~bind) can be
 useful in catch-call clauses where the argument is not used. Also, the
 function name and all relevant argument positions have to be repeated in
 every case, but that’s often a readable trade-off. Match-dispatching
-functions cannot have optional or keyword arguments, but different cases
+functions cannot have optional arguments, but different cases
 can have different numbers of arguments, and a call will find a matching
 case with the right number of arguments.
 
@@ -111,3 +111,21 @@ case with the right number of arguments.
     hello("World")
     hello("Inigo", "Montoya")
 )
+
+To write a result annotation just once in a function definition with
+multiple cases, use the function name after @rhombus(fun), then
+@rhombus(::) or @rhombus(-:), the annotation, and then a block that
+contains the cases in a @rhombus(match) form:
+
+@demo(
+  ~defn:
+    fun fib :: PositiveInteger:
+      match
+      | fib(0): 1
+      | fib(1): 1
+      | fib(n :: NonnegativeInteger): fib(n-1) + fib(n-2)
+)
+
+This notation is a slight abuse of @rhombus(match), since it's not
+really a @rhombus(match) form, but it's meant to be suggestive of the
+underlying matching process.

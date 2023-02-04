@@ -14,10 +14,12 @@
          "compound-repetition.rkt"
          "dotted-sequence-parse.rkt"
          "parse.rkt"
+         (submod "match.rkt" for-match-id)
          "macro-macro.rkt"
          "definition.rkt"
          "static-info.rkt"
-         (submod "function.rkt" for-build)
+         "parens.rkt"
+         (submod "function-parse.rkt" for-build)
          (only-in "entry-point.rkt" no-adjustments))
 
 ;; The `operator` form takes something that looks like a function-style
@@ -36,7 +38,7 @@
   
   (define-splicing-syntax-class :prefix-case
     #:description "prefix operator case"
-    (pattern (~seq (parens (~and g (group op-name-seq::dotted-operator-or-identifier-sequence arg::not-op)))
+    (pattern (~seq (_::parens (~and g (group op-name-seq::dotted-operator-or-identifier-sequence arg::not-op)))
                    ret::ret-annotation
                    ((~and tag block) (~var options (:prefix-operator-options '#f))
                                      body ...))
@@ -50,7 +52,7 @@
   
   (define-splicing-syntax-class :infix-case
     #:description "infix operator case"
-    (pattern (~seq (parens (~and g (group left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op)))
+    (pattern (~seq (_::parens (~and g (group left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op)))
                    ret::ret-annotation
                    ((~and tag block) (~var options (:infix-operator-options '#f))
                                      body ...))
@@ -65,7 +67,7 @@
 
   (define-splicing-syntax-class :postfix-case
     #:description "postfix operator case"
-    (pattern (~seq (parens (~and g (group arg::not-op op-name-seq::dotted-operator-or-identifier-sequence)))
+    (pattern (~seq (_::parens (~and g (group arg::not-op op-name-seq::dotted-operator-or-identifier-sequence)))
                    ret::ret-annotation
                    ((~and tag block) (~var options (:prefix-operator-options '#f))
                                      body ...))
@@ -143,7 +145,7 @@
         [else
          (define falses (->stx (for/list ([a (in-list args)]) #'#f)))
          (build-case-function no-adjustments
-                              name
+                              name #'#f
                               (->stx falsess) (->stx (map list args)) (->stx (map list arg-parseds))
                               falses falses
                               falses falses
@@ -176,7 +178,7 @@
         [else
          (define falses (->stx (for/list ([a (in-list lefts)]) #'#f)))
          (build-case-function no-adjustments
-                              name
+                              name #'#f
                               (->stx falsess)
                               (->stx (map list lefts rights))
                               (->stx (map list left-parseds right-parseds))
@@ -267,7 +269,7 @@
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
-        #:datum-literals (parens group block alts op)
+        #:datum-literals (group)
         [(form-id p::prefix-case)
          (generate-prefix #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
                           (list #'p.ret-predicate) #'p.ret-static-infos)]
@@ -277,91 +279,129 @@
         [(form-id p::postfix-case)
          (generate-postfix #'form-id (list #'p.g) #'p.name #'p.extends (list #'p.arg) #'p.prec (list #'p.rhs)
                            (list #'p.ret-predicate) #'p.ret-static-infos)]
-        [(form-id (alts . as))
-         (define-values (all pres ins posts)
-           (let loop ([as (syntax->list #'as)] [all '()] [pres '()] [ins '()] [posts '()])
-             (cond
-               [(null? as) (values (reverse all) (reverse pres) (reverse ins) (reverse posts))]
-               [else
-                (syntax-parse (car as)
-                  #:datum-literals (parens group block alts op)
-                  [(_ (_ p::prefix-case))
-                   (define opc (unary-opcase #'p.g #'p.name #'p.extends
-                                             #'p.prec #'p.rhs #'p.ret-predicate #'p.ret-static-infos
-                                             #'p.arg))
-                   (loop (cdr as)
-                         (cons opc all)
-                         (cons opc pres)
-                         ins
-                         posts)]
-                  [(_ (_ i::infix-case))
-                   (define opc (binary-opcase #'i.g #'i.name #'i.extends
-                                              #'i.prec #'i.rhs #'i.ret-predicate #'i.ret-static-infos
-                                              #'i.left #'i.right #'i.assc))
-                   (loop (cdr as)
-                         (cons opc all)
-                         pres
-                         (cons opc ins)
-                         posts)]
-                  [(_ (_ p::postfix-case))
-                   (define opc (unary-opcase #'p.g #'p.name #'p.extends
-                                             #'p.prec #'p.rhs #'p.ret-predicate #'p.ret-static-infos
-                                             #'p.arg))
-                   (loop (cdr as)
-                         (cons opc all)
-                         pres
-                         ins
-                         (cons opc posts))])])))
-         (check-consistent stx (map opcase-name all) "operator")
-         (when (and (pair? ins) (pair? posts))
-           (raise-syntax-error #f
-                               "combination of infix and postfix cases not allowed"
-                               stx))
-         (define (check-options opcs extract options what)
-           (unless (null? opcs)
-             (for ([opc (in-list (cdr opcs))])
-               (when (and (syntax-e (extract opc))
-                          (not (null? (syntax-e (extract opc)))))
-                 (raise-syntax-error #f
-                                     (format "~a option not allowed after first ~a case"
-                                             options what)
-                                     stx)))))
-         (check-options pres opcase-prec "precedence" "prefix")
-         (check-options ins opcase-prec "precedence" "infix")
-         (check-options ins binary-opcase-assc "associativity" "infix")
-         (check-options posts opcase-prec "precedence" "postfix")
-         (cond
-           [(and (null? ins) (null? posts))
-            (generate-prefix #'form-id (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
-                             (map unary-opcase-arg pres) (opcase-prec (car pres)) (map opcase-rhs pres)
-                             (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres)))]
-           [(and (null? pres) (null? posts))
-            (generate-infix #'form-id (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
+        [(form-id (_::alts . as))
+         (parse-operator-alts stx #'form-id #'as
+                              #f
+                              #'#f #'#f
+                              #'() #'())]
+        [(form-id main-op-name-seq::dotted-operator-or-identifier-sequence
+                  main-ret::ret-annotation
+                  (_::block
+                   (~var options (:all-operator-options '#f))
+                   (group _::match (_::alts . as))))
+         #:with main-op-name::dotted-operator-or-identifier #'main-op-name-seq
+         (parse-operator-alts stx #'form-id #'as
+                              #'main-op-name.name
+                              #'main-ret.predicate #'main-ret.static-infos
+                              #'options.prec #'options.assc)]))))
+
+(define-for-syntax (parse-operator-alts stx form-id as-stx
+                                        main-name main-ret-predicate main-ret-static-infos
+                                        main-prec main-assc)
+  (define-values (all pres ins posts)
+    (let loop ([as (syntax->list as-stx)] [all '()] [pres '()] [ins '()] [posts '()])
+      (cond
+        [(null? as) (values (reverse all) (reverse pres) (reverse ins) (reverse posts))]
+        [else
+         (syntax-parse (car as)
+           #:datum-literals (group)
+           [(_ (_ p::prefix-case))
+            (define opc (unary-opcase #'p.g #'p.name #'p.extends
+                                      #'p.prec #'p.rhs #'p.ret-predicate #'p.ret-static-infos
+                                      #'p.arg))
+            (loop (cdr as)
+                  (cons opc all)
+                  (cons opc pres)
+                  ins
+                  posts)]
+           [(_ (_ i::infix-case))
+            (define opc (binary-opcase #'i.g #'i.name #'i.extends
+                                       #'i.prec #'i.rhs #'i.ret-predicate #'i.ret-static-infos
+                                       #'i.left #'i.right #'i.assc))
+            (loop (cdr as)
+                  (cons opc all)
+                  pres
+                  (cons opc ins)
+                  posts)]
+           [(_ (_ p::postfix-case))
+            (define opc (unary-opcase #'p.g #'p.name #'p.extends
+                                      #'p.prec #'p.rhs #'p.ret-predicate #'p.ret-static-infos
+                                      #'p.arg))
+            (loop (cdr as)
+                  (cons opc all)
+                  pres
+                  ins
+                  (cons opc posts))])])))
+  (check-consistent stx
+                    (let ([names (map opcase-name all)])
+                      (if main-name
+                          (cons main-name names)
+                          names))
+                    #:has-main? main-name
+                    "operator")
+  (when (and (pair? ins) (pair? posts))
+    (raise-syntax-error #f
+                        "combination of infix and postfix cases not allowed"
+                        stx))
+  (define (check-options opcs main-opcs extract options what)
+    (unless (null? opcs)
+      (for ([opc (in-list (if (null? (syntax-e main-opcs)) (cdr opcs) opcs))])
+        (when (and (syntax-e (extract opc))
+                   (not (null? (syntax-e (extract opc)))))
+          (raise-syntax-error #f
+                              (format "~a option not allowed ~a ~a case"
+                                      options
+                                      (if (null? (syntax-e main-opcs)) "after first" "in")
+                                      what)
+                              stx)))))
+  (check-options pres main-prec opcase-prec "precedence" "prefix")
+  (check-options ins main-prec opcase-prec "precedence" "infix")
+  (check-options ins main-assc binary-opcase-assc "associativity" "infix")
+  (check-options posts main-prec opcase-prec "precedence" "postfix")
+  (when (and (null? ins)
+             (not (null? (syntax-e main-assc))))
+    (raise-syntax-error #f
+                        "associativity specified without infix cases"
+                        stx
+                        main-assc))
+  (define (opcase-prec/main opc) (if (null? (syntax-e main-prec))
+                                     (opcase-prec opc)
+                                     main-prec))
+  (define (binary-opcase-assc/main opc) (if (null? (syntax-e main-assc))
+                                            (binary-opcase-assc opc)
+                                            main-assc))
+  (cond
+    [(and (null? ins) (null? posts))
+     (generate-prefix form-id (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
+                      (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                      (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres)))]
+    [(and (null? pres) (null? posts))
+     (generate-infix form-id (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
+                     (map binary-opcase-left ins) (map binary-opcase-right ins)
+                     (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
+                     (map opcase-rhs ins)
+                     (map opcase-ret-predicate ins) (intersect-static-infos (map opcase-ret-static-infos ins)))]
+    [(and (null? pres) (null? ins))
+     (generate-postfix form-id (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
+                       (map unary-opcase-arg posts) (opcase-prec/main (car posts)) (map opcase-rhs posts)
+                       (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))]
+    [(pair? ins)
+     (generate-prefix+infix stx
+                            (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
+                            (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                            (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres))
+
+                            (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
                             (map binary-opcase-left ins) (map binary-opcase-right ins)
-                            (opcase-prec (car ins)) (binary-opcase-assc (car ins))
+                            (opcase-prec/main (car ins)) (binary-opcase-assc/main (car ins))
                             (map opcase-rhs ins)
                             (map opcase-ret-predicate ins) (intersect-static-infos (map opcase-ret-static-infos ins)))]
-           [(and (null? pres) (null? ins))
-            (generate-postfix #'form-id (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
-                              (map unary-opcase-arg posts) (opcase-prec (car posts)) (map opcase-rhs posts)
-                              (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))]
-           [(pair? ins)
-            (generate-prefix+infix stx
-                                   (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
-                                   (map unary-opcase-arg pres) (opcase-prec (car pres)) (map opcase-rhs pres)
-                                   (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres))
+    [else
+     (generate-prefix+postfix stx
+                              (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
+                              (map unary-opcase-arg pres) (opcase-prec/main (car pres)) (map opcase-rhs pres)
+                              (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres))
 
-                                   (map opcase-g ins) (opcase-name (car ins)) (opcase-extends (car ins))
-                                   (map binary-opcase-left ins) (map binary-opcase-right ins)
-                                   (opcase-prec (car ins)) (binary-opcase-assc (car ins))
-                                   (map opcase-rhs ins)
-                                   (map opcase-ret-predicate ins) (intersect-static-infos (map opcase-ret-static-infos ins)))]
-           [else
-            (generate-prefix+postfix stx
-                                     (map opcase-g pres) (opcase-name (car pres)) (opcase-extends (car pres))
-                                     (map unary-opcase-arg pres) (opcase-prec (car pres)) (map opcase-rhs pres)
-                                     (map opcase-ret-predicate pres) (intersect-static-infos (map opcase-ret-static-infos pres))
-
-                                     (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
-                                     (map unary-opcase-arg posts) (opcase-prec (car posts)) (map opcase-rhs posts)
-                                     (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))])]))))
+                              (map opcase-g posts) (opcase-name (car posts)) (opcase-extends (car posts))
+                              (map unary-opcase-arg posts) (opcase-prec/main (car posts)) (map opcase-rhs posts)
+                              (map opcase-ret-predicate posts) (intersect-static-infos (map opcase-ret-static-infos posts)))]))

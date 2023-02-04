@@ -21,7 +21,7 @@
          "assign.rkt"
          "parens.rkt"
          "op-literal.rkt"
-         (submod "function.rkt" for-call)
+         (submod "function-parse.rkt" for-call)
          "is-static.rkt"
          "realm.rkt")
 

@@ -19,16 +19,23 @@
 }
 
 @doc(
-  defn.macro 'expr.macro $macro_pattern:
-                $option; ...
-                $body
-                ...'
-  defn.macro 'expr.macro
-              | $macro_pattern:
-                  $option; ...
-                  $body
-                  ...
-              | ...'
+  defn.macro 'expr.macro $macro_patterns'
+
+  grammar macro_patterns:
+    $macro_case
+    Z| $macro_case
+     | ...
+    $op_or_id_path:
+      $option; ...
+      match
+      | $macro_case
+      | ...
+
+  grammar macro_case:
+    $macro_pattern:
+      $option; ...
+      $body
+      ...
 ){
 
  Like @rhombus(macro), but arbitrary compile-time code can appear in the

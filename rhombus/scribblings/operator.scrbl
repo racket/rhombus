@@ -46,7 +46,7 @@ an identifier:
     10 mod 3
 )
 
-The @rhombus(operator) form must be followed by parentheses and then a
+The @rhombus(operator) form is followed by parentheses and then a
 block. Inside the parentheses, there must be exactly two or three terms,
 and the first, middle, or last term must be an operator or identifier to define.
 The arguments can be described by binding patterns, but in that case,
@@ -129,12 +129,35 @@ grouped on lines however is convenient.
 
 Use the keyword @rhombus(~other) in @rhombus(~weaker_than),
 @rhombus(~stronger_than), or @rhombus(~same_as) to declare a precedence
-relationship for operators not otherwise mentioned. When multiple cases
-for an operator are provided using @vbar, then only the first case for
-prefix, infix, or postfix can have options. Precedence for prefix and
-infix/postfix are independent.
+relationship for operators not otherwise mentioned.
 
-An operator can be exported the same as identifiers:
+When multiple cases for an operator are provided using @vbar, then only
+the first case for prefix, infix, or postfix can have options.
+Precedence for prefix and infix/postfix can be independent in that form.
+Alternatively, put the operator name directly after @rhombus(operator),
+then start a block that contains @rhombus(match); precedence and
+associativity that applies to all cases can be written within the block
+and before @rhombus(match). Also similar to this notation for
+@rhombus(fun), a result annotation can be written before the block.
+
+@demo(
+  ~eval: op_eval
+  ~defn:
+    operator <> :: Posn:
+      ~weaker_than: * / + -
+      ~associativity: ~right
+      match
+      | (x <> y):
+          Posn(x, y)
+      | (<> n):
+          Posn(n, n)
+  ~repl:
+    1 <> 2 * 3
+    1 <> 2 <> 3
+    <> 4 * 5
+)
+
+An operator can be exported the same as an identifier:
 
 @rhombusblock(
   export:

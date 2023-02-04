@@ -24,7 +24,7 @@
          "op-literal.rkt"
          "name-root.rkt"
          "parse.rkt"
-         (submod "function.rkt" for-call)
+         (submod "function-parse.rkt" for-call)
          (for-syntax "class-transformer.rkt")
          "is-static.rkt")
 

@@ -6,18 +6,30 @@
 @title{Simple Expression Macros}
 
 @doc(
-  defn.macro 'macro $macro_patterns'
-  expr.macro 'macro $macro_patterns'
-  entry_point.macro 'macro $macro_patterns'
+  defn.macro 'macro $macro_case'
+  defn.macro 'macro 
+              | $macro_case
+              | ...'
+  defn.macro 'macro $op_or_id_path:
+                $option; ...
+                match
+                | $macro_case
+                | ...'
 
-  grammar macro_patterns:
+  expr.macro 'macro $macro_case'
+  expr.macro 'macro 
+              | $macro_case
+              | ...'
+
+  entry_point.macro 'macro $macro_case'
+  entry_point.macro 'macro 
+                     | $macro_case
+                     | ...'
+
+  grammar macro_case:
     $macro_pattern:
       $option; ...
       '$template'
-    Z| $macro_pattern:
-         $option; ...
-         '$template'
-     | ...
 
   grammar macro_pattern:
     '$defined_name $ $right_parsed_id'
@@ -109,14 +121,14 @@
 
 )
 
- Using @vbar alternatives, a single definition can have any number
- of @rhombus(macro_pattern)s. The patterns describe any number of prefix
- and infix variants that are (presumably) distinguished by patterns that
- are tried in order. The name to define must be the same across all
- @rhombus(macro_pattern)s. If @rhombus(~parsed) is used for the the
- right-hand side in a @rhombus(macro_pattern) of an infix or prefix form,
- then it must be the only infix or prefix @rhombus(macro_pattern) among
- the alternatives.
+ Using @vbar alternatives, a single definition can have any number of
+ @rhombus(macro_pattern)s. The patterns describe any number of prefix and
+ infix variants that are (presumably) distinguished by patterns that are
+ tried in order. The name to define must be the same across all
+ @rhombus(macro_pattern)s. If the right-hand side in a
+ @rhombus(macro_pattern) of an infix or prefix form implies a parsed
+ match, then it must be the only infix or prefix @rhombus(macro_pattern)
+ among the alternatives.
 
  The body after each @rhombus(macro_pattern) must be an immediate
  @quotes template, and any @rhombus($) escape within the template
@@ -140,6 +152,11 @@
  In a defined with @litchar{|} alternatives,
  most @rhombus(option)s are allowed only in the first case, but
  @rhombus(~op_stx) is allowed and separate in each case.
+
+ When multiple cases are written with @vbar, they can be nested in a
+ @rhombus(match) form, similar to @rhombus(operator) and @rhombus(fun).
+ In that case, @rhombus(option) keywords can be written to apply to all
+ cases, the same as in @rhombus(operator).
 
  See @secref("namespaces") for information on @rhombus(identifier_path)
  and @rhombus(operator_path).

@@ -12,7 +12,7 @@
          "parse.rkt"
          "realm.rkt"
          (submod "annotation.rkt" for-class)
-         (submod "function.rkt" for-build))
+         (submod "function-parse.rkt" for-build))
          
 (provide (for-spaces (rhombus/annot
                       rhombus/namespace)
@@ -215,7 +215,7 @@
                          (define falses (datum->syntax #f (map (lambda (f) #f) argss)))
                          (define-values (proc arity)
                            (build-case-function no-adjustments
-                                                #'prompt_handler
+                                                #'prompt_handler #'#f
                                                 (datum->syntax #f
                                                                (for/list ([args (in-list argss)])
                                                                  (for/list ([arg (in-list (syntax->list args))])

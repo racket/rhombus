@@ -162,7 +162,7 @@
                  _
                  opt
                  prec
-                 #f
+                 assc ; only non-#f if main (i.e., specified before `match` in the definition)
                  parsed-right-id
                  [tail-pattern
                   self-id
@@ -171,7 +171,7 @@
              #'name
              #'opt
              #'prec
-             #f
+             #'assc
              (and (syntax-e #'parsed-right-id) #t)
              (cond
                [(syntax-e #'parsed-right-id)
@@ -285,6 +285,13 @@
                                 orig-stx))))))
   (check-fixity-consistent "prefix" "precedence" prefixes)
   (check-fixity-consistent "infix" "precedence and associativity" infixes)
+  (when (null? infixes)
+    (for ([p (in-list ps)])
+      (when (keyword? (syntax-e (parsed-assc-stx p)))
+        (raise-syntax-error #f
+                            "associativity specified without infix cases"
+                            orig-stx
+                            (parsed-assc-stx p)))))
   (cond
     [(null? prefixes) (build-cases infixes #f make-infix-id space-sym adjustments)]
     [(null? infixes) (build-cases prefixes #t make-prefix-id space-sym adjustments)]

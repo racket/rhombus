@@ -1,6 +1,7 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
+                     enforest/name-parse
                      "srcloc.rkt"
                      "annotation-string.rkt"
                      "tag.rkt")
@@ -8,12 +9,15 @@
          "binding.rkt"
          "parse.rkt"
          "else-clause.rkt"
-         (submod "function.rkt" for-build)
+         (submod "function-parse.rkt" for-build)
          "realm.rkt"
          "parens.rkt"
          (only-in "entry-point.rkt" no-adjustments))
 
 (provide match)
+
+(module+ for-match-id
+  (provide (for-syntax :match)))
 
 (begin-for-syntax
   (define-syntax-class :pattern-clause
@@ -26,7 +30,14 @@
     (datum->syntax #f (map (lambda (x) #f) (cons 'b (syntax->list l-stx)))))
 
   (define (l1falses l-stx)
-    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx))))))
+    (datum->syntax #f (map (lambda (x) '(#f)) (cons 'b (syntax->list l-stx)))))
+  
+  (define-syntax-class :match
+    #:description "match form"
+    #:opaque
+    #:attributes ()
+    (pattern name::name
+             #:when (free-identifier=? #'name.name (expr-quote match)))))
 
 (define-syntax match
   (expression-transformer
@@ -40,7 +51,7 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (define-values (proc arity)
           (build-case-function no-adjustments
-                               #'match
+                               #'match #'#f
                                (l1falses #'(b ...))
                                #'((b) ... (ignored))
                                #`((b.parsed) ... (#,(binding-form
@@ -60,7 +71,7 @@
         #:with (b::binding ...) (no-srcloc* #`((#,group-tag clause.bind ...) ...))
         (define-values (proc arity)
           (build-case-function no-adjustments
-                               #'match
+                               #'match #'#f
                                (l1falses #'(b ...))
                                #'((b) ... (unmatched))
                                #`((b.parsed) ... (#,(binding-form
@@ -87,7 +98,6 @@
             [_ (raise-syntax-error #f
                                    "expected a pattern followed by a result block"
                                    c)]))]))))
-
 
 (struct exn:fail:contract:srcloc exn:fail:contract (srclocs)
   #:property prop:exn:srclocs (lambda (exn) (exn:fail:contract:srcloc-srclocs exn)))

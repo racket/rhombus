@@ -53,6 +53,13 @@
   | [x, y]: x+y
 )
 
+ The @rhombus(match) form's binding is recognized specially in
+ @rhombus(fun), @rhombus(operator), @rhombus(macro) and similar forms to
+ group @vbar alternatives while supplying information that applies to all
+ alternatives. Those uses of @rhombus(match) do not have a
+ @rhombus(target_expr), and they have a different syntax for the
+ @vbar clauses inside @rhombus(match).
+
 }
 
 @doc(
