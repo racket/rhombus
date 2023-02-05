@@ -4,28 +4,28 @@ use_static
 
 class AnythingGoes():
   private implements Equatable
-  private override equal_recur(other, recur): #true
-  private override hash_recur(recur): 0
+  private override equals(other, recur): #true
+  private override hash_code(recur): 0
 
 class NoGo():
   private implements Equatable
-  private override equal_recur(other, recur): #false
-  private override hash_recur(recur): 0
+  private override equals(other, recur): #false
+  private override hash_code(recur): 0
 
 class Fail():
   private implements Equatable
-  private override equal_recur(other, recur): error("failure")
-  private override hash_recur(recur): error("failure")
+  private override equals(other, recur): error("failure")
+  private override hash_code(recur): error("failure")
 
 check AnythingGoes() == AnythingGoes() ~is #true
 check:
   use_dynamic
-  AnythingGoes().equal_recur(AnythingGoes(), fun (& _): #true)
-  ~raises "equal_recur: no such field or method"
+  AnythingGoes().equals(AnythingGoes(), fun (& _): #true)
+  ~raises "equals: no such field or method"
 check:
   use_dynamic
-  AnythingGoes().hash_recur(fun (_): 0)
-  ~raises "hash_recur: no such field or method"
+  AnythingGoes().hash_code(fun (_): 0)
+  ~raises "hash_code: no such field or method"
 
 check AnythingGoes() == NoGo() ~is #false
 check NoGo() == AnythingGoes()  ~is #false

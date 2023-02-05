@@ -38,10 +38,10 @@
                   #'()
                   #'prop:Equatable
                   #'Equatable-ref
-                  (vector-immutable (box-immutable 'equal_recur)
-                                    (box-immutable 'hash_recur))
+                  (vector-immutable (box-immutable 'equals)
+                                    (box-immutable 'hash_code))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equal_recur 0 'hash_recur 1)
+                  (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
                   #t))
 
@@ -51,10 +51,10 @@
                   #'()
                   #'prop:Equatable-public
                   #'Equatable-public-ref
-                  (vector-immutable (box-immutable 'equal_recur)
-                                    (box-immutable 'hash_recur))
+                  (vector-immutable (box-immutable 'equals)
+                                    (box-immutable 'hash_code))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equal_recur 0 'hash_recur 1)
+                  (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
                   #t))
 
