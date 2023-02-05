@@ -551,12 +551,12 @@ class ApproxCircle():
 val a: ApproxCircle()
 
 a.area()
-(a -: Polygon).has_corners()
-(a -: Circle).has_sides()
+(a :~ Polygon).has_corners()
+(a :~ Circle).has_sides()
 
-(a -: Shape).area()
-(a -: Polygon).area()
-(a -: Circle).area()
+(a :~ Shape).area()
+(a :~ Polygon).area()
+(a :~ Circle).area()
 
 a.ten_area()
 ```
@@ -587,7 +587,7 @@ m is_a _Stool
 m is_a Cow
 m.legs()
 m.horns()
-(m -: Stool).seat()
+(m :~ Stool).seat()
 ```
 
 Private immutable field:
@@ -601,7 +601,7 @@ class Posn(x, y, private stamp):
 val p: Posn(1, 2)
 val Posn(x, y): p
 _Posn.stamp(p)
-(p -: _Posn).stamp
+(p :~ _Posn).stamp
 ```
 
 Open Issues

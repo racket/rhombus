@@ -39,7 +39,7 @@ begin:
     set.length()
     ~is 2
   check:
-    def set -: Set = dynamic({"a", "b"})
+    def set :~ Set = dynamic({"a", "b"})
     set.length()
     ~is 2
   check:

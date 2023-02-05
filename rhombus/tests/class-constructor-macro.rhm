@@ -24,7 +24,7 @@ check:
     constructor Psn(y, x): super(x, y)
     expression 'Posn[$x, &, $y]': '_Posn($x, $y)'
     export: Psn
-  Function.map(fun (p -: Posn): [p.x, p.y],
+  Function.map(fun (p :~ Posn): [p.x, p.y],
                [Posn[1, &, 2],
                 Posn.Psn(2, 1),
                 _Posn(1, 2)])

@@ -39,7 +39,7 @@ annotations.
 
   annot.macro 'PosnList': 'List.of(Posn)'
 
-  fun nth_x(ps -: PosnList, n):
+  fun nth_x(ps :~ PosnList, n):
     ps[n].x
 )
 

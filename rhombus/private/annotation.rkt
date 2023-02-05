@@ -33,7 +33,7 @@
          (for-spaces (#f
                       rhombus/bind)
                      ::
-                     -:)
+                     :~)
          (for-space rhombus/annot
 
                     Any
@@ -132,7 +132,7 @@
     (pattern (~seq op::name ctc ...)
              #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (bind-quote ::)))]
              #:when (or check?
-                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
+                        (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
              #:with c::annotation #'(group ctc ...)
              #:with c-parsed::annotation-form #'c.parsed
              #:attr predicate (if check? #'c-parsed.predicate #'#f)
@@ -142,10 +142,8 @@
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)
     (pattern (~seq o::name ctc ...)
-             #:when (or (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
-                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
-             #:attr seq #'(o ctc ...))
-    (pattern (~seq (~and o (op -:)) ctc ...)
+             #:when (or (free-identifier=? (in-binding-space #'o.name) (bind-quote ::))
+                        (free-identifier=? (in-binding-space #'o.name) (bind-quote :~)))
              #:attr seq #'(o ctc ...)))
 
   (define-syntax-class :annotation-form
@@ -304,10 +302,10 @@
 (define-binding-syntax ::
   (make-annotation-apply-binding-operator (bind-quote ::) #t))
 
-(define-syntax -:
-  (make-annotation-apply-expression-operator (expr-quote -:) #f))
-(define-binding-syntax -:
-  (make-annotation-apply-binding-operator (bind-quote -:) #f))
+(define-syntax :~
+  (make-annotation-apply-expression-operator (expr-quote :~) #f))
+(define-binding-syntax :~
+  (make-annotation-apply-binding-operator (bind-quote :~) #f))
 
 (define-syntax is_a
   (expression-infix-operator

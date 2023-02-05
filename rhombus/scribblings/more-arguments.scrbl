@@ -27,7 +27,7 @@ arguments:
 
 @demo(
   ~defn:
-    fun add(x -: Number, ...):
+    fun add(x :~ Number, ...):
       for values(total = 0):
         each v: [x, ...]
         total+v
@@ -64,7 +64,7 @@ its argument instead of @rhombus(...), like this:
 @demo(
   ~eval: args_eval
   ~defn:
-    fun add(& xs -: List.of(Number)):
+    fun add(& xs :~ List.of(Number)):
       for values(total = 0):
         each v: xs
         total+v
@@ -129,9 +129,9 @@ independently.
   ~eval: args_eval
   ~defn:
     fun
-    | avg(n :: Number, & ns -: List.of(Number)):
+    | avg(n :: Number, & ns :~ List.of(Number)):
         (n + add(& ns)) / (1 + List.length(ns))
-    | avg(p :: Posn, & ps -: List.of(Posn)):
+    | avg(p :: Posn, & ps :~ List.of(Posn)):
         Posn(avg(p.x, & Function.map(Posn.x, ps)),
              avg(p.y, & Function.map(Posn.y, ps)))
   ~repl:

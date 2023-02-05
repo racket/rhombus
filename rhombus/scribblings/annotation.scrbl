@@ -9,21 +9,21 @@
   ~eval: ann_eval
   ~hidden:
     class Posn(x, y)
-    fun flip(p -: Posn): Posn(p.y, p.x)
+    fun flip(p :~ Posn): Posn(p.y, p.x)
     def origin = Posn(0, 0)
 )
 
 @title(~tag: "annotation"){Annotations and the Dot Operator}
 
 Besides classes defined with @rhombus(class), a few predefined
-annotations work with the @rhombus(-:, ~bind) and @rhombus(::, ~bind)
+annotations work with the @rhombus(:~, ~bind) and @rhombus(::, ~bind)
 annotation operators, including @rhombus(Integer, ~annot) (meaning exact
 integer), @rhombus(Number, ~annot), @rhombus(String, ~annot),
 @rhombus(Keyword, ~annot), and @rhombus(Any, ~annot) (meaning any value).
 
-The @rhombus(-:) and @rhombus(::) operators also work in expression
+The @rhombus(:~) and @rhombus(::) operators also work in expression
 positions. In that case, the assertion or check is about the expression
-on the left-hand side of @rhombus(-:) or @rhombus(::). For @rhombus(::),
+on the left-hand side of @rhombus(:~) or @rhombus(::). For @rhombus(::),
 the left-hand expression must produce a value that satisfies the
 right-hand annotation, otherwise a run-time exception is raised. The
 @rhombus(is_a) operator takes an annotation like @rhombus(::), but it
@@ -32,7 +32,7 @@ expression matches the annotation.
 
 @demo(
   ~eval: ann_eval
-  (flip(origin) -: Posn).x
+  (flip(origin) :~ Posn).x
   ~error: (1 :: Posn)
   origin is_a Posn
   1 is_a Posn
@@ -58,7 +58,7 @@ the @rhombus(.) operator can be chained for efficient access:
 @demo(
   ~eval: ann_eval
   ~defn:
-    class Line(p1 -: Posn, p2 -: Posn)
+    class Line(p1 :~ Posn, p2 :~ Posn)
     def l1 :: Line:
       Line(Posn(1, 2), Posn(3, 4))
   ~repl:
@@ -72,10 +72,10 @@ acts as a namespace to provides access to
 field-accessor functions, as in @rhombus(Posn.x) (which doesn’t get a
 specific @rhombus(x), but produces a function that can be called on a
 @rhombus(Posn) instance to extract its @rhombus(x) field). An identifier
-that is bound using @rhombus(-:) or @rhombus(::) and a class name is
+that is bound using @rhombus(:~) or @rhombus(::) and a class name is
 a dot provider, and it provides access to fields of a class
 instance. More generally, an annotation that is associated to a binding
-or expression with @rhombus(-:) or @rhombus(::) might make the binding
+or expression with @rhombus(:~) or @rhombus(::) might make the binding
 or expression a dot provider. See @secref("static-info") for more
 information on dot providers and other static information.
 

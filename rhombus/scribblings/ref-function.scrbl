@@ -125,8 +125,8 @@ normally bound to implement function calls.
     $keyword
   
   grammar maybe_res_ann:
-    :: $annotation
-    -: $annotation
+    #,(@rhombus(::, ~bind)) $annotation
+    #,(@rhombus(:~, ~bind)) $annotation
     #,(epsilon)
 
   grammar rest:

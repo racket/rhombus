@@ -284,7 +284,7 @@ check:
   class Posn(x, y):
     nonfinal
     private field q: 1
-    method lookup(p -: Posn): p.q
+    method lookup(p :~ Posn): p.q
   class Posn3D(z):
     extends Posn
     private field q: "other"

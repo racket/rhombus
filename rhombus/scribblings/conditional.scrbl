@@ -114,7 +114,7 @@ case with the right number of arguments.
 
 To write a result annotation just once in a function definition with
 multiple cases, use the function name after @rhombus(fun), then
-@rhombus(::) or @rhombus(-:), the annotation, and then a block that
+@rhombus(::) or @rhombus(:~), the annotation, and then a block that
 contains the cases in a @rhombus(match) form:
 
 @demo(

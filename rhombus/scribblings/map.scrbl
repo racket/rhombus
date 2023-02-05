@@ -92,7 +92,7 @@ for keys and one for values:
 @demo(
   ~eval: map_eval
   ~defn:
-    fun locale(who, neighborhood -: Map.of(String, Posn)):
+    fun locale(who, neighborhood :~ Map.of(String, Posn)):
       def p = neighborhood[who]
       p.x +& ", " +& p.y
   ~repl:

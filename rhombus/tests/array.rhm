@@ -28,7 +28,7 @@ begin:
     arr.length()
     ~is 3
   check:
-    def arr -: Array = dynamic(Array(1, 2, 3))
+    def arr :~ Array = dynamic(Array(1, 2, 3))
     arr.length()
     ~is 3
   check:

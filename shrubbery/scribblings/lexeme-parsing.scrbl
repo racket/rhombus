@@ -43,7 +43,10 @@ multi-character operator cannot end in @litchar{+}, @litchar{-}, or
 @litchar{1} plus @litchar{-2}, not @litchar{1} and @litchar{2} combined
 with a @litchar{+-} operator), unless the operator contains only
 @litchar{+}, @litchar{-}, or @litchar{.} (so @litchar{++}, @litchar{--},
-and @litchar{...} are allowed). Also, a multi-character operator cannot
+and @litchar{...} are allowed). Also, a multi-character operator
+cannot end in @litchar{:}, since that creates an ambiguity with an
+operator just before a block, except that a sequence containing only
+@litchar{:} is allowed. A multi-character operator cannot
 end with @litchar{/} or contain @litchar{//} or @litchar{/*}, because
 that can create ambiguities with comments.
 
@@ -103,6 +106,7 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, kleeneplus(@litchar{.}), @elem{@notecol{... or containing} @litchar{//} @notecol{...}}],
     ["", "", bor, kleeneplus(@litchar{+}), @elem{@notecol{... or containing} @litchar{/*}}],
     ["", "", bor, kleeneplus(@litchar{-}), ""],
+    ["", "", bor, bseq(@litchar{:}, kleeneplus(@litchar{:})), ""],
     ["", "", bor, bseq(@litchar{#}, @nonterm{hashopchar}), ""],
     empty_line,
     [no_lex, @nonterm{opchar}, bis, @elem{@italic{symbolic Unicode character not in} @nonterm{special}}, ""],
@@ -110,7 +114,7 @@ but the table below describes the shape of @litchar("@") forms.
     ["", "", bor, @elem{@italic{one of} @litchar{:} @litchar{|}}, ""],
     empty_line,
     [no_lex, @nonterm{tailopchar}, bis, @elem{@italic{anything in} @nonterm{opchar} @italic{except}
-                                              @litchar{+}, @litchar{-}, @litchar{.}, @litchar{/}}, ""],
+                                              @litchar{+}, @litchar{-}, @litchar{.}, @litchar{:}, @litchar{/}}, ""],
     empty_line,
     [no_lex, @nonterm{hashopchar}, bis, @elem{@italic{one of} @litchar{'}, @litchar{,}, @litchar{;},
                                               @litchar{:}, @litchar{|}}, ""],

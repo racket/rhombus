@@ -25,19 +25,19 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
     | '$t ...': for values(ht = ht):
                   each t: [t, ...]
                   extract_metavariables(t, ht)
-  fun extract_lhs_metavariables(groups -: List, ht):
+  fun extract_lhs_metavariables(groups :~ List, ht):
     for values(ht = ht):
       each g: groups
       match g
       | '$p . _': extract_metavariables(p, ht)
       | ~else: ht
-  fun extract_rhs_metavariables(groups -: List, ht):
+  fun extract_rhs_metavariables(groups :~ List, ht):
     for values(ht = ht):
       each g: groups
       match g
       | '$_ ... ($g, ...)': extract_metavariables('($g, ...)', ht)
       | ~else: ht
-  def vars -: Map:
+  def vars :~ Map:
     extract_rhs_metavariables(
       [rhs, ...],
       extract_metavariables(

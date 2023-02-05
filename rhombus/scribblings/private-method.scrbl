@@ -95,7 +95,7 @@ field accessible outside the class's implementation:
     c.go(240)
     ~error:
       c.gas
-    (c -: _Car).gas
+    (c :~ _Car).gas
 )
 
 Methods can be private too, following essentially the same rules as

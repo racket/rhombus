@@ -33,7 +33,7 @@ begin:
     3 ++* ((4 * 2) ++* 5) ~is 4420
   
 begin:
-  operator ++* :
+  operator ++*:
     ~weaker_than: *
     ~associativity: ~right
     match
@@ -45,7 +45,7 @@ begin:
     3 ++* ((4 * 2) ++* 5) ~is 4420
   
 begin:
-  operator ++* :
+  operator ++*:
     ~weaker_than: *
     match
     | (a ++* b):
@@ -57,7 +57,7 @@ begin:
     3 ++* ((4 * 2) ++* 5) ~is 4420
   
 begin:
-  operator ++* :
+  operator ++*:
     ~associativity: ~right
     match
     | (a ++* b):
@@ -182,7 +182,7 @@ check:
 
 check:
   ~eval
-  operator ** :
+  operator **:
     match
     | (0 ** a): 0
     | (1 ??): 1
@@ -217,7 +217,7 @@ check:
 
 check:
   ~eval
-  operator ** :
+  operator **:
     ~associativity: ~none
     match
     | (** 0): 0

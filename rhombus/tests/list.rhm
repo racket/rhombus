@@ -49,7 +49,7 @@ begin:
     lst.length()
     ~is 3
   check:
-    def lst -: List = dynamic([1, 2, 3])
+    def lst :~ List = dynamic([1, 2, 3])
     lst.length()
     ~is 3
   check:

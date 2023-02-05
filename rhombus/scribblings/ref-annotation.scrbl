@@ -38,7 +38,7 @@
 }
 
 @doc(
-  operator (arg -: annotation) :: annotation
+  operator (arg :~ annotation) :: annotation
 ){
 
  Associates static information to the overall expression the same as
@@ -46,22 +46,22 @@
  @rhombus(expr).
 
 @examples(
-  [1, 2, 3] -: List
-  "oops" -: List
+  [1, 2, 3] :~ List
+  "oops" :~ List
 )
 
 }
 
 @doc(
-  bind.macro '$binding -: $annotation'
+  bind.macro '$binding :~ $annotation'
 ){
 
  Associates static information to @rhombus(binding) the same as
  @rhombus(::, ~bind), but performs no run-time check.
 
 @examples(
-  def x -: List: [1, 2, 3]
-  def x -: List: "oops"
+  def x :~ List: [1, 2, 3]
+  def x :~ List: "oops"
 )
 
 }

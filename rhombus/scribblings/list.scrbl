@@ -43,7 +43,7 @@ A list is a ``linked list,'' in the sense that getting the @math{n}th element
 takes @math{O(n)} time, and adding to the front takes constant time. A
 list is immutable.
 
-@rhombus(List, ~annot) works as an annotation with @rhombus(-:, ~bind) and
+@rhombus(List, ~annot) works as an annotation with @rhombus(:~, ~bind) and
 @rhombus(::, ~bind):
 
 @demo(
@@ -159,7 +159,7 @@ function’s argument can use a binding pattern that indicates a list of
 @demo(
   ~eval: list_eval
   ~defn:
-    fun nth_x([p -: Posn, ...], n):
+    fun nth_x([p :~ Posn, ...], n):
       [p, ...][n].x
   ~repl:
     nth_x([Posn(1, 2), Posn(3, 4), Posn(5, 6)], 1)
@@ -172,7 +172,7 @@ the list must satisfy:
 @demo(
   ~eval: list_eval
   ~defn:
-    fun nth_x(ps -: List.of(Posn), n):
+    fun nth_x(ps :~ List.of(Posn), n):
       ps[n].x
 )
 

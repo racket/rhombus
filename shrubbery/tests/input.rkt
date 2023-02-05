@@ -335,6 +335,8 @@ local:
 
 #%call #%juxtapose #%end
 
+-: :: ::: :~
+
 INPUT
 ))
 
@@ -1090,6 +1092,7 @@ INPUT
     (group (parens (group 1) (group (block))))
     (group (parens (group (alts (block (group 1)) (block (group 2))))))
     (group #%call #%juxtapose #%end)
+    (group (op -) (block (group (op ::) (op :::) (op :~))))
     ))
 
 ;; has « », so unarmoring won't work

@@ -58,13 +58,13 @@ check:
 dot.macro 'myint_dot_provider $left $dot $right':
   match right
   | 'is_zero': '$left .= 0'
-  | 'add': 'fun (v -: MyInt) -: MyInt: $left + v'
+  | 'add': 'fun (v :~ MyInt) :~ MyInt: $left + v'
 
 annot.macro 'MyInt':
   annot_meta.pack_predicate('fun (x): x is_a Integer',
                             '(($(statinfo_meta.dot_provider_key), myint_dot_provider))')
 
-def (one -: MyInt) = 1
+def (one :~ MyInt) = 1
 
 check:
   one.add(4).is_zero
@@ -74,7 +74,7 @@ check:
   ~is #true
 
 check:
-  ((one.add(4)) -: MyInt).is_zero
+  ((one.add(4)) :~ MyInt).is_zero
   ~is #false
 
 def two = 2 :: MyInt
@@ -82,13 +82,13 @@ check:
   two.is_zero
   ~is #false
 
-expr.macro 'I($n)': '$n -: MyInt'
+expr.macro 'I($n)': '$n :~ MyInt'
 def three = (I(3))
 check:
   three.is_zero
   ~is #false
 
-operator ((x -: MyInt) my_plus (y -: MyInt)) -: MyInt:
+operator ((x :~ MyInt) my_plus (y :~ MyInt)) :~ MyInt:
   x.add(y)
 
 check:

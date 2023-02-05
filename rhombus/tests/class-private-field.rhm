@@ -185,5 +185,5 @@ check:
   def p = Posn(1, 2)
   def Posn(x, y) = p
   [_Posn.stamp(p),
-   (p -: _Posn).stamp]
+   (p :~ _Posn).stamp]
   ~is [10, 10]

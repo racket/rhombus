@@ -50,7 +50,7 @@ begin:
     map.length()
     ~is 2
   check:
-    def map -: Map = dynamic({"a": 1, "b": 2})
+    def map :~ Map = dynamic({"a": 1, "b": 2})
     map.length()
     ~is 2
   check:
