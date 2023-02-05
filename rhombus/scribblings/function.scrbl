@@ -38,7 +38,7 @@ an anonymous function value.
     curried_add(10)(20)
 )
 
-We've also seen that functions can have @rhombus(::) and @rhombus(-:)
+We've also seen that functions can have @rhombus(::) and @rhombus(:~)
 annotations on both the parameters and the return value. In general, the
 parameters can be bindings, which can express annotations and pattern
 matching. All of that works with @rhombus(fun) in expression positions,

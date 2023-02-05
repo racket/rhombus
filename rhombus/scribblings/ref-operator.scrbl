@@ -133,7 +133,7 @@
     "a" ^^^ "b"
     ^^^ "b"
   ~defn:
-    operator ^^^ :
+    operator ^^^:
       ~weaker_than: +
       match
       | (x ^^^ y):

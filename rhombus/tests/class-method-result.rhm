@@ -13,7 +13,7 @@ begin:
     final method n_f() :: String:
       x+y
     // annotation not checked
-    method p() -: String:
+    method p() :~ String:
       x+y
   check:
     Posn(1, 2).m()
@@ -131,7 +131,7 @@ begin:
     _Posn(1, 2).zero().x
     ~is 0
   check:
-    (Posn(1, 2) -: _Posn).zero().x
+    (Posn(1, 2) :~ _Posn).zero().x
     ~is 0
 
 // interface

@@ -193,7 +193,7 @@ kwrst_arg = & expr
 Examples:
 
 ```
-> fun add(& l -: List):
+> fun add(& l :~ List):
     for values(sum = 0):
       ~each i: l
       sum+i
@@ -298,7 +298,7 @@ kwrst_binding = & binding
               | binding, ...
 
 maybe_result_annotation = :: annotation
-                        | -: annotation
+                        | :~ annotation
                         | ϵ
 ```
 
@@ -339,28 +339,28 @@ maybe_rst_binding = & binding
 #### Type Annotations
 
 When rest arguments written with `& rst` have type
-annotations `& rst -: type`, the type applies to the list
+annotations `& rst :~ type`, the type applies to the list
 value, not to the elements.
 
 When keyword rest arguments with `~& kwrst` have type
-annotations `~& kwrst -: type`, the type applies to the map
+annotations `~& kwrst :~ type`, the type applies to the map
 value, not to the value elements.
 
 ```
-> fun p(& l -: List):
+> fun p(& l :~ List):
     l
-> fun k(~& m -: Map):
+> fun k(~& m :~ Map):
     m
-> fun n(& l -: List, ~& m -: Map):
+> fun n(& l :~ List, ~& m :~ Map):
     [l, m]
 ```
 
 However, when an identifier under ellipses has a type
-annotation `(x -: type), ...`, the type applies to each
+annotation `(x :~ type), ...`, the type applies to each
 element under iteration, not to the list as a whole.
 
 ```
-> fun el((x -: Number), ...):
+> fun el((x :~ Number), ...):
     [[x, x], ...]
 ```
 

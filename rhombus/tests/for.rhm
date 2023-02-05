@@ -127,7 +127,7 @@ check:
 check:
   use_static
   class Posn(x, y)
-  fun point_xs(l -: List.of(List.of(Posn))):
+  fun point_xs(l :~ List.of(List.of(Posn))):
     for:
       each ll: l
       each p: ll

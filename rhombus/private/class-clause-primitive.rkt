@@ -11,7 +11,7 @@
          "class-clause.rkt"
          (submod "class-clause.rkt" for-class)
          "interface-clause.rkt"
-         (only-in "annotation.rkt" :: -:)
+         (only-in "annotation.rkt" :: :~)
          (submod "annotation.rkt" for-class)
          "binding.rkt"
          "expression.rkt"
@@ -172,7 +172,7 @@
     #:attributes (seq)
     (pattern (~seq (~and o op::name) ret ...)
              #:when (or (free-identifier=? (in-binding-space #'op.name) (bind-quote ::))
-                        (free-identifier=? (in-binding-space #'op.name) (bind-quote -:)))
+                        (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
              #:attr seq #'(o ret ...))
     (pattern (~seq)
              #:attr seq #'()))

@@ -16,7 +16,7 @@
 @title(~tag: "annotation-vs-bind"){Annotations versus Binding Patterns}
 
 Annotations and binding patterns serve similar and interacting purposes.
-The @rhombus(-:) and @rhombus(::) binding operators put annotations to
+The @rhombus(:~) and @rhombus(::) binding operators put annotations to
 work in a binding. For the other direction, the @rhombus(matching)
 annotation operator puts a binding form to work in a annotation.
 

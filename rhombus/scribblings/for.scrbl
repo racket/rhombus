@@ -114,7 +114,7 @@ returns as many values as identifiers to provide new values for the
 identifiers.
 
 @demo(
-  fun sum(l -: List):
+  fun sum(l :~ List):
     for values(sum = 0):
       each i: l
       sum+i
@@ -129,7 +129,7 @@ the outer and inner iterations are specialized---although that
 specialization is visible only as a change in performance, if at all.
 
 @demo(
-  fun sum2d(ll -: List.of(List.of(Number))):
+  fun sum2d(ll :~ List.of(List.of(Number))):
     for values(sum = 0):
       each l: ll
       each i: l

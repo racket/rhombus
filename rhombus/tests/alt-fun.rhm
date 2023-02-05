@@ -148,9 +148,9 @@ check: distance(3, 4); ~is 5
 check: distance(10, 5, 18, 20); ~is 17
 
 fun
-| avg(a :: Number, & bs -: List.of(Number)):
+| avg(a :: Number, & bs :~ List.of(Number)):
     (a + more_math.sum(bs)) / (1 + List.length(bs))
-| avg(a :: Posn, & bs -: List.of(Posn)):
+| avg(a :: Posn, & bs :~ List.of(Posn)):
     Posn(avg(a.x, & map(Posn.x, bs)),
          avg(a.y, & map(Posn.y, bs)))
 

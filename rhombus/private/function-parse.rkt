@@ -165,7 +165,7 @@
     (pattern (~seq op::name ctc0::not-block ctc::not-block ...)
              #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'::)))]
              #:when (or check?
-                        (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'-:)))
+                        (free-identifier=? (in-binding-space #'op.name) (in-binding-space #':~)))
              #:with c::annotation (no-srcloc #`(#,group-tag ctc0 ctc ...))
              #:with c-parsed::annotation-form #'c.parsed
              #:attr static-infos #'c-parsed.static-infos

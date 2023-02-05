@@ -13,7 +13,7 @@
 
 (provide (for-space rhombus/scribble/typeset
                     ::
-                    -:
+                    :~
                     |'|
                     fun
                     val
@@ -61,7 +61,7 @@
                [_ tail])))))
 
 (define-spacer :: annote-spacer)
-(define-spacer -: annote-spacer)
+(define-spacer :~ annote-spacer)
 
 (define-spacer |'|
   (spacer

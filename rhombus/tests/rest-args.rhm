@@ -165,7 +165,7 @@ fun
 | krpythag(~& {#'~a: a, #'~b: b, #'~c: c, & Map.empty}):
     sqr(a) + sqr(b) == sqr(c)
 
-check :
+check:
   krpythag(~a: 3, ~b: 4) ~is 5
   krpythag(~c: 5, ~a: 3) ~is 4
   krpythag(~c: 5, ~b: 4) ~is 3

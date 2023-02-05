@@ -28,12 +28,12 @@ check:
    a.has_corners(),
    a.has_sides(),
    
-   (a -: Polygon).has_corners(),
-   (a -: Circle).has_sides(),
+   (a :~ Polygon).has_corners(),
+   (a :~ Circle).has_sides(),
 
-   (a -: Shape).area(),
-   (a -: Polygon).area(),
-   (a -: Circle).area(),
+   (a :~ Shape).area(),
+   (a :~ Polygon).area(),
+   (a :~ Circle).area(),
 
    a.ten_area(),
 
@@ -69,7 +69,7 @@ check:
     implements Cowboy
     override draw(): "bullseye"
   def l = LoneRanger()
-  [l.draw(), (l -: Shape).draw(), (l -: Cowboy).draw()]
+  [l.draw(), (l :~ Shape).draw(), (l :~ Cowboy).draw()]
   ~is ["bullseye", "bullseye", "bullseye"]
 
 // diamond
@@ -127,7 +127,7 @@ check:
   def s = Sum(20)
   [s is_a Adder,
    s is_a _Adder,
-   (s -: _Adder).total()]
+   (s :~ _Adder).total()]
   ~is [#false, #true, 20]
 
 check:
@@ -191,14 +191,14 @@ check:
     private override seat(): 1
   def m = MilkShed()
   check:
-    (m -: Stool).seat()
+    (m :~ Stool).seat()
     ~raises "Stool"
   [m is_a Stool,
    m is_a _Stool,
    m is_a Cow,
    m.legs(),
    m.horns(),
-   (m -: _Stool).seat()]
+   (m :~ _Stool).seat()]
   ~is [#false, #true, #true,
        4, 2, 1]
 

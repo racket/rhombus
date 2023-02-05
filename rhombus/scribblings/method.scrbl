@@ -18,7 +18,7 @@ called.
     class Posn(x, y):
       method mdist():
         x + y // same as: this.x + this.y
-      method move(dx -: Integer, dy -: Integer):
+      method move(dx :~ Integer, dy :~ Integer):
         if dx == 0 && dy == 0
         | this
         | Posn(x+dx, y+dy)

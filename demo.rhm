@@ -341,11 +341,11 @@ begin:
   class Chromosomes(x, y, other)
   md2(Chromosomes(100, 200, 314))
 
-// `-:` is similar to `::`, but it declares static information without a
+// `:~` is similar to `::`, but it declares static information without a
 // cooresponding run-time check, so a failure may happen later if the claimed
 // information is incorrect
   
-fun md3(p -: Posn):
+fun md3(p :~ Posn):
   p.x + p.y
 md3(Posn(7, 8))
 // would trigger an error at `p.x` instead of the function call:
