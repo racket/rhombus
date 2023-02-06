@@ -1,0 +1,46 @@
+#lang rhombus
+
+use_static
+
+class AnythingGoes():
+  private implements Equatable
+  private override equals(other, recur): #true
+  private override hash_code(recur): 0
+
+class NoGo():
+  private implements Equatable
+  private override equals(other, recur): #false
+  private override hash_code(recur): 0
+
+class Fail():
+  private implements Equatable
+  private override equals(other, recur): error("failure")
+  private override hash_code(recur): error("failure")
+
+check AnythingGoes() == AnythingGoes() ~is #true
+check:
+  use_dynamic
+  AnythingGoes().equals(AnythingGoes(), fun (& _): #true)
+  ~raises "equals: no such field or method"
+check:
+  use_dynamic
+  AnythingGoes().hash_code(fun (_): 0)
+  ~raises "hash_code: no such field or method"
+
+check AnythingGoes() == NoGo() ~is #false
+check NoGo() == AnythingGoes()  ~is #false
+
+check NoGo() == NoGo() ~is #false
+begin:
+  let ng: NoGo()
+  check ng == ng ~is #true
+
+check AnythingGoes() == Fail() ~is #false
+check Fail() == AnythingGoes() ~is #false
+check NoGo() == Fail() ~is #false
+check Fail() == NoGo() ~is #false
+check Fail() == Fail() ~raises "failure"
+begin:
+  let f: Fail()
+  check f == f ~is #true
+

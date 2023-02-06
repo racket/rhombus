@@ -9,9 +9,7 @@
          "class-dot.rkt"
          (only-in "class-desc.rkt" define-class-desc-syntax))
 
-(provide (for-spaces (rhombus/namespace
-                      rhombus/class
-                      rhombus/annot)
+(provide (for-spaces (rhombus/class)
                      Equatable))
 
 (define-values (prop:Equatable Equatable? Equatable-ref)
@@ -25,10 +23,10 @@
 
 
 (define (bounce-to-equal-mode-proc this other recur mode)
-  (equals-internal-method this other))
+  (equal-recur-internal-method this other recur))
 
 (define (bounce-to-hash-mode-proc this recur mode)
-  (hashCode-internal-method this))
+  (hash-recur-internal-method this recur))
 
 (define bounced-equal+hash-implementation
   (list bounce-to-equal-mode-proc bounce-to-hash-mode-proc))
@@ -40,9 +38,10 @@
                   #'()
                   #'prop:Equatable
                   #'Equatable-ref
-                  (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
+                  (vector-immutable (box-immutable 'equals)
+                                    (box-immutable 'hash_code))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equals 0 'hashCode 1)
+                  (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
                   #t))
 
@@ -52,41 +51,15 @@
                   #'()
                   #'prop:Equatable-public
                   #'Equatable-public-ref
-                  (vector-immutable (box-immutable 'equals) (box-immutable 'hashCode))
+                  (vector-immutable (box-immutable 'equals)
+                                    (box-immutable 'hash_code))
                   #'#(#:abstract #:abstract)
-                  (hasheq 'equals 0 'hashCode 1)
+                  (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
                   #t))
 
-(define-name-root Equatable
-  #:fields
-  ([equals equals-method]
-   [hashCode hashCode-method]))
+(define (equal-recur-internal-method this other recur)
+  ((vector-ref (Equatable-ref this) 0) this other recur))
 
-(define-annotation-syntax Equatable
-  (identifier-annotation #'Equatable-public? #'((#%dot-provider equatable-instance))))
-
-(define-dot-provider-syntax equatable-instance
-  (dot-provider-more-static (make-handle-class-instance-dot #'Equatable #hasheq() #hasheq())))
-
-(define (get-equatable who v)
-  (define vt (Equatable-public-ref v #false))
-  (unless vt
-    (raise-argument-error* who rhombus-realm "Equatable" v))
-  vt)
-
-(define equals-method
-  (let ([equals (lambda (this other)
-                  ((vector-ref (get-equatable 'equals this) 0) this other))])
-    equals))
-  
-(define hashCode-method
-  (let ([hashCode (lambda (this)
-                 ((vector-ref (get-equatable 'hashCode this) 1) this))])
-    hashCode))
-
-(define (equals-internal-method v op)
-  ((vector-ref (Equatable-ref v) 0) v op))
-
-(define (hashCode-internal-method v op)
-  ((vector-ref (Equatable-ref v) 1) v op))
+(define (hash-recur-internal-method this recur)
+  ((vector-ref (Equatable-ref this) 1) this recur))
