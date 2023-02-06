@@ -22,11 +22,11 @@ class_clause.macro 'equality: $key_expr; ...':
    private method $key_id(): $key_expr
    ...
 
-   override method equals(other):
+   override method equals(other, recur):
      (other is_a PrivateForEquals)
-       $$('&& (this . $key_id() == (other -: PrivateForEquals) . $key_id())') ...
+       $('&& (this . $key_id() == (other :~ PrivateForEquals) . $key_id())') ...
 
-   override method hashCode():
+   override method hash_code(recur):
      let code = 1000003
      let code:
        #{unsafe-fx+/wraparound}(
