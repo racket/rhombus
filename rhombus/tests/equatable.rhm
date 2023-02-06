@@ -1,5 +1,9 @@
 #lang rhombus
 
+import:
+  rhombus/data/equality.equality
+  lib("racket/base.rkt").#{equal-always-hash-code} as hc
+
 use_static
 
 class AnythingGoes():
@@ -16,6 +20,9 @@ class Fail():
   private implements Equatable
   private override equals(other, recur): error("failure")
   private override hash_code(recur): error("failure")
+
+class OrderedTriple(fst, snd, thd):
+  equality: fst; snd; thd
 
 check AnythingGoes() == AnythingGoes() ~is #true
 check:
@@ -43,4 +50,44 @@ check Fail() == Fail() ~raises "failure"
 begin:
   let f: Fail()
   check f == f ~is #true
+
+check: OrderedTriple("A", "B", "C") == OrderedTriple("A", "B", "C") ~is #true
+check: hc(OrderedTriple("A", "B", "C")) == hc(OrderedTriple("A", "B", "C")) ~is #true
+check: {OrderedTriple("A", "B", "C"), OrderedTriple("A", "B", "C")}.length() ~is 1
+
+check: OrderedTriple("A", "B", "C") == OrderedTriple("C", "A", "B") ~is #false
+check: hc(OrderedTriple("A", "B", "C")) == hc(OrderedTriple("C", "A", "B"))
+       ~is #false
+check: {OrderedTriple("A", "B", "C"), OrderedTriple("C", "A", "B")}.length() ~is 2
+
+begin:
+  class MB(mutable value)
+  let a: MB(1)
+  let b: MB(1)
+  let c: MB(1)
+  check: a == b ~is #false
+  check: OrderedTriple(a, b, c) == OrderedTriple(a, b, c) ~is #true
+  check: hc(OrderedTriple(a, b, c)) == hc(OrderedTriple(a, b, c)) ~is #true
+  check: {OrderedTriple(a, b, c), OrderedTriple(a, b, c)}.length() ~is 1
+
+  check: OrderedTriple(a, b, c) == OrderedTriple(c, a, b) ~is #false
+  check: hc(OrderedTriple(a, b, c)) == hc(OrderedTriple(c, a, b)) ~is #false
+  check: {OrderedTriple(a, b, c), OrderedTriple(c, a, b)}.length() ~is 2
+
+check:
+  use_dynamic
+  OrderedTriple("A", "B", "C").equals(OrderedTriple("A", "B", "C"), fun (& _): #true)
+  ~raises "equals: no such field or method"
+check:
+  use_dynamic
+  OrderedTriple("A", "B", "C").hash_code(fun (_): 0)
+  ~raises "hash_code: no such field or method"
+
+class Foo(a, b, c):
+  equality:
+    a
+    b + c
+
+check: Foo(1, 5, 10) == Foo(1, 10, 5) ~is #true
+check: Foo(1, 5, 10) == Foo(1, 5, 5) ~is #false
 
