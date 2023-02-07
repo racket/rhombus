@@ -140,17 +140,12 @@
 }
 
 @doc(
-  fun Equatable.hash_code_combine(hc1 :: Integer,
-                                  hc2 :: Integer) :: Integer
-  fun Equatable.hash_code_combine([hc :: Integer, ...]) :: Integer
-  fun Equatable.hash_code_combine_unordered(hc1 :: Integer,
-                                            hc2 :: Integer) :: Integer
-  fun Equatable.hash_code_combine_unordered([hc :: Integer, ...])
-    :: Integer
+  fun Equatable.hash_code_combine(hc :: Integer, ...) :: Integer
+  fun Equatable.hash_code_combine_unordered(hc :: Integer, ...) :: Integer
 ){
 
- Combines two hash codes to produce a new one. Information is generally
- lost in the combination, but this combining function is mixes integers
+ Combines hash codes to produce a new one. Information is generally
+ lost in the combination, but this combining function mixes integers
  in a suitable way to produce good results for hashing.
 
  See @rhombus(Equatable, ~class) for an example.
