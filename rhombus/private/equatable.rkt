@@ -56,38 +56,42 @@
 
 (define hash_code_combine
   (case-lambda
+    [() (hash-code-combine)]
+    [(a)
+     (unless (exact-integer? a)
+       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" a))
+     (hash-code-combine a)]
     [(a b)
      (unless (exact-integer? a)
        (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" a))
      (unless (exact-integer? b)
        (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" b))
      (hash-code-combine a b)]
-    [(lst)
-     (unless (and (list? lst)
-                  (andmap exact-integer? lst))
-       (raise-argument-error* 'Equatable.hash_code_combine
-                              rhombus-realm
-                              "List.of(Integer)"
-                              lst))
+    [lst
+     (for ([e (in-list lst)])
+       (unless (exact-integer? e)
+         (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" e)))
      (hash-code-combine* lst)]))
 
-(define-static-info-syntax hash_code_combine (#%function-arity 6))
+(define-static-info-syntax hash_code_combine (#%function-arity -1))
                                                                
 (define hash_code_combine_unordered
   (case-lambda
+    [() (hash-code-combine-unordered)]
+    [(a)
+     (unless (exact-integer? a)
+       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" a))
+     (hash-code-combine-unordered a)]
     [(a b)
      (unless (exact-integer? a)
        (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" a))
      (unless (exact-integer? b)
        (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" b))
      (hash-code-combine-unordered a b)]
-    [(lst)
-     (unless (and (list? lst)
-                  (andmap exact-integer? lst))
-       (raise-argument-error* 'Equatable.hash_code_combine_unordered
-                              rhombus-realm
-                              "List.of(Integer)"
-                              lst))
+    [lst
+     (for ([e (in-list lst)])
+       (unless (exact-integer? e)
+         (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" e)))
      (hash-code-combine-unordered* lst)]))
 
-(define-static-info-syntax hash_code_combine_unoredered (#%function-arity 6))
+(define-static-info-syntax hash_code_combine_unoredered (#%function-arity -1))
