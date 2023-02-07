@@ -3,15 +3,15 @@
 
 @(def notecol = italic)
 
-@title(~tag: "lexeme-parsing"){Lexeme Parsing}
+@title(~tag: "token-parsing"){Token Parsing}
 
-The tokens used for grouping and indentation are distinct lexemes:
+The tokens used for grouping and indentation are distinct from other categories:
 
 @verbatim(~indent: 2)|{
 ( ) [ ] { } '   ; ,   : |   « »  \
 }|
 
-Other lexemes are described by the grammar in the table below, where a
+Other tokens are described by the grammar below, where a
 star (★) in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
@@ -34,7 +34,7 @@ visible. An identifier prefixed with @litchar{~} (and without @litchar{#%})
 forms a @deftech{keyword}, analogous to prefixing an identifier with @litchar{#:} in Racket.
 
 @deftech{Operators} are formed from Unicode symbolic and punctuation characters
-other than the ones listed above as distinct lexemes (plus a few more,
+other than the ones listed above as distinct tokens (plus a few more,
 like @litchar{"}, @litchar{'}, and single-character emoji sequences), but @litchar{|} or @litchar{:} is
 also allowed in an operator name as long as it is not by itself, and
 some @litchar{#} combinations like @litchar{#'} and @litchar{#,} are also operators. A

@@ -11,7 +11,7 @@
     class Posn(x, y)
 )
 
-@title(~tag: "functions_optional"){Functions and Optional or Keyword Arguments}
+@title(~tag: "functions_optional"){Optional and Keyword Arguments}
 
 As we have seen, simple function definitions with @rhombus(fun) have the
 function name, the parameters in parentheses, and the body after a
@@ -94,7 +94,7 @@ prefix operator turns a keyword into an expression that produces the keyword, as
 @rhombus(#'~scale). The operator also works on an identifiers, as in @rhombus(#'x),
 to produce a symbol.
 
-@aside{The keyword prefix and @rhombus(=) for default values are not
+@margin_note{The keyword prefix and @rhombus(=) for default values are not
  binding operators. They are specific to the syntax of @rhombus(fun).}
 
 If an argument name is the same as its keyword (just without the

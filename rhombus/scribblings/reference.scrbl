@@ -1,6 +1,6 @@
 #lang scribble/rhombus/manual
 
-@title(~style: #'toc){Core Rhombus Reference}
+@title(~style: #'toc){Core Reference}
 
 @docmodule(~lang,
            ~use_sources: rhombus/private/core,

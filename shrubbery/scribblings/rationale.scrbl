@@ -2,7 +2,7 @@
 
 @title{Rationale}
 
-The lexeme-level syntax is chosen to be familiar to programmers
+The token-level syntax is chosen to be familiar to programmers
 generally. The sequence @litchar{1+2} is one plus two, not a strangely
 spelled identifier. Tokens like @litchar{(}, @litchar{,}, @litchar("{")
 and @litchar{;} are used in familiar ways. Shrubbery notation provides

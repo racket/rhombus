@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title(~style: #'toc){Rhombus Meta and Macros Reference}
+@title(~style: #'toc){Meta and Macros Reference}
 
 @docmodule(~use_sources: lib("rhombus/private/core-meta"),
            rhombus/meta)

@@ -35,7 +35,7 @@ structure of a shrubbery-notation document, where literal fragments like
 
 A document is a sequence of groups, each of which is a non-empty
 sequence of terms. Terms include @deftech{atoms}, which are either
-individual @seclink("lexeme-parsing"){lexeme tokens}, @opener_closer
+individual @seclink("token-parsing"){tokens}, @opener_closer
 pairs that contain groups, or blocks as created with @litchar{:} or
 @litchar{|}---but a block as a term is constrained to appear only at the
 end of a group.

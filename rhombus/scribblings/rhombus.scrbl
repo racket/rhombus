@@ -2,12 +2,16 @@
 
 @title{Rhombus Prototype}
 
-This is the experimental Rhombus prototype using
-@seclink(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top"){Shrubbery notation}.
+Rhombus is an experimental, general-purpose programming language with
+conventional expression syntax that is built on
+@hyperlink("https://racket-lang.org"){Racket} and that is
+macro-extensible in the same way as Racket.
 
 @table_of_contents()
 
 @include_section("overview.scrbl")
+@include_section("datatype.scrbl")
+@include_section("macro.scrbl")
 @include_section("class-overview.scrbl")
 @include_section("static-overview.scrbl")
 @include_section("reference.scrbl")

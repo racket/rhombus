@@ -5,7 +5,7 @@
 
 @margin_note{See @secref("at-notation") for an overview of @litchar("@") notation.}
 
-As shown in @secref("lexeme-parsing"), each use of @litchar("@") has
+As shown in @secref("token-parsing"), each use of @litchar("@") has
 one of these forms:
 
 @itemlist(
@@ -22,7 +22,7 @@ one of these forms:
       conversion of @italic{braced_text} is described below.
 
       The allowed form of @italic{command} is described in
-      @secref("lexeme-parsing") as @nonterm{command}, and it always
+      @secref("token-parsing") as @nonterm{command}, and it always
       corresponds to a group. A group that ends in a block is
       disallowed. Each @italic{argument} is also a group, with no
       additional constraints, but the separating @litchar{,} is

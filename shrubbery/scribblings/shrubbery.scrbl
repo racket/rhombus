@@ -19,7 +19,7 @@ parsing is consistent with the shrubbery's lines and indentation.
 
 @include_section("example.scrbl")
 @include_section("group-and-block.scrbl")
-@include_section("lexeme-parsing.scrbl")
+@include_section("token-parsing.scrbl")
 @include_section("at-parsing.scrbl")
 @include_section("parsed-representation.scrbl")
 @include_section("language.scrbl")

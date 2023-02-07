@@ -22,7 +22,7 @@ Use the @rhombus(namespace) form to create a namespace without creating a
 sepaarte module. The identifier after @rhombus(namespace) is bound as a
 namespace, and @rhombus(export) provide forms within the
 @rhombus(namespace) body determine the bindings that can be accessed from the
-name with @rhombus(.).
+name with the @rhombus(.) operator.
 
 @demo(
   ~eval: ns_eval

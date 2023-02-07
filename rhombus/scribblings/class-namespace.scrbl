@@ -12,7 +12,7 @@
     class Posn(x, y)
 )
 
-@title(~tag: "class-namespace"){Namespace}
+@title(~tag: "class-namespace"){Class Namespaces}
 
 A name defined by @rhombus(class) works as a @tech{namespace} to access
 field selectors and methods of the class. It also works like the

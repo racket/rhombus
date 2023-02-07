@@ -50,7 +50,7 @@ Identifiers are C-style with alphanumerics and underscores. Operators
 are sequences of symbolic characters in the sense of
 @litchar{char-symbolic?}, roughly. No spaces are needed between
 operators and non-operators, so @litchar{1+2} and @litchar{1 + 2} mean
-the same thing. Comments are C-style. See @secref("lexeme-parsing")
+the same thing. Comments are C-style. See @secref("token-parsing")
 for more information.
 
 The following tokens are used for grouping, in addition to line breaks

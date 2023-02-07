@@ -3,7 +3,7 @@
     "util.rhm" open
     "common.rhm" open)
 
-@title(~style: #'toc){Classes and Interfaces Overview}
+@title(~style: #'toc, ~tag: "class-overview"){Classes and Interfaces}
 
 @Secref("classes_and_patterns") shows the basic syntax of
 @rhombus(class) for creating a new datatype. The @rhombus(class) form

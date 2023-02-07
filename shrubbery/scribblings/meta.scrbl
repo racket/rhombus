@@ -5,14 +5,14 @@
 Shrubbery notation serves the same role as S-expression notation as a
 vehicle for a programming language, but with different trade-offs.
 
-S-expression notation imposes a grouping at the lexeme level that is all
+S-expression notation imposes a grouping at the token level that is all
 but guaranteed to be respected by further parsing via macro expansion.
-One consequence of this lexeme-based grouping is that programs can be
+One consequence of this token-based grouping is that programs can be
 pretty-printed and textually traversed in standard ways.
 
 A traditional use of S-expression notation, however, insists that
 @emph{all} grouping is reflected in the S-expression. Reifying all
-grouping at the lexeme level is so onerous that many practical
+grouping at the token level is so onerous that many practical
 deployments of S-expressions include deviations from the rule, such as
 keyword-based arguments or implicit grouping by position (as in various
 Clojure forms).
