@@ -77,7 +77,7 @@ pairs, @litchar{,} separates groups, but @litchar{;} separates group
 with a @litchar{'} pair. Groups can be on separate lines at the same
 indentation, but groups on separate lines still must be separated by
 @litchar{,} in @litchar{()}, @litchar{[]}, or @litchar{{}}. Parsing
-retains whether a subgroup is formed by @litchar{()}, @litchar{[]},
+retains whether a term is formed by @litchar{()}, @litchar{[]},
 @litchar{{}}, or @litchar{''}.
 
 @rhombusblock(
@@ -351,7 +351,7 @@ separates groups. The following three blocks are the same:
 )
 
 The @litchar{;} and @litchar{,} separators interact differently with blocks formed by
-@litchar{:} and @litchar{|}. A @litchar{,} closes subgroups and blocks as necessary to reach
+@litchar{:} and @litchar{|}. A @litchar{,} closes blocks as necessary to reach
 an enclosing @litchar{()}, @litchar{[]}, or @litchar{{}}, while a @litchar{;} separates groups within a
 nested group sequence. If @litchar{;} would create an empty group, it is
 ignored.

@@ -4,7 +4,7 @@
 
 Groups and blocks provide a convenient general notation for structured
 forms, such as typical elements of programming language. Basic
-shrubbery elements less well suited for representing blocks of
+shrubbery elements are less well suited for representing blocks of
 free-form text, however. String literals work well enough for simple
 text, but they're awkward for representing multi-line paragraphs and
 interpolated text formatting.

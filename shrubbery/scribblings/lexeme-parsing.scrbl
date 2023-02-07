@@ -22,7 +22,7 @@ provides access to the full Racket S-expression number grammar. Special
 floating-point values use a @litchar{#} notation: @litchar{#inf},
 @litchar{#neginf}, and @litchar{#nan}.
 
-@deftech{Boolean literals} are Racket-style @litchar{#true} and @litchar{#false}.
+@deftech{Boolean literals} are @litchar{#true} and @litchar{#false}.
 The @deftech{void} value is @litchar{#void}.
 
 @deftech{Identifiers} are formed from Unicode alphanumeric characters plus @litchar{_}
@@ -73,7 +73,7 @@ followed by the number @litchar{+2}.
 
 When a @litchar("#{")...@litchar("}") escape describes an identifier
 S-expression, it is an identifier in the same sense as a
-shrubbery-notation identifier. the same holds for numbers, booleans,
+shrubbery-notation identifier. The same holds for numbers, booleans,
 strings, byte strings, and keywords. A @litchar("#{")...@litchar("}")
 escape must @emph{not} describe a pair, because pairs are used to represent a
 parsed shrubbery, and allowing pairs would create ambiguous or
