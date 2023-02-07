@@ -24,6 +24,9 @@ class Fail():
 class OrderedTriple(fst, snd, thd):
   equality: fst; snd; thd
 
+class OrderedTriple2(fst, snd, thd):
+  equality: fst; snd; thd
+
 check AnythingGoes() == AnythingGoes() ~is #true
 check:
   use_dynamic
@@ -82,6 +85,11 @@ check:
   use_dynamic
   OrderedTriple("A", "B", "C").hash_code(fun (_): 0)
   ~raises "hash_code: no such field or method"
+
+check: OrderedTriple("A", "B", "C") == OrderedTriple2("A", "B", "C") ~is #false
+check: hc(OrderedTriple("A", "B", "C")) == hc(OrderedTriple2("A", "B", "C"))
+       ~is #false
+check: {OrderedTriple("A", "B", "C"), OrderedTriple2("A", "B", "C")}.length() ~is 2
 
 class Foo(a, b, c):
   equality:

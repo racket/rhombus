@@ -9,8 +9,7 @@ import:
   lib("racket/base.rkt"):
     meta
     expose: #{generate-temporaries}
-  lib("racket/unsafe/ops.rkt").#{unsafe-fx+/wraparound}
-  lib("racket/unsafe/ops.rkt").#{unsafe-fx*/wraparound}
+  lib("racket/base.rkt").#{eq-hash-code}
 
 
 class_clause.macro 'equality: $key_expr; ...':
@@ -26,10 +25,8 @@ class_clause.macro 'equality: $key_expr; ...':
        $('&& (recur(this . $key_id(), (other :~ PrivateForEquals) . $key_id()))') ...
 
    private override method hash_code(recur):
-     let code = 1000003
-     let code:
-       #{unsafe-fx+/wraparound}(
-         #{unsafe-fx*/wraparound}(code, 31), recur(this . $key_id()))
+     let code = #{eq-hash-code}(PrivateForEquals)
+     let code: Equatable.hash_code_combine(code, recur(this . $key_id()))
      ...
      code'
 
