@@ -18,6 +18,7 @@ export:
     all_from(rhombus/meta)
   all_from("dispatch_table.rhm")
   see_implicit
+  provided_note
   provided_meta
   provided_also_meta
   demo
@@ -38,12 +39,14 @@ fun see_implicit(what, when, context, ~is_infix = #false):
                  @context position.
                  See also @scribble.secref("implicit").}
 
+fun provided_note(txt):
+  scribble.smaller(txt)
 
 fun provided_meta():
-  @scribble.elem{@scribble.smaller{Provided as @scribble.rhombus(meta, ~expo).}}
+  @scribble.elem{@provided_note{Provided as @scribble.rhombus(meta, ~expo).}}
 
 fun provided_also_meta():
-  @scribble.elem{@scribble.smaller{Provided both normally and as @scribble.rhombus(meta, ~expo).}}
+  @scribble.elem{@provided_note{Provided both normally and as @scribble.rhombus(meta, ~expo).}}
 
 // suppressed a label, but `examples` now does that, anyway, so maybe
 // we'll end up removing this alias:

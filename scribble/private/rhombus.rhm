@@ -141,6 +141,7 @@ expr.macro
           || kw === #'~repet
           || kw === #'~stxclass
           || kw === #'~reducer
+          || kw === #'~class
           || kw === #'~for_clause
           || kw === #'~class_clause
           || kw === #'~interface_clause

@@ -53,36 +53,22 @@
   interface Printable
 ){
 
+ @provided_note{Provided only in the @rhombus(class, ~space) space, not
+  the @rhombus(annot, ~space) or @rhombus(namespace, ~space) spaces.}
+
  An interface that a class can implement (publicly or privately) to
  customize the way its objects print. The interface has two methods:
 
 @itemlist(
 
- @item{@rhombus(Printable.print) --- takes an output port and prints to the port;
-   this method is abstract in the interface, so it must be overridden},
+ @item{@rhombus(#,(@rhombus(print, ~datum))(#,(@rhombus(output_port, ~var))))
+   --- takes an output port and prints to the port; this
+   method is abstract in the interface, so it must be overridden.}
 
- @item{@rhombus(Printable.display) --- takes an output port and displays to the
-   port; this method has a default impleemntation that calls the
-   @rhombus(Printable.print) method}
+ @item{@rhombus(#,(@rhombus(display, ~datum))(#,(@rhombus(output_port, ~var))))
+   --- takes an output port and displays to the port; this
+  method has a default implementation that calls the @rhombus(print, ~datum) method.}
 
 )
-
-}
-
-
-@doc(
-  fun Printable.print(v :: Printable, out)
-){
-
- Prints @rhombus(v) to the output port @rhombus(out).
-
-}
-
-
-@doc(
-  fun Printable.display(o :: Printable, out)
-){
-
- Displays @rhombus(v) to the output port @rhombus(out).
 
 }
