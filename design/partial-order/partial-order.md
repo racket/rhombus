@@ -45,7 +45,8 @@ The interface `PartialOrder` is intended to be implemented
 privately with the `partial_compare` method:
 
 ```
-method partial_compare(self :: Self, other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
+// Self is implicit
+method partial_compare(other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
 ```
 
 The method implementation may assume that `other`'s method
@@ -94,9 +95,11 @@ The interface `PartialOrder` is intended to be implemented
 privately with these methods:
 
 ```
-method partial_compare(self :: Self, other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
+// Self is implicit
+method partial_compare(other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
 
-method compare_hash_code(self :: Self, recur :: (Any) -> Integer) :: Integer
+// Self is implicit
+method compare_hash_code(recur :: (Any) -> Integer) :: Integer
 ```
 
 The `partial_compare` method may assume that `other`'s
@@ -138,9 +141,11 @@ The interface `PartialOrder` is intended to be implemented
 privately with these methods:
 
 ```
-method compare_key(self :: Self) :: Any
+// Self is implicit
+method compare_key() :: Any
 
-method partial_compare(self :: Self, other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
+// Self is implicit
+method partial_compare(other :: Imp, recur :: (Any, Any) -> PartialOrdering) :: PartialOrdering
 ```
 
 With the `partial_compare` method optional.
