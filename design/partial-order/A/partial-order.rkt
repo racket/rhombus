@@ -126,6 +126,21 @@
     [(extfl> a b) 1]
     [else +nan.0]))
 
+;; partial-compare-numeric/within : Numeric Numeric Real -> PartialOrdering
+(define (partial-compare-numeric/within a b epsilon)
+  (cond
+    [(and (real? a) (real? b)) (partial-compare-real/within a b epsilon)]
+    [else (partial-compare-real/within (numeric-key a) (numeric-key b) epsilon)]))
+
+;; partial-compare-real/within : Real Real Real -> PartialOrdering
+(define (partial-compare-real/within a b epsilon)
+  (define d (- a b))
+  (cond
+    [(<= (- epsilon) d epsilon) 0]
+    [(< d (- epsilon)) -1]
+    [(> d epsilon) 1]
+    [else +nan.0]))
+
 ;; ---------------------------------------------------------
 
 ;; PartialOrder struct type property and interface
@@ -167,7 +182,8 @@
 (define-name-root PartialOrder
   #:fields
   (partial_compare
-   compare))
+   compare
+   within))
 
 (define (partial-compare/recur a b recur)
   (define (cmp ai bi)
@@ -224,6 +240,17 @@
 
 (define (compare a b)
   (compare/recur a b compare))
+
+(define (partial-compare/within a b epsilon)
+  (cond
+    [(numeric? a)
+     (ord-and/bool (numeric? b) (partial-compare-numeric/within a b epsilon))]
+    [else
+     (define (cmp ai bi) (partial-compare/within ai bi epsilon))
+     (partial-compare/recur a b cmp)]))
+
+(define (within a b epsilon)
+  (zero? (partial-compare/within a b epsilon)))
 
 (define (=~? a b) (zero? (partial_compare a b)))
 (define (!=~? a b) (not (zero? (partial_compare a b))))

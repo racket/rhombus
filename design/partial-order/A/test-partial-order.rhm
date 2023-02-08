@@ -19,3 +19,9 @@ check:
   [UnredRatio(1, 2), UnredRatio(-1, 2)] >~ [UnredRatio(1, 4), UnredRatio(-3, 4)]
   ~is #true
 
+check: PartialOrder.within([6, 10], [6.02, 9.99], 0.05) ~is #true
+check: PartialOrder.within({#'C: 20, #'F: 68}, {#'C: 25, #'F: 77}, 10) ~is #true
+
+check: PartialOrder.within([6e+23, 10.0], [6.02e+23, 9.8], 0.05) ~is #false
+check: PartialOrder.within({#'C: 18, #'F: 64}, {#'C: 25, #'F: 77}, 10) ~is #false
+
