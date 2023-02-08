@@ -535,7 +535,11 @@
    [(special-comment)
     (ret 'comment "" 'comment #f start-pos end-pos 'initial)]
    [(eof) (ret-eof start-pos end-pos)]
-   [(:or bad-str bad-keyword bad-hash bad-comment bad-chars)
+   [(:or bad-hash)
+    (ret 'fail lexeme 'error #f start-pos end-pos 'bad
+         ;; pending backup in case "#%" turns into "#%id"
+         #:pending-backup 2)]
+   [(:or bad-str bad-keyword bad-comment bad-chars)
     (ret 'fail lexeme 'error #f start-pos end-pos 'bad)]
    [any-char (extend-error lexeme start-pos end-pos input-port)]))
 
