@@ -55,9 +55,11 @@
   (literal
    literal_group
    make
+   make_op
    make_group
    make_sequence
    unwrap
+   unwrap_op
    unwrap_group
    unwrap_sequence
    strip
@@ -185,6 +187,11 @@
 (define/arity (make v [ctx-stx #f])
   (do-make 'Syntax.make v ctx-stx #t #f))
 
+(define/arity (make_op v [ctx-stx #f])
+  (unless (symbol? v)
+    (raise-argument-error* 'Syntax.make_op "Symbol" v))
+  (do-make 'Syntax.make (list 'op v) ctx-stx #t #f))
+
 (define/arity (make_group v [ctx-stx #f])
   (unless (and (pair? v)
                (list? v))
@@ -213,6 +220,19 @@
               (not (list? u)))
          (syntax->list unpacked)
          u)]))
+
+(define/arity (unwrap_op v)
+  (cond
+    [(not (syntax? v))
+     (raise-argument-error* 'Syntax.unwrap_up rhombus-realm "Syntax" v)]
+    [else
+     (syntax-parse (unpack-term v 'Syntax.unwrap #f)
+       #:datum-literals (op)
+       [(op o) (syntax-e #'o)]
+       [else
+        (raise-arguments-error* 'Syntax.unwrap_up rhombus-realm
+                                "syntax object does not have just an operator"
+                                "syntax object" v)])]))
 
 (define/arity (unwrap_group v)
   (cond
@@ -344,6 +364,7 @@
 
 (define syntax-method-table
   (hash 'unwrap (method1 unwrap)
+        'unwrap_op (method1 unwrap_op)
         'unwrap_group (method1 unwrap_group)
         'unwrap_sequence (method1 unwrap_sequence)
         'strip (method1 strip)
@@ -357,6 +378,7 @@
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(unwrap) (0ary #'unwrap)]
+        [(unwrap_op) (0ary #'unwrap_op)]
         [(unwrap_group) (0ary #'unwrap_group)]
         [(unwrap_sequence) (0ary #'unwrap_sequence)]
         [(strip) (0ary #'strip)]

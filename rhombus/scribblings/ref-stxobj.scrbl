@@ -43,6 +43,7 @@ Metadata for a syntax object can include a source location and the raw
   "syntax-object"
   @rhombus(Syntax)
   [stx.unwrap(), Syntax.unwrap(stx)]
+  [stx.unwrap_op(), Syntax.unwrap_op(stx)]
   [stx.unwrap_group(), Syntax.unwrap_group(stx)]
   [stx.unwrap_sequence(), Syntax.unwrap_sequence(stx)]
   [stx.strip(), Syntax.strip(stx)]
@@ -589,6 +590,20 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  fun Syntax.make_op(name :: Symbol) :: Syntax
+){
+
+ Convenience to convert a plain symbol to a syntax object for an
+ operator, equivalent to @rhombus(Syntax.make([#'op, name])).
+
+@examples(
+  Syntax.make_op(#'#{+})
+)
+
+}
+
+
+@doc(
   fun Syntax.unwrap(stx :: Syntax)
 ){
 
@@ -641,6 +656,19 @@ Metadata for a syntax object can include a source location and the raw
   Syntax.unwrap_sequence('1.0')
   Syntax.unwrap_sequence('1 2 3')
   Syntax.unwrap_sequence('1; 2; 3')
+)
+
+}
+
+@doc(
+  fun Syntax.unwrap_op(stx :: Syntax) :: Symbol
+){
+
+ Unwraps a syntax object containing a single operator, returning the
+ operator's name as a symbol.
+
+@examples(
+  Syntax.unwrap_op('+')
 )
 
 }

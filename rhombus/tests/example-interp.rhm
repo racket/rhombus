@@ -1,0 +1,63 @@
+#lang rhombus/static
+
+// Meta-circular interpreter for a Rhombus-like variant
+// of the λ-calculus with integers and lists
+//
+//  <expr> = fun (<id>, ...): <expr>
+//         | <expr>(<expr>, ...)
+//         | <id>
+//         | (<expr>)
+//         | <integer>
+//         | [<expr>, ...]
+//         | <expr> <operator> <expr>
+//         | begin: let <id> = <expr>; <expr>
+//
+//  with primitive bindings cons, first, rest, +, -, *
+//
+//  There's no precedence for operators, though; all assumed
+//  at the same precedence and associating to the left
+
+// Example use of the interpreter
+submodule main:
+  interp('begin:
+            let swap = fun (x): [first(rest(x)), first(x)]
+            first(swap([1, 2])) + 3',
+         init_env)
+
+fun interp(e, env :~ Map):
+  match e
+  // First three rules are λ-calculus (with multiple arguments)
+  | 'fun ($(x :: Id), ...): $e':
+      fun (arg, ...):
+        interp(e, env ++ {x.unwrap(): arg, ...})
+  | '$rator($rand, ...)':
+      (interp(rator, env))(interp(rand, env), ...)
+  | '$(x :: Id)':
+      env[x.unwrap()]
+  // Allow extra parens
+  | '($e)':
+      interp(e, env)
+  // Integers
+  | '$(x :: Integer)':
+      x.unwrap()
+  // Lists
+  | '[$x, ...]':
+      [interp(x, env), ...]
+  // Operators (no attempt at precedence)
+  | '$x ... $(op :: Op) $y ...':
+      env[op.unwrap_op()](interp('$x ...', env),
+                          interp('$y ...', env))
+  // `let` as a convenience
+  | 'begin:
+       let $(x :: Id) = $rhs
+       $body':
+      interp('(fun ($x): $body)($rhs)', env)
+
+// Some primitives in an initial environment
+def init_env:
+  {'cons'.unwrap(): List.cons,
+   'first'.unwrap(): List.first,
+   'rest'.unwrap(): List.rest,
+   '+'.unwrap_op(): fun(x, y): x + y,
+   '-'.unwrap_op(): fun(x, y): x - y,
+   '*'.unwrap_op(): fun(x, y): x * y}

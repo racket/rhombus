@@ -1,0 +1,38 @@
+#lang rhombus/static
+
+// Meta-circular λ-calculus interpreter with Scheme-like syntax
+
+fun interp(e, env :~ Map):
+  match e
+  | '(lambda ($(x :: Id)) $(e :: Term))':
+      fun (arg):
+        interp(e, env ++ {x.unwrap(): arg})
+  | '($(rator :: Term) $(rand :: Term))':
+      (interp(rator, env))(interp(rand, env))
+  | '$(x :: Id)':
+      env[x.unwrap()]
+  // Convenience
+  | '(let ([$(x :: Id) $(rhs :: Term)]) $(body :: Term))':
+      interp('((lambda ($x) $body) $rhs)', env)
+  // Convenience for example (to have something to print)
+  | '$(n :: Integer)':
+      n.unwrap()
+
+// Using a syntax hack for this call to `interp`:
+// `;«....»` disables whitespace sensitivity
+interp(';«(let ([cons (lambda (x)
+                        (lambda (y)
+                         (lambda (sel)
+                          ((sel x) y))))])
+           (let ([first (lambda (p)
+                         (p (lambda (x)
+                             (lambda (y)
+                              x))))])
+            (let ([rest (lambda (p)
+                         (p (lambda (x)
+                             (lambda (y)
+                              y))))])
+             (let ([swap (lambda (p)
+                          ((cons (rest p)) (first p)))])
+              (first (swap ((cons 1) 2)))))))»',
+       {})

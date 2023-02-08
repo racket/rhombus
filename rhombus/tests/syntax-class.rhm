@@ -69,7 +69,7 @@ check:
     | '$x $op $y'
   match '1+2'
   | '$(exp :: Arithmetic)': exp.op
-  ~raises "attribute not found"
+  ~raises "no such field"
 
 begin:
   syntax_class Arithmetic
@@ -165,7 +165,7 @@ check:
   | '$x + $y + $z'
   match '10 + 20 + 30'
   | '$(f :: Foo)': f.z
-  ~raises "attribute not found"
+  ~raises "no such field or method"
 
 begin:
   syntax_class Foo:
@@ -388,7 +388,7 @@ check:
         field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~raises "attribute is a repetition"
+  ~raises "field is a repetition"
 
 check:
   ~eval
@@ -398,7 +398,7 @@ check:
         field form: '~lang'
   match '(~lang, ~lang)'
   | '($(o :: Option), ...)': [o.form]
-  ~raises "attribute is a repetition"
+  ~raises "field is a repetition"
 
 begin:
   syntax_class NTerms
