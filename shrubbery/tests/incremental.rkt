@@ -4,6 +4,8 @@
          "../lex-comment.rkt"
          "input.rkt")
 
+(define slow? #f)
+
 (define (make-key pos status) (cons pos status))
 (define (key-pos k) (car k))
 (define (key-status k) (cdr k))
@@ -135,23 +137,26 @@
   (define N (sub1 (string-length input)))
   (define (sel-pos i) i)
   ;; try inserting or deleting then re-lexing
-  (for ([i (in-range N)])
-    (define pos (sel-pos i))
+  (for ([ins (if slow?
+                 '("x" "1" "$" ")" "'" " ")
+                 '("x"))])
+    (for ([i (in-range N)])
+      (define pos (sel-pos i))
 
-    ;; delte char
-    (define new-input- (string-append (substring input 0 pos)
-                                      (substring input (+ pos 1))))
-    (define-values (memo- all-)
-      (try-delta pos -1 new-input- input memo1 all1))
+      ;; delte char
+      (define new-input- (string-append (substring input 0 pos)
+                                        (substring input (+ pos 1))))
+      (define-values (memo- all-)
+        (try-delta pos -1 new-input- input memo1 all1))
 
-    ;; insert char
-    (define new-input+ (string-append (substring input 0 pos)
-                                      "x"
-                                      (substring input pos)))
-    (try-delta pos 1 new-input+ input memo1 all1)
+      ;; insert char
+      (define new-input+ (string-append (substring input 0 pos)
+                                        ins
+                                        (substring input pos)))
+      (try-delta pos 1 new-input+ input memo1 all1)
 
-    ;; reinsert deleted char
-    (try-delta pos 1 input new-input- memo- all-)))
+      ;; reinsert deleted char
+      (try-delta pos 1 input new-input- memo- all-))))
 
 (for ([input1 (in-list input1s)]
       [i (in-naturals)])

@@ -506,7 +506,10 @@
    [identifier
     (ret 'identifier (string->symbol lexeme) #:raw lexeme 'symbol #f start-pos end-pos 'continuing)]
    [operator
-    (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial)]
+    (ret 'operator (list 'op (string->symbol lexeme)) #:raw lexeme 'operator #f start-pos end-pos 'initial
+         ;; needed if the next character is `:` for a block or similar, since another character
+         ;; after that could turn `:` into part of the operator:
+         #:pending-backup 1)]
    [keyword
     (let ([kw (string->keyword (substring lexeme 1))])
       (ret 'identifier kw #:raw lexeme 'hash-colon-keyword #f start-pos end-pos 'continuing))]
