@@ -1,0 +1,22 @@
+#lang rhombus
+
+export Lexicographic
+
+import "partial-order.rkt" open
+
+class Lexicographic(elements):
+  constructor(& elements): super(elements)
+  private implements PartialOrder
+  private override partial_compare(other :: Lexicographic, recur):
+    lexicographic_compare_list(elements, other.elements, recur)
+
+fun
+| lexicographic_compare_list([], [], _): 0
+| lexicographic_compare_list([], [_, & _], _): -1
+| lexicographic_compare_list([_, & _], [], _): 1
+| lexicographic_compare_list([f1, & r1], [f2, & r2], recur):
+    let cf: recur(f1, f2)
+    if cf .= 0
+    | lexicographic_compare_list(r1, r2, recur)
+    | cf
+

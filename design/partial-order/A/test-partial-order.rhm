@@ -1,6 +1,8 @@
 #lang rhombus
 
-import "partial-order.rkt" open
+import:
+  "partial-order.rkt" open
+  "Lexicographic.rhm".Lexicographic
 
 class UnredRatio(n :: Integer, d :: PositiveInteger):
   private implements PartialOrder
@@ -18,6 +20,28 @@ check:
 check:
   [UnredRatio(1, 2), UnredRatio(-1, 2)] >~ [UnredRatio(1, 4), UnredRatio(-3, 4)]
   ~is #true
+
+check:
+  Lexicographic(UnredRatio(1, 2), UnredRatio(-1, 2)) <~ Lexicographic(UnredRatio(3, 4), UnredRatio(-1, 4))
+  ~is #true
+check:
+  Lexicographic(UnredRatio(1, 2), UnredRatio(-1, 2)) >~ Lexicographic(UnredRatio(1, 4), UnredRatio(-3, 4))
+  ~is #true
+
+check: Lexicographic(5, 8, 3, 13, 2) =~ Lexicographic(5, 8, 3, 13, 2) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) =~ Lexicographic(5, 8, 3, 13, 2, -1) ~is #false
+check: Lexicographic(5, 8, 3, 13, 2) !=~ Lexicographic(5, 8, 3, 13, 2, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) <=~ Lexicographic(5, 8, 3, 13, 2, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) <~ Lexicographic(5, 8, 3, 13, 2, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) <=~ Lexicographic(5, 8, 2, 13, 2, -1) ~is #false
+check: Lexicographic(5, 8, 3, 13, 2) >=~ Lexicographic(5, 8, 2, 13, 2, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) >~ Lexicographic(5, 8, 2, 13, 2, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) >=~ Lexicographic(6, -1) ~is #false
+check: Lexicographic(5, 8, 3, 13, 2) <=~ Lexicographic(6, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) <~ Lexicographic(6, -1) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) <=~ Lexicographic(4, 18) ~is #false
+check: Lexicographic(5, 8, 3, 13, 2) >=~ Lexicographic(4, 18) ~is #true
+check: Lexicographic(5, 8, 3, 13, 2) >~ Lexicographic(4, 18) ~is #true
 
 check: PartialOrder.within([6, 10], [6.02, 9.99], 0.05) ~is #true
 check: PartialOrder.within({#'C: 20, #'F: 68}, {#'C: 25, #'F: 77}, 10) ~is #true
