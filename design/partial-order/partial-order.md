@@ -9,9 +9,10 @@ A generic interface for partial orders.
 Motivation
 ----------
 
-I have two main motivations:
+I have 3 main motivations:
  - Ordering for sorted data structures.
  - Customizable equal-now-like behavior within Rhombus.
+ - Equality within tolerance for testing `check-within`.
 
 Note that most sorted data structures expect a total order,
 not a partial order.
@@ -73,6 +74,10 @@ Functions:
  * `fun compare(a, b) :: Ordering`
    Errors when `partial_compare` would produce NaN,
    otherwise produces the `Ordering` it would produce.
+ * `fun within(a, b, epsilon :: Real) :: Boolean`
+   Produces true when they compare equal, while allowing
+   numbers within them to be different by at most epsilon
+   from one another, false otherwise.
 
 Operators:
  * `operator (a =~ b) :: Boolean` produces true when `partial_compare` produces zero, false when it produces something else (including NaN)
