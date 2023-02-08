@@ -25,6 +25,9 @@ submodule test:
   check:
     rx'(^ "Hello" || "Hi"{1, 22} || "At("any*")") $'
     ~completes
+  check:
+    rx'^ "https://" ((! "/"||"#")+ "/"?)* ("#" any*)? $'
+    ~completes
 
 // Instantiate enforestation and macro machinery for the
 // regexp sublanguage:
@@ -64,49 +67,64 @@ regexp.macro '#%parens ($(p :: regexp_meta.Group))':
 // `#%juxtapose` is implicitly added after something that's
 // parsed and before a non-operator
 regexp.macro '$left #%juxtapose $right':
-  ~weaker_than: ~other
-  ~stronger_than: ||
+  ~same_as: #%call
   '$(left.unwrap() ++ right.unwrap())'
 
 // `#%call` is implicitly added between a parsed term
 // and parentheses; we want just the same thing
 // as juxtaposition here, though
-regexp.macro '$left #%call ($(p :: regexp_meta.Group))':
-  '$(left.unwrap() ++ p.parsed.unwrap())'
-
-regexp.macro '$left || $right':
-  ~weaker_than: ~other
-  '$("(?:" +& left.unwrap() +& "|" +& right.unwrap() +& ")")'
+regexp.macro '$left #%call $tail ...':
+  ~same_as: #%juxtapose
+  values('$left', '#%juxtapose $tail ...')
 
 meta:
   fun atomic(s):
-    "(?:" ++ s ++ ")"
+    match s
+    | ".": s
+    | ~else: "(?:" ++ s ++ ")"
+
+regexp.macro '$left || $right':
+  ~weaker_than: ~other
+  ~stronger_than: !
+  '$(atomic(left.unwrap()) ++ "|" ++ atomic(right.unwrap()))'
 
 regexp.macro '$left *':
+  ~stronger_than: #%juxtapose #%call
   '$(atomic(left.unwrap()) ++ "*")'
 
 regexp.macro '$left +':
+  ~stronger_than: #%juxtapose #%call
   '$(atomic(left.unwrap()) ++ "+")'
 
 regexp.macro '$left ?':
-  '$(left.unwrap() ++ "?")'
+  ~stronger_than: #%juxtapose #%call
+  '$(atomic(left.unwrap()) ++ "?")'
 
 // `#%comp` is implicitly added between a parsed term
 // and curly braces
-regexp.macro
-| '$left #%comp {$(min :: Integer), _}':
-    '$(left.unwrap() ++ "{" +& min.unwrap() ++ ",}")'
-| '$left #%comp {$(min :: Integer), $(max :: Integer)}':
-    '$(left.unwrap() ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
-| '$left #%comp {$(count :: Integer)}':
-    '$(left.unwrap() ++ "{" +& count.unwrap() ++ "}")'
+regexp.macro #%comp:
+  ~stronger_than: #%juxtapose #%call
+  match
+  | '$left #%comp {$(min :: Integer), _}':
+      '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ ",}")'
+  | '$left #%comp {$(min :: Integer), $(max :: Integer)}':
+      '$(atomic(left.unwrap()) ++ "{" +& min.unwrap() ++ "," +& max.unwrap() ++ "}")'
+  | '$left #%comp {$(count :: Integer)}':
+      '$(atomic(left.unwrap()) ++ "{" +& count.unwrap() ++ "}")'
 
 regexp.macro
 | '^ $right':
+    ~weaker_than: #%juxtapose #%call
+    ~same_as: $
     '$("^" +& right.unwrap())'
 
 regexp.macro
 | '$left $('$')':
+    ~weaker_than: #%juxtapose #%call
     ~same_as: ^
     '$(left.unwrap() +& "$")'
 
+regexp.macro '! $right':
+  ~weaker_than: ~other
+  ~stronger_than: #%juxtpapose #%call
+  '$("(?!" ++ right.unwrap() ++ ").")'
