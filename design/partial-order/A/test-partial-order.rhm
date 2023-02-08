@@ -1,0 +1,21 @@
+#lang rhombus
+
+import "partial-order.rkt" open
+
+class UnredRatio(n :: Integer, d :: PositiveInteger):
+  private implements PartialOrder
+  private override partial_compare(other :: UnredRatio, recur):
+    recur(n * other.d, other.n * d)
+
+check UnredRatio(1, 2) =~ UnredRatio(2, 4) ~is #true
+check UnredRatio(1, 2) =~ UnredRatio(3, 4) ~is #false
+check UnredRatio(1, 2) <~ UnredRatio(3, 4) ~is #true
+check UnredRatio(1, 2) <~ UnredRatio(1, 4) ~is #false
+check UnredRatio(1, 2) >~ UnredRatio(1, 4) ~is #true
+check:
+  [UnredRatio(1, 2), UnredRatio(-1, 2)] <~ [UnredRatio(3, 4), UnredRatio(-1, 4)]
+  ~is #true
+check:
+  [UnredRatio(1, 2), UnredRatio(-1, 2)] >~ [UnredRatio(1, 4), UnredRatio(-3, 4)]
+  ~is #true
+
