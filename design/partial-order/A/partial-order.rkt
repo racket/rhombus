@@ -223,8 +223,9 @@
         (ord-and/prod acc (cmp ai bi))))]
     [else
      (define (<=? ai bi) (<= (cmp ai bi) 0))
+     (define (>=? ai bi) (>= (cmp ai bi) 0))
      (define le (equal?/recur a b <=?))
-     (define ge (equal?/recur b a <=?))
+     (define ge (equal?/recur a b >=?))
      (cond
        [(and le ge) 0]
        [le -1]
