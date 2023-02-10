@@ -173,6 +173,34 @@ Functions:
 Operators:
  * All the same operators from Option B: Comparison with hash
 
+### Option D: Comparators produce false on incomparable values
+
+The same as either option A, B, or C, except that when
+values are incomparable, `<~`, `<=~`, `>~`, and `>=~` each
+produce false instead of an error.
+
+This allows some short-circuiting behavior, such as:
+
+```
+[2, Baddie1()] <=~ [1, Baddie2()]
+[2, Baddie1()] <~ [1, Baddie2()]
+```
+
+These should return false immeditately after comparing `2`
+and `1`, without comparing `Baddie1()` and `Baddie2()`.
+Where option A, B, or C would try to compare `Baddie1()`
+and `Baddie2()` to see whether they're comparable or not.
+
+Option D-A provides the same interfaces and operations as
+option A, but with the false results on incomparable values
+and better short-circuiting.
+
+Option D-B provides the same as option B, but with false
+and short-circuiting.
+
+Option D-C provides the same as option C, but with false
+and short-circuiting.
+
 Evaluation and Tradeoffs
 ------------------------
 
@@ -189,6 +217,18 @@ Between B and C, B is simpler to implement but slightly
 harder for users.
 While C is slightly trickier to implement but easier for
 users.
+
+Options A, B, and C can provide error messages where users
+might expect values to be comparable when they're not.
+This can help those users find errors more quickly if they
+either have warped expectations from total orders, or when
+they accidentally mix types that they didn't mean to mix.
+Option D expects users of `<~`, `<=~`, etc. to know that
+it's a partial order where values can be incomparable.
+But option D's short-circuiting is very desirable, and
+producing false results on incomparable values also makes
+it more consistent overall, bringing `<~`, `<=~`, etc. more
+in line with the behavior of `=~` and `!=~`.
 
 Prior art and References
 ------------------------
@@ -218,3 +258,4 @@ Contributors
 ------------
 
 Alex Knauth
+Rocketnia
