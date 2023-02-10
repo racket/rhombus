@@ -15,9 +15,6 @@
 
 (require (for-syntax racket/base
                      rhombus/private/interface-parse)
-         racket/flonum
-         racket/extflonum
-         racket/math
          rhombus/private/define-operator
          (only-in rhombus/private/arithmetic
                   \|\| &&
@@ -89,37 +86,6 @@
      (ord-and/bool (realish? b) (partial-compare-realish a b))]
     [else
      (product-compare/recur a b cmp)]))
-
-(define (product-compare/recur a b cmp)
-  (cond
-    [(flvector? a)
-     (ord-and/bool
-      (flvector? b)
-      (= (flvector-length a) (flvector-length b))
-      (for/fold ([acc 0])
-                ([ai (in-flvector a)]
-                 [bi (in-flvector b)])
-        #:break (nan? acc)
-        (ord-and/prod acc (cmp ai bi))))]
-    [(extflvector? a)
-     (ord-and/bool
-      (extflvector? b)
-      (= (extflvector-length a) (extflvector-length b))
-      (for/fold ([acc 0])
-                ([ai (in-extflvector a)]
-                 [bi (in-extflvector b)])
-        #:break (nan? acc)
-        (ord-and/prod acc (cmp ai bi))))]
-    [else
-     (define (<=? ai bi) (<= (cmp ai bi) 0))
-     (define (>=? ai bi) (>= (cmp ai bi) 0))
-     (define le (equal?/recur a b <=?))
-     (define ge (equal?/recur a b >=?))
-     (cond
-       [(and le ge) 0]
-       [le -1]
-       [ge 1]
-       [else +nan.0])]))
 
 (define (partial_compare a b)
   (partial-compare/recur a b partial_compare))
