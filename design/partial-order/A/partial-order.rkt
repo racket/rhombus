@@ -14,13 +14,10 @@
                      >=~))
 
 (require (for-syntax racket/base
-                     "../../../rhombus/private/interface-parse.rkt")
-         racket/fixnum
+                     rhombus/private/interface-parse)
          racket/flonum
          racket/extflonum
-         racket/list
          racket/math
-         syntax/parse/define
          rhombus/private/define-operator
          (only-in rhombus/private/arithmetic
                   \|\| &&
@@ -28,118 +25,10 @@
                   [- rhombus-]
                   [* rhombus*]
                   [/ rhombus/])
-         "../../../rhombus/private/name-root.rkt"
-         (submod "../../../rhombus/private/annotation.rkt" for-class)
-         (submod "../../../rhombus/private/dot.rkt" for-dot-provider)
-         "../../../rhombus/private/realm.rkt"
-         "../../../rhombus/private/class-dot.rkt"
-         (only-in "../../../rhombus/private/class-desc.rkt" define-class-desc-syntax)
-         "../../../rhombus/private/static-info.rkt")
-
-;; ---------------------------------------------------------
-
-;; Core ordering datatypes and operations
-
-;; A Ordering is a ComparableReal where:
-;;  - zero?     represents =~
-;;  - negative? represents <~
-;;  - positive? represents >~
-;; this excludes NaN
-
-;; ordering-normalize : Ordering -> Ordering
-(define (ordering-normalize c)
-  (cond
-    [(zero? c) 0]
-    [(negative? c) -1]
-    [(positive? c) 1]
-    [else (error 'compare "bad ~v" c)]))
-
-;; A PartialOrdering is a Real where:
-;;  - zero?     represents =~
-;;  - negative? represents <~
-;;  - positive? represents >~
-;;  - nan?      represents incomparable
-
-;; partial-ordering-normalize : PartialOrdering -> PartialOrdering
-(define (partial-ordering-normalize c)
-  (cond
-    [(zero? c) 0]
-    [(negative? c) -1]
-    [(positive? c) 1]
-    [(nan? c) +nan.0]
-    [else (error 'partial_compare "bad ~v" c)]))
-
-;; ord-and/bool : Boolean ... PartialOrdering -> PartialOrdering
-(define-syntax-parser ord-and/bool
-  [(_) #'0]
-  [(_ c) #'c]
-  [(_ b . rst)
-   #'(if b (ord-and/bool . rst) +nan.0)])
-
-;; ord-and/prod2 : PartialOrdering PartialOrdering -> PartialOrdering
-(define (ord-and/prod2 c0 c1)
-  (cond
-    [(zero? c0) c1]
-    [(zero? c1) c0]
-    [(and (negative? c0) (negative? c1)) -1]
-    [(and (positive? c0) (positive? c1)) 1]
-    [else +nan.0]))
-
-;; ord-and/prod : PartialOrdering ... PartialOrdering
-(define-syntax-parser ord-and/prod
-  [(_) #'0]
-  [(_ c) #'c]
-  [(_ c0 c1 . rst)
-   #'(let ([c0v c0])
-       (if (nan? c0v)
-           +nan.0
-           (ord-and/prod (ord-and/prod2 c0v c1) . rst)))])
-
-(define (numeric? v)
-  (or (real? v) (extflonum? v)))
-
-(define (numeric-key x)
-  (cond
-    [(or (eq? x +inf.0) (eq? x +inf.f) (eq? x +inf.t)) +inf.0]
-    [(or (eq? x -inf.0) (eq? x -inf.f) (eq? x -inf.t)) -inf.0]
-    [(or (eq? x +nan.0) (eq? x +nan.f) (eq? x +nan.t)) +nan.0]
-    [(extflonum? x) (extfl->exact x)]
-    [else (inexact->exact x)]))
-
-(define (partial-compare-numeric a b)
-  (cond
-    [(and (real? a) (real? b)) (partial-compare-real a b)]
-    [(and (extflonum? a) (extflonum? b)) (partial-compare-extflonum a b)]
-    [else (partial-compare-real (numeric-key a) (numeric-key b))]))
-
-(define (partial-compare-real a b)
-  (cond
-    [(= a b) 0]
-    [(< a b) -1]
-    [(> a b) 1]
-    [else +nan.0]))
-
-(define (partial-compare-extflonum a b)
-  (cond
-    [(extfl= a b) 0]
-    [(extfl< a b) -1]
-    [(extfl> a b) 1]
-    [else +nan.0]))
-
-;; partial-compare-numeric/within : Numeric Numeric Real -> PartialOrdering
-(define (partial-compare-numeric/within a b epsilon)
-  (cond
-    [(and (real? a) (real? b)) (partial-compare-real/within a b epsilon)]
-    [else (partial-compare-real/within (numeric-key a) (numeric-key b) epsilon)]))
-
-;; partial-compare-real/within : Real Real Real -> PartialOrdering
-(define (partial-compare-real/within a b epsilon)
-  (define d (- a b))
-  (cond
-    [(<= (- epsilon) d epsilon) 0]
-    [(< d (- epsilon)) -1]
-    [(> d epsilon) 1]
-    [else +nan.0]))
+         rhombus/private/name-root
+         rhombus/private/realm
+         (only-in rhombus/private/class-desc define-class-desc-syntax)
+         "../common/partial-order-util.rkt")
 
 ;; ---------------------------------------------------------
 
@@ -196,8 +85,8 @@
         (ord-and/bool
          (eq? av (partial-order-ref b))
          (partial-ordering-normalize ((cadr av) a b cmp)))))]
-    [(numeric? a)
-     (ord-and/bool (numeric? b) (partial-compare-numeric a b))]
+    [(realish? a)
+     (ord-and/bool (realish? b) (partial-compare-realish a b))]
     [else
      (product-compare/recur a b cmp)]))
 
@@ -244,8 +133,8 @@
 
 (define (partial-compare/within a b epsilon)
   (cond
-    [(numeric? a)
-     (ord-and/bool (numeric? b) (partial-compare-numeric/within a b epsilon))]
+    [(realish? a)
+     (ord-and/bool (realish? b) (partial-compare-realish/within a b epsilon))]
     [else
      (define (cmp ai bi) (partial-compare/within ai bi epsilon))
      (partial-compare/recur a b cmp)]))
