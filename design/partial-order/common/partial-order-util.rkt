@@ -126,6 +126,7 @@
 ;; product-compare/recur : Any Any [Any Any -> PartialOrdering] -> PartialOrdering
 (define (product-compare/recur a b cmp)
   (cond
+    [(eq? a b) 0]
     [(flvector? a)
      (ord-and/bool
       (flvector? b)
