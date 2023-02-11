@@ -49,15 +49,14 @@ check: PartialOrder.within({#'C: 20, #'F: 68}, {#'C: 25, #'F: 77}, 10) ~is #true
 check: PartialOrder.within([6e+23, 10.0], [6.02e+23, 9.8], 0.05) ~is #false
 check: PartialOrder.within({#'C: 18, #'F: 64}, {#'C: 25, #'F: 77}, 10) ~is #false
 
-let NaN: 0.0 / 0.0
-check: NaN =~ NaN ~is #false
-check: NaN !=~ NaN ~is #true
-check: NaN <~ NaN ~is #false
-check: NaN <=~ NaN ~is #false
+check: #nan =~ #nan ~is #false
+check: #nan !=~ #nan ~is #true
+check: #nan <~ #nan ~is #false
+check: #nan <=~ #nan ~is #false
 
 class AlwaysNaN():
   private implements PartialOrder
-  private override partial_compare(_, _): NaN
+  private override partial_compare(_, _): #nan
 
 let NaNish: AlwaysNaN()
 check: NaNish =~ NaNish ~is #false
