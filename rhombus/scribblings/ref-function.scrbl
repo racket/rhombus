@@ -337,11 +337,12 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
  Applies @rhombus(f) to each element of each @rhombus(args), iterating
  through the @rhombus(args) lists together, so @rhombus(f) must take as
  many arguments as the number of given @rhombus(args) lists. The result
- is a list of values, which is the result of each call to @rhombus(f) in
+ is a list constaining the result of each call to @rhombus(f) in
  order.
 
 @examples(
-  Map.values({"a": 1, "b": 2})
+  Function.map(fun (x, y): x + y, [1, 2, 3], [4, 5, 6])
+  (fun (x, y): x + y).map([1, 2, 3], [4, 5, 6])
 )
 
 }

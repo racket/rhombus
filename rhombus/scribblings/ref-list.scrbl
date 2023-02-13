@@ -25,6 +25,7 @@ to append lists.
   [lst.first, List.first(lst)]
   [lst.rest, List.rest(lst)]
   [lst.reverse(), List.reverse(lst)]
+  [lst.map(func), List.map(lst, func)]
 )
 
 @doc(
@@ -224,6 +225,21 @@ to append lists.
 )
 
 }
+
+@doc(
+  fun List.map(args :: List, f :: Function) :: List,
+){
+
+ Like @rhombus(Function.map), but with a single list of arguments first,
+ with the function supplied second.
+
+@examples(
+  List.map([1, 2, 3], fun (x): x + 1)
+  [1, 2, 3].map(fun (x): x + 1)
+)
+
+}
+
 
 
 @doc(

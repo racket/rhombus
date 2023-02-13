@@ -99,7 +99,7 @@
 
 @doc(
   fun error(message :: String)
-  fun error(who :: String || Symbol || False, message :: String)
+  fun error(who :: String || Symbol || Identifier || Operator || False, message :: String)
 ){
 
  Throws the @rhombus(Exn.Fail) exception with @rhombus(message) as the

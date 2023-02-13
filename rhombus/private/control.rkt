@@ -47,6 +47,7 @@
      (define who-sym (cond
                        [(not who) #f]
                        [(symbol? who) who]
+                       [(string? who) (string->symbol who)]
                        [(identifier? who) who]
                        [(and (syntax? who)
                              (syntax-parse who
@@ -56,7 +57,7 @@
                         => (lambda (sym) sym)]
                        [else (raise-argument-error* 'error
                                                     rhombus-realm
-                                                    "Symbol || Identifier || Operator || False"
+                                                    "String || Symbol || Identifier || Operator || False"
                                                     who)]))
      (define msg-str
        (cond

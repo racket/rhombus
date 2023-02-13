@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "statically-str.rkt")
          "parse.rkt"
-         "parens.rkt")
+         "parens.rkt"
+         "static-info.rkt")
 
 (provide (for-syntax dot-parse-dispatch)
          method1)
@@ -19,7 +20,7 @@
          (define gs (syntax->list #'(g ...)))
          (cond
            [(if (n . < . 0)
-                (> (length gs) (- 1 n))
+                (>= (length gs) (+ 1 n))
                 (= (length gs) n))
             (success-k (apply n-k (syntax->list #'((rhombus-expression g) ...)))
                        #'new-tail)]
@@ -32,17 +33,25 @@
              (bad "expected parentheses afterward")
              (values (no-k) tail))]))
 
-    (define (0ary id)
+    (define (0ary id [static-infos #'()])
       (ary 0
-           (lambda () #`(#,id #,lhs))
-           (lambda () #`(let ([#,id (lambda () (#,id #,lhs))])
-                          #,id))))
+           (lambda () (wrap-static-info*
+                       #`(#,id #,lhs)
+                       static-infos))
+           (lambda () (wrap-static-info*
+                       #`(let ([#,id (lambda () (#,id #,lhs))])
+                           #,id)
+                       static-infos))))
 
-    (define (nary id n direct-id)
+    (define (nary id n direct-id [static-infos #'()])
       (ary n
-           (lambda args #`(#,direct-id #,lhs . #,args))
-           (lambda () #`(let ([#,direct-id (lambda () (#,id #,lhs))])
-                          #,direct-id))))
+           (lambda args (wrap-static-info*
+                         #`(#,direct-id #,lhs . #,args)
+                         static-infos))
+           (lambda () (wrap-static-info*
+                       #`(let ([#,direct-id (lambda () (#,id #,lhs))])
+                           #,direct-id)
+                       static-infos))))
 
     (define (field mk) (values (mk lhs) tail))
 

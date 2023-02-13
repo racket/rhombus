@@ -104,3 +104,12 @@ check:
   | List.empty: "empty"
   | ~else: "other"
   ~is "other"
+
+check:
+  use_static
+  [1, 2].reverse().reverse()
+  ~is [1, 2]
+
+check:
+  [1, 2].map(fun (x): x + 1).reverse()
+  ~is [3, 2]

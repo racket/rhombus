@@ -99,6 +99,7 @@
    [empty null]
    reverse
    iota
+   [map List.map]
    repet
    of))
 
@@ -201,7 +202,8 @@
                                             (datum->syntax #f
                                                            (or (extract-static-infos e)
                                                                '())))))]
-        [(reverse) (0ary #'reverse)]
+        [(reverse) (0ary #'reverse list-static-infos)]
+        [(map) (nary #'List.map 1 #'List.map list-static-infos)]
         [else (fail-k)])))))
 
 (define-reducer-syntax List
@@ -242,6 +244,15 @@
 (define-static-info-syntax iota
   (#%call-result #,list-static-infos)
   (#%function-arity 2))
+
+(define (List.map lst proc)
+  (unless (procedure? proc)
+    (raise-argument-error* 'List.map rhombus-realm "Function" proc))
+  (map proc lst))
+
+(define-static-info-syntax List.map
+  (#%call-result #,list-static-infos)
+  (#%function-arity 4))
 
 (define-static-info-syntax List.cons
   (#%call-result #,list-static-infos)

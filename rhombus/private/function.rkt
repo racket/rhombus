@@ -57,7 +57,7 @@
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(map) (nary -2 #'map)]
+        [(map) (nary #'map -2 #'map)]
         [else #f])))))
 
 (begin-for-syntax  
@@ -220,9 +220,10 @@
                             #'(ret.predicate ...)
                             #'(rhs ...)
                             #'form-id #'alts-tag))
-     (values (if arity
-                 (wrap-static-info proc #'#%function-arity arity)
-                 proc)
+     (values (wrap-function-static-info
+              (if arity
+                  (wrap-static-info proc #'#%function-arity arity)
+                  proc))
              #'tail)]
     ;; single-alterative case
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
@@ -243,6 +244,6 @@
                     [fun (if arity
                              (wrap-static-info fun #'#%function-arity arity)
                              fun)])
-               fun)
+               (wrap-function-static-info fun))
              #'tail)]))
 
