@@ -92,3 +92,15 @@ begin:
   check:
     dynamic([1, 2, 3])[0]
     ~is 1
+
+check:
+  match []
+  | List.empty: "empty"
+  | ~else: "other"
+  ~is "empty"
+
+check:
+  match [1]
+  | List.empty: "empty"
+  | ~else: "other"
+  ~is "other"

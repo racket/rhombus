@@ -163,10 +163,11 @@ to append lists.
 
 
 @doc(
-  def List.empty :: [],
+  def List.empty :: []
+  bind.macro 'List.empty'
 ){
 
-  A name for the empty list.
+  A name and pattern for the empty list.
 
 }
 

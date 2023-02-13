@@ -14,6 +14,7 @@
          "ref-result-key.rkt"
          "function-arity-key.rkt"
          "op-literal.rkt"
+         "literal.rkt"
          (submod "ellipsis.rkt" for-parse)
          "repetition.rkt"
          "compound-repetition.rkt"
@@ -140,6 +141,32 @@
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
     #`((#%ref-result #,(car static-infoss)))))
+
+(define-binding-syntax null
+  (binding-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(form-id . tail)
+        (values (binding-form #'empty-infoer #'()) #'tail)]))))
+
+(define-syntax (empty-infoer stx)
+  (syntax-parse stx
+    [(_ static-infos datum)
+     (binding-info "List.empty"
+                   #'empty
+                   #'static-infos
+                   #'()
+                   #'empty-matcher
+                   #'literal-bind-nothing
+                   #'literal-commit-nothing
+                   #'datum)]))
+
+(define-syntax (empty-matcher stx)
+  (syntax-parse stx
+    [(_ arg-id datum IF success fail)
+     #'(IF (null? arg-id)
+           success
+           fail)]))
 
 (define (nonempty-list? l)
   (and (pair? l) (list? l)))
