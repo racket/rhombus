@@ -17,7 +17,8 @@
                      "realm.rkt"
                      "import-invert.rkt"
                      "tag.rkt"
-                     "id-binding.rkt")
+                     "id-binding.rkt"
+                     "operator-parse.rkt")
          "enforest.rkt"
          "name-root.rkt"
          "name-root-space.rkt"
@@ -120,7 +121,7 @@
     #:in-space in-import-space
     #:transformer-ref (make-import-modifier-ref transform-in req))
 
-  (define (extract-prefixes r)
+  (define (extract-prefixes r #:require-identifier? require-identifier?)
     (let extract ([r r] [accum null])
       (syntax-parse r
         #:datum-literals (rename-in only-in except-in expose-in rhombus-prefix-in for-meta for-label
@@ -129,14 +130,23 @@
         [#f (reverse accum)]
         [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
          (extract #'mp accum)]
-        [(rhombus-prefix-in mp name) (extract #'mp (cons r accum))]
+        [(rhombus-prefix-in mp name)
+         (if (or (identifier? #'name)
+                 (not (syntax-e #'name)))
+             (extract #'mp (cons r accum))
+             (if require-identifier?
+                 (raise-syntax-error #f
+                                     "expected an identifier"
+                                     #'name)
+                 (syntax-parse #'name
+                   [(_ op) (extract #'mp (cons #'(rhombus-prefix-in mp op) accum))])))]
         [((~or for-meta only-space-in) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
 
-  (define (extract-prefix mp r)
-    (define prefixes (extract-prefixes r))
+  (define (extract-prefix mp r #:require-identifier? [require-identifier? #t])
+    (define prefixes (extract-prefixes r #:require-identifier? require-identifier?))
     (define (extract-string-prefix mp)
       (datum->syntax
        mp
@@ -323,7 +333,7 @@
               (syntax-parse sing
                 #:datum-literals (singleton)
                 [(space (~and mp (singleton id as-id)))
-                 (define prefix (extract-prefix #'mp #'r)) ; `as` "prefix" is really a rename
+                 (define prefix (extract-prefix #'mp #'r #:require-identifier? #f)) ; `as` "prefix" is really a rename
                  (cond
                    [(syntax-e prefix)
                     (cond
@@ -690,8 +700,12 @@
    ;; infix
    (lambda (form1 stx)
      (syntax-parse stx
+       #:datum-literals (group)
        [(_ id:identifier . tail)
         (values #`(import-dotted #,form1 id)
+                #'tail)]
+       [(_ (_::parens (group id::operator)) . tail)
+        (values #`(import-dotted #,form1 id.name)
                 #'tail)]
        [else
         (raise-syntax-error #f "not ready, yet" stx)]))
@@ -720,7 +734,7 @@
   (import-modifier
    (lambda (req stx)
      (syntax-parse stx
-       [(_ name:identifier)
+       [(_ name::name)
         (datum->syntax req
                        (list #'rhombus-prefix-in req #'name)
                        req)]))))

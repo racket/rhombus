@@ -165,9 +165,9 @@
       #:datum-literals (rename-in only-in except-in expose-in for-meta for-label
                                   only-spaces-in except-spaces-in rhombus-prefix-in only-space-in)
       [#f #f]
-      [((~or rename-in only-in except-in expose-in) mp . _)
+      [((~or rename-in only-in except-in expose-in rhombus-prefix-in) mp . _)
        (loop #'mp)]
-      [((~and mode (~or only-spaces-in except-spaces-in rhombus-prefix-in)) mp a-space ...)
+      [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
        (define the-spaces
          (for/hasheq ([a-space (in-list (syntax->list #'(a-space ...)))])
            (values (syntax-e a-space) #t)))

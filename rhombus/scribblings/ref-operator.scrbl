@@ -18,15 +18,19 @@
                 | ...'
 
   grammar op_case:  
-    ($op_or_id_path $binding_term) $implementation
-    ($binding_term $op_or_id_path $binding_term) $implementation
-    ($binding_term $op_or_id_path) $implementation
+    $op_or_id_path $binding_term $impl_block
+    $binding_term $op_or_id_path $binding_term $impl_block
+    $binding_term $op_or_id_path $impl_block
+    ($op_or_id_path $binding_term) $maybe_res_ann $impl_block
+    ($binding_term $op_or_id_path $binding_term) $maybe_res_ann $impl_block
+    ($binding_term $op_or_id_path) $maybe_res_ann $impl_block
 
-  grammar implementation:
-    $maybe_res_ann:
-      $option; ...
-      $body
-      ...
+  grammar impl_block:
+    :
+      :
+        $option; ...
+        $body
+        ...
 
   grammar option:
     ~stronger_than $other ...
@@ -68,13 +72,14 @@
  operator in the shrubbery sense; parentheses can be used around other
  binding forms for arguments. If two identifier terms appear within the
  parentheses that follow @rhombus(operator), a prefix operator is
- defined using the first identifier as its name.
+ defined using the first identifier as its name. When a parenthesized
+ sequence is followed by @rhombus(::, ~bind) or @rhombus(:~, ~bind), it
+ is treated as starting a @rhombus(maybe_res_ann), which is the same
+ as in @rhombus(fun) definitions.
 
- The @rhombus(maybe_res_ann) parts are the same as in @rhombus(fun)
- definitions. The new operator is also bound a @tech{repetition}
- operator, in which case its arguments must be repetitions, and the depth
- of the resulting repetition is the maximum of the argument repetition
- depths.
+ The new operator is also bound a @tech{repetition} operator, in which
+ case its arguments must be repetitions. The depth of the resulting
+ repetition is the maximum of the argument repetition depths.
 
  When multple cases are provided via @vbar, an operator can be defined
  as both prefix and infix or prefix and postfix (but not infix and
@@ -99,25 +104,25 @@
 
 @examples(
   ~defn:
-    operator (x ^^^ y):
+    operator x ^^^ y:
       x +& y +& x
   ~repl:
     "a" ^^^ "b"
     1 ^^^ 2
   ~defn:  
-    operator (x wings y):
+    operator x wings y:
       x +& y +& x
   ~repl:
     "a" wings "b"
   ~defn:      
-    operator ((x :: String) ^^^ (y :: String)):
+    operator ((x :: String) ^^^ (y :: String)) :: String:
       x +& y +& x
   ~repl:
     "a" ^^^ "b"
     ~error:
       1 ^^^ 2
   ~defn:      
-    operator (x List.(^^^) y):
+    operator x List.(^^^) y:
       x ++ y ++ x
   ~repl:
     begin:
@@ -125,9 +130,9 @@
       [1, 2] ^^^ [3]
   ~defn:
     operator
-    | (x ^^^ y):
+    | x ^^^ y:
         x +& y +& x
-    | (^^^ y):
+    | ^^^ y:
         "--" +& y +& "--"
   ~repl:
     "a" ^^^ "b"
@@ -136,9 +141,9 @@
     operator ^^^:
       ~weaker_than: +
       match
-      | (x ^^^ y):
+      | x ^^^ y:
           x +& y +& x
-      | (^^^ y):
+      | ^^^ y:
           "--" +& y +& "--"
   ~repl:
     1 ^^^ 2 + 3

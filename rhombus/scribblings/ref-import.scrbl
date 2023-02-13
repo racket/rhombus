@@ -31,6 +31,7 @@
     $module_path #,(@rhombus(!, ~impo)) $identifier
     #,(@rhombus(., ~impo)) $identifier
     $module_path #,(@rhombus(., ~impo)) $identifier
+    $module_path #,(@rhombus(., ~impo)) ($operator)
     #,(@rhombus(self, ~impo))
     #,(@rhombus(parent, ~impo))
 
@@ -125,6 +126,9 @@
   case the dotted form is a shorthand for just importing
   @rhombus(identifier) from @rhombus(module_path).}
 
+ @item{@rhombus(module_path#,(@rhombus(.,~impo))(operator)): the same
+  shorthand, but for operators.}
+ 
  @item{@rhombus(self, ~impo): refers to the enclosing module itself,
   usually combined with @rhombus(!, ~impo) to refer to a submodule of the
   enclosing module.}
@@ -150,12 +154,14 @@
 @doc(
   impo.macro '. $identifier'
   impo.macro '$collection_module_path . $identifier'
+  impo.macro '$collection_module_path . ($operator)'
 ){
 
   As an module-path operator, a prefix @rhombus(., ~impo) refers
   to an import prefix or a namespace @rhombus(identifier) in the enclosing
   environment, and an infix @rhombus(., ~impo) refers to an
-  @rhombus(identifier) provided by @rhombus(collection_module_path).
+  @rhombus(identifier) or @rhombus(operator)  provided by
+  @rhombus(collection_module_path).
 
 }
 

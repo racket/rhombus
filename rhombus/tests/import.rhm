@@ -145,3 +145,11 @@ check:
         make_pair
   r.make_pair
   ~is Pair.cons
+
+check:
+  fun f(x, y):
+    1 + begin:
+      import rhombus.(*) as +
+      x + y - 1
+  f(3, 4)
+  ~is 12

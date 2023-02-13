@@ -1,6 +1,6 @@
 #lang rhombus
 
-operator (a +* b):
+operator a +* b:
   (a + b) * b
   
 check:
@@ -8,7 +8,7 @@ check:
   ~is 28
 
 check:
-  operator (x mod y):
+  operator x mod y:
     x - math.floor(x / y) * y
   10 mod 3
   ~is 1
@@ -155,8 +155,8 @@ check:
 check:
   ~eval
   operator
-  | (0 ** a): 0
-  | (1 **): 1
+  | 0 ** a: 0
+  | 1 **: 1
   ~raises "combination of infix and postfix cases not allowed"
 
 check:
@@ -170,7 +170,15 @@ check:
 check:
   ~eval
   operator
-  | (** **): 0
+  | 0 ** a: 0
+  | ** a: 0
+  | 1 **: 1
+  ~raises "combination of infix and postfix cases not allowed"
+
+check:
+  ~eval
+  operator
+  | ** **: 0
   ~raises "expected non-operator"
 
 check:

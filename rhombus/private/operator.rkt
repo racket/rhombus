@@ -48,7 +48,18 @@
              #:attr prec #'options.prec
              #:attr rhs #'(tag body ...)
              #:attr ret-predicate #'ret.predicate
-             #:attr ret-static-infos #'ret.static-infos))
+             #:attr ret-static-infos #'ret.static-infos)
+    (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op
+                   ((~and tag block) (~var options (:prefix-operator-options '#f))
+                                     body ...))
+             #:with op-name::dotted-operator-or-identifier #'op-name-seq
+             #:attr name #'op-name.name
+             #:attr extends #'op-name.extends
+             #:attr prec #'options.prec
+             #:attr rhs #'(tag body ...)
+             #:attr ret-predicate #'#f
+             #:attr ret-static-infos #'()
+             #:attr g #'(group op-name-seq arg)))
   
   (define-splicing-syntax-class :infix-case
     #:description "infix operator case"
@@ -63,7 +74,20 @@
              #:attr assc #'options.assc
              #:attr rhs #'(tag body ...)
              #:attr ret-predicate #'ret.predicate
-             #:attr ret-static-infos #'ret.static-infos))
+             #:attr ret-static-infos #'ret.static-infos)
+    (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op
+                   ret::ret-annotation
+                   ((~and tag block) (~var options (:infix-operator-options '#f))
+                                     body ...))
+             #:with op-name::dotted-operator-or-identifier #'op-name-seq
+             #:attr name #'op-name.name
+             #:attr extends #'op-name.extends
+             #:attr prec #'options.prec
+             #:attr assc #'options.assc
+             #:attr rhs #'(tag body ...)
+             #:attr ret-predicate #'#f
+             #:attr ret-static-infos #'()
+             #:attr g #'(group left op-name-seq right)))
 
   (define-splicing-syntax-class :postfix-case
     #:description "postfix operator case"
@@ -77,7 +101,19 @@
              #:attr prec #'options.prec
              #:attr rhs #'(tag body ...)
              #:attr ret-predicate #'ret.predicate
-             #:attr ret-static-infos #'ret.static-infos))
+             #:attr ret-static-infos #'ret.static-infos)
+    (pattern (~seq arg::not-op op-name-seq::dotted-operator-or-identifier-sequence
+                   ret::ret-annotation
+                   ((~and tag block) (~var options (:prefix-operator-options '#f))
+                                     body ...))
+             #:with op-name::dotted-operator-or-identifier #'op-name-seq
+             #:attr name #'op-name.name
+             #:attr extends #'op-name.extends
+             #:attr prec #'options.prec
+             #:attr rhs #'(tag body ...)
+             #:attr ret-predicate #'#f
+             #:attr ret-static-infos #'()
+             #:attr g #'(group arg op-name-seq)))
 
   (define (make-prefix name op-proc prec static-infos)
     (with-syntax ([op-proc op-proc])
