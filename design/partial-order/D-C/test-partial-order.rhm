@@ -2,6 +2,7 @@
 
 import:
   lib("racket/base.rkt").gcd
+  lib("racket/flonum.rkt").flvector
   "partial-order.rkt" open
   "Lexicographic.rhm".Lexicographic
 
@@ -82,4 +83,8 @@ check: [1, Baddie(1)] >=~ [2, Baddie(2)] ~is #false
 check: [1, Baddie(1)] >~ [2, Baddie(2)] ~is #false
 check: [2, Baddie(1)] <=~ [1, Baddie(2)] ~is #false
 check: [2, Baddie(1)] <~ [1, Baddie(2)] ~is #false
+
+let hc: PartialOrder.compare_hash_code
+check: flvector(0.0) =~ flvector(-0.0) ~is #true
+check: hc(flvector(0.0)) .= hc(flvector(-0.0)) ~is #true
 
