@@ -55,7 +55,11 @@
   (property syntax-class-parser (proc))
 
   ;; used to represent parsed pattern variables and attributes in syntax classes:
-  (struct pattern-variable (sym id val-id depth unpack*-id))
+  (struct pattern-variable (sym       ; external name
+                            id        ; identifier name of external form, useful for errors
+                            val-id    ; identifier that holds match
+                            depth     ; repetition depth relative to base name
+                            unpack*-id)) ; unpacker
 
   (define (pattern-variable->list pv #:keep-id? [keep-id? #t])
     (list (pattern-variable-sym pv)

@@ -286,7 +286,6 @@
             (if (identifier? form1)
                 (list (make-pattern-variable-bind #'id temp-id unpack*
                                                   pack-depth
-                                                  #f
                                                   (for/list ([var (in-list attribute-vars)])
                                                     (pattern-variable->list var #:keep-id? #f))))
                 null)
@@ -296,7 +295,7 @@
                   (define bind-id (open-attrib-bind-id oa))
                   (define var (open-attrib-var oa))
                   (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack*-id var)
-                                              (pattern-variable-depth var) #f null))))
+                                              (pattern-variable-depth var) null))))
          #,(append
             (if (identifier? form1)
                 (list (list #'id #'id temp-id pack-depth unpack*))

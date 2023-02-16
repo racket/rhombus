@@ -355,7 +355,7 @@
                          (values temp0-id
                                  (list #`[#,temp-id (pack-tail* (syntax #,temp0-id) 0)])
                                  (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-tail-list*)
-                                                                   1 #f '()))
+                                                                   1 '()))
                                  (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-tail-list*)))))]))
                   ;; handle-block-tail-escape:
                   (lambda (name e in-e)
@@ -364,7 +364,7 @@
                       (values temp0-id
                               (list #`[#,temp-id (pack-multi-tail* (syntax #,temp0-id) 0)])
                               (list (make-pattern-variable-bind e temp-id (quote-syntax unpack-multi-tail-list*)
-                                                                1 #f null))
+                                                                1 null))
                               (list (pattern-variable (syntax-e e) e temp-id 1 (quote-syntax unpack-multi-tail-list*))))))
                   ;; handle-maybe-empty-sole-group
                   (lambda (tag pat idrs sidrs vars)

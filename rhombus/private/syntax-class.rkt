@@ -291,7 +291,7 @@
                  [(#:field id depth rhs)
                   #:with (tmp-id) (generate-temporaries #'(id))
                   #:with (pat-ids pat-rhs) (make-pattern-variable-bind #'id #'tmp-id (quote-syntax unpack-element*)
-                                                                       (syntax-e #'depth) #f null)
+                                                                       (syntax-e #'depth) null)
                   (loop (cdr body)
                         null
                         (list* #'[(define tmp-id rhs)
