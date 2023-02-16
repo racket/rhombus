@@ -12,6 +12,10 @@
                      >~
                      <=~
                      >=~))
+(module+ private
+  (provide PartialOrder?
+           equal-proc/partial-compare
+           hash-proc/compare-key))
 
 (require (for-syntax racket/base
                      rhombus/private/interface-parse)
@@ -32,7 +36,7 @@
 
 ;; PartialOrder struct type property and interface
 
-(define-values (prop:PartialOrder _PartialOrder? PartialOrder-ref)
+(define-values (prop:PartialOrder PartialOrder? PartialOrder-ref)
   (make-struct-type-property
    'PartialOrder
    #false
@@ -56,6 +60,18 @@
                   (hasheq 'compare_key 0 'partial_compare 1)
                   #hasheq()
                   #t))
+
+(module+ private
+  ;; equal-proc/partial-compare : Self Imp (Any Any -> Boolean) -> Boolean
+  (define (equal-proc/partial-compare a b recur-eql)
+    (define partial_compare (vector-ref (PartialOrder-ref a) 1))
+    (define (recur-cmp ai bi) (if (recur-eql ai bi) 0 +nan.0))
+    (partial_compare a b recur-cmp))
+
+  ;; hash-proc/compare-key : Self (Any -> Integer) -> Integer
+  (define (hash-proc/compare-key a recur-hsh)
+    (define compare_key (vector-ref (PartialOrder-ref a) 0))
+    (recur-hsh (compare_key a))))
 
 ;; ---------------------------------------------------------
 
