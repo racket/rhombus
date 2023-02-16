@@ -42,18 +42,18 @@
 }
 
 @doc(
-  syntax_class decl_meta.IsGroup:
+  syntax_class decl_meta.Group:
     kind: ~group
-  syntax_class decl_meta.IsNestableGroup:
+  syntax_class decl_meta.NestableGroup:
     kind: ~group
 ){
 
  @provided_meta()
 
- Like @rhombus(defn_meta.IsGroup, ~stxclass), but for declarations and
- nestable declarations. The @rhombus(decl_meta.IsGroup, ~stxclass) syntax
+ Like @rhombus(defn_meta.Group, ~stxclass), but for declarations and
+ nestable declarations. The @rhombus(decl_meta.Group, ~stxclass) syntax
  class matches all groups that
- @rhombus(decl_meta.IsNestableGroup, ~stxclass) matches, plus ones that
+ @rhombus(decl_meta.NestableGroup, ~stxclass) matches, plus ones that
  cannot be nested.
 
 }

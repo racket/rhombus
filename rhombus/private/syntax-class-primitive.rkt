@@ -48,7 +48,7 @@
 (begin-for-syntax
   (define in-syntax-class-space (make-interned-syntax-introducer/add 'rhombus/stxclass))
 
-  (struct rhombus-syntax-class (kind class attributes splicing? arity))
+  (struct rhombus-syntax-class (kind class attributes splicing? arity root-swap))
   (define (syntax-class-ref v) (and (rhombus-syntax-class? v) v))
 
   ;; used to communicate `syntax.parse` as a anonymous-class form
@@ -81,8 +81,9 @@
                              #:kind [kind 'term]
                              #:arity [arity #f]
                              #:fields [fields #'()]
-                             #:splicing? [splicing? #f])
-    (rhombus-syntax-class kind pat fields splicing? arity)))
+                             #:splicing? [splicing? #f]
+                             #:root-swap [root-swap #f])
+    (rhombus-syntax-class kind pat fields splicing? arity root-swap)))
 
 (define-syntax (define-syntax-class-syntax stx)
   (syntax-parse stx
@@ -102,27 +103,31 @@
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))
 
 (define-syntax-rule (define-operator-syntax-classes
-                      Group :form
-                      AfterPrefixGroup :prefix-op+form+tail
-                      AfterInfixGroup :infix-op+form+tail)
+                      Parsed :form
+                      AfterPrefixParsed :prefix-op+form+tail
+                      AfterInfixParsed :infix-op+form+tail)
   (begin
-    (define-syntax-class-syntax Group (make-syntax-class #':form
-                                                         #:kind 'group
-                                                         #:fields #'((parsed #f parsed 0 unpack-parsed*))))
-    (define-syntax-class-syntax AfterPrefixGroup (make-syntax-class #':prefix-op+form+tail
-                                                                   #:kind 'group
-                                                                   #:arity 2
-                                                                   #:fields #'((parsed #f parsed 0 unpack-parsed*)
-                                                                               (tail #f tail tail unpack-tail-list*))))
-    (define-syntax-class-syntax AfterInfixGroup (make-syntax-class #':infix-op+form+tail
-                                                                   #:kind 'group
-                                                                   #:arity 2
-                                                                   #:fields #'((parsed #f parsed 0 unpack-parsed*)
-                                                                               (tail #f tail tail unpack-tail-list*))))))
+    (define-syntax-class-syntax Parsed (make-syntax-class #':form
+                                                          #:kind 'group
+                                                          #:fields #'((parsed #f parsed 0 unpack-parsed*))
+                                                          #:root-swap '(parsed . group)))
+    (define-syntax-class-syntax AfterPrefixParsed (make-syntax-class #':prefix-op+form+tail
+                                                                     #:kind 'group
+                                                                     #:arity 2
+                                                                     #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                                 (tail #f tail tail unpack-tail-list*))
+                                                                     #:root-swap '(parsed . group)))
+    (define-syntax-class-syntax AfterInfixParsed (make-syntax-class #':infix-op+form+tail
+                                                                    #:kind 'group
+                                                                    #:arity 2
+                                                                    #:fields #'((parsed #f parsed 0 unpack-parsed*)
+                                                                                (tail #f tail tail unpack-tail-list*))
+                                                                    #:root-swap '(parsed . group)))))
 
 (define-syntax-rule (define-transformer-syntax-class
-                      Group :form)
+                      Parsed :form)
   (begin
-    (define-syntax-class-syntax Group (make-syntax-class #':form
-                                                         #:kind 'group
-                                                         #:fields #'((parsed #f parsed 0 unpack-parsed*))))))
+    (define-syntax-class-syntax Parsed (make-syntax-class #':form
+                                                          #:kind 'group
+                                                          #:fields #'((parsed #f parsed 0 unpack-parsed*))
+                                                          #:root-swap '(parsed . group)))))

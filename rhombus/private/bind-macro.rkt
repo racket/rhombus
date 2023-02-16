@@ -52,9 +52,9 @@
      unpack
      unpack_info
      get_info
-     Group
-     AfterPrefixGroup
-     AfterInfixGroup)))
+     Parsed
+     AfterPrefixParsed
+     AfterInfixParsed)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -65,9 +65,9 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Group :binding
-    AfterPrefixGroup :prefix-op+binding+tail
-    AfterInfixGroup :infix-op+binding+tail))
+    Parsed :binding
+    AfterPrefixParsed :prefix-op+binding+tail
+    AfterInfixParsed :infix-op+binding+tail))
 
 (begin-for-syntax
   (struct prefix+infix (prefix infix)

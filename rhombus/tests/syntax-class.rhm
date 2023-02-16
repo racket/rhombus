@@ -616,3 +616,30 @@ check:
   | 'a'
   def '1 $(c :: C) 3': '1 a 3'
   ~completes
+
+// root_swap
+check:
+  syntax_class C:
+    root_swap: second terms
+    pattern
+    | '$_ $second'
+  match '1 2'
+  | '$(c :: C)':
+      [c, c.terms]
+  ~prints_like ['2', '1 2']
+
+check:
+  ~eval
+  syntax_class C:
+    root_swap: unknown terms
+    pattern
+    | '$_ $second'
+  ~raises "field to swap as root not found"
+
+check:
+  ~eval
+  syntax_class C:
+    root_swap: second first
+    pattern
+    | '$first $second'
+  ~raises "field for root already exists"

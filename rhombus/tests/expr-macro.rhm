@@ -102,7 +102,7 @@ begin:
     ~is [1]
 
 begin:
-  expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail))':
+  expr.macro 'go ($(right :: expr_meta.AfterInfixParsed('*'): tail))':
     '$([tail, ...]
          +& '[$tail ...]'
          +& [right.tail, ...]
@@ -115,7 +115,7 @@ begin:
            +& "'+ 4'")
 
 begin:
-  expr.macro 'go ($(right :: expr_meta.AfterInfixGroup('*'): tail), ...)':
+  expr.macro 'go ($(right :: expr_meta.AfterInfixParsed('*'): tail), ...)':
     '$([[tail, ...], ...]
          +& '[[$tail ...], ...]'
          +& [[right.tail, ...], ...]
@@ -133,8 +133,8 @@ begin:
     ~weaker_than: *
     ~stronger_than: +
     match '$tail ...'
-    | '$(right :: expr_meta.AfterInfixGroup('ignored'))':
-        values('$right.parsed',
+    | '$(right :: expr_meta.AfterInfixParsed('ignored'))':
+        values('$right',
                '$right.tail ...')
 
   check:

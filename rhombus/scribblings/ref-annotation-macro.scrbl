@@ -61,22 +61,22 @@
 
 
 @doc(
-  syntax_class annot_meta.Group:
+  syntax_class annot_meta.Parsed:
     kind: ~group
-    field parsed
-  syntax_class annot_meta.AfterPrefixGroup(op_name):
+    field group
+  syntax_class annot_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
-  syntax_class annot_meta.AfterInfixGroup(op_name):
+  syntax_class annot_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
 ){
 
  @provided_meta()
 
- Analogous to @rhombus(expr_meta.Group, ~stxclass), etc., but for annotations.
+ Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for annotations.
 
 }
 

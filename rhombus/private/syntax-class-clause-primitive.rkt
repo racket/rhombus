@@ -11,7 +11,8 @@
                     description
                     kind
                     error_mode
-                    fields))
+                    fields
+                    root_swap))
 
 (module+ for-class
   (provide (for-syntax extract-clauses)))
@@ -37,6 +38,9 @@
         [(#:fields _ ht)
          (check "fields")
          (hash-set options '#:fields (syntax-e #'ht))]
+        [(#:root_swap _ to-root root-to)
+         (check "root_swap")
+         (hash-set options '#:root_swap (cons #'to-root #'root-to))]
         [(#:kind _ kw)
          (check "kind")
          (hash-set options '#:kind (syntax-e #'kw))]
@@ -52,6 +56,7 @@
           (hash-ref options '#:kind #f)
           (hash-ref options '#:description #f)
           (hash-ref options '#:fields #f)
+          (hash-ref options '#:root_swap #f)
           (eq? (hash-ref options '#:error-mode #f) '#:opaque)))
 
 (define-syntax-class-clause-syntax pattern
@@ -89,6 +94,14 @@
                                              id)
                          (hash-set ht sym id))))
         #`(#:fields #,stx #,ht)]))))
+
+(define-syntax-class-clause-syntax root_swap
+  (syntax-class-clause-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(_ (tag::block (group to-root:identifier root-to:identifier)))
+        #`(#:root_swap #,stx to-root root-to)]))))
 
 (define-for-syntax (make-kw-clause tag-kw valid what)
   (syntax-class-clause-transformer

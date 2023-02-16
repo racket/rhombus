@@ -62,8 +62,8 @@
 (begin-for-syntax
   (define-name-root defn_meta
     #:fields
-    (IsGroup
-     IsSequenceStartGroup)))
+    (Group
+     SequenceStartGroup)))
 
 (begin-for-syntax
   (define-syntax-class :is_definition
@@ -75,12 +75,12 @@
     (pattern g
              #:when (definition-sequence? #'(g))))
   
-  (define-syntax-class-syntax IsGroup
+  (define-syntax-class-syntax Group
     (make-syntax-class #':is_definition
                        #:kind 'group
                        #:fields #'()))
   
-  (define-syntax-class-syntax IsSequenceStartGroup
+  (define-syntax-class-syntax SequenceStartGroup
     (make-syntax-class #':is_definition_sequence
                        #:kind 'group
                        #:fields #'())))

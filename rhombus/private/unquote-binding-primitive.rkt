@@ -206,6 +206,13 @@
       (define temp-id (car (generate-temporaries (list #'id))))
       (define vars (for/list ([l (in-list (syntax->list (rhombus-syntax-class-attributes rsc)))])
                      (syntax-list->pattern-variable l)))
+      (define swap-to-root (and (rhombus-syntax-class-root-swap rsc)
+                                (car (rhombus-syntax-class-root-swap rsc))))
+      (define swap-root-to-id (and (rhombus-syntax-class-root-swap rsc)
+                                   (cdr (rhombus-syntax-class-root-swap rsc))))
+      (define swap-root-to (if (syntax? swap-root-to-id)
+                               (syntax-e swap-root-to-id)
+                               swap-root-to-id))
       (define-values (attribute-bindings attribute-vars)
         (for/lists (bindings descs) ([var (in-list vars)]
                                      [temp-attr (in-list (generate-temporaries (map pattern-variable-sym vars)))]
@@ -253,22 +260,39 @@
                (values (pattern-variable-sym var) var)))
            (for/list ([name (in-hash-keys open-attributes-spec #t)]
                       #:do [(define field+binds (hash-ref open-attributes-spec name))
-                            (define var (hash-ref found-attributes name #f))
-                            (unless var
+                            (define var-or-root
+                              (cond
+                                [(eq? name swap-to-root) #f]
+                                [(eq? name swap-root-to) 'root]
+                                [else
+                                 (hash-ref found-attributes name #f)]))
+                            (unless var-or-root
                               (raise-syntax-error #f
                                                   "not an attribute of the syntax class"
                                                   ;; pick abritaty open for the same field name
                                                   (caar field+binds)))]
                       [field+bind (in-list field+binds)])
-             (open-attrib (syntax-e (car field+bind)) (cdr field+bind) var))]
+             (open-attrib (syntax-e (car field+bind)) (cdr field+bind) var-or-root))]
           [else
-           (for/list ([var (in-list attribute-vars)])
-             (define id (or (pattern-variable-id var)
-                            (datum->syntax open-attributes-spec (pattern-variable-sym var) open-attributes-spec)))
-             (open-attrib (syntax-e id) id var))]))
+           (append
+            (if swap-root-to
+                (let ([id (if (identifier? swap-root-to-id)
+                              swap-root-to-id
+                              (datum->syntax open-attributes-spec swap-root-to open-attributes-spec))])
+                  (list (open-attrib (syntax-e id) id 'root)))
+                null)
+            (for/list ([var (in-list attribute-vars)]
+                       #:unless (eq? (pattern-variable-sym var) swap-to-root))
+              (define id (or (pattern-variable-id var)
+                             (datum->syntax open-attributes-spec (pattern-variable-sym var) open-attributes-spec)))
+              (open-attrib (syntax-e id) id var)))]))
       (define pack-depth 0)
       (define dotted-bind? (and sc (not (identifier? sc)) (rhombus-syntax-class-splicing? rsc)))
       (define instance-id (or match-id (car (generate-temporaries '(inline)))))
+      (define swap-to-root-var
+        (for/first ([var (in-list attribute-vars)]
+                    #:when (eq? (pattern-variable-sym var) swap-to-root))
+          var))
       #`(#,(if sc
                (if (identifier? sc)
                    #`(~var #,instance-id #,sc-call)
@@ -284,27 +308,52 @@
                  attribute-bindings)
          #,(append
             (if (identifier? form1)
-                (list (make-pattern-variable-bind #'id temp-id unpack*
-                                                  pack-depth
-                                                  (for/list ([var (in-list attribute-vars)])
-                                                    (pattern-variable->list var #:keep-id? #f))))
+                (list (make-pattern-variable-bind #'id
+                                                  (if swap-to-root-var
+                                                      (pattern-variable-val-id swap-to-root-var)
+                                                      temp-id)
+                                                  (if swap-to-root-var
+                                                      (pattern-variable-unpack*-id swap-to-root-var)
+                                                      unpack*)
+                                                  (if swap-to-root-var
+                                                      (pattern-variable-depth swap-to-root-var)
+                                                      pack-depth)
+                                                  (append
+                                                   (if swap-root-to
+                                                       (list
+                                                        (pattern-variable->list
+                                                         (pattern-variable swap-root-to #f temp-id pack-depth unpack*)))
+                                                       null)
+                                                   (for/list ([var (in-list attribute-vars)]
+                                                              #:unless (eq? swap-to-root (pattern-variable-sym var)))
+                                                     (pattern-variable->list var #:keep-id? #f)))))
                 null)
             (if (not open-attributes)
                 null
-                (for/list ([oa (in-list open-attributes)])
+                (for/list ([oa (in-list open-attributes)]
+                           #:unless (eq? 'root (open-attrib-var oa)))
                   (define bind-id (open-attrib-bind-id oa))
                   (define var (open-attrib-var oa))
                   (make-pattern-variable-bind bind-id (pattern-variable-val-id var) (pattern-variable-unpack*-id var)
                                               (pattern-variable-depth var) null))))
          #,(append
             (if (identifier? form1)
-                (list (list #'id #'id temp-id pack-depth unpack*))
+                (list
+                 (if swap-to-root
+                     (pattern-variable->list (struct-copy pattern-variable swap-to-root-var
+                                                          [sym swap-to-root]
+                                                          [id #f]))
+                     (list #'id #'id temp-id pack-depth unpack*)))
                 null)
             (if (not open-attributes)
                 null
                 (for/list ([oa (in-list open-attributes)])
-                  (pattern-variable->list (struct-copy pattern-variable (open-attrib-var oa)
-                                                       [sym (open-attrib-sym oa)])))))))
+                  (define var (open-attrib-var oa))
+                  (if (eq? var 'root)
+                      (pattern-variable->list
+                       (pattern-variable (open-attrib-sym oa) #f temp-id pack-depth unpack*))
+                      (pattern-variable->list (struct-copy pattern-variable var
+                                                           [sym (open-attrib-sym oa)]))))))))
     (define (incompat)
       (raise-syntax-error #f
                           "syntax class incompatible with this context"

@@ -27,6 +27,7 @@
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
     #,(@rhombus(fields, ~syntax_class_clause)): $identifier ...; ...
+    #,(@rhombus(root_swap, ~syntax_class_clause)): $identifier $identifier
 
   grammar pattern_cases:
     $pattern_case
@@ -84,7 +85,9 @@
  are accessible from the class, where variables used in all
  @rhombus(pattern_case)s are otherwise available (as described next).
  Each identifier in @rhombus(fields, ~syntax_class_clause) must be a field name that would be
- made available.
+ made available. A @rhombus(root_swap, ~syntax_class_clause) class moves
+ the value of one of the would-be fields to the root while moving the root
+ to a fresh feild; see @rhombus(root_swap, ~syntax_class_clause) for more information.
 
  The @rhombus(pattern_case) alternatives are the main content
  of a syntax class.
@@ -244,6 +247,32 @@
 
 }
 
+
+@doc(
+  syntax_class_clause.macro 'root_swap: $identifier $identifier'
+){
+
+ Adjusts the match value and fields of a syntax class. The first
+ @rhombus(identifier) names a field that te syntax class would otherwise
+ provide, but the field is removed, and its value instead becomes the
+ main value of an identifier that is bound with the syntax class.
+ Meanwhile, the matching terms that would otherwise be the variable's
+ value are associated instead with a fresh field named by the second
+ @rhombus(identifier).
+
+@examples(
+  ~defn:
+    syntax_class Parenthesized:
+      root_swap: content group
+      pattern
+      | '($content)'
+  ~repl:
+    match '(1 2 3)'
+    | '$(p :: Parenthesized)':
+        [p, p.group]
+)
+
+}
 
 @doc(
   syntax_class_clause.macro 'description:

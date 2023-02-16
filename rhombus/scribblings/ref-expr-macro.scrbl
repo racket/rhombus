@@ -54,31 +54,32 @@
 
 
 @doc(
-  syntax_class expr_meta.Group:
+  syntax_class expr_meta.Parsed:
     kind: ~group
-    field parsed
-  syntax_class expr_meta.AfterPrefixGroup(op_name):
+    field group
+  syntax_class expr_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
-  syntax_class expr_meta.AfterInfixGroup(op_name):
+  syntax_class expr_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
 ){
 
  @provided_meta()
 
- Syntax classes that match by parsing expressions. The @rhombus(parsed)
- field in each case is an opaque syntax object that represents the parsed
- expression form.
+ Syntax classes that match by parsing expressions. The value of the
+ binding in each case is an opaque syntax object that represents the parsed
+ expression form, while the @rhombus(group) field holds a syntax object
+ for the original terms that were parsed.
 
- The @rhombus(expr_meta.AfterPrefixGroup, ~stxclass) and
- @rhombus(expr_meta.AfterInfixGroup, ~stxclass) syntax classes expect an operator
+ The @rhombus(expr_meta.AfterPrefixParsed, ~stxclass) and
+ @rhombus(expr_meta.AfterInfixParsed, ~stxclass) syntax classes expect an operator
  name that is bound as a prefix or infix operator, respectively. Parsing
  procedes as if immediately after the given operator---stopping when an
  infix operator of weaker precencence is encountered, for example. The
- result is in both a @rhombus(parsed) field and a @rhombus(tail) field
+ result is in pattern variable's value plus a @rhombus(tail) field
  that contains the remaining unparsed input.
 
 @examples(
@@ -91,8 +92,8 @@
       | '$left no_fail $()':
           ~weaker_than: ~other
           'try: $left; ~catch _: #false'
-      | '$left no_fail $(right :: expr_meta.AfterInfixGroup('no_fail')) $()':
-           values('try: $left; ~catch _: $right.parsed', '$right.tail ...')
+      | '$left no_fail $(right :: expr_meta.AfterInfixParsed('no_fail')) $()':
+           values('try: $left; ~catch _: $right', '$right.tail ...')
   ~repl:
     1/0 no_fail
     1/0 no_fail 0

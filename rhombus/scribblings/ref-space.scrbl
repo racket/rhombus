@@ -117,7 +117,7 @@ driver and macro-definitions forms.
       space_path my_collection/new_thing
       macro_definer macro
       meta_namespace new_thing_meta:
-        parse_syntax_class Group
+        parse_syntax_class Parsed
 )
 
  These pieces might be used by an expression macro for a form that has a
@@ -127,8 +127,8 @@ driver and macro-definitions forms.
 @examples(
   ~eval: macro_eval
   ~defn:
-    expr.macro 'print_new_thing: $(thing :: new_thing_meta.Group)':
-      'println($thing.parsed)'
+    expr.macro 'print_new_thing: $(thing :: new_thing_meta.Parsed)':
+      'println($thing)'
   ~defn:
     new_thing.macro 'the':
       '"the new thing"'
@@ -155,17 +155,20 @@ driver and macro-definitions forms.
 
  @item{@rhombus(parse_syntax_class, ~space_meta_clause): declares an
   identifier to be bound as a @rhombus(~group) syntax class with a
-  @rhombus(parsed, ~datum) field.}
+  @rhombus(group, ~datum) field; the value of a match is a parsed term,
+  while the @rhombus(group, ~datum) field holds the matched unparsed
+  terms.}
 
  @item{@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause):
   declares an identifier to be bound as a @rhombus(~group) syntax class
-  that takes one argument and has with @rhombus(parsed, ~datum) and
+  that takes one argument and has with @rhombus(group, ~datum) and
   @rhombus(tail, ~datum) fields. The argument is a syntax object containg
   a prefix operator or identifier that is bound for the space. Parsing
-  proceeds as if for the argument of the operator, which means that
+  proceeds as if after the argument of the operator, which means that
   parsing can stop with a tail sequence remaining. The parsed ``argument''
-  is returned as the @rhombus(parsed, ~datum) field, while the reminaing
-  tail is a @rhombus(tail, ~datum) field.}
+  is is the matched result, the consumed terms are in a
+  @rhombus(group, ~datum) field, and the remainaing tail is a
+  @rhombus(tail, ~datum) field.}
 
  @item{@rhombus(parse_infix_more_syntax_class, ~space_meta_clause):
   declares an identifier like

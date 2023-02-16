@@ -120,16 +120,19 @@
                 #:make-identifier-form #,identifier-transformer)
               (define-syntax _class-name (make-syntax-class #':base
                                                             #:kind 'group
-                                                            #:fields #'((parsed parsed parsed 0 unpack-term*))))
+                                                            #:fields #'((parsed parsed parsed 0 unpack-term*))
+                                                            #:root-swap '(parsed . group)))
               (define-syntax _prefix-more-class-name (make-syntax-class #':prefix-more
                                                                         #:kind 'group
                                                                         #:fields #'((parsed parsed #f 0 unpack-term*)
                                                                                     (tail #f tail tail unpack-tail-list*))
+                                                                        #:root-swap '(parsed . group)
                                                                         #:arity 2))
               (define-syntax _infix-more-class-name (make-syntax-class #':infix-more
                                                                        #:kind 'group
                                                                        #:fields #'((parsed parsed #f 0 unpack-term*)
                                                                                    (tail #f tail tail unpack-tail-list*))
+                                                                       #:root-swap '(parsed . group)
                                                                        #:arity 2))
               (define make-prefix-operator (make-make-prefix-operator new-prefix-operator))
               (define make-infix-operator (make-make-infix-operator new-infix-operator))

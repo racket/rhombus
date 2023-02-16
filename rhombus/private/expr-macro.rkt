@@ -29,9 +29,9 @@
 (begin-for-syntax
   (define-name-root expr_meta
     #:fields
-    (Group
-     AfterPrefixGroup
-     AfterInfixGroup)))
+    (Parsed
+     AfterPrefixParsed
+     AfterInfixParsed)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -42,9 +42,9 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Group :expression
-    AfterPrefixGroup :prefix-op+expression+tail
-    AfterInfixGroup :infix-op+expression+tail))
+    Parsed :expression
+    AfterPrefixParsed :prefix-op+expression+tail
+    AfterInfixParsed :infix-op+expression+tail))
 
 (define-for-syntax (parsed-argument form)
   ;; use `rhombus-local-expand` to expose static information

@@ -30,9 +30,9 @@
   (define-name-root annot_meta
     #:fields
     (pack_predicate
-     Group
-     AfterPrefixGroup
-     AfterInfixGroup)))
+     Parsed
+     AfterPrefixParsed
+     AfterInfixParsed)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -43,9 +43,9 @@
 
 (begin-for-syntax
   (define-operator-syntax-classes
-    Group :annotation
-    AfterPrefixGroup :prefix-op+annotation+tail
-    AfterInfixGroup :infix-op+annotation+tail))
+    Parsed :annotation
+    AfterPrefixParsed :prefix-op+annotation+tail
+    AfterInfixParsed :infix-op+annotation+tail))
 
 (begin-for-syntax
   (struct annotation-prefix+infix-operator (prefix infix)

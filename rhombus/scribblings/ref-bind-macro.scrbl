@@ -284,22 +284,22 @@
 
 
 @doc(
-  syntax_class bind_meta.Group:
+  syntax_class bind_meta.Parsed:
     kind: ~group
-    field parsed
-  syntax_class bind_meta.AfterPrefixGroup(op_name):
+    field group
+  syntax_class bind_meta.AfterPrefixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
-  syntax_class bind_meta.AfterInfixGroup(op_name):
+  syntax_class bind_meta.AfterInfixParsed(op_name):
     kind: ~group
-    field parsed
+    field group
     field [tail, ...]
 ){
 
  @provided_meta()
 
- Analogous to @rhombus(expr_meta.Group, ~stxclass), etc., but for bindings.
+ Analogous to @rhombus(expr_meta.Parsed, ~stxclass), etc., but for bindings.
 
 }
 

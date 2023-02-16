@@ -59,8 +59,8 @@
 (begin-for-syntax
   (define-name-root decl_meta
     #:fields
-    (IsGroup
-     IsNestableGroup)))
+    (Group
+     NestableGroup)))
 
 (begin-for-syntax
   (define-syntax-class :is_declaration
@@ -73,12 +73,12 @@
     (pattern g
              #:when (nestable-declaration? #'g)))
   
-  (define-syntax-class-syntax IsGroup
+  (define-syntax-class-syntax Group
     (make-syntax-class #':is_declaration
                        #:kind 'group
                        #:fields #'()))
   
-  (define-syntax-class-syntax IsNestableGroup
+  (define-syntax-class-syntax NestableGroup
     (make-syntax-class #':is_nestable_declaration
                        #:kind 'group
                        #:fields #'())))

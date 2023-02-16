@@ -43,7 +43,7 @@
         [(form-id class-name args::class-args
                   ;; syntax-class clauses are impleemnted in "syntax-class-clause-primitive.rkt"
                   (_::block clause::syntax-class-clause ...))
-         (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
+         (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
            (extract-clauses stx (syntax->list #'(clause.parsed ...))))
          (build-syntax-class stx pattern-alts
                              #:define-class-id define-class-id
@@ -53,6 +53,7 @@
                              #:kind-kw kind-kw
                              #:description-expr class-desc
                              #:fields fields-ht
+                             #:swap-root swap-root
                              #:opaque? opaque?)]))))
 
 (begin-for-syntax
@@ -76,13 +77,14 @@
                          #:expected-kind expected-kind)]
     ;; patterns within `pattern`
     [((_::block clause::syntax-class-clause ...))
-     (define-values (pattern-alts kind-kw class-desc fields-ht opaque?)
+     (define-values (pattern-alts kind-kw class-desc fields-ht swap-root opaque?)
        (extract-clauses orig-stx (syntax->list #'(clause.parsed ...))))
      (build-syntax-class orig-stx pattern-alts
                          #:class/inline-name name
                          #:kind-kw kind-kw
                          #:description-expr class-desc
                          #:fields fields-ht
+                         #:swap-root swap-root
                          #:opaque? opaque?
                          #:expected-kind expected-kind)]
     [_ (raise-syntax-error who "bad syntax" orig-stx)]))
@@ -110,6 +112,7 @@
                                        #:kind-kw [kind-kw #f]
                                        #:description-expr [description-expr #f]
                                        #:fields [fields-ht #f]
+                                       #:swap-root [swap-root #f]
                                        #:opaque? [opaque? #f]
                                        #:expected-kind [expected-kind #f])
   (define-values (kind splicing?)
@@ -130,7 +133,7 @@
      (define-values (patterns attributess)
        (for/lists (patterns a<ttributess) ([alt-stx (in-list alts)])
          (parse-pattern-cases stx alt-stx kind splicing? #:keep-attr-id? (not define-syntax-id))))
-     (define attributes (intersect-attributes stx attributess fields-ht))
+     (define attributes (intersect-attributes stx attributess fields-ht swap-root))
      (cond
        [(not define-syntax-id)
         ;; return a `rhombus-syntax-class` directly
@@ -138,7 +141,9 @@
                               (syntax-class-body->inline patterns class/inline-name)
                               (datum->syntax #f (map pattern-variable->list attributes))
                               splicing?
-                              (syntax->datum class-arity))]
+                              (syntax->datum class-arity)
+                              (and swap-root
+                                   (cons (syntax-e (car swap-root)) (cdr swap-root))))]
        [else
         (define class-name class/inline-name)
         (define define-class (if splicing?
@@ -151,7 +156,7 @@
                                  class-name)
             #:description #,(or description-expr #f)
             #:datum-literals (block group quotes)
-            #:attributes #,(for/list ([var attributes])
+            #:attributes #,(for/list ([var (in-list attributes)])
                              #`[#,(pattern-variable-sym var) #,(pattern-variable-depth var)])
             #,@(if opaque? '(#:opaque) '())
             #,@patterns)
@@ -161,7 +166,8 @@
                                   (quote-syntax #,(for/list ([var (in-list attributes)])
                                                     (pattern-variable->list var #:keep-id? #f)))
                                   #,splicing?
-                                  '#,class-arity)))])]))
+                                  '#,class-arity
+                                  '#,swap-root)))])]))
 
 ;; ----------------------------------------
 
@@ -366,10 +372,10 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (intersect-attributes stx attributess fields-ht)
+(define-for-syntax (intersect-attributes stx attributess fields-ht swap-root)
   (cond
-    [(and (null? attributess) (not fields-ht)) '()]
-    [(and (null? (cdr attributess)) (not fields-ht)) (car attributess)]
+    [(and (null? attributess) (not fields-ht) (not swap-root)) '()]
+    [(and (null? (cdr attributess)) (not fields-ht) (not swap-root)) (car attributess)]
     [else
      ;; start with initial set
      (define ht0
@@ -397,6 +403,18 @@
                                    (hash-ref fields-ht k)))
              (values k var))
            ht))
+     ;; check swap root
+     (when swap-root
+       (unless (hash-ref filtered-ht (syntax-e (car swap-root)) #f)
+         (raise-syntax-error #f
+                             "field to swap as root not found"
+                             stx
+                             (car swap-root)))
+       (when (hash-ref filtered-ht (syntax-e (cdr swap-root)) #f)
+         (raise-syntax-error #f
+                             "field for root already exists"
+                             stx
+                             (cdr swap-root))))
      ;; convert back to list
      (hash-values filtered-ht #t)]))
 

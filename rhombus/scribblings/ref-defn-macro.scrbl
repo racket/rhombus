@@ -108,7 +108,7 @@
 }
 
 @doc(
-  syntax_class defn_meta.IsGroup:
+  syntax_class defn_meta.Group:
     kind: ~group
 ){
 
@@ -117,7 +117,7 @@
  Syntax class that matches only groups that start with an identifier
  that is bound as a definition form.
 
- Unlike @rhombus(expr_meta.Group), @rhombus(defn_meta.IsGroup) does not
+ Unlike @rhombus(expr_meta.Parsed), @rhombus(defn_meta.Group) does not
  parse the definition form, because the form normally needs to be parsed
  within a definition context. This syntax class can be used to
  distinguish definitions from other forms that need to be treated
@@ -126,7 +126,7 @@
 }
 
 @doc(
-  syntax_class defn_meta.IsSequenceStartGroup:
+  syntax_class defn_meta.SequenceStartGroup:
     kind: ~group
 ){
 
