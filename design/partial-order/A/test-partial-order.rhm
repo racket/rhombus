@@ -1,6 +1,7 @@
 #lang rhombus
 
 import:
+  lib("racket/flonum.rkt").flvector
   "partial-order.rkt" open
   "Lexicographic.rhm".Lexicographic
 
@@ -48,4 +49,14 @@ check: PartialOrder.within({#'C: 20, #'F: 68}, {#'C: 25, #'F: 77}, 10) ~is #true
 
 check: PartialOrder.within([6e+23, 10.0], [6.02e+23, 9.8], 0.05) ~is #false
 check: PartialOrder.within({#'C: 18, #'F: 64}, {#'C: 25, #'F: 77}, 10) ~is #false
+
+check: flvector(0.0) =~ flvector(-0.0) ~is #true
+check: flvector(0.0, -0.0) =~ flvector(-0.0, 0.0) ~is #true
+check: flvector(0.0, 1.0) =~ flvector(-0.0, 2.0) ~is #false
+check: flvector(0.0, 1.0) !=~ flvector(-0.0, 2.0) ~is #true
+check: flvector(0.0, 1.0) <=~ flvector(-0.0, 2.0) ~is #true
+check: flvector(0.0, 1.0) <~ flvector(-0.0, 2.0) ~is #true
+check: flvector(2.0, -0.0) <=~ flvector(1.0, 0.0) ~is #false
+check: flvector(2.0, -0.0) >=~ flvector(1.0, 0.0) ~is #true
+check: flvector(2.0, -0.0) >~ flvector(1.0, 0.0) ~is #true
 

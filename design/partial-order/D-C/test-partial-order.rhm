@@ -88,3 +88,24 @@ let hc: PartialOrder.compare_hash_code
 check: flvector(0.0) =~ flvector(-0.0) ~is #true
 check: hc(flvector(0.0)) .= hc(flvector(-0.0)) ~is #true
 
+check: flvector(0.0, -0.0) =~ flvector(-0.0, 0.0) ~is #true
+check: hc(flvector(0.0, -0.0)) .= hc(flvector(-0.0, 0.0)) ~is #true
+
+check: flvector(0.0, 1.0) =~ flvector(-0.0, 2.0) ~is #false
+check: flvector(0.0, 1.0) !=~ flvector(-0.0, 2.0) ~is #true
+check: flvector(0.0, 1.0) <=~ flvector(-0.0, 2.0) ~is #true
+check: flvector(0.0, 1.0) <~ flvector(-0.0, 2.0) ~is #true
+check: flvector(2.0, -0.0) <=~ flvector(1.0, 0.0) ~is #false
+check: flvector(2.0, -0.0) >=~ flvector(1.0, 0.0) ~is #true
+check: flvector(2.0, -0.0) >~ flvector(1.0, 0.0) ~is #true
+
+check: flvector(1.0, 20.0) <~ flvector(2.0, 10.0) ~is #false
+check: flvector(1.0, 20.0) <=~ flvector(2.0, 10.0) ~is #false
+check: flvector(1.0, 20.0) >~ flvector(2.0, 10.0) ~is #false
+check: flvector(1.0, 20.0) >=~ flvector(2.0, 10.0) ~is #false
+check: flvector(1.0, 20.0) =~ flvector(2.0, 10.0) ~is #false
+check: flvector(1.0, 20.0) !=~ flvector(2.0, 10.0) ~is #true
+
+check: flvector() <=~ flvector(0.0) ~is #false
+check: flvector(1.0, 10.0) <=~ flvector(2.0, 20.0, 200.0) ~is #false
+
