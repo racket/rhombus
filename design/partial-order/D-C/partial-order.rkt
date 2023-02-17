@@ -56,7 +56,7 @@
                   #'PartialOrder-ref
                   (vector-immutable (box-immutable 'compare_key)
                                     (box-immutable 'partial_compare))
-                  #'#(#:abstract #:abstract)
+                  #'#(#:abstract partial_order/key)
                   (hasheq 'compare_key 0 'partial_compare 1)
                   #hasheq()
                   #t))
@@ -72,6 +72,11 @@
   (define (hash-proc/compare-key a recur-hsh)
     (define compare_key (vector-ref (PartialOrder-ref a) 0))
     (recur-hsh (compare_key a))))
+
+(define (partial_order/key self other recur)
+  (define self.compare_key (vector-ref (PartialOrder-ref self) 0))
+  (define other.compare_key (vector-ref (PartialOrder-ref other) 0))
+  (recur (self.compare_key self) (other.compare_key other)))
 
 ;; ---------------------------------------------------------
 

@@ -164,3 +164,16 @@ begin:
   check: set_count(set_now(ic1, ic3)) ~is 1
   check: equal_now_hash_code(ic1) .= equal_now_hash_code(ic3) ~is #true
 
+class DateViaKey(year :: Integer, month :: PositiveInteger, day :: PositiveInteger):
+  private implements PartialOrder
+  private override compare_key():
+    Lexicographic(year, month, day)
+
+check: DateViaKey(1903, 12, 17) <~ DateViaKey(1969, 07, 16) ~is #true
+check: DateViaKey(1903, 12, 17) =~ DateViaKey(1969, 07, 16) ~is #false
+check: hc(DateViaKey(1903, 12, 17)) .= hc(DateViaKey(1969, 07, 16))
+       ~is #false
+check: DateViaKey(2022, 11, 16) =~ DateViaKey(2022, 11, 16) ~is #true
+check: hc(DateViaKey(2022, 11, 16)) .= hc(DateViaKey(2022, 11, 16))
+       ~is #true
+
