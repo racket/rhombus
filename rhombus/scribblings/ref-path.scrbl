@@ -11,7 +11,7 @@
 )
 
 @doc(
-  fun Path(p :: String || String || Path) :: Path
+  fun Path(p :: Bytes || String || Path) :: Path
 ){
 
  Constructs a path given a byte string, string, or existing path. When a
