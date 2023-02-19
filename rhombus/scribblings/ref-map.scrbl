@@ -19,7 +19,9 @@ To access a mapping, use square brackets after a map expression with an
 expression for the key within square brackets. Mutable maps can be
 updated with a combination of square brackets and the @rhombus(:=)
 operator. These uses of square brackets are implemented by
-@rhombus(#%ref).
+@rhombus(#%ref).  A map can be used as @tech{sequence}, in which case
+it supplies a key and its associated value (as two result values)
+in an unspecified order.
 
 @dispatch_table(
   "map"

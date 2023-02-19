@@ -13,8 +13,8 @@ convenient and useful for writing iterations that are not simple enough
 for repetitions but also do not need the full expressiveness of
 functions.
 
-The @rhombus(for) form supports iteration over @deftech{sequences},
-which includes lists, arrays, and maps. In the body of a @rhombus(for)
+The @rhombus(for) form supports iteration over @tech{sequences},
+which includes lists, arrays, maps, and sets. In the body of a @rhombus(for)
 form, each @rhombus(each, ~for_clause) clause binds to an element of a sequence for
 each iteration. The length of the sequence determines the number of
 iterations. The @rhombus(..) operator creates a sequence of integers

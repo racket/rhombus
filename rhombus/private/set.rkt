@@ -303,9 +303,24 @@
     [(_ arg-id (keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
      #`(composite-binder-id 'set composite-data)]))
 
+(define-sequence-syntax in-set
+  (lambda (stx) #'in-set*)
+  (lambda (stx)
+    (syntax-case stx ()
+      [[(d) (_ s)]
+       #'[(d)
+          (:do-in
+           ([(ht) (set-ht s)])
+           (void)
+           ([i (hash-iterate-first ht)])
+           i
+           ([(d) (hash-iterate-key ht i)])
+           #t
+           #t
+           [(hash-iterate-next ht i)])]]
+      [_ #f])))
 
-(define (in-set s)
-  (in-hash-keys (set-ht s)))
+(define (in-set* s) (in-hash-keys (set-ht s)))
 
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)

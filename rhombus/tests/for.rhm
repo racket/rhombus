@@ -147,3 +147,9 @@ check:
     each (key, val): {3: "c", 4: "d"}
     key +& " -> " +& val
   ~is {"3 -> c", "4 -> d"}
+
+check:
+  for Map:
+    each key: {3, 4}
+    values(key, key+1)
+  ~is {3: 4, 4: 5}

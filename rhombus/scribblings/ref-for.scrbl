@@ -41,7 +41,7 @@
  iterations.
 
  The block after a binding within an @rhombus(each, ~for_clause) clause must produce
- a @tech{sequence}. Each element of that sequence is bound in turn to
+ a @deftech{sequence}. Each element of that sequence is bound in turn to
  the @rhombus(binding) variables of the @rhombus(each, ~for_clause). If a sequence
  can has multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
