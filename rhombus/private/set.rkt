@@ -69,7 +69,10 @@
   (list (lambda (self other eql? mode)
           (eql? (set-ht self) (set-ht other)))
         (lambda (self hash-code mode)
-          (hash-code (set-ht self)))))
+          (hash-code (set-ht self))))
+  #:property prop:sequence
+  (lambda (s)
+    (in-set s)))
 
 (define set-method-table
   (hash 'length (let ([length (lambda (s)
@@ -301,9 +304,13 @@
      #`(composite-binder-id 'set composite-data)]))
 
 
+(define (in-set s)
+  (in-hash-keys (set-ht s)))
+
 (define-for-syntax set-static-info
   #'((#%map-ref set-member?)
      (#%map-append set-append)
+     (#%sequence-constructor in-set)
      (#%dot-provider set-instance)))
 
 (define-for-syntax mutable-set-static-info
