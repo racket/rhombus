@@ -19,7 +19,7 @@
      #:with (norm-content ...) (for/list ([c (in-list (syntax->list #'(content ...)))])
                                  (syntax-parse c
                                    [_:identifier #`[#,c #,c]]
-                                   [(_:identifier _:identifier) c]))
+                                   [(_:identifier _:identifier . _) c]))
      #:with space-id (in-name-root-space #'id)
      #:with the-orig-id (if (syntax-e #'orig-id)
                             #'orig-id

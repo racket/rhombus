@@ -13,11 +13,11 @@
 
 (provide (for-syntax name-root-ref
                      make-name-root-ref
-                     portal-syntax->lookup
-                     portal-syntax->extends
                      replace-head-dotted-name
                      import-root-ref
-                     extensible-name-root))
+                     extensible-name-root
+                     portal-syntax->lookup
+                     portal-syntax->import))
 
 (define-for-syntax (make-name-root-ref #:binding-ref [binding-ref #f]
                                        #:non-portal-ref [non-portal-ref #f]
@@ -150,14 +150,17 @@
                                        name)]
                   [else #f])]
                [else #f])))]
-    [(map self-id _ [key val] ...)
+    [(map self-id _ [key val . rule] ...)
      (define keys (syntax->list #'(key ...)))
      (define vals (syntax->list #'(val ...)))
+     (define rules (syntax->list #'(rule ...)))
      (make #'self-id
            (lambda (who-stx what name in-space)
              (or (for/or ([key (in-list keys)]
-                          [val (in-list vals)])
+                          [val (in-list vals)]
+                          [rule (in-list rules)])
                    (and (eq? (syntax-e key) (syntax-e name))
+                        (matches-rule? in-space rule)
                         val))
                  (and who-stx
                       (raise-syntax-error #f
@@ -166,6 +169,23 @@
                                                   (syntax-e who-stx))
                                           name)))))]
     [_ #f]))
+
+(define-for-syntax (matches-rule? in-space rule)
+  (cond
+    [(null? (syntax-e rule)) #t]
+    [else
+     (define x (datum->syntax #f 'x))
+     (with-syntax ([(mode space ...) rule])
+       (define match?
+         (for/or ([sp-stx (in-list (syntax->list #'(space ...)))])
+           (define sp (syntax-e sp-stx))
+           (bound-identifier=? (in-space x)
+                               (if sp
+                                   ((make-interned-syntax-introducer sp) x)
+                                   x))))
+       (if (eq? (syntax-e #'mode) 'only)
+           match?
+           (not match?)))]))
 
 (define-for-syntax (portal-syntax->extends portal-stx)
   (syntax-parse portal-stx
@@ -213,7 +233,7 @@
                                                                    (syntax-local-introduce (datum->syntax #f 'empty)))
                                                                   #'parsed-r
                                                                   'remove))]
-    [(map _ _ [key val] ...)
+    [(map . _)
      portal-stx]
     [_ #f]))
 

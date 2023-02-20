@@ -44,12 +44,13 @@
 
 (define-for-syntax (parse-exports ex)
   (define ht
-    (let loop ([ex ex] [ht #hasheq()] [except-ht #hasheq()])
+    (let loop ([ex ex] [ht #hasheq()] [except-ht #hasheq()] [spaces #f] [spaces-mode #f])
       (syntax-parse ex
-        #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label)
+        #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
+                                      only-spaces-out except-spaces-out)
         [(combine-out ex ...)
          (for/fold ([ht ht]) ([ex (in-list (syntax->list #'(ex ...)))])
-           (loop ex ht except-ht))]
+           (loop ex ht except-ht spaces spaces-mode))]
         [(all-spaces-out o ...)
          (for/fold ([ht ht]) ([o (in-list (syntax->list #'(o ...)))])
            (define-values (ext-id int-id)
@@ -62,14 +63,18 @@
              [else
               (define old (hash-ref ht ext-sym #f))
               (when (and old
-                         (not (free-identifier=? old int-id)))
+                         (not (free-identifier=? (id+rule-id old) int-id)))
                 (raise-syntax-error #f
                                     "duplicate export name with different bindings"
                                     ext-id))
-              (define base-ht (hash-set ht ext-sym int-id))
+              (define base-ht (hash-set ht ext-sym (make-id+rule int-id spaces-mode spaces)))
               ;; look for extensions (in all spaces)
               (define prefix (format "~a." (symbol->string (syntax-e int-id))))
               (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                         #:when (cond
+                                                  [(eq? spaces-mode 'only) (hash-ref spaces space-sym #f)]
+                                                  [(eq? spaces-mode 'except) (not (hash-ref spaces space-sym #f))]
+                                                  [else #t])
                                          #:do [(define intro (if space-sym
                                                                  (make-interned-syntax-introducer/add space-sym)
                                                                  (lambda (x) x)))
@@ -85,13 +90,53 @@
                      [(identifier-extension-binding? id name-root-id)
                       (define old (hash-ref ht sym #f))
                       (when (and old
-                                 (not (free-identifier=? (intro old) id)))
+                                 (not (free-identifier=? (intro (id+rule-id old)) id)))
                         (raise-syntax-error #f
                                             "duplicate export name with different bindings"
                                             id))
-                      (hash-set ht sym id)]
+                      (hash-set ht sym (make-id+rule id spaces-mode spaces))]
                      [else ht])]
                   [else ht]))]))]
+        [(only-spaces-out ex space ...)
+         (define new-spaces
+           (for/hasheq ([sp (in-list (syntax->list #'(space ...)))])
+             (values (syntax-e sp) sp)))
+         (cond
+           [(not spaces-mode)
+            (loop #'ex ht except-ht new-spaces 'only)]
+           [else
+            (for ([sp (in-hash-keys spaces)])
+              (unless (hash-ref new-spaces sp #f)
+                (raise-syntax-error #f
+                                    "space not included in nested modification"
+                                    (hash-ref spaces sp))))
+            (cond
+              [(eq? spaces-mode 'only)
+               (loop #'ex ht except-ht spaces 'only)]
+              [else
+               (define keep-spaces (for/fold ([new-spaces new-spaces]) ([sp (in-hash-keys spaces)])
+                                     (hash-remove new-spaces sp)))
+               (loop #'ex ht except-ht keep-spaces 'only)])])]
+        [(except-spaces-out ex space ...)
+         (define new-spaces
+           (for/hasheq ([sp (in-list (syntax->list #'(space ...)))])
+             (values (syntax-e sp) sp)))
+         (cond
+           [(not spaces-mode)
+            (loop #'ex ht except-ht new-spaces 'except)]
+           [else
+            (for ([sp (in-hash-keys spaces)])
+              (when (hash-ref new-spaces sp #f)
+                (raise-syntax-error #f
+                                    "space excluded in nested modification"
+                                    (hash-ref spaces sp))))
+            (cond
+              [(eq? spaces-mode 'only)
+               (loop #'ex ht except-ht spaces 'only)]
+              [else
+               (define remove-spaces (for/fold ([new-spaces new-spaces]) ([(sp id) (in-hash spaces)])
+                                       (hash-set new-spaces sp id)))
+               (loop #'ex ht except-ht remove-spaces 'except)])])]
         [(all-from-out mod-path)
          (raise-syntax-error #f
                              "module re-export not supported in a namespace context"
@@ -104,8 +149,8 @@
          (raise-syntax-error #f
                              "don't know how to parse export"
                              ex)])))
-  (for/list ([(key val) (in-hash ht)])
-    #`[#,key #,val]))
+  (for/list ([(key id+rule) (in-hash ht)])
+    #`[#,key #,@id+rule]))
 
 (define-for-syntax (exports->names exports-stx)
   (for/hasheq ([ex (in-list (if (syntax? exports-stx) (syntax->list exports-stx) exports-stx))])
@@ -113,3 +158,12 @@
                  [(id ext-id) #'ext-id]
                  [_ ex]))
     (values (syntax-e id) id)))
+
+
+(define-for-syntax (make-id+rule id spaces-mode spaces)
+  (if spaces-mode
+      (list* id spaces-mode (hash-keys spaces #t))
+      (list id)))
+
+(define-for-syntax (id+rule-id id+rule)
+  (car id+rule))

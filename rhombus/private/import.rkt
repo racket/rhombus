@@ -28,6 +28,7 @@
          "dot.rkt"
          (submod "dot.rkt" for-dot-provider)
          "space.rkt"
+         "space-parse.rkt"
          "parens.rkt"
          "import-lower-require.rkt"
          "import-from-namespace.rkt"
@@ -787,23 +788,6 @@
         (datum->syntax req
                        (list* #'except-in req #'(name.name ... ...))
                        req)]))))
-
-(define-for-syntax (parse-space-names stx gs)
-  (apply
-   append
-   (for/list ([g (in-list (syntax->list gs))])
-     (let loop ([g g])
-       (syntax-parse g
-         [() null]
-         [(~var h (:hier-name-seq in-name-root-space in-space-space name-path-op name-root-ref))
-          (define sp (syntax-local-value* (in-space-space #'h.name) space-name-ref))
-          (unless (space-name? sp)
-            (raise-syntax-error #f
-                                "not bound as a space"
-                                stx
-                                #'h.name))
-          (cons (space-name-symbol sp)
-                (loop #'h.tail))])))))
 
 (define-import-syntax only_space
   (import-modifier-block

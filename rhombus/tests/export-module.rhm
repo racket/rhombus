@@ -1,0 +1,80 @@
+#lang rhombus/and_meta
+
+// The "example-c.rhm" module exports `exint`
+// as a variable, a binding form (matches any integer)
+// and an annotation (matches any integer)
+
+submodule ~early annot ~lang rhombus/and_meta:
+  import "example-c.rhm" open
+  export:
+    only_space annot:
+      exint  
+
+check:
+  import self!annot
+  1 :: annot.exint
+  ~is 1
+
+submodule ~early expr ~lang rhombus/and_meta:
+  import "example-c.rhm" open
+  export:
+    only_space expr:
+      exint  
+
+check:
+  import self!expr
+  expr.exint
+  ~is 10
+
+check:
+  ~eval
+  import lib("rhombus/tests/export-module.rhm")!annot
+  annot.exint
+  ~raises "no such imported identifier"
+
+check:
+  ~eval
+  import lib("rhombus/tests/export-module.rhm")!expr
+  1 :: expr.exint
+  ~raises "not bound as an annotation"
+
+submodule ~early both ~lang rhombus/and_meta:
+  namespace n:
+    export: exint
+    def exint = 11
+    bind.macro 'exint': '(_ :: Integer)'
+    annot.macro 'exint': 'Integer'    
+  export:
+    all_from(.n)
+    
+check:
+  import self!both
+  both.exint
+  ~is 11
+
+check:
+  import self!both
+  3 :: both.exint
+  ~is 3
+
+submodule ~early expr_via_reexport ~lang rhombus/and_meta:
+  namespace n:
+    export:
+      only_space expr:
+        exint
+    def exint = 13
+    bind.macro 'exint': '(_ :: Integer)'
+    annot.macro 'exint': 'Integer'    
+  export:
+    all_from(.n)
+    
+check:
+  import self!expr_via_reexport
+  expr_via_reexport.exint
+  ~is 13
+
+check:
+  ~eval
+  import lib("rhombus/tests/export-module.rhm")!expr_via_reexport
+  1 :: expr_via_reexport.exint
+  ~raises "not bound as an annotation"

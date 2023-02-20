@@ -219,3 +219,17 @@
  @rhombus(all_from, ~expo).
 
 }
+
+
+@doc(
+  expo.modifier 'only_space $identifier'
+  expo.modifier 'only_space: $identifier ...'
+  expo.modifier 'except_space $identifier'
+  expo.modifier 'except_space: $identifier ...'
+){
+
+ Modifies an @rhombus(export) clause to include bindings only in the
+ specifically listed @tech{spaces} or only in the spaces not specifically
+ listed.
+
+}

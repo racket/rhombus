@@ -1,0 +1,87 @@
+#lang rhombus/and_meta
+
+// The "example-c.rhm" module exports `exint`
+// as a variable, a binding form (matches any integer)
+// and an annotation (matches any integer)
+
+check:
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space expr:
+        exint
+  n.exint
+  ~is 10
+
+check:
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space annot:
+        exint
+  3 :: n.exint
+  ~is 3
+
+check:
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space expr:
+        except_space annot:
+          exint
+  n.exint
+  ~is 10
+
+check:
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      except_space annot:
+        only_space expr annot:
+          exint
+  n.exint
+  ~is 10
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space annot:
+        exint
+  n.exint
+  ~raises "identifier not provided"
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space expr:
+        exint
+  1 :: n.exint
+  ~raises "identifier not provided"
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      only_space expr:
+        except_space expr:
+          exint
+  ~raises "space excluded in nested modification"
+
+check:
+  ~eval
+  import rhombus/meta open
+  namespace n:
+    import "example-c.rhm" open
+    export:
+      except_space expr:
+        only_space annot:
+          exint
+  ~raises "space not included in nested modification"

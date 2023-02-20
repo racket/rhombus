@@ -19,13 +19,15 @@
                      "id-binding.rkt")
          "enforest.rkt"
          "all-spaces-out.rkt"
+         "only-spaces-out.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
          "definition.rkt"
          "declaration.rkt"
          "nestable-declaration.rkt"
          "dotted-sequence-parse.rkt"
-         (submod "module-path.rkt" for-import-export))
+         (submod "module-path.rkt" for-import-export)
+         "space-parse.rkt")
 
 (provide export
 
@@ -35,6 +37,8 @@
                     except
                     meta
                     meta_label
+                    only_space
+                    except_space
                     names
                     all_from
                     |.|
@@ -192,7 +196,23 @@
      (syntax-parse stx
        [(form) 
         (datum->syntax ex (list (syntax/loc #'form for-meta) #f ex) ex)]))))
-     
+
+(define-export-syntax only_space
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form space ...)
+        (define spaces (parse-space-names stx #'((space ...))))
+        (datum->syntax ex (list* (syntax/loc #'form only-spaces-out) ex spaces) ex)]))))
+
+(define-export-syntax except_space
+  (export-modifier
+   (lambda (ex stx)
+     (syntax-parse stx
+       [(form space ...)
+        (define spaces (parse-space-names stx #'((space ...))))
+        (datum->syntax ex (list* (syntax/loc #'form except-spaces-out) ex spaces) ex)]))))
+
 (define-export-syntax names
   (export-prefix-operator
    #'names
@@ -225,10 +245,37 @@
                      (syntax-parse i
                        #:datum-literals (parsed map)
                        [(parsed mod-path parsed-r) #`(all-from-out #,(relocate #'name.name #'mod-path))]
-                       [(map _ _ [key val] ...) #`(rename-out #,@(for/list ([key (in-list (syntax->list #'(key ...)))]
-                                                                            [val (in-list (syntax->list #'(val ...)))]
-                                                                            #:when (syntax-e key))
-                                                                   #`[#,val #,key]))]))
+                       [(map _ _ [key val . rule] ...)
+                        (define keys (syntax->list #'(key ...)))
+                        (define vals (syntax->list #'(val ...)))
+                        (define rules (syntax->list #'(rule ...)))
+                        (define all-spaces
+                          #`(all-spaces-out #,@(for/list ([key (in-list keys)]
+                                                          [val (in-list vals)]
+                                                          [rule (in-list rules)]
+                                                          #:when (and (syntax-e key)
+                                                                      (null? (syntax-e rule))))
+                                                 #`[#,val #,key])))
+                        (cond
+                          [(for/and ([rule (in-list rules)]) (null? (syntax-e rule)))
+                           ;; simple case: can group all together
+                           all-spaces]
+                          [else
+                           ;; individual cases to handle spaces
+                           #`(combine-out
+                              #,all-spaces
+                             #,@(for/list ([key (in-list keys)]
+                                           [val (in-list vals)]
+                                           [rule (in-list rules)]
+                                           #:when (and (syntax-e key)
+                                                       (pair? (syntax-e rule))))
+                                  (syntax-parse rule
+                                    [(mode space ...)
+                                     #`(#,(if (eq? (syntax-e #'mode) 'only)
+                                              #'only-spaces-out
+                                              #'except-spaces-out)
+                                        (all-spaces-out [#,val #,key])
+                                        space ...)])))])]))
                    (unless (null? (syntax-e #'name.tail))
                      (raise-syntax-error #f
                                          "unexpected after `.`"
