@@ -41,7 +41,7 @@
             (unless (exact-positive-integer? n)
               (raise-argument-error* 'random
                                      rhombus-realm
-                                     "PositiveInteger"
+                                     "PosInt"
                                      n))
             (if (n . < . (arithmetic-shift 1 31))
                 (random n)

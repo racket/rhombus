@@ -42,8 +42,8 @@ submodule ~early both ~lang rhombus/and_meta:
   namespace n:
     export: exint
     def exint = 11
-    bind.macro 'exint': '(_ :: Integer)'
-    annot.macro 'exint': 'Integer'    
+    bind.macro 'exint': '(_ :: Int)'
+    annot.macro 'exint': 'Int'    
   export:
     all_from(.n)
     
@@ -63,8 +63,8 @@ submodule ~early expr_via_reexport ~lang rhombus/and_meta:
       only_space expr:
         exint
     def exint = 13
-    bind.macro 'exint': '(_ :: Integer)'
-    annot.macro 'exint': 'Integer'    
+    bind.macro 'exint': '(_ :: Int)'
+    annot.macro 'exint': 'Int'    
   export:
     all_from(.n)
     

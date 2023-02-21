@@ -3,8 +3,8 @@
 namespace n:
   export: exint
   def exint = 10
-  bind.macro 'exint': '(_ :: Integer)'
-  annot.macro 'exint': 'Integer'
+  bind.macro 'exint': '(_ :: Int)'
+  annot.macro 'exint': 'Int'
 
 check:
   import: .n as ex_c
@@ -82,8 +82,8 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.macro 'exint': '(_ :: Integer)'
-      annot.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Int)'
+      annot.macro 'exint': 'Int'
     import:
       .n:
         open
@@ -98,8 +98,8 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.macro 'exint': '(_ :: Integer)'
-      annot.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Int)'
+      annot.macro 'exint': 'Int'
     import:
       .n as ex_c:
         only_space: expr
@@ -136,7 +136,7 @@ begin:
       .n open:
         except_space: bind
     export: exint
-    bind.macro 'exint': '(_ :: PositiveInteger)'                            
+    bind.macro 'exint': '(_ :: PosInt)'                            
   check:
     import .n2 as ex_c
     def ex_c.exint = 10

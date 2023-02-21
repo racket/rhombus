@@ -32,7 +32,7 @@ begin:
     arr.length()
     ~is 3
   check:
-    def arr :: Array.of(Integer) = dynamic(Array(1, 2, 3))
+    def arr :: Array.of(Int) = dynamic(Array(1, 2, 3))
     arr.length()
     ~is 3
   check:

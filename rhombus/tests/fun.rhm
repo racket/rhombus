@@ -3,7 +3,7 @@
 class Posn(x, y)
 
 fun
-| size(n :: Integer):
+| size(n :: Int):
     n
 | size(p :: Posn):
     p.x + p.y
@@ -34,9 +34,9 @@ check:
 
 // function result contracts
 
-fun add1(x) :: Integer:
+fun add1(x) :: Int:
   match x
-   | n :: Integer : x + 1
+   | n :: Int : x + 1
    | ~else: x
 
 check:
@@ -63,11 +63,11 @@ check:
 
 check:
   begin:
-    def f = fun (x) :: Integer: x
+    def f = fun (x) :: Int: x
     f(10)
   ~is 10
 
-fun on_diag(n :: Integer) :: Posn:
+fun on_diag(n :: Int) :: Posn:
   Posn(n, n)
 
 check:
@@ -83,11 +83,11 @@ check:
 
 // `match` variant
 
-fun size2 :: Integer:
+fun size2 :: Int:
   match
   | size2("wrong"):
       "oops"
-  | size2(n :: Integer):
+  | size2(n :: Int):
       n
   | size2(p :: Posn):
       p.x + p.y
@@ -123,7 +123,7 @@ begin:
   def long_form_one = (fun:
                          match
                          | (): 1)
-  def longer_form_one = (fun :: Integer:
+  def longer_form_one = (fun :: Int:
                            match
                            | (): 1)
   check:

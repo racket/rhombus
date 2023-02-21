@@ -5,7 +5,7 @@ import:
 // define a binding operator
 
 bind.macro '$$ $n':
-  '$n :: Integer'
+  '$n :: Int'
 
 fun apply_interest($$ n):
   n * 1.05
@@ -81,7 +81,7 @@ bind.binder 'build_reverse_cons_bind($in_id, ($a, $b, $a_part_id, $b_part_id))':
 // an expression operator that's consistent with the pattern
 expr.macro '$a <> $b': 'Pair.cons($b, $a)'
 
-def rx <> (ry :: Integer) = "2" <> 1
+def rx <> (ry :: Int) = "2" <> 1
 
 check:
   rx

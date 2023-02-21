@@ -38,10 +38,10 @@
 
                     Any
                     Boolean
-                    Integer
-                    PositiveInteger
-                    NegativeInteger
-                    NonnegativeInteger
+                    Int
+                    PosInt
+                    NegInt
+                    NonnegInt
                     Flonum
                     Number
                     Real
@@ -367,10 +367,10 @@
 
 (define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
 (define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
-(define-annotation-syntax Integer (identifier-annotation #'exact-integer? #'()))
-(define-annotation-syntax PositiveInteger (identifier-annotation #'exact-positive-integer? #'()))
-(define-annotation-syntax NegativeInteger (identifier-annotation #'exact-negative-integer? #'()))
-(define-annotation-syntax NonnegativeInteger (identifier-annotation #'exact-nonnegative-integer? #'()))
+(define-annotation-syntax Int (identifier-annotation #'exact-integer? #'()))
+(define-annotation-syntax PosInt (identifier-annotation #'exact-positive-integer? #'()))
+(define-annotation-syntax NegInt (identifier-annotation #'exact-negative-integer? #'()))
+(define-annotation-syntax NonnegInt (identifier-annotation #'exact-nonnegative-integer? #'()))
 (define-annotation-syntax Flonum (identifier-annotation #'flonum? #'()))
 (define-annotation-syntax Number (identifier-annotation #'number? #'()))
 (define-annotation-syntax Real (identifier-annotation #'real? #'()))

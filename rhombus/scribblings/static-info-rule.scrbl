@@ -27,7 +27,7 @@ Here's a summary of the static-information behavior of classes:
    information for fields accessed from the binding or exression
    through a dot. For example, assuming a
    @rhombus(class Rect(top_left, side)) declaration,
-   @rhombus(r :: Rect.of(Posn, Integer)) causes
+   @rhombus(r :: Rect.of(Posn, Int)) causes
    @rhombus(r.top_left) to have @rhombus(Posn) information, with means that
    @rhombus(r.top_left.x) works.},
 

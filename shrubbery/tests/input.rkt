@@ -189,13 +189,13 @@ struct posn:
       19
   property prop_quality: "high"
 
-define fourth(n :: Integer):
+define fourth(n :: Int):
   define m: n*n
   define v: m*m
   printf("~a^4 = ~a\n", n, v)
   v
 
-define exp(n :: Integer, ~base: base = 2.718281828459045):
+define exp(n :: Int, ~base: base = 2.718281828459045):
   if (n == 1)
    | base
    | base * exp(n-1, ~base: base)
@@ -775,7 +775,7 @@ INPUT
     (group
      define
      fourth
-     (parens (group n (op ::) Integer))
+     (parens (group n (op ::) Int))
      (block
       (group define m (block (group n (op *) n)))
       (group define v (block (group m (op *) m)))
@@ -785,7 +785,7 @@ INPUT
      define
      exp
      (parens
-      (group n (op ::) Integer)
+      (group n (op ::) Int)
       (group #:base (block (group base (op =) 2.718281828459045))))
      (block
       (group

@@ -56,7 +56,7 @@ single term in next to the operator being defined:
 @demo(
   ~eval: op_eval
   ~defn:
-    operator ((x :: Integer) <> (y :: Integer)):
+    operator ((x :: Int) <> (y :: Int)):
       Posn(x, y)
   ~repl:
     ~error: 1 <> "apple"
@@ -71,9 +71,9 @@ patterns for infix, prefix, or both:
   ~eval: op_eval
   ~defn:
     operator
-    | ((x :: Integer) <> (y :: Integer)):
+    | ((x :: Int) <> (y :: Int)):
         Posn(x, y)
-    | (<> (x ::Integer)):
+    | (<> (x ::Int)):
         Posn(x, x)
     | (<> "origin"):
         Posn(0, 0)

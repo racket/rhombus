@@ -6,7 +6,7 @@ use_static
 begin:
   class Posn(x, y):
     nonfinal
-    method m() :: Integer:
+    method m() :: Int:
       x+y
     method n() :: String:
       x+y
@@ -197,9 +197,9 @@ begin:
   class Top():
     nonfinal
     method m:
-      fun (x) :: Integer:
+      fun (x) :: Int:
         x
-    method m2 :: Integer:
+    method m2 :: Int:
       fun (x):
         x
   class Bottom():

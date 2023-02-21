@@ -209,12 +209,12 @@ check:
   interface I4: abstract method m
   interface I5: method m()
   interface I6: abstract method m()
-  interface I7: method m() :: Integer
-  interface I8: abstract method m() :: Integer
-  interface I9: method m(x, y) :: Integer
-  interface IA: abstract method m(x, y) :: Integer
-  interface IB: method m(x :: String, y :: Symbol) :: Integer
-  interface IC: abstract method m(x :: String, y :: Symbol) :: Integer
+  interface I7: method m() :: Int
+  interface I8: abstract method m() :: Int
+  interface I9: method m(x, y) :: Int
+  interface IA: abstract method m(x, y) :: Int
+  interface IB: method m(x :: String, y :: Symbol) :: Int
+  interface IC: abstract method m(x :: String, y :: Symbol) :: Int
   ~completes
 
 check:

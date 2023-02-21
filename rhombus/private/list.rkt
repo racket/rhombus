@@ -80,7 +80,7 @@
 (define iota
   (lambda (n)
     (unless (exact-nonnegative-integer? n)
-      (raise-argument-error* 'List.iota rhombus-realm "NonnegativeInteger" n))
+      (raise-argument-error* 'List.iota rhombus-realm "NonnegInt" n))
     (for/list ([i (in-range n)])
       i)))
 

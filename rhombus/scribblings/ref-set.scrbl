@@ -163,7 +163,7 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  fun Set.length(set :: Set) :: Integer
+  fun Set.length(set :: Set) :: Int
 ){
 
  Returns the number of values in @rhombus(set).

@@ -101,13 +101,13 @@
     1+1 ~is 3
   check:
     1+1
-    ~is_a Integer
+    ~is_a Int
   check:
     1+1
     ~is_a String
   check:
     [1+1, 1+2]
-    ~matches [_ :: Integer, ...]
+    ~matches [_ :: Int, ...]
   check:
     '$(1+1)'
     ~prints_like '2'

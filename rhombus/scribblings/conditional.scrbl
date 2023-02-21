@@ -119,11 +119,11 @@ contains the cases in a @rhombus(match) form:
 
 @demo(
   ~defn:
-    fun fib :: PositiveInteger:
+    fun fib :: PosInt:
       match
       | fib(0): 1
       | fib(1): 1
-      | fib(n :: NonnegativeInteger): fib(n-1) + fib(n-2)
+      | fib(n :: NonnegInt): fib(n-1) + fib(n-2)
 )
 
 This notation is a slight abuse of @rhombus(match), since it's not

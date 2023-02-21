@@ -422,7 +422,7 @@
   syntax_class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Integer: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Int: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Group: #,(@rhombus(kind, ~syntax_class_clause)): ~group
   syntax_class Multi: #,(@rhombus(kind, ~syntax_class_clause)): ~multi
   syntax_class Block: #,(@rhombus(kind, ~syntax_class_clause)): ~block

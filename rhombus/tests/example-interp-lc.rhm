@@ -15,7 +15,7 @@ fun interp(e, env :~ Map):
   | '(let ([$(x :: Id) $(rhs :: Term)]) $(body :: Term))':
       interp('((lambda ($x) $body) $rhs)', env)
   // Convenience for example (to have something to print)
-  | '$(n :: Integer)':
+  | '$(n :: Int)':
       n.unwrap()
 
 // Using a syntax hack for this call to `interp`:

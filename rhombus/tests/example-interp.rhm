@@ -37,8 +37,8 @@ fun interp(e, env :~ Map):
   // Allow extra parens
   | '($e)':
       interp(e, env)
-  // Integers
-  | '$(x :: Integer)':
+  // Ints
+  | '$(x :: Int)':
       x.unwrap()
   // Lists
   | '[$x, ...]':

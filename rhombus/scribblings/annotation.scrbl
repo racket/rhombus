@@ -17,7 +17,7 @@
 
 Besides classes defined with @rhombus(class), a few predefined
 annotations work with the @rhombus(:~, ~bind) and @rhombus(::, ~bind)
-annotation operators, including @rhombus(Integer, ~annot) (meaning exact
+annotation operators, including @rhombus(Int, ~annot) (meaning exact
 integer), @rhombus(Number, ~annot), @rhombus(String, ~annot),
 @rhombus(Keyword, ~annot), and @rhombus(Any, ~annot) (meaning any value).
 
@@ -46,7 +46,7 @@ created.
 @demo(
   ~eval: ann_eval
   ~defn:
-    class Posn(x :: Integer, y :: Integer)
+    class Posn(x :: Int, y :: Int)
   ~repl:
     Posn(1, 2)
     ~error: Posn(1, "2")

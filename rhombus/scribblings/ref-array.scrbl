@@ -56,7 +56,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun Array.make(length :: Integer, val = 0) :: Array
+  fun Array.make(length :: Int, val = 0) :: Array
 ){
 
   Creates a fresh array with @rhombus(length) slots, where each slot
@@ -69,7 +69,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun Array.length(arr :: Array) :: Integer
+  fun Array.length(arr :: Array) :: Int
 ){
 
  Returns the length of @rhombus(arr).

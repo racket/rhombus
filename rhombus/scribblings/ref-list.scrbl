@@ -199,7 +199,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.length(lst :: List) :: Integer
+  fun List.length(lst :: List) :: Int
 ){
 
  Returns the number of items in @rhombus(lst).
@@ -244,7 +244,7 @@ it supplies its elements in order.
 
 
 @doc(
-  fun List.iota(n :: NonnegativeInteger) :: List.of(NonnegativeInteger)
+  fun List.iota(n :: NonnegInt) :: List.of(NonnegInt)
 ){
 
  Returns a list containing the integers 0 to @rhombus(n) (exclusive) in

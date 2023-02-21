@@ -15,10 +15,10 @@
 
 @doc(
   fun Srcloc(source,
-             line :: Maybe(PositiveInteger),
-             column :: Maybe(NonnegativeInteger),
-             position :: Maybe(PositiveInteger),
-             span :: Maybe(NonnegativeInteger))
+             line :: Maybe(PosInt),
+             column :: Maybe(NonnegInt),
+             position :: Maybe(PosInt),
+             span :: Maybe(NonnegInt))
     :: Srcloc
 ){
 
@@ -47,10 +47,10 @@
 
 @doc(
   fun Srcloc.source(srcloc :: Srcloc)
-  fun Srcloc.line(srcloc :: Srcloc) :: Maybe(PositiveInteger)
-  fun Srcloc.column(srcloc :: Srcloc) :: Maybe(NonnegativeInteger)
-  fun Srcloc.position(srcloc :: Srcloc) :: Maybe(PositiveInteger)
-  fun Srcloc.span(srcloc :: Srcloc) :: Maybe(NonnegativeInteger)
+  fun Srcloc.line(srcloc :: Srcloc) :: Maybe(PosInt)
+  fun Srcloc.column(srcloc :: Srcloc) :: Maybe(NonnegInt)
+  fun Srcloc.position(srcloc :: Srcloc) :: Maybe(PosInt)
+  fun Srcloc.span(srcloc :: Srcloc) :: Maybe(NonnegInt)
 ){
 
  Extracts a component of a source location.

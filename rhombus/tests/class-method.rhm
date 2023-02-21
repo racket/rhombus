@@ -374,7 +374,7 @@ check:
 check:
   class Posn(x, y):
     method a(): 1
-  Posn.a is_a Integer
+  Posn.a is_a Int
   ~is #false
 
 check:

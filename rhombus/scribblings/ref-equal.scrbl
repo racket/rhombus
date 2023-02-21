@@ -140,8 +140,8 @@
 }
 
 @doc(
-  fun Equatable.hash_code_combine(hc :: Integer, ...) :: Integer
-  fun Equatable.hash_code_combine_unordered(hc :: Integer, ...) :: Integer
+  fun Equatable.hash_code_combine(hc :: Int, ...) :: Int
+  fun Equatable.hash_code_combine_unordered(hc :: Int, ...) :: Int
 ){
 
  Combines hash codes to produce a new one. Information is generally

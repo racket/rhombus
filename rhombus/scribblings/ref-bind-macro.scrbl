@@ -32,7 +32,7 @@
   ~eval: macro_eval
   bind.macro 'many $ann as $id':
     '$id && [_ :: $ann, $('...')]'
-  def many Integer as tickets: [1, 2, 3]
+  def many Int as tickets: [1, 2, 3]
   tickets
   ~error: def many String as names: "oops"
 )

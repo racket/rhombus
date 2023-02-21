@@ -106,7 +106,7 @@ begin:
 // multi-case prefix operator
 begin:
   operator
-  | (** (a :: Integer)): "" +& a
+  | (** (a :: Int)): "" +& a
   | (** (a :: String)): a
 
   check:
@@ -128,7 +128,7 @@ begin:
 // multi-case prefix and infix
 begin:
   operator
-  | (** (a :: Integer)): "" +& a
+  | (** (a :: Int)): "" +& a
   | (** (a :: String)): a
   | (0 ** a): 0
   | (1 ** a): a

@@ -8,7 +8,7 @@ class Posn(x, y)
 
 def nums = [1, 2, 3]
 def yes_nums :: List = nums
-def yep_nums :: List.of(Integer) = nums
+def yep_nums :: List.of(Int) = nums
 
 check:
   nums[1]
@@ -22,7 +22,7 @@ check:
 
 def nums_a = Array(1, 2, 3)
 def yes_nums_a :: Array: nums_a
-def yep_nums_a :: Array.of(Integer): nums_a
+def yep_nums_a :: Array.of(Int): nums_a
 
 check:
   nums_a[1]
@@ -182,7 +182,7 @@ check:
  List(1, 2, n, ...)
  ~is [1, 2, 3, 4]
 
-def nested_p :: Posn.of(Integer, Posn.of(Integer, Integer)) = Posn(1, Posn(3, 4))
+def nested_p :: Posn.of(Int, Posn.of(Int, Int)) = Posn(1, Posn(3, 4))
 check:
   nested_p.y.x
   ~is 3

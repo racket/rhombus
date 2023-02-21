@@ -3,8 +3,8 @@
 namespace n:
   export: exint
   def exint = 10
-  bind.macro 'exint': '(_ :: Integer)'
-  annot.macro 'exint': 'Integer'
+  bind.macro 'exint': '(_ :: Int)'
+  annot.macro 'exint': 'Int'
 
 check:
   ~eval
@@ -77,8 +77,8 @@ check:
     namespace n:
       export: exint
       def exint = 10
-      bind.macro 'exint': '(_ :: Integer)'
-      annot.macro 'exint': 'Integer'
+      bind.macro 'exint': '(_ :: Int)'
+      annot.macro 'exint': 'Int'
     import:
       .n.exint:
         only_space: expr

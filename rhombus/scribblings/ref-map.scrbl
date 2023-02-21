@@ -314,7 +314,7 @@ in an unspecified order.
 }
 
 @doc(
-  fun Map.length(map :: Map) :: Integer
+  fun Map.length(map :: Map) :: Int
 ){
 
  Returns the number of key--value mappings in @rhombus(map).

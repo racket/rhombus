@@ -205,7 +205,7 @@ begin:
   check:
     [p.x, ...]
     ~is [1, 2, 3, 4]
-  class Square(tl :: Posn, s :: Integer)
+  class Square(tl :: Posn, s :: Int)
   def [s :: Square, ...] = [Square(Posn(0, 0), 10)]
   check:
     [s.tl, ...][0].x

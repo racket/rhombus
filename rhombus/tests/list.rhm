@@ -53,7 +53,7 @@ begin:
     lst.length()
     ~is 3
   check:
-    def lst :: List.of(Integer) = dynamic([1, 2, 3])
+    def lst :: List.of(Int) = dynamic([1, 2, 3])
     lst.length()
     ~is 3
   check:
@@ -65,7 +65,7 @@ begin:
     lst.first.length()
     ~is 3
   check:
-    def lst :: List.of(Integer) = dynamic([1, 2, 3])
+    def lst :: List.of(Int) = dynamic([1, 2, 3])
     lst.rest.length()
     ~is 2
   check:

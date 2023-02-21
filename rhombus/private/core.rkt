@@ -66,7 +66,7 @@
                      Multi
                      Keyword
                      String
-                     Integer)))
+                     Int)))
 
 (bounce "implicit.rkt"
         "underscore.rkt"

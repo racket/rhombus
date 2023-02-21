@@ -20,7 +20,7 @@
                     Multi
                     Keyword
                     String
-                    Integer))
+                    Int))
 
 (module+ for-quasiquote
   (begin-for-syntax
@@ -97,7 +97,7 @@
 (define-syntax-class-syntax Id_Op (make-syntax-class #':operator-or-identifier))
 (define-syntax-class-syntax Keyword (make-syntax-class #'keyword))
 (define-syntax-class-syntax String (make-syntax-class #'string))
-(define-syntax-class-syntax Integer (make-syntax-class #'exact-integer))
+(define-syntax-class-syntax Int (make-syntax-class #'exact-integer))
 (define-syntax-class-syntax Group (make-syntax-class #f #:kind 'group))
 (define-syntax-class-syntax Multi (make-syntax-class #f #:kind 'multi))
 (define-syntax-class-syntax Block (make-syntax-class #f #:kind 'block))

@@ -220,6 +220,6 @@ You can similarly use the @rhombus(Group,~stxclass) syntax class to
 match a single group instead of a multi-group sequence. There are
 several other predefined syntax classes, such as @rhombus(Id, ~stxclass)
 to match an identifier, @rhombus(String, ~stxclass) to match a string
-literal, and @rhombus(Integer, ~stxclass) to match an integer literal.
+literal, and @rhombus(Int, ~stxclass) to match an integer literal.
 
 @close_eval(syntax_eval)

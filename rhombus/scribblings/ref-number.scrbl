@@ -12,10 +12,10 @@
 }
 
 @doc(
-  annot.macro 'Integer'
-  annot.macro 'PositiveInteger'
-  annot.macro 'NegativeInteger'
-  annot.macro 'NonnegativeInteger'
+  annot.macro 'Int'
+  annot.macro 'PosInt'
+  annot.macro 'NegInt'
+  annot.macro 'NonnegInt'
 ){
 
  Matches exact integers: all of them, positive integers, negative
@@ -122,7 +122,7 @@
 
 @doc(
   fun math.random() :: Real
-  fun math.random(n :: PositiveInteger) :: NonnegativeInteger
+  fun math.random(n :: PosInt) :: NonnegInt
 ){
 
  Returns a random number between @rhombus(0.0) (inclusive) and

@@ -144,7 +144,7 @@
     extends Exn.Fail.Filesystem
   class Exn.Fail.Filesystem.Version():
     extends Exn.Fail.Filesystem
-  class Exn.Fail.Filesystem.Errno(errno :: Pair.of(Symbol, Integer)):
+  class Exn.Fail.Filesystem.Errno(errno :: Pair.of(Symbol, Int)):
     extends Exn.Fail.Filesystem
   class Exn.Fail.Filesystem.MissingModule(path):
     extends Exn.Fail.Filesystem
@@ -152,7 +152,7 @@
     extends Exn.Fail
   class Exn.Fail.Network.Version():
     extends Exn.Fail.Network
-  class Exn.Fail.Network.Errno(errno :: Pair.of(Symbol, Integer)):
+  class Exn.Fail.Network.Errno(errno :: Pair.of(Symbol, Int)):
     extends Exn.Fail.Network
   class Exn.Fail.OutOfMemory():
     extends Exn.Fail

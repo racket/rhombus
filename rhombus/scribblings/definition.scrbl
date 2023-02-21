@@ -120,7 +120,7 @@ accesses an annotation constructor.
 @demo(
   ~eval: posn_eval
   ~defn:
-    fun flip_ints(p :: Posn.of(Integer, Integer)):
+    fun flip_ints(p :: Posn.of(Int, Int)):
       Posn(p.y, p.x)
   ~repl:
     flip_ints(Posn(1, 2))

@@ -265,7 +265,7 @@ check:
   add(1, 2, 3)
   ~is 6
 
-def [n :: Integer, ...] = [10, 20, 30]
+def [n :: Int, ...] = [10, 20, 30]
 check:
   add(1, n, ...)
   ~is 61
@@ -433,7 +433,7 @@ begin:
   fun f_rest(x, & ys :: List):
     ys
 
-  fun f_elrest(x, y :: Integer, ...):
+  fun f_elrest(x, y :: Int, ...):
     [y, ...]
 
   check:
@@ -445,8 +445,8 @@ begin:
 
   fun
   | g_rest(): "no"
-  | g_rest(x :: Integer): "simple"
-  | g_rest(x :: Integer, y :: Integer, ...):
+  | g_rest(x :: Int): "simple"
+  | g_rest(x :: Int, y :: Int, ...):
      [y, ...]
   | g_rest(x): x
 

@@ -29,7 +29,7 @@ check:
   def Posn(px, py) = p
   [p.x, p.y, p.get_color(),
    px, py,
-   p is_a Posn.of(Integer, Integer)]
+   p is_a Posn.of(Int, Int)]
   ~is [1, 2, "blue",
        1, 2,
        #true]
@@ -50,8 +50,8 @@ check:
    _p.x, _p.y, _p.get_color(),
    px, py,
    _px, _py, _pcolor,
-   p is_a Posn.of(Integer, Integer),
-   p is_a _Posn.of(Integer, Integer, String),
+   p is_a Posn.of(Int, Int),
+   p is_a _Posn.of(Int, Int, String),
    _p.color, _Posn.color(p), _Posn.color(_p),
    _Posn.secret(p)]
   ~is [1, 2, "blue",
@@ -80,7 +80,7 @@ check:
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
-   p3 is_a Posn.of(Integer, Integer)]
+   p3 is_a Posn.of(Int, Int)]
   ~is [1, 2, "blue", 3, "light",
        1, 2,
        1, 2, 3,
@@ -103,7 +103,7 @@ check:
   [p3.x, p3.y, p3.get_color(), p3.z,
    px, py,
    px3, py3, pz3,
-   p3 is_a Posn.of(Integer, Integer)]
+   p3 is_a Posn.of(Int, Int)]
   ~is [1, 2, "red", 3,
        1, 2,
        1, 2, 3,
@@ -130,7 +130,7 @@ check:
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
-   p3 is_a Posn.of(Integer, Integer)]
+   p3 is_a Posn.of(Int, Int)]
   ~is [1, 2, "red", 3, "heavy",
        1, 2,
        1, 2, 3,
@@ -171,7 +171,7 @@ check:
   [p3.x, p3.y, p3.get_color(), p3.z, p3.get_weight(),
    px, py,
    px3, py3, pz3,
-   p3 is_a Posn.of{Integer, Integer}]
+   p3 is_a Posn.of{Int, Int}]
   ~is [1, 2, "red", 3, "heavy",
        1, 2,
        1, 2, 3,

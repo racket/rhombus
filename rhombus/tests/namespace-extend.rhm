@@ -58,7 +58,7 @@ class root.Posn(x, y)
 
 check:
   namespace inner
-  operator ((x :: Integer) inner.(+) (y :: Integer)):
+  operator ((x :: Int) inner.(+) (y :: Int)):
     ~weaker_than: *
     [x, y]
   1 inner.(+) 2*8

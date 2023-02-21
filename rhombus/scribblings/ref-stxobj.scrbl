@@ -482,7 +482,7 @@ Metadata for a syntax object can include a source location and the raw
   ~defn:
     fun simplify(stx):
       match stx
-      | '$(a :: Integer) $(bound_as expr: '+') $(b :: Integer)':
+      | '$(a :: Int) $(bound_as expr: '+') $(b :: Int)':
           '$(a.unwrap() + b.unwrap())'
       | ~else:
           stx

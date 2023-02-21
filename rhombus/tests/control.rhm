@@ -11,7 +11,7 @@ check:
   try:
     1/0
     ~catch
-    | x :: Integer:
+    | x :: Int:
         "done"      
     | x :: Exn.Fail:
         "fail"
@@ -55,7 +55,7 @@ check:
   Continuation.prompt:
     2 + (Continuation.escape("there"))
     ~catch
-    | x :: Integer: x+1
+    | x :: Int: x+1
     | x :: String: "hi " ++ x
   ~is "hi there"
 
@@ -63,7 +63,7 @@ check:
   Continuation.prompt:
     2 + (Continuation.escape(1, 2))
     ~catch
-    | x :: Integer: x+1
+    | x :: Int: x+1
     | (x, y): [x, y]
   ~is [1, 2]
 
@@ -71,7 +71,7 @@ check:
   Continuation.prompt:
     2 + (Continuation.escape(0))
     ~catch:
-      fun (x :: Integer): x+1
+      fun (x :: Int): x+1
   ~is 1
 
 check:

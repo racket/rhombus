@@ -126,13 +126,13 @@ also_first_one([1, 2, 3, 4])
 
 // a function result annotation is written before the body `:`
 
-fun add1(x) :: Integer:
+fun add1(x) :: Int:
   match x
-   | n :: Integer : x + 1
+   | n :: Int : x + 1
    | ~else: x
 
 add1(100)
-// would trigger an error, since "oops" is not an `Integer`:
+// would trigger an error, since "oops" is not an `Int`:
 //  add1("oops")
 
 fun
@@ -194,7 +194,7 @@ operator
 
 def nums = [1, 2, 3]
 def yes_nums :: List = nums
-def yep_nums :: List.of(Integer) = nums
+def yep_nums :: List.of(Int) = nums
 
 // `[]` on a list accesses by a 0-based index
 nums[1]
@@ -207,7 +207,7 @@ begin:
 
 def nums_a = Array(1, 2, 3)
 def yes_nums_a :: Array: nums_a
-def yep_nums_a :: Array.of(Integer): nums_a
+def yep_nums_a :: Array.of(Int): nums_a
 
 // unlike lists, arrays are mutable and support assignment with `:=`
 nums_a[1]
@@ -217,7 +217,7 @@ nums_a[2]
 // the `Map` constructor expects `key: value` pairs in `{}`
 def map = Map{17: "hello", 24: "goodbye"}
 def yes_map :: Map = map
-def yup_map :: Map.of(Integer, String) = map
+def yup_map :: Map.of(Int, String) = map
 
 map
 
@@ -362,7 +362,7 @@ Posn(1, 2) is_a Posn
 
 // function with multiple cases to match different kinds of calls
 fun
-| size(n :: Integer):
+| size(n :: Int):
     n
 | size(p :: Posn):
     p.x + p.y
@@ -377,7 +377,7 @@ def Posn(px, py) = Posn(1, 2)
 [px, py]
 
 // Nested class types with annotations
-class IPosn(x :: Integer, y :: Integer)
+class IPosn(x :: Int, y :: Int)
 class ILine(p1 :: IPosn, p2 :: IPosn)
 
 IPosn(1, 2).x

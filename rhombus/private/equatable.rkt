@@ -59,18 +59,18 @@
     [() (hash-code-combine)]
     [(a)
      (unless (exact-integer? a)
-       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" a))
+       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Int" a))
      (hash-code-combine a)]
     [(a b)
      (unless (exact-integer? a)
-       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" a))
+       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Int" a))
      (unless (exact-integer? b)
-       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" b))
+       (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Int" b))
      (hash-code-combine a b)]
     [lst
      (for ([e (in-list lst)])
        (unless (exact-integer? e)
-         (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Integer" e)))
+         (raise-argument-error* 'Equatable.hash_code_combine rhombus-realm "Int" e)))
      (hash-code-combine* lst)]))
 
 (define-static-info-syntax hash_code_combine (#%function-arity -1))
@@ -80,18 +80,18 @@
     [() (hash-code-combine-unordered)]
     [(a)
      (unless (exact-integer? a)
-       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" a))
+       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Int" a))
      (hash-code-combine-unordered a)]
     [(a b)
      (unless (exact-integer? a)
-       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" a))
+       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Int" a))
      (unless (exact-integer? b)
-       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" b))
+       (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Int" b))
      (hash-code-combine-unordered a b)]
     [lst
      (for ([e (in-list lst)])
        (unless (exact-integer? e)
-         (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Integer" e)))
+         (raise-argument-error* 'Equatable.hash_code_combine_unordered rhombus-realm "Int" e)))
      (hash-code-combine-unordered* lst)]))
 
 (define-static-info-syntax hash_code_combine_unoredered (#%function-arity -1))

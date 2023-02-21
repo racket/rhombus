@@ -54,7 +54,7 @@ begin:
     map.length()
     ~is 2
   check:
-    def map :: Map.of(String, Integer) = dynamic({"a": 1, "b": 2})
+    def map :: Map.of(String, Int) = dynamic({"a": 1, "b": 2})
     map.length()
     ~is 2
 

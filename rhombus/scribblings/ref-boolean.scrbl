@@ -61,8 +61,8 @@
  @rhombus(left_annot) and @rhombus(right_annot).
 
 @examples(
-  1 is_a (String || Integer)
-  1 is_a (Boolean || Integer)
+  1 is_a (String || Int)
+  1 is_a (Boolean || Int)
 )
 
 }
@@ -116,8 +116,8 @@
  supply values for the same static-information key.
 
 @examples(
-  1 is_a (String && Integer)
-  Pair.cons(1, "hello") is_a (Pair.of(Integer, Any) && Pair.of(Any, String))
+  1 is_a (String && Int)
+  Pair.cons(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))
 )
 
 }

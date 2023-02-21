@@ -210,7 +210,7 @@ check:
   def Posn(a) = p    
   [p.y, p.x, yy, xx, a,
    p is_a Posn,
-   Posn(1, "2") is_a Posn.of(Integer, String)]
+   Posn(1, "2") is_a Posn.of(Int, String)]
   ~is [0, 2, 0, 2, 2,
        #true,
        #true]
@@ -393,17 +393,17 @@ check:
   ~raises "the_y: undefined"
 
 check:
-  class Posn(x :: Integer, y :: Integer)
+  class Posn(x :: Int, y :: Int)
   Posn("x", 0)
   ~raises "value does not satisfy annotation"
 
 check:
-  class Posn(mutable x :: Integer, y :: Integer)
+  class Posn(mutable x :: Int, y :: Int)
   Posn("x", 0)
   ~raises "value does not satisfy annotation"
 
 check:
-  class Posn(mutable x :: Integer, y :: Integer):
+  class Posn(mutable x :: Int, y :: Int):
     method m():
       x := 8
   def p = Posn(2, 0)
@@ -411,13 +411,13 @@ check:
   ~is [2, #void, 5, 0, #void, 8]
 
 check:
-  class Posn(x :: Integer, mutable y :: Integer)
+  class Posn(x :: Int, mutable y :: Int)
   def p = Posn(2, 0)
   [p.y, p.y := 5, p.y, p.x]
   ~is [0, #void, 5, 2]
 
 check:
-  class Posn(mutable x :: Integer, y :: Integer)
+  class Posn(mutable x :: Int, y :: Int)
   Posn("x", 0).x := "oops"
   ~raises "value does not satisfy annotation"
 
@@ -501,11 +501,11 @@ check:
     nonfinal
   def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
-  p :: Posn.of(Integer, ~y: String)
+  p :: Posn.of(Int, ~y: String)
   p :: Posn3D
-  p :: Posn3D.of(Integer, ~y: String, Symbol)
+  p :: Posn3D.of(Int, ~y: String, Symbol)
   p :: Posn4D
-  p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
+  p :: Posn4D.of(Int, ~y: String, Symbol, Keyword)
   ~completes
   
 check:
@@ -521,9 +521,9 @@ check:
     export: of
   def p = Posn3D(1, ~y: "2", #'three)
   p :: Posn
-  p :: Posn.of(Integer, ~y: String)
+  p :: Posn.of(Int, ~y: String)
   p :: Posn3D
-  p :: Posn3D.of(Integer, String, Symbol)
+  p :: Posn3D.of(Int, String, Symbol)
   ~completes
 
 check:
@@ -553,11 +553,11 @@ check:
     export: of
   def p = Posn4D(1, ~y: "2", #'three, #'~four)
   p :: Posn
-  p :: Posn.of(X Integer, Y String)
+  p :: Posn.of(X Int, Y String)
   p :: Posn3D
-  p :: Posn3D.of[Integer, String, Symbol]
+  p :: Posn3D.of[Int, String, Symbol]
   p :: Posn4D
-  p :: Posn4D.of(Integer, ~y: String, Symbol, Keyword)
+  p :: Posn4D.of(Int, ~y: String, Symbol, Keyword)
   ~completes
 
 check:
@@ -578,7 +578,7 @@ check:
 
 check:
   class Posn(x, y):
-    field w :: Integer = 0
+    field w :: Int = 0
     field name :~ String: "ok"
   Posn(1, 2).name +& Posn(3, 4).w
   ~is "ok0"
@@ -605,7 +605,7 @@ check:
 begin:
   class Posn(x, y):
     nonfinal
-  class Posn3D(z :: Integer):
+  class Posn3D(z :: Int):
     extends Posn
   check:
     Posn3D(1, 2, "x")
