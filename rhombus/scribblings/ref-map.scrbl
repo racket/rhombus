@@ -15,9 +15,9 @@ separate values, instead of a key--value mapping. More precisely, a
 use of curly braces with no preceding expression is parsed as an
 implicit use of the @rhombus(#%braces) form.
 
-To access a mapping, use square brackets after a map expression with an
-expression for the key within square brackets. Mutable maps can be
-updated with a combination of square brackets and the @rhombus(:=)
+To access a mapping, use @brackets after a map expression with an
+expression for the key within @brackets. Mutable maps can be
+updated with a combination of @brackets and the @rhombus(:=)
 operator. These uses of square brackets are implemented by
 @rhombus(#%ref).  A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
@@ -259,13 +259,14 @@ in an unspecified order.
   operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
   operator ((v1 :: List) ++ (v2 :: List)) :: List
   operator ((v1 :: String) ++ (v2 :: String)) :: String
+  operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: Bytes
 ){
 
- Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list, or
- string. In the case of maps, mappings for keys in @rhombus(v2) replace
+ Appends @rhombus(v1) and @rhombus(v2) to create a new map, set, list,
+ string, or byte string. In the case of maps, mappings for keys in @rhombus(v2) replace
  ones that exist already in @rhombus(v1). In the case of sets, the new
  set has all of the elements of @rhombus(v1) and @rhombus(v2).
- In the case of lists and strings, the elements of @rhombus(v1) appear
+ In the case of lists, strings, and byte strings, the elements of @rhombus(v1) appear
  first in the result followed by the elements of @rhombus(v2).
 
  The combination

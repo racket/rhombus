@@ -7,5 +7,5 @@ check:
 
 check:
   ~eval
-  "a" :: String . length()
+  "a" :: Int . count()
   ~raises "operator precedence"

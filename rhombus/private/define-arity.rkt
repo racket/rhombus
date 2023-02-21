@@ -9,16 +9,26 @@
 
 (define-syntax (define/arity stx)
   (syntax-parse stx
-    [(_ #:name name (id . args) . body)
+    [(_ #:name name (id . args)
+        (~optional (~seq #:static-infos (si ...))
+                   #:defaults ([(si 1) '()]))
+        . body)
      #'(begin
          (define id
            (let ([name (lambda args . body)])
              name))
-         (define-static-info-syntax id (#%function-arity #,(extract-arity #'args))))]
-    [(_ (id . args) . body)
+         (define-static-info-syntax id
+           (#%function-arity #,(extract-arity #'args))
+           si ...))]
+    [(_ (id . args)
+        (~optional (~seq #:static-infos (si ...))
+                   #:defaults ([(si 1) '()]))
+        . body)
      #'(begin
          (define (id . args) . body)
-         (define-static-info-syntax id (#%function-arity #,(extract-arity #'args))))]))
+         (define-static-info-syntax id
+           (#%function-arity #,(extract-arity #'args))
+           si ...))]))
 
 (define-for-syntax (extract-arity args)
   (let loop ([args args] [mask 1])

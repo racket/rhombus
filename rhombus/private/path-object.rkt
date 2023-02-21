@@ -6,7 +6,10 @@
          "dot-parse.rkt"
          "realm.rkt"
          "function-arity-key.rkt"
-         "define-arity.rkt")
+         "call-result-key.rkt"
+         "define-arity.rkt"
+         (submod "string.rkt" static-infos)
+         (submod "bytes.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -33,9 +36,11 @@
     Path))
 
 (define/arity #:name Path.bytes (path-bytes s)
+  #:static-infos ((#%call-result #,bytes-static-infos))
   (bytes->immutable-bytes (path->bytes s)))
 
 (define/arity #:name Path.string (path-string s)
+  #:static-infos ((#%call-result #,string-static-infos))
   (string->immutable-string (path->string s)))
 
 (define path-bytes/method (method1 path-bytes))
@@ -50,5 +55,5 @@
   #:properties
   ()
   #:methods
-  ([bytes 0 path-bytes path-bytes/method]
-   [string 0 path-string path-string/method]))
+  ([bytes 0 path-bytes path-bytes/method bytes-static-infos]
+   [string 0 path-string path-string/method string-static-infos]))

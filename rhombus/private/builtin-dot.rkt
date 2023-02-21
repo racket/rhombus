@@ -7,6 +7,8 @@
          (submod "array.rkt" for-builtin)
          (submod "syntax-object.rkt" for-builtin)
          (submod "pair.rkt" for-builtin)
+         (submod "string.rkt" for-builtin)
+         (submod "bytes.rkt" for-builtin)
          (submod "function.rkt" for-builtin)
          (submod "path-object.rkt" for-builtin)
          (submod "srcloc-object.rkt" for-builtin)
@@ -21,6 +23,8 @@
      [(vector? v) array-method-table]
      [(syntax? v) syntax-method-table]
      [(pair? v) pair-method-table]
+     [(string? v) string-method-table]
+     [(bytes? v) bytes-method-table]
      [(procedure? v) function-method-table]
      [(path? v) path-method-table]
      [(srcloc? v) srcloc-method-table]

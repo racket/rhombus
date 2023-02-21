@@ -90,6 +90,7 @@
     [(hash? map) (hash-ref map index)]
     [(set? map) (hash-ref (set-ht map) index #f)]
     [(string? map) (string-ref map index)]
+    [(bytes? map) (bytes-ref map index)]
     [else
      (raise-argument-error* 'Map.ref rhombus-realm "Map" map)]))
 
@@ -101,6 +102,7 @@
                                                           (hash-set! (set-ht map) index #t)
                                                           (hash-remove! (set-ht map) index))]
     [(and (string? map) (not (immutable? map))) (string-set! map index val)]
+    [(and (bytes? map) (not (immutable? map))) (bytes-set! map index val)]
     [else
      (raise-argument-error* 'Map.assign rhombus-realm "Mutable_Map" map)]))
 
@@ -150,4 +152,10 @@
                                                     "cannot append a string and other value"
                                                     "string" map1
                                                     "other value" map2)])]
+    [(bytes? map1) (cond
+                     [(bytes? map2) (bytes-append map1 map2)]
+                     [else (raise-arguments-error* '++ rhombus-realm
+                                                   "cannot append a byte string and other value"
+                                                   "byte string" map1
+                                                   "other value" map2)])]
     [else (raise-argument-error* '++ rhombus-realm "or(List, Array, Map, Set, String)" map1)]))

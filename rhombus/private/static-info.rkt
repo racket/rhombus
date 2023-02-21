@@ -28,7 +28,8 @@
            unwrap-static-infos
            static-info-lookup
            static-infos-intersect
-           make-static-infos))
+           make-static-infos
+           install-static-infos!))
 
 (provide define-static-info-syntax
          define-static-info-syntaxes
@@ -50,7 +51,7 @@
         [(key:identifier val) (wrap-static-info expr #'key #'val)])))
 
   (define-syntax-class (:static-info key-id)
-    #:literals (begin quote-syntax)
+    #:literals (begin quote-syntax quote)
     (pattern id:identifier
              #:do [(define v (syntax-local-value* (in-static-info-space
                                                    (out-of-expression-space #'id))
@@ -67,7 +68,12 @@
     (pattern (begin (quote-syntax (~and form (key:identifier val))) _)
              #:when (free-identifier=? #'key key-id))
     (pattern (begin (quote-syntax _) (~var e (:static-info key-id)))
-             #:attr val #'e.val))
+             #:attr val #'e.val)
+    (pattern (quote d)
+             #:do [(define si (quoted-static-infos #'d))
+                   (define v (static-info-lookup si key-id))]
+             #:when v
+             #:attr val v))
 
   (define (syntax-local-static-info expr key-id)
     (syntax-parse expr
@@ -75,9 +81,17 @@
        #'dp.val]
       [_ #f]))
 
+  (define string-static-infos #f)
+  (define bytes-static-infos #f)
+  (define (install-static-infos! kind static-infos)
+    (case kind
+      [(string) (set! string-static-infos static-infos)]
+      [(bytes) (set! bytes-static-infos static-infos)]
+      [else (void)]))
+
   (define (extract-static-infos e)
     (syntax-parse e
-      #:literals (begin quote-syntax)
+      #:literals (begin quote-syntax quote)
       [id:identifier
        (define v (syntax-local-value* (in-static-info-space #'id)
                                       static-info-ref))
@@ -86,7 +100,14 @@
            null)]
       [(begin (quote-syntax (~and form (key:identifier val))) e)
        (cons #'form (extract-static-infos #'e))]
+      [(quote d) (quoted-static-infos #'d)]
       [_ null]))
+  
+  (define (quoted-static-infos d)
+    (cond
+      [(string? (syntax-e d)) string-static-infos]
+      [(bytes? (syntax-e d)) bytes-static-infos]
+      [else null]))
 
   (define (unwrap-static-infos e)
     (syntax-parse e

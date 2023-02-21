@@ -13,7 +13,7 @@ brackets without a preceding expression implicitly uses the
 @rhombus(#%brackets) form, which (despite its name) is normally bound to
 construct a list.
 
-A list works with map-referencing square brackets to access a list
+A list works with map-referencing @brackets to access a list
 element by position (in time proportional to the position) via
 @rhombus(#%ref). A list also works with the @rhombus(++) operator
 to append lists. A list can be used as @tech{sequence}, in which case

@@ -1,0 +1,17 @@
+#lang rhombus
+
+check:
+  #"hello" :: Bytes ~is #"hello"
+
+begin:
+  use_static
+  def hello = #"hello"
+  check:
+    #"hello".length() ~is 5
+    hello.length() ~is 5
+    
+check:
+  dynamic(#"hello").length() ~is 5
+    
+check:
+  Bytes.length(#"hello") ~is 5

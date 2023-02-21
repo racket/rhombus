@@ -1,5 +1,28 @@
 #lang rhombus
 
 check:
-  "hello" ++ " " ++ "world"
-  ~is "hello world"
+  "hello" ++ " " ++ "world" ~is "hello world"
+  "hello" :: String ~is "hello"
+
+begin:
+  use_static
+  def hello = "hello"
+  check:
+    "hello".length() ~is 5
+    hello.length() ~is 5
+    "hello".to_int() ~is #false
+    "17".to_int() ~is 17
+    "hello".to_number() ~is #false
+    "4.35".to_number() ~is 4.35
+  
+check:
+  dynamic("hello").length() ~is 5
+  dynamic("hello").to_int() ~is #false
+  dynamic("17").to_int() ~is 17
+  dynamic("hello").to_number() ~is #false
+  dynamic("4.35").to_number() ~is 4.35
+    
+check:
+  String.length("hello") ~is 5
+  String.to_int("17") ~is 17
+  String.to_number("4.35") ~is 4.35

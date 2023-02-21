@@ -73,6 +73,7 @@
         "arithmetic.rkt"
         "math.rkt"
         "string.rkt"
+        "bytes.rkt"
         "dot.rkt"
         "maybe.rkt"
         "dynamic-static.rkt"
