@@ -4,7 +4,7 @@
 @title{Exceptions}
 
 @doc(
-  decl.macro 'try:
+  expr.macro 'try:
                 $maybe_initially
                 $body
                 ...
@@ -88,7 +88,7 @@
 }
 
 @doc(
-  decl.macro 'throw $expr'
+  expr.macro 'throw $expr'
 ){
 
  Throws the value of @rhombus(expr) as an exception. Any value can be

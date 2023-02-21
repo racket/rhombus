@@ -12,7 +12,7 @@
 }
 
 @doc(
-  decl.macro 'Continuation.prompt $maybe_tag_expr:
+  expr.macro 'Continuation.prompt $maybe_tag_expr:
                 $body
                 ...
                 $maybe_catch'
@@ -53,7 +53,7 @@
 }
 
 @doc(
-  decl.macro 'Continuation.capture $maybe_tag_expr $identifier:
+  expr.macro 'Continuation.capture $maybe_tag_expr $identifier:
                 $body
                 ....'
   grammar maybe_tag_expr:

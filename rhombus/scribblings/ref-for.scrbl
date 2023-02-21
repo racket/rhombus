@@ -4,15 +4,15 @@
 @title{Iteration}
 
 @doc(
-  decl.macro 'for:
+  expr.macro 'for:
                 $clause_or_body
                 ...
                 $body'
-  decl.macro 'for $reducer:
+  expr.macro 'for $reducer:
                 $clause_or_body
                 ...
                 $body'
-  decl.macro 'for:
+  expr.macro 'for:
                 $clause_or_body
                 ...
                 $body

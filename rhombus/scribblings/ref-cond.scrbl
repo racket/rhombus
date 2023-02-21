@@ -4,7 +4,7 @@
 @title{Conditionals}
 
 @doc(
-  decl.macro 'if $test_expr
+  expr.macro 'if $test_expr
               | $then_body
                 ...
               | $else_body
@@ -29,12 +29,12 @@
 }
 
 @doc(
-  decl.macro 'cond
+  expr.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
                   ...
               | ...'
-  decl.macro 'cond
+  expr.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
                   ...
@@ -42,7 +42,7 @@
               | ~else:
                   $clause_result_body
                   ...'
-  decl.macro 'cond
+  expr.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
                   ...
@@ -62,7 +62,7 @@
 }
 
 @doc(
-  decl.macro 'when $test_expr
+  expr.macro 'when $test_expr
               | $body
                 ...'
 ){
@@ -82,7 +82,7 @@
 }
 
 @doc(
-  decl.macro 'unless $test_expr
+  expr.macro 'unless $test_expr
               | $body
                 ...'
 ){

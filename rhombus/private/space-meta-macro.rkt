@@ -13,6 +13,7 @@
          (for-template "enforest.rkt")
          "introducer.rkt"
          "name-path-op.rkt"
+         "space-provide.rkt"
          "pack.rkt"
          (submod "syntax-class-primitive.rkt" for-quasiquote)
          (submod "syntax-class-primitive.rkt" for-syntax-class)
@@ -32,8 +33,9 @@
          (for-space rhombus/space
                     space_meta_clause))
 
-(define-space-syntax space_meta_clause
-  (space-syntax rhombus/space_meta_clause))
+(define+provide-space space_meta_clause rhombus/space_meta_clause
+  #:fields
+  ())
 
 (define-syntax (enforest-meta stx)
   (syntax-parse stx

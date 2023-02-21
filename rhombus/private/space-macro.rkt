@@ -3,6 +3,7 @@
                      syntax/parse
                      "space-meta-macro.rkt"
                      "expose.rkt")
+         "provide.rkt"
          "space-provide.rkt"
          "name-root.rkt"
          "declaration.rkt"
@@ -15,19 +16,19 @@
          (submod "space-clause-primitive.rkt" for-space-macro)
          (submod "namespace.rkt" for-exports))
 
-(provide (for-space rhombus/space
-                    space_clause)
-         (for-syntax
-          (for-space rhombus/space
-                     space_meta_clause)))
+(provide (for-syntax
+          (for-spaces (rhombus/namespace
+                       rhombus/space)
+                      space_meta_clause)))
 
 (define+provide-space space rhombus/space
   #:fields
   (enforest
    transform))
 
-(define-space-syntax space_clause
-  (space-syntax rhombus/space_clause))
+(define+provide-space space_clause rhombus/space_clause
+  #:fields
+  ())
 
 (define-syntax enforest
   (declaration-transformer

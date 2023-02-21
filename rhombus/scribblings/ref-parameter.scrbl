@@ -7,7 +7,7 @@ For now, let's just say that a Rhombus @deftech{parameter} is a Racket
 parameter.
 
 @doc(
-  decl.macro 'parameterize {$parameter_expr: $val_body, ...}:
+  expr.macro 'parameterize {$parameter_expr: $val_body, ...}:
                 $body
                 ...'
 ){

@@ -243,6 +243,8 @@ driver and macro-definitions forms.
   space_meta_clause.macro 'operator_description $expr'
 ){
 
+ @provided_meta()
+
  Clause forms for use within a @rhombus(meta_namespace, ~space_clause)
  clause within a @rhombus(space.enforest) or @rhombus(space.transform)
  form. See @rhombus(space.enforest) for more information.

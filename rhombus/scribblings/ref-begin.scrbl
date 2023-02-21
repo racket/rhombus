@@ -4,7 +4,7 @@
 @title{Begin}
 
 @doc(
-  decl.macro 'begin:
+  expr.macro 'begin:
                 $body
                 ...'
 ){

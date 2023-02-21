@@ -5,12 +5,11 @@
          "../private/doc.rhm"
          "../private/docmodule.rhm"
          "../private/example.rhm"
-         (only-in "../private/typeset-doc.rkt"
-                  grammar
-                  specsubform)
+         "../private/rhombus-doc.rkt"
          "../private/rhombus-spacer.rkt")
 
-(provide (all-from-out scribble/rhombus)
+(provide (all-from-out scribble/rhombus
+                       "../private/rhombus-doc.rkt")
          litchar
          (rename-out [manual:deftech deftech]
                      [manual:tech tech]
@@ -21,8 +20,6 @@
          doc
          docmodule
          rhombusmodname
-         grammar
-         specsubform
          examples
          make_rhombus_eval
          close_eval
