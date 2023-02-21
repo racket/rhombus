@@ -4,7 +4,7 @@
 @title{Annotations}
 
 @doc(
-  operator (expr :: annotation) :: annotation
+  expr.macro '$expr :: $annotation'
 ){
 
  Checks that the value of @rhombus(expr) satisifies
@@ -38,7 +38,7 @@
 }
 
 @doc(
-  operator (arg :~ annotation) :: annotation
+  expr.macro '$expr :~ $annotation'
 ){
 
  Associates static information to the overall expression the same as

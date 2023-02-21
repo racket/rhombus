@@ -42,6 +42,10 @@
                     PosInt
                     NegInt
                     NonnegInt
+                    Integral
+                    Rational
+                    Exact
+                    Inexact
                     Flonum
                     Byte
                     Number
@@ -362,6 +366,10 @@
      #`(define-syntax #,(in-annotation-space #'id)
          rhs)]))
 
+(define (exact-number? n) (and (number? n) (exact? n)))
+(define (inexact-number? n) (and (number? n) (inexact? n)))
+(define (exact-negative-integer? n) (and (integer? n) (exact? n) (negative? n)))
+
 (define-annotation-syntax Any (identifier-annotation #'(lambda (x) #t) #'()))
 (define-annotation-syntax Boolean (identifier-annotation #'boolean? #'()))
 (define-annotation-syntax Int (identifier-annotation #'exact-integer? #'()))
@@ -371,6 +379,10 @@
 (define-annotation-syntax Flonum (identifier-annotation #'flonum? #'()))
 (define-annotation-syntax Byte (identifier-annotation #'byte? #'()))
 (define-annotation-syntax Number (identifier-annotation #'number? #'()))
+(define-annotation-syntax Integral (identifier-annotation #'integer? #'()))
+(define-annotation-syntax Rational (identifier-annotation #'rational? #'()))
+(define-annotation-syntax Exact (identifier-annotation #'exact-number? #'()))
+(define-annotation-syntax Inexact (identifier-annotation #'inexact-number? #'()))
 (define-annotation-syntax Real (identifier-annotation #'real? #'()))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))

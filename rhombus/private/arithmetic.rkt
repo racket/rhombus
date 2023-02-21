@@ -6,7 +6,6 @@
          "expression.rkt"
          "repetition.rkt"
          "define-operator.rkt"
-         "function-arity-key.rkt"
          "static-info.rkt"
          (only-in "dot.rkt"
                   |.|))
@@ -24,6 +23,10 @@
                                  [rhombus> >])
                      .=
 
+                     div
+                     mod
+                     rem
+
                      !
                      &&
                      \|\|
@@ -34,13 +37,13 @@
                      ===))
 
 (define-infix rhombus+ +
-  #:weaker-than (rhombus* rhombus/)
+  #:weaker-than (rhombus* rhombus/ div mod rem)
   #:same-as (rhombus-))
 
 (define-values-for-syntax (minus-expr-prefix minus-repet-prefix)
-  (prefix rhombus- - #:weaker-than (rhombus* rhombus/)))
+  (prefix rhombus- - #:weaker-than (rhombus* rhombus/ div mod rem)))
 (define-values-for-syntax (minus-expr-infix minus-repet-infix)
-  (infix rhombus- - #:weaker-than (rhombus* rhombus/)))
+  (infix rhombus- - #:weaker-than (rhombus* rhombus/ div mod rem)))
 
 (define-syntax rhombus-
   (expression-prefix+infix-operator
@@ -53,9 +56,13 @@
    minus-repet-infix))
 
 (define-infix rhombus* *
-  #:same-on-left-as (rhombus/))
+  #:same-on-left-as (rhombus/ div mod rem))
 
 (define-infix rhombus/ /)
+
+(define-infix div quotient)
+(define-infix mod modulo)
+(define-infix rem remainder)
 
 (define-prefix ! not
   #:stronger-than (&& \|\|))

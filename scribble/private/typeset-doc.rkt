@@ -257,6 +257,7 @@
     (pattern (~seq _ (op |.|) specsubform))
     (pattern specsubform))
   (define-splicing-syntax-class (identifier-target space-name)
+    #:attributes (name)
     #:datum-literals (|.| op)
     (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ...)
              #:do [(define target+remains (resolve-name-ref space-name
@@ -266,10 +267,19 @@
              #:attr name (datum->syntax #f (list #'root (car target+remains))))
     (pattern (~seq name:identifier)))
   (define-splicing-syntax-class (target space-name)
-    #:datum-literals (op)
-    (pattern (~seq (~var t (identifier-target space-name)))
-             #:attr name #'t.name)
-    (pattern (~seq (op name)))))
+    #:attributes (name)
+    #:datum-literals (|.| op parens group)
+    (pattern (~seq root:identifier (~seq (op |.|) field:identifier) ... (op |.|) ((~and ptag parens) (group (op opname))))
+             #:do [(define target+remains (resolve-name-ref space-name
+                                                            (in-name-root-space #'root)
+                                                            (syntax->list #'(field ... opname))
+                                                            #:parens #'ptag))]
+             #:when target+remains
+             #:attr name (datum->syntax #f (list #'root (car target+remains))))
+    (pattern (~seq (op id:identifier))
+             #:attr name #'id)
+    (pattern (~seq (~var id (identifier-target space-name)))
+             #:attr name #'id.name)))
 
 (define-for-syntax (extract-defined stx space-name)
   (syntax-parse stx
@@ -280,8 +290,8 @@
     [(group _::space _ _ (~var id (identifier-target space-name))) #'id.name]
     [(group (~or fun class) (~var id (identifier-target space-name)) (parens . _) . _) #'id.name]
     [(group (~or def interface) (~var id (identifier-target space-name)) . _) #'id.name]
-    [(group (~or operator) (parens (group (op id) . _)) . _) #'id]
-    [(group (~or operator) (parens (group arg1 (op id) . _)) . _) #'id]
+    [(group (~or operator) (parens (group (~var id (target space-name)) arg1)) . _) #'id.name]
+    [(group (~or operator) (parens (group arg1 (~var id (target space-name)) arg2)) . _) #'id.name]
     [(group _:operator-macro-head (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
     [(group _:operator-macro-head (quotes (group (~var id (target space-name)) . _))) #'id.name]
     [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) . _))) #'id.name]
@@ -304,22 +314,22 @@
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
     [(group (~or def) (~var id (identifier-target space-name)) . _) vars]
-    [(group (~or operator) (parens (group (op id) arg)) . _)
+    [(group (~or operator) (parens (group (~var _ (target space-name)) arg)) . _)
      (extract-binding-metavariables #'(group arg) vars)]
-    [(group (~or operator) (parens (group arg0 (op id) arg1)) . _)
+    [(group (~or operator) (parens (group arg0 (~var _ (target space-name)) arg1)) . _)
      (define vars0 (extract-binding-metavariables #'(group arg0) vars))
      (extract-binding-metavariables #'(group arg1) vars0)]
-    [(group _:operator-macro-head (quotes (group (op $) t0:identifier (~var id (target space-name)) t ...)))
+    [(group _:operator-macro-head (quotes (group (op $) t0:identifier (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group (op $) t0 t ...) vars)]
-    [(group _:operator-macro-head (quotes (group (~var id (target space-name)) t ...)))
+    [(group _:operator-macro-head (quotes (group (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [(group _:identifier-macro-head (quotes (group (~var id (identifier-target space-name)) t ...)))
+    [(group _:identifier-macro-head (quotes (group (~var _ (identifier-target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [(group _:identifier-macro-head (quotes (~var id (identifier-target space-name))))
+    [(group _:identifier-macro-head (quotes (~var _ (identifier-target space-name))))
      vars]
     [(group _:specsubform-head (quotes g))
      (extract-pattern-metavariables #'g vars)]
-    [(group syntax_class (~var id (identifier-target space-name)) (parens g ...) . _)
+    [(group syntax_class (~var _ (identifier-target space-name)) (parens g ...) . _)
      (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
        (extract-binding-metavariables g vars))]
     [(group grammar id b)
@@ -415,12 +425,12 @@
     [(group (~and tag (~or def fun class interface)) (~var id (identifier-target space-name)) e ...)
      (rb #:at stx
          #`(group tag #,@(subst #'id.name) e ...))]
-    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (op id) arg)) e ...)
+    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) (~var id (target space-name)) arg)) e ...)
      (rb #:at stx
-         #`(group tag (p-tag (g-tag #,@(subst #'id) arg)) e ...))]
-    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) arg0 (op id) arg1)) e ...)
+         #`(group tag (p-tag (g-tag #,@(subst #'id.name) arg)) e ...))]
+    [(group (~and tag operator) ((~and p-tag parens) ((~and g-tag group) arg0 (~var id (target space-name)) arg1)) e ...)
      (rb #:at stx
-         #`(group tag (p-tag (g-tag arg0 #,@(subst #'id) arg1)) e ...))]
+         #`(group tag (p-tag (g-tag arg0 #,@(subst #'id.name) arg1)) e ...))]
     [(group _:operator-macro-head (quotes (~and g (group (~and $0 (op $)) e0:identifier (~var id (target space-name)) e ...))))
      (rb #:at #'g
          #:pattern? #t

@@ -437,20 +437,45 @@
                 (eq? (syntax-e (car op)) 'op)
                 (eq? (syntax-e (cadr op)) '|.|)))
          (pair? (cddr elems))
-         (identifier? (caddr elems))))
+         (let ([next (caddr elems)])
+           (or (identifier? next)
+               (let ([next (syntax->list next)])
+                 (and next
+                      (= (length next) 2)
+                      (eq? (syntax-e (car next)) 'parens)
+                      (let ([g (syntax->list (cadr next))])
+                        (and g
+                             (= (length g) 2)
+                             (eq? (syntax-e (car g)) 'group)
+                             (let ([op (syntax->list (cadr g))])
+                               (and op
+                                    (= (length op) 2)
+                                    (eq? (syntax-e (car op)) 'op)))))))))))
+  (define (extract-op a)
+    (cadr (syntax->list (cadr (syntax->list (cadr (syntax->list a)))))))
+  (define (extract-ptag a)
+    (car (syntax->list a)))
   (cond
     [(dotted-elems? elems)
-     (define dotted-elems (let loop ([elems (cddr elems)])
-                            (cond
-                              [(dotted-elems? elems)
-                               (cons (car elems) (loop (cddr elems)))]
-                              [else (list (car elems))])))
+     (define-values (dotted-elems ptag)
+       (let loop ([elems (cddr elems)])
+         (cond
+           [(dotted-elems? elems)
+            (define-values (ds ptag) (loop (cddr elems)))
+            (values (cons (car elems) ds) ptag)]
+           [else
+            (define a (car elems))
+            (if (identifier? a)
+                (values (list a) #f)
+                (values (list (extract-op a))
+                        (extract-ptag a)))])))
      (define target+rest (resolve-name-ref space-name
                                            (add-space (car elems)
                                                       (if (pair? (cdr elems))
                                                           'rhombus/namespace
                                                           space-name))
-                                           dotted-elems))
+                                           dotted-elems
+                                           #:parens ptag))
      (define target (and target+rest (car target+rest)))
      (cond
        [target

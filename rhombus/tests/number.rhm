@@ -1,0 +1,20 @@
+#lang rhombus
+
+check:
+  5 div 2 ~is 2  
+  5 rem 2 ~is 1
+  5 mod 2 ~is 1
+  5 mod -2 ~is -1
+  5 rem -2 ~is 1
+
+  math.numerator(5/2) ~is 5
+  math.denominator(10/4) ~is 2
+
+  5.0 is_a Exact ~is #false
+  5.0 is_a Inexact ~is #true
+  5 is_a Exact ~is #true
+  5 is_a Inexact ~is #false
+
+  math.exact(5.0) ~is 5
+  math.inexact(5) ~is 5.0
+

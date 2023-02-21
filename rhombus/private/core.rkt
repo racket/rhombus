@@ -72,6 +72,7 @@
         "underscore.rkt"
         "arithmetic.rkt"
         "math.rkt"
+        "bits.rkt"
         "string.rkt"
         "bytes.rkt"
         "char.rkt"

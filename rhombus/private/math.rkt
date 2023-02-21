@@ -17,14 +17,26 @@
    log exp expt
    cos sin tan
    acos asin atan
-   [random rhombus-random]))
+   [random rhombus-random]
+   numerator
+   denominator   
+   magnitude angle
+   [real_part real-part]
+   [imag_part imag-part]
+   [exact inexact->exact]
+   [inexact exact->inexact]))
 
 (define-static-info-syntaxes (abs
                               floor ceiling round
                               sqrt
                               exp
                               cos sin tan
-                              acos asin)
+                              acos asin
+                              numerator
+                              denominator
+                              magnitude angle
+                              real-part imag-part
+                              inexact->exact exact->inexact)
   (#%function-arity 2))
 
 (define-static-info-syntaxes (min max expt)
