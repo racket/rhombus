@@ -29,14 +29,16 @@
            static-info-lookup
            static-infos-intersect
            make-static-infos
-           install-static-infos!))
+           install-static-infos!
+           (rename-out [string-static-infos indirect-string-static-infos]
+                       [bytes-static-infos indirect-bytes-static-infos])))
 
 (provide define-static-info-syntax
          define-static-info-syntaxes
          define-static-info-syntax/maybe)
 
 (begin-for-syntax
-  (property static-info (stxs))
+  (property static-info (get-stxs))
 
   (define in-static-info-space (make-interned-syntax-introducer/add 'rhombus/statinfo))
 
@@ -57,7 +59,7 @@
                                                    (out-of-expression-space #'id))
                                                   static-info-ref))
                    (define val (and v
-                                    (for/or ([form (in-list (static-info-stxs v))])
+                                    (for/or ([form (in-list ((static-info-get-stxs v)))])
                                       (syntax-parse form
                                         [(key:identifier val)
                                          #:when (free-identifier=? #'key key-id)
@@ -96,7 +98,7 @@
        (define v (syntax-local-value* (in-static-info-space #'id)
                                       static-info-ref))
        (if v
-           (static-info-stxs v)
+           ((static-info-get-stxs v))
            null)]
       [(begin (quote-syntax (~and form (key:identifier val))) e)
        (cons #'form (extract-static-infos #'e))]
@@ -129,7 +131,7 @@
   (syntax-parse stx
     [(_ id:identifier rhs ...)
      #`(define-syntax #,(in-static-info-space #'id)
-         (static-info (list (quasisyntax rhs) ...)))]))
+         (static-info (lambda () (list (quasisyntax rhs) ...))))]))
 
 (define-syntax (define-static-info-syntaxes stx)
   (syntax-parse stx
@@ -144,7 +146,8 @@
     [(_ id rhs ...) #'(define-static-info-syntax id rhs ...)]))
 
 (define-for-syntax (make-static-infos static-infos)
-  (static-info (syntax->list static-infos)))
+  (define infos (syntax->list static-infos))
+  (static-info (lambda () infos)))
 
 (define-for-syntax (static-infos-intersect as bs)
   (let ([bs (syntax->list bs)])

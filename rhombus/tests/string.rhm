@@ -14,15 +14,70 @@ begin:
     "17".to_int() ~is 17
     "hello".to_number() ~is #false
     "4.35".to_number() ~is 4.35
-  
+    "hello".upcase() ~is "HELLO"
+    "Hello".downcase() ~is "hello"
+    "Hello".foldcase() ~is "hello"
+    "hello".titlecase() ~is "Hello"
+    "hello".substring(1) ~is "ello"
+    "hello".substring(1, 3) ~is "el"
+    "hÉllo".utf8_bytes() ~is #"h\303\211llo"
+    "hÉllo".utf8_bytes(#false, 2) ~is #"llo"
+    "hÉllo".latin1_bytes() ~is #"h\311llo"
+    "hello".locale_bytes() ~is #"hello"
+    "hÉllo".utf8_bytes().length() ~is 6
+    "Hello".normalize_nfd() ~is "Hello"
+    "Hello".normalize_nfkd() ~is "Hello"
+    "Hello".normalize_nfc() ~is "Hello"
+    "Hello".normalize_nfkc() ~is "Hello"
+    "Hello".grapheme_span(2) ~is 1
+    "Hello".grapheme_count(2) ~is 3
+    "Hello".grapheme_span(2, 4) ~is 1
+    "Hello".grapheme_count(2, 4) ~is 2
+    
 check:
   dynamic("hello").length() ~is 5
   dynamic("hello").to_int() ~is #false
   dynamic("17").to_int() ~is 17
   dynamic("hello").to_number() ~is #false
   dynamic("4.35").to_number() ~is 4.35
+  dynamic("hello").upcase() ~is "HELLO"
+  dynamic("Hello").downcase() ~is "hello"
+  dynamic("Hello").foldcase() ~is "hello"
+  dynamic("hello").titlecase() ~is "Hello"
+  dynamic("hello").substring(1) ~is "ello"
+  dynamic("hello").substring(1, 3) ~is "el"
+  dynamic("hÉllo").utf8_bytes() ~is #"h\303\211llo"
+  dynamic("hÉllo").utf8_bytes(#false, 2) ~is #"llo"
+  dynamic("hÉllo").latin1_bytes() ~is #"h\311llo"
+  dynamic("hello").locale_bytes() ~is #"hello"
+  dynamic("Hello").normalize_nfd() ~is "Hello"
+  dynamic("Hello").normalize_nfkd() ~is "Hello"
+  dynamic("Hello").normalize_nfc() ~is "Hello"
+  dynamic("Hello").normalize_nfkc() ~is "Hello"
+  dynamic("Hello").grapheme_span(2) ~is 1
+  dynamic("Hello").grapheme_count(2) ~is 3
+  dynamic("Hello").grapheme_span(2, 4) ~is 1
+  dynamic("Hello").grapheme_count(2, 4) ~is 2
     
 check:
   String.length("hello") ~is 5
   String.to_int("17") ~is 17
   String.to_number("4.35") ~is 4.35
+  String.upcase("hello") ~is "HELLO"
+  String.downcase("Hello") ~is "hello"
+  String.foldcase("Hello") ~is "hello"
+  String.titlecase("hello") ~is "Hello"
+  String.substring("hello", 1) ~is "ello"
+  String.substring("hello", 1, 3) ~is "el"
+  String.utf8_bytes("hÉllo") ~is #"h\303\211llo"
+  String.utf8_bytes("hÉllo", #false, 2) ~is #"llo"
+  String.latin1_bytes("hÉllo") ~is #"h\311llo"
+  String.locale_bytes("hello") ~is #"hello"
+  String.normalize_nfd("Hello") ~is "Hello"
+  String.normalize_nfkd("Hello") ~is "Hello"
+  String.normalize_nfc("Hello") ~is "Hello"
+  String.normalize_nfkc("Hello") ~is "Hello"
+  String.grapheme_span("Hello", 2) ~is 1
+  String.grapheme_count("Hello", 2) ~is 3
+  String.grapheme_span("Hello", 2, 4) ~is 1
+  String.grapheme_count("Hello", 2, 4) ~is 2

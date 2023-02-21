@@ -55,5 +55,5 @@
   #:properties
   ()
   #:methods
-  ([bytes 0 path-bytes path-bytes/method bytes-static-infos]
-   [string 0 path-string path-string/method string-static-infos]))
+  ([bytes 1 path-bytes path-bytes/method bytes-static-infos]
+   [string 1 path-string path-string/method string-static-infos]))

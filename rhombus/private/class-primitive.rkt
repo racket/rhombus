@@ -34,7 +34,7 @@
         #:properties
         ([property property-proc] ...)
         #:methods
-        ([method n name-method-proc method-proc . method-si] ...))
+        ([method mask name-method-proc method-proc . method-si] ...))
      #:do [(define transparent? (eq? '#:transparent (syntax-e #'mode)))
            (define translucent? (eq? '#:translucent (syntax-e #'mode)))]
      #:with name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))))
@@ -147,7 +147,7 @@
              (case field-sym
                [(prop) (field-proc (lambda (e) (build-accessor-call #'prop-proc e)))]
                ...
-               [(method) (nary #'method-proc n #'name-method-proc . method-si)]
+               [(method) (nary #'method-proc mask #'name-method-proc . method-si)]
                ...
                [else
                 #,(if (syntax-e #'parent)

@@ -56,7 +56,8 @@
 (define-for-syntax (convert-static-info who stx)
   (unless (syntax? stx)
     (raise-result-error who "syntax?" stx))
-  (static-info (syntax->list (pack stx))))
+  (define si (syntax->list (pack stx)))
+  (static-info (lambda () si)))
 
 (define-for-syntax (pack v)
   (pack-static-infos (unpack-term v 'statinfo_meta.pack #f) 'statinfo_meta.pack))

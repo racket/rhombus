@@ -21,7 +21,7 @@ they are equal by @rhombus(==) only when they are equal by
 @doc(
   expr.macro '#' $identifier'
   expr.macro '#' $keyword'
-  bind.macro '#' $identier'
+  bind.macro '#' $identifier'
   bind.macro '#' $keyword'
 ){
 
@@ -39,5 +39,38 @@ they are equal by @rhombus(==) only when they are equal by
     | #'hello: "hi"
     | #'goodbye: "bye"
 )
+
+}
+
+@doc(
+  fun Symbol.from_string(str :: String) :: Symbol
+  fun Symbol.uninterned_from_string(str :: String) :: Symbol
+  fun Symbol.unreadable_from_string(str :: String) :: Symbol
+){
+
+ Converts a string to a symbol with the same character content. An
+ @deftech{uninterned} symbol is not equal to any other symbol, even ones
+ with the same character content. An @deftech{unreadable} symbol is only
+ equal to other unreadable symbols with the same character content.
+
+@examples(
+  Symbol.from_string("apple")
+  Symbol.from_string("apple") == #'apple
+  Symbol.uninterned_from_string("apple")
+  Symbol.uninterned_from_string("apple") == Symbol.uninterned_from_string("apple")
+  Symbol.unreadable_from_string("apple")
+  Symbol.unreadable_from_string("apple") == #'apple
+  Symbol.unreadable_from_string("apple") == Symbol.unreadable_from_string("apple")
+)
+
+}
+
+
+@doc(
+  fun Symbol.gen(name :: String || Symbol) :: Symbol
+){
+
+ Produces an @tech{uninterned} symbol with a character content derived
+ from @rhombus(name) (typically with digits appended as a debugging aid).
 
 }

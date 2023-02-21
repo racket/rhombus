@@ -41,6 +41,14 @@
 }
 
 @doc(
+  annot.macro 'Byte'
+){
+
+ Matches integers in the range @rhombus(0) ro @rhombus(255) (inclusive).
+
+}
+
+@doc(
   operator ((x :: Number) + (y :: Number)) :: Number
   operator ((x :: Number) - (y :: Number)) :: Number
   operator ((x :: Number) * (y :: Number)) :: Number

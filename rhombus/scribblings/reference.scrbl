@@ -34,6 +34,7 @@
 
 @include_section("ref-boolean.scrbl")
 @include_section("ref-number.scrbl")
+@include_section("ref-char.scrbl")
 @include_section("ref-string.scrbl")
 @include_section("ref-keyword.scrbl")
 @include_section("ref-symbol.scrbl")

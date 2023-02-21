@@ -44,7 +44,7 @@
   #:properties
   ()
   #:methods
-  ([lookup 1 class_meta.Info.lookup class_meta.Info.lookup/method]))
+  ([lookup 2 class_meta.Info.lookup class_meta.Info.lookup/method]))
 
 (struct class-expand-data class-data (stx accum-stx))
 (struct class-describe-data class-data (desc private-idesc))

@@ -11,7 +11,7 @@
 
 (define-for-syntax (dot-parse-dispatch k)
   (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
-    (define (ary n n-k no-k)
+    (define (ary mask n-k no-k)
       (define (bad msg)
         (raise-syntax-error #f msg field-stx))
       (syntax-parse tail
@@ -19,9 +19,7 @@
         [((_::parens g ...) . new-tail)
          (define gs (syntax->list #'(g ...)))
          (cond
-           [(if (n . < . 0)
-                (>= (length gs) (+ 1 n))
-                (= (length gs) n))
+           [(bitwise-bit-set? mask (length gs))
             (success-k (apply n-k (syntax->list #'((rhombus-expression g) ...)))
                        #'new-tail)]
            [else
@@ -34,7 +32,7 @@
              (values (no-k) tail))]))
 
     (define (0ary id [static-infos #'()])
-      (ary 0
+      (ary 1
            (lambda () (wrap-static-info*
                        #`(#,id #,lhs)
                        static-infos))
@@ -43,8 +41,8 @@
                            #,id)
                        static-infos))))
 
-    (define (nary id n direct-id [static-infos #'()])
-      (ary n
+    (define (nary id mask direct-id [static-infos #'()])
+      (ary mask
            (lambda args (wrap-static-info*
                          #`(#,direct-id #,lhs . #,args)
                          static-infos))

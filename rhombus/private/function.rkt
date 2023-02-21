@@ -57,7 +57,7 @@
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(map) (nary #'map -2 #'map)]
+        [(map) (nary #'map -4 #'map)]
         [else #f])))))
 
 (begin-for-syntax  

@@ -203,7 +203,7 @@
                                                            (or (extract-static-infos e)
                                                                '())))))]
         [(reverse) (0ary #'reverse list-static-infos)]
-        [(map) (nary #'List.map 1 #'List.map list-static-infos)]
+        [(map) (nary #'List.map 2 #'List.map list-static-infos)]
         [else (fail-k)])))))
 
 (define-reducer-syntax List

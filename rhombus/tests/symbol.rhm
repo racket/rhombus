@@ -1,0 +1,13 @@
+#lang rhombus
+
+check:
+  #'a :: Symbol ~is #'a
+  Symbol.from_string("a") ~is #'a
+  Symbol.uninterned_from_string("a") == #'a ~is #false
+  Symbol.uninterned_from_string("a") == Symbol.uninterned_from_string("a") ~is #false
+  to_string(Symbol.uninterned_from_string("a")) ~is "a"
+  Symbol.unreadable_from_string("a") == #'a ~is #false
+  Symbol.unreadable_from_string("a") == Symbol.unreadable_from_string("a") ~is #true
+  to_string(Symbol.unreadable_from_string("a")) ~is "a"
+  Symbol.gen("a") ~completes
+  Symbol.gen(#'a) ~completes

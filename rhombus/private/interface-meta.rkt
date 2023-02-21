@@ -46,7 +46,7 @@
   #:properties
   ()
   #:methods
-  ([lookup 1 interface_meta.Info.lookup interface_meta.Info.lookup/method]))
+  ([lookup 2 interface_meta.Info.lookup interface_meta.Info.lookup/method]))
 
 (struct interface-expand-data interface-data (stx accum-stx))
 (struct interface-describe-data interface-data (desc include-private?))

@@ -17,3 +17,19 @@ See also @rhombus(#'), which works for keywords as well as symbols.
   Matches keyword values.
 
 }
+
+
+@doc(
+  fun Keyword.from_string(str :: String) :: Keyword
+  fun Keyword.from_symbol(sym :: Symbol) :: Keyword
+){
+
+ Converts a string or symbol to a keyword with the same character
+ content, not counting a keyword's leading @litchar{~}.
+
+@examples(
+  Keyword.from_string("apple")
+  Keyword.from_symbol(#'apple)
+)
+
+}

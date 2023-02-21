@@ -382,8 +382,8 @@
         [(unwrap_group) (0ary #'unwrap_group)]
         [(unwrap_sequence) (0ary #'unwrap_sequence)]
         [(strip) (0ary #'strip)]
-        [(relocate) (nary #'relocate_method 1 #'relocate)]
-        [(relocate_span) (nary #'relocate_span_method 1 #'relocate_span)]
+        [(relocate) (nary #'relocate_method 2 #'relocate)]
+        [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
         [(srcloc) (0ary #'get-srcloc)]
         [else (fail-k)])))))
 

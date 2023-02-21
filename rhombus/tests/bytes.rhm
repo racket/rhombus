@@ -9,9 +9,28 @@ begin:
   check:
     #"hello".length() ~is 5
     hello.length() ~is 5
+    #"hello".subbytes(1) ~is #"ello"
+    #"hello".subbytes(1, 4) ~is #"ell"
+    #"h\303\211llo".utf8_string() ~is "hÉllo"
+    #"h\303\211llo".utf8_string(#false, 3) ~is "llo"
+    #"h\311llo".latin1_string() ~is "hÉllo"
+    #"hello".locale_string() ~is "hello"
+    #"h\303\211llo".utf8_string().length() ~is 5
     
 check:
   dynamic(#"hello").length() ~is 5
+  dynamic(#"hello").subbytes(1) ~is #"ello"
+  dynamic(#"hello").subbytes(1, 4) ~is #"ell"
+  dynamic(#"h\303\211llo").utf8_string() ~is "hÉllo"
+  dynamic(#"h\303\211llo").utf8_string(#false, 3) ~is "llo"
+  dynamic(#"h\311llo").latin1_string() ~is "hÉllo"
+  dynamic(#"hello").locale_string() ~is "hello"
     
 check:
   Bytes.length(#"hello") ~is 5
+  Bytes.subbytes(#"hello", 1) ~is #"ello"
+  Bytes.subbytes(#"hello", 1, 4) ~is #"ell"
+  Bytes.utf8_string(#"h\303\211llo") ~is "hÉllo"
+  Bytes.utf8_string(#"h\303\211llo", #false, 3) ~is "llo"
+  Bytes.latin1_string(#"h\311llo") ~is "hÉllo"
+  Bytes.locale_string(#"hello") ~is "hello"

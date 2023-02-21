@@ -3,8 +3,8 @@
 
 @title{Strings}
 
-A @deftech{string} is a sequence of Unicode characters. A string works
-with map-referencing @brackets to access a character via
+A @deftech{string} is a sequence of Unicode @tech{characters}. A string
+works with map-referencing @brackets to access a character via
 @rhombus(#%ref). A string also works with the @rhombus(++) operator to
 append strings, but a @rhombus(+&) can be used to append strings with
 the static guaratee that the result is a string. A string can be used as
@@ -15,8 +15,20 @@ the static guaratee that the result is a string. A string can be used as
   "string"
   @rhombus(String)
   [str.length(), String.length(str)]
+  [str.substring(arg, ...), String.substring(str, arg, ...)]
+  [str.utf8_bytes(arg, ...), String.utf8_bytes(str, arg, ...)]
+  [str.latin1_bytes(arg, ...), String.latin1_bytes(str, arg, ...)]
+  [str.locale_bytes(arg, ...), String.locale_bytes(str, arg, ...)]
   [str.to_int(), String.to_int(str)]
   [str.to_number(), String.to_number(str)]
+  [str.upcase(arg), String.upcase(str)]
+  [str.downcase(arg), String.downcase(str)]
+  [str.foldcase(arg), String.foldcase(str)]
+  [str.titlecase(arg), String.titlecase(str)]
+  [str.normalize_nfd(), String.normalize_nfd(str)]
+  [str.normalize_nfkd(), String.normalize_nfkd(str)]
+  [str.normalize_nfc(), String.normalize_nfc(str)]
+  [str.normalize_nfkc(), String.normalize_nfkc(str)]
 )
 
 @doc(
@@ -65,7 +77,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.length(str :: String) : NonnegInt
+  fun String.length(str :: String) :: NonnegInt
 ){
 
  Returns the number of characters in @rhombus(str).
@@ -79,7 +91,55 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.to_int(str :: String) : Optional[Int]
+  fun String.substring(str :: String,
+                       start :: NonnegInt,
+                       end :: NonnegInt = String.length(str)) :: String
+){
+
+ Returns the substring of @rhombus(str) from @rhombus(start) (inclusive)
+ to @rhombus(end) (exclusive).
+
+@examples(
+  String.substring("hello", 2, 4)
+  String.substring("hello", 2)
+)
+
+}
+
+
+@doc(
+  fun String.utf8_bytes(str :: String,
+                        err_byte :: Optional[Byte] = #false,
+                        start :: NonnegInt = 0,
+                        end :: NonnegInt = String.length(str)) :: Bytes
+  fun String.latin1_bytes(str :: String,
+                          err_byte :: Optional[Byte] = #false,
+                          start :: NonnegInt = 0,
+                          end :: NonnegInt = String.length(str)) :: Bytes
+  fun String.locale_bytes(str :: String,
+                          err_byte :: Optional[Byte] = #false,
+                          start :: NonnegInt = 0,
+                          end :: NonnegInt = String.length(str)) :: Bytes
+){
+
+ Converts a string to a byte string, encoding by UTF-8, Latin-1, or the
+ current locale's encoding. The @rhombus(err_byte) argument provides a
+ byte to use in place of an encoding error, where @rhombus(#false) means
+ that an exception is raised. (No encoding error is possible with
+ @rhombus(String.utf8_bytes), but @rhombus(err_byte) is accepted for
+ consistency.)
+
+@examples(
+  "hello".utf8_bytes()
+)
+
+}
+
+
+
+
+@doc(
+  fun String.to_int(str :: String) :: Optional[Int]
 ){
 
  Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
@@ -97,7 +157,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.to_number(str :: String) : Optional[Number]
+  fun String.to_number(str :: String) :: Optional[Number]
 ){
 
  Parses @rhombus(str) as a number, returning @rhombus(#false) if the
@@ -110,5 +170,59 @@ the static guaratee that the result is a string. A string can be used as
   String.to_number("fourty-two")
   "3/4".to_number()
 )
+
+}
+
+
+@doc(
+  fun String.upcase(str :: String) :: String
+  fun String.downcase(str :: String) :: String
+  fun String.foldcase(str :: String) :: String
+  fun String.titlecase(str :: String) :: String
+){
+
+ Case-conversion functions.
+
+}
+
+@doc(
+  fun String.normalize_nfd(str :: String) :: String
+  fun String.normalize_nfkd(str :: String) :: String
+  fun String.normalize_nfc(str :: String) :: String
+  fun String.normalize_nfkc(str :: String) :: String
+){
+
+ Unicode normalization functions.
+
+}
+
+@doc(
+  fun String.grapheme_span(str :: String,
+                           start :: NonnegInt = 0,
+                           end :: NonnegInt = str.length()) :: NonnegInt
+){
+
+ Returns the number of @tech{characters} (i.e., code points) in the
+ string that form a Unicode grapheme cluster starting at @rhombus(start),
+ assuming that @rhombus(start) is the start of a grapheme cluster and
+ extending no further than the character before @rhombus(end). The result
+ is @rhombus(0) if @rhombus(start) equals @rhombus(end).
+
+ The @rhombus(start) and @rhombus(end) arguments must be valid indices as
+ for @rhombus(String.substring).
+
+}
+
+@doc(
+  fun String.grapheme_count(str :: String,
+                            start :: NonnegInt = 0,
+                            end :: NonnegInt = str.length()) :: NonnegInt
+){
+
+ Returns the number of grapheme clusters in
+ @rhombus(String.substring(str, start, end)).
+
+ The @rhombus(start) and @rhombus(end) arguments must be valid indices as
+ for @rhombus(String.substring).
 
 }

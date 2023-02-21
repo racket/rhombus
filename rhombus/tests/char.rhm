@@ -1,0 +1,25 @@
+#lang rhombus
+
+check:
+  "h"[0] :: Char ~is #{#\h}
+  Char.to_int("h"[0]) ~is 104
+  Char.from_int(104) ~is "h"[0]
+  Char.utf8_length("λ"[0]) ~is 2
+  Char.is_alphabetic("λ"[0]) ~is #true
+  Char.is_lowercase("a"[0]) ~is #true
+  Char.is_uppercase("a"[0]) ~is #false
+  Char.is_titlecase("a"[0]) ~is #false
+  Char.is_numeric("a"[0]) ~is #false
+  Char.is_symbolic("+"[0]) ~is #true
+  Char.is_punctuation("!"[0]) ~is #true
+  Char.is_graphic("!"[0]) ~is #true
+  Char.is_blank("!"[0]) ~is #false
+  Char.is_whitespace("!"[0]) ~is #false
+  Char.is_extended_pictographic("!"[0]) ~is #false
+  Char.general_category("a"[0]) ~is #'ll
+  Char.grapheme_break_property("a"[0]) ~is #'Other
+  Char.upcase("a"[0]) ~is "A"[0]
+  Char.downcase("A"[0]) ~is "a"[0]
+  Char.foldcase("A"[0]) ~is "a"[0]
+  Char.titlecase("a"[0]) ~is "A"[0]
+  Char.grapheme_step("a"[0], 0) ~is values(#false, 1)

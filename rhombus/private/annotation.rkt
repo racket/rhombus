@@ -43,12 +43,9 @@
                     NegInt
                     NonnegInt
                     Flonum
+                    Byte
                     Number
                     Real
-                    String
-                    Bytes
-                    Symbol
-                    Keyword
                     Void
                     False
 
@@ -372,12 +369,9 @@
 (define-annotation-syntax NegInt (identifier-annotation #'exact-negative-integer? #'()))
 (define-annotation-syntax NonnegInt (identifier-annotation #'exact-nonnegative-integer? #'()))
 (define-annotation-syntax Flonum (identifier-annotation #'flonum? #'()))
+(define-annotation-syntax Byte (identifier-annotation #'byte? #'()))
 (define-annotation-syntax Number (identifier-annotation #'number? #'()))
 (define-annotation-syntax Real (identifier-annotation #'real? #'()))
-(define-annotation-syntax String (identifier-annotation #'string? #'()))
-(define-annotation-syntax Bytes (identifier-annotation #'bytes? #'()))
-(define-annotation-syntax Symbol (identifier-annotation #'symbol? #'()))
-(define-annotation-syntax Keyword (identifier-annotation #'keyword? #'()))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
 
