@@ -1,0 +1,30 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  "view.rhm"!internal as view:
+    expose: View
+
+export:
+  Button
+
+class Button(handle):
+  implements view.ViewPublic
+  private implements view.ViewPrivate
+  internal _Button
+  opaque
+  private override get_handle(): handle
+
+  constructor (label,
+               action :: Function,
+               ~is_enabled: is_enabled = #true,
+               ~style: style = [],
+               ~margin: margin = [0, 0],
+               ~min_size: min_size = [#false, #false],
+               ~stretch: stretch = [#true, #true]):
+    _Button(easy.button(label,                        
+                        action,
+                        #{#:enabled?}: is_enabled,
+                        ~style: style,
+                        ~margin: margin,
+                        #{#:min-size}: min_size,
+                        ~stretch: stretch))

@@ -9,6 +9,7 @@ import:
 
 export:
   DC
+  CanvasDC
 
 submodule internal:
   export:
@@ -82,3 +83,8 @@ interface DC:
 
 symbol_set_annot CopyStyle:
   { solid, opaque, xor }
+
+class CanvasDC(handle):
+  implements DC
+  private implements DCer
+  private override property dc: handle

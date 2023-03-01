@@ -1,0 +1,37 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  "view.rhm"!internal as view:
+    expose: View
+            WindowView
+
+export:
+  Window
+
+class Window(handle):
+  implements view.WindowViewPublic
+  private implements view.WindowViewPrivate
+  internal _Window
+  opaque
+  private override get_handle(): handle
+
+  constructor (~title: title = "Untitled",
+               ~size: size = [#false, #false],
+               ~alignment: alignment = [#'center, #'top],
+               ~position: position = #'center,
+               ~min_size: min_size = [#false, #false],
+               ~stretch: stretch = [#true, #true],
+               ~style: style = [],
+               ~mixin: mix :: Function = values,
+               child :: View,
+               ...):
+    _Window(easy.window(~title: title,
+                        ~size: size,
+                        ~alignment: alignment,
+                        ~position: position,
+                        #{#:min-size}: min_size,
+                        ~stretch: stretch,
+                        ~style: style,
+                        ~mixin: mix,
+                        child.get_handle(),
+                        ...))

@@ -1,0 +1,36 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  "view.rhm"!internal as view:
+    expose: View
+  rhombus/draw/private/dc.CanvasDC
+  "obs.rhm".obs_unwrap
+
+export:
+  Canvas
+
+class Canvas(handle):
+  implements view.ViewPublic
+  private implements view.ViewPrivate
+  internal _Canvas
+  opaque
+  private override get_handle(): handle
+
+  constructor (data,
+               draw :: Function,
+               ~label: label = "canvas", // should be `#false`?
+               ~is_enabled: is_enabled = #true,
+               ~style: style = [],
+               ~margin: margin = [0, 0],
+               ~min_size: min_size = [#false, #false],
+               ~stretch: stretch = [#true, #true],
+               ~mixin: mix = values):
+    _Canvas(easy.canvas(obs_unwrap(data),
+                        fun(dc, data): draw(CanvasDC(dc), data),
+                        ~label: label,
+                        #{#:enabled?}: is_enabled,
+                        ~style: style,
+                        ~margin: margin,
+                        #{#:min-size}: min_size,
+                        ~stretch: stretch,
+                        ~mixin: mix))

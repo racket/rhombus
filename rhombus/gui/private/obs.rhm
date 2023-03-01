@@ -1,0 +1,53 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+
+export:
+  Obs
+  obs_unwrap
+
+def anon_str = "anon"
+
+class Obs(handle):
+  internal _Obs
+  constructor (v,
+               ~name: name :: String = anon_str,
+               ~is_derived = #false):
+    _Obs(easy.obs(v,
+                  ~name: (if name === anon_str
+                          | #'anon
+                          | Symbol.from_string(name)),
+                  #{#:derived?}: is_derived))
+
+  method rename(name :: String) :: Obs:
+    _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
+
+  method observe(f :: Function):
+    easy.#{obs-observe!}(handle, f)
+
+  method unobserve(f :: Function):
+    easy.#{obs-unobserve!}(handle, f)
+
+  method update(f :: Function):
+    easy.#{obs-update!}(handle, f)
+
+  method peek():
+    easy.#{obs-peek}(handle)
+
+  method map(f :: Function) :: Obs:
+    _Obs(easy.#{obs-map}(handle, f))
+
+  method debounce(~duration: duration :: NonnegInt = 200) :: Obs:
+    _Obs(easy.#{obs-debounce}(~duration: duration))
+
+  method throttle(~duration: duration :: NonnegInt = 200) :: Obs:
+    _Obs(easy.#{obs-throttle}(~duration: duration))
+
+  export: combine
+
+fun combine(f :: Function, obs :: Obs, ...) :: Obs:
+  _Obs(easy.#{obs-combine}(f, obs, ...))
+
+fun
+| obs_unwrap(o :: Obs): o.handle
+| obs_unwrap(v): v

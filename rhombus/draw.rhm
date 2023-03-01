@@ -1,9 +1,9 @@
 #lang rhombus
 import:
-  "draw/pen.rhm"
-  "draw/brush.rhm"
-  "draw/dc.rhm"
-  "draw/bitmap.rhm"
+  "draw/private/pen.rhm"
+  "draw/private/brush.rhm"
+  "draw/private/dc.rhm"
+  "draw/private/bitmap.rhm"
 
 export:
   pen.Pen
