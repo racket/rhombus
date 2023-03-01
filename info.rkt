@@ -9,7 +9,8 @@
     ["scribble-lib" #:version "1.50"]
     "sandbox-lib"
     "testing-util-lib"
-    "draw-lib"))
+    "draw-lib"
+    "gui-easy-lib"))
 
 (define build-deps
   '("at-exp-lib"
