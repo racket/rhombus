@@ -30,6 +30,7 @@
   (define-name-root annot_meta
     #:fields
     (pack_predicate
+     unpack_predicate
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
@@ -93,3 +94,10 @@
   #`(parsed #,(annotation-form (wrap-expression predicate)
                                (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
                                                   'annot.pack_predicate))))
+
+(define-for-syntax (unpack_predicate stx)
+  (syntax-parse (unpack-term stx 'annot_meta.unpack_predicate #f)
+    #:datum-literals (parsed)
+    [(parsed a::annotation-form)
+     (values #'(parsed a.predicate)
+             (unpack-static-infos #'a.static-infos))]))

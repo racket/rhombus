@@ -1,30 +1,57 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/gui/easy.rkt")
-  "view.rhm"!internal as view:
-    expose: View
+  rhombus/draw/private/symbol_map.symbol_map_annot
+  rhombus/draw.Bitmap
+  "view.rhm".View
+  "obs.rhm":
+    expose: MaybeObs
+  "type.rhm":
+    expose:
+      LabelString
+      Margin
+      Size
+      Stretch
 
 export:
   Button
+  ButtonStyleSymbol
 
-class Button(handle):
-  implements view.ViewPublic
-  private implements view.ViewPrivate
+class Button(hand):
+  implements View
   internal _Button
   opaque
-  private override get_handle(): handle
+  override property handle: hand
 
-  constructor (label,
+  constructor (label :: MaybeObs.of(LabelString || Bitmap || matching([_ :: Bitmap,
+                                                                       _ :: LabelString,
+                                                                       _ :: LabelPosition])),
                action :: Function,
-               ~is_enabled: is_enabled = #true,
-               ~style: style = [],
-               ~margin: margin = [0, 0],
-               ~min_size: min_size = [#false, #false],
-               ~stretch: stretch = [#true, #true]):
-    _Button(easy.button(label,                        
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+               ~style: style :: MaybeObs.of(List.of(ButtonStyleSymbol)) = [],
+               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
+    _Button(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                         action,
                         #{#:enabled?}: is_enabled,
                         ~style: style,
                         ~margin: margin,
                         #{#:min-size}: min_size,
                         ~stretch: stretch))
+
+symbol_map_annot LabelPosition convert_label_pos:
+  { left: left,
+    top: top,
+    right: right,
+    bottom: bottom }
+
+fun
+| unwrap_bitmap(b :: Bitmap): b.handle
+| unwrap_bitmap([b :: Bitmap, l, pos]): [b.handle, l, pos]
+| unwrap_bitmap(v): v
+
+symbol_map_annot ButtonStyleSymbol convert_style:
+  { border: border,
+    multi_line: #{multi-line},
+    deleted: deleted }

@@ -4,27 +4,8 @@ export:
   View
   WindowView
 
-submodule internal:
-  export:
-    ViewPrivate
-    WindowViewPrivate
-    rename:
-      View as ViewPublic
-      WindowView as WindowViewPublic
-      _View as View
-      _WindowView as WindowView
- 
-interface View
-
-interface ViewPrivate:
-  extends View
-  internal _View
-  method get_handle()
+interface View:
+  property handle
 
 interface WindowView:
   extends View
-
-interface WindowViewPrivate:
-  extends: WindowView
-           ViewPrivate
-  internal _WindowView

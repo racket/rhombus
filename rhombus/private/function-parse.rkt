@@ -479,13 +479,13 @@
                                                (rhombus-body-expression rhs))))))))]))])))))
      arity))
 
-  (define (maybe-add-function-result-definition name static-infoss arity defns)
+  (define (maybe-add-function-result-definition name static-infoss static-infos arity defns)
     (define result-info?
       (and (pair? static-infoss)
            (pair? (syntax-e (car static-infoss)))
            (for/and ([static-infos (in-list (cdr static-infoss))])
              (same-expression? (car static-infoss) static-infos))))
-    (if (or result-info? arity)
+    (if (or result-info? arity (pair? (syntax-e static-infos)))
         (cons #`(define-static-info-syntax #,name
                   #,@(append
                       (if result-info?
@@ -493,7 +493,8 @@
                           null)
                       (if arity
                           (list #`(#%function-arity #,arity))
-                          null)))
+                          null)
+                      (syntax->list static-infos)))
               defns)
         defns))
 

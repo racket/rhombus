@@ -4,9 +4,33 @@ import:
 
 export:
   Obs
-  obs_unwrap
+  MaybeObs
+  unwrap
+  unwrap_list
+  unwrap_convert
 
 def anon_str = "anon"
+
+namespace MaybeObs:
+  export: of
+  annot.macro 'of($(ann :: annot_meta.Parsed))':
+    def (pred, infos) = annot_meta.unpack_predicate(ann)
+    annot_meta.pack_predicate('begin:
+                                 def pred = $pred
+                                 fun
+                                 | (v :: Obs): pred(v.peek())
+                                 | (v): pred(v)',
+                              '()')
+
+annot.macro 'of($(ann :: annot_meta.Parsed))':
+  def (pred, infos) = annot_meta.unpack_predicate(ann)
+  def (obs_pred, obs_info):
+    annot_meta.unpack_predicate(match 'Obs'
+                                | '$(a :: annot_meta.Parsed)': a)
+  annot_meta.pack_predicate('begin:
+                               def pred = $pred
+                               fun (v :: Obs): pred(v.peek())',
+                            obs_info)
 
 class Obs(handle):
   internal _Obs
@@ -44,10 +68,19 @@ class Obs(handle):
     _Obs(easy.#{obs-throttle}(~duration: duration))
 
   export: combine
+          of
 
 fun combine(f :: Function, obs :: Obs, ...) :: Obs:
   _Obs(easy.#{obs-combine}(f, obs, ...))
 
 fun
-| obs_unwrap(o :: Obs): o.handle
-| obs_unwrap(v): v
+| unwrap(o :: Obs): o.handle
+| unwrap(v): v
+
+fun
+| unwrap_convert(o :: Obs, convert :: Function): unwrap(o.map(convert))
+| unwrap_convert(v, convert :: Function): convert(v)
+
+fun
+| unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun (l): convert.map(l)))
+| unwrap_list(v, convert :: Function): convert.map(v)

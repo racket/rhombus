@@ -1,8 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   lib("racket/gui/easy.rkt")
-  "view.rhm"!internal:
-    expose: WindowView
+  "view.rhm".WindowView
 
 export:
   render
@@ -14,4 +13,4 @@ annot.macro 'Renderer':
 
 fun render(view :: WindowView,
            parent :: Maybe(Renderer) = #false) :: Renderer:
-  easy.render(view.get_handle(), parent)
+  easy.render(view.handle, parent)

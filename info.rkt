@@ -10,7 +10,8 @@
     "sandbox-lib"
     "testing-util-lib"
     "draw-lib"
-    "gui-easy-lib"))
+    "gui-easy-lib"
+    "gui-lib"))
 
 (define build-deps
   '("at-exp-lib"

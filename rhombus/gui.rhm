@@ -1,22 +1,18 @@
 #lang rhombus/static/and_meta
 import:
   "gui/private/obs.rhm".Obs
-  "gui/private/renderer.rhm":
-    expose: render
-            Renderer
-  "gui/private/view.rhm":
-    expose: View
-            WindowView
-  "gui/private/window.rhm".Window
-  "gui/private/canvas.rhm".Canvas
-  "gui/private/button.rhm".Button
+  "gui/private/renderer.rhm"
+  "gui/private/view.rhm"
+  "gui/private/window.rhm"
+  "gui/private/canvas.rhm"
+  "gui/private/button.rhm"
+  "gui/private/type.rhm"
 
 export:
   Obs
-  render
-  Renderer
-  View
-  WindowView
-  Window
-  Canvas
-  Button
+  all_from(.renderer)
+  all_from(.view)
+  all_from(.window)
+  all_from(.canvas)
+  all_from(.button)
+  all_from(.type)

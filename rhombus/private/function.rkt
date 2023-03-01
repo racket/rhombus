@@ -50,14 +50,14 @@
 (define-for-syntax (wrap-function-static-info expr)
   (wrap-static-info* expr function-static-infos))
 
-(define-annotation-syntax Function (identifier-annotation #'procedure? #'()))
+(define-annotation-syntax Function (identifier-annotation #'procedure? function-static-infos))
 
 (define-syntax function-instance
   (dot-provider-more-static
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(map) (nary #'map -4 #'map)]
+        [(map) (nary #'map -2 #'map)]
         [else #f])))))
 
 (begin-for-syntax  
@@ -94,7 +94,7 @@
                                 #'(rhs ...)
                                 #'form-id #'alts-tag))
          (maybe-add-function-result-definition
-          the-name (syntax->list #'(ret.static-infos ...)) arity
+          the-name (syntax->list #'(ret.static-infos ...)) function-static-infos arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; `match` containing alts case --- almost the same, but with a declared name and maybe return annotation
@@ -123,7 +123,7 @@
                                 #'(rhs ...)
                                 #'form-id #'alts-tag))
          (maybe-add-function-result-definition
-          the-name (list #'main-ret.static-infos) arity
+          the-name (list #'main-ret.static-infos) function-static-infos arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
         ;; single-alterative case
@@ -141,7 +141,7 @@
                            #'rhs
                            #'form-id #'parens-tag))
          (maybe-add-function-result-definition
-          #'name.name (list #'ret.static-infos) arity
+          #'name.name (list #'ret.static-infos) function-static-infos arity
           (build-definitions/maybe-extension #f #'name.name #'name.extends
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:

@@ -1,0 +1,58 @@
+#lang rhombus/static/and_meta
+import:
+  rhombus/draw/private/symbol_map.symbol_set_annot
+  lib("racket/gui/base.rkt").#{label-string?}
+
+export:
+  SizeInteger
+  Size
+  PositionInteger
+  Position
+  SpacingInteger
+  Margin
+  Alignment
+  Stretch
+  LabelString
+
+annot.macro 'SizeInteger':
+  'Int.in(0, 1000000)'
+
+annot.macro 'Size':
+  'matching([_ :: Maybe(SizeInteger), _ :: Maybe(SizeInteger)])'
+
+
+annot.macro 'PositionInteger':
+  'Int.in(-1000000, 1000000)'
+
+annot.macro 'Position':
+  'Any.of(#'center) || matching([_ :: Maybe(PositionInteger), _ :: Maybe(PositionInteger)])'
+
+
+annot.macro 'SpacingInteger':
+  'Int.in(0, 1000)'
+
+
+annot.macro 'Margin':
+  'matching([_ :: Maybe(SpacingInteger), _ :: Maybe(SpacingInteger)])'
+
+
+annot.macro 'Alignment':
+  'matching([_ :: HorizAlignSym, _ :: VertAlignSym])'
+
+symbol_set_annot HorizAlignSym:
+  { left, center, right }
+
+symbol_set_annot VertAlignSym:
+  { top, center, bottom }
+
+
+annot.macro 'Stretch':
+  'matching([_ :: Boolean, _ :: Boolean])'
+
+
+annot.macro 'LabelString':
+  'String && LabelStringSized'
+
+annot.macro 'LabelStringSized':
+  annot_meta.pack_predicate('#{label-string?}',
+                            '()')
