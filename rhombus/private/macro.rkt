@@ -9,16 +9,13 @@
                      "tag.rkt")
          syntax/parse/pre
          "provide.rkt"
-         "macro-rhs.rkt"
+         "macro-expr-parse.rkt"
          "definition.rkt"
          "expression.rkt"
          "expression+definition.rkt"
          "entry-point.rkt"
          "macro-macro.rkt"
-         "pack.rkt"
          "parse.rkt"
-         "function-arity-key.rkt"
-         "static-info.rkt"
          "parens.rkt"
          (submod "expr-macro.rkt" for-define))
 
@@ -26,53 +23,11 @@
                       rhombus/entry_point)
                      macro))
 
-(define-for-syntax (parse-macro stx adjustments)
-  (syntax-parse stx
-    #:datum-literals (group)
-    [(form-id (alts-tag::alts (_::block (group (_::quotes ((~and tag group) (_::parens) . pat))
-                                               (~and rhs (_::block body ...))))
-                              ...+))
-     (expose-arity
-      adjustments
-      (parse-operator-definitions-rhs
-       stx
-       (parse-operator-definitions #'form-id
-                                   'rule
-                                   #:allowed '(prefix)
-                                   stx
-                                   (map no-srcloc (syntax->list #'((tag ignore . pat) ...)))
-                                   (syntax->list #'(rhs ...))
-                                   #f
-                                   #f
-                                   #f #f
-                                   #'() #'())
-       '#f
-       #'wrap-prefix
-       #f
-       #f
-       #:adjustments adjustments))]
-    [(form-id (_::quotes ((~and tag group) (_::parens) . pat))
-              (~and rhs (_::block body ...)))
-     (expose-arity
-      adjustments
-      (parse-operator-definition-rhs
-       (parse-operator-definition #'form-id
-                                  'rule
-                                  #:allowed '(prefix)
-                                  (no-srcloc #'(tag ignore . pat))
-                                  #'rhs
-                                  #f
-                                  #f)
-       '#f
-       #'wrap-prefix
-       #f
-       #:adjustments adjustments))]))
-
 (define-syntax macro
   (make-expression+definition-transformer
    (expression-transformer
     (lambda (stx)
-      (values (parse-macro stx no-adjustments)
+      (values (parse-macro-expression stx no-adjustments)
               #'())))
    (definition-transformer
      (lambda (stx)
@@ -131,22 +86,10 @@
   (entry-point-transformer
    ;; parse macro
    (lambda (stx adjustments)
-     (parse-macro stx adjustments))
+     (parse-macro-expression stx adjustments))
    ;; extract arity
    (lambda (stx)
      1)))
-
-(define (wrap-prefix name precedence protocol proc)
-  (lambda (stx)
-    (syntax-parse (unpack-tail stx #f #f)
-      [(head . tail) (proc (pack-tail #'tail) #'head)])))
-
-(define-for-syntax (expose-arity adjustments e)
-  (wrap-static-info e
-                    #'#%function-arity
-                    #`(#,(+ 1 (length (entry-point-adjustments-prefix-arguments adjustments)))
-                       ()
-                       ())))
 
 (begin-for-syntax
   (define-syntax (rules-rhs stx)

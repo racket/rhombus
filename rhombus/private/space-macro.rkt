@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "space-meta-macro.rkt"
                      "expose.rkt")
          "provide.rkt"

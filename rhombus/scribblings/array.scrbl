@@ -22,7 +22,7 @@ for assignment.
 )
 
 @rhombus(Array) is also an annotation and a binding contructor,
-analogous to @rhombus(List), and @rhombus(Array.of) is an annotation
+analogous to @rhombus(List), and @rhombus(Array.of, ~annot) is an annotation
 constructor. The @rhombus(Array, ~bind) binding form does not support
 @rhombus(..., ~bind) or @rhombus(&, ~bind), but the @rhombus(Array)
 constructor supports @rhombus(..., ~bind) and @rhombus(&, ~bind).

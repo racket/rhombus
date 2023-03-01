@@ -488,7 +488,8 @@
                                                                   space-name))
                                                 (shrubbery-syntax->string target)
                                                 #f
-                                                #:space (list (syntax-e target) space-name)
+                                                #:space 'rhombus/namespace
+                                                #:suffix (list (syntax-e target) space-name)
                                                 #:unlinked-ok? #t))
                              target
                              target)

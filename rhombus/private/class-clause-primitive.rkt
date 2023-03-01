@@ -5,21 +5,19 @@
                      enforest/name-parse
                      "name-path-op.rkt"
                      "class-parse.rkt"
-                     (only-in "macro.rkt" macro)
                      "consistent.rkt")
          "provide.rkt"
          "class-clause.rkt"
+         "class-clause-tag.rkt"
          (submod "class-clause.rkt" for-class)
          "interface-clause.rkt"
          (only-in "annotation.rkt" :: :~)
          (submod "annotation.rkt" for-class)
          "binding.rkt"
-         "expression.rkt"
          "parens.rkt"
          "name-root-ref.rkt"
          "name-root-space.rkt"
          "var-decl.rkt"
-         (only-in "assign.rkt" :=)
          (only-in "function.rkt" fun)
          (submod "function.rkt" for-method)
          (only-in "implicit.rkt" #%body)
@@ -27,7 +25,6 @@
 
 (provide (for-space rhombus/class_clause
                     implements
-                    binding
                     nonfinal
                     authentic
                     field
@@ -36,23 +33,12 @@
                       rhombus/interface_clause)
                      extends
                      internal
-                     expression
-                     annotation
                      final
                      method
                      property
                      override
                      private
                      abstract))
-
-(module+ for-class
-  (provide (for-syntax wrap-class-clause)
-           rhombus-class))
-
-(define-syntax rhombus-class 'placeholder)
-
-(define-for-syntax (wrap-class-clause parsed)
-  #`[(group (parsed (quote-syntax (rhombus-class #,parsed) #:local)))]) ; `quote-syntax` + `rhombus-class` wrapper => clause
 
 (define-for-syntax (parse-multiple-names stx)
   (define lines
@@ -100,37 +86,6 @@
      (syntax-parse stx
        [(_ name:identifier)
         (wrap-class-clause #'(#:internal name))]))))
-
-(define-for-syntax (make-macro-clause-transformer
-                    key
-                    #:clause-transformer [clause-transformer class-clause-transformer])
-  (clause-transformer
-   (lambda (stx data)
-     (syntax-parse stx
-       #:datum-literals (group)
-       [(form-name (~and (_::quotes . _)
-                         pattern)
-                   (~and (_::block . _)
-                         template-block))
-        (wrap-class-clause #`(#,key (block (named-macro macro #,stx pattern template-block))))]
-       [(form-name (~and rhs (_::alts
-                              (_::block (group (_::quotes . _)
-                                               (_::block . _)))
-                              ...)))
-        (wrap-class-clause #`(#,key (block (named-macro macro #,stx rhs))))]
-       [(form-name (~and (_::block . _)
-                         a-block))
-        (wrap-class-clause #`(#,key a-block))]))))
-
-(define-class-clause-syntax binding
-  (make-macro-clause-transformer #'#:binding))
-
-(define-class-clause-syntax annotation
-  (make-macro-clause-transformer #'#:annotation))
-
-(define-interface-clause-syntax annotation
-  (make-macro-clause-transformer #'#:annotation
-                                 #:clause-transformer interface-clause-transformer))
 
 (define-class-clause-syntax nonfinal
   (class-clause-transformer
@@ -300,13 +255,6 @@
         (wrap-class-clause #`(#:constructor id rhs))]
        [(_ (~and rhs (_::block . _)))
         (wrap-class-clause #`(#:constructor #f rhs))]))))
-
-(define-class-clause-syntax expression
-  (make-macro-clause-transformer #'#:expression))
-
-(define-interface-clause-syntax expression
-  (make-macro-clause-transformer #'#:expression
-                                 #:clause-transformer interface-clause-transformer))
 
 (begin-for-syntax
   (define-syntax-rule (define-clause-form-syntax-class id form-id)

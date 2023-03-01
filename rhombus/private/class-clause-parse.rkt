@@ -4,7 +4,6 @@
                      enforest/hier-name-parse
                      "class-parse.rkt"
                      "expose.rkt")
-         (submod "class-clause-primitive.rkt" for-class)
          (submod "annotation.rkt" for-class)
          "entry-point.rkt"
          "parens.rkt")
@@ -13,11 +12,9 @@
                      make-expose
                      parse-annotation-options
                      parse-options
-                     wrap-class-clause
                      class-clause-accum
                      class-clause-extract
-                     method-shape-extract)
-         rhombus-class)
+                     method-shape-extract))
 
 (module+ for-interface
   (provide (for-syntax parse-method-clause

@@ -1,7 +1,9 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     "tag.rkt")
+                     "tag.rkt"
+                     "with-syntax.rkt"
+                     "srcloc.rkt")
          "parse.rkt"
          "entry-point.rkt"
          "pack.rkt"
@@ -47,12 +49,12 @@
     [(_ name (named-macro macro orig-stx . _) _ _)
      (raise-syntax-error #f "invalid pattern form" #'orig-stx)]
     [(_ name g make-prefix-operator what)
-     #:with (~var lam (:entry-point no-adjustments)) #'g
-     #'(make-prefix-operator #'name
-                             '((default . stronger))
-                             'macro
-                             (let ([name lam.parsed])
-                               (let ([name (lambda (tail head)
-                                             (name (pack-tail
-                                                    (cons head (unpack-tail tail #f #f)))))])
-                                 name)))]))
+     (with-syntax-parse ([(~var lam (:entry-point no-adjustments)) (respan #'g)])
+       #'(make-prefix-operator #'name
+                               '((default . stronger))
+                               'macro
+                               (let ([name lam.parsed])
+                                 (let ([name (lambda (tail head)
+                                               (name (pack-tail
+                                                      (cons head (unpack-tail tail #f #f)))))])
+                                   name))))]))

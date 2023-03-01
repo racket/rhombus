@@ -20,6 +20,7 @@
          "call-result-key.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
+         "class-clause-tag.rkt"
          "class-constructor.rkt"
          "class-binding.rkt"
          "class-annotation.rkt"

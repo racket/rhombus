@@ -1,8 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse
+                     syntax/parse/pre
                      "expose.rkt")
-         syntax/parse
+         syntax/parse/pre
          racket/symbol
          enforest
          enforest/property

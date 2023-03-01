@@ -23,6 +23,7 @@
          "interface-clause-parse.rkt"
          "class-top-level.rkt"
          "class-together-parse.rkt"
+         "class-clause-tag.rkt"
          "dotted-sequence-parse.rkt"
          (for-syntax "class-transformer.rkt")
          (only-meta-in 1

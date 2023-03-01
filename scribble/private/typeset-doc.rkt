@@ -175,14 +175,17 @@
   (define str+space (if str-id-e
                         (list str-id-e space)
                         space))
-  ;; FIXME: current `#:space` arguments should really be `#:suffix`,
-  ;; and supply just the space with `#:space`; waiting a little while
-  ;; to let Racket releases include that functionality
+  (define id-space (if str-id-e
+                       ;; referring to a field of a namespace, so
+                       ;; `id` is bound in the namespace space, not
+                       ;; in `space`
+                       'rhombus/namespace
+                       space))
   (define (make-content defn?)
     (racketidfont
-     (make-id-element id str defn? #:space str+space)))
+     (make-id-element id str defn? #:space id-space #:suffix str+space)))
   (define content (annote-exporting-library (make-content #t)))
-  (define target-maker (id-to-target-maker id #t #:space str+space))
+  (define target-maker (id-to-target-maker id #t #:space id-space #:suffix str+space))
   (cond
     [target-maker
      (define name (string->symbol str))
@@ -207,6 +210,7 @@
   (define str-id-e (syntax-e str-id))
   (racketidfont
    (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
+                    ;; FIXME: this should be `#:suffix`, not `#:space`
                     #:space (if str-id-e
                                 (list str-id-e space)
                                 space))))

@@ -11,8 +11,7 @@
 (provide (for-syntax parse-annotation-options
                      parse-options
                      class-clause-accum
-                     extract-internal-ids)
-         rhombus-class)
+                     extract-internal-ids))
 
 ;; interface clause forms are defined in "class-clause-parse.rkt"
 

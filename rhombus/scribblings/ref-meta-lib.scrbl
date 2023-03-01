@@ -14,9 +14,13 @@ Simple pattern-based expression macros can be written using
 using the @rhombusmodname(rhombus/meta) module (usually with no prefix).
 
 The @rhombusmodname(rhombus/meta) module provides bindings like
-@rhombus(defn.macro), @rhombus(expr.macro), and @rhombus(bind.macro), and
-it also re-exports all of @rhombusmodname(rhombus) as @rhombus(meta, ~impo)
-for use in compile-time expressions.
+@rhombus(defn.macro), @rhombus(expr.macro), and @rhombus(bind.macro). It
+it also re-exports most of @rhombusmodname(rhombus) as @rhombus(meta, ~impo)
+for use in compile-time expressions, but it omits bindings from
+@rhombusmodname(rhombus) that bridge to meta contexts: @rhombus(meta),
+@rhombus(macro), @rhombus(binding, ~class_clause), etc. Explicitly
+import @rhombusmodname(rhombus) as @rhombus(meta, ~impo) to access the
+omitted bindings.
 
 The @rhombusmodname(rhombus/and_meta) module provides all of the
 bindings from both @rhombusmodname(rhombus) and
