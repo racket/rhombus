@@ -27,7 +27,8 @@
          "name-root-ref.rkt"
          "static-info.rkt"
          "parse.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "parens.rkt")
 
 (provide is_a
          (for-spaces (#f
@@ -49,13 +50,15 @@
                     Flonum
                     Byte
                     Number
-                    Real
                     Void
                     False
 
                     matching
                     #%parens
-                    #%literal))
+                    #%literal)
+         (for-spaces (rhombus/annot
+                      rhombus/namespace)
+                     Real))
 
 (module+ for-class
   (begin-for-syntax
@@ -387,6 +390,14 @@
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
 
+(define-name-root Real
+  #:fields
+  ([above Real.above]
+   [at_least Real.at_least]
+   [below Real.below]
+   [at_most Real.at_most]
+   [in Real.in]))
+
 ;; not exported, but referenced by `:annotation-seq` so that
 ;; annotation parsing terminates appropriately
 (define-annotation-syntax ::
@@ -471,3 +482,56 @@
         (raise-syntax-error #f
                             "literal not allowed as an annotation"
                             #'tail)]))))
+
+(define-for-syntax (make-unary-real-annotation id comp-stx)
+  (annotation-prefix-operator
+   id
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       [(_ (_::parens n-g) . tail)
+        (values #`((let ([n (rhombus-expression n-g)])
+                     (lambda (v)
+                       (and (real? v)
+                            (#,comp-stx v n))))
+                   ())
+                #'tail)]))))
+
+(define-annotation-syntax Real.above (make-unary-real-annotation (annot-quote Real.above) #'>))
+(define-annotation-syntax Real.at_least (make-unary-real-annotation (annot-quote Real.above) #'>=))
+(define-annotation-syntax Real.below (make-unary-real-annotation (annot-quote Real.below) #'<))
+(define-annotation-syntax Real.at_most (make-unary-real-annotation (annot-quote Real.at_most) #'<=))
+
+(begin-for-syntax
+  (define-syntax-class :incl-group
+    #:attributes (g comp)
+    #:datum-literals (group)
+    (pattern (group t ... #:exclusive)
+             #:attr comp #'<
+             #:attr g #'(group t ...))
+    (pattern (group t ... #:inclusive)
+             #:attr comp #'<=
+             #:attr g #'(group t ...))
+    (pattern g
+             #:attr comp #'<=)))
+
+(define-annotation-syntax Real.in
+  (annotation-prefix-operator
+   (annot-quote Real.in)
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       #:datum-literals (group)
+       [(_ (_::parens lo::incl-group hi::incl-group)
+           . tail)
+        (values #`((let ([lo-v (rhombus-expression lo.g)]
+                         [hi-v (rhombus-expression hi.g)])
+                     (lambda (v)
+                       (and (real? v)
+                            (lo.comp lo-v v)
+                            (hi.comp v hi-v))))
+                   ())
+                #'tail)]))))
+

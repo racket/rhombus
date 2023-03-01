@@ -18,3 +18,30 @@ check:
   math.exact(5.0) ~is 5
   math.inexact(5) ~is 5.0
 
+check:
+  1 is_a Real.at_least(1.0) ~is #true
+  0.9 is_a Real.at_least(1.0) ~is #false
+
+  1.1 is_a Real.above(1.0) ~is #true
+  1.0 is_a Real.above(1.0) ~is #false
+
+  0.9 is_a Real.below(1.0) ~is #true
+  1.0 is_a Real.below(1.0) ~is #false
+
+  1 is_a Real.at_most(1.0) ~is #true
+  1.1 is_a Real.at_most(1.0) ~is #false
+
+  "0.9" is_a Real.at_least(0) ~is #false
+
+  0.9 is_a Real.in(1, 2) ~is #false
+  1.0 is_a Real.in(1, 2) ~is #true
+  1.0 is_a Real.in(1 ~inclusive, 2) ~is #true
+  1.0 is_a Real.in(1 ~exclusive, 2) ~is #false
+  1.1 is_a Real.in(1 ~exclusive, 2) ~is #true
+  2.0 is_a Real.in(1 ~exclusive, 2) ~is #true
+  2.0 is_a Real.in(1 ~exclusive, 2 ~inclusive) ~is #true
+  2.0 is_a Real.in(1 ~exclusive, 2 ~exclusive) ~is #false
+  2.0 is_a Real.in(1, 2 ~exclusive) ~is #false
+  1.0 is_a Real.in(1, 2 ~exclusive) ~is #true
+
+  "0.9" is_a Real.in(0, 1) ~is #false

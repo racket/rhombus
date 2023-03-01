@@ -58,10 +58,29 @@
 
 @doc(
   annot.macro 'Real'
+  annot.macro 'Real.at_least($lo)'
+  annot.macro 'Real.above($lo)'
+  annot.macro 'Real.below($hi)'
+  annot.macro 'Real.at_most($hi)'
+  annot.macro 'Real.in($lo $inclusivity, $hi $inclusivity)'
+
+  grammar inclusivity:
+    #,epsilon
+    ~inclusive
+    ~exclusive  
 ){
 
- Matches real numbers (as opposed to imaginary numbers like the result
- of @rhombus(math.sqrt(-1))).
+ The @rhombus(Real) annotation matches real numbers (as opposed to
+ imaginary numbers like the result of @rhombus(math.sqrt(-1))).
+
+ The @rhombus(Real.at_least), @rhombus(Real.above),
+ @rhombus(Real.below), and @rhombus(Real.at_most) annotations furher
+ constrain the number to be equal to or greater than, greater than, less
+ then, or equal to or less than the given number, respectively.
+
+ The @rhombus(Real.in) annotation constraints a real number to be within
+ the given range, where each end of the range is inclusive by default,
+ but @rhombus(~inclusive) or @rhombus(~exclusive) can be specified.
 
 @examples(
   5 is_a Real
@@ -69,6 +88,11 @@
   5.1 is_a Real
   #inf is_a Real
   math.sqrt(-1) is_a Real
+
+  1 is_a Real.at_least(1)
+  1 is_a Real.above(1)
+  0 is_a Real.in(0, 1 ~exclusive)
+  1 is_a Real.in(0, 1 ~exclusive)
 )
 
 }
