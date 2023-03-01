@@ -1,0 +1,41 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "color.rhm".Color
+  "symbol_map.rhm":
+    expose: symbol_map_annot
+            symbol_set_annot
+
+export:
+  Pen
+
+class Pen(handle):
+  internal _Pen
+  opaque
+  constructor (~color: color :: (String || Color) = "Black",
+               ~width: width :: Real.in(0, 255) = 1,
+               ~style: style :: PenStyle = #'solid,
+               ~cap: cap :: PenCap = #'round,
+               ~join: join :: PenJoin = #'round):
+    _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(color, width, style_convert(style), cap, join))
+
+
+symbol_map_annot PenStyle style_convert:
+  { transparent: transparent,
+    solid: solid,
+    xor: xor,
+    hilite: hilite,
+    dot: dot,
+    long_dash: #{long-dash},
+    show_dash: #{short-dash},
+    dot_dash: #{dot-dash},
+    xor_dot: #{xor-dot},
+    xor_long_dot: #{xor-long-dash},
+    xor_short_dot: #{xor-short-dash},
+    xor_dot_dash: #{xor-dot-dash} }
+
+symbol_set_annot PenCap:
+  { round, projecting, butt}
+
+symbol_set_annot PenJoin:
+  { round, bevel, miter }

@@ -115,8 +115,12 @@
                (hash-set options 'final? #f)]
               [(#:authentic)
                (when (hash-has-key? options 'authentic?)
-                 (raise-syntax-error #f "multiple authenticity clause" orig-stx clause))
+                 (raise-syntax-error #f "multiple authenticity clauses" orig-stx clause))
                (hash-set options 'authentic? #t)]
+              [(#:opaque)
+               (when (hash-has-key? options 'opaque?)
+                 (raise-syntax-error #f "multiple opacity clauses" orig-stx clause))
+               (hash-set options 'opaque? #t)]
               [(#:field id rhs-id ann-seq blk form-id mode)
                (with-syntax ([(predicate annotation-str static-infos)
                               (syntax-parse #'ann-seq

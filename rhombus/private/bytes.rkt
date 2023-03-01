@@ -25,7 +25,8 @@
 
 (define-name-root Bytes
   #:fields
-  ([length bytes-length]
+  ([make make-bytes]
+   [length bytes-length]
    [subbytes sub_bytes]
    utf8_string
    latin1_string

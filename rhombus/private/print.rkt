@@ -102,15 +102,19 @@
        (cond
          [(print-field-shapes-ref v #f)
           => (lambda (shapes)
-               (void
-                (for/fold ([did? #f]) ([i (in-range 1 (vector-length vec))]
-                                       [s (in-list shapes)]
-                                       #:when s)
-                  (when did? (display ", " op))
-                  (when (keyword? s)
-                    (display (string-append "~" (keyword->immutable-string s) ": ") op))
-                  (print (vector-ref vec i))
-                  #t)))]
+               (cond
+                 [(eq? shapes 'opaque)
+                  (display "..." op)]
+                 [else
+                  (void
+                   (for/fold ([did? #f]) ([i (in-range 1 (vector-length vec))]
+                                          [s (in-list shapes)]
+                                          #:when s)
+                     (when did? (display ", " op))
+                     (when (keyword? s)
+                       (display (string-append "~" (keyword->immutable-string s) ": ") op))
+                     (print (vector-ref vec i))
+                     #t))]))]
          [else
           (for ([i (in-range 1 (vector-length vec))])
             (unless (eqv? i 1) (display ", " op))

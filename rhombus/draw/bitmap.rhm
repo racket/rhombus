@@ -1,0 +1,81 @@
+#lang rhombus/static
+import:
+  "rkt.rhm"
+  "dc.rhm".DC
+  "dc.rhm"!internal: expose: DCer
+  "bitmap-interface.rhm" as intf
+
+export:
+  Bitmap
+  BitmapDC
+
+class BitmapDC(handle):
+  internal _BitmapDC
+  private implements DCer
+  implements DC
+
+  private override property dc:
+    handle
+
+  constructor ():
+    error("cannot instantiate")
+
+class Bitmap(handle):
+  internal _Bitmap
+  implements intf.Bitmap
+  private implements intf.BitmapPrivate
+  opaque
+
+  constructor (width :: PosInt,
+               height :: PosInt,
+               ~backing_scale: backing_space :: Real.at_least(0.0) = 1,
+               ~has_color = #true,
+               ~has_alpha = #true):
+    _Bitmap(rkt.make_object(rkt.#{bitmap%},
+                            width,
+                            height,
+                            !has_color,
+                            has_alpha,
+                            backing_space))
+
+  private override get_handle(): handle
+                               
+  override property width:
+    rkt.send handle.#{get-width}()
+
+  override property height:
+    rkt.send handle.#{get-height}()
+
+  property backing_scale:    
+    rkt.send handle.#{get-backing-scale}()
+
+  property depth:    
+    rkt.send handle.#{get-depth}()
+
+  property has_color:    
+    rkt.send handle.#{is-color?}()
+
+  property has_alpha:    
+    rkt.send handle.#{has-alpha-channel?}()
+
+  property is_ok:    
+    rkt.send handle.#{ok?}()
+
+  method make_dc() :: BitmapDC:
+    _BitmapDC(rkt.send handle.#{make-dc}())
+
+  method argb_pixels(~x: x :: NonnegInt = 0,
+                     ~y: y :: NonnegInt = 0,
+                     ~width: width :: NonnegInt = width,
+                     ~height: height :: NonnegInt = height,
+                     ~dest: dest :: Bytes = Bytes.make(width * height * 4)) :: Bytes:
+    rkt.send handle.#{get-argb-pixels}(x, y, width, height, dest)
+    dest
+
+  method write(dest,
+               ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm, #'xpm, #'bmp),
+               ~quality: quality :: Int.in(0, 100) = 75,
+               ~as_unscaled: as_unscaled :: Boolean = #false):
+    unless rkt.send handle.#{save-file}(#{#:unscaled?}: as_unscaled,
+                                        dest, kind, quality)
+    | error("error writing bitmap")

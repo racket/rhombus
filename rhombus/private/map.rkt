@@ -229,7 +229,7 @@
         [(length) (0ary #'hash-count)]
         [(keys) (0ary #'hash-keys)]
         [(values) (0ary #'hash-values)]
-        [(has_key) (0ary #'hash-has-key?)]
+        [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
         [else #f])))))
 
 (define-static-info-syntax Map-pair-build

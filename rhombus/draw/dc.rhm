@@ -1,0 +1,84 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "color.rhm".Color
+  "pen.rhm".Pen
+  "brush.rhm".Brush
+  "symbol_map.rhm".symbol_set_annot
+  "bitmap-interface.rhm"._BitmapPrivate as Bitmap
+
+export:
+  DC
+
+submodule internal:
+  export:
+    DCer
+
+interface DCer:
+  internal _DCer
+  abstract property dc
+
+interface DC:
+  private method get_dc():
+    (this :: _DCer).dc
+
+  method clear():
+    rkt.send get_dc().clear()
+
+  method font_metrics_key():
+    rkt.send get_dc().#{cache-font-metrics-key}()
+
+  method set_pen(p :: Pen):
+      rkt.send get_dc().#{set-pen}(p.handle)
+
+  method set_brush(b :: Brush):
+      rkt.send get_dc().#{set-brush}(b.handle)
+
+  method copy(x :: Real, y :: Real,
+              width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+              x2 :: Real, y2 :: Real):
+    rkt.send get_dc().copy(x, y, width, height, x2, y2)
+
+  method draw_point(x :: Real, y :: Real):
+    rkt.send get_dc().#{draw-point}(x, y)
+
+  method draw_line(x :: Real, y :: Real,
+                   x2 :: Real, y2 :: Real):
+    rkt.send get_dc().#{draw-line}(x, y, x2, y2)
+    
+  method draw_lines([[x :: Real, y :: Real], ...],
+                    ~dx: dx :: Real = 0.0,
+                    ~dy: dy :: Real = 0.0,
+                    x2 :: Real, y2 :: Real):
+    rkt.send get_dc().#{draw-lines}([Pair(x, y), ...], dx, dy)
+
+  method draw_rectangle(x :: Real, y :: Real,
+                        width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+    rkt.send get_dc().#{draw-rectangle}(x, y, width, height)
+    
+  method draw_ellipse(x :: Real, y :: Real,
+                      width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+    rkt.send get_dc().#{draw-ellipse}(x, y, width, height)
+    
+  method draw_arc(x :: Real, y :: Real,
+                  width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+                  start :: Real, end :: Real):
+    rkt.send get_dc().#{draw-arc}(x, y, width, height, start, end)
+
+  method draw_bitmap(b :: Bitmap,
+                     x :: Real, y :: Real,
+                     ~source_x: source_x :: Real = 0,
+                     ~source_y: source_y :: Real = 0,
+                     ~source_width: source_width :: Real.at_least(0.0) = b.width,
+                     ~source_height: source_height :: Real.at_least(0.0) = b.height,
+                     ~style: style :: CopyStyle = #'solid,
+                     ~color: color :: Color = Color("black"),
+                     ~mask: mask :: Maybe(Bitmap) = #false):
+    rkt.send get_dc().#{draw-bitmap-section}(b.get_handle(), x, y,
+                                             source_x, source_y,
+                                             source_width, source_height,
+                                             style, color.handle, mask)
+    #void
+
+symbol_set_annot CopyStyle:
+  { solid, opaque, xor }

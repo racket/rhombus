@@ -31,9 +31,18 @@
 
 @doc(
   annot.macro 'Any'
+  annot.macro 'Any.of($expr, ...)'
 ){
 
-  Matches any value.
+ The @rhombus(Any, ~annot) annotation matches any value. An
+ @rhombus(Any.of, ~annot) annotaton matches any value that is equal (in
+ the sense of @rhombus(==)) to one of the @rhombus(expr) results.
+
+@examples(
+  "hello" is_a Any
+  "hello" is_a Any.of("hello", "goodbye")
+  "hola" is_a Any.of("hello", "goodbye")
+)
 
 }
 

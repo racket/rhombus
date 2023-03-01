@@ -42,16 +42,30 @@
   annot.macro 'PosInt'
   annot.macro 'NegInt'
   annot.macro 'NonnegInt'
+
+  annot.macro 'Int.in($lo $inclusivity, $hi $inclusivity)'
+  
+  grammar inclusivity:
+    #,epsilon
+    ~inclusive
+    ~exclusive  
 ){
 
  Matches exact integers: all of them, positive integers, negative
- integers, or nonnegative integers.
+ integers, nonnegative integers, or integers in a given range.
+
+ The @rhombus(Int.in, ~annot) annotation constraints a integers to be
+ within the given range, where each end of the range is inclusive by
+ default, but @rhombus(~inclusive) or @rhombus(~exclusive) can be
+ specified.
 
 @examples(
   5 is_a Int
   5 is_a PosInt
   -5 is_a NegInt
   0 is_a NonnegInt
+  0 is_a Int.in(0, 1 ~exclusive)
+  1 is_a Int.in(0, 1 ~exclusive)
 )
 
 }
@@ -70,17 +84,19 @@
     ~exclusive  
 ){
 
- The @rhombus(Real) annotation matches real numbers (as opposed to
- imaginary numbers like the result of @rhombus(math.sqrt(-1))).
+ The @rhombus(Real, ~annot) annotation matches real numbers (as opposed
+ to imaginary numbers like the result of @rhombus(math.sqrt(-1))).
 
- The @rhombus(Real.at_least), @rhombus(Real.above),
- @rhombus(Real.below), and @rhombus(Real.at_most) annotations furher
- constrain the number to be equal to or greater than, greater than, less
- then, or equal to or less than the given number, respectively.
+ The @rhombus(Real.at_least, ~annot), @rhombus(Real.above, ~annot),
+ @rhombus(Real.below, ~annot), and @rhombus(Real.at_most, ~annot)
+ annotations furher constrain the number to be equal to or greater than,
+ greater than, less then, or equal to or less than the given number,
+ respectively.
 
- The @rhombus(Real.in) annotation constraints a real number to be within
- the given range, where each end of the range is inclusive by default,
- but @rhombus(~inclusive) or @rhombus(~exclusive) can be specified.
+ The @rhombus(Real.in, ~annot) annotation constraints a real number to
+ be within the given range, where each end of the range is inclusive by
+ default, but @rhombus(~inclusive) or @rhombus(~exclusive) can be
+ specified.
 
 @examples(
   5 is_a Real

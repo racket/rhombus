@@ -1,0 +1,16 @@
+#lang rhombus/static/and_meta
+
+export:
+  Bitmap
+  BitmapPrivate
+  _BitmapPrivate
+
+interface Bitmap:
+  property width
+  property height
+
+interface BitmapPrivate:
+  extends Bitmap
+  internal _BitmapPrivate
+  method get_handle()
+  

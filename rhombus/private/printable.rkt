@@ -32,8 +32,8 @@
                   #'Printable-ref
                   '#(#&print #&display)
                   #'#(#:abstract display_as_print)
-                  (hasheq 'print 0
-                          'display 1)
+                  (hasheq 'print 1
+                          'display 2)
                   #hasheq()
                   #t))
 

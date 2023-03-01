@@ -455,7 +455,9 @@
 (define-for-syntax (get-private-table desc)
   (define tables (get-private-tables))
   (or (for/or ([t (in-list tables)])
-        (and (free-identifier=? (car t) (class-desc-id desc))
+        (and (free-identifier=? (car t) (if (class-desc? desc)
+                                            (class-desc-id desc)
+                                            (interface-desc-id desc)))
              (cdr t)))
       #hasheq()))
 

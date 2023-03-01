@@ -102,6 +102,28 @@
     (1+0 no_fail 0) + 1
 )
 
+}
+
+
+@doc(
+  fun expr_meta.pack_expr(group :: Syntax) :: Syntax
+){
+
+ Converts a syntax object, which can be a multi-term syntax object, into
+ an opaque ``parsed'' term, but one that represents an expression with
+ delayed parsing.
+
+}
+
+
+@doc(
+  fun expr_meta.pack_s_exp(terms :: List.of(Syntax)) :: Syntax
+){
+
+ Converts a list of terms, which can include opaque parsed terms, into a
+ new, opaque parsed term representing a primitive parenthesized form. Any
+ immediate parsed term in @rhombus(terms) is exposed directly in the
+ parentheses sequence.
 
 }
 

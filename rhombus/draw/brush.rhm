@@ -1,0 +1,33 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "color.rhm".Color
+  "symbol_map.rhm":
+    expose: symbol_map_annot
+            symbol_set_annot
+
+export:
+  Brush
+
+class Brush(handle):
+  internal _Brush
+  opaque
+  constructor (~color: color :: (String || Color) = "Black",
+               ~style: style :: BrushStyle = #'solid):
+    _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(color, style_convert(style)))
+
+
+symbol_map_annot BrushStyle style_convert:
+  { transparent: transparent,
+    solid: solid,
+    opaque: opaque,
+    xor: xor,
+    hilite: hilite,
+    panel: panel,
+    bdiagonal_hatch: #{bdiagonal-hatch},
+    crossdiag_hatch: #{crossdiag-hatch},
+    fdiagonal_hatch: #{fdiagonal-hatch},
+    cross_hatch: #{cross-hatch},
+    horizontal_hatch: #{horizontal-hatch},
+    vertical_hatch: #{vertical-hatch} }
+                         

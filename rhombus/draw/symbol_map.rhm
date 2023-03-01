@@ -1,0 +1,24 @@
+#lang rhombus/static/and_meta
+
+export:
+  symbol_map_annot
+  symbol_set_annot
+
+defn.macro 'symbol_map_annot $(name :: Id) $(convert :: Id):
+              { $(src :: Id): $(dest :: Id), ...}':
+  '«
+     def table = { #'$src: #'$dest, ... }
+     fun is_symbol(v): table.has_key(v)
+     fun $convert(v): table[v]
+     annot.macro '$name':
+       annot_meta.pack_predicate('is_symbol', '()')
+   »'                    
+
+defn.macro 'symbol_set_annot $(name :: Id):
+              { $(src :: Id), ...}':
+  '«
+     def table = { #'$src, ... }
+     fun is_symbol(v): table[v]
+     annot.macro '$name':
+       annot_meta.pack_predicate('is_symbol', '()')
+   »'                    

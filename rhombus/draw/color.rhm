@@ -1,0 +1,37 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+
+export:
+  Color
+
+def _display = display
+
+class Color(handle):
+  internal _Color
+  
+  constructor
+  | (name :: String):
+      _Color(rkt.send (rkt.#{the-color-database}).#{find-color}(name))
+  | (red :: Byte, green :: Byte, blue :: Byte):
+      _Color(rkt.make_object(rkt.#{color%}, red, green, blue, 1.0))
+  | (red :: Byte, green :: Byte, blue :: Byte, alpha :: Real.in(0.0, 1.0)):
+      _Color(rkt.make_object(rkt.#{color%}, red, green, blue, alpha))
+
+  property red:
+    rkt.send handle.red()
+  property green:
+    rkt.send handle.green()
+  property blue:
+    rkt.send handle.blue()
+  property alpha:
+    rkt.send handle.alpha()
+
+  implements Printable
+  override print(o):
+    _display("Color("
+               +& red +& ", "
+               +& green +& ", "
+               +& blue +& ", "
+               +& alpha +& ")",
+             o)

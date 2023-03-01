@@ -306,7 +306,7 @@
                   make-datum
                   ;; make-literal
                   (lambda (d)
-                    #`(~literal #,d))
+                    #`(~datum #,d))
                   ;; handle-escape:
                   (lambda ($-id e in-e tail?)
                     (let-values ([(p new-idrs new-sidrs new-vars)

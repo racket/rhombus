@@ -37,9 +37,7 @@
                      :~)
          (for-space rhombus/annot
 
-                    Any
                     Boolean
-                    Int
                     PosInt
                     NegInt
                     NonnegInt
@@ -58,7 +56,9 @@
                     #%literal)
          (for-spaces (rhombus/annot
                       rhombus/namespace)
-                     Real))
+                     Any
+                     Real
+                     Int))
 
 (module+ for-class
   (begin-for-syntax
@@ -390,6 +390,14 @@
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
 
+(define-name-root Any
+  #:fields
+  ([of Any.of]))
+
+(define-name-root Int
+  #:fields
+  ([in Int.in]))
+
 (define-name-root Real
   #:fields
   ([above Real.above]
@@ -516,9 +524,9 @@
     (pattern g
              #:attr comp #'<=)))
 
-(define-annotation-syntax Real.in
+(define-for-syntax (make-in-annotation name pred-stx)
   (annotation-prefix-operator
-   (annot-quote Real.in)
+   name
    '((default . stronger))
    'macro
    (lambda (stxes)
@@ -528,10 +536,49 @@
            . tail)
         (values #`((let ([lo-v (rhombus-expression lo.g)]
                          [hi-v (rhombus-expression hi.g)])
+                     (unless (#,pred-stx lo-v) (bad '#,name 'lower lo-v))
+                     (unless (#,pred-stx hi-v) (bad '#,name 'upper hi-v))
                      (lambda (v)
-                       (and (real? v)
+                       (and (#,pred-stx v)
                             (lo.comp lo-v v)
                             (hi.comp v hi-v))))
                    ())
                 #'tail)]))))
+
+(define (bad who which v)
+  (raise-argument-error* who rhombus-realm
+                         (case who
+                           [(Read.in) "Real"]
+                           [else "Int"])
+                         v))
+
+(define-annotation-syntax Real.in
+  (make-in-annotation
+   (annot-quote Real.in)
+   #'real?))
+
+(define-annotation-syntax Int.in
+  (make-in-annotation
+   (annot-quote Int.in)
+   #'exact-integer?))
+
+(define-annotation-syntax Any.of
+  (annotation-prefix-operator
+   (annot-quote Any.of)
+   '((default . stronger))
+   'macro
+   (lambda (stxes)
+     (syntax-parse stxes
+       #:datum-literals (group)
+       [(_ (_::parens g ...)
+           . tail)
+        (with-syntax ([(lit ...) (generate-temporaries #'(g ...))])
+          (values #`((let ([lit (rhombus-expression g)]
+                           ...)
+                       (lambda (v)
+                         (or (equal-always? lit v)
+                             ...)))
+                     ())
+                  #'tail))]))))
+
 

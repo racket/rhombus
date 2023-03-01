@@ -7,5 +7,5 @@ check:
 
 check:
   ~eval
-  "a" :: Int . count()
+  "a" :: PosInt . count()
   ~raises "operator precedence"

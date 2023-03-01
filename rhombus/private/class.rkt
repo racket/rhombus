@@ -222,6 +222,7 @@
                                    (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
        (define final? (hash-ref options 'final? #t))
        (define authentic? (hash-ref options 'authentic? #f))
+       (define opaque? (hash-ref options 'opaque? #f))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
        (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
@@ -429,7 +430,7 @@
                                        ...]
                                       [super-name* ...]))
                (build-class-struct super
-                                   fields mutables constructor-keywords private?s final? authentic?
+                                   fields mutables constructor-keywords private?s final? authentic? opaque?
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
@@ -529,7 +530,7 @@
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
-                                       fields mutables constructor-keywords private?s final? authentic?
+                                       fields mutables constructor-keywords private?s final? authentic? opaque?
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
@@ -605,15 +606,17 @@
                                                                  (list* '(maybe-public-mutable-field-name ...)
                                                                         (hasheq (~@ 'property-name property-proc)
                                                                                 ...)))))
-                                                 #,@ (let ([field-print-shapes (print-field-shapes
-                                                                                super
-                                                                                fields constructor-keywords private?s)])
+                                                 #,@(cond
+                                                      [opaque? #`((cons prop:print-field-shapes 'opaque))]
+                                                      [else
+                                                       (define field-print-shapes
+                                                         (print-field-shapes super fields constructor-keywords private?s))
                                                        (if (or abstract-name
                                                                (and (andmap symbol? field-print-shapes)
                                                                     (not has-extra-fields?)))
                                                            null
                                                            #`((cons prop:print-field-shapes
-                                                                    '#,field-print-shapes))))
+                                                                    '#,field-print-shapes)))])
                                                  #,@(if final?
                                                         (list #'(cons prop:sealed #t))
                                                         '())

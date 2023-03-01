@@ -8,7 +8,8 @@
     "parser-tools-lib"
     ["scribble-lib" #:version "1.50"]
     "sandbox-lib"
-    "testing-util-lib"))
+    "testing-util-lib"
+    "draw-lib"))
 
 (define build-deps
   '("at-exp-lib"

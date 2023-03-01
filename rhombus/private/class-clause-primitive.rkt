@@ -26,6 +26,7 @@
 (provide (for-space rhombus/class_clause
                     implements
                     nonfinal
+                    opaque
                     authentic
                     field
                     constructor)
@@ -92,6 +93,12 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(#:nonfinal))]))))
+
+(define-class-clause-syntax opaque
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_) (wrap-class-clause #`(#:opaque))]))))
 
 (define-class-clause-syntax authentic
   (class-clause-transformer
@@ -335,10 +342,10 @@
        [(_ tag::implements form ...)
         (wrap-class-clause #`(#:private-implements . #,(parse-multiple-names #'(tag form ...))))]
        [(_ _::method (~var m (:method-impl #'#:private))) #'m.form]
+       [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
        [(_ _::override (~var m (:method-impl #'#:private-override))) #'m.form]
        [(_ _::override method (~var m (:method-impl #'#:private-override))) #'m.form]
        [(_ _::property (~var m (:property-impl #'#:private-property))) #'m.form]
-       [(_ _::override _::property (~var m (:property-impl #'#:private-override-property))) #'m.form]
        [(_ (~and (~seq field _ ...) (~var f (:field 'private)))) #'f.form]
        [(_ (~var m (:method-impl #'#:private))) #'m.form]))))
   

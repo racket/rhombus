@@ -60,6 +60,7 @@
     #,(@rhombus(expression, ~class_clause)) $expression_decl
     #,(@rhombus(binding, ~class_clause)) $binding_decl
     #,(@rhombus(annotation, ~class_clause)) $annotation_decl
+    #,(@rhombus(opaque, ~class_clause))
     $other_class_clause
 ){
 
@@ -864,6 +865,17 @@
  because @rhombus(interface) does not otherwise define an interfeace name
  for binding, and so @rhombus(bind.macro) can be
  used alongside @rhombus(interface) with the same interface name.
+
+}
+
+
+@doc(
+  class_clause.macro 'opaque'
+){
+
+ When a @tech{class clause} is @rhombus(opaque, ~class_clause), then the
+ default printed form does not show fields, and instead prints
+ @litchar{...} in parentheses after the class name.
 
 }
 

@@ -6,7 +6,8 @@
                      "pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
                      (for-syntax racket/base)
-                     "tail-returner.rkt")
+                     "tail-returner.rkt"
+                     "realm.rkt")
          "space-provide.rkt"
          "name-root.rkt"
          "macro-macro.rkt"
@@ -31,7 +32,9 @@
     #:fields
     (Parsed
      AfterPrefixParsed
-     AfterInfixParsed)))
+     AfterInfixParsed
+     pack_s_exp
+     pack_expr)))
 
 (define-operator-definition-transformer macro
   'macro
@@ -90,3 +93,20 @@
          (check-transformer-result (wrap-expression (check-expression-result form proc))
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
+
+(define-for-syntax (pack_s_exp s)
+  (unless (and (list? s)
+               (andmap syntax? s))
+    (raise-argument-error* 'expr.pack_s_exp rhombus-realm "List.of(Syntax)" s))
+  (define (unwrap-expression stx)
+    (syntax-parse stx
+      #:datum-literals (parsed)
+      [(parsed e) #'e]
+      [_ stx]))
+  #`(parsed #,(for/list ([stx (in-list s)])
+                (unwrap-expression (unpack-term stx 'expr.pack_s_exp #f)))))
+
+(define-for-syntax (pack_expr s)
+  (unless (syntax? s)
+    (raise-argument-error* 'expr.pack_expr rhombus-realm "Syntax" s))
+  #`(parsed (rhombus-expression #,(unpack-group s 'expr.pack_expr #f))))
