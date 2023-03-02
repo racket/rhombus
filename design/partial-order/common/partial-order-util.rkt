@@ -131,12 +131,14 @@
     [(> d epsilon) 1]
     [else +nan.0]))
 
-;; product-compare/recur : Any Any [Any Any -> PartialOrdering] -> PartialOrdering
-(define (product-compare/recur a b cmp)
+;; product-compare/recur :
+;; Any Any [Any Any -> PartialOrdering] Boolean -> PartialOrdering
+(define (product-compare/recur a b cmp mode)
   (cond
     [(eq? a b) 0]
     [(flvector? a)
      (ord-and/bool
+      mode
       (flvector? b)
       (= (flvector-length a) (flvector-length b))
       (for/fold ([acc 0])
@@ -146,6 +148,7 @@
         (ord-and/prod acc (cmp ai bi))))]
     [(extflvector? a)
      (ord-and/bool
+      mode
       (extflvector? b)
       (= (extflvector-length a) (extflvector-length b))
       (for/fold ([acc 0])
@@ -156,32 +159,39 @@
     [else
      (define (<=? ai bi) (<= (cmp ai bi) 0))
      (define (>=? ai bi) (>= (cmp ai bi) 0))
-     (define le (equal?/recur a b <=?))
-     (define ge (equal?/recur a b >=?))
+     (define le (if mode (equal?/recur a b <=?) (equal-always?/recur a b <=?)))
+     (define ge (if mode (equal?/recur a b >=?) (equal-always?/recur a b >=?)))
      (cond
        [(and le ge) 0]
        [le -1]
        [ge 1]
        [else +nan.0])]))
 
-;; product-hash-code/recur : Any [Any -> Integer] -> Integer
-(define (product-hash-code/recur x recur)
+;; product-hash-code/recur : Any [Any -> Integer] Boolean -> Integer
+(define (product-hash-code/recur x recur mode)
   (cond
     [(flvector? x)
-     (let loop ([acc (equal-hash-code (make-flvector 0))] [i 0])
-       (cond
-         [(<= (flvector-length x) i) acc]
-         [else
-          (loop (hash-code-combine acc (recur (flvector-ref x i)))
-                (add1 i))]))]
+     (if mode
+         (let loop ([acc (equal-hash-code (make-flvector 0))] [i 0])
+           (cond
+             [(<= (flvector-length x) i) acc]
+             [else
+              (loop (hash-code-combine acc (recur (flvector-ref x i)))
+                    (add1 i))]))
+         (eq-hash-code x))]
     [(extflvector? x)
-     (let loop ([acc (equal-hash-code (make-extflvector 0))] [i 0])
-       (cond
-         [(<= (extflvector-length x) i) acc]
-         [else
-          (loop (hash-code-combine acc (recur (extflvector-ref x i)))
-                (add1 i))]))]
-    [else (equal-hash-code/recur x recur)]))
+     (if mode
+         (let loop ([acc (equal-hash-code (make-extflvector 0))] [i 0])
+           (cond
+             [(<= (extflvector-length x) i) acc]
+             [else
+              (loop (hash-code-combine acc (recur (extflvector-ref x i)))
+                    (add1 i))]))
+         (eq-hash-code x))]
+    [else
+     (if mode
+         (equal-hash-code/recur x recur)
+         (equal-always-hash-code/recur x recur))]))
 
 ;; maps non-fixnum integers to positive fixnums
 (define (->fx v [who '->fx])

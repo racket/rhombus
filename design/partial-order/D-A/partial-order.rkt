@@ -85,7 +85,7 @@
     [(realish? a)
      (ord-and/bool (realish? b) (partial-compare-realish a b))]
     [else
-     (product-compare/recur a b cmp)]))
+     (product-compare/recur a b cmp #true)]))
 
 (define (partial_compare a b)
   (partial-compare/recur a b partial_compare))

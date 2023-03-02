@@ -73,7 +73,7 @@
          [(realish? b) (partial-compare-realish a b)]
          [else +nan.0])]
       [else
-       (product-compare/recur a b cmp)])))
+       (product-compare/recur a b cmp #true)])))
 
 ;; partial-compare : Any Any -> PartialOrder
 (define (partial-compare a b)
@@ -85,7 +85,7 @@
     [(partial-order? x)
      (->fx ((cadr (partial-order-ref x)) x compare-hash-code) 'compare-hash-code)]
     [(realish? x) (equal-hash-code (realish-key x))]
-    [else (product-hash-code/recur x compare-hash-code)]))
+    [else (product-hash-code/recur x compare-hash-code #true)]))
 
 (define-values (prop:PartialOrder PartialOrder? PartialOrder-ref)
   (make-struct-type-property
