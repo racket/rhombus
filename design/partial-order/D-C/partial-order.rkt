@@ -19,8 +19,6 @@
 
 (require (for-syntax racket/base
                      rhombus/private/interface-parse)
-         racket/flonum
-         racket/hash-code
          rhombus/private/define-operator
          (only-in rhombus/private/arithmetic
                   \|\| &&
@@ -87,14 +85,7 @@
     [(partial-order? x)
      (->fx ((cadr (partial-order-ref x)) x compare-hash-code) 'compare-hash-code)]
     [(realish? x) (equal-hash-code (realish-key x))]
-    [(flvector? x)
-     (let loop ([acc (equal-hash-code (make-flvector 0))] [i 0])
-       (cond
-         [(<= (flvector-length x) i) acc]
-         [else
-          (loop (hash-code-combine acc (compare-hash-code (flvector-ref x i)))
-                (add1 i))]))]
-    [else (equal-hash-code/recur x compare-hash-code)]))
+    [else (product-hash-code/recur x compare-hash-code)]))
 
 (define-values (prop:PartialOrder PartialOrder? PartialOrder-ref)
   (make-struct-type-property
@@ -155,10 +146,6 @@
   (ordering-normalize (partial-compare/recur a b compare)))
 
 (define (compare_hash_code a) (compare-hash-code a))
-
-(define (early-nan/= c) (if (zero? c) 0 +nan.0))
-(define (early-nan/<= c) (if (<= c 0) c +nan.0))
-(define (early-nan/>= c) (if (>= c 0) c +nan.0))
 
 (define (partial-compare/= a b)
   (early-nan/= (partial-compare/recur a b partial-compare/=)))

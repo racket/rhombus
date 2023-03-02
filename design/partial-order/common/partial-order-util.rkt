@@ -9,12 +9,17 @@
          partial-compare-realish
          partial-compare-realish/within
          product-compare/recur
-         ->fx)
+         product-hash-code/recur
+         ->fx
+         early-nan/=
+         early-nan/<=
+         early-nan/>=)
 
 (require (for-syntax racket/base)
          racket/fixnum
          racket/flonum
          racket/extflonum
+         racket/hash-code
          racket/math
          syntax/parse/define)
 
@@ -159,9 +164,34 @@
        [ge 1]
        [else +nan.0])]))
 
+;; product-hash-code/recur : Any [Any -> Integer] -> Integer
+(define (product-hash-code/recur x recur)
+  (cond
+    [(flvector? x)
+     (let loop ([acc (equal-hash-code (make-flvector 0))] [i 0])
+       (cond
+         [(<= (flvector-length x) i) acc]
+         [else
+          (loop (hash-code-combine acc (recur (flvector-ref x i)))
+                (add1 i))]))]
+    [(extflvector? x)
+     (let loop ([acc (equal-hash-code (make-extflvector 0))] [i 0])
+       (cond
+         [(<= (extflvector-length x) i) acc]
+         [else
+          (loop (hash-code-combine acc (recur (extflvector-ref x i)))
+                (add1 i))]))]
+    [else (equal-hash-code/recur x recur)]))
+
 ;; maps non-fixnum integers to positive fixnums
 (define (->fx v [who '->fx])
   (cond
     [(fixnum? v) v]
     [(exact-integer? v) (bitwise-and v (most-positive-fixnum))]
     [else (raise-argument-error who "exact-integer?" v)]))
+
+;; PartialOrdering -> PartialOrdering
+(define (early-nan/= c) (if (zero? c) 0 +nan.0))
+(define (early-nan/<= c) (if (<= c 0) c +nan.0))
+(define (early-nan/>= c) (if (>= c 0) c +nan.0))
+

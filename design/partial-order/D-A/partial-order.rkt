@@ -101,10 +101,6 @@
 
 ;; Short-circuiting via early-NaN
 
-(define (early-nan/= c) (if (zero? c) 0 +nan.0))
-(define (early-nan/<= c) (if (<= c 0) c +nan.0))
-(define (early-nan/>= c) (if (>= c 0) c +nan.0))
-
 (define (partial-compare/= a b)
   (early-nan/= (partial-compare/recur a b partial-compare/=)))
 
