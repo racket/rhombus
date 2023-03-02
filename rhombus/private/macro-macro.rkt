@@ -499,7 +499,30 @@
          (define name (pre-parsed-name p))
          (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
                                       ((space->introducer space-sym) name))
-                   (let ([#,name (#,compiletime-id #,p self-id extra-id)])
+                   (let ([#,name (#,compiletime-id (#,p) (self-id) (extra-id))])
+                     (values #,@(for/list ([space-sym (in-list space-syms)])
+                                  name)))))]
+        [(form-id (_::alts
+                   (_::block
+                    (group
+                     q::identifier-syntax-quote
+                     (~and rhs (tag::block
+                                (~optional (group #:op_stx (_::block (group self-id:identifier)))
+                                           #:defaults ([self-id #'self]))
+                                (~optional (group (~var kw (:keyword-matching extra-kw)) (_::block (group extra-id:identifier)))
+                                           #:defaults ([extra-id (if extra-kw #'extra #'#f)]))
+                                body ...))))
+                   ...))
+         (define ps (for/list ([g (in-list (syntax->list #'(q.g ...)))]
+                               [b (in-list (syntax->list #'((tag body ...) ...)))])
+                      (parse-transformer-definition g b)))
+         (check-consistent stx
+                           (map pre-parsed-name ps)
+                           "operator")
+         (define name (pre-parsed-name (car ps)))
+         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
+                                      ((space->introducer space-sym) name))
+                   (let ([#,name (#,compiletime-id #,ps (self-id ...) (extra-id ...))])
                      (values #,@(for/list ([space-sym (in-list space-syms)])
                                   name)))))]))))
 
@@ -507,8 +530,10 @@
   (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infos-stx)
     (lambda (stx)
       (syntax-parse stx
-        [(_ pre-parsed self-id extra-argument-id)
-         (parse-transformer-definition-rhs #'pre-parsed #'self-id #'extra-argument-id
+        [(_ pre-parseds self-ids extra-argument-ids)
+         (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
+                                           (syntax->list #'self-ids)
+                                           (syntax->list #'extra-argument-ids)
                                            make-transformer-id
                                            extra-static-infos-stx)]))))
 

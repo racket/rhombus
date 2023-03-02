@@ -16,10 +16,18 @@
 }
 
 @doc(
-  defn.macro '«defn.macro '$defined_name $pattern ...':
-                 $option; ...
-                 $body
-                 ...»'
+  defn.macro 'defn.macro $id_macro_patterns'
+
+  grammar id_macro_patterns:
+    '$defined_name $pattern ...':
+      $option; ...
+      $body
+      ...
+    Z| '$defined_name $pattern ...':
+         $option; ...
+         $body
+         ...
+     | ...
 
   grammar defined_name:
     $identifier
@@ -43,6 +51,10 @@
  identifier for a use of the macro (which cannot be matched directly in
  the @rhombus(pattern), since that position is used for the name
  that @rhombus(defn.macro) binds).
+
+ Using @vbar alternatives, a single definition can have any number of
+ @rhombus(pattern)s, which are tried in order. The @rhombus(defined_name)
+ must be the same across all cases.
 
  See @secref("namespaces") for information about
  @rhombus(identifier_path).

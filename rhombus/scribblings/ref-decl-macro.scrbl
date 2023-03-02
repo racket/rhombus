@@ -16,10 +16,7 @@
 }
 
 @doc(
-  defn.macro '«decl.macro '$defined_name $pattern ...':
-                 $option; ...
-                 $body
-                 ...»'
+  defn.macro 'decl.macro $id_macro_patterns'
 ){
 
  Like @rhombus(defn.macro) but for defining a macro that can be used
@@ -29,10 +26,7 @@
 }
 
 @doc(
-  defn.macro '«decl.nestable_macro '$defined_name $pattern ...':
-                 $option; ...
-                 $body
-                 ...»'
+  defn.macro 'decl.nestable_macro $id_macro_patterns'
 ){
 
  Like @rhombus(defn.macro), but for forms that can also be used in

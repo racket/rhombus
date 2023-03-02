@@ -63,3 +63,17 @@ check:
   def seq2_y = 100
   seq2_x
   ~is 101
+
+begin:
+  defn.macro
+  | 'multi_case 1 $id':
+      'def $id = "one"'
+  | 'multi_case 2 $id':
+      'def $id = "two"'
+
+  multi_case 1 a
+  multi_case 2 b
+
+  check:
+    a ~is "one"
+    b ~is "two"

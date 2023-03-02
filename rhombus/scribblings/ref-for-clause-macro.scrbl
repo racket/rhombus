@@ -19,23 +19,14 @@
 }
 
 @doc(
-  defn.macro '«for_clause.macro '$defined_name $pattern ...':
-                 $option; ...
-                 $body
-                 ...»'
-  defn.macro '«for_clause.macro
-               | '$defined_name $pattern ...':
-                   $option; ...
-                   $body
-                   ...
-               | ...»'
+  defn.macro 'for_clause.macro $id_macro_pattern'
 ){
 
  Similar to @rhombus(defn.macro), but defines a name in the
  @rhombus(for_clause, ~space) @tech{space} as a clause form
  for use within a @rhombus(for) body.
 
- The compile-time @rhombus(body) block returns the expansion result. The
+ The compile-time @rhombus(body, ~var) block returns the expansion result. The
  result must be a sequence of groups to be spliced in place of the macro
  use, where each group can be either a another @rhombus(for) clause, an
  expression, or a defintion.

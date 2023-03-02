@@ -304,42 +304,45 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (parse-transformer-definition-rhs pre-parsed self-id extra-id
+(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-ids
                                                      make-transformer-id
                                                      extra-static-infos-stx
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values])
-  (syntax-parse pre-parsed
-    #:datum-literals (pre-parsed)
-    [(pre-parsed id
-                 tail-pattern
-                 rhs)
-     (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)
-                                                                             #:as-tail? #t
-                                                                             #:splice? #t
-                                                                             #:splice-pattern values))
-     (with-syntax ([((p-id id-ref) ...) idrs]
-                   [(((s-id ...) sid-ref) ...) sidrs])
-       #`(#,make-transformer-id
-          (let ([id (lambda (tail #,@tail-ids self #,@(if (syntax-e extra-id) (list #'extra) null))
-                      (define #,self-id self)
-                      (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
-                      #,@(if (syntax-e extra-id)
-                             #`((define #,extra-id extra)
-                                (define-syntax #,(in-static-info-space extra-id) (make-static-infos #,extra-static-infos-stx)))
-                             null)
-                      (syntax-parse (insert-multi-front-group #,self-id tail)
-                        [#,pattern
-                         (let ([p-id id-ref] ...)
-                           (let-syntaxes ([(s-id ...) sid-ref] ...)
-                             #,(wrap-for-tail
-                                #`(rhombus-body-expression rhs))))]))])
-            id)))]))
+  #`(#,make-transformer-id
+     (let ([id (lambda (tail #,@tail-ids self #,@(if (syntax-e (car extra-ids)) (list #'extra) null))
+                 (syntax-parse (insert-multi-front-group self tail)
+                   #,@(for/list ([pre-parsed (in-list pre-parseds)]
+                                 [self-id (in-list self-ids)]
+                                 [extra-id (in-list extra-ids)])
+                        (syntax-parse pre-parsed
+                          #:datum-literals (pre-parsed)
+                          [(pre-parsed id
+                                       tail-pattern
+                                       rhs)
+                           (define-values (pattern idrs sidrs vars can-be-empty?) (convert-pattern #`(group (op $) _ . tail-pattern)
+                                                                                                   #:as-tail? #t
+                                                                                                   #:splice? #t
+                                                                                                   #:splice-pattern values))
+                           (with-syntax ([((p-id id-ref) ...) idrs]
+                                         [(((s-id ...) sid-ref) ...) sidrs])
+                             #`[#,pattern
+                                (define #,self-id self)
+                                (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
+                                #,@(if (syntax-e extra-id)
+                                       #`((define #,extra-id extra)
+                                          (define-syntax #,(in-static-info-space extra-id) (make-static-infos #,extra-static-infos-stx)))
+                                       null)
+                                (let ([p-id id-ref] ...)
+                                  (let-syntaxes ([(s-id ...) sid-ref] ...)
+                                    #,(wrap-for-tail
+                                       #`(rhombus-body-expression rhs))))])]))))])
+       id)))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs pre-parsed self-id #'#f
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'#f)
                                     make-transformer-id #'#f
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
