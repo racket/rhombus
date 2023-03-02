@@ -13,7 +13,6 @@
   decl.nestable_macro 'export $export_clause'
 
   grammar export_clause:
-    apple
     $export_item
     $export_item:
       $modifier
