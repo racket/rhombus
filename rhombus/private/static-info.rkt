@@ -5,7 +5,8 @@
                      enforest/syntax-local
                      "introducer.rkt")
          "expression.rkt"
-         "name-root-ref.rkt")
+         "name-root-ref.rkt"
+         "indirect-static-info-key.rkt")
 
 ;; Represent static information in either of two ways:
 ;;
@@ -19,6 +20,7 @@
 
 (begin-for-syntax
   (provide (property-out static-info)
+           static-info-get-stxs
            in-static-info-space
            wrap-static-info
            wrap-static-info*
@@ -59,16 +61,16 @@
                                                    (out-of-expression-space #'id))
                                                   static-info-ref))
                    (define val (and v
-                                    (for/or ([form (in-list ((static-info-get-stxs v)))])
-                                      (syntax-parse form
-                                        [(key:identifier val)
-                                         #:when (free-identifier=? #'key key-id)
-                                         #'val]
-                                        [_ #f]))))]
+                                    (static-info-lookup ((static-info-get-stxs v)) key-id)))]
              #:when val
              #:attr val val)
     (pattern (begin (quote-syntax (~and form (key:identifier val))) _)
              #:when (free-identifier=? #'key key-id))
+    (pattern (begin (quote-syntax (~and form (key:identifier indirect-id))) _)
+             #:when (free-identifier=? #'key #'#%indirect-static-info)
+             #:do [(define v (indirect-static-info-ref #'indirect-id key-id))]
+             #:when v
+             #:attr val v)
     (pattern (begin (quote-syntax _) (~var e (:static-info key-id)))
              #:attr val #'e.val)
     (pattern (quote d)
@@ -82,6 +84,9 @@
       [(~var dp (:static-info key-id))
        #'dp.val]
       [_ #f]))
+
+  (define (indirect-static-info-ref id key-id)
+    (syntax-local-static-info id key-id))
 
   (define string-static-infos #f)
   (define bytes-static-infos #f)
@@ -123,8 +128,10 @@
                                        (syntax->list static-infos)
                                        static-infos))])
       (syntax-parse static-info
-        [(key val) (and (free-identifier=? #'key find-key)
-                        #'val)]
+        [(key val) (or (and (free-identifier=? #'key find-key)
+                            #'val)
+                       (and (free-identifier=? #'key #'#%indirect-static-info)
+                            (indirect-static-info-ref #'val find-key)))]
         [_ #f]))))
 
 (define-syntax (define-static-info-syntax stx)

@@ -1,4 +1,4 @@
-#lang rhombus/static
+#lang rhombus/static/and_meta
 import:
   "rkt.rhm"
   "dc.rhm".DC
@@ -46,19 +46,19 @@ class Bitmap(handle):
   override property height:
     rkt.send handle.#{get-height}()
 
-  property backing_scale:    
+  property backing_scale:
     rkt.send handle.#{get-backing-scale}()
 
-  property depth:    
+  property depth:
     rkt.send handle.#{get-depth}()
 
-  property has_color:    
+  property has_color:
     rkt.send handle.#{is-color?}()
 
-  property has_alpha:    
+  property has_alpha:
     rkt.send handle.#{has-alpha-channel?}()
 
-  property is_ok:    
+  property is_ok:
     rkt.send handle.#{ok?}()
 
   method make_dc() :: BitmapDC:
@@ -79,3 +79,5 @@ class Bitmap(handle):
     unless rkt.send handle.#{save-file}(#{#:unscaled?}: as_unscaled,
                                         dest, kind, quality)
     | error("error writing bitmap")
+
+annot.delayed_complete intf.BitmapForward: Bitmap

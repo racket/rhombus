@@ -14,7 +14,8 @@
          "wrap-expression.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")
-         "parse.rkt")
+         "parse.rkt"
+         "annot-delayed.rkt")
 
 (provide (for-syntax (for-space rhombus/namespace
                                 annot_meta)))
@@ -24,7 +25,9 @@
 
 (define+provide-space annot rhombus/annot
   #:fields
-  (macro))
+  (macro
+   delayed_declare
+   delayed_complete))
 
 (begin-for-syntax
   (define-name-root annot_meta

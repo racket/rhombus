@@ -20,3 +20,45 @@ def AlsoPosn(also_x, also_y) = Posn(10, 20)
 check:
   also_x +& "," +& also_y
   ~is "10,20"
+
+begin:
+  annot.delayed_declare Forward
+  check:
+    10 :: Forward
+    ~raises "delayed annoation is not yet completed"
+  annot.delayed_complete Forward: Int
+  check:
+    10 :: Forward
+    ~is 10
+
+begin:
+  namespace f:
+    export: Forward
+            f
+    annot.delayed_declare Forward
+    fun f(v): v :: Forward
+  check:
+    f.f(10)
+    ~raises "delayed annoation is not yet completed"
+  annot.delayed_complete f.Forward: Int
+  check:
+    f.f(10)
+    ~is 10
+
+check:
+  ~eval
+  use_static
+  import: rhombus/meta open
+  annot.delayed_declare Forward
+  fun (): (10 :: Forward).x
+  ~raises "no such field or method (based on static information)"
+
+check:
+  ~eval
+  use_static
+  import: rhombus/meta open
+  annot.delayed_declare Forward
+  class Posn(x, y)
+  annot.delayed_complete Forward: Posn  
+  fun (): (10 :: Forward).x
+  ~completes

@@ -59,6 +59,55 @@
 
 }
 
+@doc(
+  defn.macro 'annot.delayed_declare $id'
+  defn.macro 'annot.delayed_complete $identifier_path: $annot'
+){
+
+ Last-resort forms for solving mutual-dependency problems among
+ annotations. The @rhombus(annot.delayed_declare) form declares an
+ annotation, and the @rhombus(annot.delayed_complete) form mutates a
+ declaration to make it equivalent to @rhombus(annot).
+
+ A completed delayed annotation need not be declared in the same module
+ or definition context, which is why @rhombus(annot.delayed_complete)
+ allows an @rhombus(identifier_path). See @secref("namespaces") form more
+ information on @rhombus(identifier_path).
+
+ If a value is tested against a delayed annotation @rhombus(id) before
+ it is completed via @rhombus(annot.delayed_complete) at run time, then
+ an exception is reported. At compile time, the static information
+ associated @rhombus(id) is empty until after it is completed via
+ @rhombus(annot.delayed_complete).
+
+ These forms should be used as last resort because they inherently
+ involve a side effect, and potentially across module boundaries. When a
+ module uses an imported delayed annotation, the run-time component of
+ that delayed annotation might be initialized as a side effect of
+ requiring some other module, which potentially makes the reference
+ fragile. Delayed annotations are suitable for use inside a library that
+ is implemented by multiple private modules that are aggregated into a
+ single library as the public interface.
+
+@examples(
+  ~eval: macro_eval
+  annot.delayed_declare Forward
+  class Posn(x, y)
+  ~error:
+    Posn(1, 2) :: Forward
+  ~error:
+    begin:
+      use_static
+      fun (p :: Forward): p.x
+  annot.delayed_complete Forward: Posn
+  Posn(1, 2) :: Forward  
+  begin:
+    use_static
+    fun (p :: Forward): p.x
+)
+
+}
+
 
 @doc(
   syntax_class annot_meta.Parsed:

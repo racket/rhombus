@@ -2,25 +2,37 @@
 import:
   "rkt.rhm"
   "color.rhm".Color
+  "color.rhm"!private._Color
   "symbol_map.rhm":
     expose: symbol_map_annot
             symbol_set_annot
+  "bitmap-interface.rhm".BitmapForward as Bitmap
 
 export:
   Pen
 
-class Pen(handle):
+class Pen(handle, private saved_stipple):
   internal _Pen
   opaque
   constructor (~color: color :: (String || Color) = "Black",
                ~width: width :: Real.in(0, 255) = 1,
                ~style: style :: PenStyle = #'solid,
                ~cap: cap :: PenCap = #'round,
-               ~join: join :: PenJoin = #'round):
-    _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(color, width, style_convert(style), cap, join))
+               ~join: join :: PenJoin = #'round,
+               ~stipple: stipple :: Maybe(Bitmap) = #false):
+    if stipple
+    | _Pen(rkt.make_object(rkt.#{pen%}, color, width, style_convert(style), cap, join, stipple),
+           stipple)
+    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(color, width, style_convert(style), cap, join),
+           #false)
+  property color :: Color: _Color(rkt.send handle.#{get-color}())
+  property width: _Color(rkt.send handle.#{get-width}())
+  property style: style_unconvert(rkt.send handle.#{get-width}())
+  property cap: rkt.send handle.#{get-cap}()
+  property join: rkt.send handle.#{get-join}()
+  property stipple :: Maybe(Bitmap): saved_stipple
 
-
-symbol_map_annot PenStyle style_convert:
+symbol_map_annot PenStyle style_convert style_unconvert:
   { transparent: transparent,
     solid: solid,
     xor: xor,

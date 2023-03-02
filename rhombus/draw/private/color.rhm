@@ -5,6 +5,10 @@ import:
 export:
   Color
 
+submodule private:
+  export:
+    _Color
+
 def _display = display
 
 class Color(handle):
