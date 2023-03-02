@@ -5,6 +5,13 @@
 
 @(def macro_eval: macro.make_macro_eval())
 
+@(def macro_meta_eval: make_rhombus_eval())
+@examples(
+  ~hidden: #true
+  ~eval: macro_meta_eval
+  import: meta -1: rhombus/meta open
+)
+
 @(def dollar: @rhombus($))
 
 @title{Expression Macros}
@@ -70,7 +77,7 @@
  @provided_meta()
 
  Syntax classes that match by parsing expressions. The value of the
- binding in each case is an opaque syntax object that represents the parsed
+ binding in each case is an opaque syntax object that represents the @tech{parsed}
  expression form, while the @rhombus(group) field holds a syntax object
  for the original terms that were parsed.
 
@@ -110,20 +117,39 @@
 ){
 
  Converts a syntax object, which can be a multi-term syntax object, into
- an opaque ``parsed'' term, but one that represents an expression with
- delayed parsing.
+ an @tech{parsed} term, but one that represents an expression with
+ delayed parsing. The function is intended for use in combination with
+ @rhombus(expr_meta.pack_s_exp).
+
+@examples(
+  ~eval: macro_meta_eval
+  expr_meta.pack_expr('x + 1')
+)
 
 }
 
 
 @doc(
-  fun expr_meta.pack_s_exp(terms :: List.of(Syntax)) :: Syntax
+  fun expr_meta.pack_s_exp(tree) :: Syntax
 ){
 
- Converts a list of terms, which can include opaque parsed terms, into a
- new, opaque parsed term representing a primitive parenthesized form. Any
- immediate parsed term in @rhombus(terms) is exposed directly in the
- parentheses sequence.
+ Converts a tree of terms, which can include @tech{parsed} terms, into a
+ new parsed term representing a Racket parenthesized form. The intent is
+ that the result is a Racket form to be used in a Rhombus context.
+
+ A ``tree'' is a syntax object or a list of trees (i.e., syntax objects
+ and arbitrary nestings of them within lists). Each syntax object must
+ contain a single term.
+
+ Any @tech{parsed} form as a leaf of @rhombus(tree) is exposed directly
+ in the parenthesized sequence, which enables the construction of parsed
+ terms that combine other parsed terms.
+
+@examples(
+  ~eval: macro_meta_eval
+  expr_meta.pack_s_exp(['lambda', ['x'], 'x'])
+  expr_meta.pack_s_exp(['lambda', ['x'], expr_meta.pack_expr('x + 1')])
+)
 
 }
 

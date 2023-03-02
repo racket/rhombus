@@ -216,10 +216,15 @@
     [else
      (define unpacked (unpack-term v 'Syntax.unwrap #f))
      (define u (syntax-e unpacked))
-     (if (and (pair? u)
-              (not (list? u)))
-         (syntax->list unpacked)
-         u)]))
+     (cond
+       [(and (pair? u)
+             (eq? (syntax-e (car u)) 'parsed))
+        v]
+       [else
+        (if (and (pair? u)
+                 (not (list? u)))
+            (syntax->list unpacked)
+            u)])]))
 
 (define/arity (unwrap_op v)
   (cond

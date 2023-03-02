@@ -94,17 +94,23 @@
                                    (unpack-tail new-tail proc #f)
                                    proc)))))
 
-(define-for-syntax (pack_s_exp s)
-  (unless (and (list? s)
-               (andmap syntax? s))
-    (raise-argument-error* 'expr.pack_s_exp rhombus-realm "List.of(Syntax)" s))
-  (define (unwrap-expression stx)
-    (syntax-parse stx
-      #:datum-literals (parsed)
-      [(parsed e) #'e]
-      [_ stx]))
-  #`(parsed #,(for/list ([stx (in-list s)])
-                (unwrap-expression (unpack-term stx 'expr.pack_s_exp #f)))))
+(define-for-syntax (pack_s_exp orig-s)
+  #`(parsed
+     #,(let loop ([s orig-s])
+         (cond
+           [(syntax? s)
+            (define stx (unpack-term s 'expr.pack_s_exp #f))
+            (syntax-parse stx
+              #:datum-literals (parsed)
+              [(parsed e) #'e]
+              [_ stx])]
+           [(list? s)
+            (for/list ([e (in-list s)])
+              (loop e))]
+           [else
+            (raise-arguments-error* 'expr.pack_s_exp rhombus-realm
+                                    "not a list nesting of syntax objects"
+                                    "value" orig-s)]))))
 
 (define-for-syntax (pack_expr s)
   (unless (syntax? s)

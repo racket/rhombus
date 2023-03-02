@@ -10,14 +10,23 @@
 
 A @deftech{syntax object} encapsulates a shrubbery term, group, or
  multi-group sequence with binding scopes and other metadata on
- individual terms, and metadata potentially on individual syntax.cls. See
+ individual terms, and metadata potentially on individual syntax objects. See
  @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "top")
  for information on shrubbery notation, and specifically
  @secref(~doc: [#'lib, "shrubbery/scribblings/shrubbery.scrbl"], "parsed-rep")
  for information on representing shrubbery terms as
  Rhombus values. The @rhombus(Syntax.make) function takes such a value
  and wraps it as a syntax object, so that it can accumulate binding
- scopes or hold other metadata.
+ scopes or hold other metadata, and functions like @rhombus(Syntax.unwrap)
+ expose that structure.
+
+In addition to normal shrubbery structure, a syntax object can contain
+@deftech{parsed} terms, which are opaque. The meaning and internal
+structure of a parsed term depends on the parser that produced it. In
+the case of parsing a syntax object as a Rhombus expression via
+@rhombus(expr_meta.Parsed, ~stxclass), a parsed term encapsulates a
+Racket expression. Pattern matching and functions like
+@rhombus(Syntax.unwrap) treat parsed terms as opaque.
 
 An quoted sequence of terms using @quotes is parsed as an
  implicit use of the @rhombus(#%quotes) form, which is normally
@@ -610,7 +619,8 @@ Metadata for a syntax object can include a source location and the raw
  Unwraps a single-term syntax object by one layer. The result is a
  list of syntax objects in the case of an operator, parentheses,
  brackets, braces, block, or alternatives, where the first element of
- the list reflects the specific shape.
+ the list reflects the specific shape. In the case of a @tech{parsed}
+ term, the result is just the parsed term, still as a syntax object.
 
 @examples(
   Syntax.unwrap('1.0')
