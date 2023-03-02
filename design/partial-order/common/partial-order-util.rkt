@@ -5,11 +5,14 @@
          ord-and/bool
          ord-and/prod
          realish?
+         realish-key
          partial-compare-realish
          partial-compare-realish/within
-         product-compare/recur)
+         product-compare/recur
+         ->fx)
 
 (require (for-syntax racket/base)
+         racket/fixnum
          racket/flonum
          racket/extflonum
          racket/math
@@ -156,3 +159,9 @@
        [ge 1]
        [else +nan.0])]))
 
+;; maps non-fixnum integers to positive fixnums
+(define (->fx v [who '->fx])
+  (cond
+    [(fixnum? v) v]
+    [(exact-integer? v) (bitwise-and v (most-positive-fixnum))]
+    [else (raise-argument-error who "exact-integer?" v)]))
