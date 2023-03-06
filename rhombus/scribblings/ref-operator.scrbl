@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -7,6 +9,10 @@
 @title(~tag: "ref-operator"){Operators}
 
 @doc(
+  ~nonterminal:
+    maybe_res_annot: fun
+    op_or_id_path: namespace
+
   defn.macro 'operator $op_case'
   defn.macro 'operator 
               | $op_case
@@ -18,12 +24,12 @@
                 | ...'
 
   grammar op_case:  
-    $op_or_id_path $binding_term $impl_block
-    $binding_term $op_or_id_path $binding_term $impl_block
-    $binding_term $op_or_id_path $impl_block
-    ($op_or_id_path $binding_term) $maybe_res_ann $impl_block
-    ($binding_term $op_or_id_path $binding_term) $maybe_res_ann $impl_block
-    ($binding_term $op_or_id_path) $maybe_res_ann $impl_block
+    $op_or_id_path $bind_term $impl_block
+    $bind_term $op_or_id_path $bind_term $impl_block
+    $bind_term $op_or_id_path $impl_block
+    ($op_or_id_path $bind_term) $maybe_res_annot $impl_block
+    ($bind_term $op_or_id_path $bind_term) $maybe_res_annot $impl_block
+    ($bind_term $op_or_id_path) $maybe_res_annot $impl_block
 
   grammar impl_block:
     :
@@ -47,8 +53,8 @@
     ~associativity: $assoc
 
   grammar other:
-    $identifier
-    $operator
+    $id
+    $op
     ~other
 
   grammar assoc:
@@ -56,25 +62,23 @@
     ~right
     ~none
 
-  grammar op_or_id_path:
-    $operator_path
-    $identifier_path
+  grammar bind_term:
+    bind
 ){
 
  Binds @rhombus(op_or_id_path) as a operator, either
- prefix, infix, postfix, or a combination. See @secref("namespaces") for
- information on @rhombus(operator_path) and @rhombus(identifier_path).
+ prefix, infix, postfix, or a combination.
 
  The operator is function-like in the sense that it receives argument
  values. (To bind an operator that is not function-like, see
- @rhombus(macro) or @rhombus(expr.macro).) Each argument is specified by
+ @rhombus(macro) or @rhombus(expr.macro, ~expr).) Each argument is specified by
  a binding that must be written as a single shrubbery term that is not an
  operator in the shrubbery sense; parentheses can be used around other
  binding forms for arguments. If two identifier terms appear within the
  parentheses that follow @rhombus(operator), a prefix operator is
  defined using the first identifier as its name. When a parenthesized
  sequence is followed by @rhombus(::, ~bind) or @rhombus(:~, ~bind), it
- is treated as starting a @rhombus(maybe_res_ann), which is the same
+ is treated as starting a @rhombus(maybe_res_annot), which is the same
  as in @rhombus(fun) definitions.
 
  The new operator is also bound a @tech{repetition} operator, in which

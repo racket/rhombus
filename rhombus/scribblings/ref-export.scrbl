@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     lib("rhombus/private/module-path.rkt")!#{for-meta}.modpath)
 
 @title{Export}
@@ -22,12 +23,22 @@
       ...
 
   grammar export_item:
-    $identifier_or_operator
+    $id_or_op
     $export
 
-  grammar identifier_or_operator:
-    $identifier_path
-    $operator_path
+  grammar id_or_op:
+    $id_path
+    $op_path
+
+  grammar modifier:
+    #,(@rhombus(rename, ~impo)) $rename_decl
+    #,(@rhombus(except, ~impo)) $except_decl
+    #,(@rhombus(meta, ~impo)) $meta_decl
+    #,(@rhombus(meta_label, ~impo))
+    #,(@rhombus(only_space, ~impo)) $only_space_decl
+    #,(@rhombus(except_space, ~impo)) $except_space_decl
+    $other_modifier
+
 ){
 
  Exports from the enclosing module or namespace. An @rhombus(export) form with a
@@ -47,17 +58,19 @@
  a block. The latter order works only if the @rhombus(modifier) itself
  does not need a block.
 
- An @rhombus(identifier_path) or @rhombus(operator_path) export can be
+ An @rhombus(id_path) or @rhombus(op_path) export can be
  an immediate identifier or oerator, or it can be dotted name, such as
  @rhombus(List.length). The last component of a dotted name is used as
  the export name. See @secref("namespaces") for information on
- @rhombus(identifier_path) and @rhombus(operator_path).
+ @rhombus(id_path) and @rhombus(op_path).
 
 }
 
 @doc(
+  ~nonterminal:
+    module_path: import
   expo.macro 'all_from($module_path)'
-  expo.macro 'all_from(#,(@rhombus(., ~expo)) $identifier_path)'
+  expo.macro 'all_from(#,(@rhombus(., ~expo)) $id_path)'
 ){
 
  With @rhombus(module_path), exports all bindings imported without a
@@ -68,36 +81,39 @@
  @rhombus(lib) forms, and in a @rhombus(lib) form, an implicit
  @filepath{.rhm} suffix is made explicit.
 
- With @rhombus(#,(@rhombus(., ~expo)) identifier_path), exports
+ With @rhombus(#,(@rhombus(., ~expo)) id_path), exports
  the content of the specified @tech{namespace} or module import (i.e.,
  the content that would be accessed with a prefix in the exporting
  context). See @secref("namespaces") for information on
- @rhombus(identifier_path).
+ @rhombus(id_path).
 }
 
 @doc(
+  ~nonterminal:
+    int_id_or_op: begin id_or_op
+    ext_id_or_op: begin id_or_op
   expo.macro 'rename:
-                $int_identifier_or_operator #,(@rhombus(as, ~expo)) $ext_identifier_or_operator
+                $int_id_or_op #,(@rhombus(as, ~expo)) $ext_id_or_op
                 ...'
 ){
 
  For each @rhombus(as, ~expo) group, exports
- @rhombus(int_identifier_or_operator) bound locally so that it's
- imported as @rhombus(ext_identifier_or_operator).
+ @rhombus(int_id_or_op) bound locally so that it's
+ imported as @rhombus(ext_id_or_op).
 
 }
 
 @doc(
   expo.macro 'names:
-                $identifier_or_operator ...
+                $id_or_op ...
                 ...'
 ){
 
- Exports all @rhombus(identifier_or_operator)s.
+ Exports all @rhombus(id_or_op)s.
 
- Most @rhombus(identifier_or_operator)s can be exported directly
+ Most @rhombus(id_or_op)s can be exported directly
  without using @rhombus(names, ~impo), but the @rhombus(names, ~impo)
- form disambiguates in the case of an @rhombus(identifier_or_operator) that is
+ form disambiguates in the case of an @rhombus(id_or_op) that is
  itself bound as an export form or modifier.
 
 }
@@ -156,21 +172,38 @@
 
 }
 
+
 @doc(
-  expo.macro '$identifier_path . $identifier'
-  expo.macro '$identifier_path . ($operator)'
+  expo.modifier 'only_space $id'
+  expo.modifier 'only_space: $id ...'
+  expo.modifier 'except_space $id'
+  expo.modifier 'except_space: $id ...'
 ){
 
-  In an export clause, @rhombus(., ~expo) can be used only to form a
-  and @rhombus(identifier_path, ~var) or @rhombus(operator_path, ~var)
-  as described for @rhombus(export). It can also be used to form an
-  @rhombus(identifier_path, ~var) for @rhombus(all_from).
+ Modifies an @rhombus(export) clause to include bindings only in the
+ specifically listed @tech{spaces} or only in the spaces not specifically
+ listed.
 
 }
 
 
 @doc(
-  modpath.macro '$identifier / $collection_module_path'
+  expo.macro '$id_path . $id'
+  expo.macro '$id_path . ($op)'
+){
+
+  In an export clause, @rhombus(., ~expo) can be used only to form a
+  and @rhombus(id_path) or @rhombus(op_path)
+  as described for @rhombus(export). It can also be used to form an
+  @rhombus(id_path) for @rhombus(all_from).
+
+}
+
+
+@doc(
+  ~nonterminal:
+    collection_module_path: import
+  modpath.macro '$id / $collection_module_path'
 ){
 
  Like the @rhombus(/, ~impo) operator for @rhombus(import) module
@@ -200,7 +233,9 @@
 
 
 @doc(
-  modpath.macro '$module_path ! $identifier'
+  ~nonterminal:
+    module_path: import
+  modpath.macro '$module_path ! $id'
 ){
 
  Like the @rhombus(!, ~impo) operator for @rhombus(import) to access a
@@ -216,19 +251,5 @@
  Like the @rhombus(self, ~impo) and @rhombus(parent, ~impo)
  @rhombus(import) forms, used for module paths in
  @rhombus(all_from, ~expo).
-
-}
-
-
-@doc(
-  expo.modifier 'only_space $identifier'
-  expo.modifier 'only_space: $identifier ...'
-  expo.modifier 'except_space $identifier'
-  expo.modifier 'except_space: $identifier ...'
-){
-
- Modifies an @rhombus(export) clause to include bindings only in the
- specifically listed @tech{spaces} or only in the spaces not specifically
- listed.
 
 }

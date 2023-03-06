@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title(~tag: "implicit"){Implicit Forms}
 
@@ -84,8 +86,8 @@ Here are all of the implicit forms:
 
 @doc(
   expr.macro '#%parens ($expr)'
-  bind.macro '#%parens ($binding)'
-  annot.macro '#%parens ($annotation)'
+  bind.macro '#%parens ($bind)'
+  annot.macro '#%parens ($annot)'
 ){
 
 @provided_also_meta()

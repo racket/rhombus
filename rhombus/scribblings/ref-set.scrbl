@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -29,13 +30,15 @@ it supplies its elements in an unspecified order.
 )
 
 @doc(
+  ~nonterminal:
+    set_expr: begin expr
   expr.macro 'Set{$expr_or_splice, ...}'
   repet.macro 'Set{$repet_or_splice, ...}'
   fun Set(value:: Any, ...) :: Set
 
   grammar expr_or_splice:
     $expr
-    $repetition #,(@litchar{,}) ellipses
+    $repet #,(@litchar{,}) ellipses
     & $set_expr
 
   grammar ellipses:
@@ -67,23 +70,26 @@ it supplies its elements in an unspecified order.
 }
 
 @doc(
+  ~nonterminal:
+    set_bind: def bind
+    rest_bind:  def bind
   bind.macro 'Set{$expr, ...}'
   bind.macro 'Set{$expr, ..., $rest}'
   grammar rest:
-    & $set_binding
-    $rest_binding #,(@litchar{,}) $ellipsis
+    & $set_bind
+    $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
 ){
 
  Matches a set containing at least the values computed by the @rhombus(expr)s.
  The matched set may have additional values.
- If @rhombus(& set_binding) is supplied, the rest of the set excluding
- the values of the given @rhombus(expr)s must match the @rhombus(set_binding).
- If @rhombus(rest_binding) followed by @dots is
+ If @rhombus(& set_bind) is supplied, the rest of the set excluding
+ the values of the given @rhombus(expr)s must match the @rhombus(set_bind).
+ If @rhombus(rest_bind) followed by @dots is
  supplied, the rest of the set excluding the given @rhombus(expr)s
- must have individual values that match @rhombus(rest_binding), and identifiers in
- @rhombus(rest_binding) are bound
+ must have individual values that match @rhombus(rest_bind), and identifiers in
+ @rhombus(rest_bind) are bound
  as repetitions.
 
 @examples(
@@ -102,7 +108,7 @@ it supplies its elements in an unspecified order.
 
 @doc(
   annot.macro 'Set'
-  annot.macro 'Set.of($annotation)'
+  annot.macro 'Set.of($annot)'
 ){
 
  Matches any set in the form without @rhombus(of). The @rhombus(of)
@@ -122,7 +128,9 @@ it supplies its elements in an unspecified order.
 
 
 @doc(
-  expr.macro 'MutableSet{$value_expr, ...}'
+  ~nonterminal:
+    val_expr: begin expr
+  expr.macro 'MutableSet{$val_expr, ...}'
   fun MutableSet(value:: Any, ...) :: Set
 ){
 

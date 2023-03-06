@@ -1,12 +1,16 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @title{Dot}
 
 @doc(
-  expr.macro '$target_expr . $identifier'
-  expr.macro '$target_expr . $identifier := $expr'
-  repet.macro '$target_repetition . $identifier'
+  ~nonterminal:
+    target_expr: begin expr
+    target_repet: begin repet                 
+  expr.macro '$target_expr . $id'
+  expr.macro '$target_expr . $id := $expr'
+  repet.macro '$target_repet . $id'
 ){
 
  Accesses or updates a component of @rhombus(target), either statically

@@ -1,14 +1,15 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @title{Annotations}
 
 @doc(
-  expr.macro '$expr :: $annotation'
+  expr.macro '$expr :: $annot'
 ){
 
  Checks that the value of @rhombus(expr) satisifies
- @rhombus(annotation), and returns the value if so.
+ @rhombus(annot), and returns the value if so.
 
 @examples(
   [1, 2, 3] :: List
@@ -17,11 +18,11 @@
 }
 
 @doc(
-  bind.macro '$binding :: $annotation'
+  bind.macro '$bind :: $annot'
 ){
 
- Binds the same as @rhombus(binding), but first checks that the value to
- be bound satisfies @rhombus(annotation).
+ Binds the same as @rhombus(bind), but first checks that the value to
+ be bound satisfies @rhombus(annot).
 
 @examples(
   def x :: List: [1, 2, 3]
@@ -47,7 +48,7 @@
 }
 
 @doc(
-  expr.macro '$expr :~ $annotation'
+  expr.macro '$expr :~ $annot'
 ){
 
  Associates static information to the overall expression the same as
@@ -62,10 +63,10 @@
 }
 
 @doc(
-  bind.macro '$binding :~ $annotation'
+  bind.macro '$bin :~ $annot'
 ){
 
- Associates static information to @rhombus(binding) the same as
+ Associates static information to @rhombus(bind) the same as
  @rhombus(::, ~bind), but performs no run-time check.
 
 @examples(
@@ -77,11 +78,11 @@
 
 
 @doc(
-  expr.macro '$expr is_a $annotation'
+  expr.macro '$expr is_a $annot'
 ){
 
  Produces @rhombus(#true) if the value of @rhombus(expr)
- satisfies @rhombus(annotation), @rhombus(#false) otherwise.
+ satisfies @rhombus(annot), @rhombus(#false) otherwise.
 
 @examples(
   [1, 2, 3] is_a List
@@ -91,12 +92,12 @@
 }
 
 @doc(
-  annot.macro 'matching($binding)'
+  annot.macro 'matching($bind)'
 ){
 
- Converts @rhombus(binding) into an annotation. Variables bound in
- @rhombus($binding) are not made visible, but the annotation
- corresponds to the set of values for which @rhombus(binding) would
+ Converts @rhombus(bind) into an annotation. Variables bound in
+ @rhombus($bind) are not made visible, but the annotation
+ corresponds to the set of values for which @rhombus(bind) would
  match.
 
 @examples(
@@ -107,11 +108,11 @@
 }
 
 @doc(
-  annot.macro 'Maybe($annotation)'
+  annot.macro 'Maybe($annot)'
 ){
 
  An annotation that is satisfied by either @rhombus(#false) or a value
- that satisfies @rhombus(annotation).
+ that satisfies @rhombus(annot).
 
 @examples(
   #false :: Maybe(String)

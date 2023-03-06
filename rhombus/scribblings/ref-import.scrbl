@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Import}
 
@@ -28,16 +30,29 @@
     $string
     #,(@rhombus(lib, ~impo))($string)
     #,(@rhombus(file, ~impo))($string)
-    $module_path #,(@rhombus(!, ~impo)) $identifier
-    #,(@rhombus(., ~impo)) $identifier
-    $module_path #,(@rhombus(., ~impo)) $identifier
-    $module_path #,(@rhombus(., ~impo)) ($operator)
+    $module_path #,(@rhombus(!, ~impo)) $id
+    #,(@rhombus(., ~impo)) $id
+    $module_path #,(@rhombus(., ~impo)) $id
+    $module_path #,(@rhombus(., ~impo)) ($op)
     #,(@rhombus(self, ~impo))
     #,(@rhombus(parent, ~impo))
 
   grammar collection_module_path:
-    $identifier
-    $identifier #,(@rhombus(/, ~impo)) $collection_module_path
+    $id
+    $id #,(@rhombus(/, ~impo)) $collection_module_path
+
+  grammar modifier:
+    #,(@rhombus(as, ~impo)) $id
+    #,(@rhombus(open, ~impo))
+    #,(@rhombus(expose, ~impo)) $expose_decl
+    #,(@rhombus(rename, ~impo)) $rename_decl
+    #,(@rhombus(only, ~impo)) $only_decl
+    #,(@rhombus(except, ~impo)) $except_decl
+    #,(@rhombus(meta, ~impo)) $meta_decl
+    #,(@rhombus(meta_label, ~impo))
+    #,(@rhombus(only_space, ~impo)) $only_space_decl
+    #,(@rhombus(except_space, ~impo)) $except_space_decl
+    $other_modifier
 
 ){
 
@@ -60,7 +75,7 @@
    @rhombus(module_path: modifier; modifier; ...) where the initial
    @rhombus(modifier) does not accept a block argument. This form is
    especially handy when the initial @rhombus(modifier) is @rhombus(open)
-   or @rhombus(as #,(@rhombus(identifier,~var))) and additional modifiers
+   or @rhombus(as #,(@rhombus(id,~var))) and additional modifiers
    are needed.},
 
  @item{@rhombus(modifier: import_clause; ....) is the same as the
@@ -87,7 +102,7 @@
 
  @item{@rhombus(collection_module_path): refers to an installed
    collection library, where the @rhombus(/, ~impo) operator acts as a path
-   separator. Each @rhombus(identifier) in the path is constrained to
+   separator. Each @rhombus(id) in the path is constrained to
    contain only characters allowed in a @rhombus(string) module path, with
    the additional constraint that @litchar{.} is disallowed. A module path
    of this form refers to a file with the @filepath{.rhm} suffix.},
@@ -111,22 +126,22 @@
  @item{@rhombus(#,(@rhombus(file, ~impo))(string)): refers to a file through a
    platform-specific path with no constraints on @rhombus(string).},
 
- @item{@rhombus(module_path #,(@rhombus(!, ~impo)) identifier):
+ @item{@rhombus(module_path #,(@rhombus(!, ~impo)) id):
   refers to submodule of another module. The submodule name
-  @rhombus(identifier) is used as the default import prefix.},
+  @rhombus(id) is used as the default import prefix.},
 
- @item{@rhombus(#,(@rhombus(., ~impo))identifier): refers to a namespace
-  @rhombus(identifier), which might be predefined like @rhombus(List), or
+ @item{@rhombus(#,(@rhombus(., ~impo))id): refers to a namespace
+  @rhombus(id), which might be predefined like @rhombus(List), or
   might be bound by @rhombus(namespace) or as a prefix with @rhombus(import).},
 
- @item{@rhombus(module_path#,(@rhombus(.,~impo))identifier): a shorthand for importing only
-  @rhombus(identifier) from @rhombus(module_path) path and then importing
-  with @rhombus(.identifier). The last @rhombus(identifier) in a dotted
+ @item{@rhombus(module_path#,(@rhombus(.,~impo))id): a shorthand for importing only
+  @rhombus(id) from @rhombus(module_path) path and then importing
+  with @rhombus(.id). The last @rhombus(id) in a dotted
   sequence is allowed to be an export that is not a namespace, in which
   case the dotted form is a shorthand for just importing
-  @rhombus(identifier) from @rhombus(module_path).}
+  @rhombus(id) from @rhombus(module_path).}
 
- @item{@rhombus(module_path#,(@rhombus(.,~impo))(operator)): the same
+ @item{@rhombus(module_path#,(@rhombus(.,~impo))(op)): the same
   shorthand, but for operators.}
  
  @item{@rhombus(self, ~impo): refers to the enclosing module itself,
@@ -142,25 +157,29 @@
 }
 
 @doc(
-  impo.macro '$identifier / $collection_module_path'
+  ~nonterminal:
+    collection_module_path: import
+  impo.macro '$id / $collection_module_path'
 ){
 
-  As a module-path operator, combines @rhombus(identifier) and
+  As a module-path operator, combines @rhombus(id) and
   @rhombus(collection_module_path) to build a longer collection-based
   module path.
 
 }
 
 @doc(
-  impo.macro '. $identifier'
-  impo.macro '$collection_module_path . $identifier'
-  impo.macro '$collection_module_path . ($operator)'
+  ~nonterminal:
+    collection_module_path: import
+  impo.macro '. $id'
+  impo.macro '$collection_module_path . $id'
+  impo.macro '$collection_module_path . ($op)'
 ){
 
   As an module-path operator, a prefix @rhombus(., ~impo) refers
-  to an import prefix or a namespace @rhombus(identifier) in the enclosing
+  to an import prefix or a namespace @rhombus(id) in the enclosing
   environment, and an infix @rhombus(., ~impo) refers to an
-  @rhombus(identifier) or @rhombus(operator)  provided by
+  @rhombus(id) or @rhombus(op)  provided by
   @rhombus(collection_module_path).
 
 }
@@ -188,10 +207,12 @@
 
 
 @doc(
-  impo.macro '$module_path ! $identifier'
+  ~nonterminal:
+    module_path: import
+  impo.macro '$module_path ! $id'
 ){
 
- Refers to a submodule name @rhombus(identifier) of the module
+ Refers to a submodule name @rhombus(id) of the module
  referenced by @rhombus(module_path). See @rhombus(import) for more
  information.
 
@@ -210,12 +231,12 @@
 
 
 @doc(
-  impo.modifier 'as $identifier'
+  impo.modifier 'as $id'
 ){
 
  Modifies an @rhombus(import) clause to bind the prefix
- @rhombus(identifier), used to access non-exposed imports, instead of
- inferring a prefix identifier from the module name.
+ @rhombus(id), used to access non-exposed imports, instead of
+ inferring a prefix id from the module name.
 
 }
 
@@ -229,53 +250,55 @@
 }
 
 @doc(
-  impo.modifier 'expose $identifier'
+  impo.modifier 'expose $id'
   impo.modifier 'expose:
-                   $identifier ...
+                   $id ...
                    ...'
 ){
 
  Modifies an @rhombus(import) clause so that the listed
- @rhombus(identifier)s are imported without a prefix. The exposed
- identifiers remain accessible though the import's prefix, too.
+ @rhombus(id)s are imported without a prefix. The exposed
+ ids remain accessible though the import's prefix, too.
 
 }
 
 @doc(
-  impo.modifier 'rename $identifier #,(@rhombus(as, ~impo)) $local_identifier'
+  ~nonterminal:
+    local_id: begin id
+  impo.modifier 'rename $id #,(@rhombus(as, ~impo)) $local_id'
   impo.modifier 'rename:
-                   $identifier #,(@rhombus(as, ~impo)) $local_identifier
+                   $id #,(@rhombus(as, ~impo)) $local_id
                    ...'
 ){
 
- Modifies an @rhombus(import) clause so that @rhombus(local_identifier)
- is used in place of the imported identifier name @rhombus(identifier).
- The new name @rhombus(local_identifier) applies to modifiers after the
+ Modifies an @rhombus(import) clause so that @rhombus(local_id)
+ is used in place of the imported id name @rhombus(id).
+ The new name @rhombus(local_id) applies to modifiers after the
  @rhombus(rename) modifier.
   
 }
 
 @doc(
-  impo.modifier 'only $identifier'
+  impo.modifier 'only $id'
   impo.modifier 'only:
-                   $identifier ...
+                   $id ...
                    ...'
 ){
 
  Modifies an @rhombus(import) clause so that only the listed
- @rhombus(identifier)s are imported.
+ @rhombus(id)s are imported.
 
 }
 
 @doc(
-  impo.modifier 'except $identifier'
+  impo.modifier 'except $id'
   impo.modifier 'except:
-                     $identifier ...
+                     $id ...
                      ...'
 ){
 
  Modifies an @rhombus(import) clause so that the listed
- @rhombus(identifier)s are @emph{not} imported.
+ @rhombus(id)s are @emph{not} imported.
 
 }
 
@@ -308,10 +331,10 @@
 }
 
 @doc(
-  impo.modifier 'only_space $identifier'
-  impo.modifier 'only_space: $identifier ...'
-  impo.modifier 'except_space $identifier'
-  impo.modifier 'except_space: $identifier ...'
+  impo.modifier 'only_space $id'
+  impo.modifier 'only_space: $id ...'
+  impo.modifier 'except_space $id'
+  impo.modifier 'except_space: $id ...'
 ){
 
  Modifies an @rhombus(import) clause to include bindings only in the

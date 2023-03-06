@@ -1,11 +1,18 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dollar: @rhombus($))
 
 @title{Simple Expression Macros}
 
 @doc(
+  ~nonterminal:
+    op_or_id_path: namespace
+    right_parsed_id: begin id
+    left_parsed_id: begin id
+
   defn.macro 'macro $macro_case'
   defn.macro 'macro 
               | $macro_case
@@ -37,14 +44,14 @@
     '$ $left_parsed_id $defined_name $ $right_parsed_id'
     '$ $left_parsed_id $defined_name $pattern ...'    
   grammar defined_name:
-    $identifier
-    $operator
+    $id
+    $op
     #,(dollar)('#,(dollar)')
-    ($identifier_path)
-    ($operator_path)
+    ($id_path)
+    ($op_path)
     ()
   grammar parsed_id:
-    $identifier
+    $id
     ($parsed_id)
   grammar option:
     ~stronger_than $other ...
@@ -59,11 +66,11 @@
     ~same_on_right_as: $other ...; ...
     ~associativity $assoc
     ~associativity: $assoc
-    ~op_stx $identifier
-    ~op_stx: $identifier
+    ~op_stx $id
+    ~op_stx: $id
   grammar other:
-    $identifier
-    $operator
+    $id
+    $op
     ~other
   grammar assoc:
     ~left
@@ -75,7 +82,7 @@
  (which is an operator or identifier) within @rhombus(macro_pattern) as a
  pattern-based macro whose expansion is described by a
  @rhombus(template). When @rhombus(defined_name) is a plain
- @rhombus(operator), it cannot be @rhombus($), but the form
+ @rhombus(op), it cannot be @rhombus($), but the form
  @rhombus($('$')) can be used to define @rhombus($). A
  @rhombus(defined_name) cannot be @rhombus(()) for a @rhombus(macro)
  defintition. The @rhombus(defined_name) is bound in the
@@ -108,7 +115,7 @@
   identifier (optionally parenthesized), then the macro is applied with an
   already-parsed term after the macro name in a use of the macro. That
   parse heeds precedence and associativity declarations for other macros
-  and for operators defined with @rhombus(operator).}
+  and for operators defined with @rhombus(op).}
 
  @item{Otherwise, the right-hand side is an arbitrary pattern that is
   matched to a sequence of terms after the macro name in its enclosing
@@ -158,9 +165,6 @@
  In that case, @rhombus(option) keywords can be written to apply to all
  cases, the same as in @rhombus(operator).
 
- See @secref("namespaces") for information on @rhombus(identifier_path)
- and @rhombus(operator_path).
-
 @examples(
   ~defn:
     macro 'thunk: $body':
@@ -181,7 +185,7 @@
  syntax object passed to the function produced by @rhombus(macro), the
  leading @rhombus(()) in each pattern is replaced by @rhombus(_, ~bind).
  In addition, unless the pattern ends with @rhombus(#,(@rhombus($, ~bind))())
- or @rhombus($#,(@rhombus(identifier, ~var)) ..., ~bind), a @rhombus($tail ..., ~bind) pattern
+ or @rhombus($#,(@rhombus(id, ~var)) ..., ~bind), a @rhombus($tail ..., ~bind) pattern
  is added to the end; and the result
  values are the syntax object produced by @rhombus(template) and
  @rhombus('$tail ...').

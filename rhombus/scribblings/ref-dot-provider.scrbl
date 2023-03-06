@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @title{Dot Providers}
@@ -14,10 +15,13 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_macro_patterns: defn.macro
+
   defn.macro 'dot.macro $id_macro_patterns'
 ){
 
- Similar to @rhombus(defn.macro), but binds a @tech{dot provider} that
+ Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that
  is normally referenced indirectly via @tech{static information},
  instead of directly. The @rhombus(pattern, ~var) sequence after the leading
  @rhombus(defined_name, ~var) should match a sequence of three
@@ -36,6 +40,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_macro_patterns: defn.macro
+
   defn.macro 'dot.macro_more_static $id_macro_patterns'
 ){
 

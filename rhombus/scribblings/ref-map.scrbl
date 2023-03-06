@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -33,15 +34,24 @@ in an unspecified order.
 )
 
 @doc(
+  ~nonterminal:
+    key_expr: begin expr
+    val_expr: begin expr
+    elem_expr: begin expr
+    map_expr: begin expr
+    set_expr: begin expr
+    key_repet: begin repet
+    val_repet: begin repet
+    elem_repet: begin repet
   expr.macro '#%braces {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition #,(@litchar{,}) $ellipses
+    $key_repet: $val_repet #,(@litchar{,}) $ellipses
     & $map_expr
   expr.macro '#%braces {$expr_or_splice, ...+}'
   grammar expr_or_splice:
     $elem_expr
-    $elem_repetitions #,(@litchar{,}) $ellipses
+    $elem_repet #,(@litchar{,}) $ellipses
     & $set_expr
   grammar ellipses:
     $ellipsis
@@ -87,9 +97,13 @@ in an unspecified order.
 }
 
 @doc(
+  ~nonterminal:
+    at_expr: begin expr
+    at_repet: begin repet
+    rhs_expr: begin expr
   expr.macro '$expr #%ref [$at_expr]'
   expr.macro '$expr #%ref [$at_expr] := $rhs_expr'
-  repet.macro '$repetition #%ref [$at_repetition]'
+  repet.macro '$repetition #%ref [$at_repet]'
 ){
 
  Without @rhombus(:=), accesses the element of the map, array, list, or
@@ -113,12 +127,18 @@ in an unspecified order.
 }
 
 @doc(
+  ~nonterminal:
+    key_expr: begin expr
+    val_expr: begin expr
+    map_expr: begin expr
+    key_repet: begin repet
+    val_repet: begin repet
   expr.macro 'Map{$key_val_or_splice, ...}'
   repet.macro 'Map{$key_val_or_splice_repet, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
-    $key_repetition: $val_repetition #,(@litchar{,}) $ellipsis
-    @rhombus(&) $map_expr
+    $key_repet: $val_repet #,(@litchar{,}) $ellipsis
+    #,(@rhombus(&)) $map_expr
   grammar ellipsis:
     #,(dots),
   fun Map([key :: Any, value :: Any], ...) :: Map
@@ -141,22 +161,30 @@ in an unspecified order.
 }
 
 @doc(
-  bind.macro '#%braces {$key_expr: $val_binding, ...}'
-  bind.macro '#%braces {$key_expr: $val_binding, ..., map_rest}'
+  ~nonterminal:
+    key_expr: begin expr
+    val_bind: def bind
+    map_bind: def bind
+    set_bind: def bind
+    rest_key_bind:  def bind
+    rest_val_bind:  def bind
+    rest_bind:  def bind
+  bind.macro '#%braces {$key_expr: $val_bind, ...}'
+  bind.macro '#%braces {$key_expr: $val_bind, ..., map_rest}'
   grammar map_rest:
-    & $map_binding
-    $rest_key_binding: $rest_val_binding #,(@litchar{,}) $ellipsis
+    & $map_bind
+    $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   bind.macro '#%braces {$expr, ...}'
   bind.macro '#%braces {$expr, ..., set_rest}'
-  grammar map_rest:
-    & $set_binding
-    $rest_binding #,(@litchar{,}) $ellipsis
+  grammar set_rest:
+    & $set_bind
+    $rest_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
 ){
 
  Matches either a map or set, depending on whether
- @rhombus(key_expr) and @rhombus(val_binding) are provided or
+ @rhombus(key_expr) and @rhombus(val_bind) are provided or
  @rhombus(expr) is provided. If no @rhombus(key_expr) or
  @rhombus(expr) are provided, the binding matches a map (not a set).
 
@@ -174,26 +202,32 @@ in an unspecified order.
 }
 
 @doc(
-  bind.macro 'Map{$key_expr: $val_binding, ...}'
-  bind.macro 'Map{$key_expr: $val_binding, ..., $rest}'
-  bind.macro 'Map([$key_expr, $val_binding], ...)'
+  ~nonterminal:
+    key_expr: begin expr
+    val_bind: def bind
+    map_bind: def bind
+    rest_key_bind:  def bind
+    rest_val_bind:  def bind
+  bind.macro 'Map{$key_expr: $val_bind, ...}'
+  bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'Map([$key_expr, $val_bind], ...)'
   grammar rest:
-    & $map_binding
-    $rest_key_binding: $rest_val_binding #,(@litchar{,}) $ellipsis
+    & $map_bind
+    $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
   grammar ellipsis:
     #,(dots)
 ){
 
  Matches a map of the keys computed by @rhombus(key_expr) to values
- that match the corresponding @rhombus(val_binding)s.
+ that match the corresponding @rhombus(val_bind)s.
  The matched map may have additional keys and values.
- If @rhombus(& map_binding) is supplied, the rest of the map excluding
- the given @rhombus(key_expr)s must match the @rhombus(map_binding).
- If @rhombus(rest_key_binding: rest_val_binding) followed by @dots is
+ If @rhombus(& map_bind) is supplied, the rest of the map excluding
+ the given @rhombus(key_expr)s must match the @rhombus(map_bind).
+ If @rhombus(rest_key_bind: rest_val_bind) followed by @dots is
  supplied, the rest of the map excluding the given @rhombus(key_expr)s
- must have individual keys that match @rhombus(rest_key_binding) and
- values that match @rhombus(rest_val_binding), and identifiers in
- @rhombus(rest_key_binding) and @rhombus(rest_val_binding) are bound
+ must have individual keys that match @rhombus(rest_key_bind) and
+ values that match @rhombus(rest_val_bind), and identifiers in
+ @rhombus(rest_key_bind) and @rhombus(rest_val_bind) are bound
  as repetitions.
 
 @examples(
@@ -212,8 +246,11 @@ in an unspecified order.
 
 
 @doc(
+  ~nonterminal:
+    value_annot: :: annot
+    key_annot: :: annot
   annot.macro 'Map'
-  annot.macro 'Map.of($key_annotation, $value_annotation)'
+  annot.macro 'Map.of($key_annot, $value_annot)'
 ){
 
  Matches any map in the form without @rhombus(of). The @rhombus(of)
@@ -233,7 +270,10 @@ in an unspecified order.
 }
 
 @doc(
-  expr.macro 'MutableMap{key: value, ...}'
+  ~nonterminal:
+    key_expr: begin expr
+    val_expr: begin expr
+  expr.macro 'MutableMap{key_expr: val_expr, ...}'
   fun MutableMap(key :: Any, value:: Any, ...) :: Map
 ){
 

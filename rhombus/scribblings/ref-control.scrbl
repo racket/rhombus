@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Continuations}
 
@@ -12,6 +14,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    tag_expr: begin expr
   expr.macro 'Continuation.prompt $maybe_tag_expr:
                 $body
                 ...
@@ -30,8 +34,8 @@
     #,(epsilon)
 
   grammar arg_bindings:
-    $binding
-    ($binding, ...)
+    $bind
+    ($bind, ...)
 ){
 
  Returns the value of the @rhombus(body) sequence, but also establishes
@@ -53,7 +57,9 @@
 }
 
 @doc(
-  expr.macro 'Continuation.capture $maybe_tag_expr $identifier:
+  ~nonterminal:
+    tag_expr: begin expr
+  expr.macro 'Continuation.capture $maybe_tag_expr $id:
                 $body
                 ....'
   grammar maybe_tag_expr:
@@ -62,7 +68,7 @@
 ){
 
  Captures the continuation of the @rhombus(Continuation.capture)
- expression, binds it to @rhombus(identifier), and then evaluates the
+ expression, binds it to @rhombus(id), and then evaluates the
  @rhombus(body) sequence in tail position. The captured continuation is
  composable and delimited, and it is represented as a procedure that
  accepts values to deliver to the continuation.

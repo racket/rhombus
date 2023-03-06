@@ -30,7 +30,7 @@ as @tech{sequence}, in which case it supplies its bytes in order.
 
 
 @doc(
-  fun Bytes.length(bstr :: Bytes) : NonnegInt
+  fun Bytes.length(bstr :: Bytes) :: NonnegInt
 ){
 
  Returns the number of bytes in @rhombus(bstr).

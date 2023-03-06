@@ -133,6 +133,7 @@ expr.macro
     if (kw === #'~var
           || kw === #'~datum
           || kw === #'~space
+          || kw === #'~expr
           || kw === #'~bind
           || kw === #'~impo
           || kw === #'~expo
@@ -151,7 +152,7 @@ expr.macro
           || kw === #'~pattern_clause
           || kw === #'~space_clause
           || kw === #'~space_meta_clause)
-    | '#{typeset-rhombus}(~space: #'$kw, $(escape_group(forms)))'
+    | '#{typeset-rhombus}(~space: #'$kw, $(literal_group(forms)))'
     | Syntax.error("invalid space", kw_stx)
 
 expr.macro 'rhombusblock_etc $tail ...':

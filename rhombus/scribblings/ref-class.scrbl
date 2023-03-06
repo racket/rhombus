@@ -1,32 +1,38 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Classes and Interfaces}
 
 @doc(
-  ~literal: :: extends binding field,
-  defn.macro 'class $identifier_path($field_spec, ...)',
-  defn.macro 'class $identifier_path($field_spec, ...):
+  ~literal: :: extends binding field
+  ~nonterminal:
+    default_expr: begin expr
+    default_body: begin body
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+    method_decl: method ~class_clause
+    property_decl: method ~class_clause
+
+  defn.macro 'class $id_path($field_spec, ...)'
+  defn.macro 'class $id_path($field_spec, ...):
                 $class_clause_or_body_or_export
                 ...'
 
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
-
   grammar field_spec:
-    $modifiers $identifier $maybe_annot $maybe_default
-    $keyword: $modifiers $identifier $maybe_annot $maybe_default
+    $modifiers $id $maybe_annot $maybe_default
+    $keyword: $modifiers $id $maybe_annot $maybe_default
     $keyword $maybe_default
 
-  grammar modifers:
+  grammar modifiers:
     #,(@rhombus(private, ~class_clause))
     #,(@rhombus(mutable, ~bind))
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
     ε
 
   grammar maybe_annot:
-    :: #,(@rhombus(annotation, ~var))
+    :: annot
     ε
 
   grammar maybe_default:
@@ -40,22 +46,22 @@
     $export
 
   grammar class_clause:
-    #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
-    #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation = $expr
-    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $identifier $maybe_annotation: $body; ...
+    #,(@rhombus(field, ~class_clause)) $id $maybe_annot = $expr
+    #,(@rhombus(field, ~class_clause)) $id $maybe_annot: $body; ...
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $id $maybe_annot = $expr
+    #,(@rhombus(private, ~class_clause)) #,(@rhombus(field, ~class_clause)) $id $maybe_annot: $body; ...
     #,(@rhombus(method, ~class_clause)) $method_impl
     #,(@rhombus(override, ~class_clause)) $method_impl
     #,(@rhombus(final, ~class_clause)) $method_impl
     #,(@rhombus(private, ~class_clause)) $method_impl
     #,(@rhombus(abstract, ~class_clause)) $method_decl
     #,(@rhombus(property, ~class_clause)) $property_impl
-    #,(@rhombus(extends, ~class_clause)) $identifier_path
+    #,(@rhombus(extends, ~class_clause)) $id_path
     #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(implements, ~class_clause)) $implements_decl
     #,(@rhombus(final, ~class_clause))
     #,(@rhombus(nonfinal, ~class_clause))
-    #,(@rhombus(internal, ~class_clause)) $identifier
+    #,(@rhombus(internal, ~class_clause)) $id
     #,(@rhombus(constructor, ~class_clause)) $constructor_decl
     #,(@rhombus(expression, ~class_clause)) $expression_decl
     #,(@rhombus(binding, ~class_clause)) $binding_decl
@@ -64,7 +70,7 @@
     $other_class_clause
 ){
 
- Binds @rhombus(identifier_path) as a class name in several @tech{spaces}:
+ Binds @rhombus(id_path) as a class name in several @tech{spaces}:
 
 @itemlist(
 
@@ -76,7 +82,7 @@
 
  @item{in the @rhombus(annot, ~space) space,
   an annotation, which is satisfied by any instance of the class,
-  and an annotation constructor @rhombus(identifier_path.of), which by
+  and an annotation constructor @rhombus(id_path.of), which by
   default takes as many annotation arguments as supplied
   non-@rhombus(private, ~class_clause) @rhombus(field_spec)s in
   parentheses;},
@@ -90,11 +96,11 @@
  @item{in the @rhombus(namespace, ~space) space,
   a @tech{namespace} to access exported bindings as well as a
   function
-  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(method,~var))),
+  @rhombus(id_path#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
-  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(property,~var))),
+  @rhombus(id_path#,(rhombus(.))#,(@rhombus(property,~var))),
   and a field accessor
-  @rhombus(identifier_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
+  @rhombus(id_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
   non-@rhombus(private, ~class_clause) method, property, and field in the class
   (including inherited methods, properties, and fields); and}
 
@@ -208,10 +214,10 @@
  @rhombus(nonfinal, ~class_clause).
 
  When a @rhombus(class_clause) is an @rhombus(internal, ~class_clause)
- form, then the clause's @rhombus(identifier) is bound in similar ways as
- the main class @rhombus(identifier_path): as a constructor, annotation
+ form, then the clause's @rhombus(id) is bound in similar ways as
+ the main class @rhombus(id_path): as a constructor, annotation
  form, binding pattern form, and namespace. A use of the internal
- @rhombus(identifier) as a constructor creates an instance of the same
+ @rhombus(id) as a constructor creates an instance of the same
  class, but the constructor expects arguments for all fields declared
  with @rhombus(field_spec)s, including private fields. For more
  information on internal names, see @rhombus(constructor, ~class_clause),
@@ -225,7 +231,7 @@
  or @rhombus(expression, ~class_clause),
  @rhombus(binding, ~class_clause), and
  @rhombus(annotation, ~class_clause) replace default meanings of the
- defined @rhombus(identifier_path) for an expression context, binding
+ defined @rhombus(id_path) for an expression context, binding
  context, and annotation context, respectively. See
  @rhombus(constructor, ~class_clause),
  @rhombus(expression, ~class_clause),
@@ -257,13 +263,8 @@
  overridden via @rhombus(override, ~class_clause), the original and
  overriding versions must be both methods or both properties.
 
- The @rhombus(identifier_path) defined by @rhombus(class) does not
- become usable until
-
  See @secref("static-info-rules") for information about static
  information associated with classes.
-
- See @secref("namespaces") for information on @rhombus(identifier_path).
 
 @examples(
   class Posn(x, y)
@@ -293,16 +294,18 @@
 
 @doc(
   ~literal: :: extends binding field
-  defn.macro 'interface $identifier_path',
-  defn.macro 'interface $identifier_path:
+  ~nonterminal:
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+    method_decl: method ~class_clause
+    property_decl: method ~class_clause
+
+  defn.macro 'interface $id_path'
+  defn.macro 'interface $id_path:
                 $interface_clause_or_body_or_export
                 ...'
 
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
-
-  grammar class_clause_or_body_or_export:
+  grammar interface_clause_or_body_or_export:
     $interface_clause
     $body
     $export
@@ -414,27 +417,27 @@
 
 
 @doc(
-  class_clause.macro 'extends $identifier_path'
-  class_clause.macro 'extends: $identifier_path'
-  interface_clause.macro 'extends $identifier_path'
-  interface_clause.macro 'extends: $identifier_path ...; ...'
+  class_clause.macro 'extends $id_path'
+  class_clause.macro 'extends: $id_path'
+  interface_clause.macro 'extends $id_path'
+  interface_clause.macro 'extends: $id_path ...; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that is a subclass of the one named by @rhombus(identifier_path), and an
+ that is a subclass of the one named by @rhombus(id_path), and an
  @tech{interface clause} recognized by @rhombus(interface) to define an
  interface that is a subinterface of the ones named by the
- @rhombus(identifier_path)s.
+ @rhombus(id_path)s.
 
 }
 
 @doc(
-  class_clause.macro 'implements $identifier_path ...'
-  class_clause.macro 'implements: $identifier_path ...; ...'
+  class_clause.macro 'implements $id_path ...'
+  class_clause.macro 'implements: $id_path ...; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to define a class
- that implements subclasses named by @rhombus(identifier_path)s. See
+ that implements subclasses named by @rhombus(id_path)s. See
  @rhombus(class) and @rhombus(interface).
 
 }
@@ -449,7 +452,11 @@
 
 }
 
-@doc(  
+@doc(
+  ~nonterminal:
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+
   class_clause.macro 'final $method_impl'
   class_clause.macro 'final #,(@rhombus(method, ~class_clause)) $method_impl'
   class_clause.macro 'final #,(@rhombus(override, ~class_clause)) $method_impl'
@@ -466,11 +473,8 @@
 ){
 
  The @rhombus(final, ~class_clause) form as a @tech{class clause} or
- @tech{interface clause} is followed by a method or property declaration, where
- @rhombus(method_impl) is the same as for
- @rhombus(method, ~class_clause)
- and @rhombus(property_impl) is the same as for
- @rhombus(property, ~class_clause). In that case, the method or property is final, even
+ @tech{interface clause} is followed by a method or property declaration.
+ In that case, the method or property is final, even
  if the enclosing class is not (and an interface is never final). A final
  method or property cannot be overridden in subclaseses or subinterfaces. Using
  @rhombus(final, ~class_clause) with an immediate declaration is the same
@@ -482,9 +486,11 @@
  is not used.
 }
 
-@doc(  
-  class_clause.macro 'field $identifier $maybe_annotation = $expr'
-  class_clause.macro 'field $identifier $maybe_annotation: $body; ...'
+@doc(
+  ~nonterminal:
+    maybe_annot: class
+  class_clause.macro 'field $id $maybe_annot = $expr'
+  class_clause.macro 'field $id $maybe_annot: $body; ...'
 ){
 
  A @tech{class clause} recognized by @rhombus(class) to add fields to
@@ -495,6 +501,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    maybe_res_annot: fun
+
   class_clause.macro 'method $method_impl'
   class_clause.macro 'property $property_impl'
   class_clause.macro 'override $method_impl'
@@ -512,26 +521,26 @@
   interface_clause.macro 'override #,(@rhombus(property, ~interface_clause)) $property_decl'
 
   grammar method_impl:
-    $identifier $maybe_res_ann: $entry_point
-    $identifier ($kwopt_binding, ..., $rest, ...) $maybe_res_ann: $body; ...
-    Z| $identifier($binding, ..., $rest, ...) $maybe_res_ann:
+    $id $maybe_res_annot: $entry_point
+    $id ($kwopt_bind, ..., $rest, ...) $maybe_res_annot: $body; ...
+    Z| $id($bind, ..., $rest, ...) $maybe_res_annot:
          $body
          ...
      | ...
 
   grammar method_decl:
-    $identifier $maybe_res_ann
-    $identifier ($kwopt_binding, ..., $rest, ...) $maybe_res_ann
+    $id $maybe_res_annot
+    $id ($kwopt_binding, ..., $rest, ...) $maybe_res_annot
     
   grammar property_impl:
-    $identifier $maybe_res_ann: $body
-    Z| $identifier $maybe_res_ann: $body
-    Z| $identifier $maybe_res_ann: $body
-     | $identifier := $binding: $body
+    $id $maybe_res_annot: $body
+    Z| $id $maybe_res_annot: $body
+    Z| $id $maybe_res_annot: $body
+     | $id := $binding: $body
 
   grammar property_decl:
-    $identifier $maybe_res_ann
-    Z| $identifier $maybe_res_ann
+    $id $maybe_res_annot
+    Z| $id $maybe_res_annot
 ){
 
  These @tech{class clauses} and @tech{interface clauses} are recognized
@@ -542,11 +551,11 @@
  @rhombus(method, ~class_clause) is the same as just
  @rhombus(override, ~class_clause).
 
- A @rhombus(method_impl) is either an @rhombus(identifier) followed by
+ A @rhombus(method_impl) is either an @rhombus(id) followed by
  an optional result annotation and a block containing an @tech{entry
   point}, or it has the same form as a @rhombus(fun) definition with a
  form name like @rhombus(method, ~class_clause) in place of
- @rhombus(fun). A @rhombus(maybe_res_ann) applies to the immediate method
+ @rhombus(fun). A @rhombus(maybe_res_annot) applies to the immediate method
  implementation as well as overriding implementations in subclasses; a
  result annotation within an @tech{entry point}, in contrast, does not
  apply to subclasses.
@@ -564,7 +573,7 @@
  and the subsequent @rhombus(body) will normally refer to that binding.
  Using @rhombus(:=) with a property always produces @rhombus(#void);
  any value returned by the @rhombus(body) of a property definition's
- @rhombus(:=) case is ignored. A @rhombus(maybe_res_ann) in a
+ @rhombus(:=) case is ignored. A @rhombus(maybe_res_annot) in a
  @rhombus(property, ~class_clause) clause applies to overriding implementations
  in subclasses, but it imposes no constraints on the right-hand part of
  @rhombus(:=) when assigning to a property.
@@ -595,8 +604,12 @@
 }
 
 @doc(
-  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $identifier_path ...'
-  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $identifier_path ...; ...'
+  ~nonterminal:
+    method_impl: method ~class_clause
+    property_impl: method ~class_clause
+
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)) $id_path ...'
+  class_clause.macro 'private #,(@rhombus(implements, ~class_clause)): $id_path ...; ...'
   class_clause.macro 'private #,(@rhombus(field, ~class_clause)) $field_decl'
   class_clause.macro 'private $method_impl'
   class_clause.macro 'private #,(@rhombus(method, ~class_clause)) $method_impl'
@@ -635,6 +648,10 @@
 }
 
 @doc(
+  ~nonterminal:
+    method_decl: method ~class_clause
+    property_decl: method ~class_clause
+
   class_clause.macro 'abstract $method_decl'
   class_clause.macro 'abstract #,(@rhombus(method, ~class_clause)) $method_decl'
   class_clause.macro 'abstract #,(@rhombus(override, ~class_clause)) $method_decl'
@@ -678,69 +695,74 @@
 
 }
 
-@doc(  
-  expr.macro 'super . $identifier($arg, ...)'
+@doc(
+  ~nonterminal:
+    arg_expr: begin expr
+
+  expr.macro 'super . $id($arg_expr, ...)'
   expr.macro 'super'
 ){
 
  The @rhombus(super) form can only be used in two places: within a
- method property call to invoke another method or property @rhombus(identifier) that is
+ method property call to invoke another method or property @rhombus(id) that is
  statically known to be implemented in a superclass or superinterface of
  the enclosing class; or within a custom constructor to as a reference to
  an underlying constructor. In the case of a method call or property use, the
  @rhombus(super) call invokes the superclass's or superinterface's
- implementation, even if a method or property named @rhombus(identifier) is
+ implementation, even if a method or property named @rhombus(id) is
  overridden in a class, interface, or a subclass.
 
 }
 
 @doc(  
-  class_clause.macro 'internal $identifier'
-  class_clause.macro 'internal: $identifier'
-  interface_clause.macro 'internal $identifier'
-  interface_clause.macro 'internal: $identifier'
+  class_clause.macro 'internal $id'
+  class_clause.macro 'internal: $id'
+  interface_clause.macro 'internal $id'
+  interface_clause.macro 'internal: $id'
 ){
 
  A @tech{class clause} or @tech{interface clause} recognized by
- @rhombus(class) and @rhombus(interface) to bind @rhombus(identifier) to
+ @rhombus(class) and @rhombus(interface) to bind @rhombus(id) to
  the class or interface's representation. See @rhombus(class),
  @rhombus(interface), and @rhombus(constructor, ~class_clause) for more
  information.
 
- When used as a @tech{namespace}, @rhombus(identifier) can access the
+ When used as a @tech{namespace}, @rhombus(id) can access the
  immediate private fields, methods, and properties of the class or interface
  containing the @rhombus(internal, ~class_clause) declaration. Along
- similar lines, @rhombus(identifier) as an annotation associates static
+ similar lines, @rhombus(id) as an annotation associates static
  information with an expression or binding so that @rhombus(.) can be
  used to access private fields, methods and properties, but only with @rhombus(.) as
  statically resolved.
 
 }
 
-@doc(  
+@doc(
+  ~nonterminal:
+    maybe_res_annot: fun
   class_clause.macro 'constructor $maybe_name: $entry_point'
   class_clause.macro 'constructor $maybe_name($kwopt_binding, ...,
-                                              $rest, ...) $maybe_res_ann:
+                                              $rest, ...) $maybe_res_annot:
                         $body; ...'
   class_clause.macro 'constructor
-                      | $maybe_name($binding, ..., $rest, ...) $maybe_res_ann:
+                      | $maybe_name($binding, ..., $rest, ...) $maybe_res_annot:
                           $body; ...
                       | ...'
   class_clause.macro 'expression: $entry_point'
-  class_clause.macro '«expression '$identifier $pattern ...': '$template'»'
-  class_clause.macro '«expression | '$identifier $pattern ...': '$template'
+  class_clause.macro '«expression '$id $pattern ...': '$template'»'
+  class_clause.macro '«expression | '$id $pattern ...': '$template'
                                   | ...»'
   class_clause.macro 'binding: $entry_point'
-  class_clause.macro '«binding '$identifier $pattern ...': '$template'»'
-  class_clause.macro '«binding | '$identifier $pattern ...': '$template'
+  class_clause.macro '«binding '$id $pattern ...': '$template'»'
+  class_clause.macro '«binding | '$id $pattern ...': '$template'
                                | ...»'
   class_clause.macro 'annotation: $entry_point'
-  class_clause.macro '«annotation '$identifier $pattern ...': '$template'»',
-  class_clause.macro '«annotation | '$identifier $pattern ...': '$template'
+  class_clause.macro '«annotation '$id $pattern ...': '$template'»',
+  class_clause.macro '«annotation | '$id $pattern ...': '$template'
                                   | ...»'
 
   grammar maybe_name:
-    $identifier
+    $id
     #,("ϵ")
 ){
 
@@ -760,7 +782,7 @@
  
  When a @rhombus(class) has a @rhombus(constructor, ~class_clause)
  form with an empty @rhombus(maybe_name), then a use of new class's
- @rhombus(identifier_path, ~var) as a
+ @rhombus(id_path) as a
  constructor function invokes a function the @tech{entry point} (typically a
  @rhombus(fun, ~entry_point) form) in the block after
  @rhombus(constructor, ~class_clause). That function must return an
@@ -786,9 +808,9 @@
 )
 
  If a @rhombus(constructor, ~class_clause) form has an
- @rhombus(identifier) for @rhombus(maybe_name) that is not the same as
- the enclosing class's @rhombus(identifier_path, ~var), then the constructor is bound to
- @rhombus(identifier) instead of @rhombus(identifier_path, ~var).
+ @rhombus(id) for @rhombus(maybe_name) that is not the same as
+ the enclosing class's @rhombus(id_path), then the constructor is bound to
+ @rhombus(id) instead of @rhombus(id_path).
  Typically, naming a constructor is paired with an
  @rhombus(expression, ~class_clause) declaration that refers to that
  constructor.
@@ -803,15 +825,15 @@
  argument as the default superclass constructor.
 
  When a @rhombus(class) has a @rhombus(expression, ~class_clause) form,
- then a use of new class's @rhombus(identifier_path, ~var) as an
+ then a use of the new class's @rhombus(id_path) as an
  expression invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. This macro replaces the default meaning of the
- @rhombus(identifier_path, ~var) as a reference to the constructor.
+ @rhombus(id_path) as a reference to the constructor.
  
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
- then a use of new class's @rhombus(identifier_path, ~var) as a
+ then a use of the new class's @rhombus(id_path) as a
  binding-pattern constructor invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(binding, ~class_clause). The @rhombus(entry_point) is a
@@ -829,7 +851,7 @@
  superclass constructor).
 
  When a @rhombus(class) has an @rhombus(annotation, ~class_clause) form,
- then a use of new class's @rhombus(identifier_path, ~var) in a
+ then a use of new class's @rhombus(id_path) in a
  annotation invokes the @tech{entry point} (typically a
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(annotation, ~class_clause). The @rhombus(entry_point) is a

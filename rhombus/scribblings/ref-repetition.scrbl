@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -125,8 +127,11 @@ positions.
 }
 
 @doc(
+  ~nonterminal:
+    list_expr: begin expr
+    list_bind: def bind
   expr.macro '& list_expr'
-  bind.macro '& list_binding'
+  bind.macro '& list_bind'
 ){
 
 @provided_also_meta()
@@ -147,8 +152,11 @@ positions.
 }
 
 @doc(
+  ~nonterminal:
+    map_expr: begin expr
+    map_bind: def bind
   expr.macro '~& map_expr'
-  bind.macro '~& map_binding'
+  bind.macro '~& map_bind'
 ){
 
 @provided_also_meta()

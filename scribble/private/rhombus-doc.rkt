@@ -1,7 +1,8 @@
 #lang racket/base
 (require (for-syntax racket/base
                      syntax/parse/pre
-                     shrubbery/property)
+                     shrubbery/property
+                     (prefix-in typeset-meta: "typeset_meta.rhm"))
          "doc.rkt"
          "typeset-help.rkt"
          racket/list
@@ -27,7 +28,9 @@
                   table-cells))
 
 (provide (for-space rhombus/namespace
-                    space_meta_clause))
+                    space_meta_clause)
+         (for-space rhombus/doc
+                    grammar))
 
 (define-name-root space_meta_clause
   #:fields
@@ -44,11 +47,11 @@
      #'(begin
          (provide (for-space rhombus/doc id))
          (define-doc-syntax id
-           (doc-transformer (lambda (stx) desc)
-                            (lambda (stx) 'space-sym)
-                            extract-name
-                            extract-metavariables
-                            extract-typeset)))]))
+           (make-doc-transformer #:extract-desc (lambda (stx) desc)
+                                 #:extract-space-sym (lambda (stx) 'space-sym)
+                                 #:extract-name extract-name
+                                 #:extract-metavariables extract-metavariables
+                                 #:extract-typeset extract-typeset)))]))
 
 (begin-for-syntax
   (define-splicing-syntax-class (identifier-target space-name)
@@ -411,28 +414,37 @@
   head-extract-metavariables
   head-extract-typeset)
 
-(define-doc grammar
-  #f
-  #f
-  (lambda (stx space-name) #f)
-  (lambda (stx space-name vars)
-    (syntax-parse stx
-      #:datum-literals (group)
-      [(group _ id b)
-       (extract-pattern-metavariables #'(group b) (add-metavariable vars #'id))]))
-  (lambda (stx space-name subst)
-    (syntax-parse stx
-      #:datum-literals (group)
-      [(group grammar id (block g ...))
-       #`(typeset-grammar (rhombus-expression (group one-rhombus (parens (group id))))
-                          #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
-                               (syntax-parse g
-                                 #:datum-literals (group)
-                                 [(group t ...)
-                                  (rb #'(group t ...)
-                                      #:at g
-                                      #:pattern? #t
-                                      #:options #'((parens (group #:inset (block (group (parsed #f)))))))])))])))
+(define-doc-syntax grammar
+  (make-doc-transformer
+   #:extract-desc (lambda (stx) #f)
+   #:extract-space-sym (lambda (stx) 'grammar)
+   #:extract-name (lambda (stx space-name)
+                    (syntax-parse stx
+                      #:datum-literals (group)
+                      [(group _ id . _) #'id]))
+   #:extract-metavariables
+   (lambda (stx space-name vars)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(group _ id) vars]
+       [(group _ id b)
+        (extract-pattern-metavariables #'(group b) vars)]))
+   #:extract-typeset
+   (lambda (stx space-name subst)
+     (syntax-parse stx
+       #:datum-literals (group)
+       [(group grammar id)
+        #`(paragraph plain #,(subst #'id #:wrap? #f))]
+       [(group grammar id (block g ...))
+        #`(typeset-grammar #,(subst #'id #:wrap? #f)
+                           #,@(for/list ([g (in-list (syntax->list #'(g ...)))])
+                                (syntax-parse g
+                                  #:datum-literals (group)
+                                  [(group t ...)
+                                   (rb #'(group t ...)
+                                       #:at g
+                                       #:pattern? #t
+                                       #:options #'((parens (group #:inset (block (group (parsed #f)))))))])))]))))
 
 ;; ----------------------------------------
 
@@ -465,12 +477,15 @@
     [((~datum alts) b ...)
      (for/fold ([vars vars]) ([b (in-list (syntax->list #'(b ...)))])
        (extract-term-metavariables b vars))]
-    [id:identifier (add-metavariable vars #'id)]
+    [id:identifier
+     (if (identifier-binding (typeset-meta:in_space #'id))
+         vars
+         (add-metavariable vars #'id))]
     [_ vars]))
 
 (define-for-syntax (extract-pattern-metavariables g vars)
   (syntax-parse g
-    #:datum-literals (group)
+    #:datum-literals (group block)
     [(group t ...)
      (for/fold ([vars vars] [after-$? #f] #:result vars) ([t (in-list (syntax->list #'(t ...)))])
        (syntax-parse t

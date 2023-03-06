@@ -18,6 +18,7 @@
                      [manual:exec exec]
                      [manual:hash-lang hash_lang])
          doc
+         nonterminal
          docmodule
          rhombusmodname
          examples

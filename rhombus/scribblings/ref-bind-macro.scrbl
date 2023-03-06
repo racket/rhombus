@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -20,10 +21,13 @@
 }
 
 @doc(
+  ~nonterminal:
+    macro_patterns: expr.macro
+
   defn.macro 'bind.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro), but defines an identifier or operator as a
+ Like @rhombus(expr.macro, ~expr), but defines an identifier or operator as a
  binding form in the @rhombus(bind, ~space) @tech{space}.
  The result of the macro expansion can be a low-level
  binding description created with @rhombus(bind_meta.pack).
@@ -80,7 +84,7 @@
 }
 
 @doc(
-  defn.macro '«bind.infoer '$identifier($static_info_pattern, $data_pattern)':
+  defn.macro '«bind.infoer '$id($static_info_pattern, $data_pattern)':
                  $body
                  ...»'
 ){
@@ -212,8 +216,8 @@
 }
 
 @doc(
-  defn.macro '«bind.matcher '$identifier($id_pattern, $data_pattern,
-                                         $IF_pattern, $success_pattern, $fail_pattern)':
+  defn.macro '«bind.matcher '$id($id_pattern, $data_pattern,
+                                 $IF_pattern, $success_pattern, $fail_pattern)':
                  $body
                  ...»'
 ){
@@ -232,7 +236,7 @@
 }
 
 @doc(
-  defn.macro '«bind.committer '$identifier($id_pattern, $data_pattern)':
+  defn.macro '«bind.committer '$id($id_pattern, $data_pattern)':
                  $body
                  ...»'
 ){
@@ -257,7 +261,7 @@
 }
 
 @doc(
-  defn.macro '«bind.binder '$identifier($id_pattern, $data_pattern)':
+  defn.macro '«bind.binder '$id($id_pattern, $data_pattern)':
                  $body
                  ...»'
 ){

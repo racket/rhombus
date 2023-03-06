@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Arrays}
 
@@ -32,7 +34,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  bind.macro 'Array($binding, ...)'
+  bind.macro 'Array($bind, ...)'
 ){
 
  Matches an array with as many elements as @rhombus(binding)s, where
@@ -47,7 +49,7 @@ it supplies its elements in order.
 
 @doc(
   annot.macro 'Array'
-  annot.macro 'Array.of($annotation)'
+  annot.macro 'Array.of($annot)'
 ){
 
  Matches any array in the form without @rhombus(of). The @rhombus(of)

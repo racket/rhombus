@@ -10,6 +10,8 @@
 
 @local_table_of_contents()
 
+@include_section("ref-form.scrbl")
+
 @include_section("ref-def.scrbl")
 @include_section("ref-namespace.scrbl")
 @include_section("ref-import.scrbl")

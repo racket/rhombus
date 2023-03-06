@@ -1,21 +1,23 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Definitions}
 
 @doc(
-  defn.macro 'def $binding = $expr'
-  defn.macro 'def $binding:
+  defn.macro 'def $bind = $expr'
+  defn.macro 'def $bind:
                 $body
                 ...'
 ){
 
- Binds the identifiers of @rhombus(binding) to the value of @rhombus(expr) or the
+ Binds the identifiers of @rhombus(bind) to the value of @rhombus(expr) or the
  @rhombus(body) sequence. The @rhombus(body) itself can include
- definitions, and its normally it ends with an expression to provide the
+ definitions, and it normally ends with an expression to provide the
  result value.
 
- A @rhombus(binding) can be just an identifier, or it can be constructed
+ A @rhombus(bind) can be just an identifier, or it can be constructed
  with a binding operator, such as a pattern form or @rhombus(::) for
  annotations.
 
@@ -43,8 +45,8 @@
 
 
 @doc(
-  defn.macro 'let $binding = $expr'
-  defn.macro 'let $binding:
+  defn.macro 'let $bind = $expr'
+  defn.macro 'let $bind:
                 $body
                 ...'
 ){
@@ -65,11 +67,7 @@
 
 
 @doc(
-  bind.macro '$identifier_path . $identifier'
- 
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
+  bind.macro '$id_path . $id'
 ){
 
  The @rhombus(., ~bind) operator works somewhat like a binding operator

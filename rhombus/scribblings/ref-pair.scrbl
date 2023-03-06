@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @title{Pairs}
 
@@ -53,8 +54,11 @@ to append lists.
 }
 
 @doc(
+  ~nonterminal:
+    fst_annot: :: annot
+    rst_annot: :: annot
   annot.macro 'Pair'
-  annot.macro 'Pair.of($fst_annotation, $rst_annotation)'
+  annot.macro 'Pair.of($fst_annot, $rst_annot)'
 ){
 
  Matches any pair in the form without @rhombus(of). The @rhombus(of)
@@ -64,6 +68,9 @@ to append lists.
 }
 
 @doc(
+  ~nonterminal:
+    fst_bind: def bind
+    rst_bind: def bind
   fun Pair.cons(fst :: Any, rst :: Any) :: Pair
   bind.macro 'Pair.cons($fst_bind, $rst_bind)'
 ){

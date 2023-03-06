@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Parameters}
 
@@ -7,6 +9,9 @@ For now, let's just say that a Rhombus @deftech{parameter} is a Racket
 parameter.
 
 @doc(
+  ~nonterminal:
+    parameter_expr: begin expr
+    val_body: begin body
   expr.macro 'parameterize {$parameter_expr: $val_body, ...}:
                 $body
                 ...'

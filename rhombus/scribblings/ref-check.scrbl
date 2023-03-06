@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @(def check_eval: make_rhombus_eval())
 
@@ -13,6 +14,10 @@
 @title{Unit Testing}
 
 @doc(
+  ~nonterminal:
+    expected_expr: begin expr
+    expected_body: begin body
+    expected_bind: def bind
   expr.macro 'check:
                 $maybe_eval
                 $body
@@ -30,12 +35,12 @@
   grammar expected_result:
     ~is $expected_expr
     ~is: $expected_body; ...
-    ~is_a $annotation
-    ~is_a: $annotation
+    ~is_a $annot
+    ~is_a: $annot
     ~prints_like $expected_expr
     ~prints_like: $expected_body; ...
-    ~matches $expected_binding
-    ~matches: $expected_binding; ...
+    ~matches $expected_bind
+    ~matches: $expected_bind; ...
     ~raises $expected_expr
     ~raises: $expected_body; ...
     ~completes
@@ -52,7 +57,7 @@
   exception and is equal by @rhombus(==).}
 
  @item{In @rhombus(~is_a) mode, checks that the original result is not
-  an exception and satisfies @rhombus(annotation).}
+  an exception and satisfies @rhombus(annot).}
 
  @item{In @rhombus(~prints_like) mode, evaluates the
   @rhombus(expected_expr) or @rhombus(expected_body), then checks that the
@@ -61,8 +66,8 @@
 
  @item{In @rhombus(~matches) mode, checks that the original result is
   not an exception, that the number of result values matches the number of
-  supplied @rhombus(expected_binding)s, and that each value matches the
-  corresponding @rhombus(expected_binding).}
+  supplied @rhombus(expected_bind)s, and that each value matches the
+  corresponding @rhombus(expected_bind).}
 
  @item{In @rhombus(~raises) mode, obtains one or more strings (as
   multiple values) by evaluating @rhombus(expected_body) or

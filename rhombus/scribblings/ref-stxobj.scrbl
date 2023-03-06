@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: 
     "common.rhm" open 
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def dots = @rhombus(...))
@@ -228,10 +229,13 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
+  ~nonterminal:
+    pattern_cases: syntax_class
+
   bind.macro '$ $stx_pat_bind_term'
 
   grammar stx_pat_bind_term:
-    $identifier
+    $id
     #,(@rhombus(_, ~unquote_bind))
     ($ stx_bind)
     '$term ...; ...'
@@ -239,7 +243,7 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar stx_bind:
     $stx_pat_bind_term
-    $identifier #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
+    $id #,(@rhombus(::, ~unquote_bind)) $syntax_class_spec
     $stx_bind #,(@rhombus(&&, ~unquote_bind)) $stx_bind
     $stx_bind #,(@rhombus(||, ~unquote_bind)) $stx_bind
     #,(@rhombus(pattern, ~unquote_bind)) $pattern_cases
@@ -250,8 +254,8 @@ Metadata for a syntax object can include a source location and the raw
 
  Only allowed within a @rhombus('', ~bind) binding pattern, escapes to a
  unquoted binding pattern. Typically, the unquoted pattern has an
- @rhombus(identifier) that is not bound as a unquote binding
- oerator; the @rhombus(identifier) is then bound to the corresponding portion
+ @rhombus(id) that is not bound as a unquote binding
+ oerator; the @rhombus(id) is then bound to the corresponding portion
  of the syntax object that matches the @rhombus('', ~bind) form.
 
 @examples(
@@ -325,6 +329,8 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~nonterminal:
+    stx_bind: $ ~bind
   unquote_bind.macro '_'
   unquote_bind.macro '#%parens ($stx_bind)'
 ){
@@ -348,6 +354,8 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~nonterminal:
+    stx_bind: def bind
   unquote_bind.macro '$stx_bind && $stx_bind'
   unquote_bind.macro '$stx_bind || $stx_bind'
 ){
@@ -381,13 +389,17 @@ Metadata for a syntax object can include a source location and the raw
 
 
 @doc(
-  unquote_bind.macro '$identifier :: $syntax_class $maybe_args'
-  unquote_bind.macro '$identifier :: $syntax_class $maybe_args:
+  ~nonterminal:
+    field_id: begin id
+    pattern_id: begin id
+
+  unquote_bind.macro '$id :: $syntax_class $maybe_args'
+  unquote_bind.macro '$id :: $syntax_class $maybe_args:
                         $field_expose
                         ...'
 
   grammar syntax_class:
-    $identifier
+    $id
     (syntax_class | $pattern_case | ...)
     (syntax_class: $class_clause; ...)
 
@@ -401,14 +413,14 @@ Metadata for a syntax object can include a source location and the raw
 
   grammar field_expose:
     #,(@rhombus(open, ~impo))
-    $field_identifier #,(@rhombus(as, ~impo)) $pattern_identifier; ...
-    $field_identifier ....
+    $field_id #,(@rhombus(as, ~impo)) $pattern_id; ...
+    $field_id ....
 ){
 
 @provided_also_meta()
 
  Unquote binding operator for use with @rhombus($, ~bind) that binds
- @rhombus(identifier) for a match to @rhombus(syntax_class).
+ @rhombus(id) for a match to @rhombus(syntax_class).
 
  The @rhombus(syntax_class) can be a predefined class such as
  @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
@@ -418,19 +430,19 @@ Metadata for a syntax object can include a source location and the raw
  with @rhombus(syntax_class) may expect arguments, which must be supplied
  after the syntax class name.
 
- The @rhombus(identifier) before @rhombus(::, ~unquote_bind) refers to
+ The @rhombus(id) before @rhombus(::, ~unquote_bind) refers to
  the matched input, and it is a repetition if the syntax class has
  classification @rhombus(~sequence). The identifier can be combined with
  @rhombus(.) to access fields (if any) of the syntax class. If
- @rhombus(identifier) is @rhombus(_, ~unquote_bind), then it is not
+ @rhombus(id) is @rhombus(_, ~unquote_bind), then it is not
  bound.
 
  A block supplied after @rhombus(syntax_class) exposes fields of match
  as directly bound pattern identifier. For each
- @rhombus(field_identifier #,(@rhombus(as, ~impo)) pattern_identifier)
- that is supplied, then @rhombus(pattern_identifier) is bound directly to
+ @rhombus(field_id #,(@rhombus(as, ~impo)) pattern_id)
+ that is supplied, then @rhombus(pattern_id) is bound directly to
  the to the named field's value. Suppling just an
- @rhombus(field_identifier) binds using the same identifier. Supplying
+ @rhombus(field_id) binds using the same identifier. Supplying
  @rhombus(open, ~impo) is a shorthand for listing every field to bind
  using its own name, and it cannot appear multiple times or be combined
  with expose clauses for individual fields.
@@ -460,6 +472,8 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
+  ~nonterminal:
+    pattern_cases: syntax_class
   unquote_bind.macro 'pattern $pattern_cases'
 ){
 
@@ -472,12 +486,12 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  unquote_bind.macro '«bound_as $space: '$identifier_or_operator'»'
+  unquote_bind.macro '«bound_as $space: '$id_or_op'»'
 ){
 
  Unquote binding operator for use with @rhombus($, ~bind). It matches a
  syntax object for an identifier or operator, where the identifier or
- operator's binding is the same as @rhombus(identifier_or_operator) in
+ operator's binding is the same as @rhombus(id_or_op) in
  the @tech{space} identified by @rhombus(space) (e.g.,
  @rhombus(expr, ~space)).
 

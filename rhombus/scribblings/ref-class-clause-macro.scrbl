@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -29,6 +30,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    defined_name: defn.macro
+
   defn.macro '«class_clause.macro '$defined_name $pattern ...':
                 $option; ...
                 $body
@@ -40,11 +44,11 @@
                    ...
                | ...»'
   grammar option:
-    ~op_stx: $identifier
-    ~info: $identifier
+    ~op_stx: $id
+    ~info: $id
 ){
 
- Like @rhombus(defn.macro), but defines a name in the
+ Like @rhombus(defn.macro, ~expr), but defines a name in the
  @rhombus(class_clause, ~space) @tech{space} as a clause form for use
  within a @rhombus(class) body.
 
@@ -53,8 +57,8 @@
  use, where each group can be either a another @rhombus(class) clause, an
  expression, a defintion, or an export.
 
- In addition to an @rhombus(~op_stx) option like @rhombus(defn.macro),
- the optional @rhombus(~info) body form binds an @rhombus(identifier) to
+ In addition to an @rhombus(~op_stx) option like @rhombus(defn.macro, ~expr),
+ the optional @rhombus(~info) body form binds an @rhombus(id) to
  a @rhombus(class_meta.Info) value. Use the
  @rhombus(class_meta.Info.lookup) function to access information about
  the class declaration that appears before the use of the class-clause
@@ -79,6 +83,9 @@
 }
 
 @doc(
+  ~nonterminal:
+    defined_name: defn.macro
+
   defn.macro '«interface_clause.macro '$defined_name $pattern ...':
                  $option; ...
                  $body
@@ -97,6 +104,9 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 }
 
 @doc(
+  ~nonterminal:
+    defined_name: defn.macro
+
   defn.macro '«class_and_interface_clause.macro '$defined_name $pattern ...':
                  $option; ...
                  $body

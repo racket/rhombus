@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Exceptions}
 
@@ -9,16 +11,16 @@
                 $body
                 ...
                 $maybe_catch
-                $maybe_finally='
+                $maybe_finally'
 
   grammar maybe_initially:
     ~initially: $body; ...
     #,(epsilon)
 
   grammar maybe_catch:
-    ~catch $binding: $body; ...
+    ~catch $bind: $body; ...
     ~catch
-    | $binding: $body; ...
+    | $bind: $body; ...
     | ...
     #,(epsilon)
 
@@ -99,7 +101,8 @@
 
 @doc(
   fun error(message :: String)
-  fun error(who :: String || Symbol || Identifier || Operator || False, message :: String)
+  fun error(who :: String || Symbol || Identifier || Operator || False,
+            message :: String)
 ){
 
  Throws the @rhombus(Exn.Fail) exception with @rhombus(message) as the

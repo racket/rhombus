@@ -1,5 +1,6 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import: "common.rhm" open
+          "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -30,13 +31,15 @@ it supplies its elements in order.
 )
 
 @doc(
+  ~nonterminal:
+    list_expr: begin expr
   fun List(v :: Any, ...) :: List
   expr.macro '#%brackets [$expr_or_splice, ...]'
   repet.macro '#%brackets [$repet_or_splice, ...]'
 
   grammar expr_or_splice:
     $expr
-    $repetition #,(@litchar{,}) $ellipses
+    $repet #,(@litchar{,}) $ellipses
     & $list_expr
 
   grammar ellipses:
@@ -69,20 +72,23 @@ it supplies its elements in order.
 }
 
 @doc(
-  bind.macro 'List($binding, ...)'
-  bind.macro 'List($binding, ..., $rest)'
-  bind.macro '#%brackets [$binding, ...]'
-  bind.macro '#%brackets [$binding, ..., $rest]'
+  ~nonterminal:
+    list_bind: def bind
+    repet_bind: def bind
+  bind.macro 'List($bind, ...)'
+  bind.macro 'List($bind, ..., $rest)'
+  bind.macro '#%brackets [$bind, ...]'
+  bind.macro '#%brackets [$bind, ..., $rest]'
   grammar rest:
-    $repetition_binding #,(@litchar{,}) $ellipsis
-    & $list_binding
+    $repet_bind #,(@litchar{,}) $ellipsis
+    & $list_bind
   grammar ellipsis:
     #,(dots)
 ){
 
- Matches a list with as many elements as @rhombus(binding)s, or if
+ Matches a list with as many elements as @rhombus(bind)s, or if
  @rhombus(rest) is included, at least as many elements as
- @rhombus(binding)s, where the @rhombus(rest) (if present) matches the
+ @rhombus(bind)s, where the @rhombus(rest) (if present) matches the
  rest of the list.
 
  @see_implicit(@rhombus(#%brackets, ~bind), @rhombus([]), "binding")
@@ -148,11 +154,14 @@ it supplies its elements in order.
 }
 
 @doc(
-  bind.macro 'List.cons($elem_binding, $list_binding)'
+  ~nonterminal:
+    list_bind: def bind
+    elem_bind: def bind
+  bind.macro 'List.cons($elem_bind, $list_bind)'
 ){
 
- Matches a non-empty list where @rhombus(elem_binding) matches the
- first element of the list and @rhombus(list_binding) matches the
+ Matches a non-empty list where @rhombus(elem_bind) matches the
+ first element of the list and @rhombus(list_bind) matches the
  rest of the list.
 
 @examples(
@@ -199,7 +208,7 @@ it supplies its elements in order.
 }
 
 @doc(
-  fun List.length(lst :: List) :: Int
+  fun List.length(lst :: List) :: NonnegInt
 ){
 
  Returns the number of items in @rhombus(lst).

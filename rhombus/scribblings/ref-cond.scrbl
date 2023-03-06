@@ -1,9 +1,15 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Conditionals}
 
 @doc(
+  ~nonterminal:
+    test_expr: begin expr
+    then_body: begin body
+    else_body: begin body
   expr.macro 'if $test_expr
               | $then_body
                 ...
@@ -29,6 +35,10 @@
 }
 
 @doc(
+  ~nonterminal:
+    clause_test_expr: begin expr
+    clause_result_body: begin body
+    clause_result_expr: begin expr
   expr.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
@@ -62,6 +72,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    test_expr: begin expr
   expr.macro 'when $test_expr
               | $body
                 ...'
@@ -82,6 +94,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    test_expr: begin expr
   expr.macro 'unless $test_expr
               | $body
                 ...'

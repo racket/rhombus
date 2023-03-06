@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -16,6 +17,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_macro_patterns: defn.macro
   defn.macro 'decl.macro $id_macro_patterns'
 ){
 
@@ -26,6 +29,8 @@
 }
 
 @doc(
+  ~nonterminal:
+    id_macro_patterns: defn.macro
   defn.macro 'decl.nestable_macro $id_macro_patterns'
 ){
 

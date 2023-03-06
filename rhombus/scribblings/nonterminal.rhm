@@ -1,0 +1,42 @@
+#lang rhombus
+import:
+  scribble/rhombus/manual
+  meta_label:
+    rhombus open
+
+export:
+  expr
+  repet
+  entry_point
+  bind
+  annot
+  body
+  nestable_body
+  defn
+  decl
+  id
+  op
+  id_or_op
+  id_path
+  op_path
+  pattern
+  template
+
+manual.nonterminal:
+  expr: begin
+  repet: begin
+  entry_point: begin
+  bind: def
+  annot: ::
+  body: begin
+  nestable_body: begin
+  defn: begin
+  decl: begin
+  id: begin
+  op: begin
+  id_or_op: begin
+  id_path: namespace
+  op_path: namespace
+  op_or_id_path: namespace
+  pattern: #%quotes
+  template: #%quotes

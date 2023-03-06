@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @title{Static Information}
@@ -16,7 +17,7 @@
 
 
 @doc(
-  defn.macro '«statinfo.macro '$identifier': 
+  defn.macro '«statinfo.macro '$id': 
                 $body
                 ...»'
 ){

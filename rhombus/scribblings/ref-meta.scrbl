@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: 
-    "common.rhm" open 
+    "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @title{Meta Definitions and Expressions}
@@ -31,29 +32,29 @@
 }
 
 @doc(
-  defn.macro 'meta.bridge $identifier:
+  defn.macro 'meta.bridge $id:
                 $body
                 ...'
 ){
 
- Binds @rhombus(identifier) at the enclosing phase, but like a macro,
+ Binds @rhombus(id) at the enclosing phase, but like a macro,
  where the @rhombus(body) side is a compile-time block at one phase
  greater than the enclosing phase.
 
  The result of the @rhombus(body) block might be a macro transformer
- that is triggered by a use of @rhombus(identifier), or it might be
+ that is triggered by a use of @rhombus(id), or it might be
  some other kind of value that is accessed with
  @rhombus(Syntax.meta_value).
 
- For example, forms like @rhombus(expr.macro), @rhombus(bind.macro),
- and @rhombus(annotation.macro) expand to @rhombus(meta.bridge). In
+ For example, forms like @rhombus(expr.macro, ~expr), @rhombus(bind.macro, ~expr),
+ and @rhombus(annot.macro, ~expr) expand to @rhombus(meta.bridge). In
  those cases, the generated @rhombus(body) block produces an
  expression transformer, binding transformer, or annotation
  transformer. Some forms that expand to @rhombus(meta.bridge) enrich
- the @rhombus(identifier) with a scope for a space of bindings, which
- enables overloading a @rhombus(identifier) for different contexts
+ the @rhombus(id) with a scope for a space of bindings, which
+ enables overloading a @rhombus(id) for different contexts
  like expressions versus bindings. For example,
- @rhombus(annotation.macro) enriches its @rhombus(identifier) with a
+ @rhombus(annotation.macro) enriches its @rhombus(id) with a
  scope for annotation operators.
 
 }

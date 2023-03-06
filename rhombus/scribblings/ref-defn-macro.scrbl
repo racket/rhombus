@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -30,13 +31,13 @@
      | ...
 
   grammar defined_name:
-    $identifier
-    ($identifier_path)
+    $id
+    ($id_path)
   grammar option:
-    ~op_stx: $identifier
+    ~op_stx: $id
 ){
 
- Defines @rhombus(identifier) or @rhombus(identifier_path) as a macro
+ Defines @rhombus(id) or @rhombus(id_path) as a macro
  in the @rhombus(expr, ~space) @tech{space}. The macro can be used
  in a definition context, where the compile-time
  @rhombus(body) block returns the expansion result. The macro pattern is
@@ -56,9 +57,6 @@
  @rhombus(pattern)s, which are tried in order. The @rhombus(defined_name)
  must be the same across all cases.
 
- See @secref("namespaces") for information about
- @rhombus(identifier_path).
-
 @examples(
   ~eval: macro_eval
   defn.macro 'enum:
@@ -77,19 +75,15 @@
 }
 
 @doc(
+  ~nonterminal:
+    defined_name: defn.macro
+    option: defn.macro option
   defn.macro '«defn.sequence_macro '$defined_name $pattern ...
                                     $pattern
                                     ...':
                  $option; ...
                  $body
                  ...»'
-  grammar defined_name:
-    $identifier
-    $operator
-    ($identifier_path)    
-    ($operator_path)
-  grammar option:
-    ~op_stx: $identifier
 ){
 
  Similar to @rhombus(defn.macro), but defines a macro for a definition

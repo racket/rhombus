@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @(def dots: @rhombus(..., ~bind))
 @(def dots_expr: @rhombus(...))
@@ -26,13 +28,20 @@ normally bound to implement function calls.
 
 
 @doc(
+  ~nonterminal:
+    fun_expr: begin expr
+    arg_expr: begin expr
+    repet_arg: #%call arg               
+    list_expr: begin expr
+    map_expr: begin expr
+
   expr.macro '$fun_expr #%call ($arg, ...)'
   repet.macro '$fun_expr #%call ($repet_arg, ...)'
 
   grammar arg:
     $arg_expr
     $keyword: $arg_expr
-    $repetition #,(@litchar{,}) $ellipses
+    $repet #,(@litchar{,}) $ellipses
     & $list_expr
     ~& $map_expr
   grammar ellipses:
@@ -49,7 +58,7 @@ normally bound to implement function calls.
   in place of expressions. 
 
   If the @rhombus(arg) sequence contains @rhombus(& list_expr) or
-  @rhombus(repetition #,(@litchar{,}) ellipses), then the
+  @rhombus(repet #,(@litchar{,}) ellipses), then the
   elements of the list or @tech{repetition} are spliced into the
   call as separate by-position arguments.
 
@@ -72,79 +81,82 @@ normally bound to implement function calls.
 }
 
 @doc(
+  ~nonterminal:
+    default_expr: begin expr
+    default_body: begin body
+    list_expr: begin expr
+    map_expr: begin expr
+    list_bind: def bind
+    map_bind: def bind
+    repet_bind: def bind
+
   ~literal: match
-  defn.macro 'fun $identifier_path($binding, ...):
+  defn.macro 'fun $id_path($bind, ...):
                 $body
                 ...'
-  defn.macro 'fun $identifier_path $case_maybe_kw_opt'
-  defn.macro 'fun | $identifier_path $case_maybe_kw
+  defn.macro 'fun $id_path $case_maybe_kw_opt'
+  defn.macro 'fun | $id_path $case_maybe_kw
                   | ...'
-  defn.macro 'fun $identifier_path $maybe_res_ann:
-                match | $identifier_path $case_maybe_kw
+  defn.macro 'fun $id_path $maybe_res_annot:
+                match | $id_path $case_maybe_kw
                       | ...'
 
-  expr.macro 'fun ($binding, ...):
+  expr.macro 'fun ($bind, ...):
                 $body
                 ...'
-  expr.macro 'fun case_maybe_kw_op'
+  expr.macro 'fun $case_maybe_kw_opt'
 
   expr.macro 'fun | $case_maybe_kw
                   | ...'
 
-  expr.macro 'fun $maybe_res_ann:
+  expr.macro 'fun $maybe_res_annot:
                 match | $case_maybe_kw
                       | ...'
 
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
-
   grammar case_maybe_kw_opt:
-    ($binding_maybe_kw_opt, ..., $rest, ...) $maybe_res_ann:
+    ($bind_maybe_kw_opt, ..., $rest, ...) $maybe_res_annot:
       $body
       ...
 
   grammar case_maybe_kw:
-    ($binding_maybe_kw, ..., $rest, ...) $maybe_res_ann:
+    ($bind_maybe_kw, ..., $rest, ...) $maybe_res_annot:
       $body
       ...
 
-  grammar binding_maybe_kw_opt:
-    $binding
-    $keyword: $binding
-    $binding = $default_expr
-    $binding: $default_body; ...
-    $keyword: $binding = $default_expr
-    $keyword: $binding: $default_body; ...
+  grammar bind_maybe_kw_opt:
+    $bind
+    $keyword: $bind
+    $bind = $default_expr
+    $bind: $default_body; ...
+    $keyword: $bind = $default_expr
+    $keyword: $bind: $default_body; ...
     $keyword
     $keyword = $default_expr
   
-  grammar binding_maybe_kw:
-    $binding
-    $keyword: $binding
+  grammar bind_maybe_kw:
+    $bind
+    $keyword: $bind
     $keyword
   
-  grammar maybe_res_ann:
-    #,(@rhombus(::, ~bind)) $annotation
-    #,(@rhombus(:~, ~bind)) $annotation
+  grammar maybe_res_annot:
+    #,(@rhombus(::, ~bind)) $annot
+    #,(@rhombus(:~, ~bind)) $annot
     #,(epsilon)
 
   grammar rest:
-    $repetition_binding #,(@litchar{,}) $ellipsis
-    & $list_binding
-    ~& $map_binding
+    $repet_bind #,(@litchar{,}) $ellipsis
+    & $list_bind
+    ~& $map_bind
 
   grammar ellipsis:
     #,(dots)
 
 ){
 
- Binds @rhombus(identifier_path) as a function in the @rhombus(expr, ~space)
+ Binds @rhombus(id_path) as a function in the @rhombus(expr, ~space)
  @tech{space}, or when
- @rhombus(identifier_path) is not supplied, serves as an expression that
+ @rhombus(id_path) is not supplied, serves as an expression that
  produces a function value.
-
- See @secref("namespaces") for information on @rhombus(identifier_path).
 
  The first case shown for the definition and expression forms shown
  above are subsumed by the second case, but they describe the most common
@@ -182,8 +194,8 @@ normally bound to implement function calls.
  result of a @rhombus(default_expr) is subject to the same constraints
  imposed by annotations and patterns for its argument as an explicitly
  supplied argument would be. An argument form @rhombus($keyword = $default_expr)
- is equivalent to the form @rhombus($keyword: $identifier = $default_expr)
- for the @rhombus($identifier) with the same string form as @rhombus($keyword).
+ is equivalent to the form @rhombus($keyword: $id = $default_expr)
+ for the @rhombus($id) with the same string form as @rhombus($keyword).
 
 @examples(
   ~defn:
@@ -231,26 +243,26 @@ normally bound to implement function calls.
     is_passing(80) && is_passing(#true)
 )
 
-When a @rhombus(rest) sequence contains @rhombus(& list_binding) or
-@rhombus(repetition_binding #,(@litchar{,}) #,(dots)), then the
+When a @rhombus(rest) sequence contains @rhombus(& list_bind) or
+@rhombus(repet_bind #,(@litchar{,}) #,(dots)), then the
 function or function alternative accepts any number of additional
 by-position arguments.
-For @rhombus(& list_binding), the additional arguments are collected
+For @rhombus(& list_bind), the additional arguments are collected
 into a list value, and that list value is bound to the
-@rhombus(list_binding).
-For @rhombus(repetition_binding #,(@litchar{,}) #,(dots)), each
-variable in @rhombus(repetition_binding) is bound to a repetition that
+@rhombus(list_bind).
+For @rhombus(repet_bind #,(@litchar{,}) #,(dots)), each
+variable in @rhombus(repet_bind) is bound to a repetition that
 repeats access to that piece of each additional argument.
-Only one by-position rest binding, @rhombus(& list_binding) or
-@rhombus(repetition_binding #,(@litchar{,}) #,(dots_expr)), can appear
+Only one by-position rest binding, @rhombus(& list_bind) or
+@rhombus(repet_bind #,(@litchar{,}) #,(dots_expr)), can appear
 in a @rhombus(rest) sequence.
 
-When a @rhombus(rest) sequence contains @rhombus(~& map_binding), then
+When a @rhombus(rest) sequence contains @rhombus(~& map_bind), then
 the function or function alternative accepts any number of additional
 keyword arguments. The additional keywords and associated argument
 values are collected into a map value to be bound to
-@rhombus(map_binding).
-Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
+@rhombus(map_bind).
+Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 
 @examples(
   ~defn:
@@ -273,16 +285,16 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
     is_sorted([1, 2, 9, 3, 5])
 )
 
- When @rhombus(maybe_res_ann) is present, it provides an annotation for
+ When @rhombus(maybe_res_annot) is present, it provides an annotation for
  the function's result, but only for the corresponding case if a
- @rhombus(maybe_res_ann) is present in a multi-case function written with
+ @rhombus(maybe_res_annot) is present in a multi-case function written with
  @(vbar). In the case of a checked annotation using @rhombus(::), the
  function's body is @emph{not} in tail position with respect to a call to
  the function, since a check will be applied to the function's result.
- When @rhombus(maybe_res_ann) is present for a function declared with
- cases under @rhombus(match), a @rhombus(maybe_res_ann) before the block
+ When @rhombus(maybe_res_annot) is present for a function declared with
+ cases under @rhombus(match), a @rhombus(maybe_res_annot) before the block
  containing @rhombus(match) applies to all cases, in addition to any
- @rhombus(maybe_res_ann) supplied for a specific case.
+ @rhombus(maybe_res_annot) supplied for a specific case.
 
 @examples(
   ~defn:
@@ -302,15 +314,20 @@ Only one @rhombus(~& map_binding) can appear in a @rhombus(rest) sequence.
 
 
 @doc(
-  entry_point.macro 'fun ($binding, ...):
+  ~nonterminal:
+    case_maybe_kw_opt: fun
+    case_maybe_kw: fun
+    maybe_res_annot: fun
+
+  entry_point.macro 'fun ($bind, ...):
                        $body
                        ...'
-  entry_point.macro 'fun case_maybe_kw_op'
+  entry_point.macro 'fun $case_maybe_kw_opt'
 
   entry_point.macro 'fun | $case_maybe_kw
                          | ...'
 
-  entry_point.macro 'fun $maybe_res_ann:
+  entry_point.macro 'fun $maybe_res_annot:
                        match | $case_maybe_kw
                              | ...'
 ){

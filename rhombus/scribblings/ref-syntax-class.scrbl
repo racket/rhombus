@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: 
-    "common.rhm" open
+    "common.rhm" open    
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def dots: @rhombus(..., ~bind))
@@ -9,16 +10,21 @@
 @title{Syntax Classes}
 
 @doc(
-  defn.macro 'syntax_class $name $maybe_args
+  ~nonterminal:
+    id_bind: def bind
+    rest_id: begin id
+    syntax_pattern: #%quotes pattern
+
+  defn.macro 'syntax_class $id $maybe_args
               | $pattern_case
               | ...'
-  defn.macro 'syntax_class $name $maybe_args:
+  defn.macro 'syntax_class $id $maybe_args:
                 $class_clause
                 ...'
 
   grammar maybe_args:
-    ($identifier_binding, ...)
-    ($identifier_binding, ..., & $rest_identifier)
+    ($id_bind, ...)
+    ($id_bind, ..., & $rest_id)
     #,(epsilon)
 
   grammar class_clause:
@@ -26,8 +32,8 @@
     #,(@rhombus(description, ~syntax_class_clause)) $desc_rhs
     #,(@rhombus(error_mode, ~syntax_class_clause)) $error_mode_rhs
     #,(@rhombus(kind, ~syntax_class_clause)) $kind_rhs
-    #,(@rhombus(fields, ~syntax_class_clause)): $identifier ...; ...
-    #,(@rhombus(root_swap, ~syntax_class_clause)): $identifier $identifier
+    #,(@rhombus(fields, ~syntax_class_clause)): $id ...; ...
+    #,(@rhombus(root_swap, ~syntax_class_clause)): $id $id
 
   grammar pattern_cases:
     $pattern_case
@@ -49,8 +55,8 @@
  Defines a @deftech{syntax class} that can be used in syntax patterns with
  @rhombus(::, ~unquote_bind). A syntax class can optionally have arguments, in which
  case every use of the syntax class with @rhombus(::, ~unquote_bind) must supply
- arguments; an @rhombus(identifier_binding) is like a @rhombus(kwopt_binding, ~var) for
- @rhombus(fun), but each binding must be a plain @rhombus(identifier) (i.e., annotations
+ arguments; an @rhombus(id_bind) is like a @rhombus(kwopt_binding, ~var) for
+ @rhombus(fun), but each binding must be a plain @rhombus(id) (i.e., annotations
  and general pattern matching are not supported). Identifiers bound as arguments
  are visible in @rhombus(clause) bodies.
 
@@ -183,17 +189,12 @@
 
 
 @doc(
+  ~nonterminal:
+    pattern_cases: syntax_class pattern_cases
+    pattern_case: syntax_class pattern_case
+                   
   syntax_class_clause.macro 'pattern $pattern_cases'
   bind.macro 'pattern $pattern_cases'
-
-  grammar pattern_cases:
-    $pattern_case
-    Z| $pattern_case
-     | ...
-
-  grammar pattern_case:
-    $syntax_pattern
-    $syntax_pattern: $pattern_body; ...
 ){
 
  The @rhombus(pattern, ~syntax_class_clause) clause form in
@@ -238,27 +239,27 @@
 
 @doc(
   syntax_class_clause.macro 'fields:
-                               $identifier ...
+                               $id ...
                                ...'
 ){
 
  Limits the set of fields that are provided by a syntax class to the
- listed @rhombus(identifier)s. See @rhombus(syntax_class).
+ listed @rhombus(id)s. See @rhombus(syntax_class).
 
 }
 
 
 @doc(
-  syntax_class_clause.macro 'root_swap: $identifier $identifier'
+  syntax_class_clause.macro 'root_swap: $id $id'
 ){
 
  Adjusts the match value and fields of a syntax class. The first
- @rhombus(identifier) names a field that te syntax class would otherwise
+ @rhombus(id) names a field that te syntax class would otherwise
  provide, but the field is removed, and its value instead becomes the
  main value of an identifier that is bound with the syntax class.
  Meanwhile, the matching terms that would otherwise be the variable's
  value are associated instead with a fresh field named by the second
- @rhombus(identifier).
+ @rhombus(id).
 
 @examples(
   ~defn:
@@ -350,14 +351,14 @@
 
 
 @doc(
-  pattern_clause.macro 'field $identifier_maybe_rep:
+  pattern_clause.macro 'field $id_maybe_rep:
                           $body
                           ...'
-  pattern_clause.macro 'field $identifier_maybe_rep = $expr'
+  pattern_clause.macro 'field $id_maybe_rep = $expr'
   
-  grammar identifier_maybe_rep:
-    $identifier
-    [$identifier_maybe_rep, $ellipsis]
+  grammar id_maybe_rep:
+    $id
+    [$id_maybe_rep, $ellipsis]
 
   grammar ellipsis:
     #,(dots)

@@ -1,15 +1,16 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
 
 @(def macro_meta_eval: make_rhombus_eval())
 @examples(
-  ~hidden: #true
   ~eval: macro_meta_eval
-  import: meta -1: rhombus/meta open
+  ~hidden:
+    import: meta -1: rhombus/meta open
 )
 
 @(def dollar: @rhombus($))
@@ -26,6 +27,10 @@
 }
 
 @doc(
+  ~nonterminal:
+    macro_pattern: macro
+    option: macro
+
   defn.macro 'expr.macro $macro_patterns'
 
   grammar macro_patterns:
@@ -50,7 +55,7 @@
 
  If a @rhombus(macro_pattern) ends with
  @rhombus(#,(@rhombus($, ~bind))()) or
- @rhombus($#,(@rhombus(identifier, ~var)) ..., ~bind), then a match
+ @rhombus(#,(@rhombus($, ~bind))#,(@rhombus(id, ~var)) #,(@rhombus(..., ~bind))), then a match
  covers all subsequent terms in the enclosing group of a use of the
  macro. In that case, the @rhombus(body) after the pattern can return two
  values: an expansion for the consumed part of the input match, and a

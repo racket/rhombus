@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title(~tag: "namespaces"){Namespaces}
 
@@ -32,42 +34,23 @@ object. If the namespace @rhombus(p) exports only @rhombus(x) bindings
 in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
 @rhombus(p.x) refers to the @rhombus(x) field of the @rhombus(p) object.
 
-Forms that can extend a namespace typically refer to these non-terminals
-as part of their grammar:
-
 @doc(
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
-
-  grammar operator_path:
-    $operator
-    $identifier_path . ($operator)
-){}
-
-@doc(
-  defn.macro 'namespace $identifier_path'
-  defn.macro 'namespace $identifier_path:
-                $body_or_export
+  ~nonterminal:
+    export_clause: export
+  defn.macro 'namespace $id_path'
+  defn.macro 'namespace $id_path:
+                $nestable_body
                 ...'
-
-  grammar identifier_path:
-    $identifier
-    $identifier_path . $identifier
-
-  grammar body_or_export:
-    $body
-    $export
 ){
 
- Similar to the same @rhombus(body_or_export) sequence spliced into the
+ Similar to the same @rhombus(nestable_body) sequence spliced into the
  enclosing context, but definitions within the body are not visible
  outside the body, and @rhombus(export) declarations are allowed and
- determine exports for the @rhombus(identifier_path) immediately after
+ determine exports for the @rhombus(id_path) immediately after
  @rhombus(namespace). An exported @rhombus(name, ~var) can be reached using
- @rhombus(identifier_path#,(rhombus(.))#,(rhombus(name, ~var))). The name
- @rhombus(identifier_path) also works with @rhombus(import). The @rhombus(identfier)
- at the end of @rhombus(identifier_path) is bound in the @rhombus(namespace, ~space)
+ @rhombus(id_path#,(rhombus(.))#,(rhombus(name, ~var))). The name
+ @rhombus(id_path) also works with @rhombus(import). The @rhombus(id)
+ at the end of @rhombus(id_path) is bound in the @rhombus(namespace, ~space)
  @tech{space}.
 
 @examples(

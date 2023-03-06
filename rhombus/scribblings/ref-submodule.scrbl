@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title(~tag: "submodules"){Submodules}
 
@@ -8,16 +10,19 @@ A @deftech{submodule} is a module that is textually nested in another
 (sub)module.
 
 @doc(
-  decl.macro 'submodule $identifier:
+  ~nonterminal:
+    module_path: import
+
+  decl.macro 'submodule $id:
                 $body
                 ...'
-  decl.macro 'submodule $identifier ~lang $module_path:
+  decl.macro 'submodule $id ~lang $module_path:
                 $body
                 ...'
-  decl.macro 'submodule ~early $identifier ~lang $module_path:
+  decl.macro 'submodule ~early $id ~lang $module_path:
                 $body
                 ...'
-  decl.macro 'submodule ~late $identifier ~lang $module_path:
+  decl.macro 'submodule ~late $id ~lang $module_path:
                 $body
                 ...'
 ){
@@ -29,9 +34,9 @@ A @deftech{submodule} is a module that is textually nested in another
  refer to bindings in the enclosing module, and the submodule implicitly
  imports the enclosing module. The enclosing module cannot directly
  import the submodule, in contrast, since that would create a import
- cycle. The same @rhombus(identifier) can be declared multiple times this
+ cycle. The same @rhombus(id) can be declared multiple times this
  way using @rhombus(submodule), and all of the @rhombus(body) forms for
- the same @rhombus(identifier) are combined (in the order as the appear)
+ the same @rhombus(id) are combined (in the order as the appear)
  to create one submodule. The expansion of the @rhombus(body) forms is
  delayed until the enclosing module is fully expanded.
 
@@ -44,7 +49,7 @@ A @deftech{submodule} is a module that is textually nested in another
  When @rhombus(~early) is present, or when @rhombus(~lang) is used
  without @rhombus(~late), then the submodule is defined before the rest
  of the enclosing module is expanded. The rest of the module can import
- the submodule using @rhombus(self!identifier, ~impo), for example, or
+ the submodule using @rhombus(self!id, ~impo), for example, or
  the submodule might be used from outside the enclosing module. In the
  latter case, the enclosing module need not be instantiated to use the
  submodule.
@@ -54,6 +59,6 @@ A @deftech{submodule} is a module that is textually nested in another
  @rhombus(submodule) without @rhombus(~lang). The submodule can import
  from the enclosing mosulde using @rhombus(parent, ~impo), or it can
  import from sibling submodules using a module path such as
- @rhombus(parent!identifier, ~impo).
+ @rhombus(parent!id, ~impo).
 
 }

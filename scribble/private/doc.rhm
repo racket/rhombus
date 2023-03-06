@@ -5,6 +5,7 @@ import:
 
 export:
   doc
+  nonterminal
 
 expr.macro 'doc $parens $tail ...':
   ~op_stx: me
@@ -14,3 +15,7 @@ expr.macro 'doc $parens $tail ...':
              '$tail ...')
   | ~else:
       Syntax.error("expected forms and documentation content", '$me $parens')
+
+defn.macro 'nonterminal: $nts':
+  ~op_stx: me
+  parsed(['#{define-nonterminal}', me, ': $nts'])

@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -20,10 +21,13 @@
 
 
 @doc(
+  ~nonterminal:
+    macro_patterns: expr.macro
+
   defn.macro 'annot.macro $macro_patterns'
 ){
 
- Like @rhombus(expr.macro), but defines an identifier or operator as an
+ Like @rhombus(expr.macro, ~expr), but defines an identifier or operator as an
  annotation form in the @rhombus(annot, ~space) @tech{space}.
  The result of the macro expansion can be a result
  created with @rhombus(annot_meta.pack_predicate).
@@ -61,24 +65,24 @@
 
 @doc(
   defn.macro 'annot.delayed_declare $id'
-  defn.macro 'annot.delayed_complete $identifier_path: $annot'
+  defn.macro 'annot.delayed_complete $id_path: $annot'
 ){
 
  Last-resort forms for solving mutual-dependency problems among
- annotations. The @rhombus(annot.delayed_declare) form declares an
- annotation, and the @rhombus(annot.delayed_complete) form mutates a
+ annotations. The @rhombus(annot.delayed_declare, ~expr) form declares an
+ annotation, and the @rhombus(annot.delayed_complete, ~expr) form mutates a
  declaration to make it equivalent to @rhombus(annot).
 
  A completed delayed annotation need not be declared in the same module
- or definition context, which is why @rhombus(annot.delayed_complete)
- allows an @rhombus(identifier_path). See @secref("namespaces") form more
- information on @rhombus(identifier_path).
+ or definition context, which is why @rhombus(annot.delayed_complete, ~expr)
+ allows an @rhombus(id_path). See @secref("namespaces") form more
+ information on @rhombus(id_path).
 
  If a value is tested against a delayed annotation @rhombus(id) before
- it is completed via @rhombus(annot.delayed_complete) at run time, then
+ it is completed via @rhombus(annot.delayed_complete, ~expr) at run time, then
  an exception is reported. At compile time, the static information
  associated @rhombus(id) is empty until after it is completed via
- @rhombus(annot.delayed_complete).
+ @rhombus(annot.delayed_complete, ~expr).
 
  These forms should be used as last resort because they inherently
  involve a side effect, and potentially across module boundaries. When a

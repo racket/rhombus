@@ -1,6 +1,7 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
+    "nonterminal.rhm" open
     "macro.rhm")
 
 @(def macro_eval = macro.make_macro_eval())
@@ -13,8 +14,8 @@ specific @deftech{space}. Example spaces include
 @rhombus(expr, ~space) and @rhombus(bind, ~space), which
 generally correspond to a @tech{namespace} that provides a binding
 form for the space.
-Binding forms like @rhombus(def), @rhombus(expr.macro), and
-@rhombus(bind.macro) bind an identifier in the corresponding space.
+Binding forms like @rhombus(def), @rhombus(expr.macro, ~expr), and
+@rhombus(bind.macro, ~expr) bind an identifier in the corresponding space.
 
 Forms that bind in different spaces can be used on the same name to give
 that name a meaning in multiple contexts. The @rhombus(class) form binds
@@ -39,27 +40,30 @@ forms create a new space along with its associated parser
 driver and macro-definitions forms.
 
 @doc(
-  defn.macro 'space.enforest $space_identifier:
-                $space_clause_or_body
+  ~nonterminal:
+    space_id: begin id
+
+  defn.macro 'space.enforest $space_id:
+                $space_clause_or_body_or_export
                 ...'
 
-  grammar space_clause_or_body:
-    #,(@rhombus(space_path, ~space_clause)) $space_identifier_path
-    #,(@rhombus(macro_definer, ~space_clause)) $identifier
-    #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_identifier:
+  grammar space_clause_or_body_or_export:
+    #,(@rhombus(space_path, ~space_clause)) $space_id_path
+    #,(@rhombus(macro_definer, ~space_clause)) $id
+    #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
       ...
     $body
     $export
                   
-  grammar space_identifier_path:
-    $identifier
-    $space_identifier_path / $identifier
+  grammar space_id_path:
+    $id
+    $space_id_path / $id
 
   grammar space_meta_clause_or_body:
-    #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $identifier
-    #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $identifier
-    #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $identifier
+    #,(@rhombus(parse_syntax_class, ~space_meta_clause)) $id
+    #,(@rhombus(parse_prefix_more_syntax_class, ~space_meta_clause)) $id
+    #,(@rhombus(parse_infix_more_syntax_class, ~space_meta_clause)) $id
     #,(@rhombus(identifier_parser, ~space_meta_clause)) $expr
     #,(@rhombus(parse_checker, ~space_meta_clause)) $expr
     #,(@rhombus(description, ~space_meta_clause)) $expr
@@ -68,16 +72,16 @@ driver and macro-definitions forms.
     $export    
 ){
 
- Defines @rhombus(space_identifier) as a @tech{space} with syntax
+ Defines @rhombus(space_id) as a @tech{space} with syntax
  classes and macro-definition forms that reference and bind in the space
  specified by @rhombus(space_path, ~space_clause). The
- @rhombus(space_identifier_path) declared with
+ @rhombus(space_id_path) declared with
  @rhombus(space_path, ~space_clause) should be globally unique, typically
  based on the module path of the enclosing module, but the intent is that
  this identifying path is always referenced as
- @rhombus(space_identifier).
+ @rhombus(space_id).
 
- Besides being defined as a space, the @rhombus(space_identifier) is
+ Besides being defined as a space, the @rhombus(space_id) is
  defined as a @tech{namespace}. Among the
  @rhombus(space_clause_or_body)s, @rhombus(body) and @rhombus(export)
  forms can add definitions and exports to the namespace, the same as for
@@ -202,7 +206,10 @@ driver and macro-definitions forms.
 
 
 @doc(
-  defn.macro 'space.transform $space_identifier:
+  ~nonterminal:
+    space_id: begin id
+    space_clause_or_body_or_export: space.enforest
+  defn.macro 'space.transform $space_id:
                 $space_clause_or_body_or_export
                 ...'
 ){
@@ -220,9 +227,12 @@ driver and macro-definitions forms.
 }
 
 @doc(
-  space_clause.macro 'space_path $space_path'
-  space_clause.macro 'macro_definer $identifier'
-  space_clause.macro 'meta_namespace $meta_namespace_identifier:
+  ~nonterminal:
+    meta_namespace_id: begin id
+    space_id_path: space.enforest
+  space_clause.macro 'space_path $space_id_path'
+  space_clause.macro 'macro_definer $id'
+  space_clause.macro 'meta_namespace $meta_namespace_id:
                         $space_meta_clause_or_body_or_export
                           ...'
 ){
@@ -234,9 +244,9 @@ driver and macro-definitions forms.
 }
 
 @doc(
-  space_meta_clause.macro 'parse_syntax_class $identifier'
-  space_meta_clause.macro 'parse_prefix_more_syntax_class $identifier'
-  space_meta_clause.macro 'parse_infix_more_syntax_class $identifier'
+  space_meta_clause.macro 'parse_syntax_class $id'
+  space_meta_clause.macro 'parse_prefix_more_syntax_class $id'
+  space_meta_clause.macro 'parse_infix_more_syntax_class $id'
   space_meta_clause.macro 'identifier_parser $expr'
   space_meta_clause.macro 'parse_checker $expr'
   space_meta_clause.macro 'description $expr'

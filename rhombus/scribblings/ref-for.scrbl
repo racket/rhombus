@@ -1,5 +1,7 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open
+    "nonterminal.rhm" open)
 
 @title{Iteration}
 
@@ -18,11 +20,11 @@
                 $body
                 ~into $reducer'
   grammar clause_or_body:
-    #,(@rhombus(each, ~for_clause)) $binding:
+    #,(@rhombus(each, ~for_clause)) $bind:
       $body
       ...
     #,(@rhombus(each, ~for_clause)):
-      $binding:
+      $bind:
         $body
         ...
       ...
@@ -32,6 +34,10 @@
     #,(@rhombus(final_when, ~for_clause)) $expr_or_block
     $other_for_clause
     $body
+
+  grammar expr_or_block:
+    expr
+    : : $body; ...      
 ){
 
  Iterates as determined by @rhombus(each, ~for_clause) clauses among the
@@ -42,10 +48,10 @@
 
  The block after a binding within an @rhombus(each, ~for_clause) clause must produce
  a @deftech{sequence}. Each element of that sequence is bound in turn to
- the @rhombus(binding) variables of the @rhombus(each, ~for_clause). If a sequence
+ the @rhombus(bind) variables of the @rhombus(each, ~for_clause). If a sequence
  can has multiple values as its elements (for example, a map as a
  sequence has a key and value for each element), then
- @rhombus(binding) can be a @rhombus(values, ~bind) pattern or just a
+ @rhombus(bind) can be a @rhombus(values, ~bind) pattern or just a
  prenthesized sequence of bindings to receive a matcging number of
  element values.
 
@@ -165,11 +171,11 @@
 
 @doc(
   for_clause.macro 'each:
-                      $binding:
+                      $bind:
                         $body
                         ...
                       ...'
-  for_clause.macro 'each $binding:
+  for_clause.macro 'each $bind:
                       $body
                       ...'
   for_clause.macro 'keep_when $expr'
