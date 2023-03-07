@@ -110,8 +110,9 @@
                                                          #`((#,group-tag any ...))
                                                          #'rhs-blk)
                           . bodys))]
-            [(group prim-for-clause #:each (block (group any ...+ rhs-blk)
-                                                  ...))
+            [(group prim-for-clause #:each ({~or block parens}
+                                            (group any ...+ rhs-blk)
+                                            ...))
              ;; parse binding as binding group
              #`(#:splice (for-clause-step
                           orig
@@ -262,6 +263,10 @@
        #:datum-literals (group block)
        [(form-id d::each-decl)
         #`[(#,group-tag prim-for-clause #:each d.bind ... d.blk)]]
+       [(form-id (tag::parens (group d::each-decl) ...))
+        #`[(#,group-tag prim-for-clause #:each (tag
+                                                (group d.bind ... d.blk)
+                                                ...))]]
        [(form-id (tag::block (group d::each-decl) ...))
         #`[(#,group-tag prim-for-clause #:each (tag
                                                 (group d.bind ... d.blk)

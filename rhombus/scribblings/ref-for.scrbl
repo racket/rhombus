@@ -28,6 +28,7 @@
         $body
         ...
       ...
+    #,(@rhombus(each, ~for_clause)) ($bind: $body; ..., ...)
     #,(@rhombus(keep_when, ~for_clause)) $expr_or_block
     #,(@rhombus(skip_when, ~for_clause)) $expr_or_block
     #,(@rhombus(break_when, ~for_clause)) $expr_or_block
@@ -175,6 +176,10 @@
                         $body
                         ...
                       ...'
+  for_clause.macro 'each ($bind:
+                            $body
+                            ...,
+                          ...)'
   for_clause.macro 'each $bind:
                       $body
                       ...'

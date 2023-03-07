@@ -16,6 +16,10 @@ check:
   ~is [0, 1]
 
 check:
+  for List: each (i: 0..2); i
+  ~is [0, 1]
+
+check:
   for Map:
     each i: 0..2
     values(i, "" +& i)
@@ -48,6 +52,10 @@ check:
       i: 0..2
       j: 0..2
     [i, -j-1]
+  ~is [[0, -1], [1, -2]]
+
+check:
+  for List: each (i: 0..2, j: 0..2); [i, -j-1]
   ~is [[0, -1], [1, -2]]
 
 check:
@@ -171,3 +179,11 @@ check:
     each i: 3..7
     i
   ~raises "index is out of range"
+
+check:
+  for List:
+    each (x: let ns: for List: each (n: 1..4); n
+             ns ++ List.rest(List.reverse(ns)),
+          y: 1..6)
+    x * y
+  ~is [1, 4, 9, 8, 5]
