@@ -207,7 +207,7 @@
     [(null? l)
      ;; Out of tokens
      (when (string? (closer-expected closer))
-       (fail (closer-expected-opener closer) (format "expected ~s" (closer-expected closer))))
+       (fail (closer-expected-opener closer) (format "did not find matching ~s" (closer-expected closer))))
      (done)]
     [else
      (define t (car l))
