@@ -334,6 +334,7 @@ local:
 (| 1 | 2)
 
 #%call #%juxtapose #%end
+@( #%inside )
 
 -: :: ::: :~
 
@@ -1092,6 +1093,7 @@ INPUT
     (group (parens (group 1) (group (block))))
     (group (parens (group (alts (block (group 1)) (block (group 2))))))
     (group #%call #%juxtapose #%end)
+    (group (parens (group #%inside)))
     (group (op -) (block (group (op ::) (op :::) (op :~))))
     ))
 

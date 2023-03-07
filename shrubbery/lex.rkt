@@ -635,7 +635,7 @@
     ;;    then identifier, and the next step will be back to 'initial
     [(initial args no-args op-continue)
      ;; recur to parse in shrubbery mode:
-     (define-values (t type paren start end backup sub-status pending-backup)
+     (define-values (t type paren start end backup sub-status t-pending-backup)
        (recur (in-at-shrubbery-status status)))
      ;; to keep the term and possibly exit 'initial or 'args mode:
      (define (ok status)
@@ -678,10 +678,10 @@
            [else
             ;; continue in-at mode
             (values status 0)]))
-       (values t type paren start end 0  next-status pending-backup))
+       (values t type paren start end 0 next-status (max pending-backup t-pending-backup)))
      ;; converts a token to an error token:
      (define (error status)
-       (values (struct-copy token t [name 'fail]) 'error #f start end 0 status 0))
+       (values (struct-copy token t [name 'fail]) 'error #f start end 0 status t-pending-backup))
      ;; update the shrubbery-level status, then keep the term or error,
      ;; tracking nesting depth through the status as we continue:
      (let ([status (struct-copy in-at status
