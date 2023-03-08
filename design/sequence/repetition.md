@@ -268,7 +268,7 @@ and [function calls with *expression and **expression](https://docs.python.org/3
 Contributors
 ------------
 
-* Russ Angle
+* Ross Angle
 * Jack Firth
 * Matthew Flatt
 * Sid Kasivajhula
