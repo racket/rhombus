@@ -16,11 +16,12 @@
 
 (begin-for-syntax
   (define (make-expression&repetition-prefix-operator expr-name repet-name prec protocol exp)
+    (when (eq? protocol 'macro) (error "macro protocol not currently supported for prefix repetition"))
     (define rep
-      (lambda (form stx)
-        (build-compound-repetition stx
+      (lambda (form self-stx)
+        (build-compound-repetition self-stx
                                    (list form)
-                                   (lambda (form) (values (exp form stx)
+                                   (lambda (form) (values (exp form self-stx)
                                                           #'())))))
     (values
      (expression-prefix-operator expr-name prec protocol exp)
@@ -28,11 +29,22 @@
 
   (define (make-expression&repetition-infix-operator expr-name repet-name prec protocol exp assc)
     (define rep
-      (lambda (form1 form2 stx)
-        (build-compound-repetition stx
-                                   (list form1 form2)
-                                   (lambda (form1 form2) (values (exp form1 form2 stx)
-                                                                 #'())))))
+      (if (eq? protocol 'macro)
+          ;; used for postfix
+          (lambda (form stx)
+            (define tail #f)
+            (define e (build-compound-repetition stx
+                                                 (list form)
+                                                 (lambda (form)
+                                                   (define-values (e e-tail) (exp form stx))
+                                                   (set! tail e-tail)
+                                                   (values e #'()))))
+            (values e tail))
+          (lambda (form1 form2 self-stx)
+            (build-compound-repetition self-stx
+                                       (list form1 form2)
+                                       (lambda (form1 form2) (values (exp form1 form2 self-stx)
+                                                                     #'()))))))
     (values
      (expression-infix-operator expr-name prec protocol exp assc)
      (repetition-infix-operator repet-name prec protocol rep assc)))

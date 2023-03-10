@@ -240,3 +240,10 @@ check:
       ~associativity: ~left
       1
   ~raises "associativity option not allowed after first infix case"
+
+// check postfix operator as repetition
+check:
+  operator n??: n
+  def [a, ...] = [1, 2, 3]
+  [a??, ...]
+  ~is [1, 2, 3]
