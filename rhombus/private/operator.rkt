@@ -236,59 +236,76 @@
 
   (define (generate-infix form-id gs name extends lefts rights prec assc rhss ret-predicates ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])
-      (cons
-       #`(define op-proc
-           #,(build-binary-function name lefts rights rhss form-id (last gs) ret-predicates))
-       (build-syntax-definitions/maybe-extension
-        '(#f rhombus/repet) name extends
-        (make-infix name #'op-proc prec assc ret-static-infos)))))
+      (add-top-level
+       #'(op-proc)
+       (append
+        (build-syntax-definitions/maybe-extension
+         '(#f rhombus/repet) name extends
+         (make-infix name #'op-proc prec assc ret-static-infos))
+        (list
+         #`(define op-proc
+             #,(build-binary-function name lefts rights rhss form-id (last gs) ret-predicates)))))))
     
   (define (generate-postfix form-id gs name extends args prec rhss ret-predicates ret-static-infos)
     (with-syntax ([(op-proc) (generate-temporaries (list name))])
-      (cons
-       #`(define op-proc
-           #,(build-unary-function name args rhss form-id (last gs) ret-predicates))
-       (build-syntax-definitions/maybe-extension
-        '(#f rhombus/repet) name extends
-        (make-postfix name #'op-proc prec ret-static-infos)))))
+      (add-top-level
+       #'(op-proc)
+       (append
+        (build-syntax-definitions/maybe-extension
+         '(#f rhombus/repet) name extends
+         (make-postfix name #'op-proc prec ret-static-infos))
+        (list
+         #`(define op-proc
+             #,(build-unary-function name args rhss form-id (last gs) ret-predicates)))))))
 
   (define (generate-prefix+infix stx
                                  p-gs p-name p-extends p-args p-prec p-rhss p-ret-predicates p-ret-static-infos
                                  i-gs i-name i-extends i-lefts i-rights i-prec i-assc i-rhss i-ret-predicates i-ret-static-infos)
     (with-syntax ([(p-op-proc i-op-proc) (generate-temporaries (list p-name i-name))])
-      (list*
-       #`(define p-op-proc
-           #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
-       #`(define i-op-proc
-           #,(build-binary-function i-name i-lefts i-rights i-rhss (first i-gs) (last i-gs) i-ret-predicates))
-       (build-syntax-definitions/maybe-extension
-        '(#f rhombus/repet) p-name p-extends
-        #`(let-values ([(prefix-expr prefix-repet)
-                        #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)]
-                       [(infix-expr infix-repet)
-                        #,(make-infix i-name #'i-op-proc i-prec i-assc i-ret-static-infos)])
-            (values
-             (expression-prefix+infix-operator prefix-expr infix-expr)
-             (repetition-prefix+infix-operator prefix-repet infix-repet)))))))
+      (add-top-level
+       #'(p-op-proc i-op-proc)
+       (append
+        (build-syntax-definitions/maybe-extension
+         '(#f rhombus/repet) p-name p-extends
+         #`(let-values ([(prefix-expr prefix-repet)
+                         #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)]
+                        [(infix-expr infix-repet)
+                         #,(make-infix i-name #'i-op-proc i-prec i-assc i-ret-static-infos)])
+             (values
+              (expression-prefix+infix-operator prefix-expr infix-expr)
+              (repetition-prefix+infix-operator prefix-repet infix-repet))))
+        (list
+         #`(define p-op-proc
+             #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
+         #`(define i-op-proc
+             #,(build-binary-function i-name i-lefts i-rights i-rhss (first i-gs) (last i-gs) i-ret-predicates)))))))
 
   (define (generate-prefix+postfix stx
                                    p-gs p-name p-extends p-args p-prec p-rhss p-ret-predicates p-ret-static-infos
                                    a-gs a-name a-extends a-args a-prec a-rhss a-ret-predicates a-ret-static-infos)
     (with-syntax ([(p-op-proc a-op-proc) (generate-temporaries (list p-name a-name))])
-      (list*
-       #`(define p-op-proc
-           #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
-       #`(define a-op-proc
-           #,(build-unary-function a-name a-args a-rhss (first a-gs) (last a-gs) a-ret-predicates))
-       (build-syntax-definitions/maybe-extension
-        '(#f rhombus/repet) p-name p-extends
-        #`(let-values ([(prefix-expr prefix-repet)
-                        #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)]
-                       [(infix-expr infix-repet)
-                        #,(make-postfix a-name #'a-op-proc a-prec a-ret-static-infos)])
-            (values
-             (expression-prefix+infix-operator prefix-expr infix-expr)
-             (repetition-prefix+infix-operator prefix-repet infix-repet))))))))
+      (add-top-level
+       #'(p-op-proc a-op-proc)
+       (append
+        (build-syntax-definitions/maybe-extension
+         '(#f rhombus/repet) p-name p-extends
+         #`(let-values ([(prefix-expr prefix-repet)
+                         #,(make-prefix p-name #'p-op-proc p-prec p-ret-static-infos)]
+                        [(infix-expr infix-repet)
+                         #,(make-postfix a-name #'a-op-proc a-prec a-ret-static-infos)])
+             (values
+              (expression-prefix+infix-operator prefix-expr infix-expr)
+              (repetition-prefix+infix-operator prefix-repet infix-repet))))
+        (list
+         #`(define p-op-proc
+             #,(build-unary-function p-name p-args p-rhss (first p-gs) (last p-gs) p-ret-predicates))
+         #`(define a-op-proc
+             #,(build-unary-function a-name a-args a-rhss (first a-gs) (last a-gs) a-ret-predicates)))))))
+
+  (define (add-top-level binds defns)
+    (if (eq? 'top-level (syntax-local-context))
+        (cons #`(define-syntaxes #,binds (values)) defns)
+        defns)))
 
 (begin-for-syntax
   (struct opcase (g name extends prec rhs ret-predicate ret-static-infos))
