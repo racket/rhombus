@@ -1,7 +1,9 @@
 #lang scribble/rhombus/manual
 @(import: 
     "common.rhm" open
-    "nonterminal.rhm" open
+    "nonterminal.rhm":
+      open
+      except: expr
     "macro.rhm")
 
 @title{Meta Definitions and Expressions}

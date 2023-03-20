@@ -21,9 +21,9 @@
 
 @doc(
   ~nonterminal:
-    id_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro
 
-  defn.macro 'for_clause.macro $id_macro_patterns'
+  defn.macro 'for_clause.macro $prefix_macro_patterns'
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but defines a name in the

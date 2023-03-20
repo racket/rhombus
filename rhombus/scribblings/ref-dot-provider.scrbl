@@ -16,17 +16,18 @@
 
 @doc(
   ~nonterminal:
-    id_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro
+    defined_name: defn.macro
 
-  defn.macro 'dot.macro $id_macro_patterns'
+  defn.macro 'dot.macro $prefix_macro_patterns'
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that
  is normally referenced indirectly via @tech{static information},
- instead of directly. The @rhombus(pattern, ~var) sequence after the leading
- @rhombus(defined_name, ~var) should match a sequence of three
+ instead of directly. The @rhombus(pattern) sequence after the leading
+ @rhombus(defined_name) should match a sequence of three
  terms: a parsed left-hand expression, a @rhombus(.) term, and a
- right-hand identifier. The @rhombus(defined_name, ~var) is bound in the
+ right-hand identifier. The @rhombus(defined_name) is bound in the
  @rhombus(dot, ~space) @tech{space}.
 
  The result must be either @rhombus(#false) or a syntax object. A
@@ -41,13 +42,14 @@
 
 @doc(
   ~nonterminal:
-    id_macro_patterns: defn.macro
+    prefix_macro_patterns: defn.macro
+    defined_name: defn.macro
 
-  defn.macro 'dot.macro_more_static $id_macro_patterns'
+  defn.macro 'dot.macro_more_static $prefix_macro_patterns'
 ){
 
- Like @rhombus(dot.macro), but the @rhombus(pattern, ~var) sequence after
- the leading @rhombus(defined_name, ~var) should match a sequence
+ Like @rhombus(dot.macro), but the @rhombus(pattern) sequence after
+ the leading @rhombus(defined_name) should match a sequence
  of at least four terms: a boolean literal indicating whether
  the @rhombus(.) is in static mode (see @rhombus(use_static)), a
  parsed left-hand expression, a @rhombus(.) term, and a right-hand

@@ -6,6 +6,8 @@
 
 @(def macro_eval: macro.make_macro_eval())
 
+@(def dollar: @rhombus($))
+
 @title{Definition Macros}
 
 @doc(
@@ -17,9 +19,9 @@
 }
 
 @doc(
-  defn.macro 'defn.macro $id_macro_patterns'
+  defn.macro 'defn.macro $prefix_macro_patterns'
 
-  grammar id_macro_patterns:
+  grammar prefix_macro_patterns:
     '$defined_name $pattern ...':
       $option; ...
       $body
@@ -32,12 +34,16 @@
 
   grammar defined_name:
     $id
+    $op
+    #,(dollar)('#,(dollar)')
     ($id_path)
+    ($op_path)
+
   grammar option:
     ~op_stx: $id
 ){
 
- Defines @rhombus(id) or @rhombus(id_path) as a macro
+ Defines @rhombus(defined_name) as a macro
  in the @rhombus(expr, ~space) @tech{space}. The macro can be used
  in a definition context, where the compile-time
  @rhombus(body) block returns the expansion result. The macro pattern is
@@ -77,7 +83,7 @@
 @doc(
   ~nonterminal:
     defined_name: defn.macro
-    option: defn.macro option
+    option: defn.macro
   defn.macro '«defn.sequence_macro '$defined_name $pattern ...
                                     $pattern
                                     ...':
@@ -86,16 +92,13 @@
                  ...»'
 ){
 
- Similar to @rhombus(defn.macro), but defines a macro for a definition
+ Similar to @rhombus(defn.macro, ~expr), but defines a macro for a definition
  context that is matched against all of the remaining groups in the
  context, so the pattern is a multi-group pattern.
 
  The macro result is two values: a sequence of groups to
  splice in place of the sequence-macro use, and a sequence of
  groups that represent the tail of the definition context that was not consumed.
-
- See @secref("namespaces") for information about
- @rhombus(identifier_path) and @rhombus(operator_path).
 
 @examples(
   ~eval: macro_eval

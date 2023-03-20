@@ -1,7 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open
+    "nonterminal.rhm":
+      open
+      except: defn
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())
@@ -18,11 +20,11 @@
 
 @doc(
   ~nonterminal:
-    id_macro_patterns: defn.macro
-  defn.macro 'decl.macro $id_macro_patterns'
+    prefix_macro_patterns: defn.macro
+  defn.macro 'decl.macro $prefix_macro_patterns'
 ){
 
- Like @rhombus(defn.macro) but for defining a macro that can be used
+ Like @rhombus(defn.macro, ~expr) but for defining a macro that can be used
  only in a module or interactive position --- the same places where
  @rhombus(meta) and @rhombus(submodule) are allowed, for example.
 
@@ -30,11 +32,11 @@
 
 @doc(
   ~nonterminal:
-    id_macro_patterns: defn.macro
-  defn.macro 'decl.nestable_macro $id_macro_patterns'
+    prefix_macro_patterns: defn.macro
+  defn.macro 'decl.nestable_macro $prefix_macro_patterns'
 ){
 
- Like @rhombus(defn.macro), but for forms that can also be used in
+ Like @rhombus(defn.macro, ~expr), but for forms that can also be used in
  namespaces that are witin a module or interactive position --- the same
  places where @rhombus(export) is allowed, for example.
 

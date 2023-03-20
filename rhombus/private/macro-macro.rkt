@@ -198,20 +198,6 @@
     (pattern (~seq _::$+1 (_::parens (group (_::quotes (group (op (~and name (~datum $))))))))
              #:attr extends #'#f))
 
-  (define-syntax-class :operator-or-dotted-identifier
-    #:attributes (name extends)
-    #:description "operator-macro pattern"
-    #:datum-literals (op group)
-    (pattern op-name::operator-or-identifier
-             #:when (not (free-identifier=? (in-binding-space #'op-name.name) (bind-quote $)
-                                            (add1 (syntax-local-phase-level)) (syntax-local-phase-level)))
-             #:attr name #'op-name.name
-             #:attr extends #'#f)
-    (pattern (_::parens (group seq::dotted-operator-or-identifier-sequence))
-             #:with id::dotted-operator-or-identifier #'seq
-             #:attr name #'id.name
-             #:attr extends #'id.extends))
-
   (define-syntax-class :identifier-for-parsed
     #:attributes (id)
     #:description "identifier for a parsed sequence"
@@ -385,7 +371,7 @@
                                            compiletime-id
                                            #f #f
                                            #'() #'()))]
-        [(form-id main-op::operator-or-dotted-identifier
+        [(form-id main-op::operator-or-identifier-or-$
                   (_::block
                    ~!
                    (~var main-options (:all-operator-options space-sym))
@@ -440,7 +426,7 @@
 
   (define-syntax-class :identifier-definition-group
     #:datum-literals (group)
-    (pattern (group _:identifier . _)))
+    (pattern (group _::operator-or-identifier-or-$ . _)))
   
   (define-splicing-syntax-class :identifier-sequence-syntax-quote
     #:datum-literals (group)
@@ -450,8 +436,8 @@
 (define-for-syntax (parse-transformer-definition g rhs)
   (syntax-parse g
     #:datum-literals (group)
-    [(group id:identifier . tail-pattern)
-     #`(pre-parsed id
+    [(group id::operator-or-identifier-or-$ . tail-pattern)
+     #`(pre-parsed id.name
                    tail-pattern
                    #,rhs)]))
 

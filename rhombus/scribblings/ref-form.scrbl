@@ -143,7 +143,7 @@
  @rhombus(::, ~bind) or @rhombus(:~, ~bind), or a larger binding pattern.
 
  Besides all of the binding forms provided by @rhombusmodname(rhombus),
- new ones can be defined with @rhombus(bind.macro, ~bind).
+ new ones can be defined with @rhombus(bind.macro, ~expr).
 
 }
 

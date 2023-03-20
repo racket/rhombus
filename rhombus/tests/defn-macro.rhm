@@ -77,3 +77,19 @@ block:
   check:
     a ~is "one"
     b ~is "two"
+
+// dotted name as macro
+check:
+  defn.macro 'List.three $id $x':
+    'def $id: [$x, $x, $x]'
+  List.three bells "ding"
+  bells
+  ~is ["ding", "ding", "ding"]
+
+// operator as macro
+check:
+  defn.macro '!!! $id $x':
+    'def $id: [$x, $x, $x]'
+  !!! bells "dong"
+  bells
+  ~is ["dong", "dong", "dong"]
