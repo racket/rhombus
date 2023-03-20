@@ -77,7 +77,7 @@ check:
 
 check:
   ~eval
-  begin:
+  block:
     import rhombus/meta open
     namespace n:
       export: exint
@@ -93,7 +93,7 @@ check:
 
 check:
   ~eval
-  begin:
+  block:
     import rhombus/meta open
     namespace n:
       export: exint
@@ -130,7 +130,7 @@ check:
   11 :: ex_c.exint
   ~is 11
 
-begin:
+block:
   namespace n2:
     import:
       .n open:

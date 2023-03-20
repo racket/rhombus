@@ -1,7 +1,7 @@
 #lang rhombus
 
 // dfferent repetition depths at same template depth
-begin:
+block:
   def [[x, ...], ...] = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
   def [y, ...] = ["a", "b", "c"]
   def one = 1
@@ -18,7 +18,7 @@ begin:
     ['x: $x; ...', ...]
     ~prints_like ['x: 1; 2; 3', 'x: 4; 5; 6', 'x: 7; 8; 9']
 
-begin:
+block:
   check:
     '$[1, 2] 3'
     ~prints_like '1 2 3'

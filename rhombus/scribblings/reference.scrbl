@@ -26,7 +26,7 @@
 @include_section("ref-cond.scrbl")
 @include_section("ref-match.scrbl")
 @include_section("ref-for.scrbl")
-@include_section("ref-begin.scrbl")
+@include_section("ref-block.scrbl")
 @include_section("ref-parameter.scrbl")
 @include_section("ref-exn.scrbl")
 @include_section("ref-control.scrbl")

@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   use_static
   def v:
     try:

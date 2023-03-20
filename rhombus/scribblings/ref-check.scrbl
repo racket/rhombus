@@ -15,8 +15,8 @@
 
 @doc(
   ~nonterminal:
-    expected_expr: begin expr
-    expected_body: begin body
+    expected_expr: block expr
+    expected_body: block body
     expected_bind: def bind
   expr.macro 'check:
                 $maybe_eval

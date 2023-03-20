@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   def π = 3.14
   check:
     π

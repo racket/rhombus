@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   import "static_arity.rhm"
   static_arity.check:
     Path(s)

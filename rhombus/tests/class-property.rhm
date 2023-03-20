@@ -2,7 +2,7 @@
 
 use_static
 
-begin:
+block:
   class Posn(x, y):
     property
     | is_origin:
@@ -32,13 +32,13 @@ begin:
     use_dynamic
     [dynamic(Posn(0, 0)).is_origin,
      dynamic(Posn(0, 0)).is_at_origin(),
-     begin:
+     block:
        def proc: Posn(0, 1).is_at_origin
        proc(),
      dynamic(Posn(0, 0)).is_origin_dont_ask_again]
     ~is [#true, #true, #false, #true]
 
-begin:
+block:
   class Posn(x, y):
     nonfinal
     internal _Posn
@@ -51,13 +51,13 @@ begin:
   check:
     def p: Posn3D(0, 0, 0)
     [p.is_origin,
-     begin:
+     block:
        use_dynamic
        dynamic(p).is_origin,
      (_Posn(1, 2)).is_origin]
     ~is [#true, #true, #false]
     
-begin:
+block:
   class Posn(x, y):
     nonfinal
     internal _Posn
@@ -121,7 +121,7 @@ check:
     override property is_origin: #false
   ~raises "cannot override superclass's non-property method with a property"
 
-begin:
+block:
   class Posn(x, y):
     internal _Posn
     private property is_origin:
@@ -134,7 +134,7 @@ begin:
      p.is_at_origin()]
     ~is [#true, #true]
 
-begin:
+block:
   interface Pointy:
     abstract property is_origin
   class Posn(x, y):

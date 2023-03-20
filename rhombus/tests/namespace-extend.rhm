@@ -172,7 +172,7 @@ check:
   ~eval
   namespace N
   def N.y = 10
-  begin:
+  block:
     namespace N
     import: .N as n
     n.y
@@ -184,7 +184,7 @@ check:
   import rhombus/meta open
   namespace N
   expr.rule '(N.z) 0': '1'
-  begin:
+  block:
     namespace N
     import: .N as n
     n.z 0
@@ -197,7 +197,7 @@ check:
   namespace N
   def N.y = 10
   expr.macro '(N.z) 0': '1'
-  begin:
+  block:
     import: .N as n
     [n.y, n.z 0]
   ~is [10, 1]

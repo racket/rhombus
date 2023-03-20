@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   import "static_arity.rhm"
   static_arity.check:
     Set(k, ...)
@@ -16,7 +16,7 @@ check:
   Set.length([1, 2, 3])
   ~raises values("contract violation", "expected: Set")
 
-begin:
+block:
   use_static
   check:
     {1, 2}.length()
@@ -47,7 +47,7 @@ begin:
     set.length()
     ~is 2
 
-begin:
+block:
   check:
     dynamic({"a", "b"}).length()
     ~is 2
@@ -56,7 +56,7 @@ begin:
     ~is #true
 
 // See also tests in "rest-args.rhm"
-begin:
+block:
   check:
     {"a", "b", &{"c"}}
     ~is {"a", "b", "c"}
@@ -77,7 +77,7 @@ begin:
     ~is {"a", "b", "c"}
   check:
     def mutable x = []
-    [{&(begin: x := [1, x]; {"b"}), (begin: x:= [2, x]; "a"), &(begin: x:= [3, x]; {"c"})},
+    [{&(block: x := [1, x]; {"b"}), (block: x:= [2, x]; "a"), &(block: x:= [3, x]; {"c"})},
      x]
     ~is [{"a", "b", "c"},
          [3, [2, [1, []]]]]
@@ -85,7 +85,7 @@ begin:
     Set{&"oops"}
     ~raises "not a set"
 
-begin:
+block:
   def [x, ...] = [1, 2, 3]
   check:
     {x, ...}

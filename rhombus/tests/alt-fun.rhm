@@ -14,7 +14,7 @@ fun map(f, l):
     each e: l
     f(e)
 
-begin:
+block:
   fun
   | f([]): 0
   | f(a): 1
@@ -23,24 +23,24 @@ begin:
   check f([1]) ~is 1
   check f() ~is 2
 
-begin:
+block:
   fun
   | f([]): 0
   | f(): 2
   check:
     f([1]) ~raises "f: no matching case for arguments"
 
-begin:
+block:
   fun f([] = [1]): 0
   check:
     f() ~raises "f: argument does not satisfy annotation"
 
-begin:
+block:
   fun f([] = [], & rst): rst
   check:
     f("a") ~raises "f: argument does not satisfy annotation"
 
-begin:
+block:
   /*
   fun
   | f([] = [1]): 0
@@ -65,7 +65,7 @@ begin:
   check f([1]) ~is 1
   check f() ~is 2
 
-begin:
+block:
   /*
   fun
   | f([] = []): 0
@@ -89,7 +89,7 @@ begin:
   check f() ~is 0
   check f("a") ~is 1
 
-begin:
+block:
   /*
   fun
   | ([] = [1], & rst): 0
@@ -115,7 +115,7 @@ begin:
   check f() ~is 2
   check f([], [1]) ~is 0
 
-begin:
+block:
   /*
   fun
   | ([] = [], & rst): 0
@@ -173,7 +173,7 @@ check pythag(~c: 5, ~a: 3) ~is 4
 check pythag(~c: 5, ~b: 4) ~is 3
 check pythag(~a: 3, ~b: 4, ~c: 5) ~is #true
 check pythag(~a: 3, ~b: 4, ~c: 6) ~is #false
-begin:
+block:
   check object_name(pythag) ~is #'pythag
   check procedure_arity(pythag) ~is 0
   def values(req_kws, all_kws) = procedure_keywords(pythag)

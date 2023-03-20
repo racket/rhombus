@@ -8,7 +8,7 @@ check:
   Array.length([1, 2, 3])
   ~raises values("contract violation", "expected: Array")
 
-begin:
+block:
   use_static
   check:
     Array(1, 2, 3).length()
@@ -45,7 +45,7 @@ begin:
     arr[0].x
     ~is 1
 
-begin:
+block:
   check:
     dynamic(Array(1, 2, 3)).length()
     ~is 3

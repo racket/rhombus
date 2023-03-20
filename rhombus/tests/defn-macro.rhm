@@ -40,7 +40,7 @@ check:
   ~eval
   import: rhombus/meta open
   decl.macro 'empty_import': 'oops'
-  begin:
+  block:
     empty_import
     "ok"
   ~raises "llegal use of syntax"
@@ -64,7 +64,7 @@ check:
   seq2_x
   ~is 101
 
-begin:
+block:
   defn.macro
   | 'multi_case 1 $id':
       'def $id = "one"'

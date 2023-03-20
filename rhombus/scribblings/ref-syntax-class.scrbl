@@ -12,7 +12,7 @@
 @doc(
   ~nonterminal:
     id_bind: def bind
-    rest_id: begin id
+    rest_id: block id
     syntax_pattern: #%quotes pattern
 
   defn.macro 'syntax_class $id $maybe_args

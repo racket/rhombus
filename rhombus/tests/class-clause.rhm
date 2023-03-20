@@ -1,6 +1,6 @@
 #lang rhombus/static/and_meta
 
-begin:
+block:
   class_clause.macro 'bounce':
     ~info: i
     'method names(): ('$(class_meta.Info.lookup(i, #'name))')
@@ -48,7 +48,7 @@ begin:
   def_idescribe dimethods method_names
   expr.macro 'diann $(name :: Term)': '$(interface_meta.describe(name).lookup(#'uses_default_annotation))'
   
-  begin:
+  block:
     interface Pointy
     interface VeryPointy:
       extends Pointy
@@ -86,7 +86,7 @@ begin:
       p0.visibilities() ~prints_like 'public'
       p0.arities() ~prints_like '1'
       
-    begin:
+    block:
       check:
         dname Posn ~prints_like 'Posn'
         dsuper Posn ~prints_like ''
@@ -124,7 +124,7 @@ begin:
         dmethods Posn0D ~prints_like 'get_extent
                                         $('supers methods arities visibilities')'
 
-  begin:
+  block:
     interface Pointy:
       internal _Pointy
       method here(): 0
@@ -229,7 +229,7 @@ begin:
 
 // Make sure that introduced names can be referenced directly
 
-begin:
+block:
   class_clause.macro 'gen $mode ... : $m':
     '$mode ... method introduced(): 5
      method $m(): introduced()'
@@ -246,7 +246,7 @@ begin:
     Posn(1, 2).five()
     ~is 5
 
-begin:
+block:
   class_clause.macro 'gen $mode ... : $m':
     '$mode ... property | introduced: 5
      method $m(): introduced'
@@ -263,7 +263,7 @@ begin:
     Posn(1, 2).five()
     ~is 5
 
-begin:
+block:
   class_clause.macro 'gen $mode ... : $m':
     '$mode ... field introduced: 5
      method $m(): introduced'

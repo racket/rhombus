@@ -101,7 +101,7 @@
         "class-clause-primitive.rkt"
         "interface.rkt"
         "class-together.rkt"
-        "begin.rkt"
+        "block.rkt"
         "cond.rkt"
         "match.rkt"
         "submodule.rkt"

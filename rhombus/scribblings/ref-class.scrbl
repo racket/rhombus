@@ -8,8 +8,8 @@
 @doc(
   ~literal: :: extends binding field
   ~nonterminal:
-    default_expr: begin expr
-    default_body: begin body
+    default_expr: block expr
+    default_body: block body
     method_impl: method ~class_clause
     property_impl: method ~class_clause
     method_decl: method ~class_clause
@@ -697,7 +697,7 @@
 
 @doc(
   ~nonterminal:
-    arg_expr: begin expr
+    arg_expr: block expr
 
   expr.macro 'super . $id($arg_expr, ...)'
   expr.macro 'super'

@@ -49,7 +49,7 @@ generally, such as a block created with @rhombus(begin) or
 @demo(
   ~eval: ns_eval
   ~repl:
-    begin:
+    block:
       import: .geometry open
       Complex(0, tau)
   ~defn:
@@ -76,7 +76,7 @@ existing namespace or by nesting @rhombus(namespace) forms.
   ~repl:
     subject.english.greeting
     subject.geometry.tau
-    begin:
+    block:
       import: .subject open
       geometry.tau             
 )
@@ -86,7 +86,7 @@ reach a nested binding without making intemediate bindings visible.
 
 @demo(
   ~eval: ns_eval
-  begin:
+  block:
     import: rhombus.List open
     length(["a", "b", "c"])
 )
@@ -99,7 +99,7 @@ scope of the extending definition.
 
 @demo(
   ~eval: ns_eval
-  begin:
+  block:
     def geometry.e = 2.71
     geometry.e
   ~error: geometry.e

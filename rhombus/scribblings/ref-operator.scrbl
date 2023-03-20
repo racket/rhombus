@@ -129,7 +129,7 @@
     operator x List.(^^^) y:
       x ++ y ++ x
   ~repl:
-    begin:
+    block:
       import: .List open
       [1, 2] ^^^ [3]
   ~defn:

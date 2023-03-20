@@ -63,7 +63,7 @@ expr.macro 'examples($form, ...)':
                                              $(List.repet(j[1])), ...)',
                            j[1])
   def eval = find_eval()
-  'begin:
+  'block:
      def eval: $(eval || 'make_rhombus_eval()')
      def content = [$new_form, ...]
      $(if eval | #void | 'close_eval(eval)')

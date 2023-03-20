@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   def mutable accum = []
   check:
     for:

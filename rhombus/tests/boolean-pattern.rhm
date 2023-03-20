@@ -23,7 +23,7 @@ check:
   z.x
   ~raises values("no such field or method", "static")
 
-begin:
+block:
   fun try(v):
     match v
     | [x] || [a, b, c]: "lists"

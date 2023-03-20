@@ -7,9 +7,9 @@
 
 @doc(
   ~nonterminal:
-    test_expr: begin expr
-    then_body: begin body
-    else_body: begin body
+    test_expr: block expr
+    then_body: block body
+    else_body: block body
   expr.macro 'if $test_expr
               | $then_body
                 ...
@@ -36,9 +36,9 @@
 
 @doc(
   ~nonterminal:
-    clause_test_expr: begin expr
-    clause_result_body: begin body
-    clause_result_expr: begin expr
+    clause_test_expr: block expr
+    clause_result_body: block body
+    clause_result_expr: block expr
   expr.macro 'cond
               | $clause_test_expr:
                   $clause_result_body
@@ -73,7 +73,7 @@
 
 @doc(
   ~nonterminal:
-    test_expr: begin expr
+    test_expr: block expr
   expr.macro 'when $test_expr
               | $body
                 ...'
@@ -95,7 +95,7 @@
 
 @doc(
   ~nonterminal:
-    test_expr: begin expr
+    test_expr: block expr
   expr.macro 'unless $test_expr
               | $body
                 ...'

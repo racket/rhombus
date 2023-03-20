@@ -112,6 +112,7 @@ Here are all of the implicit forms:
 ){
 
  Returns the result of the @rhombus(body) block, which may include local
- definitions.
+ definitions. The @rhombus(body) sequence @emph{does not} implicitly use
+ @rhombus(#%body) again.
 
 }

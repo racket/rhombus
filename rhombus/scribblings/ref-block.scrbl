@@ -3,10 +3,10 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@title{Begin}
+@title{Block}
 
 @doc(
-  expr.macro 'begin:
+  expr.macro 'block:
                 $body
                 ...'
 ){
@@ -15,14 +15,13 @@
  definitions.
 
 @examples(
-  begin:
+  block:
     1
     2
 
-  begin:
+  block:
     def one: 1
     one + one
 )
 
 }
-

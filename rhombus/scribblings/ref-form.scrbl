@@ -6,7 +6,7 @@
 @title{General Forms}
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar id
   grammar op
   grammar id_or_op:
@@ -29,12 +29,12 @@
 
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar expr
 ){
 
  In syntax descriptions, @rhombus(expr) stands for any expression form.
- Function calls, arithmetic, @rhombus(begin), and @rhombus(match) are
+ Function calls, arithmetic, @rhombus(block), and @rhombus(match) are
  some examples of expression forms, but @rhombusmodname(rhombus) provides
  many more.
 
@@ -48,7 +48,7 @@
 }
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar repet
 ){
 
@@ -65,7 +65,7 @@
 
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar entry_point
 ){
 
@@ -77,7 +77,7 @@
 
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar defn
 ){
 
@@ -93,7 +93,7 @@
 
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar body:
     $expr
     $defn
@@ -104,10 +104,16 @@
  In some cases, the expanded form of the @rhombus(body) equence must ends
  with an expression to provide a result value.
 
+ Unless noted otherwise, a @rhombus(body) sequence implicitly uses
+ @rhombus(#%body). The context for the implicit @rhombus(#%body)
+ binding is associated with the @litchar{:} delimiter that forms the
+ enclosing block. Use the @rhombus(Block, ~stxclass) to match a block and
+ preserve its context for referencing @rhombus(#%body).
+
 }
 
 @doc(
-  ~nonterminal_key: begin
+  ~nonterminal_key: block
   grammar decl
   grammar nestable_decl
   grammar nestable_body:

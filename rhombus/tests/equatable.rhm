@@ -31,7 +31,7 @@ check AnythingGoes() == NoGo() ~is #false
 check NoGo() == AnythingGoes()  ~is #false
 
 check NoGo() == NoGo() ~is #false
-begin:
+block:
   let ng: NoGo()
   check ng == ng ~is #true
 
@@ -40,7 +40,7 @@ check Fail() == AnythingGoes() ~is #false
 check NoGo() == Fail() ~is #false
 check Fail() == NoGo() ~is #false
 check Fail() == Fail() ~raises "failure"
-begin:
+block:
   let f: Fail()
   check f == f ~is #true
 

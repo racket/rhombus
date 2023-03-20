@@ -46,7 +46,7 @@ check:
   [1, 2, & [3, 4]]
   ~is [1, 2, 3, 4]
 
-begin:
+block:
   def [a, b, & rst] = [1, 2, 3, 4]
   check a ~is 1
   check b ~is 2
@@ -76,20 +76,20 @@ check:
   Set("a", "b", & ["c", "d"])
   ~is {"a", "b", "c", "d"}
 
-begin:
+block:
   def {"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
   check a ~is 1
   check b ~is 2
   check rst ~is {"c": 3, "d": 4}
 
-begin:
+block:
   def Map{"a": a, "b": b, & rst} = {"a": 1, "b": 2, "c": 3, "d": 4}
   check a ~is 1
   check b ~is 2
   check rst ~is {"c": 3, "d": 4}
 
 // Match & rest on mutable maps produces an immutable copy
-begin:
+block:
   def m = MutableMap{"a": 1, "b": 2}
   def r = match m
           | {"a": a, & rst}: rst
@@ -97,14 +97,14 @@ begin:
   m["b"] := 3
   check r ~is {"b": 2}
 
-begin:
+block:
   fun avg(a, b):
     (a + b) / 2
   check avg(1, 5) ~is 3
   check avg(7, 9) ~is 8
   check avg(-2, 4) ~is 1
 
-begin:
+block:
   fun avg(a, & bs):
     (a + more_math.sum(bs)) / (1 + List.length(bs))
   check avg(1, 5) ~is 3
@@ -237,7 +237,7 @@ check:
 // ---------------------------
 // Repetition Rest with ...
 
-begin:
+block:
   def [x, ...] = [2, 3]
   check math.expt(x, ...) ~is 8
   check List(x, ...) ~is [2, 3]
@@ -340,10 +340,10 @@ check:
 
 check:
   def mutable s = 0
-  [add(&(begin: s := [1, s]; [-1, 1]),
-       (begin: s := [2, s]; 2),
-       &(begin: s := [3, s]; [3, 4]),
-       (begin: s := [4, s]; 5)),
+  [add(&(block: s := [1, s]; [-1, 1]),
+       (block: s := [2, s]; 2),
+       &(block: s := [3, s]; [3, 4]),
+       (block: s := [4, s]; 5)),
    s]
   ~is [14, [4, [3, [2, [1, 0]]]]]
 
@@ -352,41 +352,41 @@ check:
 
 check:
   def mutable s = 0
-  [triangle_area(~base: (begin: s := [1, s]; 1), ~& (begin: s := [2, s]; { #'~height: 10 })),
+  [triangle_area(~base: (block: s := [1, s]; 1), ~& (block: s := [2, s]; { #'~height: 10 })),
    s]
   ~is [5, [2, [1, 0]]]
 
 check:
   def mutable s = 0
-  [triangle_area(~& (begin: s := [2, s]; { #'~height: 10 }), ~base: (begin: s := [1, s]; 1)), 
+  [triangle_area(~& (block: s := [2, s]; { #'~height: 10 }), ~base: (block: s := [1, s]; 1)), 
    s]
   ~is [5, [1, [2, 0]]]
 
 check:
   def mutable s = 0
-  [anyargs(~& (begin: s := [1, s]; { #'~height: 10 }),
-           & (begin: s := [2, s]; [9, 10, 11]),
-           ~base: (begin: s := [3, s]; 1),
-           (begin: s := [4, s]; 8)),
+  [anyargs(~& (block: s := [1, s]; { #'~height: 10 }),
+           & (block: s := [2, s]; [9, 10, 11]),
+           ~base: (block: s := [3, s]; 1),
+           (block: s := [4, s]; 8)),
    s]
   ~is [[[9, 10, 11, 8], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
-  [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
-           ~& (begin: s := [2, s]; { #'~height: 10 }),
-           ~base: (begin: s := [3, s]; 1),
-           List.repet(begin: s := [4, s]; [8, 88]), ...),
+  [anyargs(& (block: s := [1, s]; [9, 10, 11]),
+           ~& (block: s := [2, s]; { #'~height: 10 }),
+           ~base: (block: s := [3, s]; 1),
+           List.repet(block: s := [4, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10}], [4, [3, [2, [1, 0]]]]]
 
 check:
   def mutable s = 0
-  [anyargs(& (begin: s := [1, s]; [9, 10, 11]),
-           ~& (begin: s := [2, s]; { #'~height: 10 }),
-           ~base: (begin: s := [3, s]; 1),
-           ~& (begin: s := [4, s]; { #'~width: 20 }),
-           List.repet(begin: s := [5, s]; [8, 88]), ...),
+  [anyargs(& (block: s := [1, s]; [9, 10, 11]),
+           ~& (block: s := [2, s]; { #'~height: 10 }),
+           ~base: (block: s := [3, s]; 1),
+           ~& (block: s := [4, s]; { #'~width: 20 }),
+           List.repet(block: s := [5, s]; [8, 88]), ...),
    s]
   ~is [[[9, 10, 11, 8, 88], {#'~base: 1, #'~height: 10, #'~width: 20}],
        [5, [4, [3, [2, [1, 0]]]]]]
@@ -428,7 +428,7 @@ for:
 // ---------------------------
 // Old demo tests - probably redundant, but keeping in case
 
-begin:
+block:
 
   fun f_rest(x, & ys :: List):
     ys
@@ -478,7 +478,7 @@ begin:
 
 // maps and sets with `...` binding
 
-begin:
+block:
   def {x: y, ...} = {1: "a", 2: "b"}
   check:
     {[x, y], ...}
@@ -493,7 +493,7 @@ begin:
     {y: x, ...}
     ~is {"a": 1, "b": 2}
 
-begin:
+block:
   def {2: two, x: y, ...} = {1: "a", 2: "b"}
   check:
     two
@@ -502,7 +502,7 @@ begin:
     [[x, ...], [y, ...]]
     ~is [[1], ["a"]]
 
-begin:
+block:
   def {1: one, 2: two, x: y, ...} = {1: "a", 2: "b"}
   check:
     one
@@ -519,7 +519,7 @@ check:
   def {2: two, x: y, ...} = {1: "a"}
   ~raises "value does not satisfy annotation"
 
-begin:
+block:
   def {x, ...} = {1, 2}
   check:
     {[x], ...}
@@ -531,13 +531,13 @@ begin:
     {x: "a", ...}
     ~is {1: "a", 2: "a"}
 
-begin:
+block:
   def {2, x, ...} = {1, 2}
   check:
     [x, ...]
     ~is [1]
 
-begin:
+block:
   def {1, 2, x, ...} = {1, 2}
   check:
     [x, ...]

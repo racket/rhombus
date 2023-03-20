@@ -98,7 +98,7 @@ check:
 check:
   ~eval
   import: lib("rhombus/tests/example-a.rhm") open
-  begin:
+  block:
     import: .ExList: 
               rename: cons as kons
     [ExList.kons(1, [2]),
@@ -148,7 +148,7 @@ check:
 
 check:
   fun f(x, y):
-    1 + begin:
+    1 + block:
       import rhombus.(*) as +
       x + y - 1
   f(3, 4)

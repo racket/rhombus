@@ -46,7 +46,7 @@
       use_static
       ps[0].x
   ~error:
-    begin:
+    block:
       use_static
       Posn(1, 2, 3)
 )

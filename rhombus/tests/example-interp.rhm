@@ -10,7 +10,7 @@
 //         | <integer>
 //         | [<expr>, ...]
 //         | <expr> <operator> <expr>
-//         | begin: let <id> = <expr>; <expr>
+//         | block: let <id> = <expr>; <expr>
 //
 //  with primitive bindings cons, first, rest, +, -, *
 //
@@ -19,7 +19,7 @@
 
 // Example use of the interpreter
 submodule main:
-  interp('begin:
+  interp('block:
             let swap = fun (x): [first(rest(x)), first(x)]
             first(swap([1, 2])) + 3',
          init_env)
@@ -48,7 +48,7 @@ fun interp(e, env :~ Map):
       env[op.unwrap_op()](interp('$x ...', env),
                           interp('$y ...', env))
   // `let` as a convenience
-  | 'begin:
+  | 'block:
        let $(x :: Id) = $rhs
        $body':
       interp('(fun ($x): $body)($rhs)', env)

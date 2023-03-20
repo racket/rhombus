@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   import "static_arity.rhm"
   static_arity.check:
     Map(k, ...)
@@ -21,7 +21,7 @@ check:
   Map.length({1, 2, 3})
   ~raises values("contract violation", "expected: Map")
 
-begin:
+block:
   use_static
   check:
     {"a": 1, "b": 2}.length()
@@ -58,7 +58,7 @@ begin:
     map.length()
     ~is 2
 
-begin:
+block:
   check:
     dynamic({"a": 1, "b": 2}).length()
     ~is 2
@@ -67,7 +67,7 @@ begin:
     ~is 1
 
 // See also tests in "rest-args.rhm"
-begin:
+block:
   check:
     {"a": 1, "b": 2, &{"c": 3}}
     ~is {"a": 1, "b": 2, "c": 3}
@@ -91,7 +91,7 @@ begin:
     ~is {"a": 1, "b": 2, "c": 3}
   check:
     def mutable x = []
-    [{&(begin: x := [1, x]; {"b": 2}), (begin: x:= [2, x]; "a"): 1, &(begin: x:= [3, x]; {"c": 3})},
+    [{&(block: x := [1, x]; {"b": 2}), (block: x:= [2, x]; "a"): 1, &(block: x:= [3, x]; {"c": 3})},
      x]
     ~is [{"a": 1, "b": 2, "c": 3},
          [3, [2, [1, []]]]]
@@ -99,7 +99,7 @@ begin:
     {&"oops"}
     ~raises "not a map"
 
-begin:
+block:
   def [x, ...] = [1, 2, 3]
   check:
     {x: x, ..., #true: 0}

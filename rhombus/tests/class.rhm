@@ -589,7 +589,7 @@ check:
 check:
   def mutable n = 0
   class Posn(x, y):
-    field color: "red" +& begin: n := n + 1; n
+    field color: "red" +& block: n := n + 1; n
   [Posn(1, 2).color, Posn(1, 2).color]
   ~is ["red1", "red2"]
 
@@ -605,7 +605,7 @@ check:
   PosnUser(Posn(1, 2)).m()
   ~is 3
 
-begin:
+block:
   class Posn(x, y):
     nonfinal
   class Posn3D(z :: Int):

@@ -32,7 +32,7 @@ it supplies its elements in order.
 
 @doc(
   ~nonterminal:
-    list_expr: begin expr
+    list_expr: block expr
   fun List(v :: Any, ...) :: List
   expr.macro '#%brackets [$expr_or_splice, ...]'
   repet.macro '#%brackets [$repet_or_splice, ...]'

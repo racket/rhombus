@@ -31,7 +31,7 @@ it supplies its elements in an unspecified order.
 
 @doc(
   ~nonterminal:
-    set_expr: begin expr
+    set_expr: block expr
   expr.macro 'Set{$expr_or_splice, ...}'
   repet.macro 'Set{$repet_or_splice, ...}'
   fun Set(value:: Any, ...) :: Set
@@ -129,7 +129,7 @@ it supplies its elements in an unspecified order.
 
 @doc(
   ~nonterminal:
-    val_expr: begin expr
+    val_expr: block expr
   expr.macro 'MutableSet{$val_expr, ...}'
   fun MutableSet(value:: Any, ...) :: Set
 ){

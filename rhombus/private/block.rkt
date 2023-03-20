@@ -4,9 +4,9 @@
          "expression.rkt"
          "parse.rkt")
 
-(provide (rename-out [rhombus-begin begin]))
+(provide (rename-out [rhombus-block block]))
 
-(define-syntax rhombus-begin
+(define-syntax rhombus-block
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx

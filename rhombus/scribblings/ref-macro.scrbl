@@ -10,8 +10,8 @@
 @doc(
   ~nonterminal:
     op_or_id_path: namespace
-    right_parsed_id: begin id
-    left_parsed_id: begin id
+    right_parsed_id: block id
+    left_parsed_id: block id
 
   defn.macro 'macro $macro_case'
   defn.macro 'macro 

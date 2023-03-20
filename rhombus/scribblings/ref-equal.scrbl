@@ -123,7 +123,7 @@
     class Posn(x, y):
       private field cache = #false
       method dist():
-        cache || (begin:
+        cache || (block:
                     cache := math.sqrt(x*x + y*y)
                     cache)
       // since `cache` is mutable, the default equality

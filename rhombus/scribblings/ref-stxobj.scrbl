@@ -390,8 +390,8 @@ Metadata for a syntax object can include a source location and the raw
 
 @doc(
   ~nonterminal:
-    field_id: begin id
-    pattern_id: begin id
+    field_id: block id
+    pattern_id: block id
 
   unquote_bind.macro '$id :: $syntax_class $maybe_args'
   unquote_bind.macro '$id :: $syntax_class $maybe_args:

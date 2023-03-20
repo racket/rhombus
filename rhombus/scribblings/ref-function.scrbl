@@ -29,11 +29,11 @@ normally bound to implement function calls.
 
 @doc(
   ~nonterminal:
-    fun_expr: begin expr
-    arg_expr: begin expr
+    fun_expr: block expr
+    arg_expr: block expr
     repet_arg: #%call arg               
-    list_expr: begin expr
-    map_expr: begin expr
+    list_expr: block expr
+    map_expr: block expr
 
   expr.macro '$fun_expr #%call ($arg, ...)'
   repet.macro '$fun_expr #%call ($repet_arg, ...)'
@@ -82,10 +82,10 @@ normally bound to implement function calls.
 
 @doc(
   ~nonterminal:
-    default_expr: begin expr
-    default_body: begin body
-    list_expr: begin expr
-    map_expr: begin expr
+    default_expr: block expr
+    default_body: block body
+    list_expr: block expr
+    map_expr: block expr
     list_bind: def bind
     map_bind: def bind
     repet_bind: def bind

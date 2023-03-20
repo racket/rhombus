@@ -67,7 +67,7 @@ expr.macro
 // single lines in block
 | 'check: $result1 ... $(result2 :: result); ...':
     ~op_stx: check_id
-    'begin:
+    'block:
        check_same(located'$(check_id)',
                   fun (): $result1 ...; $result2.suffix; ...,
                   matcher($result2.mode, : $result2.body),

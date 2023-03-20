@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   syntax_class Arithmetic
   | '$x + $y'
 
@@ -37,7 +37,7 @@ check:
   | '$(exp :: Arithmetic)': exp
   ~prints_like '1 + 2'
 
-begin:
+block:
   syntax_class Arithmetic
   | '$x + $y'
   | '$x - $y'
@@ -71,7 +71,7 @@ check:
   | '$(exp :: Arithmetic)': exp.op
   ~raises "no such field"
 
-begin:
+block:
   syntax_class Arithmetic
   | '$x + $y':
       field sum: Syntax.make(Syntax.unwrap(x) + Syntax.unwrap(y))
@@ -87,7 +87,7 @@ begin:
     | '$(exp :: Arithmetic)': [exp.num, ...]
     ~prints_like ['1', '2']
 
-begin:
+block:
   syntax_class Foo
   | 'a ($x, ...) z'
 
@@ -106,7 +106,7 @@ begin:
     | '$(whole :: Foo: x as f)': [f, ...]
     ~prints_like ['1', '2', '3']
 
-begin:
+block:
   syntax_class Foo
   | 'a $x ...'
 
@@ -117,7 +117,7 @@ begin:
 
 // check that right-hand side of pattern
 // is in a more nested scope than pattern variables
-begin:
+block:
   syntax_class Foo
   | 'a $x':
       def x = "whatever"
@@ -127,7 +127,7 @@ begin:
     ~prints_like '1'
 
 // check that syntax class description appears in match error
-begin:
+block:
   check:
     ~eval
     import:
@@ -143,7 +143,7 @@ begin:
     right_operand 1 +
     ~raises "expression with addition or subtraction"
 
-begin:
+block:
   syntax_class Foo
   | '$x + $y'
   | '$x + $y + $z'
@@ -167,7 +167,7 @@ check:
   | '$(f :: Foo)': f.z
   ~raises "no such field or method"
 
-begin:
+block:
   syntax_class Foo:
     kind: ~sequence
     pattern
@@ -177,7 +177,7 @@ begin:
     | '0 + $(f :: Foo)': [f.x, f.y]
     ~prints_like ['1', '2']
 
-begin:
+block:
   syntax_class Foo:
     kind: ~term
     pattern
@@ -195,7 +195,7 @@ check:
     | '$x + $y'
   ~raises "not a single-term pattern"
 
-begin:
+block:
   syntax_class Foo:
     kind: ~group
     pattern
@@ -205,7 +205,7 @@ begin:
     | '($(f :: Foo))': [f.x, f.y]
     ~prints_like ['1', '2']
 
-begin:
+block:
   syntax_class Foo:
     kind: ~group
     pattern
@@ -215,7 +215,7 @@ begin:
     | '($(f :: Foo))': f.g
     ~prints_like '1 + 2'
 
-begin:
+block:
   check:
     syntax_class Foo:
       kind: ~group
@@ -225,7 +225,7 @@ begin:
     | '0 + $(f :: Foo)': [f.x, f.y]
     ~prints_like ['1', '2']
 
-begin:
+block:
   check:
     ~eval
     syntax_class Foo:
@@ -236,7 +236,7 @@ begin:
     | '0 + $(f :: Foo) + 3': [f.x, f.y]
     ~raises "syntax class incompatible with this context"
 
-begin:
+block:
   syntax_class Foo:
     kind: ~multi
     pattern
@@ -253,7 +253,7 @@ begin:
     | '($(f :: Foo))': [f.x, f.y, f.z, f.w, f]
     ~prints_like ['1', '2', '3', '4', '1 + 2; 3 - 4']
 
-begin:
+block:
   syntax_class Foo:
     kind: ~block
     pattern
@@ -274,7 +274,7 @@ check:
         $z - $w)'
   ~raises "not a block pattern"
 
-begin:
+block:
   syntax_class Foo:
     kind: ~multi
     pattern
@@ -294,7 +294,7 @@ begin:
     | ~else: "no"
     ~prints_like '(1 + 2, 3 - 4)'
 
-begin:
+block:
   syntax_class Foo:
     kind: ~multi
     pattern
@@ -308,7 +308,7 @@ begin:
     | ': $(f :: Foo)': f
     ~prints_like '1 + 2; 3 - 4; 5 / 6'
 
-begin:
+block:
   syntax_class Foo:
     pattern
     | '$x $y':
@@ -332,7 +332,7 @@ begin:
     [f.x, f.y, f.case]
     ~prints_like ['c', '5', '3']
    
-begin:
+block:
   syntax_class Foo:
     pattern
     | '$x $y':
@@ -400,7 +400,7 @@ check:
   | '($(o :: Option), ...)': [o.form]
   ~raises "field is a repetition"
 
-begin:
+block:
   syntax_class NTerms
   | '~one $a':
       field b = '0'
@@ -434,7 +434,7 @@ begin:
     ~prints_like '33'
 
 // check that dotted syntax-class names work
-begin:
+block:
   namespace N:
     export Arithmetic
     syntax_class Arithmetic
@@ -451,7 +451,7 @@ begin:
     ~prints_like '2'
 
 // empty pattern is a special case
-begin:
+block:
   syntax_class Maybe:
     pattern
     | '1'
@@ -467,7 +467,7 @@ begin:
     x
     ~prints_like '1'
 
-begin:
+block:
   syntax_class House(material)
   | '< < > >':
       field stuff: Syntax.make(material +& "!")
@@ -499,7 +499,7 @@ check:
   ~is [1, #'~q, 3]    
 
 // a field used both as a non-syntax and a sytax field
-begin:
+block:
   syntax_class Foo:
     pattern
     | '$x':
@@ -520,7 +520,7 @@ begin:
 
 // mixing tail and non-tail modes for a field is allowed,
 // even though it disables optimization for the tail case
-begin:
+block:
   syntax_class Foo:
     kind: ~group
     pattern
@@ -536,7 +536,7 @@ begin:
     ~prints_like ['1', '2', '3']
 
 // inline syntax class
-begin:
+block:
   fun m(stx):
     def '$(f2 :: (syntax_class:
                     pattern
@@ -558,7 +558,7 @@ begin:
     ~raises "value does not satisfy annotation"
 
 // opening an inline syntax class
-begin:
+block:
   fun m(stx):
     def '$(f2 :: (syntax_class:
                     pattern
@@ -575,7 +575,7 @@ begin:
     ~prints_like ['1', '2']
 
 // check interaction of macro introduction and pattern variables
-begin:
+block:
   import rhombus/meta open
   check:
     expr.macro 'matcher $(ex :: Term)':

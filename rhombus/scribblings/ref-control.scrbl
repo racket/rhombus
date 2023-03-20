@@ -15,7 +15,7 @@
 
 @doc(
   ~nonterminal:
-    tag_expr: begin expr
+    tag_expr: block expr
   expr.macro 'Continuation.prompt $maybe_tag_expr:
                 $body
                 ...
@@ -58,7 +58,7 @@
 
 @doc(
   ~nonterminal:
-    tag_expr: begin expr
+    tag_expr: block expr
   expr.macro 'Continuation.capture $maybe_tag_expr $id:
                 $body
                 ....'

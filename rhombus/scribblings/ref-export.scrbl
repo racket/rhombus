@@ -90,8 +90,8 @@
 
 @doc(
   ~nonterminal:
-    int_id_or_op: begin id_or_op
-    ext_id_or_op: begin id_or_op
+    int_id_or_op: block id_or_op
+    ext_id_or_op: block id_or_op
   expo.macro 'rename:
                 $int_id_or_op #,(@rhombus(as, ~expo)) $ext_id_or_op
                 ...'

@@ -128,7 +128,7 @@ positions.
 
 @doc(
   ~nonterminal:
-    list_expr: begin expr
+    list_expr: block expr
     list_bind: def bind
   expr.macro '& list_expr'
   bind.macro '& list_bind'
@@ -153,7 +153,7 @@ positions.
 
 @doc(
   ~nonterminal:
-    map_expr: begin expr
+    map_expr: block expr
     map_bind: def bind
   expr.macro '~& map_expr'
   bind.macro '~& map_bind'

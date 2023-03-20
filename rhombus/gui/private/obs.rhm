@@ -15,7 +15,7 @@ namespace MaybeObs:
   export: of
   annot.macro 'of($(ann :: annot_meta.Parsed))':
     def (pred, infos) = annot_meta.unpack_predicate(ann)
-    annot_meta.pack_predicate('begin:
+    annot_meta.pack_predicate('block:
                                  def pred = $pred
                                  fun
                                  | (v :: Obs): pred(v.peek())
@@ -27,7 +27,7 @@ annot.macro 'of($(ann :: annot_meta.Parsed))':
   def (obs_pred, obs_info):
     annot_meta.unpack_predicate(match 'Obs'
                                 | '$(a :: annot_meta.Parsed)': a)
-  annot_meta.pack_predicate('begin:
+  annot_meta.pack_predicate('block:
                                def pred = $pred
                                fun (v :: Obs): pred(v.peek())',
                             obs_info)

@@ -12,7 +12,7 @@ be used as annotations, but the rules about defining annotations before
 using them can be subtle. For example, this works:
 
 @demo(
-  begin:
+  block:
     def make:
       fun () :: Posn:
         Posn(1, 2)
@@ -24,7 +24,7 @@ But this does not:
 
 @demo(
   ~error:
-    begin:
+    block:
       fun make() :: Posn:
         Posn(1, 2)
       class Posn(x, y)
@@ -35,7 +35,7 @@ reason this one does not:
 
 @demo(
   ~error:
-    begin:
+    block:
       def make:
         fun () :: Posn:
           Posn(1, 2)
@@ -58,7 +58,7 @@ the one in @secref("class-namespace"): define @rhombus(Posn) before
 trying to use it:
 
 @demo(
-  begin:
+  block:
     class Posn(x, y)
     fun make() :: Posn:
       Posn(1, 2)
@@ -71,7 +71,7 @@ have two classes that need to refer to each other.
 
 @demo(
   ~error:
-    begin:
+    block:
       class Posn2D(x, y):
         method inject() :: Posn3D:
           Posn3D(x, y, 0)
@@ -86,7 +86,7 @@ they canot be ordered differently. To enable mutual references, use the
 @rhombus(class.together) form to combine the definitions.
 
 @demo(
-  begin:
+  block:
     class.together:
       class Posn2D(x, y):
         method inject() :: Posn3D:

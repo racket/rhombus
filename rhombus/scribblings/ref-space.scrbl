@@ -41,7 +41,7 @@ driver and macro-definitions forms.
 
 @doc(
   ~nonterminal:
-    space_id: begin id
+    space_id: block id
 
   defn.macro 'space.enforest $space_id:
                 $space_clause_or_body_or_export
@@ -207,7 +207,7 @@ driver and macro-definitions forms.
 
 @doc(
   ~nonterminal:
-    space_id: begin id
+    space_id: block id
     space_clause_or_body_or_export: space.enforest
   defn.macro 'space.transform $space_id:
                 $space_clause_or_body_or_export
@@ -228,7 +228,7 @@ driver and macro-definitions forms.
 
 @doc(
   ~nonterminal:
-    meta_namespace_id: begin id
+    meta_namespace_id: block id
     space_id_path: space.enforest
   space_clause.macro 'space_path $space_id_path'
   space_clause.macro 'macro_definer $id'

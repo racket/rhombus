@@ -47,7 +47,7 @@ check:
   ~is #true
 
 check:
-  begin:
+  block:
     def v = mcons(1, 2)
     v == v
   ~is #true
@@ -64,7 +64,7 @@ check:
   {mcons(1, 2): 3}[mcons(1, 2)]
   ~raises "hash-ref: no value found for key"
 
-begin:
+block:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
   def m = {a: "a", b: "b"}
@@ -84,12 +84,12 @@ check:
   ~is #false
 
 check:
-  begin:
+  block:
     def v = mcons(1, 2)
     {v}[v]
   ~is #true
 
-begin:
+block:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
   def c = mcons(1, 2)
@@ -111,7 +111,7 @@ check Map.empty ~is {}
 check {"a": 1, "b": 2} ~is {"b": 2, "a": 1}
 check {"a": 1, "b": 2} ~is Map{"b": 2, "a": 1}
 check {"a": 1, "b": 2} ~is Map(["b", 2], ["a", 1])
-begin:
+block:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
   check {a: 1, b: 2} ~is {b: 2, a: 1}
@@ -170,7 +170,7 @@ check Set() ~is Set()
 check {"a", "b"} ~is {"b", "a"}
 check {"a", "b"} ~is Set{"b", "a"}
 check {"a", "b"} ~is Set("b", "a")
-begin:
+block:
   def a = mcons(1, 2)
   def b = mcons(1, 2)
   check {a, b} ~is {b, a}

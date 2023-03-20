@@ -202,7 +202,7 @@ check:
 check:
   ~eval
   use_static
-  begin:
+  block:
     class Posn(x, y):
       method m0(): [y, x]
     def p = Posn(1, 2)
@@ -212,7 +212,7 @@ check:
 check:
   ~eval
   use_static
-  begin:
+  block:
     class Posn(x, y):
       method m0(): m0
     "ok"
@@ -296,7 +296,7 @@ check:
 check:
   ~eval
   use_static
-  begin:
+  block:
     class Posn(x, y):
       nonfinal
       private field q: 1

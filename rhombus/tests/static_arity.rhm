@@ -16,14 +16,14 @@ export:
 expr.macro 'static_arity_check:
               $dotted_id ... ($arg, ...)
               ...':
-  'begin:
+  'block:
      one_check:
        $dotted_id ... ($arg, ...)
      ...'
 
 expr.macro 'one_check:
               $dotted_id ... ($arg, ...)':
-  'begin:
+  'block:
      check:
        ~eval
        use_static
@@ -34,7 +34,7 @@ expr.macro 'one_check:
            'check_wrong_fewer:
               $dotted_id ... ($arg, ...)'
        | '$arg; ...':
-           'begin:
+           'block:
               check_wrong_fewer:
                 $dotted_id ... ($arg, ...)
               check_wrong_count:

@@ -6,8 +6,8 @@
 
 @doc(
   ~nonterminal:
-    target_expr: begin expr
-    target_repet: begin repet                 
+    target_expr: block expr
+    target_repet: block repet                 
   expr.macro '$target_expr . $id'
   expr.macro '$target_expr . $id := $expr'
   repet.macro '$target_repet . $id'

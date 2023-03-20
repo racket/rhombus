@@ -100,12 +100,12 @@
   ~error:
     Posn(1, 2) :: Forward
   ~error:
-    begin:
+    block:
       use_static
       fun (p :: Forward): p.x
   annot.delayed_complete Forward: Posn
   Posn(1, 2) :: Forward  
-  begin:
+  block:
     use_static
     fun (p :: Forward): p.x
 )

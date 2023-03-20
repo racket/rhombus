@@ -56,7 +56,7 @@
  cannot be used in a top-level context outside of a module or local block.
 
 @examples(
-  begin:
+  block:
     let v = 1
     fun get_v(): v
     let v = v+1

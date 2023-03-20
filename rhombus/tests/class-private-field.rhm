@@ -8,7 +8,7 @@ use_static
 check:
   ~eval
   use_static
-  begin:
+  block:
     class Posn(x, y, private color = "blue"):
       method get_color():
         color
@@ -17,7 +17,7 @@ check:
 
 check:
   ~eval
-  begin:
+  block:
     class Posn(x, y, private color = "blue"):
       method get_color():
         color

@@ -59,7 +59,7 @@ check:
    Posn(20, 10).y]
   ~is [10, 20]
 
-begin:
+block:
   interface Stringish:
     internal _Stringish
     annotation 'Stringish': 'String || _Stringish'
@@ -69,7 +69,7 @@ begin:
   check:
     5 :: Stringish
     ~raises "value does not satisfy annotation"
-  begin:
+  block:
     class S():
       implements Stringish
     check:

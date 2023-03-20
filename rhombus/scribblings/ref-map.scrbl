@@ -35,14 +35,14 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    key_expr: begin expr
-    val_expr: begin expr
-    elem_expr: begin expr
-    map_expr: begin expr
-    set_expr: begin expr
-    key_repet: begin repet
-    val_repet: begin repet
-    elem_repet: begin repet
+    key_expr: block expr
+    val_expr: block expr
+    elem_expr: block expr
+    map_expr: block expr
+    set_expr: block expr
+    key_repet: block repet
+    val_repet: block repet
+    elem_repet: block repet
   expr.macro '#%braces {$key_val_or_splice, ...}'
   grammar key_val_or_splice:
     $key_expr: $val_expr
@@ -98,9 +98,9 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    at_expr: begin expr
-    at_repet: begin repet
-    rhs_expr: begin expr
+    at_expr: block expr
+    at_repet: block repet
+    rhs_expr: block expr
   expr.macro '$expr #%ref [$at_expr]'
   expr.macro '$expr #%ref [$at_expr] := $rhs_expr'
   repet.macro '$repetition #%ref [$at_repet]'
@@ -128,11 +128,11 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    key_expr: begin expr
-    val_expr: begin expr
-    map_expr: begin expr
-    key_repet: begin repet
-    val_repet: begin repet
+    key_expr: block expr
+    val_expr: block expr
+    map_expr: block expr
+    key_repet: block repet
+    val_repet: block repet
   expr.macro 'Map{$key_val_or_splice, ...}'
   repet.macro 'Map{$key_val_or_splice_repet, ...}'
   grammar key_val_or_splice:
@@ -162,7 +162,7 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    key_expr: begin expr
+    key_expr: block expr
     val_bind: def bind
     map_bind: def bind
     set_bind: def bind
@@ -203,7 +203,7 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    key_expr: begin expr
+    key_expr: block expr
     val_bind: def bind
     map_bind: def bind
     rest_key_bind:  def bind
@@ -271,8 +271,8 @@ in an unspecified order.
 
 @doc(
   ~nonterminal:
-    key_expr: begin expr
-    val_expr: begin expr
+    key_expr: block expr
+    val_expr: block expr
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
   fun MutableMap(key :: Any, value:: Any, ...) :: Map
 ){

@@ -69,7 +69,7 @@
   class_clause.macro 'lazy_method $id(): $body':
     'private field result: #false
      method $id():
-       result || (begin:
+       result || (block:
                     def v: $body
                     result := v
                     v)'

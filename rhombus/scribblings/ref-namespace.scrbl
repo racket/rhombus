@@ -59,7 +59,7 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
     def pi: 3.14
     def tau: 6.28
   geometry.pi
-  begin:
+  block:
     import: .geometry open
     [pi, tau]
 )

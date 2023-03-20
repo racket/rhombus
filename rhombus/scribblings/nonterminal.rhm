@@ -23,18 +23,18 @@ export:
   template
 
 manual.nonterminal:
-  expr: begin
-  repet: begin
-  entry_point: begin
+  expr: block
+  repet: block
+  entry_point: block
   bind: def
   annot: ::
-  body: begin
-  nestable_body: begin
-  defn: begin
-  decl: begin
-  id: begin
-  op: begin
-  id_or_op: begin
+  body: block
+  nestable_body: block
+  defn: block
+  decl: block
+  id: block
+  op: block
+  id_or_op: block
   id_path: namespace
   op_path: namespace
   op_or_id_path: namespace

@@ -11,7 +11,6 @@
              @racket[(group @#,nonterm{term} ... @#,nonterm{tail-term})])
        (list @nonterm{term}
              @nonterm{atom}
-             @racket[(op @#,nonterm{symbol})]
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
              @racket[(braces @#,nonterm{group} ...)]

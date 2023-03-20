@@ -17,7 +17,7 @@ check:
         "fail"
   ~is "fail"
 
-begin:
+block:
   def mutable n = 0;
   check:
     try:

@@ -199,7 +199,7 @@ def yep_nums :: List.of(Int) = nums
 // `[]` on a list accesses by a 0-based index
 nums[1]
 
-begin:
+block:
   // `use_dynamic` because `also_nums` is not declared to be a list
   use_dynamic
   def also_nums = if #true | nums | #false
@@ -275,7 +275,7 @@ def [x, y, ...] = nums
 {& a_set, 0}
 
 // function calls can also use `...`
-begin:
+block:
   fun f (a, b): a
   // this works because `y` happens to have two elements:
   f(y, ...)
@@ -336,7 +336,7 @@ fun md2(p):
   p.x + p.y
 
 md2(Posn(5, 6))
-begin:
+block:
   // dynamic lookup means that we can pass in anything that has `x` and `y`:
   class Chromosomes(x, y, other)
   md2(Chromosomes(100, 200, 314))
@@ -391,7 +391,7 @@ def l1 = ILine(IPosn(1, 2), IPosn(3, 4))
 l1.p2.x
 ILine.p1(l1).x
 (l1.p1 :: IPosn).x
-begin:
+block:
   def ILine(p1, p2) = l1
   p1.x + p2.y
 
@@ -477,13 +477,13 @@ expr.macro 'find_matching_name $expr ... : $id ...':
   def [name, ...]: Function.map(fun(id): "" +& id,
                                 [id, ...])
   // build a result conditional
-  'begin:
+  'block:
      def val = $expr ...
      cond
      | val == $id: $name
      | ...'
 
-begin:
+block:
   def x = 1
   def y = 2
   def z = 3

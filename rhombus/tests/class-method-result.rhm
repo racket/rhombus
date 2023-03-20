@@ -3,7 +3,7 @@
 use_static
 
 // basic result annotation checks
-begin:
+block:
   class Posn(x, y):
     nonfinal
     method m() :: Int:
@@ -28,7 +28,7 @@ begin:
     Posn(1, 2).p()
     ~is 3
 
-  begin:
+  block:
     class Posn3D(z):
       extends Posn
       override m():
@@ -48,7 +48,7 @@ begin:
       ~is "ok"
 
 // annotation obligations are inherited and compose
-begin:
+block:
   interface Red
   interface Blue
   interface Green
@@ -102,7 +102,7 @@ begin:
     ~raises "result does not satisfy annotation"
 
 // class self-reference
-begin:
+block:
   class Posn(x, y):
     nonfinal
     method zero() :: Posn:
@@ -112,7 +112,7 @@ begin:
     ~is 0
 
 // class self-reference, final method
-begin:
+block:
   class Posn(x, y):
     final method zero() :: Posn:
       Posn(0, 0)
@@ -121,7 +121,7 @@ begin:
     ~is 0
 
 // class self-reference, private method
-begin:
+block:
   class Posn(x, y):
     nonfinal
     internal _Posn
@@ -135,7 +135,7 @@ begin:
     ~is 0
 
 // interface
-begin:
+block:
   interface Pointy:
     method visible() :: Boolean
     method invisible() :: Boolean:
@@ -162,7 +162,7 @@ begin:
     ~is #false
 
 // multiple interface inheritance
-begin:
+block:
   interface Red:
     method example(x) :: Red:
       this
@@ -193,7 +193,7 @@ begin:
     ~raises "result does not satisfy annotation"
 
 // alternate method forms, internal versus external annotations
-begin:
+block:
   class Top():
     nonfinal
     method m:
@@ -222,7 +222,7 @@ begin:
     ~raises "result does not satisfy annotation"
 
 // abstract override
-begin:
+block:
   interface Left
   interface Right
   class Both():

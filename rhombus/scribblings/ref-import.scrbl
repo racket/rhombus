@@ -264,7 +264,7 @@
 
 @doc(
   ~nonterminal:
-    local_id: begin id
+    local_id: block id
   impo.modifier 'rename $id #,(@rhombus(as, ~impo)) $local_id'
   impo.modifier 'rename:
                    $id #,(@rhombus(as, ~impo)) $local_id

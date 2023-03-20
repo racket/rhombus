@@ -10,8 +10,8 @@ parameter.
 
 @doc(
   ~nonterminal:
-    parameter_expr: begin expr
-    val_body: begin body
+    parameter_expr: block expr
+    val_body: block body
   expr.macro 'parameterize {$parameter_expr: $val_body, ...}:
                 $body
                 ...'

@@ -49,7 +49,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
   def [name_str, ...]: for List:
                          each name: [name, ...]
                          "" +& name.unwrap()
-  '«begin:
+  '«block:
       rhombus_typeset '$id':
         '@racketvarfont("" +& #'$id)'
       ...

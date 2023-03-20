@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   import "static_arity.rhm"
   static_arity.check:
     List(l, ...)
@@ -23,7 +23,7 @@ check:
   [] :: NonemptyList
   ~raises "does not satisfy annotation"
 
-begin:
+block:
   use_static
   check:
     [1, 2, 3].length()
@@ -79,7 +79,7 @@ begin:
     List.cons(1, [2, 3]).length()
     ~is 3
 
-begin:
+block:
   check:
     dynamic([1, 2, 3]).length()
     ~is 3

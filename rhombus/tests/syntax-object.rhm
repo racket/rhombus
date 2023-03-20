@@ -1,6 +1,6 @@
 #lang rhombus
 
-begin:
+block:
   import "static_arity.rhm"
   static_arity.check:
     Syntax.make(t, [ctx])
@@ -45,15 +45,15 @@ check:
   ~prints_like '1 2'
 
 check:
-  Syntax.make_group(['begin', ['block', '1 2', '3']])
-  ~prints_like 'begin: 1 2; 3'
+  Syntax.make_group(['block', ['block', '1 2', '3']])
+  ~prints_like 'block: 1 2; 3'
 
 check:
   Syntax.make(['block'])
   ~prints_like ':«»'
 
 check:
-  Syntax.make_group(['begin', ['block', '1 2', '3'], 'more'])
+  Syntax.make_group(['block', ['block', '1 2', '3'], 'more'])
   ~raises "invalid as a shrubbery non-tail term"
 
 check:

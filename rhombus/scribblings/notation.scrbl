@@ -146,7 +146,7 @@ even when they are written right under @rhombus(if), @rhombus(match), or
 @rhombus(cond):
 
 @rhombusblock(
-  begin:
+  block:
     group within block
     another group within block
 
@@ -203,7 +203,7 @@ have to be on a new line. These examples parse the same as the previous
 examples:
 
 @rhombusblock(
-  begin: group within block
+  block: group within block
          another group within block
 
   if is_rotten(apple) | get_another() | take_bite()
@@ -223,7 +223,7 @@ Within a block, a @litchar{;} can be used instead of a new line to start
 a new group, so these examples also parse the same:
 
 @rhombusblock(
-  begin: group within block; another group within block
+  block: group within block; another group within block
 
   if is_rotten(apple) | get_another() | take_bite(); be_happy()
 

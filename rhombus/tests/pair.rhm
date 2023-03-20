@@ -33,7 +33,7 @@ check:
   ["ok", "fine"] :: Pair.of(String, List)
   ~is ["ok", "fine"]
 
-begin:
+block:
   use_static
   check:
     Pair(1, 2).first
@@ -70,7 +70,7 @@ begin:
     x.first.length()
     ~is 3
 
-begin:
+block:
   check:
     dynamic(Pair(1, 2)).first
     ~is 1

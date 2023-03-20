@@ -7,9 +7,9 @@
 
 @doc(
   ~nonterminal:
-    target_expr: begin expr
-    result_body: begin body
-    result_expr: begin expr
+    target_expr: block expr
+    result_body: block body
+    result_expr: block expr
 
   expr.macro 'match $target_expr
               | $bind:

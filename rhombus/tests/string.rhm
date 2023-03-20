@@ -4,7 +4,7 @@ check:
   "hello" ++ " " ++ "world" ~is "hello world"
   "hello" :: String ~is "hello"
 
-begin:
+block:
   use_static
   def hello = "hello"
   check:
