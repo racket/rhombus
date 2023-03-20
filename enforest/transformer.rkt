@@ -8,7 +8,8 @@
          "name-root.rkt"
          (submod "name-root.rkt" for-parse)
          "private/name-path-op.rkt"
-         "private/check.rkt")
+         "private/check.rkt"
+         "implicit.rkt")
 
 ;; Degenerate variant of enforestation with only prefix operators
 ;; that must consume the full group
@@ -51,19 +52,38 @@
            #:opaque
            #:description form-kind-str
            (pattern ((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
+                    #:cut
                     #:do [(define head-id #'hname.name)]
                     #:do [(define t (syntax-local-value* (in-space head-id) transformer-ref))]
                     #:when t
                     #:attr parsed (apply-transformer t head-id
                                                      (datum->syntax #f (cons head-id #'hname.tail))
+                                                     check-result))
+           (pattern ((~datum group) ((~datum parsed) . _) . _)
+                    #:cut
+                    #:when #f
+                    #:attr parsed #'#f)
+           (pattern ((~datum group) head . tail)
+                    #:do [(define-values (implicit-name ctx) (select-prefix-implicit #'head))]
+                    #:do [(define implicit-id (datum->syntax ctx implicit-name))]
+                    #:do [(define t (syntax-local-value* (in-space implicit-id) transformer-ref))]
+                    #:when t
+                    #:attr parsed (apply-transformer t implicit-id
+                                                     (datum->syntax #f (list* implicit-id #'head #'tail))
                                                      check-result)))
+
          #,@(if (syntax-e #'form?)
                 #`((define (form? e)
                      (syntax-parse e
                        [((~datum group) . (~var hname (:hier-name-seq in-name-root-space in-space name-path-op name-root-ref)))
                         (and (syntax-local-value* (in-space #'hname.name) transformer-ref)
                              #t)]
-                       [_ #f])))
+                       [((~datum group) ((~datum parsed) . _) . _) #f]
+                       [((~datum group) head . _)
+                        (define-values (implicit-name ctx) (select-prefix-implicit #'head))
+                        (define implicit-id (datum->syntax ctx implicit-name))
+                        (and (syntax-local-value* (in-space implicit-id) transformer-ref)
+                             #t)])))
                 '()))]))
 
 (define (apply-transformer t id stx checker)

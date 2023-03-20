@@ -9,7 +9,9 @@ Rhombus parsing is driven by bindings even for forms that have no
 apparent name, such as a literal expression like @rhombus(7) or square
 brackets like @rhombus([1, 2, 3]). In those cases without an apparent
 name an implement form is used to give meaning to the term, whether in
-an expression position, binding position, or other kind of position.
+an expression position, binding position, or other kind of position. For
+positions that allow only prefix operators, such as definition
+positions, only prefix implicits are used.
 Here are all of the implicit forms:
 
 @itemlist(
@@ -93,7 +95,7 @@ Here are all of the implicit forms:
 @provided_also_meta()
 
  Produces the same value as @rhombus(expr), same binding as
- @rhombus(binding), and so on. Multiple expression, bindings, etc.,
+ @rhombus(bind), and so on. Multiple expression, bindings, etc.,
  are disallowed.
 
 @examples(

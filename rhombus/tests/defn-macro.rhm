@@ -93,3 +93,12 @@ check:
   !!! bells "dong"
   bells
   ~is ["dong", "dong", "dong"]
+
+// implicit as macro
+check:
+  defn.macro '#%parens ($defn)':
+    '$defn'
+  (def ding = "ding",
+   def dong = "dong")
+  [ding, dong]
+  ~is ["ding", "dong"]
