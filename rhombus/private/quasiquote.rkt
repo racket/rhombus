@@ -494,7 +494,7 @@
                       (check-escape e)
                       (define id (car (generate-temporaries (list e))))
                       (with-syntax ([(tag . _) in-e])
-                        (values #`(tag . #,id) (list #`[#,id (pending-unpack #,e unpack-multi* (quote-syntax #,$-id))]) null null)))
+                        (values (quasisyntax/loc e (tag . #,id)) (list #`[#,id (pending-unpack #,e unpack-multi* (quote-syntax #,$-id))]) null null)))
                     ;; adjust-escape-siblings
                     (lambda (idrs)
                       ;; adapt to allow repetitions at different depths where

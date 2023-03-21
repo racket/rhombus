@@ -19,6 +19,8 @@ expr.macro 'examples($form, ...)':
         split(rest)
     | ['~label: $_', &rest]:
         split(rest)
+    | ['~indent: $_', &rest]:
+        split(rest)
     | ['~defn: $defn; ...', &rest]:
         [['~defn', [defn, ...]], &split(rest)]
     | ['~repl: $repl; ...', &rest]:
@@ -40,13 +42,14 @@ expr.macro 'examples($form, ...)':
         cond
         | kw.unwrap() == want_kw:
             when was_found
-            | Syntax.error("duplicate `~eval` clause", '$eval_expr')
+            | Syntax.error("duplicate `~" +& kw.unwrap() +& "` clause", '$eval_expr')
             find_kw(rest, want_kw, #true)
             eval_expr
         | ~else: find_kw(rest, want_kw, was_found)
     | [form, &rest]: find_kw(rest, want_kw, was_found)
   fun find_eval(): find_kw([form, ...], #'~eval, #false)
   fun find_label(): find_kw([form, ...], #'~label, #false)
+  fun find_indent(): find_kw([form, ...], #'~indent, #false) || '0'
   def [new_form, ...]:
     for List:
       each:
@@ -59,12 +62,14 @@ expr.macro 'examples($form, ...)':
       def label: if i == 0 | find_label() | #false
       Syntax.relocate_span('@examples_stanza(~label: $label,
                                              ~eval: eval,
+                                             ~indent: indent,
                                              $no_prompt, ...,
                                              $(List.repet(j[1])), ...)',
                            j[1])
   def eval = find_eval()
   'block:
      def eval: $(eval || 'make_rhombus_eval()')
+     def indent: $(find_indent())
      def content = [$new_form, ...]
      $(if eval | #void | 'close_eval(eval)')
      content'

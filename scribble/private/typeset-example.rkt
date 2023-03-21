@@ -36,7 +36,9 @@
                      (~optional (group #:eval (block eval-expr))
                                 #:defaults ([eval-expr #'(group (parsed (make-rhombus-eval)))]))
                      (~optional (group #:hidden (block hidden-expr))
-                                #:defaults ([hidden-expr #'(group (parsed #f))])))
+                                #:defaults ([hidden-expr #'(group (parsed #f))]))
+                     (~optional (group #:indent (block indent-expr))
+                                #:defaults ([indent-expr #'(group (parsed 0))])))
                 ...
                 (group form ...) ...))
      (define (rb form)
@@ -51,7 +53,8 @@
                      [prompt-indent (if (syntax-e #'no-prompt) 0 2)])
          #'(rhombus-expression (group rhombusblock_etc
                                       (parens (group #:prompt (block (group (parsed prompt))))
-                                              (group #:indent (block (group (parsed prompt-indent))))
+                                              (group #:indent (block (group (parsed (+ prompt-indent
+                                                                                       (rhombus-expression indent-expr))))))
                                               (group #:inset (block (group (parsed #f)))))
                                       (t-block t-form)))))
      (with-syntax ([((t-form e-form) ...)
@@ -72,6 +75,7 @@
           #:eval (rhombus-expression eval-expr)
           #:label (rhombus-expression label-expr)
           #:hidden? (rhombus-expression hidden-expr)
+          #:indent (rhombus-expression indent-expr)
           (list
            (list t-form
                  (adjust-top-srcloc (quote-syntax (top e-form))))
@@ -87,6 +91,7 @@
 (define (examples #:eval eval
                   #:label label
                   #:hidden? hidden?
+                  #:indent indent
                   rb+exprs)
   (define example-block
     (nested-flow
@@ -129,12 +134,12 @@
                                     (lambda () (eval (strip-context expr)))
                                     list)]))])
                  (append
-                  (format-lines (get-output eval) racketoutput)
-                  (format-lines (get-error-output eval) racketerror)
+                  (format-lines (get-output eval) racketoutput indent)
+                  (format-lines (get-error-output eval) racketerror indent)
                   (cond
                     [(eq? mode 'error)
                      (if (string? vs)
-                         (format-lines vs racketerror)
+                         (format-lines vs racketerror indent)
                          (raise-arguments-error
                           'examples
                           "example did not error"
@@ -148,23 +153,24 @@
                           [else
                            (define o (open-output-string))
                            (call-in-sandbox-context eval (lambda () (print v o)))
-                           (format-lines (get-output-string o) (lambda (s) (racketresultfont s #:decode? #f)))])))]))))]))))))))
+                           (format-lines (get-output-string o) (lambda (s) (racketresultfont s #:decode? #f)) indent)])))]))))]))))))))
   (cond
     [hidden? null]
     [label (list label example-block)]
     [else example-block]))
 
-(define (format-lines str format-line)
+(define (format-lines str format-line extra-indent)
   (for/list ([line-str (in-list (string-split str "\n"))])
     (define indent (let loop ([i 0])
                      (cond
                        [(i . >= . (string-length line-str)) i]
                        [(char=? #\space (string-ref line-str i)) (loop (+ i 1))]
                        [else i])))
+    (define all-indent (+ indent extra-indent))
     (paragraph plain
                (list
-                 (if (= indent 0) "" (hspace indent))
-                 (format-line (substring line-str indent))))))
+                (if (= all-indent 0) "" (hspace all-indent))
+                (format-line (substring line-str indent))))))
 
 (define (format-exception exn eval)
   (define o (open-output-string))
@@ -180,8 +186,3 @@
                  (cons (syntax-property (car l) 'raw "")
                        (cdr l))
                  (cadr l)))
-
-  
-  
-
-

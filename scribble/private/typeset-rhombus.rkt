@@ -331,9 +331,9 @@
                          (cons (cond
                                  [first?
                                   (define len (string-length prompt))
-                                  (list (element tt-style (substring prompt 0 (min len indent-amt)))
-                                        (element hspace-style
-                                          (make-string (- indent-amt (min len indent-amt)) #\space)))]
+                                  (list (element hspace-style
+                                          (make-string (- indent-amt (min len indent-amt)) #\space))
+                                        (element tt-style (substring prompt 0 (min len indent-amt))))]
                                  [else indent])
                                elements))))
   (define output-block
