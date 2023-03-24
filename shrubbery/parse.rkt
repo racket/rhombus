@@ -294,7 +294,7 @@
               (define-values (rest-l last-line delta raw)
                 (next-of (cdr l) (token-line t) (group-state-delta sg) (cons t (group-state-raw sg))
                          (group-state-count? sg)))
-              ;; In top level or immediately in opener-closer: 
+              ;; In top level or immediately in opener-closer:
               (parse-groups rest-l (struct-copy group-state sg
                                                 [check-column? (next-line?* rest-l last-line)]
                                                 [last-line last-line]
@@ -547,6 +547,7 @@
                        #:closer (or (and (state-count? s) (token-column t)) 'any)
                        #:bar-closes? #f
                        #:bar-closes-line #f
+                       #:drop-empty? #t ;; possible when `commenting`
                        #:delta delta
                        #:raw raw
                        #:group-commenting group-commenting)]))
@@ -579,7 +580,7 @@
                 [(eq? 'bar-operator (token-name use-t))
                  (when (and (state-operator-column s)
                             (<= column (state-operator-column s)))
-                   (fail use-t "wrong indentation"))
+                   (fail use-t "wrong indentation")) 
                  (parse-block #f use-l
                               #:count? (state-count? s)
                               #:block-mode 'inside
@@ -587,6 +588,7 @@
                               #:closer (or column 'any)
                               #:bar-closes? #f
                               #:bar-closes-line #f
+                              #:drop-empty? #t ;; possible when `group-commenting`
                               #:delta delta
                               #:raw raw
                               #:group-commenting group-commenting)]
@@ -828,6 +830,7 @@
                      #:closer closer
                      #:bar-closes? [bar-closes? #f]
                      #:bar-closes-line [bar-closes-line #f]
+                     #:drop-empty? [drop-empty? #f]
                      #:delta in-delta
                      #:raw in-raw
                      #:group-commenting [in-group-commenting #f]
@@ -891,19 +894,25 @@
                                                                      null
                                                                      tail-raw))))
      (unless (null? null-g) (error "internal error, parsed more"))
-     (values (list (add-raw-to-prefix
-                    t in-raw #:tail (let ([tail-raw (and used-closer? tail-raw)])
-                                      (if (pair? rev-suffix-raw)
-                                          (append (or tail-raw null) rev-suffix-raw)
-                                          tail-raw))
-                    (add-span-srcloc
-                     t end-t #:alt next-t
-                     (tag-as-block indent-gs))))
+     (values (if (and (null? indent-gs)
+                      drop-empty?)
+                 null
+                 (list (add-raw-to-prefix
+                        t in-raw #:tail (let ([tail-raw (and used-closer? tail-raw)])
+                                          (if (pair? rev-suffix-raw)
+                                              (append (or tail-raw null) rev-suffix-raw)
+                                              tail-raw))
+                        (add-span-srcloc
+                         t end-t #:alt next-t
+                         (tag-as-block indent-gs)))))
              post-l
              post-line
              post-delta
              post-tail-commenting
-             post-tail-raw)]
+             (if (and (null? indent-gs)
+                      drop-empty?)
+                 (append post-tail-raw in-raw)
+                 post-tail-raw))]
     [else
      (when opener-t (fail opener-t (format "expected `»`")))
      (when (and (not can-empty?) t (not opener-t)) (fail-empty))
@@ -1312,7 +1321,7 @@
          [(null? raw) (done)]
          [else
           (define t (car raw))
-          (case (token-name t)
+          (case (and (token? t) (token-name t))
             [(whitespace)
              (loop (cdr raw) (cons t pending) rev-suffix-raw)]
             [(comment)

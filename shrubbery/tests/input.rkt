@@ -1913,6 +1913,24 @@ cond | #// gone; here | here
   #// goodbye:
     the enclosing group of the block is commented out
 }
+
+alone
+#//
+| only alt gone
+
+alone
+  #//
+  | only alt gone
+
+alone
+#//
+| first alt gone
+#//
+| second alt gone
+
+(#// | gone, ok)
+(alone #// | gone, ok)
+
 INPUT
 )
 
@@ -1954,7 +1972,12 @@ INPUT
        hello
        (block
         (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
-        (group match x (alts (block (group 1 (block (group (quotes (group one)))))) (block (group 2 (block (group (quotes (group two))))))))))))))
+        (group match x (alts (block (group 1 (block (group (quotes (group one)))))) (block (group 2 (block (group (quotes (group two))))))))))))
+    (group alone)
+    (group alone)
+    (group alone)
+    (group (parens (group ok)))
+    (group (parens (group alone) (group ok)))))
 
 (define input5
 #<<INPUT
