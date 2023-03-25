@@ -127,7 +127,7 @@ types and one macro:
       value has one suitable for the context, returning @racket[#f]
       otherwise. Normally, these functions use structure-property
       accessors. The defaults are @racket[prefix-operator-ref] and
-      @racket[infix-oerator-ref].}
+      @racket[infix-operator-ref].}
 
     @item{@racket[#:name-path-op]: an operator name that is recognized after a
       name-root identifier for hierarhical name references. The
@@ -235,6 +235,6 @@ and macro:
     ]
 
    The @racket[define-transform] function is provided by the
-   @racket[enforest/transform] library.}
+   @racket[enforest/transformer] library.}
 
  ]
