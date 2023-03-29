@@ -72,7 +72,7 @@
                              (if (and b (not (null? b)))
                                  (cons a b)
                                  a)
-                             b))
+                             (or b null)))
   (let loop ([g g] [tail null] [use-prefix? #f] [keep-suffix? keep-suffix?])
     (cond
       [(null? g)
