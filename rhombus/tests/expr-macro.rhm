@@ -161,20 +161,20 @@ check:
 block:
   check:
     macro '$((a)) op $b':
-      ~weaker_than: *
+      ~weaker_than *
       '$a + $b'
     1 op 2 * 4
     ~is 9
   check:
     macro '$a op $(((b)))':
-      ~weaker_than: *
+      ~weaker_than *
       '$a + $b'
     1 op 2 * 4
     ~is 9
   check:
     // not parsed
     macro '$a op $(b :: Term)':
-      ~weaker_than: *
+      ~weaker_than *
       '$a + $b'
     1 op 2 * 4
     ~is 12

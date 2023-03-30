@@ -98,7 +98,7 @@
     #:attributes ([name 1])
     (pattern (_::block (group o::op/other ...) ...)
              #:attr [name 1] (syntax->list #'(o.name ... ...)))
-    (pattern (n::op/other ...)
+    (pattern (~seq n::op/other ...)
              #:attr [name 1] (syntax->list #'(n.name ...))))
 
   (define-syntax-class-mixin operator-options
@@ -112,7 +112,7 @@
                      #:defaults ([(stronger.name 2) '()]))
           (~optional (group #:weaker_than ~! weaker::ops/others)
                      #:defaults ([(weaker.name 2) '()]))
-          (~optional (group #:same_as ~! (_::block same::ops/others))
+          (~optional (group #:same_as ~! same::ops/others)
                      #:defaults ([(same.name 2) '()]))
           (~optional (group #:same_on_left_as ~! same-on-left::ops/others)
                      #:defaults ([(same-on-left.name 2) '()]))
