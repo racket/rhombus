@@ -53,8 +53,7 @@ driver and macro-definitions forms.
     #,(@rhombus(meta_namespace, ~space_clause)) $meta_namespace_id:
       $space_meta_clause_or_body
       ...
-    $body
-    $export
+    $nestable_body
                   
   grammar space_id_path:
     $id
@@ -68,8 +67,7 @@ driver and macro-definitions forms.
     #,(@rhombus(parse_checker, ~space_meta_clause)) $expr
     #,(@rhombus(description, ~space_meta_clause)) $expr
     #,(@rhombus(operator_description, ~space_meta_clause)) $expr
-    $body
-    $export    
+    $nestable_body
 ){
 
  Defines @rhombus(space_id) as a @tech{space} with syntax
