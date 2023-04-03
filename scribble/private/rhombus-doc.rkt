@@ -39,19 +39,44 @@
 (define-syntax (define-doc stx)
   (syntax-parse stx
     [(_ id
+        namespace
+        desc
+        space-sym ; id, #f, or expression for procedure
+        extract-name
+        extract-metavariables
+        extract-typeset)
+     #`(begin
+         (provide (for-space rhombus/doc id)
+                  #,@(if (syntax-e #'namespace)
+                         #'((for-space rhombus/namespace
+                                       namespace))
+                         #'()))
+         #,@(if (syntax-e #'namespace)
+                #'((require (only-space-in rhombus/namespace
+                                           (rename-in rhombus/meta
+                                                      [namespace namespace]))))
+                #'())
+         (define-doc-syntax id
+           (make-doc-transformer #:extract-desc (lambda (stx) desc)
+                                 #:extract-space-sym #,(if (or (identifier? #'space-sym)
+                                                               (boolean? (syntax-e #'space-sym)))
+                                                           #'(lambda (stx) 'space-sym)
+                                                           #'space-sym)
+                                 #:extract-name extract-name
+                                 #:extract-metavariables extract-metavariables
+                                 #:extract-typeset extract-typeset)))]
+    [(_ id
         desc
         space-sym
         extract-name
         extract-metavariables
         extract-typeset)
-     #'(begin
-         (provide (for-space rhombus/doc id))
-         (define-doc-syntax id
-           (make-doc-transformer #:extract-desc (lambda (stx) desc)
-                                 #:extract-space-sym (lambda (stx) 'space-sym)
-                                 #:extract-name extract-name
-                                 #:extract-metavariables extract-metavariables
-                                 #:extract-typeset extract-typeset)))]))
+     #'(define-doc id #f
+         desc
+         space-sym
+         extract-name
+         extract-metavariables
+         extract-typeset)]))
 
 (begin-for-syntax
   (define-splicing-syntax-class (identifier-target space-name)
@@ -107,7 +132,7 @@
     #:datum-literals ($ group op quotes)
     [(group _ _ _ (quotes (group (op $) _:identifier (~var id (target space-name)) . _))) #'id.name]
     [(group _ _ _ (quotes (group (~var id (target space-name)) . _))) #'id.name]
-    [_ ((identifier-macro-extract-name space-name) stx)]))
+    [_ (identifier-macro-extract-name stx space-name)]))
 
 (define-for-syntax (space-extract-name stx space-name)
   (syntax-parse stx
@@ -132,7 +157,7 @@
      (extract-pattern-metavariables #'(group (op $) t0 t ...) vars)]
     [(group _ _ _ (quotes (group (~var _ (target space-name)) t ...)))
      (extract-pattern-metavariables #'(group t ...) vars)]
-    [_ ((identifier-macro-extract-metavariables space-name) stx vars)]))
+    [_ (identifier-macro-extract-metavariables stx space-name vars)]))
 
 (define-for-syntax (space-extract-typeset stx space-name subst)
   (syntax-parse stx
@@ -169,170 +194,170 @@
      (rb #:at #'g
          #:pattern? #t
          #`(group #,@(subst #'id.name) e ...))]
-    [_ ((identifier-macro-extract-typeset space-name) stx subst)]))
+    [_ (identifier-macro-extract-typeset stx space-name subst)]))
 
-(define-doc space.enforest
+(define-doc space.enforest space
   "space"
   rhombus/space
   space-extract-name
   (lambda (stx space-name vars) vars)
   space-extract-typeset)
 
-(define-doc space.transform
+(define-doc space.transform space
   "space"
   rhombus/space
   space-extract-name
   (lambda (stx space-name vars) vars)
   space-extract-typeset)
 
-(define-doc decl.nestable_macro
+(define-doc decl.nestable_macro decl
   "nestable declaration"
   #f
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc decl.macro
+(define-doc decl.macro decl
   "declaration"
   #f
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc defn.macro
+(define-doc defn.macro defn
   "definition"
   #f
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc expr.macro
+(define-doc expr.macro expr
   "expression"
   #f
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc impo.modifier
+(define-doc impo.modifier impo
   "import modifier"
   rhombus/impo
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc modpath.macro
+(define-doc modpath.macro #f
   "module path"
   rhombus/modpath
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc expo.modifier
+(define-doc expo.modifier expo
   "export modifier"
   rhombus/expo
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc impo.macro
+(define-doc impo.macro impo
   "import"
   rhombus/impo
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc expo.macro
+(define-doc expo.macro expo
   "export"
   rhombus/expo
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc bind.macro
+(define-doc bind.macro bind
   "binding operator"
   rhombus/bind
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc annot.macro
+(define-doc annot.macro annot
   "annotation"
   rhombus/annot
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc repet.macro
+(define-doc repet.macro repet
   "repetition"
   rhombus/repet
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc reducer.macro
+(define-doc reducer.macro reducer
   "reducer"
   rhombus/reducer
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc for_clause.macro
+(define-doc for_clause.macro for_clause
   "for clause"
   rhombus/for_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc class_clause.macro
+(define-doc class_clause.macro class_clause
   "class clause"
   rhombus/class_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc interface_clause.macro
+(define-doc interface_clause.macro interface_clause
   "interface clause"
   rhombus/interface_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc entry_point.macro
+(define-doc entry_point.macro entry_point
   "entry point"
   rhombus/entry_point
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc unquote_bind.macro
+(define-doc unquote_bind.macro unquote_bind
   "unquote binding"
   rhombus/unquote_bind
   operator-macro-extract-name
   operator-macro-extract-metavariables
   operator-macro-extract-typeset)
 
-(define-doc syntax_class_clause.macro
+(define-doc syntax_class_clause.macro syntax_class_clause
   "syntax class clause"
   rhombus/syntax_class_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc pattern_clause.macro
+(define-doc pattern_clause.macro pattern_clause
   "pattern clause"
   rhombus/pattern_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc space_clause.macro
+(define-doc space_clause.macro space_clause
   "space clause"
   rhombus/space_clause
   identifier-macro-extract-name
   identifier-macro-extract-metavariables
   identifier-macro-extract-typeset)
 
-(define-doc space_meta_clause.macro
+(define-doc space_meta_clause.macro space_meta_clause
   "space meta clause"
   rhombus/space_meta_clause
   identifier-macro-extract-name
@@ -346,13 +371,27 @@
   parens-extract-metavariables
   head-extract-typeset)
 
+(define-doc method
+  "method"
+  #f
+  parens-extract-name
+  parens-extract-metavariables
+  head-extract-typeset)
+
+(define-doc property
+  "property"
+  #f
+  parens-extract-name
+  parens-extract-metavariables
+  head-extract-typeset)
+
 (define-doc def
   "function"
   #f
   head-extract-name
   head-extract-metavariables
   head-extract-typeset)
-  
+
 (define-doc operator
   "operator"
   #f
@@ -402,14 +441,32 @@
 
 (define-doc class
   "class"
-  rhombus/class
+  (lambda (stx)
+    '(rhombus/class rhombus/annot))
   parens-extract-name
-  parens-extract-metavariables
+  (lambda (stx space-name vars)
+    (class-body-extract-metavariables
+     stx
+     space-name
+     (parens-extract-metavariables stx space-name vars)))
   head-extract-typeset)
+
+(define-for-syntax (class-body-extract-metavariables stx space-name vars)
+  (syntax-parse stx
+    #:datum-literals (block parens)
+    [(group _ _ (parens . _) (block g ...))
+     (for/fold ([vars vars]) ([g (in-list (syntax->list #'(g ...)))])
+       (syntax-parse g
+         #:datum-literals (constructor parens)
+         [(_ constructor (~and p (parens . _)))
+          (parens-extract-metavariables #'(group ctr ctr p) space-name vars)]
+         [_ vars]))]
+    [_ vars]))
 
 (define-doc interface
   "interface"
-  rhombus/class
+  (lambda (stx)
+    '(rhombus/class rhombus/annot))
   head-extract-name
   head-extract-metavariables
   head-extract-typeset)
@@ -455,6 +512,7 @@
   (syntax-parse stx
     #:literals (:: rhombus-=)
     #:datum-literals (parens group op)
+    [(group _:keyword (block g)) (extract-binding-metavariables #'g vars)]
     [(group lhs (op ::) . _) (extract-binding-metavariables #'(group lhs) vars)]
     [(group lhs (op rhombus-=) . _) (extract-binding-metavariables #'(group lhs) vars)]
     [(group (parens g)) (extract-binding-metavariables #'g vars)]

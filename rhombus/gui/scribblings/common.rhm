@@ -1,0 +1,15 @@
+#lang rhombus/static
+
+import:
+  meta_label:
+    rhombus open
+    rhombus/gui open
+    lib("racket/gui/easy.rkt") open:
+      except:
+        render
+
+export:
+  meta_label:
+    all_from(rhombus)
+    all_from(rhombus/gui)
+    all_from(lib("racket/gui/easy.rkt"))

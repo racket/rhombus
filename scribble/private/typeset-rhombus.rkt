@@ -427,7 +427,7 @@
 (define (id-space-name id [default-name #f])
   (or (full-space-name (syntax-property id 'typeset-space-name)) default-name))
 
-(define (initial-name-ref elems space-name)
+(define (initial-name-ref elems default-space-name)
   (define (dotted-elems? elems)
     (and (identifier? (car elems))
          (pair? (cdr elems))
@@ -469,6 +469,7 @@
                 (values (list a) #f)
                 (values (list (extract-op a))
                         (extract-ptag a)))])))
+     (define space-name (id-space-name (car elems) default-space-name))
      (define target+rest (resolve-name-ref space-name
                                            (add-space (car elems)
                                                       (if (pair? (cdr elems))

@@ -69,7 +69,7 @@
                                   [(group (parens sub-g)) #'sub-g]
                                   [else g]))
      #`(doc:#%module-begin
-        #:id #,(datum->syntax stx 'doc)
+        #:id doc
         #:begin [(module configure-runtime racket/base (require rhombus/runtime-config))]
         #:post-process post-process
         (rhombus-forwarding-sequence

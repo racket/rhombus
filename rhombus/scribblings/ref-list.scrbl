@@ -108,17 +108,17 @@ it supplies its elements in order.
 
 @doc(
   annot.macro 'List'
-  annot.macro 'List.of($annotation)'
+  annot.macro 'List.of($annot)'
 ){
 
  Matches any list in the form without @rhombus(of). The @rhombus(of)
- variant matches a list whose elements satisfy @rhombus(annotation).
+ variant matches a list whose elements satisfy @rhombus(annot).
 
 }
 
 @doc(
   annot.macro 'NonemptyList'
-  annot.macro 'NonemptyList.of($annotation)'
+  annot.macro 'NonemptyList.of($annot)'
 ){
 
  Like @rhombus(List, ~annot) as an annotation, but matches only non-empty

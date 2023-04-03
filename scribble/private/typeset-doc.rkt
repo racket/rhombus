@@ -89,9 +89,17 @@
      (define kind-strs (for/list ([form (in-list forms)]
                                   [t (in-list transformers)])
                          ((doc-transformer-extract-desc t) form)))
-     (define space-names (for/list ([form (in-list forms)]
-                                    [t (in-list transformers)])
-                           ((doc-transformer-extract-space-sym t) form)))
+     (define all-space-namess (for/list ([form (in-list forms)]
+                                        [t (in-list transformers)])
+                                ((doc-transformer-extract-space-sym t) form)))
+     (define space-names (for/list ([all-names (in-list all-space-namess)])
+                           (if (list? all-names)
+                               (car all-names)
+                               all-names)))
+     (define extra-space-namess (for/list ([all-names (in-list all-space-namess)])
+                                  (if (list? all-names)
+                                      (cdr all-names)
+                                      '())))
      (define introducers (for/list ([space-name (in-list space-names)])
                            (if (and space-name
                                     (not (eq? space-name 'grammar)))
@@ -121,7 +129,8 @@
      (define def-id-as-defs (for/fold ([rev-as-defs '()] [seen #hash()] #:result (reverse rev-as-defs))
                                       ([immed-def-name (in-list def-names)]
                                        [immed-introducer (in-list introducers)]
-                                       [immed-space-name (in-list space-names)])
+                                       [immed-space-name (in-list space-names)]
+                                       [extra-space-names (in-list extra-space-namess)])
                               (cond
                                 [(not immed-def-name)
                                  (values (cons #f rev-as-defs)
@@ -134,12 +143,20 @@
                                  (define introducer (if (eq? immed-space-name 'grammar)
                                                         nt-introducer
                                                         immed-introducer))
+                                 (define extra-introducers (for/list ([extra-space-name (in-list extra-space-names)])
+                                                             (let ([intro (make-interned-syntax-introducer extra-space-name)])
+                                                               (lambda (x)
+                                                                 (intro x 'add)))))
                                  (define space-name (if (eq? immed-space-name 'grammar)
                                                         nt-space-name
                                                         immed-space-name))
                                  (define def-id (if (identifier? def-name)
                                                     (introducer def-name)
                                                     (in-name-root-space (car (syntax-e def-name)))))
+                                 (define extra-def-ids (for/list ([extra-introducer (in-list extra-introducers)])
+                                                         (if (identifier? def-name)
+                                                             (extra-introducer def-name)
+                                                             (in-name-root-space (car (syntax-e def-name))))))
                                  (define str-id (if (identifier? def-name)
                                                     #f
                                                     (cadr (syntax->list def-name))))
@@ -156,8 +173,10 @@
                                                              #'make-redef-id
                                                              #'make-def-id)
                                                        (quote-syntax #,def-id)
+                                                       (quote-syntax #,extra-def-ids)
                                                        (quote-syntax #,str-id)
                                                        (quote #,space-name)
+                                                       (quote #,extra-space-names)
                                                        (quote #,(and (eq? immed-space-name 'grammar)
                                                                      immed-def-name))
                                                        (quote #,immed-space-name)))
@@ -232,7 +251,7 @@
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id str-id space nonterm-sym immed-space)
+(define (make-def-id id extra-ids str-id space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (define str (if (eq? immed-space 'grammar)
                   (symbol->string nonterm-sym)
@@ -242,49 +261,60 @@
   (define nonterm-suffix (if (eq? immed-space 'grammar)
                              (list nonterm-sym)
                              null))
-  (define str+space (cond
-                      [str-id-e
-                       (append (list str-id-e space)
-                               nonterm-suffix)]
-                      [(null? nonterm-suffix) space]
-                      [else (cons space nonterm-suffix)]))
-  (define id-space (if str-id-e
-                       ;; referring to a field of a namespace, so
-                       ;; `id` is bound in the namespace space, not
-                       ;; in `space`
-                       'rhombus/namespace
-                       space))
+  (define (get-str+space space)
+    (cond
+      [str-id-e
+       (append (list str-id-e space)
+               nonterm-suffix)]
+      [(null? nonterm-suffix) space]
+      [else (cons space nonterm-suffix)]))
+  (define str+space (get-str+space space))
+  (define (get-id-space space)
+    (if str-id-e
+        ;; referring to a field of a namespace, so
+        ;; `id` is bound in the namespace space, not
+        ;; in `space`
+        'rhombus/namespace
+        space))
+  (define id-space (get-id-space space))
   (define (make-content defn?)
     ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
      (make-id-element id str defn? #:space id-space #:suffix str+space)))
   (define content (annote-exporting-library (make-content #t)))
-  (define target-maker (id-to-target-maker id #t #:space id-space #:suffix str+space))
-  (cond
-    [target-maker
-     (define name (string->symbol str))
-     (define ref-content (make-content #f))
-     (target-maker content
-                   (lambda (tag)
-                     (if nonterm-sym
-                         (target-element
-                          #f
-                          content
-                          tag)
-                         (toc-target2-element
-                          #f
-                          (index-element
-                           #f
-                           content
-                           tag
-                           (list (datum-intern-literal str))
-                           (list ref-content)
-                           (with-exporting-libraries
-                             (lambda (libs) (thing-index-desc name libs))))
-                          tag
-                          ref-content))))]
-    [else content]))
+  (for/fold ([content content]) ([id (cons id (syntax->list extra-ids))]
+                                 [space (cons space extra-spaces)]
+                                 [idx (in-naturals)])
+    (define id-space (get-id-space space))
+    (define str+space (get-str+space space))
+    (define target-maker (id-to-target-maker id #t #:space id-space #:suffix str+space))
+    (cond
+      [target-maker
+       (define name (string->symbol str))
+       (define ref-content (make-content #f))
+       (target-maker content
+                     (lambda (tag)
+                       (if (or nonterm-sym
+                               (idx . > . 0))
+                           (begin
+                             (target-element
+                              #f
+                              content
+                              tag))
+                           (toc-target2-element
+                            #f
+                            (index-element
+                             #f
+                             content
+                             tag
+                             (list (datum-intern-literal str))
+                             (list ref-content)
+                             (with-exporting-libraries
+                               (lambda (libs) (thing-index-desc name libs))))
+                            tag
+                            ref-content))))]
+      [else content])))
 
-(define (make-redef-id id str-id space nonterm-sym immed-space)
+(define (make-redef-id id extra-ids str-id space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (racketidfont
    (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t

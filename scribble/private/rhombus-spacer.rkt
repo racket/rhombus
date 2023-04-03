@@ -16,13 +16,16 @@
                     :~
                     |'|
                     fun
+                    constructor
                     val
                     def
                     match
                     for
                     import
                     class
-                    interface))
+                    interface
+                    extends
+                    implements))
 
 (define-syntax (define-spacer stx)
   (syntax-parse stx
@@ -57,7 +60,8 @@
                [(a . more)
                 #:when (not (escape? #'a escape))
                 #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'annot)
-                   . more)]
+                   #,@(for/list ([more (syntax->list #'more)])
+                        (term-identifiers-syntax-property more 'typeset-space-name 'annot)))]
                [_ tail])))))
 
 (define-spacer :: annote-spacer)
@@ -81,6 +85,11 @@
                [_ tail])))))
 
 (define-spacer fun
+  (spacer
+   (lambda (head tail escape)
+     (fun-spacer head tail escape))))
+
+(define-spacer constructor
   (spacer
    (lambda (head tail escape)
      (fun-spacer head tail escape))))
@@ -291,3 +300,18 @@
      #`(group-tag #,(term-identifiers-syntax-property #'form 'typeset-space-name space)
                   . rest)]
     [_ stx]))
+
+(define-spacer extends
+  (spacer
+   (lambda (head tail escape)
+     (extends-spacer head tail escape))))
+
+(define-spacer implements
+  (spacer
+   (lambda (head tail escape)
+     (extends-spacer head tail escape))))
+
+(define-for-syntax (extends-spacer head tail escape)
+  (values head
+          (for/list ([e (syntax->list tail)])
+            (term-identifiers-syntax-property e 'typeset-space-name 'class))))
