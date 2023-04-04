@@ -1,0 +1,57 @@
+#lang rhombus
+
+check:
+  math.equal() ~is #true
+  math.equal(1) ~is #true
+  math.equal(1, 2) ~is #false
+  math.equal(2, 2) ~is #true
+  math.equal(1, 2, 3) ~is #false
+  math.equal(2, 2, 2) ~is #true
+
+check:
+  math.less() ~is #true
+  math.less(1) ~is #true
+  math.less(1, 2) ~is #true
+  math.less(1, 1) ~is #false
+  math.less(1, 2, 3) ~is #true
+  math.less(1, 2, 2) ~is #false
+
+check:
+  math.less_or_equal() ~is #true
+  math.less_or_equal(1) ~is #true
+  math.less_or_equal(1, 2) ~is #true
+  math.less_or_equal(1, 1) ~is #true
+  math.less_or_equal(1, -1) ~is #false
+  math.less_or_equal(1, 2, 3) ~is #true
+  math.less_or_equal(1, 2, 2) ~is #true
+  math.less_or_equal(1, 2, -2) ~is #false
+    
+check:
+  math.greater() ~is #true
+  math.greater(-1) ~is #true
+  math.greater(-1, -2) ~is #true
+  math.greater(-1, -1) ~is #false
+  math.greater(-1, -2, -3) ~is #true
+  math.greater(-1, -2, -2) ~is #false
+
+check:
+  math.greater_or_equal() ~is #true
+  math.greater_or_equal(-1) ~is #true
+  math.greater_or_equal(-1, -2) ~is #true
+  math.greater_or_equal(-1, -1) ~is #true
+  math.greater_or_equal(-1, 1) ~is #false
+  math.greater_or_equal(-1, -2, -3) ~is #true
+  math.greater_or_equal(-1, -2, -2) ~is #true
+  math.greater_or_equal(-1, -2, 2) ~is #false
+    
+check:
+  math.sum() ~is 0
+  math.sum(1) ~is 1
+  math.sum(1, 2) ~is 3
+  math.sum(1, 2, 3, 4) ~is 10
+
+check:
+  math.product() ~is 1
+  math.product(0) ~is 0
+  math.product(1, 2) ~is 2
+  math.product(1, 2, 3, 4) ~is 24

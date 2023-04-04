@@ -348,6 +348,44 @@
 }
 
 @doc(
+  fun math.sum(n :: Number, ...) :: Number
+  fun math.product(n :: Number, ...) :: Number
+){
+
+ Generalizations of @rhombus(+) and @rhombus(*) to any number of
+ arguments.
+
+@examples(
+  math.sum()
+  math.sum(1, 2, 3, 4)
+  math.product(1, 2, 3, 4)
+)
+
+}
+
+@doc(
+  fun math.equal(n :: Number, ...) :: Boolean
+  fun math.less(n :: Real, ...) :: Boolean
+  fun math.less_or_equal(n :: Real, ...) :: Boolean
+  fun math.greater(n :: Real, ...) :: Boolean
+  fun math.greater_or_equal(n :: Real, ...) :: Boolean
+){
+
+ Generalizations of @rhombus(.=), @rhombus(<), @rhombus(<=),
+ @rhombus(>), and @rhombus(>=) to any number of arguments. The result is
+ always @rhombus(#true) for zero or one arguments.
+
+@examples(
+  math.less()
+  math.less(1)
+  math.less(2, 1)
+  math.less(1, 2, 3, 4)
+  math.less(1, 2, 3, 0)
+)
+
+}
+
+@doc(
   operator ((n :: Int) bits.and (m :: Int)) :: Int
   operator ((n :: Int) bits.or (m :: Int)) :: Int
   operator ((n :: Int) bits.xor (m :: Int)) :: Int

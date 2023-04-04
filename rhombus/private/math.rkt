@@ -1,5 +1,7 @@
 #lang racket/base
-(require "name-root.rkt"
+(require (for-syntax racket/base
+                     syntax/parse)
+         "name-root.rkt"
          "static-info.rkt"
          "define-arity.rkt"
          "realm.rkt")
@@ -24,7 +26,11 @@
    [real_part real-part]
    [imag_part imag-part]
    [exact inexact->exact]
-   [inexact exact->inexact]))
+   [inexact exact->inexact]
+   equal
+   less less_or_equal
+   greater greater_or_equal
+   sum product))
 
 (define-static-info-syntaxes (abs
                               floor ceiling round
@@ -65,3 +71,41 @@
                             (- len 32)
                             (+ shift 31)))))])])
     random))
+
+(define-syntax (define-nary stx)
+  (syntax-parse stx
+    [(_ ok? ok-str 0-value [name op] ...)
+     #'(begin
+         (define name
+           (case-lambda
+             [() (0-value op)]
+             [(a)
+              (unless (ok? a) (raise-argument-error* 'name rhombus-realm ok-str a))
+              (op a)]
+             [(a b)
+              (unless (ok? a) (raise-argument-error* 'name rhombus-realm ok-str a))
+              (unless (ok? b) (raise-argument-error* 'name rhombus-realm ok-str b))
+              (op a b)]
+             [ns
+              (for ([a (in-list ns)])
+                (unless (ok? a) (raise-argument-error* 'name rhombus-realm ok-str a)))
+              (apply op ns)]))
+         ...
+         (define-static-info-syntaxes (name ...)
+           (#%function-arity -1)))]))
+
+(define-nary
+  number? "Number" (lambda (op) #t)
+  [equal =])
+
+(define-nary
+  real? "Real" (lambda (op) #t)
+  [less <]
+  [less_or_equal <=]
+  [greater >]
+  [greater_or_equal >=])
+
+(define-nary
+  number? "Number" (lambda (op) (op))
+  [sum +]
+  [product *])
