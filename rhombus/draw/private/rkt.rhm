@@ -12,6 +12,7 @@ export:
   draw.#{color%} draw.#{the-color-database}
   draw.#{pen%} draw.#{the-pen-list}
   draw.#{brush%} draw.#{the-brush-list}
+  draw.#{font%}
   send
 
 expr.macro 'send $target ... . $(method :: Id)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':

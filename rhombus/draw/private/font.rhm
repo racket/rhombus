@@ -1,0 +1,84 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "symbol_map.rhm" open
+  lib("racket/base.rkt").hash
+
+export:
+  Font
+
+expr.macro 'default($like . $field, $expr)':
+  'if $like | Font . $field($like) | $expr'
+
+class Font(handle):
+  internal _Font
+  opaque
+  constructor (~like: like :: Maybe(Font) = #false,
+               ~kind: kind :: Font.Kind = default(like.kind, #'default),
+               ~name: name :: Maybe(String) = default(like.name, #false),
+               ~size: size :: Real.in(0.0, 1024.0) = default(like.size, 12.0),
+               ~in_pixels: in_pixels :: Any = default(like.in_pixels, #false),
+               ~style: style :: Font.Style = default(like.style, #'normal),
+               ~weight: weight :: Font.Weight = default(like.weight, #'normal),
+               ~has_underline: has_underline :: Any = default(like.has_underline, #false),
+               ~smoothing: smoothing :: Font.Smoothing = default(like.smoothing, #'default),
+               ~hinting: hinting :: Font.Hinting = default(like.hinting, #'aligned),
+               ~features: features :: Map.of(Font.FeatureString, NonnegInt) = default(like.features, {})):
+    if name
+    | _Font(rkt.make_object(rkt.#{font%}, size, name, kind, style, weight, has_underline,
+                            convert_smoothing(smoothing), in_pixels, hinting, norm_hash(features)))
+    | _Font(rkt.make_object(rkt.#{font%}, size, kind, style, weight, has_underline,
+                            convert_smoothing(smoothing), in_pixels, hinting, norm_hash(features)))
+
+  property name: rkt.send handle.#{get-face}()
+  property kind: rkt.send handle.#{get-family}()
+  property size: rkt.send handle.#{get-size}()
+  property in_pixels: rkt.send handle.#{get-size-in-pixels}()  
+  property style: rkt.send handle.#{get-style}()
+  property weight: rkt.send handle.#{get-weight}()
+  property has_underline: rkt.send handle.#{get-underlined}()  
+  property smoothing: unconvert_smoothing(rkt.send handle.#{get-smoothing}())
+  property hinting: rkt.send handle.#{get-hinting}()
+  property features: rkt.send handle.#{get-feature-settings}()
+  
+  export:
+    Kind
+    Style
+    Weight
+    Smoothing
+    Hinting
+    FeatureString
+
+  symbol_set_annot Kind: { default, decorative, roman, script, swiss,
+                           modern, symbol, system }
+
+  symbol_set_annot Style: { normal, italic, slant }
+
+  annot.macro 'Weight': 'Int.in(100, 1000) || WeightSymbol'
+  symbol_set_annot WeightSymbol:
+    { thin, ultralight, light, semilight, book, normal,
+      medium, semibold, bold, ultrabold, heavy, ultraheavy }
+
+  symbol_map_annot Smoothing convert_smoothing unconvert_smoothing:
+    { default: default,
+      partly_smoothed: #{partly-smoothed},
+      smoothed: smoothed,
+      unsmoothed: unsmoothed }
+
+  symbol_set_annot Hinting: { aligned, unaligned }
+
+  annot.macro 'FeatureString':
+    annot_meta.pack_predicate('is_feature_string', '()')
+  fun
+  | is_feature_string(v :: String):
+      fun ok(c):
+         c == " "[0] || c == "!"[0] || ((Char.to_int(c) >= Char.to_int("#"[0]))
+                                          && (Char.to_int(c) <= Char.to_int("~"[0])))
+      v.length() == 4 && ok(v[0]) && ok(v[1]) && ok(v[2]) && ok(v[3])
+  | is_feature_string(v):
+      #false
+
+  fun norm_hash(map :: Map):
+    hash(&(for values(list = []):
+             each values(k, v): map
+             [k, v, &list]))

@@ -12,4 +12,5 @@
 @include_section("color.scrbl")
 @include_section("pen.scrbl")
 @include_section("brush.scrbl")
+@include_section("font.scrbl")
 @include_section("bitmap.scrbl")

@@ -4,14 +4,21 @@
 @title{Pen}
 
 @doc(
-  class Pen(handle, private saved_stipple):
-    constructor (~color: color :: (String || Color) = "Black",
+  class Pen(handle):
+    constructor (~like: like :: Maybe(Pen) = #false,
+                 ~color: color :: (String || Color) = "Black",
                  ~width: width :: Real.in(0, 255) = 1,
                  ~style: style :: Pen.Style = #'solid,
                  ~cap: cap :: Pen.Cap = #'round,
                  ~join: join :: Pen.Join = #'round,
                  ~stipple: stipple :: Maybe(Bitmap) = #false)
 ){
+
+ Creates a pen configuration.
+
+ If @rhombus(like) is provided as a @rhombus(Font), then @rhombus(like)
+ provides default values for other arguments, instead of the normal
+ defaults.
 
 }
 

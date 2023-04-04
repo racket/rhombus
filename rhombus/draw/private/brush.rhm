@@ -12,12 +12,16 @@ import:
 export:
   Brush
 
+expr.macro 'default($like . $field, $expr)':
+  'if $like | Brush . $field($like) | $expr'
+
 class Brush(handle, private saved_stipple):
   internal _Brush
   opaque
-  constructor (~color: color :: (String || Color) = "Black",
-               ~style: style :: Brush.Style = #'solid,
-               ~stipple: stipple :: Maybe(Bitmap) = #false):
+  constructor (~like: like :: Maybe(Brush) = #false,
+               ~color: color :: (String || Color) = default(like.color, "Black"),
+               ~style: style :: Brush.Style = default(like.style, #'solid),
+               ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
     | _Brush(rkt.make_object(rkt.#{brush%}, color, style_convert(style),
                              (stipple :: BitmapPrivate).get_handle()),

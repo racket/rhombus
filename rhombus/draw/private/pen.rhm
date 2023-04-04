@@ -12,15 +12,19 @@ import:
 export:
   Pen
 
+expr.macro 'default($like . $field, $expr)':
+  'if $like | Pen . $field($like) | $expr'
+
 class Pen(handle, private saved_stipple):
   internal _Pen
   opaque
-  constructor (~color: color :: (String || Color) = "Black",
-               ~width: width :: Real.in(0, 255) = 1,
-               ~style: style :: Pen.Style = #'solid,
-               ~cap: cap :: Pen.Cap = #'round,
-               ~join: join :: Pen.Join = #'round,
-               ~stipple: stipple :: Maybe(Bitmap) = #false):
+  constructor (~like: like :: Maybe(Pen) = #false,
+               ~color: color :: (String || Color) = default(like.color, "Black"),
+               ~width: width :: Real.in(0, 255) = default(like.width, 1),
+               ~style: style :: Pen.Style = default(like.style, #'solid),
+               ~cap: cap :: Pen.Cap = default(like.cap, #'round),
+               ~join: join :: Pen.Join = default(like.join, #'round),
+               ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
     | _Pen(rkt.make_object(rkt.#{pen%}, color, width, style_convert(style), cap, join,
                            (stipple :: BitmapPrivate).get_handle()),

@@ -4,6 +4,7 @@ import:
   "color.rhm".Color
   "pen.rhm".Pen
   "brush.rhm".Brush
+  "font.rhm".Font
   "symbol_map.rhm".symbol_set_annot
   "bitmap-interface.rhm"._BitmapPrivate as Bitmap
 
@@ -34,6 +35,9 @@ interface DC:
 
   method set_brush(b :: Brush):
       rkt.send get_dc().#{set-brush}(b.handle)
+
+  method set_font(f :: Font):
+      rkt.send get_dc().#{set-font}(f.handle)
 
   method copy(x :: Real, y :: Real,
               width :: Real.at_least(0.0), height :: Real.at_least(0.0),
@@ -71,7 +75,7 @@ interface DC:
                      ~source_y: source_y :: Real = 0,
                      ~source_width: source_width :: Real.at_least(0.0) = b.width,
                      ~source_height: source_height :: Real.at_least(0.0) = b.height,
-                     ~style: style :: DC.CopyStyle = #'solid,
+                     ~style: style :: DC.BitmapOverlay = #'solid,
                      ~color: color :: Color = Color("black"),
                      ~mask: mask :: Maybe(Bitmap) = #false):
     rkt.send get_dc().#{draw-bitmap-section}(b.get_handle(), x, y,
@@ -80,11 +84,27 @@ interface DC:
                                              style, color.handle, mask)
     #void
 
-  export:
-    CopyStyle
+  method draw_text(str :: String,
+                   x :: Real, y :: Real,
+                   ~combine: combine :: DC.TextCombine = #'kern,
+                   ~angle: angle :: Real = 0.0):
+    rkt.send get_dc().#{draw-text}(str, x, y,
+                                   match combine
+                                   | #'kern: #true
+                                   | #'grapheme: #'grapheme
+                                   | ~else: #false,
+                                   0,
+                                   angle)
 
-  symbol_set_annot CopyStyle:
+  export:
+    BitmapOverlay
+    TextCombine
+
+  symbol_set_annot BitmapOverlay:
     { solid, opaque, xor }
+
+  symbol_set_annot TextCombine:
+    { kern, grapheme, char }
 
 class CanvasDC(handle):
   implements DC

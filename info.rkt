@@ -18,6 +18,8 @@
     "math-lib"
     "racket-doc"
     "rackunit-lib"
-    "scribble-doc"))
+    "scribble-doc"
+    "draw-doc"
+    "gui-easy"))
 
 (define version "0.1")

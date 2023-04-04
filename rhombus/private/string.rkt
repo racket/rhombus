@@ -11,6 +11,7 @@
                   [display rhombus:display])
          "realm.rkt"
          "call-result-key.rkt"
+         "map-ref-set-key.rkt"
          "define-arity.rkt"
          "name-root.rkt"
          "static-info.rkt"
@@ -35,7 +36,8 @@
   (provide (for-syntax string-static-infos)))
 
 (define-for-syntax string-static-infos
-  #'((#%dot-provider string-instance)))
+  #'((#%dot-provider string-instance)
+     (#%map-ref string-ref)))
 
 (define-annotation-syntax String (identifier-annotation #'string? string-static-infos))
 

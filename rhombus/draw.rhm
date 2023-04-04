@@ -3,6 +3,7 @@ import:
   "draw/private/color.rhm"
   "draw/private/pen.rhm"
   "draw/private/brush.rhm"
+  "draw/private/font.rhm"
   "draw/private/dc.rhm"
   "draw/private/bitmap.rhm"
 
@@ -10,5 +11,6 @@ export:
   all_from(.color)
   all_from(.pen)
   all_from(.brush)
+  all_from(.font)
   all_from(.dc)
   bitmap.Bitmap

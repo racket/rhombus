@@ -25,9 +25,10 @@
 @doc(
   method DC.set_pen(dc :: DC, p :: Pen) :: Void
   method DC.set_brush(dc :: DC, b :: Brush) :: Void
+  method DC.set_font(dc :: DC, f :: Font) :: Void
 ){
 
- Sets the drawing context's state.
+ Adjusts the drawing context's configuration.
 
 }
 
@@ -62,6 +63,18 @@
 }
 
 @doc(
+  method DC.draw_text(dc:: DC,
+                      str :: String,
+                      x :: Real, y :: Real,
+                      ~combine: combine :: DC.TextCombine = #'kern,
+                      ~angle: angle :: Real = 0.0) :: Void
+){
+
+ Draws text into a drawing context using the current font.
+ 
+}
+
+@doc(
   method DC.draw_bitmap(
     dc: DC,
     bm :: Bitmap,
@@ -70,7 +83,7 @@
     ~source_y: source_y :: Real = 0,
     ~source_width: source_width :: Real.at_least(0.0) = Bitmap.width(bm),
     ~source_height: source_height :: Real.at_least(0.0) = Bitmap.height(bm),
-    ~style: style :: DC.CopyStyle = #'solid,
+    ~style: style :: DC.BitmapOverlay = #'solid,
     ~color: color :: Color = Color("black"),
     ~mask: mask :: Maybe(Bitmap) = #false
   ) :: Void
@@ -103,7 +116,7 @@
 }
 
 @doc(
-  annot.macro 'DC.CopyStyle'
+  annot.macro 'DC.BitmapOverlay'
 ){
 
  Satisfied by the following symbols:
@@ -112,6 +125,20 @@
   @item{@rhombus(#'solid)}  
   @item{@rhombus(#'opaque)}
   @item{@rhombus(#'xor)}
+)
+
+}
+
+@doc(
+  annot.macro 'DC.TextCombine'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+  @item{@rhombus(#'kern)}  
+  @item{@rhombus(#'grapheme)}
+  @item{@rhombus(#'char)}
 )
 
 }
