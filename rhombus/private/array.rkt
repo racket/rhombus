@@ -14,12 +14,16 @@
          "function-arity-key.rkt"
          "composite.rkt"
          "name-root.rkt"
-         "dot-parse.rkt")
+         "dot-parse.rkt"
+         "reducer.rkt"
+         "parens.rkt"
+         "parse.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
                       rhombus/bind
-                      rhombus/annot)
+                      rhombus/annot
+                      rhombus/reducer)
                      Array))
 
 (module+ for-builtin
@@ -57,7 +61,36 @@
     #`((#%ref-result #,(car static-infoss)))))
 
 (define-static-info-syntax vector
-  (#%call-result #,array-static-infos))
+  (#%call-result #,array-static-infos)
+  (#%function-arity -1))
+
+(define-reducer-syntax Array
+  (reducer-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ #:length e ...+)
+        #`[(array-reduce-wrap
+            dest
+            (rhombus-expression (group e ...)))
+           ([i 0])
+           ((lambda (v) (vector-set! dest i v) (add1 i)))
+           #,array-static-infos]]
+       [(_)
+        #`[(reverse-list->vector)
+           ([accum null])
+           ((lambda (v) (cons v accum)))
+           #,array-static-infos]]))))
+
+(define (reverse-list->vector l)
+  (list->vector (reverse l)))
+
+(define-syntax array-reduce-wrap
+  (lambda (stx)
+    (syntax-parse stx
+      [(_ dest-id len-expr body)
+       #'(let ([dest-id (make-vector len-expr)])
+           body
+           dest-id)])))
 
 (define-syntax array-instance
   (dot-provider-more-static
@@ -74,7 +107,7 @@
    'macro
    (lambda (stx)
      (syntax-parse stx
-       [(form-id ((~and tag (~datum parens)) arg ...) . tail)
+       [(form-id (tag::parens arg ...) . tail)
         (define args (syntax->list #'(arg ...)))
         (define len (length args))
         (define pred #`(lambda (v)

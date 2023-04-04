@@ -35,10 +35,10 @@
      (syntax-parse stx
        #:datum-literals (group op)
        [(_ (parens (group id:identifier _::equal rhs ...) ...))
-        #'[begin
-            ([id (rhombus-expression (group rhs ...))] ...)
-            (begin)
-            ()]]))))
+        #'[(begin)
+           ([id (rhombus-expression (group rhs ...))] ...)
+           (begin)
+           ()]]))))
 
 (define-static-info-syntax values
   (#%function-arity -1))

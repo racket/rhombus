@@ -154,7 +154,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[set
+        #`[(set)
            ([ht #hashalw()])
            ((lambda (v) (hash-set ht v #t)))
            #,set-static-info]]))))

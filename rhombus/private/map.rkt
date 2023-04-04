@@ -241,7 +241,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[begin
+        #`[(begin)
            ([ht #hashalw()])
            (add-to-map ht)
            #,map-static-info]]))))

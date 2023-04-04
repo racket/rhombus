@@ -50,6 +50,9 @@
 (module+ for-compound-repetition
   (provide (for-syntax list-static-infos)))
 
+(module+ normal-call
+  (provide (for-syntax normal-call?)))
+
 (define list-method-table
   (hash 'length (method1 length)
         'first car
@@ -110,10 +113,6 @@
    ;; avoid a `list?` check in `apply`, and we can expose more static
    ;; information this way
    (lambda (stx)
-     (define (normal-call? tag)
-       (define id (datum->syntax tag '#%call))
-       (or (free-identifier=? #%call-id id)
-           (free-identifier=? static-#%call-id id)))
      (syntax-parse stx
        #:datum-literals (parens group op)
        [(form-id (tag::parens _ ... _ (group _::...-expr)) . tail)
@@ -211,7 +210,7 @@
    (lambda (stx)
      (syntax-parse stx
        [(_)
-        #`[reverse
+        #`[(reverse)
            ([accum null])
            ((lambda (v) (cons v accum)))
            #,list-static-infos]]))))
@@ -411,4 +410,8 @@
   (define static-#%call-id #f)
   (define (set-#%call-ids! id static-id)
     (set! #%call-id id)
-    (set! static-#%call-id static-id)))
+    (set! static-#%call-id static-id))
+  (define (normal-call? tag)
+    (define id (datum->syntax tag '#%call))
+    (or (free-identifier=? #%call-id id)
+        (free-identifier=? static-#%call-id id))))

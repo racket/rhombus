@@ -58,6 +58,22 @@ it supplies its elements in order.
 }
 
 @doc(
+  reducer.macro 'Array'
+  reducer.macro 'Array ~length $expr'
+){
+
+ A @tech{reducer} used with @rhombus(for), accumulates each result of a
+ @rhombus(for) body into a result array.
+
+ When a @rhombus(~length) clause is provided, an array of the specified
+ length is created and mutated by iterations of the @rhombus(for) body.
+ Iterations more than the specified length will trigger an exception,
+ while iterations fewer than the length will leave @rhombus(0) values in
+ the array.
+
+}
+
+@doc(
   fun Array.make(length :: Int, val = 0) :: Array
 ){
 

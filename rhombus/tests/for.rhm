@@ -153,3 +153,21 @@ check:
     each key: {3, 4}
     values(key, key+1)
   ~is {3: 4, 4: 5}
+
+check:
+  for Array:
+    each i: 3..7
+    i
+  ~prints_like Array(3, 4, 5, 6)
+
+check:
+  for Array ~length 6:
+    each i: 3..7
+    i
+  ~prints_like Array(3, 4, 5, 6, 0, 0)
+
+check:
+  for Array ~length 2:
+    each i: 3..7
+    i
+  ~raises "index is out of range"
