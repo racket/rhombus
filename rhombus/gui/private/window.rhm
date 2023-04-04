@@ -17,7 +17,6 @@ import:
 
 export:
   Window
-  WindowStyleSymbol
 
 class Window(hand):
   implements WindowView
@@ -31,7 +30,7 @@ class Window(hand):
                ~position: position :: MaybeObs.of(Position) = #'center,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-               ~style: style :: MaybeObs.of(List.of(WindowStyleSymbol)) = [],
+               ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
                ~mixin: mix :: Function = values,
                child :: View,
                ...):
@@ -46,13 +45,16 @@ class Window(hand):
                         child.handle,
                         ...))
 
-symbol_map_annot WindowStyleSymbol convert_style:
-  { no_resize_border: #{no-resize-border},
-    no_caption: #{no-caption},
-    no_system_menu: #{no-system-menu},
-    hide_menu_bar: #{hide-menu-bar},
-    toolbar_button: #{toolbar-button},
-    float: float,
-    metal: metal,
-    fullscreen_button: #{fullscreen-button},
-    fullscreen_aux: #{fullscreen-aux} }
+  export:
+    StyleSymbol  
+
+  symbol_map_annot StyleSymbol convert_style:
+    { no_resize_border: #{no-resize-border},
+      no_caption: #{no-caption},
+      no_system_menu: #{no-system-menu},
+      hide_menu_bar: #{hide-menu-bar},
+      toolbar_button: #{toolbar-button},
+      float: float,
+      metal: metal,
+      fullscreen_button: #{fullscreen-button},
+      fullscreen_aux: #{fullscreen-aux} }

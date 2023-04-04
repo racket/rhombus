@@ -10,7 +10,7 @@
                  draw :: Function,
                  ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas",
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(CanvasStyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -33,7 +33,7 @@
 }
 
 @doc(
-  annot.macro 'CanvasStyleSymbol'
+  annot.macro 'Canvas.StyleSymbol'
 ){
 
  Satisfied by the following symbols:

@@ -15,7 +15,6 @@ import:
 
 export:
   Button
-  ButtonStyleSymbol
 
 class Button(hand):
   implements View
@@ -25,10 +24,10 @@ class Button(hand):
 
   constructor (label :: MaybeObs.of(LabelString || Bitmap || matching([_ :: Bitmap,
                                                                        _ :: LabelString,
-                                                                       _ :: LabelPosition])),
+                                                                       _ :: Button.LabelPosition])),
                action :: Function,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~style: style :: MaybeObs.of(List.of(ButtonStyleSymbol)) = [],
+               ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
@@ -39,19 +38,22 @@ class Button(hand):
                         ~margin: margin,
                         #{#:min-size}: min_size,
                         ~stretch: stretch))
+  export:
+    StyleSymbol
+    LabelPosition
 
-symbol_map_annot LabelPosition convert_label_pos:
-  { left: left,
-    top: top,
-    right: right,
-    bottom: bottom }
+  symbol_map_annot StyleSymbol convert_style:
+    { border: border,
+      multi_line: #{multi-line},
+      deleted: deleted }
+
+  symbol_map_annot LabelPosition convert_label_pos:
+    { left: left,
+      top: top,
+      right: right,
+      bottom: bottom }
 
 fun
 | unwrap_bitmap(b :: Bitmap): b.handle
 | unwrap_bitmap([b :: Bitmap, l, pos]): [b.handle, l, pos]
 | unwrap_bitmap(v): v
-
-symbol_map_annot ButtonStyleSymbol convert_style:
-  { border: border,
-    multi_line: #{multi-line},
-    deleted: deleted }

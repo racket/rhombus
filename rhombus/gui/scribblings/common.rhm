@@ -4,6 +4,7 @@ import:
   meta_label:
     rhombus open
     rhombus/gui open
+    rhombus/draw open
     lib("racket/gui/easy.rkt") open:
       except:
         render
@@ -12,4 +13,5 @@ export:
   meta_label:
     all_from(rhombus)
     all_from(rhombus/gui)
+    all_from(rhombus/draw)
     all_from(lib("racket/gui/easy.rkt"))

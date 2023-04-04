@@ -15,7 +15,6 @@ import:
 
 export:
   Canvas
-  CanvasStyleSymbol
 
 class Canvas(hand):
   implements View
@@ -27,7 +26,7 @@ class Canvas(hand):
                draw :: Function,
                ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas", // should be `#false`?
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~style: style :: MaybeObs.of(List.of(CanvasStyleSymbol)) = [],
+               ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -42,15 +41,18 @@ class Canvas(hand):
                         ~stretch: stretch,
                         ~mixin: mix))
 
-symbol_map_annot CanvasStyleSymbol convert_style:
-  { border: boder,
-    control_border: #{control-border},
-    combo: combo,
-    vscroll: vscroll,
-    hscroll: hscroll,
-    resize_corner: #{resize-corner},
-    gl: gl,
-    no_autoclear: #{no-autoclear},
-    transparent: transparent,
-    no_focus: #{no-focus},
-    deleted: deleted }
+  export:
+    StyleSymbol
+
+  symbol_map_annot StyleSymbol convert_style:
+    { border: boder,
+      control_border: #{control-border},
+      combo: combo,
+      vscroll: vscroll,
+      hscroll: hscroll,
+      resize_corner: #{resize-corner},
+      gl: gl,
+      no_autoclear: #{no-autoclear},
+      transparent: transparent,
+      no_focus: #{no-focus},
+      deleted: deleted }

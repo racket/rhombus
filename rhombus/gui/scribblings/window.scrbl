@@ -12,7 +12,7 @@
                  ~position: position :: MaybeObs.of(Position) = #'center,
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 ~style: style :: MaybeObs.of(List.of(WindowStyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
                  ~mixin: mix :: Function = values,
                  child :: View,
                  ...)
@@ -24,7 +24,7 @@
 }
 
 @doc(
-  annot.macro 'WindowStyleSymbol'
+  annot.macro 'Window.StyleSymbol'
 ){
 
  Satisfied by the following symbols:

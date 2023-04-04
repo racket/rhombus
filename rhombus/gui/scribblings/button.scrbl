@@ -10,10 +10,10 @@
                                         || Bitmap
                                         || matching([_ :: Bitmap,
                                                      _ :: LabelString,
-                                                     _ :: LabelPosition])),
+                                                     _ :: Button.LabelPosition])),
                  action :: Function,
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~style: style :: MaybeObs.of(List.of(ButtonStyleSymbol)) = [],
+                 ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
@@ -25,7 +25,7 @@
 }
 
 @doc(
-  annot.macro 'ButtonStyleSymbol'
+  annot.macro 'Button.StyleSymbol'
 ){
 
  Satisfied by the following symbols:
@@ -35,6 +35,23 @@
  @item{@rhombus(#'border)}
  @item{@rhombus(#'multi_line)} 
  @item{@rhombus(#'deleted)}
+
+)
+
+}
+
+@doc(
+  annot.macro 'Button.LabelPosition'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+
+ @item{@rhombus(#'left)}
+ @item{@rhombus(#'top)} 
+ @item{@rhombus(#'right)}
+ @item{@rhombus(#'bottom)}
 
 )
 
