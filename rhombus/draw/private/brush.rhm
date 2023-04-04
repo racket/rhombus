@@ -2,32 +2,46 @@
 import:
   "rkt.rhm"
   "color.rhm".Color
+  "color.rhm"!private._Color
   "symbol_map.rhm":
     expose: symbol_map_annot
             symbol_set_annot
+  "bitmap-interface.rhm".BitmapForward as Bitmap
+  "bitmap-interface.rhm".BitmapPrivate
 
 export:
   Brush
 
-class Brush(handle):
+class Brush(handle, private saved_stipple):
   internal _Brush
   opaque
   constructor (~color: color :: (String || Color) = "Black",
-               ~style: style :: BrushStyle = #'solid):
-    _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(color, style_convert(style)))
+               ~style: style :: Brush.Style = #'solid,
+               ~stipple: stipple :: Maybe(Bitmap) = #false):
+    if stipple
+    | _Brush(rkt.make_object(rkt.#{brush%}, color, style_convert(style),
+                             (stipple :: BitmapPrivate).get_handle()),
+             stipple)
+    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(color, style_convert(style)),
+             #false)
+  property color :: Color: _Color(rkt.send handle.#{get-color}())
+  property style: style_unconvert(rkt.send handle.#{get-width}())
+  property stipple :: Maybe(Bitmap): saved_stipple
 
+  export:
+    Style
 
-symbol_map_annot BrushStyle style_convert:
-  { transparent: transparent,
-    solid: solid,
-    opaque: opaque,
-    xor: xor,
-    hilite: hilite,
-    panel: panel,
-    bdiagonal_hatch: #{bdiagonal-hatch},
-    crossdiag_hatch: #{crossdiag-hatch},
-    fdiagonal_hatch: #{fdiagonal-hatch},
-    cross_hatch: #{cross-hatch},
-    horizontal_hatch: #{horizontal-hatch},
-    vertical_hatch: #{vertical-hatch} }
+  symbol_map_annot Style style_convert style_unconvert:
+    { transparent: transparent,
+      solid: solid,
+      opaque: opaque,
+      xor: xor,
+      hilite: hilite,
+      panel: panel,
+      bdiagonal_hatch: #{bdiagonal-hatch},
+      crossdiag_hatch: #{crossdiag-hatch},
+      fdiagonal_hatch: #{fdiagonal-hatch},
+      cross_hatch: #{cross-hatch},
+      horizontal_hatch: #{horizontal-hatch},
+      vertical_hatch: #{vertical-hatch} }
                          

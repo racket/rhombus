@@ -9,7 +9,7 @@ import:
       Size
       Stretch
   "view.rhm".View
-  rhombus/draw/private/dc.CanvasDC
+  rhombus/draw/private/dc!internal.CanvasDC
   "obs.rhm":
     expose: MaybeObs
 

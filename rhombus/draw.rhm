@@ -1,12 +1,14 @@
 #lang rhombus
 import:
+  "draw/private/color.rhm"
   "draw/private/pen.rhm"
   "draw/private/brush.rhm"
   "draw/private/dc.rhm"
   "draw/private/bitmap.rhm"
 
 export:
-  pen.Pen
-  brush.Brush
-  dc.DC
-  bitmap.Bitmap bitmap.BitmapDC
+  all_from(.color)
+  all_from(.pen)
+  all_from(.brush)
+  all_from(.dc)
+  bitmap.Bitmap

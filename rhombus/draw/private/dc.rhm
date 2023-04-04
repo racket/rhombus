@@ -9,11 +9,11 @@ import:
 
 export:
   DC
-  CanvasDC
 
 submodule internal:
   export:
     DCer
+    CanvasDC
 
 interface DCer:
   internal _DCer
@@ -49,8 +49,7 @@ interface DC:
     
   method draw_lines([[x :: Real, y :: Real], ...],
                     ~dx: dx :: Real = 0.0,
-                    ~dy: dy :: Real = 0.0,
-                    x2 :: Real, y2 :: Real):
+                    ~dy: dy :: Real = 0.0):
     rkt.send get_dc().#{draw-lines}([Pair(x, y), ...], dx, dy)
 
   method draw_rectangle(x :: Real, y :: Real,
@@ -72,7 +71,7 @@ interface DC:
                      ~source_y: source_y :: Real = 0,
                      ~source_width: source_width :: Real.at_least(0.0) = b.width,
                      ~source_height: source_height :: Real.at_least(0.0) = b.height,
-                     ~style: style :: CopyStyle = #'solid,
+                     ~style: style :: DC.CopyStyle = #'solid,
                      ~color: color :: Color = Color("black"),
                      ~mask: mask :: Maybe(Bitmap) = #false):
     rkt.send get_dc().#{draw-bitmap-section}(b.get_handle(), x, y,
@@ -81,8 +80,11 @@ interface DC:
                                              style, color.handle, mask)
     #void
 
-symbol_set_annot CopyStyle:
-  { solid, opaque, xor }
+  export:
+    CopyStyle
+
+  symbol_set_annot CopyStyle:
+    { solid, opaque, xor }
 
 class CanvasDC(handle):
   implements DC

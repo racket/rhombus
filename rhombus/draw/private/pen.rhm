@@ -7,6 +7,7 @@ import:
     expose: symbol_map_annot
             symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
+  "bitmap-interface.rhm".BitmapPrivate
 
 export:
   Pen
@@ -16,38 +17,44 @@ class Pen(handle, private saved_stipple):
   opaque
   constructor (~color: color :: (String || Color) = "Black",
                ~width: width :: Real.in(0, 255) = 1,
-               ~style: style :: PenStyle = #'solid,
-               ~cap: cap :: PenCap = #'round,
-               ~join: join :: PenJoin = #'round,
+               ~style: style :: Pen.Style = #'solid,
+               ~cap: cap :: Pen.Cap = #'round,
+               ~join: join :: Pen.Join = #'round,
                ~stipple: stipple :: Maybe(Bitmap) = #false):
     if stipple
-    | _Pen(rkt.make_object(rkt.#{pen%}, color, width, style_convert(style), cap, join, stipple),
+    | _Pen(rkt.make_object(rkt.#{pen%}, color, width, style_convert(style), cap, join,
+                           (stipple :: BitmapPrivate).get_handle()),
            stipple)
     | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(color, width, style_convert(style), cap, join),
            #false)
   property color :: Color: _Color(rkt.send handle.#{get-color}())
-  property width: _Color(rkt.send handle.#{get-width}())
+  property width: rkt.send handle.#{get-width}()
   property style: style_unconvert(rkt.send handle.#{get-width}())
   property cap: rkt.send handle.#{get-cap}()
   property join: rkt.send handle.#{get-join}()
   property stipple :: Maybe(Bitmap): saved_stipple
 
-symbol_map_annot PenStyle style_convert style_unconvert:
-  { transparent: transparent,
-    solid: solid,
-    xor: xor,
-    hilite: hilite,
-    dot: dot,
-    long_dash: #{long-dash},
-    show_dash: #{short-dash},
-    dot_dash: #{dot-dash},
-    xor_dot: #{xor-dot},
-    xor_long_dot: #{xor-long-dash},
-    xor_short_dot: #{xor-short-dash},
-    xor_dot_dash: #{xor-dot-dash} }
+  export:
+    Style
+    Cap
+    Join
 
-symbol_set_annot PenCap:
-  { round, projecting, butt}
+  symbol_map_annot Style style_convert style_unconvert:
+    { transparent: transparent,
+      solid: solid,
+      xor: xor,
+      hilite: hilite,
+      dot: dot,
+      long_dash: #{long-dash},
+      show_dash: #{short-dash},
+      dot_dash: #{dot-dash},
+      xor_dot: #{xor-dot},
+      xor_long_dot: #{xor-long-dash},
+      xor_short_dot: #{xor-short-dash},
+      xor_dot_dash: #{xor-dot-dash} }
 
-symbol_set_annot PenJoin:
-  { round, bevel, miter }
+  symbol_set_annot Cap:
+    { round, projecting, butt}
+
+  symbol_set_annot Join:
+    { round, bevel, miter }

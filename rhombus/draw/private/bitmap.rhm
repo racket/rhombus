@@ -28,7 +28,7 @@ class Bitmap(handle):
 
   constructor (width :: PosInt,
                height :: PosInt,
-               ~backing_scale: backing_space :: Real.at_least(0.0) = 1,
+               ~backing_scale: backing_space :: Real.above(0.0) = 1,
                ~has_color = #true,
                ~has_alpha = #true):
     _Bitmap(rkt.make_object(rkt.#{bitmap%},
