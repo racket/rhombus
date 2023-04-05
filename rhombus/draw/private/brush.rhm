@@ -3,6 +3,7 @@ import:
   "rkt.rhm"
   "color.rhm".Color
   "color.rhm"!private._Color
+  "color.rhm"!private.unwrap_color
   "symbol_map.rhm":
     expose: symbol_map_annot
             symbol_set_annot
@@ -23,10 +24,10 @@ class Brush(handle, private saved_stipple):
                ~style: style :: Brush.Style = default(like.style, #'solid),
                ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
-    | _Brush(rkt.make_object(rkt.#{brush%}, color, style_convert(style),
+    | _Brush(rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
                              (stipple :: BitmapPrivate).get_handle()),
              stipple)
-    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(color, style_convert(style)),
+    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)),
              #false)
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property style: style_unconvert(rkt.send handle.#{get-width}())

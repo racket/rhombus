@@ -3,6 +3,7 @@ import:
   "rkt.rhm"
   "color.rhm".Color
   "color.rhm"!private._Color
+  "color.rhm"!private.unwrap_color
   "symbol_map.rhm":
     expose: symbol_map_annot
             symbol_set_annot
@@ -26,10 +27,10 @@ class Pen(handle, private saved_stipple):
                ~join: join :: Pen.Join = default(like.join, #'round),
                ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
-    | _Pen(rkt.make_object(rkt.#{pen%}, color, width, style_convert(style), cap, join,
+    | _Pen(rkt.make_object(rkt.#{pen%}, unwrap_color(color), width, style_convert(style), cap, join,
                            (stipple :: BitmapPrivate).get_handle()),
            stipple)
-    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(color, width, style_convert(style), cap, join),
+    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(unwrap_color(color), width, style_convert(style), cap, join),
            #false)
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property width: rkt.send handle.#{get-width}()
