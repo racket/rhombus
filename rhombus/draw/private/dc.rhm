@@ -24,6 +24,14 @@ interface DC:
   private method get_dc():
     (this :: _DCer).dc
 
+  property size :: matching([_ :: Real.at_least(0.0),
+                             _ :: Real.at_least(0.0)]):
+    def (w, h) = rkt.send get_dc().#{get-size}()
+    [w, h]
+
+  property width: size[0]
+  property height: size[0]
+
   method clear():
     rkt.send get_dc().clear()
 

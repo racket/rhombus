@@ -72,7 +72,7 @@ class Obs(handle):
           of
 
 fun combine(f :: Function, obs :: Obs, ...) :: Obs:
-  _Obs(easy.#{obs-combine}(f, obs, ...))
+  _Obs(easy.#{obs-combine}(f, obs.handle, ...))
 
 fun
 | unwrap(o :: Obs): o.handle

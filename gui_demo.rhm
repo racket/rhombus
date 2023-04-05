@@ -1,0 +1,59 @@
+#lang rhombus/static
+import:
+  rhombus/draw
+  rhombus/gui
+
+fun draw_face(dc :: draw.DC, config :: Map):
+  def [w, h] = dc.size
+  def s = math.max(10, math.min(w, h) - 20)
+  def x = (w-s)/2
+  def y = (h-s)/2
+  def π = math.atan(0, -1)
+
+  dc.set_pen(draw.Pen(~style: #'transparent))
+  dc.set_brush(draw.Brush(~color: "orange"))
+  dc.draw_ellipse(x, y, s, s)
+
+  dc.set_pen(draw.Pen(~color: "Black"))
+  dc.set_brush(draw.Brush(~style: #'transparent))
+  if config["mood"] == "Happy"
+  | dc.draw_arc(x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s, π * -3/4, π * -1/4)
+  | dc.draw_arc(x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s, π * 1/4, π * 3/4)
+
+  when config["eyes"]
+  | dc.set_pen(draw.Pen(~style: #'transparent))
+    dc.set_brush(draw.Brush(~color: "black"))
+    dc.draw_ellipse(x+0.3*s, y+0.3*s, 0.1*s, 0.1*s)
+    dc.draw_ellipse(x+0.6*s, y+0.3*s, 0.1*s, 0.1*s)
+
+def tabs:
+  def tab_e = gui.Obs("Happy")
+  def eyes_e = gui.Obs(#true)
+
+  def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine(fun (tab, eyes):
+                                                       { "mood": tab,
+                                                         "eyes": eyes },
+                                                     tab_e,
+                                                     eyes_e),
+                                     draw_face),
+                          gui.Checkbox(fun (on): eyes_e.update(fun (_): on),
+                                       ~is_checked: eyes_e,
+                                       ~label: "Eyes"))
+
+  def happy_button = gui.Button("Be Happy",
+                                fun ():
+                                  tab_e.update(fun (v): "Happy"),
+                                ~stretch: [#false, #false])
+
+  gui.TabsPanel(["Happy", "Sad"],
+                fun (what, choices, selected):
+                  tab_e.update(fun (v): selected),
+                ~selection: tab_e,
+                gui.ListPanel(tab_e.map(fun (v):
+                                          match v
+                                          | "Happy": [canvas]
+                                          | ~else [canvas, happy_button]),
+                              fun (view, view_e): view))
+
+gui.render(gui.Window(tabs,
+                      ~size: [800, 600]))

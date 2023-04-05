@@ -15,6 +15,17 @@
 }
 
 @doc(
+  property DC.width(dc :: DC) :: Real.at_least(0.0)
+  property DC.height(dc :: DC) :: Real.at_least(0.0)
+  property DC.size(dc :: DC) :: matching([_ :: Real.at_least(0.0),
+                                          _ :: Real.at_least(0.0)])
+){
+
+ The size of the drawing area: width, height, or both.
+
+}
+
+@doc(
   method DC.clear(dc :: DC) :: Void
 ){
 
