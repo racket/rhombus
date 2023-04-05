@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Renderer}
+@title{Renderers}
 
 @doc(
   annot.macro 'Renderer'

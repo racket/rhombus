@@ -5,6 +5,7 @@ import:
 export:
   Obs
   MaybeObs
+  _Obs
   unwrap
   unwrap_list
   unwrap_convert
@@ -37,11 +38,11 @@ class Obs(handle):
   constructor (v,
                ~name: name :: String = anon_str,
                ~is_derived = #false):
-    _Obs(easy.obs(v,
-                  ~name: (if name === anon_str
-                          | #'anon
-                          | Symbol.from_string(name)),
-                  #{#:derived?}: is_derived))
+    super(easy.obs(v,
+                   ~name: (if name === anon_str
+                           | #'anon
+                           | Symbol.from_string(name)),
+                   #{#:derived?}: is_derived))
 
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))

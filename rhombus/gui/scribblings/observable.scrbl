@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Observable}
+@title{Observables}
 
 @doc(
   class Obs(handle):

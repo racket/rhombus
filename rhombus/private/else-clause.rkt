@@ -14,4 +14,4 @@
     (pattern (_::block (group #:else (tag::block else-rhs ...)))
              #:attr parsed #'(rhombus-body-at tag else-rhs ...))
     (pattern (_::block (group #:else else-rhs ...+))
-             #:attr parsed #'(rhombus-expression else-rhs ...))))
+             #:attr parsed #'(rhombus-expression (group else-rhs ...)))))

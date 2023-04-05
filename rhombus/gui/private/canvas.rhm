@@ -31,15 +31,15 @@ class Canvas(hand):
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                ~mixin: mix :: Function = values):
-    _Canvas(easy.canvas(obs.unwrap(data),
-                        fun(dc, data): draw(CanvasDC(dc), data),
-                        ~label: obs.unwrap(label),
-                        #{#:enabled?}: obs.unwrap(is_enabled),
-                        ~style: obs.unwrap_list(style, convert_style),
-                        ~margin: margin,
-                        #{#:min-size}: min_size,
-                        ~stretch: stretch,
-                        ~mixin: mix))
+    super(easy.canvas(obs.unwrap(data),
+                      fun(dc, data): draw(CanvasDC(dc), data),
+                      ~label: obs.unwrap(label),
+                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~style: obs.unwrap_list(style, convert_style),
+                      ~margin: obs.unwrap(margin),
+                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~stretch: obs.unwrap_list(stretch, values),
+                      ~mixin: mix))
 
   export:
     StyleSymbol

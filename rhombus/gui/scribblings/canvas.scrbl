@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Canvas}
+@title{Canvases}
 
 @doc(
   class Canvas():

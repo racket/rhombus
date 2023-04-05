@@ -1,5 +1,15 @@
 #lang rhombus/static/and_meta
 
+import:
+  lib("racket/gui/easy.rkt"):
+    expose:
+      #{if-view}
+      #{cond-view}
+      #{case-view}
+  lib("racket/base.rkt").else
+  "obs.rhm"
+  rhombus
+
 export:
   View
   WindowView
@@ -7,5 +17,42 @@ export:
 interface View:
   property handle
 
+  export:
+    if
+    cond
+
+  expr.macro 'if $test | $then | $else':
+    'AView($(expr_meta.pack_s_exp(['#{if-view}',
+                                   expr_meta.pack_expr('obs.unwrap(block: $test)'),
+                                   expr_meta.pack_expr('unwrap_view(block: $then)'),
+                                   expr_meta.pack_expr('unwrap_view(block: $else)')])))'
+
+  expr.macro
+  | 'cond
+     | $ques ...: $ans
+     | ...
+     | ~else: $else_ans':
+      'AView($(expr_meta.pack_s_exp(['#{cond-view}',
+                                     [expr_meta.pack_expr('obs.unwrap($ques ...)'),                                    
+                                      expr_meta.pack_expr('unwrap_view(block: $ans)')],
+                                     ...,
+                                     ['else',
+                                      expr_meta.pack_expr('unwrap_view(block: $else_ans)')]])))'
+  | 'cond
+     | $ques ...: $ans
+     | ...
+     | ~else $else':
+      'cond
+       | $ques ...: $ans
+       | ...
+       | ~else: $else'     
+
 interface WindowView:
   extends View
+
+fun unwrap_view(v :: View): v.handle
+
+class AView(hand):
+  implements View
+  opaque
+  override property handle: hand

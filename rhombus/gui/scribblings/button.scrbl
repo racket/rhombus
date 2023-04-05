@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Button}
+@title{Buttons}
 
 @doc(
   class Button():

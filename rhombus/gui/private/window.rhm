@@ -34,16 +34,16 @@ class Window(hand):
                ~mixin: mix :: Function = values,
                child :: View,
                ...):
-    _Window(easy.window(~title: obs.unwrap(title),
-                        ~size: obs.unwrap(size),
-                        ~alignment: obs.unwrap(alignment),
-                        ~position: obs.unwrap(position),
-                        #{#:min-size}: obs.unwrap(min_size),
-                        ~stretch: obs.unwrap(stretch),
-                        ~style: obs.unwrap_list(style, convert_style),
-                        ~mixin: mix,
-                        child.handle,
-                        ...))
+    super(easy.window(~title: obs.unwrap(title),
+                      ~size: obs.unwrap(size),
+                      ~alignment: obs.unwrap(alignment),
+                      ~position: obs.unwrap(position),
+                      #{#:min-size}: obs.unwrap(min_size),
+                      ~stretch: obs.unwrap(stretch),
+                      ~style: obs.unwrap_list(style, convert_style),
+                      ~mixin: mix,
+                      child.handle,
+                      ...))
 
   export:
     StyleSymbol  

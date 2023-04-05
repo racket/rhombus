@@ -31,13 +31,14 @@ class Button(hand):
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
-    _Button(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
-                        action,
-                        #{#:enabled?}: is_enabled,
-                        ~style: style,
-                        ~margin: margin,
-                        #{#:min-size}: min_size,
-                        ~stretch: stretch))
+    super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
+                      action,
+                      #{#:enabled?}: is_enabled,
+                      ~style: style,
+                      ~margin: margin,
+                      #{#:min-size}: min_size,
+                      ~stretch: stretch))
+
   export:
     StyleSymbol
     LabelPosition
