@@ -20,7 +20,7 @@ normally bound to implement function calls.
 
 @doc(
   annot.macro 'Function'
-  annot.macro 'Function.of_arity($expr_or_keyword,, $expr_or_keyword, ...)'
+  annot.macro 'Function.of_arity($expr_or_keyword, $expr_or_keyword, ...)'
   grammar expr_or_keyword:
     $expr
     $keyword
