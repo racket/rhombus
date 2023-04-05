@@ -9,3 +9,17 @@ check:
   ~eval
   "a" :: PosInt . count()
   ~raises "operator precedence"
+
+check:
+  1 is_a Function ~is #false
+  1 is_a Function.of_arity(1) ~is #false
+  List is_a Function ~is #true
+  List is_a Function.of_arity(1) ~is #true
+  List is_a Function.of_arity(1, 2, 3) ~is #true
+  Pair is_a Function.of_arity(2) ~is #true
+  Pair is_a Function.of_arity(1, 2) ~is #false
+  (fun (x): #void) is_a Function.of_arity(1) ~is #true
+  (fun (x, ~y = 0): #void) is_a Function.of_arity(1) ~is #true
+  (fun (x, ~y): #void) is_a Function.of_arity(1) ~is #false
+  (fun (x, ~y = 0): #void) is_a Function.of_arity(1, ~y) ~is #true
+  (fun (x, ~y): #void) is_a Function.of_arity(1, ~y) ~is #true

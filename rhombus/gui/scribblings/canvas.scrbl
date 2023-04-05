@@ -7,7 +7,7 @@
   class Canvas():
     implements View
     constructor (data :: MaybeObs.of(Any),
-                 draw :: Function,
+                 draw :: Function.of_arity(2),
                  ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas",
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],

@@ -26,7 +26,7 @@
 }
 
 @doc(
-  method Obs.observe(obs :: Obs, f :: Function)
+  method Obs.observe(obs :: Obs, f :: Function.of_arity(1))
 ){
 
  Adds @rhombus(f) as a function to be called when the value of
@@ -35,7 +35,7 @@
 }
 
 @doc(
-  method Obs.unobserve(obs :: Obs, f :: Function)
+  method Obs.unobserve(obs :: Obs, f :: Function.of_arity(1))
 ){
 
  Removes @rhombus(f) as a function to be called when the value of
@@ -44,7 +44,7 @@
 }
 
 @doc(
-  method Obs.update(obs :: Obs, f :: Function)
+  method Obs.update(obs :: Obs, f :: Function.of_arity(1))
 ){
 
  Changes the value @rhombus(v, ~var) of @rhombus(obs) to
@@ -69,7 +69,7 @@
 }
 
 @doc(
-  method Obs.map(obs :: Obs, f :: Function) :: Obs
+  method Obs.map(obs :: Obs, f :: Function.of_arity(1)) :: Obs
 ){
 
  Returns an observer whose value changes each time that @rhombus(obs)'s

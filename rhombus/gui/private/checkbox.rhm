@@ -1,0 +1,27 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  "view.rhm".View
+  "obs.rhm":
+    expose: MaybeObs
+  "type.rhm":
+    expose:
+      LabelString
+
+export:
+  Checkbox
+
+class Checkbox(hand):
+  implements View
+  internal _Checkbox
+  opaque
+  override property handle: hand
+
+  constructor (action :: Function.of_arity(1),
+               ~label: label :: MaybeObs.of(LabelString),
+               ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true):
+    super(easy.checkbox(action,
+                        ~label: obs.unwrap(label),
+                        #{#:enabled?}: obs.unwrap(is_enabled),
+                        #{#:checked?}: obs.unwrap(is_checked)))

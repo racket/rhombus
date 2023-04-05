@@ -20,9 +20,30 @@ normally bound to implement function calls.
 
 @doc(
   annot.macro 'Function'
+  annot.macro 'Function.of_arity($expr_or_keyword,, $expr_or_keyword, ...)'
+  grammar expr_or_keyword:
+    $expr
+    $keyword
 ){
 
- Matches any function.
+ The @rhombus(Function, ~annot) annotation matches any function.
+
+ The @rhombus(Function.of_arity, ~annot) variant requires that each
+ @rhombus(expr) produces a nonnegative integer, and then function must
+ accept that many by-position arguments. The function must require only
+ keywords that are provided as @rhombus(keyword)s, and it must accept all
+ @rhombus(keyword)s that are listed. Each @rhombus(keyword) must be
+ distinct.
+
+@examples(
+  math.cos is_a Function
+  math.cos is_a Function.of_arity(1)
+  math.atan is_a Function.of_arity(1, 2)
+  (fun (x, ~y): #void) is_a Function.of_arity(1, ~y)
+  (fun (x, ~y): #void) is_a Function.of_arity(1)
+  (fun (x, ~y = 0): #void) is_a Function.of_arity(1)
+  (fun (x, ~y = 0): #void) is_a Function.of_arity(1, ~y, ~z)
+)
 
 }
 

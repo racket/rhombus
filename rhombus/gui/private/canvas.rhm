@@ -23,7 +23,7 @@ class Canvas(hand):
   override property handle: hand
 
   constructor (data,
-               draw :: Function,
+               draw :: Function.of_arity(2),
                ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas", // should be `#false`?
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],

@@ -25,7 +25,7 @@ class Button(hand):
   constructor (label :: MaybeObs.of(LabelString || Bitmap || matching([_ :: Bitmap,
                                                                        _ :: LabelString,
                                                                        _ :: Button.LabelPosition])),
-               action :: Function,
+               action :: Function.of_arity(0),
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -33,11 +33,11 @@ class Button(hand):
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
     super(easy.button(obs.unwrap_convert(label, unwrap_bitmap),
                       action,
-                      #{#:enabled?}: is_enabled,
-                      ~style: style,
-                      ~margin: margin,
-                      #{#:min-size}: min_size,
-                      ~stretch: stretch))
+                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~style: obs.unwrap_list(style, convert_style),
+                      ~margin: obs.unwrap_list(margin, values),
+                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~stretch: obs.unwrap_list(stretch, values)))
 
   export:
     StyleSymbol

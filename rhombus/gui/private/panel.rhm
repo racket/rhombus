@@ -33,7 +33,7 @@ symbol_map_annot PanelStyleSymbol convert_style:
     hide_hscroll: #{hide-hscroll} }
 
 defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
-                            $(kw :: Keyword)  $easy_kw: $kw_arg :: $kw_arg_annot = $kw_default, ...):
+                            $(kw :: Keyword)  $easy_kw: $kw_arg :: $kw_arg_annot ... = $kw_default, ...):
               ~easy: $easy_name
               $body
               ...':
@@ -43,7 +43,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
      override property handle: hand
 
      constructor ($arg :: $arg_annot ..., ...,
-                  $kw: $kw_arg :: $kw_arg_annot = $kw_default, ...,
+                  $kw: $kw_arg :: $kw_arg_annot ... = $kw_default, ...,
                   ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                   ~style: style :: MaybeObs.of(List.of($(name).StyleSymbol)) = [],
                   ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
@@ -91,9 +91,9 @@ def_panel GroupPanel(label :: MaybeObs.of(LabelString) => (obs.unwrap)):
     { deleted: deleted }
 
 def_panel TabsPanel(choices :: MaybeObs.of(List) => (fun (v): obs.unwrap_list(v, values)),
-                    action :: Function => values,
-                    ~choice_to_label #{#:choice->label}: choice_to_label :: Function = values,
-                    ~choice_equal #{#:choice=?}: choice_equal :: Function = (fun (a, b): a == b)):
+                    action :: Function.of_arity(3) => values,
+                    ~choice_to_label #{#:choice->label}: choice_to_label :: Function.of_arity(1) = values,
+                    ~choice_equal #{#:choice=?}: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b)):
   ~easy: tabs
 
   export:
@@ -112,8 +112,8 @@ class ListPanel(hand):
   override property handle: hand
 
   constructor (children :: MaybeObs.of(List),
-               make_view :: Function,
-               ~key: key :: Function = values,
+               make_view :: Function.of_arity(2),
+               ~key: key :: Function.of_arity(1) = values,
                ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                ~style: style :: MaybeObs.of(List.of(ListPanel.StyleSymbol)) = [],
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,

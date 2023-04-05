@@ -1,7 +1,7 @@
 #lang scribble/rhombus/manual
 @(import: "common.rhm" open)
 
-@title{Buttons}
+@title{Controls}
 
 @doc(
   class Button():
@@ -11,7 +11,7 @@
                                         || matching([_ :: Bitmap,
                                                      _ :: LabelString,
                                                      _ :: Button.LabelPosition])),
-                 action :: Function,
+                 action :: Function.of_arity(0),
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -21,6 +21,22 @@
 
  Creates a button. When rendered, the function call @rhombus(action())
  is performed when the button is clicked.
+
+}
+
+@doc(
+  class Checkbox():
+    implements View
+    constructor (label :: MaybeObs.of(LabelString),
+                 action :: Function.of_arity(1),
+                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+                 ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false)
+){
+
+ Creates a checkbox. When rendered, the function call
+ @rhombus(action(#,(@rhombus(now_checked, ~var)))) is performed when the
+ checkbox is clicked, where @rhombus(now_checked, ~var) indicates the
+ state of the checkbox.
 
 }
 

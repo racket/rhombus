@@ -47,19 +47,19 @@ class Obs(handle):
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
 
-  method observe(f :: Function):
+  method observe(f :: Function.of_arity(1)):
     easy.#{obs-observe!}(handle, f)
 
-  method unobserve(f :: Function):
+  method unobserve(f :: Function.of_arity(1)):
     easy.#{obs-unobserve!}(handle, f)
 
-  method update(f :: Function):
+  method update(f :: Function.of_arity(1)):
     easy.#{obs-update!}(handle, f)
 
   method peek():
     easy.#{obs-peek}(handle)
 
-  method map(f :: Function) :: Obs:
+  method map(f :: Function.of_arity(1)) :: Obs:
     _Obs(easy.#{obs-map}(handle, f))
 
   method debounce(~duration: duration :: NonnegInt = 200) :: Obs:

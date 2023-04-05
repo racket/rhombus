@@ -22,7 +22,8 @@
          (submod "annotation.rkt" for-class)
          "dotted-sequence-parse.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "dot-parse.rkt")
+         "dot-parse.rkt"
+         "realm.rkt")
 
 (provide (for-spaces (#f
                       rhombus/entry_point)
@@ -39,7 +40,8 @@
 
 (define-name-root Function
   #:fields
-  (map))
+  (map
+   of_arity))
 
 (define function-method-table
   (hash 'map (lambda (f) (lambda lists (apply map f lists)))))
@@ -51,6 +53,66 @@
   (wrap-static-info* expr function-static-infos))
 
 (define-annotation-syntax Function (identifier-annotation #'procedure? function-static-infos))
+
+(define-annotation-syntax of_arity
+  (annotation-prefix-operator
+   (annot-quote of_arity)
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(_ (_::parens g ...+) . tail)
+        (with-syntax ([(kw ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
+                                           #:do [(define kw
+                                                   (syntax-parse g
+                                                     [(_ kw:keyword) #'kw]
+                                                     [_ #f]))]
+                                           #:when kw)
+                                  kw)]
+                      [(g ...) (for/list ([g (in-list (syntax->list #'(g ...)))]
+                                          #:unless (syntax-parse g
+                                                     [(_ _:keyword) #t]
+                                                     [_ #f]))
+                                 g)])
+          (with-syntax ([(kw-ok? kw-check) (let ([kws (syntax->list #'(kw ...))])
+                                             (cond
+                                               [(null? kws) #'(#f #t)]
+                                               [else
+                                                (for/fold ([ht #hasheq()]) ([kw-stx (in-list kws)])
+                                                  (define kw (syntax-e kw-stx))
+                                                  (when (hash-ref ht kw #f)
+                                                    (raise-syntax-error #f "duplicate keyword" kw #f))
+                                                  (hash-set ht kw #t))
+                                                #`(#t (accepts-keywords? v '#,(sort (map syntax-e kws) keyword<?)))]))]
+                        [(n ...) (generate-temporaries #'(g ...))])
+            (values (annotation-form #`(let ([n (check-nonneg-integer 'Function.of_arity (rhombus-expression g))]
+                                             ...)
+                                         (lambda (v)
+                                           (and (procedure? v)
+                                                (procedure-arity-includes? v n kw-ok?)
+                                                ...
+                                                kw-check)))
+                                     function-static-infos)
+                    #'tail)))]))))
+
+(define (check-nonneg-integer who v)
+  (unless (exact-nonnegative-integer? v)
+    (raise-argument-error* who rhombus-realm "NonnegInt" v))
+  v)
+
+(define (accepts-keywords? proc kws)
+  (define-values (req allow) (procedure-keywords proc))
+  (define (kw-subset big small)
+    (let loop ([big big] [small small])
+      (cond
+        [(null? small) #t]
+        [(null? big) #f]
+        [(eq? (car small) (car big)) (loop (cdr big) (cdr small))]
+        [(keyword<? (car small) (car big)) #f]
+        [else (loop (cdr big) small)])))
+  (and (or (not allow)
+           (kw-subset allow kws))
+       (kw-subset kws req)))
 
 (define-syntax function-instance
   (dot-provider-more-static

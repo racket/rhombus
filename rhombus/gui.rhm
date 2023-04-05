@@ -10,6 +10,7 @@ import:
   "gui/private/panel.rhm"
   "gui/private/canvas.rhm"
   "gui/private/button.rhm"
+  "gui/private/checkbox.rhm"
   "gui/private/type.rhm"
 
 export:
@@ -20,4 +21,5 @@ export:
   all_from(.panel)
   all_from(.canvas)
   all_from(.button)
+  all_from(.checkbox)
   all_from(.type)

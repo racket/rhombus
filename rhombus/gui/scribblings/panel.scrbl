@@ -56,9 +56,9 @@
   class TabsPanel():
     implements View
     constructor (choices :: MaybeObs.of(List),
-                 action :: Function,
-                 ~choice_to_label: choice_to_label :: Function = values,
-                 ~choice_equal: choice_equal :: Function = (fun (a, b): a == b),
+                 action :: Function.of_arity(3),
+                 ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+                 ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                  ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
@@ -100,8 +100,8 @@
   class ListPanel():
     implements View
     constructor (children :: MaybeObs.of(List),
-                 make :: Function,
-                 ~key: key :: Function = values,
+                 make :: Function.of_arity(2),
+                 ~key: key :: Function.of_arity(1) = values,
                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                  ~style: style :: MaybeObs.of(List.of(Group.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
