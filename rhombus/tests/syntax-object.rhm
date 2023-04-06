@@ -91,3 +91,13 @@ check:
 check:
   Syntax.unwrap_sequence('1')
   ~prints_like ['1']
+
+check:
+  match 'a: *'
+  | 'a: $b': b is_a Operator
+  ~is #true
+
+check:
+  match 'a: b'
+  | 'a: $b': b is_a Identifier
+  ~is #true

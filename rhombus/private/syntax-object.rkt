@@ -39,16 +39,20 @@
   (identifier-annotation #'syntax? syntax-static-infos))
 
 (define-annotation-syntax Identifier
-  (identifier-annotation #'identifier? syntax-static-infos))
+  (identifier-annotation #'is-identifier? syntax-static-infos))
+(define (is-identifier? s)
+  (and (syntax? s)
+       (identifier? (unpack-term s #f #f))))
 
 (define-annotation-syntax Operator
   (identifier-annotation #'is-operator? syntax-static-infos))
 (define (is-operator? s)
   (and (syntax? s)
-       (syntax-parse s
-         #:datum-literals (op)
-         [(op _) #t]
-         [_ #f])))
+       (let ([t (unpack-term s #f #f)])
+         (syntax-parse t
+           #:datum-literals (op)
+           [(op _) #t]
+           [_ #f]))))
 
 (define-name-root Syntax
   #:fields
