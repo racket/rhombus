@@ -53,12 +53,6 @@
 (module+ normal-call
   (provide (for-syntax normal-call?)))
 
-(define list-method-table
-  (hash 'length (method1 length)
-        'first car
-        'rest cdr
-        'reverse (method1 reverse)))
-
 (define-for-syntax list-static-infos
   #'((#%map-ref list-ref)
      (#%sequence-constructor in-list)
@@ -104,7 +98,8 @@
    iota
    [map List.map]
    repet
-   of))
+   of
+   [append List.append]))
 
 (define-syntax List
   (expression-transformer
@@ -256,6 +251,35 @@
 (define-static-info-syntax List.cons
   (#%call-result #,list-static-infos)
   (#%function-arity 4))
+
+(define List.append
+  (case-lambda
+    [() null]
+    [(a)
+     (unless (list? a) (raise-argument-error* 'List.append rhombus-realm "List" a))
+     a]
+    [(a b)
+     (cond
+       [(list? b) (append a b)]
+       [else
+        (unless (list? a) (raise-argument-error* 'List.append rhombus-realm "List" a))
+        (raise-argument-error* 'List.append rhombus-realm "List" b)])]
+    [ls
+     (if (list? (let loop ([ls ls]) (if (pair? (cdr ls)) (loop (cdr ls)) (car ls))))
+         (apply append ls)
+         (for ([l (in-list ls)])
+           (unless (list? l) (raise-argument-error* 'List.append rhombus-realm "List" l))))]))
+
+(define-static-info-syntax List.append
+  (#%call-result #,list-static-infos)
+  (#%function-arity -1))
+
+(define list-method-table
+  (hash 'length (method1 length)
+        'first car
+        'rest cdr
+        'reverse (method1 reverse)
+        'append (method* List.append)))
 
 (define-for-syntax (wrap-list-static-info expr)
   (wrap-static-info* expr list-static-infos))

@@ -27,6 +27,7 @@ it supplies its elements in order.
   [lst.first, List.first(lst)]
   [lst.rest, List.rest(lst)]
   [lst.reverse(), List.reverse(lst)]
+  [lst.append(lst2, ...), List.append(lst, lst2, ...)]
   [lst.map(func), List.map(lst, func)]
 )
 
@@ -235,6 +236,21 @@ it supplies its elements in order.
 )
 
 }
+
+
+@doc(
+  fun List.append(lst :: List, ...) :: List
+){
+
+ Appends the @rhombus(lst)s in order. See also @rhombus(++).
+
+@examples(
+  List.append([1, 2, 3], [4, 5], [6])
+  [1, 2, 3].append([4, 5], [6])
+)
+
+}
+
 
 @doc(
   fun List.map(args :: List, f :: Function) :: List,

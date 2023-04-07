@@ -7,7 +7,8 @@
          "static-info.rkt")
 
 (provide (for-syntax dot-parse-dispatch)
-         method1)
+         method1
+         method*)
 
 (define-for-syntax (dot-parse-dispatch k)
   (lambda (lhs dot-stx field-stx tail more-static? success-k fail-k)
@@ -59,3 +60,8 @@
   (lambda (v)
     (lambda ()
       (proc v))))
+
+(define (method* proc)
+  (lambda (v)
+    (lambda args
+      (apply proc v args))))

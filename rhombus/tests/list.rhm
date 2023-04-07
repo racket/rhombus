@@ -113,3 +113,10 @@ check:
 check:
   [1, 2].map(fun (x): x + 1).reverse()
   ~is [3, 2]
+
+check:
+  List.append(&[[1, 2], [3], [4, 5]]) ~is [1, 2, 3, 4, 5]
+  [1, 2].append() ~is [1, 2]
+  [1, 2].append([3]) ~is [1, 2, 3]
+  [1, 2].append([3], [4, 5]) ~is [1, 2, 3, 4, 5]
+  [1, 2].append(3) ~raises "contract violation"
