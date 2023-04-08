@@ -15,7 +15,7 @@ export:
   draw.#{font%}
   send
 
-expr.macro 'send $target ... . $(method :: Id)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
+expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':
   expr_meta.pack_s_exp(['rkt_send',
                         expr_meta.pack_expr('$target ...'),
                         method,

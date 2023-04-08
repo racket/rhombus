@@ -96,7 +96,7 @@ meta:
         nested([g, ...], block_syntax, 'block_syntax', stxs)
     | '| $(b :: Block) | ...':
         nested_alts([b, ...], stxs)
-    | '$(id :: Id_Op)':
+    | '$(id :: Name)':
         def mv = Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Transformer(proc):
@@ -107,7 +107,7 @@ meta:
 
   fun adjust_spaces(head, tail):
     match '$head'
-    | '$(id :: Id_Op)':
+    | '$(id :: Name)':
         def mv = Syntax.meta_value(typeset_meta.in_space(id), #false)
         match mv
         | typeset_meta.Spacer(proc):

@@ -58,9 +58,9 @@
                      ;;   (all-from-out "syntax-class-primitive.rkt")
                      ;; work here?
                      Term
-                     Id
-                     Op
-                     Id_Op
+                     Identifier
+                     Operator
+                     Name
                      Group
                      Block
                      Multi

@@ -5,8 +5,8 @@ export:
   symbol_set_annot
 
 defn.macro
-| 'symbol_map_annot $(name :: Id) $(convert :: Id) $(unconvert :: Id):
-     { $(src :: Id): $(dest :: Id), ...}':
+| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier) $(unconvert :: Identifier):
+     { $(src :: Identifier): $(dest :: Identifier), ...}':
     '«
        def table = { #'$src: #'$dest, ... }
        def rev_table = { #'$dest: #'$src, ... }
@@ -16,8 +16,8 @@ defn.macro
        annot.macro '$name':
          annot_meta.pack_predicate('is_symbol', '()')
      »'
-| 'symbol_map_annot $(name :: Id) $(convert :: Id):
-     { $(src :: Id): $(dest :: Id), ...}':
+| 'symbol_map_annot $(name :: Identifier) $(convert :: Identifier):
+     { $(src :: Identifier): $(dest :: Identifier), ...}':
     '«
        def table = { #'$src: #'$dest, ... }
        fun is_symbol(v): table.has_key(v)
@@ -26,8 +26,8 @@ defn.macro
          annot_meta.pack_predicate('is_symbol', '()')
      »'
 
-defn.macro 'symbol_set_annot $(name :: Id):
-              { $(src :: Id), ...}':
+defn.macro 'symbol_set_annot $(name :: Identifier):
+              { $(src :: Identifier), ...}':
   '«
      def table = { #'$src, ... }
      fun is_symbol(v): table[v]

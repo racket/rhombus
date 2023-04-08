@@ -423,7 +423,7 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(id) for a match to @rhombus(syntax_class).
 
  The @rhombus(syntax_class) can be a predefined class such as
- @rhombus(Term, ~stxclass), @rhombus(Id, ~stxclass), or
+ @rhombus(Term, ~stxclass), @rhombus(Identifier, ~stxclass), or
  @rhombus(Group, ~stxclass), among others, it can be a class defined with
  @rhombus(syntax_class), or it can be an parenthesized inline
  @rhombus(syntax_class) form that omits the class name. A class defined

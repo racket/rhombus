@@ -27,12 +27,12 @@ submodule main:
 fun interp(e, env :~ Map):
   match e
   // First three rules are λ-calculus (with multiple arguments)
-  | 'fun ($(x :: Id), ...): $e':
+  | 'fun ($(x :: Identifier), ...): $e':
       fun (arg, ...):
         interp(e, env ++ {x.unwrap(): arg, ...})
   | '$rator($rand, ...)':
       (interp(rator, env))(interp(rand, env), ...)
-  | '$(x :: Id)':
+  | '$(x :: Identifier)':
       env[x.unwrap()]
   // Allow extra parens
   | '($e)':
@@ -44,12 +44,12 @@ fun interp(e, env :~ Map):
   | '[$x, ...]':
       [interp(x, env), ...]
   // Operators (no attempt at precedence)
-  | '$x ... $(op :: Op) $y ...':
+  | '$x ... $(op :: Operator) $y ...':
       env[op.unwrap_op()](interp('$x ...', env),
                           interp('$y ...', env))
   // `let` as a convenience
   | 'block:
-       let $(x :: Id) = $rhs
+       let $(x :: Identifier) = $rhs
        $body':
       interp('(fun ($x): $body)($rhs)', env)
 

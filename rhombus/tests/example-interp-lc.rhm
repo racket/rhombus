@@ -4,15 +4,15 @@
 
 fun interp(e, env :~ Map):
   match e
-  | '(lambda ($(x :: Id)) $(e :: Term))':
+  | '(lambda ($(x :: Identifier)) $(e :: Term))':
       fun (arg):
         interp(e, env ++ {x.unwrap(): arg})
   | '($(rator :: Term) $(rand :: Term))':
       (interp(rator, env))(interp(rand, env))
-  | '$(x :: Id)':
+  | '$(x :: Identifier)':
       env[x.unwrap()]
   // Convenience
-  | '(let ([$(x :: Id) $(rhs :: Term)]) $(body :: Term))':
+  | '(let ([$(x :: Identifier) $(rhs :: Term)]) $(body :: Term))':
       interp('((lambda ($x) $body) $rhs)', env)
   // Convenience for example (to have something to print)
   | '$(n :: Int)':

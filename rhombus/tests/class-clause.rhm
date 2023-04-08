@@ -25,9 +25,9 @@ block:
      method arities(): ('$(i.lookup(#'method_arities))')
      method visibilities(): ('$(i.lookup(#'method_visibilities))')'
   defn.macro 'def_describe $name $key':
-    '«expr.macro '$name $('$')(id :: Id)': '('$('$')(class_meta.describe(id).lookup(#'$key))')'»'
+    '«expr.macro '$name $('$')(id :: Identifier)': '('$('$')(class_meta.describe(id).lookup(#'$key))')'»'
   defn.macro 'def_idescribe $name $key':
-    '«expr.macro '$name $('$')(id :: Id)': '('$('$')(interface_meta.describe(id).lookup(#'$key))')'»'
+    '«expr.macro '$name $('$')(id :: Identifier)': '('$('$')(interface_meta.describe(id).lookup(#'$key))')'»'
   def_describe dname name
   def_describe dsuper extends
   def_describe dinterfaces implements

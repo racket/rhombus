@@ -145,12 +145,12 @@ expressions, but infix in the sense of the @rhombus(.) operator, which
 expects an expression on the left but a plain identifier on the right.
 For example, to match just an identifier in a macro pattern,
 annotate a pattern variable with @rhombus(::, ~unquote_bind) and
-@rhombus(Id, ~stxclass):
+@rhombus(Identifier, ~stxclass):
 
 @demo(
   ~eval: macro_eval
   ~defn:
-    macro '$left is_name $(name :: Id)':
+    macro '$left is_name $(name :: Identifier)':
       ~stronger_than: ~other
       '$left == #'$name'
   ~repl:

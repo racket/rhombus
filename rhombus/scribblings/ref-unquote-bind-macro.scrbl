@@ -51,7 +51,7 @@ bindings versus @rhombus(::, ~bind) and
     | '($content)'
     | '[$content]'
     | '{$content}'
-    unquote_bind.macro 'wrapped $(id :: Id)':
+    unquote_bind.macro 'wrapped $(id :: Identifier)':
       '_ :: Wrapped: content as $id'
     match '{x} [y] (z)'
     | '$(wrapped a) ...': [a, ...]

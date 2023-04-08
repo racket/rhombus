@@ -418,9 +418,9 @@
 
 @doc(
   syntax_class Term: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Id: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
-  syntax_class Id_Op: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Identifier: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Operator: #,(@rhombus(kind, ~syntax_class_clause)): ~term
+  syntax_class Name: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Keyword: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class String: #,(@rhombus(kind, ~syntax_class_clause)): ~term
   syntax_class Int: #,(@rhombus(kind, ~syntax_class_clause)): ~term
@@ -450,5 +450,8 @@
  bound to a match for the entire block as a single term (i.e., as a
  single-term syntax object that has a block term, and not as a
  multi-group syntax object).
+
+ The @rhombus(Name, ~stxclass) syntax class is the union of
+ @rhombus(Identifier, ~stxclass) and @rhombus(Operator, ~stxclass).
 
 }

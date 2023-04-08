@@ -17,7 +17,7 @@ expr.macro 'dispatch_table($what, $who, [$lhs . $name $lhs_rest ..., $rhs], ...)
     | '($g, ...)': for values(ht = ht):
                      each g: [g, ...]
                      extract_group_metavariables(g, ht)
-    | '$(x :: Id)':
+    | '$(x :: Identifier)':
         ht ++ { Syntax.unwrap(x): x }
     | ~else: ht
   fun extract_group_metavariables(group, ht):

@@ -17,7 +17,7 @@ export:
 meta:
   fun translate_mod(mod):
     match mod
-    | '$(a :: Id)': Syntax.unwrap(a)
+    | '$(a :: Identifier)': Syntax.unwrap(a)
     | '$a / $b ...':
         base.#{string->symbol}(Syntax.unwrap(a)
                                  +& "/"
