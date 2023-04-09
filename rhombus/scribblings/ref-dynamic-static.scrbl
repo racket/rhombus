@@ -60,7 +60,7 @@
  (Re-)defines @rhombus(.), @rhombus(#%ref), and @rhombus(#%parens)
  to their default bindings, which allow either static or dynamic
  resolution of a component access or lookup specialization with no
- complains about argument ismatches.
+ complaints about argument mismatches.
 
 @examples(
   class Posn(x, y)
