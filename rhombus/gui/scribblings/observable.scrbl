@@ -134,11 +134,13 @@
 }
 
 @doc(
-  method Obs.combine(f :: Function, obs :: Obs, ...) :: Obs
+  method Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs
+  method Obs.combine({#,(@rhombus(key, ~var)): obs :: Obs, ...}) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
- @rhombus(f(#,(@rhombus(v, ~var)), ...)) when any value @rhombus(v, ~var)
- or an @rhombus(obs) changes.
+ @rhombus(f(#,(@rhombus(v, ~var)), ...)) or
+ @rhombus({#,(@rhombus(key, ~var)): #,(@rhombus(v, ~var)), ...}) when any value @rhombus(v, ~var)
+ of an @rhombus(obs) changes.
 
 }

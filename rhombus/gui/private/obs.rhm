@@ -76,8 +76,12 @@ class Obs(handle):
   export: combine
           of
 
-fun combine(f :: Function, obs :: Obs, ...) :: Obs:
-  _Obs(easy.#{obs-combine}(f, obs.handle, ...))
+fun
+| combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs:
+    _Obs(easy.#{obs-combine}(f, obs.handle, ...))
+| combine({ key: obs :: Obs, ... }) :: Obs:
+    _Obs(easy.#{obs-combine}(fun (v, ...): { key: v, ... },
+                             obs.handle, ...))
 
 fun
 | unwrap(o :: Obs): o.handle

@@ -30,11 +30,8 @@ def tabs:
   def at_tab = gui.Obs("Happy")
   def eyes = gui.Checkbox("Eyes", ~is_checked: #true)
 
-  def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine(fun (tab, eyes):
-                                                       { "mood": tab,
-                                                         "eyes": eyes },
-                                                     at_tab,
-                                                     eyes.at_is_checked),
+  def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine({ "mood": at_tab,
+                                                       "eyes": eyes.at_is_checked} ),
                                      draw_face),
                           eyes)
 
