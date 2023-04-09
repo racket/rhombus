@@ -14,7 +14,7 @@
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                  ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
                  ~mixin: mix :: Function = values,
-                 child :: View,
+                 child :: MaybeObs.of(View),
                  ...)
 ){
 

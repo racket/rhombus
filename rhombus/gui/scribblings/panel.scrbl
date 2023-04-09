@@ -13,7 +13,7 @@
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: View,
+                 child :: MaybeObs.of(View),
                  ...)
   class VPanel():
     implements View
@@ -24,7 +24,7 @@
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: View,
+                 child :: MaybeObs.of(View),
                  ...)
 ){
 
@@ -44,7 +44,7 @@
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: View,
+                 child :: MaybeObs.of(View),
                  ...)
 ){
 
@@ -56,7 +56,8 @@
   class TabsPanel():
     implements View
     constructor (choices :: MaybeObs.of(List),
-                 action :: Function.of_arity(3),
+                 ~selection: selection :: MaybeObs.of(Any),
+                 ~action: action :: Function.of_arity(3) = #,(@rhombus(set_selection, ~var)),
                  ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
                  ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
@@ -66,15 +67,25 @@
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                 child :: View,
+                 child :: MaybeObs.of(View),
                  ...)
 ){
 
- Creates a tab vertical panel with @rhombus(choices) providing the
- number and identity of choices. The @rhombus(choice_to_label) function
- converts an item in @rhombus(choices) to a label to be shown for the
- tab, and @rhombus(choice_equal) defines equality for choice identities.
- By default, @rhombus(choices) is expected to be a list of
+ Creates a tab panel where @rhombus(choices) provides the number and
+ identity of choices, and @rhombus(selection) determines which of the
+ tabs is selected.
+
+ If @rhombus(selection) is not an observable, then an observable
+ @rhombus(at_selection, ~var) is created with initial value
+ @rhombus(selection). Otherwise, @rhombus(at_selection, ~var) is
+ @rhombus(selection). A observable derived from
+ @rhombus(at_selection, ~var) can be obtained from the
+ @rhombus(TabsPanel.at_selection) property.
+
+ The @rhombus(choice_to_label) function converts an item in
+ @rhombus(choices) to a label to be shown for the tab, and
+ @rhombus(choice_equal) defines equality for choice identities. By
+ default, @rhombus(choices) is expected to be a list of
  @rhombus(LabelString), since @rhombus(choice_to_label) is the identity
  function.
 
@@ -89,39 +100,28 @@
  where @rhombus(what, ~var) describes the action, @rhombus(choices) is
  the list of choices at the time of the action, and
  @rhombus(selected, ~var) is the tab (if any) selected after the action.
+ The default @rhombus(set_selection, ~var) function corresponds to
 
- The @rhombus(View.if) form, @rhombus(View.cond) form, or
- @rhombus(ListPanel) can be useful for building the content of a tab
- based on an observable whose value is updated by @rhombus(action).
+@rhombusblock(
+  fun(what, choices, selected):
+    #,(@rhombus(at_selection, ~var)).value := selected
+)
+
+ To change the content of a @rhombus(TabsPanel, ~class) based on its
+ selection, supply a @rhombus(child) that is an observable derived from
+ one supplied as @rhombus(selection).
 
 }
+
 
 @doc(
-  class ListPanel():
-    implements View
-    constructor (children :: MaybeObs.of(List),
-                 make :: Function.of_arity(2),
-                 ~key: key :: Function.of_arity(1) = values,
-                 ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-                 ~style: style :: MaybeObs.of(List.of(Group.StyleSymbol)) = [],
-                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-                 ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-                 ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
+  property TabsPanel.at_selection(tabs :: TabsPanel) :: Obs
 ){
 
- Creates a vertical panel whose content is supplied as a list
- @rhombus(children), instead of individual views, and where
- @rhombus(children) can be an @tech{observable}.
-
- A value in the @rhombus(children) list is mapped to a
- @rhombus(View, ~class) in two steps: a key is obtained for each list
- element via @rhombus(key), and then both @rhombus(key) and an observable
- for element in @rhombus(children) are passed to @rhombus(make).
+ Returns an observable derived from the one that determines the selected
+ tab of @rhombus(tabs).
 
 }
-
 
 
 @doc(

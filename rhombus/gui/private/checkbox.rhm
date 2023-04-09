@@ -3,7 +3,9 @@ import:
   lib("racket/gui/easy.rkt")
   "view.rhm".View
   "obs.rhm":
-    expose: MaybeObs
+    expose:
+      Obs
+      MaybeObs
   "type.rhm":
     expose:
       LabelString
@@ -11,17 +13,22 @@ import:
 export:
   Checkbox
 
-class Checkbox(hand):
+class Checkbox(hand, private _at_checked :: Obs):
   implements View
   internal _Checkbox
   opaque
   override property handle: hand
 
-  constructor (action :: Function.of_arity(1),
-               ~label: label :: MaybeObs.of(LabelString),
+  constructor (label :: MaybeObs.of(LabelString),
+               ~action: action :: Maybe(Function.of_arity(1)) = #false,
                ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true):
-    super(easy.checkbox(action,
+    def at_checked = obs.to_obs(is_checked)
+    super(easy.checkbox(action || fun (on): at_checked.value := on,
                         ~label: obs.unwrap(label),
                         #{#:enabled?}: obs.unwrap(is_enabled),
-                        #{#:checked?}: obs.unwrap(is_checked)))
+                        #{#:checked?}: obs.unwrap(at_checked)),
+          at_checked)
+
+  property at_is_checked :: Obs:
+    _at_checked.map(values)

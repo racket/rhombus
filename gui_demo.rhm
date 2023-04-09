@@ -27,33 +27,28 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.draw_ellipse(x+0.6*s, y+0.3*s, 0.1*s, 0.1*s)
 
 def tabs:
-  def tab_e = gui.Obs("Happy")
-  def eyes_e = gui.Obs(#true)
+  def at_tab = gui.Obs("Happy")
+  def eyes = gui.Checkbox("Eyes", ~is_checked: #true)
 
   def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine(fun (tab, eyes):
                                                        { "mood": tab,
                                                          "eyes": eyes },
-                                                     tab_e,
-                                                     eyes_e),
+                                                     at_tab,
+                                                     eyes.at_is_checked),
                                      draw_face),
-                          gui.Checkbox(fun (on): eyes_e.update(fun (_): on),
-                                       ~is_checked: eyes_e,
-                                       ~label: "Eyes"))
+                          eyes)
 
   def happy_button = gui.Button("Be Happy",
-                                fun ():
-                                  tab_e.update(fun (v): "Happy"),
+                                ~action: fun ():
+                                           at_tab.update(fun (v): "Happy"),
                                 ~stretch: [#false, #false])
 
   gui.TabsPanel(["Happy", "Sad"],
-                fun (what, choices, selected):
-                  tab_e.update(fun (v): selected),
-                ~selection: tab_e,
-                gui.ListPanel(tab_e.map(fun (v):
-                                          match v
-                                          | "Happy": [canvas]
-                                          | ~else [canvas, happy_button]),
-                              fun (view, view_e): view))
+                ~selection: at_tab,
+                at_tab.map(fun (v):
+                             match v
+                             | "Happy": canvas
+                             | ~else gui.HPanel(canvas, happy_button)))
 
 gui.render(gui.Window(tabs,
                       ~size: [800, 600]))

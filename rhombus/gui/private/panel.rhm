@@ -12,15 +12,17 @@ import:
       Stretch
       LabelString
   "view.rhm".View
+  "view.rhm"!private.to_view
   "obs.rhm":
-    expose: MaybeObs
+    expose:
+      Obs
+      MaybeObs
 
 export:
   HPanel
   VPanel
   GroupPanel
   TabsPanel
-  ListPanel
 
 symbol_map_annot PanelStyleSymbol convert_style:
   { deleted: deleted,
@@ -32,9 +34,7 @@ symbol_map_annot PanelStyleSymbol convert_style:
     hide_vscroll: #{hide-vscroll},
     hide_hscroll: #{hide-hscroll} }
 
-defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
-                            $(kw :: Keyword)  $easy_kw:
-                              $kw_arg :: $kw_arg_annot ... = $kw_default => $kw_convert, ...):
+defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
               ~easy: $easy_name
               $body
               ...':
@@ -44,7 +44,6 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
      override property handle: hand
 
      constructor ($arg :: $arg_annot ..., ...,
-                  $kw: $kw_arg :: $kw_arg_annot ... = $kw_default, ...,
                   ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                   ~style: style :: MaybeObs.of(List.of($(name).StyleSymbol)) = [],
                   ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
@@ -52,10 +51,9 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
                   ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
                   ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                   ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
-                  child :: View,
+                  child :: MaybeObs.of(View),
                   $'...'):
        super(easy . $easy_name($convert($arg), ...,
-                               $easy_kw: $kw_convert($kw_arg), ...,
                                ~alignment: obs.unwrap(alignment),
                                #{#:enabled?}: obs.unwrap(is_enabled),
                                ~style: obs.unwrap_list(style, convert_style),
@@ -63,7 +61,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...,
                                ~margin: obs.unwrap_list(margin, values),
                                #{#:min-size}: obs.unwrap_list(min_size, values),
                                ~stretch: obs.unwrap_list(stretch, values),
-                               child.handle,
+                               to_view(child).handle,
                                $'...'))
 
      $body
@@ -85,18 +83,52 @@ def_panel VPanel():
 
 def_panel GroupPanel(label :: MaybeObs.of(LabelString) => (obs.unwrap)):
   ~easy: group
-
+  
   export:
     StyleSymbol
   symbol_map_annot StyleSymbol convert_style:
     { deleted: deleted }
 
-def_panel TabsPanel(choices :: MaybeObs.of(List) => (fun (v): obs.unwrap_list(v, values)),
-                    action :: Function.of_arity(3) => values,
-                    ~choice_to_label #{#:choice->label}: choice_to_label :: Function.of_arity(1) = values => values,
-                    ~choice_equal #{#:choice=?}: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b) => values,
-                    ~selection ~selection: selection :: MaybeObs.of(Any) = #false => (obs.unwrap)):
-  ~easy: tabs
+class TabsPanel(hand, private _at_selection :: Obs):
+  implements View
+  opaque
+  override property handle: hand
+
+  constructor (choices :: MaybeObs.of(List),
+               ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+               ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
+               ~selection: selection :: MaybeObs.of(Any) = #false,
+               ~action: action :: Maybe(Function.of_arity(3)) = #false,
+               ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+               ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+               ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
+               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
+               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+               child :: MaybeObs.of(View),
+               ...):
+    def at_selection = obs.to_obs(selection)
+    def use_action = action || (fun(what, choices, selected):
+                                  at_selection.value := selected)
+    super(easy.tabs(obs.unwrap_list(choices, values),
+                    use_action,
+                    ~selection: obs.unwrap(at_selection),
+                    #{#:choice->label}: choice_to_label,
+                    #{#:choice=?}: choice_equal,
+                    ~alignment: obs.unwrap(alignment),
+                    #{#:enabled?}: obs.unwrap(is_enabled),
+                    ~style: obs.unwrap_list(style, convert_style),
+                    ~spacing: obs.unwrap(spacing),
+                    ~margin: obs.unwrap_list(margin, values),
+                    #{#:min-size}: obs.unwrap_list(min_size, values),
+                    ~stretch: obs.unwrap_list(stretch, values),
+                    to_view(child).handle,
+                    ...),
+          at_selection)
+
+  property at_selection :: Obs:
+    _at_selection.map(values)
 
   export:
     StyleSymbol
@@ -107,33 +139,3 @@ def_panel TabsPanel(choices :: MaybeObs.of(List) => (fun (v): obs.unwrap_list(v,
       new_button: #{new-button},
       flat_portable: #{flat-portable},
       deleted: deleted }
-
-class ListPanel(hand):
-  implements View
-  opaque
-  override property handle: hand
-
-  constructor (children :: MaybeObs.of(List),
-               make_view :: Function.of_arity(2),
-               ~key: key :: Function.of_arity(1) = values,
-               ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
-               ~style: style :: MaybeObs.of(List.of(ListPanel.StyleSymbol)) = [],
-               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
-               ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,
-               ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
-               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
-               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
-    super(easy.#{list-view}(obs.unwrap(children),
-                            fun (k, v): View.handle(make_view(k, obs._Obs(v))),
-                            ~key: key,
-                            ~alignment: obs.unwrap(alignment),
-                            #{#:enabled?}: obs.unwrap(is_enabled),
-                            ~style: obs.unwrap_list(style, convert_style),
-                            ~spacing: obs.unwrap(spacing),
-                            ~margin: obs.unwrap_list(margin, values),
-                            #{#:min-size}: obs.unwrap_list(min_size, values),
-                            ~stretch: obs.unwrap_list(stretch, values)))
-
-  export:
-    StyleSymbol
-  annot.macro 'StyleSymbol': 'PanelStyleSymbol'

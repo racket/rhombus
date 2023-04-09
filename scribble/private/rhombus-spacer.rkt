@@ -55,14 +55,15 @@
   (spacer
    (lambda (head tail escape)
      (values head
-             (syntax-parse tail
-               #:datum-literals (group)
-               [(a . more)
-                #:when (not (escape? #'a escape))
-                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'annot)
-                   #,@(for/list ([more (syntax->list #'more)])
-                        (term-identifiers-syntax-property more 'typeset-space-name 'annot)))]
-               [_ tail])))))
+             (let loop ([tail tail])
+               (syntax-parse tail
+                 #:datum-literals (group op =)
+                 [((op =) . more) tail] ; in function arguments?
+                 [(a . more)
+                  #:when (not (escape? #'a escape))
+                  #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'annot)
+                     . #,(loop #'more))]
+                 [_ tail]))))))
 
 (define-spacer :: annote-spacer)
 (define-spacer :~ annote-spacer)
@@ -101,14 +102,16 @@
 
 (define-for-syntax (arg-spacer stx)
   (syntax-parse stx
-    #:datum-literals (group op)
-    #:literals (rhombus-=)
-    [((~and tag group) a ... (~and eq (op rhombus-=)) e ...)
+    #:datum-literals (group op = block)
+    [((~and tag group) kw:keyword ((~and b-tag block) g))
+     #`(tag kw (b-tag #,(arg-spacer #'g)))]
+    [((~and tag group) a ... (~and eq (op =)) e ...)
      #`(tag #,@(for/list ([a (in-list (syntax->list #'(a ...)))])
                  (term-identifiers-syntax-property a 'typeset-space-name 'bind))
             eq
             e ...)]
-    [_ (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
+    [_
+     (group-identifiers-syntax-property stx 'typeset-space-name 'bind)]))
 
 (define-for-syntax (fun-spacer head tail escape)
   (define (post-spacer stx)

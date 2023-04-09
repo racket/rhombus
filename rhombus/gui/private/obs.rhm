@@ -9,6 +9,7 @@ export:
   unwrap
   unwrap_list
   unwrap_convert
+  to_obs
 
 def anon_str = "anon"
 
@@ -43,6 +44,10 @@ class Obs(handle):
                            | #'anon
                            | Symbol.from_string(name)),
                    #{#:derived?}: is_derived))
+
+  property
+  | value: peek()
+  | value := v: update(fun(_): v)
 
   method rename(name :: String) :: Obs:
     _Obs(easy.#{obs-rename}(handle, Symbol.from_string(name)))
@@ -85,3 +90,7 @@ fun
 fun
 | unwrap_list(o :: Obs, convert :: Function): unwrap(o.map(fun (l): convert.map(l)))
 | unwrap_list(v, convert :: Function): convert.map(v)
+
+fun
+| to_obs(o :: Obs) :: Obs: o
+| to_obs(v) :: Obs: Obs(v)

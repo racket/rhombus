@@ -36,23 +36,3 @@
  Create a @rhombus(WindowView, ~class) using @rhombus(Window, ~class).
 
 }
-
-@doc(
-  expr.macro 'View.if $obs_expr
-              | $view_expr
-              | $view_expr'
-  expr.macro 'View.cond
-              | $obs_expr: $view_expr
-              | ...
-              | ~else: $view_expr'
-  expr.macro 'View.cond
-              | $obs_expr: $view_expr
-              | ...
-              | ~else $view_expr'
-){
-
- Produces a @rhombus(View) that changes if @rhombus(obs_expr) is an
- @tech{observable} and when the observable's value changes. Each
- @rhombus(view_expr) must produce a @rhombus(View).
-
-}

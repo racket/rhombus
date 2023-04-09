@@ -24,8 +24,9 @@ class Button(hand):
 
   constructor (label :: MaybeObs.of(LabelString || Bitmap || matching([_ :: Bitmap,
                                                                        _ :: LabelString,
-                                                                       _ :: Button.LabelPosition])),
-               action :: Function.of_arity(0),
+                                                                       _ :: Button.LabelPosition]))
+                 = "Button",
+               ~action: action :: Function.of_arity(0) = values,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Button.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],

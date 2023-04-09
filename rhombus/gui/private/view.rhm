@@ -6,6 +6,7 @@ import:
       #{if-view}
       #{cond-view}
       #{case-view}
+      #{observable-view}
   lib("racket/base.rkt").else
   "obs.rhm"
   rhombus
@@ -13,6 +14,10 @@ import:
 export:
   View
   WindowView
+
+submodule private:
+  export:
+    to_view
 
 interface View:
   property handle
@@ -56,3 +61,7 @@ class AView(hand):
   implements View
   opaque
   override property handle: hand
+
+fun
+| to_view(v :: View) :: View: v
+| to_view(o :: obs.Obs) :: View: AView(#{observable-view}(o.map(fun (v :: View): v.handle).handle))

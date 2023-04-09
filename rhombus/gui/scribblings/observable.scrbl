@@ -26,6 +26,32 @@
 }
 
 @doc(
+  property Obs.value(obs :: Obs)
+  property Obs.value(obs :: Obs, v :: Any)
+){
+
+ Returns the value via @rhombus(Obs.peek) (which you shouldn't normally
+ do) or updates the value via @rhombus(Obs.update) (ignoring the current
+ value).
+
+@examples(
+  ~hidden:
+    // fake observable, because we can't instante `rhombus/gui` here
+    class Obs(mutable v):
+      property | value: v
+               | value := x: v := x
+  ~defn:
+    def o = Obs("apple")
+  ~repl:
+    o.value
+    o.value := "banana"
+    o.value
+)
+
+}
+
+
+@doc(
   method Obs.observe(obs :: Obs, f :: Function.of_arity(1))
 ){
 
@@ -57,6 +83,13 @@
 ){
 
  Returns the current value of @rhombus(obs).
+
+ Normally, instead of peeking an observable's value, you should either
+ register an observer or pass an observer to a constructor that expects
+ one. For example, when an observer's value should affect drawing in a
+ @rhombus(Canvas, ~class), then the first argument to
+ @rhombus(Canvas, ~class) should the observer (or one derived from it),
+ and then a rendered canvas will be updated when the observable changes.
 
 }
 

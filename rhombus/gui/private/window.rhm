@@ -11,6 +11,7 @@ import:
   "view.rhm":
     expose: View
             WindowView
+  "view.rhm"!private.to_view
   "obs.rhm":
     expose: Obs
             MaybeObs
@@ -32,7 +33,7 @@ class Window(hand):
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                ~style: style :: MaybeObs.of(List.of(Window.StyleSymbol)) = [],
                ~mixin: mix :: Function = values,
-               child :: View,
+               child :: MaybeObs.of(View),
                ...):
     super(easy.window(~title: obs.unwrap(title),
                       ~size: obs.unwrap(size),
@@ -42,7 +43,7 @@ class Window(hand):
                       ~stretch: obs.unwrap(stretch),
                       ~style: obs.unwrap_list(style, convert_style),
                       ~mixin: mix,
-                      child.handle,
+                      to_view(child).handle,
                       ...))
 
   export:
