@@ -8,15 +8,19 @@ import:
     expose: symbol_map_annot
             symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
-  "bitmap-interface.rhm".BitmapPrivate
+  "bitmap-interface.rhm".Bitmap as BitmapPrivate
 
 export:
   Pen
 
+submodule private:
+  export:
+    _Pen
+
 expr.macro 'default($like . $field, $expr)':
   'if $like | Pen . $field($like) | $expr'
 
-class Pen(handle, private saved_stipple):
+class Pen(handle):
   internal _Pen
   opaque
   constructor (~like: like :: Maybe(Pen) = #false,
@@ -28,18 +32,19 @@ class Pen(handle, private saved_stipple):
                ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
     | _Pen(rkt.make_object(rkt.#{pen%}, unwrap_color(color), width, style_convert(style), cap, join,
-                           (stipple :: BitmapPrivate).get_handle()),
-           stipple)
-    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(unwrap_color(color), width, style_convert(style), cap, join),
-           #false)
+                           BitmapPrivate.handle(stipple)))
+    | _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(unwrap_color(color), width, style_convert(style), cap, join))
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property width: rkt.send handle.#{get-width}()
   property style: style_unconvert(rkt.send handle.#{get-width}())
   property cap: rkt.send handle.#{get-cap}()
   property join: rkt.send handle.#{get-join}()
-  property stipple :: Maybe(Bitmap): saved_stipple
+  property stipple :: Maybe(Bitmap):
+    let bm = rkt.send handle.#{get-stipple}()
+    bm && BitmapPrivate(bm)
 
   export:
+    none
     Style
     Cap
     Join
@@ -63,3 +68,7 @@ class Pen(handle, private saved_stipple):
 
   symbol_set_annot Join:
     { round, bevel, miter }
+
+def none = _Pen(rkt.send rkt.#{the-pen-list}.#{find-or-create-pen}(rkt.#{make-color}(0, 0, 0),
+                                                                   1,
+                                                                   #'transparent))

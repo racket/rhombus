@@ -9,7 +9,7 @@ export:
   rename:
     class.#{make-object} as make_object
   draw.#{bitmap%}
-  draw.#{color%} draw.#{the-color-database}
+  draw.#{color%} draw.#{the-color-database} draw.#{make-color}
   draw.#{pen%} draw.#{the-pen-list}
   draw.#{brush%} draw.#{the-brush-list}
   draw.#{font%}

@@ -8,15 +8,19 @@ import:
     expose: symbol_map_annot
             symbol_set_annot
   "bitmap-interface.rhm".BitmapForward as Bitmap
-  "bitmap-interface.rhm".BitmapPrivate
+  "bitmap-interface.rhm".Bitmap as BitmapPrivate
 
 export:
   Brush
 
+submodule private:
+  export:
+    _Brush
+
 expr.macro 'default($like . $field, $expr)':
   'if $like | Brush . $field($like) | $expr'
 
-class Brush(handle, private saved_stipple):
+class Brush(handle):
   internal _Brush
   opaque
   constructor (~like: like :: Maybe(Brush) = #false,
@@ -25,15 +29,16 @@ class Brush(handle, private saved_stipple):
                ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
     | _Brush(rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
-                             (stipple :: BitmapPrivate).get_handle()),
-             stipple)
-    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)),
-             #false)
+                             BitmapPrivate.handle(stipple)))
+    | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)))
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property style: style_unconvert(rkt.send handle.#{get-width}())
-  property stipple :: Maybe(Bitmap): saved_stipple
+  property stipple :: Maybe(Bitmap):
+    let bm = rkt.send handle.#{get-stipple}()
+    bm && BitmapPrivate(bm)
 
   export:
+    none
     Style
 
   symbol_map_annot Style style_convert style_unconvert:
@@ -49,4 +54,6 @@ class Brush(handle, private saved_stipple):
       cross_hatch: #{cross-hatch},
       horizontal_hatch: #{horizontal-hatch},
       vertical_hatch: #{vertical-hatch} }
-                         
+
+def none = _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(rkt.#{make-color}(0, 0, 0),
+                                                                         #'transparent))

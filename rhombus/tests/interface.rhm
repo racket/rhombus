@@ -232,3 +232,70 @@ check:
     extends Foo
     override property foo :: Bar
   ~completes
+
+// abstract from common superinterface
+check:
+  interface A:
+    method m()
+  interface B:
+    extends A
+    override method m(): 1
+  interface C:
+    extends A
+  class C1():
+    implements: A B
+  class C2():
+    implements: B A
+  class C3():
+    implements: C B
+  class C4():
+    implements: B C
+    nonfinal
+  class C5():
+    extends C4
+    implements A
+  ~completes
+
+// abstract not from common superinterface
+check:
+  ~eval
+  interface A:
+    method m()
+  interface B:
+    method m(): 1    
+  interface C:
+    extends A
+  class C1():
+    implements: A B
+  ~raises "method supplied by multiple superinterfaces and not overridden"
+check:
+  ~eval
+  interface A:
+    method m()
+  interface B:
+    method m(): 1    
+  class C1():
+    implements: B A
+  ~raises "method supplied by multiple superinterfaces and not overridden"
+check:
+  ~eval
+  interface A:
+    method m()
+  class C1():
+    method m(): 1
+    nonfinal
+  class C2():
+    extends C1
+    implements: A
+  ~raises "method supplied by multiple classes or superinterfaces and not overridden"
+check:
+  ~eval
+  interface A:
+    method m():1
+  class C1():
+    abstract method m()
+    nonfinal
+  class C2():
+    extends C1
+    implements: A
+  ~raises "method supplied by multiple classes or superinterfaces and not overridden"

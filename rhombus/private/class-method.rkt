@@ -84,26 +84,32 @@
   ;; in the same place in the new vtable
   (define-values (ht            ; symbol -> (cons mindex id)
                   super-priv-ht ; symbol -> identifier or (list identifier), implies not in `ht`
-                  vtable-ht)    ; int -> accessor-identifier or '#:abstract
-    (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()]) ([super (in-list supers)])
+                  vtable-ht     ; int -> accessor-identifier or '#:abstract
+                  from-ht)      ; symbol -> super
+    (for/fold ([ht #hasheq()] [priv-ht #hasheq()] [vtable-ht #hasheqv()] [from-ht #hasheq()]) ([super (in-list supers)])
       (define super-vtable (super-method-vtable super))
       (define private? (hash-ref private-interfaces super #f))
-      (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht])
+      (for/fold ([ht ht] [priv-ht priv-ht] [vtable-ht vtable-ht] [from-ht from-ht])
                 ([shape (super-method-shapes super)]
                  [super-i (in-naturals)])
-        (define i (hash-count ht))
         (define new-rhs (let ([rhs (vector-ref super-vtable super-i)])
                           (if (eq? (syntax-e rhs) '#:abstract) '#:abstract rhs)))
-        (define-values (key val)
+        (define-values (key val i old-val)
           (let* ([arity (and (vector? shape) (vector-ref shape 1))]
                  [shape (if (vector? shape) (vector-ref shape 0) shape)]
                  [property? (pair? shape)]
                  [shape (if (pair? shape) (car shape) shape)]
                  [final? (not (box? shape))]
                  [shape (if (box? shape) (unbox shape) shape)])
-            (values shape (cons (mindex i final? property? arity) shape))))
-        (define old-val (or (hash-ref ht key #f)
-                            (hash-ref priv-ht key #f)))
+            (define old-val (or (hash-ref ht shape #f)
+                                (hash-ref priv-ht shape #f)))
+            (define i (if (pair? old-val)
+                          (mindex-index (car old-val))
+                          (hash-count ht)))
+            (values shape
+                    (cons (mindex i final? property? arity) shape)
+                    i
+                    old-val)))
         (cond
           [old-val
            (define old-rhs (cond
@@ -114,30 +120,43 @@
                              [(pair? old-val) (car old-val)]
                              [else old-val]))
            (unless (or (if (identifier? old-rhs)
+                           ;; same implementation?
                            (and (identifier? new-rhs)
                                 (free-identifier=? old-rhs new-rhs))
+                           ;; both abstract?
                            (eq? old-rhs new-rhs))
+                       ;; from a common superclass/superinterface?
+                       (and (not (and (identifier? new-rhs) (identifier? old-rhs)))
+                            (in-common-superinterface? (hash-ref from-ht key) super key))
+                       ;; overridden
                        (for/or ([added (in-list added-methods)])
                          (and (eq? key (syntax-e (added-method-id added)))
                               (eq? 'override (added-method-replace added)))))
              (raise-syntax-error #f (format "method supplied by multiple ~a and not overridden" supers-str) stx key))
            (if (or private?
-                   (and (pair? old-val) (mindex? (car old-val))))
-               (values ht priv-ht vtable-ht)
-               (values (hash-set vtable-ht key val)
+                   (and (pair? old-val) (mindex? (car old-val))
+                        (not (and (identifier? new-rhs)
+                                  (not (identifier? old-rhs)))))
+                   (and (identifier? old-rhs)
+                        (not (identifier? new-rhs))))
+               (values ht priv-ht vtable-ht from-ht)
+               (values (hash-set ht key val)
                        (hash-remove priv-ht key)
-                       (hash-set vtable-ht i new-rhs)))]
+                       (hash-set vtable-ht i new-rhs)
+                       (hash-set from-ht key super)))]
           [private?
            (define (property-shape? shape) (or (pair? shape) (and (vector? shape) (pair? (vector-ref shape 0)))))
            (values ht
                    (hash-set priv-ht key (if (property-shape? shape)
                                              (list new-rhs)
                                              new-rhs))
-                   vtable-ht)]
+                   vtable-ht
+                   (hash-set from-ht key super))]
           [else
            (values (hash-set ht key val)
                    priv-ht
-                   (hash-set vtable-ht i new-rhs))]))))
+                   (hash-set vtable-ht i new-rhs)
+                   (hash-set from-ht key super))]))))
 
   ;; merge method-result tables from superclass and superinterfaces,
   ;; assuming that the names all turn out to be sufficiently distinct
@@ -349,6 +368,44 @@
   (if (class-desc? p)
       (class-desc-method-map p)
       (interface-desc-method-map p)))
+
+(define-for-syntax (in-common-superinterface? i j key)
+  (define (lookup id)
+    (and id (syntax-local-value* (in-class-desc-space id)
+                                 (lambda (v)
+                                   (or (class-desc-ref v)
+                                       (interface-desc-ref v))))))
+  (define (gather-from-interfaces int-ids ht saw-abstract?)
+    (let ([int-ids (syntax->list int-ids)])
+      (for/fold ([ht ht]) ([int-id (in-list int-ids)])
+        (gather (lookup int-id) ht saw-abstract?))))
+  (define (gather i ht saw-abstract?)
+    (cond
+      [i
+       (define idx (hash-ref (super-method-map i) key))
+       (define impl (vector-ref (super-method-vtable i) idx))
+       (cond
+         [(and (not (eq? (syntax-e impl) '#:abstract))
+               saw-abstract?)
+          ;; no superinterface abstract is the relevant abstract
+          ht]
+         [else
+          (define new-saw-abstract? (or saw-abstract? (eq? (syntax-e impl) '#:abstract)))
+          (gather-from-interfaces (if (class-desc? i)
+                                      (class-desc-interface-ids i)
+                                      (interface-desc-super-ids i))
+                                  (let ([ht (hash-set ht i #t)])
+                                    (if (class-desc? i)
+                                        (gather (lookup (class-desc-super-id i))
+                                                ht
+                                                new-saw-abstract?)
+                                        ht))
+                                  new-saw-abstract?)])]
+      [else ht]))
+  (define i-ht (gather i #hasheq() #f))
+  (define j-ht (gather j #hasheq() #f))
+  (for/or ([k (in-hash-keys i-ht)])
+    (hash-ref j-ht k #f)))
 
 (define-syntax this
   (expression-transformer

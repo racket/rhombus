@@ -2,28 +2,23 @@
 import:
   "rkt.rhm"
   "dc.rhm".DC
-  "dc.rhm"!internal: expose: DCer
+  "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
 
 export:
   Bitmap
   BitmapDC
 
-class BitmapDC(handle):
-  internal _BitmapDC
-  private implements DCer
-  implements DC
+interface BitmapDC:
+  extends DC
 
-  private override property dc:
-    handle
+class _BitmapDC():
+  extends: SomeDC
+  implements BitmapDC
 
-  constructor ():
-    error("cannot instantiate")
-
-class Bitmap(handle):
+class Bitmap():
   internal _Bitmap
-  implements intf.Bitmap
-  private implements intf.BitmapPrivate
+  extends intf.Bitmap
   opaque
 
   constructor (width :: PosInt,
@@ -38,8 +33,6 @@ class Bitmap(handle):
                             has_alpha,
                             backing_space))
 
-  private override get_handle(): handle
-                               
   override property width:
     rkt.send handle.#{get-width}()
 

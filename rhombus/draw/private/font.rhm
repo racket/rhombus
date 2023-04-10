@@ -7,6 +7,10 @@ import:
 export:
   Font
 
+submodule private:
+  export:
+    _Font
+
 expr.macro 'default($like . $field, $expr)':
   'if $like | Font . $field($like) | $expr'
 

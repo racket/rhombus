@@ -386,6 +386,18 @@
 }
 
 @doc(
+  def math.pi :: Flonum
+){
+
+ An appromation @italic{π}, the ratio of a circle's circumference to its diameter.
+
+@examples(
+  math.pi
+)
+
+}
+
+@doc(
   operator ((n :: Int) bits.and (m :: Int)) :: Int
   operator ((n :: Int) bits.or (m :: Int)) :: Int
   operator ((n :: Int) bits.xor (m :: Int)) :: Int

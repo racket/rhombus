@@ -3,18 +3,20 @@ import:
   "rkt.rhm"
   "color.rhm".Color
   "pen.rhm".Pen
+  "pen.rhm"!private._Pen
   "brush.rhm".Brush
+  "brush.rhm"!private._Brush
   "font.rhm".Font
+  "font.rhm"!private._Font
   "symbol_map.rhm".symbol_set_annot
-  "bitmap-interface.rhm"._BitmapPrivate as Bitmap
+  "bitmap-interface.rhm".Bitmap
 
 export:
   DC
 
 submodule internal:
   export:
-    DCer
-    CanvasDC
+    SomeDC
 
 interface DCer:
   internal _DCer
@@ -30,7 +32,10 @@ interface DC:
     [w, h]
 
   property width: size[0]
-  property height: size[0]
+  property height: size[1]
+
+  method push()
+  method pop()
 
   method clear():
     rkt.send get_dc().clear()
@@ -39,13 +44,22 @@ interface DC:
     rkt.send get_dc().#{cache-font-metrics-key}()
 
   method set_pen(p :: Pen):
-      rkt.send get_dc().#{set-pen}(p.handle)
+    rkt.send get_dc().#{set-pen}(p.handle)
+
+  method get_pen() :: Pen:
+    _Pen(rkt.send get_dc().#{get-pen}())
 
   method set_brush(b :: Brush):
       rkt.send get_dc().#{set-brush}(b.handle)
 
+  method get_brush() :: Brush:
+    _Brush(rkt.send get_dc().#{get-brush}())
+
   method set_font(f :: Font):
       rkt.send get_dc().#{set-font}(f.handle)
+
+  method get_font() :: Font:
+    _Font(rkt.send get_dc().#{get-font}())
 
   method copy(x :: Real, y :: Real,
               width :: Real.at_least(0.0), height :: Real.at_least(0.0),
@@ -86,7 +100,7 @@ interface DC:
                      ~style: style :: DC.BitmapOverlay = #'solid,
                      ~color: color :: Color = Color("black"),
                      ~mask: mask :: Maybe(Bitmap) = #false):
-    rkt.send get_dc().#{draw-bitmap-section}(b.get_handle(), x, y,
+    rkt.send get_dc().#{draw-bitmap-section}(b.handle, x, y,
                                              source_x, source_y,
                                              source_width, source_height,
                                              style, color.handle, mask)
@@ -114,7 +128,29 @@ interface DC:
   symbol_set_annot TextCombine:
     { kern, grapheme, char }
 
-class CanvasDC(handle):
+class SomeDC(handle):
+  nonfinal
   implements DC
   private implements DCer
   private override property dc: handle
+
+  private field states = []
+
+  override method push():
+    states := [get_pen(),
+               get_brush(),
+               get_font(),
+               states]
+    
+  override method pop():
+    match states
+    | []:
+        error("DC.pop", "no state pushed")
+    | [pen,
+       brush,
+       font,
+       old_states]:
+        set_pen(pen)
+        set_brush(brush)
+        set_font(font)
+        states := old_states

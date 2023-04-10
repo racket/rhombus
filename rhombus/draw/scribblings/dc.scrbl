@@ -44,6 +44,26 @@
 }
 
 @doc(
+  method DC.get_pen(dc :: DC) :: Pen
+  method DC.get_brush(dc :: DC) :: Brush
+  method DC.get_font(dc :: DC) :: Font
+){
+
+ Reports the drawing context's configuration.
+
+}
+
+
+@doc(
+  method DC.push() :: Void
+  method DC.pop() :: Void
+){
+
+ Saves and restores the draw context's configuration.
+
+}
+
+@doc(
   method DC.draw_point(dc:: DC, x :: Real, y :: Real) :: Void
   method DC.draw_line(dc:: DC,
                       x :: Real, y :: Real,

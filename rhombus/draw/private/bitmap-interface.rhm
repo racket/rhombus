@@ -2,17 +2,11 @@
 
 export:
   Bitmap
-  BitmapPrivate
-  _BitmapPrivate
   BitmapForward
 
-interface Bitmap:
-  property width
-  property height
-
-interface BitmapPrivate:
-  extends Bitmap
-  internal _BitmapPrivate
-  method get_handle()
+class Bitmap(handle):
+  nonfinal
+  abstract property width
+  abstract property height
 
 annot.delayed_declare BitmapForward

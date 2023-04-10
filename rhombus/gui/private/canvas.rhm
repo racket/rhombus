@@ -9,7 +9,7 @@ import:
       Size
       Stretch
   "view.rhm".View
-  rhombus/draw/private/dc!internal.CanvasDC
+  rhombus/draw/private/dc!internal.SomeDC
   "obs.rhm":
     expose: MaybeObs
 
@@ -32,7 +32,7 @@ class Canvas(hand):
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                ~mixin: mix :: Function = values):
     super(easy.canvas(obs.unwrap(data),
-                      fun(dc, data): draw(CanvasDC(dc), data),
+                      fun(dc, data): draw(SomeDC(dc), data),
                       ~label: obs.unwrap(label),
                       #{#:enabled?}: obs.unwrap(is_enabled),
                       ~style: obs.unwrap_list(style, convert_style),

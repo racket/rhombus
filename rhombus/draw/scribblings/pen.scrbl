@@ -31,7 +31,7 @@
   property Pen.stipple(pen :: Pen) :: Maybe(Bitmap)
 ){
 
- Propeties to access pen components.
+ Properties to access pen components.
 
 }
 

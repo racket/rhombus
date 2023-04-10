@@ -12,7 +12,8 @@
 
 (define-name-root math
   #:fields
-  (abs
+  (pi
+   abs
    min max
    floor ceiling round
    sqrt
@@ -31,6 +32,8 @@
    less less_or_equal
    greater greater_or_equal
    sum product))
+
+(define pi (atan 0 -1))
 
 (define-static-info-syntaxes (abs
                               floor ceiling round
