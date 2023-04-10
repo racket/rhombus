@@ -1,0 +1,8 @@
+#lang rhombus/static/and_meta
+
+export:
+  Region
+
+class Region(hand):
+  nonfinal
+  property handle: hand

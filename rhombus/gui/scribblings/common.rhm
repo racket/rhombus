@@ -4,7 +4,8 @@ import:
   meta_label:
     rhombus open
     rhombus/gui open
-    rhombus/draw open
+    rhombus/draw open:
+      except: Path
     lib("racket/gui/easy.rkt") open:
       except:
         render

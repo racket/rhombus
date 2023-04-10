@@ -50,3 +50,12 @@
 )
 
 }
+
+
+@doc(
+  def Brush.none :: Pen
+){
+
+ A brush with style @rhombus(#'transparent).
+
+}

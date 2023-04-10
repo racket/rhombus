@@ -1,0 +1,12 @@
+#lang rhombus/static/and_meta
+
+export:
+  DC
+  _DC
+  DCForward
+
+interface DC:
+  internal _DC
+  abstract property dc
+
+annot.delayed_declare DCForward

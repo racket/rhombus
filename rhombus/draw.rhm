@@ -4,6 +4,8 @@ import:
   "draw/private/pen.rhm"
   "draw/private/brush.rhm"
   "draw/private/font.rhm"
+  "draw/private/region.rhm"
+  "draw/private/path.rhm"
   "draw/private/dc.rhm"
   "draw/private/bitmap.rhm"
 
@@ -12,5 +14,7 @@ export:
   all_from(.pen)
   all_from(.brush)
   all_from(.font)
+  all_from(.region)
+  all_from(.path)
   all_from(.dc)
   bitmap.Bitmap

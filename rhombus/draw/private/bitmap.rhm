@@ -31,7 +31,7 @@ class Bitmap():
                             height,
                             !has_color,
                             has_alpha,
-                            backing_space))
+                            backing_space))()
 
   override property width:
     rkt.send handle.#{get-width}()

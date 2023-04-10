@@ -3,7 +3,8 @@
 import:
   meta_label:
     rhombus open
-    rhombus/draw open
+    rhombus/draw open:
+      except: Path
 
 export:
   meta_label:

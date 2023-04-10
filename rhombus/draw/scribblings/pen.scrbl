@@ -85,3 +85,12 @@
 )
 
 }
+
+
+@doc(
+  def Pen.none :: Pen
+){
+
+ A pen with style @rhombus(#'transparent).
+
+}

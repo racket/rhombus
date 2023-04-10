@@ -567,7 +567,7 @@
                 (raise-syntax-error #f
                                     (string-append "property does not support assignment" statically-str)
                                     id))
-              (values #`(#,rator id e.parsed)
+              (values #`(#,rator obj-id e.parsed)
                       #'e.tail)]
              [(head . tail)
               (define call #`(#,rator obj-id))

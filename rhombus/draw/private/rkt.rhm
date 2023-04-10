@@ -13,6 +13,8 @@ export:
   draw.#{pen%} draw.#{the-pen-list}
   draw.#{brush%} draw.#{the-brush-list}
   draw.#{font%}
+  draw.#{region%}
+  draw.#{dc-path%}
   send
 
 expr.macro 'send $target ... . $(method :: Identifier)($(kw :: Keyword): $kw_arg, ..., $arg, ...)':

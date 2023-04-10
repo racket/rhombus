@@ -1,0 +1,83 @@
+#lang rhombus/static/and_meta
+import:
+  "rkt.rhm"
+  "dc-interface.rhm".DCForward as DC
+  "dc-interface.rhm"._DC
+  "region-interface.rhm" as intf
+  "symbol_map.rhm":
+    expose: symbol_map_annot
+
+export:
+  Region
+
+submodule private:
+  export:
+    _Region
+    set_wrap_dc
+
+class Region():
+  internal _Region
+  extends intf.Region
+  opaque
+
+  constructor(dc :: Maybe(DC) = #false):
+    _Region(rkt.make_object(rkt.#{region%}, dc && (dc :: _DC).dc))()
+
+  property dc :: Maybe(DC):
+    let dc = rkt.send hand.#{get-dc}()
+    dc && wrap_dc(dc)
+
+  method is_empty():
+    rkt.send hand.#{is-empty?}()
+
+  method contains(x :: Real, y :: Real):
+    rkt.send hand.#{in-region?}(x, y)
+
+  method rectangle(x :: Real, y :: Real,
+                   width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+    rkt.send hand.#{set-rectangle}(x, y, width, height)
+
+  method rounded_rectangle(x :: Real, y :: Real,
+                           width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+                           radius :: Real = -0.25):
+    rkt.send hand.#{set-rounded-rectangle}(x, y, width, height, radius)
+
+  method ellipse(x :: Real, y :: Real,
+                 width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+    rkt.send hand.#{set-ellipse}(x, y, width, height)
+
+  method arc(x :: Real, y :: Real,
+             width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+             start_radians :: Real, end_radians :: Real):
+    rkt.send hand.#{set-arc}(x, y, width, height, start_radians, end_radians)
+
+  method polygon([[x :: Real, y :: Real], ...],
+                 dx :: Real = 0.0,
+                 dy :: Real = 0.0,
+                 fill :: Region.Fill = #'odd_even):
+    rkt.send hand.#{set-polygon}([Pair(x, y), ...], dx, dy, fill_convert(fill))
+
+  method path(p :: Path,
+              ~dx: dx :: Real = 0.0,
+              ~dy: dy :: Real = 0.0,
+              ~fill: fill :: Region.Fill = #'odd_even):
+    rkt.send hand.#{set-path}(p, dx, dy, fill_convert(fill))
+
+  method union(region :: Region):
+    rkt.send hand.#{union}(region.hand)
+  method intersect(region :: Region):
+    rkt.send hand.#{intersect}(region.hand)
+  method subtract(region :: Region):
+    rkt.send hand.#{subtract}(region.hand)
+  method xor(region :: Region):
+    rkt.send hand.#{xor}(region.hand)
+
+  export:
+    Fill
+    
+  symbol_map_annot Fill fill_convert:
+    { odd_even: #{odd-even},
+      winding: winding }
+
+def mutable wrap_dc = #false
+fun set_wrap_dc(f): wrap_dc := f

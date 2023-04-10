@@ -4,8 +4,9 @@ export:
   Bitmap
   BitmapForward
 
-class Bitmap(handle):
+class Bitmap(hand):
   nonfinal
+  property handle: hand
   abstract property width
   abstract property height
 

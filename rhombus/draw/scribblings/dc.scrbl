@@ -1,5 +1,10 @@
 #lang scribble/rhombus/manual
-@(import: "common.rhm" open)
+@(import:
+    "common.rhm" open:
+      except: Path
+    meta_label:
+      rhombus/draw:
+        expose: Path)
 
 @title{Drawing Context}
 
@@ -34,25 +39,19 @@
 }
 
 @doc(
-  method DC.set_pen(dc :: DC, p :: Pen) :: Void
-  method DC.set_brush(dc :: DC, b :: Brush) :: Void
-  method DC.set_font(dc :: DC, f :: Font) :: Void
+  method DC.pen(dc :: DC) :: Pen
+  method DC.pen(dc :: DC, p :: Pen) :: Void
+  method DC.brush(dc :: DC) :: Brush
+  method DC.brush(dc :: DC, b :: Brush) :: Void
+  method DC.font(dc :: DC) :: Font
+  method DC.font(dc :: DC, f :: Font) :: Void
+  method DC.clipping_region(dc :: DC) :: Maybe(Region)
+  method DC.clipping_region(dc :: DC, rgn :: Maybe(Region)) :: Void
 ){
 
- Adjusts the drawing context's configuration.
+ Properties to get or set the drawing context's configuration.
 
 }
-
-@doc(
-  method DC.get_pen(dc :: DC) :: Pen
-  method DC.get_brush(dc :: DC) :: Brush
-  method DC.get_font(dc :: DC) :: Font
-){
-
- Reports the drawing context's configuration.
-
-}
-
 
 @doc(
   method DC.push() :: Void
@@ -64,41 +63,56 @@
 }
 
 @doc(
-  method DC.draw_point(dc:: DC, x :: Real, y :: Real) :: Void
-  method DC.draw_line(dc:: DC,
+  method DC.point(dc :: DC, x :: Real, y :: Real) :: Void
+  method DC.line(dc :: DC,
+                 x :: Real, y :: Real,
+                 x2 :: Real, y2 :: Real) :: Void
+  method DC.lines(dc :: DC,
+                  [[x :: Real, y :: Real], ...],
+                  ~dx: dx :: Real = 0.0,
+                  ~dy: dy :: Real = 0.0) :: Void
+  method DC.polygon(dc :: DC,
+                    [[x :: Real, y :: Real], ...],
+                    ~dx: dx :: Real = 0.0,
+                    ~dy: dy :: Real = 0.0,
+                    ~fill: fill :: DC.Fill = #'even_odd) :: Void
+  method DC.rectangle(dc :: DC,
                       x :: Real, y :: Real,
-                      x2 :: Real, y2 :: Real) :: Void
-  method DC.draw_lines(dc:: DC,
-                       [[x :: Real, y :: Real], ...],
-                       ~dx: dx :: Real = 0.0,
-                       ~dy: dy :: Real = 0.0) :: Void
-  method DC.draw_rectangle(dc:: DC,
-                           x :: Real, y :: Real,
-                           width :: Real.at_least(0.0),
-                           height :: Real.at_least(0.0)) :: Void
-  method DC.draw_ellipse(dc:: DC,
-                         x :: Real, y :: Real,
-                         width :: Real.at_least(0.0),
-                         height :: Real.at_least(0.0)) :: Void
-  method DC.draw_arc(dc:: DC,
-                     x :: Real, y :: Real,
-                     width :: Real.at_least(0.0),
-                     height :: Real.at_least(0.0),
-                     start :: Real, end :: Real) :: Void
+                      width :: Real.at_least(0.0),
+                      height :: Real.at_least(0.0)) :: Void
+  method DC.rounded_rectangle(dc :: DC,
+                              x :: Real, y :: Real,
+                              width :: Real.at_least(0.0),
+                              height :: Real.at_least(0.0),
+                              radius :: Real = -0.25) :: Void
+  method DC.ellipse(dc :: DC,
+                    x :: Real, y :: Real,
+                    width :: Real.at_least(0.0),
+                    height :: Real.at_least(0.0)) :: Void
+  method DC.arc(dc :: DC,
+                x :: Real, y :: Real,
+                width :: Real.at_least(0.0),
+                height :: Real.at_least(0.0),
+                start :: Real, end :: Real) :: Void
+  method DC.path(dc :: DC,
+                 p :: Path,
+                 ~dx: dx :: Real = 0.0,
+                 ~dy: dy :: Real = 0.0,
+                 ~fill: fill :: DC.Fill = #'odd_even) :: Void
 ){
 
  Draws lines into a drawing context using the current pen. In the case
- of drawing a rectangle, ellipse, or arc, a shape is fulled using the
- current brush, too.
+ of drawing a polygon, rectangle, rounded rectangle, ellipse, or arc, a
+ shape is fulled using the current brush, too.
 
 }
 
 @doc(
-  method DC.draw_text(dc:: DC,
-                      str :: String,
-                      x :: Real, y :: Real,
-                      ~combine: combine :: DC.TextCombine = #'kern,
-                      ~angle: angle :: Real = 0.0) :: Void
+  method DC.text(dc:: DC,
+                 str :: String,
+                 x :: Real, y :: Real,
+                 ~combine: combine :: DC.TextCombine = #'kern,
+                 ~angle: angle :: Real = 0.0) :: Void
 ){
 
  Draws text into a drawing context using the current font.
@@ -106,7 +120,7 @@
 }
 
 @doc(
-  method DC.draw_bitmap(
+  method DC.bitmap(
     dc: DC,
     bm :: Bitmap,
     dest_x :: Real, dest_y :: Real,
@@ -170,6 +184,20 @@
   @item{@rhombus(#'kern)}  
   @item{@rhombus(#'grapheme)}
   @item{@rhombus(#'char)}
+)
+
+}
+
+
+@doc(
+  annot.macro 'DC.Fill'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+  @item{@rhombus(#'even_odd)}  
+  @item{@rhombus(#'winding)}
 )
 
 }
