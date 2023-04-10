@@ -442,7 +442,7 @@
   method-extract-typeset)
 
 (define-doc def
-  "function"
+  "value"
   #f
   head-extract-name
   head-extract-metavariables

@@ -389,7 +389,7 @@
   def math.pi :: Flonum
 ){
 
- An appromation @italic{π}, the ratio of a circle's circumference to its diameter.
+ An appromation of @italic{π}, the ratio of a circle's circumference to its diameter.
 
 @examples(
   math.pi

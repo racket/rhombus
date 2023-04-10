@@ -126,72 +126,85 @@
        (if (attribute nt-key-g)
            (nt-key-expand #'nt-key-g)
            (values (car def-names) (car space-names) (car introducers))))
-     (define def-id-as-defs (for/fold ([rev-as-defs '()] [seen #hash()] #:result (reverse rev-as-defs))
-                                      ([immed-def-name (in-list def-names)]
-                                       [immed-introducer (in-list introducers)]
-                                       [immed-space-name (in-list space-names)]
-                                       [extra-space-names (in-list extra-space-namess)])
-                              (cond
-                                [(not immed-def-name)
-                                 (values (cons #f rev-as-defs)
-                                         seen)]
-                                [else
-                                 (define def-name (if (eq? immed-space-name 'grammar)
-                                                      ;; use key of a grammar non-terminal
-                                                      nt-def-name
-                                                      immed-def-name))
-                                 (define introducer (if (eq? immed-space-name 'grammar)
-                                                        nt-introducer
-                                                        immed-introducer))
-                                 (define extra-introducers (for/list ([extra-space-name (in-list extra-space-names)])
-                                                             (let ([intro (make-interned-syntax-introducer extra-space-name)])
-                                                               (lambda (x)
-                                                                 (intro x 'add)))))
-                                 (define space-name (if (eq? immed-space-name 'grammar)
-                                                        nt-space-name
-                                                        immed-space-name))
-                                 (define def-id (if (identifier? def-name)
-                                                    (introducer def-name)
-                                                    (in-name-root-space (car (syntax-e def-name)))))
-                                 (define extra-def-ids (for/list ([extra-introducer (in-list extra-introducers)])
-                                                         (if (identifier? def-name)
-                                                             (extra-introducer def-name)
-                                                             (in-name-root-space (car (syntax-e def-name))))))
-                                 (define str-id (if (identifier? def-name)
-                                                    #f
-                                                    (cadr (syntax->list def-name))))
-                                 (define index-str (let ([l (syntax->list def-name)])
-                                                     (and (and (list? l) ((length l) . > . 2))
-                                                          (caddr l))))
-                                 (define sym-path (cons
-                                                   (if str-id
-                                                       (syntax-e str-id)
-                                                       null)
-                                                   (if (eq? immed-space-name 'grammar)
-                                                       (syntax-e immed-def-name)
-                                                       null)))
-                                 (define seen-key (cons (cons (syntax-e def-id) sym-path)
-                                                        space-name))
-                                 (define typeset-id #`(#,(if (hash-ref seen seen-key #f)
-                                                             #'make-redef-id
-                                                             #'make-def-id)
-                                                       (quote-syntax #,def-id)
-                                                       (quote-syntax #,extra-def-ids)
-                                                       (quote-syntax #,str-id)
-                                                       (quote #,index-str)
-                                                       (quote #,space-name)
-                                                       (quote #,extra-space-names)
-                                                       (quote #,(and (eq? immed-space-name 'grammar)
-                                                                     immed-def-name))
-                                                       (quote #,immed-space-name)))
-                                 (values
-                                  (cons (if (eq? immed-space-name 'grammar)
-                                            typeset-id
-                                            #`(defining-element
-                                                #f
-                                                #,typeset-id))
-                                        rev-as-defs)
-                                  (hash-set seen seen-key #t))])))
+     (define def-id-as-defs
+       (for/fold ([rev-mk-as-defs '()] [rev-keys '()] [seen #hash()]
+                                       #:result (let ([key-rev-strss (for/list ([key (in-list (reverse rev-keys))])
+                                                                       (hash-ref seen key '()))])
+                                                  (for/list ([mk-as-def (reverse rev-mk-as-defs)]
+                                                             [key-rev-strs (in-list key-rev-strss)])
+                                                    (mk-as-def key-rev-strs))))
+                 ([immed-def-name (in-list def-names)]
+                  [immed-introducer (in-list introducers)]
+                  [immed-space-name (in-list space-names)]
+                  [extra-space-names (in-list extra-space-namess)]
+                  [kind-str (in-list kind-strs)])
+         (cond
+           [(not immed-def-name)
+            (values (cons (lambda (l) #f) rev-mk-as-defs)
+                    (cons #f rev-keys)
+                    seen)]
+           [else
+            (define def-name (if (eq? immed-space-name 'grammar)
+                                 ;; use key of a grammar non-terminal
+                                 nt-def-name
+                                 immed-def-name))
+            (define introducer (if (eq? immed-space-name 'grammar)
+                                   nt-introducer
+                                   immed-introducer))
+            (define extra-introducers (for/list ([extra-space-name (in-list extra-space-names)])
+                                        (let ([intro (make-interned-syntax-introducer extra-space-name)])
+                                          (lambda (x)
+                                            (intro x 'add)))))
+            (define space-name (if (eq? immed-space-name 'grammar)
+                                   nt-space-name
+                                   immed-space-name))
+            (define def-id (if (identifier? def-name)
+                               (introducer def-name)
+                               (in-name-root-space (car (syntax-e def-name)))))
+            (define extra-def-ids (for/list ([extra-introducer (in-list extra-introducers)])
+                                    (if (identifier? def-name)
+                                        (extra-introducer def-name)
+                                        (in-name-root-space (car (syntax-e def-name))))))
+            (define str-id (if (identifier? def-name)
+                               #f
+                               (cadr (syntax->list def-name))))
+            (define index-str (let ([l (syntax->list def-name)])
+                                (and (and (list? l) ((length l) . > . 2))
+                                     (caddr l))))
+            (define sym-path (cons
+                              (if str-id
+                                  (syntax-e str-id)
+                                  null)
+                              (if (eq? immed-space-name 'grammar)
+                                  (syntax-e immed-def-name)
+                                  null)))
+            (define seen-key (cons (cons (syntax-e def-id) sym-path)
+                                   space-name))
+            (define make-typeset-id
+              (lambda (kind-rev-strs)
+                #`(#,(if (hash-ref seen seen-key #f)
+                         #'make-redef-id
+                         #'make-def-id)
+                   (quote-syntax #,def-id)
+                   (quote-syntax #,extra-def-ids)
+                   (quote-syntax #,str-id)
+                   (quote #,index-str)
+                   (quote #,(combine-kind-strs (reverse kind-rev-strs)))
+                   (quote #,space-name)
+                   (quote #,extra-space-names)
+                   (quote #,(and (eq? immed-space-name 'grammar)
+                                 immed-def-name))
+                   (quote #,immed-space-name))))
+            (values
+             (cons (if (eq? immed-space-name 'grammar)
+                       make-typeset-id
+                       (lambda (kind-rev-strs)
+                         #`(defining-element
+                             #f
+                             #,(make-typeset-id kind-rev-strs))))
+                   rev-mk-as-defs)
+             (cons seen-key rev-keys)
+             (hash-set seen seen-key (cons kind-str (hash-ref seen seen-key '()))))])))
      (define nonterm-vars (for/fold ([vars #hasheq()]) ([immed-def-name (in-list def-names)]
                                                         [immed-introducer (in-list introducers)]
                                                         [immed-space-name (in-list space-names)])
@@ -255,7 +268,7 @@
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id extra-ids str-id index-str-in space extra-spaces nonterm-sym immed-space)
+(define (make-def-id id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (define str (if (eq? immed-space 'grammar)
                   (symbol->string nonterm-sym)
@@ -312,14 +325,14 @@
                              content
                              tag
                              (list (datum-intern-literal index-str))
-                             (list ref-content)
+                             (list (list ref-content " " kind-str))
                              (with-exporting-libraries
                                (lambda (libs) (thing-index-desc name libs))))
                             tag
                             ref-content))))]
       [else content])))
 
-(define (make-redef-id id extra-ids str-id index-str space extra-spaces nonterm-sym immed-space)
+(define (make-redef-id id extra-ids str-id index-str kind-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (racketidfont
    (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
@@ -457,3 +470,18 @@
              (append ((if (car lbls) (add-background-label (car lbls)) values)
                       (list (car l)))
                      (loop (cdr l) (cdr lbls))))]))))]))
+
+(define-for-syntax (combine-kind-strs strs)
+  (let ([strs (reverse (for/fold ([new-strs '()]) ([str (in-list strs)])
+                         (if (member str new-strs)
+                             new-strs
+                             (cons str new-strs))))])
+    (cond
+      [(null? strs) "???"]
+      [(= 1 (length strs)) (car strs)]
+      [(= 2 (length strs)) (string-append (car strs) " and " (cadr strs))]
+      [else (let loop ([strs strs])
+              (cond
+                [(null? (cdr strs)) (string-append "and " (car strs))]
+                [else
+                 (string-append (car strs) ", " (loop (cdr strs)))]))])))
