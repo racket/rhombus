@@ -160,6 +160,9 @@
                                  (define str-id (if (identifier? def-name)
                                                     #f
                                                     (cadr (syntax->list def-name))))
+                                 (define index-str (let ([l (syntax->list def-name)])
+                                                     (and (and (list? l) ((length l) . > . 2))
+                                                          (caddr l))))
                                  (define sym-path (cons
                                                    (if str-id
                                                        (syntax-e str-id)
@@ -175,6 +178,7 @@
                                                        (quote-syntax #,def-id)
                                                        (quote-syntax #,extra-def-ids)
                                                        (quote-syntax #,str-id)
+                                                       (quote #,index-str)
                                                        (quote #,space-name)
                                                        (quote #,extra-space-names)
                                                        (quote #,(and (eq? immed-space-name 'grammar)
@@ -251,13 +255,14 @@
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id extra-ids str-id space extra-spaces nonterm-sym immed-space)
+(define (make-def-id id extra-ids str-id index-str-in space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (define str (if (eq? immed-space 'grammar)
                   (symbol->string nonterm-sym)
                   (shrubbery-syntax->string (if str-id-e
                                                 str-id
                                                 id))))
+  (define index-str (or index-str-in str))
   (define nonterm-suffix (if (eq? immed-space 'grammar)
                              (list nonterm-sym)
                              null))
@@ -277,7 +282,7 @@
         'rhombus/namespace
         space))
   (define id-space (get-id-space space))
-  (define (make-content defn?)
+  (define (make-content defn? [str str])
     ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
      (make-id-element id str defn? #:space id-space #:suffix str+space)))
   (define content (annote-exporting-library (make-content #t)))
@@ -290,7 +295,7 @@
     (cond
       [target-maker
        (define name (string->symbol str))
-       (define ref-content (make-content #f))
+       (define ref-content (make-content #f index-str))
        (target-maker content
                      (lambda (tag)
                        (if (or nonterm-sym
@@ -306,7 +311,7 @@
                              #f
                              content
                              tag
-                             (list (datum-intern-literal str))
+                             (list (datum-intern-literal index-str))
                              (list ref-content)
                              (with-exporting-libraries
                                (lambda (libs) (thing-index-desc name libs))))
@@ -314,7 +319,7 @@
                             ref-content))))]
       [else content])))
 
-(define (make-redef-id id extra-ids str-id space extra-spaces nonterm-sym immed-space)
+(define (make-redef-id id extra-ids str-id index-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
   (racketidfont
    (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t

@@ -5,7 +5,7 @@
 
 @doc(
   class Brush(handle, private saved_stipple):
-    constructor (~like like :: Maybe(Brush) = #false,
+    constructor (~like: like :: Maybe(Brush) = #false,
                  ~color: color :: (String || Color) = "Black",
                  ~style: style :: Brush.Style = #'solid,
                  ~stipple: stipple :: Maybe(Bitmap) = #false)
@@ -13,15 +13,15 @@
 
  Creates a brush configuration.
 
- If @rhombus(like) is provided as a @rhombus(Brush), then @rhombus(like)
+ If @rhombus(like) is provided as a @rhombus(Brush, ~class), then @rhombus(like)
  provides default values for other arguments, instead of the normal defaults.
 
 }
 
 @doc(
-  property Brush.color(brush :: Brush) :: Color
-  property Brush.style(brush :: Brush) :: BrushStyle
-  property Brush.stipple(brush :: Brush) :: Maybe(Bitmap)
+  property (brush :: Brush).color :: Color
+  property (brush :: Brush).style :: Brush.Style
+  property (brush :: Brush).stipple :: Maybe(Bitmap)
 ){
 
  Properties to access brush components.
@@ -53,7 +53,7 @@
 
 
 @doc(
-  def Brush.none :: Pen
+  def Brush.none :: Brush
 ){
 
  A brush with style @rhombus(#'transparent).

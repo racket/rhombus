@@ -15,13 +15,13 @@
 }
 
 @doc(
-  property Bitmap.width(bm :: Bitmap) :: PosInt
-  property Bitmap.height(bm :: Bitmap) :: PosInt
-  property Bitmap.backing_scale(bm :: Bitmap) :: Real.above(0.0)
-  property Bitmap.depth(bm :: Bitmap) :: NonnegInt
-  property Bitmap.has_color(bm :: Bitmap) :: Boolean
-  property Bitmap.has_alpha(bm :: Bitmap) :: Boolean
-  property Bitmap.is_ok(bm :: Bitmap) :: Boolean
+  property (bm :: Bitmap).width :: PosInt
+  property (bm :: Bitmap).height :: PosInt
+  property (bm :: Bitmap).backing_scale :: Real.above(0.0)
+  property (bm :: Bitmap).depth :: NonnegInt
+  property (bm :: Bitmap).has_color :: Boolean
+  property (bm :: Bitmap).has_alpha :: Boolean
+  property (bm :: Bitmap).is_ok :: Boolean
 ){
 
  Properties to access bitmap components.
@@ -29,7 +29,7 @@
 }
 
 @doc(
-  method Bitmap.make_dc(bm :: Bitmap) :: DC
+  method (bm :: Bitmap).make_dc() :: DC
 ){
 
  Creates a drawing context that writes to the bitmap.
@@ -37,8 +37,7 @@
 }
 
 @doc(
-  method Bitmap.argb_pixels(
-    bm :: Bitmap,
+  method (bm :: Bitmap).argb_pixels(
     ~x: x :: NonnegInt = 0,
     ~y: y :: NonnegInt = 0,
     ~width: width :: NonnegInt = width,
@@ -52,12 +51,11 @@
 }
 
 @doc(
-  method Bitmap.write(bm :: Bitmap,
-                      dest :: Path,
-                      ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm,
-                                            #'xpm, #'bmp),
-                      ~quality: quality :: Int.in(0, 100) = 75,
-                      ~as_unscaled: as_unscaled :: Boolean = #false)
+  method (bm :: Bitmap).write(dest :: Path,
+                              ~kind: kind :: Any.of(#'png, #'jpeg, #'xbm,
+                                                    #'xpm, #'bmp),
+                              ~quality: quality :: Int.in(0, 100) = 75,
+                              ~as_unscaled: as_unscaled :: Boolean = #false)
     :: Void
 ){
 

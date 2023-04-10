@@ -56,7 +56,7 @@
 }
 
 @doc(
-  property Checkbox.at_is_checked(cb :: Checkbox) :: Obs.of(Boolean)
+  property (cb :: Checkbox).at_is_checked :: Obs.of(Boolean)
 ){
 
  Returns an observable derived from the one that determines whether

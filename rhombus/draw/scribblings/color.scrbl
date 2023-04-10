@@ -26,10 +26,10 @@
 }
 
 @doc(
-  property Color.red(col :: Color) :: Byte
-  property Color.green(col :: Color) :: Byte
-  property Color.blue(col :: Color) :: Byte
-  property Color.alpha(col :: Color) :: Real.in(0, 1)
+  property (col :: Color).red :: Byte
+  property (col :: Color).green :: Byte
+  property (col :: Color).blue :: Byte
+  property (col :: Color).alpha :: Real.in(0, 1)
 ){
 
  Properties to access color components.

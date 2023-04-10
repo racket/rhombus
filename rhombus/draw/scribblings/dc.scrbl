@@ -20,10 +20,10 @@
 }
 
 @doc(
-  property DC.width(dc :: DC) :: Real.at_least(0.0)
-  property DC.height(dc :: DC) :: Real.at_least(0.0)
-  property DC.size(dc :: DC) :: matching([_ :: Real.at_least(0.0),
-                                          _ :: Real.at_least(0.0)])
+  property (dc :: DC).width :: Real.at_least(0.0)
+  property (dc :: DC).height :: Real.at_least(0.0)
+  property (dc :: DC).size :: matching([_ :: Real.at_least(0.0),
+                                        _ :: Real.at_least(0.0)])
 ){
 
  The size of the drawing area: width, height, or both.
@@ -31,7 +31,7 @@
 }
 
 @doc(
-  method DC.clear(dc :: DC) :: Void
+  method (dc :: DC).clear() :: Void
 ){
 
  Resets the output to an empty state.
@@ -39,14 +39,14 @@
 }
 
 @doc(
-  method DC.pen(dc :: DC) :: Pen
-  method DC.pen(dc :: DC, p :: Pen) :: Void
-  method DC.brush(dc :: DC) :: Brush
-  method DC.brush(dc :: DC, b :: Brush) :: Void
-  method DC.font(dc :: DC) :: Font
-  method DC.font(dc :: DC, f :: Font) :: Void
-  method DC.clipping_region(dc :: DC) :: Maybe(Region)
-  method DC.clipping_region(dc :: DC, rgn :: Maybe(Region)) :: Void
+  property | (dc :: DC).pen :: Pen
+           | (dc :: DC).pen := p :: Pen
+  property | (dc :: DC).brush :: Brush
+           | (dc :: DC).brush := b :: Brush
+  property | (dc :: DC).font :: Font
+           | (dc :: DC).font := f :: Font
+  property | (dc :: DC).clipping_region :: Maybe(Region)
+           | (dc :: DC).clipping_region := rgn :: Maybe(Region)
 ){
 
  Properties to get or set the drawing context's configuration.
@@ -54,8 +54,8 @@
 }
 
 @doc(
-  method DC.push() :: Void
-  method DC.pop() :: Void
+  method (dc :: DC).push() :: Void
+  method (dc :: DC).pop() :: Void
 ){
 
  Saves and restores the draw context's configuration.
@@ -63,42 +63,34 @@
 }
 
 @doc(
-  method DC.point(dc :: DC, x :: Real, y :: Real) :: Void
-  method DC.line(dc :: DC,
-                 x :: Real, y :: Real,
-                 x2 :: Real, y2 :: Real) :: Void
-  method DC.lines(dc :: DC,
-                  [[x :: Real, y :: Real], ...],
-                  ~dx: dx :: Real = 0.0,
-                  ~dy: dy :: Real = 0.0) :: Void
-  method DC.polygon(dc :: DC,
-                    [[x :: Real, y :: Real], ...],
-                    ~dx: dx :: Real = 0.0,
-                    ~dy: dy :: Real = 0.0,
-                    ~fill: fill :: DC.Fill = #'even_odd) :: Void
-  method DC.rectangle(dc :: DC,
-                      x :: Real, y :: Real,
-                      width :: Real.at_least(0.0),
-                      height :: Real.at_least(0.0)) :: Void
-  method DC.rounded_rectangle(dc :: DC,
-                              x :: Real, y :: Real,
+  method (dc :: DC).point(x :: Real, y :: Real) :: Void
+  method (dc :: DC).line(x :: Real, y :: Real,
+                         x2 :: Real, y2 :: Real) :: Void
+  method (dc :: DC).lines([[x :: Real, y :: Real], ...],
+                          ~dx: dx :: Real = 0.0,
+                          ~dy: dy :: Real = 0.0) :: Void
+  method (dc :: DC).polygon([[x :: Real, y :: Real], ...],
+                            ~dx: dx :: Real = 0.0,
+                            ~dy: dy :: Real = 0.0,
+                            ~fill: fill :: DC.Fill = #'even_odd) :: Void
+  method (dc :: DC).rectangle(x :: Real, y :: Real,
                               width :: Real.at_least(0.0),
-                              height :: Real.at_least(0.0),
-                              radius :: Real = -0.25) :: Void
-  method DC.ellipse(dc :: DC,
-                    x :: Real, y :: Real,
-                    width :: Real.at_least(0.0),
-                    height :: Real.at_least(0.0)) :: Void
-  method DC.arc(dc :: DC,
-                x :: Real, y :: Real,
-                width :: Real.at_least(0.0),
-                height :: Real.at_least(0.0),
-                start :: Real, end :: Real) :: Void
-  method DC.path(dc :: DC,
-                 p :: Path,
-                 ~dx: dx :: Real = 0.0,
-                 ~dy: dy :: Real = 0.0,
-                 ~fill: fill :: DC.Fill = #'odd_even) :: Void
+                              height :: Real.at_least(0.0)) :: Void
+  method (dc :: DC).rounded_rectangle(x :: Real, y :: Real,
+                                      width :: Real.at_least(0.0),
+                                      height :: Real.at_least(0.0),
+                                      radius :: Real = -0.25) :: Void
+  method (dc :: DC).ellipse(x :: Real, y :: Real,
+                            width :: Real.at_least(0.0),
+                            height :: Real.at_least(0.0)) :: Void
+  method (dc :: DC).arc(x :: Real, y :: Real,
+                        width :: Real.at_least(0.0),
+                        height :: Real.at_least(0.0),
+                        start :: Real, end :: Real) :: Void
+  method (dc :: DC).path(p :: Path,
+                         ~dx: dx :: Real = 0.0,
+                         ~dy: dy :: Real = 0.0,
+                         ~fill: fill :: DC.Fill = #'odd_even) :: Void
 ){
 
  Draws lines into a drawing context using the current pen. In the case
@@ -108,11 +100,10 @@
 }
 
 @doc(
-  method DC.text(dc:: DC,
-                 str :: String,
-                 x :: Real, y :: Real,
-                 ~combine: combine :: DC.TextCombine = #'kern,
-                 ~angle: angle :: Real = 0.0) :: Void
+  method (dc:: DC).text(str :: String,
+                        x :: Real, y :: Real,
+                        ~combine: combine :: DC.TextCombine = #'kern,
+                        ~angle: angle :: Real = 0.0) :: Void
 ){
 
  Draws text into a drawing context using the current font.
@@ -120,8 +111,7 @@
 }
 
 @doc(
-  method DC.bitmap(
-    dc: DC,
+  method (dc :: DC).bitmap(
     bm :: Bitmap,
     dest_x :: Real, dest_y :: Real,
     ~source_x: source_x :: Real = 0,
@@ -139,11 +129,10 @@
 }
 
 @doc(
-  method DC.copy(dc :: DC,
-                 source_x :: Real, source_y :: Real,
-                 width :: Real.at_least(0.0),
-                 height :: Real.at_least(0.0),
-                 dest_x2 :: Real, dest_y :: Real) :: Void
+  method (dc :: DC).copy(source_x :: Real, source_y :: Real,
+                         width :: Real.at_least(0.0),
+                         height :: Real.at_least(0.0),
+                         dest_x2 :: Real, dest_y :: Real) :: Void
 ){
 
  Copies a portion of the draw context's content to another portion of
@@ -152,7 +141,7 @@
 }
 
 @doc(
-  method DC.font_metrics_key(dc :: DC) :: Any
+  method (dc :: DC).font_metrics_key() :: Any
 ){
 
  Returns a value that changes when the selected font is changed to one

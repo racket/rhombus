@@ -5,7 +5,7 @@
 
 @doc(
   class Font(handle):
-    constructor (~like like :: Maybe(Font) = #false,
+    constructor (~like: like :: Maybe(Font) = #false,
                  ~kind: kind :: Font.Kind = #'default,
                  ~name: name :: Maybe(String) = #false,
                  ~size: size :: Real.in(0.0, 1024.0) = 12.0,
@@ -20,23 +20,23 @@
 
  Creates a font configuration.
 
- If @rhombus(like) is provided as a @rhombus(Font), then @rhombus(like)
+ If @rhombus(like) is provided as a @rhombus(Font, ~class), then @rhombus(like)
  provides default values for other arguments, instead of the normal
  defaults.
 
 }
 
 @doc(
-  property Font.kind(font :: Font) :: Font.Kind
-  property Font.name(font :: Font) :: Maybe(String)
-  property Font.size(font :: Font) :: Real.in(0.0, 1024.0)
-  property Font.in_pixels(font :: Font) :: Boolean
-  property Font.style(font :: Font) :: Font.Style
-  property Font.weight(font :: Font) :: Font.Weight
-  property Font.has_underline(font :: Font) :: Boolean
-  property Font.smoothing(font :: Font) :: Font.Smoothing
-  property Font.hinting(font :: Font) :: Font.Hinting
-  property Font.features(font :: Font) :: Map.of(Font.FeatureString, NonnegInt)
+  property (font :: Font).kind :: Font.Kind
+  property (font :: Font).name :: Maybe(String)
+  property (font :: Font).size :: Real.in(0.0, 1024.0)
+  property (font :: Font).in_pixels :: Boolean
+  property (font :: Font).style :: Font.Style
+  property (font :: Font).weight :: Font.Weight
+  property (font :: Font).has_underline :: Boolean
+  property (font :: Font).smoothing :: Font.Smoothing
+  property (font :: Font).hinting :: Font.Hinting
+  property (font :: Font).features :: Map.of(Font.FeatureString, NonnegInt)
 ){
 
  Propeties to access font components.

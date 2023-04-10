@@ -115,7 +115,7 @@
 
 
 @doc(
-  property TabsPanel.at_selection(tabs :: TabsPanel) :: Obs
+  property (tabs :: TabsPanel).at_selection :: Obs
 ){
 
  Returns an observable derived from the one that determines the selected

@@ -18,7 +18,7 @@
 }
 
 @doc(
-  property Region.dc(rgn :: Region) :: Maybe(DC)
+  property (rgn :: Region).dc :: Maybe(DC)
 ){
 
  Reports the drawing context that the region is specific to, if any.
@@ -26,8 +26,8 @@
 }
 
 @doc(
-  method Region.is_empty(rgn :: Region) :: Boolean
-  method Region.contains(rgn :: Region, x :: Real, y :: Real) :: Boolean
+  method (rgn :: Region).is_empty() :: Boolean
+  method (rgn :: Region).contains(x :: Real, y :: Real) :: Boolean
 ){
 
   Queries the content represented by the region.
@@ -35,34 +35,28 @@
 }
 
 @doc(
-  method Region.polygon(rgn :: Region,
-                        [[x :: Real, y :: Real], ...],
-                        ~dx: dx :: Real = 0.0,
-                        ~dy: dy :: Real = 0.0,
-                        ~fill: fill :: Region.Fill = #'even_odd) :: Void
-  method Region.rectangle(rgn :: Region,
-                          x :: Real, y :: Real,
-                          width :: Real.at_least(0.0),
-                          height :: Real.at_least(0.0)) :: Void
-  method Region.rounded_rectangle(rgn :: Region,
-                                  x :: Real, y :: Real,
-                                  width :: Real.at_least(0.0),
-                                  height :: Real.at_least(0.0),
-                                  radius :: Real = -0.25) :: Void
-  method Region.ellipse(rgn :: Region,
-                        x :: Real, y :: Real,
-                        width :: Real.at_least(0.0),
-                        height :: Real.at_least(0.0)) :: Void
-  method Region.arc(rgn :: Region,
-                    x :: Real, y :: Real,
-                    width :: Real.at_least(0.0),
-                    height :: Real.at_least(0.0),
-                    start :: Real, end :: Real) :: Void
-  method Region.path(rgn :: Region,
-                     p :: Path,
-                     ~dx: dx :: Real = 0.0,
-                     ~dy: dy :: Real = 0.0,
-                     ~fill: fill :: Region.Fill = #'odd_even) :: Void
+  method (rgn :: Region).polygon([[x :: Real, y :: Real], ...],
+                                 ~dx: dx :: Real = 0.0,
+                                 ~dy: dy :: Real = 0.0,
+                                 ~fill: fill :: Region.Fill = #'even_odd) :: Void
+  method (rgn :: Region).rectangle(x :: Real, y :: Real,
+                                   width :: Real.at_least(0.0),
+                                   height :: Real.at_least(0.0)) :: Void
+  method (rgn :: Region).rounded_rectangle(x :: Real, y :: Real,
+                                           width :: Real.at_least(0.0),
+                                           height :: Real.at_least(0.0),
+                                           radius :: Real = -0.25) :: Void
+  method (rgn :: Region).ellipse(x :: Real, y :: Real,
+                                 width :: Real.at_least(0.0),
+                                 height :: Real.at_least(0.0)) :: Void
+  method (rgn :: Region).arc(x :: Real, y :: Real,
+                             width :: Real.at_least(0.0),
+                             height :: Real.at_least(0.0),
+                             start :: Real, end :: Real) :: Void
+  method (rgn :: Region).path(p :: Path,
+                              ~dx: dx :: Real = 0.0,
+                              ~dy: dy :: Real = 0.0,
+                              ~fill: fill :: Region.Fill = #'odd_even) :: Void
 ){
 
  Adds to the region. A path or polygon is implicitly closed.
@@ -70,10 +64,10 @@
 }
 
 @doc(
-  method Region.union(rgn :: Region, rgn2 :: Region) :: Void
-  method Region.intersect(rgn :: Region, rgn2 :: Region) :: Void
-  method Region.subtract(rgn :: Region, rgn2 :: Region) :: Void
-  method Region.xor(rgn :: Region, rgn2 :: Region) :: Void
+  method (rgn :: Region).union(rgn2 :: Region) :: Void
+  method (rgn :: Region).intersect(rgn2 :: Region) :: Void
+  method (rgn :: Region).subtract(rgn2 :: Region) :: Void
+  method (rgn :: Region).xor(rgn2 :: Region) :: Void
 ){
 
  Changes the region by applying a combination with another region. The

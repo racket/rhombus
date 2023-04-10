@@ -16,19 +16,19 @@
 
  Creates a pen configuration.
 
- If @rhombus(like) is provided as a @rhombus(Font), then @rhombus(like)
+ If @rhombus(like) is provided as a @rhombus(Pen, ~class), then @rhombus(like)
  provides default values for other arguments, instead of the normal
  defaults.
 
 }
 
 @doc(
-  property Pen.color(pen :: Pen) :: Color
-  property Pen.width(pen :: Pen) :: Real.in(0, 255)
-  property Pen.style(pen :: Pen) :: Pen.Style
-  property Pen.cap(pen :: Pen) :: Pen.Cap
-  property Pen.join(pen :: Pen) :: Pen.Join
-  property Pen.stipple(pen :: Pen) :: Maybe(Bitmap)
+  property (pen :: Pen).color :: Color
+  property (pen :: Pen).width :: Real.in(0, 255)
+  property (pen :: Pen).style :: Pen.Style
+  property (pen :: Pen).cap :: Pen.Cap
+  property (pen :: Pen).join :: Pen.Join
+  property (pen :: Pen).stipple :: Maybe(Bitmap)
 ){
 
  Properties to access pen components.
