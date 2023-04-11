@@ -117,6 +117,7 @@
           (define str (shrubbery-syntax->string stx))
           (cond
             [(eq? space-name 'datum) (element tt-style str)]
+            [(eq? space-name 'value) (element variable-color str)]
             [else
              (define space-name (id-space-name* #'id))
              (if (identifier-binding (add-space #'id space-name) #f)
@@ -132,6 +133,8 @@
              (element variable-color str)]
             [(eq? space-name 'datum)
              (element tt-style str)]
+            [(eq? space-name 'value)
+             (element value-color str)]
             [(identifier-binding (add-space stx space-name) #f)
              (element tt-style (make-id-element (add-space stx space-name) str #f
                                                 #:space space-name
@@ -225,6 +228,8 @@
                         (cond
                           [(eq? space-name 'var)
                            (element variable-color str)]
+                          [(eq? space-name 'value)
+                           (element value-color str)]
                           [else
                            (element tt-style (make-id-element (add-space id space-name) str #f
                                                               #:space space-name
@@ -416,7 +421,10 @@
 (define (lookup-stx-identifier start end position-stxes stx-ranges)
   (lookup-stx (lambda (stx)
                 (and (identifier? stx)
-                     (identifier-binding (add-space stx (id-space-name stx)) #f)))
+                     (let ([name (id-space-name stx)])
+                       (or (eq? name 'var)
+                           (eq? name 'value)
+                           (identifier-binding (add-space stx name) #f)))))
               start end position-stxes stx-ranges))
 
 (define (element*? v)

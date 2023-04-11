@@ -15,6 +15,7 @@
                     ::
                     :~
                     |'|
+                    |#'|
                     fun
                     constructor
                     val
@@ -67,6 +68,17 @@
 
 (define-spacer :: annote-spacer)
 (define-spacer :~ annote-spacer)
+
+(define-spacer |#'|
+  (spacer
+   (lambda (head tail escape)
+     (values head
+             (syntax-parse tail
+               [(a:identifier . more)
+                #:when (not (escape? #'a escape))
+                #`(#,(term-identifiers-syntax-property #'a 'typeset-space-name 'value)
+                   . more)]
+               [_ tail])))))
 
 (define-spacer |'|
   (spacer

@@ -5,7 +5,7 @@
 
 (define (full-space-name space-name)
   (case space-name
-    [(#f var datum hide) space-name]
+    [(#f var datum value hide) space-name]
     [(expr) #f]
     [else (string->symbol (string-append "rhombus/" (symbol->string space-name)))]))
 
@@ -16,7 +16,7 @@
     [else
      (define space
        (case space-name/full
-         [(#f var datum expr) #f]
+         [(#f var value datum expr) #f]
          [else space-name/full]))
      (if space
          ((make-interned-syntax-introducer space) stx 'add)

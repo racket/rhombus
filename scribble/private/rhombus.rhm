@@ -132,6 +132,7 @@ expr.macro
     def kw = Syntax.unwrap(kw_stx)
     if (kw === #'~var
           || kw === #'~datum
+          || kw === #'~value
           || kw === #'~space
           || kw === #'~expr
           || kw === #'~bind
