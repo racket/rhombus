@@ -26,8 +26,8 @@
 }
 
 @doc(
-  property Obs.value(obs :: Obs)
-  property Obs.value(obs :: Obs, v :: Any)
+  property | (obs :: Obs).value
+           | (obs :: Obs).value := v
 ){
 
  Returns the value via @rhombus(Obs.peek) (which you shouldn't normally
@@ -52,7 +52,7 @@
 
 
 @doc(
-  method Obs.observe(obs :: Obs, f :: Function.of_arity(1))
+  method (obs :: Obs).observe(f :: Function.of_arity(1))
 ){
 
  Adds @rhombus(f) as a function to be called when the value of
@@ -61,7 +61,7 @@
 }
 
 @doc(
-  method Obs.unobserve(obs :: Obs, f :: Function.of_arity(1))
+  method (obs :: Obs).unobserve(f :: Function.of_arity(1))
 ){
 
  Removes @rhombus(f) as a function to be called when the value of
@@ -70,7 +70,7 @@
 }
 
 @doc(
-  method Obs.update(obs :: Obs, f :: Function.of_arity(1))
+  method (obs :: Obs).update(f :: Function.of_arity(1))
 ){
 
  Changes the value @rhombus(v, ~var) of @rhombus(obs) to
@@ -79,7 +79,7 @@
 }
 
 @doc(
-  method Obs.peek(obs :: Obs)
+  method (obs :: Obs).peek()
 ){
 
  Returns the current value of @rhombus(obs).
@@ -94,7 +94,7 @@
 }
 
 @doc(
-  method Obs.rename(obs :: Obs, name :: String) :: Obs
+  method (obs :: Obs).rename(name :: String) :: Obs
 ){
 
  Returns an observer like @rhombus(obs), but named as @rhombus(name).
@@ -102,7 +102,7 @@
 }
 
 @doc(
-  method Obs.map(obs :: Obs, f :: Function.of_arity(1)) :: Obs
+  method (obs :: Obs).map(f :: Function.of_arity(1)) :: Obs
 ){
 
  Returns an observer whose value changes each time that @rhombus(obs)'s
@@ -113,8 +113,7 @@
 }
 
 @doc(
-  method Obs.debounce(obs :: Obs,
-                      ~duration: msec :: NonnegInt = 200) :: Obs
+  method (obs :: Obs).debounce(~duration: msec :: NonnegInt = 200) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
@@ -124,8 +123,7 @@
 }
 
 @doc(
-  method Obs.throttle(obs :: Obs,
-                      ~duration: msec :: NonnegInt = 200) :: Obs
+  method (obs :: Obs).throttle(~duration: msec :: NonnegInt = 200) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
@@ -134,13 +132,13 @@
 }
 
 @doc(
-  method Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs
-  method Obs.combine({#,(@rhombus(key, ~var)): obs :: Obs, ...}) :: Obs
+  fun Obs.combine(f :: Function.of_arity(1), obs :: Obs, ...) :: Obs
+  fun Obs.combine({#,(@rhombus(key, ~var)): obs :: Obs, ...}) :: Obs
 ){
 
  Returns a new observable whose value changes to the value of
- @rhombus(f(#,(@rhombus(v, ~var)), ...)) or
- @rhombus({#,(@rhombus(key, ~var)): #,(@rhombus(v, ~var)), ...}) when any value @rhombus(v, ~var)
- of an @rhombus(obs) changes.
+ @rhombus(f(obs.value, ...)) or
+ @rhombus({#,(@rhombus(key, ~var)): obs.value, ...}) when the value
+ of any @rhombus(obs) changes.
 
 }
