@@ -31,6 +31,8 @@
                  ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
                  ~action: action :: Function.of_arity(1) = #,(@rhombus(set_is_checked, ~var)),
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true)
+
+  property (cb :: Checkbox).at_is_checked :: Obs.of(Boolean)
 ){
 
  Creates a checkbox. When rendered, the function call
@@ -56,15 +58,6 @@
 }
 
 @doc(
-  property (cb :: Checkbox).at_is_checked :: Obs.of(Boolean)
-){
-
- Returns an observable derived from the one that determines whether
- @rhombus(cb) is shown as checked.
-
-}
-
-@doc(
   class Slider():
     implements View
     constructor (label :: MaybeObs.of(Maybe(LabelString)) = #false,
@@ -76,6 +69,8 @@
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                  ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal])
+
+  property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
 ){
 
  Creates a slider. When rendered, the function call
@@ -100,12 +95,25 @@
 
 }
 
+
 @doc(
-  property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
+  class Label():
+    implements View
+    constructor (label :: MaybeObs.of(LabelString),
+                 ~color: color :: MaybeObs.of(Maybe(Color)) = #false,
+                 ~font: font :: MaybeObs.of(Font) = Label.normal_control_font)
+
+  property (lbl :: Label).at_label :: Obs.of(LabelString)
 ){
 
- Returns an observable derived from the one that determines the value
- shown by @rhombus(sldr).
+ Creates a text label.
+
+ If @rhombus(label) is not an observable, then an observable
+ @rhombus(at_label, ~var) is created with initial value
+ @rhombus(value). Otherwise, @rhombus(at_label, ~var) is
+ @rhombus(value). A observable derived from
+ @rhombus(at_value, ~var) can be obtained from the
+ @rhombus(Label.at_label) property.
 
 }
 

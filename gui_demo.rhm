@@ -75,13 +75,15 @@ def tabs:
                          ~max_value: 100,
                          ~style: [#'plain, #'horizontal])
   let spacer = gui.HPanel(~stretch: [#true, #true])
-
+  
   def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine({ "mood": at_tab,
                                                        "eyes": eyes.at_is_checked,
                                                        "moustache": stache.at_is_checked,
                                                        "scale": scale.at_value } ),
                                      draw_face),
-                          gui.HPanel(eyes, stache, spacer, scale,
+                          gui.HPanel(eyes, stache,
+                                     spacer,
+                                     gui.Label("-"), scale, gui.Label("+"),
                                      ~stretch: [#true, #false]))
 
   def happy_button = gui.Button("Be Happy",
