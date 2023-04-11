@@ -11,6 +11,7 @@ import:
   "gui/private/canvas.rhm"
   "gui/private/button.rhm"
   "gui/private/checkbox.rhm"
+  "gui/private/slider.rhm"
   "gui/private/type.rhm"
 
 export:
@@ -22,4 +23,5 @@ export:
   all_from(.canvas)
   all_from(.button)
   all_from(.checkbox)
+  all_from(.slider)
   all_from(.type)

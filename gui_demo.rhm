@@ -4,13 +4,20 @@ import:
   rhombus/gui
 
 fun draw_face(dc :: draw.DC, config :: Map):
-  def [w, h] = dc.size
-  def s = math.max(10, math.min(w, h) - 20)
-  def x = (w-s)/2
-  def y = (h-s)/2
-  def π = math.pi
+  let [w, h] = dc.size
+  let s = math.max(10, math.min(w, h) - 20)
+  
+  let scale = config["scale"] / 50
+  let w = w / scale
+  let h = h / scale
+  
+  let x = (w-s)/2
+  let y = (h-s)/2
+  let π = math.pi
 
   dc.push()
+
+  dc.scale(scale)
 
   let background: if config["mood"] == "Happy"
                   | draw.RadialGradient(w/2, h/2, s/2,
@@ -59,16 +66,23 @@ fun draw_face(dc :: draw.DC, config :: Map):
   dc.pop()
 
 def tabs:
-  def at_tab = gui.Obs("Happy")
-  def eyes = gui.Checkbox("Eyes", ~is_checked: #true)
-  def stache = gui.Checkbox("Moustache", ~is_checked: #false)
+  let at_tab = gui.Obs("Happy")
+  let eyes = gui.Checkbox("Eyes", ~is_checked: #true)
+  let stache = gui.Checkbox("Moustache", ~is_checked: #false)
+  let scale = gui.Slider("", // empty label works around a `gui-easy` bug for now
+                         ~value: 50,
+                         ~min_value: 1,
+                         ~max_value: 100,
+                         ~style: [#'plain, #'horizontal])
+  let spacer = gui.HPanel(~stretch: [#true, #true])
 
   def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine({ "mood": at_tab,
                                                        "eyes": eyes.at_is_checked,
-                                                       "moustache": stache.at_is_checked } ),
+                                                       "moustache": stache.at_is_checked,
+                                                       "scale": scale.at_value } ),
                                      draw_face),
-                          gui.HPanel(eyes, stache,
-                                     ~stretch: [#false, #false]))
+                          gui.HPanel(eyes, stache, spacer, scale,
+                                     ~stretch: [#true, #false]))
 
   def happy_button = gui.Button("Be Happy",
                                 ~action: fun ():

@@ -1,0 +1,60 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  rhombus/draw/private/symbol_map.symbol_map_annot
+  "view.rhm".View
+  "obs.rhm":
+    expose:
+      Obs
+      MaybeObs
+  "type.rhm":
+    expose:
+      LabelString
+      PositionInteger
+      Size
+      Stretch
+
+
+export:
+  Slider
+
+class Slider(hand, private _at_value :: Obs):
+  implements View
+  internal _Slider
+  opaque
+  override property handle: hand
+
+  constructor (label :: MaybeObs.of(Maybe(LabelString)) = #false,
+               ~value: value :: MaybeObs.of(PositionInteger) = 0,
+               ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
+               ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
+               ~action: action :: Maybe(Function.of_arity(1)) = #false,
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+               ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal]):
+    def at_value = obs.to_obs(value)
+    super(easy.slider(obs.unwrap(at_value),
+                      action || fun (val): at_value.value := val,
+                      ~label: obs.unwrap(label),
+                      #{#:min-value}: obs.unwrap(min_value),
+                      #{#:max-value}: obs.unwrap(max_value),
+                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~stretch: obs.unwrap_list(stretch, values),
+                      ~style: convert_style.map(style)),
+          at_value)
+
+  export:
+    StyleSymbol
+
+  symbol_map_annot StyleSymbol convert_style:
+    { horizontal: horizontal,
+      vertical: vertical,
+      plain: plain,
+      vertical_label: #{vertical-label},
+      horizontal_label: #{horizontal-label},
+      deleted: deleted }
+
+  property at_value :: Obs:
+    _at_value.map(values)

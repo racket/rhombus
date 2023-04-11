@@ -65,6 +65,52 @@
 }
 
 @doc(
+  class Slider():
+    implements View
+    constructor (label :: MaybeObs.of(Maybe(LabelString)) = #false,
+                 ~value: value :: MaybeObs.of(PositionInteger) = 0,
+                 ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
+                 ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
+                 ~action: action :: Maybe(Function.of_arity(1)) = #false,
+                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
+                 ~style: style :: List.of(Slider.StyleSymbol) = [#'horizontal])
+){
+
+ Creates a slider. When rendered, the function call
+ @rhombus(action(#,(@rhombus(now_val, ~var)))) is performed when the
+ slider is changed, where @rhombus(now_val, ~var) indicates the value of
+ the slider.
+
+ If @rhombus(value) is not an observable, then an observable
+ @rhombus(at_value, ~var) is created with initial value
+ @rhombus(value). Otherwise, @rhombus(at_value, ~var) is
+ @rhombus(value). A observable derived from
+ @rhombus(at_value, ~var) can be obtained from the
+ @rhombus(Checkbox.at_value) property.
+
+ The default @rhombus(set_value, ~var) function for @rhombus(action)
+ corresponds to
+
+@rhombusblock(
+  fun(val):
+    #,(@rhombus(at_value, ~var)).value := val
+)
+
+}
+
+@doc(
+  property (sldr :: Slider).at_value :: Obs.of(PositionInteger)
+){
+
+ Returns an observable derived from the one that determines the value
+ shown by @rhombus(sldr).
+
+}
+
+
+@doc(
   annot.macro 'Button.StyleSymbol'
 ){
 
@@ -96,3 +142,24 @@
 )
 
 }
+
+
+@doc(
+  annot.macro 'Slider.StyleSymbol'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+
+ @item{@rhombus(#'horizontal)}
+ @item{@rhombus(#'vertical)} 
+ @item{@rhombus(#'plain)} 
+ @item{@rhombus(#'horizontal_label)}
+ @item{@rhombus(#'vertical_label)} 
+ @item{@rhombus(#'deleted)}
+
+)
+
+}
+

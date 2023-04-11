@@ -154,10 +154,29 @@ interface DC:
                                    0,
                                    angle)
 
+  method | scale(sx :: Real, sy :: Real):
+             rkt.send get_dc().#{scale}(sx, sy)
+         | scale(s :: Real):
+             rkt.send get_dc().#{scale}(s, s)
+  method translate(dx :: Real, dy :: Real):
+    rkt.send get_dc().#{translate}(dx, dy)
+  method rotate(radians :: Real):
+    rkt.send get_dc().#{rotate}(radians)
+  method transform(a :: Transformation):
+    rkt.send get_dc().#{transform}(a)
+
+  property | transformation :: Transformation:
+               let Array(a, x, y, sx, sy, rot) =  rkt.send get_dc().#{get-transformation}()
+               a
+           | transformation := a :: Transformation:
+               let Array(old_a, x, y, sx, sy, rot) =  rkt.send get_dc().#{get-transformation}()
+               rkt.send get_dc().#{set-transformation}(Array(a, x, y, sx, sy, rot))
+
   export:
     BitmapOverlay
     TextCombine
     Fill
+    Transformation
 
   symbol_set_annot BitmapOverlay:
     { solid, opaque, xor }
@@ -169,6 +188,10 @@ interface DC:
     { odd_even: #{odd-even},
       winding: winding }
 
+  annot.macro 'Transformation':
+    'matching(Array(_ :: Real, _ :: Real,
+                    _ :: Real, _ :: Real,
+                    _ :: Real, _ :: Real))'
 
 namespace main:
   export: DC
@@ -192,6 +215,7 @@ namespace some_dc:
                  brush,
                  font,
                  clipping_region,
+                 transformation,
                  states]
     
     override method pop():
@@ -202,11 +226,13 @@ namespace some_dc:
          old_brush,
          old_font,
          old_region,
+         old_transformation,
          old_states]:
           pen := old_pen
           brush := old_brush
           font := old_font
           clipping_region := old_region
+          transformation := old_transformation
           states := old_states
 
   set_wrap_dc(DC)

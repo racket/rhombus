@@ -47,9 +47,26 @@
            | (dc :: DC).font := f :: Font
   property | (dc :: DC).clipping_region :: Maybe(Region)
            | (dc :: DC).clipping_region := rgn :: Maybe(Region)
+  property | (dc :: DC).transformation :: DC.Transformation
+           | (dc :: DC).transformation := rgn :: DC.Transformation
 ){
 
  Properties to get or set the drawing context's configuration.
+
+}
+
+@doc(
+  method (dc :: DC).scale(s :: Real) :: Void
+  method (dc :: DC).scale(sx :: Real, sy :: Real) :: Void
+  method (dc :: DC).translate(dx :: Real, dy :: Real) :: Void
+  method (dc :: DC).rotate(radians :: Real) :: Void
+  method (dc :: DC).transform(t :: DC.Transformation) :: Void
+){
+
+ Applies a (further) transformation to the drawing context's conversion
+ from drawing coordinates to deivice coordinates. In other words, these
+ methods change the result that is returned by the
+ @rhombus(DC.transformation) property, and they affect drawing accodingly.
 
 }
 
@@ -187,6 +204,31 @@
 @itemlist(
   @item{@rhombus(#'even_odd)}  
   @item{@rhombus(#'winding)}
+)
+
+}
+
+
+@doc(
+  annot.macro 'DC.Transformation'
+){
+
+ Satisfied by an array of six @rhombus(Real, ~annot)s:
+
+@itemlist(
+
+  @item{@rhombus(xx, ~var): a scale from the logical @rhombus(x, ~var) to the device @rhombus(x, ~var)}
+
+  @item{@rhombus(yx, ~var): a scale from the logical @rhombus(y, ~var) added to the device @rhombus(x, ~var)}
+
+  @item{@rhombus(xy, ~var): a scale from the logical @rhombus(x, ~var) added to the device @rhombus(y, ~var)}
+
+  @item{@rhombus(yy, ~var): a scale from the logical @rhombus(y, ~var) to the device @rhombus(y, ~var)}
+
+  @item{@rhombus(x0, ~var): an additional amount added to the device @rhombus(x, ~var)}
+  
+  @item{@rhombus(y0, ~var): an additional amount added to the device @rhombus(y, ~var)}
+
 )
 
 }
