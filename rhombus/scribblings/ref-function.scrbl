@@ -384,3 +384,11 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
 )
 
 }
+
+@doc(
+  fun Function.pass(& args, &~ kw_args) :: Void
+){
+
+ Accepts any arguments and returns @rhombus(#void).
+
+}

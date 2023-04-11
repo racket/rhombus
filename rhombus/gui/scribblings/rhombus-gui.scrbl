@@ -18,4 +18,5 @@ The @rhombusmodname(rhombus/gui) library is based on
 @include_section("panel.scrbl")
 @include_section("canvas.scrbl")
 @include_section("control.scrbl")
+@include_section("event.scrbl")
 @include_section("annotation.scrbl")

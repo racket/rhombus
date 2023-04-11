@@ -10,8 +10,13 @@ import:
       Stretch
   "view.rhm".View
   rhombus/draw/private/dc!internal.SomeDC
+  "event.rhm"!private:
+    expose:
+      _MouseEvent
+      _KeyEvent
   "obs.rhm":
     expose: MaybeObs
+  "canvas-help.rkt".add_canvas_callbacks
 
 export:
   Canvas
@@ -24,7 +29,9 @@ class Canvas(hand):
 
   constructor (data,
                draw :: Function.of_arity(2),
-               ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas", // should be `#false`?
+               ~label: label :: MaybeObs.of(Maybe(LabelString)) = #false,
+               ~key: on_key :: Function.of_arity(1) = Function.pass,
+               ~mouse: on_mouse :: Function.of_arity(1) = Function.pass,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
                ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
@@ -39,7 +46,11 @@ class Canvas(hand):
                       ~margin: obs.unwrap(margin),
                       #{#:min-size}: obs.unwrap_list(min_size, values),
                       ~stretch: obs.unwrap_list(stretch, values),
-                      ~mixin: mix))
+                      ~mixin: (fun (c): mix(add_canvas_callbacks(
+                                              c,
+                                              fun (ev): on_key(_KeyEvent(ev)()),
+                                              fun (ev): on_mouse(_MouseEvent(ev)())
+                                            )))))
 
   export:
     StyleSymbol

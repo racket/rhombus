@@ -41,7 +41,8 @@
 (define-name-root Function
   #:fields
   (map
-   of_arity))
+   of_arity
+   pass))
 
 (define function-method-table
   (hash 'map (lambda (f) (lambda lists (apply map f lists)))))
@@ -309,3 +310,9 @@
                (wrap-function-static-info fun))
              #'tail)]))
 
+
+(define pass
+  (make-keyword-procedure
+   (let ([pass (lambda (kws kw-args . args)
+                 (void))])
+     pass)))

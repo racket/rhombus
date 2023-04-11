@@ -13,6 +13,7 @@ import:
   "gui/private/checkbox.rhm"
   "gui/private/slider.rhm"
   "gui/private/label.rhm"
+  "gui/private/event.rhm"
   "gui/private/type.rhm"
 
 export:
@@ -26,4 +27,5 @@ export:
   all_from(.checkbox)
   all_from(.slider)
   all_from(.label)
+  all_from(.event)
   all_from(.type)

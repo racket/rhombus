@@ -8,6 +8,8 @@
     implements View
     constructor (data :: MaybeObs.of(Any),
                  draw :: Function.of_arity(2),
+                 ~mouse: mouse :: Function.of_arity(1) = Function.pass,
+                 ~key: key :: Function.of_arity(1) = Function.pass,
                  ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas",
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
@@ -29,6 +31,11 @@
  when @rhombus(data) is an @tech{observable}. The @rhombus(draw) function
  is called to update the canvas content when @rhombus(data) is an
  @tech{observable} and its value changes.
+
+ When a mouse or key event is received by a rendered canvas, the
+ @rhombus(mouse) or @rhombus(key) funciton is called with a
+ @rhombus(MouseEvent, ~class) or @rhombus(KeyEvent, ~class),
+ respectively.
 
 }
 

@@ -1,0 +1,272 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  lib("racket/gui/base.rkt") as gui
+  rhombus/draw/private/symbol_map:
+    expose:
+      symbol_map_annot
+      symbol_set_annot
+  rhombus/draw/private/rkt
+  "type.rhm":
+    expose:
+      LabelString
+      Margin
+      Size
+      Stretch
+  "view.rhm".View
+  rhombus/draw/private/dc!internal.SomeDC
+  "obs.rhm":
+    expose: MaybeObs
+  "canvas-help.rkt".add_canvas_callbacks
+
+export:
+  MouseEvent
+  KeyEvent
+
+submodule private:
+  export:
+    _MouseEvent
+    _KeyEvent
+
+class KeyMouseEvent(handle):
+  nonfinal
+
+  // result is cached in subclasses:
+  property down:
+    let s: Set{}
+    let s: if rkt.send handle.#{get-shift-down}() | s ++ { #'shift } | s
+    let s: if rkt.send handle.#{get-control-down}() | s ++ { #'control } | s
+    let s: if rkt.send handle.#{get-meta-down}() | s ++ { #'meta } | s
+    let s: if rkt.send handle.#{get-alt-down}() | s ++ { #'alt } | s
+    let s: if rkt.send handle.#{get-caps-down}() | s ++ { #'caps } | s
+    let s: if rkt.send handle.#{get-mod3-down}() | s ++ { #'mod3 } | s
+    let s: if rkt.send handle.#{get-mod4-down}() | s ++ { #'mod4 } | s
+    let s: if rkt.send handle.#{get-mod5-down}() | s ++ { #'mod5 } | s
+    s
+
+  // `sym` is restructed to appropriate values in subclasses:
+  method is_down(sym):
+    match sym
+    | #'left: rkt.send handle.#{get-left-down}()
+    | #'middle: rkt.send handle.#{get-middle-down}()
+    | #'right: rkt.send handle.#{get-right-down}()
+    | #'shift: rkt.send handle.#{get-shift-down}()
+    | #'control: rkt.send handle.#{get-control-down}()
+    | #'meta: rkt.send handle.#{get-meta-down}()
+    | #'alt: rkt.send handle.#{get-alt-down}()
+    | #'caps: rkt.send handle.#{get-caps-down}()
+    | #'mod3: rkt.send handle.#{get-mod3-down}()
+    | #'mod4: rkt.send handle.#{get-mod4-down}()
+    | #'mod5: rkt.send handle.#{get-mod5-down}()
+    | ~else error("bad symbol")
+
+  property x: rkt.send handle.#{get-x}()
+  property y: rkt.send handle.#{get-y}()
+  property timestamp: rkt.send handle.#{get-time-stamp}()  
+
+
+class MouseEvent():
+  extends KeyMouseEvent
+  internal _MouseEvent
+  opaque
+  private field down_set = #false
+
+  constructor (~kind: kind :: MouseEvent.Kind = #'motion,
+               ~down: down :: Set.of(MouseEvent.DownSymbol) = Set{},
+               ~x: x :: Int = 0,
+               ~y: y :: Int = 0,
+               ~timestamp: timestamp :: Int = 0):
+    super(rkt.make_object(gui.#{mouse-event%},
+                          convert_kind(kind),
+                          down[#'left], down[#'middle], down[#'right],
+                          x, y,
+                          down[#'shift], down[#'control], down[#'meta], down[#'alt],
+                          timestamp,
+                          down[#'caps], down[#'mod3], down[#'mod4], down[#'mod5]))()
+
+  property kind:
+    unconvert_kind(rkt.send handle.#{get-event-type}())
+
+  override property down :: Set:
+    if down_set
+    | down_set
+    | let s: super.down
+      let s: if rkt.send handle.#{get-left-down}() | s ++ { #'left } | s
+      let s: if rkt.send handle.#{get-middle-down}() | s ++ { #'middle } | s
+      let s: if rkt.send handle.#{get-right-down}() | s ++ { #'right } | s
+      down_set := s
+      s
+
+  override method is_down(sym :: MouseEvent.DownSymbol):
+    super.is_down(sym)
+
+  method is_button_changed(which :: MouseEvent.Button = #'any):
+    rkt.send handle.#{button-changed?}(which)
+  method is_button_press(which :: MouseEvent.Button = #'any):
+    rkt.send handle.#{button-down?}(which)
+  method is_button_release(which :: MouseEvent.Button = #'any):
+    rkt.send handle.#{button-down?}(which)
+  method is_dragging():
+    rkt.send handle.#{dragging?}()
+
+  export:
+    Kind
+    DownSymbol
+    Button
+
+  symbol_map_annot Kind convert_kind unconvert_kind:
+    { enter: enter,
+      leave: leave,
+      left_down: #{left-down},
+      left_up: #{left-up},
+      middle_down: #{middle-down},
+      middle_up: #{middle-up},
+      right_down: #{right-down},
+      right_up: #{right-up},
+      motion: motion }
+
+  symbol_set_annot DownSymbol:
+    { left, middle, right,
+      shift, control, meta, alt,
+      caps, mod3, mod4, mod5 }
+
+  symbol_set_annot Button:
+    { left, middle, right, any }
+
+
+class KeyEvent():
+  extends KeyMouseEvent
+  internal _KeyEvent
+  opaque
+  private field down_set = #false
+
+  constructor (code :: (Char || KeyEvent.Key),
+               ~release_code: release_code :: (Char || KeyEvent.Key) = #'press,
+               ~other_caps_code: other_caps_code :: Maybe(Char || KeyEvent.Key) = #false,
+               ~other_shift_code: other_shift_code :: Maybe(Char || KeyEvent.Key) = #false,
+               ~other_altgr_code: other_altgr_code :: Maybe(Char || KeyEvent.Key) = #false,
+               ~other_shift_altgr_code: other_shift_altgr_code :: Maybe(Char || KeyEvent.Key) = #false,
+               ~down: down :: Set.of(KeyEvent.DownSymbol) = Set{},
+               ~x: x :: Int = 0,
+               ~y: y :: Int = 0,
+               ~timestamp: timestamp :: Int = 0,
+               ~use_altgr: use_altgr = #true):
+    let evt = rkt.make_object(gui.#{key-event%},
+                              match code
+                              | c :: Char: code
+                              | ~else convert_key(code),
+                              down[#'shift], down[#'control], down[#'meta], down[#'alt],
+                              x, y,
+                              timestamp,
+                              down[#'caps], down[#'mod3], down[#'mod4], down[#'mod5],
+                              use_altgr && #true)
+    rkt.send evt.#{set-key-release-code}(release_code)
+    when other_caps_code | rkt.send evt.#{set-other-caps-key-code}(other_caps_code)
+    when other_shift_code | rkt.send evt.#{set-other-shift-key-code}(other_shift_code)
+    when other_altgr_code | rkt.send evt.#{set-other-altgr-key-code}(other_altgr_code)
+    when other_shift_altgr_code | rkt.send evt.#{set-other-shift-altgr-key-code}(other_shift_altgr_code)
+    super(evt)()
+
+  override property down :: Set:
+    if down_set
+    | down_set
+    | let s: super.down
+      down_set := s
+      s
+      
+  override method is_down(sym :: KeyEvent.DownSymbol):
+    super.is_down(sym)
+
+  property code: rkt.send handle.#{get-key-code}()
+  property release_code: rkt.send handle.#{get-key-release-code}()
+  property other_altgr_code: rkt.send handle.#{get-other-altgr-key-code}()
+  property other_caps_code: rkt.send handle.#{get-other-caps-key-code}()
+  property other_shift_code: rkt.send handle.#{get-other-shift-key-code}()
+  property other_shift_altgr_code: rkt.send handle.#{get-other-shift-altgr-key-code}()
+
+  property wheel_steps: rkt.send handle.#{get-wheel-steps}()
+
+  export:
+    DownSymbol
+    Key
+
+  symbol_map_annot  Key convert_key:
+    { start: start,
+      cancel: cancel,
+      clear: clear,
+      shift: shift,
+      rshift: rshift,
+      control: control,
+      rcontrol: rcontrol,
+      menu: menu,
+      pause: pause,
+      capital: capital,
+      prior: prior,
+      next: next,
+      end: end,
+      home: home,
+      left: left,
+      up: up,
+      right: right,
+      down: down,
+      escape: escape,
+      select: select,
+      print: print,
+      execute: execute,
+      snapshot: snapshot,
+      insert: insert,
+      help: help,
+      numpad0: numpad0,
+      numpad1: numpad1,
+      numpad2: numpad2,
+      numpad3: numpad3,
+      numpad4: numpad4,
+      numpad5: numpad5,
+      numpad6: numpad6,
+      numpad7: numpad7,
+      numpad8: numpad8,
+      numpad9: numpad9,
+      numpad_enter: #{numpad-enter},
+      multiply: multiply,
+      add: add,
+      separator: separator,
+      subtract: subtract,
+      decimal: decimal,
+      divide: divide,
+      f1: f1,
+      f2: f2,
+      f3: f3,
+      f4: f4,
+      f5: f5,
+      f6: f6,
+      f7: f7,
+      f8: f8,
+      f9: f9,
+      f10: f10,
+      f11: f11,
+      f12: f12,
+      f13: f13,
+      f14: f14,
+      f15: f15,
+      f16: f16,
+      f17: f17,
+      f18: f18,
+      f19: f19,
+      f20: f20,
+      f21: f21,
+      f22: f22,
+      f23: f23,
+      f24: f24,
+      numlock: numlock,
+      scroll: scroll,
+      wheel_up: #{wheel-up},
+      wheel_down: #{wheel-down},
+      wheel_left: #{wheel-left},
+      wheel_right: #{wheel-right},
+      release: release,
+      press: press }
+
+  symbol_set_annot DownSymbol:
+    { shift, control, meta, alt,
+      caps, mod3, mod4, mod5 }
+
