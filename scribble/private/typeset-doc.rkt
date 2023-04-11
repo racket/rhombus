@@ -6,10 +6,12 @@
                      (prefix-in typeset-meta: "typeset_meta.rhm")
                      shrubbery/property
                      rhombus/private/name-path-op
-                     "add-space.rkt")
+                     "add-space.rkt"
+                     "typeset-key-help.rkt")
          "doc.rkt"
          (submod "doc.rkt" for-class)
          "typeset-help.rkt"
+         "typeset-key-help.rkt"
          "defining-element.rkt"
          shrubbery/print
          racket/list
@@ -182,9 +184,10 @@
                                    space-name))
             (define make-typeset-id
               (lambda (kind-rev-strs)
-                #`(#,(if (hash-ref seen seen-key #f)
-                         #'make-redef-id
-                         #'make-def-id)
+                #`(make-def-id
+                   #,(if (hash-ref seen seen-key #f)
+                         #t
+                         #'redef?)
                    (quote-syntax #,def-id)
                    (quote-syntax #,extra-def-ids)
                    (quote-syntax #,str-id)
@@ -225,6 +228,7 @@
                                  [t (in-list transformers)]
                                  [def-id-as-def (in-list def-id-as-defs)]
                                  [space-name (in-list space-names)])
+                        ;; uses `def-id-as-def` in a context that binds `redef?`:
                         (extract-typeset t form def-id-as-def space-name)))
      (with-syntax ([(typeset ...) typesets]
                    [(kind-str ...) kind-strs])
@@ -268,78 +272,84 @@
    (lambda (use-stx)
      #`(parsed (tt "...")))))
 
-(define (make-def-id id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
+(define (make-def-id redef? id extra-ids str-id index-str-in kind-str space extra-spaces nonterm-sym immed-space)
   (define str-id-e (syntax-e str-id))
-  (define str (if (eq? immed-space 'grammar)
-                  (symbol->string nonterm-sym)
-                  (shrubbery-syntax->string (if str-id-e
-                                                str-id
-                                                id))))
-  (define index-str (or index-str-in str))
-  (define nonterm-suffix (if (eq? immed-space 'grammar)
-                             (list nonterm-sym)
-                             null))
-  (define (get-str+space space)
-    (cond
-      [str-id-e
-       (append (list str-id-e space)
-               nonterm-suffix)]
-      [(null? nonterm-suffix) space]
-      [else (cons space nonterm-suffix)]))
-  (define str+space (get-str+space space))
-  (define (get-id-space space)
-    (if str-id-e
-        ;; referring to a field of a namespace, so
-        ;; `id` is bound in the namespace space, not
-        ;; in `space`
-        'rhombus/namespace
-        space))
-  (define id-space (get-id-space space))
-  (define (make-content defn? [str str])
-    ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
-     (make-id-element id str defn? #:space id-space #:suffix str+space)))
-  (define content (annote-exporting-library (make-content #t)))
-  (for/fold ([content content]) ([id (cons id (syntax->list extra-ids))]
-                                 [space (cons space extra-spaces)]
-                                 [idx (in-naturals)])
-    (define id-space (get-id-space space))
-    (define str+space (get-str+space space))
-    (define target-maker (id-to-target-maker id #t #:space id-space #:suffix str+space))
-    (cond
-      [target-maker
-       (define name (string->symbol str))
-       (define ref-content (make-content #f index-str))
-       (target-maker content
-                     (lambda (tag)
-                       (if (or nonterm-sym
-                               (idx . > . 0))
-                           (begin
-                             (target-element
-                              #f
-                              content
-                              tag))
-                           (toc-target2-element
-                            #f
-                            (index-element
-                             #f
-                             content
-                             tag
-                             (list (datum-intern-literal index-str))
-                             (list (list ref-content " " kind-str))
-                             (with-exporting-libraries
-                               (lambda (libs) (thing-index-desc name libs))))
-                            tag
-                            ref-content))))]
-      [else content])))
-
-(define (make-redef-id id extra-ids str-id index-str kind-str space extra-spaces nonterm-sym immed-space)
-  (define str-id-e (syntax-e str-id))
-  (racketidfont
-   (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
-                    #:space space
-                    #:suffix (if str-id-e
-                                 (list str-id-e space)
-                                 space))))
+  (cond
+    [redef?
+     (racketidfont
+      (make-id-element id (shrubbery-syntax->string (if str-id-e str-id id)) #t
+                       #:space space
+                       #:suffix (if str-id-e
+                                    (list (if index-str-in
+                                              (string->symbol index-str-in)
+                                              (target-id-key-symbol str-id))
+                                          space)
+                                    space)))]
+    [else
+     (define str (if (eq? immed-space 'grammar)
+                     (symbol->string nonterm-sym)
+                     (shrubbery-syntax->string (if str-id-e
+                                                   str-id
+                                                   id))))
+     (define index-str (or index-str-in str))
+     (define nonterm-suffix (if (eq? immed-space 'grammar)
+                                (list nonterm-sym)
+                                null))
+     (define (get-str+space space)
+       (cond
+         [str-id-e
+          (append (list (if index-str-in
+                            (string->symbol index-str-in)
+                            (target-id-key-symbol str-id))
+                        space)
+                  nonterm-suffix)]
+         [(null? nonterm-suffix) space]
+         [else (cons space nonterm-suffix)]))
+     (define str+space (get-str+space space))
+     (define (get-id-space space)
+       (if str-id-e
+           ;; referring to a field of a namespace, so
+           ;; `id` is bound in the namespace space, not
+           ;; in `space`
+           'rhombus/namespace
+           space))
+     (define id-space (get-id-space space))
+     (define (make-content defn? [str str])
+       ((if (eq? immed-space 'grammar) racketvarfont racketidfont)
+        (make-id-element id str defn? #:space id-space #:suffix str+space)))
+     (define content (annote-exporting-library (make-content #t)))
+     (for/fold ([content content]) ([id (cons id (syntax->list extra-ids))]
+                                    [space (cons space extra-spaces)]
+                                    [idx (in-naturals)])
+       (define id-space (get-id-space space))
+       (define str+space (get-str+space space))
+       (define target-maker (id-to-target-maker id #t #:space id-space #:suffix str+space))
+       (cond
+         [target-maker
+          (define name (string->symbol str))
+          (define ref-content (make-content #f index-str))
+          (target-maker content
+                        (lambda (tag)
+                          (if (or nonterm-sym
+                                  (idx . > . 0))
+                              (begin
+                                (target-element
+                                 #f
+                                 content
+                                 tag))
+                              (toc-target2-element
+                               #f
+                               (index-element
+                                #f
+                                content
+                                tag
+                                (list (datum-intern-literal index-str))
+                                (list (list ref-content " " kind-str))
+                                (with-exporting-libraries
+                                  (lambda (libs) (thing-index-desc name libs))))
+                               tag
+                               ref-content))))]
+         [else content]))]))
 
 (define-for-syntax (nonterm-id-transformer id sym nt-def-name nt-space-name)
   #`(make-nonterm-id-transformer
@@ -352,7 +362,7 @@
                   #f
                   (let ([l (if (syntax? nt-def-name) (syntax->list nt-def-name) nt-def-name)])
                     (if (pair? (cdr l))
-                        (cadr l)
+                        (target-id-key-symbol (cadr l))
                         #f))))
      (quote #,nt-space-name)))
 
@@ -442,14 +452,16 @@
                                 from)
                  (from-property from)))
   
-  (define (subst name #:wrap? [wrap? #t])
+  (define (subst name #:wrap? [wrap? #t] #:redef? [as-redef? #f])
     (cond
       [wrap?
        (define id (if (identifier? name) name (cadr (syntax->list name))))
        #`((op #,(relocate #'|#,| id syntax-raw-prefix-property syntax-raw-prefix-property))
           (#,(relocate #'parens id syntax-raw-suffix-property syntax-raw-tail-suffix-property)
-           (group (parsed #,def-id-as-def))))]
-      [else def-id-as-def]))
+           (group (parsed (let ([redef? #,as-redef?])
+                            #,def-id-as-def)))))]
+      [else #`(let ([redef? #,as-redef?])
+                #,def-id-as-def)]))
   ((doc-transformer-extract-typeset t) stx space-name subst))
 
 (define (insert-labels l lbls)

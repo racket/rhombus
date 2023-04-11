@@ -376,8 +376,9 @@
     (define target+remains (resolve-name-ref #f root (list name)))
     (define target (car target+remains))
     (datum->syntax #f (list root
+                            ;; 'raw property used to typeset object
                             (datum->syntax target (syntax-e target) name name)
-                            ;; string for index and search:
+                            ;; string for key, index, and search:
                             (format "~a.~a"
                                     (syntax-e root)
                                     (syntax-e name)))))
@@ -419,12 +420,23 @@
         [(group tag ((~and a-tag alts)
                      ((~and b-tag block)
                       ((~and g-tag group)
-                       ((~and p-pag parens) (group lhs (~and cc (op ::)) class)) (~and dot (op |.|)) name . more)) . tail))
-         (rb #:at stx
-             #`(group tag (a-tag
-                           (b-tag
-                            (g-tag
-                             (p-pag (group lhs cc class)) dot #,@(subst #'name) . more)) . tail)))]
+                       ((~and p-pag parens) (group lhs (~and cc (op ::)) class)) (~and dot (op |.|)) name . more))
+                     ((~and b2-tag block)
+                      ((~and g2-tag group)
+                       ((~and p2-pag parens) (group lhs2 (~and cc2 (op ::)) class2)) (~and dot2 (op |.|)) name2 . more2))
+                     ...))
+         (with-syntax ([((name2 ...) ...)
+                        (for/list ([name2 (in-list (syntax->list #'(name2 ...)))])
+                          (subst name2 #:redef? #t))])
+           (rb #:at stx
+               #`(group tag (a-tag
+                             (b-tag
+                              (g-tag
+                               (p-pag (group lhs cc class)) dot #,@(subst #'name) . more))
+                             (b2-tag
+                              (g2-tag
+                               (p2-pag (group lhs2 cc2 class2)) dot name2 ... . more2))
+                             ...))))]
         [_ (head-extract-typeset stx space-name subst)]))))
   
 (define-doc method

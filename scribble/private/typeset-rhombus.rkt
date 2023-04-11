@@ -19,6 +19,7 @@
                   nested-flow)
          (submod scribble/racket id-element)
          (for-template "typeset-help.rkt")
+         "typeset-key-help.rkt"
          "add-space.rkt"
          "line-shape.rkt")
 
@@ -490,7 +491,8 @@
                                                 (shrubbery-syntax->string target)
                                                 #f
                                                 #:space 'rhombus/namespace
-                                                #:suffix (list (syntax-e target) space-name)
+                                                #:suffix (list (target-id-key-symbol target)
+                                                               space-name)
                                                 #:unlinked-ok? #t))
                              target
                              target)
