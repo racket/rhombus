@@ -12,7 +12,20 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
   dc.push()
 
+  let background: if config["mood"] == "Happy"
+                  | draw.RadialGradient(w/2, h/2, s/2,
+                                        w/2, h/2, math.max(w, h),
+                                        [[0, draw.Color("white")],
+                                         [1, draw.Color("yellow")]])
+                  | draw.LinearGradient(0, 0,
+                                        0, h,
+                                        [[0.5, draw.Color("white")],
+                                         [1, draw.Color("darkblue")]])
+  
   dc.pen := draw.Pen.none
+  dc.brush := draw.Brush(~gradient: background)
+  dc.rectangle(0, 0, w, h)
+  
   dc.brush := draw.Brush(~color: "orange")
   dc.ellipse(x, y, s, s)
 

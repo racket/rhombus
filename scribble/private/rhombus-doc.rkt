@@ -374,6 +374,8 @@
 (begin-for-syntax
   (define (build-dotted root name)
     (define target+remains (resolve-name-ref #f root (list name)))
+    (unless target+remains
+      (raise-syntax-error #f "no label binding" root name))
     (define target (car target+remains))
     (datum->syntax #f (list root
                             ;; 'raw property used to typeset object

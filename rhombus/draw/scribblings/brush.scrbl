@@ -8,7 +8,9 @@
     constructor (~like: like :: Maybe(Brush) = #false,
                  ~color: color :: (String || Color) = "Black",
                  ~style: style :: Brush.Style = #'solid,
-                 ~stipple: stipple :: Maybe(Bitmap) = #false)
+                 ~stipple: stipple :: Maybe(Bitmap) = #false,
+                 ~gradient: gradient :: Maybe(LinearGradient || RadialGradient)
+                              = #false)
 ){
 
  Creates a brush configuration.
@@ -22,6 +24,8 @@
   property (brush :: Brush).color :: Color
   property (brush :: Brush).style :: Brush.Style
   property (brush :: Brush).stipple :: Maybe(Bitmap)
+  property (brush :: Brush).gradient :: Maybe(LinearGradient
+                                                || RadialGradient)
 ){
 
  Properties to access brush components.
@@ -57,5 +61,37 @@
 ){
 
  A brush with style @rhombus(#'transparent).
+
+}
+
+@doc(
+  class LinearGradient():
+    constructor (x0 :: Real, y0 :: Real,
+                 x1 :: Real, y1 :: Real,
+                 [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
+  property (grad :: LinearGradient).line
+    :: matching([_ :: Real, _ :: Real,
+                 _ :: Real, _ :: Real])
+  property (grad :: LinearGradient).stops
+    :: List.of(matching([_ :: Real, _ :: Color]))
+){
+
+ A linear gradient for a @rhombus(Brush, ~class).
+
+}
+
+@doc(
+  class RadialGradient():
+    constructor (x0 :: Real, y0 :: Real, r0 :: Real,
+                 x1 :: Real, y1 :: Real, r1 :: Real,
+                 [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
+  property (grad :: RadialGradient).circles
+    :: matching([_ :: Real, _ :: Real, _ :: Real,
+                 _ :: Real, _ :: Real, _ :: Real])
+  property (grad :: RadialGradient).stops
+    :: List.of(matching([_ :: Real, _ :: Color]))
+){
+
+ A radial gradient for a @rhombus(Brush, ~class).
 
 }

@@ -12,11 +12,47 @@ import:
 
 export:
   Brush
+  LinearGradient
+  RadialGradient
 
 submodule private:
   export:
     _Brush
 
+class LinearGradient(handle):
+  opaque
+  internal _LinearGradient
+  constructor (x0 :: Real, y0 :: Real,
+               x1 :: Real, y1 :: Real,
+               [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
+    _LinearGradient(rkt.make_object(rkt.#{linear-gradient%},
+                                    x0, y0,
+                                    x1, y1,
+                                    [[stop, color.handle], ...]))
+  property line:
+    let values(x0, y0, x1, y1): rkt.send handle.#{get-line}()
+    [x0, y0, x1, y1]
+  property stops:
+    def [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    [[stop, _Color(c)], ...]
+  
+class RadialGradient(handle):
+  opaque
+  internal _RadialGradient
+  constructor (x0 :: Real, y0 :: Real, r0 :: Real,
+               x1 :: Real, y1 :: Real, r1 :: Real,
+               [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
+    _RadialGradient(rkt.make_object(rkt.#{radial-gradient%},
+                                    x0, y0, r0,
+                                    x1, y1, r1,
+                                    [[stop, color.handle], ...]))
+  property circles:
+    let values(x0, y0, r0, x1, y1, r1): rkt.send handle.#{get-circles}()
+    [x0, y0, r0, x1, y1, r1]
+  property stops:
+    def [[stop, c], ...] = rkt.send handle.#{get-stops}()
+    [[stop, _Color(c)], ...]
+    
 expr.macro 'default($like . $field, $expr)':
   'if $like | Brush . $field($like) | $expr'
 
@@ -26,16 +62,26 @@ class Brush(handle):
   constructor (~like: like :: Maybe(Brush) = #false,
                ~color: color :: (String || Color) = default(like.color, "Black"),
                ~style: style :: Brush.Style = default(like.style, #'solid),
-               ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
-    if stipple
+               ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false),
+               ~gradient: gradient :: Maybe(LinearGradient || RadialGradient) = default(like.gradient, #false)):
+    if stipple || gradient
     | _Brush(rkt.make_object(rkt.#{brush%}, unwrap_color(color), style_convert(style),
-                             BitmapPrivate.handle(stipple)))
+                             stipple && BitmapPrivate.handle(stipple),
+                             match gradient
+                             | g :: LinearGradient: g.handle
+                             | g :: RadialGradient: g.handle
+                             | ~else #false))
     | _Brush(rkt.send rkt.#{the-brush-list}.#{find-or-create-brush}(unwrap_color(color), style_convert(style)))
   property color :: Color: _Color(rkt.send handle.#{get-color}())
   property style: style_unconvert(rkt.send handle.#{get-width}())
   property stipple :: Maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
     bm && BitmapPrivate(bm)
+  property gradient :: Maybe(LinearGradient || RadialGradient):
+    let g = rkt.send handle.#{get-gradient}()
+    g && (if g rkt.is_a rkt.#{linear-gradient%}
+          | _LinearGradient(g)
+          | _RadialGradient(g))
 
   export:
     none
