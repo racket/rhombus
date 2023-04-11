@@ -278,7 +278,7 @@ in an unspecified order.
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
- that can be updated using @rhombus(=).
+ that can be updated using @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for constructing
  mutable maps, only immutable maps.
