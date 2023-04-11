@@ -33,8 +33,8 @@ interface DC:
   private method get_dc():
     (this :: _DCer).dc
 
-  property size :: matching([_ :: Real.at_least(0.0),
-                             _ :: Real.at_least(0.0)]):
+  property size :: matching([_ :: NonnegReal,
+                             _ :: NonnegReal]):
     def (w, h) = rkt.send get_dc().#{get-size}()
     [w, h]
 
@@ -76,7 +76,7 @@ interface DC:
       rkt.send get_dc().#{set-clipping-region}(region && Region.handle(region))
     
   method copy(x :: Real, y :: Real,
-              width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+              width :: NonnegReal, height :: NonnegReal,
               x2 :: Real, y2 :: Real):
     rkt.send get_dc().copy(x, y, width, height, x2, y2)
 
@@ -105,20 +105,20 @@ interface DC:
     rkt.send get_dc().#{draw-path}(p.hand, dx, dy, fill_convert(fill))
 
   method rectangle(x :: Real, y :: Real,
-                   width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                   width :: NonnegReal, height :: NonnegReal):
     rkt.send get_dc().#{draw-rectangle}(x, y, width, height)
     
   method rounded_rectangle(x :: Real, y :: Real,
-                           width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+                           width :: NonnegReal, height :: NonnegReal,
                            radius :: Real = -0.25):
     rkt.send get_dc().#{draw-rounded-rectangle}(x, y, width, height, radius)
     
   method ellipse(x :: Real, y :: Real,
-                 width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                 width :: NonnegReal, height :: NonnegReal):
     rkt.send get_dc().#{draw-ellipse}(x, y, width, height)
     
   method arc(x :: Real, y :: Real,
-             width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+             width :: NonnegReal, height :: NonnegReal,
              start :: Real, end :: Real):
     rkt.send get_dc().#{draw-arc}(x, y, width, height, start, end)
 
@@ -131,8 +131,8 @@ interface DC:
                 x :: Real, y :: Real,
                 ~source_x: source_x :: Real = 0,
                 ~source_y: source_y :: Real = 0,
-                ~source_width: source_width :: Real.at_least(0.0) = b.width,
-                ~source_height: source_height :: Real.at_least(0.0) = b.height,
+                ~source_width: source_width :: NonnegReal = b.width,
+                ~source_height: source_height :: NonnegReal = b.height,
                 ~style: style :: DC.BitmapOverlay = #'solid,
                 ~color: color :: Color = Color("black"),
                 ~mask: mask :: Maybe(Bitmap) = #false):

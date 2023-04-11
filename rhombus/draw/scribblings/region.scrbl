@@ -40,18 +40,18 @@
                                  ~dy: dy :: Real = 0.0,
                                  ~fill: fill :: Region.Fill = #'even_odd) :: Void
   method (rgn :: Region).rectangle(x :: Real, y :: Real,
-                                   width :: Real.at_least(0.0),
-                                   height :: Real.at_least(0.0)) :: Void
+                                   width :: NonnegReal,
+                                   height :: NonnegReal) :: Void
   method (rgn :: Region).rounded_rectangle(x :: Real, y :: Real,
-                                           width :: Real.at_least(0.0),
-                                           height :: Real.at_least(0.0),
+                                           width :: NonnegReal,
+                                           height :: NonnegReal,
                                            radius :: Real = -0.25) :: Void
   method (rgn :: Region).ellipse(x :: Real, y :: Real,
-                                 width :: Real.at_least(0.0),
-                                 height :: Real.at_least(0.0)) :: Void
+                                 width :: NonnegReal,
+                                 height :: NonnegReal) :: Void
   method (rgn :: Region).arc(x :: Real, y :: Real,
-                             width :: Real.at_least(0.0),
-                             height :: Real.at_least(0.0),
+                             width :: NonnegReal,
+                             height :: NonnegReal,
                              start :: Real, end :: Real) :: Void
   method (rgn :: Region).path(p :: Path,
                               ~dx: dx :: Real = 0.0,

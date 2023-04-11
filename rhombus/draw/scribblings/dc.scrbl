@@ -20,10 +20,10 @@
 }
 
 @doc(
-  property (dc :: DC).width :: Real.at_least(0.0)
-  property (dc :: DC).height :: Real.at_least(0.0)
-  property (dc :: DC).size :: matching([_ :: Real.at_least(0.0),
-                                        _ :: Real.at_least(0.0)])
+  property (dc :: DC).width :: NonnegReal
+  property (dc :: DC).height :: NonnegReal
+  property (dc :: DC).size :: matching([_ :: NonnegReal,
+                                        _ :: NonnegReal])
 ){
 
  The size of the drawing area: width, height, or both.
@@ -74,18 +74,18 @@
                             ~dy: dy :: Real = 0.0,
                             ~fill: fill :: DC.Fill = #'even_odd) :: Void
   method (dc :: DC).rectangle(x :: Real, y :: Real,
-                              width :: Real.at_least(0.0),
-                              height :: Real.at_least(0.0)) :: Void
+                              width :: NonnegReal,
+                              height :: NonnegReal) :: Void
   method (dc :: DC).rounded_rectangle(x :: Real, y :: Real,
-                                      width :: Real.at_least(0.0),
-                                      height :: Real.at_least(0.0),
+                                      width :: NonnegReal,
+                                      height :: NonnegReal,
                                       radius :: Real = -0.25) :: Void
   method (dc :: DC).ellipse(x :: Real, y :: Real,
-                            width :: Real.at_least(0.0),
-                            height :: Real.at_least(0.0)) :: Void
+                            width :: NonnegReal,
+                            height :: NonnegReal) :: Void
   method (dc :: DC).arc(x :: Real, y :: Real,
-                        width :: Real.at_least(0.0),
-                        height :: Real.at_least(0.0),
+                        width :: NonnegReal,
+                        height :: NonnegReal,
                         start :: Real, end :: Real) :: Void
   method (dc :: DC).path(p :: Path,
                          ~dx: dx :: Real = 0.0,
@@ -116,8 +116,8 @@
     dest_x :: Real, dest_y :: Real,
     ~source_x: source_x :: Real = 0,
     ~source_y: source_y :: Real = 0,
-    ~source_width: source_width :: Real.at_least(0.0) = Bitmap.width(bm),
-    ~source_height: source_height :: Real.at_least(0.0) = Bitmap.height(bm),
+    ~source_width: source_width :: NonnegReal = Bitmap.width(bm),
+    ~source_height: source_height :: NonnegReal = Bitmap.height(bm),
     ~style: style :: DC.BitmapOverlay = #'solid,
     ~color: color :: Color = Color("black"),
     ~mask: mask :: Maybe(Bitmap) = #false
@@ -130,8 +130,8 @@
 
 @doc(
   method (dc :: DC).copy(source_x :: Real, source_y :: Real,
-                         width :: Real.at_least(0.0),
-                         height :: Real.at_least(0.0),
+                         width :: NonnegReal,
+                         height :: NonnegReal,
                          dest_x2 :: Real, dest_y :: Real) :: Void
 ){
 

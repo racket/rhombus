@@ -38,20 +38,20 @@ class Path(hand):
     rkt.send hand.#{move-to}(x, y)
 
   method rectangle(x :: Real, y :: Real,
-                   width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                   width :: NonnegReal, height :: NonnegReal):
     rkt.send hand.#{rectangle}(x, y, width, height)
 
   method rounded_rectangle(x :: Real, y :: Real,
-                           width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+                           width :: NonnegReal, height :: NonnegReal,
                            radius :: Real):
     rkt.send hand.#{rounded-rectangle}(x, y, width, height, radius)
 
   method ellipse(x :: Real, y :: Real,
-                 width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                 width :: NonnegReal, height :: NonnegReal):
     rkt.send hand.#{ellipse}(x, y, width, height)
 
   method arc(x :: Real, y :: Real,
-             width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+             width :: NonnegReal, height :: NonnegReal,
              start_radians :: Real, end_radians :: Real,
              ~clockwise = #false):
     rkt.send hand.#{arc}(x, y, width, height, start_radians, end_radians, !clockwise)

@@ -34,20 +34,20 @@ class Region():
     rkt.send hand.#{in-region?}(x, y)
 
   method rectangle(x :: Real, y :: Real,
-                   width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                   width :: NonnegReal, height :: NonnegReal):
     rkt.send hand.#{set-rectangle}(x, y, width, height)
 
   method rounded_rectangle(x :: Real, y :: Real,
-                           width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+                           width :: NonnegReal, height :: NonnegReal,
                            radius :: Real = -0.25):
     rkt.send hand.#{set-rounded-rectangle}(x, y, width, height, radius)
 
   method ellipse(x :: Real, y :: Real,
-                 width :: Real.at_least(0.0), height :: Real.at_least(0.0)):
+                 width :: NonnegReal, height :: NonnegReal):
     rkt.send hand.#{set-ellipse}(x, y, width, height)
 
   method arc(x :: Real, y :: Real,
-             width :: Real.at_least(0.0), height :: Real.at_least(0.0),
+             width :: NonnegReal, height :: NonnegReal,
              start_radians :: Real, end_radians :: Real):
     rkt.send hand.#{set-arc}(x, y, width, height, start_radians, end_radians)
 

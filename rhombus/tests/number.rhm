@@ -19,6 +19,18 @@ check:
   math.inexact(5) ~is 5.0
 
 check:
+  1 is_a NonnegReal ~is #true
+  0 is_a NonnegReal ~is #true
+  -1 is_a NonnegReal ~is #false
+
+  1 is_a PosReal ~is #true
+  0 is_a PosReal ~is #false
+  -1 is_a PosReal ~is #false
+
+  1 is_a NegReal ~is #false
+  0 is_a NegReal ~is #false
+  -1 is_a NegReal ~is #true
+
   1 is_a Real.at_least(1.0) ~is #true
   0.9 is_a Real.at_least(1.0) ~is #false
 

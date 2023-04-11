@@ -41,6 +41,9 @@
                     PosInt
                     NegInt
                     NonnegInt
+                    PosReal
+                    NegReal
+                    NonnegReal
                     Integral
                     Rational
                     Exact
@@ -387,6 +390,9 @@
 (define-annotation-syntax Exact (identifier-annotation #'exact-number? #'()))
 (define-annotation-syntax Inexact (identifier-annotation #'inexact-number? #'()))
 (define-annotation-syntax Real (identifier-annotation #'real? #'()))
+(define-annotation-syntax PosReal (identifier-annotation #'positive-real? #'()))
+(define-annotation-syntax NegReal (identifier-annotation #'negative-real? #'()))
+(define-annotation-syntax NonnegReal (identifier-annotation #'nonnegative-real? #'()))
 (define-annotation-syntax Void (identifier-annotation #'void? #'()))
 (define-annotation-syntax False (identifier-annotation #'not #'()))
 
@@ -405,6 +411,10 @@
    [below Real.below]
    [at_most Real.at_most]
    [in Real.in]))
+
+(define (positive-real? r) (and (real? r) (r . > . 0.0)))
+(define (negative-real? r) (and (real? r) (r . < . 0.0)))
+(define (nonnegative-real? r) (and (real? r) (r . >= . 0.0)))
 
 ;; not exported, but referenced by `:annotation-seq` so that
 ;; annotation parsing terminates appropriately

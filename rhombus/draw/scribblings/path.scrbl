@@ -47,18 +47,18 @@
                                 ~dx: dx :: Real = 0.0,
                                 ~dy: dy :: Real = 0.0) :: Void
   method (path :: Path).rectangle(x :: Real, y :: Real,
-                                  width :: Real.at_least(0.0),
-                                  height :: Real.at_least(0.0)) :: Void
+                                  width :: NonnegReal,
+                                  height :: NonnegReal) :: Void
   method (path :: Path).rounded_rectangle(x :: Real, y :: Real,
-                                          width :: Real.at_least(0.0),
-                                          height :: Real.at_least(0.0),
+                                          width :: NonnegReal,
+                                          height :: NonnegReal,
                                           radius :: Real = -0.25) :: Void
   method (path :: Path).ellipse(x :: Real, y :: Real,
-                                width :: Real.at_least(0.0),
-                                height :: Real.at_least(0.0)) :: Void
+                                width :: NonnegReal,
+                                height :: NonnegReal) :: Void
   method (path :: Path).arc(x :: Real, y :: Real,
-                            width :: Real.at_least(0.0),
-                            height :: Real.at_least(0.0),
+                            width :: NonnegReal,
+                            height :: NonnegReal,
                             start :: Real, end :: Real) :: Void
 ){
 

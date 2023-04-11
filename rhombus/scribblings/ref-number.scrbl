@@ -72,6 +72,9 @@
 
 @doc(
   annot.macro 'Real'
+  annot.macro 'PosReal'
+  annot.macro 'NegReal'
+  annot.macro 'NonnegReal'
   annot.macro 'Real.at_least($lo)'
   annot.macro 'Real.above($lo)'
   annot.macro 'Real.below($hi)'
@@ -85,7 +88,10 @@
 ){
 
  The @rhombus(Real, ~annot) annotation matches real numbers (as opposed
- to imaginary numbers like the result of @rhombus(math.sqrt(-1))).
+ to imaginary numbers like the result of @rhombus(math.sqrt(-1))). The
+ @rhombus(PosReal, ~annot), @rhombus(NegReal, ~annot), and
+ @rhombus(NonnegReal, ~annot) annotatiosn match positive, negative, and
+ non-negative real numbers, respectively.
 
  The @rhombus(Real.at_least, ~annot), @rhombus(Real.above, ~annot),
  @rhombus(Real.below, ~annot), and @rhombus(Real.at_most, ~annot)
