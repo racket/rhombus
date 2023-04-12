@@ -69,6 +69,8 @@
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
                  child :: MaybeObs.of(View),
                  ...)
+
+  property (tabs :: TabsPanel).at_selection :: Obs
 ){
 
  Creates a tab panel where @rhombus(choices) provides the number and
@@ -103,23 +105,13 @@
  The default @rhombus(set_selection, ~var) function corresponds to
 
 @rhombusblock(
-  fun(what, choices, selected):
+  fun (what, choices, selected):
     #,(@rhombus(at_selection, ~var)).value := selected
 )
 
  To change the content of a @rhombus(TabsPanel, ~class) based on its
  selection, supply a @rhombus(child) that is an observable derived from
  one supplied as @rhombus(selection).
-
-}
-
-
-@doc(
-  property (tabs :: TabsPanel).at_selection :: Obs
-){
-
- Returns an observable derived from the one that determines the selected
- tab of @rhombus(tabs).
 
 }
 

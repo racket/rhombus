@@ -1,0 +1,58 @@
+#lang rhombus/static/and_meta
+import:
+  lib("racket/gui/easy.rkt")
+  rhombus/draw/private/symbol_map.symbol_map_annot
+  rhombus/draw.Bitmap
+  "view.rhm".View
+  "obs.rhm":
+    expose:
+      MaybeObs
+      Obs
+  "type.rhm":
+    expose:
+      LabelString
+      Size
+      Stretch
+
+export:
+  Choice
+
+class Choice(hand, private _at_selection :: Obs):
+  implements View
+  opaque
+  override property handle: hand
+
+  constructor (choices :: MaybeObs.of(List),
+               ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+               ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
+               ~selection: selection :: MaybeObs.of(Any) = #false,
+               ~action: action :: Maybe(Function.of_arity(1)) = #false,
+               ~label: label :: MaybeObs.of(Maybe(LabelString)) = #false,
+               ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+               ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+               ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+               ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true]):
+    def at_selection = obs.to_obs(selection)
+    def use_action = action || (fun(selected):
+                                  at_selection.value := selected)
+    super(easy.choice(obs.unwrap_list(choices, values),
+                      use_action,
+                      ~selection: obs.unwrap(at_selection),
+                      #{#:choice->label}: choice_to_label,
+                      #{#:choice=?}: choice_equal,
+                      ~label: obs.unwrap(label),
+                      #{#:enabled?}: obs.unwrap(is_enabled),
+                      ~style: obs.unwrap_list(style, convert_style),
+                      #{#:min-size}: obs.unwrap_list(min_size, values),
+                      ~stretch: obs.unwrap_list(stretch, values)),
+          at_selection)
+
+  property at_selection :: Obs:
+    _at_selection.map(values)
+
+  export:
+    StyleSymbol
+  symbol_map_annot StyleSymbol convert_style:
+    { horizontal_label: #{horizontal-label},
+      vertical_label: #{vertical-label},
+      deleted: deleted }

@@ -11,6 +11,7 @@ import:
   "gui/private/canvas.rhm"
   "gui/private/button.rhm"
   "gui/private/checkbox.rhm"
+  "gui/private/choice.rhm"
   "gui/private/slider.rhm"
   "gui/private/label.rhm"
   "gui/private/event.rhm"
@@ -25,6 +26,7 @@ export:
   all_from(.canvas)
   all_from(.button)
   all_from(.checkbox)
+  all_from(.choice)
   all_from(.slider)
   all_from(.label)
   all_from(.event)

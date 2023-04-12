@@ -44,7 +44,7 @@ defn.macro 'def_panel $name($arg :: $arg_annot ... => $convert, ...):
      override property handle: hand
 
      constructor ($arg :: $arg_annot ..., ...,
-                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
+                  ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'center],
                   ~style: style :: MaybeObs.of(List.of($(name).StyleSymbol)) = [],
                   ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                   ~spacing: spacing :: MaybeObs.of(SpacingInteger) = 0,

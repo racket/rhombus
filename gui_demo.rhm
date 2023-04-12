@@ -47,9 +47,12 @@ fun draw_face(dc :: draw.DC, config :: Map):
     let y = y/scale
     dc.ellipse(x-2, y-2, 4, 4)
 
-  // face circle
+  // face shape    
   dc.brush := draw.Brush(~color: "orange")
-  dc.ellipse(x, y, s, s)
+  match config["shape"]
+  | "Square": dc.rectangle(x, y, s, s)
+  | "Rounded": dc.rounded_rectangle(x, y, s, s)
+  | ~else dc.ellipse(x, y, s, s)
 
   // mouth
   dc.pen := draw.Pen(~color: "Black")
@@ -87,6 +90,7 @@ fun draw_face(dc :: draw.DC, config :: Map):
 
 def tabs:
   let at_tab = gui.Obs("Happy")
+  let shape = gui.Choice(["Circle", "Square", "Rounded"])                          
   let eyes = gui.Checkbox("Eyes", ~is_checked: #true)
   let stache = gui.Checkbox("Moustache", ~is_checked: #false)
   let scale = gui.Slider(~value: 50,
@@ -110,6 +114,7 @@ def tabs:
                    | ~else s)
   
   def canvas = gui.VPanel(gui.Canvas(gui.Obs.combine({ "mood": at_tab,
+                                                       "shape": shape.at_selection,
                                                        "eyes": eyes.at_is_checked,
                                                        "moustache": stache.at_is_checked,
                                                        "scale": scale.at_value,
@@ -118,7 +123,7 @@ def tabs:
                                      draw_face,
                                      ~mouse: ghost_mouse,
                                      ~key: accum_key),
-                          gui.HPanel(eyes, stache,
+                          gui.HPanel(shape, eyes, stache,
                                      spacer,
                                      gui.Label("-"), scale, gui.Label("+"),
                                      ~stretch: [#true, #false]))

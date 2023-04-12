@@ -51,8 +51,55 @@
  corresponds to
 
 @rhombusblock(
-  fun(on):
+  fun (on):
     #,(@rhombus(at_is_checked, ~var)).value := on
+)
+
+}
+
+@doc(
+  class Choice():
+    implements View
+    constructor (choices :: MaybeObs.of(List),
+                 ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
+                 ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
+                 ~selection: selection :: MaybeObs.of(Any) = #false,
+                 ~action: action :: Maybe(Function.of_arity(1)) = #false,
+                 ~label: label :: MaybeObs.of(Maybe(LabelString)) = #false,
+                 ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
+                 ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
+                 ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
+                 ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true])
+
+  property (chc :: Choice).at_selection :: Obs
+){
+
+ Creates a popup choice selecotr where @rhombus(choices) provides the
+ number and identity of choices, and @rhombus(selection) determines which
+ of the tabs is selected. When rendered, the function call
+ @rhombus(action(#,(@rhombus(now_selected, ~var)))) is performed when the
+ selection is changed, where @rhombus(now_selected, ~var) indicates the
+ newly selected choice.
+
+ If @rhombus(selection) is not an observable, then an observable
+ @rhombus(at_selection, ~var) is created with initial value
+ @rhombus(selection). Otherwise, @rhombus(at_selection, ~var) is
+ @rhombus(selection). A observable derived from
+ @rhombus(at_selection, ~var) can be obtained from the
+ @rhombus(Choice.at_selection) property.
+
+ The @rhombus(choice_to_label) function converts an item in
+ @rhombus(choices) to a label to be shown for the control, and
+ @rhombus(choice_equal) defines equality for choice identities. By
+ default, @rhombus(choices) is expected to be a list of
+ @rhombus(LabelString), since @rhombus(choice_to_label) is the identity
+ function.
+
+ The default @rhombus(action, ~var) function corresponds to
+
+@rhombusblock(
+  fun (selected):
+    #,(@rhombus(at_selection, ~var)).value := selected
 )
 
 }
@@ -89,7 +136,7 @@
  corresponds to
 
 @rhombusblock(
-  fun(val):
+  fun (val):
     #,(@rhombus(at_value, ~var)).value := val
 )
 
@@ -150,6 +197,25 @@
 )
 
 }
+
+
+@doc(
+  annot.macro 'Choice.StyleSymbol'
+){
+
+ Satisfied by the following symbols:
+
+@itemlist(
+
+ @item{@rhombus(#'horizontal_label)}
+ @item{@rhombus(#'vertical_label)}
+ @item{@rhombus(#'deleted)}
+
+)
+
+}
+
+
 
 
 @doc(
