@@ -94,7 +94,7 @@
        [(form-id in ...+ (_::alts clause ...))
         (for ([c (in-list (syntax->list #'(clause ...)))])
           (syntax-parse c
-            [(c::pattern-clause ...) (void)]
+            [_::pattern-clause (void)]
             [_ (raise-syntax-error #f
                                    "expected a pattern followed by a result block"
                                    c)]))]))))
