@@ -34,14 +34,14 @@ class KeyMouseEvent(handle):
   // result is cached in subclasses:
   property down:
     let s: Set{}
-    let s: if rkt.send handle.#{get-shift-down}() | s ++ { #'shift } | s
-    let s: if rkt.send handle.#{get-control-down}() | s ++ { #'control } | s
-    let s: if rkt.send handle.#{get-meta-down}() | s ++ { #'meta } | s
-    let s: if rkt.send handle.#{get-alt-down}() | s ++ { #'alt } | s
-    let s: if rkt.send handle.#{get-caps-down}() | s ++ { #'caps } | s
-    let s: if rkt.send handle.#{get-mod3-down}() | s ++ { #'mod3 } | s
-    let s: if rkt.send handle.#{get-mod4-down}() | s ++ { #'mod4 } | s
-    let s: if rkt.send handle.#{get-mod5-down}() | s ++ { #'mod5 } | s
+    let s :~ Set: if rkt.send handle.#{get-shift-down}() | s ++ { #'shift } | s
+    let s :~ Set: if rkt.send handle.#{get-control-down}() | s ++ { #'control } | s
+    let s :~ Set: if rkt.send handle.#{get-meta-down}() | s ++ { #'meta } | s
+    let s :~ Set: if rkt.send handle.#{get-alt-down}() | s ++ { #'alt } | s
+    let s :~ Set: if rkt.send handle.#{get-caps-down}() | s ++ { #'caps } | s
+    let s :~ Set: if rkt.send handle.#{get-mod3-down}() | s ++ { #'mod3 } | s
+    let s :~ Set: if rkt.send handle.#{get-mod4-down}() | s ++ { #'mod4 } | s
+    let s :~ Set: if rkt.send handle.#{get-mod5-down}() | s ++ { #'mod5 } | s
     s
 
   // `sym` is restructed to appropriate values in subclasses:
@@ -90,10 +90,10 @@ class MouseEvent():
   override property down :: Set:
     if down_set
     | down_set
-    | let s: super.down
-      let s: if rkt.send handle.#{get-left-down}() | s ++ { #'left } | s
-      let s: if rkt.send handle.#{get-middle-down}() | s ++ { #'middle } | s
-      let s: if rkt.send handle.#{get-right-down}() | s ++ { #'right } | s
+    | let s :~ Set: super.down
+      let s :~ Set: if rkt.send handle.#{get-left-down}() | s ++ { #'left } | s
+      let s :~ Set: if rkt.send handle.#{get-middle-down}() | s ++ { #'middle } | s
+      let s :~ Set: if rkt.send handle.#{get-right-down}() | s ++ { #'right } | s
       down_set := s
       s
 

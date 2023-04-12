@@ -11,11 +11,34 @@ normally bound to implement an array reference or assignment, as well
 as other operations.  An array can be used as @tech{sequence}, in which case
 it supplies its elements in order.
 
+An array is normally mutable, but immutable arrays can originate from
+Racket. The @rhombus(Array, ~annot) annotation is satisfied by both
+mutable and immutable arrays, while @rhombus(MutableArray, ~annot) and
+@rhombus(ImmutableArray, ~annot) require one or the other.
+
 @dispatch_table(
   "array",
   @rhombus(Array),
   [arr.length(), Array.length(arr)]
+  [arr.copy(), Array.copy(arr)]
+  [arr.copy_from(arg, ...), Array.copy_from(arr, arg, ...)]
 )
+
+@doc(
+  annot.macro 'Array'
+  annot.macro 'Array.of($annot)'
+  annot.macro 'MutableArray'
+  annot.macro 'ImmutableArray'
+){
+
+ Matches any array in the form without @rhombus(of). The @rhombus(of)
+ variant matches an array whose elements satisfy @rhombus(annotation).
+
+ @rhombus(MutableArray, ~annot) matches only mutable arrays, and and
+ @rhombus(ImmutableArray, ~annot) matches only immutable arrays (that may
+ originate from Racket).
+
+}
 
 @doc(
   fun Array(v :: Any, ...) :: Array
@@ -37,23 +60,13 @@ it supplies its elements in order.
   bind.macro 'Array($bind, ...)'
 ){
 
- Matches an array with as many elements as @rhombus(binding)s, where
- each element matches its corresponding @rhombus(binding).
+ Matches an array with as many elements as @rhombus(bind)s, where
+ each element matches its corresponding @rhombus(bind).
 
 @examples(
   def Array(1, x, y): Array(1, 2, 3)
   y
 )
-
-}
-
-@doc(
-  annot.macro 'Array'
-  annot.macro 'Array.of($annot)'
-){
-
- Matches any array in the form without @rhombus(of). The @rhombus(of)
- variant matches an array whose elements satisfy @rhombus(annotation).
 
 }
 
@@ -98,3 +111,27 @@ it supplies its elements in order.
 
 }
 
+
+@doc(
+  fun Array.copy(arr :: Array) :: Array
+){
+
+ Returns a fresh array string with the same initial content as
+ @rhombus(arr).
+
+}
+
+@doc(
+  fun Array.copy_from(dest_arr :: Array,
+                      dest_start :: NonnegInt,
+                      src_arr :: Array,
+                      src_start :: NonnegInt = 0,
+                      src_end :: NonnegInt = Bytes.length(src_bstr)) :: Void
+){
+
+ Copies bytes from @rhombus(src_arr) at @rhombus(src_start) (inclusive) to
+ @rhombus(src_end) (exclusive) into @rhombus(dest_arr) starting at
+ @rhombus(dest_start). The length of @rhombus(dest_arr) must be at least 
+ @rhombus(dest_start + (src_end - src_start)).
+
+}

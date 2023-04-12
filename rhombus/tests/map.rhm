@@ -97,7 +97,7 @@ block:
          [3, [2, [1, []]]]]
   check:
     {&"oops"}
-    ~raises "not a map"
+    ~raises "not an immutable map"
 
 block:
   def [x, ...] = [1, 2, 3]

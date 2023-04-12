@@ -14,6 +14,13 @@
 )
 
 @doc(
+  annot.macro 'Srcloc'
+){
+
+ Matches a source location value.
+}
+
+@doc(
   fun Srcloc(source,
              line :: Maybe(PosInt),
              column :: Maybe(NonnegInt),
@@ -36,13 +43,6 @@
 
  Matches a source location where the components match the corresponding binding forms.
 
-}
-
-@doc(
-  annot.macro 'Srcloc'
-){
-
- Matches a source location value.
 }
 
 @doc(

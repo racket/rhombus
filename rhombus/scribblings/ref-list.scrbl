@@ -32,6 +32,16 @@ it supplies its elements in order.
 )
 
 @doc(
+  annot.macro 'List'
+  annot.macro 'List.of($annot)'
+){
+
+ Matches any list in the form without @rhombus(of). The @rhombus(of)
+ variant matches a list whose elements satisfy @rhombus(annot).
+
+}
+
+@doc(
   ~nonterminal:
     list_expr: block expr
   fun List(v :: Any, ...) :: List
@@ -104,16 +114,6 @@ it supplies its elements in order.
   def List(1, x, ...): [1, 2, 3]
   [x, ...]
 )
-
-}
-
-@doc(
-  annot.macro 'List'
-  annot.macro 'List.of($annot)'
-){
-
- Matches any list in the form without @rhombus(of). The @rhombus(of)
- variant matches a list whose elements satisfy @rhombus(annot).
 
 }
 

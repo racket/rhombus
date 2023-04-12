@@ -25,13 +25,35 @@ it supplies a key and its associated value (as two result values)
 in an unspecified order.
 
 @dispatch_table(
-  "map"
+  "map (immutable or mutable)"
   @rhombus(Map)
   [map.length(), Map.length(map)]
   [map.keys(), Map.keys(map)]
   [map.values(), Map.values(map)]
   [map.has_key(k), Map.has_key(map, k)]
+  [map.copy(), Map.copy(map)]
+  [map.snapshot(), Map.snapshot(map)]
 )
+
+@doc(
+  ~nonterminal:
+    value_annot: :: annot
+    key_annot: :: annot
+  annot.macro 'Map'
+  annot.macro 'Map.of($key_annot, $value_annot)'
+  annot.macro 'MapView'
+  annot.macro 'MutableMap'
+){
+
+ Matches any immutable map in the form without @rhombus(of). The @rhombus(of)
+ variant matches a map whose keys satisfy @rhombus(key_annotation)
+ and whose values satisfy @rhombus(value_annotation).
+
+ @rhombus(MapView, ~annot) matches both mutable and immutable maps,
+ while @rhombus(MutableMap, ~annot) matches mutable maps (created with,
+ for example, the @rhombus(MutableMap) constructor).
+
+}
 
 @doc(
   ~nonterminal:
@@ -183,7 +205,7 @@ in an unspecified order.
     #,(dots)
 ){
 
- Matches either a map or set, depending on whether
+ Matches either an immutable map or immutable set, depending on whether
  @rhombus(key_expr) and @rhombus(val_bind) are provided or
  @rhombus(expr) is provided. If no @rhombus(key_expr) or
  @rhombus(expr) are provided, the binding matches a map (not a set).
@@ -211,6 +233,9 @@ in an unspecified order.
   bind.macro 'Map{$key_expr: $val_bind, ...}'
   bind.macro 'Map{$key_expr: $val_bind, ..., $rest}'
   bind.macro 'Map([$key_expr, $val_bind], ...)'
+  bind.macro 'MapView{$key_expr: $val_bind, ...}'
+  bind.macro 'MapView{$key_expr: $val_bind, ..., $rest}'
+  bind.macro 'MapView([$key_expr, $val_bind], ...)'
   grammar rest:
     & $map_bind
     $rest_key_bind: $rest_val_bind #,(@litchar{,}) $ellipsis
@@ -230,6 +255,9 @@ in an unspecified order.
  @rhombus(rest_key_bind) and @rhombus(rest_val_bind) are bound
  as repetitions.
 
+ The @rhombus(Map, ~bind) binding forms match only immutable maps, while
+ @rhombus(MapView, ~bind) forms match both immutable and mutable maps.
+
 @examples(
   def Map{"x": x, "y": y}: {"x": 1, "y": 2}
   y
@@ -246,20 +274,6 @@ in an unspecified order.
 
 
 @doc(
-  ~nonterminal:
-    value_annot: :: annot
-    key_annot: :: annot
-  annot.macro 'Map'
-  annot.macro 'Map.of($key_annot, $value_annot)'
-){
-
- Matches any map in the form without @rhombus(of). The @rhombus(of)
- variant matches a map whose keys satisfy @rhombus(key_annotation)
- and whose values satisfy @rhombus(value_annotation).
-
-}
-
-@doc(
   reducer.macro 'Map'
 ){
 
@@ -274,7 +288,7 @@ in an unspecified order.
     key_expr: block expr
     val_expr: block expr
   expr.macro 'MutableMap{key_expr: val_expr, ...}'
-  fun MutableMap(key :: Any, value:: Any, ...) :: Map
+  fun MutableMap(key :: Any, value:: Any, ...) :: MutableMap
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
@@ -295,10 +309,10 @@ in an unspecified order.
 
 
 @doc(
-  operator ((v1 :: Map) ++ (v2 :: Map)) :: Map
-  operator ((v1 :: Set) ++ (v2 :: Set)) :: Set
+  operator ((v1 :: MapView) ++ (v2 :: MapView)) :: Map
+  operator ((v1 :: SetView) ++ (v2 :: SetView)) :: Set
   operator ((v1 :: List) ++ (v2 :: List)) :: List
-  operator ((v1 :: String) ++ (v2 :: String)) :: String
+  operator ((v1 :: StringView) ++ (v2 :: StringView)) :: String
   operator ((v1 :: Bytes) ++ (v2 :: Bytes)) :: Bytes
 ){
 
@@ -329,12 +343,18 @@ in an unspecified order.
 @doc(
   bind.macro 'Map.empty'
   expr.macro 'Map.empty'
+  bind.macro 'MapView.empty'
+  expr.macro 'MapView.empty'
 ){
 
- An empty map. The @rhombus(Map.empty, ~bind) binding form differs
- from from @rhombus({}) or @rhombus(Map()), because @rhombus(Map.empty, ~bind)
- matches only an empty map (possibly mutable), while @rhombus({}) or @rhombus(Map())
- matches any map.
+ An empty map. The @rhombus(Map.empty, ~bind) binding form differs from
+ from @rhombus({}) or @rhombus(Map()), because @rhombus(Map.empty, ~bind)
+ matches only an empty immutable map, while @rhombus({}) or
+ @rhombus(Map()) matches any immutable map.
+
+ The @rhombus(MapView.empty, ~bind) binding form matches an empty map
+ whether it is mutable or immutable. The @rhombus(MapView.empty)
+ expression form is equivalent to @rhombus(Map.empty).
 
 @examples(
   Map.empty
@@ -350,12 +370,18 @@ in an unspecified order.
   match {"x": 1, "y": 2}
   | Map(): "Map binding allows extra"
   | _: #false
+  match MutableMap{}
+  | Map.empty: "empty immutable map"
+  | _: #false
+  match MutableMap{}
+  | MapView.empty: "empty map for now"
+  | _: #false
 )
 
 }
 
 @doc(
-  fun Map.length(map :: Map) :: Int
+  fun Map.length(map :: MapView) :: Int
 ){
 
  Returns the number of key--value mappings in @rhombus(map).
@@ -370,7 +396,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.keys(map :: Map) :: List
+  fun Map.keys(map :: MapView) :: List
 ){
 
  Returns the keys of @rhombus(map) in a list.
@@ -383,7 +409,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.values(map :: Map) :: List
+  fun Map.values(map :: MapView) :: List
 ){
 
  Returns the values of @rhombus(map) in a list.
@@ -396,7 +422,7 @@ in an unspecified order.
 
 
 @doc(
-  fun Map.has_key(map :: Map, key) :: Boolean
+  fun Map.has_key(map :: MapView, key) :: Boolean
 ){
 
  Returns @rhombus(#true) if @rhombus(key) is mapped to a value in
@@ -406,5 +432,24 @@ in an unspecified order.
   Map.has_key({"a": 1, "b": 2}, "a")
   Map.has_key({"a": 1, "b": 2}, "c")
 )
+
+}
+
+@doc(
+  fun Map.copy(map :: MapView) :: MutableMap
+){
+
+ Creates a mutable map whose initial content matches @rhombus(map).
+
+}
+
+
+
+@doc(
+  fun Map.snapshot(set :: MapView) :: Map
+){
+
+ Returns an immutable map whose content matches @rhombus(map). If
+ @rhombus(map) is immutable, then it is the result.
 
 }

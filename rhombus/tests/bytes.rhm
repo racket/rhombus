@@ -9,8 +9,18 @@ block:
   check:
     #"hello".length() ~is 5
     hello.length() ~is 5
-    #"hello".subbytes(1) ~is #"ello"
-    #"hello".subbytes(1, 4) ~is #"ell"
+    #"hello".subbytes(1) ~is_now #"ello"
+    #"hello".subbytes(1, 4) ~is_now #"ell"
+    #"hello".copy() ~is_now #"hello"
+    #"hello".copy() == #"hello" ~is #false
+    (block:
+       let s = #"hello".copy()
+       s.copy_from(0, #"HE")
+       s) ~is_now #"HEllo"
+    (block:
+       let s = #"hello".copy()
+       s.copy_from(2, #"xxxx", 1, 3)
+       s) ~is_now #"hexxo"
     #"h\303\211llo".utf8_string() ~is "hÉllo"
     #"h\303\211llo".utf8_string(#false, 3) ~is "llo"
     #"h\311llo".latin1_string() ~is "hÉllo"
@@ -19,8 +29,13 @@ block:
     
 check:
   dynamic(#"hello").length() ~is 5
-  dynamic(#"hello").subbytes(1) ~is #"ello"
-  dynamic(#"hello").subbytes(1, 4) ~is #"ell"
+  dynamic(#"hello").subbytes(1) ~is_now #"ello"
+  dynamic(#"hello").subbytes(1, 4) ~is_now #"ell"
+  dynamic(#"hello").copy() ~is_now #"hello"
+  (block:
+     let s = #"hello".copy()
+     dynamic(s).copy_from(0, #"HE")
+     s) ~is_now #"HEllo"
   dynamic(#"h\303\211llo").utf8_string() ~is "hÉllo"
   dynamic(#"h\303\211llo").utf8_string(#false, 3) ~is "llo"
   dynamic(#"h\311llo").latin1_string() ~is "hÉllo"
@@ -28,8 +43,9 @@ check:
     
 check:
   Bytes.length(#"hello") ~is 5
-  Bytes.subbytes(#"hello", 1) ~is #"ello"
-  Bytes.subbytes(#"hello", 1, 4) ~is #"ell"
+  Bytes.subbytes(#"hello", 1) ~is_now #"ello"
+  Bytes.subbytes(#"hello", 1, 4) ~is_now #"ell"
+  Bytes.copy(#"hello") ~is_now #"hello"
   Bytes.utf8_string(#"h\303\211llo") ~is "hÉllo"
   Bytes.utf8_string(#"h\303\211llo", #false, 3) ~is "llo"
   Bytes.latin1_string(#"h\311llo") ~is "hÉllo"

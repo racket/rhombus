@@ -44,6 +44,17 @@ block:
     def arr :: Array.of(Posn) = Array(Posn(1, 2))
     arr[0].x
     ~is 1
+  check:
+    Array(1, 2, 3).copy() ~is_now Array(1, 2, 3)
+    Array(4, 5, 6).copy() == Array(4, 5, 6) ~is #false
+    (block:
+       let s = Array(4, 5, 6)
+       s.copy_from(0, Array(7))
+       s) ~is_now Array(7, 5, 6)
+    (block:
+       let s = Array(4, 5, 6, 7, 8)
+       s.copy_from(2, Array(0, 9, 10, 11), 1, 3)
+       s) ~is_now Array(4, 5, 9, 10, 8)
 
 block:
   check:
@@ -52,3 +63,14 @@ block:
   check:
     dynamic(Array(1, 2, 3))[0]
     ~is 1
+  check:
+    dynamic(Array(1, 2, 3)).copy() ~is_now Array(1, 2, 3)
+    dynamic(Array(4, 5, 6)).copy() == Array(4, 5, 6) ~is #false
+    (block:
+       let s = Array(4, 5, 6)
+       dynamic(s).copy_from(0, Array(7))
+       s) ~is_now Array(7, 5, 6)
+    (block:
+       let s = Array(4, 5, 6, 7, 8)
+       dynamic(s).copy_from(2, Array(0, 9, 10, 11), 1, 3)
+       s) ~is_now Array(4, 5, 9, 10, 8)

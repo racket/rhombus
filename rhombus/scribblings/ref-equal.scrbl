@@ -71,6 +71,33 @@
 
 
 @doc(
+  operator (v1 is_now v2) :: Boolean
+){
+
+ Reports whether @rhombus(v1) and @rhombus(v2) are equivalent @emph{now}
+ in the sense that mutable fields of objects have the same values.
+
+ Mutable and immutable strings, byte vectors, and arrays are considered
+ the same if they have the same elements, even if one is mutable and the
+ other is immutable. However, a mutable map or set is never considered
+ equivalent to an immutable map or set, even if they have the same
+ content.
+
+@examples(
+  ~repl:
+    #"apple" is_now Bytes.copy(#"apple")
+    #"apple" == Bytes.copy(#"apple")
+  ~defn:
+    class Posn(mutable x, mutable y)
+  ~repl:
+    Posn(1, 2) is_now Posn(1, 2)
+    Posn(1, 2) == Posn(1, 2)
+)
+
+}
+
+
+@doc(
   expr.macro '='
 ){
 

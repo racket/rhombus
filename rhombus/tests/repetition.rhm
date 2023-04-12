@@ -129,7 +129,7 @@ block:
     ~is [{1: 1}, {2: 1}, {3: 1}]
   check:
     [MutableMap{x: 1}, ...]
-    ~prints_like [{1: 1}, {2: 1}, {3: 1}]
+    ~is_now [{1: 1}, {2: 1}, {3: 1}].map(fun (s): Map.copy(s))
   check:
     use_static
     def m = [{x: 1}, ...]
@@ -140,10 +140,10 @@ block:
     ~is [{1}, {1, 2}, {1, 3}]
   check:
     [MutableSet{x, 1}, ...]
-    ~prints_like [{1}, {1, 2}, {1, 3}]
+    ~is_now [{1}, {1, 2}, {1, 3}].map(fun (s): Set.copy(s))
   check:
     [MutableSet(x, 1), ...]
-    ~prints_like [{1}, {1, 2}, {1, 3}]
+    ~is_now [{1}, {1, 2}, {1, 3}].map(fun (s): Set.copy(s))
   check:
     use_static
     def m = [{x}, ...]

@@ -59,12 +59,14 @@
                        (let loop ([c (read (open-input-string str))])
                          (case c
                            [(number?) "Number"]
-                           [(string?) "String"]
+                           [(string?) "StringView"]
                            [(list?) "List"]
                            [(hash?) "Map"]
                            [(vector?) "Array"]
+                           [((and/c vector? (not/c immutable?))) "MutableArray"]
                            [(pair?) "Pair"]
                            [(bytes?) "Bytes"]
+                           [((and/c bytes? (not/c immutable?))) "MutableBytes"]
                            [(path?) "Path"]
                            [(srcloc?) "Srcloc"]
                            [else (format "~s" c)])))
@@ -90,6 +92,8 @@
                  [(string->path) (rhombus 'Path)]
                  [(path->bytes) (rhombus 'Path.bytes)]
                  [(path->string) (rhombus 'Path.string)]
+                 [(bytes-copy) (rhombus 'Bytes.copy)]
+                 [(bytes-copy!) (rhombus 'Bytes.copy_from)]
                  [else (values who who-realm)])]
               [else (values who who-realm)]))
           (define-values (new-msg new-msg-realm)

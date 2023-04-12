@@ -5,6 +5,7 @@ import:
   lib("racket/syntax-srcloc.rkt") as srcloc
   lib("racket/base.rkt").#{error-print-source-location}
   lib("rackunit/log.rkt").#{test-log!}
+  lib("racket/base.rkt")
 
 export:
  check
@@ -14,6 +15,7 @@ meta:
     kind: ~term
     pattern
     | '~is'
+    | '~is_now'
     | '~is_a'
     | '~prints_like'
     | '~raises'
@@ -103,6 +105,8 @@ fun check_same(loc_where, thunk, expected_thunk, maybe_loc_mode):
         !exn_msg && (("" +& got) == ("" +& expected))
     | #'~is:
         !exn_msg && (got == expected)
+    | #'~is_now:
+        !exn_msg && (got is_now expected)
     | #'~raises:
         exn_msg && does_contain_each(expected, exn_msg)
     | #'~completes:

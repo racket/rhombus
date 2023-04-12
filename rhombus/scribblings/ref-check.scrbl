@@ -35,6 +35,8 @@
   grammar expected_result:
     ~is $expected_expr
     ~is: $expected_body; ...
+    ~is_now $expected_expr
+    ~is_now: $expected_body; ...
     ~is_a $annot
     ~is_a: $annot
     ~prints_like $expected_expr
@@ -55,6 +57,9 @@
  @item{In @rhombus(~is) mode, evaluates the @rhombus(expected_expr) or
   @rhombus(expected_body), then checks that the original result is not an
   exception and is equal by @rhombus(==).}
+
+ @item{In @rhombus(~is_now) mode, check like @rhombus(~is) mode, but
+  using @rhombus(is_now).}
 
  @item{In @rhombus(~is_a) mode, checks that the original result is not
   an exception and satisfies @rhombus(annot).}

@@ -4,7 +4,9 @@
                      enforest/syntax-local
                      "srcloc.rkt"
                      "statically-str.rkt")
+         "provide.rkt"
          "expression.rkt"
+         "repetition.rkt"
          "parse.rkt"
          (submod "map.rkt" for-build)
          "map-ref-set-key.rkt"
@@ -25,6 +27,12 @@
 
 (module+ for-ref
   (provide (for-syntax parse-map-ref-or-set)))
+
+(module+ for-dynamic-static
+  (provide (for-spaces (#f
+                        rhombus/repet)
+                       ++
+                       static-++)))
 
 (define-for-syntax (parse-map-ref-or-set map-in stxes more-static?
                                          #:repetition? [repetition? #f])
@@ -106,20 +114,37 @@
     [else
      (raise-argument-error* 'Map.assign rhombus-realm "Mutable_Map" map)]))
 
-(define-syntax ++
+(define-for-syntax (make-++-expression name static?)
   (expression-infix-operator
-   (expr-quote ++)
+   name
    `((,(expr-quote +&) . same))
    'automatic
    (lambda (form1-in form2 stx)
      (define form1 (rhombus-local-expand form1-in))
      (define append-id (or (syntax-local-static-info form1 #'#%map-append)
-                          #'map-append))
+                           (if static?
+                               (raise-syntax-error '++ (string-append "specialization not known" statically-str) form1-in)
+                               #'map-append)))
      (datum->syntax (quote-syntax here)
                     (list append-id form1 form2)
                     (span-srcloc form1 form2)
                     stx))
    'left))
+
+(define-syntax ++ (make-++-expression (expr-quote ++) #f))
+(define-syntax static-++ (make-++-expression (expr-quote static-++) #t))
+
+(define-for-syntax (make-++-repetition name static?)
+  (repetition-infix-operator
+   name
+   `((,(expr-quote +&) . same))
+   'automatic
+   (lambda (form1-in form2 stx)
+     (raise-syntax-error #f "not yet ready" stx))
+   'left))
+
+(define-repetition-syntax ++ (make-++-repetition (expr-quote ++) #f))
+(define-repetition-syntax static-++ (make-++-repetition (expr-quote static-++) #t))
 
 (define (map-append map1 map2)
   (cond
@@ -158,4 +183,4 @@
                                                    "cannot append a byte string and other value"
                                                    "byte string" map1
                                                    "other value" map2)])]
-    [else (raise-argument-error* '++ rhombus-realm "or(List, Array, Map, Set, String)" map1)]))
+    [else (raise-argument-error* '++ rhombus-realm "List || Array || Map || Set || String" map1)]))

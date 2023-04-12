@@ -9,7 +9,8 @@
          "define-arity.rkt"
          "function-arity-key.rkt"
          "static-info.rkt"
-         "expression.rkt")
+         "expression.rkt"
+         "mutability.rkt")
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
@@ -71,8 +72,8 @@
          [(eqv? v -inf.0) (display "#neginf" op)]
          [(eqv? v +nan.0) (display "#nan" op)]
          [else (write v op)])]
-      [(or (string? v)
-           (bytes? v)
+      [(or (and (string? v) (immutable? v))
+           (and (bytes? v) (immutable? v))
            (exact-integer? v))
        (cond
          [(display?) (display v op)]
@@ -141,6 +142,8 @@
          #f)
        (display ")" op)]
       [(hash? v)
+       (when (mutable-hash? v)
+         (display "MutableMap" op))
        (display "{" op)
        (for/fold ([first? #t]) ([k+v (hash-map v cons #t)])
          (define k (car k+v))
@@ -154,8 +157,12 @@
       [(set? v)
        (cond
          [(eqv? 0 (hash-count (set-ht v)))
+          (when (mutable-hash? (set-ht v))
+            (display "Mutable" op))
           (display "Set{}" op)]
          [else
+          (when (mutable-hash? (set-ht v))
+            (display "MutableSet" op))
           (display "{" op)
           (for/fold ([first? #t]) ([v (in-list (hash-map (set-ht v) (lambda (k v) k) #t))])
             (unless first? (display ", " op))

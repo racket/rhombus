@@ -22,6 +22,20 @@ to append lists.
 )
 
 @doc(
+  ~nonterminal:
+    fst_annot: :: annot
+    rst_annot: :: annot
+  annot.macro 'Pair'
+  annot.macro 'Pair.of($fst_annot, $rst_annot)'
+){
+
+ Matches any pair in the form without @rhombus(of). The @rhombus(of)
+ variant matches a pair whose components satisfy @rhombus(fst_annotation)
+ and @rhombus(rst_annotation).
+
+}
+
+@doc(
   fun Pair(fst_v :: Any, rst_v :: Any) :: Pair
 ){
 
@@ -50,20 +64,6 @@ to append lists.
   def Pair(lx, ly): [1, 2]
   y
 )
-
-}
-
-@doc(
-  ~nonterminal:
-    fst_annot: :: annot
-    rst_annot: :: annot
-  annot.macro 'Pair'
-  annot.macro 'Pair.of($fst_annot, $rst_annot)'
-){
-
- Matches any pair in the form without @rhombus(of). The @rhombus(of)
- variant matches a pair whose components satisfy @rhombus(fst_annotation)
- and @rhombus(rst_annotation).
 
 }
 

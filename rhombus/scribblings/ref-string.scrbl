@@ -10,6 +10,11 @@ append strings, but a @rhombus(+&) can be used to append strings with
 the static guaratee that the result is a string. A string can be used as
 @tech{sequence}, in which case it supplies its bytes in order.
 
+Although Racket supports mutable strings, the @rhombus(String, ~annot)
+annotation recognizes only immutable strings, and Rhombus operations
+generate immutable strings. Some operations allow mutable strings as
+input, and @rhombus(StringView, ~annot) recognizes both mutable and
+immutable strings.
 
 @dispatch_table(
   "string"
@@ -33,9 +38,11 @@ the static guaratee that the result is a string. A string can be used as
 
 @doc(
   annot.macro 'String'
+  annot.macro 'StringView'
 ){
 
-  Matches strings.
+ Matches strings. The @rhombus(StringView, ~annot) annotation allows mutable
+ Racket strings as well as immutable Rhombus strings.
 
 }
 
@@ -77,7 +84,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.length(str :: String) :: NonnegInt
+  fun String.length(str :: StringView) :: NonnegInt
 ){
 
  Returns the number of characters in @rhombus(str).
@@ -91,7 +98,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.substring(str :: String,
+  fun String.substring(str :: StringView,
                        start :: NonnegInt,
                        end :: NonnegInt = String.length(str)) :: String
 ){
@@ -108,15 +115,15 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.utf8_bytes(str :: String,
+  fun String.utf8_bytes(str :: StringView,
                         err_byte :: Optional[Byte] = #false,
                         start :: NonnegInt = 0,
                         end :: NonnegInt = String.length(str)) :: Bytes
-  fun String.latin1_bytes(str :: String,
+  fun String.latin1_bytes(str :: StringView,
                           err_byte :: Optional[Byte] = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
-  fun String.locale_bytes(str :: String,
+  fun String.locale_bytes(str :: StringView,
                           err_byte :: Optional[Byte] = #false,
                           start :: NonnegInt = 0,
                           end :: NonnegInt = String.length(str)) :: Bytes
@@ -139,7 +146,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.to_int(str :: String) :: Optional[Int]
+  fun String.to_int(str :: StringView) :: Optional[Int]
 ){
 
  Parses @rhombus(str) as an integer, returning @rhombus(#false) if the
@@ -157,7 +164,7 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.to_number(str :: String) :: Optional[Number]
+  fun String.to_number(str :: StringView) :: Optional[Number]
 ){
 
  Parses @rhombus(str) as a number, returning @rhombus(#false) if the
@@ -175,10 +182,10 @@ the static guaratee that the result is a string. A string can be used as
 
 
 @doc(
-  fun String.upcase(str :: String) :: String
-  fun String.downcase(str :: String) :: String
-  fun String.foldcase(str :: String) :: String
-  fun String.titlecase(str :: String) :: String
+  fun String.upcase(str :: StringView) :: String
+  fun String.downcase(str :: StringView) :: String
+  fun String.foldcase(str :: StringView) :: String
+  fun String.titlecase(str :: StringView) :: String
 ){
 
  Case-conversion functions.
@@ -186,10 +193,10 @@ the static guaratee that the result is a string. A string can be used as
 }
 
 @doc(
-  fun String.normalize_nfd(str :: String) :: String
-  fun String.normalize_nfkd(str :: String) :: String
-  fun String.normalize_nfc(str :: String) :: String
-  fun String.normalize_nfkc(str :: String) :: String
+  fun String.normalize_nfd(str :: StringView) :: String
+  fun String.normalize_nfkd(str :: StringView) :: String
+  fun String.normalize_nfc(str :: StringView) :: String
+  fun String.normalize_nfkc(str :: StringView) :: String
 ){
 
  Unicode normalization functions.
@@ -197,7 +204,7 @@ the static guaratee that the result is a string. A string can be used as
 }
 
 @doc(
-  fun String.grapheme_span(str :: String,
+  fun String.grapheme_span(str :: StringView,
                            start :: NonnegInt = 0,
                            end :: NonnegInt = str.length()) :: NonnegInt
 ){
@@ -214,7 +221,7 @@ the static guaratee that the result is a string. A string can be used as
 }
 
 @doc(
-  fun String.grapheme_count(str :: String,
+  fun String.grapheme_count(str :: StringView,
                             start :: NonnegInt = 0,
                             end :: NonnegInt = str.length()) :: NonnegInt
 ){

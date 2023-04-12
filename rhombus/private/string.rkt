@@ -17,7 +17,8 @@
          "static-info.rkt"
          "dot-parse.rkt"
          (submod "dot.rkt" for-dot-provider)
-         (submod "annotation.rkt" for-class))
+         (submod "annotation.rkt" for-class)
+         "mutability.rkt")
 
 (provide (for-spaces (#f
                       rhombus/repet)
@@ -27,7 +28,9 @@
                      to_string)
          (for-spaces (rhombus/annot
                       rhombus/namespace)
-                     String))
+                     String)
+         (for-space rhombus/annot
+                    StringView))
 
 (module+ for-builtin
   (provide string-method-table))
@@ -37,9 +40,11 @@
 
 (define-for-syntax string-static-infos
   #'((#%dot-provider string-instance)
-     (#%map-ref string-ref)))
+     (#%map-ref string-ref)
+     (#%map-append string-append-immutable)))
 
-(define-annotation-syntax String (identifier-annotation #'string? string-static-infos))
+(define-annotation-syntax String (identifier-annotation #'immutable-string? string-static-infos))
+(define-annotation-syntax StringView (identifier-annotation #'string? string-static-infos))
 
 (define-infix +& append-as-strings
   #:stronger-than (== ===))

@@ -11,6 +11,13 @@
 )
 
 @doc(
+  annot.macro 'Path'
+){
+
+ Matches a path value.
+}
+
+@doc(
   fun Path(p :: Bytes || String || Path) :: Path
 ){
 
@@ -38,13 +45,6 @@
   p
 )
 
-}
-
-@doc(
-  annot.macro 'Path'
-){
-
- Matches a path value.
 }
 
 @doc(

@@ -5,7 +5,7 @@
 
 (rhombus-definition (group use_static))
 
-(bounce #:except (|.| #%ref #%call)
+(bounce #:except (|.| #%ref #%call ++)
         "main.rkt")
 (bounce #:only (|.|)
         #:spaces (rhombus/impo rhombus/expo)
@@ -13,11 +13,13 @@
 (provide (for-space #f
                     |.|
                     #%ref
-                    #%call)
+                    #%call
+                    ++)
          (for-space rhombus/repet
                     |.|
                     #%ref
-                    #%call))
+                    #%call
+                    ++))
 
 (module reader syntax/module-reader
   #:language 'rhombus/static

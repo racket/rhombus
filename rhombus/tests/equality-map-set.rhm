@@ -125,7 +125,17 @@ check:
   match MutableMap()
   | Map.empty: "Map.empty"
   | _: #false
-  ~is "Map.empty"
+  ~is #false
+check:
+  match {}
+  | MapView.empty: "MapView.empty"
+  | _: #false
+  ~is "MapView.empty"
+check:
+  match MutableMap()
+  | MapView.empty: "MapView.empty"
+  | _: #false
+  ~is "MapView.empty"
 check:
   match {"a": 1}
   | Map.empty: "Map.empty"
@@ -143,7 +153,17 @@ check:
   match MutableSet()
   | Set.empty: "Set.empty"
   | _: #false
-  ~is "Set.empty"
+  ~is #false
+check:
+  match Set()
+  | SetView.empty: "SetView.empty"
+  | _: #false
+  ~is "SetView.empty"
+check:
+  match MutableSet()
+  | SetView.empty: "SetView.empty"
+  | _: #false
+  ~is "SetView.empty"
 
 def local_map = Map{#'alice: Posn(4, 5),
                     #'bob: Posn(7, 9)}

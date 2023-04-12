@@ -8,6 +8,7 @@
          (submod "annotation.rkt" for-class)
          (submod "dot.rkt" for-dot-provider)
          "static-info.rkt"
+         "define-arity.rkt"
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "ref-result-key.rkt"
@@ -17,20 +18,22 @@
          "dot-parse.rkt"
          "reducer.rkt"
          "parens.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "realm.rkt"
+         "mutability.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
                       rhombus/bind
                       rhombus/annot
                       rhombus/reducer)
-                     Array))
+                     Array)
+         (for-space rhombus/annot
+                    MutableArray
+                    ImmutableArray))
 
 (module+ for-builtin
   (provide array-method-table))
-
-(define array-method-table
-  (hash 'length (method1 vector-length)))
 
 (define-for-syntax array-static-infos
   #'((#%map-ref vector-ref)
@@ -42,6 +45,8 @@
   #:fields
   ([make make-vector]
    [length vector-length]
+   copy
+   copy_from
    of))
 
 (define-syntax Array
@@ -59,6 +64,9 @@
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
     #`((#%ref-result #,(car static-infoss)))))
+
+(define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
+(define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))
 
 (define-static-info-syntax vector
   (#%call-result #,array-static-infos)
@@ -92,12 +100,32 @@
            body
            dest-id)])))
 
+(define/arity (copy v)
+  #:static-infos ((#%call-result #,array-static-infos))
+  (unless (vector? v) (raise-argument-error* 'Vector.copy rhombus-realm "Array" v))
+  (define len (vector-length v))
+  (define new-v (make-vector len))
+  (vector-copy! new-v 0 v 0 len)
+  new-v)
+(define/arity (copy_from v dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
+  #:static-infos ((#%call-result #,array-static-infos))
+  (vector-copy! v dest-start src src-start src-end))
+
+(define array-method-table
+  (hash 'length (method1 vector-length)
+        'copy (method1 copy)
+        'copy_from (lambda (vec)
+                     (lambda (dest-start src [src-start 0] [src-end (and (vector? src) (vector-length src))])
+                       (vector-copy! vec dest-start src src-start src-end)))))
+
 (define-syntax array-instance
   (dot-provider-more-static
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'vector-length)]
+        [(copy) (0ary #'copy array-static-infos)]
+        [(copy_from) (nary #'copy_from 28 #'copy_from #'())]
         [else #f])))))
 
 (define-binding-syntax Array

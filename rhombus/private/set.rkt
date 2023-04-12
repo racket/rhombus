@@ -1,5 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
+                     racket/symbol
                      syntax/parse/pre
                      racket/syntax
                      "srcloc.rkt"
@@ -28,7 +29,9 @@
          "composite.rkt"
          "define-arity.rkt"
          (only-in "lambda-kwrest.rkt" hash-remove*)
-         "op-literal.rkt")
+         "op-literal.rkt"
+         "hash-snapshot.rkt"
+         "mutability.rkt")
 
 (provide (for-spaces (rhombus/namespace
                       #f
@@ -38,8 +41,13 @@
                       rhombus/annot)
                      Set)
          (for-spaces (#f
-                      rhombus/repet)
-                     MutableSet))
+                      rhombus/repet
+                      rhombus/annot)
+                     MutableSet)
+         (for-spaces (rhombus/namespace
+                      rhombus/bind
+                      rhombus/annot)
+                    SetView))
 
 (module+ for-binding
   (provide (for-syntax parse-set-binding)))
@@ -74,12 +82,8 @@
   (lambda (s)
     (in-set s)))
 
-(define set-method-table
-  (hash 'length (let ([length (lambda (s)
-                                (unless (set? s)
-                                  (raise-argument-error* 'Set.length rhombus-realm "Set" s))
-                                (hash-count (set-ht s)))])
-                  (method1 length))))
+(define (immutable-set? v) (and (set? v) (immutable-hash? (set-ht v))))
+(define (mutable-set? v) (and (set? v) (mutable-hash? (set-ht v))))
 
 (define (set-member? s v)
   (hash-ref (set-ht s) v #f))
@@ -98,7 +102,9 @@
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
         [(length) (0ary #'set-count)]
-        [else #f])))))
+        [(copy) (0ary #'Set.copy mutable-set-static-info)]
+        [(snapshot) (0ary #'Set.snapshot set-static-info)]
+        [else (fail-k)])))))
 
 (define-syntax (Set-build stx)
   (syntax-parse stx
@@ -116,23 +122,27 @@
 
 (define (set->list s) (hash-keys (set-ht s)))
 
-(define-syntax empty-set
-  (expression-transformer
-   (lambda (stx)
-     (syntax-parse stx
-       [(form-id . tail)
-        (values #'(set #hashalw()) #'tail)]))))
+(define-syntaxes (empty-set empty-set-view)
+  (let ([t (expression-transformer
+            (lambda (stx)
+              (syntax-parse stx
+                [(form-id . tail)
+                 (values #'(set #hashalw()) #'tail)])))])
+    (values t t)))
 
-(define-binding-syntax empty-set
+(define-for-syntax (make-empty-set-binding hash?-id)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id . tail)
-        (values (binding-form #'empty-set-infoer #'()) #'tail)]))))
+        (values (binding-form #'empty-set-infoer hash?-id) #'tail)]))))
+
+(define-binding-syntax empty-set (make-empty-set-binding #'immutable-hash?))
+(define-binding-syntax empty-set-view (make-empty-set-binding #'hash?))
 
 (define-syntax (empty-set-infoer stx)
   (syntax-parse stx
-    [(_ static-infos datum)
+    [(_ static-infos hash?)
      (binding-info "Set.empty"
                    #'empty-set
                    #'static-infos
@@ -140,12 +150,12 @@
                    #'empty-set-matcher
                    #'literal-commit-nothing
                    #'literal-bind-nothing
-                   #'datum)]))
+                   #'hash?)]))
 
 (define-syntax (empty-set-matcher stx)
   (syntax-parse stx
-    [(_ arg-id datum IF success fail)
-     #'(IF (and (set? arg-id) (eqv? 0 (hash-count (set-ht arg-id))))
+    [(_ arg-id hash? IF success fail)
+     #'(IF (and (set? arg-id) (hash? (set-ht arg-id)) (eqv? 0 (hash-count (set-ht arg-id))))
            success
            fail)]))
 
@@ -185,26 +195,38 @@
   #:fields
   ([empty empty-set]
    [length set-count]
+   [copy Set.copy]
+   [snapshot Set.snapshot]
    of))
+
+(define-name-root SetView
+  #:fields
+  ([empty empty-set-view]))
 
 (define-syntax Set
   (expression-transformer
    (lambda (stx) (parse-set stx #f))))
 
-(define-binding-syntax Set
+(define-for-syntax (make-set-binding-transformer mode)
   (binding-transformer
    (lambda (stx)
      (syntax-parse stx
        [(form-id (~and content (_::braces . _)) . tail)
-        (parse-set-binding (syntax-e #'form-id) stx "braces")]
+        (parse-set-binding (syntax-e #'form-id) stx "braces" mode)]
        [(form-id (_::parens arg ...) . tail)
-        (parse-set-binding (syntax-e #'form-id) stx "parentheses")]))))
+        (parse-set-binding (syntax-e #'form-id) stx "parentheses" mode)]))))
+
+(define-binding-syntax Set
+  (make-set-binding-transformer 'Set))
+
+(define-binding-syntax SetView
+  (make-set-binding-transformer 'SetView))
 
 (define-repetition-syntax Set
   (repetition-transformer
    (lambda (stx) (parse-set stx #t))))
 
-(define-for-syntax (parse-set-binding who stx opener+closer)
+(define-for-syntax (parse-set-binding who stx opener+closer [mode 'Set])
   (syntax-parse stx
     #:datum-literals (parens block group op)
     [(form-id (_ (group key-e ...) ...
@@ -214,23 +236,28 @@
      (generate-set-binding (syntax->list #`((#,group-tag key-e ...) ...))
                            #`(#,group-tag elem-b ...)
                            #'tail
+                           mode
                            #:rest-repetition? #t)]
     [(form-id (_ (group elem-e ...) ...
                  (group _::&-bind rst ...))
               . tail)
      (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
                            #`(#,group-tag rst ...)
-                           #'tail)]
+                           #'tail
+                           mode)]
     [(form-id (_ (group elem-e ...) ...) . tail)
-     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...)) #f #'tail)]))
+     (generate-set-binding (syntax->list #`((#,group-tag elem-e ...) ...))
+                           #f
+                           #'tail
+                           mode)]))
 
-(define-for-syntax (generate-set-binding keys maybe-rest tail
+(define-for-syntax (generate-set-binding keys maybe-rest tail mode
                                          #:rest-repetition? [rest-repetition? #f])
   (with-syntax ([(key ...) keys]
                 [tail tail])
     (define rest-tmp (and maybe-rest (generate-temporary 'rest-tmp)))
     (define-values (composite new-tail)
-      ((make-composite-binding-transformer (cons "Set" (map shrubbery-syntax->string keys))
+      ((make-composite-binding-transformer (cons (symbol->immutable-string mode) (map shrubbery-syntax->string keys))
                                            #'(lambda (v) #t) ; predicate built into set-matcher
                                            '()
                                            '()
@@ -246,7 +273,7 @@
     (with-syntax-parse ([composite::binding-form composite])
       (values
        (binding-form #'set-infoer
-                     #`((key ...)
+                     #`(#,mode (key ...)
                         #,rest-tmp
                         composite.infoer-id
                         composite.data))
@@ -254,7 +281,7 @@
 
 (define-syntax (set-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (keys rest-tmp composite-infoer-id composite-data))
+    [(_ static-infos (mode keys rest-tmp composite-infoer-id composite-data))
      #:with composite-impl::binding-impl #'(composite-infoer-id static-infos composite-data)
      #:with composite-info::binding-info #'composite-impl.info
      (binding-info #'composite-info.annotation-str
@@ -264,14 +291,14 @@
                    #'set-matcher
                    #'set-committer
                    #'set-binder
-                   #'(keys rest-tmp composite-info.matcher-id composite-info.committer-id composite-info.binder-id composite-info.data))]))
+                   #'(mode keys rest-tmp composite-info.matcher-id composite-info.committer-id composite-info.binder-id composite-info.data))]))
 
 (define-syntax (set-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
+    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-binder-id composite-committer-id composite-data)
         IF success failure)
      (define key-tmps (generate-temporaries #'keys))
-     #`(IF (set? arg-id)
+     #`(IF (#,(if (eq? (syntax-e #'mode) 'SetView) #'set? #'immutable-set?) arg-id)
            #,(let loop ([keys (syntax->list #'keys)]
                         [key-tmp-ids key-tmps])
                (cond
@@ -295,12 +322,12 @@
 
 (define-syntax (set-committer stx)
   (syntax-parse stx
-    [(_ arg-id (keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
      #`(composite-committer-id 'set composite-data)]))
 
 (define-syntax (set-binder stx)
   (syntax-parse stx
-    [(_ arg-id (keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
+    [(_ arg-id (mode keys rest-tmp composite-matcher-id composite-committer-id composite-binder-id composite-data))
      #`(composite-binder-id 'set composite-data)]))
 
 (define-sequence-syntax in-set
@@ -334,7 +361,7 @@
 
 (define-annotation-constructor (Set of)
   ()
-  #'set? set-static-info
+  #'immutable-set? set-static-info
   1
   #f
   (lambda (arg-id predicate-stxs)
@@ -374,13 +401,16 @@
                            mutable-set-static-info)))]
                [else (wrap-static-info*
                       (quasisyntax/loc stx
-                        (MutableSet-build #,@(car argss)))
+                        (MutableSet-build #,@(if (null? argss) null (car argss))))
                       mutable-set-static-info)])
              #'tail)]
     [(_ . tail) (values (if repetition?
                             (identifier-repetition-use #'MutableSet-build)
                             #'MutableSet-build)
                         #'tail)]))
+
+(define-annotation-syntax MutableSet (identifier-annotation #'mutable-set? mutable-set-static-info))
+(define-annotation-syntax SetView (identifier-annotation #'set? set-static-info))
 
 (define-syntax MutableSet
   (expression-transformer
@@ -421,8 +451,30 @@
          (hash-set ht k #t))))
 
 (define (set-assert v)
-  (unless (set? v)
+  (unless (immutable-set? v)
     (raise-arguments-error* 'Set rhombus-realm
                             "not a set for splicing"
                             "value" v))
   v)
+
+(define/arity (Set.copy s)
+  #:static-infos ((#%call-result #,mutable-set-static-info))
+  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "SetView" s))
+  (set (hash-copy (set-ht s))))
+
+(define/arity (Set.snapshot s)
+  #:static-infos ((#%call-result #,set-static-info))
+  (unless (set? s) (raise-argument-error* 'Set.copy rhombus-realm "SetView" s))
+  (define ht (set-ht s))
+  (if (immutable-hash? ht)
+      s
+      (set (hash-snapshot ht))))
+
+(define set-method-table
+  (hash 'length (let ([length (lambda (s)
+                                (unless (set? s)
+                                  (raise-argument-error* 'Set.length rhombus-realm "SetView" s))
+                                (hash-count (set-ht s)))])
+                  (method1 length))
+        'copy (method1 Set.copy)
+        'snapshot (method1 Set.snapshot)))

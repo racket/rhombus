@@ -7,6 +7,7 @@
          "repetition.rkt"
          "define-operator.rkt"
          "static-info.rkt"
+         "mutability.rkt"
          (only-in "dot.rkt"
                   |.|))
 
@@ -34,7 +35,8 @@
                      ==
                      !=
 
-                     ===))
+                     ===
+                     is_now))
 
 (define-infix rhombus+ +
   #:weaker-than (rhombus* rhombus/ div mod rem)
@@ -96,5 +98,6 @@
 (define-eql-infix == equal-always?)
 (define-eql-infix != not-equal-always?)
 (define-eql-infix === eq?)
+(define-eql-infix is_now equal?)
 
 (define (not-equal-always? a b) (not (equal-always? a b)))

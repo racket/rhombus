@@ -7,7 +7,7 @@
   defn.macro 'use_static'
 ){
 
- (Re-)defines @rhombus(.), @rhombus(#%ref), and @rhombus(#%parens)
+ (Re-)defines @rhombus(.), @rhombus(#%ref), @rhombus(++) and @rhombus(#%parens)
  to require certain static information and consistency with static
  information:
 
@@ -21,6 +21,10 @@
   the lookup operator can be specialized statically (e.g., to a
   @tech{list} or @tech{map} lookup), otherwise the lookup form is an
   error.}
+
+ @item{A static @rhombus(++) works only when the append operation can be
+  specialized statically (e.g., to a @tech{list} or @tech{map} append),
+  otherwise the operator use is an error.}
 
  @item{A static @rhombus(#%parens) does not require static
   information about functions and methods for calls, but it reports an
