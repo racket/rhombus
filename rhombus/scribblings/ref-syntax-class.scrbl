@@ -254,7 +254,7 @@
 ){
 
  Adjusts the match value and fields of a syntax class. The first
- @rhombus(id) names a field that te syntax class would otherwise
+ @rhombus(id) names a field that the syntax class would otherwise
  provide, but the field is removed, and its value instead becomes the
  main value of an identifier that is bound with the syntax class.
  Meanwhile, the matching terms that would otherwise be the variable's
