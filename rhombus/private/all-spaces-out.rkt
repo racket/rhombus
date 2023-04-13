@@ -49,9 +49,9 @@
                                                 (make-interned-syntax-introducer sym)
                                                 (lambda (x) x)))]
                          [(space-id) (in-value (intro id))]
-                         #:when (and (identifier-binding* space-id)
+                         #:when (and (identifier-binding* space-id phase)
                                      (or (not sym)
-                                         (not (free-identifier=? id space-id)))))
+                                         (not (free-identifier=? id space-id phase)))))
                (cons sym space-id)))
            (when (null? space+ids)
              (raise-syntax-error 'export
