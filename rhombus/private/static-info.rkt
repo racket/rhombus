@@ -30,6 +30,7 @@
            unwrap-static-infos
            static-info-lookup
            static-infos-intersect
+           static-infos-remove
            make-static-infos
            install-static-infos!
            (rename-out [string-static-infos indirect-string-static-infos]
@@ -169,6 +170,12 @@
                              [_ #f]))]
                         [_ #f]))
       a)))
+
+(define-for-syntax (static-infos-remove as key)
+  (for/list ([a (in-list (if (syntax? as) (syntax->list as) as))]
+             #:when (syntax-parse a
+                      [(a-key a-val) (not (free-identifier=? #'a-key key))]))
+    a))
 
 (define-for-syntax (equal-static-info-value? a b)
   (cond

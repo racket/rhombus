@@ -163,3 +163,16 @@ block:
       0
     f()
     ~raises "results do not satisfy annotation"
+  check:
+    ~eval
+    fun oops():
+      use_static
+
+      // make sure values are not propagated through a single-value context
+      fun f():: (Int, List):
+        values(1, [2])
+
+      def x = f()
+      def (a, b) = x
+      b[0]
+    ~raises "specialization not known"

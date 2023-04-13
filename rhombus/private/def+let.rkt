@@ -76,7 +76,7 @@
     [lhs::binding
      #:with lhs-e::binding-form #'lhs.parsed
      #:with rhs (rhombus-local-expand (enforest-expression-block rhs-stx))
-     #:with static-infos (extract-static-infos #'rhs)
+     #:with static-infos (single-valued-static-info (extract-static-infos #'rhs))
      #:with lhs-impl::binding-impl #'(lhs-e.infoer-id static-infos lhs-e.data)
      #:with lhs-i::binding-info #'lhs-impl.info
      (list
@@ -105,7 +105,7 @@
                                    [(si ...)
                                     #:when (= (length (syntax->list #'(si ...)))
                                               (length lhss))
-                                    #'(si ...)]
+                                    (map single-valued-static-info (syntax->list #'(si ...)))]
                                    [_ (for/list ([lhs (in-list lhss)]) #'())])) 
      #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
@@ -150,3 +150,6 @@
 
 (define (rhs-binding-failure who val binding-str)
   (raise-binding-failure who "value" val binding-str))
+
+(define-for-syntax (single-valued-static-info si)
+  (static-infos-remove si #'#%values))
