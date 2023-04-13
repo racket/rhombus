@@ -25,6 +25,7 @@
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "function-arity-key.rkt"
+         "values-key.rkt"
          "static-info.rkt"
          "annotation.rkt"
          "repetition.rkt"
@@ -160,8 +161,21 @@
     (pattern (braces . _)))
 
   (define-splicing-syntax-class :ret-annotation
+    #:attributes (static-infos ; can be `(#%values (static-infos ...))` for multiple results
+                  predicate)   ; can be `(lambda (arg ...) ....)` for multiple results
     #:description "return annotation"
     #:datum-literals (block group)
+    (pattern (~seq op::name (~optional vls:identifier) (_::parens g ...))
+             #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'::)))]
+             #:when (and (or check?
+                             (free-identifier=? (in-binding-space #'op.name) (in-binding-space #':~)))
+                         (or (not (attribute vls))
+                             (free-identifier=? #'vls #'values)))
+             #:with (c::annotation ...) #'(g ...)
+             #:with (c-parsed::annotation-form ...) #'(c.parsed ...)
+             #:with (arg ...) (generate-temporaries #'(g ...))
+             #:attr static-infos #'((#%values (c-parsed.static-infos ...)))
+             #:attr predicate (if check? #'(lambda (arg ...) (and (c-parsed.predicate arg) ...)) #'#f))
     (pattern (~seq op::name ctc0::not-block ctc::not-block ...)
              #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (in-binding-space #'::)))]
              #:when (or check?
@@ -636,18 +650,51 @@
      (cond
        [(or (syntax-e #'pred)
             (syntax-e #'main-pred))
-        #`(let ([result e])
-            (if #,(cond
-                    [(and (syntax-e #'pred)
-                          (syntax-e #'main-pred))
-                     #'(and (pred result)
-                            (main-pred result))]
-                    [(syntax-e #'pred)
-                     #'(pred result)]
-                    [else
-                     #'(main-pred result)])
-                result
-                (raise-result-failure 'name result)))]
+        (define (multi-result? e) (syntax-parse e
+                                    #:literals (lambda)
+                                    [(lambda (_ _ . _) . _) #t]
+                                    [(lambda () . _) #t]
+                                    [_ #f]))
+        (cond
+          [(or (multi-result? #'pred)
+               (multi-result? #'main-pred))
+           (define (wrap-values pred e)
+             (syntax-parse pred
+               #:literals (lambda)
+               [(lambda (arg ...) . _)
+                #`(call-with-values
+                   (lambda () #,e)
+                   (case-lambda
+                     [(arg ...)
+                      (if (#,pred arg ...)
+                          (values arg ...)
+                          (raise-results-failure 'name (list arg ...)))]
+                     [args (raise-results-failure 'name args)]))]
+               [_ #`(let ([result #,e])
+                      (if (#,pred result)
+                          result
+                          (raise-result-failure 'name result)))]))
+           (cond
+             [(and (syntax-e #'pred)
+                   (syntax-e #'main-pred))
+              (wrap-values #'main-pred (wrap-values #'pred #'e))]
+             [(syntax-e #'pred)
+              (wrap-values #'pred #'e)]
+             [else
+              (wrap-values #'main-pred #'e)])]
+          [else
+           #`(let ([result e])
+               (if #,(cond
+                       [(and (syntax-e #'pred)
+                             (syntax-e #'main-pred))
+                        #'(and (pred result)
+                               (main-pred result))]
+                       [(syntax-e #'pred)
+                        #'(pred result)]
+                       [else
+                        #'(main-pred result)])
+                   result
+                   (raise-result-failure 'name result)))])]
        [else #'e])]))
 
 (define (raise-result-failure who val)
@@ -656,6 +703,18 @@
    (string-append "result does not satisfy annotation\n"
                   "  result: ~v")
    val))
+
+(define (raise-results-failure who vals)
+  (raise-contract-error
+   who
+   (string-append "results do not satisfy annotation\n"
+                  "  results...:"
+                  (if (null? vals)
+                      " [none]"
+                      (apply
+                       string-append
+                       (for/list ([v (in-list vals)])
+                         (format "\n   ~v" v)))))))
 
 (begin-for-syntax
   (define-syntax-class :kw-argument

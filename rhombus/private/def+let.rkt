@@ -12,6 +12,7 @@
          "implicit.rkt"
          "annotation.rkt"
          "call-result-key.rkt"
+         "values-key.rkt"
          "static-info.rkt"
          "forwarding-sequence.rkt"
          (only-in "values.rkt"
@@ -38,13 +39,13 @@
          #:when (or (not (attribute op))
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
-                                   #'(g ...) #'(rhombus-body-expression rhs)
+                                   #'(g ...) #'rhs
                                    wrap-definition)]
         [(form-id (~optional op::name) (parens g ...) _::equal rhs ...+)
          #:when (or (not (attribute op))
                     (free-identifier=? (in-binding-space #'op.name) (bind-quote rhombus-values)))
          (build-values-definitions #'form-id
-                                   #'(g ...) #`(rhombus-expression (#,group-tag rhs ...))
+                                   #'(g ...) #`(#,group-tag rhs ...)
                                    wrap-definition)]
         [(form-id any::not-equal ... _::equal rhs ...+)
          #:with g-tag group-tag
@@ -97,8 +98,16 @@
   (syntax-parse gs-stx
     [(lhs::binding ...)
      #:with (lhs-e::binding-form ...) #'(lhs.parsed ...)
-     #:with rhs rhs-stx
-     #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id () lhs-e.data) ...)
+     #:with rhs (rhombus-local-expand (enforest-expression-block rhs-stx))
+     #:with (static-infos ...) (let ([si (extract-static-infos #'rhs)])
+                                 (define lhss (syntax->list #'(lhs ...)))
+                                 (syntax-parse (static-info-lookup si #'#%values)
+                                   [(si ...)
+                                    #:when (= (length (syntax->list #'(si ...)))
+                                              (length lhss))
+                                    #'(si ...)]
+                                   [_ (for/list ([lhs (in-list lhss)]) #'())])) 
+     #:with (lhs-impl::binding-impl ...) #'((lhs-e.infoer-id static-infos lhs-e.data) ...)
      #:with (lhs-i::binding-info ...) #'(lhs-impl.info ...)
      #:with (tmp-id ...) (generate-temporaries #'(lhs-i.name-id ...))
      #:with lhs-str (string-append

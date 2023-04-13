@@ -66,7 +66,7 @@
 }
 
 @doc(
-  fun annot_meta.unpack_predicate(stx:: Syntax)
+  fun annot_meta.unpack_predicate(stx:: Syntax) :: (Syntax, Syntax)
 ){
 
  @provided_meta()

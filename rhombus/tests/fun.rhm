@@ -129,3 +129,37 @@ block:
   check:
     long_form_one() ~is 1
     longer_form_one() ~is 1
+
+block:
+  check:
+    fun f() :: values(Int, Int):
+      values(0, 1)
+    def (x, y) = f()
+    [x, y]
+    ~is [0, 1]
+  check:
+    fun f() :: (Int, Int):
+      values(0, 1)
+    def (x, y) = f()
+    [x, y]
+    ~is [0, 1]
+  check:
+    use_static
+    fun f() :: (Int, List):
+      values(0, [1, 2])
+    def (x, y) = f()
+    y[0]
+    ~is 1
+
+block:
+  check:
+    fun f() :: (Int, Int):
+      values(0, "oops")
+    def (x, y) = f()
+    10
+    ~raises "results do not satisfy annotation"
+  check:
+    fun f() :: (Int, Int):
+      0
+    f()
+    ~raises "results do not satisfy annotation"

@@ -162,6 +162,10 @@ normally bound to implement function calls.
   grammar maybe_res_annot:
     #,(@rhombus(::, ~bind)) $annot
     #,(@rhombus(:~, ~bind)) $annot
+    #,(@rhombus(::, ~bind)) values($annot, ...)
+    #,(@rhombus(:~, ~bind)) values($annot, ...)
+    #,(@rhombus(::, ~bind)) ($annot, ...)
+    #,(@rhombus(:~, ~bind)) ($annot, ...)
     #,(epsilon)
 
   grammar rest:
@@ -315,7 +319,10 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  When @rhombus(maybe_res_annot) is present for a function declared with
  cases under @rhombus(match), a @rhombus(maybe_res_annot) before the block
  containing @rhombus(match) applies to all cases, in addition to any
- @rhombus(maybe_res_annot) supplied for a specific case.
+ @rhombus(maybe_res_annot) supplied for a specific case. A
+ @rhombus(maybe_res_annot) that has a parenthesized sequence of
+ @rhombus(annot)s (with our without @rhombus(values)) describes
+ multiple result values with an annotation for each individual result.
 
 @examples(
   ~defn:
@@ -329,6 +336,17 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
     hello("World")
     ~error:
       hello()
+  ~defn:
+    fun things_to_say :: values(String, String):
+      match
+      | things_to_say():
+          values("Hi", "Bye")
+      | things_to_say(more):
+          values("Hi", "Bye", more)
+  ~repl:
+    things_to_say()
+    ~error:
+      things_to_say("Nachos")
 )
 
 }
