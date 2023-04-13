@@ -66,6 +66,19 @@
 }
 
 @doc(
+  fun annot_meta.unpack_predicate(stx:: Syntax)
+){
+
+ @provided_meta()
+
+ The inverse of @rhombus(annot_meta.pack_predicate), returning two
+ values: an expression and unpacked static information. This function is
+ potentially useful on the result of matching
+ @rhombus(annot_meta.Parsed, ~stxclass).
+
+}
+
+@doc(
   defn.macro 'annot.delayed_declare $id'
   defn.macro 'annot.delayed_complete $id_path: $annot'
 ){

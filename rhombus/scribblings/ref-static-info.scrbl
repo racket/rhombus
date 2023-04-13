@@ -80,7 +80,7 @@
 
  The inverse of @rhombus(statinfo_meta.pack). This function is
  potentially useful to parse a result from
- @rhombus(staticinfo_meta.lookup) for a key whose value is packed
+ @rhombus(statinfo_meta.lookup) for a key whose value is packed
  static information.
 
 }

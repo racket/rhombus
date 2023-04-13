@@ -62,3 +62,25 @@ check:
   annot.delayed_complete Forward: Posn  
   fun (): (10 :: Forward).x
   ~completes
+
+check:
+  use_static
+  annot.macro 'BoxOf($(ann :: annot_meta.Parsed))':
+    def (pred, infos) = annot_meta.unpack_predicate(ann)
+    annot_meta.pack_predicate('block:
+                                 let content_pred = $pred
+                                 fun | (Array(v)): content_pred(v)
+                                     | (_): #false',
+                              '((#%box_ref_info, $infos),
+                                ($(statinfo_meta.dot_provider_key),
+                                 boxof_dot_provider))')
+  fun box_content(Array(v)): v
+
+  dot.macro 'boxof_dot_provider $left $dot $right':
+    let infos = statinfo_meta.lookup(left, '#%box_ref_info') || '()'
+    match right
+    | 'content': statinfo_meta.wrap('box_content($left)', infos)
+
+  def v :: BoxOf(List) = Array([1, 2, 3])
+  v.content[0]
+  ~is 1

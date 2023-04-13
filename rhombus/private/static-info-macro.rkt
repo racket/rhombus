@@ -70,7 +70,10 @@
                                             (pack info)))))
 
 (define-for-syntax (lookup form key)
-  (define si (extract-static-infos form))
+  (define si (extract-static-infos (syntax-parse (unpack-term form #'statinfo_meta.lookup #f)
+                                     #:datum-literals (parsed)
+                                     [(parsed e) #'e]
+                                     [t #'t])))
   (and si (static-info-lookup si key)))
 
 (define-for-syntax call_result_key #'#%call-result)
