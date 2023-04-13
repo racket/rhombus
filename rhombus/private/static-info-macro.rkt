@@ -70,7 +70,7 @@
                                             (pack info)))))
 
 (define-for-syntax (lookup form key)
-  (define si (extract-static-infos (syntax-parse (unpack-term form #'statinfo_meta.lookup #f)
+  (define si (extract-static-infos (syntax-parse (unpack-term form 'statinfo_meta.lookup #f)
                                      #:datum-literals (parsed)
                                      [(parsed e) #'e]
                                      [t #'t])))
