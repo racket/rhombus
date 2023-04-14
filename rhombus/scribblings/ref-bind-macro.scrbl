@@ -96,7 +96,7 @@
  argument to @rhombus(bind_meta.pack). The transformer's result is
  automatically unpacked via @rhombus(bind_meta.pack_info), so it should be
  a syntax object that is suitable to pack---which means that it encodes
- information about identifiers to be boound as well as furtyher
+ information about identifiers to be bound as well as further
  ``continuations'' in the form of a matcher transformer defined with
  @rhombus(bind.matcher), a committer transformer defined with
  @rhombus(bind.committer), and binder transformer defined with
