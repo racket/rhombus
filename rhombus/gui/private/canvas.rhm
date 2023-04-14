@@ -56,7 +56,7 @@ class Canvas(hand):
     StyleSymbol
 
   symbol_map_annot StyleSymbol convert_style:
-    { border: boder,
+    { border: border,
       control_border: #{control-border},
       combo: combo,
       vscroll: vscroll,
