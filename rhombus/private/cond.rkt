@@ -1,11 +1,13 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse/pre)
+                     syntax/parse/pre
+                     "srcloc.rkt")
          "expression.rkt"
          "parse.rkt"
          "else-clause.rkt"
          (only-in "underscore.rkt"
                   [_ rhombus-_])
+         "parens.rkt"
          "error.rkt")
 
 (provide (rename-out [rhombus-if if]
@@ -17,17 +19,18 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       #:datum-literals (alts)
-       [(form-id test ... (alts alt ...)
+       [(form-id test ... (~and all-alts (_::alts alt ...))
                  . tail)
         (syntax-parse #'(alt ...)
           #:datum-literals (block)
           [(((~and tag-thn block) thn ...)
             ((~and tag-els block) els ...))
            (values
-            #'(if (rhombus-expression (group test ...))
-                  (rhombus-body-at tag-thn thn ...)
-                  (rhombus-body-at tag-els els ...))
+            (relocate
+             (respan #'(form-id test ... all-alts))
+             #'(if (rhombus-expression (group test ...))
+                   (rhombus-body-at tag-thn thn ...)
+                   (rhombus-body-at tag-els els ...)))
             #'tail)]
           [_
            (raise-syntax-error #f

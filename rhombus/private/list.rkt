@@ -55,6 +55,7 @@
 
 (define-for-syntax list-static-infos
   #'((#%map-ref list-ref)
+     (#%map-append List.append)
      (#%sequence-constructor in-list)
      (#%dot-provider list-instance)))
 

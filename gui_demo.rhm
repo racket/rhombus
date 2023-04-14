@@ -102,7 +102,9 @@ def tabs:
   let ghosts = gui.Obs([])
   fun ghost_mouse(ev :: gui.MouseEvent):
     ghosts.update(fun (l :: List):
-                    (if l.length() < 10 | l | l.rest) ++ [[ev.x, ev.y]])
+                    let keep :~ List:
+                      if l.length() < 10 | l | l.rest
+                    keep ++ [[ev.x, ev.y]])
 
   let keyed = gui.Obs("")
   fun accum_key(ev :: gui.KeyEvent):
