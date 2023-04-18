@@ -201,3 +201,18 @@ check:
     match
     | 'prefix': 'ok'
   ~raises "associativity specified without infix cases"
+
+check:
+  def f = (macro '() $x':
+             ~op_stx: id
+             '$id')
+  f('apple 10')
+  ~prints_like 'apple'
+
+check:
+  // precedence not allowed for `macro` expression form
+  ~eval
+  (macro '() $x':
+     ~weaker_than: +
+     '$x')
+  ~raises "unexpected term"

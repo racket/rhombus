@@ -185,7 +185,7 @@
                        1
                        (if (eq? kind 'rule)
                            (convert-rule-template #'(tag rhs ...)
-                                                  (list arg-id #'opt-self-id))
+                                                  (list arg-id #'self-id))
                            #`(rhombus-body-expression (tag rhs ...)))))]
                [else
                 (macro-clause #'self-id '()

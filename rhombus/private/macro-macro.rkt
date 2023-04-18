@@ -134,13 +134,26 @@
   (define-composed-splicing-syntax-class (:prefix-operator-options space-sym)
     operator-options)
 
+  (define-composed-splicing-syntax-class (:self-operator-options space-sym)
+    self-options)
+
   (define-composed-splicing-syntax-class (:self-prefix-operator-options space-sym)
     operator-options
     self-options)
-  
+
   (define-composed-splicing-syntax-class (:macro-prefix-operator-options space-sym)
     operator-options
     self-options)
+
+  (define-splicing-syntax-class (:macro-maybe-prefix-operator-options space-sym prec?)
+    (pattern (~var o (:self-operator-options space-sym))
+             #:when (not prec?)
+             #:attr prec #'()
+             #:attr self-id #'o.self-id)
+    (pattern (~var o (:macro-prefix-operator-options space-sym))
+             #:when prec?
+             #:attr prec #'o.prec
+             #:attr self-id #'o.self-id))
 
   (define-syntax-class-mixin infix-operator-options
     #:datum-literals (group)
@@ -277,7 +290,8 @@
                              g))
        (define parsed-right-id (check-parsed-right-form form-id #'tail-pattern))
        (syntax-parse rhs
-         [(tag::block (~var opt (:macro-prefix-operator-options space-sym)) rhs ...)
+         [(tag::block (~var opt (:macro-maybe-prefix-operator-options space-sym (memq 'precedence allowed)))
+                      rhs ...)
           #`(pre-parsed op-name.name
                         op-name.extends
                         prefix
@@ -300,7 +314,7 @@
 
 ;; single-case macro definition:
 (define-for-syntax (parse-operator-definition form-id kind g rhs space-sym compiletime-id
-                                              #:allowed [allowed '(prefix infix)])
+                                              #:allowed [allowed '(prefix infix precedence)])
   (define p ((parse-one-macro-definition form-id kind allowed space-sym) g rhs))
   (define op (pre-parsed-name p))
   (if compiletime-id
@@ -312,7 +326,7 @@
 ;; multi-case macro definition:
 (define-for-syntax (parse-operator-definitions form-id kind stx gs rhss space-sym compiletime-id
                                                main-name main-extends main-prec main-assc
-                                               #:allowed [allowed '(prefix infix)])
+                                               #:allowed [allowed '(prefix infix precedence)])
   (define ps (map (parse-one-macro-definition form-id kind allowed space-sym
                                               main-prec main-assc)
                   gs rhss))
