@@ -773,8 +773,8 @@
  @rhombus(expression, ~class_clause),
  @rhombus(binding, ~class_clause), and @rhombus(annotation, ~class_clause),
  the @rhombus(pattern) and @rhombus(template) shorthands are similar to
- using a @rhombus(macro, ~entry_point) entry point, but an @rhombus(identifer) must be
- presented instead of @rhombus(()) for the pattern, and @rhombus(identifer)
+ using a @rhombus(macro, ~entry_point) entry point, but an @rhombus(id) must be
+ presented instead of @rhombus(()) for the pattern, and @rhombus(id)
  must match the name of the class being defined. When @rhombus(annotation, ~class_clause)
  is not present, in addition to the class name being bound as a default annotation,
  an @rhombus(of, ~datum) annotation constructor is exported as a field
