@@ -55,7 +55,7 @@ check:
 
 // checking some static-info propagation cases
   
-dot.macro 'myint_dot_provider $left $dot $right':
+dot.macro 'myint_dot_provider $left $dot $right $tail ...':
   match right
   | 'is_zero': '$left .= 0'
   | 'add': 'fun (v :~ MyInt) :~ MyInt: $left + v'
@@ -94,3 +94,18 @@ operator ((x :~ MyInt) my_plus (y :~ MyInt)) :~ MyInt:
 check:
   (-2 my_plus 2).is_zero
   ~is #true
+
+block:
+  annot.macro 'MyStr':
+    annot_meta.pack_predicate('fun (x): x is_a String',
+                              '(($(statinfo_meta.dot_provider_key), mystr_dot_provider))')
+  dot.macro 'mystr_dot_provider $left $dot $right':
+    ~is_static: is_static
+    match right
+    | 'is_static': '$is_static'
+  check:
+    ("x" :: MyStr).is_static ~is #true
+  check:
+    use_dynamic
+    ("x" :: MyStr).is_static
+    ~is #false

@@ -155,7 +155,7 @@
                       #'(fail-k))])))
 
          (define-syntax instance
-           (dot-provider-more-static
+           (dot-provider
             (dot-parse-dispatch
              name-dot-dispatch))))]))
 

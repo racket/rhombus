@@ -51,9 +51,9 @@
     (pattern name:identifier)
     (pattern (~and name #:other)))
 
-  (define-syntax-class (:keyword-matching maybe-kw)
+  (define-syntax-class (:keyword-matching kws)
     (pattern kw:keyword
-             #:when (eq? (syntax-e #'kw) maybe-kw)))
+             #:when (memq (syntax-e #'kw) kws)))
 
   (define (combine-prec space-sym strongers weakers sames same-on-lefts same-on-rights)
     (define intro (space->introducer space-sym))
@@ -459,19 +459,19 @@
   (syntax-parse stx
     #:literals (syntax)
     [(_ id #:multi (space ...)
-        #:extra [extra-kw extra-static-infos]
+        #:extra ([extra-kw extra-static-infos] ...)
         #'make-transformer-id)
      #`(begin
          (define-syntax id (make-identifier-syntax-definition-transformer-runtime '(space ...)
                                                                                   #'compiletime-id
-                                                                                  (syntax-e #'extra-kw)))
+                                                                                  (map syntax-e (syntax->list #'(extra-kw ...)))))
          (begin-for-syntax
            (define-syntax compiletime-id
-             (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id #'extra-static-infos))))]
+             (make-identifier-syntax-definition-transformer-compiletime #'make-transformer-id #'(extra-static-infos ...)))))]
     [(_ id #:multi m
         #'make-transformer-id)
      #'(define-identifier-syntax-definition-transformer id #:multi m
-         #:extra [#f #f]
+         #:extra ()
          #'make-transformer-id)]
     [(_ id space
         #:extra extra
@@ -479,27 +479,31 @@
      #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra extra #'make-transformer-id)]
     [(_ id space
         #'make-transformer-id)
-     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra [#f #f] #'make-transformer-id)]))
+     #'(define-identifier-syntax-definition-transformer id #:multi (space) #:extra () #'make-transformer-id)]))
 
 (define-for-syntax (make-identifier-syntax-definition-transformer-runtime space-syms
                                                                           compiletime-id
-                                                                          extra-kw)
+                                                                          extra-kws)
   (definition-transformer
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
         [(form-id q::identifier-syntax-quote
                   (~and rhs (tag::block
-                             (~optional (group #:op_stx (_::block (group self-id:identifier)))
-                                        #:defaults ([self-id #'self]))
-                             (~optional (group (~var kw (:keyword-matching extra-kw)) (_::block (group extra-id:identifier)))
-                                        #:defaults ([extra-id (if extra-kw #'extra #'#f)]))
+                             (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
+                                                                      (_::block (group self-id:identifier))))
+                                              #:defaults ([self-id #'self]))
+                                   (group (~var kw (:keyword-matching extra-kws))
+                                          ~!
+                                          (~or extra-id:identifier
+                                               (_::block (group extra-id:identifier)))))
+                             ...
                              body ...)))
          (define p (parse-transformer-definition #'q.g #'(tag body ...)))
          (define name (pre-parsed-name p))
          (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
                                       ((space->introducer space-sym) name))
-                   (let ([#,name (#,compiletime-id (#,p) (self-id) (extra-id))])
+                   (let ([#,name (#,compiletime-id (#,p) (self-id) (#,(extract-extra-ids stx extra-kws #'(kw ...) #'(extra-id ...))))])
                      (values #,@(for/list ([space-sym (in-list space-syms)])
                                   name)))))]
         [(form-id (_::alts
@@ -507,10 +511,14 @@
                     (group
                      q::identifier-syntax-quote
                      (~and rhs (tag::block
-                                (~optional (group #:op_stx (_::block (group self-id:identifier)))
-                                           #:defaults ([self-id #'self]))
-                                (~optional (group (~var kw (:keyword-matching extra-kw)) (_::block (group extra-id:identifier)))
-                                           #:defaults ([extra-id (if extra-kw #'extra #'#f)]))
+                                (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
+                                                                         (_::block (group self-id:identifier))))
+                                                 #:defaults ([self-id #'self]))
+                                      (group (~var kw (:keyword-matching extra-kws))
+                                             ~!
+                                             (~or extra-id:identifier
+                                                  (_::block (group extra-id:identifier)))))
+                                ...
                                 body ...))))
                    ...))
          (define ps (for/list ([g (in-list (syntax->list #'(q.g ...)))]
@@ -522,12 +530,26 @@
          (define name (pre-parsed-name (car ps)))
          (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
                                       ((space->introducer space-sym) name))
-                   (let ([#,name (#,compiletime-id #,ps (self-id ...) (extra-id ...))])
+                   (let ([#,name (#,compiletime-id #,ps (self-id ...) #,(extract-extra-idss stx extra-kws #'((kw ...) ...) #'((extra-id ...) ...)))])
                      (values #,@(for/list ([space-sym (in-list space-syms)])
                                   name)))))]))))
 
 (begin-for-syntax
-  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infos-stx)
+  (define (extract-extra-ids stx extra-kws kws-stx ids-stx)
+    (define ht (for/fold ([ht #hasheq()]) ([kw-stx (in-list (syntax->list kws-stx))]
+                                           [id (in-list (syntax->list ids-stx))])
+                 (when (hash-ref ht (syntax-e kw-stx) #f)
+                   (raise-syntax-error #f "duplicate option" stx kw-stx))
+                 (hash-set ht (syntax-e kw-stx) id)))
+    (for/list ([kw (in-list extra-kws)])
+      (hash-ref ht kw (lambda () (car (generate-temporaries (list (keyword->string kw))))))))
+  (define (extract-extra-idss stx extra-kws kws-stxs ids-stxs)
+    (for/list ([kws-stx (in-list (syntax->list kws-stxs))]
+               [ids-stx (in-list (syntax->list ids-stxs))])
+      (extract-extra-ids stx extra-kws kws-stx ids-stx))))
+
+(begin-for-syntax
+  (define-for-syntax (make-identifier-syntax-definition-transformer-compiletime make-transformer-id extra-static-infoss-stx)
     (lambda (stx)
       (syntax-parse stx
         [(_ pre-parseds self-ids extra-argument-ids)
@@ -535,7 +557,7 @@
                                            (syntax->list #'self-ids)
                                            (syntax->list #'extra-argument-ids)
                                            make-transformer-id
-                                           extra-static-infos-stx)]))))
+                                           extra-static-infoss-stx)]))))
 
 (define-syntax (define-identifier-syntax-definition-sequence-transformer stx)
   (syntax-parse stx

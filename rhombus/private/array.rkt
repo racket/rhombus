@@ -119,7 +119,7 @@
                        (vector-copy! vec dest-start src src-start src-end)))))
 
 (define-syntax array-instance
-  (dot-provider-more-static
+  (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym

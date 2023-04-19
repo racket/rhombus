@@ -27,13 +27,13 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/class_clause
-  #:extra [#:info class-data-static-infos]
+  #:extra ([#:info class-data-static-infos])
   #'make-class-clause-transformer)
 
 (define-identifier-syntax-definition-transformer both_macro
   #:multi (rhombus/class_clause
            rhombus/interface_clause)
-  #:extra [#:info #'()]
+  #:extra ([#:info #'()])
   #'make-class-and-interface-clause-transformer)
 
 (define-for-syntax (make-class-clause-transformer proc)

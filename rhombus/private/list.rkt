@@ -183,7 +183,7 @@
     #`((#%ref-result #,(car static-infoss)))))
 
 (define-syntax list-instance
-  (dot-provider-more-static
+  (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym

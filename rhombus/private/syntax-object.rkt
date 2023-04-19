@@ -382,7 +382,7 @@
         'srcloc (method1 syntax-srcloc)))
 
 (define-syntax syntax-instance
-  (dot-provider-more-static
+  (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym

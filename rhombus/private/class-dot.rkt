@@ -77,9 +77,9 @@
                               #`([of name-of])
                               null)))
          #'(define-dot-provider-syntax name-instance
-             (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
-                                                                       #hasheq()
-                                                                       #hasheq()))))
+             (dot-provider (make-handle-class-instance-dot (quote-syntax name)
+                                                           #hasheq()
+                                                           #hasheq()))))
         (if exposed-internal-id
             (with-syntax ([([private-method-name private-method-id private-method-id/prop] ...)
                            (for/list ([(sym id/prop) (in-hash method-private)])
@@ -97,15 +97,15 @@
                              ...
                              [of #,internal-of-id]))
                #`(define-dot-provider-syntax internal-name-instance
-                   (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name)
-                                                                             (hasheq
-                                                                              (~@ 'private-field-name
-                                                                                  private-field-desc)
-                                                                              ...)
-                                                                             (hasheq
-                                                                              (~@ 'private-method-name
-                                                                                  (quote-syntax private-method-id/prop))
-                                                                              ...))))))
+                   (dot-provider (make-handle-class-instance-dot (quote-syntax name)
+                                                                 (hasheq
+                                                                  (~@ 'private-field-name
+                                                                      private-field-desc)
+                                                                  ...)
+                                                                 (hasheq
+                                                                  (~@ 'private-method-name
+                                                                      (quote-syntax private-method-id/prop))
+                                                                  ...))))))
             null))))))
 
 (define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results 
@@ -136,11 +136,11 @@
                       ...
                       ex ...))
         #'(define-dot-provider-syntax name-instance
-            (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))
+            (dot-provider (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))
        (if internal-name
            (list
             #`(define-dot-provider-syntax internal-name-instance
-                (dot-provider-more-static (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
+                (dot-provider (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
            null)))))
 
 (define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id final?)

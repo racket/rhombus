@@ -2,7 +2,9 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      enforest/proc-name
-                     "pack.rkt")
+                     "pack.rkt"
+                     (submod "syntax-object.rkt" for-quasiquote)
+                     (for-syntax racket/base))
          "space-provide.rkt"
          "name-root.rkt"
          (for-syntax "name-root.rkt")
@@ -20,32 +22,21 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/dot
+  #:extra ([#:is_static (quote-syntax ())]
+           [#:tail syntax-static-infos])
   #'make-dot-provider-transformer)
-
-(define-identifier-syntax-definition-transformer macro_more_static
-  rhombus/dot
-  #'make-dot-provider-more-static-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)
   (dot-provider
-   (lambda (left dot right)
-     (define e (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot))
-     (and e
-          (wrap-expression e)))))
-
-(define-for-syntax (make-dot-provider-more-static-transformer proc)
-  (dot-provider-more-static
    (lambda (left dot right tail static? success-k fail-k)
      (call-with-values
-      (lambda () (proc (pack-tail #`((parsed #,left) #,dot #,right . #,tail)) dot))
+      (lambda () (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot static? tail))
       (case-lambda
-        [(false)
-         (when false
-           (error (proc-name proc)
-                  (format (string-append "expected a single-value result as #false\n"
-                                         "  received: ~.v")
-                          false)))
-         (fail-k)]
+        [(e)
+         (cond
+           [e (success-k (wrap-expression e) tail)]
+           [else
+            (fail-k)])]
         [(e tail)
          (if e
              (success-k (wrap-expression e) (unpack-tail tail proc #f))

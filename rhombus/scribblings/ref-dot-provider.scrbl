@@ -20,6 +20,12 @@
     defined_name: defn.macro
 
   defn.macro 'dot.macro $prefix_macro_patterns'
+
+  grammar option:
+    ~op_stx: $id
+    ~is_static: $id
+    ~tail: $id
+
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that
@@ -30,43 +36,25 @@
  right-hand identifier. The @rhombus(defined_name) is bound in the
  @rhombus(dot, ~space) @tech{space}.
 
- The result must be either @rhombus(#false) or a syntax object. A
- @rhombus(#false) result means that static resolution failed, in which
- case the @rhombus(.) operator will generate a fallback lookup that is
- dynamic and generic---unless the @rhombus(.) operator is in static
- mode, in which case it will report a syntax error. A syntax-object
- result provides an expression form (that normally includes the
- left-hand expression) to replace the @rhombus(.) expression.
+ Two extra @rhombus(option)s are supported: @rhombus(~is_static) and
+ @rhombus(~tail). Each of these declares an identifier that is bound to
+ information about the context of the @rhombus(.) use. The identifier for
+ @rhombus(~is_static) is bound to @rhombus(#true) or @rhombus(#false),
+ depending on whether @rhombus(.) was a static or dynamic dot; see
+ @rhombus(use_static). The identifier for @rhombus(~tail) is bound to a
+ multi-term syntax object representing the tail of the enclosing group
+ after the @rhombus(.) and subsequent identifier.
 
-}
+ The result must be either @rhombus(#false), a syntax object, or two
+ syntax-object values. A @rhombus(#false) result means that static
+ resolution failed, in which case the @rhombus(.) operator will generate
+ a fallback lookup that is dynamic and generic---unless the @rhombus(.)
+ operator is in static mode, in which case it will report a syntax error.
+ A (first) syntax-object result provides an expression form (that normally
+ includes the left-hand expression) to replace the @rhombus(.)
+ expression. When a second syntax-object result is provided, it is used
+ as the remainder of the enclosing group for further processing, and the
+ default result is the same tail that would be provided for an identifier
+ declared with the @rhombus(~tail) option.
 
-@doc(
-  ~nonterminal:
-    prefix_macro_patterns: defn.macro
-    defined_name: defn.macro
-
-  defn.macro 'dot.macro_more_static $prefix_macro_patterns'
-){
-
- Like @rhombus(dot.macro), but the @rhombus(pattern) sequence after
- the leading @rhombus(defined_name) should match a sequence
- of at least four terms: a boolean literal indicating whether
- the @rhombus(.) is in static mode (see @rhombus(use_static)), a
- parsed left-hand expression, a @rhombus(.) term, and a right-hand
- identifier. Furthermore, the pattern input may have additional terms
- that appear after the right-hand identifier. Like
- @rhombus(expr.macro), the body result should be two values: an
- expression as the expansion of the @rhombus(.) form plus a sequence
- of remaining terms that were not consumed by the expansion.
-
- The expansion result can be @rhombus(#false) to indicate that static
- resolution failed. Two @rhombus(#false) result values are treated the
- same as a single false result, while a single non-@rhombus(#false)
- result is not allowed. When @rhombus(#false) is returned, a dynamic
- fallback is used only if the @rhombus(.) operator is not in static
- mode. At the same time, the implementation of the macro can use the
- literal boolean at the start of the input to parse input differently
- in static and dynamic modes (e.g., to require parentheses after the
- right-hand name to form a method-like call).
- 
 }

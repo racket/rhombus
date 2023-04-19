@@ -304,17 +304,18 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-ids
+(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-idss
                                                      make-transformer-id
-                                                     extra-static-infos-stx
+                                                     extra-static-infoss-stx
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values])
+  (define in-extra-ids (generate-temporaries (car extra-idss)))
   #`(#,make-transformer-id
-     (let ([id (lambda (tail #,@tail-ids self #,@(if (syntax-e (car extra-ids)) (list #'extra) null))
+     (let ([id (lambda (tail #,@tail-ids self #,@in-extra-ids)
                  (syntax-parse (insert-multi-front-group self tail)
                    #,@(for/list ([pre-parsed (in-list pre-parseds)]
                                  [self-id (in-list self-ids)]
-                                 [extra-id (in-list extra-ids)])
+                                 [extra-ids-stx (in-list extra-idss)])
                         (syntax-parse pre-parsed
                           #:datum-literals (pre-parsed)
                           [(pre-parsed id
@@ -325,14 +326,19 @@
                                                                                                    #:splice? #t
                                                                                                    #:splice-pattern values))
                            (with-syntax ([((p-id id-ref) ...) idrs]
-                                         [(((s-id ...) sid-ref) ...) sidrs])
+                                         [(((s-id ...) sid-ref) ...) sidrs]
+                                         [(extra-static-infos ...) extra-static-infoss-stx]
+                                         [(in-extra-id ...) in-extra-ids]
+                                         [(extra-id ...) extra-ids-stx]
+                                         [(extra-id/static ...) (map (lambda (extra-id) (in-static-info-space extra-id))
+                                                                     (syntax->list extra-ids-stx))])
                              #`[#,pattern
                                 (define #,self-id self)
                                 (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
-                                #,@(if (syntax-e extra-id)
-                                       #`((define #,extra-id extra)
-                                          (define-syntax #,(in-static-info-space extra-id) (make-static-infos #,extra-static-infos-stx)))
-                                       null)
+                                (define extra-id in-extra-id)
+                                ...
+                                (define-syntax extra-id/static (make-static-infos extra-static-infos))
+                                ...
                                 (let ([p-id id-ref] ...)
                                   (let-syntaxes ([(s-id ...) sid-ref] ...)
                                     #,(wrap-for-tail
@@ -342,8 +348,8 @@
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id
                                                               make-transformer-id
                                                               gs-stx)
-  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'#f)
-                                    make-transformer-id #'#f
+  (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'())
+                                    make-transformer-id (list)
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
                                     (lambda (body)

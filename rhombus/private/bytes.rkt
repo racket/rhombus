@@ -85,7 +85,7 @@
                            (string->immutable-string (bytes->string/locale str err-char start end))))))
 
 (define-syntax bytes-instance
-  (dot-provider-more-static
+  (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym

@@ -97,7 +97,7 @@
   (hash-count (set-ht s)))
 
 (define-syntax set-instance
-  (dot-provider-more-static
+  (dot-provider
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
