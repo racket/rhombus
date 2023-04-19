@@ -58,6 +58,9 @@
   [digit16 (:/ "af" "AF" "09")]
   [digit16_ (:or digit16 (:: digit16 "_"))]
   [digit8 (:/ "0" "7")]
+  [digit8_ (:or digit8 (:: digit8 "_"))]
+  [digit2 (:/ "0" "1")]
+  [digit2_ (:or digit2 (:: digit2 "_"))]
 
   [langchar (:or (:/ "az" "AZ" "09") "+" "-" "_")]
 
@@ -137,13 +140,19 @@
   
   ;; disallows a number that starts +, -, or "."
   [number/continuing (:or decimal-number/continuing
-                          hex-number)]
+                          hex-number
+                          octal-number
+                          binary-number)]
   [number (:: (:? sign)
               (:or decimal-number
-                   hex-number))]
+                   hex-number
+                   octal-number
+                   binary-number))]
   
   [uinteger (:: (:* digit_) digit)]
   [uinteger16 (:: (:* digit16_) digit16)]
+  [uinteger8 (:: (:* digit8_) digit8)]
+  [uinteger2 (:: (:* digit2_) digit2)]
 
   ;; doesn't match digits ending with "."; that case is handled with
   ;; a follow-up peek to use "." when not part of an multi-char operator
@@ -154,6 +163,8 @@
                        (:: "." uinteger (:? number-exponent)))]
   [number-exponent (:: exponent-marker (:? sign) uinteger)]
   [hex-number (:: "0x" uinteger16)]
+  [octal-number (:: "0o" uinteger8)]
+  [binary-number (:: "0b" uinteger2)]
 
   [bad-number/continuing (:- (:: digit (:+ non-number-delims))
                              identifier
@@ -922,8 +933,13 @@
 
 (define (parse-number s)
   (if (and ((string-length s) . > . 2)
-           (eqv? #\x (string-ref s 1)))
-      (string->number (regexp-replace* #rx"_" (substring s 2) "") 16)
+           (eqv? #\0 (string-ref s 0)))
+      (case (string-ref s 1)
+        [(#\x) (string->number (regexp-replace* #rx"_" (substring s 2) "") 16)]
+        [(#\o) (string->number (regexp-replace* #rx"_" (substring s 2) "") 8)]
+        [(#\b) (string->number (regexp-replace* #rx"_" (substring s 2) "") 2)]
+        [else
+          (string->number (regexp-replace* #rx"_" s ""))])
       (string->number (regexp-replace* #rx"_" s ""))))
 
 (define (parse-string s)

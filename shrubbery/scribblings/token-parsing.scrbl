@@ -16,7 +16,7 @@ star (★) in the left column indicates the productions that correspond to
 @tech{terms} or comments.
 
 @deftech{Numbers} are supported directly in in simple forms---decimal integers,
-decimal floating point, and hexadecimal integers---in all cases allowing
+decimal floating point, and hexadecimal/octal/binary integers---in all cases allowing
 @litchar{_}s between digits. A @litchar("#{")...@litchar("}") escape
 provides access to the full Racket S-expression number grammar. Special
 floating-point values use a @litchar{#} notation: @litchar{#inf},
@@ -129,6 +129,8 @@ but the table below describes the shape of @litchar("@") forms.
     [is_lex, @nonterm{number}, bis, @nonterm{integer}, ""],
     ["", "", bor, @nonterm{float}, ""],
     ["", "", bor, @nonterm{hexinteger}, ""],
+    ["", "", bor, @nonterm{octalinteger}, ""],
+    ["", "", bor, @nonterm{binaryinteger}, ""],
     empty_line,
     [no_lex, @nonterm{integer}, bis, bseq(boptional(@nonterm{sign}), @nonterm{nonneg}), ""],
     empty_line,
@@ -175,6 +177,28 @@ but the table below describes the shape of @litchar("@") forms.
     [no_lex, @nonterm{ushex}, bis, @nonterm{hex}, ""],
     ["", "", bor, bseq(@litchar{_}, @nonterm{hex}), ""],
     empty_line,
+
+
+    [no_lex, @nonterm{octalinteger}, bis, bseq(@litchar{0o},
+                                               @nonterm{octal},
+                                               kleenestar(@nonterm{usoctal})), ""],
+    empty_line,
+    [no_lex, @nonterm{octal}, bis, @elem{@italic{one of} @litchar{0} @italic{through} @litchar{7}}, ""],
+    empty_line,
+    [no_lex, @nonterm{usoctal}, bis, @nonterm{octal}, ""],
+    ["", "", bor, bseq(@litchar{_}, @nonterm{octal}), ""],
+    empty_line,
+
+    [no_lex, @nonterm{binaryinteger}, bis, bseq(@litchar{0b},
+                                                @nonterm{bit},
+                                                kleenestar(@nonterm{usbit})), ""],
+    empty_line,
+    [no_lex, @nonterm{bit}, bis, @elem{@italic{one of} @litchar{0} @italic{or} @litchar{1}}, ""],
+    empty_line,
+    [no_lex, @nonterm{usbit}, bis, @nonterm{bit}, ""],
+    ["", "", bor, bseq(@litchar{_}, @nonterm{bit}), ""],
+    empty_line,
+
     [is_lex, @nonterm{boolean}, bis, @litchar{#true}, ""],
     ["", "", bor, @litchar{#false}, ""],
     empty_line,
