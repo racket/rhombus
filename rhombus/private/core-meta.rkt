@@ -14,6 +14,7 @@
         "for-clause-macro.rkt"
         "class-clause-macro.rkt"
         "interface-clause-macro.rkt"
+        "class-clause-primitive-meta-macro.rkt"
         "entry-point-macro.rkt"
         "static-info-macro.rkt"
         "repet-macro.rkt"

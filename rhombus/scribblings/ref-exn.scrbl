@@ -15,6 +15,7 @@
 
   grammar maybe_initially:
     ~initially: $body; ...
+    ~initially $expr
     #,(epsilon)
 
   grammar maybe_catch:
@@ -26,13 +27,14 @@
 
   grammar maybe_finally:
     ~finally: $body; ...
+    ~finally $expr
     #,(epsilon)
 ){
 
 
- Returns the value of the @rhombus(body) sequence, but runs the body of
+ Returns the value of the @rhombus(body) sequence, but runs the body or expression of
  an @rhombus(~initially) clause when entry the @rhombus(try) body
- (whether normally or by a continuation jump) and the body of a
+ (whether normally or by a continuation jump) and the body or expression of a
  @rhombus(~finally) clause when leaving the @rhombus(try) body (whether
  normally or by a continuation jump, including exception throws).
 

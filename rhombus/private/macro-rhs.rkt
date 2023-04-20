@@ -196,7 +196,7 @@
   (syntax-parse stx
     [(_ template ids)
      (let ([ids (syntax->list #'ids)])
-       (convert-template #'(multi template)
+<       (convert-template #'(multi template)
                          #:rhombus-expression #'rhombus-expression
                          #:check-escape (lambda (e)
                                           (unless (or (and (identifier? e)
@@ -308,7 +308,8 @@
                                                      make-transformer-id
                                                      extra-static-infoss-stx
                                                      #:tail-ids [tail-ids '()]
-                                                     #:wrap-for-tail [wrap-for-tail values])
+                                                     #:wrap-for-tail [wrap-for-tail values]
+                                                     #:else [else-case #f])
   (define in-extra-ids (generate-temporaries (car extra-idss)))
   #`(#,make-transformer-id
      (let ([id (lambda (tail #,@tail-ids self #,@in-extra-ids)
@@ -342,7 +343,10 @@
                                 (let ([p-id id-ref] ...)
                                   (let-syntaxes ([(s-id ...) sid-ref] ...)
                                     #,(wrap-for-tail
-                                       #`(rhombus-body-expression rhs))))])]))))])
+                                       #`(rhombus-body-expression rhs))))])]))
+                   #,@(if else-case
+                          #`([_ #,else-case])
+                          null)))])
        id)))
 
 (define-for-syntax (parse-transformer-definition-sequence-rhs pre-parsed self-id

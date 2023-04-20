@@ -141,18 +141,23 @@
            (to-output tail output max-length)
            tail)])))
 
-(define (all-raw-available? s)
+(define (all-raw-available? s [head? #f])
   (cond
     [(syntax? s)
      (or (syntax-raw-property s)
          (let ([e (syntax-e s)])
            (or (and (pair? e)
                     (all-raw-available? e))
-               (null? e)))
+               (null? e)
+               (and head?
+                    (pair? e)
+                    (eq? 'parsed (syntax-e (car e)))
+                    (pair? (cdr e))
+                    (null? (cddr e)))))
          #;
          (and (log-error "?? ~s" s)
               #f))]
-    [(pair? s) (and (all-raw-available? (car s))
+    [(pair? s) (and (all-raw-available? (car s) #t)
                     (all-raw-available? (cdr s)))]
     [else #t]))
 

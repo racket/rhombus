@@ -34,7 +34,7 @@
          :options-block
 
          check-duplicate-field-names
-         check-fields-methods-distinct
+         check-fields-methods-dots-distinct
          check-consistent-subclass
          check-consistent-construction
          check-consistent-unimmplemented
@@ -67,6 +67,8 @@
                     custom-constructor?
                     custom-binding?
                     custom-annotation?
+                    dots ; list of symbols for dot syntax
+                    dot-provider  ; #f or compile-time identifier
                     defaults-id)) ; #f if no arguments with defaults
 (define (class-desc-ref v) (and (class-desc? v) v))
 
@@ -129,23 +131,40 @@
            #:attr (form 1) '())
   (pattern (~seq (_::block form ...))))
 
-(define (check-duplicate-field-names stxes ids super)
+(define (check-duplicate-field-names stxes ids super interface-dotss)
   (define super-ids (map field-desc-name (if super (class-desc-fields super) '())))
+  (define dots-ht (let ([ht (if (not super)
+                                #hasheq()
+                                (for/fold ([ht #hasheq()]) ([dot-name (in-list (class-desc-dots super))])
+                                  (hash-set ht dot-name "superclass")))])
+                    (for*/fold ([ht ht]) ([dots (in-list interface-dotss)]
+                                          [dot-name (in-list dots)])
+                      (hash-set ht dot-name "interface"))))
   (let ([ht (for/hasheq ([id (in-list super-ids)])
               (values id 'super))])
     (for/fold ([ht ht]) ([id (in-list ids)])
-      (define prev (hash-ref ht (syntax-e id) #f))
-      (when prev
-        (raise-syntax-error #f
-                            (if (eq? prev 'super)
-                                "field name already exists in superclass"
-                                "duplicate field name")
-                            stxes
-                            id))
-      (hash-set ht (syntax-e id) id))))
+      (cond
+        [(hash-ref ht (syntax-e id) #f)
+         => (lambda (prev)
+              (raise-syntax-error #f
+                                  (if (eq? prev 'super)
+                                      "field name already exists in superclass"
+                                      "duplicate field name")
+                                  stxes
+                                  id))]
+        [(hash-ref dots-ht (syntax-e id) #f)
+         => (lambda (what)
+              (raise-syntax-error #f
+                                  (format "field name already in ~a as dot syntax" what)
+                                  stxes
+                                  id))]
+        [else
+         (hash-set ht (syntax-e id) id)]))))
   
-(define (check-fields-methods-distinct stxes field-ht method-mindex method-names method-decls)
-  (for ([k (in-hash-keys field-ht)])
+(define (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
+  (define dots-ht (for/hasheq ([dot (in-list dots)])
+                    (values (syntax-e (car dot)) (car dot))))
+  (define (check-method k what)
     (define id-or-sym (or (hash-ref method-decls k #f)
                           (let ([mix (hash-ref method-mindex k #f)])
                             (and mix
@@ -155,7 +174,16 @@
                      (hash-ref field-ht k #f)
                      id-or-sym))
       (raise-syntax-error #f
-                          "identifier used as both a field name and method name"
+                          (format "identifier used as both a ~a name and method name" what)
+                          stxes
+                          id)))
+  (for ([k (in-hash-keys field-ht)])
+    (check-method k "field"))
+  (for ([(k id) (in-hash dots-ht)])
+    (check-method k "dot-syntax")
+    (when (hash-ref field-ht k #f)
+      (raise-syntax-error #f
+                          "identifier used as both a field name and dot-syntax name"
                           stxes
                           id))))
 
@@ -223,7 +251,9 @@
                                                f)]
       [else #f])))
 
-(define (check-exports-distinct stxes exports-stx fields method-mindex)
+(define (check-exports-distinct stxes exports-stx fields method-mindex dots)
+  (define dots-ht (for/hasheq ([dot (in-list dots)])
+                    (values (syntax-e (car dot)) (car dot))))
   (define exports (for/list ([ex (in-list exports-stx)])
                     (syntax-parse ex
                       [(id ext-id) #'ext-id]
@@ -241,7 +271,11 @@
         (raise-syntax-error #f
                             (format "exported name conflicts with ~a name"
                                     (if (mindex-property? mix) "property" "method"))
-                            ex)))))
+                            ex)))
+    (when (hash-ref ht dots-ht #f)
+      (raise-syntax-error #f
+                          "exported name conflicts with dot-syntax name"
+                          ex))))
 
 (define (field-to-field+keyword+default f arg)
   (values (field-desc-name f)

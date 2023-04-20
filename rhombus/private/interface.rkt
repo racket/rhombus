@@ -12,7 +12,8 @@
                      (only-in "class-parse.rkt"
                               :options-block
                               in-class-desc-space
-                              check-exports-distinct))
+                              check-exports-distinct
+                              check-fields-methods-dots-distinct))
          "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -161,13 +162,23 @@
                        abstract-name)  ; #f or identifier
          (extract-method-tables stxes added-methods #f supers #hasheq() #f))
 
+       (define dots (hash-ref options 'dots '()))
+       (define dot-provider-rhss (map cdr dots))
+       (check-fields-methods-dots-distinct stxes #hasheq() method-mindex method-names method-decls dots)
+
        (define exs (parse-exports #'(combine-out . exports)))
-       (check-exports-distinct stxes exs '() method-mindex)
+       (check-exports-distinct stxes exs '() method-mindex dots)
 
        (define internal-name (let ([id #'maybe-internal-name])
                                (and (syntax-e id) id)))
 
        (define expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
+
+       (define parent-dot-providers
+         (for/list ([parent (in-list supers)]
+                    #:do [(define dp (interface-desc-dot-provider parent))]
+                    #:when dp)
+           dp))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -177,7 +188,13 @@
                      [name-ref (temporary "~a-ref")]
                      [prop-internal:name (temporary "prop:~a" #:name internal-name)]
                      [(super-name ...) parent-names]
-                     [(export ...) exs])
+                     [(export ...) exs]
+                     [(dot-id ...) (map car dots)]
+                     [dot-provider-name (or (and (or (pair? dot-provider-rhss)
+                                                     ((length parent-dot-providers) . > . 1))
+                                                 (temporary "dot-provider-~a"))
+                                            (and (pair? parent-dot-providers)
+                                                 (car parent-dot-providers)))])
          (with-syntax ([internal-name-ref (if internal-name
                                               (temporary "~a-ref" #:name internal-name)
                                               #'name-ref)])
@@ -203,15 +220,17 @@
                                                  prop:internal-name internal-name? internal-name-ref))
                (build-interface-dot-handling method-mindex method-vtable method-results
                                              internal-name
-                                             expression-macro-rhs
-                                             #'(name name-instance name-ref
+                                             expression-macro-rhs dot-provider-rhss parent-dot-providers
+                                             #'(name name? name-instance name-ref
                                                      internal-name-instance internal-name-ref
+                                                     dot-provider-name [dot-id ...]
                                                      [export ...]))
                (build-interface-desc parent-names options
-                                     method-mindex method-names method-vtable method-results method-private
+                                     method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
                                      #'(name prop:name name-ref
-                                             prop:internal-name internal-name? internal-name-ref))
+                                             prop:internal-name internal-name? internal-name-ref
+                                             dot-provider-name))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
@@ -259,11 +278,12 @@
                                                                   (quote-syntax ((#%dot-provider name-instance))))))))))
   
 (define-for-syntax (build-interface-desc parent-names options
-                                         method-mindex method-names method-vtable method-results method-private
+                                         method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
                                          names)
   (with-syntax ([(name prop:name name-ref
-                       prop:internal-name internal-name? internal-name-ref)
+                       prop:internal-name internal-name? internal-name-ref
+                       dot-provider-name)
                  names])
     (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
           [method-map (build-quoted-method-map method-mindex)]
@@ -284,6 +304,8 @@
                                          '#,method-map
                                          #,method-result-expr
                                          #,custom-annotation?
+                                         '()
+                                         #f
                                          (quote #,(build-quoted-private-method-list 'method method-private))
                                          (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
@@ -299,4 +321,7 @@
                             (quote-syntax #,method-vtable)
                             '#,method-map
                             #,method-result-expr
-                            #,custom-annotation?)))))))
+                            #,custom-annotation?
+                            '#,(map car dots)
+                            #,(and (syntax-e #'dot-provider-name)
+                                   #'(quote-syntax dot-provider-name)))))))))

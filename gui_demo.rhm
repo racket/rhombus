@@ -17,74 +17,72 @@ fun draw_face(dc :: draw.DC, config :: Map):
   let y = (h-s)/2
   let π = math.pi
 
-  dc.push()
+  dc.save_and_restore:
 
-  dc.scale(scale)
+    dc.scale(scale)
 
-  let background: if config["mood"] == "Happy"
-                  | draw.RadialGradient(w/2, h/2, s/2,
-                                        w/2, h/2, math.max(w, h),
-                                        [[0, draw.Color("white")],
-                                         [1, draw.Color("yellow")]])
-                  | draw.LinearGradient(0, 0,
-                                        0, h,
-                                        [[0.5, draw.Color("white")],
-                                         [1, draw.Color("darkblue")]])
+    let background: if config["mood"] == "Happy"
+                    | draw.RadialGradient(w/2, h/2, s/2,
+                                          w/2, h/2, math.max(w, h),
+                                          [[0, draw.Color("white")],
+                                           [1, draw.Color("yellow")]])
+                    | draw.LinearGradient(0, 0,
+                                          0, h,
+                                          [[0.5, draw.Color("white")],
+                                           [1, draw.Color("darkblue")]])
 
-  // draw a gradient backround
-  dc.pen := draw.Pen.none
-  dc.brush := draw.Brush(~gradient: background)
-  dc.rectangle(0, 0, w, h)
-
-  // draw keyed text
-  dc.text(config["keyed"], 0, 0)
-
-  // draw ghost dots (showing recent mouse movements)
-  dc.brush := draw.Brush(~color: draw.Color(0, 0, 0, 0.25))
-  for:
-    each [x, y]: (config["ghosts"] :: List)
-    let x = x/scale
-    let y = y/scale
-    dc.ellipse(x-2, y-2, 4, 4)
-
-  // face shape    
-  dc.brush := draw.Brush(~color: "orange")
-  match config["shape"]
-  | "Square": dc.rectangle(x, y, s, s)
-  | "Rounded": dc.rounded_rectangle(x, y, s, s)
-  | ~else dc.ellipse(x, y, s, s)
-
-  // mouth
-  dc.pen := draw.Pen(~color: "Black")
-  dc.brush := draw.Brush.none
-  if config["mood"] == "Happy"
-  | dc.arc(x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s, π * -3/4, π * -1/4)
-  | dc.arc(x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s, π * 1/4, π * 3/4)
-
-  // eyes
-  when config["eyes"]
-  | dc.pen := draw.Pen.none
-    dc.brush := draw.Brush(~color: "black")
-    dc.ellipse(x+0.3*s, y+0.3*s, 0.1*s, 0.1*s)
-    dc.ellipse(x+0.6*s, y+0.3*s, 0.1*s, 0.1*s)
-
-  // moustache
-  when config["moustache"]
-  | let p = draw.Path()
-    p.move_to(0, 0)
-    p.curve_to(20, -10,  80, -10,  100, 0)
-    p.curve_to(120, 10,  180, 0,  200, -20)
-    p.curve_to(180, 20,  120, 40, 90, 30)
-    p.curve_to(60, 20, 20, 20, 0, 0)
-    p.close()
-    p.scale(s/500, s/500)
+    // draw a gradient backround
     dc.pen := draw.Pen.none
-    dc.brush := draw.Brush(~color: "brown")
-    dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
-    p.scale(-1, 1)
-    dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
+    dc.brush := draw.Brush(~gradient: background)
+    dc.rectangle(0, 0, w, h)
 
-  dc.pop()
+    // draw keyed text
+    dc.text(config["keyed"], 0, 0)
+
+    // draw ghost dots (showing recent mouse movements)
+    dc.brush := draw.Brush(~color: draw.Color(0, 0, 0, 0.25))
+    for:
+      each [x, y]: (config["ghosts"] :: List)
+      let x = x/scale
+      let y = y/scale
+      dc.ellipse(x-2, y-2, 4, 4)
+
+    // face shape    
+    dc.brush := draw.Brush(~color: "orange")
+    match config["shape"]
+    | "Square": dc.rectangle(x, y, s, s)
+    | "Rounded": dc.rounded_rectangle(x, y, s, s)
+    | ~else dc.ellipse(x, y, s, s)
+
+    // mouth
+    dc.pen := draw.Pen(~color: "Black")
+    dc.brush := draw.Brush.none
+    if config["mood"] == "Happy"
+    | dc.arc(x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s, π * -3/4, π * -1/4)
+    | dc.arc(x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s, π * 1/4, π * 3/4)
+
+    // eyes
+    when config["eyes"]
+    | dc.pen := draw.Pen.none
+      dc.brush := draw.Brush(~color: "black")
+      dc.ellipse(x+0.3*s, y+0.3*s, 0.1*s, 0.1*s)
+      dc.ellipse(x+0.6*s, y+0.3*s, 0.1*s, 0.1*s)
+
+    // moustache
+    when config["moustache"]
+    | let p = draw.Path()
+      p.move_to(0, 0)
+      p.curve_to(20, -10,  80, -10,  100, 0)
+      p.curve_to(120, 10,  180, 0,  200, -20)
+      p.curve_to(180, 20,  120, 40, 90, 30)
+      p.curve_to(60, 20, 20, 20, 0, 0)
+      p.close()
+      p.scale(s/500, s/500)
+      dc.pen := draw.Pen.none
+      dc.brush := draw.Brush(~color: "brown")
+      dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
+      p.scale(-1, 1)
+      dc.path(p, ~dx: x+0.5*s, ~dy: y+0.6*s)
 
 // ----------------------------------------
 

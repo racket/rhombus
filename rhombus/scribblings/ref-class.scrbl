@@ -66,6 +66,7 @@
     #,(@rhombus(expression, ~class_clause)) $expression_decl
     #,(@rhombus(binding, ~class_clause)) $binding_decl
     #,(@rhombus(annotation, ~class_clause)) $annotation_decl
+    #,(@rhombus(dot, ~class_clause)) $dot_decl
     #,(@rhombus(opaque, ~class_clause))
     $other_class_clause
 ){
@@ -99,17 +100,19 @@
   @rhombus(id_path#,(rhombus(.))#,(@rhombus(method,~var))),
   a function
   @rhombus(id_path#,(rhombus(.))#,(@rhombus(property,~var))),
-  and a field accessor
+  a syntactic form
+  @rhombus(id_path#,(rhombus(.))#,(@rhombus(dot,~var))),
+  a field accessor
   @rhombus(id_path#,(rhombus(.))#,(@rhombus(field,~var))) for each
-  non-@rhombus(private, ~class_clause) method, property, and field in the class
-  (including inherited methods, properties, and fields); and}
+  non-@rhombus(private, ~class_clause) method, property, dot syntax, and field in the class
+  (including inherited methods, properties, fields, and dot syntax), respectively; and}
 
  @item{in the @rhombus(class, ~space) space, a representation of the
   class for reference as a superclass.}
  
 )
 
- Fields, methods, and properties declared in a class can be accessed
+ Fields, methods, properties, and dot syntax declared in a class can be accessed
  from an object (as opposed to just a class) using @rhombus(.), but fields,
  methods, and properties
  declared as @rhombus(private, ~class_clause) can only be accessed by
@@ -155,7 +158,7 @@
  instance is created. Definitions are scoped to the block for
  potential use by class clauses, but a @rhombus(class) form is analogous
  to @rhombus(namespace) in that local definitions can be exported.
- exported names must be distinct from all non-private field, method, and property
+ exported names must be distinct from all non-private field, method, property, and dot-syntax
  names (which are automatically exported from the class in its role as a
  namespace). Since the definitions and expressions of a @rhombus(class)
  body must be processed to find @tech{class clauses} in the body, the
@@ -232,11 +235,16 @@
  @rhombus(binding, ~class_clause), and
  @rhombus(annotation, ~class_clause) replace default meanings of the
  defined @rhombus(id_path) for an expression context, binding
- context, and annotation context, respectively. See
+ context, and annotation context, respectively. The
+ @rhombus(dot, ~class_clause) form (which must be imported
+ through @rhombusmodname(rhombus/meta)) replaces the way that
+ @rhombus(.) accesses are resolved for expressions that have the class's
+ annotation. See
  @rhombus(constructor, ~class_clause),
  @rhombus(expression, ~class_clause),
- @rhombus(binding, ~class_clause), and
- @rhombus(annotation, ~class_clause) for more information on those forms.
+ @rhombus(binding, ~class_clause),
+ @rhombus(annotation, ~class_clause), and
+ @rhombus(dot, ~class_clause) for more information on those forms.
 
  When a method procedure is accessed from a class (as a namespace) via
  @rhombus(.), the procedure expects an extra by-position argument that
@@ -251,11 +259,11 @@
  determined by the object and may be from a subclass that overrides the
  method; the same is true for properties.
  
- Each field, method, and property name must be distinct from all other field,
- method, and property names, whether from a parenthesized @rhombus(field_spec), from a
- @rhombus(field, ~class_clause) clause, or from a method or property clause. If an
- @rhombus(extends, ~class_clause) clause is present, then each field name
- must also be distinct from any field name in the superclass, except that
+ Each field, method, property, and dot-syntax name must be distinct from all other field,
+ method, property, and dot-syntax names, whether from a parenthesized @rhombus(field_spec), from a
+ @rhombus(field, ~class_clause) clause, or from a method, property, or dot-syntax clause. If an
+ @rhombus(extends, ~class_clause) or @rhombus(implements, ~class_clause) clause is present, then each name
+ must also be distinct from any name in the superclass or interface, except that
  a @rhombus(override, ~class_clause) clause must name a method or property that is
  already declared in the superclass. Private superclass fields,
  methods, and properties are not visible to the subclass, so their names are not required
@@ -321,6 +329,7 @@
     #,(@rhombus(internal, ~interface_clause)) $internal_decl
     #,(@rhombus(expression, ~interface_clause)) $expression_decl
     #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
+    #,(@rhombus(dot, ~interface_clause)) $annotation_decl
     $other_interface_clause
 
 ){

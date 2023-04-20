@@ -23,9 +23,11 @@
 
   grammar option:
     ~op_stx: $id
+    ~op_stx $id
     ~is_static: $id
+    ~is_static $id
+    ~tail $id
     ~tail: $id
-
 ){
 
  Similar to @rhombus(defn.macro, ~expr), but binds a @tech{dot provider} that
@@ -56,5 +58,51 @@
  as the remainder of the enclosing group for further processing, and the
  default result is the same tail that would be provided for an identifier
  declared with the @rhombus(~tail) option.
+
+}
+
+
+@doc(
+  ~nonterminal:
+    defined_id: block id
+    left_id: block id
+    obj_expr: block expr
+
+  class_clause.macro '«dot '$ $left_id . $defined_id':
+                         $option; ...
+                         $body
+                         ...»'
+  interface_clause.macro '«dot '$ $left_id . $defined_id':
+                             $option; ...
+                             $body
+                             ...»'
+  grammar option:
+    ~op_stx: $id
+    ~op_stx $id
+    ~head_stx: $id
+    ~head_stx $id
+    ~is_static: $id
+    ~is_static $id
+    ~tail $id
+    ~tail: $id
+){
+
+ Forms for @rhombus(class) or @rhombus(interface) to bind a macro that
+ is normally triggered by using the @rhombus(defined_id) after @rhombus(.) on an
+ expression that has the class's or interface's annotation. The macro can also be
+ triggered by @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)) for a class
+ or initerface @rhombus(name, ~var), which is treated as
+ @rhombus((obj_expr :: #,(@rhombus(name, ~var))).defined_id).
+
+ The pattern for @rhombus(dot, ~class_clause) is constrained to have an
+ escape for @rhombus(left_id) as the left-hand expression (which has the
+ class or interface annotation), a literal @rhombus(.), and then an
+ identifier for @rhombus(defined_id).
+
+ The @rhombus(option)s and result @rhombus(body) are as for
+ @rhombus(dot.macro), except that @rhombus(~head_stx) is also allowed as
+ an option. An identifier after @rhombus(~head_stx) is bound to the
+ called form, either @rhombus(obj_expr.defined_id) or
+ @rhombus(#,(@rhombus(name, ~var)).defined_id(obj_expr)).
 
 }

@@ -33,20 +33,21 @@ interface DC:
   private method get_dc():
     (this :: _DCer).dc
 
-  dot '$left . save_and_restore':
-    ~head_stx: head
-    ~tail: tail
-    match tail
-    | ': $body':
-        values('block:
-                  let dc :: DC = $left
-                  try:
-                    ~initially dc.save()
-                    block $tail
-                    ~finally dc.restore()',
-               '')
-    | _:
-        Syntax.error("expected a block afterward", head)
+  dot_provider
+  | '$left $dot $(name && 'save_and_restore')':
+      ~tail: tail
+      match tail
+      | ': $body':
+          values('block:
+                    let dc :: DC = $left
+                    try:
+                      ~initially dc.push()
+                      block $tail
+                      ~finally dc.pop()',
+                 '')
+      | _:
+          Syntax.error("expected a block afterward", name)
+  | '$_': #false    
 
   property size :: matching([_ :: NonnegReal,
                              _ :: NonnegReal]):
@@ -56,8 +57,8 @@ interface DC:
   property width: size[0]
   property height: size[1]
 
-  method save()
-  method restore()
+  method push()
+  method pop()
 
   method clear():
     rkt.send get_dc().clear()
@@ -225,7 +226,7 @@ namespace some_dc:
 
     private field states = []
 
-    override method save():
+    override method push():
       states := [pen,
                  brush,
                  font,
@@ -233,10 +234,10 @@ namespace some_dc:
                  transformation,
                  states]
     
-    override method restore():
+    override method pop():
       match states
       | []:
-          error("DC.pop", "no state saved")
+          error("DC.pop", "no state pushed")
       | [old_pen,
          old_brush,
          old_font,

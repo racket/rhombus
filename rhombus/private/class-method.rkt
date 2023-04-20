@@ -79,6 +79,13 @@
       [else
        (values "class or interface" "classes or superinterfaces")]))
 
+  (define dot-ht
+    (for/fold ([ht #hasheq()]) ([super (in-list supers)])
+      (for/fold ([ht #hasheq()]) ([sym (in-list (super-dots super))])
+        (when (hash-ref ht sym #f)
+          (raise-syntax-error #f (format "dot syntax supplied by multiple ~a" supers-str) stx sym))
+        (hash-set ht sym #t))))
+
   ;; create merged method tables from the superclass (if any) and all superinterfaces;
   ;; we start with the superclass, if any, so the methods from its vtable stay
   ;; in the same place in the new vtable
@@ -110,6 +117,8 @@
                     (cons (mindex i final? property? arity) shape)
                     i
                     old-val)))
+        (when (hash-ref dot-ht key #f)
+          (raise-syntax-error #f (format "name supplied as both method and dot syntax by ~a" supers-str) stx key))
         (cond
           [old-val
            (define old-rhs (cond
@@ -190,6 +199,8 @@
             (when (eq? (added-method-kind added) 'property)
               (raise-syntax-error #f (format "cannot override ~a's non-property method with a property" super-str)
                                   stx id))))
+      (when (hash-ref dot-ht (syntax-e id) #f)
+        (raise-syntax-error #f (format "method name is supplied as dot syntax by ~a" super-str) stx id))
       (cond
         [(hash-ref here-ht (syntax-e id) #f)
          (raise-syntax-error #f "duplicate method name" stx id)]
@@ -368,6 +379,11 @@
   (if (class-desc? p)
       (class-desc-method-map p)
       (interface-desc-method-map p)))
+
+(define-for-syntax (super-dots p)
+  (if (class-desc? p)
+      (class-desc-dots p)
+      (interface-desc-dots p)))
 
 (define-for-syntax (in-common-superinterface? i j key)
   (define (lookup id)

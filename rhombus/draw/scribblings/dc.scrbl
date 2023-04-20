@@ -71,11 +71,22 @@
 }
 
 @doc(
-  method (dc :: DC).push() :: Void
-  method (dc :: DC).pop() :: Void
+  method (dc :: DC).save() :: Void
+  method (dc :: DC).restore() :: Void
+  dot (dc :: DC).save_and_restore:
+    $body
+    ...
 ){
 
  Saves and restores the draw context's configuration.
+
+ The @rhombus(DC.save) method pushes the current drawing state (pen,
+ brush, clipping region, and transformation) onto an internal stack, and
+ @rhombus(DC.restore) pops the stack and restores the popped drawing
+ state. The @rhombus(DC.save_and_restore) form wraps a @rhombus(body)
+ sequence to save the drawing state on entry to the sequence and restore
+ it on exit, returning the value(s) produced by the @rhombus(body)
+ sequence; entry and exit cover continuation jumps, like @rhombus(try).
 
 }
 

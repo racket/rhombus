@@ -34,6 +34,7 @@
 
          (for-syntax parse-operator-definition
                      parse-operator-definitions
+                     parse-identifier-syntax-transformer
                      :operator-syntax-quote
                      :match+1
 
@@ -486,35 +487,49 @@
                                                                           extra-kws)
   (definition-transformer
     (lambda (stx)
-      (syntax-parse stx
-        #:datum-literals (group)
-        [(form-id q::identifier-syntax-quote
-                  (~and rhs (tag::block
-                             (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
-                                                                      (_::block (group self-id:identifier))))
-                                              #:defaults ([self-id #'self]))
-                                   (group (~var kw (:keyword-matching extra-kws))
-                                          ~!
-                                          (~or extra-id:identifier
-                                               (_::block (group extra-id:identifier)))))
-                             ...
-                             body ...)))
-         (define p (parse-transformer-definition #'q.g #'(tag body ...)))
+      (parse-identifier-syntax-transformer
+       stx
+       compiletime-id extra-kws
+       (lambda (p ct)
          (define name (pre-parsed-name p))
          (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
                                       ((space->introducer space-sym) name))
-                   (let ([#,name (#,compiletime-id (#,p) (self-id) (#,(extract-extra-ids stx extra-kws #'(kw ...) #'(extra-id ...))))])
+                   (let ([#,name #,ct])
                      (values #,@(for/list ([space-sym (in-list space-syms)])
-                                  name)))))]
-        [(form-id (_::alts
-                   (_::block
-                    (group
-                     q::identifier-syntax-quote
-                     (~and rhs (tag::block
-                                (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
+                                  name))))))
+       (lambda (ps ct)
+         (define name (pre-parsed-name (car ps)))
+         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
+                                      ((space->introducer space-sym) name))
+                   (let ([#,name #,ct])
+                     (values #,@(for/list ([space-sym (in-list space-syms)])
+                                  name))))))))))
+
+(define-for-syntax (parse-identifier-syntax-transformer stx compiletime-id extra-kws k ks)
+  (syntax-parse stx
+    #:datum-literals (group)
+    [(form-id q::identifier-syntax-quote
+              (~and rhs (tag::block
+                         (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
+                                                                  (_::block (group self-id:identifier))))
+                                          #:defaults ([self-id #'self]))
+                               (group (~var kw (:keyword-matching extra-kws))
+                                      ~!
+                                      (~or extra-id:identifier
+                                           (_::block (group extra-id:identifier)))))
+                         ...
+                         body ...)))
+     (define p (parse-transformer-definition #'q.g #'(tag body ...)))
+     (k p #`(#,compiletime-id (#,p) (self-id) (#,(extract-extra-ids stx extra-kws #'(kw ...) #'(extra-id ...)))))]
+    [(form-id (_::alts
+               (_::block
+                (group
+                 q::identifier-syntax-quote
+                 (~and rhs (tag::block
+                            (~alt (~optional (group #:op_stx ~! (~or self-id:identifier
                                                                          (_::block (group self-id:identifier))))
-                                                 #:defaults ([self-id #'self]))
-                                      (group (~var kw (:keyword-matching extra-kws))
+                                             #:defaults ([self-id #'self]))
+                                  (group (~var kw (:keyword-matching extra-kws))
                                              ~!
                                              (~or extra-id:identifier
                                                   (_::block (group extra-id:identifier)))))
@@ -527,12 +542,7 @@
          (check-consistent stx
                            (map pre-parsed-name ps)
                            "operator")
-         (define name (pre-parsed-name (car ps)))
-         (list #`(define-syntaxes #,(for/list ([space-sym (in-list space-syms)])
-                                      ((space->introducer space-sym) name))
-                   (let ([#,name (#,compiletime-id #,ps (self-id ...) #,(extract-extra-idss stx extra-kws #'((kw ...) ...) #'((extra-id ...) ...)))])
-                     (values #,@(for/list ([space-sym (in-list space-syms)])
-                                  name)))))]))))
+         (ks ps #`(#,compiletime-id #,ps (self-id ...) #,(extract-extra-idss stx extra-kws #'((kw ...) ...) #'((extra-id ...) ...))))]))
 
 (begin-for-syntax
   (define (extract-extra-ids stx extra-kws kws-stx ids-stx)

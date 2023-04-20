@@ -20,6 +20,12 @@
                      expression
                      annotation))
 
+;; see also "class-clause-primitive-meta-macro.rkt", which provides
+;; forms that are exported only by `rhombus/meta`, because they
+;; require meta-time binding to be useful (unlike `expression`,
+;; `binding`, and `annotation`, which have a `macro`-like form that
+;; works even without meta imports).
+
 (define-for-syntax (parse-multiple-names stx)
   (define lines
     (syntax-parse stx

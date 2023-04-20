@@ -59,6 +59,9 @@
                (hash-set options 'expression-macro-rhs (extract-rhs #'rhs))]
               [(#:annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
+              [(#:dot name block)
+               (hash-set options 'dots (cons (cons #'name (extract-rhs #'block))
+                                             (hash-ref options 'dots null)))]
               [_
                (parse-method-clause orig-stx options clause)]))
           (loop (cdr clauses) new-options)]))]))

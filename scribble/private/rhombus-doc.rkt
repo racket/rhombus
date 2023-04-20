@@ -455,6 +455,27 @@
   method-extract-metavariables
   method-extract-typeset)
 
+(define-doc dot
+  "expression"
+  #f
+  (lambda (stx space-name)
+    (syntax-parse stx
+      #:datum-literals (group parens :: |.| op)
+      [(group _ (parens (group _ (op ::) class)) (op |.|) name . _)
+       (build-dotted #'class #'name)]))
+  (lambda (stx space-name vars)
+    (syntax-parse stx
+      #:datum-literals (group parens :: |.| op)
+      [(group _ (parens (group self (op ::) class)) (op |.|) name . more)
+       (extract-pattern-metavariables #'(group . more)
+                                      vars)]))
+  (lambda (stx space-name subst)
+    (syntax-parse stx
+      #:datum-literals (group parens :: |.| op)
+      [(group tag ((~and p-tag parens) (group self cc class)) dot name . more)
+       (rb #:at stx
+           #`(group tag (p-tag (group self cc class)) dot #,@(subst #'name) . more))])))
+
 (define-doc def
   "value"
   #f

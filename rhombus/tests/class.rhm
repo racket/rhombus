@@ -675,3 +675,119 @@ check:
              | me2 := other: "no"
   (CPosn(1, 2).me2 := 10).x
   ~raises values("no such field or method", "static")
+
+check:
+  ~eval
+  class Posn(x, y):
+    annotation 'Posn':
+      1
+  ~raises "result must be a template expression"
+
+check:
+  ~eval
+  class Posn(x, y):
+    dot '$left . sevens':
+      '77'
+  ~raises "dot: unbound"
+
+check:
+  import rhombus/meta open
+  class Posn(x, y):
+    dot '$left . sevens':
+      '77'
+  Posn(1, 2).sevens
+  ~is 77
+
+block:
+  import rhombus/meta open
+  class Posn(x, y):
+    nonfinal
+    dot '$left . a':
+      '3'
+    dot '$left . aa':
+      'block: $left; 3'
+    dot '$left . w':
+      ~tail: tail
+      '4 $tail'
+  class Posn3D(z):
+    extends Posn
+  check:
+    Posn(1, 2).x + 10 ~is 11
+    Posn(1, 2).y + 10 ~is 12
+    Posn(1, 2).a + 10 ~is 13
+    Posn(1, 2).w + 10 ~is 24
+    Posn3D(1, 2, 3).a + 10 ~is 13
+    Posn3D(1, 2, 3).w + 10 ~is 24
+    Posn.a(Posn(1, 2)) + 10 ~is 13
+    Posn.w(Posn(1, 2)) + 10 ~is 24
+    Posn.a(8) + 100 ~is 103
+    Posn.aa(8) ~raises "not an instance"
+  check:
+    use_dynamic
+    Posn(1, 2).bananas + 10
+    ~raises "no such field or method"
+  check:
+    use_dynamic
+    dynamic(Posn(1, 2)).a + 10
+    ~raises "dynamic use of dot syntax"
+  check:
+    use_dynamic
+    dynamic(Posn3D(1, 2, 3)).w + 10
+    ~raises "dynamic use of dot syntax"
+
+block:
+  import rhombus/meta open
+  class Posn(x, y):
+    dot '$left . eat':
+      ~is_static: is_static
+      ~tail: tail
+      values('[$is_static,
+               '$tail']',
+             '')
+  check:
+    Posn(1, 2).eat * "hi"
+    ~prints_like [#true, '* "hi"']
+  check:
+    use_dynamic
+    Posn(1, 2).eat * "hi"
+    ~prints_like [#false, '* "hi"']
+
+check:
+  ~eval
+  import rhombus/meta open
+  class Posn(x, y):
+    dot '$left . x':
+      '77'
+  ~raises "identifier used as both a field name and dot-syntax name"
+
+check:
+  ~eval
+  import rhombus/meta open
+  class Posn(x, y):
+    method sevens(): 777
+    dot '$left . sevens':
+      '77'
+  ~raises "identifier used as both a dot-syntax name and method name"
+
+check:
+  ~eval
+  import rhombus/meta open
+  class Posn(x, y):
+    nonfinal
+    dot '$left . sevens':
+      '77'
+  class Posn3D(z):
+    extends Posn
+    method sevens(): 777
+  ~raises "method name is supplied as dot syntax by superclass"
+
+check:
+  ~eval
+  import rhombus/meta open
+  class Posn(x, y):
+    nonfinal
+    dot '$left . sevens':
+      '77'
+  class Posn3D(sevens):
+    extends Posn
+  ~raises "field name already in superclass as dot syntax"

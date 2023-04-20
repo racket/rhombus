@@ -98,15 +98,19 @@
                   (raise-syntax-error #f "`~initially` clause must appear at the start of the body" stx (car gs))]
                  [(group #:initially (tag::block body ...+))
                   (loop (cdr gs) rev-gs (hash-set state 'initially #'(rhombus-body-at tag body ...)))]
+                 [(group #:initially term ...+)
+                  (loop (cdr gs) rev-gs (hash-set state 'initially #'(rhombus-expression (group term ...))))]
                  [(group (~and kw #:initially) . _)
-                  (raise-syntax-error #f "expected non-empty block after `~initially`" stx #'kw)]
+                  (raise-syntax-error #f "expected block or expression after `~initially`" stx #'kw)]
                  [(group #:finally . _)
                   #:when (hash-ref state 'finally #f)
                   (raise-syntax-error #f "duplicate `~finally` clause" stx (car gs))]
                  [(group #:finally (tag::block body ...+))
                   (loop (cdr gs) rev-gs (hash-set state 'finally #'(rhombus-body-at tag body ...)))]
+                 [(group #:finally term ...+)
+                  (loop (cdr gs) rev-gs (hash-set state 'finally #'(rhombus-expression (group term ...))))]
                  [(group (~and kw #:finally) . _)
-                  (raise-syntax-error #f "expected non-empty block after `~finally`" stx #'kw)]
+                  (raise-syntax-error #f "expected block or expression after `~finally`" stx #'kw)]
                  [(group #:catch . _)
                   #:when (hash-ref state 'handler #f)
                   (raise-syntax-error #f "duplicate `~catch` clause" stx (car gs))]

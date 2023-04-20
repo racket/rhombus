@@ -26,29 +26,38 @@
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
          (for-syntax "class-transformer.rkt")
-         "is-static.rkt")
+         "class-dot-transformer.rkt"
+         "is-static.rkt"
+         "realm.rkt")
 
 (provide (for-syntax build-class-dot-handling
                      build-interface-dot-handling
 
-                     make-handle-class-instance-dot))
+                     make-handle-class-instance-dot
+
+                     extract-all-dot-names)
+         no-dynamic-dot-syntax)
 
 (define-for-syntax (build-class-dot-handling method-mindex method-vtable method-results final?
                                              has-private? method-private exposed-internal-id internal-of-id
                                              expression-macro-rhs intro constructor-given-name
-                                             export-of?
+                                             export-of? dot-provider-rhss parent-dot-providers
                                              names)
-  (with-syntax ([(name constructor-name name-instance name-ref name-of
-                       make-internal-name internal-name-instance
+  (with-syntax ([(name name? constructor-name name-instance name-ref name-of
+                       make-internal-name internal-name-instance dot-provider-name
                        [public-field-name ...] [private-field-name ...] [field-name ...]
                        [public-name-field ...] [name-field ...]
+                       [dot-id ...]
                        [private-field-desc ...]
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
       (method-static-entries method-mindex method-vtable method-results #'name-ref final?))
     (with-syntax ([(method-name ...) method-names]
-                  [(method-id ...) method-impl-ids])
+                  [(method-id ...) method-impl-ids]
+                  [(dot-rhs ...) dot-provider-rhss]
+                  [(dot-rhs-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))]
+                  [(dot-class-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))])
       (append
        method-defns
        (append
@@ -72,14 +81,30 @@
                        ...
                        [method-name method-id]
                        ...
+                       [dot-id dot-class-id]
+                       ...
                        ex ...
                        #,@(if export-of?
                               #`([of name-of])
-                              null)))
-         #'(define-dot-provider-syntax name-instance
-             (dot-provider (make-handle-class-instance-dot (quote-syntax name)
-                                                           #hasheq()
-                                                           #hasheq()))))
+                              null))))
+        (syntax->list
+         #`((define-syntaxes (dot-class-id dot-rhs-id)
+              (let ([dot-id dot-rhs])
+                (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
+                                                  (quote-syntax name?) (quote-syntax name-instance))
+                        dot-id)))
+            ...))
+        (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
+        (list
+         #`(define-dot-provider-syntax name-instance
+             (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
+                                                                              #hasheq()
+                                                                              #hasheq())])
+                               (if (syntax-e #'dot-provider-name)
+                                   #`(compose-dot-providers
+                                      (quote-syntax dot-provider-name)
+                                      #,default)
+                                   default)))))
         (if exposed-internal-id
             (with-syntax ([([private-method-name private-method-id private-method-id/prop] ...)
                            (for/list ([(sym id/prop) (in-hash method-private)])
@@ -111,15 +136,20 @@
 (define-for-syntax (build-interface-dot-handling method-mindex method-vtable method-results 
                                                  internal-name
                                                  expression-macro-rhs
+                                                 dot-provider-rhss parent-dot-providers
                                                  names)
-  (with-syntax ([(name name-instance name-ref
+  (with-syntax ([(name name? name-instance name-ref
                        internal-name-instance internal-name-ref
+                       dot-provider-name [dot-id ...]
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
       (method-static-entries method-mindex method-vtable method-results #'name-ref #f))
     (with-syntax ([(method-name ...) method-names]
-                  [(method-id ...) method-impl-ids])
+                  [(method-id ...) method-impl-ids]
+                  [(dot-rhs ...) dot-provider-rhss]
+                  [(dot-rhs-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))]
+                  [(dot-intf-id ...) (map (make-syntax-introducer) (syntax->list #'(dot-id ...)))])
       (append
        method-defns
        (list
@@ -134,14 +164,48 @@
         #`(define-name-root name
             #:fields ([method-name method-id]
                       ...
-                      ex ...))
-        #'(define-dot-provider-syntax name-instance
-            (dot-provider (make-handle-class-instance-dot (quote-syntax name) #hasheq() #hasheq()))))
+                      [dot-id dot-intf-id]
+                      ...
+                      ex ...)))
+        (syntax->list
+         #`((define-syntaxes (dot-intf-id dot-rhs-id)
+              (let ([dot-id dot-rhs])
+                (values (wrap-class-dot-via-class dot-id (quote-syntax dot-id)
+                                                  (quote-syntax name?) (quote-syntax name-instance))
+                        dot-id)))
+            ...))
+       (maybe-dot-provider-definition #'(dot-rhs-id ...) #'dot-provider-name parent-dot-providers)
+       (list
+        #`(define-dot-provider-syntax name-instance
+             (dot-provider #,(let ([default #'(make-handle-class-instance-dot (quote-syntax name)
+                                                                              #hasheq()
+                                                                              #hasheq())])
+                               
+                               (if (syntax-e #'dot-provider-name)
+                                   #`(compose-dot-providers
+                                      (quote-syntax dot-provider-name)
+                                      #,default)
+                                   default)))))
        (if internal-name
            (list
             #`(define-dot-provider-syntax internal-name-instance
                 (dot-provider (make-handle-class-instance-dot (quote-syntax #,internal-name) #hasheq() #hasheq()))))
            null)))))
+
+(define-for-syntax (maybe-dot-provider-definition dot-rhs-ids dot-provider-name parent-dot-providers)
+  (if (and (syntax-e dot-provider-name)
+           (or (pair? (syntax-e dot-rhs-ids))
+               ((length parent-dot-providers) . > . 1)))
+      (list
+       #`(define-syntax #,dot-provider-name
+           (compose-dot-providers
+            #,@(if (pair? (syntax-e dot-rhs-ids))
+                   (list #`(wrap-class-dot-provider-transformers
+                            (quote-syntax #,dot-rhs-ids)))
+                   null)
+            #,@(for/list ([name (in-list parent-dot-providers)])
+                 #`(quote-syntax #,name)))))
+      null))
 
 (define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id final?)
   (for/fold ([names '()] [ids '()] [defns '()])
@@ -396,3 +460,19 @@
   (expression-transformer
    (lambda (stx)
      (raise-syntax-error #f "cannot be used as an expression" stx))))
+
+(define (no-dynamic-dot-syntax id)
+  (lambda (obj)
+    (raise-arguments-error* id rhombus-realm
+                            "dynamic use of dot syntax disallowed"
+                            "object" obj)))
+
+(define-for-syntax (extract-all-dot-names ids-stx supers)
+  (apply
+   append
+   (map syntax-e (syntax->list ids-stx))
+   (for/list ([super (in-list supers)]
+              #:when super)
+     (if (class-desc? super)
+         (class-desc-dots super)
+         (interface-desc-dots super)))))

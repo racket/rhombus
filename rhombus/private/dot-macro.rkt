@@ -16,7 +16,10 @@
 (define+provide-space dot rhombus/dot
   #:fields
   (macro
-   macro_more_static))
+      macro_more_static))
+
+(module+ for-compose
+  (provide (for-syntax wrap-dot-provider-transformer)))
 
 (define-for-syntax provider_key #'#%dot-provider)
 
@@ -27,17 +30,19 @@
   #'make-dot-provider-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)
-  (dot-provider
-   (lambda (left dot right tail static? success-k fail-k)
-     (call-with-values
-      (lambda () (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot static? tail))
-      (case-lambda
-        [(e)
-         (cond
-           [e (success-k (wrap-expression e) tail)]
-           [else
-            (fail-k)])]
-        [(e tail)
-         (if e
-             (success-k (wrap-expression e) (unpack-tail tail proc #f))
-             (fail-k))])))))
+  (dot-provider (wrap-dot-provider-transformer proc)))
+   
+(define-for-syntax (wrap-dot-provider-transformer proc)
+  (lambda (left dot right tail static? success-k fail-k)
+    (call-with-values
+     (lambda () (proc (pack-tail #`((parsed #,left) #,dot #,right)) dot static? (pack-tail tail)))
+     (case-lambda
+       [(e)
+        (cond
+          [e (success-k (wrap-expression e) tail)]
+          [else
+           (fail-k)])]
+       [(e tail)
+        (if e
+            (success-k (wrap-expression e) (unpack-tail tail proc #f))
+            (fail-k))]))))

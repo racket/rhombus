@@ -109,6 +109,9 @@
                (hash-set options 'binding-rhs (extract-rhs #'block))]
               [(#:annotation block) ; checked in `parse-annotation-options`
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
+              [(#:dot name block)
+               (hash-set options 'dots (cons (cons #'name (extract-rhs #'block))
+                                             (hash-ref options 'dots null)))]
               [(#:nonfinal)
                (when (hash-has-key? options 'final?)
                  (raise-syntax-error #f "multiple finality clauses" orig-stx clause))

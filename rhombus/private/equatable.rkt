@@ -41,7 +41,9 @@
                   #'#(#:abstract #:abstract)
                   (hasheq 'equals 0 'hash_code 1)
                   #hasheq()
-                  #t))
+                  #t
+                  '()
+                  #f))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))

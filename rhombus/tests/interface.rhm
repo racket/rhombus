@@ -299,3 +299,28 @@ check:
     extends C1
     implements: A
   ~raises "method supplied by multiple classes or superinterfaces and not overridden"
+
+block:
+  import rhombus/meta open
+  interface Point:
+    dot '$left . sevens':
+      '77'
+  class Posn(x, y):
+    implements Point
+  check:
+    (Posn(1, 2) :: Point).sevens ~is 77
+    Point.sevens(8) ~is 77
+  check:
+    use_dynamic
+    dynamic(Posn(1, 2)).sevens
+    ~raises "dynamic use of dot syntax"
+
+check:
+  ~eval
+  import rhombus/meta open
+  interface Point:
+    dot '$left . sevens':
+      '77'
+  class Posn(sevens):
+    implements Point
+  ~raises "field name already in interface as dot syntax"

@@ -286,7 +286,7 @@
                                                 (and (not (syntax-e kw))
                                                      (syntax-e df))))
        (define (to-keyword f) (datum->syntax f (string->keyword (symbol->string (syntax-e f))) f f))
-       (define field-ht (check-duplicate-field-names stxes fields super))
+       (define field-ht (check-duplicate-field-names stxes fields super (map interface-desc-dots interfaces)))
        (check-field-defaults stxes super-has-by-position-default? constructor-fields constructor-defaults constructor-keywords)
        (define intro (make-syntax-introducer))
        (define all-name-fields
@@ -317,6 +317,17 @@
                            (class-desc-constructor-makers super)))
                   'synthesize)))
 
+       (define dots (hash-ref options 'dots '()))
+       (define dot-provider-rhss (map cdr dots))
+       (define parent-dot-providers
+         (for/list ([parent (in-list (cons super interfaces))]
+                    #:do [(define dp (cond
+                                       [(class-desc? parent) (class-desc-dot-provider parent)]
+                                       [(interface-desc? parent) (interface-desc-dot-provider parent)]
+                                       [else #f]))]
+                    #:when dp)
+           dp))
+
        (define added-methods (reverse (hash-ref options 'methods '())))
        (define-values (method-mindex   ; symbol -> mindex
                        method-names    ; index -> symbol-or-identifier
@@ -327,11 +338,11 @@
                        abstract-name)  ; #f or identifier for a still-abstract method
          (extract-method-tables stxes added-methods super interfaces private-interfaces final?))
 
-       (check-fields-methods-distinct stxes field-ht method-mindex method-names method-decls)
+       (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
        (check-consistent-unimmplemented stxes final? abstract-name)
 
        (define exs (parse-exports #'(combine-out . exports)))
-       (check-exports-distinct stxes exs fields method-mindex)
+       (check-exports-distinct stxes exs fields method-mindex dots)
 
        (define need-constructor-wrapper?
          (need-class-constructor-wrapper? extra-fields constructor-keywords constructor-defaults constructor-rhs
@@ -410,7 +421,13 @@
                        [(constructor-public-field-keyword ...) constructor-public-keywords]
                        [(super-name* ...) (if super #'(super-name) '())]
                        [make-internal-name (and exposed-internal-id
-                                                (temporary "make-internal-~a"))])
+                                                (temporary "make-internal-~a"))]
+                       [(dot-id ...) (map car dots)]
+                       [dot-provider-name (or (and (or (pair? dot-provider-rhss)
+                                                       ((length parent-dot-providers) . > . 1))
+                                                   (temporary "dot-provider-~a"))
+                                              (and (pair? parent-dot-providers)
+                                                   (car parent-dot-providers)))])
            (define defns
              (reorder-for-top-level
               (append
@@ -444,7 +461,8 @@
                                            [field-predicate ...]
                                            [field-annotation-str ...]
                                            [super-field-name ...]
-                                           [super-name-field ...]))
+                                           [super-name-field ...]
+                                           [dot-id ...]))
                (build-added-field-arg-definitions added-fields)
                (build-class-constructor super constructor-rhs
                                         added-fields constructor-private?s
@@ -478,11 +496,12 @@
                (build-class-dot-handling method-mindex method-vtable method-results final?
                                          has-private? method-private exposed-internal-id #'internal-of
                                          expression-macro-rhs intro (hash-ref options 'constructor-name #f)
-                                         (not annotation-rhs)
-                                         #'(name constructor-name name-instance name-ref name-of
-                                                 make-internal-name internal-name-instance
+                                         (not annotation-rhs) dot-provider-rhss parent-dot-providers
+                                         #'(name name? constructor-name name-instance name-ref name-of
+                                                 make-internal-name internal-name-instance dot-provider-name
                                                  [public-field-name ...] [private-field-name ...] [field-name ...]
                                                  [public-name-field ...] [name-field ...]
+                                                 [dot-id ...]
                                                  [(list 'private-field-name
                                                         (quote-syntax private-name-field)
                                                         (quote-syntax private-maybe-set-name-field!)
@@ -508,8 +527,9 @@
                                  constructor-defaults super-constructor+-defaults
                                  final? has-private-fields? private?s
                                  parent-name interface-names all-interfaces private-interfaces
-                                 method-mindex method-names method-vtable method-results method-private
+                                 method-mindex method-names method-vtable method-results method-private dots
                                  #'(name class:name constructor-maker-name name-defaults name-ref
+                                         dot-provider-name
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
                                                      (quote-syntax super-maybe-set-name-field!)
@@ -545,7 +565,8 @@
                        [field-predicate ...]
                        [field-annotation-str ...]
                        [super-field-name ...]
-                       [super-name-field ...])
+                       [super-name-field ...]
+                       [dot-id ...])
                  names]
                 [(mutable-field ...) (for/list ([field (in-list fields)]
                                                 [mutable (in-list mutables)]
@@ -580,7 +601,8 @@
                      (define name (hash-ref method-names i))
                      (if (mindex-property? (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
                          (values ms (cons (list name v) ps))
-                         (values (cons (list name v) ms) ps)))])
+                         (values (cons (list name v) ms) ps)))]
+                  [(all-dot-name ...) (extract-all-dot-names #'(dot-id ...) (cons super interfaces))])
       (list
        #`(define-values (class:name make-all-name name? name-field ... set-name-field! ...)
            (let-values ([(class:name name name? name-ref name-set!)
@@ -594,6 +616,8 @@
                                                                         (hasheq (~@ 'super-field-name super-name-field)
                                                                                 ...
                                                                                 (~@ 'property-name property-proc)
+                                                                                ...
+                                                                                (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
                                                                                 ...)
                                                                         (hasheq (~@ 'method-name method-proc)
                                                                                 ...)))))
@@ -664,9 +688,10 @@
                                      constructor-defaults super-constructor+-defaults
                                      final? has-private-fields? private?s
                                      parent-name interface-names all-interfaces private-interfaces
-                                     method-mindex method-names method-vtable method-results method-private
+                                     method-mindex method-names method-vtable method-results method-private dots
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
+                       dot-provider-name
                        fields
                        ([field-name field-argument maybe-set-name-field!] ...))
                  names])
@@ -731,6 +756,9 @@
                              #t)
                       #,(and (hash-ref options 'binding-rhs #f) #t)
                       #,(and (hash-ref options 'annotation-rhs #f) #t)
+                      '#,(map car dots)
+                      #,(and (syntax-e #'dot-provider-name)
+                             #'(quote-syntax dot-provider-name))
                       #,(and (syntax-e #'name-defaults)
                              #'(quote-syntax name-defaults)))))
      (if exposed-internal-id
