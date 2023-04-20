@@ -56,7 +56,8 @@
 (define/arity (to_string a)
   #:static-infos ((#%call-result #,string-static-infos))
   (cond
-    [(string? a) a]
+    [(immutable-string? a) a]
+    [(string? a) (string->immutable-string a)]
     [(symbol? a) (symbol->immutable-string a)]
     [(keyword? a) (keyword->immutable-string a)]
     [(identifier? a) (symbol->immutable-string (syntax-e a))]
