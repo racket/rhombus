@@ -143,6 +143,7 @@
 
 (define-syntax (flattened-if stx)
   (syntax-parse stx
+    [(_ #t success-expr _) #'success-expr]
     [(_ check-expr success-expr fail-expr)
      #'(begin
          (unless check-expr fail-expr)

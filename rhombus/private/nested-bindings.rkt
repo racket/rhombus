@@ -40,6 +40,8 @@
 
 (define-syntax (if-block stx)
   (syntax-parse stx
+    [(_ #t thn els) #`(racket-block thn)]
+    [(_ #f thn els) #`(racket-block els)]
     [(_ tst thn els)
      #`(if tst (racket-block thn) (racket-block els))]))
 
