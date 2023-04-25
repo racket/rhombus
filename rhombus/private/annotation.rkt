@@ -91,7 +91,7 @@
            raise-annotation-failure))
 
 (begin-for-syntax
-  ;; see also "annotation-property.rkt"
+  ;; see also "annotation-operator.rkt"
 
   (property annotation (predicate-stx static-infos))
 
