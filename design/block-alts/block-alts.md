@@ -400,11 +400,11 @@ Instead of needing some identifier like `pattern` or `match` separating the opti
 Evaluation and Tradeoffs
 --------------
 
-## Good of A:
+### Good of A:
 
 Option A fits better into the existing parser which allows `|` on the same indentation level as the head of the group it's a part of. All existing code that uses `|` in that way will continue to parse the same way. Option A also has less "rightward drift" required.
 
-## Bad of A:
+### Bad of A:
 
 Cases like:
 
@@ -426,7 +426,7 @@ Have the potential to be confusing, as they are visually similar but parse compl
 
 To someone unfamiliar with how Rhombus deals with `|` alts, those might both look like the `|` alts belong to `a`'s group and not `b`'s group like the first one currently does.
 
-## Good of B
+### Good of B
 
 Option B may be easier to read, with the children of a group clearly indented more than the head of the group. This:
 
@@ -456,7 +456,7 @@ a:
 
 Option B might also allow the lexer and parser code to be simpler: the half-integer column values for `|` alts could be turned into simple integers.
 
-## Bad of B
+### Bad of B
 
 Changing existing Rhombus programs will require some effort.
 Especially existing programs that currently use:
