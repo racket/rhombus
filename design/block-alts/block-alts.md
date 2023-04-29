@@ -272,8 +272,8 @@ In general, Rhombus forms that currently have the shape:
 main_id:
   option; ...
   other_id
-  | case
-  | ...
+    | case
+    | ...
 ```
 
 Where `other_id` is something bland like `pattern` or `match`, can be simplified to:
@@ -291,8 +291,8 @@ For example this `syntax_class` form:
 syntax_class id maybe_args:
   stxclass_option; ...
   pattern
-  | pattern_case
-  | ...
+    | pattern_case
+    | ...
 ```
 
 Could by simplified to:
@@ -326,8 +326,8 @@ This `operator` form:
 operator op_or_id_path:
   option; ...
   match
-  | op_case
-  | ...
+    | op_case
+    | ...
 ```
 
 Could by simplified to:
@@ -356,8 +356,8 @@ This `macro` form:
 macro op_or_id_path:
   option; ...
   match
-  | macro_case
-  | ...
+    | macro_case
+    | ...
 ```
 
 Could by simplified to:
@@ -374,8 +374,8 @@ And this `fun` form:
 ```
 fun maybe_res_annot:
   match
-  | case_maybe_kw
-  | ...
+    | case_maybe_kw
+    | ...
 ```
 
 Could be simplified to:
