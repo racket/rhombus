@@ -1,0 +1,9 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+export:
+  Maybe
+
+annot.macro 'Maybe($(ann :: annot_meta.Parsed))':
+  'False || $ann'

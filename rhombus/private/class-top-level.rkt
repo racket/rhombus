@@ -47,6 +47,8 @@
           (define (keep-stx)
             (loop (cdr defs) (cons def stxs) vars var-names))
           (syntax-parse def
+            [((~literal begin) d ...)
+             (loop (append (syntax->list #'(d ...)) (cdr defs)) stxs vars var-names)]
             [((~literal define) (id . _) . _)
              (loop (cdr defs) stxs (cons def vars) (cons #'id var-names))]
             [((~literal define) id rhs)

@@ -3,7 +3,9 @@
 
 (bounce "private/core.rkt"
         "private/core-macro.rkt"
-        "private/check.rhm")
+        "private/check.rhm"
+        "private/maybe.rhm"
+        "private/string.rhm")
 
 (module reader syntax/module-reader
   #:language 'rhombus

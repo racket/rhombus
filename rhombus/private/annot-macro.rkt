@@ -6,9 +6,11 @@
                      "pack.rkt"
                      "static-info-pack.rkt"
                      (submod "syntax-class-primitive.rkt" for-syntax-class)
-                     "tail-returner.rkt")
+                     "tail-returner.rkt"
+                     "realm.rkt")
          "space-provide.rkt"
          "definition.rkt"
+         (only-in "binding.rkt" :binding-form)
          (submod "annotation.rkt" for-class)
          "macro-macro.rkt"
          "wrap-expression.rkt"
@@ -32,8 +34,12 @@
 (begin-for-syntax
   (define-name-root annot_meta
     #:fields
-    (pack_predicate
+    (is_predicate
+     pack_predicate
      unpack_predicate
+     is_converter
+     pack_converter
+     unpack_converter
      Parsed
      AfterPrefixParsed
      AfterInfixParsed)))
@@ -93,14 +99,63 @@
                                (unpack-tail new-tail proc #f)
                                proc))))
   
+(define-for-syntax (annotation-kind stx who)
+  (syntax-parse (unpack-term stx who #f)
+    #:datum-literals (parsed)
+    [(parsed a::annotation-predicate-form) 'predicate]
+    [(parsed a::annotation-binding-form) 'converter]
+    [_ (raise-arguments-error* who
+                               rhombus-realm
+                               "syntax object is not a parsed annotation"
+                               "syntax object" stx)]))
+
+(define-for-syntax (is_predicate stx)
+  (eq? (annotation-kind stx 'annot_meta.is_predicate) 'predicate))
+
 (define-for-syntax (pack_predicate predicate [static-infos #'(parens)])
-  #`(parsed #,(annotation-form (wrap-expression predicate)
-                               (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
-                                                  'annot.pack_predicate))))
+  (unless (syntax? predicate) (raise-argument-error* 'annot.pack_predicate rhombus-realm "Syntax" predicate))
+  #`(parsed #,(annotation-predicate-form (wrap-expression predicate)
+                                         (pack-static-infos (unpack-term static-infos 'annot.pack_predicate #f)
+                                                            'annot.pack_predicate))))
 
 (define-for-syntax (unpack_predicate stx)
   (syntax-parse (unpack-term stx 'annot_meta.unpack_predicate #f)
     #:datum-literals (parsed)
-    [(parsed a::annotation-form)
+    [(parsed a::annotation-predicate-form)
      (values #'(parsed a.predicate)
-             (unpack-static-infos #'a.static-infos))]))
+             (unpack-static-infos #'a.static-infos))]
+    [_
+     (raise-arguments-error* 'annot_meta.unpack_predicate
+                             rhombus-realm
+                             "syntax object is not a parsed annotation that is a predicate"
+                             "syntax object" stx)]))
+
+(define-for-syntax (is_converter stx)
+  (eq? (annotation-kind stx 'annot_meta.is_converter) 'converter))
+
+(define-for-syntax (pack_converter binding body [static-infos #'(parens)])
+  (syntax-parse (if (syntax? binding) binding #'no)
+    [(parsed _::binding-form)
+     (unless (syntax? body) (raise-argument-error* 'annot.pack_converter rhombus-realm "Syntax" body))
+     #`(parsed #,(annotation-binding-form binding
+                                          (wrap-expression body)
+                                          (pack-static-infos (unpack-term static-infos 'annot.pack_converter #f)
+                                                             'annot.pack_converter)))]
+    [_ (raise-arguments-error* 'annot_meta.pack_converter
+                               rhombus-realm
+                               "not a parsed-binding syntax object"
+                               "value"  binding)]))
+     
+
+(define-for-syntax (unpack_converter stx)
+  (syntax-parse (unpack-term stx 'annot_meta.unpack_predicate #f)
+    #:datum-literals (parsed)
+    [(parsed a::annotation-binding-form)
+     (values #'(parsed a.binding)
+             #'(parsed a.body)
+             (unpack-static-infos #'a.static-infos))]
+    [_
+     (raise-arguments-error* 'annot_meta.unpack_converter
+                             rhombus-realm
+                             "syntax object is not a parsed annotation that is a converter"
+                             "syntax object" stx)]))

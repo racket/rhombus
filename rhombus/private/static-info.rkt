@@ -30,6 +30,7 @@
            unwrap-static-infos
            static-info-lookup
            static-infos-intersect
+           static-infos-union
            static-infos-remove
            make-static-infos
            install-static-infos!
@@ -170,6 +171,9 @@
                              [_ #f]))]
                         [_ #f]))
       a)))
+
+(define-for-syntax (static-infos-union as bs)
+  (append (syntax->list as) bs))
 
 (define-for-syntax (static-infos-remove as key)
   (for/list ([a (in-list (if (syntax? as) (syntax->list as) as))]

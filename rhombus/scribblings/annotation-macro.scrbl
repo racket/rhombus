@@ -67,7 +67,7 @@ binding form or constructor:
 The @rhombus(annot_meta.pack_predicate) takes an optional second
 argument, which is static information to associate with uses of the
 annotation. Static information (the second argument to
-@rhombus(annot_meta.pack_predicate)) is a a parenthesized sequence of
+@rhombus(annot_meta.pack_predicate)) is a parenthesized sequence of
 parenthesized two-group elements, where the first group in each element
 is a key and the second element is a value.
 

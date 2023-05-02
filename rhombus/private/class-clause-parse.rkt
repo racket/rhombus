@@ -62,6 +62,9 @@
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
+              [(#:expression block)
+               ;; needed to determine whether default `.of` annotation can work
+               (hash-set options 'expression-rhs #t)]
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 

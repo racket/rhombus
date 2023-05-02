@@ -3,7 +3,8 @@
                      syntax/parse/pre
                      "annotation-string.rkt")
          "binding.rkt"
-         "parse.rkt")
+         "parse.rkt"
+         "static-info.rkt")
 
 (provide (for-space rhombus/bind
                     &&
@@ -35,13 +36,12 @@
     [(_ static-infos (lhs-i::binding-form rhs-i::binding-form))
      #:with lhs-impl::binding-impl #'(lhs-i.infoer-id static-infos lhs-i.data)
      #:with lhs::binding-info #'lhs-impl.info
-     #:with (lhs-static-info ...) #'lhs.static-infos
-     #:with rhs-impl::binding-impl #'(rhs-i.infoer-id (lhs-static-info ... . static-infos) rhs-i.data)
+     #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-union #'lhs.static-infos #'static-infos) rhs-i.data)
      #:with rhs::binding-info #'rhs-impl.info
      #:with (lhs-bind-info ...) #'lhs.bind-infos
      (binding-info (annotation-string-and (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
-                   #'(lhs-static-info ... . rhs.static-infos)
+                   #'rhs.static-infos ; presumably includes `lhs.static-infos` as passed to `rhs-id.infoer-id`
                    #'(lhs-bind-info ... . rhs.bind-infos)
                    #'and-matcher
                    #'and-committer
@@ -65,7 +65,7 @@
 (define-syntax (and-binder stx)
   (syntax-parse stx
     [(_ arg-id (lhs::binding-info rhs::binding-info))
-     #'(begin
+     #`(begin
          (lhs.binder-id arg-id lhs.data)
          (rhs.binder-id arg-id rhs.data))]))
 
@@ -88,13 +88,11 @@
     [(_ static-infos (lhs-i::binding-form rhs-i::binding-form))
      #:with lhs-impl::binding-impl #'(lhs-i.infoer-id static-infos lhs-i.data)
      #:with lhs::binding-info #'lhs-impl.info
-     #:with (lhs-static-info ...) #'lhs.static-infos
      #:with rhs-impl::binding-impl #'(rhs-i.infoer-id static-infos rhs-i.data)
      #:with rhs::binding-info #'rhs-impl.info
-     #:with (lhs-bind-info ...) #'lhs.bind-infos
      (binding-info (annotation-string-or (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
-                   #'()
+                   (static-infos-intersect #'lhs.static-infos #'rhs.static-infos)
                    #'()
                    #'or-matcher
                    #'or-committer
@@ -103,8 +101,9 @@
 
 (define-syntax (or-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (lhs::binding-info rhs::binding-info finish-id) IF success fail)
-     #'(begin
+    [(_ arg-id (lhs::binding-info rhs::binding-info finish-id)
+        IF success fail)
+     #`(begin
          (define finish-id
            (let ()
              (lhs.matcher-id arg-id lhs.data block-if

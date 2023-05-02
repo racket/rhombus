@@ -60,6 +60,11 @@
  implied by the annotation is the intersection of information for
  @rhombus(left_annot) and @rhombus(right_annot).
 
+ The annotations are checked in other. Either or both of
+ @rhombus(left_annot) and @rhombus(right_annot) can be a @tech{converter
+  annotation}, in which case the conversion result of the first satisified
+ annotation is used.
+
 @examples(
   1 is_a (String || Int)
   1 is_a (Boolean || Int)
@@ -115,6 +120,12 @@
  from @rhombus(right_annot) takes precedence in cases where both
  supply values for the same static-information key.
 
+ If @rhombus(left_annot) is a @tech{converter annotation}, the
+ conversion is not applied. Only the matching component of the annotation
+ is used, the same as when the annotation is after @rhombus(is_a). If
+ @rhombus(right_annot) is a @tech{converter annotation}, its conversion
+ applies for the overall annotation created by @rhombus(&&, ~annot).
+ 
 @examples(
   1 is_a (String && Int)
   Pair.cons(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))

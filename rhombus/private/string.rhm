@@ -1,0 +1,10 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+export:
+  StringViewAsString
+
+annot.macro 'StringViewAsString':
+  'converting(fun (s :: StringView) :: String:
+               to_string(s))'

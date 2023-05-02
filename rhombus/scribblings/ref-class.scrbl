@@ -567,7 +567,10 @@
  @rhombus(fun). A @rhombus(maybe_res_annot) applies to the immediate method
  implementation as well as overriding implementations in subclasses; a
  result annotation within an @tech{entry point}, in contrast, does not
- apply to subclasses.
+ apply to subclasses. A @rhombus(maybe_res_annot) can specify a
+ @tech{converter annotation} only if the method is @rhombus(final)
+ or the enclosing class is @tech{final}; the conversion applies
+ before inherited result annotations for the method are checked.
 
  A @rhombus(property, ~class_clause) clause declares or overrides a
  @tech{property}, which is like a method in that using the property evaluates a
@@ -839,8 +842,11 @@
  @rhombus(macro, ~entry_point) form) in the block after
  @rhombus(expression, ~class_clause). The @rhombus(entry_point) is a
  meta-time expression. This macro replaces the default meaning of the
- @rhombus(id_path) as a reference to the constructor.
- 
+ @rhombus(id_path) as a reference to the constructor. When
+ @rhombus(expression, ~class_clause), then the default
+ @rhombus(id_path.of) annotation constructor accepts only
+ @tech{predicate annotations}.
+
  When a @rhombus(class) has a @rhombus(binding, ~class_clause) form,
  then a use of the new class's @rhombus(id_path) as a
  binding-pattern constructor invokes the @tech{entry point} (typically a

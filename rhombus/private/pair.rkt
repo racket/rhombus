@@ -71,7 +71,18 @@
            (#,(cadr predicate-stxs) (cdr #,arg-id))))
   (lambda (static-infoss)
     #`((#%first-result #,(car static-infoss))
-       (#%rest-result #,(cadr static-infoss)))))
+       (#%rest-result #,(cadr static-infoss))))
+  #'pair-build-convert #'())
+
+(define-syntax (pair-build-convert arg-id build-convert-stxs kws data)
+  #`(#,(car build-convert-stxs)
+     (car arg-id)
+     (lambda (a)
+       #,(cadr build-convert-stxs)
+       (cdr arg-id)
+       (lambda (d) (cons a d))
+       (lambda () #f))
+     (lambda () #f)))
 
 (define-syntax pair-instance
   (dot-provider

@@ -139,8 +139,11 @@
                                #'orig-stx))
        (define internal-of-id (and internal-id
                                    (car (generate-temporaries '(internal-of)))))
+       (define make-converted-internal (and internal-id
+                                            (car (generate-temporaries '(make-converted-internal)))))
 
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
+       (define expression-macro-rhs (hash-ref options 'expression-rhs #f))
 
        (define intro (make-syntax-introducer))
        (define constructor-name-fields
@@ -162,6 +165,11 @@
                      [internal-of internal-of-id]
                      [name? (datum->syntax #'name (string->symbol (format "~a?" (syntax-e #'name))) #'name)]
                      [name-of (intro (datum->syntax #'name (string->symbol (format "~a-of" (syntax-e #'name))) #'name))]
+                     [make-converted-name (and (not expression-macro-rhs)
+                                               (intro (datum->syntax #'name
+                                                                     (string->symbol (format "make-converted-~a" (syntax-e #'name)))
+                                                                     #'name)))]
+                     [make-converted-internal make-converted-internal]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
@@ -175,13 +183,14 @@
                                               exposed-internal-id internal-of-id intro
                                               #'(name name-instance name? name-of
                                                       internal-name-instance
+                                                      make-converted-name make-converted-internal
                                                       constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
                                                       constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
               #,@(build-extra-internal-id-aliases exposed-internal-id extra-exposed-internal-ids)
               (class-finish
                [orig-stx base-stx scope-stx
-                         full-name name name? name-of
-                         name-instance internal-name-instance internal-of
+                         full-name name name? name-of make-converted-name
+                         name-instance internal-name-instance internal-of make-converted-internal
                          constructor-field-names
                          constructor-field-keywords
                          constructor-field-defaults
@@ -196,8 +205,8 @@
   (lambda (stx)
     (syntax-parse stx
       [(_ [orig-stx base-stx scope-stx
-                    full-name name name? name-of
-                    name-instance internal-name-instance internal-of
+                    full-name name name? name-of make-converted-name
+                    name-instance internal-name-instance internal-of make-converted-internal
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
@@ -421,6 +430,8 @@
                        [(constructor-public-field-keyword ...) constructor-public-keywords]
                        [(super-name* ...) (if super #'(super-name) '())]
                        [make-internal-name (and exposed-internal-id
+                                                #'make-converted-internal
+                                                #;
                                                 (temporary "make-internal-~a"))]
                        [(dot-id ...) (map car dots)]
                        [dot-provider-name (or (and (or (pair? dot-provider-rhss)
@@ -476,6 +487,7 @@
                                         final?
                                         #'(name make-name make-all-name constructor-name constructor-maker-name
                                                 constructor-visible-name
+                                                make-converted-name make-converted-internal
                                                 name?
                                                 name-defaults
                                                 make-internal-name

@@ -63,7 +63,17 @@
     #`(for/and ([e (in-vector #,arg-id)])
         (#,(car predicate-stxs) e)))
   (lambda (static-infoss)
-    #`((#%ref-result #,(car static-infoss)))))
+    #`((#%ref-result #,(car static-infoss))))
+  #'array-build-convert #'())
+
+(define-syntax (array-build-convert arg-id build-convert-stxs kws data)
+  #`(for/fold ([lst '()] #:result (and lst (apply vector (reverse lst))))
+              ([v (in-list #,arg-id)])
+      #:break (not lst)
+      (#,(car build-convert-stxs)
+       v
+       (lambda (v) (cons v lst))
+       (lambda () #f))))
 
 (define-annotation-syntax MutableArray (identifier-annotation #'mutable-vector? array-static-infos))
 (define-annotation-syntax ImmutableArray (identifier-annotation #'immutable-vector? array-static-infos))
