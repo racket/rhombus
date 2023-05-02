@@ -354,6 +354,9 @@
                      (and (or (mindex-final? mix)
                               (not in-final?))
                           (vector-ref method-vtable (mindex-index mix))))))
+        ;; result annotation can convert if final
+        #,(or in-final?
+              (eq? (added-method-disposition added) 'final))
         #,(added-method-kind added)
         #,(added-method-arity added))))
           
@@ -714,10 +717,10 @@
         private-tables-id
         super-names
         kind)
-     #:do [(define result-pred
+     #:do [(define result-desc
              (cond
                [(not (syntax-e #'result-id)) #f]
-               [else (method-result-predicate-expr (syntax-local-method-result #'result-id))]))]
+               [else (syntax-local-method-result #'result-id)]))]
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
                                    (lambda (arity stx)
@@ -731,13 +734,19 @@
                                                [(and (eq? (syntax-e #'kind) 'property)
                                                      (eqv? arity 1))
                                                 #`(begin #,body (void))]
-                                               [result-pred
-                                                #`(let ([result #,body])
-                                                    (unless (#,result-pred result)
-                                                      (raise-result-failure 'method-name result))
-                                                    result)]
+                                               [(and result-desc
+                                                     (method-result-handler-expr result-desc))
+                                                (if (method-result-predicate? result-desc)
+                                                    #`(let ([result #,body])
+                                                        (unless (#,(method-result-handler-expr result-desc) result)
+                                                          (raise-result-failure 'method-name result))
+                                                        result)
+                                                    #`(let ([result #,body])
+                                                        (#,(method-result-handler-expr result-desc)
+                                                         result
+                                                         (lambda ()
+                                                           (raise-result-failure 'method-name result)))))]
                                                [else body]))))
                                    #t)))
      #'expr
      #'e.parsed]))
-

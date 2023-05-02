@@ -50,8 +50,9 @@
               (define-syntax #,(in-annotation-space #'name)
                 (letrec ([self (make-delayed-annotation
                                 (lambda (stx)
-                                  (values #`(delayed-predicate
-                                             ((#%indirect-static-info delayed-static-info)))
+                                  (values (annotation-predicate-form
+                                           #'delayed-predicate
+                                           #'((#%indirect-static-info delayed-static-info)))
                                           (syntax-parse stx
                                             [(_ . tail) #'tail]
                                             [_ 'does-not-happen])))
@@ -71,16 +72,22 @@
                                      stx
                                      #'name-seq))]
          #:with ap::annotation #'g
-         #:with a::annotation-form #'ap.parsed
          (define dp (syntax-local-value* (in-annotation-space #'name.name) delayed-annotation-ref))
          (unless dp
            (raise-syntax-error #f
                                "not defined as a delayed annotation"
                                stx
                                #'name.name))
-         #`((define-syntaxes ()
-              (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
-            (#,(delayed-annotation-complete!-id dp) a.predicate))]))))
+         (syntax-parse #'ap.parsed
+           [a::annotation-predicate-form 
+            #`((define-syntaxes ()
+                 (delayed-annotation-complete-compiletime #'name.name #'a.static-infos))
+               (#,(delayed-annotation-complete!-id dp) a.predicate))]
+           [a::annotation-binding-form
+            (raise-syntax-error #f
+                                "supported only for predicate-based annotations"
+                                stx)])]))))
+           
 
 (define-for-syntax (delayed-annotation-complete-compiletime name static-infos)
   (define dp (syntax-local-value* (in-annotation-space name) delayed-annotation-ref))

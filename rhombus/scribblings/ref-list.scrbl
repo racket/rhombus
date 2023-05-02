@@ -29,6 +29,7 @@ it supplies its elements in order.
   [lst.reverse(), List.reverse(lst)]
   [lst.append(lst2, ...), List.append(lst, lst2, ...)]
   [lst.map(func), List.map(lst, func)]
+  [lst.sort(arg, ...), List.sort(lst, arg, ...)]
 )
 
 @doc(
@@ -266,6 +267,19 @@ it supplies its elements in order.
 
 }
 
+
+@doc(
+  fun List.sort(lst :: List, less :: Function.of_arity(2) = math.less) :: List,
+){
+
+ Sorts @rhombus(lst) using @rhombus(less) to compare elements.
+
+@examples(
+  List.sort([1, 3, 2])
+  List.sort([1, 3, 2], math.greater)
+)
+
+}
 
 
 @doc(

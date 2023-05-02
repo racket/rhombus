@@ -368,7 +368,17 @@
     #`(for/and ([v (in-hash-keys (set-ht #,arg-id))])
         (#,(car predicate-stxs) v)))
   (lambda (static-infoss)
-    #`()))
+    #`())
+  #'set-build-convert #'())
+
+(define-syntax (set-build-convert arg-id build-convert-stxs kws data)
+  #`(for/fold ([ht #hashalw()] #:result (and ht (set ht)))
+              ([v (in-hash-keys (set-ht #,arg-id))])
+      #:break (not ht)
+      (#,(car build-convert-stxs)
+       v
+       (lambda (v) (hash-set ht v #t))
+       (lambda () #f))))
 
 (define-static-info-syntax Set-build*
   (#%call-result #,set-static-info)

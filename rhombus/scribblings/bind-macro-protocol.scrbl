@@ -37,7 +37,10 @@ A binding form using the low-level protocol has four parts:
  useful if some value needs to be computed once and referenced my
  multiple user-visible bindings (which does not work for definitions
  generated in the fourth function of the bindings are scoped to only
- later definition by @rhombus(let)).}
+ later definition by @rhombus(let)). When a binding form is used in a
+ match-only position, such as within a @rhombus(matching) annotation on
+ the right-hand side of @rhombus(is_a), then the committer function is
+ not used.}
 
  @item{A compile-time ``binder'' function that generates definitions for
  the bound variables (i.e., the ones described by the function in the
@@ -46,7 +49,9 @@ A binding form using the low-level protocol has four parts:
  These bindings are the ones that are affected by @rhombus(let). The
  generated definitions do not need to attach static information reported
  by the first bullet's function; that information will be attached by the
- definition form that drives the expansion of binding forms.}
+ definition form that drives the expansion of binding forms. When a
+ binding form is used in a match-only position, then the binder function
+ is not used.}
 
 )
 

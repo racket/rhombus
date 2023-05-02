@@ -1,0 +1,198 @@
+#lang rhombus/and_meta
+
+check:
+  [1, "apple"] :: converting(fun ([_, y :: String]): y)
+  ~is "apple"
+
+check:
+  [[1, "apple"]] :: List.of(converting(fun ([_, y :: String]): y))
+  ~is ["apple"]
+
+check:
+  [[1, 2]] :: List.of(converting(fun ([_, y :: String]): y))
+  ~raises "does not satisfy annotation"
+
+class Posn(x, y)
+class PosnKW(x, ~y: y)
+
+block:
+  use_static
+  fun f() :: converting(fun (x) :: Posn: Posn([x], 0)):
+    Posn(3, 4)
+  check:
+    f().x ~is [Posn(3, 4)]
+
+
+block:
+  def p1 = PosnKW(1, ~y: 2)
+  def p2 = p1 :: PosnKW.of(~y: converting(fun (y) :: Real: y),
+                           Int)  
+  check:
+    p1 == p2 ~is #true
+    p1 === p2 ~is #false
+
+check:
+  fun f() :: values(converting(fun ([x, y :: Real]): x+y), String):
+    values([1, 2], "apple")
+  f()
+  ~is values(3, "apple")
+
+check:
+  [1, 2] :: (matching([1, _]) && converting(fun ([_, y :: Real]): y))
+  ~is 2
+
+check:
+  [1, 2] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x)) ~is 2
+  [4, 1] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x)) ~is 4
+
+check:
+  [2, 2] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x))
+  ~raises "does not satisfy annotation"
+
+check:
+  [12, 1] :: (Int || converting(fun ([x, 1]): x))
+  ~is 12
+
+block:
+  use_static
+  fun f() :: converting(fun (x) :: PosnKW: PosnKW([x], ~y: 0)):
+    PosnKW(3, ~y: 4)
+  check:
+    f().x ~is [PosnKW(3, ~y: 4)]
+
+block:
+  import: rhombus/meta open
+  annot.macro 'Foo': 'Int'
+  class Posn(x, y)
+  annot.macro 'bindme': 'converting(fun (Posn(_ :: Foo, z :: Foo)): z)'
+  fun f(x :: bindme):
+    x
+  check:
+    f(Posn(1, 20)) ~is 20
+
+check:
+  class Hello():
+    method m() :: converting(fun (_::String): 0):
+      "100"
+  Hello().m()
+  ~is 0
+
+check:
+  interface Greeter:
+    method m() :: Int
+  class Hello():
+    implements Greeter
+    override method m() :: converting(fun (_::String): 0):
+      "100"
+  Hello().m()
+  ~is 0
+
+check:
+  interface Greeter:
+    method m() :: String
+  class Hello():
+    implements Greeter
+    override method m() :: converting(fun (_::String): 0):
+      "100"
+  Hello().m()
+  ~raises "result does not satisfy annotation"
+
+check:
+  ~eval
+  interface Greeter:
+    method m() :: converting(fun (_::String): 0)
+  ~raises "declared result annotation must be a predicate annotation"
+
+check:
+  ~eval
+  class Hello():
+    nonfinal
+    method m() :: converting(fun (_::String): 0):
+      "hi"
+  ~raises "declared result annotation must be a predicate annotation"
+
+check:
+  class Hello():
+    nonfinal
+    final method m() :: converting(fun (_::String): 0):
+      "hi"
+  Hello().m()
+  ~is 0
+
+block:
+  expr.macro 'reveal($(ann :: annot_meta.Parsed))':
+    cond
+    | annot_meta.is_converter(ann):
+        def (cvt, body, si) = annot_meta.unpack_converter(ann)
+        '"converter"'
+    | annot_meta.is_predicate(ann):
+        def (pred, si) = annot_meta.unpack_predicate(ann)
+        // predicate can unpack as converter
+        def (cvt, body, si2) = annot_meta.unpack_converter(ann)
+        '"predicate"'
+
+  check:
+    reveal(Int) ~is "predicate"
+    reveal(StringViewAsString) ~is "converter"
+
+check:
+  [1, "oops"] is_a converting(fun(_ :: converting(fun ([x, ...]): [x+1, ...])): "ok")
+  ~is #true
+
+check:
+  [1, "oops"] is_a matching((_ :: List) :: converting(fun ([x, ...]): [x+1, ...]))
+  ~raises "+: contract violation"
+
+check:
+  ~eval
+  "apple" :~ StringViewAsString
+  ~raises "converter annotation not allowed in a non-checked position"
+
+check:
+  ~eval
+  def x :~ StringViewAsString = 0
+  ~raises "converter annotation not allowed in a non-checked position"
+
+check:
+  ~eval
+  fun (x :~ StringViewAsString): 0
+  ~raises "converter annotation not allowed in a non-checked position"
+
+check:
+  ~eval
+  fun () :~ StringViewAsString: 0
+  ~raises "converter annotation not allowed in a non-checked position"
+
+check:
+  ~eval
+  fun () :~ values(Int, StringViewAsString): 0
+  ~raises "converter annotation not allowed in a non-checked position"
+
+block:
+  annot.macro 'UTF8Bytes_oops':
+    'converting(fun (s :: Bytes):
+                  Bytes.utf8_string(s))'
+
+  check:
+    #"\316\273" :: UTF8Bytes_oops ~is "λ"
+    #"\316" :: UTF8Bytes_oops ~raises "byte string is not a well-formed UTF-8 encoding"
+    #"\316" is_a UTF8Bytes_oops ~is #true
+
+  fun try_utf8(s):
+    try:
+      Bytes.utf8_string(s)
+      ~catch _: #false
+
+  annot.macro 'MaybeUTF8Bytes':
+    'converting(fun (s :: Bytes): try_utf8(s))'
+
+  check:
+    #"\316" :: MaybeUTF8Bytes ~is #false
+
+  annot.macro 'UTF8Bytes':
+    'converting(fun ((str :: String) :: MaybeUTF8Bytes):: String: str)'
+
+  check:
+    #"\316\273" :: UTF8Bytes ~is "λ"
+    #"\316" is_a UTF8Bytes ~is #false
+    #"\316" :: UTF8Bytes ~raises "value does not satisfy annotation"

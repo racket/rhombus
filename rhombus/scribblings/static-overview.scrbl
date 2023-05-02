@@ -22,3 +22,4 @@ bindings.
 @include_section("static-info-rule.scrbl")
 @include_section("annotation-macro.scrbl")
 @include_section("bind-macro-protocol.scrbl")
+@include_section("annotation-macro-protocol.scrbl")

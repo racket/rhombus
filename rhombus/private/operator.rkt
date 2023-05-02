@@ -47,7 +47,7 @@
              #:attr extends #'op-name.extends
              #:attr prec #'options.prec
              #:attr rhs #'(tag body ...)
-             #:attr ret-predicate #'ret.predicate
+             #:attr ret-predicate #'ret.converter
              #:attr ret-static-infos #'ret.static-infos)
     (pattern (~seq op-name-seq::dotted-operator-or-identifier-sequence arg::not-op
                    ((~and tag block) (~var options (:prefix-operator-options '#f))
@@ -73,7 +73,7 @@
              #:attr prec #'options.prec
              #:attr assc #'options.assc
              #:attr rhs #'(tag body ...)
-             #:attr ret-predicate #'ret.predicate
+             #:attr ret-predicate #'ret.converter
              #:attr ret-static-infos #'ret.static-infos)
     (pattern (~seq left::not-op op-name-seq::dotted-operator-or-identifier-sequence right::not-op
                    ret::ret-annotation
@@ -100,7 +100,7 @@
              #:attr extends #'op-name.extends
              #:attr prec #'options.prec
              #:attr rhs #'(tag body ...)
-             #:attr ret-predicate #'ret.predicate
+             #:attr ret-predicate #'ret.converter
              #:attr ret-static-infos #'ret.static-infos)
     (pattern (~seq arg::not-op op-name-seq::dotted-operator-or-identifier-sequence
                    ret::ret-annotation
@@ -345,7 +345,7 @@
          #:with main-op-name::dotted-operator-or-identifier #'main-op-name-seq
          (parse-operator-alts stx #'form-id #'as
                               #'main-op-name.name
-                              #'main-ret.predicate #'main-ret.static-infos
+                              #'main-ret.converter #'main-ret.static-infos
                               #'options.prec #'options.assc)]))))
 
 (define-for-syntax (parse-operator-alts stx form-id as-stx

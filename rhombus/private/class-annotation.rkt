@@ -25,34 +25,51 @@
                                                 names)
   (with-syntax ([(name name-instance name? name-of
                        internal-name-instance
+                       make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        field-keywords public-field-keywords super-field-keywords)
                  names])
     (with-syntax ([core-ann-name (if annotation-rhs
                                      (car (generate-temporaries #'(name)))
                                      #'name)])
-      (define (make-ann-def id of-id no-super? name-fields keywords name-instance-stx)
+      (define (make-ann-defs id of-id no-super? name-fields keywords name-instance-stx make-converted-id)
         (define len (length (syntax->list name-fields)))
         (with-syntax ([(constructor-name-field ...) name-fields]
                       [(field-keyword ...) keywords]
                       [(super-name-field ...) (if no-super? '() #'super-name-fields)]
                       [(super-field-keyword ...) (if no-super? '() #'super-field-keywords)]
-                      [name-instance name-instance-stx])
-          #`(define-annotation-constructor (#,id #,of-id)
-              ([accessors (list (quote-syntax super-name-field) ...
-                                (quote-syntax constructor-name-field) ...)])
-              (quote-syntax name?)
-              (quote-syntax ((#%dot-provider name-instance)))
-              (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
-              (super-field-keyword ... field-keyword ...)
-              (make-class-instance-predicate accessors)
-              (make-class-instance-static-infos accessors))))
+                      [name-instance name-instance-stx]
+                      [name-build-convert (and
+                                           (syntax-e make-converted-id)
+                                           ((make-syntax-introducer)
+                                            (datum->syntax #f
+                                                           (string->symbol
+                                                            (format "~a-build-convert" (syntax-e #'name))))))])
+          (append
+           (list
+            #`(define-annotation-constructor (#,id #,of-id)
+                ([accessors (list (quote-syntax super-name-field) ...
+                                  (quote-syntax constructor-name-field) ...)])
+                (quote-syntax name?)
+                (quote-syntax ((#%dot-provider name-instance)))
+                (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
+                (super-field-keyword ... field-keyword ...)
+                (make-class-instance-predicate accessors)
+                (make-class-instance-static-infos accessors)
+                #,(and (syntax-e #'name-build-convert)
+                       #'(quote-syntax name-build-convert))
+                #,(and (syntax-e #'name-build-convert)
+                       #'accessors)))
+           (if (syntax-e #'name-build-convert)
+               (list
+                #`(define-syntax name-build-convert
+                    (make-class-instance-converter (quote-syntax #,make-converted-id))))
+               null))))
       (append
        (if exposed-internal-id
-           (list
-            (begin
-              (make-ann-def exposed-internal-id internal-of-id #t #'constructor-name-fields #'field-keywords
-                            #'internal-name-instance)))
+           (make-ann-defs exposed-internal-id internal-of-id #t #'constructor-name-fields #'field-keywords
+                          #'internal-name-instance
+                          #'make-converted-internal)
            null)
        (cond
          [annotation-rhs
@@ -63,34 +80,37 @@
                                        make-annotation-prefix-operator
                                        "class")))]
          [else
-          (list
-           (make-ann-def #'name #'name-of #f #'constructor-public-name-fields #'public-field-keywords
-                         #'name-instance))])))))
-
-(define-for-syntax (make-curried-annotation-of-tranformer super-annotation-id)
-  (lambda (tail predicate-stx static-infos
-                sub-n kws predicate-maker info-maker)
-    (syntax-parse tail
-      [(form-id p-term (tag::parens g ...) . new-tail)
-       #:with p::annotation #`(#,group-tag #,super-annotation-id (op |.|) of p-term)
-       (define-values (ann c-tail) (parse-annotation-of #'(form-id (tag g ...))
-                                                        predicate-stx static-infos
-                                                        sub-n kws predicate-maker info-maker))
-       (with-syntax-parse ([p::annotation-form #'p.parsed]
-                           [c::annotation-form ann])
-         (values (annotation-form
-                  #`(let ([p? p.predicate]
-                          [c? c.predicate])
-                      (lambda (v) (and (p? v) (c? v))))
-                  (append (syntax->list #'p.static-infos)
-                          #'c.static-infos))
-                 #'new-tail))])))
+          (make-ann-defs #'name #'name-of #f #'constructor-public-name-fields #'public-field-keywords
+                         #'name-instance
+                         #'make-converted-name)])))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)
     #`(and #,@(for/list ([acc (in-list accessors)]
                          [pred (in-list predicate-stxs)])
                 #`(#,pred (#,acc #,arg))))))
+
+(define-for-syntax (make-class-instance-converter constructor)
+  (lambda (arg-id build-convert-stxs kws accessors)
+    (define orig-args (generate-temporaries accessors))
+    (let loop ([build-convert-stxs build-convert-stxs] [accessors (syntax->list accessors)] [args orig-args])
+      (cond
+        [(null? accessors)
+         #`(#,constructor #,@(if kws
+                                 (apply
+                                  append
+                                  (for/list ([arg (in-list orig-args)]
+                                             [kw (in-list kws)])
+                                    (if kw
+                                        (list kw arg)
+                                        (list arg))))
+                                 orig-args))]
+        [else
+         #`(#,(car build-convert-stxs)
+            (#,(car accessors) #,arg-id)
+            (lambda (#,(car args))
+              #,(loop (cdr build-convert-stxs) (cdr accessors) (cdr args)))
+            (lambda () #f))]))))
 
 (define-for-syntax (make-class-instance-static-infos accessors)
   (lambda (static-infoss)

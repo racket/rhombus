@@ -41,11 +41,6 @@
                    #'nothing-bind
                    #'())]))
 
-(define-syntax (always-succeed stx)
-  (syntax-parse stx
-    [(_ _ _ IF success fail)
-     #'(IF #t success fail)]))
-
 (define-syntax (nothing-commit stx)
   (syntax-parse stx
     [(_ _ _) #'(begin)]))

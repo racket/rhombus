@@ -244,7 +244,22 @@
         (and (#,(car predicate-stxs) k)
              (#,(cadr predicate-stxs) v))))
   (lambda (static-infoss)
-    #`((#%ref-result #,(cadr static-infoss)))))
+    #`((#%ref-result #,(cadr static-infoss))))
+  #'map-build-convert #'())
+
+(define-syntax (map-build-convert arg-id build-convert-stxs kws data)
+  #`(for/fold ([map #hashalw()])
+              ([(k v) (in-hash #,arg-id)])
+      #:break (not map)
+      (#,(car build-convert-stxs)
+       k
+       (lambda (k)
+         (#,(cadr build-convert-stxs)
+          v
+          (lambda (v)
+            (hash-set map k v))
+          (lambda () #f)))
+       (lambda () #f))))
 
 (define-syntax hash-instance
   (dot-provider

@@ -40,7 +40,8 @@
            binding-extension-combine))
 
 (provide define-binding-syntax
-         raise-binding-failure)
+         raise-binding-failure
+         always-succeed)
 
 (begin-for-syntax
   ;; To unpack a binding transformer result:
@@ -133,7 +134,7 @@
                    #'id
                    #'static-infos
                    #'((id (0) . static-infos))
-                   #'identifier-succeed
+                   #'always-succeed
                    #'identifier-commit
                    #'identifier-bind
                    (let ([prefix (syntax-property #'id extension-syntax-property-key)])
@@ -141,9 +142,9 @@
                          #`[id #,prefix]
                          #'id)))]))
 
-(define-syntax (identifier-succeed stx)
+(define-syntax (always-succeed stx)
   (syntax-parse stx
-    [(_ arg-id bind-id* IF success fail)
+    [(_ _ _ IF success fail)
      #'(IF #t success fail)]))
 
 (define-syntax (identifier-commit stx)

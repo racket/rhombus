@@ -47,18 +47,31 @@
 
 
 @doc(
-  fun annot_meta.pack_predicate(fun_stx:: Syntax,
+  fun annot_meta.is_predicate(stx :: Syntax) :: Boolean
+  fun annot_meta.pack_predicate(fun_stx :: Syntax,
                                 statinfo_stx :: Syntax = '()') :: Syntax
+  fun annot_meta.unpack_predicate(stx :: Syntax) :: (Syntax, Syntax)
 ){
 
  @provided_meta()
 
- Packs an expression for a predicate with static information into an
+ The @rhombus(annot_meta.is_predicate) function determines whether a
+ syntax object represents a parsed @tech{predicate annotation}.  This
+ function and @rhombus(annot_meta.unpack_predicate) are potentially
+ useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
+
+
+ The @rhombus(annot_meta.pack_predicate) function packs an expression
+ for a predicate with static information into an
  annotation form as a syntax object. When the resulting annotation is
  applied to a value, it checks the value using the predicate, and it
  also associates the static information in @rhombus(statinfo_stx) with
  the value. The given @rhombus(statinfo_stx) is in unpacked form
  (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
+
+ The @rhombus(annot_meta.unpack_predicate) function is
+ the inverse of @rhombus(annot_meta.pack_predicate), returning two
+ values: an expression and unpacked static information.
 
  See @secref("annotation-macro") for more explanation and for
  examples.
@@ -66,17 +79,42 @@
 }
 
 @doc(
-  fun annot_meta.unpack_predicate(stx:: Syntax) :: (Syntax, Syntax)
+  fun annot_meta.is_converter(stx :: Syntax) :: Boolean
+  fun annot_meta.pack_converter(bind_stx :: Syntax,
+                                body_stx :: Syntax,
+                                statinfo_stx :: Syntax = '()') :: Syntax
+  fun annot_meta.unpack_converter(stx :: Syntax) :: (Syntax, Syntax, Syntax)
 ){
 
  @provided_meta()
 
- The inverse of @rhombus(annot_meta.pack_predicate), returning two
- values: an expression and unpacked static information. This function is
- potentially useful on the result of matching
- @rhombus(annot_meta.Parsed, ~stxclass).
+ The @rhombus(annot_meta.is_predicate) function determines whether a
+ syntax object represents a parsed @tech{converter annotation}. This
+ function and @rhombus(annot_meta.unpack_converter) are potentially
+ useful on the result of matching @rhombus(annot_meta.Parsed, ~stxclass).
+
+ The @rhombus(annot_meta.pack_converter) function packs
+ a binding, a body expression (that can refer to
+ bindings), and static information into a @tech{converter annotation}
+ form as a syntax object. When the resulting annotation is applied to a
+ value, it uses the binding to determine whether the value satisifies the
+ predicate, and if so (and if the converted result is needed), the
+ @rhombus(body) expression is evaluated to obstain the converted value.
+ It also associates the static information in @rhombus(statinfo_stx) with
+ the converted value. The given @rhombus(statinfo_stx) is in unpacked
+ form (i.e., @rhombus(statinfo_meta.pack) is applied automatically).
+
+ The @rhombus(annot_meta.unpack_converter) function is
+ the inverse of @rhombus(annot_meta.pack_converter), returning three
+ values: a binding, an expression, and unpacked static information.
+ The @rhombus(annot_meta.unpack_converter) function will also unpack
+ a @tech{predicate annotation}, automatically generalizing it to
+ a converter annotation.
+
+ See @secref("annotation-macro-protocol") for more explanation.
 
 }
+
 
 @doc(
   defn.macro 'annot.delayed_declare $id'
