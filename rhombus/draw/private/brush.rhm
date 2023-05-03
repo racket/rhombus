@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
+  "type.rhm" open
   "color.rhm".Color
   "color.rhm"!private._Color
   "color.rhm"!private.unwrap_color
@@ -22,34 +23,34 @@ submodule private:
 class LinearGradient(handle):
   opaque
   internal _LinearGradient
-  constructor (x0 :: Real, y0 :: Real,
-               x1 :: Real, y1 :: Real,
+  constructor (pt1 :: PointLike,
+               pt2 :: PointLike,
                [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
     _LinearGradient(rkt.make_object(rkt.#{linear-gradient%},
-                                    x0, y0,
-                                    x1, y1,
+                                    pt1.x, pt1.y,
+                                    pt2.x, pt2.y,
                                     [[stop, color.handle], ...]))
-  property line:
-    let values(x0, y0, x1, y1): rkt.send handle.#{get-line}()
-    [x0, y0, x1, y1]
-  property stops:
+  property line :: List.of(Point):
+    let values(x1, y1, x2, y2): rkt.send handle.#{get-line}()
+    [Point(x1, y1), Point(x2, y2)]
+  property stops :: List.of(matching([_ :: Real, _ :: Color])):
     def [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
   
 class RadialGradient(handle):
   opaque
   internal _RadialGradient
-  constructor (x0 :: Real, y0 :: Real, r0 :: Real,
-               x1 :: Real, y1 :: Real, r1 :: Real,
+  constructor ([pt1 :: PointLike, r1 :: Real],
+               [pt2 :: PointLike, r2 :: Real],
                [[stop :: Real.in(0.0, 1.0), color :: Color], ...]):
     _RadialGradient(rkt.make_object(rkt.#{radial-gradient%},
-                                    x0, y0, r0,
-                                    x1, y1, r1,
+                                    pt1.x, pt1.y, r1,
+                                    pt2.x, pt2.y, r2,
                                     [[stop, color.handle], ...]))
-  property circles:
+  property circles:: List.of(matching([_ :: Point, _ :: Real])):
     let values(x0, y0, r0, x1, y1, r1): rkt.send handle.#{get-circles}()
-    [x0, y0, r0, x1, y1, r1]
-  property stops:
+    [[Point(x0, y0), r0], [Point(x1, y1), r1]]
+  property stops :: List.of(matching([_ :: Real, _ :: Color])):
     def [[stop, c], ...] = rkt.send handle.#{get-stops}()
     [[stop, _Color(c)], ...]
     

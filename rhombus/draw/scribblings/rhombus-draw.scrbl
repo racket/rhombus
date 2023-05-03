@@ -16,3 +16,4 @@
 @include_section("region.scrbl")
 @include_section("path.scrbl")
 @include_section("bitmap.scrbl")
+@include_section("point-et-al.scrbl")

@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+
+export:
+  Point
+  PointLike
+  PointLikeAsPoint
+
+class Point(x :: Real, y :: Real):
+  export:
+    zero
+
+def zero = Point(0, 0)
+
+annot.macro 'PointLike':
+  'Point
+     || matching([_ :: Real, _ :: Real])
+     || matching({#'x: _ :: Real, #'y: _ :: Real})'
+
+annot.macro 'PointLikeAsPoint':
+  'Point
+     || converting(fun ([x :: Real, y :: Real]) :: Point: Point(x, y))
+     || converting(fun ({#'x: x :: Real, #'y: y :: Real}) :: Point: Point(x, y))'

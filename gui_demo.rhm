@@ -6,9 +6,9 @@ import:
 // ----------------------------------------
 
 fun draw_face(dc :: draw.DC, config :: Map):
-  let [w, h] = dc.size
+  let draw.Size(w, h) = dc.size
   let s = math.max(10, math.min(w, h) - 20)
-  
+
   let scale = config["scale"] / 50
   let w = w / scale
   let h = h / scale
@@ -22,60 +22,64 @@ fun draw_face(dc :: draw.DC, config :: Map):
     dc.scale(scale)
 
     let background: if config["mood"] == "Happy"
-                    | draw.RadialGradient(w/2, h/2, s/2,
-                                          w/2, h/2, math.max(w, h),
+                    | def center = [w/2, h/2]
+                      draw.RadialGradient([center, s/2],
+                                          [center, math.max(w, h)],
                                           [[0, draw.Color("white")],
                                            [1, draw.Color("yellow")]])
-                    | draw.LinearGradient(0, 0,
-                                          0, h,
+                    | draw.LinearGradient([0, 0],
+                                          [0, h],
                                           [[0.5, draw.Color("white")],
                                            [1, draw.Color("darkblue")]])
 
     // draw a gradient backround
     dc.pen := draw.Pen.none
     dc.brush := draw.Brush(~gradient: background)
-    dc.rectangle(0, 0, w, h)
+    dc.rectangle([0, 0, w, h])
 
     // draw keyed text
-    dc.text(config["keyed"], 0, 0)
+    dc.text(config["keyed"])
 
     // draw ghost dots (showing recent mouse movements)
     dc.brush := draw.Brush(~color: draw.Color(0, 0, 0, 0.25))
+    def dot_size = [4, 4]
     for:
       each [x, y]: (config["ghosts"] :: List)
       let x = x/scale
       let y = y/scale
-      dc.ellipse(x-2, y-2, 4, 4)
+      dc.ellipse([[x-2, y-2], dot_size])
 
     // face shape    
     dc.brush := draw.Brush(~color: "orange")
+    def face_rect = [x, y, s, s]
     match config["shape"]
-    | "Square": dc.rectangle(x, y, s, s)
-    | "Rounded": dc.rounded_rectangle(x, y, s, s)
-    | ~else dc.ellipse(x, y, s, s)
+    | "Square": dc.rectangle(face_rect)
+    | "Rounded": dc.rounded_rectangle(face_rect)
+    | ~else dc.ellipse(face_rect)
 
     // mouth
     dc.pen := draw.Pen(~color: "Black")
     dc.brush := draw.Brush.none
     if config["mood"] == "Happy"
-    | dc.arc(x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s, π * -3/4, π * -1/4)
-    | dc.arc(x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s, π * 1/4, π * 3/4)
+    | dc.arc([x + 0.2*s, y + 0.2*s, 0.6*s, 0.6*s], π * -3/4, π * -1/4)
+    | dc.arc([x + 0.2*s, y + 0.7*s, 0.6*s, 0.6*s], π * 1/4, π * 3/4)
 
     // eyes
     when config["eyes"]
     | dc.pen := draw.Pen.none
       dc.brush := draw.Brush(~color: "black")
-      dc.ellipse(x+0.3*s, y+0.3*s, 0.1*s, 0.1*s)
-      dc.ellipse(x+0.6*s, y+0.3*s, 0.1*s, 0.1*s)
+      let eye_size = [0.1*s, 0.1*s]
+      dc.ellipse([[x+0.3*s, y+0.3*s], eye_size])
+      dc.ellipse([[x+0.6*s, y+0.3*s], eye_size])
 
     // moustache
     when config["moustache"]
     | let p = draw.Path()
-      p.move_to(0, 0)
-      p.curve_to(20, -10,  80, -10,  100, 0)
-      p.curve_to(120, 10,  180, 0,  200, -20)
-      p.curve_to(180, 20,  120, 40, 90, 30)
-      p.curve_to(60, 20, 20, 20, 0, 0)
+      p.move_to([0, 0])
+      p.curve_to([20, -10], [80, -10], [100, 0])
+      p.curve_to([120, 10], [180, 0],  [200, -20])
+      p.curve_to([180, 20], [120, 40], [90, 30])
+      p.curve_to([60, 20],  [20, 20],  [0, 0])
       p.close()
       p.scale(s/500, s/500)
       dc.pen := draw.Pen.none

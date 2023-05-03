@@ -66,14 +66,13 @@
 
 @doc(
   class LinearGradient():
-    constructor (x0 :: Real, y0 :: Real,
-                 x1 :: Real, y1 :: Real,
+    constructor (pt1 :: PointLike,
+                 pt2 :: PointLike,
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
   property (grad :: LinearGradient).line
-    :: matching([_ :: Real, _ :: Real,
-                 _ :: Real, _ :: Real])
+    :: matching([_ :: Point, _ :: Point])
   property (grad :: LinearGradient).stops
-    :: List.of(matching([_ :: Real, _ :: Color]))
+    :: List.of(matching([_ :: Real.in(0.0, 1.0), _ :: Color]))
 ){
 
  A linear gradient for a @rhombus(Brush, ~class).
@@ -82,14 +81,14 @@
 
 @doc(
   class RadialGradient():
-    constructor (x0 :: Real, y0 :: Real, r0 :: Real,
-                 x1 :: Real, y1 :: Real, r1 :: Real,
+    constructor ([[pt1 :: PointLike], r1 :: Real],
+                 [[pt2 :: PointLike], r2 :: Real],
                  [[stop :: Real.in(0.0, 1.0), color :: Color], ...])
   property (grad :: RadialGradient).circles
-    :: matching([_ :: Real, _ :: Real, _ :: Real,
-                 _ :: Real, _ :: Real, _ :: Real])
+    :: matching([[_ :: PointLike, _ :: Real],
+                 [_ :: PointLike, _ :: Real]])
   property (grad :: RadialGradient).stops
-    :: List.of(matching([_ :: Real, _ :: Color]))
+    :: List.of(matching([_ :: Real.in(0.0, 1.0), _ :: Color]))
 ){
 
  A radial gradient for a @rhombus(Brush, ~class).

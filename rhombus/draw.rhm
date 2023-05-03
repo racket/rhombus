@@ -1,5 +1,8 @@
 #lang rhombus
 import:
+  "draw/private/point.rhm"
+  "draw/private/size.rhm"
+  "draw/private/rect.rhm"
   "draw/private/color.rhm"
   "draw/private/pen.rhm"
   "draw/private/brush.rhm"
@@ -10,6 +13,9 @@ import:
   "draw/private/bitmap.rhm"
 
 export:
+  all_from(.point)
+  all_from(.size)
+  all_from(.rect)
   all_from(.color)
   all_from(.pen)
   all_from(.brush)

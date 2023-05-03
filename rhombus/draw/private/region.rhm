@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
+  "type.rhm" open
   "dc-interface.rhm".DCForward as DC
   "dc-interface.rhm"._DC
   "region-interface.rhm" as intf
@@ -30,38 +31,36 @@ class Region():
   method is_empty():
     rkt.send hand.#{is-empty?}()
 
-  method contains(x :: Real, y :: Real):
-    rkt.send hand.#{in-region?}(x, y)
+  method contains(pt :: PointLike):
+    rkt.send hand.#{in-region?}(pt.x, pt.y)
 
-  method rectangle(x :: Real, y :: Real,
-                   width :: NonnegReal, height :: NonnegReal):
-    rkt.send hand.#{set-rectangle}(x, y, width, height)
+  method rectangle(r :: RectLike):
+    rkt.send hand.#{set-rectangle}(r.x, r.y, r.width, r.height)
 
-  method rounded_rectangle(x :: Real, y :: Real,
-                           width :: NonnegReal, height :: NonnegReal,
+  method rounded_rectangle(r :: RectLike,
                            radius :: Real = -0.25):
-    rkt.send hand.#{set-rounded-rectangle}(x, y, width, height, radius)
+    rkt.send hand.#{set-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
 
-  method ellipse(x :: Real, y :: Real,
-                 width :: NonnegReal, height :: NonnegReal):
-    rkt.send hand.#{set-ellipse}(x, y, width, height)
+  method ellipse(r :: RectLike):
+    rkt.send hand.#{set-ellipse}(r.x, r.y, r.width, r.height)
 
-  method arc(x :: Real, y :: Real,
-             width :: NonnegReal, height :: NonnegReal,
+  method arc(r :: RectLike,
              start_radians :: Real, end_radians :: Real):
-    rkt.send hand.#{set-arc}(x, y, width, height, start_radians, end_radians)
+    rkt.send hand.#{set-arc}(r.x, r.y, r.width, r.height, start_radians, end_radians)
 
-  method polygon([[x :: Real, y :: Real], ...],
-                 dx :: Real = 0.0,
-                 dy :: Real = 0.0,
+  method polygon([pt :: PointLike, ...],
+                 ~dpt: dpt :: PointLike = Point.zero,
+                 ~dx: dx :: Real = 0,
+                 ~dy: dy :: Real = 0,
                  fill :: Region.Fill = #'odd_even):
-    rkt.send hand.#{set-polygon}([Pair(x, y), ...], dx, dy, fill_convert(fill))
+    rkt.send hand.#{set-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method path(p :: Path,
+              ~dpt: dpt :: PointLike = Point.zero,
               ~dx: dx :: Real = 0.0,
               ~dy: dy :: Real = 0.0,
               ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send hand.#{set-path}(p, dx, dy, fill_convert(fill))
+    rkt.send hand.#{set-path}(p, dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
   method union(region :: Region):
     rkt.send hand.#{union}(region.hand)

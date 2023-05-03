@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
+  "type.rhm" open
   "symbol_map.rhm":
     expose: symbol_map_annot
 
@@ -21,43 +22,41 @@ class Path(hand):
   method reset():
     rkt.send hand.reset()
 
-  method scale(x :: Real, y :: Real):
-    rkt.send hand.#{scale}(x, y)
+  method | scale(s :: Real):
+             rkt.send hand.#{scale}(s, s)
+         | scale(sx :: Real, sy :: Real):
+             rkt.send hand.#{scale}(sx, sy)
   method rotate(radians :: Real):
     rkt.send hand.#{rotate}(radians)
 
-  method curve_to(x1 :: Real, y1 :: Real,
-                  x2 :: Real, y2 :: Real,
-                  x3 :: Real, y3 :: Real):
-    rkt.send hand.#{curve-to}(x1, y1, x2, y2, x3, y3)
+  method curve_to(pt1 :: PointLike,
+                  pt2 :: PointLike,
+                  pt3 :: PointLike):
+    rkt.send hand.#{curve-to}(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y)
 
-  method line_to(x :: Real, y :: Real):
-    rkt.send hand.#{line-to}(x, y)
+  method line_to(pt :: PointLike):
+    rkt.send hand.#{line-to}(pt.x, pt.y)
 
-  method move_to(x :: Real, y :: Real):
-    rkt.send hand.#{move-to}(x, y)
+  method move_to(pt :: PointLike):
+    rkt.send hand.#{move-to}(pt.x, pt.y)
 
-  method rectangle(x :: Real, y :: Real,
-                   width :: NonnegReal, height :: NonnegReal):
-    rkt.send hand.#{rectangle}(x, y, width, height)
+  method rectangle(r :: RectLike):
+    rkt.send hand.#{rectangle}(r.x, r.y, r.width, r.height)
 
-  method rounded_rectangle(x :: Real, y :: Real,
-                           width :: NonnegReal, height :: NonnegReal,
+  method rounded_rectangle(r :: RectLike,
                            radius :: Real):
-    rkt.send hand.#{rounded-rectangle}(x, y, width, height, radius)
+    rkt.send hand.#{rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
 
-  method ellipse(x :: Real, y :: Real,
-                 width :: NonnegReal, height :: NonnegReal):
-    rkt.send hand.#{ellipse}(x, y, width, height)
+  method ellipse(r :: RectLike):
+    rkt.send hand.#{ellipse}(r.x, r.y, r.width, r.height)
 
-  method arc(x :: Real, y :: Real,
-             width :: NonnegReal, height :: NonnegReal,
+  method arc(r :: RectLike,
              start_radians :: Real, end_radians :: Real,
              ~clockwise = #false):
-    rkt.send hand.#{arc}(x, y, width, height, start_radians, end_radians, !clockwise)
+    rkt.send hand.#{arc}(r.x, r.y, r.width, r.height, start_radians, end_radians, !clockwise)
 
-  method polygon([[x :: Real, y :: Real], ...],
-                 dx :: Real = 0.0,
-                 dy :: Real = 0.0):
-    rkt.send hand.#{lines}([Pair(x, y), ...], dx, dy)
-
+  method polygon([[pt :: PointLike], ...],
+                 ~dpt: dpt :: PointLike = Point.zero,
+                 ~dx: dx :: Real = 0,
+                 ~dy: dy :: Real = 0):
+    rkt.send hand.#{lines}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)

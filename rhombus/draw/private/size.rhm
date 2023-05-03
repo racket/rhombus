@@ -1,0 +1,22 @@
+#lang rhombus/static/and_meta
+
+export:
+  Size
+  SizeLike
+  SizeLikeAsSize
+
+class Size(width :: NonnegReal, height :: NonnegReal):
+  export:
+    zero
+
+def zero = Size(0, 0)
+
+annot.macro 'SizeLike':
+  'Size
+     || matching([_ :: NonnegReal, _ :: NonnegReal])
+     || matching({#'width: _ :: NonnegReal, #'height: _ :: NonnegReal})'
+
+annot.macro 'SizeLikeAsSize':
+  'Size
+     || converting(fun ([width :: NonnegReal, height :: NonnegReal]) :: Size: Size(width, height))
+     || converting(fun ({#'width: width :: NonnegReal, #'height: height :: NonnegReal}) :: Size: Size(width, height))'

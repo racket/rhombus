@@ -22,8 +22,7 @@
 @doc(
   property (dc :: DC).width :: NonnegReal
   property (dc :: DC).height :: NonnegReal
-  property (dc :: DC).size :: matching([_ :: NonnegReal,
-                                        _ :: NonnegReal])
+  property (dc :: DC).size :: Size
 ){
 
  The size of the drawing area: width, height, or both.
@@ -58,6 +57,7 @@
 @doc(
   method (dc :: DC).scale(s :: Real) :: Void
   method (dc :: DC).scale(sx :: Real, sy :: Real) :: Void
+  method (dc :: DC).translate(dpt :: PointLike) :: Void
   method (dc :: DC).translate(dx :: Real, dy :: Real) :: Void
   method (dc :: DC).rotate(radians :: Real) :: Void
   method (dc :: DC).transform(t :: DC.Transformation) :: Void
@@ -91,33 +91,28 @@
 }
 
 @doc(
-  method (dc :: DC).point(x :: Real, y :: Real) :: Void
-  method (dc :: DC).line(x :: Real, y :: Real,
-                         x2 :: Real, y2 :: Real) :: Void
-  method (dc :: DC).lines([[x :: Real, y :: Real], ...],
-                          ~dx: dx :: Real = 0.0,
-                          ~dy: dy :: Real = 0.0) :: Void
-  method (dc :: DC).polygon([[x :: Real, y :: Real], ...],
-                            ~dx: dx :: Real = 0.0,
-                            ~dy: dy :: Real = 0.0,
+  method (dc :: DC).point(pt :: PointLike) :: Void
+  method (dc :: DC).line(pt1 :: PointLike,
+                         pt2 :: PointLike) :: Void
+  method (dc :: DC).lines([[pt :: PointLike], ...],
+                          ~dpt dpt :: PointLike = Point.zero,
+                          ~dx: dx :: Real = 0,
+                          ~dy: dy :: Real = 0) :: Void
+  method (dc :: DC).polygon([[pt :: PointLike], ...],
+                            ~dpt dpt :: PointLike = Point.zero,
+                            ~dx: dx :: Real = 0,
+                            ~dy: dy :: Real = 0,
                             ~fill: fill :: DC.Fill = #'even_odd) :: Void
-  method (dc :: DC).rectangle(x :: Real, y :: Real,
-                              width :: NonnegReal,
-                              height :: NonnegReal) :: Void
-  method (dc :: DC).rounded_rectangle(x :: Real, y :: Real,
-                                      width :: NonnegReal,
-                                      height :: NonnegReal,
+  method (dc :: DC).rectangle(r :: RectLike) :: Void
+  method (dc :: DC).rounded_rectangle(r :: RectLike,
                                       radius :: Real = -0.25) :: Void
-  method (dc :: DC).ellipse(x :: Real, y :: Real,
-                            width :: NonnegReal,
-                            height :: NonnegReal) :: Void
-  method (dc :: DC).arc(x :: Real, y :: Real,
-                        width :: NonnegReal,
-                        height :: NonnegReal,
+  method (dc :: DC).ellipse(r :: RectLike) :: Void
+  method (dc :: DC).arc(r :: RectLike,
                         start :: Real, end :: Real) :: Void
   method (dc :: DC).path(p :: Path,
-                         ~dx: dx :: Real = 0.0,
-                         ~dy: dy :: Real = 0.0,
+                         ~dpt dpt :: PointLike = Point.zero,
+                         ~dx: dx :: Real = 0,
+                         ~dy: dy :: Real = 0,
                          ~fill: fill :: DC.Fill = #'odd_even) :: Void
 ){
 
@@ -125,11 +120,16 @@
  of drawing a polygon, rectangle, rounded rectangle, ellipse, or arc, a
  shape is fulled using the current brush, too.
 
+ Offsets through @rhombus(dpt) and also @rhombus(dx) or @rhombus(dy) are
+ combined.
+
 }
 
 @doc(
   method (dc:: DC).text(str :: String,
-                        x :: Real, y :: Real,
+                        ~dpt dpt :: PointLike = Point.zero,
+                        ~dx: dx :: Real = 0,
+                        ~dy: dy :: Real = 0,
                         ~combine: combine :: DC.TextCombine = #'kern,
                         ~angle: angle :: Real = 0.0) :: Void
 ){
@@ -141,26 +141,24 @@
 @doc(
   method (dc :: DC).bitmap(
     bm :: Bitmap,
-    dest_x :: Real, dest_y :: Real,
-    ~source_x: source_x :: Real = 0,
-    ~source_y: source_y :: Real = 0,
-    ~source_width: source_width :: NonnegReal = Bitmap.width(bm),
-    ~source_height: source_height :: NonnegReal = Bitmap.height(bm),
+    ~dpt: dpt :: PointLike = Point.zero,
+    ~dx: dx :: Real = 0,
+    ~dy: dy :: Real = 0,
+    ~source: source :: RectLike = Rect(Point.zero, Bitmap.size(bm)),
     ~style: style :: DC.BitmapOverlay = #'solid,
     ~color: color :: Color = Color("black"),
     ~mask: mask :: Maybe(Bitmap) = #false
   ) :: Void
 ){
 
- Draws a bitmap into the drawing context.
+ Draws a region of a bitmap into the drawing context. The default
+ @rhombus(source) region is the entire bitmap.
 
 }
 
 @doc(
-  method (dc :: DC).copy(source_x :: Real, source_y :: Real,
-                         width :: NonnegReal,
-                         height :: NonnegReal,
-                         dest_x2 :: Real, dest_y :: Real) :: Void
+  method (dc :: DC).copy(source :: RectLike,
+                         dest :: PointLike) :: Void
 ){
 
  Copies a portion of the draw context's content to another portion of

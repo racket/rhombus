@@ -6,6 +6,9 @@ import:
     rhombus/gui open
     rhombus/draw open:
       except: Path
+              Size
+              Point
+              Rect
     lib("racket/gui/easy.rkt") open:
       except:
         render

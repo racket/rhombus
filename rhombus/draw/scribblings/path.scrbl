@@ -29,11 +29,11 @@
 }
 
 @doc(
-  method (path :: Path).move_to(x :: Real, y :: Real)
-  method (path :: Path).line_to(x :: Real, y :: Real)
-  method (path :: Path).curve_to(x1 :: Real, y1 :: Real,
-                                 x2 :: Real, y2 :: Real,
-                                 x3 :: Real, y3 :: Real)
+  method (path :: Path).move_to(pt :: PointLike)
+  method (path :: Path).line_to(pt :: PointLike)
+  method (path :: Path).curve_to(pt1 :: PointLike,
+                                 pt2 :: PointLike,
+                                 pt3 :: PointLike)
 ){
 
  Sets a starting poin for an open path, or extends an open path with a
@@ -43,22 +43,15 @@
 
 
 @doc(
-  method (path :: Path).polygon([[x :: Real, y :: Real], ...],
-                                ~dx: dx :: Real = 0.0,
-                                ~dy: dy :: Real = 0.0) :: Void
-  method (path :: Path).rectangle(x :: Real, y :: Real,
-                                  width :: NonnegReal,
-                                  height :: NonnegReal) :: Void
-  method (path :: Path).rounded_rectangle(x :: Real, y :: Real,
-                                          width :: NonnegReal,
-                                          height :: NonnegReal,
+  method (path :: Path).polygon([pt :: PointLike, ...],
+                                ~dpt: dpt :: PointLike = Point.zero,
+                                ~dx: dx :: Real = 0,
+                                ~dy: dy :: Real = 0) :: Void
+  method (path :: Path).rectangle(r :: RectLike) :: Void
+  method (path :: Path).rounded_rectangle(r :: RectLike,
                                           radius :: Real = -0.25) :: Void
-  method (path :: Path).ellipse(x :: Real, y :: Real,
-                                width :: NonnegReal,
-                                height :: NonnegReal) :: Void
-  method (path :: Path).arc(x :: Real, y :: Real,
-                            width :: NonnegReal,
-                            height :: NonnegReal,
+  method (path :: Path).ellipse(r :: RectLike) :: Void
+  method (path :: Path).arc(r :: RectLike,
                             start :: Real, end :: Real) :: Void
 ){
 
@@ -67,7 +60,8 @@
 }
 
 @doc(
-  method (path :: Path).scale(x :: Real, y :: Real) :: Void
+  method (path :: Path).scale(s :: Real) :: Void
+  method (path :: Path).scale(sx :: Real, sy :: Real) :: Void
   method (path :: Path).rotate(radians :: Real) :: Void
 ){
 

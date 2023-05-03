@@ -27,7 +27,7 @@
 
 @doc(
   method (rgn :: Region).is_empty() :: Boolean
-  method (rgn :: Region).contains(x :: Real, y :: Real) :: Boolean
+  method (rgn :: Region).contains(pt :: PointLike) :: Boolean
 ){
 
   Queries the content represented by the region.
@@ -35,27 +35,21 @@
 }
 
 @doc(
-  method (rgn :: Region).polygon([[x :: Real, y :: Real], ...],
-                                 ~dx: dx :: Real = 0.0,
-                                 ~dy: dy :: Real = 0.0,
+  method (rgn :: Region).polygon([pt :: PointLike, ...],
+                                 ~dpt: dpt :: PointLike = Point.zero,
+                                 ~dx: dx :: Real = 0,
+                                 ~dy: dy :: Real = 0,
                                  ~fill: fill :: Region.Fill = #'even_odd) :: Void
-  method (rgn :: Region).rectangle(x :: Real, y :: Real,
-                                   width :: NonnegReal,
-                                   height :: NonnegReal) :: Void
-  method (rgn :: Region).rounded_rectangle(x :: Real, y :: Real,
-                                           width :: NonnegReal,
-                                           height :: NonnegReal,
+  method (rgn :: Region).rectangle(r :: RectLike) :: Void
+  method (rgn :: Region).rounded_rectangle(r :: RectLike,
                                            radius :: Real = -0.25) :: Void
-  method (rgn :: Region).ellipse(x :: Real, y :: Real,
-                                 width :: NonnegReal,
-                                 height :: NonnegReal) :: Void
-  method (rgn :: Region).arc(x :: Real, y :: Real,
-                             width :: NonnegReal,
-                             height :: NonnegReal,
+  method (rgn :: Region).ellipse(r :: RectLike) :: Void
+  method (rgn :: Region).arc(r :: RectLike,
                              start :: Real, end :: Real) :: Void
   method (rgn :: Region).path(p :: Path,
-                              ~dx: dx :: Real = 0.0,
-                              ~dy: dy :: Real = 0.0,
+                              ~dpt: dpt :: PointLike = Point.zero,
+                              ~dx: dx :: Real = 0,
+                              ~dy: dy :: Real = 0,
                               ~fill: fill :: Region.Fill = #'odd_even) :: Void
 ){
 

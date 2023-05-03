@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
+  "type.rhm" open
   "dc.rhm".DC
   "dc.rhm"!internal.SomeDC
   "bitmap-interface.rhm" as intf
@@ -38,6 +39,9 @@ class Bitmap():
 
   override property height:
     rkt.send handle.#{get-height}()
+
+  override property size:
+    Size(width, height)
 
   property backing_scale:
     rkt.send handle.#{get-backing-scale}()

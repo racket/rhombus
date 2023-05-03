@@ -1,6 +1,7 @@
 #lang rhombus/static/and_meta
 import:
   "rkt.rhm"
+  "type.rhm" open
   "dc-interface.rhm".DC as DCer
   "dc-interface.rhm"._DC as _DCer
   "dc-interface.rhm".DCForward
@@ -48,13 +49,12 @@ interface DC:
     | _:
         Syntax.error("expected a block afterward", head)
 
-  property size :: matching([_ :: NonnegReal,
-                             _ :: NonnegReal]):
+  property size :: Size:
     def (w, h) = rkt.send get_dc().#{get-size}()
-    [w, h]
+    Size(w, h)
 
-  property width: size[0]
-  property height: size[1]
+  property width: size.width
+  property height: size.height
 
   method save()
   method restore()
@@ -90,78 +90,78 @@ interface DC:
   | clipping_region := region :: Maybe(Region):
       rkt.send get_dc().#{set-clipping-region}(region && Region.handle(region))
     
-  method copy(x :: Real, y :: Real,
-              width :: NonnegReal, height :: NonnegReal,
-              x2 :: Real, y2 :: Real):
-    rkt.send get_dc().copy(x, y, width, height, x2, y2)
+  method copy(src :: RectLike,
+              dest :: PointLike):
+    rkt.send get_dc().copy(src.x, src.y, src.width, src.height, dest.x, dest.y)
 
-  method point(x :: Real, y :: Real):
-    rkt.send get_dc().#{draw-point}(x, y)
+  method point(pt :: PointLike):
+    rkt.send get_dc().#{draw-point}(pt.x, pt.y)
 
-  method line(x :: Real, y :: Real,
-              x2 :: Real, y2 :: Real):
-    rkt.send get_dc().#{draw-line}(x, y, x2, y2)
+  method line(pt1 :: PointLike,
+              pt2 :: PointLike):
+    rkt.send get_dc().#{draw-line}(pt1.x, pt1.y, pt2.x, pt2.y)
     
-  method lines([[x :: Real, y :: Real], ...],
+  method lines([pt :: PointLike, ...],
+               ~dpt: dpt :: PointLike = Point.zero,
                ~dx: dx :: Real = 0.0,
                ~dy: dy :: Real = 0.0):
-    rkt.send get_dc().#{draw-lines}([Pair(x, y), ...], dx, dy)
+    rkt.send get_dc().#{draw-lines}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy)
 
-  method polygon([[x :: Real, y :: Real], ...],
+  method polygon([pt :: PointLike, ...],
+                 ~dpt: dpt :: PointLike = Point.zero,
                  ~dx: dx :: Real = 0.0,
                  ~dy: dy :: Real = 0.0,
                  ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send get_dc().#{draw-polygon}([Pair(x, y), ...], dx, dy, fill_convert(fill))
+    rkt.send get_dc().#{draw-polygon}([Pair(pt.x, pt.y), ...], dpt.x + dx, dpt.y + dy,
+                                      fill_convert(fill))
 
   method path(p :: Path,
+              ~dpt: dpt :: PointLike = Point.zero,
               ~dx: dx :: Real = 0.0,
               ~dy: dy :: Real = 0.0,
               ~fill: fill :: Region.Fill = #'odd_even):
-    rkt.send get_dc().#{draw-path}(p.hand, dx, dy, fill_convert(fill))
+    rkt.send get_dc().#{draw-path}(p.hand, dpt.x + dx, dpt.y + dy, fill_convert(fill))
 
-  method rectangle(x :: Real, y :: Real,
-                   width :: NonnegReal, height :: NonnegReal):
-    rkt.send get_dc().#{draw-rectangle}(x, y, width, height)
+  method rectangle(r :: RectLike):
+    rkt.send get_dc().#{draw-rectangle}(r.x, r.y, r.width, r.height)
     
-  method rounded_rectangle(x :: Real, y :: Real,
-                           width :: NonnegReal, height :: NonnegReal,
+  method rounded_rectangle(r :: RectLike,
                            radius :: Real = -0.25):
-    rkt.send get_dc().#{draw-rounded-rectangle}(x, y, width, height, radius)
+    rkt.send get_dc().#{draw-rounded-rectangle}(r.x, r.y, r.width, r.height, radius)
     
-  method ellipse(x :: Real, y :: Real,
-                 width :: NonnegReal, height :: NonnegReal):
-    rkt.send get_dc().#{draw-ellipse}(x, y, width, height)
+  method ellipse(r :: RectLike):
+    rkt.send get_dc().#{draw-ellipse}(r.x, r.y, r.width, r.height)
     
-  method arc(x :: Real, y :: Real,
-             width :: NonnegReal, height :: NonnegReal,
+  method arc(r :: RectLike,
              start :: Real, end :: Real):
-    rkt.send get_dc().#{draw-arc}(x, y, width, height, start, end)
+    rkt.send get_dc().#{draw-arc}(r.x, r.y, r.width, r.height, start, end)
 
-  method spline(x1 :: Real, y1 :: Real,
-                x2 :: Real, y2 :: Real,
-                x3 :: Real, y3 :: Real):
-    rkt.send get_dc().#{draw-spline}(x1, y1, x2, y2, x3, y3)
+  method spline(pt1 :: PointLike,
+                pt2 :: PointLike,
+                pt3 :: PointLike):
+    rkt.send get_dc().#{draw-spline}(pt1.x, pt1.y, pt2.x, pt2.y, pt3.x, pt3.y)
 
   method bitmap(b :: Bitmap,
-                x :: Real, y :: Real,
-                ~source_x: source_x :: Real = 0,
-                ~source_y: source_y :: Real = 0,
-                ~source_width: source_width :: NonnegReal = b.width,
-                ~source_height: source_height :: NonnegReal = b.height,
+                ~dpt: dpt :: PointLike = Point.zero,
+                ~dx: dx :: Real = 0,
+                ~dy: dy :: Real = 0,
+                ~source: source :: RectLike = Rect(Point.zero, b.size),
                 ~style: style :: DC.BitmapOverlay = #'solid,
                 ~color: color :: Color = Color("black"),
                 ~mask: mask :: Maybe(Bitmap) = #false):
-    rkt.send get_dc().#{draw-bitmap-section}(b.handle, x, y,
-                                             source_x, source_y,
-                                             source_width, source_height,
+    rkt.send get_dc().#{draw-bitmap-section}(b.handle, dpt.x + dx, dpt.y + dy,
+                                             source.x, source.y,
+                                             source.width, source.height,
                                              style, color.handle, mask)
     #void
 
   method text(str :: String,
-              x :: Real, y :: Real,
+              ~dpt: dpt :: Point = Point.zero,
+              ~dx: dx :: Real = 0,
+              ~dy: dy :: Real = 0,
               ~combine: combine :: DC.TextCombine = #'kern,
               ~angle: angle :: Real = 0.0):
-    rkt.send get_dc().#{draw-text}(str, x, y,
+    rkt.send get_dc().#{draw-text}(str, dpt.x + dx, dpt.y + dy,
                                    match combine
                                    | #'kern: #true
                                    | #'grapheme: #'grapheme
@@ -173,8 +173,10 @@ interface DC:
              rkt.send get_dc().#{scale}(sx, sy)
          | scale(s :: Real):
              rkt.send get_dc().#{scale}(s, s)
-  method translate(dx :: Real, dy :: Real):
-    rkt.send get_dc().#{translate}(dx, dy)
+  method | translate(dx :: Real, dy :: Real):
+             rkt.send get_dc().#{translate}(dx, dy)
+         | translate(dpt :: PointLike):
+             rkt.send get_dc().#{translate}(dpt.x, dpt.y)
   method rotate(radians :: Real):
     rkt.send get_dc().#{rotate}(radians)
   method transform(a :: Transformation):

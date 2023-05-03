@@ -17,6 +17,7 @@
 @doc(
   property (bm :: Bitmap).width :: PosInt
   property (bm :: Bitmap).height :: PosInt
+  property (bm :: Bitmap).size :: Size
   property (bm :: Bitmap).backing_scale :: Real.above(0.0)
   property (bm :: Bitmap).depth :: NonnegInt
   property (bm :: Bitmap).has_color :: Boolean
@@ -24,7 +25,9 @@
   property (bm :: Bitmap).is_ok :: Boolean
 ){
 
- Properties to access bitmap components.
+ Properties to access bitmap components. The @rhombus(Bitmap.size)
+ property combines the @rhombus(Bitmap.width) and @rhombus(Bitmap.height)
+ properties.
 
 }
 

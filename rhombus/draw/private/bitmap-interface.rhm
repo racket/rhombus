@@ -1,4 +1,6 @@
 #lang rhombus/static/and_meta
+import:
+  "type.rhm" open
 
 export:
   Bitmap
@@ -9,5 +11,6 @@ class Bitmap(hand):
   property handle: hand
   abstract property width
   abstract property height
+  abstract property size :: Size
 
 annot.delayed_declare BitmapForward
