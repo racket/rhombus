@@ -666,8 +666,9 @@
                 [t-block (syntax-raw-property
                           (datum->syntax #f 'block
                                          (syntax-parse at-form
-                                           #:datum-literals (op)
+                                           #:datum-literals (op parens)
                                            [(_ (op a) . _) #'a]
+                                           [(_ (seq . _) . _) #'seq] 
                                            [(_ a . _) #'a]))
                           "")]
                 [(option ...) options])

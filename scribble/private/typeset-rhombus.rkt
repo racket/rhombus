@@ -214,26 +214,28 @@
               (define type (if (hash? attribs)
                                (hash-ref attribs 'type 'other)
                                attribs))
-              (define (make-element start end skip-ws)
+              (define (make-element start end skip-ws line-shape)
+                (define (non-ws e) (values e (line-shape-step-nonws line-shape e)))
                 (cond
                   [(lookup-stx-typeset start end position-stxes stx-ranges)
                    => (lambda (e)
-                        e)]
+                        (non-ws e))]
                   [(and (or (eq? type 'symbol)
                             (eq? type 'operator))
                         (lookup-stx-identifier start end position-stxes stx-ranges))
                    => (lambda (id)
                         (define str (shrubbery-syntax->string id))
                         (define space-name (id-space-name id))
-                        (cond
-                          [(eq? space-name 'var)
-                           (element variable-color str)]
-                          [(eq? space-name 'value)
-                           (element value-color str)]
-                          [else
-                           (element tt-style (make-id-element (add-space id space-name) str #f
-                                                              #:space space-name
-                                                              #:unlinked-ok? #t))]))]
+                        (non-ws
+                         (cond
+                           [(eq? space-name 'var)
+                            (element variable-color str)]
+                           [(eq? space-name 'value)
+                            (element value-color str)]
+                           [else
+                            (element tt-style (make-id-element (add-space id space-name) str #f
+                                                               #:space space-name
+                                                               #:unlinked-ok? #t))])))]
                   [else
                    (define style
                      (case type
@@ -262,7 +264,7 @@
                                     (regexp-match-positions #rx"[^ ]" show-str sp-start)))
                      (cond
                        [(= sp-start (string-length show-str))
-                        null]
+                        (values null line-shape)]
                        [(or (eq? style hspace-style)
                             (and m (> (caar m) sp-start)))
                         (define len (- (if m (caar m) (string-length show-str)) sp-start))
@@ -273,13 +275,15 @@
                                                      (for/list ([i (in-range ws-len)]) 'nbsp)))
                                       ;; normal whitespace
                                       (element hspace-style (make-string ws-len #\space))))
-                        (cons e
-                              (shape-loop (+ sp-start ws-len) (line-shape-step line-shape e)))]
+                        (let-values ([(es line-shape)
+                                      (shape-loop (+ sp-start ws-len) (line-shape-step line-shape e))])
+                          (values (cons e es) line-shape))]
                        [else
                         (define e (element style show-str))
-                        (if (eqv? sp-start 0)
-                            e
-                            (list e))]))]))
+                        (values (if (eqv? sp-start 0)
+                                    e
+                                    (list e))
+                                (line-shape-step-nonws line-shape e))]))]))
               ;; `one-token-loop` eventually emits the token, but handles newlines;
               ;; most newlines are separate whitespace tokens, but they are also
               ;; potentially in the middle of a whitespace or comment token
@@ -303,16 +307,14 @@
                       ;; the newline is not at the start of the token, so emit
                       ;; a partial token
                       (define upto (caar nl))
-                      (define e (make-element start upto skip-ws))
+                      (define-values (e new-line-shape) (make-element start upto skip-ws line-shape))
                       (cons e
-                            (let ([line-shape (line-shape-step line-shape e)])
-                              (one-token-loop upto end (- skip-ws (- upto start)) line-shape)))])]
+                            (one-token-loop upto end (- skip-ws (- upto start)) new-line-shape))])]
                   [else
                    ;; no newline within the token
-                   (define e (make-element start end skip-ws))
+                   (define-values (e new-line-shape) (make-element start end skip-ws line-shape))
                    (cons e
-                         (let ([line-shape (line-shape-step line-shape e)])
-                           (token-loop new-state end (- skip-ws (- end start)) line-shape)))]))]))])))
+                         (token-loop new-state end (- skip-ws (- end start)) new-line-shape))]))]))])))
   (define elementss (let loop ([l elements+linebreaks])
                       (cond
                         [(null? l) (list null)]

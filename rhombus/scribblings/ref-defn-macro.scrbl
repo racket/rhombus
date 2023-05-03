@@ -1,7 +1,9 @@
 #lang scribble/rhombus/manual
 @(import:
     "common.rhm" open
-    "nonterminal.rhm" open
+    "nonterminal.rhm":
+      except: defn
+      open
     "macro.rhm")
 
 @(def macro_eval: macro.make_macro_eval())

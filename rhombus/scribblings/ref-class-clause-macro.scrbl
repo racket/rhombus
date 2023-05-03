@@ -34,9 +34,9 @@
     defined_name: defn.macro
 
   defn.macro '«class_clause.macro '$defined_name $pattern ...':
-                $option; ...
-                $body
-                ...»'
+                 $option; ...
+                 $body
+                 ...»'
   defn.macro '«class_clause.macro
                | '$defined_name $pattern ...':
                    $option; ...
@@ -85,6 +85,7 @@
 @doc(
   ~nonterminal:
     defined_name: defn.macro
+    option: class_clause.macro
 
   defn.macro '«interface_clause.macro '$defined_name $pattern ...':
                  $option; ...
@@ -106,6 +107,7 @@ in the @rhombus(interface_clause, ~space) @tech{space}.
 @doc(
   ~nonterminal:
     defined_name: defn.macro
+    option: class_clause.macro
 
   defn.macro '«class_and_interface_clause.macro '$defined_name $pattern ...':
                  $option; ...
