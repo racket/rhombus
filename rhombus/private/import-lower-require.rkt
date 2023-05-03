@@ -320,11 +320,11 @@
           (if for-expose?
               null
               (list #`(all-except #,mod-path
-                                  #,@(for/list ([k (in-hash-keys renames)]
-                                                #:when (hash-ref syms k #f))
+                                  ;; things in `renames` are renamed or excluded
+                                  #,@(for/list ([k (in-hash-keys renames)])
                                        k))))
           (for/list ([(k v) (in-hash renames)]
-                     #:when v
+                     #:when v ;; #f means excluded
                      #:when (and (or (not for-expose?)
                                      (expose? v))
                                  (hash-ref syms (syntax-e (plain-id v)) #f)))
