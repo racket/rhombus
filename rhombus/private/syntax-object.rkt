@@ -6,6 +6,7 @@
          syntax/strip-context
          racket/syntax-srcloc
          shrubbery/property
+         shrubbery/print
          "provide.rkt"
          "expression.rkt"
          (submod "annotation.rkt" for-class)
@@ -17,7 +18,8 @@
          "static-info.rkt"
          "define-arity.rkt"
          (submod "dot.rkt" for-dot-provider)
-         (submod "srcloc-object.rkt" for-static-info))
+         (submod "srcloc-object.rkt" for-static-info)
+         (submod "string.rkt" static-infos))
 
 (provide (for-spaces (rhombus/namespace
                       rhombus/annot)
@@ -69,6 +71,7 @@
    strip
    relocate
    relocate_span
+   to_code_string
    [srcloc get-srcloc]))
 
 (define-syntax literal
@@ -189,14 +192,17 @@
   (datum->syntax ctx-stx (if group? (group v) (loop v tail?))))
 
 (define/arity (make v [ctx-stx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (do-make 'Syntax.make v ctx-stx #t #f))
 
 (define/arity (make_op v [ctx-stx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (symbol? v)
     (raise-argument-error* 'Syntax.make_op "Symbol" v))
   (do-make 'Syntax.make (list 'op v) ctx-stx #t #f))
 
 (define/arity (make_group v [ctx-stx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (and (pair? v)
                (list? v))
     (raise-argument-error* 'Syntax.make_group rhombus-realm "NonemptyList" v))
@@ -209,6 +215,7 @@
                                                (loop ds))])))))
 
 (define/arity (make_sequence v [ctx-stx #f])
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (list? v) (raise-argument-error* 'Syntax.make_sequence rhombus-realm "List" v))
   (pack-multi (for/list ([e (in-list v)])
                 (do-make 'Syntax.make_sequence e ctx-stx #t #t))))
@@ -265,6 +272,7 @@
      (strip-context v)]))
 
 (define/arity (relocate stx ctx-stx-in)
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" stx))
   (unless (syntax? ctx-stx-in) (raise-argument-error* 'Syntax.relocate rhombus-realm "Syntax" ctx-stx-in))
   (define ctx-stx (relevant-source-syntax ctx-stx-in))
@@ -296,6 +304,7 @@
       relocate)))
 
 (define/arity (relocate_span stx ctx-stxes-in)
+  #:static-infos ((#%call-result #,syntax-static-infos))
   (define keep-raw-interior? #f) ; expose this as an option?
   (unless (syntax? stx) (raise-argument-error* 'Syntax.relocate_span rhombus-realm "Syntax" stx))
   (define ctx-stxes (map relevant-source-syntax ctx-stxes-in))
@@ -371,6 +380,11 @@
                            (relocate_span stx ctx-stxes))])
       relocate_span)))
 
+(define/arity (to_code_string stx)
+  #:static-infos ((#%call-result #,string-static-infos))  
+  (unless (syntax? stx) (raise-argument-error* 'Syntax.to_code_string rhombus-realm "Syntax" stx))
+  (string->immutable-string (shrubbery-syntax->string stx)))
+
 (define syntax-method-table
   (hash 'unwrap (method1 unwrap)
         'unwrap_op (method1 unwrap_op)
@@ -379,7 +393,8 @@
         'strip (method1 strip)
         'relocate relocate_method
         'relocate_span relocate_span_method
-        'srcloc (method1 syntax-srcloc)))
+        'srcloc (method1 syntax-srcloc)
+        'to_code_string (method1 to_code_string)))
 
 (define-syntax syntax-instance
   (dot-provider
@@ -394,6 +409,7 @@
         [(relocate) (nary #'relocate_method 2 #'relocate)]
         [(relocate_span) (nary #'relocate_span_method 2 #'relocate_span)]
         [(srcloc) (0ary #'get-srcloc)]
+        [(to_code_string) (0ary #'to_code_string)]
         [else (fail-k)])))))
 
 (define get-srcloc

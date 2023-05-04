@@ -1,0 +1,16 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+
+export:
+  described_as
+
+bind.macro '$left described_as $right ...':
+  ~weaker_than: ~other
+  bind_meta.pack('(described_as_infoer,
+                   ($('$right ...'.to_code_string()), $left))')
+
+bind.infoer 'described_as_infoer($static_info, ($str, $left))':
+  def left_info = bind_meta.get_info(left, static_info)
+  def '($left_str, $rest, ...)' = bind_meta.unpack_info(left_info)
+  '($str, $rest, ...)'

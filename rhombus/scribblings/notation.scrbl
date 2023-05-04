@@ -26,7 +26,8 @@ complete details.
  you're familiar with S-expression notation.}
 
 Numbers are decimal, either integer or floating-point, or they’re
-hexadecimal integers written with @litchar{0x}. An underscore can be
+hexadecimal, octal, or binary integers written with a @litchar{0x},
+@litchar{0o}, or @litchar{0b} prefix, respectively. An underscore can be
 used to separate digits in a number.
 
 @rhombusblock(
@@ -38,6 +39,8 @@ used to separate digits in a number.
   .5
   6.022e23
   0xf00ba7ba2
+  0o377
+  0b1001
 )
 
 Identifiers use Unicode alphanumeric characters, @litchar{_}, and

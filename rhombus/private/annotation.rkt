@@ -302,7 +302,21 @@
            ;; we don't get here when used specifically as `of`
            (values (annotation-predicate-form predicate-stx
                                               static-infos)
-                   #'tail)])))))
+                   #'tail)]))))
+
+  (define (remove-tail t tail)
+    (define l (syntax->list t))
+    (define tail-l (syntax->list tail))
+    (define len (length l))
+    (define tail-len (length tail-l))
+    (if (len . > . tail-len)
+        (datum->syntax
+         #f
+         (let loop ([len len] [l l])
+           (if (len . > . tail-len)
+               (cons (car l) (loop (sub1 len) (cdr l)))
+               null)))
+        t)))
 
 (define-syntax (define-annotation-constructor stx)
   (syntax-parse stx
@@ -333,7 +347,8 @@
          (build-annotated-expression #'op.name #'t
                                      checked? form #'t.parsed
                                      (lambda (tmp-id)
-                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-syntax->string #'t)))
+                                       #`(raise-::-annotation-failure 'op.name #,tmp-id '#,(shrubbery-syntax->string
+                                                                                            (remove-tail #'t #'t.tail))))
                                      wrap-static-info*)
          #'t.tail)]))
    'none))
@@ -392,7 +407,7 @@
            [c-parsed::annotation-predicate-form 
             (binding-form
              #'annotation-predicate-infoer
-             #`(#,(shrubbery-syntax->string #'t)
+             #`(#,(shrubbery-syntax->string (remove-tail #'t #'t.tail))
                 #,(and checked? #'c-parsed.predicate)
                 c-parsed.static-infos
                 left.infoer-id
@@ -402,7 +417,7 @@
                     (raise-unchecked-disallowed #'op.name #'t))]
             (binding-form
              #'annotation-binding-infoer
-             #`(#,(shrubbery-syntax->string #'t)
+             #`(#,(shrubbery-syntax->string (remove-tail #'t #'t.tail))
                 c-parsed.binding
                 c-parsed.body
                 c-parsed.static-infos
@@ -896,5 +911,3 @@
                              ...)))
                    #'())
                   #'tail))]))))
-
-

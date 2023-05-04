@@ -84,10 +84,10 @@ interface DC:
       rkt.send get_dc().#{set-font}(f.handle)
 
   property
-  | clipping_region :: Maybe(Region):
+  | clipping_region :: maybe(Region):
       let r = rkt.send get_dc().#{get-clipping-region}()
       r && _Region(r)
-  | clipping_region := region :: Maybe(Region):
+  | clipping_region := region :: maybe(Region):
       rkt.send get_dc().#{set-clipping-region}(region && Region.handle(region))
     
   method copy(src :: RectLike,
@@ -148,7 +148,7 @@ interface DC:
                 ~source: source :: RectLike = Rect(Point.zero, b.size),
                 ~style: style :: DC.BitmapOverlay = #'solid,
                 ~color: color :: Color = Color("black"),
-                ~mask: mask :: Maybe(Bitmap) = #false):
+                ~mask: mask :: maybe(Bitmap) = #false):
     rkt.send get_dc().#{draw-bitmap-section}(b.handle, dpt.x + dx, dpt.y + dy,
                                              source.x, source.y,
                                              source.width, source.height,

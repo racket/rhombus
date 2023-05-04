@@ -1,6 +1,7 @@
 #lang racket/base
 (require syntax/stx
          enforest/proc-name
+         shrubbery/property
          "realm.rkt")
 
 ;; We represent Rhombus syntax objects as a syntax object with one of
@@ -74,8 +75,8 @@
 
          insert-multi-front-group)
 
-(define multi-blank (syntax-property (syntax-property (datum->syntax #f 'multi) 'raw "") 'from-pack #t))
-(define group-blank (syntax-property (syntax-property (datum->syntax #f 'group) 'raw "") 'from-pack #t))
+(define multi-blank (syntax-property (syntax-raw-property (datum->syntax #f 'multi) "") 'from-pack #t #t))
+(define group-blank (syntax-property (syntax-raw-property (datum->syntax #f 'group) "") 'from-pack #t #t))
 
 (define (group-syntax? r)
   (and (syntax? r)

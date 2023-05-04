@@ -7,7 +7,8 @@
 
 @title(~tag: "interfaces"){Interfaces}
 
-The @rhombus(interface) definition form is similar to @rhombus(class),
+The @rhombus(interface) definition form for an @deftech{interface}
+is similar to @rhombus(class),
 but without fields. A @rhombus(class) form can declare that the class
 implements an interface through an @rhombus(implements, ~class_clause)
 clause. When a class implements an interface, then instances of the

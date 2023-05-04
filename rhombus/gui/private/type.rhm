@@ -18,14 +18,14 @@ annot.macro 'SizeInteger':
   'Int.in(0, 1000000)'
 
 annot.macro 'Size':
-  'matching([_ :: Maybe(SizeInteger), _ :: Maybe(SizeInteger)])'
+  'matching([_ :: maybe(SizeInteger), _ :: maybe(SizeInteger)])'
 
 
 annot.macro 'PositionInteger':
   'Int.in(-1000000, 1000000)'
 
 annot.macro 'Position':
-  'Any.of(#'center) || matching([_ :: Maybe(PositionInteger), _ :: Maybe(PositionInteger)])'
+  'Any.of(#'center) || matching([_ :: maybe(PositionInteger), _ :: maybe(PositionInteger)])'
 
 
 annot.macro 'SpacingInteger':
@@ -33,7 +33,7 @@ annot.macro 'SpacingInteger':
 
 
 annot.macro 'Margin':
-  'matching([_ :: Maybe(SpacingInteger), _ :: Maybe(SpacingInteger)])'
+  'matching([_ :: maybe(SpacingInteger), _ :: maybe(SpacingInteger)])'
 
 
 annot.macro 'Alignment':

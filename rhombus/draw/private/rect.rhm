@@ -1,16 +1,16 @@
 #lang rhombus/static/and_meta
 import:
+  "dotting.rhm"
   "point.rhm" open:
-    except: PointLike
-    rename: PointLikeAsPoint as PointLike
+    rename: PointLike as _PointLike
+  ._PointLike.to_point as PointLike
   "size.rhm" open:
-    except: SizeLike
-    rename: SizeLikeAsSize as SizeLike
+    rename: SizeLike as _SizeLike
+  ._SizeLike.to_size as SizeLike
 
 export:
   Rect
   RectLike
-  RectLikeAsRect
 
 class Rect(x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal):
   constructor
@@ -27,18 +27,23 @@ class Rect(x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal):
 
 def zero = Rect(0, 0, 0, 0)
 
-annot.macro 'RectLike':
+dotting.annot_macro 'RectLike' ('to_rect' => 'RectLike.to_rect'):
   'Rect
      || matching([_ :: Real, _ :: Real, _ :: NonnegReal, _ :: NonnegReal])
-     || matching([_ :: Point, _ :: Size])
+     || matching([_ :: PointLike, _ :: SizeLike])
      || matching({#'x: _ :: Real, #'y: _ :: Real, #'width: _ :: NonnegReal, #'height: _ :: NonnegReal})
-     || matching({#'point: _ :: topleft, #'size: _ :: Size})'
+     || matching({#'point: _ :: PointLike, #'size: _ :: Size})'
 
-annot.macro 'RectLikeAsRect':
-  'Rect
-     || converting(fun ([x :: Real, y :: Real, w :: NonnegReal, h :: NonnegReal]) :: Rect: Rect(x, y, w, h))
-     || converting(fun ([topleft :: PointLike, size :: SizeLike]) :: Rect: Rect(topleft.x, topleft.y, size.width, size.height))
-     || converting(fun ({#'x: x :: Real, #'y: y :: Real, #'width: w :: NonnegReal, #'height: h :: NonnegReal}) :: Rect:
-                     Rect(x, y, w, h))
-     || converting(fun ({#'point: topleft :: PointLike, #'size: size :: SizeLike}) :: Rect:
-                     Rect(topleft.x, topleft.y, size.width, size.height))'
+namespace RectLike:
+  export:
+    to_rect
+  annot.macro 'to_rect':
+    'Rect
+       || converting(fun ([x :: Real, y :: Real, w :: NonnegReal, h :: NonnegReal]) :: Rect: Rect(x, y, w, h))
+       || converting(fun ([topleft :: PointLike, size :: SizeLike]) :: Rect: Rect(topleft.x, topleft.y, size.width, size.height))
+       || converting(fun ({#'x: x :: Real, #'y: y :: Real, #'width: w :: NonnegReal, #'height: h :: NonnegReal}) :: Rect:
+                       Rect(x, y, w, h))
+       || converting(fun ({#'point: topleft :: PointLike, #'size: size :: SizeLike}) :: Rect:
+                       Rect(topleft.x, topleft.y, size.width, size.height))'
+  fun to_rect(r :: to_rect described_as RectLike):
+    r

@@ -23,13 +23,13 @@ expr.macro 'default($like . $field, $expr)':
 class Pen(handle):
   internal _Pen
   opaque
-  constructor (~like: like :: Maybe(Pen) = #false,
+  constructor (~like: like :: maybe(Pen) = #false,
                ~color: color :: (String || Color) = default(like.color, "Black"),
                ~width: width :: Real.in(0, 255) = default(like.width, 1),
                ~style: style :: Pen.Style = default(like.style, #'solid),
                ~cap: cap :: Pen.Cap = default(like.cap, #'round),
                ~join: join :: Pen.Join = default(like.join, #'round),
-               ~stipple: stipple :: Maybe(Bitmap) = default(like.stipple, #false)):
+               ~stipple: stipple :: maybe(Bitmap) = default(like.stipple, #false)):
     if stipple
     | _Pen(rkt.make_object(rkt.#{pen%}, unwrap_color(color), width, style_convert(style), cap, join,
                            BitmapPrivate.handle(stipple)))
@@ -39,7 +39,7 @@ class Pen(handle):
   property style: style_unconvert(rkt.send handle.#{get-width}())
   property cap: rkt.send handle.#{get-cap}()
   property join: rkt.send handle.#{get-join}()
-  property stipple :: Maybe(Bitmap):
+  property stipple :: maybe(Bitmap):
     let bm = rkt.send handle.#{get-stipple}()
     bm && BitmapPrivate(bm)
 

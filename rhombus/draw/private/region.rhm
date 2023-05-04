@@ -21,10 +21,10 @@ class Region():
   extends intf.Region
   opaque
 
-  constructor(dc :: Maybe(DC) = #false):
+  constructor(dc :: maybe(DC) = #false):
     _Region(rkt.make_object(rkt.#{region%}, dc && (dc :: _DC).dc))()
 
-  property dc :: Maybe(DC):
+  property dc :: maybe(DC):
     let dc = rkt.send hand.#{get-dc}()
     dc && wrap_dc(dc)
 

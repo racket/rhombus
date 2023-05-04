@@ -64,8 +64,8 @@
                  ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
                  ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                  ~selection: selection :: MaybeObs.of(Any) = #false,
-                 ~action: action :: Maybe(Function.of_arity(1)) = #false,
-                 ~label: label :: MaybeObs.of(Maybe(LabelString)) = #false,
+                 ~action: action :: maybe(Function.of_arity(1)) = #false,
+                 ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
                  ~style: style :: MaybeObs.of(List.of(Choice.StyleSymbol)) = [],
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
@@ -107,11 +107,11 @@
 @doc(
   class Slider():
     implements View
-    constructor (label :: MaybeObs.of(Maybe(LabelString)) = #false,
+    constructor (label :: MaybeObs.of(maybe(LabelString)) = #false,
                  ~value: value :: MaybeObs.of(PositionInteger) = 0,
                  ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
                  ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
-                 ~action: action :: Maybe(Function.of_arity(1)) = #false,
+                 ~action: action :: maybe(Function.of_arity(1)) = #false,
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                  ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],
@@ -147,7 +147,7 @@
   class Label():
     implements View
     constructor (label :: MaybeObs.of(LabelString),
-                 ~color: color :: MaybeObs.of(Maybe(Color)) = #false,
+                 ~color: color :: MaybeObs.of(maybe(Color)) = #false,
                  ~font: font :: MaybeObs.of(Font) = Label.normal_control_font)
 
   property (lbl :: Label).at_label :: Obs.of(LabelString)

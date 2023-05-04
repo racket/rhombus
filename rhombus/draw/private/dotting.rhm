@@ -1,0 +1,30 @@
+#lang rhombus/static/and_meta
+
+export:
+  annot_macro
+
+defn.macro '«annot_macro '$name' ('$field' => '$method'): '$ann'»':
+  '«annot.macro '$name':
+      '($ann) && _dot'
+
+    annot.macro '_dot':
+      annot_meta.pack_predicate('fun (x): #true',
+                                '(($(statinfo_meta.dot_provider_key),
+                                   _dot_provider))')
+
+    dot.macro '_dot_provider $('$')left . $('$')field':
+      ~tail tail
+      match field
+      | '$field':
+          convert_dot(left, field, tail, '$method')
+      | ~else #false»'
+
+meta:
+  fun convert_dot(left, field, tail, method):
+    match tail
+    | '() $tail ...':
+        values('$method($left)',
+               '$tail ...')
+    | ~else:
+        Syntax.error("expected parentheses afterward for a static method call",
+                     field)

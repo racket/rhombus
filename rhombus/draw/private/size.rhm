@@ -1,9 +1,10 @@
 #lang rhombus/static/and_meta
+import:
+  "dotting.rhm"
 
 export:
   Size
   SizeLike
-  SizeLikeAsSize
 
 class Size(width :: NonnegReal, height :: NonnegReal):
   export:
@@ -11,12 +12,17 @@ class Size(width :: NonnegReal, height :: NonnegReal):
 
 def zero = Size(0, 0)
 
-annot.macro 'SizeLike':
+dotting.annot_macro 'SizeLike' ('to_size' => 'SizeLike.to_size'):
   'Size
      || matching([_ :: NonnegReal, _ :: NonnegReal])
      || matching({#'width: _ :: NonnegReal, #'height: _ :: NonnegReal})'
 
-annot.macro 'SizeLikeAsSize':
-  'Size
-     || converting(fun ([width :: NonnegReal, height :: NonnegReal]) :: Size: Size(width, height))
-     || converting(fun ({#'width: width :: NonnegReal, #'height: height :: NonnegReal}) :: Size: Size(width, height))'
+namespace SizeLike:
+  export:
+    to_size
+  annot.macro 'to_size':
+    'Size
+       || converting(fun ([width :: NonnegReal, height :: NonnegReal]) :: Size: Size(width, height))
+       || converting(fun ({#'width: width :: NonnegReal, #'height: height :: NonnegReal}) :: Size: Size(width, height))'
+  fun to_size(s :: to_size described_as SizeLike):
+    s

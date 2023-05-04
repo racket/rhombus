@@ -54,10 +54,10 @@
   class KeyEvent():
     constructor (code :: (Char || KeyEvent.Key),
                  ~release_code: r_code :: (Char || KeyEvent.Key) = #'press,
-                 ~other_caps_code: oc_code :: Maybe(Char || KeyEvent.Key) = #false,
-                 ~other_shift_code: os_code :: Maybe(Char || KeyEvent.Key) = #false,
-                 ~other_altgr_code: oa_code :: Maybe(Char || KeyEvent.Key) = #false,
-                 ~other_shift_altgr_code: osa_code :: Maybe(Char || KeyEvent.Key) = #false,
+                 ~other_caps_code: oc_code :: maybe(Char || KeyEvent.Key) = #false,
+                 ~other_shift_code: os_code :: maybe(Char || KeyEvent.Key) = #false,
+                 ~other_altgr_code: oa_code :: maybe(Char || KeyEvent.Key) = #false,
+                 ~other_shift_altgr_code: osa_code :: maybe(Char || KeyEvent.Key) = #false,
                  ~down: down :: Set.of(KeyEvent.DownSymbol) = Set{},
                  ~x: x :: Int = 0,
                  ~y: y :: Int = 0,
@@ -66,10 +66,10 @@
 
   property (ev :: KeyEvent).code :: Char || KeyEvent.Key
   property (ev :: KeyEvent).release_code :: Char || KeyEvent.Key
-  property (ev :: KeyEvent).other_caps_code :: Maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_shift_code :: Maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_altgr_code :: Maybe(Char || KeyEvent.Key)
-  property (ev :: KeyEvent).other_shift_altgr_code :: Maybe(Char || KeyEvent.Key)
+  property (ev :: KeyEvent).other_caps_code :: maybe(Char || KeyEvent.Key)
+  property (ev :: KeyEvent).other_shift_code :: maybe(Char || KeyEvent.Key)
+  property (ev :: KeyEvent).other_altgr_code :: maybe(Char || KeyEvent.Key)
+  property (ev :: KeyEvent).other_shift_altgr_code :: maybe(Char || KeyEvent.Key)
   property (ev :: KeyEvent).down :: Set.of(KeyEvent.DownSymbol)
   property (ev :: KeyEvent).x :: Int
   property (ev :: KeyEvent).y :: Int

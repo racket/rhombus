@@ -10,7 +10,7 @@
                  draw :: Function.of_arity(2),
                  ~mouse: mouse :: Function.of_arity(1) = Function.pass,
                  ~key: key :: Function.of_arity(1) = Function.pass,
-                 ~label: label :: MaybeObs.of(Maybe(LabelString)) = "canvas",
+                 ~label: label :: MaybeObs.of(maybe(LabelString)) = "canvas",
                  ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                  ~style: style :: MaybeObs.of(List.of(Canvas.StyleSymbol)) = [],
                  ~margin: margin :: MaybeObs.of(Margin) = [0, 0],
