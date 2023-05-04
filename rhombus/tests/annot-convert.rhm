@@ -42,6 +42,10 @@ check:
   ~is 2
 
 check:
+  [1, 2] :: (converting(fun ([_, y :: Real]): [[y]]) && converting(fun ([[y]]): y+1))
+  ~is 3
+
+check:
   [1, 2] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x)) ~is 2
   [4, 1] :: (converting(fun ([1, x]): x) || converting(fun ([x, 1]): x)) ~is 4
 

@@ -34,14 +34,14 @@
         (annotation-binding-form
          (binding-form
           #'and-infoer
-          #`[result l.binding r.binding r.body r.static-infos])
+          #`[result l.binding r.binding l.body r.body r.static-infos])
          #'result
          #'r.static-infos)]))
    'left))
 
 (define-syntax (and-infoer stx)
   (syntax-parse stx
-    [(_ static-infos (arg lhs-i::binding-form rhs-i::binding-form rhs-body rhs-static-infos))
+    [(_ static-infos (right-val lhs-i::binding-form rhs-i::binding-form lhs-body rhs-body rhs-static-infos))
      #:with lhs-impl::binding-impl #'(lhs-i.infoer-id static-infos lhs-i.data)
      #:with lhs::binding-info #'lhs-impl.info
      #:with rhs-impl::binding-impl #`(rhs-i.infoer-id #,(static-infos-union #'lhs.static-infos #'static-infos) rhs-i.data)
@@ -50,31 +50,37 @@
      (binding-info (annotation-string-and (syntax-e #'lhs.annotation-str) (syntax-e #'rhs.annotation-str))
                    #'lhs.name-id
                    #'rhs.static-infos ; presuambly includes `lhs.static-infos` as passed to `rhs-i.infoer-id`
-                   #'((arg (0) . rhs-static-infos))
+                   #'((right-val (0) . rhs-static-infos))
                    #'and-matcher
                    #'and-committer
                    #'and-binder
-                   #'(arg lhs rhs rhs-body))]))
+                   #'(left-val right-val lhs rhs lhs-body rhs-body))]))
 
 (define-syntax (and-matcher stx)
   (syntax-parse stx
-    [(_ arg-id (bind-id lhs::binding-info rhs::binding-info rhs-body) IF success fail)
+    [(_ arg-id (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body) IF success fail)
+     #:with ((lhs-bind-id bind-use . lhs-bind-static-infos) ...) #'lhs.bind-infos
      #'(lhs.matcher-id arg-id lhs.data IF
                        (begin
-                         (rhs.matcher-id arg-id rhs.data IF success fail))
+                         (lhs.committer-id arg-id lhs.data)
+                         (lhs.binder-id arg-id lhs.data)
+                         (define-static-info-syntax/maybe lhs-bind-id . lhs-bind-static-infos)
+                         ...
+                         (define left-id lhs-body)
+                         (rhs.matcher-id left-id rhs.data IF success fail))
                        fail)]))
 
 (define-syntax (and-committer stx)
   (syntax-parse stx
-    [(_ arg-id (bind-id lhs::binding-info rhs::binding-info rhs-body))
-     #'(rhs.committer-id arg-id rhs.data)]))
+    [(_ arg-id (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
+     #'(rhs.committer-id left-id rhs.data)]))
 
 (define-syntax (and-binder stx)
   (syntax-parse stx
-    [(_ arg-id (bind-id lhs::binding-info rhs::binding-info rhs-body))
+    [(_ arg-id (left-id bind-id lhs::binding-info rhs::binding-info lhs-body rhs-body))
      #:with ((rhs-bind-id bind-use . rhs-bind-static-infos) ...) #'rhs.bind-infos
      #`(begin
-         (rhs.binder-id arg-id rhs.data)
+         (rhs.binder-id left-id rhs.data)
          (define-static-info-syntax/maybe rhs-bind-id . rhs-bind-static-infos)
          ...
          (define bind-id rhs-body))]))

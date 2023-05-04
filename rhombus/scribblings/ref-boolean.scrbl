@@ -114,21 +114,28 @@
 ){
 
  Creates an annotation that accepts a value satisfying both
- @rhombus(left_annot) and @rhombus(right_annot). The static information
+ @rhombus(left_annot) and @rhombus(right_annot).
+
+ When @rhombus(left_annot) and @rhombus(right_annot) are
+ @tech{predicate annotations}, the static information
  implied by the annotation is the union of information for
  @rhombus(left_annot) and @rhombus(right_annot), where information
  from @rhombus(right_annot) takes precedence in cases where both
  supply values for the same static-information key.
 
- If @rhombus(left_annot) is a @tech{converter annotation}, the
- conversion is not applied. Only the matching component of the annotation
- is used, the same as when the annotation is after @rhombus(is_a). If
- @rhombus(right_annot) is a @tech{converter annotation}, its conversion
- applies for the overall annotation created by @rhombus(&&, ~annot).
+ If @rhombus(left_annot) or @rhombus(right_annot) is a
+ @tech{converter annotation}, the @rhombus(left_annot) conversion
+ is applied first, and its result is the input to @rhombus(right_annot),
+ and the result of @rhombus(right_annot) is the result for the
+ for the overall annotation created by @rhombus(&&, ~annot).
+ When the overall annotation is used only for matching, the conversion
+ part of @rhombus(right_annot) is skipped, but the conversion part of
+ @rhombus(left_annot) must be performed.
  
 @examples(
   1 is_a (String && Int)
   Pair.cons(1, "hello") is_a (Pair.of(Int, Any) && Pair.of(Any, String))
+  1 :: (converting(fun (n): n+1) && converting(fun (n): -n))
 )
 
 }
