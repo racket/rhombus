@@ -3,49 +3,48 @@
 
 import:
   rhombus/data/list.List
-  rhombus/tests/check.check
 
 
 check:
   List.of().size
-  0
+  ~is 0
 
 check:
   List.of("foo").size
-  1
+  ~is 1
 
 check:
   List.of("foo", "bar", "baz").size
-  3
+  ~is 3
 
 check:
   List.of("foo").get(0)
-  "foo"
+  ~is "foo"
   
 check:
   List.of("foo", "bar", "baz").get(0)
-  "foo"
+  ~is "foo"
 
 check:
   List.of("foo", "bar", "baz").get(1)
-  "bar"
+  ~is "bar"
 
 check:
   List.of("foo", "bar", "baz").get(2)
-  "baz"
+  ~is "baz"
 
 check:
   List.of().isEmpty()
-  #true
+  ~is #true
 
 check:
   List.of(1, 2, 3).contains(2)
-  #true
+  ~is #true
 
 check:
   List.of(1, 2, 3).contains(4)
-  #false
+  ~is #false
 
 check:
   List.builder().build().size
-  0
+  ~is 0
