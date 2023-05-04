@@ -2,6 +2,7 @@
 (require (for-syntax racket/base
                      syntax/parse/pre
                      shrubbery/print
+                     shrubbery/property
                      "srcloc.rkt"
                      "tag.rkt")
          syntax/parse/pre
@@ -23,7 +24,8 @@
                   ::)
          "pattern-variable.rkt"
          "unquote-binding.rkt"
-         "unquote-binding-identifier.rkt")
+         "unquote-binding-identifier.rkt"
+         "tag.rkt") ; for use in `~parse`
 
 (provide (for-spaces (#f
                       rhombus/bind
@@ -315,7 +317,7 @@
                                       (values #f #f #f #f))])
                       (if p
                           (with-syntax ([(tmp) (generate-temporaries '(tail))])
-                            (values #`(~and tmp (~parse #,p (cons 'group #'tmp)))
+                            (values #`(~and tmp (~parse #,p (cons group-tag #'tmp)))
                                     new-idrs new-sidrs new-vars))
                           (let-values ([(p new-idrs new-sidrs new-vars) (handle-escape $-id e in-e 'term)])
                             (values (if tail? (list p) p) new-idrs new-sidrs new-vars)))))
@@ -707,7 +709,7 @@
      (values (group-k #'g)
              #'tail)]
     [(_ ((~and tag quotes) . args) . tail)
-     (values (multi-k (datum->syntax #f (cons (syntax-property (datum->syntax #f 'multi) 'raw "")
+     (values (multi-k (datum->syntax #f (cons (syntax-raw-property (datum->syntax #f 'multi) "")
                                               #'args)))
              #'tail)]))
 

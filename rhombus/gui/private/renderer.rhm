@@ -12,5 +12,5 @@ annot.macro 'Renderer':
                             '()')
 
 fun render(view :: WindowView,
-           parent :: Maybe(Renderer) = #false) :: Renderer:
+           parent :: maybe(Renderer) = #false) :: Renderer:
   easy.render(view.handle, parent)

@@ -5,13 +5,13 @@
 
 @doc(
   class Pen(handle):
-    constructor (~like: like :: Maybe(Pen) = #false,
+    constructor (~like: like :: maybe(Pen) = #false,
                  ~color: color :: (String || Color) = "Black",
                  ~width: width :: Real.in(0, 255) = 1,
                  ~style: style :: Pen.Style = #'solid,
                  ~cap: cap :: Pen.Cap = #'round,
                  ~join: join :: Pen.Join = #'round,
-                 ~stipple: stipple :: Maybe(Bitmap) = #false)
+                 ~stipple: stipple :: maybe(Bitmap) = #false)
 ){
 
  Creates a pen configuration.
@@ -28,7 +28,7 @@
   property (pen :: Pen).style :: Pen.Style
   property (pen :: Pen).cap :: Pen.Cap
   property (pen :: Pen).join :: Pen.Join
-  property (pen :: Pen).stipple :: Maybe(Bitmap)
+  property (pen :: Pen).stipple :: maybe(Bitmap)
 ){
 
  Properties to access pen components.

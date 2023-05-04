@@ -29,7 +29,7 @@ class Canvas(hand):
 
   constructor (data,
                draw :: Function.of_arity(2),
-               ~label: label :: MaybeObs.of(Maybe(LabelString)) = #false,
+               ~label: label :: MaybeObs.of(maybe(LabelString)) = #false,
                ~key: on_key :: Function.of_arity(1) = Function.pass,
                ~mouse: on_mouse :: Function.of_arity(1) = Function.pass,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,

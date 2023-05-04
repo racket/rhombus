@@ -5,7 +5,8 @@
         "private/core-macro.rkt"
         "private/check.rhm"
         "private/maybe.rhm"
-        "private/string.rhm")
+        "private/string.rhm"
+        "private/described_as.rhm")
 
 (module reader syntax/module-reader
   #:language 'rhombus

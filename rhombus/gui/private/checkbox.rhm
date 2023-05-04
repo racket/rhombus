@@ -20,7 +20,7 @@ class Checkbox(hand, private _at_checked :: Obs):
   override property handle: hand
 
   constructor (label :: MaybeObs.of(LabelString),
-               ~action: action :: Maybe(Function.of_arity(1)) = #false,
+               ~action: action :: maybe(Function.of_arity(1)) = #false,
                ~is_checked: is_checked :: MaybeObs.of(Boolean) = #false,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true):
     def at_checked = obs.to_obs(is_checked)

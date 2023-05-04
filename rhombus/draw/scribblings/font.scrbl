@@ -5,9 +5,9 @@
 
 @doc(
   class Font(handle):
-    constructor (~like: like :: Maybe(Font) = #false,
+    constructor (~like: like :: maybe(Font) = #false,
                  ~kind: kind :: Font.Kind = #'default,
-                 ~name: name :: Maybe(String) = #false,
+                 ~name: name :: maybe(String) = #false,
                  ~size: size :: Real.in(0.0, 1024.0) = 12.0,
                  ~in_pixels: in_pixels :: Any = #false,
                  ~style: style :: Font.Style = #'normal,
@@ -28,7 +28,7 @@
 
 @doc(
   property (font :: Font).kind :: Font.Kind
-  property (font :: Font).name :: Maybe(String)
+  property (font :: Font).name :: maybe(String)
   property (font :: Font).size :: Real.in(0.0, 1024.0)
   property (font :: Font).in_pixels :: Boolean
   property (font :: Font).style :: Font.Style

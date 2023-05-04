@@ -1,9 +1,10 @@
 #lang rhombus/static/and_meta
+import:
+  "dotting.rhm"
 
 export:
   Point
   PointLike
-  PointLikeAsPoint
 
 class Point(x :: Real, y :: Real):
   export:
@@ -11,12 +12,17 @@ class Point(x :: Real, y :: Real):
 
 def zero = Point(0, 0)
 
-annot.macro 'PointLike':
+dotting.annot_macro 'PointLike' ('to_point' => 'PointLike.to_point'):
   'Point
      || matching([_ :: Real, _ :: Real])
      || matching({#'x: _ :: Real, #'y: _ :: Real})'
 
-annot.macro 'PointLikeAsPoint':
-  'Point
-     || converting(fun ([x :: Real, y :: Real]) :: Point: Point(x, y))
-     || converting(fun ({#'x: x :: Real, #'y: y :: Real}) :: Point: Point(x, y))'
+namespace PointLike:
+  export:
+    to_point
+  annot.macro 'to_point':
+    'Point
+       || converting(fun ([x :: Real, y :: Real]) :: Point: Point(x, y))
+       || converting(fun ({#'x: x :: Real, #'y: y :: Real}) :: Point: Point(x, y))'
+  fun to_point(p :: to_point described_as PointLike):
+    p

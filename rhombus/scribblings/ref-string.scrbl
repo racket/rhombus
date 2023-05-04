@@ -26,6 +26,7 @@ immutable strings.
   [str.locale_bytes(arg, ...), String.locale_bytes(str, arg, ...)]
   [str.to_int(), String.to_int(str)]
   [str.to_number(), String.to_number(str)]
+  [str.to_string(), String.to_string(str)]
   [str.upcase(arg), String.upcase(str)]
   [str.downcase(arg), String.downcase(str)]
   [str.foldcase(arg), String.foldcase(str)]
@@ -39,12 +40,13 @@ immutable strings.
 @doc(
   annot.macro 'String'
   annot.macro 'StringView'
-  annot.macro 'StringViewAsString'
+  annot.macro 'StringView.to_string'
 ){
 
  Matches strings. The @rhombus(StringView, ~annot) annotation allows mutable
  Racket strings as well as immutable Rhombus strings.
- The @rhombus(StringViewAsString, ~annot) converter annotation converts
+ The @rhombus(StringView.to_string, ~annot) @tech{converter annotation}
+ allows the same strings as @rhombus(StringView, ~annot), but converts
  a mutable Racket string to an immutable Rhombus string.
 
 }
@@ -180,6 +182,18 @@ immutable strings.
   String.to_number("fourty-two")
   "3/4".to_number()
 )
+
+}
+
+
+@doc(
+  fun String.to_string(str :: StringView) :: String
+  fun StringView.to_string(str :: StringView) :: String
+){
+
+ The same as @rhombus(to_string), but constrained to a
+ @rhombus(StringView) argument. This function exists for consistency with
+ the @rhombus(StringView.to_string, ~annot) annotation.
 
 }
 

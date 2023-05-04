@@ -44,8 +44,8 @@
            | (dc :: DC).brush := b :: Brush
   property | (dc :: DC).font :: Font
            | (dc :: DC).font := f :: Font
-  property | (dc :: DC).clipping_region :: Maybe(Region)
-           | (dc :: DC).clipping_region := rgn :: Maybe(Region)
+  property | (dc :: DC).clipping_region :: maybe(Region)
+           | (dc :: DC).clipping_region := rgn :: maybe(Region)
   property | (dc :: DC).transformation :: DC.Transformation
            | (dc :: DC).transformation := rgn :: DC.Transformation
 ){
@@ -147,7 +147,7 @@
     ~source: source :: RectLike = Rect(Point.zero, Bitmap.size(bm)),
     ~style: style :: DC.BitmapOverlay = #'solid,
     ~color: color :: Color = Color("black"),
-    ~mask: mask :: Maybe(Bitmap) = #false
+    ~mask: mask :: maybe(Bitmap) = #false
   ) :: Void
 ){
 

@@ -17,9 +17,9 @@ expr.macro 'default($like . $field, $expr)':
 class Font(handle):
   internal _Font
   opaque
-  constructor (~like: like :: Maybe(Font) = #false,
+  constructor (~like: like :: maybe(Font) = #false,
                ~kind: kind :: Font.Kind = default(like.kind, #'default),
-               ~name: name :: Maybe(String) = default(like.name, #false),
+               ~name: name :: maybe(String) = default(like.name, #false),
                ~size: size :: Real.in(0.0, 1024.0) = default(like.size, 12.0),
                ~in_pixels: in_pixels :: Any = default(like.in_pixels, #false),
                ~style: style :: Font.Style = default(like.style, #'normal),

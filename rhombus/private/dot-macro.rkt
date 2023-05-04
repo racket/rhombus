@@ -15,8 +15,7 @@
 
 (define+provide-space dot rhombus/dot
   #:fields
-  (macro
-      macro_more_static))
+  (macro))
 
 (module+ for-compose
   (provide (for-syntax wrap-dot-provider-transformer)))

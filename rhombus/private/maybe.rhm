@@ -3,7 +3,7 @@ import:
   "core-meta.rkt" open
 
 export:
-  Maybe
+  maybe
 
-annot.macro 'Maybe($(ann :: annot_meta.Parsed))':
+annot.macro 'maybe($(ann :: annot_meta.Parsed))':
   'False || $ann'

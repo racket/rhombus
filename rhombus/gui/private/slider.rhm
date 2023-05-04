@@ -24,11 +24,11 @@ class Slider(hand, private _at_value :: Obs):
   opaque
   override property handle: hand
 
-  constructor (label :: MaybeObs.of(Maybe(LabelString)) = #false,
+  constructor (label :: MaybeObs.of(maybe(LabelString)) = #false,
                ~value: value :: MaybeObs.of(PositionInteger) = 0,
                ~min_value: min_value :: MaybeObs.of(PositionInteger) = 0,
                ~max_value: max_value :: MaybeObs.of(PositionInteger) = 100,
-               ~action: action :: Maybe(Function.of_arity(1)) = #false,
+               ~action: action :: maybe(Function.of_arity(1)) = #false,
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,
                ~min_size: min_size :: MaybeObs.of(Size) = [#false, #false],
                ~stretch: stretch :: MaybeObs.of(Stretch) = [#true, #true],

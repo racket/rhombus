@@ -5,11 +5,11 @@
 
 @doc(
   class Brush(handle, private saved_stipple):
-    constructor (~like: like :: Maybe(Brush) = #false,
+    constructor (~like: like :: maybe(Brush) = #false,
                  ~color: color :: (String || Color) = "Black",
                  ~style: style :: Brush.Style = #'solid,
-                 ~stipple: stipple :: Maybe(Bitmap) = #false,
-                 ~gradient: gradient :: Maybe(LinearGradient || RadialGradient)
+                 ~stipple: stipple :: maybe(Bitmap) = #false,
+                 ~gradient: gradient :: maybe(LinearGradient || RadialGradient)
                               = #false)
 ){
 
@@ -23,8 +23,8 @@
 @doc(
   property (brush :: Brush).color :: Color
   property (brush :: Brush).style :: Brush.Style
-  property (brush :: Brush).stipple :: Maybe(Bitmap)
-  property (brush :: Brush).gradient :: Maybe(LinearGradient
+  property (brush :: Brush).stipple :: maybe(Bitmap)
+  property (brush :: Brush).gradient :: maybe(LinearGradient
                                                 || RadialGradient)
 ){
 

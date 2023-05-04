@@ -30,7 +30,7 @@ class Label(hand, private _at_label :: Obs):
   override property handle: hand
 
   constructor (label :: MaybeObs.of(LabelString),
-               ~color : color :: MaybeObs.of(Maybe(Color)) = #false,
+               ~color : color :: MaybeObs.of(maybe(Color)) = #false,
                ~font : font :: Font = normal_control_font):
     def at_label = obs.to_obs(label)
     super(easy.text(obs.unwrap(at_label),

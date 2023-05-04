@@ -96,7 +96,7 @@
 @rhombusblock(
   action(#,(@rhombus(what, ~var)) :: Any.of(#'select, #'new, #'close, #'reorder),
          choices :: List,
-         #,(@rhombus(selected, ~var)) :: Maybe(Any))
+         #,(@rhombus(selected, ~var)) :: maybe(Any))
 )
 
  where @rhombus(what, ~var) describes the action, @rhombus(choices) is

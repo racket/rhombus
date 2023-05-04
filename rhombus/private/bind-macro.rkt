@@ -76,7 +76,7 @@
 
 (define-for-syntax (unpack stx)
   (syntax-parse (unpack-term stx 'bind_meta.unpack #f)
-    [((~datum parsed) b::binding-form)<
+    [((~datum parsed) b::binding-form)
      (pack-term #'(parens (group chain-to-infoer)
                           (group (parsed (b.infoer-id b.data)))))]))
 
@@ -112,7 +112,24 @@
 
 (define-for-syntax (pack-info stx)
   (syntax-parse (unpack-term stx 'bind_meta.pack_info #f)
-    #:datum-literals (parens group)
+    #:datum-literals (parens group parsed)
+    [(parens name-str-g
+             name-id-g
+             static-infos-g
+             bind-ids-g
+             (group (~literal chain-to-matcher))
+             (group (~literal chain-to-committer))
+             (group (~literal chain-to-binder))
+             (group (parsed (orig-matcher-id orig-committer-id orig-binder-id orig-data))))
+     ;; hacky: remove indirection to get back to Racket forms
+     (pack-info #'(parens name-str-g
+                          name-id-g
+                          static-infos-g
+                          bind-ids-g
+                          (group orig-matcher-id)
+                          (group orig-committer-id)
+                          (group orig-binder-id)
+                          (group orig-data)))]
     [(parens (group name-str:string)
              (group name-id:identifier)
              (group static-infos)

@@ -17,3 +17,4 @@ macro-extensible in the same way as Racket.
 @include_section("reference.scrbl")
 @include_section("ref-meta-lib.scrbl")
 @include_section("ref-static-lib.scrbl")
+@include_section("naming-convention.scrbl")

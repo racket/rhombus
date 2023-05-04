@@ -1,21 +1,24 @@
 #lang rhombus/static/and_meta
 
-// Rename `XLikeAsX` to `XLike` so that argument
-// error are reported as `XLike`, but we get the
-// conversions of `XLikeAsX`
+// Rename `XLike.asX` to `XLike` so that argument
+// errors are reported as `XLike`, but we get the
+// conversions of `XLike.asX`
 
 import:
   "point.rhm":
-    except: PointLike
-    rename: PointLikeAsPoint as PointLike
+    rename: PointLike as _PointLike
+  .point._PointLike.to_point as PointLike
   "size.rhm":
-    except: SizeLike
-    rename: SizeLikeAsSize as SizeLike
+    rename: SizeLike as _SizeLike
+  .size._SizeLike.to_size as SizeLike
   "rect.rhm":
-    except: RectLike
-    rename: RectLikeAsRect as RectLike
+    rename: RectLike as _RectLike
+  .rect._RectLike.to_rect as RectLike
 
 export:
   all_from(.point)
+  PointLike
   all_from(.size)
+  SizeLike
   all_from(.rect)
+  RectLike

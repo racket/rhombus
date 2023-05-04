@@ -1,10 +1,18 @@
 #lang rhombus/private/core
 import:
   "core-meta.rkt" open
+  lib("rhombus/private/core.rkt")
 
 export:
-  StringViewAsString
+  StringView
 
-annot.macro 'StringViewAsString':
-  'converting(fun (s :: StringView) :: String:
-               to_string(s))'
+namespace StringView:
+  export:
+    to_string
+
+  fun to_string(s :: StringView):
+    core.to_string(s)
+
+  annot.macro 'to_string':
+    'converting(fun (s :: StringView) :: String:
+                 to_string(s))'

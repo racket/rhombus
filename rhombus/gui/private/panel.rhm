@@ -98,7 +98,7 @@ class TabsPanel(hand, private _at_selection :: Obs):
                ~choice_to_label: choice_to_label :: Function.of_arity(1) = values,
                ~choice_equal: choice_equal :: Function.of_arity(2) = (fun (a, b): a == b),
                ~selection: selection :: MaybeObs.of(Any) = #false,
-               ~action: action :: Maybe(Function.of_arity(3)) = #false,
+               ~action: action :: maybe(Function.of_arity(3)) = #false,
                ~alignment: alignment :: MaybeObs.of(Alignment) = [#'center, #'top],
                ~style: style :: MaybeObs.of(List.of(TabsPanel.StyleSymbol)) = [],
                ~is_enabled: is_enabled :: MaybeObs.of(Boolean) = #true,

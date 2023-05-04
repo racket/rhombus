@@ -8,7 +8,8 @@
 @title(~tag: "classes_and_patterns"){Classes and Patterns}
 
 In the same way that @rhombus(fun) and @rhombus(fun) defines a variable
-or function, @rhombus(class) defines a new class. By convention, class
+or function, @rhombus(class) defines a new @deftech{class}. By
+@seclink("naming-convention"){convention}, class
 names start with a capital letter.
 
 @demo(

@@ -14,7 +14,7 @@
 
 @doc(
   fun render(view :: WindowView,
-             parent :: Maybe(Renderer) = #false) :: Renderer
+             parent :: maybe(Renderer) = #false) :: Renderer
 ){
 
  Renders @rhombus(view). Provide a @rhombus(parent) renderer to show a

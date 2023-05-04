@@ -103,6 +103,25 @@
 
 }
 
+
+@doc(
+  bind.macro '$bind described_as $term ...'
+){
+
+ Equivalent to @rhombus(bind), but when a binding match fails in a way
+ that triggers an error message (as opposed to moving on to a different
+ binding pattern), the message describes the expected annotation as
+ @rhombus(term ...). The @rhombus(term ...) sequence is not parsed, so it
+ can be any sequence of terms.
+
+@examples(
+  ~error:
+    def (x :: Int) described_as An Integer = "oops"
+)
+
+}
+
+
 @doc(
   annot.macro 'matching($bind)'
 ){
@@ -150,19 +169,19 @@
 }
 
 @doc(
-  annot.macro 'Maybe($annot)'
+  annot.macro 'maybe($annot)'
 ){
 
- Equivalent to @rhombus(False || annot): an annotation that is
+ Equivalent to @rhombus(#,(@rhombus(False, ~annot)) #,(@rhombus(||, ~annot)) annot), which is an annotation that is
  satisfied by either @rhombus(#false) or a value that satisfies
  @rhombus(annot). If @rhombus(annot) is a @tech{converter annotation},
  its conversion applies to a non-@rhombus(#false) value.
 
 @examples(
-  #false :: Maybe(String)
-  "string" :: Maybe(String)
+  #false :: maybe(String)
+  "string" :: maybe(String)
   ~error:
-    #true :: Maybe(String)
+    #true :: maybe(String)
 )
 
 }

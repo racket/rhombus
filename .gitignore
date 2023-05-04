@@ -2,4 +2,6 @@
 compiled/
 doc/
 *~
+\#*
+.#*
 .DS_Store

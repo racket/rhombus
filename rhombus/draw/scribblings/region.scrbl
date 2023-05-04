@@ -10,7 +10,7 @@
 
 @doc(
   class Region(handle):
-    constructor (dc :: Maybe(DC) = #false)
+    constructor (dc :: maybe(DC) = #false)
 ){
 
  Creates a region, optionally specific to @rhombus(dc).
@@ -18,7 +18,7 @@
 }
 
 @doc(
-  property (rgn :: Region).dc :: Maybe(DC)
+  property (rgn :: Region).dc :: maybe(DC)
 ){
 
  Reports the drawing context that the region is specific to, if any.

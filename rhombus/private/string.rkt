@@ -65,6 +65,12 @@
      (rhombus:display a o)
      (string->immutable-string (get-output-string o))]))
 
+(define/arity (String.to_string s)
+  #:static-infos ((#%call-result #,string-static-infos))
+  (cond
+    [(string? s) (string->immutable-string s)]
+    [else (raise-argument-error* 'String.to_string rhombus-realm "String" s)]))
+  
 (define-name-root String
   #:fields
   ([length string-length]
@@ -83,7 +89,8 @@
    latin1_bytes
    locale_bytes
    grapheme_span
-   grapheme_count))
+   grapheme_count
+   [to_string String.to_string]))
 
 (define/arity (to_int s)
   (unless (string? s)
@@ -146,6 +153,7 @@
   (hash 'length (method1 string-length)
         'to_int (method1 to_int)
         'to_number (method1 to_number)
+        'to_string (method1 String.to_string)
         'substring (lambda (str)
                      (lambda (start [end (and (string? str) (string-length str))])
                        (string->immutable-string (substring str start end))))
@@ -181,6 +189,7 @@
         [(length) (0ary #'string-length)]
         [(to_int) (0ary #'to_int)]
         [(to_number) (0ary #'to_number)]
+        [(to_string) (0ary #'String.to_string)]
         [(substring) (nary #'sub_string 6 #'sub_string string-static-infos)]
         [(upcase) (0ary #'upcase)]
         [(downcase) (0ary #'downcase)]

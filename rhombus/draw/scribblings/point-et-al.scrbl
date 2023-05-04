@@ -20,7 +20,8 @@
 @doc(
   class Point(x :: Real, y :: Real)
   annot.macro 'PointLike'
-  annot.macro 'PointLikeAsPoint'
+  annot.macro 'PointLike.to_point'
+  fun PointLike.to_point(pt :: PointLike) :: Point
   def Point.zero :: Point = Point(0, 0)
 ){
 
@@ -42,10 +43,16 @@
 
 )
 
- The @rhombus(PointLikeAsPoint, ~annot) annotation is satified by any
+ The @rhombus(PointLike.to_point, ~annot) annotation is satified by any
  value that satisfis @rhombus(PointLike, ~annot), and the value is
  converted to an equivalent @rhombus(Point, ~class) object if it is not one
  already.
+
+ The @rhombus(PointLike.to_point) function converts a
+ @rhombus(PointLike) value to a @rhombus(Point), like the
+ @rhombus(PointLike.to_point, ~annot) annotation. An expression
+ @rhombus(pt) with static information from @rhombus(PointLike, ~annot)
+ can call @rhombus(PointLike.to_point(pt)) using @rhombus(pt.to_point()).
 
  @rhombus(Point.zero) is a @rhombus(Point, ~class) object with @rhombus(0)
  values.
@@ -56,7 +63,8 @@
 @doc(
   class Size(width :: NonnegReal, height :: NonnegReal)
   annot.macro 'SizeLike'
-  annot.macro 'SizeLikeAsSize'
+  annot.macro 'SizeLike.to_size'
+  fun SizeLike.to_size(sz :: SizeLike) :: Size
   def Size.zero :: Size = Size(0, 0)
 ){
 
@@ -79,13 +87,10 @@
 
 )
 
- The @rhombus(SizeLikeAsSize, ~annot) annotation is satified by any
- value that satisfis @rhombus(SizeLike, ~annot), and the value is
- converted to an equivalent @rhombus(Size, ~class) object if it is not one
- already.
-
- @rhombus(Size.zero) is a @rhombus(Size, ~class) object with @rhombus(0)
- values.
+ The @rhombus(SizeLike.to_size, ~annot) annotation,
+ @rhombus(SizeLike.to_size) function, and @rhombus(Size.zero) value are
+ anaologous to @rhombus(PointLike.to_point, ~annot),
+ @rhombus(PointLike.to_point), and @rhombus(Point.zero).
 
 }
 
@@ -95,14 +100,15 @@
     constructor
     | (x :: Real, y :: Real, width :: NonnegReal, height :: NonnegReal)
     | (point :: PointLike, size :: SizeLike)
-  annot.macro 'RectLike'
-  annot.macro 'RectLikeAsRect'
   property (r :: Rect).point :: Point
   property (r :: Rect).size :: Size
+  annot.macro 'RectLike'
+  annot.macro 'RectLike.to_rect'
+  fun RectLike.to_rect(sz :: RectLike) :: Rect
   def Rect.zero :: Rect = Rect(0, 0, 0, 0)
 ){
 
- The @rhombus(Rectangle) class represents a rectagular region, where
+ The @rhombus(Rect) class represents a rectagular region, where
  @rhombus(x) and @rhombus(y) correspond to the top-left of the rectangle.
  The @rhombus(Rect.point) property produces @rhombus(x) and @rhombus(y)
  in a @rhombus(Point), while @rhombus(Rect.size) property produces
@@ -137,12 +143,9 @@
 
 )
 
- The @rhombus(RectLikeAsRect, ~annot) annotation is satified by any
- value that satisfis @rhombus(RectLike, ~annot), and the value is
- converted to an equivalent @rhombus(Rect, ~class) object if it is not one
- already.
-
- @rhombus(Rect.zero) is a @rhombus(Rect, ~class) object with @rhombus(0)
- values.
+ The @rhombus(RectLike.to_rect, ~annot) annotation,
+ @rhombus(RectLike.to_rect) function, and @rhombus(Rect.zero) value are
+ anaologous to @rhombus(PointLike.to_point, ~annot),
+ @rhombus(PointLike.to_point), and @rhombus(Point.zero).
 
 }
