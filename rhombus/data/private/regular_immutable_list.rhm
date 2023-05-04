@@ -9,7 +9,7 @@ import:
   rhombus/data/private/list.List
   rhombus/data/private/persistent_list.PersistentList
   rhombus/data/sequence.Iterator
-  lib("racket/base").error
+  lib("racket/base.rkt").error
 
 
 class RegularImmutableList(storage :: Array):
