@@ -314,14 +314,14 @@
     [(_ _ extends . _) #'extends]))
 
 ;; single-case macro definition:
-(define-for-syntax (parse-operator-definition form-id kind g rhs space-sym compiletime-id
+(define-for-syntax (parse-operator-definition form-id kind stx g rhs space-sym compiletime-id
                                               #:allowed [allowed '(prefix infix precedence)])
   (define p ((parse-one-macro-definition form-id kind allowed space-sym) g rhs))
   (define op (pre-parsed-name p))
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym op
                                                (pre-parsed-extends p)
-                                               #`(#,compiletime-id #,p))
+                                               #`(#,compiletime-id #:single #,stx #,p))
       p))
 
 ;; multi-case macro definition:
@@ -339,7 +339,7 @@
   (if compiletime-id
       (build-syntax-definition/maybe-extension space-sym (or main-name (pre-parsed-name (car ps)))
                                                (or main-extends (pre-parsed-extends (car ps)))
-                                               #`(#,compiletime-id #,stx #,@ps))
+                                               #`(#,compiletime-id #:multi #,stx #,@ps))
       ps))
 
 ;; An operator definition transformer involves a phase-0 binding for
@@ -407,6 +407,7 @@
                   (~and rhs (_::block body ...)))
          (list (parse-operator-definition #'form-id
                                           kind
+                                          stx
                                           #'q.g
                                           #'rhs
                                           space-sym
@@ -420,12 +421,12 @@
     (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group)
-        [(form-id pre-parsed)
-         (parse-operator-definition-rhs #'pre-parsed
+        [(form-id #:single orig-stx pre-parsed)
+         (parse-operator-definition-rhs #'orig-stx #'pre-parsed
                                         space-sym
                                         make-prefix-id
                                         make-infix-id)]
-        [(form-id orig-stx pre-parsed ...)
+        [(form-id #:multi orig-stx pre-parsed ...)
          (parse-operator-definitions-rhs #'orig-stx (syntax->list #'(pre-parsed ...))
                                          space-sym
                                          make-prefix-id

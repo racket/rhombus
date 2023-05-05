@@ -9,8 +9,8 @@
   bind.macro 'mutable $id'
 ){
 
- Binds @rhombus(id) so that its vaue can be changed using
- @rhombus(:=).
+ Binds @rhombus(id) so that its vaue can be changed using and
+ @tech{assignment operator} such as @rhombus(:=).
 
  No static information is associated with @rhombus(id), even if
  a surrounding binding pattern would otherwise associate static
@@ -22,8 +22,8 @@
   expr.macro '$id := $expr'
 ){
 
- Changes the value of @rhombus(id) to the result of
- @rhombus(expr) and returns @rhombus(#void). The
+ An @tech{assignment operator} that changes the value of @rhombus(id)
+ to the result of @rhombus(expr) and returns @rhombus(#void). The
  @rhombus(id) must be bound with @rhombus(mutable, ~bind).
 
  The @rhombus(:=) operator is also recognized by other forms, such as

@@ -12,8 +12,7 @@
          "map-ref-set-key.rkt"
          "ref-result-key.rkt"
          "static-info.rkt"
-         (only-in "assign.rkt"
-                  :=)
+         (submod "assign.rkt" for-assign)
          "op-literal.rkt"
          (only-in "string.rkt"
                   +&)
@@ -43,19 +42,30 @@
   (define (not-static) (string-append "specialization not known" statically-str))
   (syntax-parse stxes
     #:datum-literals (brackets op)
-    [(_ ((~and head brackets) index) _:::=-expr . rhs+tail)
+    [(_ ((~and head brackets) index) . assign-tail)
      #:when (not repetition?)
-     #:with (~var rhs (:infix-op+expression+tail #':=)) #'(group . rhs+tail)
+     #:with assign::assign-op-seq #'assign-tail
+     (define op (attribute assign.op))
      (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
                              (if more-static?
                                  (raise-syntax-error who (not-static) map-in)
                                  #'map-set!)))
-     (define e (datum->syntax (quote-syntax here)
-                              (list map-set!-id map #'(rhombus-expression index) #'rhs.parsed)
-                              (span-srcloc map #'head)
-                              #'head))
-     (values e
-             #'rhs.tail)]
+     (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
+                            (if more-static?
+                                (raise-syntax-error who (not-static) map-in)
+                                #'map-ref)))
+     (local-require enforest/operator)
+     (define-values (assign-expr tail) (build-assign
+                                        op
+                                        #'assign.name
+                                        #`(lambda () (#,map-ref-id map-v index-v))
+                                        #`(lambda (v) (#,map-set!-id map-v index-v v))
+                                        #'map
+                                        #'assign.tail))
+     (values #`(let ([map-v #,map]
+                     [index-v (rhombus-expression index)])
+                 #,assign-expr)
+             tail)]
     [(_ ((~and head brackets) index) . tail)
      (define (build-ref map index map-static-info)
        (define map-ref-id (or (map-static-info #'#%map-ref)

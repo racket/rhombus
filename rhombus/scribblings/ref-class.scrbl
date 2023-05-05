@@ -175,7 +175,8 @@
  of the class is created, but it cannot refer to @rhombus(this),
  fields of the class, methods of the class, or properties of the class. All fields
  added through a @rhombus(field, ~class_clause) clause are mutable, and they
- can be updated in a custom constructor (form example) using @rhombus(:=). The
+ can be updated in a custom constructor (form example) using
+ @tech{assignment operators} such as @rhombus(:=). The
  @rhombus(field, ~class_clause) can appear any number of times as a
  @rhombus(class_clause), with or without a
  @rhombus(private, ~class_clause) prefix.
@@ -576,19 +577,20 @@
  @tech{property}, which is like a method in that using the property evaluates a
  block. However, the property is used either as an expression, which is
  analogous to calling a method with no arguments, or as the left-hand
- side of a @rhombus(:=) form, which is analogous to calling a method with
+ side of an @tech{assignment operator} like @rhombus(:=) form, which is
+ analogous to calling a method with
  the right-hand side of @rhombus(:=) as the method argument. A property
  always supports a reference form, but it supports assignment only when
  the @rhombus(property, ~class_clause) form includes a @rhombus(:=) case.
  In a @rhombus(property, ~class_clause)'s @rhombus(:=) case, the part
  after @rhombus(:=) is a binding analogous to a function-argument binding,
  and the subsequent @rhombus(body) will normally refer to that binding.
- Using @rhombus(:=) with a property always produces @rhombus(#void);
- any value returned by the @rhombus(body) of a property definition's
- @rhombus(:=) case is ignored. A @rhombus(maybe_res_annot) in a
+ Using @rhombus(:=) with a property always produces @rhombus(#void),
+ but more generally, any value returned by the @rhombus(body) of a property definition's
+ @rhombus(:=) case is ignored by assignment operators. A @rhombus(maybe_res_annot) in a
  @rhombus(property, ~class_clause) clause applies to overriding implementations
  in subclasses, but it imposes no constraints on the right-hand part of
- @rhombus(:=) when assigning to a property.
+ @rhombus(:=) or other assignment operators when assigning to a property.
 
  In the body of a method or property, the special expression form @rhombus(this)
  refers to the object whose method was called. Fields (in the case of a

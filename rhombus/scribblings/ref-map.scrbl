@@ -18,8 +18,8 @@ implicit use of the @rhombus(#%braces) form.
 
 To access a mapping, use @brackets after a map expression with an
 expression for the key within @brackets. Mutable maps can be
-updated with a combination of @brackets and the @rhombus(:=)
-operator. These uses of square brackets are implemented by
+updated with a combination of @brackets and @tech{assignment operators}
+such as @rhombus(:=). These uses of square brackets are implemented by
 @rhombus(#%ref).  A map can be used as @tech{sequence}, in which case
 it supplies a key and its associated value (as two result values)
 in an unspecified order.
@@ -124,18 +124,21 @@ in an unspecified order.
     at_repet: block repet
     rhs_expr: block expr
   expr.macro '$expr #%ref [$at_expr]'
-  expr.macro '$expr #%ref [$at_expr] := $rhs_expr'
+  expr.macro '$expr #%ref [$at_expr] $assign_op $rhs_expr'
   repet.macro '$repetition #%ref [$at_repet]'
+  grammar assign_op:
+    :=
+    $other_assign_op
 ){
 
- Without @rhombus(:=), accesses the element of the map, array, list, or
+ Without an @rhombus(assign_op), accesses the element of the map, array, list, or
  string produced by @rhombus(expr) at the index or key produced by
  @rhombus(at_expr). The access form also works as a @tech{repetition}
  given repetitions for a collection and an index.
 
- With @rhombus(:=), a mutable array, map, or set element is assigned to
- the value produced by @rhombus(rhs_expr), and the expression result is
- @rhombus(#void).
+ With an @rhombus(assign_op), a mutable array, map, or set element is assigned to
+ the value based on the operator and @rhombus(rhs_expr). The expression result is
+ @rhombus(#void) in the case of @rhombus(:=) as @rhombus(assign-op).
 
  See also @rhombus(use_static).
 
@@ -292,7 +295,7 @@ in an unspecified order.
 ){
 
  Similar to @rhombus(Map) as a constructor, but creates a mutable map
- that can be updated using @rhombus(:=).
+ that can be updated using and @tech{assignment operator} lik @rhombus(:=).
 
  Note that @dots_expr and @rhombus(&) are not supported for constructing
  mutable maps, only immutable maps.

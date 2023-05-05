@@ -1,0 +1,91 @@
+#lang rhombus/and_meta
+
+use_static
+
+class Posn(x, mutable y):
+  nonfinal
+  property | dist: x + y
+           | dist := z: y := z
+
+class Posn3D(z):
+  extends Posn
+  override property | dist: x + y
+                    | dist := z: super.dist := z+1
+
+def p = Posn3D(1, 2, 3)
+
+check:
+  p.dist := 7 ~is #void
+  p ~is_now Posn3D(1, 8, 3)
+
+assign.macro '$left ok $right': '$left := $right'
+
+def mutable x = 10
+
+check:
+  p.y := 9 ~is #void
+  p ~is_now Posn3D(1, 9, 3)
+  p.y ok 10 ~is #void
+  p ~is_now Posn3D(1, 10, 3)
+
+  x ok 12 ~is #void
+  x ~is 12
+
+assign.macro '$left += $tail ...':
+  ~stronger_than: ==
+  ~weaker_than: ~other
+  def '$(right :: expr_meta.AfterInfixParsed('+='))' = '$tail ...'
+  def (ref, set, name) = assign_meta.unpack_left(left)
+  values(assign_meta.pack_assignment('block:
+                                        let v = $ref() + $right
+                                        $set(v)
+                                        v'),
+         '$right.tail ...')
+
+check:
+  x += 0 == x ~is #true
+  x += 1 + 2 ~is 15
+  x ~is 15
+  p.y += -1 ~is 9
+  p ~is_now Posn3D(1, 9, 3)
+
+block:
+  use_dynamic
+  def p = Posn(1, 200)
+  check:
+    dynamic(p).y += 1 ~is 201
+    p.y ~is 201
+
+block:
+  def m = MutableMap()
+  check:
+    m["apple"] := 1 ~is #void
+    m["apple"] ~is 1
+    m["apple"] ok 10 ~is #void
+    m["apple"] += 10 ~is 20
+
+
+class Shape(mutable color):
+  property | col: color
+           | col := v: color := v
+  method paint(c):
+    color += c
+  method pnt(c):
+    col += c
+
+def s = Shape(100)
+check:
+  s.paint(5) ~is 105
+  s.pnt(5) ~is 110
+  s.color ~is 110
+
+def mutable ref = [0]
+expr.macro 'refcar $(a :: assign_meta.AssignParsed('fun () : List.first(ref)',
+                                                   'fun (v): ref := [v]',
+                                                   'reffed')) $()':
+  values(a, '$a.tail ...')
+check:
+  refcar := 11 ~is #void
+  ref ~is [11]
+  refcar += 3 ~is 14
+  ref ~is [14]

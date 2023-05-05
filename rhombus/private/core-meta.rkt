@@ -19,6 +19,7 @@
         "static-info-macro.rkt"
         "repet-macro.rkt"
         "dot-macro.rkt"
+        "assign-macro.rkt"
         "import-macro.rkt"
         "export-macro.rkt"
         "unquote-binding-macro.rkt"

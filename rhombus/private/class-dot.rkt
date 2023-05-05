@@ -20,7 +20,7 @@
                   in-repetition-space
                   repetition-transformer
                   identifier-repetition-use)
-         "assign.rkt"
+         (submod "assign.rkt" for-assign) (only-in "assign.rkt" :=)
          "op-literal.rkt"
          "name-root.rkt"
          "parse.rkt"
@@ -321,40 +321,35 @@
   (unless desc (error "cannot find annotation binding for instance dot provider"))
   (define (do-field fld)
     (define accessor-id (field-desc-accessor-id fld))
-    (define-values (op-id assign-rhs new-tail)
-      (syntax-parse tail
-        [(_:::=-expr . tail)
-         #:when (syntax-e (field-desc-mutator-id fld))
-         #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
-         (values (field-desc-mutator-id fld)
-                 #'e.parsed
-                 #'e.tail)]
-        [_
-         (values accessor-id
-                 #f
-                 tail)]))
-    (define e (datum->syntax (quote-syntax here)
-                             (append (list (relocate field-id op-id) form1)
-                                     (if assign-rhs
-                                         (list field-id)
-                                         null))
-                             (span-srcloc form1 field-id)
-                             #'dot))
-    (define full-e
-      (cond
-        [assign-rhs #`(let ([#,field-id #,assign-rhs])
-                        #,e)]
-        [else e]))
-    
-    (define static-infos (field-desc-static-infos fld))
-    (define more-static-infos (syntax-local-static-info form1 accessor-id))
-    (define all-static-infos (if more-static-infos
-                                 (datum->syntax #f
-                                                (append (syntax->list more-static-infos)
-                                                        static-infos))
-                                 static-infos))
-    (success (wrap-static-info* full-e all-static-infos)
-             new-tail))
+    (syntax-parse tail
+      [assign::assign-op-seq
+       #:when (syntax-e (field-desc-mutator-id fld))
+       (define-values (assign-expr tail) (build-assign
+                                          (attribute assign.op)
+                                          #'assign.name
+                                          #`(lambda ()
+                                              (#,(relocate field-id accessor-id) obj))
+                                          #`(lambda (v)
+                                              (#,(field-desc-mutator-id fld) obj v))
+                                          #'obj
+                                          #'assign.tail))
+       (success #`(let ([obj #,form1])
+                    #,assign-expr)
+                tail)]
+      [_
+       (define e (datum->syntax (quote-syntax here)
+                                (list (relocate field-id accessor-id) form1)
+                                (span-srcloc form1 field-id)
+                                #'dot))
+       (define static-infos (field-desc-static-infos fld))
+       (define more-static-infos (syntax-local-static-info form1 accessor-id))
+       (define all-static-infos (if more-static-infos
+                                    (datum->syntax #f
+                                                   (append (syntax->list more-static-infos)
+                                                           static-infos))
+                                    static-infos))
+       (success (wrap-static-info* e all-static-infos)
+                tail)]))
   (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity)
     (define-values (args new-tail)
       (if property?

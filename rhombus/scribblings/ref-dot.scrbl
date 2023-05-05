@@ -9,11 +9,16 @@
     target_expr: block expr
     target_repet: block repet                 
   expr.macro '$target_expr . $id'
-  expr.macro '$target_expr . $id := $expr'
+  expr.macro '$target_expr . $id $assign_op $expr'
   repet.macro '$target_repet . $id'
+  grammar assign_op:
+    :=
+    $other_assign_op
+
 ){
 
- Accesses or updates a component of @rhombus(target), either statically
+ Accesses or updates a component of the value produce by
+ @rhombus(target_expr), either statically
  or dynamically. The operation is static when @rhombus(target) is a
  @tech{dot provider}. The access form also works as a @tech{repetition}
  given a repetition for the target.

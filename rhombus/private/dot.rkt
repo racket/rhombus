@@ -3,6 +3,7 @@
                      syntax/parse/pre
                      enforest/property
                      enforest/syntax-local
+                     enforest/operator
                      "operator-parse.rkt"
                      "tag.rkt"
                      "statically-str.rkt")
@@ -17,7 +18,7 @@
          "realm.rkt"
          "parse.rkt"
          "assign.rkt"
-         "op-literal.rkt")
+         (submod "assign.rkt" for-assign))
 
 (provide (for-spaces (#f
                       rhombus/repet
@@ -151,20 +152,32 @@
                                      more-static? #:repetition? repetition?
                                      dot dot-name field-id tail)
   (define (generic)
-    (if more-static?
-        (raise-syntax-error #f
-                            (string-append "no such field or method" statically-str)
-                            field-id)
-        (syntax-parse tail
-          #:datum-literals (op)
-          [(_:::=-expr . tail)
-           #:when (not repetition?)
-           #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
-           (values #`(dot-assign-by-name #,form1 '#,field-id e.parsed)
-                   #'e.tail)]
-          [else
-           (values #`(dot-lookup-by-name #,form1 '#,field-id)
-                   tail)])))
+    (cond
+      [more-static?
+       (raise-syntax-error #f
+                           (string-append "no such field or method" statically-str)
+                           field-id)]
+      [else
+       (define (lookup)
+         (values #`(dot-lookup-by-name #,form1 '#,field-id)
+                 tail))
+       (cond
+         [repetition? (lookup)]
+         [else
+          (syntax-parse tail
+            [assign::assign-op-seq
+             #:do [(define op (attribute assign.op))]
+             (define-values (assign-expr tail) (build-assign
+                                                op
+                                                #'assign.name
+                                                #`(lambda () (dot-lookup-by-name lhs '#,field-id))
+                                                #`(lambda (v) (dot-assign-by-name lhs '#,field-id v))
+                                                #'field-id
+                                                #'assign.tail))
+             (values #`(let ([lhs #,form1])
+                         #,assign-expr)
+                     tail)]
+            [_ (lookup)])])]))
   (cond
     [dp-id
      (define p (syntax-local-value* (in-dot-provider-space dp-id) dot-provider-ref))

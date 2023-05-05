@@ -382,7 +382,7 @@
                     (unpack-group form proc #f)
                     #'#f)
     [b::binding #'b.parsed]
-    [_ (raise-result-error (proc-name proc) "binding?" form)]))
+    [_ (raise-result-error (proc-name proc) "Binding_Syntax" form)]))
 
 (define-for-syntax (make-binding-infix-operator name prec protocol proc assc)
   (binding-infix-operator

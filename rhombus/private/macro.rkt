@@ -77,6 +77,7 @@
           (list
            (parse-operator-definition #'form-id
                                       'rule
+                                      stx
                                       #'q.g
                                       #'rhs
                                       '#f
@@ -94,7 +95,7 @@
 (begin-for-syntax
   (define-syntax (rules-rhs stx)
     (syntax-parse stx
-      [(_ orig-stx pre-parsed ...)
+      [(_ #:multi orig-stx pre-parsed ...)
        (parse-operator-definitions-rhs #'orig-stx (syntax->list #'(pre-parsed ...))
                                        '#f
                                        #'make-expression-prefix-operator
@@ -102,8 +103,8 @@
                                        #'expression-prefix+infix-operator)]))
   (define-syntax (rule-rhs stx)
     (syntax-parse stx
-      [(_ pre-parsed)
-       (parse-operator-definition-rhs #'pre-parsed
+      [(_ #:single orig-stx pre-parsed)
+       (parse-operator-definition-rhs #'orig-stx #'pre-parsed
                                       '#f
                                       #'make-expression-prefix-operator
                                       #'make-expression-infix-operator)])))

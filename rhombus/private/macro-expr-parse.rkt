@@ -43,8 +43,10 @@
      (expose-arity
       adjustments
       (parse-operator-definition-rhs
+       stx
        (parse-operator-definition #'form-id
                                   'rule
+                                  stx
                                   #:allowed '(prefix)
                                   (no-srcloc #'(tag ignore . pat))
                                   #'rhs

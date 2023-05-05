@@ -36,6 +36,7 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-defn-macro.scrbl")
 @include_section("ref-decl-macro.scrbl")
 @include_section("ref-expr-macro.scrbl")
+@include_section("ref-assign-macro.scrbl")
 @include_section("ref-bind-macro.scrbl")
 @include_section("ref-annotation-macro.scrbl")
 @include_section("ref-dot-provider.scrbl")

@@ -18,7 +18,7 @@
          "dot-provider-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
-         "assign.rkt"
+         (submod "assign.rkt" for-assign)
          "parens.rkt"
          "op-literal.rkt"
          (submod "function-parse.rkt" for-call)
@@ -497,16 +497,23 @@
                 [(pair? shape)
                  ;; a property
                  (syntax-parse #'tail
-                   [( _:::=-expr . rhs)
-                    #:with (~var e (:infix-op+expression+tail #':=)) #'(group . rhs)
-                    (define-values (call new-tail)
-                      (parse-function-call impl (list #'id #'e.parsed) #'(method-id (parens))
+                   [assign::assign-op-seq
+                    (define-values (assign-call assign-empty-tail)
+                      (parse-function-call impl (list #'id #'v) #'(method-id (parens))
                                            #:static? static?
                                            #:rator-stx #'head
                                            #:rator-kind 'property
                                            #:rator-arity shape-arity))
-                    (values call
-                            #'e.tail)]
+                    (define-values (assign-expr tail) (build-assign
+                                                       (attribute assign.op)
+                                                       #'assign.name
+                                                       #`(lambda () (#,impl obj))
+                                                       #`(lambda (v) #,assign-call)
+                                                       #'obj
+                                                       #'assign.tail))
+                    (values #`(let ([obj id])
+                                #,assign-expr)
+                            tail)]
                    [_
                     (define-values (call new-tail)
                       (parse-function-call impl (list #'id) #'(method-id (parens))
@@ -541,18 +548,17 @@
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
-       [(head _:::=-expr . tail)
+       [(head . tail)
         #:when (syntax-e maybe-mutator-id)
-        #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
+        #:with assign::assign-op-seq #'tail
         (syntax-parse (syntax-parameter-value #'this-id)
           [(obj-id . _)
-           (values (no-srcloc
-                    #`(let ([#,id e.parsed])
-                        #,(datum->syntax #'here
-                                         (list maybe-mutator-id #'obj-id id)
-                                         #'head
-                                         #'head)))
-                   #'e.tail)])]
+           (build-assign (attribute assign.op)
+                         #'assign.name
+                         #`(lambda () (#,accessor-id obj-id))
+                         #`(lambda (v) (#,maybe-mutator-id obj-id v))
+                         #'id
+                         #'assign.tail)])]
        [(head . tail)
         (syntax-parse (syntax-parameter-value #'this-id)
           [(id . _)
@@ -578,16 +584,20 @@
                              index/id
                              #`(vector-ref (prop-methods-ref obj-id) #,index/id)))
            (syntax-parse stx
-             [(head _:::=-expr . tail)
-              #:with (~var e (:infix-op+expression+tail #':=)) #'(group . tail)
+             [(head . tail)
+              #:with assign::assign-op-seq #'tail
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (when (and r (eqv? 2 (method-result-arity r)))
                 (raise-syntax-error #f
                                     (string-append "property does not support assignment" statically-str)
                                     id))
-              (values #`(#,rator obj-id e.parsed)
-                      #'e.tail)]
+              (build-assign (attribute assign.op)
+                            #'assign.name
+                            #`(lambda () (#,rator obj-id))
+                            #`(lambda (v) (#,rator obj-id v))
+                            #'id
+                            #'assign.tail)]
              [(head . tail)
               (define call #`(#,rator obj-id))
               (define r (and (syntax-e result-id)

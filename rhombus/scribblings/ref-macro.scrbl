@@ -199,6 +199,8 @@
     converter('ListLike[1, 2, 3].more')
 )
 
+ The @rhombus(macro) form does not define an @tech{assignment operator}
+ that works with mutable targets. To define an assignment operator, use
+ @rhombus(assign.macro), instead.
+
 }
-
-
