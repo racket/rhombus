@@ -1,0 +1,108 @@
+#lang rhombus
+
+use_static
+  
+block:
+  class Posn(x, y):
+    prefab
+    final method m(): [x, y]
+    final property dist: x + y
+  def p:
+    class Posn(ex, why):
+      prefab
+    Posn(10, 20)
+  def p3:
+    class Posn(ex, why, zee):
+      prefab
+    Posn(100, 200, 300)
+  check:
+    Posn(1, 2).x ~is 1
+    Posn(1, 2).y ~is 2
+    Posn(1, 2).dist ~is 3
+    Posn.x(p) ~is 10
+    Posn.y(p) ~is 20
+    Posn.dist(p) ~is 30
+    Posn.x(p3) ~raises "contract violation"
+    (p :: Posn).x ~is 10
+    (p :: Posn).y ~is 20
+    Posn(1, 2).m() ~is [1, 2]
+    Posn.m(p) ~is [10, 20]
+    Posn.m(p3) ~raises "not an instance for method call"
+    (p :: Posn).m() ~is [10, 20]
+    (p3 :: Posn).m() ~raises "does not satisfy annotation"
+    Posn(1, 2) is_a Posn ~is #true
+    p is_a Posn ~is #true
+    p3 is_a Posn ~is #false
+    (block: use_dynamic; dynamic(Posn(1, 2)).x) ~raises "no such field or method"
+    (block: use_dynamic; dynamic(Posn(1, 2)).m()) ~raises "no such field or method"
+
+check:
+  ~eval
+  class Posn(x, y):
+    prefab
+    opaque
+  ~raises "prefab class cannot be opaque"
+
+check:
+  ~eval
+  class Posn(x, y):
+    opaque
+    prefab
+  ~raises "opaque class cannot be prefab"
+
+check:
+  ~eval
+  class Posn(x, y):
+    prefab
+    method m(): "ok"
+  ~raises "methods in a prefab class must be final"
+
+check:
+  ~eval
+  class Posn(x, y):
+    prefab
+    property dist: x + y
+  ~raises "methods in a prefab class must be final"
+
+check:
+  class Posn(x, y):
+    prefab
+  class Posn3D(z):
+    extends Posn
+  Posn3D(1, 2, 3).x
+  ~is 1
+
+check:
+  ~eval
+  class Posn(x, y):
+    nonfinal
+  class Posn3D(z):
+    extends Posn
+    prefab
+  ~raises "superclass must be prefab"
+
+
+block:
+  class Posn(x, mutable y):
+    prefab
+    final method m(): [x, y]
+  def p:
+    class Posn(ex, why):
+      prefab
+    Posn(10, 20)
+  check:
+    Posn(1, 2).y ~is 2
+    p is_a Posn ~is #false
+
+block:
+  class Posn(x, mutable y):
+    field z = 0
+    prefab
+    final method m(): [x, y]
+  def p:
+    class Posn(ex, mutable why, mutable zee):
+      prefab
+    Posn(10, 20, 30)
+  check:
+    Posn(1, 2).z ~is 0
+    (p :: Posn).z ~is 30

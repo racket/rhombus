@@ -27,6 +27,7 @@
                     implements
                     nonfinal
                     opaque
+                    prefab
                     authentic
                     field
                     constructor)
@@ -105,6 +106,12 @@
    (lambda (stx data)
      (syntax-parse stx
        [(_) (wrap-class-clause #`(#:authentic))]))))
+
+(define-class-clause-syntax prefab
+  (class-clause-transformer
+   (lambda (stx data)
+     (syntax-parse stx
+       [(_) (wrap-class-clause #`(#:prefab))]))))
 
 (begin-for-syntax
   (define-splicing-syntax-class (:field mode)

@@ -229,8 +229,9 @@
        (define private-interfaces (interface-set-diff
                                    (interface-names->interfaces stxes (hash-ref options 'private-implements '()))
                                    (interface-names->interfaces stxes (hash-ref options 'public-implements '()))))
-       (define final? (hash-ref options 'final? #t))
        (define authentic? (hash-ref options 'authentic? #f))
+       (define prefab? (hash-ref options 'prefab? #f))
+       (define final? (hash-ref options 'final? (not prefab?)))
        (define opaque? (hash-ref options 'opaque? #f))
        (define given-constructor-rhs (hash-ref options 'constructor-rhs #f))
        (define given-constructor-name (hash-ref options 'constructor-name #f))
@@ -345,7 +346,7 @@
                        method-private  ; symbol -> identifier or (list identifier)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier for a still-abstract method
-         (extract-method-tables stxes added-methods super interfaces private-interfaces final?))
+         (extract-method-tables stxes added-methods super interfaces private-interfaces final? prefab?))
 
        (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
        (check-consistent-unimmplemented stxes final? abstract-name)
@@ -458,7 +459,7 @@
                                        ...]
                                       [super-name* ...]))
                (build-class-struct super
-                                   fields mutables constructor-keywords private?s final? authentic? opaque?
+                                   fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
@@ -540,6 +541,7 @@
                                  final? has-private-fields? private?s
                                  parent-name interface-names all-interfaces private-interfaces
                                  method-mindex method-names method-vtable method-results method-private dots
+                                 authentic? prefab?
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name
                                          (list (list 'super-field-name
@@ -562,7 +564,7 @@
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
-                                       fields mutables constructor-keywords private?s final? authentic? opaque?
+                                       fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
@@ -621,58 +623,61 @@
                          (make-struct-type 'name
                                            #,(and super (class-desc-class:id super))
                                            #,(length fields) 0 #f
-                                           (list #,@(if abstract-name
-                                                        null
-                                                        #`((cons prop:field-name->accessor
-                                                                 (list* '(public-field-name ...)
-                                                                        (hasheq (~@ 'super-field-name super-name-field)
-                                                                                ...
-                                                                                (~@ 'property-name property-proc)
-                                                                                ...
-                                                                                (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
-                                                                                ...)
-                                                                        (hasheq (~@ 'method-name method-proc)
-                                                                                ...)))))
-                                                 #,@(if (or abstract-name
-                                                            (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
-                                                                   (not (syntax-e maybe-name)))
-                                                                 (null? (syntax-e #'(property-proc ...)))))
-                                                        null
-                                                        #`((cons prop:field-name->mutator
-                                                                 (list* '(maybe-public-mutable-field-name ...)
-                                                                        (hasheq (~@ 'property-name property-proc)
-                                                                                ...)))))
-                                                 #,@(cond
-                                                      [opaque? #`((cons prop:print-field-shapes 'opaque))]
-                                                      [else
-                                                       (define field-print-shapes
-                                                         (print-field-shapes super fields constructor-keywords private?s))
-                                                       (if (or abstract-name
-                                                               (and (andmap symbol? field-print-shapes)
-                                                                    (not has-extra-fields?)))
-                                                           null
-                                                           #`((cons prop:print-field-shapes
-                                                                    '#,field-print-shapes)))])
-                                                 #,@(if final?
-                                                        (list #'(cons prop:sealed #t))
-                                                        '())
-                                                 #,@(if authentic?
-                                                        (list #'(cons prop:authentic #t))
-                                                        '())
-                                                 #,@(if (or (zero? (vector-length method-vtable))
-                                                            abstract-name)
-                                                        '()
-                                                        (list #`(cons prop:methods
-                                                                      (vector #,@(vector->list method-vtable)))))
-                                                 #,@(if abstract-name
-                                                        null
-                                                        (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
-                                                                                                                         private-interfaces))])
-                                                          #`(cons #,(interface-desc-prop:id intf)
-                                                                  (vector #,@(build-interface-vtable intf
-                                                                                                     method-mindex method-vtable method-names
-                                                                                                     method-private))))))
-                                           #f #f
+                                           #,(if prefab?
+                                                 #'null
+                                                 #`(list #,@(if abstract-name
+                                                                null
+                                                                #`((cons prop:field-name->accessor
+                                                                         (list* '(public-field-name ...)
+                                                                                (hasheq (~@ 'super-field-name super-name-field)
+                                                                                        ...
+                                                                                        (~@ 'property-name property-proc)
+                                                                                        ...
+                                                                                        (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
+                                                                                        ...)
+                                                                                (hasheq (~@ 'method-name method-proc)
+                                                                                        ...)))))
+                                                         #,@(if (or abstract-name
+                                                                    (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
+                                                                           (not (syntax-e maybe-name)))
+                                                                         (null? (syntax-e #'(property-proc ...)))))
+                                                                null
+                                                                #`((cons prop:field-name->mutator
+                                                                         (list* '(maybe-public-mutable-field-name ...)
+                                                                                (hasheq (~@ 'property-name property-proc)
+                                                                                        ...)))))
+                                                         #,@(cond
+                                                              [opaque? #`((cons prop:print-field-shapes 'opaque))]
+                                                              [else
+                                                               (define field-print-shapes
+                                                                 (print-field-shapes super fields constructor-keywords private?s))
+                                                               (if (or abstract-name
+                                                                       (and (andmap symbol? field-print-shapes)
+                                                                            (not has-extra-fields?)))
+                                                                   null
+                                                                   #`((cons prop:print-field-shapes
+                                                                            '#,field-print-shapes)))])
+                                                         #,@(if final?
+                                                                (list #'(cons prop:sealed #t))
+                                                                '())
+                                                         #,@(if authentic?
+                                                                (list #'(cons prop:authentic #t))
+                                                                '())
+                                                         #,@(if (or (zero? (vector-length method-vtable))
+                                                                    abstract-name)
+                                                                '()
+                                                                (list #`(cons prop:methods
+                                                                              (vector #,@(vector->list method-vtable)))))
+                                                         #,@(if abstract-name
+                                                                null
+                                                                (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
+                                                                                                                                 private-interfaces))])
+                                                                  #`(cons #,(interface-desc-prop:id intf)
+                                                                          (vector #,@(build-interface-vtable intf
+                                                                                                             method-mindex method-vtable method-names
+                                                                                                             method-private)))))))
+                                           #,(if prefab? (quote-syntax 'prefab) #f)
+                                           #f
                                            '(immutable-field-index ...)
                                            #,(build-guard-expr #'(super-field-name ...)
                                                                fields
@@ -701,6 +706,7 @@
                                      final? has-private-fields? private?s
                                      parent-name interface-names all-interfaces private-interfaces
                                      method-mindex method-names method-vtable method-results method-private dots
+                                     authentic? prefab?
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name
@@ -772,7 +778,9 @@
                       #,(and (syntax-e #'dot-provider-name)
                              #'(quote-syntax dot-provider-name))
                       #,(and (syntax-e #'name-defaults)
-                             #'(quote-syntax name-defaults)))))
+                             #'(quote-syntax name-defaults))
+                      '(#,@(if authentic? '(authentic) null)
+                        #,@(if prefab? '(prefab) null)))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

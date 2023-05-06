@@ -68,6 +68,7 @@
     #,(@rhombus(annotation, ~class_clause)) $annotation_decl
     #,(@rhombus(dot, ~class_clause)) $dot_decl
     #,(@rhombus(opaque, ~class_clause))
+    #,(@rhombus(prefab, ~class_clause))
     $other_class_clause
 ){
 
@@ -913,8 +914,44 @@
 ){
 
  When a @tech{class clause} is @rhombus(opaque, ~class_clause), then the
- default printed form does not show fields, and instead prints
+ default printed form of a class instance does not show fields, and instead prints
  @litchar{...} in parentheses after the class name.
+
+}
+
+
+@doc(
+  class_clause.macro 'prefab'
+){
+
+ When a @tech{class clause} is @rhombus(prefab, ~class_clause), then the
+ representation of an instance depends only on the class name, the number
+ of fields in the class, and the mutability of each field. When two
+ @rhombus(class) desclarations have @rhombus(prefab, ~class_clause), the
+ same field count, and the same mutability of each field, then instances
+ from one @rhombus(class) declaration count as instances of the other
+ @rhombus(class) declaration, even if they have different annotations on
+ the fields, different methods, and so on. That sharing implies a number
+ of constraints:
+
+@itemlist(
+
+ @item{A @rhombus(prefab, ~class_clause) class's fields and methods are
+  accessible from an instance expression followed by @rhombus(.) only when
+  the reference is statically resolved. That is, dynamic @rhombus(.)
+  lookup will fail to find a field or a method.}
+
+ @item{A @rhombus(prefab, ~class_clause) class's methods and properties
+  must all be @rhombus(final, ~class_clause).}
+
+ @item{If a @rhombus(prefab, ~class_clause) class has a superclass, the
+  superclass must also be @rhombus(prefab, ~class_clause).}
+
+ @item{A @rhombus(prefab, ~class_clause) class is implicitly
+  @rhombus(nonfinal, ~class_clause), and it cannot be
+  @rhombus(opaque, ~class_clause) or @rhombus(authentic, ~class_clause).}
+
+)
 
 }
 

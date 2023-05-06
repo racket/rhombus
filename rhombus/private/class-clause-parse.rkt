@@ -122,10 +122,22 @@
               [(#:authentic)
                (when (hash-has-key? options 'authentic?)
                  (raise-syntax-error #f "multiple authenticity clauses" orig-stx clause))
+               (when (hash-ref options 'prefab? #f)
+                 (raise-syntax-error #f "a prefab class cannot be authentic" orig-stx clause))
                (hash-set options 'authentic? #t)]
+              [(#:prefab)
+               (when (hash-has-key? options 'prefab?)
+                 (raise-syntax-error #f "multiple prefab clauses" orig-stx clause))
+               (when (hash-ref options 'authentic? #f)
+                 (raise-syntax-error #f "an authentic class cannot be prefab" orig-stx clause))
+               (when (hash-ref options 'opaque? #f)
+                 (raise-syntax-error #f "an opaque class cannot be prefab" orig-stx clause))
+               (hash-set options 'prefab? #t)]
               [(#:opaque)
                (when (hash-has-key? options 'opaque?)
                  (raise-syntax-error #f "multiple opacity clauses" orig-stx clause))
+               (when (hash-has-key? options 'prefab?)
+                 (raise-syntax-error #f "a prefab class cannot be opaque" orig-stx clause))
                (hash-set options 'opaque? #t)]
               [(#:field id rhs-id ann-seq blk form-id mode)
                (with-syntax ([(predicate annotation-str static-infos)

@@ -68,7 +68,7 @@
 ;;   method-decls    ; symbol -> identifier, intended for checking distinct
 ;;   abstract-name   ; #f or identifier for a still-abstract method
 
-(define-for-syntax (extract-method-tables stx added-methods super interfaces private-interfaces final?)
+(define-for-syntax (extract-method-tables stx added-methods super interfaces private-interfaces final? prefab?)
   (define supers (if super (cons super interfaces) interfaces))
   (define-values (super-str supers-str)
     (cond
@@ -252,6 +252,9 @@
                     new-here-ht)]
            [else
             (define pos (hash-count vtable-ht))
+            (when prefab?
+              (unless (eq? (added-method-disposition added) 'final)
+                (raise-syntax-error #f "methods in a prefab class must be final" stx id)))
             (values (hash-set ht (syntax-e id)
                               (cons (mindex pos
                                             (or final?

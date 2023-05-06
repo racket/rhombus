@@ -69,7 +69,8 @@
                     custom-annotation?
                     dots ; list of symbols for dot syntax
                     dot-provider  ; #f or compile-time identifier
-                    defaults-id)) ; #f if no arguments with defaults
+                    defaults-id   ; #f if no arguments with defaults
+                    flags))       ; list with 'authentic, and/or 'prefab
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
@@ -200,7 +201,21 @@
                           stxes
                           parent-name)))
   (check-consistent-custom (class-desc-custom-binding? super) (hash-ref options 'binding-rhs #f) "binding")
-  (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation-rhs #f) "annotation"))
+  (check-consistent-custom (class-desc-custom-annotation? super) (hash-ref options 'annotation-rhs #f) "annotation")
+  (when (hash-ref options 'prefab? #f)
+    (unless (memq 'prefab (class-desc-flags super))
+      (raise-syntax-error #f
+                          "superclass must be prefab for a prefab subclass"
+                          stxes
+                          parent-name)))
+  (unless (eq? (and (memq 'authentic (class-desc-flags super)) #t)
+               (hash-ref options 'authentic? #f))
+    (raise-syntax-error #f
+                        (if (hash-ref options 'authentic? #f)
+                            "cannot create a non-authenic subclass of an authentic superclass"
+                            "cannot create an authenic subclass of a non-authentic superclass")
+                        stxes
+                        parent-name)))
 
 (define (check-consistent-construction stxes mutables private?s defaults options
                                        name given-constructor-rhs given-constructor-name expression-macro-rhs)

@@ -160,7 +160,7 @@
                        method-private  ; symbol -> identifier or (list identifier)
                        method-decls    ; symbol -> identifier, intended for checking distinct
                        abstract-name)  ; #f or identifier
-         (extract-method-tables stxes added-methods #f supers #hasheq() #f))
+         (extract-method-tables stxes added-methods #f supers #hasheq() #f #f))
 
        (define dots (hash-ref options 'dots '()))
        (define dot-provider-rhss (map cdr dots))
