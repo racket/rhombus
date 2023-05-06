@@ -35,6 +35,7 @@
                   #'Equatable
                   #'()
                   #'prop:Equatable
+                  #'prop:Equatable
                   #'Equatable-ref
                   (vector-immutable (box-immutable 'equals)
                                     (box-immutable 'hash_code))
@@ -43,7 +44,8 @@
                   #hasheq()
                   #t
                   '()
-                  #f))
+                  #f
+                  '()))
 
 (define (equal-recur-internal-method this other recur)
   ((vector-ref (Equatable-ref this) 0) this other recur))

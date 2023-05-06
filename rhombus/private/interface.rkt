@@ -13,7 +13,8 @@
                               :options-block
                               in-class-desc-space
                               check-exports-distinct
-                              check-fields-methods-dots-distinct))
+                              check-fields-methods-dots-distinct
+                              added-method-body))
          "forwarding-sequence.rkt"
          "definition.rkt"
          "expression.rkt"
@@ -32,6 +33,8 @@
          (only-in "class-annotation.rkt"
                   build-extra-internal-id-aliases)
          "class-dot.rkt"
+         (only-in "class-method.rkt"
+                  raise-not-an-instance)
          "parse.rkt"
          (submod "namespace.rkt" for-exports))
 
@@ -117,12 +120,19 @@
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
-       
+
+       (define internal-internal-name (or internal-name
+                                          ;; we need an internal accessor if there are any non-abstract,
+                                          ;; non-final methods, since those need a way to access a
+                                          ;; vtable from `this`
+                                          (and (hash-ref options 'has-non-abstract-method? #f)
+                                               (temporary "internal-internal-~a"))))
+
        (with-syntax ([name? (temporary "~a?")]
                      [name-instance (temporary "~a-instance")]
-                     [internal-name? (temporary "~a?" #:name internal-name)]
+                     [internal-name? (temporary "~a?" #:name internal-internal-name)]
                      [internal-name-instance (if internal-name
-                                                 (temporary "~a-instance" #:name internal-name)
+                                                 (temporary "~a-instance" #:name internal-internal-name)
                                                  #'name-instance)])
          (wrap-for-together
           #'for-together?
@@ -135,7 +145,8 @@
               (interface-finish [orig-stx base-stx scope-stx
                                           full-name name
                                           name? name-instance
-                                          #,internal-name internal-name? internal-name-instance]
+                                          #,internal-name internal-name? internal-name-instance
+                                          #,internal-internal-name]
                                 exports
                                 option ...))))])))
 
@@ -145,7 +156,8 @@
       [(_ [orig-stx base-stx scope-stx
                     full-name name
                     name? name-instance
-                    maybe-internal-name internal-name? internal-name-instance]
+                    maybe-internal-name internal-name? internal-name-instance
+                    internal-internal-name-id]
           exports
           option ...)
        (define stxes #'orig-stx)
@@ -171,6 +183,8 @@
 
        (define internal-name (let ([id #'maybe-internal-name])
                                (and (syntax-e id) id)))
+       (define internal-internal-name (and (syntax-e #'internal-internal-name-id)
+                                           #'internal-internal-name-id))
 
        (define expression-macro-rhs (hash-ref options 'expression-macro-rhs #f))
 
@@ -180,13 +194,18 @@
                     #:when dp)
            dp))
 
+       (define callable?
+         (for/or ([super (in-list supers)])
+           (memq 'call (interface-desc-flags super))))
+
        (define (temporary template #:name [name #'name])
          (and name
               ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
 
        (with-syntax ([prop:name (temporary "prop:~a")]
                      [name-ref (temporary "~a-ref")]
-                     [prop-internal:name (temporary "prop:~a" #:name internal-name)]
+                     [name-ref-or-error (temporary "~a-ref-or-error")]
+                     [prop:internal-name (temporary "prop:~a" #:name internal-internal-name)]
                      [(super-name ...) parent-names]
                      [(export ...) exs]
                      [(dot-id ...) (map car dots)]
@@ -195,8 +214,8 @@
                                                  (temporary "dot-provider-~a"))
                                             (and (pair? parent-dot-providers)
                                                  (car parent-dot-providers)))])
-         (with-syntax ([internal-name-ref (if internal-name
-                                              (temporary "~a-ref" #:name internal-name)
+         (with-syntax ([internal-name-ref (if internal-internal-name
+                                              (temporary "~a-ref" #:name internal-internal-name)
                                               #'name-ref)])
            (define defns
              (reorder-for-top-level
@@ -207,7 +226,9 @@
                    null)
                (build-methods method-results
                               added-methods method-mindex method-names method-private
-                              #'(name name-instance name?
+                              #'(name name-instance internal-name?
+                                      internal-name-ref
+                                      ()
                                       []
                                       []
                                       []
@@ -215,34 +236,36 @@
                                       []
                                       []
                                       [super-name ...]))
-               (build-interface-property internal-name
-                                         #'(name prop:name name? name-ref
+               (build-interface-property internal-internal-name
+                                         #'(name prop:name name? name-ref name-ref-or-error
                                                  prop:internal-name internal-name? internal-name-ref))
                (build-interface-dot-handling method-mindex method-vtable method-results
                                              internal-name
                                              expression-macro-rhs dot-provider-rhss parent-dot-providers
-                                             #'(name name? name-instance name-ref
+                                             #'(name name? name-instance internal-name-ref name-ref-or-error
                                                      internal-name-instance internal-name-ref
                                                      dot-provider-name [dot-id ...]
                                                      [export ...]))
-               (build-interface-desc parent-names options
+               (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
-                                     #'(name prop:name name-ref
+                                     callable?
+                                     #'(name prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
-                                     #f))))
+                                     #f
+                                     #f #f))))
            #`(begin . #,defns)))])))
 
-(define-for-syntax (build-interface-property internal-name names)
-  (with-syntax ([(name prop:name name? name-ref
+(define-for-syntax (build-interface-property internal-internal-name names)
+  (with-syntax ([(name prop:name name? name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref)
                  names])
     (append
-     (if internal-name
+     (if internal-internal-name
          (list
           #`(define-values (prop:internal-name internal-name? internal-name-ref)
               (make-struct-type-property 'name)))
@@ -250,10 +273,14 @@
      (list
       #`(define-values (prop:name name? name-ref)
           (make-struct-type-property 'name
-                                     #,@(if internal-name
+                                     #,@(if internal-internal-name
                                             #`(#f (list (cons prop:internal-name
                                                               (lambda (vt) vt))))
-                                            '())))))))
+                                            '())))
+      #`(define (name-ref-or-error v)
+          (define vtable (name-ref v #f))
+          (or vtable
+              (raise-not-an-instance 'name v)))))))
 
 (define-for-syntax (build-interface-annotation internal-name annotation-rhs names)
   (with-syntax ([(name name? name-instance
@@ -277,11 +304,12 @@
           #`(define-annotation-syntax name (identifier-annotation (quote-syntax name?)
                                                                   (quote-syntax ((#%dot-provider name-instance))))))))))
   
-(define-for-syntax (build-interface-desc parent-names options
+(define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
+                                         callable?
                                          names)
-  (with-syntax ([(name prop:name name-ref
+  (with-syntax ([(name prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
                        dot-provider-name)
                  names])
@@ -298,6 +326,7 @@
                                          #f
                                          (quote-syntax #,parent-names)
                                          (quote-syntax prop:internal-name)
+                                         (quote-syntax prop:internal-name)
                                          (quote-syntax internal-name-ref)
                                          '#,method-shapes
                                          (quote-syntax #,method-vtable)
@@ -306,6 +335,7 @@
                                          #,custom-annotation?
                                          '()
                                          #f
+                                         '()
                                          (quote #,(build-quoted-private-method-list 'method method-private))
                                          (quote #,(build-quoted-private-method-list 'property method-private)))))
            null)
@@ -316,7 +346,9 @@
                                    #`(quote-syntax #,internal-name))
                             (quote-syntax #,parent-names)
                             (quote-syntax prop:name)
-                            (quote-syntax name-ref)
+                            #,(and (syntax-e #'prop:internal-name)
+                                   #'(quote-syntax prop:internal-name))
+                            (quote-syntax name-ref-or-error)
                             '#,method-shapes
                             (quote-syntax #,method-vtable)
                             '#,method-map
@@ -324,4 +356,8 @@
                             #,custom-annotation?
                             '#,(map car dots)
                             #,(and (syntax-e #'dot-provider-name)
-                                   #'(quote-syntax dot-provider-name)))))))))
+                                   #'(quote-syntax dot-provider-name))
+                            '#,(append
+                                (if callable?
+                                    '(call)
+                                    '())))))))))

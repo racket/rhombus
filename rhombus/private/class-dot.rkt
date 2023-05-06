@@ -25,6 +25,7 @@
          "name-root.rkt"
          "parse.rkt"
          (submod "function-parse.rkt" for-call)
+         "function-arity-key.rkt"
          (for-syntax "class-transformer.rkt")
          "class-dot-transformer.rkt"
          "is-static.rkt"
@@ -52,7 +53,7 @@
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results #'name-ref final?))
+      (method-static-entries method-mindex method-vtable method-results #'name-ref #'name? final? #f))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
@@ -138,13 +139,13 @@
                                                  expression-macro-rhs
                                                  dot-provider-rhss parent-dot-providers
                                                  names)
-  (with-syntax ([(name name? name-instance name-ref
+  (with-syntax ([(name name? name-instance name-ref static-name-ref
                        internal-name-instance internal-name-ref
                        dot-provider-name [dot-id ...]
                        [ex ...])
                  names])
     (define-values (method-names method-impl-ids method-defns)
-      (method-static-entries method-mindex method-vtable method-results #'name-ref #f))
+      (method-static-entries method-mindex method-vtable method-results #'static-name-ref #'name? #f #t))
     (with-syntax ([(method-name ...) method-names]
                   [(method-id ...) method-impl-ids]
                   [(dot-rhs ...) dot-provider-rhss]
@@ -207,7 +208,8 @@
                  #`(quote-syntax #,name)))))
       null))
 
-(define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id final?)
+(define-for-syntax (method-static-entries method-mindex method-vtable method-results name-ref-id name?-id
+                                          final? via-interface?)
   (for/fold ([names '()] [ids '()] [defns '()])
             ([(name mix) (in-hash method-mindex)])
     (cond
@@ -221,7 +223,6 @@
                           (make-method-accessor '#,name #,name-ref-id #,(mindex-index mix)))
                       #`(define-syntax #,stx-id
                           (make-method-accessor-transformer '#,name
-                                                            (quote-syntax #,stx-id)
                                                             (quote-syntax #,name-ref-id)
                                                             #,(mindex-index mix)
                                                             (quote-syntax #,proc-id)
@@ -229,6 +230,23 @@
                                                                 (and ids
                                                                      #`(quote-syntax #,(car ids))))))
                       defns))]
+      [(or
+        ;; if the method is inherited, we need to check whether
+        ;; a provided instance is the subclass, not a superclass
+        (mindex-inherited? mix)
+        ;; if the method is in an interface, then even if it's final,
+        ;; we need to check using `name-ref-id`, because...
+        via-interface?)
+       (define proc-id (vector-ref method-vtable (mindex-index mix)))
+       (define stx-id (car (generate-temporaries (list name))))
+       (values (cons name names)
+               (cons stx-id ids)
+               (list*
+                #`(define-syntax #,stx-id
+                    (make-method-checked-static-transformer '#,name
+                                                            (quote-syntax #,name?-id)
+                                                            (quote-syntax #,proc-id)))
+                defns))]
       [else
        (values (cons name names)
                (cons (vector-ref method-vtable (mindex-index mix)) ids)
@@ -243,12 +261,13 @@
       (apply (method-ref ref obj idx) obj args)))
    name))
 
-(define-for-syntax (make-method-accessor-transformer name id name-ref-id idx proc-id ret-info-id)
+(define-for-syntax (make-method-accessor-transformer name name-ref-id idx proc-id ret-info-id)
   (expression-transformer
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals (op)
        [(rator-id (~and args (tag::parens self arg ...)) . tail)
+        #:when (not (syntax-parse #'self [(_ kw:keyword . _) #t] [_ #f]))
         (define obj-id #'this)
         (define rator #`(method-ref #,name-ref-id #,obj-id #,idx))
         (define r (and ret-info-id
@@ -271,6 +290,52 @@
                             (datum->syntax #f name #'head))]
        [(_ . tail)
         (values proc-id #'tail)]))))
+
+(define-for-syntax (make-method-checked-static-transformer name name?-id proc-id)
+  (expression-transformer
+   (lambda (stx)
+     (syntax-parse stx
+       #:datum-literals (op)
+       [(rator-id (~and args (tag::parens self arg ...)) . tail)
+        #:when (not (syntax-parse #'self [(_ kw:keyword . _) #t] [_ #f]))
+        (define obj-id #'this)
+        (define-values (call new-tail)
+          (parse-function-call proc-id (list obj-id) #'(#,obj-id (tag arg ...))
+                               #:static? (is-static-call-context? #'tag)
+                               #:rator-stx (datum->syntax #f name #'rator-id)))
+        (values (wrap-static-info*
+                 #`(let ([#,obj-id (rhombus-expression self)])
+                     (unless (#,name?-id #,obj-id) (raise-not-an-instance '#,name #,obj-id))
+                     #,(unwrap-static-infos call))
+                 (datum->syntax #f (extract-static-infos call)))
+                #'tail)]
+       [(head (tag::parens) . _)
+        #:when (is-static-call-context? #'tag)
+        (raise-syntax-error #f
+                            (string-append "wrong number of arguments in function call" statically-str)
+                            (datum->syntax #f name #'head))]
+       [(_ . tail)
+        (values #`(wrap-object-check #,proc-id '#,name #,name?-id)
+                #'tail)]))))
+
+(define (wrap-object-check proc name name?)
+  (define-values (req-kws allowed-kws) (procedure-keywords proc))
+  (cond
+    [(null? allowed-kws)
+     (procedure-reduce-arity-mask (lambda (obj . args)
+                                    (unless (name? obj) (raise-not-an-instance name obj))
+                                    (apply proc obj args))
+                                  (procedure-arity-mask proc)
+                                  name)]
+    [else
+     (procedure-reduce-keyword-arity-mask (make-keyword-procedure
+                                           (lambda (kws kw-args obj . args)
+                                             (unless (name? obj) (raise-not-an-instance name obj))
+                                             (keyword-apply proc kws kw-args obj args)))
+                                          (procedure-arity-mask proc)
+                                          req-kws
+                                          allowed-kws
+                                          name)]))
 
 (define-for-syntax (class-expression-transformers id make-id)
   (values
@@ -350,7 +415,7 @@
                                     static-infos))
        (success (wrap-static-info* e all-static-infos)
                 tail)]))
-  (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity)
+  (define (do-method pos/id* ret-info-id nonfinal? property? shape-arity add-check)
     (define-values (args new-tail)
       (if property?
           (syntax-parse tail
@@ -375,7 +440,18 @@
        (define-values (rator obj-e arity wrap)
          (cond
            [(identifier? pos/id)
-            (values pos/id form1 #f (lambda (e) e))]
+            (cond
+              [add-check
+               (define obj-id #'obj)
+               (values pos/id obj-id #f (lambda (e)
+                                          (define static-infos (extract-static-infos e))
+                                          (wrap-static-info*
+                                           #`(let ([#,obj-id #,form1])
+                                               #,(add-check obj-id)
+                                               #,(unwrap-static-infos e))
+                                           static-infos)))]
+              [else
+               (values pos/id form1 #f (lambda (e) e))])]
            [else
             (define obj-id #'obj)
             (define r (and ret-info-id
@@ -390,6 +466,9 @@
                         (and r (method-result-arity r)))
                     (lambda (e)
                       (define call-e #`(let ([#,obj-id #,form1])
+                                         #,@(if add-check
+                                                (list (add-check obj-id))
+                                                null)
                                          #,e))
                       (if (pair? (syntax-e static-infos))
                           (wrap-static-info* call-e static-infos)
@@ -413,6 +492,9 @@
           (success #`(curry-method #,pos/id #,form1) new-tail)]
          [else
           (success #`(method-curried-ref #,(desc-ref-id desc) #,form1 #,pos/id) new-tail)])]))
+  (define (make-interface-check desc name)
+    (lambda (obj-id)
+      #`(void (#,(interface-desc-ref-id desc) #,obj-id))))
   (cond
     [(and (class-desc? desc)
           (for/or ([field+acc (in-list (class-desc-fields desc))])
@@ -424,13 +506,21 @@
           (define shape (vector-ref (desc-method-shapes desc) pos))
           (define shape-symbol (and shape (if (vector? shape) (vector-ref shape 0) shape)))
           (define shape-arity (and shape (vector? shape) (vector-ref shape 1)))
+          (define non-final? (or (box? shape-symbol) (and (pair? shape-symbol) (box? (car shape-symbol)))))
           (do-method pos
                      (hash-ref (desc-method-result desc) (syntax-e field-id) #f)
-                     ;; non-final?
-                     (or (box? shape-symbol) (and (pair? shape-symbol) (box? (car shape-symbol))))
+                     non-final?
                      ;; property?
                      (pair? shape-symbol)
-                     shape-arity))]
+                     shape-arity
+                     ;; corner case: final method in interface called through
+                     ;; non-internal needs a check that the argument is not
+                     ;; an internal instance, since the implementation checks only
+                     ;; for an internal instance
+                     (and (interface-desc? desc)
+                          (not (interface-internal-desc? desc))
+                          (not non-final?)
+                          (make-interface-check desc field-id))))]
     [(hash-ref internal-fields (syntax-e field-id) #f)
      => (lambda (fld) (do-field fld))]
     [(hash-ref internal-methods (syntax-e field-id) #f)
@@ -439,11 +529,11 @@
                          id/property
                          (car (syntax-e id/property))))
           (define property? (pair? (syntax-e id/property)))
-          (do-method id #f #f property? #f))]
+          (do-method id #f #f property? #f #f))]
     [(hash-ref (get-private-table desc) (syntax-e field-id) #f)
      => (lambda (id/fld)
           (if (identifier? id/fld)
-              (do-method id/fld #f #f #f #f)
+              (do-method id/fld #f #f #f #f #f)
               (do-field id/fld)))]
     [more-static?
      (raise-syntax-error #f

@@ -18,6 +18,7 @@
          "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
+         "function-indirect-key.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
          "class-clause-tag.rkt"
@@ -36,7 +37,8 @@
          "parse.rkt"
          "error.rkt"
          (submod "namespace.rkt" for-exports)
-         (submod "print.rkt" for-class))
+         (submod "print.rkt" for-class)
+         "class-callable.rkt")
 
 ;; the `class` form is provided by "class-together.rkt"
 (provide this
@@ -133,6 +135,9 @@
        (define-values (super-constructor-fields super-keywords super-defaults)
          (extract-super-constructor-fields super))
 
+       (define interface-names (reverse (hash-ref options 'implements '())))
+       (define interfaces (interface-names->interfaces #'orig-stx interface-names))
+
        (define-values (internal-id exposed-internal-id extra-exposed-internal-ids)
          (extract-internal-ids options
                                #'scope-stx #'base-stx
@@ -150,6 +155,14 @@
          (make-accessor-names #'name
                               (syntax->list #'constructor-field-names)
                               intro))
+
+       (define function-statinfo-indirect-id
+         (callable-statinfo-indirect-id super interfaces #'name intro))
+
+       (define indirect-static-infos
+         (if function-statinfo-indirect-id
+             #`((#%function-indirect #,function-statinfo-indirect-id))
+             #'()))
 
        (with-syntax ([constructor-name-fields constructor-name-fields]
                      [((constructor-public-name-field constructor-public-field-keyword) ...)
@@ -170,10 +183,12 @@
                                                                      (string->symbol (format "make-converted-~a" (syntax-e #'name)))
                                                                      #'name)))]
                      [make-converted-internal make-converted-internal]
+                     [function-statinfo-indirect function-statinfo-indirect-id]
                      [(super-field-keyword ...) super-keywords]
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
-                                                                        '())])
+                                                                        '())]
+                     [indirect-static-infos indirect-static-infos])
          (wrap-for-together
           #'for-together?
           #`(begin
@@ -182,7 +197,7 @@
                                               super-constructor-fields
                                               exposed-internal-id internal-of-id intro
                                               #'(name name-instance name? name-of
-                                                      internal-name-instance
+                                                      internal-name-instance indirect-static-infos
                                                       make-converted-name make-converted-internal
                                                       constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
                                                       constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
@@ -191,6 +206,7 @@
                [orig-stx base-stx scope-stx
                          full-name name name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
+                         function-statinfo-indirect indirect-static-infos
                          constructor-field-names
                          constructor-field-keywords
                          constructor-field-defaults
@@ -207,6 +223,7 @@
       [(_ [orig-stx base-stx scope-stx
                     full-name name name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
+                    function-statinfo-indirect indirect-static-infos
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
@@ -363,6 +380,9 @@
          (or has-private-fields?
              ((hash-count method-private) . > . 0)))
 
+       (define-values (here-callable? public-callable?)
+         (callable-method-status super interfaces method-mindex method-vtable method-private))
+
        (define (temporary template)
          ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e #'name))))))
 
@@ -430,6 +450,7 @@
                                                                                       #:result (lambda (pub priv) pub))]
                        [(constructor-public-field-keyword ...) constructor-public-keywords]
                        [(super-name* ...) (if super #'(super-name) '())]
+                       [(interface-name ...) interface-names]
                        [make-internal-name (and exposed-internal-id
                                                 #'make-converted-internal
                                                 #;
@@ -446,6 +467,8 @@
                (build-methods method-results
                               added-methods method-mindex method-names method-private
                               #'(name name-instance name?
+                                      prop-methods-ref
+                                      indirect-static-infos
                                       [(field-name) ... super-field-name ...]
                                       [field-static-infos ... super-field-static-infos ...]
                                       [name-field ... super-name-field ...]
@@ -457,13 +480,13 @@
                                              (quote-syntax private-field-static-infos)
                                              (quote-syntax private-field-argument))
                                        ...]
-                                      [super-name* ...]))
+                                      [super-name* ... interface-name ...]))
                (build-class-struct super
                                    fields mutables constructor-keywords private?s final? authentic? prefab? opaque?
                                    method-mindex method-names method-vtable method-private
                                    abstract-name
                                    interfaces private-interfaces
-                                   has-extra-fields?
+                                   has-extra-fields? here-callable?
                                    #'(name class:name make-all-name name? name-ref
                                            [public-field-name ...]
                                            [public-maybe-set-name-field! ...]
@@ -493,6 +516,7 @@
                                                 name-defaults
                                                 make-internal-name
                                                 name-instance
+                                                indirect-static-infos
                                                 [private-field-name ...]
                                                 [(list 'private-field-name
                                                        (quote-syntax private-name-field)
@@ -503,6 +527,7 @@
                (build-class-binding-form super binding-rhs
                                          exposed-internal-id intro
                                          #'(name name-instance name?
+                                                 indirect-static-infos
                                                  [constructor-name-field ...] [constructor-public-name-field ...] [super-name-field ...]
                                                  [constructor-field-static-infos ...] [constructor-public-field-static-infos ...] [super-field-static-infos ...]
                                                  [constructor-field-keyword ...] [constructor-public-field-keyword ...] [super-field-keyword ...]))
@@ -531,6 +556,7 @@
                                          (append super-defaults constructor-private-defaults)
                                          #'(name constructor-name name-instance
                                                  internal-name-instance make-internal-name
+                                                 indirect-static-infos
                                                  [name-field ...]
                                                  [field-static-infos ...]))
                (build-class-desc exposed-internal-id super options
@@ -541,7 +567,7 @@
                                  final? has-private-fields? private?s
                                  parent-name interface-names all-interfaces private-interfaces
                                  method-mindex method-names method-vtable method-results method-private dots
-                                 authentic? prefab?
+                                 authentic? prefab? here-callable? public-callable?
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name
                                          (list (list 'super-field-name
@@ -560,7 +586,8 @@
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
-                                     final?))))
+                                     final?
+                                     #'function-statinfo-indirect here-callable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -568,7 +595,7 @@
                                        method-mindex method-names method-vtable method-private
                                        abstract-name
                                        interfaces private-interfaces
-                                       has-extra-fields?
+                                       has-extra-fields? here-callable?
                                        names)
   (with-syntax ([(name class:name make-all-name name? name-ref
                        [public-field-name ...]
@@ -637,6 +664,8 @@
                                                                                         ...)
                                                                                 (hasheq (~@ 'method-name method-proc)
                                                                                         ...)))))
+                                                         #,@(callable-method-as-property here-callable?
+                                                                                         method-mindex method-vtable method-private)
                                                          #,@(if (or abstract-name
                                                                     (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
                                                                            (not (syntax-e maybe-name)))
@@ -694,8 +723,8 @@
                       mutable-field-annotation-str)
                      ...)))
        #`(define (name-ref v)
-           (if (name? v)
-               (prop-methods-ref v)
+           (define vtable (prop-methods-ref v #f))
+           (or vtable
                (raise-not-an-instance 'name v)))))))
 
 (define-for-syntax (build-class-desc exposed-internal-id super options
@@ -706,7 +735,7 @@
                                      final? has-private-fields? private?s
                                      parent-name interface-names all-interfaces private-interfaces
                                      method-mindex method-names method-vtable method-results method-private dots
-                                     authentic? prefab?
+                                     authentic? prefab? here-callable? public-callable?
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name
@@ -779,8 +808,12 @@
                              #'(quote-syntax dot-provider-name))
                       #,(and (syntax-e #'name-defaults)
                              #'(quote-syntax name-defaults))
+                      #,(callable-method-for-class-desc here-callable? public-callable?
+                                                        super
+                                                        method-mindex method-vtable method-private)
                       '(#,@(if authentic? '(authentic) null)
-                        #,@(if prefab? '(prefab) null)))))
+                        #,@(if prefab? '(prefab) null)
+                        #,@(if public-callable? '(call) null)))))
      (if exposed-internal-id
          (list
           #`(define-class-desc-syntax #,exposed-internal-id

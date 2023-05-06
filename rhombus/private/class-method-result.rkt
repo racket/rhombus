@@ -32,7 +32,7 @@
   (define (parse check? result-handler result-static-infos predicate-handler?)
     (syntax-parse stx
       #:datum-literals (op)
-      [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity)
+      [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity maybe-call-statinfo-id)
        #:do [(define super-results (map syntax-local-method-result
                                         (syntax->list #'(super-result-id ...))))]
        #:with handler (for/fold ([handler (and check? result-handler)])
@@ -75,16 +75,22 @@
                                               (quote-syntax all-static-infos)
                                               (quote arity)))))
        (cond
-         [(syntax-e #'maybe-final-id)
+         [(or (syntax-e #'maybe-final-id)
+              (syntax-e #'maybe-call-statinfo-id))
+          (define (gen id)
+            (if (syntax-e id)
+              #`((define-static-info-syntax #,id
+                   #,(if (eq? (syntax-e #'kind) 'property)
+                         #`(#%call-results-at-arities ((1 all-static-infos)))
+                         #`(#%call-result all-static-infos))
+                   #,@(if (syntax-e #'arity)
+                          #`((#%function-arity arity))
+                          #'())))
+              #'()))
           #`(begin
               #,def
-              (define-static-info-syntax maybe-final-id
-                #,(if (eq? (syntax-e #'kind) 'property)
-                      #`(#%call-results-at-arities ((1 all-static-infos)))
-                      #`(#%call-result all-static-infos))
-                #,@(if (syntax-e #'arity)
-                       #`((#%function-arity arity))
-                       #'())))]
+              #,@(gen #'maybe-final-id)
+              #,@(gen #'maybe-call-statinfo-id))]
          [else def])]))
   (syntax-parse stx
     #:datum-literals ()

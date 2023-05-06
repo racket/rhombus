@@ -52,7 +52,9 @@
              #,expr)))
 
   (define (wrap-static-info* expr stxes)
-    (for/fold ([expr expr]) ([stx (in-list (syntax->list stxes))])
+    (for/fold ([expr expr]) ([stx (in-list (if (syntax? stxes)
+                                               (reverse (syntax->list stxes))
+                                               stxes))])
       (syntax-parse stx
         [(key:identifier val) (wrap-static-info expr #'key #'val)])))
 

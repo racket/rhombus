@@ -423,3 +423,201 @@ check:
     extends A
     abstract override m()
   ~raises "final class cannot have abstract methods"
+
+block:
+  interface C:
+    final direct():
+      "direct"
+    method call() :: String:
+      next("intf")
+    method next(s) :: String
+  interface D:
+    extends C
+    override method call():
+      "INTF"
+  class A(a):
+    nonfinal
+    internal _A
+    private implements C
+    method indirect():
+      call()
+    private override method next(s :: String):
+      s ++ ".a"
+  class B():
+    extends A
+    implements: C D
+    override method call():
+      super.call() ++ "B"
+    override method next(s :: String):
+      s ++ ".b"  
+  check:
+    A(1).indirect() ~is "intf.a"
+    A.indirect(A(1)) ~is "intf.a"
+    (A(1) :: _A).call() ~is "intf.a"
+    (A(1) :: _A).next("x") ~is "x.a"    
+    (A(1) :: _A).direct() ~is "direct"
+    B(1).direct() ~is "direct"
+    D.direct(B(1)) ~is "direct"
+    B(1).call() ~is "INTFB"
+    B(1).next("x") ~is "x.b"
+
+// check on inherited method when called via subclass that
+// the passed instance is a subclass instance; also check
+// that static information is propagated as it should be
+block:
+  class O(v)
+  class A():
+    nonfinal
+    method m() :: O: O("m")
+    final method f() :: O: O("f")
+    method k(~arg: arg) :: O: O("k")
+    final method kw(~arg: arg) :: O: O("kw")
+  class B():
+    extends A
+  check:
+    A().m().v ~is "m"
+    A().f().v ~is "f"
+    A().k(~arg: "ok").v ~is "k"
+    A().kw(~arg: "ok").v ~is "kw"
+    B().m().v ~is "m"
+    B().f().v ~is "f"
+    B().k(~arg: 0).v ~is "k"
+    B().kw(~arg: 0).v ~is "kw"
+    A.m(A()).v ~is "m"
+    A.f(A()).v ~is "f"
+    A.k(A(), ~arg: 0).v ~is "k"
+    A.k(~arg: 0, A()) ~is O("k")
+    A.kw(A(), ~arg: 0).v ~is "kw"
+    A.kw(~arg: 0, A()) ~is O("kw")
+    A.m(B()).v ~is "m"
+    A.f(B()).v ~is "f"
+    A.k(B(), ~arg: 0).v ~is "k"
+    A.k(~arg: 0, B()) ~is O("k")
+    A.kw(B(), ~arg: 0).v ~is "kw"
+    A.kw(~arg: 0, B()) ~is O("kw")
+    B.m(A()) ~raises "not an instance for method call"
+    B.f(A()) ~raises "not an instance for method call"
+    B.k(A(), ~arg: 0) ~raises "not an instance for method call"
+    B.k(~arg: 0, A()) ~raises "not an instance for method call"
+    B.kw(A(), ~arg: 0) ~raises "not an instance for method call"
+    B.kw(~arg: 0, A()) ~raises "not an instance for method call"
+    B.m(B()).v ~is "m"
+    B.f(B()).v ~is "f"
+    B.k(B(), ~arg: 0).v ~is "k"
+    B.k(~arg: 0, B()) ~is O("k")
+    B.kw(B(), ~arg: 0).v ~is "kw"
+    B.kw(~arg: 0, B()) ~is O("kw")
+    ("oops" :~ A).m() ~raises "not an instance for method call"
+    ("oops" :~ A).f() ~raises "not an instance for method call"
+    ("oops" :~ B).m() ~raises "not an instance for method call"
+    ("oops" :~ B).f() ~raises "not an instance for method call"
+    ("oops" :~ B).k(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ B).kw(~arg: 0) ~raises "not an instance for method call"
+    dynamic(B.m)(A()) ~raises "not an instance for method call"
+    dynamic(B.f)(A()) ~raises "not an instance for method call"
+    dynamic(B.k)(A(), ~arg: 0) ~raises "not an instance for method call"
+    dynamic(B.kw)(A(), ~arg: 0) ~raises "not an instance for method call"
+    dynamic(B.m)(B()) ~is O("m")
+    dynamic(B.f)(B()) ~is O("f")
+    dynamic(B.k)(B(), ~arg: 0) ~is O("k")
+    dynamic(B.kw)(B(), ~arg: 0) ~is O("kw")
+
+// similar, but for interfaces, where there's the extra
+// twist of private implementation
+block:
+  class O(v)
+  interface I:
+    method m() :: O: O("m")
+    final method f() :: O: O("f")
+    method k(~arg: arg) :: O: O("k")
+    final method kw(~arg: arg) :: O: O("kw")
+  interface J:
+    extends I
+  class B():
+    implements I
+  class C():
+    internal _C
+    private implements I
+  class D():
+    implements J
+  check:
+    B().m().v ~is "m"
+    B().f().v ~is "f"
+    B().k(~arg: 0).v ~is "k"
+    B().kw(~arg: 0).v ~is "kw"
+    D().m().v ~is "m"
+    D().f().v ~is "f"
+    D().k(~arg: 0).v ~is "k"
+    D().kw(~arg: 0).v ~is "kw"
+    I.m(B()).v ~is "m"
+    I.f(B()).v ~is "f"
+    I.k(B(), ~arg: 0).v ~is "k"
+    I.k(~arg: 0, B()) ~is O("k")
+    I.kw(B(), ~arg: 0).v ~is "kw"
+    I.kw(~arg: 0, B()) ~is O("kw")
+    B.m(B()).v ~is "m"
+    B.f(B()).v ~is "f"
+    B.k(B(), ~arg: 0).v ~is "k"
+    B.k(~arg: 0, B()) ~is O("k")
+    B.kw(B(), ~arg: 0).v ~is "kw"
+    B.kw(~arg: 0, B()) ~is O("kw")
+    I.m(C()) ~raises "not an instance for method call"
+    I.f(C()) ~raises "not an instance for method call"
+    I.k(C(), ~arg: 0) ~raises "not an instance for method call"
+    I.k(~arg: 0, C()) ~raises "not an instance for method call"
+    I.kw(C(), ~arg: 0) ~raises "not an instance for method call"
+    I.kw(~arg: 0, C()) ~raises "not an instance for method call"
+    I.m(D()).v ~is "m"
+    I.f(D()).v ~is "f"
+    I.k(D(), ~arg: 0).v ~is "k"
+    I.k(~arg: 0, D()) ~is O("k")
+    I.kw(D(), ~arg: 0).v ~is "kw"
+    I.kw(~arg: 0, D()) ~is O("kw")
+    J.m(D()).v ~is "m"
+    J.f(D()).v ~is "f"
+    J.m(B()) ~raises "not an instance for method call"
+    J.f(B()) ~raises "not an instance for method call"
+    J.k(D(), ~arg: 0).v ~is "k"
+    J.k(~arg: 0, D()) ~is O("k")
+    J.kw(D(), ~arg: 0).v ~is "kw"
+    J.kw(~arg: 0, D()) ~is O("kw")
+    (C() :: _C).m().v ~is "m"
+    (C() :: _C).f().v ~is "f"
+    (C() :: _C).k(~arg: 0).v ~is "k"
+    (C() :: _C).kw(~arg: 0).v ~is "kw"
+    ("oops" :~ I).m() ~raises "not an instance for method call"
+    ("oops" :~ I).f() ~raises "not an instance for method call"
+    ("oops" :~ I).k(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ I).kw(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ B).m() ~raises "not an instance for method call"
+    ("oops" :~ B).f() ~raises "not an instance for method call"
+    ("oops" :~ B).k(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ B).kw(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ _C).m() ~raises "not an instance for method call"
+    ("oops" :~ _C).f() ~raises "not an instance for method call"
+    ("oops" :~ _C).k(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ _C).kw(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ J).m() ~raises "not an instance for method call"
+    ("oops" :~ J).f() ~raises "not an instance for method call"
+    ("oops" :~ J).k(~arg: 0) ~raises "not an instance for method call"
+    ("oops" :~ J).kw(~arg: 0) ~raises "not an instance for method call"
+    (C() :~ I).m() ~raises "not an instance for method call"
+    (C() :~ I).f() ~raises "not an instance for method call"
+    (C() :~ I).k(~arg: 0) ~raises "not an instance for method call"
+    (C() :~ I).kw(~arg: 0) ~raises "not an instance for method call"
+    (C() :~ J).m() ~raises "not an instance for method call"
+    (C() :~ J).f() ~raises "not an instance for method call"
+    (C() :~ J).k(~arg: 0) ~raises "not an instance for method call"
+    (C() :~ J).kw(~arg: 0) ~raises "not an instance for method call"
+
+check:
+  ~eval
+  interface A:
+    method m
+  interface B:
+    method m
+  class C():
+    implements: A B
+    override method m():
+      super.m()
+  ~raises "inherited method is ambiguous"

@@ -33,6 +33,10 @@
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
                (hash-set options 'annotation-rhs (extract-rhs #'block))]
+              [((~or #:method #:override #:final #:final-override
+                     #:property #:override-property
+                     #:final-property #:final-override-property) . _)
+               (hash-set options 'has-non-abstract-method? #t)]
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 

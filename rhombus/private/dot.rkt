@@ -253,7 +253,7 @@
                                     (apply proc obj args))
                                   (arithmetic-shift (procedure-arity-mask proc) -1)
                                   (object-name proc))]
-    [(null? allowed-kws)
+    [else
      (procedure-reduce-keyword-arity-mask (make-keyword-procedure
                                            (lambda (kws kw-args . args)
                                              (keyword-apply proc kws kw-args obj args)))

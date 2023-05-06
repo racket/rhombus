@@ -1,0 +1,120 @@
+#lang rhombus
+
+use_static
+
+class O(v):
+  nonfinal
+class O2(w):
+  extends O  
+
+class A0():
+  implements Callable
+  override method call() :: O:
+    O("A0")
+  method call_self():
+    this().v
+
+class A1():
+  nonfinal
+  implements Callable
+  override method call() :: O:
+    O("A1")
+
+class B1():
+  extends A1
+  implements Callable
+  override method call() :: O2:
+    O2("B1", "B1")
+
+class C1():
+  extends A1
+  override method call() :: O2:
+    O2("C1", "C1")
+
+class A2():
+  nonfinal
+  implements Callable
+
+class B2():
+  extends A2
+  override method call() :: O:
+    O("B2")
+
+interface I3:
+  extends Callable
+
+class A3():
+  implements I3
+  override method call() :: O:
+    O("A3")
+
+class A4():
+  nonfinal
+  implements I3
+
+class B4():
+  extends A4
+  override method call() :: O:
+    O("B4")
+
+class A5():
+  nonfinal
+  private implements Callable
+  private override method call() :: O:
+    O("A5")
+
+class B5():
+  nonfinal
+  extends A5
+
+class C5():
+  extends B5
+  implements Callable
+  override method call() :: O2:
+    O2("C5", "C5")
+
+class C6():
+  extends B5
+  private implements Callable
+  private override method call() :: O:
+    O("C6")
+
+interface I7:
+  extends I3
+  override method call() :: O:
+    O("I7")
+
+class A7():
+  nonfinal
+  implements I7
+
+class B7():
+  extends A7
+  override method call() :: O2:
+    O2("B7", "B7")
+
+check:
+  A0()().v ~is "A0"
+  A1()().v ~is "A1"
+  B1()().v ~is "B1"
+  B1()().w ~is "B1"
+  C1()().v ~is "C1"
+  C1()().w ~is "C1"
+  B2()().v ~is "B2"
+  A3()().v ~is "A3"
+  B4()().v ~is "B4"
+  A5()().v ~is "A5"
+  B5()().v ~is "A5"
+  C5()().v ~is "C5"
+  C5()().w ~is "C5"
+  C6()().v ~is "C6"
+  A7()().v ~is "I7"
+  B7()().v ~is "B7"
+  B7()().w ~is "B7"
+  (dynamic(A0()) :: A0)().v ~is "A0"
+  A0().call_self() ~is "A0"
+
+block:
+  use_dynamic
+  check:
+    (dynamic(A0()))().v ~is "A0"

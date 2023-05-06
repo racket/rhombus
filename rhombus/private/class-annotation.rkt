@@ -24,7 +24,7 @@
                                                 exposed-internal-id internal-of-id intro
                                                 names)
   (with-syntax ([(name name-instance name? name-of
-                       internal-name-instance
+                       internal-name-instance indirect-static-infos
                        make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        field-keywords public-field-keywords super-field-keywords)
@@ -51,7 +51,8 @@
                 ([accessors (list (quote-syntax super-name-field) ...
                                   (quote-syntax constructor-name-field) ...)])
                 (quote-syntax name?)
-                (quote-syntax ((#%dot-provider name-instance)))
+                (quote-syntax ((#%dot-provider name-instance)
+                               . indirect-static-infos))
                 (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
                 (super-field-keyword ... field-keyword ...)
                 (make-class-instance-predicate accessors)

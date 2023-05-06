@@ -29,15 +29,17 @@
                   #'Printable
                   #'()
                   #'prop:Printable
+                  #'prop:Printable
                   #'Printable-ref
                   '#(#&print #&display)
                   #'#(#:abstract display_as_print)
-                  (hasheq 'print 1
-                          'display 2)
+                  (hasheq 'print 0
+                          'display 1)
                   #hasheq()
                   #t
                   '()
-                  #f))
+                  #f
+                  '()))
 
 (define (display_as_print v op)
   (print-internal-method v op))

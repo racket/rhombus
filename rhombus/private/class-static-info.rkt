@@ -21,13 +21,15 @@
                                              names)
   (with-syntax ([(name constructor-name name-instance
                        internal-name-instance make-internal-name
+                       indirect-static-infos
                        [name-field ...]
                        [field-static-infos ...])
                  names])
     (append
      (list
       #`(define-static-info-syntax constructor-name
-          (#%call-result ((#%dot-provider name-instance)))
+          (#%call-result ((#%dot-provider name-instance)
+                          . indirect-static-infos))
           (#%function-arity #,(if given-constructor-rhs
                                   (syntax-parse given-constructor-rhs
                                     [(_ e-arity::entry-point-arity)

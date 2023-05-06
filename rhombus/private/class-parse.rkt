@@ -70,7 +70,8 @@
                     dots ; list of symbols for dot syntax
                     dot-provider  ; #f or compile-time identifier
                     defaults-id   ; #f if no arguments with defaults
-                    flags))       ; list with 'authentic, and/or 'prefab
+                    call-method-id ; #f or identifier as private `call` whose static info is relevant
+                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable)
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class
@@ -122,7 +123,7 @@
                          arity))     ; #f, integer, or (list integer required-list allowed-list)
 
 ;; used for a table produced by `extract-method-tables`
-(struct mindex (index final? property? arity))
+(struct mindex (index final? property? arity inherited?))
 
 (define (any-stx? l) (for/or ([x (in-list l)]) (syntax-e x)))
 

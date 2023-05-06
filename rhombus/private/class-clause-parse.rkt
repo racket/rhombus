@@ -56,6 +56,10 @@
                (when (hash-has-key? options 'extends)
                  (raise-syntax-error #f "multiple extension clauses" orig-stx #'id))
                (hash-set options 'extends #'id)]
+              [(#:implements id ...)
+               (add-implements options 'public-implements #'(id ...))]
+              [(#:private-implements id ...)
+               (add-implements options 'private-implements #'(id ...))]
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
               [(#:annotation block)
@@ -73,13 +77,6 @@
     #:context orig-stx
     [((_ clause-parsed) ...)
      (define clauses (syntax->list #'(clause-parsed ...)))
-     (define (add-implements options extra-key ids-stx)
-       (define l (reverse (syntax->list ids-stx)))
-       (define new-options
-         (hash-set options 'implements (append l (hash-ref options 'implements '()))))
-       (if extra-key
-           (hash-set new-options extra-key (append l (hash-ref new-options extra-key '())))
-           new-options))
      (let loop ([clauses clauses] [options #hasheq()])
        (cond
          [(null? clauses) options]
@@ -215,6 +212,14 @@
                                       (hash-ref options 'methods null)))]
     [_
      (raise-syntax-error #f "unrecognized clause" orig-stx clause)]))
+
+(define-for-syntax (add-implements options extra-key ids-stx)
+  (define l (reverse (syntax->list ids-stx)))
+  (define new-options
+    (hash-set options 'implements (append l (hash-ref options 'implements '()))))
+  (if extra-key
+      (hash-set new-options extra-key (append l (hash-ref new-options extra-key '())))
+      new-options))
 
 (define-for-syntax (extract-arity rhs)
   (syntax-parse rhs

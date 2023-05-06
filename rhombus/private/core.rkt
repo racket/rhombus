@@ -129,6 +129,7 @@
         "equatable.rkt"
         "eval.rkt"
         "printable.rkt"
+        "callable.rkt"
         "path-object.rkt"
         "srcloc-object.rkt")
 

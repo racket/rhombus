@@ -39,6 +39,7 @@
                        name-defaults
                        make-internal-name
                        name-instance
+                       indirect-static-infos
                        [private-field-name ...]
                        [private-field-desc ...])
                  names])
@@ -178,7 +179,8 @@
                                                       ...))
                                         (get-private-tables))]
                                [super-this #`(#:c #,(wrap-static-info #'make-name #'#%call-result
-                                                                      (let ([si #'((#%dot-provider name-instance))])
+                                                                      (let ([si #`((#%dot-provider name-instance)
+                                                                                   . indirect-static-infos)])
                                                                         (if super
                                                                             #`((#%call-result #,si))
                                                                             si))))])

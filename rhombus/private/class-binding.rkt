@@ -20,6 +20,7 @@
                                              exposed-internal-id intro
                                              names)
   (with-syntax ([(name name-instance name?
+                       indirect-static-infos
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        constructor-field-static-infoss constructor-public-field-static-infoss super-field-static-infoss
                        field-keywords public-field-keywords super-field-keywords)
@@ -34,7 +35,8 @@
         #`(binding-transformer
            (make-composite-binding-transformer #,(symbol->string (syntax-e #'name))
                                                (quote-syntax name?)
-                                               #:static-infos (quote-syntax ((#%dot-provider name-instance)))
+                                               #:static-infos (quote-syntax ((#%dot-provider name-instance)
+                                                                             . indirect-static-infos))
                                                (list (quote-syntax super-name-field) ...
                                                      (quote-syntax constructor-name-field) ...)
                                                #:keywords '(super-field-keyword ... field-keyword ...)

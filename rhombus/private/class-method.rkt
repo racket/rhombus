@@ -16,6 +16,7 @@
          "class-this.rkt"
          "class-method-result.rkt"
          "dot-provider-key.rkt"
+         "function-indirect-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
@@ -114,7 +115,7 @@
                           (mindex-index (car old-val))
                           (hash-count ht)))
             (values shape
-                    (cons (mindex i final? property? arity) shape)
+                    (cons (mindex i final? property? arity #t) shape)
                     i
                     old-val)))
         (when (hash-ref dot-ht key #f)
@@ -220,7 +221,7 @@
                                  (not (equal? (added-method-arity added) (mindex-arity mix))))
                              (let ([property? (eq? (added-method-kind added) 'property)]
                                    [arity (added-method-arity added)])
-                               (hash-set ht (syntax-e id) (cons (mindex idx final? property? arity) id)))
+                               (hash-set ht (syntax-e id) (cons (mindex idx final? property? arity #f) id)))
                              ht)
                          (hash-set vtable-ht idx (added-method-rhs-id added))
                          priv-ht
@@ -260,7 +261,8 @@
                                             (or final?
                                                 (eq? (added-method-disposition added) 'final))
                                             (eq? (added-method-kind added) 'property)
-                                            (added-method-arity added))
+                                            (added-method-arity added)
+                                            #f)
                                     id))
                     (hash-set vtable-ht pos (added-method-rhs-id added))
                     priv-ht
@@ -341,28 +343,44 @@
 (define-for-syntax (build-method-results added-methods
                                          method-mindex method-vtable method-private
                                          method-results
-                                         in-final?)
-  (for/list ([added (in-list added-methods)]
-             #:when (added-method-result-id added))
-    #`(define-method-result-syntax #,(added-method-result-id added)
-        #,(added-method-maybe-ret added)
-        #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
-        ;; When calls do not go through vtable, also add static info
-        ;; as #%call-result to binding; non-vtable calls include final methods
-        ;; and `super` calls to non-final methods:
-        #,(or (let ([id/property (hash-ref method-private (syntax-e (added-method-id added)) #f)])
-                (if (pair? id/property) (car id/property) id/property))
-              (and (not (eq? (added-method-body added) 'abstract))
-                   (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
-                     (and (or (mindex-final? mix)
-                              (not in-final?))
-                          (vector-ref method-vtable (mindex-index mix))))))
-        ;; result annotation can convert if final
-        #,(or in-final?
-              (eq? (added-method-disposition added) 'final))
-        #,(added-method-kind added)
-        #,(added-method-arity added))))
-          
+                                         in-final?
+                                         function-statinfo-indirect-stx here-callable?)
+  (define defs
+    (for/list ([added (in-list added-methods)]
+               #:when (added-method-result-id added))
+      #`(define-method-result-syntax #,(added-method-result-id added)
+          #,(added-method-maybe-ret added)
+          #,(cdr (hash-ref method-results (syntax-e (added-method-id added)) '(none)))
+          ;; When calls do not go through vtable, also add static info
+          ;; as #%call-result to binding; non-vtable calls include final methods
+          ;; and `super` calls to non-final methods:
+          #,(or (let ([id/property (hash-ref method-private (syntax-e (added-method-id added)) #f)])
+                  (if (pair? id/property) (car id/property) id/property))
+                (and (not (eq? (added-method-body added) 'abstract))
+                     (let ([mix (hash-ref method-mindex (syntax-e (added-method-id added)) #f)])
+                       (and (or (mindex-final? mix)
+                                (not in-final?))
+                            (vector-ref method-vtable (mindex-index mix))))))
+          ;; result annotation can convert if final
+          #,(or in-final?
+                (eq? (added-method-disposition added) 'final))
+          #,(added-method-kind added)
+          #,(added-method-arity added)
+          #,(and here-callable?
+                 (eq? 'call (syntax-e (added-method-id added)))
+                 function-statinfo-indirect-stx))))
+  ;; may need to add info for inherited `call`:
+  (if (and function-statinfo-indirect-stx
+           here-callable?
+           (not (for/or ([added (in-list added-methods)])
+                  (eq? 'call (syntax-e (added-method-id added))))))
+      ;; `call` is inherited, so bounce again to inherited method's info
+      (cons
+       #`(define-static-info-syntax #,function-statinfo-indirect-stx
+           (#%function-indirect #,(vector-ref method-vtable (mindex-index (hash-ref method-mindex 'call)))))
+       defs)
+      defs))
+
 (define-for-syntax (build-method-result-expression method-result)
   #`(hasheq
      #,@(apply append
@@ -437,12 +455,14 @@
         (cond
           [(let ([v (syntax-parameter-value #'this-id)])
              (and (not (identifier? v)) v))
-           => (lambda (id+dp+supers)
-                (syntax-parse id+dp+supers
-                  [(id dp . _)
-                   (values (wrap-static-info (datum->syntax #'id (syntax-e #'id) #'head #'head)
-                                             #'#%dot-provider
-                                             #'dp)
+           => (lambda (id+dp+isi+supers)
+                (syntax-parse id+dp+isi+supers
+                  [(id dp indirect-static-infos . _)
+                   (values (wrap-static-info*
+                            (wrap-static-info (datum->syntax #'id (syntax-e #'id) #'head #'head)
+                                              #'#%dot-provider
+                                              #'dp)
+                            #'indirect-static-infos)
                            #'tail)]))]
           [else
            (raise-syntax-error #f
@@ -452,31 +472,32 @@
 (define-syntax super
   (expression-transformer
    (lambda (stxs)
-     (define c-or-id+dp+supers (syntax-parameter-value #'this-id))
+     (define c-or-id+dp+isi+supers (syntax-parameter-value #'this-id))
      (cond
-       [(not c-or-id+dp+supers)
+       [(not c-or-id+dp+isi+supers)
         (raise-syntax-error #f
                             "allowed only within methods and constructors"
                             #'head)]
-       [(keyword? (syntax-e (car (syntax-e c-or-id+dp+supers))))
+       [(keyword? (syntax-e (car (syntax-e c-or-id+dp+isi+supers))))
         ;; in a constructor
-        (syntax-parse c-or-id+dp+supers
+        (syntax-parse c-or-id+dp+isi+supers
           [(_ make-name)
            (syntax-parse stxs
              [(head . tail)
               (values #'make-name #'tail)])])]
        [else
         ;; in a method
-        (define id+dp+supers c-or-id+dp+supers)
-        (syntax-parse id+dp+supers
-          [(id dp)
-           (raise-syntax-error #f "class has no superclass" #'head)]
-          [(id dp . super-ids)
+        (define id+dp+isi+supers c-or-id+dp+isi+supers)
+        (syntax-parse id+dp+isi+supers
+          [(id dp isi)
+           (raise-syntax-error #f "class has no superclass"
+                               (syntax-parse stxs #:datum-literals (op |.|) [(head . _) #'head]))]
+          [(id dp isi . super-ids)
            (syntax-parse stxs
              #:datum-literals (op |.|)
              [(head (op (~and dot-op |.|)) method-id:identifier . tail)
               (define super+pos
-                (for/or ([super-id (in-list (syntax->list #'super-ids))])
+                (for/fold ([found #f]) ([super-id (in-list (syntax->list #'super-ids))])
                   (define super (syntax-local-value* (in-class-desc-space super-id)
                                                      (lambda (v)
                                                        (or (class-desc-ref v)
@@ -484,6 +505,9 @@
                   (unless super
                     (raise-syntax-error #f "class or interface not found" super-id))
                   (define pos (hash-ref (super-method-map super) (syntax-e #'method-id) #f))
+                  (when found
+                    (unless (in-common-superinterface? (car found) super (syntax-e #'method-id))
+                      (raise-syntax-error #f "inherited method is ambiguous" #'method-id)))
                   (and pos (cons super pos))))
               (unless super+pos
                 (raise-syntax-error #f "no such method in superclass" #'head #'method-id))
@@ -572,7 +596,7 @@
                                       static-infos)
                    #'tail)])]))))
 
-(define-for-syntax (make-method-syntax id index/id result-id kind)
+(define-for-syntax (make-method-syntax id index/id result-id kind methods-ref-id)
   (define (add-method-result call r)
     (if r
         (wrap-static-info* call (method-result-static-infos r))
@@ -585,7 +609,7 @@
           [(obj-id . _)
            (define rator (if (identifier? index/id)
                              index/id
-                             #`(vector-ref (prop-methods-ref obj-id) #,index/id)))
+                             #`(vector-ref (#,methods-ref-id obj-id) #,index/id)))
            (syntax-parse stx
              [(head . tail)
               #:with assign::assign-op-seq #'tail
@@ -616,7 +640,7 @@
              [(id . _)
               (define rator (if (identifier? index/id)
                                 index/id
-                                #`(vector-ref (prop-methods-ref id) #,index/id)))
+                                #`(vector-ref (#,methods-ref-id id) #,index/id)))
               (define r (and (syntax-e result-id)
                              (syntax-local-method-result result-id)))
               (define-values (call new-tail)
@@ -637,6 +661,8 @@
                                   added-methods method-mindex method-names method-private
                                   names)
   (with-syntax ([(name name-instance name?
+                       methods-ref
+                       indirect-static-infos
                        [field-name ...]
                        [field-static-infos ...]
                        [name-field ...]
@@ -689,12 +715,14 @@
              (define-syntax method-name (make-method-syntax (quote-syntax method-name)
                                                             (quote-syntax method-index/id)
                                                             (quote-syntax method-result-id)
-                                                            (quote method-kind)))
+                                                            (quote method-kind)
+                                                            (quote-syntax methods-ref)))
              ...
              (define-syntax private-method-name (make-method-syntax (quote-syntax private-method-name)
                                                                     (quote-syntax private-method-id)
                                                                     (quote-syntax private-method-result-id)
-                                                                    (quote private-method-kind)))
+                                                                    (quote private-method-kind)
+                                                                    (quote-syntax methods-ref)))
              ...
              (define-syntax new-private-tables (cons (cons (quote-syntax name)
                                                            (hasheq (~@ 'private-method-name
@@ -717,6 +745,7 @@
                                                                     name name-instance name?
                                                                     #,(and r (car r)) #,(added-method-id added)
                                                                     new-private-tables
+                                                                    indirect-static-infos
                                                                     [super-name ...]
                                                                     #,(added-method-kind added))])
                        #,(added-method-id added))))))))))
@@ -728,6 +757,7 @@
         name name-instance name?
         result-id method-name
         private-tables-id
+        indirect-static-infos
         super-names
         kind)
      #:do [(define result-desc
@@ -737,10 +767,11 @@
      #:with (~var e (:entry-point (entry-point-adjustments
                                    (list #'this-obj)
                                    (lambda (arity stx)
-                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance . super-names))]
+                                     #`(syntax-parameterize ([this-id (quote-syntax (this-obj name-instance indirect-static-infos
+                                                                                              . super-names))]
                                                              [private-tables (quote-syntax private-tables-id)])
-                                         ;; This check might be redundant, depending on how the method was called:
-                                         (unless (name? this-obj) (raise-not-an-instance 'name this-obj))
+                                         ;; This check might be redundant, depending on how the method was called
+                                         (unless (name? this-obj) (raise-not-an-instance 'method-name this-obj))
                                          #,(let ([body #`(let ()
                                                            #,stx)])
                                              (cond

@@ -410,3 +410,33 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
  Accepts any arguments and returns @rhombus(#void).
 
 }
+
+
+@doc(
+  interface Callable
+){
+
+ @provided_note{Provided only in the @rhombus(class, ~space) space, not
+  the @rhombus(annot, ~space) space. Methods of the interface are
+  @emph{not} included in the @rhombus(namespace, ~space) binding.}
+
+ An interface that a class can implement (publicly or privately) to make
+ instances of the class callable as functions. The interface has one
+ abstract method, @rhombus(call), which must be overridden to implement the
+ behavior of function calls. The @rhombus(call) method receives the arguments
+ that are passed to the instance that is called as a function.
+
+@examples(
+  ~defn:
+    class Posn(x, y):
+      private implements Callable
+      private override method call(dx, dy):
+        Posn(x + dx, y + dy)
+  ~repl:
+    def p = Posn(1, 2)
+    p
+    p(3, 4)
+)
+
+}
+
