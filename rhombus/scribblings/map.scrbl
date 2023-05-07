@@ -86,7 +86,7 @@ each corresponding value is matched to the value binding pattern.
     alice_home(neighborhood)
 )
 
-The @rhombus(Map.of) annotation constructor takes two annotations, one
+The @rhombus(Map.of, ~annot) annotation constructor takes two annotations, one
 for keys and one for values:
 
 @demo(
@@ -153,7 +153,7 @@ repetitions must have the same length.
     {key: val, ...}
 )
 
-In a map pattern, @rhombus(:)-separated key and value bindings should
+In a map pattern, @(colon)-separated key and value bindings should
 appear before @rhombus(...). Unlike key expressions for individual keys,
 the key part of a repetition binding is a binding. There is no
 guaranteed about the order of the keys and values, except that those two

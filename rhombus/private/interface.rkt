@@ -194,9 +194,12 @@
                     #:when dp)
            dp))
 
-       (define callable?
+       (define (able? which)
          (for/or ([super (in-list supers)])
-           (memq 'call (interface-desc-flags super))))
+           (memq which (interface-desc-flags super))))
+       (define callable? (able? 'call))
+       (define refable? (able? 'ref))
+       (define setable? (able? 'set))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -249,7 +252,7 @@
                (build-interface-desc supers parent-names options
                                      method-mindex method-names method-vtable method-results method-private dots
                                      internal-name
-                                     callable?
+                                     callable? refable? setable?
                                      #'(name prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
                                              dot-provider-name))
@@ -257,6 +260,8 @@
                                      method-mindex method-vtable method-private
                                      method-results
                                      #f
+                                     #f #f
+                                     #f #f
                                      #f #f))))
            #`(begin . #,defns)))])))
 
@@ -307,7 +312,7 @@
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
                                          internal-name
-                                         callable?
+                                         callable? refable? setable?
                                          names)
   (with-syntax ([(name prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
@@ -358,6 +363,6 @@
                             #,(and (syntax-e #'dot-provider-name)
                                    #'(quote-syntax dot-provider-name))
                             '#,(append
-                                (if callable?
-                                    '(call)
-                                    '())))))))))
+                                (if callable? '(call) '())
+                                (if refable? '(ref) '())
+                                (if setable? '(set) '())))))))))

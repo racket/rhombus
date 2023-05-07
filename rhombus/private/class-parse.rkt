@@ -70,8 +70,10 @@
                     dots ; list of symbols for dot syntax
                     dot-provider  ; #f or compile-time identifier
                     defaults-id   ; #f if no arguments with defaults
-                    call-method-id ; #f or identifier as private `call` whose static info is relevant
-                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable)
+                    call-method-id ; #f or identifier as private `call` (for Callable) whose static info is relevant
+                    ref-method-id ; for `ref`
+                    set-method-id ; for `set`
+                    flags))       ; list with 'authentic, 'prefab, and/or 'call (=> public `call` is for Callable), 'ref, 'set
 (define (class-desc-ref v) (and (class-desc? v) v))
 
 (struct class-internal-desc (id                   ; identifier of non-internal class

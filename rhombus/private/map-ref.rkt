@@ -11,6 +11,8 @@
          (submod "map.rkt" for-build)
          "map-ref-set-key.rkt"
          "ref-result-key.rkt"
+         "ref-indirect-key.rkt"
+         "call-result-key.rkt"
          "static-info.rkt"
          (submod "assign.rkt" for-assign)
          "op-literal.rkt"
@@ -20,7 +22,8 @@
          (submod "set.rkt" for-build)
          "repetition.rkt"
          "compound-repetition.rkt"
-         "realm.rkt")
+         "realm.rkt"
+         "ref-property.rkt")
 
 (provide ++)
 
@@ -46,11 +49,11 @@
      #:when (not repetition?)
      #:with assign::assign-op-seq #'assign-tail
      (define op (attribute assign.op))
-     (define map-set!-id (or (syntax-local-static-info map #'#%map-set!)
+     (define map-set!-id (or (syntax-local-static-info/indirect map #'#%map-set! #'#%set-indirect)
                              (if more-static?
                                  (raise-syntax-error who (not-static) map-in)
                                  #'map-set!)))
-     (define map-ref-id (or (syntax-local-static-info map #'#%map-ref)
+     (define map-ref-id (or (syntax-local-static-info/indirect map #'#%map-ref #'#%ref-indirect)
                             (if more-static?
                                 (raise-syntax-error who (not-static) map-in)
                                 #'map-ref)))
@@ -68,7 +71,7 @@
              tail)]
     [(_ ((~and head brackets) index) . tail)
      (define (build-ref map index map-static-info)
-       (define map-ref-id (or (map-static-info #'#%map-ref)
+       (define map-ref-id (or (static-info/indirect map-static-info #'#%map-ref #'#%ref-indirect)
                               (if more-static?
                                   (raise-syntax-error who (not-static) map-in)
                                   #'map-ref)))
@@ -76,7 +79,8 @@
                                 (list map-ref-id map index)
                                 (span-srcloc map #'head)
                                 #'head))
-       (define result-static-infos (or (map-static-info #'#%ref-result)
+       (define result-static-infos (or (static-info/indirect map-static-info #'#%ref-result #'#%ref-indirect)
+                                       (syntax-local-static-info map-ref-id #'#%call-result)
                                        #'()))
        (values e result-static-infos))
      (cond
@@ -101,16 +105,29 @@
         (values (wrap-static-info* e result-static-infos)
                 #'tail)])]))
 
+(begin-for-syntax
+  (define (syntax-local-static-info/indirect e key indirect-key)
+    (or (syntax-local-static-info e key)
+        (let ([id (syntax-local-static-info e indirect-key)])
+          (and id
+               (syntax-local-static-info/indirect id key indirect-key)))))
+  (define (static-info/indirect map-static-info key indirect-key)
+    (or (map-static-info key)
+        (let ([id (map-static-info indirect-key)])
+          (and id
+               (syntax-local-static-info/indirect id key indirect-key))))))
+
 (define (map-ref map index)
   (cond
     [(vector? map) (vector-ref map index)]
     [(list? map) (list-ref map index)]
     [(hash? map) (hash-ref map index)]
     [(set? map) (hash-ref (set-ht map) index #f)]
+    [(refable-ref map #f) => (lambda (ref) (ref map index))]
     [(string? map) (string-ref map index)]
     [(bytes? map) (bytes-ref map index)]
     [else
-     (raise-argument-error* 'Map.ref rhombus-realm "Map" map)]))
+     (raise-argument-error* 'ref rhombus-realm "_Refable" map)]))
 
 (define (map-set! map index val)
   (cond
@@ -119,10 +136,11 @@
     [(and (set? map) (not (immutable? (set-ht map)))) (if val
                                                           (hash-set! (set-ht map) index #t)
                                                           (hash-remove! (set-ht map) index))]
+    [(setable-ref map #f) => (lambda (set) (set map index val))]
     [(and (string? map) (not (immutable? map))) (string-set! map index val)]
     [(and (bytes? map) (not (immutable? map))) (bytes-set! map index val)]
     [else
-     (raise-argument-error* 'Map.assign rhombus-realm "Mutable_Map" map)]))
+     (raise-argument-error* 'assign rhombus-realm "_MutableRefable" map)]))
 
 (define-for-syntax (make-++-expression name static?)
   (expression-infix-operator

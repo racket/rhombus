@@ -92,7 +92,7 @@ normally bound to implement function calls.
 
  See also @rhombus(use_static).
 
- @see_implicit(@rhombus(#%call), @rhombus(()), "expression", ~is_infix: #true)
+ @see_implicit(@rhombus(#%call), @parens, "expression", ~is_infix: #true)
 
 @examples(
   List.length([1, 2, 3])
@@ -416,15 +416,20 @@ Only one @rhombus(~& map_bind) can appear in a @rhombus(rest) sequence.
   interface Callable
 ){
 
- @provided_note{Provided only in the @rhombus(class, ~space) space, not
-  the @rhombus(annot, ~space) space. Methods of the interface are
-  @emph{not} included in the @rhombus(namespace, ~space) binding.}
+@provided_interface_only()
 
  An interface that a class can implement (publicly or privately) to make
  instances of the class callable as functions. The interface has one
- abstract method, @rhombus(call), which must be overridden to implement the
- behavior of function calls. The @rhombus(call) method receives the arguments
- that are passed to the instance that is called as a function.
+ abstract method, which must be overridden to implement the behavior of
+ function calls:
+
+@itemlist(
+
+ @item{@rhombus(call) --- receives the arguments that are passed to the
+  instance that is called as a function, and the method's result is the
+  result of the function call.}
+
+)
 
 @examples(
   ~defn:

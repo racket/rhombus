@@ -15,11 +15,11 @@
                              ;; to get the arity right; direct handling also
                              ;; lets us supply the method-as-function directly
                              ;; as the property value; direct handling is
-                             ;; implemented by `callable-method-as-property`
-                             ;; below
+                             ;; implemented by `able-method-as-property`
+                             ;; in "class-able.rkt"
                              (list)))
 
-(define-for-syntax callable-interface-desc
+(define-class-desc-syntax Callable
   (interface-desc #'Callable
                   #'Callable
                   #'()
@@ -34,6 +34,3 @@
                   '()
                   #f
                   '(call)))
-
-(define-class-desc-syntax Callable
-  callable-interface-desc)

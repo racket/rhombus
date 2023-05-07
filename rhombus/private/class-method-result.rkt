@@ -10,7 +10,9 @@
          "binding.rkt"
          "static-info.rkt"
          "call-result-key.rkt"
-         "function-arity-key.rkt")
+         "function-arity-key.rkt"
+         "ref-result-key.rkt"
+         "map-ref-set-key.rkt")
 
 (provide define-method-result-syntax)
 
@@ -32,7 +34,10 @@
   (define (parse check? result-handler result-static-infos predicate-handler?)
     (syntax-parse stx
       #:datum-literals (op)
-      [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity maybe-call-statinfo-id)
+      [(_ id _ (super-result-id ...) maybe-final-id convert-ok? kind arity
+          maybe-call-statinfo-id
+          maybe-ref-statinfo-id+id
+          maybe-set-statinfo-id+id)
        #:do [(define super-results (map syntax-local-method-result
                                         (syntax->list #'(super-result-id ...))))]
        #:with handler (for/fold ([handler (and check? result-handler)])
@@ -76,7 +81,9 @@
                                               (quote arity)))))
        (cond
          [(or (syntax-e #'maybe-final-id)
-              (syntax-e #'maybe-call-statinfo-id))
+              (syntax-e #'maybe-call-statinfo-id)
+              (syntax-e #'maybe-ref-statinfo-id+id)
+              (syntax-e #'maybe-set-statinfo-id+id))
           (define (gen id)
             (if (syntax-e id)
               #`((define-static-info-syntax #,id
@@ -87,10 +94,22 @@
                           #`((#%function-arity arity))
                           #'())))
               #'()))
+          (define (gen-bounce ind-id+id key result-key)
+            (if (syntax-e ind-id+id)
+                (syntax-parse ind-id+id
+                  [(ind-id id)
+                   #`((define-static-info-syntax ind-id
+                        (#,key id)
+                        #,@(if result-key
+                               #`((#,result-key all-static-infos))
+                               null)))])
+                #'()))
           #`(begin
               #,def
               #,@(gen #'maybe-final-id)
-              #,@(gen #'maybe-call-statinfo-id))]
+              #,@(gen #'maybe-call-statinfo-id)
+              #,@(gen-bounce #'maybe-ref-statinfo-id+id '#%map-ref '#%ref-result)
+              #,@(gen-bounce #'maybe-set-statinfo-id+id '#%map-set! #f))]
          [else def])]))
   (syntax-parse stx
     #:datum-literals ()

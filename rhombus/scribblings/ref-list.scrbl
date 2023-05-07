@@ -71,7 +71,7 @@ it supplies its elements in order.
  repetitions, where @rhombus(repet_or_splice) is like
  @rhombus(expr_or_splice), but with repetitions in place of expressions.
 
- @see_implicit(@rhombus(#%brackets), @rhombus([]), "expression")
+ @see_implicit(@rhombus(#%brackets), @brackets, "expression")
 
 @examples(
   def lst = List(1, 2, 3)

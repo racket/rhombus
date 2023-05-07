@@ -105,7 +105,7 @@ in an unspecified order.
  replace one earlier in the sequence. This ordering applies to mappings
  or elements spliced via @dots_expr and @rhombus(&), too.
  
- @see_implicit(@rhombus(#%braces), @rhombus({}), "expression")
+ @see_implicit(@rhombus(#%braces), @braces, "expression or repetition")
 
 @examples(
   {1, 2, 3}
@@ -131,18 +131,19 @@ in an unspecified order.
     $other_assign_op
 ){
 
- Without an @rhombus(assign_op), accesses the element of the map, array, list, or
- string produced by @rhombus(expr) at the index or key produced by
+ Without an @rhombus(assign_op), accesses the element of the map, array, list,
+ string, or @rhombus(Refable) object produced by @rhombus(expr) at the index or key produced by
  @rhombus(at_expr). The access form also works as a @tech{repetition}
  given repetitions for a collection and an index.
 
- With an @rhombus(assign_op), a mutable array, map, or set element is assigned to
+ With an @rhombus(assign_op), a mutable array, map, set, or @rhombus(MutableRefable)
+ object's element is assigned to
  the value based on the operator and @rhombus(rhs_expr). The expression result is
  @rhombus(#void) in the case of @rhombus(:=) as @rhombus(assign-op).
 
  See also @rhombus(use_static).
 
- @see_implicit(@rhombus(#%ref), @rhombus([]), "expression or repetition", ~is_infix: #true)
+ @see_implicit(@rhombus(#%ref), @brackets, "expression or repetition", ~is_infix: #true)
 
 @examples(
   {"a": 1, "b": 2}["a"]
@@ -215,7 +216,7 @@ in an unspecified order.
 
  See @rhombus(Map, ~bind) and @rhombus(Set, ~bind) for more information.
 
- @see_implicit(@rhombus(#%braces, ~bind), @rhombus({}), "binding") 
+ @see_implicit(@rhombus(#%braces, ~bind), @braces, "binding")
 
 @examples(
   def {"x": x, "y": y}: Map{"x": 1, "y": 2}
@@ -454,5 +455,79 @@ in an unspecified order.
 
  Returns an immutable map whose content matches @rhombus(map). If
  @rhombus(map) is immutable, then it is the result.
+
+}
+
+@doc(
+  interface Refable
+){
+
+@provided_interface_only()
+
+ An interface that a class can implement (publicly or privately) to make
+ instances of the class work with @rhombus(#%ref). The interface has a
+ single abstract method:
+
+@itemlist(
+
+ @item{@rhombus(#,(@rhombus(ref, ~datum))(#,(@rhombus(index, ~var))))
+  --- the @rhombus(index, ~var) value is the second argument to @rhombus(#%ref),
+  which is normally written within @brackets. The result of the
+  @rhombus(ref) method is the result of the reference form.}
+
+)
+@examples(
+  ~defn:
+    class Interleaved(lst1, lst2):
+      private implements Refable
+      private override method ref(index):
+        if (index mod 2) == 0
+        | lst1[index div 2]
+        | lst2[index div 2]    
+  ~repl:
+    def lsts = Interleaved([1, 2, 3], [-1, -2, -3])
+    lsts[2]
+    lsts[3]
+)
+
+}
+
+@doc(
+  interface MutableRefable:
+    extends Refable
+){
+
+@provided_interface_only()
+
+ An interface that extends @rhombus(Refable, ~class) to dd support for
+ assignment with @rhombus(#%ref). The interface has one additional
+ abstract method:
+
+@itemlist(
+
+ @item{@rhombus(#,(@rhombus(set, ~datum))(#,(@rhombus(index, ~var)), #,(@rhombus(val, ~var))))
+  --- takes an @rhombus(index, ~var) and new @rhombus(value, ~var), which are the second and
+  third arguments to @rhombus(#%ref). Those arguments are normally written
+  within @brackets and after an assignment operator like @rhombus(:=),
+  respetcively. The result must be @rhombus(#void).}
+
+)
+@examples(
+  ~defn:
+    class InterleavedArray(arr1, arr2):
+      private implements MutableRefable
+      private override method ref(index):
+        if (index mod 2) == 0
+        | arr1[index div 2]
+        | arr2[index div 2]    
+      private override method set(index, val):
+        if (index mod 2) == 0
+        | arr1[index div 2] := val
+        | arr2[index div 2] := val
+  ~repl:
+    def lsts = InterleavedArray(Array(1, 2, 3), Array(-1, -2, -3))
+    lsts[2] := 20
+    lsts
+)
 
 }

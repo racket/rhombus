@@ -113,9 +113,7 @@
   interface Equatable
 ){
 
- @provided_note{Provided only in the @rhombus(class, ~space) space, not
-  the @rhombus(annot, ~space) space. Methods of the interface are
-  @emph{not} included in the @rhombus(namespace, ~space) binding.}
+@provided_interface_only()
 
  An interface that a class can implement (publicly or privately) to
  customize the way its objects are compared and hashed. The interface has

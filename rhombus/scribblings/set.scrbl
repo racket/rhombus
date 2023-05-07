@@ -38,7 +38,7 @@ expression. The @rhombus(Set) constructor can also be used like a
 function with @parens instead of
 @braces.
 
-@rhombus(Set.of) and @rhombus(MutableSet) work as you'd expect. When
+@rhombus(Set.of, ~annot) and @rhombus(MutableSet) work as you'd expect. When
 @brackets with @rhombus(:=) is used to modify a mutable
 set, the ``key'' is removed from the set if the assigned value is
 @rhombus(#false), otherwise the ``key'' is added to the set.

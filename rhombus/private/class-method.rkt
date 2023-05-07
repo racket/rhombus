@@ -17,6 +17,8 @@
          "class-method-result.rkt"
          "dot-provider-key.rkt"
          "function-indirect-key.rkt"
+         "map-ref-set-key.rkt"
+         "ref-indirect-key.rkt"
          "static-info.rkt"
          (submod "dot.rkt" for-dot-provider)
          (submod "assign.rkt" for-assign)
@@ -344,7 +346,9 @@
                                          method-mindex method-vtable method-private
                                          method-results
                                          in-final?
-                                         function-statinfo-indirect-stx here-callable?)
+                                         call-statinfo-indirect-stx here-callable?
+                                         ref-statinfo-indirect-stx here-refable?
+                                         set-statinfo-indirect-stx here-setable?)
   (define defs
     (for/list ([added (in-list added-methods)]
                #:when (added-method-result-id added))
@@ -368,18 +372,29 @@
           #,(added-method-arity added)
           #,(and here-callable?
                  (eq? 'call (syntax-e (added-method-id added)))
-                 function-statinfo-indirect-stx))))
-  ;; may need to add info for inherited `call`:
-  (if (and function-statinfo-indirect-stx
-           here-callable?
-           (not (for/or ([added (in-list added-methods)])
-                  (eq? 'call (syntax-e (added-method-id added))))))
-      ;; `call` is inherited, so bounce again to inherited method's info
-      (cons
-       #`(define-static-info-syntax #,function-statinfo-indirect-stx
-           (#%function-indirect #,(vector-ref method-vtable (mindex-index (hash-ref method-mindex 'call)))))
-       defs)
-      defs))
+                 call-statinfo-indirect-stx)
+          #,(and here-refable?
+                 (eq? 'ref (syntax-e (added-method-id added)))
+                 #`[#,ref-statinfo-indirect-stx #,(added-method-rhs-id added)])
+          #,(and here-setable?
+                 (eq? 'set (syntax-e (added-method-id added)))
+                 #`[#,set-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
+  ;; may need to add info for inherited `call`, etc.:
+  (define (add-able which statinfo-indirect-stx here-able? key defs)
+    (if (and statinfo-indirect-stx
+             here-able?
+             (not (for/or ([added (in-list added-methods)])
+                    (eq? which (syntax-e (added-method-id added))))))
+        ;; method is inherited, so bounce again to inherited method's info
+        (cons
+         #`(define-static-info-syntax #,statinfo-indirect-stx
+             (#,key #,(vector-ref method-vtable (mindex-index (hash-ref method-mindex which)))))
+         defs)
+        defs))
+  (let* ([defs (add-able 'call call-statinfo-indirect-stx here-callable? #'#%function-indirect defs)]
+         [defs (add-able 'ref ref-statinfo-indirect-stx here-refable? #'#%map-ref defs)]
+         [defs (add-able 'set set-statinfo-indirect-stx here-setable? #'#%map-set! defs)])
+    defs))
 
 (define-for-syntax (build-method-result-expression method-result)
   #`(hasheq
