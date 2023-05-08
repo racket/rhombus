@@ -194,7 +194,7 @@
           (display name op)
           (display ">" op)]
          [else
-          (display "#<function>") op])]
+          (display "#<function>" op)])]
       [(symbol? v)
        (cond
          [(display?)

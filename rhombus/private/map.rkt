@@ -75,6 +75,11 @@
         'keys (method1 hash-keys)
         'has_key (lambda (ht) (lambda (key) (hash-has-key? ht key)))
         'copy (method1 hash-copy)
+        'ref (lambda (ht)
+               (let ([ref (case-lambda
+                            [(key) (hash-ref ht key)]
+                            [(key default) (hash-ref ht key default)])])
+                 ref))
         'hash-snapshot (method1 hash-snapshot)))
 
 (define Map-build hashalw) ; inlined version of `Map.from_interleaved`
@@ -185,6 +190,7 @@
    [has_key hash-has-key?]
    [copy hash-copy]
    [snapshot hash-snapshot]
+   [ref hash-ref]
    of))
 
 (define-name-root MapView
@@ -272,6 +278,7 @@
         [(has_key) (nary #'hash-has-key? 2 #'hash-has-key?)]
         [(copy) (0ary #'hash-copy mutable-map-static-info)]
         [(snapshot) (0ary #'hash-snapshot map-static-info)]
+        [(ref) (nary #'hash-ref 6 #'hash-ref)]
         [else #f])))))
 
 (define-static-info-syntax Map-pair-build
@@ -516,4 +523,5 @@
   (#%function-arity 1)
   (#%call-result #,map-static-info))
   
-
+(define-static-info-syntaxes (hash-ref)
+  (#%function-arity 12))

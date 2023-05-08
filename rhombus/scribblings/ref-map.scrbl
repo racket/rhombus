@@ -30,6 +30,7 @@ in an unspecified order.
   [map.length(), Map.length(map)]
   [map.keys(), Map.keys(map)]
   [map.values(), Map.values(map)]
+  [map.ref(k), Map.ref(map, k)]
   [map.has_key(k), Map.has_key(map, k)]
   [map.copy(), Map.copy(map)]
   [map.snapshot(), Map.snapshot(map)]
@@ -426,6 +427,27 @@ in an unspecified order.
 
 
 @doc(
+  fun Map.ref(map :: MapView, key, default = #,@rhombus(raise_error, ~var))
+){
+
+ Equivalent to @rhombus(map[key]) when @rhombus(default) is not
+ provided, otherwise @rhombus(default) is used when @rhombus(map) does
+ not contain a mapping for @rhombus(key). In that case, if
+ @rhombus(default) is a function, then the function is called with zero
+ arguments to get a result, otherwise @rhombus(default) is returned as
+ the result.
+
+@examples(
+  Map.ref({"a": 1, "b": 2}, "a")
+  Map.ref({"a": 1, "b": 2}, "c", #inf)
+  ~error:
+    Map.ref({"a": 1, "b": 2}, "c", fun(): error("no value"))
+)
+
+}
+
+
+@doc(
   fun Map.has_key(map :: MapView, key) :: Boolean
 ){
 
@@ -438,6 +460,7 @@ in an unspecified order.
 )
 
 }
+
 
 @doc(
   fun Map.copy(map :: MapView) :: MutableMap

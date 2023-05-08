@@ -8,6 +8,7 @@ block:
     Map.keys(m, [try_sort])
     Map.values(m)
     Map.has_key(m, k)
+    Map.ref(m, k, [default])
 
 check:
   {"a": 1, #'~b: 2}
@@ -27,8 +28,10 @@ block:
     {"a": 1, "b": 2}.length()
     ~is 2
   check:
-    {"a": 1, "b": 2}["a"]
-    ~is 1
+    {"a": 1, "b": 2}["a"] ~is 1
+    {"a": 1, "b": 2}.ref("a") ~is 1
+    {"a": 1, "b": 2}.ref("c", "other") ~is "other"
+    {"a": 1, "b": 2}.ref("c", fun (): "got other") ~is "got other"
   check:
     Map{"a": 1, "b": 2}.length()
     ~is 2
@@ -60,11 +63,10 @@ block:
 
 block:
   check:
-    dynamic({"a": 1, "b": 2}).length()
-    ~is 2
-  check:
-    dynamic({"a": 1, "b": 2})["a"]
-    ~is 1
+    dynamic({"a": 1, "b": 2}).length() ~is 2
+    dynamic({"a": 1, "b": 2})["a"] ~is 1
+    dynamic({"a": 1, "b": 2}).ref("a") ~is 1
+    dynamic({"a": 1, "b": 2}).ref("c", "other")  ~is "other"
 
 // See also tests in "rest-args.rhm"
 block:
