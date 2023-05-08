@@ -289,7 +289,7 @@
      ;; applied to a singleton import by itself:
      (unless (or (pair? mods) (pair? namesps))
        (convert-require-from-namespace #'r #hasheq() #hasheq() #f #t #f))
-     ;; module re-imports
+     ;; module (re-)imports
      (define-values (mod-forms covered-ht)
        (let loop ([orig-mods orig-mods] [rev-mod-forms '()] [covered-ht #hasheq()])
          (cond

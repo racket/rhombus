@@ -299,11 +299,16 @@
                                    k))))]
            [else
             ;; specific ids, some exposed or renamed
-            (for/list ([(k v) (in-hash renames)]
-                       #:when (and (or (not for-expose?)
-                                       (expose? v))
-                                   (hash-ref syms (syntax-e (plain-id v)) #f)))
-              #`(rename #,mod-path #,(plain-id v) #,k))])]
+            (define l
+              (for/list ([(k v) (in-hash renames)]
+                         #:when (and (or (not for-expose?)
+                                         (expose? v))
+                                     (hash-ref syms (syntax-e (plain-id v)) #f)))
+                #`(rename #,mod-path #,(plain-id v) #,k)))
+            (if (null? l)
+                ;; don't lose track of the module completely
+                (list #`(only #,mod-path))
+                l)])]
         [(and for-expose?
               (or (zero? (hash-count renames))
                   (for/and ([(k v) (in-hash renames)])
@@ -350,7 +355,7 @@
                         #,@(make-ins #f))))
        (if prefix-id
            (for/list ([phase (in-hash-keys
-                              (for/hasheqv ([phase+space(in-list r-phase+spaces)]
+                              (for/hasheqv ([phase+space (in-list r-phase+spaces)]
                                             #:when (or phase-shift (eqv? 0 (phase+space-phase phase+space))))
                                 (values (phase+space-phase phase+space) #t)))])
              (define s-prefix-id prefix-id)
@@ -364,9 +369,12 @@
                                                #,(prefix-intro s-prefix-id))))))
            null)))
     (values
-     (if module?
-         #`(#%require #,@(map car reqs+defss))
-         #`(begin
-             (#%require #,@(map car reqs+defss))
-             #,@(apply append (map cdr reqs+defss))))
+     (if (null? r-phase+spaces)
+         ;; don't lose track of the dependency:
+         #`(#%require (for-meta #,phase-shift) (only #,mod-path))
+         (if module?
+             #`(#%require #,@(map car reqs+defss))
+             #`(begin
+                 (#%require #,@(map car reqs+defss))
+                 #,@(apply append (map cdr reqs+defss)))))
      new-covered-ht)))
