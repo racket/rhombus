@@ -45,6 +45,7 @@
                   #t
                   '()
                   #f
+                  #'()
                   '()))
 
 (define (equal-recur-internal-method this other recur)

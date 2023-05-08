@@ -28,6 +28,7 @@
              [else (error "unknown able")]))))
 
 ;; returns `(values here-<which>able? public-<which>able?)`:
+;;   * `<which>able?` implies that a <which> method is declared or inherited, maybe abstract
 ;;   * `here-<which>able?` implies that a <which> method is declared or inherited and implements
 ;;     `<Which>able`; if #f, instances may still be callable through an inherited private implementation
 ;;   * `public-<which>able?` can be #f even if `here-<which>able?` if the <which> method is not public
@@ -36,7 +37,8 @@
     (or (and super (memq which (class-desc-flags super)))
         (for/or ([intf (in-list interfaces)])
           (memq which (interface-desc-flags intf)))))
-  (values (and is-able?
+  (values is-able?
+          (and is-able?
                (or (hash-ref method-private which #f)
                    (let ([m (hash-ref method-mindex which #f)])
                      (and m

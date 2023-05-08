@@ -1,7 +1,8 @@
 #lang racket/base
 (require "private/bounce.rkt")
 
-(bounce "private/core-meta.rkt")
+(bounce "private/core-meta.rkt"
+        "private/sequence_meta.rhm")
 
 (bounce-meta "private/class-meta.rkt"
              "private/interface-meta.rkt")

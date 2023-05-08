@@ -39,6 +39,7 @@
                   #t
                   '()
                   #f
+                  #'()
                   '(ref)))
 
 (define-class-desc-syntax MutableRefable
@@ -56,6 +57,7 @@
                   #t
                   '()
                   #f
+                  #'()
                   '(ref set)))
 
 (define-syntax void-result

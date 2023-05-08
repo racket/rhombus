@@ -45,6 +45,8 @@
 (begin-for-syntax
   (define-syntax-class :equal
     #:attributes ()
+    #:description "equal operator"
+    #:opaque
     (pattern op::name
              #:when (free-identifier=? #'op.name
                                        (expr-quote rhombus=))))

@@ -36,6 +36,20 @@ class A2():
     | "bad"
     | #void
 
+interface I3:
+  extends MutableRefable
+  
+class A3():
+  implements I3
+  field saved = #false
+  override method ref(index) :: O:
+    O(index)
+  override method set(index, val):
+    saved := [index, val]
+    if index == "bad"
+    | "bad"
+    | #void  
+
 check:
   A()[0].v ~is 0
   A().ref_self(7) ~is 7
@@ -44,6 +58,8 @@ check:
   A2()[3].v ~is 3
   A2()["good"] := #'ok ~is #void
   A2()["bad"] := #'no ~raises "result does not satisfy annotation"
+  A3()[0].v ~is 0
+  (A3() :: I3)[0] ~is O(0)
 
 block:
   def b = B()  

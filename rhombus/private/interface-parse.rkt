@@ -26,6 +26,7 @@
                         custom-annotation?
                         dots            ; list of symbols for dot syntax
                         dot-provider    ; #f or compile-time identifier
+                        static-infos    ; same as `class-desc`
                         flags))         ; list of 'call (public `call` is Callable), 'ref, and/or 'ref+set
 (struct interface-internal-desc interface-desc (private-methods      ; (list symbol ...)
                                                 private-properties)) ; (list symbol ...)

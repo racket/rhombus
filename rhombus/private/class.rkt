@@ -18,8 +18,6 @@
          "expression.rkt"
          (submod "dot.rkt" for-dot-provider)
          "call-result-key.rkt"
-         "function-indirect-key.rkt"
-         "ref-indirect-key.rkt"
          "class-clause.rkt"
          "class-clause-parse.rkt"
          "class-clause-tag.rkt"
@@ -139,6 +137,9 @@
 
        (define interface-names (reverse (hash-ref options 'implements '())))
        (define interfaces (interface-names->interfaces #'orig-stx interface-names))
+       (define private-interfaces (interface-set-diff
+                                   (interface-names->interfaces #'orig-stx (hash-ref options 'private-implements '()))
+                                   (interface-names->interfaces #'orig-stx (hash-ref options 'public-implements '()))))
 
        (define-values (internal-id exposed-internal-id extra-exposed-internal-ids)
          (extract-internal-ids options
@@ -158,23 +159,17 @@
                               (syntax->list #'constructor-field-names)
                               intro))
 
-       (define call-statinfo-indirect-id
-         (able-statinfo-indirect-id 'call super interfaces #'name intro))
-       (define ref-statinfo-indirect-id
-         (able-statinfo-indirect-id 'ref super interfaces #'name intro))
-       (define set-statinfo-indirect-id
-         (able-statinfo-indirect-id 'set super interfaces #'name intro))
+       (define-values (call-statinfo-indirect-id
+                       ref-statinfo-indirect-id
+                       set-statinfo-indirect-id
 
-       (define indirect-static-infos
-         #`(#,@(if call-statinfo-indirect-id
-                   #`((#%function-indirect #,call-statinfo-indirect-id))
-                   #'())
-            #,@(if ref-statinfo-indirect-id
-                   #`((#%ref-indirect #,ref-statinfo-indirect-id))
-                   #'())
-            #,@(if set-statinfo-indirect-id
-                   #`((#%set-indirect #,set-statinfo-indirect-id))
-                   #'())))
+                       static-infos-id
+                       static-infos-exprs
+                       instance-static-infos
+
+                       indirect-static-infos
+                       internal-indirect-static-infos)
+         (extract-instance-static-infoss #'name options super interfaces private-interfaces intro))
 
        (with-syntax ([constructor-name-fields constructor-name-fields]
                      [((constructor-public-name-field constructor-public-field-keyword) ...)
@@ -202,16 +197,19 @@
                      [((super-field-name super-name-field . _) ...) (if super
                                                                         (class-desc-fields super)
                                                                         '())]
-                     [indirect-static-infos indirect-static-infos])
+                     [indirect-static-infos indirect-static-infos]
+                     [internal-indirect-static-infos internal-indirect-static-infos]
+                     [instance-static-infos instance-static-infos])
          (wrap-for-together
           #'for-together?
           #`(begin
               #,@(top-level-declare #'(name? . constructor-name-fields))
+              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-class-annotation-form super annotation-rhs
                                               super-constructor-fields
                                               exposed-internal-id internal-of-id intro
                                               #'(name name-instance name? name-of
-                                                      internal-name-instance indirect-static-infos
+                                                      internal-name-instance indirect-static-infos internal-indirect-static-infos
                                                       make-converted-name make-converted-internal
                                                       constructor-name-fields [constructor-public-name-field ...] [super-name-field ...]
                                                       constructor-field-keywords [constructor-public-field-keyword ...] [super-field-keyword ...]))
@@ -221,6 +219,7 @@
                          full-name name name? name-of make-converted-name
                          name-instance internal-name-instance internal-of make-converted-internal
                          call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect indirect-static-infos
+                         instance-static-infos
                          constructor-field-names
                          constructor-field-keywords
                          constructor-field-defaults
@@ -238,6 +237,7 @@
                     full-name name name? name-of make-converted-name
                     name-instance internal-name-instance internal-of make-converted-internal
                     call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect indirect-static-infos
+                    instance-static-infos
                     (constructor-field-name ...)
                     (constructor-field-keyword ...) ; #f or keyword
                     (constructor-field-default ...) ; #f or (parsed)
@@ -394,11 +394,11 @@
          (or has-private-fields?
              ((hash-count method-private) . > . 0)))
 
-       (define-values (here-callable? public-callable?)
+       (define-values (callable? here-callable? public-callable?)
          (able-method-status 'call super interfaces method-mindex method-vtable method-private))
-       (define-values (here-refable? public-refable?)
+       (define-values (refable? here-refable? public-refable?)
          (able-method-status 'ref super interfaces method-mindex method-vtable method-private))
-       (define-values (here-setable? public-setable?)
+       (define-values (setable? here-setable? public-setable?)
          (able-method-status 'set super interfaces method-mindex method-vtable method-private))
 
        (define (temporary template)
@@ -591,6 +591,7 @@
                                  here-setable? public-setable?
                                  #'(name class:name constructor-maker-name name-defaults name-ref
                                          dot-provider-name
+                                         instance-static-infos
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
                                                      (quote-syntax super-maybe-set-name-field!)
@@ -608,9 +609,10 @@
                                      method-mindex method-vtable method-private
                                      method-results
                                      final?
-                                     #'call-statinfo-indirect here-callable?
-                                     #'ref-statinfo-indirect here-refable?
-                                     #'set-statinfo-indirect here-setable?))))
+                                     #'prop-methods-ref
+                                     #'call-statinfo-indirect callable?
+                                     #'ref-statinfo-indirect refable?
+                                     #'set-statinfo-indirect setable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-class-struct super
@@ -769,6 +771,7 @@
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
                        dot-provider-name
+                       instance-static-infos
                        fields
                        ([field-name field-argument maybe-set-name-field!] ...))
                  names])
@@ -838,6 +841,7 @@
                              #'(quote-syntax dot-provider-name))
                       #,(and (syntax-e #'name-defaults)
                              #'(quote-syntax name-defaults))
+                      (#,(quote-syntax quasisyntax) instance-static-infos)
                       #,(able-method-for-class-desc 'call here-callable? public-callable?
                                                     super
                                                     method-mindex method-vtable method-private)

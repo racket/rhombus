@@ -14,6 +14,7 @@
          "for-clause.rkt"
          "static-info.rkt"
          "ref-result-key.rkt"
+         "sequence-constructor-key.rkt"
          "parse.rkt"
          "parens.rkt"
          (rename-in "values.rkt"

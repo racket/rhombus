@@ -13,6 +13,7 @@
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "function-arity-key.rkt"
+         "sequence-constructor-key.rkt"
          "composite.rkt"
          "name-root.rkt"
          "dot-parse.rkt"

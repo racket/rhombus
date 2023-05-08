@@ -6,7 +6,8 @@
         "private/check.rhm"
         "private/maybe.rhm"
         "private/string.rhm"
-        "private/described_as.rhm")
+        "private/described_as.rhm"
+        "private/sequence.rhm")
 
 (module reader syntax/module-reader
   #:language 'rhombus

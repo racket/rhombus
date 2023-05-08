@@ -4,7 +4,9 @@
                      enforest/proc-name
                      "pack.rkt"
                      "realm.rkt"
-                     (submod "class-meta.rkt" for-static-info))
+                     (submod "class-meta.rkt" for-static-info)
+                     (for-syntax
+                      racket/base))
          "space-provide.rkt"
          "class+interface.rkt"
          "class-clause.rkt"

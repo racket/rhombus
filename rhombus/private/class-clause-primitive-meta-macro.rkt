@@ -6,6 +6,7 @@
                      "macro-rhs.rkt"
                      (submod "dot.rkt" for-dot-provider)
                      "srcloc.rkt"
+                     "parse.rkt"
                      (for-syntax racket/base
                                  syntax/parse/pre
                                  "with-syntax.rkt"
@@ -19,7 +20,8 @@
 
 (provide (for-spaces (rhombus/class_clause
                       rhombus/interface_clause)
-                     dot))
+                     dot
+                     static_info))
 
 ;; see also "class-clause-primitive-macro.rkt"; this one has only
 ;; forms that need meta-time bindings, so we don't want a mate-time
@@ -79,3 +81,16 @@
                                          #'values
                                          #`(syntax-static-infos #'() syntax-static-infos)
                                          #:else #'#f)])))
+
+
+(define-for-syntax (parse-static_info stx data)
+  (syntax-parse stx
+    [(_ (tag::block body ...))
+     (wrap-class-clause #`(#:static-infos
+                           (rhombus-body-at tag body ...)))]))
+
+(define-class-clause-syntax static_info
+  (class-clause-transformer parse-static_info))
+
+(define-interface-clause-syntax static_info
+  (interface-clause-transformer parse-static_info))

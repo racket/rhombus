@@ -152,3 +152,18 @@
  See @secref("annotation-macro") for examples using some of these keys.
 
 }
+
+
+@doc(
+  class_clause.macro 'static_info: $body; ...'
+  interface_clause.macro 'static_info: $body; ...'
+){
+
+ A clause form for @rhombus(class) or @rhombus(interface) that adds
+ static information associated with the class or interface name as an
+ annotation (i.e., static information for instances of the class or
+ interface). The @rhombus(body) sequence should produce static
+ information in unpacked form, like the form accepted by
+ @rhombus(statinfo_meta.pack).
+
+}

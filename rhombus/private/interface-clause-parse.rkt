@@ -29,6 +29,9 @@
             (syntax-parse clause
               [(#:internal id)
                (hash-set options 'internals (cons #'id (hash-ref options 'internals '())))]
+              [(#:extends id ...)
+               (hash-set options 'extends (append (reverse (syntax->list #'(id ...)))
+                                                  (hash-ref options 'extends '())))]
               [(#:annotation block)
                (when (hash-has-key? options 'annotation-rhs)
                  (raise-syntax-error #f "multiple annotation clauses" orig-stx clause))
@@ -37,6 +40,8 @@
                      #:property #:override-property
                      #:final-property #:final-override-property) . _)
                (hash-set options 'has-non-abstract-method? #t)]
+              [(#:static-infos expr)
+               (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 
@@ -66,6 +71,8 @@
               [(#:dot name block)
                (hash-set options 'dots (cons (cons #'name (extract-rhs #'block))
                                              (hash-ref options 'dots null)))]
+              [(#:static-infos expr)
+               (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_
                (parse-method-clause orig-stx options clause)]))
           (loop (cdr clauses) new-options)]))]))

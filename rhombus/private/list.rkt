@@ -13,6 +13,7 @@
          "call-result-key.rkt"
          "ref-result-key.rkt"
          "function-arity-key.rkt"
+         "sequence-constructor-key.rkt"
          "op-literal.rkt"
          "literal.rkt"
          (submod "ellipsis.rkt" for-parse)

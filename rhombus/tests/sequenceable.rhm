@@ -1,0 +1,100 @@
+#lang rhombus/static/and_meta
+
+class Posn(x, y):
+  nonfinal
+  implements Sequenceable
+  override method to_sequence():
+    Sequence.make(~initial_position: 0,
+                  ~continue_at_position: fun (i): i < 2,
+                  ~position_to_next: fun (i): i + 1,
+                  ~position_to_element: fun (i):
+                                          if i == 0
+                                          | y
+                                          | x)
+  sequence '$lhs: $rhs':
+    '((p = $rhs),
+      #true,
+      (pos = 0),
+      pos < 2,
+      ($lhs = if pos == 0 | Posn.y(p) | Posn.x(p)),
+      #true,
+      #true,
+      (pos + 1))'
+
+class Posn3D(z):
+  extends Posn
+
+check:
+  for List:
+    each j: Posn(1, 2)
+    j
+  ~is [2, 1]
+
+check:
+  for List:
+    each j: Posn3D(1, 2, 3)
+    j
+  ~is [2, 1]
+
+interface Sql:
+  extends Sequenceable
+  internal _Sql
+  property ex
+  property why
+  sequence '$lhs: $rhs':
+    '((p = $rhs),
+      #true,
+      (pos = 0),
+      pos < 2,
+      ($lhs = if pos == 0 | (p :~ _Sql).why | (p :~ _Sql).ex),
+      #true,
+      #true,
+      (pos + 1))'
+
+class Posn2(x, y):
+  implements Sql
+  override method to_sequence():
+    error("don't use this")
+  override property ex: -x
+  override property why: -y
+
+check:
+  for List:
+    each j: Posn2(1, 2)
+    j
+  ~is [-2, -1]
+
+
+class Posn3(x, y):
+  internal _Posn3
+  private implements Sql
+  private override method to_sequence():
+    error("don't use this")
+  private override property ex: -x
+  private override property why: -y
+
+check:
+  for List:
+    each j: (Posn3(1, 2) :: _Posn3)
+    j
+  ~is [-2, -1]
+
+class Posn4(x, y):
+  nonfinal
+  implements Sequenceable
+  override method to_sequence():
+    Sequence.make(~initial_position: 0,
+                  ~continue_at_position: fun (i): i < 2,
+                  ~position_to_next: fun (i): i + 1,
+                  ~position_to_element: fun (i):
+                                          if i == 0
+                                          | y*10
+                                          | x*10)
+  sequence '$lhs: $rhs':
+    #false
+
+check:
+  for List:
+    each j: Posn4(1, 2)
+    j
+  ~is [20, 10]

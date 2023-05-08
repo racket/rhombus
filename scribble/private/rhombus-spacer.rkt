@@ -165,9 +165,9 @@
    (lambda (head tail escape)
      (syntax-parse tail
        #:datum-literals (group op)
-       [(esc form ((~and tag parens) arg ...) . more)
+       [(esc ((~and tag parens) arg ...) . more)
         #:when (escape? #'esc escape)
-        (fun-spacer head tail escape)]
+        (values head tail)]
        [(id ((~and tag parens) arg ...) . more)
         #:when (and (identifier? #'id)
                     (not (free-identifier=? #'id #'rhombus-values)))

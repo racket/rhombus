@@ -127,6 +127,7 @@
         "boolean-pattern.rkt"
         "boolean-annotation.rkt"
         "equatable.rkt"
+        "sequenceable.rkt"
         "eval.rkt"
         "printable.rkt"
         "callable.rkt"

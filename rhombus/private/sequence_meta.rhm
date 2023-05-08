@@ -1,0 +1,20 @@
+#lang rhombus/private/core
+import:
+  "core-meta.rkt" open
+  "sequence-help.rkt" open
+  "sequence-constructor-key.rkt" open
+
+export:
+  sequence
+
+class_and_interface_clause.macro '«sequence '$(pat :: Group)':
+                                     $body
+                                     ...»':
+  '«
+     sequence_macro sequence_constructor:
+       make_sequence_constructor(fun ('$pat'):
+                                   $body
+                                   ...)
+     static_info: '((#{#%sequence-constructor},
+                     sequence_constructor))'
+   »'

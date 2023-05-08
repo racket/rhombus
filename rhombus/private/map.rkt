@@ -21,6 +21,7 @@
          "map-ref-set-key.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
+         "sequence-constructor-key.rkt"
          "composite.rkt"
          "parse.rkt"
          "realm.rkt"

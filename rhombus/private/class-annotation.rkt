@@ -24,7 +24,7 @@
                                                 exposed-internal-id internal-of-id intro
                                                 names)
   (with-syntax ([(name name-instance name? name-of
-                       internal-name-instance indirect-static-infos
+                       internal-name-instance indirect-static-infos internal-indirect-static-infos
                        make-converted-name make-converted-internal
                        constructor-name-fields constructor-public-name-fields super-name-fields
                        field-keywords public-field-keywords super-field-keywords)
@@ -32,7 +32,8 @@
     (with-syntax ([core-ann-name (if annotation-rhs
                                      (car (generate-temporaries #'(name)))
                                      #'name)])
-      (define (make-ann-defs id of-id no-super? name-fields keywords name-instance-stx make-converted-id)
+      (define (make-ann-defs id of-id no-super? name-fields keywords name-instance-stx
+                             make-converted-id indirect-static-infos-stx)
         (define len (length (syntax->list name-fields)))
         (with-syntax ([(constructor-name-field ...) name-fields]
                       [(field-keyword ...) keywords]
@@ -51,8 +52,8 @@
                 ([accessors (list (quote-syntax super-name-field) ...
                                   (quote-syntax constructor-name-field) ...)])
                 (quote-syntax name?)
-                (quote-syntax ((#%dot-provider name-instance)
-                               . indirect-static-infos))
+                (#,(quote-syntax quasisyntax) ((#%dot-provider name-instance)
+                                               . #,indirect-static-infos-stx))
                 (quote #,(+ len (if no-super? 0 (length super-constructor-fields))))
                 (super-field-keyword ... field-keyword ...)
                 (make-class-instance-predicate accessors)
@@ -70,7 +71,8 @@
        (if exposed-internal-id
            (make-ann-defs exposed-internal-id internal-of-id #t #'constructor-name-fields #'field-keywords
                           #'internal-name-instance
-                          #'make-converted-internal)
+                          #'make-converted-internal
+                          #'internal-indirect-static-infos)
            null)
        (cond
          [annotation-rhs
@@ -83,7 +85,8 @@
          [else
           (make-ann-defs #'name #'name-of #f #'constructor-public-name-fields #'public-field-keywords
                          #'name-instance
-                         #'make-converted-name)])))))
+                         #'make-converted-name
+                         #'indirect-static-infos)])))))
 
 (define-for-syntax (make-class-instance-predicate accessors)
   (lambda (arg predicate-stxs)

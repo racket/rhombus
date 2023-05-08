@@ -346,9 +346,10 @@
                                          method-mindex method-vtable method-private
                                          method-results
                                          in-final?
-                                         call-statinfo-indirect-stx here-callable?
-                                         ref-statinfo-indirect-stx here-refable?
-                                         set-statinfo-indirect-stx here-setable?)
+                                         methods-ref-id
+                                         call-statinfo-indirect-stx callable?
+                                         ref-statinfo-indirect-stx refable?
+                                         set-statinfo-indirect-stx setable?)
   (define defs
     (for/list ([added (in-list added-methods)]
                #:when (added-method-result-id added))
@@ -370,30 +371,38 @@
                 (eq? (added-method-disposition added) 'final))
           #,(added-method-kind added)
           #,(added-method-arity added)
-          #,(and here-callable?
+          #,(and callable?
                  (eq? 'call (syntax-e (added-method-id added)))
                  call-statinfo-indirect-stx)
-          #,(and here-refable?
+          #,(and refable?
                  (eq? 'ref (syntax-e (added-method-id added)))
                  #`[#,ref-statinfo-indirect-stx #,(added-method-rhs-id added)])
-          #,(and here-setable?
+          #,(and setable?
                  (eq? 'set (syntax-e (added-method-id added)))
                  #`[#,set-statinfo-indirect-stx #,(added-method-rhs-id added)]))))
   ;; may need to add info for inherited `call`, etc.:
-  (define (add-able which statinfo-indirect-stx here-able? key defs)
+  (define (add-able which statinfo-indirect-stx able? key defs abstract-args)
     (if (and statinfo-indirect-stx
-             here-able?
+             able?
              (not (for/or ([added (in-list added-methods)])
                     (eq? which (syntax-e (added-method-id added))))))
         ;; method is inherited, so bounce again to inherited method's info
-        (cons
-         #`(define-static-info-syntax #,statinfo-indirect-stx
-             (#,key #,(vector-ref method-vtable (mindex-index (hash-ref method-mindex which)))))
-         defs)
+        (let* ([index (mindex-index (hash-ref method-mindex which))]
+               [impl-id (vector-ref method-vtable index)])
+          (define abstract? (eq? impl-id '#:abstract))
+          (if (or (not abstract?) abstract-args)
+              (cons
+               #`(define-static-info-syntax #,statinfo-indirect-stx
+                   (#,key #,(if abstract?
+                                #`(lambda (obj . #,abstract-args)
+                                    ((method-ref #,methods-ref-id obj #,index) obj . #,abstract-args))
+                                impl-id)))
+               defs)
+              defs))
         defs))
-  (let* ([defs (add-able 'call call-statinfo-indirect-stx here-callable? #'#%function-indirect defs)]
-         [defs (add-able 'ref ref-statinfo-indirect-stx here-refable? #'#%map-ref defs)]
-         [defs (add-able 'set set-statinfo-indirect-stx here-setable? #'#%map-set! defs)])
+  (let* ([defs (add-able 'call call-statinfo-indirect-stx callable? #'#%function-indirect defs #f)]
+         [defs (add-able 'ref ref-statinfo-indirect-stx refable? #'#%map-ref defs #'(index))]
+         [defs (add-able 'set set-statinfo-indirect-stx setable? #'#%map-set! defs #'(index val))])
     defs))
 
 (define-for-syntax (build-method-result-expression method-result)

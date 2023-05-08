@@ -1,6 +1,6 @@
 #lang racket/base
 (require (for-syntax racket/base
-                     syntax/parse)
+                     syntax/parse/pre)
          "name-root.rkt"
          "static-info.rkt"
          "define-arity.rkt"

@@ -26,6 +26,7 @@
          "class-top-level.rkt"
          "class-together-parse.rkt"
          "class-clause-tag.rkt"
+         "class-static-info.rkt"
          "dotted-sequence-parse.rkt"
          (for-syntax "class-transformer.rkt")
          (only-meta-in 1
@@ -36,7 +37,8 @@
          (only-in "class-method.rkt"
                   raise-not-an-instance)
          "parse.rkt"
-         (submod "namespace.rkt" for-exports))
+         (submod "namespace.rkt" for-exports)
+         "class-able.rkt")
 
 (provide interface)
 
@@ -109,6 +111,7 @@
           option ...)
        (define stxes #'orig-stx)
        (define options (parse-annotation-options #'orig-stx #'(option ...)))
+       (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
 
        (define-values (unexposed-internal-name internal-name extra-internal-names)
          (extract-internal-ids options
@@ -117,9 +120,10 @@
                                     
        (define annotation-rhs (hash-ref options 'annotation-rhs #f))
 
+       (define intro (make-syntax-introducer))
        (define (temporary template #:name [name #'name])
          (and name
-              ((make-syntax-introducer) (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
+              (intro (datum->syntax #f (string->symbol (format template (syntax-e name)))))))
 
        (define internal-internal-name (or internal-name
                                           ;; we need an internal accessor if there are any non-abstract,
@@ -127,26 +131,47 @@
                                           ;; vtable from `this`
                                           (and (hash-ref options 'has-non-abstract-method? #f)
                                                (temporary "internal-internal-~a"))))
+       
+       (define-values (call-statinfo-indirect-id
+                       ref-statinfo-indirect-id
+                       set-statinfo-indirect-id
+
+                       static-infos-id
+                       static-infos-exprs
+                       instance-static-infos
+
+                       indirect-static-infos
+                       internal-indirect-static-infos)
+         (extract-instance-static-infoss #'name options #f supers #hasheq() intro))
 
        (with-syntax ([name? (temporary "~a?")]
                      [name-instance (temporary "~a-instance")]
                      [internal-name? (temporary "~a?" #:name internal-internal-name)]
                      [internal-name-instance (if internal-name
                                                  (temporary "~a-instance" #:name internal-internal-name)
-                                                 #'name-instance)])
+                                                 #'name-instance)]
+                     [indirect-static-infos indirect-static-infos]
+                     [instance-static-infos instance-static-infos]
+                     [call-statinfo-indirect call-statinfo-indirect-id]
+                     [ref-statinfo-indirect ref-statinfo-indirect-id]
+                     [set-statinfo-indirect set-statinfo-indirect-id])
          (wrap-for-together
           #'for-together?
           #`(begin
+              #,@(build-instance-static-infos-defs static-infos-id static-infos-exprs)
               #,@(build-interface-annotation internal-name
                                              annotation-rhs
                                              #'(name name? name-instance
-                                                     internal-name? internal-name-instance))
+                                                     internal-name? internal-name-instance
+                                                     indirect-static-infos))
               #,@(build-extra-internal-id-aliases internal-name extra-internal-names)
               (interface-finish [orig-stx base-stx scope-stx
                                           full-name name
                                           name? name-instance
                                           #,internal-name internal-name? internal-name-instance
-                                          #,internal-internal-name]
+                                          #,internal-internal-name
+                                          instance-static-infos
+                                          call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect]
                                 exports
                                 option ...))))])))
 
@@ -157,7 +182,9 @@
                     full-name name
                     name? name-instance
                     maybe-internal-name internal-name? internal-name-instance
-                    internal-internal-name-id]
+                    internal-internal-name-id
+                    instance-static-infos
+                    call-statinfo-indirect ref-statinfo-indirect set-statinfo-indirect]
           exports
           option ...)
        (define stxes #'orig-stx)
@@ -194,12 +221,12 @@
                     #:when dp)
            dp))
 
-       (define (able? which)
-         (for/or ([super (in-list supers)])
-           (memq which (interface-desc-flags super))))
-       (define callable? (able? 'call))
-       (define refable? (able? 'ref))
-       (define setable? (able? 'set))
+       (define-values (callable? here-callable? public-callable?)
+         (able-method-status 'call #f supers method-mindex method-vtable method-private))
+       (define-values (refable? here-refable? public-refable?)
+         (able-method-status 'ref #f supers method-mindex method-vtable method-private))
+       (define-values (setable? here-setable? public-setable?)
+         (able-method-status 'set #f supers method-mindex method-vtable method-private))
 
        (define (temporary template #:name [name #'name])
          (and name
@@ -255,14 +282,16 @@
                                      callable? refable? setable?
                                      #'(name prop:name name-ref name-ref-or-error
                                              prop:internal-name internal-name? internal-name-ref
-                                             dot-provider-name))
+                                             dot-provider-name
+                                             instance-static-infos))
                (build-method-results added-methods
                                      method-mindex method-vtable method-private
                                      method-results
                                      #f
-                                     #f #f
-                                     #f #f
-                                     #f #f))))
+                                     #'internal-name-ref
+                                     #'call-statinfo-indirect callable?
+                                     #'ref-statinfo-indirect refable?
+                                     #'set-statinfo-indirect setable?))))
            #`(begin . #,defns)))])))
 
 (define-for-syntax (build-interface-property internal-internal-name names)
@@ -289,7 +318,8 @@
 
 (define-for-syntax (build-interface-annotation internal-name annotation-rhs names)
   (with-syntax ([(name name? name-instance
-                       internal-name? internal-name-instance)
+                       internal-name? internal-name-instance
+                       indirect-static-infos)
                  names])
     (append
      (if internal-name
@@ -307,7 +337,8 @@
                                       "interface")))
          (list
           #`(define-annotation-syntax name (identifier-annotation (quote-syntax name?)
-                                                                  (quote-syntax ((#%dot-provider name-instance))))))))))
+                                                                  (quasisyntax ((#%dot-provider name-instance)
+                                                                                . indirect-static-infos)))))))))
   
 (define-for-syntax (build-interface-desc supers parent-names options
                                          method-mindex method-names method-vtable method-results method-private dots
@@ -316,7 +347,8 @@
                                          names)
   (with-syntax ([(name prop:name name-ref name-ref-or-error
                        prop:internal-name internal-name? internal-name-ref
-                       dot-provider-name)
+                       dot-provider-name
+                       instance-static-infos)
                  names])
     (let ([method-shapes (build-quoted-method-shapes method-vtable method-names method-mindex)]
           [method-map (build-quoted-method-map method-mindex)]
@@ -338,6 +370,7 @@
                                          '#,method-map
                                          #,method-result-expr
                                          #,custom-annotation?
+                                         (#,(quote-syntax quasisyntax) instance-static-infos)
                                          '()
                                          #f
                                          '()
@@ -362,6 +395,7 @@
                             '#,(map car dots)
                             #,(and (syntax-e #'dot-provider-name)
                                    #'(quote-syntax dot-provider-name))
+                            (#,(quote-syntax quasisyntax) instance-static-infos)
                             '#,(append
                                 (if callable? '(call) '())
                                 (if refable? '(ref) '())

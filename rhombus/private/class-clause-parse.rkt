@@ -69,6 +69,8 @@
               [(#:expression block)
                ;; needed to determine whether default `.of` annotation can work
                (hash-set options 'expression-rhs #t)]
+              [(#:static-infos expr)
+               (hash-set options 'static-infoss (cons #'expr (hash-ref options 'static-infoss '())))]
               [_ options]))
           (loop (cdr clauses) new-options)]))]))
 
@@ -136,6 +138,9 @@
                (when (hash-has-key? options 'prefab?)
                  (raise-syntax-error #f "a prefab class cannot be opaque" orig-stx clause))
                (hash-set options 'opaque? #t)]
+              [(#:static-infos expr)
+               ;; covered in annotation pass
+               options]
               [(#:field id rhs-id ann-seq blk form-id mode)
                (with-syntax ([(predicate annotation-str static-infos)
                               (syntax-parse #'ann-seq

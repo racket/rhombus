@@ -67,6 +67,7 @@
     #,(@rhombus(binding, ~class_clause)) $binding_decl
     #,(@rhombus(annotation, ~class_clause)) $annotation_decl
     #,(@rhombus(dot, ~class_clause)) $dot_decl
+    #,(@rhombus(static_info, ~class_clause)) $static_info_decl
     #,(@rhombus(opaque, ~class_clause))
     #,(@rhombus(prefab, ~class_clause))
     $other_class_clause
@@ -241,12 +242,16 @@
  @rhombus(dot, ~class_clause) form (which must be imported
  through @rhombusmodname(rhombus/meta)) replaces the way that
  @rhombus(.) accesses are resolved for expressions that have the class's
- annotation. See
+ annotation. The
+ @rhombus(static_info, ~class_clause) form (which must be imported
+ through @rhombusmodname(rhombus/meta)) adds static information for
+ the class's instances. See
  @rhombus(constructor, ~class_clause),
  @rhombus(expression, ~class_clause),
  @rhombus(binding, ~class_clause),
- @rhombus(annotation, ~class_clause), and
- @rhombus(dot, ~class_clause) for more information on those forms.
+ @rhombus(annotation, ~class_clause),
+ @rhombus(dot, ~class_clause), and
+ @rhombus(static_info, ~class_clause) for more information on those forms.
 
  When a method procedure is accessed from a class (as a namespace) via
  @rhombus(.), the procedure expects an extra by-position argument that
@@ -331,7 +336,8 @@
     #,(@rhombus(internal, ~interface_clause)) $internal_decl
     #,(@rhombus(expression, ~interface_clause)) $expression_decl
     #,(@rhombus(annotation, ~interface_clause)) $annotation_decl
-    #,(@rhombus(dot, ~interface_clause)) $annotation_decl
+    #,(@rhombus(dot, ~interface_clause)) $dot_decl
+    #,(@rhombus(static_info, ~interface_clause)) $static_info_decl
     $other_interface_clause
 
 ){

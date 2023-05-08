@@ -42,6 +42,7 @@ alternative to starting with @rhombusmodname(rhombus) and importing
 @include_section("ref-dot-provider.scrbl")
 @include_section("ref-repet-macro.scrbl")
 @include_section("ref-for-clause-macro.scrbl")
+@include_section("ref-sequence-macro.scrbl")
 @include_section("ref-class-clause-macro.scrbl")
 @include_section("ref-static-info.scrbl")
 @include_section("ref-unquote-bind-macro.scrbl")

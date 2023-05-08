@@ -93,6 +93,15 @@ class B7():
   override method call() :: O2:
     O2("B7", "B7")
 
+interface I8:
+  extends Callable
+  override method call() :: O
+
+class A8():
+  implements I8
+  override method call() :: O:
+    O("A8")
+
 check:
   A0()().v ~is "A0"
   A1()().v ~is "A1"
@@ -102,6 +111,7 @@ check:
   C1()().w ~is "C1"
   B2()().v ~is "B2"
   A3()().v ~is "A3"
+  (A3() :: I3)() ~is O("A3")
   B4()().v ~is "B4"
   A5()().v ~is "A5"
   B5()().v ~is "A5"
@@ -109,8 +119,11 @@ check:
   C5()().w ~is "C5"
   C6()().v ~is "C6"
   A7()().v ~is "I7"
+  (A7() :: I7)().v ~is "I7"
   B7()().v ~is "B7"
   B7()().w ~is "B7"
+  A8()().v ~is "A8"
+  (A8() :: I8)().v ~is "A8"
   (dynamic(A0()) :: A0)().v ~is "A0"
   A0().call_self() ~is "A0"
 

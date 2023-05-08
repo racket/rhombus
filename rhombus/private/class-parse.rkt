@@ -70,6 +70,7 @@
                     dots ; list of symbols for dot syntax
                     dot-provider  ; #f or compile-time identifier
                     defaults-id   ; #f if no arguments with defaults
+                    static-infos  ; syntax object for aditional instance static-infos
                     call-method-id ; #f or identifier as private `call` (for Callable) whose static info is relevant
                     ref-method-id ; for `ref`
                     set-method-id ; for `set`
