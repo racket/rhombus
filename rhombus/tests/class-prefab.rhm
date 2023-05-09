@@ -106,3 +106,59 @@ block:
   check:
     Posn(1, 2).z ~is 0
     (p :: Posn).z ~is 30
+
+block:
+  class Posn(x :: Int, y):
+    prefab
+
+  check:
+    Posn(1, 2) ~is Posn(1, 2)
+    Posn(1, "2") ~is Posn(1, "2")
+    Posn("1", 2) ~raises "value does not satisfy annotation"
+
+  block:
+    class Posn3D(z):
+      extends Posn
+      prefab
+
+    check:
+      Posn3D(1, 2, 3) ~is Posn3D(1, 2, 3)
+      Posn3D(1, "2", 3) ~is Posn3D(1, "2", 3)
+      Posn3D(1, 2, "3") ~is Posn3D(1, 2, "3")
+      Posn3D("1", 2, 3) ~raises "value does not satisfy annotation"
+
+  block:
+    class Posn3D(z :: Int):
+      extends Posn
+      prefab
+
+    check:
+      Posn3D(1, 2, 3) ~is Posn3D(1, 2, 3)
+      Posn3D(1, "2", 3) ~is Posn3D(1, "2", 3)
+      Posn3D(1, 2, "3") ~raises "value does not satisfy annotation"
+      Posn3D("1", 2, 3) ~raises "value does not satisfy annotation"
+
+block:
+  class Posn(x, y):
+    prefab
+
+  block:
+    class Posn3D(z :: Int):
+      extends Posn
+      prefab
+
+    check:
+      Posn3D(1, 2, 3) ~is Posn3D(1, 2, 3)
+      Posn3D("1", 2, 3) ~is Posn3D("1", 2, 3)
+      Posn3D(1, "2", 3) ~is Posn3D(1, "2", 3)
+      Posn3D(1, 2, "3") ~raises "value does not satisfy annotation"
+
+check:
+  class Posn(x :: Int, y):
+    prefab
+  def p:
+    class Posn(x, y):
+      prefab
+    Posn("a", 2)
+  Posn.x(p)
+  ~is "a"

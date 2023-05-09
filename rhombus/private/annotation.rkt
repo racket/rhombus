@@ -154,10 +154,19 @@
              #:when (or check?
                         (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
              #:with c::annotation #'(group ctc ...)
-             #:with c-parsed::annotation-predicate-form #'c.parsed
-             #:attr predicate (if check? #'c-parsed.predicate #'#f)
-             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-             #:attr static-infos #'c-parsed.static-infos))
+             #:do [(define-values (predicate-stx annotation-str-stx static-infos-stx)
+                     (syntax-parse #'c.parsed
+                       [c-parsed::annotation-predicate-form
+                        (values (if check? #'c-parsed.predicate #'#f)
+                                (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
+                                #'c-parsed.static-infos)]
+                       [_ (raise-syntax-error #f
+                                              "expected a predicate annotation"
+                                              #'op.name
+                                              (respan (no-srcloc #'(ctc ...))))]))]
+             #:attr predicate predicate-stx
+             #:attr annotation-str annotation-str-stx
+             #:attr static-infos static-infos-stx))
 
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)

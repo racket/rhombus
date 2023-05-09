@@ -478,7 +478,13 @@
                                                        ((length parent-dot-providers) . > . 1))
                                                    (temporary "dot-provider-~a"))
                                               (and (pair? parent-dot-providers)
-                                                   (car parent-dot-providers)))])
+                                                   (car parent-dot-providers)))]
+                       [prefab-guard-name (and prefab?
+                                               (or (and super
+                                                        (class-desc-prefab-guard-id super))
+                                                   (for/or ([pred-stx (in-list (syntax->list #'(field-predicate ...)))])
+                                                     (syntax-e pred-stx)))
+                                               (temporary "prefab-guard-~a"))])
            (define defns
              (reorder-for-top-level
               (append
@@ -505,7 +511,7 @@
                                    abstract-name
                                    interfaces private-interfaces
                                    has-extra-fields? here-callable? here-refable? here-setable?
-                                   #'(name class:name make-all-name name? name-ref
+                                   #'(name class:name make-all-name name? name-ref prefab-guard-name
                                            [public-field-name ...]
                                            [public-maybe-set-name-field! ...]
                                            [field-name ...]
@@ -590,7 +596,7 @@
                                  here-refable? public-refable?
                                  here-setable? public-setable?
                                  #'(name class:name constructor-maker-name name-defaults name-ref
-                                         dot-provider-name
+                                         dot-provider-name prefab-guard-name
                                          instance-static-infos
                                          (list (list 'super-field-name
                                                      (quote-syntax super-name-field)
@@ -622,7 +628,7 @@
                                        interfaces private-interfaces
                                        has-extra-fields? here-callable? here-refable? here-setable?
                                        names)
-  (with-syntax ([(name class:name make-all-name name? name-ref
+  (with-syntax ([(name class:name make-all-name name? name-ref prefab-guard-name
                        [public-field-name ...]
                        [public-maybe-set-name-field! ...]
                        [field-name ...]
@@ -668,93 +674,114 @@
                      (if (mindex-property? (hash-ref method-mindex (if (syntax? name) (syntax-e name) name)))
                          (values ms (cons (list name v) ps))
                          (values (cons (list name v) ms) ps)))]
-                  [(all-dot-name ...) (extract-all-dot-names #'(dot-id ...) (cons super interfaces))])
-      (list
-       #`(define-values (class:name make-all-name name? name-field ... set-name-field! ...)
-           (let-values ([(class:name name name? name-ref name-set!)
-                         (make-struct-type 'name
-                                           #,(and super (class-desc-class:id super))
-                                           #,(length fields) 0 #f
-                                           #,(if prefab?
-                                                 #'null
-                                                 #`(list #,@(if abstract-name
-                                                                null
-                                                                #`((cons prop:field-name->accessor
-                                                                         (list* '(public-field-name ...)
-                                                                                (hasheq (~@ 'super-field-name super-name-field)
-                                                                                        ...
-                                                                                        (~@ 'property-name property-proc)
-                                                                                        ...
-                                                                                        (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
-                                                                                        ...)
-                                                                                (hasheq (~@ 'method-name method-proc)
-                                                                                        ...)))))
-                                                         #,@(able-method-as-property 'call #'prop:procedure here-callable?
-                                                                                     method-mindex method-vtable method-private)
-                                                         #,@(able-method-as-property 'ref #'prop:refable here-refable?
-                                                                                     method-mindex method-vtable method-private)
-                                                         #,@(able-method-as-property 'set #'prop:setable here-setable?
-                                                                                     method-mindex method-vtable method-private)
-                                                         #,@(if (or abstract-name
-                                                                    (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
-                                                                           (not (syntax-e maybe-name)))
-                                                                         (null? (syntax-e #'(property-proc ...)))))
-                                                                null
-                                                                #`((cons prop:field-name->mutator
-                                                                         (list* '(maybe-public-mutable-field-name ...)
-                                                                                (hasheq (~@ 'property-name property-proc)
-                                                                                        ...)))))
-                                                         #,@(cond
-                                                              [opaque? #`((cons prop:print-field-shapes 'opaque))]
-                                                              [else
-                                                               (define field-print-shapes
-                                                                 (print-field-shapes super fields constructor-keywords private?s))
-                                                               (if (or abstract-name
-                                                                       (and (andmap symbol? field-print-shapes)
-                                                                            (not has-extra-fields?)))
-                                                                   null
-                                                                   #`((cons prop:print-field-shapes
-                                                                            '#,field-print-shapes)))])
-                                                         #,@(if final?
-                                                                (list #'(cons prop:sealed #t))
-                                                                '())
-                                                         #,@(if authentic?
-                                                                (list #'(cons prop:authentic #t))
-                                                                '())
-                                                         #,@(if (or (zero? (vector-length method-vtable))
-                                                                    abstract-name)
-                                                                '()
-                                                                (list #`(cons prop:methods
-                                                                              (vector #,@(vector->list method-vtable)))))
-                                                         #,@(if abstract-name
-                                                                null
-                                                                (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
-                                                                                                                                 private-interfaces))])
-                                                                  #`(cons #,(interface-desc-prop:id intf)
-                                                                          (vector #,@(build-interface-vtable intf
-                                                                                                             method-mindex method-vtable method-names
-                                                                                                             method-private)))))))
-                                           #,(if prefab? (quote-syntax 'prefab) #f)
-                                           #f
-                                           '(immutable-field-index ...)
-                                           #,(build-guard-expr #'(super-field-name ...)
-                                                               fields
-                                                               (syntax->list #'(field-predicate ...))
-                                                               (map syntax-e
-                                                                    (syntax->list #'(field-annotation-str ...)))))])
-             (values class:name name name?
-                     (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
-                     ...
-                     (compose-annotation-check
-                      (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
-                      mutable-field
-                      mutable-field-predicate
-                      mutable-field-annotation-str)
-                     ...)))
-       #`(define (name-ref v)
-           (define vtable (prop-methods-ref v #f))
-           (or vtable
-               (raise-not-an-instance 'name v)))))))
+                  [(all-dot-name ...) (extract-all-dot-names #'(dot-id ...) (cons super interfaces))]
+                  [primitive-make-name (if (syntax-e #'prefab-guard-name)
+                                           ((make-syntax-introducer)
+                                            (datum->syntax #f (string->symbol (format "make-prefab-~a" (syntax-e #'name)))))
+                                           #'make-all-name)])
+      (define guard-expr
+        (build-guard-expr #'(super-field-name ...)
+                          fields
+                          (syntax->list #'(field-predicate ...))
+                          (map syntax-e
+                               (syntax->list #'(field-annotation-str ...)))
+                          #:super (and prefab?
+                                       super
+                                       (class-desc-prefab-guard-id super))))
+      (append
+       (list
+        #`(define-values (class:name primitive-make-name name? name-field ... set-name-field! ...)
+            (let-values ([(class:name name name? name-ref name-set!)
+                          (make-struct-type 'name
+                                            #,(and super (class-desc-class:id super))
+                                            #,(length fields) 0 #f
+                                            #,(if prefab?
+                                                  #'null
+                                                  #`(list #,@(if abstract-name
+                                                                 null
+                                                                 #`((cons prop:field-name->accessor
+                                                                          (list* '(public-field-name ...)
+                                                                                 (hasheq (~@ 'super-field-name super-name-field)
+                                                                                         ...
+                                                                                         (~@ 'property-name property-proc)
+                                                                                         ...
+                                                                                         (~@ 'all-dot-name (no-dynamic-dot-syntax 'all-dot-name))
+                                                                                         ...)
+                                                                                 (hasheq (~@ 'method-name method-proc)
+                                                                                         ...)))))
+                                                          #,@(able-method-as-property 'call #'prop:procedure here-callable?
+                                                                                      method-mindex method-vtable method-private)
+                                                          #,@(able-method-as-property 'ref #'prop:refable here-refable?
+                                                                                      method-mindex method-vtable method-private)
+                                                          #,@(able-method-as-property 'set #'prop:setable here-setable?
+                                                                                      method-mindex method-vtable method-private)
+                                                          #,@(if (or abstract-name
+                                                                     (and (for/and ([maybe-name (in-list (syntax->list #'(maybe-public-mutable-field-name ...)))])
+                                                                            (not (syntax-e maybe-name)))
+                                                                          (null? (syntax-e #'(property-proc ...)))))
+                                                                 null
+                                                                 #`((cons prop:field-name->mutator
+                                                                          (list* '(maybe-public-mutable-field-name ...)
+                                                                                 (hasheq (~@ 'property-name property-proc)
+                                                                                         ...)))))
+                                                          #,@(cond
+                                                               [opaque? #`((cons prop:print-field-shapes 'opaque))]
+                                                               [else
+                                                                (define field-print-shapes
+                                                                  (print-field-shapes super fields constructor-keywords private?s))
+                                                                (if (or abstract-name
+                                                                        (and (andmap symbol? field-print-shapes)
+                                                                             (not has-extra-fields?)))
+                                                                    null
+                                                                    #`((cons prop:print-field-shapes
+                                                                             '#,field-print-shapes)))])
+                                                          #,@(if final?
+                                                                 (list #'(cons prop:sealed #t))
+                                                                 '())
+                                                          #,@(if authentic?
+                                                                 (list #'(cons prop:authentic #t))
+                                                                 '())
+                                                          #,@(if (or (zero? (vector-length method-vtable))
+                                                                     abstract-name)
+                                                                 '()
+                                                                 (list #`(cons prop:methods
+                                                                               (vector #,@(vector->list method-vtable)))))
+                                                          #,@(if abstract-name
+                                                                 null
+                                                                 (for/list ([intf (in-list (close-interfaces-over-superinterfaces interfaces
+                                                                                                                                  private-interfaces))])
+                                                                   #`(cons #,(interface-desc-prop:id intf)
+                                                                           (vector #,@(build-interface-vtable intf
+                                                                                                              method-mindex method-vtable method-names
+                                                                                                              method-private)))))))
+                                            #,(if prefab? (quote-syntax 'prefab) #f)
+                                            #f
+                                            '(immutable-field-index ...)
+                                            #,(and (not prefab?)
+                                                   guard-expr))])
+              (values class:name name name?
+                      (make-struct-field-accessor name-ref field-index 'name-field 'name 'rhombus)
+                      ...
+                      (compose-annotation-check
+                       (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
+                       mutable-field
+                       mutable-field-predicate
+                       mutable-field-annotation-str)
+                      ...)))
+        #`(define (name-ref v)
+            (define vtable (prop-methods-ref v #f))
+            (or vtable
+                (raise-not-an-instance 'name v))))
+       (if (syntax-e #'prefab-guard-name)
+           (list
+            #`(define prefab-guard-name #,guard-expr)
+            #`(define make-all-name
+                (let ([name (lambda (super-field-name ... field-name ...)
+                              (let-values ([(super-field-name ... field-name ...)
+                                            (prefab-guard-name super-field-name ... field-name ... 'name)])
+                                (primitive-make-name super-field-name ... field-name ...)))])
+                  name)))
+           null)))))
 
 (define-for-syntax (build-class-desc exposed-internal-id super options
                                      constructor-public-keywords super-keywords
@@ -770,7 +797,7 @@
                                      here-setable? public-setable?
                                      names)
   (with-syntax ([(name class:name constructor-maker-name name-defaults name-ref
-                       dot-provider-name
+                       dot-provider-name prefab-guard-name
                        instance-static-infos
                        fields
                        ([field-name field-argument maybe-set-name-field!] ...))
@@ -851,6 +878,8 @@
                       #,(able-method-for-class-desc 'set here-setable? public-setable?
                                                     super
                                                     method-mindex method-vtable method-private)
+                      #,(and (syntax-e #'prefab-guard-name)
+                             #`(quote-syntax prefab-guard-name))
                       '(#,@(if authentic? '(authentic) null)
                         #,@(if prefab? '(prefab) null)
                         #,@(if public-callable? '(call) null)

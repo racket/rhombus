@@ -122,20 +122,27 @@
                [static-infos (in-list static-infoss)])
       #`(#,acc #,static-infos))))
 
-(define-for-syntax (build-guard-expr super-fields fields predicates annotation-strs)
-  (and (any-stx? predicates)
+(define-for-syntax (build-guard-expr super-fields fields predicates annotation-strs
+                                     #:super [super-guard-id #f])
+  (and (or (any-stx? predicates)
+           (and super-guard-id
+                (syntax-e super-guard-id)))
        #`(lambda (#,@super-fields #,@fields who)
-           (values #,@super-fields
-                   #,@(for/list ([field (in-list fields)]
-                                 [predicate (in-list predicates)]
-                                 [annotation-str (in-list annotation-strs)])
-                        (cond
-                          [(not (syntax-e predicate)) field]
-                          [else #`(if (#,predicate #,field)
-                                      #,field
-                                      (raise-annotation-failure who
-                                                                #,field
-                                                                '#,annotation-str))]))))))
+           (let-values #,(if (and super-guard-id
+                                  (syntax-e super-guard-id))
+                             #`([#,super-fields (#,super-guard-id #,@super-fields who)])
+                             #'())
+             (values #,@super-fields
+                     #,@(for/list ([field (in-list fields)]
+                                   [predicate (in-list predicates)]
+                                   [annotation-str (in-list annotation-strs)])
+                          (cond
+                            [(not (syntax-e predicate)) field]
+                            [else #`(if (#,predicate #,field)
+                                        #,field
+                                        (raise-annotation-failure who
+                                                                  #,field
+                                                                  '#,annotation-str))])))))))
 
 (define-syntax (compose-annotation-check stx)
   (syntax-parse stx
