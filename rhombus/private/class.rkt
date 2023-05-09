@@ -247,7 +247,7 @@
                     (constructor-name-field ...)]
           exports
           option ...)
-       #:with [(constructor-field-predicate constructor-field-annotation-str constructor-field-static-infos)
+       #:with [(constructor-field-converter constructor-field-annotation-str constructor-field-static-infos)
                ...] (parse-field-annotations #'(constructor-field-ann-seq ...))
        (define stxes #'orig-stx)
        (define options (parse-options #'orig-stx #'(option ...)))
@@ -425,8 +425,8 @@
                                                          kw))
                                                    (for/list ([f (in-list added-fields)])
                                                      (added-field-arg-id f)))]
-                     [(field-predicate ...) (append (syntax->list #'(constructor-field-predicate ...))
-                                                    (map added-field-predicate added-fields))]
+                     [(field-converter ...) (append (syntax->list #'(constructor-field-converter ...))
+                                                    (map added-field-converter added-fields))]
                      [(field-annotation-str ...) (append (syntax->list #'(constructor-field-annotation-str ...))
                                                          (map added-field-annotation-str added-fields))]
                      [super-name (and super (class-desc-id super))]
@@ -482,8 +482,8 @@
                        [prefab-guard-name (and prefab?
                                                (or (and super
                                                         (class-desc-prefab-guard-id super))
-                                                   (for/or ([pred-stx (in-list (syntax->list #'(field-predicate ...)))])
-                                                     (syntax-e pred-stx)))
+                                                   (for/or ([converter-stx (in-list (syntax->list #'(field-converter ...)))])
+                                                     (syntax-e converter-stx)))
                                                (temporary "prefab-guard-~a"))])
            (define defns
              (reorder-for-top-level
@@ -517,7 +517,7 @@
                                            [field-name ...]
                                            [name-field ...]
                                            [set-name-field! ...]
-                                           [field-predicate ...]
+                                           [field-converter ...]
                                            [field-annotation-str ...]
                                            [super-field-name ...]
                                            [super-name-field ...]
@@ -634,7 +634,7 @@
                        [field-name ...]
                        [name-field ...]
                        [set-name-field! ...]
-                       [field-predicate ...]
+                       [field-converter ...]
                        [field-annotation-str ...]
                        [super-field-name ...]
                        [super-name-field ...]
@@ -655,12 +655,12 @@
                                                       [i (in-naturals)]
                                                       #:when (syntax-e mutable))
                                              i)])
-    (with-syntax ([((mutable-field-predicate mutable-field-annotation-str) ...)
-                   (for/list ([pred (in-list (syntax->list #'(field-predicate ...)))]
+    (with-syntax ([((mutable-field-converter mutable-field-annotation-str) ...)
+                   (for/list ([converter (in-list (syntax->list #'(field-converter ...)))]
                               [ann-str (in-list (syntax->list #'(field-annotation-str ...)))]
                               [mutable (in-list mutables)]
                               #:when (syntax-e mutable))
-                     (list pred ann-str))]
+                     (list converter ann-str))]
                   [(maybe-public-mutable-field-name ...)
                    (for/list ([name (in-list (syntax->list #'(public-field-name ...)))]
                               [mutator (in-list (syntax->list #'(public-maybe-set-name-field! ...)))])
@@ -682,7 +682,7 @@
       (define guard-expr
         (build-guard-expr #'(super-field-name ...)
                           fields
-                          (syntax->list #'(field-predicate ...))
+                          (syntax->list #'(field-converter ...))
                           (map syntax-e
                                (syntax->list #'(field-annotation-str ...)))
                           #:super (and prefab?
@@ -765,7 +765,7 @@
                       (compose-annotation-check
                        (make-struct-field-mutator name-set! mutable-field-index 'set-name-field! 'name 'rhombus)
                        mutable-field
-                       mutable-field-predicate
+                       mutable-field-converter
                        mutable-field-annotation-str)
                       ...)))
         #`(define (name-ref v)

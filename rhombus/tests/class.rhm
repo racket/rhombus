@@ -791,3 +791,14 @@ check:
   class Posn3D(sevens):
     extends Posn
   ~raises "field name already in superclass as dot syntax"
+
+block:
+  import lib("racket/base.rkt")
+  class Posn(mutable x :: StringView.to_string):
+    method assign(v): x := v
+  def p = Posn(base.#{string-copy}("apple"))
+  check: p.x ~is "apple"
+  p.x := base.#{string-copy}("ok")
+  check: p.x ~is "ok"
+  p.assign(base.#{string-copy}("still ok"))
+  check: p.x ~is "still ok"

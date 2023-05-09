@@ -98,4 +98,4 @@
   (for/list ([seq (in-list (syntax->list ann-seqs-stx))])
     (syntax-parse seq
       [#f (list #'#f #'#f #'())]
-      [(c::inline-annotation) (list #'c.predicate #'c.annotation-str #'c.static-infos)])))
+      [(c::inline-annotation) (list #'c.converter #'c.annotation-str #'c.static-infos)])))

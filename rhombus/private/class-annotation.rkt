@@ -122,9 +122,9 @@
                [static-infos (in-list static-infoss)])
       #`(#,acc #,static-infos))))
 
-(define-for-syntax (build-guard-expr super-fields fields predicates annotation-strs
+(define-for-syntax (build-guard-expr super-fields fields converters annotation-strs
                                      #:super [super-guard-id #f])
-  (and (or (any-stx? predicates)
+  (and (or (any-stx? converters)
            (and super-guard-id
                 (syntax-e super-guard-id)))
        #`(lambda (#,@super-fields #,@fields who)
@@ -134,27 +134,29 @@
                              #'())
              (values #,@super-fields
                      #,@(for/list ([field (in-list fields)]
-                                   [predicate (in-list predicates)]
+                                   [converter (in-list converters)]
                                    [annotation-str (in-list annotation-strs)])
                           (cond
-                            [(not (syntax-e predicate)) field]
-                            [else #`(if (#,predicate #,field)
-                                        #,field
-                                        (raise-annotation-failure who
-                                                                  #,field
-                                                                  '#,annotation-str))])))))))
+                            [(not (syntax-e converter)) field]
+                            [else #`(#,converter
+                                     #,field
+                                     who
+                                     (lambda (val who)
+                                       (raise-annotation-failure who val '#,annotation-str)))])))))))
 
 (define-syntax (compose-annotation-check stx)
   (syntax-parse stx
     [(_ mutator who #f _) #'mutator]
-    [(_ mutator who predicate annotation-str)
+    [(_ mutator who converter annotation-str)
      #`(let ([m mutator])
          (lambda (obj val)
-           (unless (predicate val)
-             (raise-annotation-failure 'who
-                                       val
-                                       'annotation-str))
-           (m obj val)))]))
+           (let ([val (converter val
+                                 'who
+                                 (lambda (val who)
+                                   (raise-annotation-failure who
+                                                             val
+                                                             'annotation-str)))])
+             (m obj val))))]))
 
 (define-for-syntax (build-extra-internal-id-aliases internal extra-internals)
   (for/list ([extra (in-list extra-internals)])

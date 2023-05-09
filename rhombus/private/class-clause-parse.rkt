@@ -142,15 +142,15 @@
                ;; covered in annotation pass
                options]
               [(#:field id rhs-id ann-seq blk form-id mode)
-               (with-syntax ([(predicate annotation-str static-infos)
+               (with-syntax ([(converter annotation-str static-infos)
                               (syntax-parse #'ann-seq
                                 [#f (list #'#f #'#f #'())]
                                 [(c::inline-annotation)
-                                 (list #'c.predicate #'c.annotation-str #'c.static-infos)])])
+                                 (list #'c.converter #'c.annotation-str #'c.static-infos)])])
                  (hash-set options 'fields (cons (added-field #'id
                                                               #'rhs-id #'blk #'form-id
                                                               #'static-infos
-                                                              #'predicate
+                                                              #'converter
                                                               #'annotation-str
                                                               (syntax-e #'mode))
                                                  (hash-ref options 'fields null))))]

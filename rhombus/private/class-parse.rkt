@@ -118,7 +118,7 @@
 ;; quoted as a list in a `class-desc` construction
 (define (method-desc-name f) (car f))
 
-(struct added-field (id arg-id arg-blk form-id static-infos predicate annotation-str mode))
+(struct added-field (id arg-id arg-blk form-id static-infos converter annotation-str mode))
 (struct added-method (id rhs-id rhs maybe-ret result-id
                          body        ; 'method, 'abstract
                          replace     ; 'method, 'override

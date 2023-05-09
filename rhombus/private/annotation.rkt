@@ -154,19 +154,24 @@
              #:when (or check?
                         (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
              #:with c::annotation #'(group ctc ...)
-             #:do [(define-values (predicate-stx annotation-str-stx static-infos-stx)
-                     (syntax-parse #'c.parsed
-                       [c-parsed::annotation-predicate-form
-                        (values (if check? #'c-parsed.predicate #'#f)
-                                (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-                                #'c-parsed.static-infos)]
-                       [_ (raise-syntax-error #f
-                                              "expected a predicate annotation"
-                                              #'op.name
-                                              (respan (no-srcloc #'(ctc ...))))]))]
-             #:attr predicate predicate-stx
-             #:attr annotation-str annotation-str-stx
-             #:attr static-infos static-infos-stx))
+             #:with c-parsed::annotation-binding-form #'c.parsed
+             #:with arg-parsed::binding-form #'c-parsed.binding
+             #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+             #:with arg-info::binding-info #'arg-impl.info
+             #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
+             #:attr converter #'(lambda (tmp-id who fail-k)
+                                  (arg-info.matcher-id tmp-id
+                                                       arg-info.data
+                                                       if/blocked
+                                                       (begin
+                                                         (arg-info.committer-id tmp-id arg-info.data)
+                                                         (arg-info.binder-id tmp-id arg-info.data)
+                                                         (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                                                         ...
+                                                         c-parsed.body)
+                                                       (fail-k tmp-id who)))
+             #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
+             #:attr static-infos #'c-parsed.static-infos))
 
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)

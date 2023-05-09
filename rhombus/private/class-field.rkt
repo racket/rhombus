@@ -16,13 +16,14 @@
                            #:datum-literals (block)
                            [(block . _) #`(rhombus-body-at . #,blk)]
                            [_ #`(rhombus-expression #,blk)]))]
-                  [predicate (added-field-predicate added)]
+                  [converter (added-field-converter added)]
                   [annotation-str (added-field-annotation-str added)]
                   [form-id (added-field-form-id added)])
       #`(define tmp-id (lambda ()
                          (let ([id rhs])
-                           #,(if (syntax-e #'predicate)
-                                 #`(if (predicate id)
-                                       id
-                                       (raise-binding-failure 'form-id "value" id 'annotation-str))
+                           #,(if (syntax-e #'converter)
+                                 #`(converter id
+                                              'form-id
+                                              (lambda (who val)
+                                                (raise-binding-failure who "value" val 'annotation-str)))
                                  #'id)))))))
