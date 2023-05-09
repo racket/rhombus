@@ -80,7 +80,7 @@ internal state, and the state can even be specific to a particular
   @rhombus(#false) return from one of the continue functions.}
 
  @item{@rhombus(continue_at_value): An optional function that takes the
-  current element (which may me multiple values supplied as multiple
+  current element (which may be multiple values supplied as multiple
   arguments) and reports whether iteration should continue with that
   element. A @rhombus(#false) for @rhombus(continue_at_value) is equivalent
   to a function that always returns @rhombus(#true). This function is
@@ -100,13 +100,13 @@ internal state, and the state can even be specific to a particular
   the value must be retained for that predicate).}
 
  @item{@rhombus(continue_at_pos_val): An optional function that takes
-  both the current position and elements (which may me multiple values
+  both the current position and elements (which may be multiple values
   supplied as multiple arguments) and reports whether iteration should
   continue with that element. A @rhombus(#false) for
   @rhombus(continue_at_pos_val) is equivalent to a function that always
   returns @rhombus(#true). This function is applied after the element is
-  exposed to iteration. The position is receives has been converted by
-  @rhombus(early_next_pos), if supplied..}
+  exposed to iteration. If @rhombus(early_next_pos) is supplied, its
+  return is the first argument to @rhombus(continue_at_pos_val).}
 
 )
 
