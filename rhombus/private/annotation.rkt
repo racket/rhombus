@@ -149,29 +149,47 @@
              #:attr tail #'c.tail))
 
   (define-splicing-syntax-class :inline-annotation
-    (pattern (~seq op::name ctc ...)
+    #:attributes (converter annotation-str static-infos)
+    (pattern (~seq op::name ~! ctc ...)
              #:do [(define check? (free-identifier=? (in-binding-space #'op.name) (bind-quote ::)))]
              #:when (or check?
                         (free-identifier=? (in-binding-space #'op.name) (bind-quote :~)))
              #:with c::annotation #'(group ctc ...)
-             #:with c-parsed::annotation-binding-form #'c.parsed
-             #:with arg-parsed::binding-form #'c-parsed.binding
-             #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
-             #:with arg-info::binding-info #'arg-impl.info
-             #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
-             #:attr converter #'(lambda (tmp-id who fail-k)
-                                  (arg-info.matcher-id tmp-id
-                                                       arg-info.data
-                                                       if/blocked
-                                                       (begin
-                                                         (arg-info.committer-id tmp-id arg-info.data)
-                                                         (arg-info.binder-id tmp-id arg-info.data)
-                                                         (define-static-info-syntax/maybe bind-id . bind-static-infos)
-                                                         ...
-                                                         c-parsed.body)
-                                                       (fail-k tmp-id who)))
+             #:with (~var ca (:annotation-converted check?)) #'c.parsed
+             #:do [(when (and (not check?)
+                              (syntax-e #'ca.converter))
+                     (raise-unchecked-disallowed #'op.name (respan (no-srcloc #'(ctc ...)))))]
+             #:attr converter #'ca.converter
              #:attr annotation-str (datum->syntax #f (shrubbery-syntax->string #'(ctc ...)))
-             #:attr static-infos #'c-parsed.static-infos))
+             #:attr static-infos #'ca.static-infos))
+
+  (define-syntax-class (:annotation-converted check?)
+    #:attributes (converter static-infos)
+    (pattern c-parsed::annotation-predicate-form
+             #:attr converter (if check?
+                                  #'(lambda (tmp-id who fail-k)
+                                      (if (c-parsed.predicate tmp-id)
+                                          tmp-id
+                                          (fail-k tmp-id who)))
+                                  #'#f)
+             #:attr static-infos #'c-parsed.static-infos)
+     (pattern c-parsed::annotation-binding-form
+              #:with arg-parsed::binding-form #'c-parsed.binding
+              #:with arg-impl::binding-impl #'(arg-parsed.infoer-id () arg-parsed.data)
+              #:with arg-info::binding-info #'arg-impl.info
+              #:with ((bind-id bind-use . bind-static-infos) ...) #'arg-info.bind-infos
+              #:attr converter #'(lambda (tmp-id who fail-k)
+                                   (arg-info.matcher-id tmp-id
+                                                        arg-info.data
+                                                        if/blocked
+                                                        (begin
+                                                          (arg-info.committer-id tmp-id arg-info.data)
+                                                          (arg-info.binder-id tmp-id arg-info.data)
+                                                          (define-static-info-syntax/maybe bind-id . bind-static-infos)
+                                                          ...
+                                                          c-parsed.body)
+                                                        (fail-k tmp-id who)))
+              #:attr static-infos #'c-parsed.static-infos))
 
   (define-splicing-syntax-class :unparsed-inline-annotation
     #:attributes (seq)

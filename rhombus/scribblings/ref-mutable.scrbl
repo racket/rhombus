@@ -6,15 +6,37 @@
 @title{Mutable Variables and Assignment}
 
 @doc(
-  bind.macro 'mutable $id'
+  bind.macro 'mutable $id $maybe_annot'
+
+  grammar maybe_annot:
+    :: annot
+    :~ annot
+    #,(epsilon)
 ){
 
- Binds @rhombus(id) so that its vaue can be changed using and
+ Binds @rhombus(id) so that its vaue can be changed using an
  @tech{assignment operator} such as @rhombus(:=).
 
- No static information is associated with @rhombus(id), even if
- a surrounding binding pattern would otherwise associate static
- information with it.
+ If an @rhombus(annot) is present using @rhombus(::, ~bind), then the
+ value of every assignment to @rhombus(id) must satisfy the annotation,
+ and the value installed into @rhombus(id) is the converted value if
+ @rhombus(annot) is a @tech{converter annotation}. Static information
+ from @rhombus(annot) is associated with uses of @rhombus(id) whether
+ attached by @rhombus(::, ~bind) or @rhombus(:~, ~bind).
+
+@examples(
+  ~repl:
+    def mutable count: 0
+    count := count + 1
+    count
+    count := "string"
+
+  ~repl:
+    def mutable count :: Int: 0
+    count := count + 1
+    ~error:
+      count := "string"
+)
 
 }
 

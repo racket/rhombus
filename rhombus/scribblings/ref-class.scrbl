@@ -29,16 +29,17 @@
     #,(@rhombus(private, ~class_clause))
     #,(@rhombus(mutable, ~bind))
     #,(@rhombus(private, ~class_clause)) #,(@rhombus(mutable, ~bind))
-    ε
+    #,(epsilon)
 
   grammar maybe_annot:
     :: annot
-    ε
+    :~ annot
+    #,(epsilon)
 
   grammar maybe_default:
     = $default_expr
     : : $default_body; ...
-    ε
+    #,(epsilon)
 
   grammar class_clause_or_body_or_export:
     $class_clause

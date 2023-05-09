@@ -162,3 +162,14 @@ check:
     Posn("a", 2)
   Posn.x(p)
   ~is "a"
+
+block:
+  class Posn(mutable x :: Int, y):
+    prefab
+  def p = Posn(1, 2)
+  check:
+    p ~is_now Posn(1, 2)
+    p.x := 10 ~completes
+    p ~is_now Posn(10, 2)
+    p.x := "oops" ~raises "does not satisfy annotation"
+    p ~is_now Posn(10, 2)
