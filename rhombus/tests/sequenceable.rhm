@@ -12,14 +12,16 @@ class Posn(x, y):
                                           | y
                                           | x)
   sequence '$lhs: $rhs':
-    '((p = $rhs),
-      #true,
-      (pos = 0),
-      pos < 2,
-      ($lhs = if pos == 0 | Posn.y(p) | Posn.x(p)),
-      #true,
-      #true,
-      (pos + 1))'
+    '(~outer_binds:
+        p = $rhs,
+      ~recur_binds:
+        pos = 0,
+      ~head_guard:
+        pos < 2,
+      ~inner_binds:
+        $lhs = if pos == 0 | Posn.y(p) | Posn.x(p),
+      ~recur_args:
+        (pos + 1))'
 
 class Posn3D(z):
   extends Posn
@@ -42,14 +44,16 @@ interface Sql:
   property ex
   property why
   sequence '$lhs: $rhs':
-    '((p = $rhs),
-      #true,
-      (pos = 0),
-      pos < 2,
-      ($lhs = if pos == 0 | (p :~ _Sql).why | (p :~ _Sql).ex),
-      #true,
-      #true,
-      (pos + 1))'
+    '(~outer_binds:
+        p = $rhs,
+      ~recur_binds:
+        pos = 0,
+      ~head_guard:
+        pos < 2,
+      ~inner_binds:
+        $lhs = if pos == 0 | (p :~ _Sql).why | (p :~ _Sql).ex,
+      ~recur_args:
+        (pos + 1))'
 
 class Posn2(x, y):
   implements Sql

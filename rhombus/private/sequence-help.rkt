@@ -41,30 +41,74 @@
           (syntax-parse s
             #:datum-literals (group)
             [(_::parens
-              (group (_::parens
-                      (group outer-ids::identifiers _::equal outer-rhs ...)
-                      ...))
-              outer-check-g
-              (group (_::parens
-                      (group loop-id:identifier _::equal loop-rhs ...)
-                      ...))
-              pos-guard-g
-              (group (_::parens
-                      (group inner-ids::identifiers _::equal inner-rhs ...)
-                      ...))
-              pre-guard-g
-              post-guard-g
-              (group (_::parens
-                      recur-g
-                      ...)))
+              (~optional (group
+                          #:outer_binds
+                          (_::block
+                           (group outer-ids::identifiers _::equal outer-rhs ...)
+                           ...))
+                         #:defaults ([(outer-ids 1) '()]
+                                     [(outer-rhs 2) '()]))
+              (~optional (group
+                          #:outer_check
+                          (outer-tag::block
+                           outer-check-g
+                           ...))
+                         #:defaults ([outer-tag #'#f]
+                                     [(outer-check-g 1) '()]))
+              (~optional (group
+                          #:recur_binds
+                          (_::block
+                           (group loop-id:identifier _::equal loop-rhs ...)
+                           ...))
+                         #:defaults ([(loop-id 1) '()]
+                                     [(loop-rhs 2) '()]))
+              (~optional (group
+                          #:head_guard
+                          (head-tag::block
+                           head-guard-g
+                           ...))
+                         #:defaults ([head-tag #'#f]
+                                     [(head-guard-g 1) '()]))
+              (~optional (group
+                          #:inner_binds
+                          (_::block
+                           (group inner-ids::identifiers _::equal inner-rhs ...)
+                           ...))
+                         #:defaults ([(inner-ids 1) '()]
+                                     [(inner-rhs 2) '()]))
+              (~optional (group
+                          #:pre_guard
+                          (pre-tag::block
+                           pre-guard-g
+                           ...))
+                         #:defaults ([pre-tag #'#f]
+                                     [(pre-guard-g 1) '()]))
+              (~optional (group
+                          #:post_guard
+                          (post-tag::block
+                           post-guard-g
+                           ...))
+                         #:defaults ([post-tag #'#f]
+                                     [(post-guard-g 1) '()]))
+              (~optional (group #:recur_args
+                                (_::block
+                                 (group (_::parens
+                                         recur-g
+                                         ...))))
+                         #:defaults ([(recur-g 1) '()])))
              #'[(lhs ...)
                 (:do-in
                  ([(outer-ids.id ...) (rhombus-expression (group outer-rhs ...))] ...)
-                 (rhombus-expression outer-check-g)
+                 (rhombus-body-at* outer-tag outer-check-g ...)
                  ([loop-id (rhombus-expression (group loop-rhs ...))] ...)
-                 (rhombus-expression pos-guard-g)
+                 (rhombus-body-at* head-tag head-guard-g ...)
                  ([(inner-ids.id ...) (rhombus-expression (group inner-rhs ...))] ...)
-                 (rhombus-expression pre-guard-g)
-                 (rhombus-expression post-guard-g)
+                 (rhombus-body-at* pre-tag pre-guard-g ...)
+                 (rhombus-body-at* post-tag post-guard-g ...)
                  ((rhombus-expression recur-g) ...))]])]
          [else #f])])))
+
+(define-syntax rhombus-body-at*
+  (syntax-rules ()
+    [(_ #f) #t]
+    [(_ tag body ...) (rhombus-body-at tag body ...)]))
