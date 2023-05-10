@@ -13,7 +13,7 @@ defn.macro '«annot_macro '$name' ('$field' => '$method'): '$ann'»':
                                    _dot_provider))')
 
     dot.macro '_dot_provider $('$')left . $('$')field':
-      ~tail tail
+      ~tail '$('$')tail'
       match field
       | '$field':
           convert_dot(left, field, tail, '$method')

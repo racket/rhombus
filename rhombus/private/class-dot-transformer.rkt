@@ -65,7 +65,7 @@
         (define orig-tail (pack-tail #'tail))
         (call-with-values
          (lambda ()
-           (proc (pack-tail new-g) #'hd new-g #f orig-tail))
+           (proc (pack-tail new-g) name new-g #f orig-tail))
          ;; different default tail:
          (case-lambda
            [(e) (values e orig-tail)]

@@ -707,8 +707,8 @@ block:
     dot '$left . aa':
       'block: $left; 3'
     dot '$left . w':
-      ~tail: tail
-      '4 $tail'
+      ~tail: '$tail ...'
+      '4 $tail ...'
   class Posn3D(z):
     extends Posn
   check:
@@ -740,9 +740,9 @@ block:
   class Posn(x, y):
     dot '$left . eat':
       ~is_static: is_static
-      ~tail: tail
+      ~tail: '$tail ...'
       values('[$is_static,
-               '$tail']',
+               '$tail ...']',
              '')
   check:
     Posn(1, 2).eat * "hi"

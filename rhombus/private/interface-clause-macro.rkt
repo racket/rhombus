@@ -18,7 +18,7 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/interface_clause
-  #:extra ([#:info interface-data-static-infos])
+  #:extra ([#:info interface-data-static-infos value])
   #'make-interface-clause-transformer)
 
 (define-for-syntax (make-interface-clause-transformer proc)

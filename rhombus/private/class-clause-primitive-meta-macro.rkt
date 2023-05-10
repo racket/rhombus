@@ -67,6 +67,7 @@
        (parse-identifier-syntax-transformer #'pat
                                             #'dot-transformer-compiletime
                                             '(#:head_stx #:is_static #:tail)
+                                            '(value value pattern)
                                             (lambda (p ct)
                                               ct)
                                             (lambda (ps ct)
@@ -74,13 +75,15 @@
 
   (define-syntax (dot-transformer-compiletime stx)
     (syntax-parse stx
-      [(_ pre-parseds self-ids extra-argument-ids)
+      [(_ pre-parseds self-ids extra-argument-binds)
        (parse-transformer-definition-rhs (syntax->list #'pre-parseds)
                                          (syntax->list #'self-ids)
-                                         (syntax->list #'extra-argument-ids)
+                                         (syntax->list #'extra-argument-binds)
                                          #'values
                                          #`(syntax-static-infos #'() syntax-static-infos)
-                                         #:else #'#f)])))
+                                         '(value value pattern)
+                                         #:else #'#f
+                                         #:cut? #t)])))
 
 
 (define-for-syntax (parse-static_info stx data)

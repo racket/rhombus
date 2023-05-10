@@ -24,8 +24,8 @@
 
 (define-identifier-syntax-definition-transformer macro
   rhombus/dot
-  #:extra ([#:is_static (quote-syntax ())]
-           [#:tail syntax-static-infos])
+  #:extra ([#:is_static (quote-syntax ()) value]
+           [#:tail syntax-static-infos pattern])
   #'make-dot-provider-transformer)
 
 (define-for-syntax (make-dot-provider-transformer proc)

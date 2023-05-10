@@ -3,7 +3,9 @@
          (for-syntax racket/base
                      syntax/parse/pre
                      enforest/name-parse
-                     "srcloc.rkt")
+                     shrubbery/print
+                     "srcloc.rkt"
+                     "pack.rkt")
          (submod "quasiquote.rkt" convert)
          "quasiquote.rkt"
          (only-in "ellipsis.rkt"
@@ -19,6 +21,7 @@
          "pack.rkt"
          "entry-point.rkt"
          "parens.rkt"
+         "repetition.rkt"
          (only-in "static-info.rkt"
                   in-static-info-space
                   make-static-infos)
@@ -308,19 +311,21 @@
 
 ;; ----------------------------------------
 
-(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-idss
+(define-for-syntax (parse-transformer-definition-rhs pre-parseds self-ids extra-bindss
                                                      make-transformer-id
                                                      extra-static-infoss-stx
+                                                     extra-shapes
                                                      #:tail-ids [tail-ids '()]
                                                      #:wrap-for-tail [wrap-for-tail values]
-                                                     #:else [else-case #f])
-  (define in-extra-ids (generate-temporaries (car extra-idss)))
+                                                     #:else [else-case #f]
+                                                     #:cut? [cut? #f])
+  (define in-extra-ids (generate-temporaries (car extra-bindss)))
   #`(#,make-transformer-id
      (let ([id (lambda (tail #,@tail-ids self #,@in-extra-ids)
                  (syntax-parse (insert-multi-front-group self tail)
                    #,@(for/list ([pre-parsed (in-list pre-parseds)]
                                  [self-id (in-list self-ids)]
-                                 [extra-ids-stx (in-list extra-idss)])
+                                 [extra-binds-stx (in-list extra-bindss)])
                         (syntax-parse pre-parsed
                           #:datum-literals (pre-parsed)
                           [(pre-parsed id
@@ -330,24 +335,21 @@
                                                                                                    #:as-tail? #t
                                                                                                    #:splice? #t
                                                                                                    #:splice-pattern values))
+                           (define-values (extra-patterns wrap-extra)
+                             (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes))
                            (with-syntax ([((p-id id-ref) ...) idrs]
-                                         [(((s-id ...) sid-ref) ...) sidrs]
-                                         [(extra-static-infos ...) extra-static-infoss-stx]
-                                         [(in-extra-id ...) in-extra-ids]
-                                         [(extra-id ...) extra-ids-stx]
-                                         [(extra-id/static ...) (map (lambda (extra-id) (in-static-info-space extra-id))
-                                                                     (syntax->list extra-ids-stx))])
+                                         [(((s-id ...) sid-ref) ...) sidrs])
                              #`[#,pattern
+                                #,@(if cut? #'(#:cut) '())
+                                #,@extra-patterns
+                                #,@(build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
                                 (define #,self-id self)
                                 (define-syntax #,(in-static-info-space self-id) (make-static-infos syntax-static-infos))
-                                (define extra-id in-extra-id)
-                                ...
-                                (define-syntax extra-id/static (make-static-infos extra-static-infos))
-                                ...
-                                (let ([p-id id-ref] ...)
-                                  (let-syntaxes ([(s-id ...) sid-ref] ...)
-                                    #,(wrap-for-tail
-                                       #`(rhombus-body-expression rhs))))])]))
+                                #,(wrap-extra
+                                   #`(let ([p-id id-ref] ...)
+                                       (let-syntaxes ([(s-id ...) sid-ref] ...)
+                                         #,(wrap-for-tail
+                                            #`(rhombus-body-expression rhs)))))])]))
                    #,@(if else-case
                           #`([_ #,else-case])
                           null)))])
@@ -357,7 +359,7 @@
                                                               make-transformer-id
                                                               gs-stx)
   (parse-transformer-definition-rhs (list pre-parsed) (list self-id) (list #'())
-                                    make-transformer-id (list)
+                                    make-transformer-id #'() (list)
                                     #:tail-ids #'(tail-id)
                                     #:wrap-for-tail
                                     (lambda (body)
@@ -377,3 +379,47 @@
    (case-lambda
      [(v) v]
      [args (apply raise-result-arity-error* who rhombus-realm 1 #f args)])))
+
+
+(define-for-syntax (build-extra-patterns in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+  (for/fold ([rev-withs '()]
+             [wrap (lambda (x) x)]
+             #:result (values (reverse rev-withs)
+                              wrap))
+            ([in-extra-id (in-list in-extra-ids)]
+             [extra-bind (in-list (syntax->list extra-binds-stx))]
+             [extra-static-infos (in-list (syntax->list extra-static-infoss-stx))]
+             [extra-shape (in-list extra-shapes)]
+             #:when (syntax-e extra-bind)
+             #:when (eq? extra-shape 'pattern))
+    (define-values (pattern idrs sidrs vars can-be-empty?)
+      (syntax-parse extra-bind
+        [(_ g)
+         (convert-pattern #'g
+                          #:as-tail? #t
+                          #:splice? #t
+                          #:splice-pattern values)]))
+    (with-syntax ([((p-id id-ref) ...) idrs]
+                  [(((s-id ...) sid-ref) ...) sidrs])
+      (values
+       (append (reverse (syntax->list
+                         #`(#:with #,pattern (unpack-tail #,in-extra-id #f #f))))
+               rev-withs)
+       (lambda (x)
+         #`(let ([p-id id-ref] ...)
+             (let-syntaxes ([(s-id ...) sid-ref] ...)
+               #,(wrap x))))))))
+
+(define-for-syntax (build-extra-bindings in-extra-ids extra-binds-stx extra-static-infoss-stx extra-shapes)
+  (apply
+   append
+   (for/list ([in-extra-id (in-list in-extra-ids)]
+              [extra-bind (in-list (syntax->list extra-binds-stx))]
+              [extra-static-infos (in-list (syntax->list extra-static-infoss-stx))]
+              [extra-shape (in-list extra-shapes)]
+              #:when (syntax-e extra-bind)
+              #:unless (eq? extra-shape 'pattern))
+     (list
+      #`(define #,extra-bind #,in-extra-id)
+      #`(define-syntax #,(in-static-info-space extra-bind)
+          (make-static-infos #,extra-static-infos))))))

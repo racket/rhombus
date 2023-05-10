@@ -36,7 +36,7 @@ interface DC:
 
   dot '$left . save_and_restore':
     ~head_stx: head
-    ~tail: tail
+    ~tail: '$tail'
     match tail
     | ': $body':
         values('block:

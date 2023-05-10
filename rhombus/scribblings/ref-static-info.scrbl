@@ -22,13 +22,13 @@
                 ...»'
 ){
 
- Binds @rhombus(identifier) in the static-information space to
+ Binds @rhombus(id) in the static-information space to
  associate the static information produced by the @rhombus(body) block.
- This static information applies to a use of @rhombus(identifier) in the
+ This static information applies to a use of @rhombus(id) in the
  expression space. The static information produced by the
  @rhombus(body) block must be in unpacked form (i.e.,
  @rhombus(statinfo_meta.pack) is applied automatically). The
- @rhombus(identifier) is bound in the @rhombus(statinfo, ~space)
+ @rhombus(id) is bound in the @rhombus(statinfo, ~space)
  @tech{space}.
 
  See @secref("annotation-macro") for an example.
