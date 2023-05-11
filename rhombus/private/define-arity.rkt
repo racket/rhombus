@@ -20,6 +20,16 @@
          (define-static-info-syntax id
            (#%function-arity #,(extract-arity #'args))
            si ...))]
+    [(_ id (~and rhs
+                 ((~literal case-lambda)
+                  [args body ...]
+                  ...)))
+     #'(begin
+         (define id rhs)
+         (define-static-info-syntax id
+           (#%function-arity #,(apply
+                                bitwise-ior
+                                (map extract-arity (syntax->list #'(args ...)))))))]
     [(_ (id . args)
         (~optional (~seq #:static-infos (si ...))
                    #:defaults ([(si 1) '()]))

@@ -8,6 +8,8 @@ block:
     Syntax.make_sequence(t, [ctx])
     Syntax.unwrap(stx)
     Syntax.unwrap_sequence(stx)
+    Syntax.equal_binding(stx, stx2, [phase1], [phase2])
+    Syntax.equal_name_and_scopes(stx, stx2, [phase])
 
 check:
   Syntax.make(1)
@@ -101,3 +103,29 @@ check:
   match 'a: b'
   | 'a: $b': b is_a Identifier
   ~is #true
+
+check:
+  Syntax.equal_binding('check', 'check') ~is #true
+  Syntax.equal_binding('check', 'def') ~is #false
+  Syntax.equal_binding('check', 'check', 0, 1) ~is #false
+  Syntax.equal_name_and_scopes('check', 'check') ~is #true
+  Syntax.equal_name_and_scopes('check', 'check', 0) ~is #true
+  Syntax.expanding_phase() ~is 0
+
+namespace ns1:
+  import rhombus.Pair.cons
+  export x
+  def x = 'cons'
+namespace ns2:
+  import rhombus.List.cons
+  export x
+  def x = 'cons'
+namespace ns3:
+  import rhombus.List.cons
+  export x
+  def x = 'cons'
+check:
+  Syntax.equal_binding(ns1.x, ns2.x) ~is #false
+  Syntax.equal_binding(ns3.x, ns2.x) ~is #true
+  Syntax.equal_name_and_scopes(ns1.x, ns2.x) ~is #false
+  Syntax.equal_name_and_scopes(ns3.x, ns2.x) ~is #false

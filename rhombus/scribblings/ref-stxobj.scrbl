@@ -59,6 +59,8 @@ Metadata for a syntax object can include a source location and the raw
   [stx.strip(), Syntax.strip(stx)]
   [stx.relocate(like_stx), Syntax.relocate(stx, like_stx)]
   [stx.relocate_span(like_stxes), Syntax.relocate(stx, like_stxes)]
+  [stx.equal_binding(stx2, #,(more_args)), Syntax.equal_binding(stx, stx2, #,(more_args))]
+  [stx.equal_name_and_scopes(stx2, #,(more_args)), Syntax.equal_name_and_scopes(stx, stx2, #,(more_args))]
 )
 
 @doc(
@@ -564,7 +566,7 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make(term) :: Syntax
+  fun Syntax.make(term, ctx_stx :: maybe(Syntax) = #false) :: Syntax
 ){
 
  Converts an ``unwrapped'' representation of a shrubbery @emph{term}
@@ -573,7 +575,9 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(term) itself), a long as a syntax object that can be used as
  a term or group is used within a position that represents a term or
  group, respectively, and those syntax objects left as-is within the
- result.
+ result. Newly-created syntax objects are given the same scopes
+ as @rhombus(ctx_stx) if it is a syntax object, an empty set of scopes
+ otherwise.
 
 @examples(
   Syntax.make(1.0)
@@ -585,11 +589,13 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_group(terms :: List) :: Syntax
+  fun Syntax.make_group(terms :: List,
+                        ctx_stx :: maybe(Syntax) = #false) :: Syntax
 ){
 
  Converts a nonempty list of terms, each convertible by @rhombus(Syntax.make),
- into a group syntax object.
+ into a group syntax object. The @rhombus(ctx_stx) argument's scopes are used
+ for new syntax objects, the same as in @rhombus(Syntax.make).
 
 @examples(
   Syntax.make_group([1.0, 2, "c"])
@@ -600,11 +606,14 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_sequence(groups :: List) :: Syntax
+  fun Syntax.make_sequence(groups :: List,
+                           ctx_stx :: maybe(Syntax) = #false) :: Syntax
 ){
 
  Converts a list of groups, each convertible by
  @rhombus(Syntax.make_group), into a multi-group syntax object.
+ The @rhombus(ctx_stx) argument's scopes are used
+ for new syntax objects, the same as in @rhombus(Syntax.make).
 
 @examples(
   Syntax.make_sequence(['1 2 3', 'a b'])
@@ -613,11 +622,14 @@ Metadata for a syntax object can include a source location and the raw
 }
 
 @doc(
-  fun Syntax.make_op(name :: Symbol) :: Syntax
+  fun Syntax.make_op(name :: Symbol,
+                     ctx_stx :: maybe(Syntax) = #false) :: Syntax
 ){
 
  Convenience to convert a plain symbol to a syntax object for an
  operator, equivalent to @rhombus(Syntax.make([#'op, name])).
+ The @rhombus(ctx_stx) argument's scopes are used
+ for the new syntax object, the same as in @rhombus(Syntax.make).
 
 @examples(
   Syntax.make_op(#'#{+})
@@ -738,5 +750,56 @@ Metadata for a syntax object can include a source location and the raw
  @rhombus(stx). Merging combines raw source text in sequence, and it
  combines compatible source locations to describe a region containing
  all of the locations.
+
+}
+
+
+@doc(
+  fun Syntax.equal_binding(stx1 :: Identifier,
+                           stx2 :: Identifier,
+                           phase1 :: SyntaxPhase = Syntax.expanding_phase(),
+                           phase2 :: SyntaxPhase = phase1)
+    :: Boolean
+){
+
+ Checks whether @rhombus(stx1) at phase @rhombus(phase1) refers to the
+ same binding as @rhombus(stx2) at @rhombus(phase2).
+
+}
+
+@doc(
+  fun Syntax.equal_name_and_scopes(stx1 :: Identifier,
+                                   stx2 :: Identifier,
+                                   phase :: SyntaxPhase
+                                     = Syntax.expanding_phase())
+    :: Boolean
+){
+
+ Checks whether @rhombus(stx1) and @rhombus(stx) have the same name (as
+ returned by @rhombus(Syntax.unwrap)) and the same scopes at
+ @rhombus(phase).
+
+}
+
+@doc(
+  annot.macro 'SyntaxPhase'
+){
+
+ Matches an integer or @rhombus(#false).
+
+ A phase-level integer corresponds to a phase of evaluation, especially
+ relative to the main body of a module. Phase level @rhombus(0)
+ corresponds to a module's run time, @rhombus(1) corresponds to expansion
+ time for run-time forms, and so on. A phase level of @rhombus(#false)
+ corresponds to the label phase, like @rhombus(meta_label, ~impo).
+
+}
+
+@doc(
+  fun Syntax.expanding_phase() :: SyntaxPhase
+){
+
+ Returns the phase of expression forms currently being expanded, or
+ @rhombus(0) if no expansion is in progress.
 
 }

@@ -33,6 +33,7 @@ export:
   comma
   colon
   vbar
+  more_args
 
 fun see_implicit(what, when, context, ~is_infix = #false):
   @scribble.elem{The @what form is implicitly used when @when is
@@ -76,3 +77,5 @@ def quotes = @open_close("'", "'")
 def comma = @manual.litchar(",")
 def colon = @manual.litchar(":")
 def vbar = @manual.litchar{|}
+
+def more_args = scribble.elem("....")
