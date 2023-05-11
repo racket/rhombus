@@ -97,7 +97,7 @@ identifier to the right of the dot. The dot provider associated with
 @demo(
   ~eval: ann_eval
   ~defn:
-    dot.macro 'vector_dot_provider $left $dot $right':
+    dot.macro 'vector_dot_provider $left . $right':
       match right
       | 'angle': 'vector_angle($left)'
       | 'magnitude': 'vector_magnitude($left)'
@@ -177,7 +177,7 @@ dot provider is used directly, then it receives itself as the left
 argument:
 
 @rhombusblock(
-  dot.macro 'hello $left $dot $right':
+  dot.macro 'hello $left . $right':
     match right
     | 'english': '"Hi"'
     | 'chinese': '"你好"'
