@@ -397,6 +397,37 @@ syntax_parse stx_expr:
 
 Instead of needing some identifier like `pattern` or `match` separating the options from the cases.
 
+### Option C: `|` pipe indentation equal to group head indentation
+
+For a shrubbery like:
+
+```
+a:
+  b
+| c
+```
+
+To parse as:
+
+```
+(group a
+       (block (group b))
+       (alts (block (group c))))
+```
+
+The indentation of the `|` before `c` must be equal-to the indentation of `a`, less than the indentation of `b`. If it's less than `a`, then it might belong to a parent of `a` instead of `a`'s group. If it's between `a` and `b`, then it's an indentation error. If it's equal to `b`, then it would belong to `b`'s group instead of `a`'s group, and if it's more than `b` it's an indentation error.
+
+This indentation restriction applies to normal alts as well, so:
+
+```
+a
+  | c
+```
+
+is an indentation error too.
+
+The grammar, written/armored forms, and possible modifications to Rhombus forms are the same as written in option A.
+
 Evaluation and Tradeoffs
 --------------
 
@@ -486,6 +517,49 @@ Might "silently" fail, with the parser interpreting the same text as a different
 Instead of giving an error or some other immediate feedback to prompt users to fix their code.
 
 Rightward drift may also become a problem with option B, when programs get larger, more complicated, and more nested, the little bits of extra indentation that option B forces on `|` alts may start to add up.
+
+### Good of C
+
+Making `|` alts indentation between `a` and `b` an error prevents the problem in Bad of A. If
+
+```
+a:
+  b
+ | c
+```
+
+Is an indentation error, then there's no confusion between that and 
+
+```
+a:
+  b
+  | c
+```
+
+Option C also has less "rightward drift" than option B.
+
+### Bad of C
+
+If there are Rhombus programs that use rightward drift for alts:
+
+```
+a
+  | c
+```
+
+instead of
+
+```
+a
+| c
+```
+
+then they will get indentation errors.
+Fortunately, those errors could be made easy to read,
+and any given program should be simple to correct.
+Simple enough that an automatic tool similar to resyntax
+could probably do it.
+But it will still take more than zero effort.
 
 Prior art and References
 ---------
