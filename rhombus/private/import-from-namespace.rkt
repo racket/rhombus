@@ -13,9 +13,22 @@
                      check-allowed-for-dotted
                      space-excluded?
                      expose-spaces
+                     expose-spaces-with-rule
                      find-identifer-in-spaces))
 
 (begin-for-syntax
+  ;; inputs:
+  ;;   - r: the parsed `require` form
+  ;;   - ht: sym -> (list (cons id space) ...) = content of namespace in hash-table form
+  ;;   - covered-ht: threaded through conversions to make sure every identifier is used
+  ;;   - accum?: whether to add to `covered-ht` or complain about missing
+  ;;   - phase-shink-of?
+  ;;   - only-space-sym: #f means all spaces
+  ;; results are
+  ;;   - ht: sym -> (list (cons id space) ...) = adjusted (by renames, excepts, etc.) content
+  ;;   - exposed-ht: sym -> id, where `id` is the identifier to bind (without a prefix)
+  ;;   - new-covered-ht: updated coverage (when `accum?` is true)
+  ;;   - as-is?: true means `ht` is as given, and `exposed-ht` is empty
   (define (convert-require-from-namespace r ht covered-ht accum? phase-shift-ok? only-space-sym)
     (let extract ([r r] [ht ht] [step 0])
       (define (root) (values ht #hasheq() covered-ht #t))
@@ -25,8 +38,9 @@
         [#f (root)]
         [(rename-in mp [orig bind] ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
-         (define renames
-           (for/fold ([renames #hasheq()])
+         (define-values (renames rename-bind-ids)
+           (for/fold ([renames #hasheq()]
+                      [rename-bind-ids #hasheq()])
                      ([orig-s (in-list (syntax->list #'(orig ...)))]
                       [bind-s (in-list (syntax->list #'(bind ...)))])
                (define orig (syntax-e orig-s))
@@ -35,9 +49,11 @@
                  [(hash-ref new-ht orig #f)
                   (when (hash-ref renames orig #f)
                     (raise-syntax-error 'import "duplicate rename for identifier" orig-s))
-                  (hash-set renames orig bind)]
+                  (values (hash-set renames orig bind)
+                          (hash-set rename-bind-ids bind bind-s))]
                  [(or accum? (covered? covered-ht orig step))
-                  renames]
+                  (values renames
+                          rename-bind-ids)]
                  [else
                   (raise-syntax-error 'import "identifier to rename is not included" orig-s)])))
          (define-values (pruned-ht pruned-expose-ht)
@@ -49,7 +65,7 @@
                    ([(orig bind) (in-hash renames)])
            (values (hash-set ht bind (hash-ref new-ht orig))
                    (if (hash-ref new-expose-ht orig #f)
-                       (hash-set expose-ht bind #t)
+                       (hash-set expose-ht bind (hash-ref rename-bind-ids bind))
                        expose-ht)
                    (cover covered-ht orig step)
                    #f))]
@@ -64,9 +80,10 @@
              [(hash-ref new-ht id #f)
               => (lambda (v)
                    (values (hash-set ht id v)
-                           (if (hash-ref new-expose-ht id #f)
-                               (hash-set expose-ht id #t)
-                               expose-ht)
+                           (let ([as-id (hash-ref new-expose-ht id #f)])
+                             (if as-id
+                                 (hash-set expose-ht id as-id)
+                                 expose-ht))
                            (cover covered-ht id step)
                            #f))]
              [(or accum? (covered? covered-ht id step))
@@ -99,7 +116,7 @@
              (define id (syntax-e id-s))
              (cond
                [(hash-ref new-ht id #f)
-                (values (hash-set expose-ht id #t)
+                (values (hash-set expose-ht id id-s)
                         (cover covered-ht id step))]
                [(or accum? (covered? covered-ht id step))
                 (values expose-ht
@@ -134,9 +151,9 @@
                         #:when (pair? new-id+spaces))
              (values key new-id+spaces)))
          (define pruned-expose-ht
-           (for/hasheq ([k (in-hash-keys new-expose-ht)]
+           (for/hasheq ([(k k-id) (in-hash new-expose-ht)]
                         #:when (hash-ref pruned-ht k #f))
-             (values k #t)))
+             (values k k-id)))
          (values pruned-ht pruned-expose-ht covered-ht #f)]
         [(only-space-in space mp) ;; redundant for namespaces
          (extract #'mp ht step)]
@@ -183,11 +200,13 @@
       (find-identifer-in-spaces id/id+spaces only-space-sym)
       id/id+spaces))
 
-(define-for-syntax (find-identifer-in-spaces id-in only-space)
+(define-for-syntax (find-identifer-in-spaces id-in only-space
+                                             #:keep? [keep? (lambda (space-sym) #t)])
   ;; find all spaces where the identifier is bound
   (for*/fold ([id+spaces '()]) ([space-sym (in-list (if only-space
                                                         (list only-space)
-                                                        (cons #f (syntax-local-module-interned-scope-symbols))))])
+                                                        (cons #f (syntax-local-module-interned-scope-symbols))))]
+                                #:when (keep? space-sym))
     (define intro (if space-sym
                       (make-interned-syntax-introducer space-sym)
                       (lambda (x mode) x)))
@@ -198,3 +217,16 @@
                          id+spaces)))
         (cons (cons id space-sym) id+spaces)
         id+spaces)))
+
+(define-for-syntax (expose-spaces-with-rule id rule)
+  (syntax-parse rule
+    #:datum-literals (only)
+    [() id]
+    [(mode space ...)
+     (define spaces (for/hasheq ([space (in-list (syntax->list #'(space ...)))])
+                      (values (syntax-e space) #t)))
+     (find-identifer-in-spaces
+      id #f
+      #:keep? (if (eq? (syntax-e #'mode) 'only)
+                  (lambda (space-sym) (hash-ref spaces space-sym #f))
+                  (lambda (space-sym) (not (hash-ref spaces space-sym #f)))))]))

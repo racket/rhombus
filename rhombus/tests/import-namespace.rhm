@@ -155,3 +155,55 @@ block:
     import .n2 open
     def exint = -10
     ~raises "value does not satisfy annotation"
+
+check:
+  namespace ns:
+    export:
+      only_space annot:
+        Streeng
+  annot.macro 'Streeng': 'String'
+  import .ns
+  "10" :: ns.Streeng
+  ~is "10"
+
+block:
+  // make sure non-macro-introduced names are not
+  // mismatched with macro-introduced namespace names
+  defn.macro 'datatype $name':
+    '«namespace ADT:
+        export:
+          only_space annot: $name
+        class $name ()
+      import:
+        .ADT . $name
+    »'
+  datatype List
+  check:
+    [1, 2] is_a List ~is #false
+    List(1, 2) ~is [1, 2]
+
+block:
+  // similar, but for `expose`
+  defn.macro 'datatype $name':
+    '«namespace ADT:
+        export:
+          only_space annot: $name
+        class $name ()
+      import:
+        .ADT as ignored:
+          expose: $name
+    »'
+  datatype List
+  check:
+    [1, 2] is_a List ~is #false
+    List(1, 2) ~is [1, 2]
+
+check:
+  import .List.iota
+  iota(2)
+  ~is [0, 1]
+
+check:
+  import rhombus.List.iota
+  iota(2)
+  ~is [0, 1]
