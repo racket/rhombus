@@ -52,3 +52,63 @@ check:
     export: home.x
   like_home.x
   ~is "x"
+
+check:
+  namespace n:
+    let y = 11
+    export:
+      y
+  n.y
+  ~is 11
+
+check:
+  def y = 8
+  namespace n:
+    export:
+      y
+    let y = 11
+  n.y
+  ~is 8
+
+check:
+  namespace ~open:
+    export:
+      x
+    def x = 10
+  x
+  ~is 10
+
+check:
+  namespace ~open:
+    let y = 11
+    export:
+      y
+  y
+  ~is 11
+
+check:
+  import rhombus/meta open
+  defn.macro 'gen':
+    'namespace ~open:
+       let y = 12
+       export:
+         y
+     y'
+  gen
+  ~is 12
+
+check:
+  ~eval
+  namespace ~open:
+    export:
+      nonesuch
+  nonesuch
+  ~raises "undefined"
+
+check:
+  import rhombus/meta open
+  namespace ~open:
+    export: Num
+    annot.macro 'Num': 'Real'
+  1 :: Num
+  ~is 1

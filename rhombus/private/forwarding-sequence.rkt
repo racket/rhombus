@@ -62,9 +62,15 @@
               #,forms
               (final ... #,(reverse (syntax->list #'binds)) #,@(reverse (syntax->list #'(accum ...)))))]
          [[(final ...) bind ...]
+          (define ctx-id (datum->syntax #f 'ctx))
+          (define all-ctx-id ((make-syntax-delta-introducer #'remove-ctx #'base-ctx)
+                               ((make-syntax-delta-introducer #'add-ctx #'base-ctx)
+                                ctx-id
+                                'add)
+                               'add))
           #`(begin
               #,forms
-              (final ... #,@(reverse (syntax->list #'(bind ...)))))]
+              (final ... #,ctx-id #,all-ctx-id #,@(reverse (syntax->list #'(bind ...)))))]
          [_ forms])]
       [(_ ctx mode orig base-ctx add-ctx remove-ctx (~and form ((~literal quote) v)) . forms)
        (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx . forms)
@@ -78,6 +84,7 @@
                            (local-expand #'form
                                          (syntax-local-context)
                                          (list #'rhombus-forward
+                                               #'pop-forward
                                                #'define-values
                                                #'define-syntaxes
                                                ;; etc.
@@ -87,14 +94,17 @@
                                                #'begin-for-syntax)
                                          #f)]))
        (syntax-parse exp-form
-         #:literals (begin define-values define-syntaxes rhombus-forward #%require provide #%provide quote-syntax)
-         [(rhombus-forward . sub-forms)
+         #:literals (begin define-values define-syntaxes rhombus-forward pop-forward #%require provide #%provide quote-syntax)
+         [(rhombus-forward sub-form ...)
           (define introducer (make-syntax-introducer #t))
           #`(begin
               #,@(reverse accum)
-              (sequence ctx #f #f base-ctx #,(introducer #'add-ctx) base-ctx . sub-forms)
-              (sequence ctx mode orig base-ctx add-ctx #,(introducer #'remove-ctx)
-                        . #,(introducer #'forms)))]
+              (sequence ctx #f #f base-ctx #,(introducer #'add-ctx) base-ctx
+                        sub-form ...
+                        (pop-forward mode orig base-ctx add-ctx #,(introducer #'remove-ctx)
+                                     . #,(introducer #'forms))))]
+         [(pop-forward mode orig base-ctx add-ctx remove-ctx . forms)
+          #`(sequence ctx mode orig base-ctx add-ctx remove-ctx . forms)]
          [(begin form ...)
           (define seq #`(sequence ctx mode orig base-ctx add-ctx remove-ctx form ... . forms))
           (if (null? accum)
@@ -167,6 +177,11 @@
                 (sequence ctx #:saw-non-defn #f base-ctx add-ctx remove-ctx . forms))])])))
 
 (define-syntax (rhombus-forward stx)
+  (raise-syntax-error #f
+                      "should not get expanded"
+                      stx))
+
+(define-syntax (pop-forward stx)
   (raise-syntax-error #f
                       "should not get expanded"
                       stx))

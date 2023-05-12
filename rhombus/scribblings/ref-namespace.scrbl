@@ -21,7 +21,7 @@ and a parenthesized operator. When using a form like @rhombus(expr.macro)
 to extends a namespace, the @litchar{.}-separated sequence must be
 surrounded by pair of parentheses.
 
-A namespace contains binding that are any any @tech{space}, while the
+A namespace contains bindings that are in any @tech{space}, while the
 namespace name itself is bound in the @rhombus(namespace, ~space) space. In a
 given context, a dotted reference through a namespace takes precedence
 over interpreting the namespace identifier instead in the context's
@@ -41,6 +41,9 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
   defn.macro 'namespace $id_path:
                 $nestable_body
                 ...'
+  defn.macro 'namespace ~open:
+                $nestable_body
+                ...'
 ){
 
  Similar to the same @rhombus(nestable_body) sequence spliced into the
@@ -53,15 +56,34 @@ in other spaces (such as @rhombus(bind) or @rhombus(annot)), then
  at the end of @rhombus(id_path) is bound in the @rhombus(namespace, ~space)
  @tech{space}.
 
+ When @rhombus(~open) is supplied in place of @rhombus(id_path), then
+ instead of defining a visible namespace, a private namespace name is
+ created and also imported with @rhombus(import) to bind all the exported
+ name in the enclosing scope. The names are bound using the same
+ identifiers as listed in the namespace's @rhombus(export), but without
+ scopes created by @rhombus(namespace) to isolate other bindings within
+ the namespace.
+
 @examples(
-  namespace geometry:
-    export: pi tau
-    def pi: 3.14
-    def tau: 6.28
-  geometry.pi
-  block:
-    import: .geometry open
-    [pi, tau]
+  ~defn:
+    namespace geometry:
+      export: pi tau
+      def pi: 3.14
+      def tau: 6.28
+  ~repl:
+    geometry.pi
+    block:
+      import: .geometry open
+      [pi, tau]
+  ~defn:
+    namespace ~open:
+      export: bump
+      def mutable x = 0
+      fun bump(): x := x + 1; x
+  ~repl:
+    bump()
+    ~error:
+      x // not exported
 )
 
 }
