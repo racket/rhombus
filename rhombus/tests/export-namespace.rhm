@@ -46,7 +46,7 @@ check:
   ~eval
   import rhombus/meta open
   namespace n:
-    import "example-c.rhm" open
+    import lib("rhombus/tests/example-c.rhm") open
     export:
       only_space annot:
         exint
@@ -57,7 +57,7 @@ check:
   ~eval
   import rhombus/meta open
   namespace n:
-    import "example-c.rhm" open
+    import lib("rhombus/tests/example-c.rhm") open
     export:
       only_space expr:
         exint
@@ -68,7 +68,7 @@ check:
   ~eval
   import rhombus/meta open
   namespace n:
-    import "example-c.rhm" open
+    import lib("rhombus/tests/example-c.rhm") open
     export:
       only_space expr:
         except_space expr:
@@ -79,7 +79,7 @@ check:
   ~eval
   import rhombus/meta open
   namespace n:
-    import "example-c.rhm" open
+    import lib("rhombus/tests/example-c.rhm") open
     export:
       except_space expr:
         only_space annot:
@@ -124,3 +124,86 @@ check:
   import lib("rhombus/tests/example-d.rhm") as d
   d.two
   ~raises "no such imported identifier"
+
+block:
+  def thing = 1
+  namespace ns:
+    export:
+      only_space expr:
+        thing
+      only_space annot:
+        thing
+    annot.macro 'thing': 'Int'
+  check:
+    ns.thing ~is 1
+    10 :: ns.thing ~is 10
+
+block:
+  def thing = 1
+  namespace ns:
+    export:
+      except_space annot:
+        thing
+      only_space annot:
+        thing
+    annot.macro 'thing': 'Int'
+  check:
+    ns.thing ~is 1
+    10 :: ns.thing ~is 10
+
+block:
+  def thing = 1
+  namespace ns:
+    export:
+      only_space expr:
+        thing
+      except_space expr:
+        thing
+    annot.macro 'thing': 'Int'
+  check:
+    ns.thing ~is 1
+    10 :: ns.thing ~is 10
+
+
+block:
+  namespace ns:
+    annot.macro 'thing': 'Int'
+    export:
+      only_space annot:
+        thing
+    let thing = 1
+    export:
+      only_space expr:
+        thing
+  check:
+    ns.thing ~is 1
+    10 :: ns.thing ~is 10
+
+block:
+  def thing = 1
+  namespace ns:
+    export:
+      except_space annot:
+        thing
+      except_space expr:
+        thing
+    annot.macro 'thing': 'Int'
+  check:
+    ns.thing ~is 1
+    10 :: ns.thing ~is 10
+
+check:
+  ~eval
+  import rhombus/meta open
+  block:
+    namespace ns:
+      annot.macro 'thing': 'Int'
+      export:
+        except_space expr:
+          thing
+      let thing = 1
+      export:
+        except_space annot:
+          thing
+    "ok"
+  ~raises "duplicate export name with different bindings"

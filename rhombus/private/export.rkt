@@ -244,9 +244,9 @@
               => (lambda (i)
                    (define form
                      (syntax-parse i
-                       #:datum-literals (parsed map)
+                       #:datum-literals (parsed nspace)
                        [(parsed mod-path parsed-r) #`(all-from-out #,(relocate #'name.name #'mod-path))]
-                       [(map _ _ [key val . rule] ...)
+                       [(nspace _ _ [key val . rule] ...)
                         (define keys (syntax->list #'(key ...)))
                         (define vals (syntax->list #'(val ...)))
                         (define rules (syntax->list #'(rule ...)))
@@ -270,13 +270,19 @@
                                            [rule (in-list rules)]
                                            #:when (and (syntax-e key)
                                                        (pair? (syntax-e rule))))
-                                  (syntax-parse rule
-                                    [(mode space ...)
-                                     #`(#,(if (eq? (syntax-e #'mode) 'only)
-                                              #'only-spaces-out
-                                              #'except-spaces-out)
-                                        (all-spaces-out [#,val #,key])
-                                        space ...)])))])]))
+                                  (let loop ([rule rule])
+                                    (syntax-parse rule
+                                      [(#:space ([space space-id] ...) . rule-rest)
+                                       #`(combine-out
+                                          (only-spaces-out space-id space)
+                                          ...
+                                          #,(loop #'rule-rest))]
+                                      [((~and mode (~or #:only #:except))  space ...)
+                                       #`(#,(if (eq? (syntax-e #'mode) '#:only)
+                                                #'only-spaces-out
+                                                #'except-spaces-out)
+                                          (all-spaces-out [#,val #,key])
+                                          space ...)]))))])]))
                    (unless (null? (syntax-e #'name.tail))
                      (raise-syntax-error #f
                                          "unexpected after `.`"

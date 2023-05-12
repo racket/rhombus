@@ -114,7 +114,7 @@ check:
       .n as ex_c:
         only_space: expr
     10 :: ex_c.exint
-  ~raises "not bound as an annotation"
+  ~raises "identifier not provided"
 
 check:
   import:

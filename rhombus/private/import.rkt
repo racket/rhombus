@@ -412,11 +412,11 @@
            (error "internal error: namespace or import at strange space" space-sym))
          (list '#:all
                (syntax-parse i
-                 #:datum-literals (parsed map)
+                 #:datum-literals (parsed nspace)
                  [(parsed mod-path parsed-r)
                   (define-values (mp r) (import-invert (syntax-local-introduce (transform-in #'parsed-r)) #f #f))
                   #`(reimport #,id #,mp #,r)]
-                 [(map . _) #`(import-root #,id #,i #,space-id)]))])))
+                 [(nspace . _) #`(import-root #,id #,i #,space-id)]))])))
   (cond
     [(null? space+maps)
      (cond
@@ -481,8 +481,8 @@
 (define-for-syntax (imports-from-namespace im r-parsed covered-ht accum? dotted-id only-space-sym)
   (define open-all-spaces? (not only-space-sym))
   (syntax-parse im
-    #:datum-literals (import-root map)
-    [(import-root id (map orig-id _ [key val . rule] ...) lookup-id)
+    #:datum-literals (import-root nspace)
+    [(import-root id (nspace orig-id _ [key val . rule] ...) lookup-id)
      (define-values (prefix open-id) (extract-prefix+open-id #'id r-parsed))
      (define bound-prefix (string-append (symbol->immutable-string (syntax-e #'id))
                                          "."))
@@ -580,42 +580,23 @@
                                         #`(define-syntax #,new-id
                                             (make-rename-transformer (quote-syntax #,ext-id)))))))]
                          [else
-                          ;; if spaces were reduced, then we'll need to introduce
-                          ;; fresh rename transformers to map to them; note that `ht`
-                          ;; includes additional bindings from namespace extensions
-                          (define key-rhs-ht
-                            (for/hasheq ([(key val) (in-hash ht)]
-                                         #:when (cond
-                                                  [(identifier? val)
-                                                   ;; no space modifier fetched the list of binding spaces,
-                                                   ;; so the spaces certainly weren't reduced
-                                                   #f]
-                                                  [(and (cdar val)
-                                                        (null? (cdr val)))
-                                                   ;; only one non-default space remaining, so we can use that identifier
-                                                   #f]
-                                                  [else
-                                                   ;; make a new name, to which we'll add each space
-                                                   #t]))
-                              (values key ((make-syntax-introducer) (datum->syntax #f key)))))
                           (with-syntax ([(root-id) (generate-temporaries #'(id))])
                             #`((define-name-root root-id
                                  #:orig-id orig-id
                                  #:fields
                                  #,(for/list ([(key val) (in-hash ht)])
-                                     #`[#,key #,(let ([v (hash-ref key-rhs-ht key val)])
-                                                  (if (pair? v)
-                                                      (caar v)
-                                                      v))]))
-                               ;; add rename transformers needed to implement space pruning
-                               #,@(for/list ([(key rhs) (in-hash key-rhs-ht)]
-                                             #:do [(define val (hash-ref ht key))]
-                                             [id+space (in-list val)])
-                                    (define space (cdr id+space))
-                                    #`(define-syntax #,(if space
-                                                           ((make-interned-syntax-introducer space) rhs)
-                                                           rhs)
-                                        (make-rename-transformer (quote-syntax #,(car id+space)))))
+                                     (cond
+                                       [(identifier? val)
+                                        ;; simple case: propagate all available spaces
+                                        #`[#,key #,val]]
+                                       [else
+                                        ;; generate space-specific bindings
+                                        #`[#,key
+                                           #,(if (pair? val) (caar val) key) ; will be ignored, but needed for right shape
+                                           #:space #,(for/list ([id+space (in-list val)])
+                                                       #`[#,(cdr id+space) #,(car id+space)])
+                                           ;; no other spaces:
+                                           #:only]])))
                                ;; add rename transformer for the prefix
                                (define-syntax #,(in-name-root-space (datum->syntax #'id (syntax-e prefix) #'id))
                                  (make-rename-transformer (quote-syntax #,(in-name-root-space #'root-id))))))]))

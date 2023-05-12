@@ -219,14 +219,23 @@
         id+spaces)))
 
 (define-for-syntax (expose-spaces-with-rule id rule)
-  (syntax-parse rule
-    #:datum-literals (only)
-    [() id]
-    [(mode space ...)
-     (define spaces (for/hasheq ([space (in-list (syntax->list #'(space ...)))])
-                      (values (syntax-e space) #t)))
-     (find-identifer-in-spaces
-      id #f
-      #:keep? (if (eq? (syntax-e #'mode) 'only)
-                  (lambda (space-sym) (hash-ref spaces space-sym #f))
-                  (lambda (space-sym) (not (hash-ref spaces space-sym #f)))))]))
+  (let loop ([rule rule])
+    (syntax-parse rule
+      #:datum-literals (only)
+      [() id]
+      [(#:space ([space space-id] ...) . rule-rest)
+       (append
+        (map cons
+             (syntax->list #'(space-id ...))
+             (syntax->list #'(space ...)))
+        (loop #'rule-rest))]
+      [(#:only) ; shortcut for zero spaces
+       null]
+      [((~and mode (~or #:only #:except)) space ...)
+       (define spaces (for/hasheq ([space (in-list (syntax->list #'(space ...)))])
+                        (values (syntax-e space) #t)))
+       (find-identifer-in-spaces
+        id #f
+        #:keep? (if (eq? (syntax-e #'mode) '#:only)
+                    (lambda (space-sym) (hash-ref spaces space-sym #f))
+                    (lambda (space-sym) (not (hash-ref spaces space-sym #f)))))])))

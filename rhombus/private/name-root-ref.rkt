@@ -127,7 +127,7 @@
 
 (define-for-syntax (portal-syntax->lookup portal-stx make)
   (syntax-parse portal-stx
-    #:datum-literals (import map)
+    #:datum-literals (import nspace)
     [([import _ _ _] pre-ctx-s ctx-s)
      (define pre-ctx #'pre-ctx-s)
      (define ctx #'ctx-s)
@@ -150,7 +150,7 @@
                                        name)]
                   [else #f])]
                [else #f])))]
-    [(map self-id _ [key val . rule] ...)
+    [(nspace self-id _ [key val . rule] ...)
      (define keys (syntax->list #'(key ...)))
      (define vals (syntax->list #'(val ...)))
      (define rules (syntax->list #'(rule ...)))
@@ -160,8 +160,7 @@
                           [val (in-list vals)]
                           [rule (in-list rules)])
                    (and (eq? (syntax-e key) (syntax-e name))
-                        (matches-rule? in-space rule)
-                        val))
+                        (rule->identifier in-space rule val)))
                  (and who-stx
                       (raise-syntax-error #f
                                           (format "~a not provided by ~a"
@@ -170,27 +169,36 @@
                                           name)))))]
     [_ #f]))
 
-(define-for-syntax (matches-rule? in-space rule)
-  (cond
-    [(null? (syntax-e rule)) #t]
-    [else
-     (define x (datum->syntax #f 'x))
-     (with-syntax ([(mode space ...) rule])
+(define-for-syntax (rule->identifier in-space rule val-id)
+  (define (target-space? sp x)
+    (bound-identifier=? (in-space x)
+                        (if sp
+                            ((make-interned-syntax-introducer sp) x)
+                            x)))
+  (let loop ([rule rule])
+    (syntax-parse rule
+      [() val-id]
+      [(#:space ([space space-id] ...) . rest-rule)
+       (define x (datum->syntax #f 'x))
+       (or (for/or ([sp-stx (in-list (syntax->list #'(space ...)))]
+                    [space-id (in-list (syntax->list #'(space-id ...)))])
+             (and (target-space? (syntax-e sp-stx) x)
+                  (in-space space-id)))
+           (loop #'rest-rule))]
+      [((~and mode (~or #:only #:except)) space ...)
+       (define x (datum->syntax #f 'x))
        (define match?
          (for/or ([sp-stx (in-list (syntax->list #'(space ...)))])
-           (define sp (syntax-e sp-stx))
-           (bound-identifier=? (in-space x)
-                               (if sp
-                                   ((make-interned-syntax-introducer sp) x)
-                                   x))))
-       (if (eq? (syntax-e #'mode) 'only)
-           match?
-           (not match?)))]))
+           (target-space? (syntax-e sp-stx) x)))
+       (and (if (eq? (syntax-e #'mode) '#:only)
+                match?
+                (not match?))
+            val-id)])))
 
 (define-for-syntax (portal-syntax->extends portal-stx)
   (syntax-parse portal-stx
-    #:datum-literals (import map)
-    [(map _ extends . _) #'extends]
+    #:datum-literals (import nspace)
+    [(nspace _ extends . _) #'extends]
     [_ #f]))
 
 (define-for-syntax (relocate-field root-id field-id new-field-id)
@@ -226,14 +234,14 @@
 
 (define-for-syntax (portal-syntax->import portal-stx)
   (syntax-parse portal-stx
-    #:datum-literals (map import)
+    #:datum-literals (nspace import)
     [([import mod-path parsed-r mod-ctx] orig-s ctx-s)
      #`(parsed #,(datum->syntax #'ctx-s (syntax-e #'mod-path)) #,((make-syntax-delta-introducer
                                                                    #'mod-ctx
                                                                    (syntax-local-introduce (datum->syntax #f 'empty)))
                                                                   #'parsed-r
                                                                   'remove))]
-    [(map . _)
+    [(nspace . _)
      portal-stx]
     [_ #f]))
 
@@ -260,8 +268,8 @@
            [(null? (cdr ids))
             ;; must be `map` portal syntax to allow extension:
             (syntax-parse (portal-syntax-content v)
-              #:datum-literals (map)
-              [(map . _) #t]
+              #:datum-literals (nspace)
+              [(nspace . _) #t]
               [_ #f])]
            [else
             (loop (cdr ids) (portal-syntax-content v) id)])
