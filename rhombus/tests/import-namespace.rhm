@@ -42,6 +42,16 @@ check:
   ~is 10
 
 check:
+  defn.macro 'open_n':
+    ~op_stx self
+    'import: .n open ~scope_like $self'
+  open_n
+  def exint = 10
+  10 :: exint
+  exint
+  ~is 10
+
+check:
   import:
     .n:
       open

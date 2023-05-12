@@ -73,7 +73,8 @@
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (for/fold ([ht #hasheq()]
                     [expose-ht #hasheq()]
-                    [covered-ht covered-ht])
+                    [covered-ht covered-ht]
+                    #:result (values ht expose-ht covered-ht #f))
                    ([id-s (in-list (syntax->list #'(id ...)))])
            (define id (syntax-e id-s))
            (cond
@@ -95,16 +96,15 @@
          (for/fold ([ht new-ht]
                     [expose-ht new-expose-ht]
                     [covered-ht covered-ht]
-                    [as-is? #f])
+                    #:result (values ht expose-ht covered-ht #f))
                    ([id-s (in-list (syntax->list #'(id ...)))])
            (define id (syntax-e id-s))
            (cond
              [(hash-ref new-ht id #f) (values (hash-remove ht id)
                                               (hash-remove expose-ht id)
-                                              (cover covered-ht id step)
-                                              #f)]
+                                              (cover covered-ht id step))]
              [(or accum? (covered? covered-ht id step))
-              (values ht expose-ht covered-ht #f)]
+              (values ht expose-ht covered-ht)]
              [else
               (raise-syntax-error 'import "identifier to exclude is not included" id-s)]))]
         [(expose-in mp id ...)
@@ -133,7 +133,7 @@
          (if phase-shift-ok?
              (extract #'mp ht step)
              (raise-syntax-error 'import "cannot shift phase of namespace content" r))]
-        [(rhombus-prefix-in mp name) (extract #'mp ht step)]
+        [(rhombus-prefix-in mp . _) (extract #'mp ht step)]
         [((~and mode (~or only-spaces-in except-spaces-in)) mp a-space ...)
          (define-values (new-ht new-expose-ht covered-ht as-is?) (extract #'mp ht (add1 step)))
          (define the-spaces

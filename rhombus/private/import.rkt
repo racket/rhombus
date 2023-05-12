@@ -131,7 +131,7 @@
         [#f (reverse accum)]
         [((~or rename-in only-in except-in expose-in for-label only-spaces-in except-spaces-in) mp . _)
          (extract #'mp accum)]
-        [(rhombus-prefix-in mp name)
+        [(rhombus-prefix-in mp name ctx)
          (if (or (identifier? #'name)
                  (not (syntax-e #'name)))
              (extract #'mp (cons r accum))
@@ -140,13 +140,13 @@
                                      "expected an identifier"
                                      #'name)
                  (syntax-parse #'name
-                   [(_ op) (extract #'mp (cons #'(rhombus-prefix-in mp op) accum))])))]
+                   [(_ op) (extract #'mp (cons #'(rhombus-prefix-in mp op ctx) accum))])))]
         [((~or for-meta only-space-in) _ mp) (extract #'mp accum)]
         [_ (raise-syntax-error 'import
                                "don't know how to extract module path"
                                r)])))
 
-  (define (extract-prefix mp r #:require-identifier? [require-identifier? #t])
+  (define (extract-prefix+open-id mp r #:require-identifier? [require-identifier? #t])
     (define prefixes (extract-prefixes r #:require-identifier? require-identifier?))
     (define (extract-string-prefix mp)
       (datum->syntax
@@ -158,34 +158,36 @@
        mp))
     (cond
       [(null? prefixes)
-       (syntax-parse mp
-         #:datum-literals (lib import-root import-dotted import-spaces file submod reimport singleton)
-         [_:string (extract-string-prefix mp)]
-         [_:identifier (datum->syntax
-                        mp
-                        (string->symbol (regexp-replace #rx"^.*/"
-                                                        (symbol->string (syntax-e mp))
-                                                        ""))
-                        mp)]
-         [(lib str) (extract-string-prefix #'str)]
-         [(import-root id . _) #'id]
-         [(import-dotted _ id) #'id]
-         [(import-spaces _ mp . _) #'mp]
-         [(reimport id . _) #'id]
-         [(singleton _ id) #'id]
-         [(file str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
-                       (datum->syntax
-                        mp
-                        (string->symbol (path->string (path-replace-suffix name #"")))))]
-         [(submod _ id) #'id]
-         [(submod ".") (datum->syntax mp 'self)]
-         [(submod "..") (datum->syntax mp 'parent)]
-         [_ (raise-syntax-error 'import
-                                "don't know how to extract default prefix"
-                                mp)])]
+       (values
+        (syntax-parse mp
+          #:datum-literals (lib import-root import-dotted import-spaces file submod reimport singleton)
+          [_:string (extract-string-prefix mp)]
+          [_:identifier (datum->syntax
+                         mp
+                         (string->symbol (regexp-replace #rx"^.*/"
+                                                         (symbol->string (syntax-e mp))
+                                                         ""))
+                         mp)]
+          [(lib str) (extract-string-prefix #'str)]
+          [(import-root id . _) #'id]
+          [(import-dotted _ id) #'id]
+          [(import-spaces _ mp . _) #'mp]
+          [(reimport id . _) #'id]
+          [(singleton _ id) #'id]
+          [(file str) (let-values ([(base name dir?) (split-path (syntax-e #'str))])
+                        (datum->syntax
+                         mp
+                         (string->symbol (path->string (path-replace-suffix name #"")))))]
+          [(submod _ id) #'id]
+          [(submod ".") (datum->syntax mp 'self)]
+          [(submod "..") (datum->syntax mp 'parent)]
+          [_ (raise-syntax-error 'import
+                                 "don't know how to extract default prefix"
+                                 mp)])
+        #f)]
       [(null? (cdr prefixes))
        (syntax-parse (car prefixes)
-         [(_ mp name) #'name])]
+         [(_ mp name ctx) (values #'name (and (syntax-e #'ctx) #'ctx))])]
       [else
        (raise-syntax-error 'import
                            "second prefix specification not allowed"
@@ -263,11 +265,11 @@
                 (lambda (after-mp)
                   (define new-id (make-id after-mp #'next-id))
                   (define new-next-id ((make-syntax-introducer) #'next-id))
-                  #`(rhombus-import-dotted-one wrt dotted #,new-id #,new-next-id #t (rhombus-prefix-in #f #f)
+                  #`(rhombus-import-dotted-one wrt dotted #,new-id #,new-next-id #t (rhombus-prefix-in #f #f #f)
                                                #,(k new-next-id))))]
          [_
           (define m-mod-path (intro-mod-path mod-path (make-syntax-introducer)))
-          #`(rhombus-import-one wrt dotted #,m-mod-path (rhombus-prefix-in #f #f)
+          #`(rhombus-import-one wrt dotted #,m-mod-path (rhombus-prefix-in #f #f #f)
                                 #,(k m-mod-path))]))]
     [(_ wrt dotted (import-spaces dot-name ir ...) r (k-form wrt-placeholder dotted-placeholder . k-args))
      ;; Split into the three types of imports:
@@ -312,7 +314,7 @@
             (define-values (mod-form new-covered-ht)
               (syntax-parse orig-mod
                 [(space mp)
-                 (define prefix (extract-prefix #'mp #'r))
+                 (define-values (prefix open-id) (extract-prefix+open-id #'mp #'r))
                  ;; The name-root expansion of import prefixes is handled by
                  ;; `name-root-ref`, which recognizes `(portal <id> (import ....))`
                  ;; forms generated by `lower-require-clause`
@@ -328,6 +330,7 @@
                                        use-mp
                                        (and (syntax-e prefix)
                                             prefix)
+                                       open-id
                                        covered-ht
                                        (or (pair? (cdr orig-mods))
                                            (pair? namesps)))]))
@@ -356,7 +359,8 @@
               (syntax-parse sing
                 #:datum-literals (singleton reimport)
                 [(space (~and mp (singleton id as-id)))
-                 (define prefix (extract-prefix #'mp #'r #:require-identifier? #f)) ; `as` "prefix" is really a rename
+                 (define-values (prefix ignored-open-id)
+                   (extract-prefix+open-id #'mp #'r #:require-identifier? #f)) ; `as` "prefix" is really a rename
                  (cond
                    [(syntax-e prefix)
                     (cond
@@ -479,7 +483,7 @@
   (syntax-parse im
     #:datum-literals (import-root map)
     [(import-root id (map orig-id _ [key val . rule] ...) lookup-id)
-     (define prefix (extract-prefix #'id r-parsed))
+     (define-values (prefix open-id) (extract-prefix+open-id #'id r-parsed))
      (define bound-prefix (string-append (symbol->immutable-string (syntax-e #'id))
                                          "."))
      (define extension-ht
@@ -637,8 +641,16 @@
                         #:do [(define space-v-id (intro v-id 'add))]
                         #:when (identifier-binding* space-v-id)
                         #:do [(define new-id (intro (if (syntax-e prefix)
+                                                        ;; identifier must be explicitly `expose`d, so use
+                                                        ;; the identifier from that declaration:
                                                         (hash-ref expose-ht key)
-                                                        (datum->syntax #'id key #'id))
+                                                        ;; use the identifier for `open` or supplied
+                                                        ;; with `open`
+                                                        (if open-id
+                                                            (datum->syntax open-id key open-id)
+                                                            ;; as a fallback, use the module name,
+                                                            ;; which is needed for `.`-based chaining
+                                                            (datum->syntax #'id key #'id)))
                                                     'add))])
                #`(define-syntax #,new-id
                    (make-rename-transformer (quote-syntax #,space-v-id))))
@@ -790,7 +802,7 @@
      (syntax-parse stx
        [(_ name::name)
         (datum->syntax req
-                       (list #'rhombus-prefix-in req #'name.name)
+                       (list #'rhombus-prefix-in req #'name.name #f)
                        req)]))))
 
 (begin-for-syntax
@@ -874,9 +886,13 @@
    (lambda (req stx)
      (syntax-parse stx
        #:datum-literals (block group)
+       [(_ #:scope_like id:identifier)
+        (datum->syntax req
+                       (list #'rhombus-prefix-in req #f #'id)
+                       req)]
        [(_)
         (datum->syntax req
-                       (list #'rhombus-prefix-in req #f)
+                       (list #'rhombus-prefix-in req #f #f)
                        req)]))))
 
 (define-import-syntax expose

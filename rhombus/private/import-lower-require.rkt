@@ -18,7 +18,7 @@
 (define-syntax import-dotted #f)
 
 (begin-for-syntax
-  (define (lower-require-clause inner-r r mod-path prefix-id covered-ht accum?)
+  (define (lower-require-clause inner-r r mod-path prefix-id open-id covered-ht accum?)
     (define (expose v) (vector v))
     (define (expose? v) (vector? v))
     (define (expose-id v) (vector-ref v 0))
@@ -252,7 +252,7 @@
              (unless (eq? space '#:all)
                (raise-syntax-error 'import "duplicate or conflicting space" #'new-space))
              (extract #'mp (syntax-e #'new-space) step)]
-            [(rhombus-prefix-in mp name) (extract #'mp space step)]
+            [(rhombus-prefix-in mp name open-id) (extract #'mp space step)]
             [_ (raise-syntax-error 'import
                                    "don't know how to lower"
                                    r)]))))
@@ -269,7 +269,7 @@
            #`(tag phase #,(strip #'mp))]
           [((~and tag only-space-in) space mp)
            #`(tag space #,(strip #'mp))]
-          [((~literal rhombus-prefix-in) mp name) (strip #'mp)]
+          [((~literal rhombus-prefix-in) mp . _) (strip #'mp)]
           [_ (raise-syntax-error 'import "don't know how to strip" r)])))
     (define (plain-id v) (if (expose? v) (expose-id v) v))
     (define any-space-limited?
@@ -296,7 +296,9 @@
                 (list #'(only #,mod-path
                               #,@(for/list ([k (in-hash-keys renames)]
                                             #:when (hash-ref syms k #f))
-                                   k))))]
+                                   (if open-id
+                                       (datum->syntax open-id k)
+                                       k)))))]
            [else
             ;; specific ids, some exposed or renamed
             (define l
@@ -321,7 +323,9 @@
                     (and (expose? v)
                          (eq? k (syntax-e (expose-id v)))))))
          ;; all ids, none renamed (but some exposed)
-         (list mod-path)]
+         (if open-id
+             (list (datum->syntax open-id (syntax-e mod-path) mod-path mod-path))
+             (list mod-path))]
         [else
          ;; mixture of renames and exposes, with unmentioned imported
          (append

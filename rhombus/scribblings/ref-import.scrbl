@@ -43,7 +43,7 @@
 
   grammar modifier:
     #,(@rhombus(as, ~impo)) $id
-    #,(@rhombus(open, ~impo))
+    #,(@rhombus(open, ~impo)) $open_decl
     #,(@rhombus(expose, ~impo)) $expose_decl
     #,(@rhombus(rename, ~impo)) $rename_decl
     #,(@rhombus(only, ~impo)) $only_decl
@@ -242,10 +242,17 @@
 
 @doc(
   impo.modifier 'open'
+  impo.modifier 'open ~scope_like $id'
 ){
 
  Modifies an @rhombus(import) clause so that no prefix (normally based on the
  module name) is bound, so all imports are exposed.
+
+ If @rhombus(~scope_like id) is specified, then the name part of
+ @rhombus(id) does not matter, but its scopes are used for the exposed
+ bindings. Otherwise, the scopes for each exposed binding is defived from
+ the module or namespace specification that this @rhombus(open, ~impo)
+ form modifies.
 
 }
 

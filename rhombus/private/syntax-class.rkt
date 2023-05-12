@@ -146,13 +146,14 @@
                                    (cons (syntax-e (car swap-root)) (cdr swap-root))))]
        [else
         (define class-name class/inline-name)
+        (define internal-class-name ((make-syntax-introducer) class-name))
         (define define-class (if splicing?
                                  #'define-splicing-syntax-class
                                  #'define-syntax-class))
         (list
          ;; return a list of definitions
          #`(#,define-class #,(if (syntax-e class-formals)
-                                 #`(#,class-name . #,class-formals)
+                                 #`(#,internal-class-name . #,class-formals)
                                  class-name)
             #:description #,(or description-expr #f)
             #:datum-literals (block group quotes)
@@ -162,7 +163,7 @@
             #,@patterns)
          #`(#,define-syntax-id #,(in-syntax-class-space class-name)
             (rhombus-syntax-class '#,kind
-                                  #'#,class-name
+                                  (quote-syntax #,internal-class-name)
                                   (quote-syntax #,(for/list ([var (in-list attributes)])
                                                     (pattern-variable->list var #:keep-id? #f)))
                                   #,splicing?

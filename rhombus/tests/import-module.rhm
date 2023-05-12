@@ -38,6 +38,27 @@ check:
   ~is 10
 
 check:
+  defn.macro 'open_c':
+    ~op_stx self
+    'import: lib("rhombus/tests/example-c.rhm") open ~scope_like $self'
+  open_c
+  def exint = 10
+  10 :: exint
+  exint
+  ~is 10
+
+check:
+  defn.macro 'open_c':
+    ~op_stx self
+    'import: lib("rhombus/tests/example-c.rhm"):
+               expose: $(Syntax.make(#'exint, self))'
+  open_c
+  def exint = 10
+  10 :: exint
+  exint
+  ~is 10
+
+check:
   import:
     lib("rhombus/tests/example-c.rhm"):
       open
