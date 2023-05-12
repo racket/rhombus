@@ -85,3 +85,42 @@ check:
         only_space annot:
           exint
   ~raises "space not included in nested modification"
+
+check:
+  namespace ns:
+    let z = 200
+    export all_defined
+  ns.z
+  ~is 200
+
+check:
+  decl.nestable_macro 'out_all $id':
+    'export all_defined ~scope_like $id'
+  namespace ns:
+    let z = 200
+    out_all here
+  ns.z
+  ~is 200
+
+check:
+  ~eval
+  def x = 0
+  namespace ns:
+    def z = 200
+    export all_defined
+  ns.x
+  ~raises "identifier not provided by ns"
+
+block:
+  import "example-d.rhm" as d
+  check:
+    d.one ~is "one"
+    "ok" is_a d.Streeng ~is #true
+    "ok" is_a d.DPosn ~is #false
+    d.DPosn(1, 2) is_a d.DPosn ~is #true
+
+check:
+  ~eval
+  import lib("rhombus/tests/example-d.rhm") as d
+  d.two
+  ~raises "no such imported identifier"

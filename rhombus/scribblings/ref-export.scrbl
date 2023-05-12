@@ -24,14 +24,17 @@
 
   grammar export_item:
     $id_or_op
-    $export
+    #,(@rhombus(all_from, ~expo))($source)
+    #,(@rhombus(rename, ~expo)) $rename_decl
+    #,(@rhombus(names, ~expo)) $names_decl
+    #,(@rhombus(all_defined, ~expo)) $all_defined_decl
+    $other_export
 
   grammar id_or_op:
     $id_path
     $op_path
 
   grammar modifier:
-    #,(@rhombus(rename, ~impo)) $rename_decl
     #,(@rhombus(except, ~impo)) $except_decl
     #,(@rhombus(meta, ~impo)) $meta_decl
     #,(@rhombus(meta_label, ~impo))
@@ -117,6 +120,25 @@
  itself bound as an export form or modifier.
 
 }
+
+@doc(
+  expo.macro 'all_defined'
+  expo.macro 'all_defined ~scope_like $id'
+){
+
+ Exports all identifiers defined within the enclosing module or
+ namespace that could be referened by a @rhombus(names) form using the
+ same scopes as @rhombus(id) or (when no @rhombus(id) is provided) the
+ @rhombus(all_defined) identifier itself. Supplying
+ @rhombus(~scope_like id) is particularly useful in the case of a
+ macro-introduced @rhombus(all_defined) form.
+
+ Imports using @rhombus(import) count as definitions only when the
+ import is from a namespace. Imports from a module do no count as
+ definitions.
+
+}
+
 
 @doc(
   expo.macro '$export #%juxtapose $export'

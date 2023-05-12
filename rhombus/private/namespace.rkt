@@ -4,7 +4,8 @@
                      racket/symbol
                      syntax/datum
                      "introducer.rkt"
-                     "id-binding.rkt")
+                     "id-binding.rkt"
+                     "expose.rkt")
          "definition.rkt"
          "dotted-sequence-parse.rkt"
          "forwarding-sequence.rkt"
@@ -33,19 +34,26 @@
        [(form-id name-seq::dotted-identifier-sequence)
         #:with name::dotted-identifier #'name-seq
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports name.name name.extends)))]
+            (define-name-root-for-exports [name.name name.extends plain scoped])))]
        [(form-id name-seq::dotted-identifier-sequence
                  ((~and tag block) form ...))
         #:with name::dotted-identifier #'name-seq
+        (define intro syntax-local-introduce)
         #`((rhombus-nested-forwarding-sequence
-            (define-name-root-for-exports name.name name.extends)
-            #,(syntax-local-introduce
+            (define-name-root-for-exports [name.name name.extends plain #,(intro #'scoped)])
+            #,(intro
                #`(rhombus-nested form ...))))]))))
 
 (define-syntax (define-name-root-for-exports stx)
   (syntax-parse stx
-    [(_ name extends ctx all-ctx ex ...)
-     #:with fields (parse-exports #'(combine-out ex ...))
+    [(_ [name extends base-ctx scoped-ctx]
+        [#:ctx forward-base-ctx forward-ctx]
+        ex ...)
+     #:with fields (parse-exports #'(combine-out ex ...)
+                                  (make-expose ((make-syntax-delta-introducer #'forward-ctx
+                                                                              #'forward-base-ctx)
+                                                #'scoped-ctx)
+                                               #'base-ctx))
      #'(define-name-root name
          #:extends extends
          #:fields
@@ -53,13 +61,11 @@
 
 (define-syntax (open-exports stx)
   (syntax-parse stx
-    [(_ plain scoped ctx all-ctx ex ...)
-     #:with fields (parse-exports #'(combine-out ex ...))
-     (define delta (let ([d1 (make-syntax-delta-introducer #'scoped #'plain)]
-                         [d2 (make-syntax-delta-introducer #'all-ctx #'ctx)])
-                     (lambda (id mode)
-                       (d2 (d1 id mode) mode))))
-     (define (expose id) (delta id 'remove))
+    [(_ plain scoped [#:ctx ctx all-ctx] ex ...)
+     (define expose (make-expose
+                     ((make-syntax-delta-introducer #'all-ctx #'ctx) #'scoped)
+                     #'plain))
+     (define fields (parse-exports #'(combine-out ex ...) expose))
      (define (generate-definitions ext-id int-id rule)
        (define defs
          (for/list ([space-sym (in-list (syntax-parse rule
@@ -86,7 +92,7 @@
      #`(begin
          #,@(apply
              append
-             (for/list ([field (in-list (syntax->list #'fields))])
+             (for/list ([field (in-list fields)])
                (syntax-parse field
                  [id:identifier
                   (generate-definitions #'id #'id #'())]
@@ -95,12 +101,56 @@
                  [_
                   (raise-syntax-error 'namespace+open "unsupported" field)]))))]))
 
-(define-for-syntax (parse-exports ex)
+(define-for-syntax (parse-exports ex expose)
+  (define (use-space? space-sym spaces-mode spaces)
+    (cond
+      [(eq? spaces-mode 'only) (hash-ref spaces space-sym #f)]
+      [(eq? spaces-mode 'except) (not (hash-ref spaces space-sym #f))]
+      [else #t]))
   (define ht
     (let loop ([ex ex] [ht #hasheq()] [except-ht #hasheq()] [spaces #f] [spaces-mode #f])
+      (define (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode)
+        (define ext-sym (syntax-e ext-id))
+        (cond
+          [(hash-ref except-ht ext-sym #f) ht]
+          [else
+           (define old (hash-ref ht ext-sym #f))
+           (when (and old
+                      (not (free-identifier=? (ext+int+rule-int old) int-id)))
+             (raise-syntax-error #f
+                                 "duplicate export name with different bindings"
+                                 ext-id))
+           (define base-ht (hash-set ht ext-sym (make-ext+int+rule ext-id int-id spaces-mode spaces)))
+           ;; look for extensions (in all spaces)
+           (define prefix (format "~a." (symbol->string (syntax-e int-id))))
+           (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                                      #:when (use-space? space-sym spaces-mode spaces)
+                                      #:do [(define intro (if space-sym
+                                                              (make-interned-syntax-introducer/add space-sym)
+                                                              (lambda (x) x)))
+                                            (define name-root-id  (extensible-name-root (list int-id)))]
+                                      #:when name-root-id
+                                      [sym (in-list (syntax-bound-symbols (intro int-id)))])
+             (define str (symbol->immutable-string sym))
+             (cond
+               [(and (> (string-length str) (string-length prefix))
+                     (string=? prefix (substring str 0 (string-length prefix))))
+                (define id (intro (datum->syntax int-id sym int-id)))
+                (cond
+                  [(identifier-extension-binding? id name-root-id)
+                   (define old (hash-ref ht sym #f))
+                   (when (and old
+                              (not (free-identifier=? (intro (ext+int+rule-int old)) id)))
+                     (raise-syntax-error #f
+                                         "duplicate export name with different bindings"
+                                         id))
+                   (define ext-ext-id (datum->syntax ext-id sym))
+                   (hash-set ht sym (make-ext+int+rule ext-ext-id id spaces-mode spaces))]
+                  [else ht])]
+               [else ht]))]))
       (syntax-parse ex
         #:datum-literals (combine-out all-spaces-out all-from-out for-meta for-label
-                                      only-spaces-out except-spaces-out)
+                                      only-spaces-out except-spaces-out all-spaces-defined-out)
         [(combine-out ex ...)
          (for/fold ([ht ht]) ([ex (in-list (syntax->list #'(ex ...)))])
            (loop ex ht except-ht spaces spaces-mode))]
@@ -110,47 +160,7 @@
              (syntax-parse o
                [(int-id ext-id) (values #'ext-id #'int-id)]
                [_:identifier (values o o)]))
-           (define ext-sym (syntax-e ext-id))
-           (cond
-             [(hash-ref except-ht ext-sym #f) ht]
-             [else
-              (define old (hash-ref ht ext-sym #f))
-              (when (and old
-                         (not (free-identifier=? (ext+int+rule-int old) int-id)))
-                (raise-syntax-error #f
-                                    "duplicate export name with different bindings"
-                                    ext-id))
-              (define base-ht (hash-set ht ext-sym (make-ext+int+rule ext-id int-id spaces-mode spaces)))
-              ;; look for extensions (in all spaces)
-              (define prefix (format "~a." (symbol->string (syntax-e int-id))))
-              (for*/fold ([ht base-ht]) ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
-                                         #:when (cond
-                                                  [(eq? spaces-mode 'only) (hash-ref spaces space-sym #f)]
-                                                  [(eq? spaces-mode 'except) (not (hash-ref spaces space-sym #f))]
-                                                  [else #t])
-                                         #:do [(define intro (if space-sym
-                                                                 (make-interned-syntax-introducer/add space-sym)
-                                                                 (lambda (x) x)))
-                                               (define name-root-id  (extensible-name-root (list int-id)))]
-                                         #:when name-root-id
-                                         [sym (in-list (syntax-bound-symbols (intro int-id)))])
-                (define str (symbol->immutable-string sym))
-                (cond
-                  [(and (> (string-length str) (string-length prefix))
-                        (string=? prefix (substring str 0 (string-length prefix))))
-                   (define id (intro (datum->syntax int-id sym int-id)))
-                   (cond
-                     [(identifier-extension-binding? id name-root-id)
-                      (define old (hash-ref ht sym #f))
-                      (when (and old
-                                 (not (free-identifier=? (intro (ext+int+rule-int old)) id)))
-                        (raise-syntax-error #f
-                                            "duplicate export name with different bindings"
-                                            id))
-                      (define ext-ext-id (datum->syntax ext-id sym))
-                      (hash-set ht sym (make-ext+int+rule ext-ext-id id spaces-mode spaces))]
-                     [else ht])]
-                  [else ht]))]))]
+           (add-name-at-all-spaces ht ext-id int-id spaces spaces-mode))]
         [(only-spaces-out ex space ...)
          (define new-spaces
            (for/hasheq ([sp (in-list (syntax->list #'(space ...)))])
@@ -191,6 +201,25 @@
                (define remove-spaces (for/fold ([new-spaces new-spaces]) ([(sp id) (in-hash spaces)])
                                        (hash-set new-spaces sp id)))
                (loop #'ex ht except-ht remove-spaces 'except)])])]
+        [(all-spaces-defined-out)
+         (for/fold ([ht ht]) ([sym (in-list (syntax-bound-symbols ex))])
+           (define id (datum->syntax ex sym))
+           (define use-spaces
+             (for/hasheq ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                          #:when (use-space? space-sym spaces-mode spaces)
+                          #:do [(define space-id
+                                  (if space-sym
+                                      ((make-interned-syntax-introducer space-sym) id)
+                                      id))]
+                          #:when (if space-sym
+                                     (identifier-distinct-binding* space-id id)
+                                     (identifier-binding* space-id))
+                          #:when (identifier-distinct-binding* space-id
+                                                               (expose space-id)))
+               (values space-sym #t)))
+           (cond
+             [(null? use-spaces) ht]
+             [else (add-name-at-all-spaces ht id id use-spaces 'only)]))]
         [(all-from-out mod-path)
          (raise-syntax-error #f
                              "module re-export not supported in a namespace context"

@@ -9,6 +9,7 @@
                      "tag.rkt"
                      "interface-parse.rkt"
                      (submod "interface-meta.rkt" for-class)
+                     "expose.rkt"
                      (only-in "class-parse.rkt"
                               :options-block
                               in-class-desc-space
@@ -65,18 +66,18 @@
      (define body #'(options.form ...))
      ;; The shape of `finish-data` is recognzied in `interface-annotation+finish`
      ;; and "interface-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
-                                      #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx) #,for-together?
                                       full-name name]
                             ;; data accumulated from parsed clauses:
                             ()))
      (define interface-data-stx #f)
      #`(#,(cond
             [(null? (syntax-e body))
-             #`(interface-annotation+finish #,finish-data ())]
+             #`(interface-annotation+finish #,finish-data [#:ctx base base] ())]
             [else
-             #`(rhombus-mixed-nested-forwarding-sequence (interface-annotation+finish #,finish-data) rhombus-class
-                                                         (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body)))]))]))
+             #`(rhombus-mixed-nested-forwarding-sequence
+                (interface-annotation+finish #,finish-data) rhombus-class
+                (interface-body-step (#,interface-data-stx ()) . #,(syntax-local-introduce body)))]))]))
 
 (define-syntax interface-body-step
   (lambda (stx)
@@ -103,12 +104,13 @@
 (define-syntax interface-annotation+finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ ([orig-stx base-stx scope-stx
-                     for-together?
+      [(_ ([orig-stx base-stx init-scope-stx for-together?
                      full-name name]
            . _)
+          [#:ctx forward-base-ctx forward-ctx]
           exports
           option ...)
+       #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define stxes #'orig-stx)
        (define options (parse-annotation-options #'orig-stx #'(option ...)))
        (define supers (interface-names->interfaces stxes (reverse (hash-ref options 'extends '()))))
@@ -205,7 +207,8 @@
        (define dot-provider-rhss (map cdr dots))
        (check-fields-methods-dots-distinct stxes #hasheq() method-mindex method-names method-decls dots)
 
-       (define exs (parse-exports #'(combine-out . exports)))
+       (define exs (parse-exports #'(combine-out . exports)
+                                  (make-expose #'scope-stx #'base-stx)))
        (check-exports-distinct stxes exs '() method-mindex dots)
 
        (define internal-name (let ([id #'maybe-internal-name])

@@ -40,16 +40,18 @@
 (define-syntax (enforest-meta stx)
   (syntax-parse stx
     #:datum-literals (group)
-    [(_  name:identifier names clauses)
-     #`(rhombus-mixed-nested-forwarding-sequence (enforest-meta-finish [#,stx name #t . names]) rhombus-meta-enforest
-                                                 (enforest-meta-body-step . clauses))]))
+    [(_  name:identifier base-stx scope-stx names clauses)
+     #`(rhombus-mixed-nested-forwarding-sequence
+        (enforest-meta-finish [#,stx base-stx scope-stx name #t . names]) rhombus-meta-enforest
+        (enforest-meta-body-step . clauses))]))
 
 (define-syntax (transform-meta stx)
   (syntax-parse stx
     #:datum-literals (group)
-    [(_  name:identifier names clauses)
-     #`(rhombus-mixed-nested-forwarding-sequence (enforest-meta-finish [#,stx name #f . names]) rhombus-meta-enforest
-                                                 (enforest-meta-body-step . clauses))]))
+    [(_  name:identifier base-stx scope-stx names clauses)
+     #`(rhombus-mixed-nested-forwarding-sequence
+        (enforest-meta-finish [#,stx base-stx scope-stx name #f . names]) rhombus-meta-enforest
+        (enforest-meta-body-step . clauses))]))
   
 (define-syntax enforest-meta-body-step
   (lambda (stx)
@@ -73,13 +75,15 @@
 (define-syntax enforest-meta-finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ [orig-stx
+      [(_ [orig-stx base-stx init-scope-stx
            meta-name enforest?
-           name base-stx scope-stx
+           name
            space-path-name make-prefix-operator make-infix-operator make-prefix+infix-operator]
+          [#:ctx forward-base-ctx forward-ctx]
           exports
           option
           ...)
+       #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define options (parse-space-meta-clause-options #'orig-stx (syntax-e #'transformer?) #'(option ...)))
        (define class-name (hash-ref options '#:syntax_class #'#f))
        (define prefix-more-class-name (hash-ref options '#:syntax_class_prefix_more #'#f))
@@ -89,7 +93,7 @@
        (define macro-result (hash-ref options '#:parsed_checker #'check-syntax))
        (define identifier-transformer (hash-ref options '#:identifier_transformer #'values))
        (define expose (make-expose #'scope-stx #'base-stx))
-       (define exs (parse-exports #'(combine-out . exports)))
+       (define exs (parse-exports #'(combine-out . exports) expose))
        (check-distinct-exports (exports->names exs)
                                class-name prefix-more-class-name infix-more-class-name
                                #'orig-stx)

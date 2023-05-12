@@ -802,3 +802,12 @@ block:
   check: p.x ~is "ok"
   p.assign(base.#{string-copy}("still ok"))
   check: p.x ~is "still ok"
+
+// make sure `_let` in a `class` body doesn't obscure
+// `internal binding
+check:
+  class C(x, y):
+    let mini = 0
+    internal _C
+  C(1, 2) is_a _C
+  ~is #true

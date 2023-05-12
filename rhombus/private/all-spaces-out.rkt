@@ -10,7 +10,8 @@
          "name-root-space.rkt"
          "dotted-sequence-parse.rkt")
 
-(provide all-spaces-out)
+(provide all-spaces-out
+         all-spaces-defined-out)
 
 (define-syntax all-spaces-out
   (make-provide-transformer
@@ -86,3 +87,23 @@
                                              (identifier-distinct-binding* id id* phase)))
                          (make-export phase space (datum->syntax int-id sym int-id) (adjust-prefix sym prefix))))]
                  [else null])))))))))))
+
+(define-syntax all-spaces-defined-out
+  (make-provide-transformer
+   (lambda (stx phase+spaces)
+     (define ht (syntax-local-module-defined-identifiers))
+     (define phases (if (null? phase+spaces)
+                        (list 0)
+                        (hash-keys
+                         (for/hash ([p+s (in-list phase+spaces)])
+                           (values (phase+space-phase p+s) #t)))))
+     (for*/list ([space-sym (in-list (cons #f (syntax-local-module-interned-scope-symbols)))]
+                 #:do [(define intro (if space-sym
+                                         (make-interned-syntax-introducer space-sym)
+                                         (lambda (x mode) x)))]
+                 [phase (in-list phases)]
+                 [space-id (in-list (hash-ref ht phase '()))]
+                 #:when (and (bound-identifier=? space-id (intro space-id 'add))
+                             (free-identifier=? space-id
+                                                (intro (datum->syntax stx (syntax-e space-id)) 'add))))
+       (make-export space-id (syntax-e space-id) (phase+space phase space-sym) #f stx)))))

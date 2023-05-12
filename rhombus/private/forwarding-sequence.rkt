@@ -60,17 +60,11 @@
          [[(final ...) #:stop-at* _ binds accum ...]
           #`(begin
               #,forms
-              (final ... #,(reverse (syntax->list #'binds)) #,@(reverse (syntax->list #'(accum ...)))))]
+              (final ... [#:ctx base-ctx remove-ctx] #,(reverse (syntax->list #'binds)) #,@(reverse (syntax->list #'(accum ...)))))]
          [[(final ...) bind ...]
-          (define ctx-id (datum->syntax #f 'ctx))
-          (define all-ctx-id ((make-syntax-delta-introducer #'remove-ctx #'base-ctx)
-                               ((make-syntax-delta-introducer #'add-ctx #'base-ctx)
-                                ctx-id
-                                'add)
-                               'add))
           #`(begin
               #,forms
-              (final ... #,ctx-id #,all-ctx-id #,@(reverse (syntax->list #'(bind ...)))))]
+              (final ... [#:ctx base-ctx remove-ctx] #,@(reverse (syntax->list #'(bind ...)))))]
          [_ forms])]
       [(_ ctx mode orig base-ctx add-ctx remove-ctx (~and form ((~literal quote) v)) . forms)
        (loop #'(_ ctx mode orig base-ctx add-ctx remove-ctx . forms)

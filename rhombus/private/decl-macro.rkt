@@ -40,7 +40,7 @@
         (unpack-declarations (proc (pack-tail #'tail) #'head) proc)]))))
 
 (define-for-syntax (make-nestable-declaration-transformer proc)
-  (declaration-transformer
+  (nestable-declaration-transformer
    (lambda (tail)
      (syntax-parse tail
        [(head . tail)

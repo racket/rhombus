@@ -70,8 +70,7 @@
      (define body #'(options.form ...))
      ;; The shape of `finish-data` is recognzied in `class-annotation+finish`
      ;; and "class-meta.rkt"
-     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx)
-                                      #,for-together?
+     (define finish-data #`([orig-stx base-stx #,(syntax-local-introduce #'scope-stx) #,for-together?
                                       full-name name
                                       (field.name ...)
                                       (field.keyword ...)
@@ -83,10 +82,11 @@
                             ()))
      #`(#,(cond
             [(null? (syntax-e body))
-             #`(class-annotation+finish #,finish-data ())]
+             #`(class-annotation+finish #,finish-data [#:ctx base-stx base-stx] ())]
             [else
-             #`(rhombus-mixed-nested-forwarding-sequence (class-annotation+finish #,finish-data) rhombus-class
-                                                         (class-body-step #,finish-data . #,(syntax-local-introduce body)))]))]))
+             #`(rhombus-mixed-nested-forwarding-sequence
+                (class-annotation+finish #,finish-data) rhombus-class
+                (class-body-step #,finish-data . #,(syntax-local-introduce body)))]))]))
 
 (define-syntax class-body-step
   (lambda (stx)
@@ -115,8 +115,7 @@
 (define-syntax class-annotation+finish
   (lambda (stx)
     (syntax-parse stx
-      [(_ ([orig-stx base-stx scope-stx
-                     for-together?
+      [(_ ([orig-stx base-stx init-scope-stx for-together?
                      full-name name
                      constructor-field-names
                      constructor-field-keywords
@@ -125,8 +124,10 @@
                      constructor-field-privates
                      constructor-field-ann-seqs]
            . _)
+          [#:ctx forward-base-ctx forward-ctx]
           exports
           option ...)
+       #:with scope-stx ((make-syntax-delta-introducer #'forward-ctx #'forward-base-ctx) #'init-scope-stx)
        (define options (parse-annotation-options #'orig-stx #'(option ...)))
        (define parent-name (hash-ref options 'extends #f))
        (define super (and parent-name
@@ -308,10 +309,11 @@
        (define-values (constructor-public-defaults constructor-private-defaults)
          (partition-fields constructor-defaults constructor-private?s #:result values))
 
+       (define expose (make-expose #'scope-stx #'base-stx))
        (check-consistent-construction stxes mutables private?s constructor-defaults options
                                       #'name given-constructor-rhs
                                       (and given-constructor-name
-                                           ((make-expose #'scope-stx #'base-stx) given-constructor-name))
+                                           (expose given-constructor-name))
                                       expression-macro-rhs)
 
        (define has-defaults? (any-stx? constructor-defaults))
@@ -382,7 +384,7 @@
        (check-fields-methods-dots-distinct stxes field-ht method-mindex method-names method-decls dots)
        (check-consistent-unimmplemented stxes final? abstract-name)
 
-       (define exs (parse-exports #'(combine-out . exports)))
+       (define exs (parse-exports #'(combine-out . exports) expose))
        (check-exports-distinct stxes exs fields method-mindex dots)
 
        (define need-constructor-wrapper?

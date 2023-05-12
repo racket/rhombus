@@ -41,6 +41,7 @@
                     except_space
                     names
                     all_from
+                    all_defined
                     |.|
                     #%juxtapose))
 
@@ -290,6 +291,20 @@
              . tail)
           (values #`(all-from-out #,(convert-symbol-module-path #'mod-path.parsed))
                   #'tail)])))))
+
+(define-export-syntax all_defined
+  (export-prefix-operator
+   #'all_from
+   '((default . stronger))
+   'macro
+   (lambda (stx)
+     (syntax-parse stx
+       [(form #:scope_like id:identifier . tail)
+        (values (datum->syntax #'id (list #'all-spaces-defined-out) #'form #'form)
+                #'tail)]
+       [(form . tail)
+        (values (datum->syntax #'form (list #'all-spaces-defined-out) #'form #'form)
+                #'tail)]))))
 
 (define-export-syntax #%juxtapose
   (export-infix-operator
