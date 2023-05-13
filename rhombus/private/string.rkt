@@ -108,6 +108,9 @@
   #:static-infos ((#%call-result #,string-static-infos))
   (string->immutable-string (substring str start end)))
 
+(define-static-info-syntax string-append-immutable
+  (#%call-result #,string-static-infos))
+
 (define/arity (upcase s)
   #:static-infos ((#%call-result #,string-static-infos))
   (string->immutable-string (string-upcase s)))

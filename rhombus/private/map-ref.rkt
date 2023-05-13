@@ -153,10 +153,13 @@
                            (if static?
                                (raise-syntax-error '++ (string-append "specialization not known" statically-str) form1-in)
                                #'map-append)))
-     (datum->syntax (quote-syntax here)
-                    (list append-id form1 form2)
-                    (span-srcloc form1 form2)
-                    stx))
+     (define si (or (syntax-local-static-info append-id #'#%call-result) #'()))
+     (wrap-static-info*
+      (datum->syntax (quote-syntax here)
+                     (list append-id form1 form2)
+                     (span-srcloc form1 form2)
+                     stx)
+      si))
    'left))
 
 (define-syntax ++ (make-++-expression (expr-quote ++) #f))
