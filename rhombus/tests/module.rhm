@@ -43,3 +43,29 @@ module test:
     import: rhombus/tests/module!combined
     [combined.c1, combined.c2]
     ~is [1, 2]
+
+// ----------------------------------------
+
+module a ~lang rhombus:
+  export y
+  def y = "y"
+
+module m ~lang rhombus:
+  module ~early mn ~lang rhombus:
+    import parent ! ! a
+    export xn
+    def xn = a.y
+  import self!mn
+  export x
+  def x = "x" ++ mn.xn
+
+import: self!m as m
+
+check m.x ~is "xy"
+
+def z = "z"
+export z
+
+module ~late main ~lang rhombus:
+  import parent as p
+  check p.z ~is "z"

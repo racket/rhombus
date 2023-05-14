@@ -13,6 +13,10 @@
    (lambda (stx)
      (syntax-parse stx
        [(_ name:identifier (_::block body ...))
+        (when (eq? 'top-level (syntax-local-context))
+          (raise-syntax-error #f
+                              "splicing submodules are not supported in an interactive context"
+                              stx))
         (list (datum->syntax
                #'name
                (syntax-e
@@ -29,6 +33,12 @@
            #:lang mp ...+ (_::block body ...))
         #:with lang::module-path #'(group mp ...)
         #:with module (if (eq? (syntax-e #'order) '#:late) #'module* #'module)
+        (when (and (eq? 'top-level (syntax-local-context))
+                   (eq? (syntax-e #'order) '#:late))
+          (raise-syntax-error #f
+                              "late submodules are not supported in an interactive context"
+                              stx
+                              #'order))
         #`((module name lang.parsed
              (#,(datum->syntax #'lang.parsed '#%module-begin)
               (top body

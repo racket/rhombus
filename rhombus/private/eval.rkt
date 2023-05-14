@@ -1,20 +1,26 @@
 #lang racket/base
-(require "provide.rkt"
+(require (for-syntax racket/base)
+         "provide.rkt"
          "parse.rkt"
          "pack.rkt"
          "expression.rkt"
          "define-arity.rkt"
          "function-arity-key.rkt"
-         "static-info.rkt")
+         "static-info.rkt"
+         (submod "annotation.rkt" for-class))
 
 (provide (for-spaces (#f
                       rhombus/statinfo)
-                     make_rhombus_toplevel
-                     make_rhombus_empty_toplevel
+                     make_rhombus_evaluator
+                     make_rhombus_empty_evaluator
                      (rename-out [rhombus-eval eval]
-                                 [current-namespace current_toplevel])))
+                                 [current-namespace current_evaluator]))
+         (for-spaces (rhombus/annot)
+                     Evaluator))
 
-(define/arity (make_rhombus_empty_toplevel)
+(define-annotation-syntax Evaluator (identifier-annotation #'namespace? #'()))
+
+(define/arity (make_rhombus_empty_evaluator)
   (define this-ns (variable-reference->empty-namespace (#%variable-reference)))
   (define ns (make-base-empty-namespace))
   (namespace-attach-module this-ns
@@ -22,8 +28,8 @@
                            ns)
   ns)
 
-(define/arity (make_rhombus_toplevel)
-  (define ns (make_rhombus_empty_toplevel))
+(define/arity (make_rhombus_evaluator)
+  (define ns (make_rhombus_empty_evaluator))
   (parameterize ([current-namespace ns])
     (namespace-require 'rhombus))
   ns)

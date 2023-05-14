@@ -160,7 +160,7 @@
       [(null? prefixes)
        (values
         (syntax-parse mp
-          #:datum-literals (lib import-root import-dotted import-spaces file submod reimport singleton)
+          #:datum-literals (lib import-root import-dotted import-spaces file submod reimport singleton quote)
           [_:string (extract-string-prefix mp)]
           [_:identifier (datum->syntax
                          mp
@@ -178,12 +178,14 @@
                         (datum->syntax
                          mp
                          (string->symbol (path->string (path-replace-suffix name #"")))))]
-          [(submod _ id) #'id]
+          [(submod _ ... id) #'id]
           [(submod ".") (datum->syntax mp 'self)]
           [(submod "..") (datum->syntax mp 'parent)]
-          [_ (raise-syntax-error 'import
-                                 "don't know how to extract default prefix"
-                                 mp)])
+          [(quote id) #'id]
+          [_
+           (raise-syntax-error 'import
+                               "don't know how to extract default prefix"
+                               mp)])
         #f)]
       [(null? (cdr prefixes))
        (syntax-parse (car prefixes)

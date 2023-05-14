@@ -5,10 +5,15 @@
 
 @title(~tag: "submodules"){Modules and Submodules}
 
-A @deftech{module} is normally written as its own file.
+A @deftech{module} is normally written as its own file starting with
+@rhombus(#,(@hash_lang()) #,(@rhombusmodname(rhombus))) or similar. In an
+interactive context, the @rhombus(module) form can declare a module; in
+that case, the module decared as @rhombus(id) can be referenced using
+@rhombus(self!, ~impo)@rhombus(id).
+
 A @deftech{submodule} is a module that is textually nested in another
-(sub)module, but whose lifetime might be different than the enclosing
-(sub)module.
+(sub)module using the @rhombus(module) form. Its lifetime might be
+different than the enclosing (sub)module.
 
 @doc(
   ~nonterminal:
@@ -28,8 +33,13 @@ A @deftech{submodule} is a module that is textually nested in another
                 ...'
 ){
 
- Creates a submodule within the enclosing module. A submodule can be
- accessed with a module path that uses @rhombus(!, ~impo).
+ Creates a @tech{submodule} within the enclosing module, or declares a
+ module interactively in an interactive context (such as a
+ read-eval-print loop). The module can be accessed with a module path
+ that uses @rhombus(!, ~impo).
+
+ A @rhombus(~lang) is required to declare a module interactively, and
+ @rhombus(~late) is not allowed interactively.
 
  When @rhombus(~lang) is not present, then the submodule's body can
  refer to bindings in the enclosing module, and the submodule implicitly

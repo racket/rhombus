@@ -6,6 +6,7 @@
                      enforest/property
                      enforest/proc-name
                      enforest/name-root
+                     enforest/name-parse
                      "srcloc.rkt"
                      "introducer.rkt"
                      "name-path-op.rkt"
@@ -198,7 +199,7 @@
 
 (define-for-syntax (make-module-path-submod-operator infix-operator)
   (infix-operator
-   #'rhombus-!
+   (in-module-path-space #'rhombus-!)
    '((default . stronger))
    'macro
    (lambda (mp stx)
@@ -225,6 +226,13 @@
 (define-module-path-syntax rhombus-!
   (make-module-path-submod-operator module-path-infix-operator))
 
+(begin-for-syntax
+  (define-syntax-class :!
+    #:description "submodule separator"
+    #:opaque
+    (pattern name::name
+             #:when (free-identifier=? (in-module-path-space #'name.name) (in-module-path-space #'rhombus-!)))))
+
 (define-for-syntax (make-module-path-submod-same-operator prefix-operator)
   (prefix-operator
    #'rhombus-self
@@ -233,11 +241,13 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals ()
-       [(form-id . tail)
-        (values (datum->syntax #'form-id
-                               (list #'submod ".")
-                               #'form-id
-                               #'form-id)
+       [(form-id name::! id:identifier . tail)
+        (values (datum->syntax #'id
+                               (if (eq? 'top-level (syntax-local-context))
+                                   (list #'quote #'id)
+                                   (list #'submod "." #'id))
+                               #'id
+                               #'id)
                 #'tail)]))))
 
 (define-module-path-syntax rhombus-self
@@ -251,7 +261,24 @@
    (lambda (stx)
      (syntax-parse stx
        #:datum-literals ()
-       [(form-id . tail)
+       [(form-id name::! ...+ id:identifier . tail)
+        (values (datum->syntax #'id
+                               (append (list #'submod)
+                                       (for/list ([name (in-list (syntax->list #'(name ...)))])
+                                         "..")
+                                       (list #'id))
+                               #'id
+                               #'id)
+                #'tail)]
+       [(form-id name::! ...+)
+        (values (datum->syntax #'form-id
+                               (append (list #'submod)
+                                       (for/list ([name (in-list (syntax->list #'(name ...)))])
+                                         ".."))
+                               #'form-id
+                               #'form-id)
+                #'())]
+       [(form-id  . tail)
         (values (datum->syntax #'form-id
                                (list #'submod "..")
                                #'form-id

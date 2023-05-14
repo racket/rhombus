@@ -34,8 +34,8 @@
     #,(@rhombus(., ~impo)) $id
     $module_path #,(@rhombus(., ~impo)) $id
     $module_path #,(@rhombus(., ~impo)) ($op)
-    #,(@rhombus(self, ~impo))
-    #,(@rhombus(parent, ~impo))
+    #,(@rhombus(self, ~impo)) #,(@rhombus(!, ~impo)) $id
+    #,(@rhombus(parent, ~impo)) #,(@rhombus(!, ~impo)) ...
 
   grammar collection_module_path:
     $id
@@ -149,8 +149,9 @@
   enclosing module.}
 
  @item{@rhombus(parent, ~impo): refers to the parent of the enclosing
-  submodule, somtimes combined with @rhombus(!, ~impo) to refer to a
-  sibling submodule.}
+  submodule, sometimes combined with @rhombus(!, ~impo) to refer to a
+  sibling submodule or with additional @rhombus(!, ~impo)s to reach an
+  ancestor of the enclsoing submodule.}
 
 )
 
@@ -219,13 +220,29 @@
 }
 
 @doc(
-  impo.macro 'self'
+  impo.macro 'self ! id'
   impo.macro 'parent'
+  impo.macro 'parent ! ...'
 ){
 
- Refers to the module itself to reference a @tech{submodule} of the enclosing
- module, or refers to the parent module within a submodule. See
- @rhombus(import) for more information.
+ The form @rhombus(self!, ~impo)@rhombus(id) refers to
+ @tech{submodule} named @rhombus(id) of the enclosing module. Additional
+ uses of @rhombus(!, ~impo) refer to more deepely nested submodules
+ within that one.
+
+ In an interactive context, such as a read-eval-print loop (REPL),
+ @rhombus(self!)@rhombus(id) refers to a module declaraed interactively
+ with name @rhombus(id).
+
+ The form @rhombus(parent, ~impo) refers to the parent of an enclosing
+ submodule. A @rhombus(parent, ~impo) form may be followed by
+ @rhombus(!, ~impo)@rhombus(id) to access a submodule of the enclosing
+ module (i.e., a sibling submodule). When additional additional
+ @rhombus(!, ~impo) operators are used before an @rhombus(id) or without
+ a subsequent @rhombus(id), each @rhombus(!, ~impo) refers to an
+ enclosing parent, thus reaching an ancestor module.
+
+ See @rhombus(import) for more information.
 
 }
 

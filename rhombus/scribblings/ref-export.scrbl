@@ -266,7 +266,7 @@
 }
 
 @doc(
-  modpath.macro 'self'
+  modpath.macro 'self ! id'
   modpath.macro 'parent'
 ){
 
