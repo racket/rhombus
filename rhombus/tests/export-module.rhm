@@ -4,7 +4,7 @@
 // as a variable, a binding form (matches any integer)
 // and an annotation (matches any integer)
 
-submodule ~early annot ~lang rhombus/and_meta:
+module ~early annot ~lang rhombus/and_meta:
   import "example-c.rhm" open
   export:
     only_space annot:
@@ -15,7 +15,7 @@ check:
   1 :: annot.exint
   ~is 1
 
-submodule ~early expr ~lang rhombus/and_meta:
+module ~early expr ~lang rhombus/and_meta:
   import "example-c.rhm" open
   export:
     only_space expr:
@@ -38,7 +38,7 @@ check:
   1 :: expr.exint
   ~raises "not bound as an annotation"
 
-submodule ~early both ~lang rhombus/and_meta:
+module ~early both ~lang rhombus/and_meta:
   namespace n:
     export: exint
     def exint = 11
@@ -57,7 +57,7 @@ check:
   3 :: both.exint
   ~is 3
 
-submodule ~early expr_via_reexport ~lang rhombus/and_meta:
+module ~early expr_via_reexport ~lang rhombus/and_meta:
   namespace n:
     export:
       only_space expr:

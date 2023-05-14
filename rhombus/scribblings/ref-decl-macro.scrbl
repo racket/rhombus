@@ -26,7 +26,7 @@
 
  Like @rhombus(defn.macro, ~expr) but for defining a macro that can be used
  only in a module or interactive position --- the same places where
- @rhombus(meta) and @rhombus(submodule) are allowed, for example.
+ @rhombus(meta) and @rhombus(module) are allowed, for example.
 
 }
 

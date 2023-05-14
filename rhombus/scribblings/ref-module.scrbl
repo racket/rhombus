@@ -3,8 +3,9 @@
     "common.rhm" open
     "nonterminal.rhm" open)
 
-@title(~tag: "submodules"){Submodules}
+@title(~tag: "submodules"){Modules and Submodules}
 
+A @deftech{module} is normally written as its own file.
 A @deftech{submodule} is a module that is textually nested in another
 (sub)module, but whose lifetime might be different than the enclosing
 (sub)module.
@@ -13,16 +14,16 @@ A @deftech{submodule} is a module that is textually nested in another
   ~nonterminal:
     module_path: import
 
-  decl.macro 'submodule $id:
+  decl.macro 'module $id:
                 $body
                 ...'
-  decl.macro 'submodule $id ~lang $module_path:
+  decl.macro 'module $id ~lang $module_path:
                 $body
                 ...'
-  decl.macro 'submodule ~early $id ~lang $module_path:
+  decl.macro 'module ~early $id ~lang $module_path:
                 $body
                 ...'
-  decl.macro 'submodule ~late $id ~lang $module_path:
+  decl.macro 'module ~late $id ~lang $module_path:
                 $body
                 ...'
 ){
@@ -41,24 +42,24 @@ A @deftech{submodule} is a module that is textually nested in another
  delayed until the enclosing module is fully expanded.
 
  When @rhombus(~lang) is present, the module named after @rhombus(~lang)
- supplies initial bindings for body of the submodule. In that case, the
+ supplies initial bindings for body of the module. In that case, a
  submodule body cannot refer directly to the bindings of the enclosing
- module, and no other @rhombus(submodule) in the enclosed module can use
- the name @rhombus(identifier).
+ module, and no other @rhombus(module) in the enclosing module can use
+ the name @rhombus(id).
 
  When @rhombus(~early) is present, or when @rhombus(~lang) is used
  without @rhombus(~late), then the submodule is defined before the rest
  of the enclosing module is expanded. The rest of the module can import
- the submodule using @rhombus(self!id, ~impo), for example, or
+ the submodule using @rhombus(self!, ~impo)@rhombus(id), for example, or
  the submodule might be used from outside the enclosing module. In the
  latter case, the enclosing module need not be instantiated to use the
  submodule.
 
- When @rhombus(~late) is used with @rhombus(~lang), then the submodule
+ When @rhombus(~late) is used with @rhombus(~lang) for a submodule, then the submodule
  is expanded only after the enclosing module, similar to use
- @rhombus(submodule) without @rhombus(~lang). The submodule can import
+ @rhombus(module) without @rhombus(~lang). The submodule can import
  from the enclosing mosulde using @rhombus(parent, ~impo), or it can
  import from sibling submodules using a module path such as
- @rhombus(parent!id, ~impo).
+ @rhombus(parent!, ~impo)@rhombus(id).
 
 }

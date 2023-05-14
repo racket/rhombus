@@ -1,31 +1,31 @@
 #lang rhombus
 
-submodule combined:
+module combined:
   def c1 = 1
 
-submodule combined:
+module combined:
   def c2 = 2
   export: c1 c2
 
-submodule separate ~lang rhombus:
+module separate ~lang rhombus:
   def s1 = "s1"
   export s1
 
 // This test will get run multiple times
-// due to the `test` submodule
+// due to the `test` module
 check:
   import:
     self!separate    
   separate.s1
   ~is "s1"
   
-submodule ~late afterward ~lang rhombus:
+module ~late afterward ~lang rhombus:
   def a1 = "a1"
   export a1
 
-// This `test` submodule is able to `eval` uses
+// This `test` module is able to `eval` uses
 // of the enclosing module
-submodule test:
+module test:
   check:
     import:
       parent!separate    
@@ -34,12 +34,12 @@ submodule test:
   
   check:
     ~eval
-    import: rhombus/tests/submodule!afterward
+    import: rhombus/tests/module!afterward
     afterward.a1
     ~is "a1"
 
   check:
     ~eval
-    import: rhombus/tests/submodule!combined
+    import: rhombus/tests/module!combined
     [combined.c1, combined.c2]
     ~is [1, 2]

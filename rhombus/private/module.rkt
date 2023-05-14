@@ -5,9 +5,10 @@
          "declaration.rkt"
          "parens.rkt")
 
-(provide submodule)
+(provide (rename-out
+          [rhombus:module module]))
 
-(define-syntax submodule
+(define-syntax rhombus:module
   (declaration-transformer
    (lambda (stx)
      (syntax-parse stx
@@ -48,7 +49,7 @@
        (begin
          (unless (symbol? (syntax-e #'the-submodule))
            (raise-syntax-error #f
-                               "expected an identifier for a submodule, found something else"
+                               "expected an identifier for a module, found something else"
                                stx
                                #'the-submodule))
          ;; This looks it up the first time and is allowed to create a

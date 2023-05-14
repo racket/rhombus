@@ -23,7 +23,7 @@ export:
   MouseEvent
   KeyEvent
 
-submodule private:
+module private:
   export:
     _MouseEvent
     _KeyEvent

@@ -16,7 +16,7 @@ export:
   LinearGradient
   RadialGradient
 
-submodule private:
+module private:
   export:
     _Brush
 

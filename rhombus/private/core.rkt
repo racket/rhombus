@@ -104,7 +104,7 @@
         "block.rkt"
         "cond.rkt"
         "match.rkt"
-        "submodule.rkt"
+        "module.rkt"
         "quasiquote.rkt"
         "dollar.rkt"
         "unquote-binding-primitive.rkt"

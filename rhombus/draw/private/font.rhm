@@ -7,7 +7,7 @@ import:
 export:
   Font
 
-submodule private:
+module private:
   export:
     _Font
 

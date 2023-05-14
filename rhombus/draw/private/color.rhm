@@ -5,7 +5,7 @@ import:
 export:
   Color
 
-submodule private:
+module private:
   export:
     _Color
     unwrap_color

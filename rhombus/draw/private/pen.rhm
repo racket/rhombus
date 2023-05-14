@@ -13,7 +13,7 @@ import:
 export:
   Pen
 
-submodule private:
+module private:
   export:
     _Pen
 

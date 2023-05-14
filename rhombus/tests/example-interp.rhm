@@ -18,7 +18,7 @@
 //  at the same precedence and associating to the left
 
 // Example use of the interpreter
-submodule main:
+module main:
   interp('block:
             let swap = fun (x): [first(rest(x)), first(x)]
             first(swap([1, 2])) + 3',

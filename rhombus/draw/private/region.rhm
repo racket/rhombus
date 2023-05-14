@@ -11,7 +11,7 @@ import:
 export:
   Region
 
-submodule private:
+module private:
   export:
     _Region
     set_wrap_dc

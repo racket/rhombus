@@ -223,8 +223,8 @@
   impo.macro 'parent'
 ){
 
- Refers to the module itself to reference a submodule of the enclosing
- module, or refers to the paren module of a submodule. See
+ Refers to the module itself to reference a @tech{submodule} of the enclosing
+ module, or refers to the parent module within a submodule. See
  @rhombus(import) for more information.
 
 }

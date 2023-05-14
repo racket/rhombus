@@ -15,7 +15,7 @@ export:
   View
   WindowView
 
-submodule private:
+module private:
   export:
     to_view
 
