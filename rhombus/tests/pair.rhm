@@ -77,3 +77,18 @@ block:
   check:
     dynamic(Pair(1, 2)).rest
     ~is 2
+
+block:
+  use_static
+  class Posn(x, y)
+  class Box(v)
+  def p :: Pair.of(Posn, Box) = dynamic(Pair(Posn(1, 2), Box(3)))
+  check:
+    p.first.x ~is 1
+    p.first.y ~is 2
+    p.rest.v ~is 3
+  def Pair(f, r) :: Pair.of(Posn, Box) = dynamic(Pair(Posn(10, 20), Box(30)))
+  check:
+    f.x ~is 10
+    f.y ~is 20
+    r.v ~is 30

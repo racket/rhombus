@@ -39,7 +39,8 @@
                                       #'pair?
                                       #:static-infos #'((#%dot-provider pair-instance))
                                       (list #'car #'cdr)
-                                      (list #'() #'())))
+                                      (list #'() #'())
+                                      #:accessor->info? #t))
 
 (define-binding-syntax cons (binding-transformer
                              pair-binding))
@@ -70,8 +71,8 @@
     #`(and (#,(car predicate-stxs) (car #,arg-id))
            (#,(cadr predicate-stxs) (cdr #,arg-id))))
   (lambda (static-infoss)
-    #`((#%first-result #,(car static-infoss))
-       (#%rest-result #,(cadr static-infoss))))
+    #`((car #,(car static-infoss))
+       (cdr #,(cadr static-infoss))))
   #'pair-build-convert #'())
 
 (define-syntax (pair-build-convert arg-id build-convert-stxs kws data)
@@ -89,8 +90,8 @@
    (dot-parse-dispatch
     (lambda (field-sym field ary 0ary nary fail-k)
       (case field-sym
-        [(first) (field (lambda (x) (add-info #`(car #,x) x #'#%first-result)))]
-        [(rest) (field (lambda (x) (add-info #`(cdr #,x) x #'#%rest-result)))]
+        [(first) (field (lambda (x) (add-info #`(car #,x) x #'car)))]
+        [(rest) (field (lambda (x) (add-info #`(cdr #,x) x #'cdr)))]
         [else #f])))))
 
 (define-for-syntax (add-info e on-e key)
