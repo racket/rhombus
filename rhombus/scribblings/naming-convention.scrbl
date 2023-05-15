@@ -10,7 +10,7 @@ syntactically, authors are new libraries are encouraged to stick to
 
 Most names use ``snake case,'' where the leading character is lowercase
 and multiple words are joined by @litchar{_}. Spelled-out words are
-preferred, but abbreivations are used in place of long words that must
+preferred, but abbreviations are used in place of long words that must
 be written especially often. Examples:
 
 @itemlist(
@@ -20,7 +20,7 @@ be written especially often. Examples:
  ``function,'' ``definition,'' and ``conditional,'' respectively.}
 
  @item{The names @rhombus(match) and @rhombus(class) are short enough
- that no abbreviation would be needed, wbile @rhombus(namespace) and
+ that no abbreviation would be needed, while @rhombus(namespace) and
  @rhombus(interface) are spelled out because they are needed much less
  frequently than forms like @rhombus(def).}
 
@@ -53,7 +53,7 @@ joined by capitalizing each word) are used for a name that refers to a
 
  @item{The @rhombus(StringView.to_string, ~annot) annotation is a
  @tech{converter annotation}, which means that it does not simply refer
- to an interface (even in pricniple), so the name @rhombus(to_string) is
+ to an interface (even in principle), so the name @rhombus(to_string) is
  not capitalized.}
 
  @item{Annotation constructors are @emph{not} capitalized, including
