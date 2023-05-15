@@ -63,6 +63,7 @@
 
 (color-test 1 input1)
 (color-test "1a" input1a)
+(color-test "1b" input1b)
 (color-test 2 input2)
 (color-test 3 input3)
 (color-test 4 input4)

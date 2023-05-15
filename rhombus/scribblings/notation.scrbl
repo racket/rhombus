@@ -83,7 +83,7 @@ fair game for an operator:
 )
 
 The @litchar{:} and @litchar{|} characters can be used as part of an
-operator, even though they have a special meaning along; to avoid
+operator, even though the characters have a special meaning when used alone. To avoid
 confusion with @tech{blocks}, an operator cannot end with @litchar{:}
 unless it contains only @litchar{:} characters. Similarly, to avoid
 potential confusion with operators alongside numbers, an operator that
@@ -140,18 +140,23 @@ list-structured S-expression that uses immediate parentheses, however.
 
 Shrubbery notation is whitespace-sensitive, and it uses line breaks and
 indentation for grouping. A line with more indentation starts a
-@deftech{block}, and it’s always after a line that ends @litchar{:}, that
-ends @litchar{|} (much less commonly), or that starts @litchar{|}. You
-can think of a more-indented @litchar{|} as being preceded implicitly by
-a @litchar{:} at the end of the previous line. A @litchar{|} counts as
-being indented by half a column, so the @litchar{|}s below are indented
-even when they are written right under @rhombus(if), @rhombus(match), or
-@rhombus(cond):
+@deftech{block}, and it’s always after a line that ends @litchar{:}. A
+@litchar{|} alternative also starts a block, and the @litchar{|} itself
+can start a new line, in which case it must line up with the start
+of its enclosing form. So, the @litchar{|}s below are written with the
+same indentation as @rhombus(if), @rhombus(match), or @rhombus(cond) to
+create the alternative cases within those forms:
+
+@margin_note{In DrRacket, hit Tab to cycle through the possible
+ indentations for a line (based on preceding lines). The indentation
+ possibilities can be different if a line starts with @litchar{|}. If
+ multiple lines are selected, then Tab cycles through possibilities for
+ the first selected line and shifts remaining lines by same amount.}
 
 @rhombusblock(
   block:
-    group within block
-    another group within block
+    println("group within block")
+    println("another group within block")
 
   if is_rotten(apple)
   | get_another()
@@ -178,19 +183,12 @@ even when they are written right under @rhombus(if), @rhombus(match), or
       wear_hat()
 )
 
-@margin_note{In DrRacket, hit Tab to cycle through the possible
- indentations for a line (based on preceding lines). If multiple lines
- are selected, then Tab cycles through possibilities for the first
- selected line and shifts remaining lines by same amount.}
-
-A @litchar{|} is allowed only within a block, and it also starts a
-subblock on the right-hand side of the @litchar{|}. Each subsequent
-@litchar{|} at the same indentation creates a new subblock. Shrubbery
-notation allows @litchar{|} only within a block whose groups all contain
-an immediate @litchar{|} subblock. A block of @litchar{|} subblocks is
-an @deftech{alts-block}. A @litchar{:} isn’t needed or allowed before
-the first @litchar{|} in an alts-block, because the @litchar{|} itself
-is enough of an indication that a alts-block is starting.
+A @litchar{:} isn’t needed before the first @litchar{|} in an
+alts-block, because the @litchar{|} itself is enough of an indication
+that a sequence of alternatives is starting, but a @litchar{:} is
+allowed. Some forms support the combination of a @litchar{:} followed by
+a sequence of @litchar{|} alternatives, but most forms have either a
+@litchar{:} block or a sequence of @litchar{|} alternatives.
 
 Each line within a block forms a @deftech{group}. Groups are important,
 because parsing and macro expansion are constrained to operate on groups
@@ -198,12 +196,13 @@ because parsing and macro expansion are constrained to operate on groups
 level of indentation as a previous line continue that group’s block. A
 @litchar{|} can have multiple groups in the subblock to its right, but
 the block started by @litchar{|} turns out to be the only thing in its
-own group.
+own group. A @litchar{:} block or sequence of @litchar{|} alternatives
+can only be at the end of an enclosing group.
 
 A @litchar{:} doesn’t have to be followed by a new line, but it starts a
-new block, anyway. Similarly, a @litchar{|} that starts a block doesn’t
-have to be on a new line. These examples parse the same as the previous
-examples:
+new block, anyway. Similarly, a @litchar{|} that starts an alternative
+doesn’t have to be on a new line. These examples parse the same as the
+previous examples:
 
 @rhombusblock(
   block: group within block

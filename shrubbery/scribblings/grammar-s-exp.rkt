@@ -5,22 +5,23 @@
 (provide shrubbery_s_expression_grammar)
 
 (define shrubbery_s_expression_grammar
-  (BNF (list @nonterm{parsed}
+  (BNF (list @nonterm{document}
              @racket[(top @#,nonterm{group} ...)])
        (list @nonterm{group}
-             @racket[(group @#,nonterm{term} ... @#,nonterm{tail-term})])
-       (list @nonterm{term}
+             @racket[(group @#,nonterm{item} ... @#,nonterm{item})]
+             @racket[(group @#,nonterm{item} ... @#,nonterm{block})]
+             @racket[(group @#,nonterm{item} ... @#,nonterm{alts})]
+             @racket[(group @#,nonterm{item} ... @#,nonterm{block} @#,nonterm{alts})])
+       (list @nonterm{item}
              @nonterm{atom}
              @racket[(parens @#,nonterm{group} ...)]
              @racket[(brackets @#,nonterm{group} ...)]
              @racket[(braces @#,nonterm{group} ...)]
              @racket[(quotes @#,nonterm{group} ...)])
-       (list @nonterm{tail-term}
-             @nonterm{term}
-             @nonterm{block}
-             @racket[(alts @#,nonterm{block} ...)])
        (list @nonterm{block}
-             @racket[(block @#,nonterm{group} ...)])))
+             @racket[(block @#,nonterm{group} ...)])
+       (list @nonterm{alts}
+             @racket[(alts @#,nonterm{block} ...)])))
              
 
              

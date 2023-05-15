@@ -114,18 +114,12 @@ case with the right number of arguments.
 
 To write a result annotation just once in a function definition with
 multiple cases, use the function name after @rhombus(fun), then
-@rhombus(::) or @rhombus(:~), the annotation, and then a block that
-contains the cases in a @rhombus(match) form:
+@rhombus(::) or @rhombus(:~), the annotation, and then the cases:
 
 @demo(
   ~defn:
     fun fib :: PosInt:
-      match
-      | fib(0): 1
-      | fib(1): 1
-      | fib(n :: NonnegInt): fib(n-1) + fib(n-2)
+    | fib(0): 1
+    | fib(1): 1
+    | fib(n :: NonnegInt): fib(n-1) + fib(n-2)
 )
-
-This notation is a slight abuse of @rhombus(match), since it's not
-really a @rhombus(match) form, but it's meant to be suggestive of the
-underlying matching process.

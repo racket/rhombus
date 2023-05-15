@@ -19,9 +19,8 @@
               | ...'
   defn.macro 'macro $op_or_id_path:
                 $option; ...
-                match
-                | $macro_case
-                | ...'
+              | $macro_case
+              | ...'
 
   expr.macro 'macro $macro_case'
   expr.macro 'macro 
@@ -160,9 +159,8 @@
  most @rhombus(option)s are allowed only in the first case, but
  @rhombus(~op_stx) is allowed and separate in each case.
 
- When multiple cases are written with @vbar, they can be nested in a
- @rhombus(match) form, similar to @rhombus(operator) and @rhombus(fun).
- In that case, @rhombus(option) keywords can be written to apply to all
+ When multiple cases are written with @vbar, they can appear after a block
+ that supplies @rhombus(option)s that apply to all
  cases, the same as in @rhombus(operator).
 
 @examples(

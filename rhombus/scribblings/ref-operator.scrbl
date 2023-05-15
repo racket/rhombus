@@ -17,11 +17,10 @@
   defn.macro 'operator 
               | $op_case
               | ...'
-  defn.macro 'operator $op_or_id_path:
+  defn.macro 'operator $op_or_id_path $maybe_res_annot:
                 $option; ...
-                match
-                | $op_case
-                | ...'
+              | $op_case
+              | ...'
 
   grammar op_case:  
     $op_or_id_path $bind_term $impl_block
@@ -90,19 +89,18 @@
  postfix). The prefix cases and infix/postfix cases can be mixed in any
  order, but when the operator is used as a prefix or infix/postfix
  operator, cases are tried in the relative order that they are written.
- Similar to the @rhombus(form) form, multiple cases can be placed under
- @rhombus(match) within a block, with the advantage that a result
- annotation can be written once for all cases.
+ Similar to the @rhombus(fun) form the operator name and a result
+ annotation can be written before the @vbar cases to appply for all cases.
 
  At the start of an operator body, @rhombus(option)s can declare
  precedence and, in the case of an infix operator, an associativity for
  the operator. Each @rhombus(option) keyword can appear at most once. In
  a precedence specification, @rhombus(~other) stands for any operator not
- otherwise mentioned. When multiple cases are povided using @vbar, then
+ otherwise mentioned. When multiple cases are povided using an immediate @vbar, then
  only the first prefix case and the first infix/postfix case can supply
- options; alternatively, when cases are nested under @rhombus(match),
- then options that apply to all cases can be written before
- @rhombus(match). Options can appear both before @rhombus(match) and in
+ options; alternatively, when the operator name (maybe with a result annotation)
+ is written before @vbar, options that apply to all cases can be supplied in
+ a block before the cases. Options can appear both before the cases and in
  individual clauses, as long as all precedence and all associatvity
  options are in one or the other.
 
@@ -144,11 +142,10 @@
   ~defn:
     operator ^^^:
       ~weaker_than: +
-      match
-      | x ^^^ y:
-          x +& y +& x
-      | ^^^ y:
-          "--" +& y +& "--"
+    | x ^^^ y:
+        x +& y +& x
+    | ^^^ y:
+        "--" +& y +& "--"
   ~repl:
     1 ^^^ 2 + 3
     ^^^ 4 + 5

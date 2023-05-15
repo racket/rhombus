@@ -14,7 +14,6 @@
          "definition.rkt"
          "entry-point.rkt"
          "parse.rkt"
-         (submod "match.rkt" for-match-id)
          "name-root.rkt"
          "call-result-key.rkt"
          "function-arity-key.rkt"
@@ -137,7 +136,7 @@
      (lambda (stx)
       (syntax-parse stx
         #:datum-literals (group block alts parens)
-        ;; alts case
+        ;; immediate alts case
         [(form-id (alts-tag::alts
                    (block (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
                                  ret::ret-annotation
@@ -161,16 +160,13 @@
           the-name (syntax->list #'(ret.static-infos ...)) function-static-infos arity
           (build-definitions/maybe-extension #f the-name (car (syntax->list #'(name.extends ...)))
                                              proc))]
-        ;; `match` containing alts case --- almost the same, but with a declared name and maybe return annotation
+        ;; both header and alts --- almost the same, but with a declared name and maybe return annotation
         [(form-id main-name-seq::dotted-identifier-sequence main-ret::ret-annotation
-                  (_::block
-                   ~!
-                   (group _::match
-                          (alts-tag::alts
-                           (block (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
-                                         ret::ret-annotation
-                                         (~and rhs (_::block body ...))))
-                           ...+))))
+                  (alts-tag::alts
+                   (block (group name-seq::dotted-identifier-sequence (_::parens arg::kw-binding ... rest::maybe-arg-rest)
+                                 ret::ret-annotation
+                                 (~and rhs (_::block body ...))))
+                   ...+))
          #:with main-name::dotted-identifier #'main-name-seq
          #:with (name::dotted-identifier ...) #'(name-seq ...)
          (define names (syntax->list #'(name.name ...)))
@@ -209,10 +205,9 @@
           (build-definitions/maybe-extension #f #'name.name #'name.extends
                                              proc))]
         ;; definition form didn't match, so try parsing as a `fun` expression:
-        [(_ (~or (_::parens _ ...)
+        [(_ (~or (~seq (_::parens _ ...) _ ...)
                  (_::alts (block (group (parens _ ...) . _)) ...+)
-                 (~seq _ ... (_::block (group _::match (_::alts . _)))))
-            . _)
+                 (~seq _ ... (_::alts . _))))
          (syntax-parse #`(group . #,stx)
            [e::expression
             (list #'(#%expression e.parsed))])])))))
@@ -244,36 +239,12 @@
 (define-for-syntax (parse-anonymous-function stx [adjustments no-adjustments] [for-entry? #f])
   (syntax-parse stx
     #:datum-literals (group block alts)
-    ;; alts case
-    [(form-id (alts-tag::alts
+    ;; alts case, with maybe a declared return annotation
+    [(form-id main-ret::ret-annotation
+              (alts-tag::alts
                (block (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
                              (~and rhs (_::block body ...))))
-               ...+)
-              . tail)
-     (define-values (proc arity)
-       (build-case-function adjustments
-                            (get-local-name #'form-id) #'#f
-                            #'((arg.kw ...) ...)
-                            #'((arg ...) ...) #'((arg.parsed ...) ...)
-                            #'(rest.arg ...) #'(rest.parsed ...)
-                            #'(rest.kwarg ...) #'(rest.kwparsed ...)
-                            #'(ret.converter ...)
-                            #'(rhs ...)
-                            #'form-id #'alts-tag))
-     (values (if arity
-                 (wrap-static-info proc #'#%function-arity arity)
-                 proc)
-             #'tail)]
-    ;; `match` containing alts case --- almost the same, but with maybe a declared return annotation
-    [(form-id main-ret::ret-annotation
-              (_::block
-               ~!
-               (group _::match
-                      (alts-tag::alts
-                       (block (group (_::parens arg::kw-binding ... rest::maybe-arg-rest) ret::ret-annotation
-                                     (~and rhs (_::block body ...))))
-                       ...+)
-                      . tail)))
+               ...+))
      (define-values (proc arity)
        (build-case-function adjustments
                             (get-local-name #'form-id) #'main-ret.converter
@@ -288,11 +259,10 @@
               (if arity
                   (wrap-static-info proc #'#%function-arity arity)
                   proc))
-             #'tail)]
+             #'())]
     ;; single-alterative case
     [(form-id (parens-tag::parens arg::kw-opt-binding ... rest::maybe-arg-rest) ret::ret-annotation
-              (~and rhs (_::block body ...))
-              . tail)
+              (~and rhs (_::block body ...)))
      (define-values (fun arity)
        (build-function adjustments
                        (get-local-name #'form-id)
@@ -309,8 +279,7 @@
                              (wrap-static-info fun #'#%function-arity arity)
                              fun)])
                (wrap-function-static-info fun))
-             #'tail)]))
-
+             #'())]))
 
 (define pass
   (make-keyword-procedure

@@ -128,8 +128,8 @@ also_first_one([1, 2, 3, 4])
 
 fun add1(x) :: Int:
   match x
-   | n :: Int : x + 1
-   | ~else: x
+  | n :: Int : x + 1
+  | ~else: x
 
 add1(100)
 // would trigger an error, since "oops" is not an `Int`:

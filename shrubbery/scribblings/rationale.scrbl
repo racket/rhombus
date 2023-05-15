@@ -38,10 +38,22 @@ it's possible for bad indentation to inadvertently cause an operator to
 be treated as continuing a group, but hopefully that will be rare.
 Always requiring a preceding @litchar{:} before an indented @litchar{|}
 line would be consistent, but it adds extras @litchar{:}s where
-@litchar{|} already provides one consistency check. Allowing an optional
-@litchar{:} before @litchar{|} would work, but programmers may then
-choose differently on omitting or including the @litchar{:}, leading to
-subtly divergent conventions.
+@litchar{|} already provides one consistency check.
+
+A @litchar{:} block or @litchar{|} alternatives must appear at the end
+of a group, because @litchar{:} and @litchar{|} lack a specific closing
+character. Forms that expect both a @litchar{:} block and @litchar{|}
+alternatives in a group seem unlikely to be common, but allowing both
+supports certain syntactic forms (e.g., an operator that is defined
+through multiple pattern-matching cases, but with a block before all
+cases to specify precedence and associativity). Allowing the
+combination, in turn, naturally leads to allowing an empty-block
+@litchar{:} before a sequence of @litchar{|} alternatives, effectively
+making a @litchar{:} before @litchar{|} optional. Normalizing to drop
+the empty block in that case, instead of preserving it before the
+sequence of alternatives, makes shrubbery notation feel more consistent
+without burdening consumers of shrubbery forms to explicitly accomodate
+an empty block.
 
 Explicit block grouping via @litchar{«} and @litchar{»} is expected to
 be rare. The grouping characters were intentionally chosen from the

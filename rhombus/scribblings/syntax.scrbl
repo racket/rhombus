@@ -110,8 +110,25 @@ to form a repetition of matches:
  must thread potentially long sequences into and out of macro
  transformers.}
 
-A @rhombus($)-escaped variable in a @quotes pattern matches one
-term among other terms in the group. Keep in mind that @quotes
+A @rhombus($)-escaped variable in a @quotes pattern matches one term
+among other terms in the group. A block created with @litchar{:} counts
+as a single term of its enclosing group, and a sequence of @litchar{|}
+alternatives (not an individual alternative) similarly counts as one term.
+
+@demo(
+  ~defn:
+    def '$x $y' = 'block: 1 2 3'
+  ~repl:
+    x
+    y
+  ~defn:
+    def '$z $w' = 'cond | is_ok: "good" | ~else: "bad"'
+  ~repl:
+    z
+    w
+)
+
+Keep in mind that @quotes
 creates syntax objects containing shrubberies that are not yet parsed,
 so a variable will @emph{not} be matched to a multi-term sequence that would be
 parsed as an expression. For example, a pattern variable @rhombus(y) by
@@ -177,7 +194,7 @@ group or by itself in a multi-group position.
     'fun (): $body'
 )
 
-There is no contraint that the original and destination contexts have
+There is no constraint that the original and destination contexts have
 the same shape, so a match from a block-like context can be put into a
 brackets context, for example.
 

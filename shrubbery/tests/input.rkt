@@ -7,6 +7,9 @@
          input1a
          expected1a
 
+         input1b
+         expected1b
+
          input2
          expected2
 
@@ -44,22 +47,22 @@ define fib(n):
        | else: fib(n-1) + fib(n-2)
 
 define
- | fib(0): 0
- | fib(1): 1
- | fib(n): fib(n-1) + fib(n-2)
+| fib(0): 0
+| fib(1): 1
+| fib(n): fib(n-1) + fib(n-2)
 
 define
- | fib(0): 0
- | fib(1): 1
- | fib(n): fib(n-1)
-             + fib(n-2)
+| fib(0): 0
+| fib(1): 1
+| fib(n): fib(n-1)
+            + fib(n-2)
 
 define fib:
   lambda (n):
     cond
-     | n == 0: 0
-     | n == 1: 1
-     | else: fib(n-1) + fib(n-2)
+    | n == 0: 0
+    | n == 1: 1
+    | else: fib(n-1) + fib(n-2)
 
 // Ok to add `:` before `|`. This parses the
 // same as the prevous example, but this is not the standard
@@ -67,9 +70,9 @@ define fib:
 define fib:
   lambda (n):
     cond
-     | n == 0: 0
-     | n == 1: 1
-     | else: fib(n-1) + fib(n-2)
+    | n == 0: 0
+    | n == 1: 1
+    | else: fib(n-1) + fib(n-2)
 
 // Adding parentheses is ok, at least with the obvious handling
 // of parentheses by the use of sapling notation, but the
@@ -77,9 +80,9 @@ define fib:
 (define fib:
   (lambda (n):
     (cond
-      | (n == 0): 0
-      | (n == 1): 1
-      | else: (fib(n-1) + fib(n-2)))))
+     | (n == 0): 0
+     | (n == 1): 1
+     | else: (fib(n-1) + fib(n-2)))))
 
 // For maximal noise, you could add parentheses and trailing colons.
 // But we won't.
@@ -93,15 +96,15 @@ INPUT
 
 define fib(n):
   match n
-   | 0: 0
-   | 1: 1
-   | n: fib(n-1) + fib(n-2)
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
 define fib(n):
   match n
-   | 0: 0
-   | 1: 1
-   | n: fib(n-1) + fib(n-2)
+  | 0: 0
+  | 1: 1
+  | n: fib(n-1) + fib(n-2)
 
 define fib(n):
   match n | 0: 0
@@ -110,12 +113,12 @@ define fib(n):
 
 define fib(n):
   match n
-   | 0:
-       0
-   | 1:
-       1
-   | n:
-       fib(n-1) + fib(n-2)
+  | 0:
+      0
+  | 1:
+      1
+  | n:
+      fib(n-1) + fib(n-2)
 
 // END equivalent `fib` definitions
 
@@ -126,16 +129,16 @@ define make_adder(n):
 
 define analyze(n):
   if n == 0
-   | printf("zero\n")
-   | printf("other\n")
+  | printf("zero\n")
+  | printf("other\n")
   printf("done\n")
 
 define analyze(n):
   if n == 0
-   | printf("zero\n")
-     printf("done saying zero\n")
-   | printf("other\n")
-     printf("done saying other\n")
+  | printf("zero\n")
+    printf("done saying zero\n")
+  | printf("other\n")
+    printf("done saying other\n")
 
 struct posn(x, y)
 
@@ -197,8 +200,8 @@ define fourth(n :: Int):
 
 define exp(n :: Int, ~base: base = 2.718281828459045):
   if (n == 1)
-   | base
-   | base * exp(n-1, ~base: base)
+  | base
+  | base * exp(n-1, ~base: base)
 
 define positive_p(n): if n > 0 | true | false
 
@@ -212,34 +215,34 @@ define go():
 
 define approx(x):
   match x
-   | something(v):
-       printf("got it\n")
-       v
-   | nothing: 0
+  | something(v):
+      printf("got it\n")
+      v
+  | nothing: 0
 
 // With two `:`s on one line, there's no way to
 // add to the first `:`
 define approx_thunk(x):
   match x
-   | something(v): lambda (): v
-   | nothing: lambda (): 0
+  | something(v): lambda (): v
+  | nothing: lambda (): 0
 
 // Enough indentation for `v` means that it continues the
 // implicit second `:`, so the `lambda` body has `v`:
 define approx_thunk(x):
   match x
-   | something(v): lambda ():
-                      v
-   | nothing: lambda (): 0
+  | something(v): lambda ():
+                     v
+  | nothing: lambda (): 0
 
 define approx_thunk(x):
   match x
-   | something(v): lambda
-                    | (): v
-                    | (n): v+n
-   | nothing: lambda
-               | (): 0
-               | (n): n
+  | something(v): lambda
+                  | (): v
+                  | (n): v+n
+  | nothing: lambda
+             | (): 0
+             | (n): n
 
 #' #, #; #: #|
 
@@ -281,8 +284,8 @@ define f(x_something,
 define sum(l):
   let loop(l = l):
     if is_null(l)
-     | 0
-     | first(l) + loop(rest(l))
+    | 0
+    | first(l) + loop(rest(l))
 
 define show_all(l):
   for (x = in_list(l)):
@@ -316,8 +319,8 @@ define partition(l, pred):
             result (reverse(yes), reverse(no))):
    with (x = in_list(l)):
      if pred(x)
-      | (cons(x, yes), no)
-      | (yes, cons(x, no))
+     | (cons(x, yes), no)
+     | (yes, cons(x, no))
 
 local:
   with:
@@ -1293,7 +1296,157 @@ INPUT
     (group top_f)
     (group if t (alts (block (group x)) (block (group y) (group z))))
     (group a (parens (group 1) (group 2)))))
-  
+
+;; mixture of `:` and `|`
+(define input1b
+#<<INPUT
+a:
+  option
+| case 1
+| case 2
+
+b: option
+| case 1
+
+c:
+| case 1
+| case 2
+
+d:
+| case 1
+
+nested
+| a:
+    option
+  | case 1
+  | case 2
+
+nested:
+| a:
+    option
+  | case 1
+  | case 2
+
+one line:«option; also» | case 1 | case 2
+
+many lines:«option; also»
+| case 1
+| case 2
+
+a | b: «c» | d
+
+a |«b: «c»»| d
+
+a:«b | c: d  | e »
+
+a:«b | c:«d» | e »
+
+a:«b |«c:«d»»|«e»»
+
+a:«»
+| b
+
+a:«» | b
+
+a:
+  b; c
+| d
+
+a:
+  b;« c »
+| d
+
+a:
+  b; (c)
+| d
+
+a: b; cc
+| d
+
+a: b;« cc »
+| d
+
+a: b; (cc)
+| d
+
+a:
+  b
+#//
+| c
+
+a:
+  b
+#//
+| c
+| d
+
+a:«»
+#//
+| c
+
+a:«»
+#//
+| c
+| d
+
+a:
+  b
+  #//
+  | c
+
+a:
+  b
+  #//
+  | c
+| d
+
+a:
+  #//
+  b
+| c
+| d
+
+#//
+a:
+  b
+| c
+| d
+
+INPUT
+  )
+
+(define expected1b
+  '(top
+    (group a (block (group option)) (alts (block (group case 1)) (block (group case 2))))
+    (group b (block (group option)) (alts (block (group case 1))))
+    (group c (alts (block (group case 1)) (block (group case 2))))
+    (group d (alts (block (group case 1))))
+    (group nested (alts (block (group a (block (group option)) (alts (block (group case 1)) (block (group case 2)))))))
+    (group nested (alts (block (group a (block (group option)) (alts (block (group case 1)) (block (group case 2)))))))
+    (group one line (block (group option) (group also)) (alts (block (group case 1)) (block (group case 2))))
+    (group many lines (block (group option) (group also)) (alts (block (group case 1)) (block (group case 2))))
+    (group a (alts (block (group b (block (group c)))) (block (group d))))
+    (group a (alts (block (group b (block (group c)))) (block (group d))))
+    (group a (block (group b (alts (block (group c (block (group d)))) (block (group e))))))
+    (group a (block (group b (alts (block (group c (block (group d)))) (block (group e))))))
+    (group a (block (group b (alts (block (group c (block (group d)))) (block (group e))))))
+    (group a (block) (alts (block (group b))))
+    (group a (block) (alts (block (group b))))
+    (group a (block (group b) (group c)) (alts (block (group d))))
+    (group a (block (group b) (group c)) (alts (block (group d))))
+    (group a (block (group b) (group (parens (group c)))) (alts (block (group d))))
+    (group a (block (group b) (group cc)) (alts (block (group d))))
+    (group a (block (group b) (group cc)) (alts (block (group d))))
+    (group a (block (group b) (group (parens (group cc)))) (alts (block (group d))))
+    (group a (block (group b)))
+    (group a (block (group b)) (alts (block (group d))))
+    (group a (block))
+    (group a (block) (alts (block (group d))))
+    (group a (block (group b)))
+    (group a (block (group b)) (alts (block (group d))))
+    (group a (alts (block (group c)) (block (group d))))))
+
+
 (define input2
 #<<INPUT
 
@@ -1352,9 +1505,9 @@ this: \
              foo
 
 foo
- | more \
- | again:
-              sub
+| more \
+| again:
+             sub
 
 a
 |
@@ -1368,16 +1521,16 @@ something:
   more stuff
 
 define
- | fib(0) = 0
- | fib(1) = 1
- | fib(n) =
-   fib(n-1) + fib(n-2)
+| fib(0) = 0
+| fib(1) = 1
+| fib(n) =
+  fib(n-1) + fib(n-2)
 
 define
- | fib(0) = 0
- | fib(1) = 1
- | fib(n) = fib(n-1) + fib(n-2)
- | more
+| fib(0) = 0
+| fib(1) = 1
+| fib(n) = fib(n-1) + fib(n-2)
+| more
 
 nonsense:
   hello | there 4.5
@@ -1438,14 +1591,14 @@ x | indentize
 
 define fib(n):
  match n
-  | 0
-    : 0
-  | 1
-    : 1
-  | n
-    : fib(n-1)
-      + fib(n-2)
-      more
+ | 0
+   : 0
+ | 1
+   : 1
+ | n
+   : fib(n-1)
+     + fib(n-2)
+     more
 
 begin:
   dictionary = [
@@ -1919,10 +2072,6 @@ alone
 | only alt gone
 
 alone
-  #//
-  | only alt gone
-
-alone
 #//
 | first alt gone
 #//
@@ -1973,7 +2122,6 @@ INPUT
        (block
         (group val x (block (group f (parens (group 1) (group 2 (op +) 3)))))
         (group match x (alts (block (group 1 (block (group (quotes (group one)))))) (block (group 2 (block (group (quotes (group two))))))))))))
-    (group alone)
     (group alone)
     (group alone)
     (group (parens (group ok)))

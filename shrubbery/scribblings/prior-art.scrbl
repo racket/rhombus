@@ -1,4 +1,6 @@
 #lang scribble/rhombus/manual
+@(import:
+    "quote.rhm" open)
 
 @title{Prior Art}
 
@@ -10,10 +12,10 @@ Sampling notation's rules relating indentation, lines, @litchar{;}, and
 @hyperlink("https://github.com/tonyg/racket-something"){#lang something}
 reader, which also targets an underlying expander that
 further groups tokens. Shrubbery notation evolved away from using
-@litchar{{}} for blocks, however, because @litchar{:} was nearly always
+@braces for blocks, however, because @litchar{:} was nearly always
 preferred in experiments with the notation. For the very rare case that
-explicit grouping is needed for a block, @litchar{«} and @litchar{»} can
-be used. Freeing @litchar{{}} from use for blocks, meanwhile, allows its
+explicit grouping is needed for a block, @guillemets can
+be used. Freeing @braces from use for blocks, meanwhile, allows its
 use for set and map notations.
 
 Shrubbery notation is also based on
@@ -21,7 +23,7 @@ Shrubbery notation is also based on
 particularly its use of @litchar{|}. Lexprs use mandatory @litchar{:} and @litchar{|} tokens
 as a prefix for indentation, and it absorbs an additional line after
 an indented section to allow further chaining of the group. Although
-@litchar{«»} can be used to form multiple subgroups within a shrubbery group,
+@guillemets can be used to form multiple subgroups within a shrubbery group,
 the notation discourages that style in favor of further nesting (or,
 in the case of @litchar{if}, in favor of @litchar{|} notation like other
 conditionals).

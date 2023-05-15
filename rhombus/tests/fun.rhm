@@ -36,8 +36,8 @@ check:
 
 fun add1(x) :: Int:
   match x
-   | n :: Int : x + 1
-   | ~else: x
+  | n :: Int : x + 1
+  | ~else: x
 
 check:
   add1(100)
@@ -84,15 +84,14 @@ check:
 // `match` variant
 
 fun size2 :: Int:
-  match
-  | size2("wrong"):
-      "oops"
-  | size2(n :: Int):
-      n
-  | size2(p :: Posn):
-      p.x + p.y
-  | size2(a, b):
-      a+b
+| size2("wrong"):
+    "oops"
+| size2(n :: Int):
+    n
+| size2(p :: Posn):
+    p.x + p.y
+| size2(a, b):
+    a+b
 
 check:
   size2(10) ~is 10
@@ -102,11 +101,10 @@ check:
 block:
   use_static
   fun flip :: Posn:
-    match
-    | flip(Posn(x, y)):
-        Posn(y,x)
-    | flip(x):
-        Posn(0, x)
+  | flip(Posn(x, y)):
+      Posn(y,x)
+  | flip(x):
+      Posn(0, x)
   check:
     flip(Posn(1, 2)) ~is Posn(2, 1)
     flip(Posn(1, 2)).y ~is 1
@@ -114,18 +112,15 @@ block:
 
 check:
   fun size3:
-    match
-    | size3(_): "not yet implemented"
+  | size3(_): "not yet implemented"
   size3(10)
   ~is "not yet implemented"
 
 block:
-  def long_form_one = (fun:
-                         match
+  def long_form_one = (fun
+                       | (): 1)
+  def longer_form_one = (fun :: Int
                          | (): 1)
-  def longer_form_one = (fun :: Int:
-                           match
-                           | (): 1)
   check:
     long_form_one() ~is 1
     longer_form_one() ~is 1

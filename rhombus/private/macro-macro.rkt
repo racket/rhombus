@@ -17,7 +17,6 @@
          "definition.rkt"
          "name-root-ref.rkt"
          "dollar.rkt"
-         (only-in "match.rkt" match)
          ;; because we generate compile-time code:
          (for-syntax "parse.rkt")
          "op-literal.rkt"
@@ -36,7 +35,6 @@
                      parse-operator-definitions
                      parse-identifier-syntax-transformer
                      :operator-syntax-quote
-                     :match+1
 
                      :prefix-operator-options
                      :infix-operator-options
@@ -179,14 +177,6 @@
   (define-composed-splicing-syntax-class (:all-operator-options space-sym)
     operator-options
     infix-operator-options)
-  
-  (define-syntax-class :match+1
-    #:description "match form"
-    #:opaque
-    #:attributes ()
-    (pattern name::name
-             #:when (free-identifier=? (quote-syntax match) #'name.name
-                                       (syntax-local-phase-level) (add1 (syntax-local-phase-level)))))
 
   (define-syntax-class :$+1
     #:description "unquote operator"
@@ -387,13 +377,13 @@
                                            #f #f
                                            #'() #'()))]
         [(form-id main-op::operator-or-identifier-or-$
-                  (_::block
-                   ~!
-                   (~var main-options (:all-operator-options space-sym))
-                   (group _::match+1
-                          (alts-tag::alts (_::block (group q::operator-syntax-quote
-                                                           (~and rhs (_::block body ...))))
-                                          ...+))))
+                  (~optional
+                   (_::block
+                    (~var main-options (:all-operator-options space-sym))))
+                  (alts-tag::alts ~!
+                                  (_::block (group q::operator-syntax-quote
+                                                   (~and rhs (_::block body ...))))
+                                  ...+))
          (list (parse-operator-definitions #'form-id
                                            kind
                                            stx
@@ -402,7 +392,8 @@
                                            space-sym
                                            compiletime-id
                                            #'main-op.name #'main-op.extends
-                                           #'main-options.prec #'main-options.assc))]
+                                           (if (attribute main-options) #'main-options.prec #'())
+                                           (if (attribute main-options) #'main-options.assc #'())))]
         [(form-id q::operator-syntax-quote
                   (~and rhs (_::block body ...)))
          (list (parse-operator-definition #'form-id

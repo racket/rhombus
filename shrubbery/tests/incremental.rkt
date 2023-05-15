@@ -162,6 +162,7 @@
       [i (in-naturals)])
   (try-input (format "1[~a]" i) input1))
 (try-input '1a input1a)
+(try-input '1b input1b)
 (try-input 2 input2)
 (try-input 3 input3)
 (try-input 4 input4)

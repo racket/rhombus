@@ -1,7 +1,8 @@
 #lang scribble/rhombus/manual
 @(import:
     "grammar.rhm" open
-    "grammar-s-exp.rkt" open)
+    "grammar-s-exp.rkt" open
+    "quote.rhm" open)
 
 @title(~tag: "parsed-rep"){Parsed Representation}
 
@@ -10,39 +11,40 @@ The parse of a shrubbery can be represented by an S-expression:
 @itemlist(
 
  @item{Each group is represented as a list that starts @litchar{'group}, and
-   the rest of the list are the elements of the group.},
+   the rest of the list are the elements of the group.}
 
  @item{Atom elements are represented as “themselves” within a group,
    including identifers a symbols, except that an operator is
    represented as a 2-element list that is @litchar{'op} followed by the operator name
-   as a symbol.},
+   as a symbol.}
 
- @item{A group sequence is represented as a list of @litchar{'group} lists.},
+ @item{A group sequence is represented as a list of @litchar{'group} lists.}
 
- @item{An element created by @litchar{()} is represented by @litchar{'parens} consed
-   onto a group-sequence list.},
+ @item{An element created by @parens is represented by @litchar{'parens} consed
+   onto a group-sequence list.}
    
- @item{An element created by @litchar{[]} is represented by @litchar{'brackets} consed
-   onto a group-sequence list.},
+ @item{An element created by @brackets is represented by @litchar{'brackets} consed
+   onto a group-sequence list.}
 
- @item{An element created by @litchar{{}} is represented by @litchar{'braces} consed
-   onto a group-sequence list.},
+ @item{An element created by @braces is represented by @litchar{'braces} consed
+   onto a group-sequence list.}
 
- @item{An element created by @litchar{''} is represented by @litchar{'quotes} consed
-   onto a group-sequence list.},
+ @item{An element created by @quotes is represented by @litchar{'quotes} consed
+   onto a group-sequence list.}
 
- @item{A block is represented as either @litchar{'block} or @litchar{'alts} consed onto a
-   group-sequence list. The representation uses @litchar{'alts} if the content
-   of the block is a squence of groups started with @litchar{|}, and it's
-   @litchar{'block} otherwise.},
+ @item{A block is represented as @litchar{'block} consed onto a
+   group-sequence list. A @litchar{'block} list appears only at the end of
+   a group list or just before an @litchar{'alts} list that is at the end
+   of the group list.}
 
- @item{A block created to follow @litchar{|} appears immediately in an @litchar{'alts}
-   list.}
+ @item{A sequence of alternatives is represented as @litchar{'alts}
+   consed onto a list of @litchar{'block} lists, where each
+   @litchar{'block} list represents a @litchar{|} alternative. An
+   @litchar{'alts} list appears only at the end of a group list.}
 
 )
 
-Note that a block can only appear immediately in a @litchar{'group} or @litchar{'alts}
-list, and only at the end within a @litchar{'group} list. Note also that there is no possibility of confusion between
+Note that there is no possibility of confusion between
 symbol atoms in the input and @litchar{'group}, @litchar{'block}, etc., at the start
 of a list in an S-expression representation, because symbol atoms will
 always appear as non-initial items in a @litchar{'group} list.
@@ -54,23 +56,24 @@ Overall, the grammar of S-expression representations is as follows:
 Here's the same grammar, but expressed using Rhombus constructors:
 
 @nested(~style: #'inset,
-        bnf.BNF([@nonterm{parsed},
+        bnf.BNF([@nonterm{document},
                  @rhombus([#'top, #,(@nonterm{group}), ...])],
                 [@nonterm{group},
-                 @rhombus([#'group, #,(@nonterm{term}), ..., #,(@nonterm{tail-term})])],
-                [@nonterm{term},
+                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{item})]),
+                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block})]),
+                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{alts})]),
+                 @rhombus([#'group, #,(@nonterm{item}), ..., #,(@nonterm{block}), #,(@nonterm{alts})])],
+                [@nonterm{item},
                  @nonterm{atom},
                  @rhombus([#'op, #,(@nonterm{symbol})]),
                  @rhombus([#'parens, #,(@nonterm{group}), ...]),
                  @rhombus([#'brackets, #,(@nonterm{group}), ...]),
                  @rhombus([#'braces, #,(@nonterm{group}), ...]),
                  @rhombus([#'quotes, #,(@nonterm{group}), ...])],
-                [@nonterm{tail-term},
-                 @nonterm{term},
-                 @nonterm{block},
-                 @rhombus([#'alts, #,(@nonterm{block}), ...])],
                 [@nonterm{block},
-                 @rhombus([#'block, #,(@nonterm{group}), ...])]))
+                 @rhombus([#'block, #,(@nonterm{group}), ...])],
+                [@nonterm{alts},
+                 @rhombus([#'alts, #,(@nonterm{block}), ...])]))
 
 Here are some example shrubberies with their S-expression parsed
 representations:

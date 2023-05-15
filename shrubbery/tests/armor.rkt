@@ -52,6 +52,7 @@
 (check "simple" "a: 1 2" '(top (group a (block (group 1) (group 2)))))
 (check 1 input1 expected1)
 (check '1a input1a expected1a #:unarmor? #f)
+(check '1b input1a expected1a #:unarmor? #f)
 (check 2 input2 expected2 #:unarmor? #f) ; unarmor not right yet for continuing
 (check 3 input3 expected3)
 (check 4 input4 expected4)

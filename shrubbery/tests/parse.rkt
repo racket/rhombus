@@ -76,6 +76,7 @@
 
 (check 1 input1 expected1)
 (check '1a input1a expected1a)
+(check '1b input1b expected1b)
 (check 2 input2 expected2)
 (check 3 input3 expected3)
 (check 4 input4 expected4)

@@ -1,8 +1,10 @@
 #lang scribble/rhombus/manual
+@(import:
+    "quote.rhm" open)
 
 @title(~tag: "at-notation"){At-Notation Using @litchar("@")}
 
-Groups and blocks provide a convenient general notation for structured
+Groups, blocks, and alternatives provide a convenient general notation for structured
 forms, such as typical elements of programming language. Basic
 shrubbery elements are less well suited for representing blocks of
 free-form text, however. String literals work well enough for simple
@@ -27,7 +29,7 @@ is equivalent to
   typeset(["Write \"hello\" to C:\\greet.txt."])
 )
 
-Note that text in @litchar("{}") in this example did not need escapes
+Note that text in @braces in this example did not need escapes
 for the literal quotes and backslashes. The conversion puts the
 literal string in a list, where the list has more elements in the case
 of multiline text or escapes.
@@ -78,7 +80,7 @@ before parenthesized @italic{arg}s. The @italic{command} and
 is in text mode and converted to @italic{converted_text}. The
 @italic{converted_text} translation includes elements that are not
 string literals in places where @italic{text} has escapes. An
-@litchar("@") form can have multiple @litchar("{}") @italic{text}
+@litchar("@") form can have multiple @braces @italic{text}
 blocks, in which case the translation has multiple
 @italic{converted_list} list arguments.
 
@@ -105,7 +107,7 @@ Some additional @litchar("@") rules:
 
 @itemlist(
 
- @item{When multiple lines of text are within @litchar("{}"), then
+ @item{When multiple lines of text are within @braces, then
        leading indentation common to all lines is discarded.},
 
  @item{While the @italic{command} component itself can be parenthesized, it

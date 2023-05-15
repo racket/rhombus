@@ -23,7 +23,7 @@ one of these forms:
 
       The allowed form of @italic{command} is described in
       @secref("token-parsing") as @nonterm{command}, and it always
-      corresponds to a group. A group that ends in a block is
+      corresponds to a group. A group that ends in a block or sequence of alternatives is
       disallowed. Each @italic{argument} is also a group, with no
       additional constraints, but the separating @litchar{,} is
       optional for arguments that are newline-separated groups.
@@ -76,7 +76,7 @@ one of these forms:
 
       The allowed forms of @italic{command} are the same as for the
       preceding cases of @litchar("@"), except that @italic{command}
-      is allowed to be a group that ends in a block if the
+      is allowed to be a group that ends in a block or sequence of alternatives if the
       @litchar("@") is at the end of the enclosing group. If
       parentheses or a @italic{braced_text} follow @italic{command},
       then one of the preceding @litchar("@") cases applies, instead.},
@@ -89,13 +89,13 @@ one of these forms:
       }
 
       where @italic{command} is allowed to be any group (but ending in
-      a block only when @litchar("@") is at the end of the enclosing
+      a block or sequence of alternatives only when @litchar("@") is at the end of the enclosing
       group), and space is allowed between @litchar("@(«") and
       @italic{command} or between @italic{command} and @litchar("»)").},
 
  @item{@bseq(@litchar("@//"), @italic{braced_text})
 
-       A block-comment form, but allowed only within a
+       A comment form, but allowed only within a
        @italic{braced_text}. No space is allowed between
        @litchar("@//") and @italic{braced_text}.},
 

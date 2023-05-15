@@ -88,11 +88,10 @@ block:
 block:
   macro listly:
     ~stronger_than: +&
-    match
-    | '$a listly $b':
-        '[$a, $b]'
-    | 'listly $c':
-        '[$c]'
+  | '$a listly $b':
+      '[$a, $b]'
+  | 'listly $c':
+      '[$c]'
 
   check:
     1 listly 5 +& 7
@@ -188,18 +187,16 @@ check:
 
 check:
   ~eval
-  macro prefix:
-    match
-    | 'prefix': 'ok'
-    | 'preeefix': 'oops'
+  macro prefix
+  | 'prefix': 'ok'
+  | 'preeefix': 'oops'
   ~raises "case operator does not match the declared operator"
 
 check:
   ~eval
   macro prefix:
     ~associativity: ~left
-    match
-    | 'prefix': 'ok'
+  | 'prefix': 'ok'
   ~raises "associativity specified without infix cases"
 
 check:

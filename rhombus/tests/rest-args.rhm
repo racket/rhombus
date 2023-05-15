@@ -91,9 +91,9 @@ block:
 // Match & rest on mutable maps produces an immutable copy
 block:
   def m = MutableMap{"a": 1, "b": 2}
-  def r = match m
-          | MapView{"a": a, & rst}: rst
-          | _: #false
+  def r: match m
+         | MapView{"a": a, & rst}: rst
+         | _: #false
   m["b"] := 3
   check r ~is {"b": 2}
 
